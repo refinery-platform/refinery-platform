@@ -737,12 +737,6 @@
         });
       });
 
-      $(document).on('refinery/analyses-trigger-redirect', function(e){
-        console.log("I'm in the html view!");
-        var analysesStatusMessage = "Analysis '{}' finished successfully.  " +
-          "View the " + "results in the" + " file browser."
-      });
-
       $("[rel=tooltip]").tooltip();
 
       $("#help-igv-button").click( function(event) {
