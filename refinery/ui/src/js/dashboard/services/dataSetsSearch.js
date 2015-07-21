@@ -70,11 +70,13 @@ angular
                 } else {
                   doc.description = null;
                 }
-                if (userId && doc.access.indexOf('u_' + userId) >= 0) {
-                  doc.is_owner = true;
-                }
-                if (doc.access.indexOf('g_' + settings.publicGroupId) >= 0) {
-                  doc.public = true;
+                if (doc.access) {
+                  if (userId && doc.access.indexOf('u_' + userId) >= 0) {
+                    doc.is_owner = true;
+                  }
+                  if (doc.access.indexOf('g_' + settings.publicGroupId) >= 0) {
+                    doc.public = true;
+                  }
                 }
               }
 
