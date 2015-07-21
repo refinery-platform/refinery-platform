@@ -40,9 +40,6 @@ function analysesFactory($http) {
       headers: { "X-Requested-With" : 'XMLHttpRequest'}
     }).then(function(response){
       processAnalysesDetail(response.data, uuid);
-      console.log(uuid);
-      console.log(response.data);
-
       }, function(error){
         console.error("Error accessing analysis monitoring API");
       });
