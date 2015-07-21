@@ -12,14 +12,14 @@ angular
   'ui.router',
 
   /*
-   * Angular App commons
+   * Angular App globals
    */
   'errors',
 
   /*
    * Refinery modules
    */
-  'refineryState',
+  'refineryRouter',
   'refineryWorkflows',
   'refineryNodeMapping',
   'refineryAnalysis',

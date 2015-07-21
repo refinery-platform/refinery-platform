@@ -66,7 +66,7 @@ RefineryStateProvider.prototype.$get = function () {
 };
 
 angular
-  .module('refineryState', [])
+  .module('refineryRouter')
   .provider('refineryState', [
     '$windowProvider',
     '$stateProvider',
