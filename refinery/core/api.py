@@ -556,7 +556,8 @@ class AnalysisResource(ModelResource):
         filtering = {
             'data_set': ALL_WITH_RELATIONS,
             'workflow_steps_num': ALL_WITH_RELATIONS,
-            'data_set__uuid': ALL
+            'data_set__uuid': ALL,
+            'status': ALL
         }
         ordering = ['name', 'creation_date']
 
