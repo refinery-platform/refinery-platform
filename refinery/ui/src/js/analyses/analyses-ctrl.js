@@ -64,13 +64,13 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     vm.analysesMsg = analysesAlertService.getAnalysesMsg();
   };
 
-
   //watches for analyze tab view to update AnalysesList
   $scope.$on('refinery/analyze-tab-active', function(){
     vm.updateAnalysesList();
     vm.refreshAnalysesDetail();
   });
 
+  //checks url to see if view is filtered by analysis
   $scope.checkAnalysesViewFlag = function() {
     var flag;
     if(typeof window.analysisUuid === 'undefined' || window.analysisUuid === "None") {

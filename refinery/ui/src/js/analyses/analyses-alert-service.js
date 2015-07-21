@@ -3,10 +3,9 @@ angular.module('refineryAnalyses')
 
 function analysesAlertService(analysesFactory) {
   var vm = this;
-
-    var analysesMsg = {};
-    analysesMsg.status = "";
-    analysesMsg.name = "";
+  var analysesMsg = {};
+  analysesMsg.status = "";
+  analysesMsg.name = "";
 
   vm.setAnalysesMsg = function (uuid) {
      vm.findAnalysesAlertStatus(uuid);

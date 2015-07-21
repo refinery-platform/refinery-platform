@@ -9,5 +9,8 @@ function rpAnalysesAlertMsg($location) {
     templateUrl: '/static/partials/analyses-alert-msg.html',
     controller: 'AnalysesCtrl',
     controllerAs: 'AnalysesCtrl',
+    bindToController: {
+      analysesMsg: '@',
+    },
   };
 }
