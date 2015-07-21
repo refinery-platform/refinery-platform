@@ -12,10 +12,11 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout) {
   vm.updateAnalysesList = function(){
     analysesFactory.getAnalysesList().then(function(){
       vm.analysesList = analysesFactory.analysesList;
+      console.log(vm.analysesList);
       vm.analysesRunningUuids = analysesFactory.createAnalysesRunningList(vm.analysesList);
     });
 
-    var timerList = $timeout(vm.updateAnalysesList, 10000);
+    var timerList = $timeout(vm.updateAnalysesList, 15000);
   };
 
   vm.refreshAnalysesDetail = function(){
@@ -43,11 +44,11 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout) {
     vm.analysesDetail[uuid].cancelingAnalyses = true;
     analysesFactory.postCancelAnalysis(uuid).then(function(result)
     {
-      alert( "Successfully canceled analysis." );
-      vm.analysesDetail[uuid].cancelingAnalyses = false;
-      vm.updateAnalysesList();
+      bootbox.prompt( "Successfully canceled analysis." );
+      //vm.analysesDetail[uuid].cancelingAnalyses = false;
+      //vm.updateAnalysesList();
     }, function(error){
-      alert("Canceling analysis failed");
+      bootbox.prompt("Canceling analysis failed");
       vm.analysesDetail[uuid].cancelingAnalyses = false;
     });
   };
