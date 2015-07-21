@@ -1,10 +1,15 @@
+/**
+ * RefineryStateProvider Class
+ * @param {object} $window        Angular's window object.
+ * @param {object} $stateProvider UI-Router's $stateProvider.
+ */
 function RefineryStateProvider ($window, $stateProvider) {
   this.$window = $window;
   this.$stateProvider = $stateProvider;
 }
 
 /**
- * State initialization only when the location path matches the given one
+ * State initialization only when the location's path matches the given path.
  *
  * @description
  * Wraps the original $stateProvider's `state` method, to restrict state
@@ -16,7 +21,7 @@ function RefineryStateProvider ($window, $stateProvider) {
  *
  * @example
  * <pre>
- * var app = angular.module('app', ['refineryState']);
+ * var app = angular.module('app', ['refineryRouter']);
  *
  * var user = angular.module('app.user', []);
  *
@@ -48,8 +53,8 @@ function RefineryStateProvider ($window, $stateProvider) {
  * </pre>
  *
  * @param  {string} name  $stateProvider's state name.
- * @param  {[type]} state $stateProvider's state object.
- * @param  {[type]} path  Path under which the state should be registered
+ * @param  {object} state $stateProvider's state object.
+ * @param  {string} path  Path under which the state will be registered.
  */
 RefineryStateProvider.prototype.state = function (name, state, path) {
   if (this.$window.location.pathname === path) {

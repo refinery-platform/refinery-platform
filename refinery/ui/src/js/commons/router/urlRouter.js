@@ -1,26 +1,42 @@
+/**
+ * RefineryUrlRouterProvider Class
+ * @param {object} $window            Angular's window object.
+ * @param {object} $urlRouterProvider UI-Router's $urlRouterProvider.
+ */
 function RefineryUrlRouterProvider ($window, $urlRouterProvider) {
   this.$window = $window;
   this.$urlRouterProvider = $urlRouterProvider;
 }
 
 /**
- * State initialization only when the location path matches the given one
+ * Default URL route initialization only when the location's path matches the
+ * given path.
  *
  * @description
- * Wraps the original $stateProvider's `state` method, to restrict state
- * registration to a given path. This is useful when using Angular together with
- * another non-JavaScript framework that has it's own URL router.
+ * Wraps the original $urlRouterProvider's `otherwise` method, to restrict
+ * default URL rewriting to a given path. This is useful when using Angular
+ * together with another non-JavaScript framework that has it's own URL router.
  *
- * This way we can specify the same route multiple times but restrict it to a
- * given path.
+ * This way we can specify the same default route multiple times without
+ * interference on other paths.
  *
  * @example
  * <pre>
- * var app = angular.module('app', ['refineryState']);
+ * var app = angular.module('app', ['refineryRouter']);
  *
  * var user = angular.module('app.user', []);
  *
- * user.config(function (refineryStateProvider) {
+ * user.config(function (refineryStateProvider, refineryUrlRouterProvider) {
+ *  refineryStateProvider
+ *    .state(
+ *      'list',
+ *      {
+ *        url: '/',
+ *        templateUrl: '/static/partials/user/list.html',
+ *        controller: 'UserCtrl as user'
+ *      },
+ *      '/users/');
+ *
  *  refineryStateProvider
  *    .state(
  *      'edit',
@@ -30,26 +46,27 @@ function RefineryUrlRouterProvider ($window, $urlRouterProvider) {
  *        controller: 'UserCtrl as user'
  *      },
  *      '/users/');
- * });
  *
- * var group = angular.module('app.group', []);
- *
- * group.config(function (refineryStateProvider) {
  *  refineryStateProvider
  *    .state(
- *      'edit',
+ *      'delete',
  *      {
- *        url: '/edit',
- *        templateUrl: '/static/partials/group/edit.html',
- *        controller: 'GroupCtrl as group'
+ *        url: '/delete',
+ *        templateUrl: '/static/partials/user/delete.html',
+ *        controller: 'UserCtrl as user'
  *      },
- *      '/groups/');
+ *      '/users/');
+ *
+ *  refineryUrlRouterProvider
+ *    .otherwise(
+ *      '/',
+ *      '/users/'
+ *    );
  * });
  * </pre>
  *
- * @param  {string} name  $stateProvider's state name.
- * @param  {[type]} state $stateProvider's state object.
- * @param  {[type]} path  Path under which the state should be registered
+ * @param  {string} url  Default route.
+ * @param  {strign} path Path under which the default route will be registered.
  */
 RefineryUrlRouterProvider.prototype.otherwise = function (url, path) {
   if (this.$window.location.pathname === path) {
