@@ -11,14 +11,13 @@
            {{ analysis.name }}
         </span>
         <span ng-switch-default>
-          <a rp-analyses-trigger-redirect ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
+          <a ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
             {{ analysis.name }}
           </a>
         </span>
       </span>
 
-      <span ng-if="analysis.status=='RUNNING' || analysis
-      .status=='INITIALIZED'" ng-init="AnalysesCtrl.refreshAnalysesDetail()">
+      <span ng-if="analysis.status=='RUNNING' || analysis.status=='INITIALIZED'" ng-init="AnalysesCtrl.refreshAnalysesDetail()">
 
         &nbsp;
         <a rp-analyses-cancel-confirm confirmed-click="AnalysesCtrl
