@@ -2,7 +2,8 @@ angular
   .module('refineryDashboard')
   .config([
     'refineryStateProvider',
-    function(refineryStateProvider) {
+    'refineryUrlRouterProvider',
+    function(refineryStateProvider, refineryUrlRouterProvider) {
       refineryStateProvider
         .state(
           'launchPad',
@@ -11,7 +12,8 @@ angular
             templateUrl: '/static/partials/dashboard/views/launchPad.html',
             controller: 'LaunchPadCtrl as launchPad'
           },
-          '/');
+          '/'
+        );
 
       refineryStateProvider
         .state(
@@ -21,7 +23,14 @@ angular
             templateUrl: '/static/partials/dashboard/views/dataSetsExploration.html',
             controller: 'DataSetsExplorationCtrl as dse'
           },
-          '/');
+          '/'
+        );
+
+      refineryUrlRouterProvider
+        .otherwise(
+          '/',
+          '/'
+        );
     }
   ]
 );
