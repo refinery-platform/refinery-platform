@@ -177,7 +177,7 @@
           </span>
           <span ng-if="analysis.status == 'FAILURE'">
             <i class="icon-warning-sign"></i>
-            <a ng-href="analysis_manager/{{ analysis.uuid }}">{{ analysis.name }}</a>
+            <a ng-href=data_sets/{{ analysis.data_set__uuid }}/analysis/{{ analysis.uuid }}">{{ analysis.name }}</a>
           </span>
         </li>
       </ul>
