@@ -82,10 +82,13 @@ def group_invite(request, token):
     # We are done using this token.
     inv.delete()
     return render_to_response(
-            'core/group_invite.html',
-            {'message': '%s has been added to the group %s!' % (user.username, group.name)},
-            context_instance=RequestContext(request))
-
+        'core/group_invite.html',
+        {
+            'message': '%s has been added to the group %s!' % (user.username, group.name),
+            'user': user,
+            'group': group
+        },
+        context_instance=RequestContext(request))
 
 
 def custom_error_page(request, template, context_dict):

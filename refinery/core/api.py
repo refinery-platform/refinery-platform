@@ -42,6 +42,7 @@ from django.http import HttpResponse
 import datetime
 from django.core.mail import EmailMessage
 from tastypie.utils import trailing_slash
+from django.template import loader, Context
 
 
 logger = logging.getLogger(__name__)
@@ -1408,14 +1409,15 @@ class InvitationResource(ModelResource):
     def send_email(self, invitation):
         group = self.get_group(invitation.group_id)
         subject = 'Invitation to join group %s' % group.name
-        body = """
-        You have been invited to join %s. Please use the following steps:
-
-        1. Make a refinery acount if you have not already and log in.
-        2. Click on this link: http://192.168.50.50:8000/group_invite/%s/
-        """ % (group.name, invitation.token_uuid)
-
-        email = EmailMessage(subject, body, to=[invitation.recipient_email])
+        temp_loader = loader.get_template('group_invitation/group_invite_email.txt')
+        context_dict = {
+            'group_name': group.name,
+            'token': invitation.token_uuid
+        }
+        email = EmailMessage(
+            subject,
+            temp_loader.render(Context(context_dict)),
+            to=[invitation.recipient_email])
         email.send()
         return HttpCreated("Email sent")
 
