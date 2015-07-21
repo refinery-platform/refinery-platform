@@ -8,15 +8,24 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout) {
   var vm = this;
   vm.analysesDetail = {};
   vm.analysesRunningUuids = [];
+  vm.analysesGlobalList = [];
 
   vm.updateAnalysesList = function(){
     analysesFactory.getAnalysesList().then(function(){
       vm.analysesList = analysesFactory.analysesList;
-      console.log(vm.analysesList);
       vm.analysesRunningUuids = analysesFactory.createAnalysesRunningList(vm.analysesList);
     });
 
-    var timerList = $timeout(vm.updateAnalysesList, 15000);
+    $timeout(vm.updateAnalysesList, 20000);
+  };
+
+  vm.updateAnalysesGlobalList = function(){
+    analysesFactory.getAnalysesGlobalList().then(function(){
+      vm.analysesGlobalList = analysesFactory.analysesGlobalList;
+      console.log(vm.analysesGlobalList);
+    });
+
+    $timeout(vm.updateAnalysesGlobalList, 20000);
   };
 
   vm.refreshAnalysesDetail = function(){
@@ -24,9 +33,12 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout) {
     for(var i = 0; i < vm.analysesRunningUuids.length; i++) {
       vm.updateAnalysesDetail(i);
     }
-    if(vm.analysesRunningUuids.length > 0) {
-      timerDetail = $timeout(vm.refreshAnalysesDetail, 5000);
+    if(vm.analysesRunningUuids.length > 0){
+      timerDetail = $timeout(vm.refreshAnalysesDetail, 10000);
+    }else{
+      $timeout.cancel(timerDetail);
     }
+
     $scope.$on('refinery/analyze-tab-inactive', function(){
       $timeout.cancel(timerDetail);
     });
@@ -44,11 +56,11 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout) {
     vm.analysesDetail[uuid].cancelingAnalyses = true;
     analysesFactory.postCancelAnalysis(uuid).then(function(result)
     {
-      bootbox.prompt( "Successfully canceled analysis." );
-      //vm.analysesDetail[uuid].cancelingAnalyses = false;
+      bootbox.alert( "Successfully canceled analysis." );
+      vm.analysesDetail[uuid].cancelingAnalyses = false;
       //vm.updateAnalysesList();
     }, function(error){
-      bootbox.prompt("Canceling analysis failed");
+      bootbox.alert("Canceling analysis failed");
       vm.analysesDetail[uuid].cancelingAnalyses = false;
     });
   };
@@ -85,5 +97,6 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout) {
   };
 
 
-  vm.updateAnalysesList();
+  //vm.updateAnalysesList();
+  vm.updateAnalysesGlobalList();
 }

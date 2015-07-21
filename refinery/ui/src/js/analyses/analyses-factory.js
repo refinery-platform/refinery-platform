@@ -6,6 +6,7 @@ function analysesFactory($http) {
   var serverUrl = "/api/v1/analysis";
   var analysesList = [];
   var analysesDetail = {};
+  var analysesGlobalList = [];
 
   var initializeAnalysesDetail = function(uuid){
     analysesDetail[uuid]={
@@ -25,6 +26,15 @@ function analysesFactory($http) {
       '/?format=json&limit=0&order_by=creation_date&data_set__uuid='+ dataSetUuid)
       .then(function (response) {
       angular.copy(response.data.objects.reverse(),analysesList);
+    }, function (response) {
+      console.error("Error accessing analyses API.");
+    });
+  };
+
+  var getAnalysesGlobalList = function() {
+    return $http.get(serverUrl + '/?format=json&limit=10')
+      .then(function (response) {
+      angular.copy(response.data.objects, analysesGlobalList);
     }, function (response) {
       console.error("Error accessing analyses API.");
     });
@@ -118,11 +128,13 @@ function analysesFactory($http) {
 
 
  return{
+   getAnalysesGlobalList: getAnalysesGlobalList,
    getAnalysesList: getAnalysesList,
    getAnalysesDetail: getAnalysesDetail,
    postCancelAnalysis: postCancelAnalysis,
    createAnalysesRunningList: createAnalysesRunningList,
    analysesDetail: analysesDetail,
    analysesList: analysesList,
+   analysesGlobalList: analysesGlobalList
  };
 }
