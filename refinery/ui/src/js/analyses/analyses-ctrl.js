@@ -8,7 +8,6 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout) {
   var vm = this;
   vm.analysesDetail = {};
   vm.analysesRunningUuids = [];
-  vm.analysesRunningFlag = true;
 
   vm.updateAnalysesList = function(){
     analysesFactory.getAnalysesList().then(function(){
@@ -16,20 +15,17 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout) {
       vm.analysesRunningUuids = analysesFactory.createAnalysesRunningList(vm.analysesList);
     });
 
-    var timerList = $timeout(vm.updateAnalysesList, 30000);
+    var timerList = $timeout(vm.updateAnalysesList, 10000);
   };
 
   vm.refreshAnalysesDetail = function(){
     var timerDetail;
-
     for(var i = 0; i < vm.analysesRunningUuids.length; i++) {
       vm.updateAnalysesDetail(i);
     }
-
     if(vm.analysesRunningUuids.length > 0) {
       timerDetail = $timeout(vm.refreshAnalysesDetail, 5000);
     }
-
     $scope.$on('refinery/analyze-tab-inactive', function(){
       $timeout.cancel(timerDetail);
     });
@@ -62,6 +58,14 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout) {
     vm.analysesMsg = analysesAlertService.getAnalysesMsg();
   };
 
+  vm.isAnalysesRunning = function(){
+    if(vm.analysesRunningUuids.length > 0){
+      return true;
+    }else{
+      return false;
+    }
+  };
+
   //watches for analyze tab view to update AnalysesList
   $scope.$on('refinery/analyze-tab-active', function(){
     vm.refreshAnalysesDetail();
@@ -78,6 +82,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout) {
     }
     return flag;
   };
+
 
   vm.updateAnalysesList();
 }

@@ -9,8 +9,5 @@ function rpAnalysesRunningTabIcon() {
     templateUrl: '/static/partials/analyses-running-tab-icon.html',
     controller: 'AnalysesCtrl',
     controllerAs: 'AnalysesCtrl',
-    bindToController: {
-      analysesRunningFlag: '@',
-    },
   };
 }
