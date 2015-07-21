@@ -62,7 +62,7 @@ angular.module('refineryNodeMapping', [
   '$urlRouterProvider',
   function($stateProvider, $urlRouterProvider) {
   // Default state
-  $urlRouterProvider.otherwise(function($injector, $location) {
+  $urlRouterProvider.otherwise(function($injector) {
     var $state = $injector.get('$state');
     $state.go('browse');
   });
