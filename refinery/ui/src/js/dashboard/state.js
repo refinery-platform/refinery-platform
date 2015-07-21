@@ -13,9 +13,7 @@ angular
             controller: 'LaunchPadCtrl as launchPad'
           },
           '/'
-        );
-
-      refineryStateProvider
+        )
         .state(
           'dataSetsExploration',
           {
