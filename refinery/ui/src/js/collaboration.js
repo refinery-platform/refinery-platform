@@ -112,16 +112,12 @@ collab.controller('refineryCollaborationController', function ($scope, $state, $
             var expireTime = millisToTime(expiresDate.getTime() - createdDate.getTime());
             i.created = humanize.date('D Y-F-dS @ h:m:s A', createdDate);
             i.expires = humanize.date('D Y-F-dS @ h:m:s A', expiresDate);
-            
             i.expireDuration =
               humanize.relativeTime(humanize.time() +
               expireTime.d * 86400 +
               expireTime.h * 3600 +
               expireTime.m * 60 +
               expireTime.s);
-
-            console.log(i);
-
             return i;
           });
         },
