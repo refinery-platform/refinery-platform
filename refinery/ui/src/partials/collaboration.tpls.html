@@ -61,7 +61,7 @@
     </div>
 
     <div class="span4" refinery-expandable-panel>
-    <div class="refinery-panel">
+        <div class="refinery-panel">
             <div class="refinery-header">
                 <span class="refinery-header-left">
                     <h3>
@@ -72,31 +72,31 @@
                 </span>
             </div>
 
-                    <div class="refinery-panel-content scrollable jquery-full-height">
+            <div class="refinery-panel-content scrollable jquery-full-height">
 
-        <ul class="nav nav-list scrollable">
-            <li ng-repeat="invite in activeGroupInviteList">
-                {{ invite.recipient_email }}
-          <span>
-            <span style="float:right;margin-left:10px">
-              <a href="#/{{ activeGroup.group_id }}/" ng-click="revokeInvitation(invite)">Revoke</a>
-            </span>
-            <span style="float:right">
-              <a href="#/{{ activeGroup.group_id }}/" ng-click="resendInvitation(invite)">Resend</a>
-            </span>
-          </span>
-                <br>
-          <span>
-            Created: {{ invite.created }}
-            <br>
-            Expires: {{ invite.expires }}
-          </span>
-                <hr>
-            </li>
-        </ul>
-                        </div>
+                <ul class="nav nav-list scrollable">
+                    <li ng-repeat="invite in activeGroupInviteList">
+                        {{ invite.recipient_email }}
+                        <span>
+                            <span style="float:right;margin-left:10px">
+                                <a href="#/{{ activeGroup.group_id }}/" ng-click="revokeInvitation(invite)">Revoke</a>
+                            </span>
+                            <span style="float:right">
+                                <a href="#/{{ activeGroup.group_id }}/" ng-click="resendInvitation(invite)">Resend</a>
+                            </span>
+                        </span>
+                        <br>
+                        <span>
+                            Created: {{ invite.created }}
+                            <br>
+                            Expires: {{ invite.expires }}
+                        </span>
+                        <hr>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
 
-</div>
 </div>
 
