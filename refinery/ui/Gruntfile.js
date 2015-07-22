@@ -7,6 +7,8 @@ module.exports = function(grunt) {
   // Timer
   require('time-grunt')(grunt);
 
+  var config = grunt.file.readJSON('config.json');
+
   grunt.initConfig({
     /*
      * Add vendor prefixes to out CSS to ensure better browser support.
@@ -305,9 +307,9 @@ module.exports = function(grunt) {
        * When UI vendor assets change we copy them over.
        */
       uiVendor: {
-        files: [
-          '<%= cfg.vendorPath %>/**/*'
-        ],
+        files: config.files.vendor.map(function (file) {
+          return config.vendorPath + '/' + file;
+        }),
         tasks: [
           'copy:uiBuildVendor'
         ]
