@@ -8,7 +8,7 @@ function analysesStatusIcon(){
       case "FAILURE":
         return "icon-warning-sign";
       case "RUNNING":
-        return "icon-spinner icon-spin icon-large";
+        return "icon-cog icon-spin icon-large";
       default:
         return "icon-question-sign";
     }
