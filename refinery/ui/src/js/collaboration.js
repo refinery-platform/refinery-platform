@@ -1,7 +1,7 @@
 // Note: be careful to distinguish between groupId, group_id, userId, and user_id.
 // camelCase is for JS, while snake_case is for the Python TastyPie API.
 
-var collab = angular.module('refineryCollaboration', []);
+var collab = angular.module('refineryCollaboration', ['angular-humanize']);
 
 collab.config(function (refineryStateProvider) {
   refineryStateProvider
@@ -94,7 +94,11 @@ collab.controller('refineryCollaborationController', function ($scope, $state, $
         group_id: pageScope.activeGroup.group_id
       }).$promise.then(
         function (data) {
-          pageScope.activeGroupInviteList = data.objects;
+          pageScope.activeGroupInviteList = data.objects.map(function (i) {
+            i.created = humanize.date('D Y-F-dS @ h:m:s A', new Date(i.created));
+            i.expires = humanize.date('D Y-F-dS @ h:m:s A', new Date(i.expires));
+            return i;
+          });
         },
         function (error) {
           console.error(error);
