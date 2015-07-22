@@ -88,6 +88,17 @@ collab.controller('refineryCollaborationController', function ($scope, $state, $
     }
   });
 
+  // Thanks http://stackoverflow.com/a/13603311/2704964
+
+  function millisToTime(t) {
+    return {
+      d: Math.floor(t / 86400000),
+      h: Math.floor((t % 86400000) / 3600000),
+      m: Math.floor(((t % 86400000) % 3600000) / 60000),
+      s: Math.floor((((t % 86400000) % 3600000) % 60000) / 1000)
+    };
+  }
+
   pageScope.$watch('activeGroup', function () {
     if (pageScope.activeGroup) {
       groupInviteService.query({
@@ -96,8 +107,21 @@ collab.controller('refineryCollaborationController', function ($scope, $state, $
         function (data) {
           pageScope.activeGroupInviteList = data.objects.map(function (i) {
             var offset = new Date().getTimezoneOffset() * 60000;
-            i.created = humanize.date('D Y-F-dS @ h:m:s A', new Date(new Date(i.created).getTime() + offset));
-            i.expires = humanize.date('D Y-F-dS @ h:m:s A', new Date(new Date(i.expires).getTime() + offset));
+            var createdDate = new Date(new Date(i.created).getTime() + offset);
+            var expiresDate = new Date(new Date(i.expires).getTime() + offset);
+            var expireTime = millisToTime(expiresDate.getTime() - createdDate.getTime());
+            i.created = humanize.date('D Y-F-dS @ h:m:s A', createdDate);
+            i.expires = humanize.date('D Y-F-dS @ h:m:s A', expiresDate);
+            
+            i.expireDuration =
+              humanize.relativeTime(humanize.time() +
+              expireTime.d * 86400 +
+              expireTime.h * 3600 +
+              expireTime.m * 60 +
+              expireTime.s);
+
+            console.log(i);
+
             return i;
           });
         },
