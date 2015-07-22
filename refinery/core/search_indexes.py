@@ -5,9 +5,9 @@ Created on Jul 2, 2012
 '''
 
 import logging
-from core.models import DataSet, Project
 from data_set_manager.models import Node, AnnotatedNode
 from data_set_manager.utils import get_node_types
+from django.db import models
 from django.template import loader
 from django.template.context import Context
 from haystack import indexes
@@ -38,7 +38,7 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     content_auto = indexes.EdgeNgramField(null=True)
 
     def get_model(self):
-        return DataSet
+        return models.get_model('core', 'DataSet')
 
     def index_queryset(self, using=None):
         """Used when the entire index for model is updated."""
@@ -186,7 +186,7 @@ class ProjectIndex(indexes.SearchIndex, indexes.Indexable):
     # content_auto = indexes.EdgeNgramField(model_attr='summary')
 
     def get_model(self):
-        return Project
+        return models.get_model('core', 'Project')
 
     def prepare_access(self, object):
         access_list = []

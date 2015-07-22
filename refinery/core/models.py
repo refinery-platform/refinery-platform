@@ -30,6 +30,7 @@ from registration.signals import user_registered, user_activated
 from data_set_manager.models import Investigation, Node, Study, Assay
 from file_store.models import get_file_size, FileStoreItem
 from galaxy_connector.models import Instance
+from core.search_indexes import DataSetIndex
 
 
 logger = logging.getLogger(__name__)
@@ -490,19 +491,11 @@ class DataSet(SharableResource):
 
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
-        # This might be a hack but I couldn't find an easier solution to about
-        # the import loop. I found this solution here
-        # http://stackoverflow.com/a/7199514/981933
-        from core.search_indexes import DataSetIndex
         logger.info("Re-index / update data set: %s", self)
         DataSetIndex().update_object(self, using='core')
 
     def unshare(self, group):
         super(DataSet, self).unshare(group)
-        # This might be a hack but I couldn't find an easier solution to about
-        # the import loop. I found this solution here
-        # http://stackoverflow.com/a/7199514/981933
-        from core.search_indexes import DataSetIndex
         logger.info("Re-index / update data set: %s", self)
         DataSetIndex().update_object(self, using='core')
 
