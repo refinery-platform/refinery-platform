@@ -95,8 +95,9 @@ collab.controller('refineryCollaborationController', function ($scope, $state, $
       }).$promise.then(
         function (data) {
           pageScope.activeGroupInviteList = data.objects.map(function (i) {
-            i.created = humanize.date('D Y-F-dS @ h:m:s A', new Date(i.created));
-            i.expires = humanize.date('D Y-F-dS @ h:m:s A', new Date(i.expires));
+            var offset = new Date().getTimezoneOffset() * 60000;
+            i.created = humanize.date('D Y-F-dS @ h:m:s A', new Date(new Date(i.created).getTime() + offset));
+            i.expires = humanize.date('D Y-F-dS @ h:m:s A', new Date(new Date(i.expires).getTime() + offset));
             return i;
           });
         },
