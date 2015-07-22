@@ -1,3 +1,23 @@
-<div ng-repeat ="analysis in analysesCtrl.analysesGlobalList">
-    {{ analysis.name }}
-</div>
+<ul id="analyses-popover" ng-repeat ="analysis in analysesCtrl.analysesGlobalList">
+   <li>
+     <span class="spinner"><i class="{{analysis.status | analysesStatusIcon}}"></i>
+     </span>
+     &nbsp;
+    <span ng-switch on="analysis.status">
+        <span ng-switch-when="UNKNOWN">
+           {{ analysis.name }}
+        </span>
+        <span ng-switch-default>
+          <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
+            {{ analysis.name }}
+          </a>
+        </span>
+      </span>
+     &nbsp;
+     <span ng-if="analysis.status == 'RUNNING'">
+       <i class="icon-circle-arrow-down"></i>
+       <i class="icon-cog"></i>
+       <i class="icon-circle-arrow-up"></i>
+     </span>
+   </li>
+</ul>
