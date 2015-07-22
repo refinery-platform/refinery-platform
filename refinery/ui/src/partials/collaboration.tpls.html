@@ -27,7 +27,7 @@
 
       <ul class="nav nav-list scrollable">
         <li ng-repeat="member in activeGroup.member_list">
-          {{member.username}}
+          {{member.first_name}} {{member.last_name }} - ({{member.username}})
           <span style="float:right" ng-if="activeGroup.can_edit">
             <span ng-if="member.is_manager" style="float:left;color:red" font-size="5px">
               manager

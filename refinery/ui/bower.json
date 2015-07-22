@@ -23,7 +23,7 @@
     "angular-ui-utils": "flekschas/ui-utils#expose-reload",
     "angular-bootstrap": "0.8.0",
     "angular-mocks": "1.4.1",
-    "angularjs-humanize": "latest",
+    "angularjs-humanize": "0.0.1",
     "tipsy": "0.1.7",
     "c3": "0.3.0",
     "ng-grid": "2.0.13",

@@ -960,6 +960,8 @@ class GroupManagementResource(Resource):
             lambda u: {
                 'user_id': u.id,
                 'username': u.username,
+                'first_name': u.first_name,
+                'last_name': u.last_name,
                 'is_manager': True if ((not self.is_manager_group(group) and
                     u in group.extendedgroup.manager_group.user_set.all()) or
                     (self.is_manager_group(group) and
