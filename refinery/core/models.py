@@ -3,13 +3,13 @@ Created on Feb 20, 2012
 
 @author: nils
 '''
-
-from bioblend import galaxy
+from __future__ import absolute_import
 from datetime import datetime
 import logging
 import os
 import smtplib
 import socket
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import User, Group
@@ -22,6 +22,8 @@ from django.db.models.fields import IntegerField
 from django.db.models.signals import post_save, post_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
+
+from bioblend import galaxy
 from django_extensions.db.fields import UUIDField
 from django_auth_ldap.backend import LDAPBackend
 from guardian.shortcuts import get_users_with_perms, \
@@ -30,8 +32,7 @@ from registration.signals import user_registered, user_activated
 from data_set_manager.models import Investigation, Node, Study, Assay
 from file_store.models import get_file_size, FileStoreItem
 from galaxy_connector.models import Instance
-from core.search_indexes import DataSetIndex
-
+from .utils import index_data_set
 
 logger = logging.getLogger(__name__)
 
@@ -491,13 +492,11 @@ class DataSet(SharableResource):
 
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
-        logger.info("Re-index / update data set: %s", self)
-        DataSetIndex().update_object(self, using='core')
+        index_data_set(self)
 
     def unshare(self, group):
         super(DataSet, self).unshare(group)
-        logger.info("Re-index / update data set: %s", self)
-        DataSetIndex().update_object(self, using='core')
+        index_data_set(self)
 
 
 class InvestigationLink(models.Model):

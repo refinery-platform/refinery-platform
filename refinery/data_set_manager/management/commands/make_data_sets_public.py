@@ -1,6 +1,5 @@
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
-from guardian.shortcuts import assign_perm
 
 from core.models import DataSet, ExtendedGroup
 
@@ -15,7 +14,8 @@ class Command(BaseCommand):
         except User.DoesNotExist:
             raise CommandError("User '%s' does not exist" % args[0])
         public_group = ExtendedGroup.objects.public_group()
-        for dataset in DataSet.objects.all():
-            if user == dataset.get_owner():
-                assign_perm('read_dataset', public_group, dataset)
-                self.stdout.write("Making public data set '%s'" % dataset.name)
+        #TODO: optimize retrieving user's data sets
+        for data_set in DataSet.objects.all():
+            if user == data_set.get_owner():
+                self.stdout.write("Making public data set '%s'" % data_set.name)
+                data_set.share(public_group)
