@@ -42,6 +42,8 @@
       "angular-animate/angular-animate.min.js.map",
       "angular-cookies/angular-cookies.min.js",
       "angular-cookies/angular-cookies.min.js.map",
+      "angularjs-humanize/src/angular-humanize.js",
+      "humanize/humanize.js",
       "c3/c3.css",
       "c3/c3.min.js",
       "d3/d3.min.js",
