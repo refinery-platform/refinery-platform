@@ -5,11 +5,12 @@ function analysesFactory($http) {
   "use strict";
   var serverUrl = "/api/v1/analysis";
   var analysesList = [];
-  var analysesDetail = {};
+  //var analysesDetail = {};
+  var analysesGlobalDetail = {};
   var analysesGlobalList = [];
 
-  var initializeAnalysesDetail = function(uuid){
-    analysesDetail[uuid]={
+  var initializeAnalysesGlobalDetail = function(uuid){
+    analysesGlobalDetail[uuid]={
       "preprocessing": 'PENDING',
       "preprocessingPercentDone":'0%',
       "execution": 'PENDING',
@@ -49,7 +50,8 @@ function analysesFactory($http) {
       data: {'csrfmiddlewaretoken': csrf_token},
       headers: { "X-Requested-With" : 'XMLHttpRequest'}
     }).then(function(response){
-      processAnalysesDetail(response.data, uuid);
+      console.log(response);
+      processAnalysesGlobalDetail(response.data, uuid);
       }, function(error){
         console.error("Error accessing analysis monitoring API");
       });
@@ -69,9 +71,9 @@ function analysesFactory($http) {
   };
 
   /*process responses from api*/
-  var processAnalysesDetail = function(data, uuid){
-    if(!(analysesDetail.hasOwnProperty(uuid))){
-      initializeAnalysesDetail(uuid);
+  var processAnalysesGlobalDetail = function(data, uuid){
+    if(!(analysesGlobalDetail.hasOwnProperty(uuid))){
+      initializeAnalysesGlobalDetail(uuid);
     }
     setPreprocessingStatus(data, uuid);
     setPostprocessingStatus(data, uuid);
@@ -90,27 +92,27 @@ function analysesFactory($http) {
 
   var setPreprocessingStatus = function(data, uuid){
      if( isNotPending(data.preprocessing[0].state)) {
-       analysesDetail[uuid].preprocessing = data.preprocessing[0].state;
-       if( data.preprocessing[0].percent_done > analysesDetail[uuid].preprocessingPercentDone) {
-        analysesDetail[uuid].preprocessingPercentDone = data.preprocessing[0].percent_done;
+       analysesGlobalDetail[uuid].preprocessing = data.preprocessing[0].state;
+       if( data.preprocessing[0].percent_done > analysesGlobalDetail[uuid].preprocessingPercentDone) {
+        analysesGlobalDetail[uuid].preprocessingPercentDone = data.preprocessing[0].percent_done;
        }
     }
   };
 
   var setPostprocessingStatus = function(data, uuid){
      if( isNotPending(data.postprocessing[0].state)) {
-       analysesDetail[uuid].postprocessing = data.postprocessing[0].state;
-       if(data.postprocessing[0].percent_done > analysesDetail[uuid].postprocessingPercentDone) {
-        analysesDetail[uuid].postprocessingPercentDone = data.postprocessing[0].percent_done;
+       analysesGlobalDetail[uuid].postprocessing = data.postprocessing[0].state;
+       if(data.postprocessing[0].percent_done > analysesGlobalDetail[uuid].postprocessingPercentDone) {
+        analysesGlobalDetail[uuid].postprocessingPercentDone = data.postprocessing[0].percent_done;
        }
     }
   };
 
   var setExecutionStatus = function(data, uuid){
      if(isNotPending(data.execution[0].state)) {
-       analysesDetail[uuid].execution = data.execution[0].state;
-       if( data.execution[0].percent_done > analysesDetail[uuid].executionPercentDone) {
-        analysesDetail[uuid].executionPercentDone = data.execution[0].percent_done;
+       analysesGlobalDetail[uuid].execution = data.execution[0].state;
+       if( data.execution[0].percent_done > analysesGlobalDetail[uuid].executionPercentDone) {
+        analysesGlobalDetail[uuid].executionPercentDone = data.execution[0].percent_done;
        }
      }
   };
@@ -128,13 +130,14 @@ function analysesFactory($http) {
 
 
  return{
+
    getAnalysesGlobalList: getAnalysesGlobalList,
    getAnalysesList: getAnalysesList,
    getAnalysesDetail: getAnalysesDetail,
    postCancelAnalysis: postCancelAnalysis,
    createAnalysesRunningList: createAnalysesRunningList,
-   analysesDetail: analysesDetail,
    analysesList: analysesList,
-   analysesGlobalList: analysesGlobalList
+   analysesGlobalList: analysesGlobalList,
+   analysesGlobalDetail: analysesGlobalDetail
  };
 }
