@@ -1,68 +1,102 @@
 <div id="group-collab">
-  <div class="row-fluid">
 
-    <div class="span4 well">
-      <strong>Groups</strong>
-      <span style="float:right;margin-left:5px">
-        <a href="#/{{activeGroup.group_id}}/" ng-click="openGroupEditor()"><i class="icon-cog"></i></a>
-      </span>
+    <div class="span4" refinery-expandable-panel>
+        <div class="refinery-panel">
+            <div class="refinery-header">
+                <span class="refinery-header-left">
+                    <h3>
+                        <i class="m-r-1-4 icon-group"></i>Groups
+                    </h3>
+                </span>
+                <span class="refinery-header-right">
+                    <a href="#/{{ activeGroup.group_id }}/" ng-click="openGroupEditor()"><i class="icon-cog"></i></a>
+                </span>
+            </div>
 
-      <ul class="nav nav-list scrollable">
-        <li ng-repeat="group in groupList" ng-click="setGroupActive(group)" ng-class="group.group_id === activeGroup.group_id ? 'active' : ''">
-          <a ng-href="#/{{group.group_id}}/">
-            {{group.group_name}}
+            <div class="refinery-panel-content scrollable jquery-full-height">
+            <ul class="nav nav-list scrollable">
+                <li ng-repeat="group in groupList" ng-click="setGroupActive(group)"
+                    ng-class="group.group_id === activeGroup.group_id ? 'active' : ''">
+                    <a ng-href="#/{{ group.group_id }}/">
+                        {{ group.group_name }}
             <span style="float:right;color:red" font-size="10px" ng-if="group.can_edit">
               manager
             </span>
-          </a>
-        </li>
-      </ul>
+                    </a>
+                </li>
+            </ul>
+                </div>
+        </div>
     </div>
 
-    <div class="span4 well">
-      <strong>Members</strong>
-      <span style="margin-left:5px" ng-if="activeGroup.can_edit">
-        <a href="#/{{activeGroup.group_id}}/" ng-click="openEmailInvite()"><i class="icon-plus"></i></a>
-      </span>
+    <div class="span4" refinery-expandable-panel>
+        <div class="refinery-panel">
+            <div class="refinery-header">
+                <span class="refinery-header-left">
+                    <h3>
+                        <i class="m-r-1-4 icon-user"></i>Members
+                    </h3>
+                </span>
+                <span class="refinery-header-right">
+                    <a href="#/{{ activeGroup.group_id }}/" ng-click="openEmailInvite()"><i class="icon-plus"></i></a>
+                </span>
+            </div>
 
-      <ul class="nav nav-list scrollable">
-        <li ng-repeat="member in activeGroup.member_list">
-          {{member.first_name}} {{member.last_name }} - ({{member.username}})
-          <span style="float:right" ng-if="activeGroup.can_edit">
-            <span ng-if="member.is_manager" style="float:left;color:red" font-size="5px">
-              manager
-            </span>
-            <a href="#/{{activeGroup.group_id}}/" ng-click="openMemberEditor(member)" style="margin-left:10px">
-              <i class="icon-cog"></i>
-            </a>
-          </span>
-        </li>
-      </ul>
+            <div class="refinery-panel-content scrollable jquery-full-height">
+                <ul class="nav nav-list scrollable">
+                    <li ng-repeat="member in activeGroup.member_list">
+                        {{ member.first_name }} {{ member.last_name }} - ({{ member.username }})
+                        <span style="float:right" ng-if="activeGroup.can_edit">
+                            <span ng-if="member.is_manager" style="float:left;color:red" font-size="5px">
+                                manager
+                            </span>
+                            <a href="#/{{ activeGroup.group_id }}/" ng-click="openMemberEditor(member)" style="margin-left:10px">
+                                <i class="icon-cog"></i>
+                            </a>
+                        </span>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
 
-    <div class="span4 well">
-      <strong>Pending Invitations</strong>
-      <ul class="nav nav-list scrollable">
-        <li ng-repeat="invite in activeGroupInviteList">
-          {{invite.recipient_email}}
-          <span>
-            <span style="float:right;margin-left:10px">
-              <a href="#/{{activeGroup.group_id}}/" ng-click="revokeInvitation(invite)">Revoke</a>
-            </span>
-            <span style="float:right">
-              <a href="#/{{activeGroup.group_id}}/" ng-click="resendInvitation(invite)">Resend</a>
-            </span>
-          </span>
-          <br>
-          <span>
-            Created: {{invite.created}}
-            <br>
-            Expires: {{invite.expires}}
-          </span>
-          <hr>
-        </li>
-      </ul>
+    <div class="span4" refinery-expandable-panel>
+        <div class="refinery-panel">
+            <div class="refinery-header">
+                <span class="refinery-header-left">
+                    <h3>
+                        <i class="m-r-1-4 icon-envelope"></i>Pending Invitations
+                    </h3>
+                </span>
+                <span class="refinery-header-right">
+                </span>
+            </div>
+
+            <div class="refinery-panel-content scrollable jquery-full-height">
+
+                <ul class="nav nav-list scrollable">
+                    <li ng-repeat="invite in activeGroupInviteList">
+                        {{ invite.recipient_email }}
+                        <span>
+                            <span style="float:right;margin-left:10px">
+                                <a href="#/{{ activeGroup.group_id }}/" ng-click="revokeInvitation(invite)">Revoke</a>
+                            </span>
+                            <span style="float:right">
+                                <a href="#/{{ activeGroup.group_id }}/" ng-click="resendInvitation(invite)">Resend</a>
+                            </span>
+                        </span>
+                        <br>
+                        <span>
+                            Created: {{ invite.created }}
+                            <br>
+                            Expires: {{ invite.expires }}
+                        </span>
+                        <hr>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
 
-  </div>
 </div>
+
