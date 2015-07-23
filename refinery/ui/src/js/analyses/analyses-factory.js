@@ -5,14 +5,14 @@ function analysesFactory($http) {
   "use strict";
   var serverUrl = "/api/v1/analysis";
   var analysesList = [];
-  //var analysesDetail = {};
-  var analysesGlobalDetail = {};
   var analysesGlobalList = [];
+  var analysesDetail = {};
+  var analysesGlobalDetail = {};
   var analysesRunningGlobalList = [];
   var analysesRunningList = [];
 
-  var initializeAnalysesGlobalDetail = function(uuid){
-    analysesGlobalDetail[uuid]={
+  var initializeAnalysesDetail = function(uuid, analysesObj){
+    analysesObj[uuid]={
       "preprocessing": 'PENDING',
       "preprocessingPercentDone":'0%',
       "execution": 'PENDING',
@@ -64,7 +64,9 @@ function analysesFactory($http) {
 
   //http.post header needed to be adjusted because django was not recognizing it
   // as an ajax call.
-  var getAnalysesDetail = function(uuid) {
+  var getAnalysesDetail = function(uuid, analysesType) {
+    analysesType = analysesType || "";
+    
     return $http({
       method: 'POST',
       url: '/analysis_manager/' + uuid + "/?format=json",
@@ -72,7 +74,11 @@ function analysesFactory($http) {
       headers: { "X-Requested-With" : 'XMLHttpRequest'}
     }).then(function(response){
       //console.log(response);
-      processAnalysesGlobalDetail(response.data, uuid);
+        if(analysesType === "global") {
+          processAnalysesGlobalDetail(response.data, uuid, analysesGlobalDetail);
+        }else{
+          processAnalysesGlobalDetail(response.data, uuid, analysesDetail);
+        }
       }, function(error){
         console.error("Error accessing analysis monitoring API");
       });
@@ -92,14 +98,14 @@ function analysesFactory($http) {
   };
 
   /*process responses from api*/
-  var processAnalysesGlobalDetail = function(data, uuid){
-    if(!(analysesGlobalDetail.hasOwnProperty(uuid))){
-      initializeAnalysesGlobalDetail(uuid);
+  var processAnalysesGlobalDetail = function(data, uuid, analysesObj){
+    if(!(analysesObj.hasOwnProperty(uuid))){
+      initializeAnalysesDetail(uuid, analysesObj);
     }
-    setPreprocessingStatus(data, uuid);
-    setPostprocessingStatus(data, uuid);
+    setPreprocessingStatus(data, uuid, analysesObj);
+    setPostprocessingStatus(data, uuid, analysesObj);
     if(data.execution != null){
-      setExecutionStatus(data, uuid);
+      setExecutionStatus(data, uuid, analysesObj);
     }
   };
 
@@ -111,44 +117,32 @@ function analysesFactory($http) {
     }
   };
 
-  var setPreprocessingStatus = function(data, uuid){
+  var setPreprocessingStatus = function(data, uuid, analysesObj){
      if( isNotPending(data.preprocessing[0].state)) {
-       analysesGlobalDetail[uuid].preprocessing = data.preprocessing[0].state;
-       if( data.preprocessing[0].percent_done > analysesGlobalDetail[uuid].preprocessingPercentDone) {
-        analysesGlobalDetail[uuid].preprocessingPercentDone = data.preprocessing[0].percent_done;
+       analysesObj[uuid].preprocessing = data.preprocessing[0].state;
+       if( data.preprocessing[0].percent_done > analysesObj[uuid].preprocessingPercentDone) {
+        analysesObj[uuid].preprocessingPercentDone = data.preprocessing[0].percent_done;
        }
     }
   };
 
-  var setPostprocessingStatus = function(data, uuid){
+  var setPostprocessingStatus = function(data, uuid, analysesObj){
      if( isNotPending(data.postprocessing[0].state)) {
-       analysesGlobalDetail[uuid].postprocessing = data.postprocessing[0].state;
-       if(data.postprocessing[0].percent_done > analysesGlobalDetail[uuid].postprocessingPercentDone) {
-        analysesGlobalDetail[uuid].postprocessingPercentDone = data.postprocessing[0].percent_done;
+       analysesObj[uuid].postprocessing = data.postprocessing[0].state;
+       if(data.postprocessing[0].percent_done > analysesObj[uuid].postprocessingPercentDone) {
+        analysesObj[uuid].postprocessingPercentDone = data.postprocessing[0].percent_done;
        }
     }
   };
 
-  var setExecutionStatus = function(data, uuid){
+  var setExecutionStatus = function(data, uuid, analysesObj){
      if(isNotPending(data.execution[0].state)) {
-       analysesGlobalDetail[uuid].execution = data.execution[0].state;
-       if( data.execution[0].percent_done > analysesGlobalDetail[uuid].executionPercentDone) {
-        analysesGlobalDetail[uuid].executionPercentDone = data.execution[0].percent_done;
+       analysesObj[uuid].execution = data.execution[0].state;
+       if( data.execution[0].percent_done > analysesObj[uuid].executionPercentDone) {
+        analysesObj[uuid].executionPercentDone = data.execution[0].percent_done;
        }
      }
   };
-
-  /*Creates a list of analysis running uuids for getting analyses details*/
-  //var createAnalysesRunningList = function(data){
-  //  var tempArr = [];
-  //  for(var i = 0; i<data.length; i++){
-  //    if(data[i].status === "RUNNING" || data[i].status === "INITIALIZED"){
-  //      tempArr.push(data[i].uuid);
-  //    }
-  //  }
-  //  return tempArr;
-  //};
-
 
  return{
 
@@ -158,9 +152,9 @@ function analysesFactory($http) {
    postCancelAnalysis: postCancelAnalysis,
    getAnalysesRunningGlobalList:getAnalysesRunningGlobalList,
    getAnalysesRunningList:getAnalysesRunningList,
-   //createAnalysesRunningList: createAnalysesRunningList,
    analysesList: analysesList,
    analysesGlobalList: analysesGlobalList,
+   analysesDetail: analysesDetail,
    analysesGlobalDetail: analysesGlobalDetail,
    analysesRunningList:analysesRunningList,
    analysesRunningGlobalList:analysesRunningGlobalList

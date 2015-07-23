@@ -7,6 +7,11 @@
         <span ng-switch-when="UNKNOWN">
            {{ analysis.name }}
         </span>
+        <span ng-switch-when="RUNNING">
+           <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/#/analyses">
+             {{ analysis.name }}
+           </a>
+        </span>
         <span ng-switch-default>
           <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
             {{ analysis.name }}

@@ -8,9 +8,10 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   var vm = this;
   vm.analysesDetail = {};
   vm.analysesList = [];
+  vm.analysesGlobalList = [];
   vm.analysesGlobalDetail = {};
   vm.analysesRunningList = [];
-  vm.analysesGlobalList = [];
+  vm.analysesRunningGlobalList = [];
 
   vm.updateAnalysesList = function () {
     analysesFactory.getAnalysesList().then(function () {
@@ -27,7 +28,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
 
   vm.updateAnalysesRunningGlobalList = function () {
     analysesFactory.getAnalysesRunningGlobalList().then(function () {
-      vm.analysesGlobalRunningList = analysesFactory.analysesGlobalRunningList;
+      vm.analysesRunningGlobalList = analysesFactory.analysesRunningGlobalList;
     });
     $timeout(vm.updateAnalysesRunningGlobalList, 10000);
   };
@@ -40,23 +41,31 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.refreshAnalysesGlobalDetail = function(){
-     console.log("in refresh analyses global detail");
     var timerDetail;
-    for (var i = 0; i < vm.analysesRunningGlobalUuids.length; i++) {
+    vm.analysesRunningGlobalList = analysesFactory.analysesRunningGlobalList;
+    for (var i = 0; i < vm.analysesRunningGlobalList.length; i++) {
       vm.updateAnalysesGlobalDetail(i);
     }
   };
 
   vm.refreshAnalysesDetail = function () {
-    for (var i = 0; i < vm.analysesRunningUuids.length; i++) {
-      vm.analysesDetail[vm.analysesRunningUuids[i]] = analysesFactory.analysesGlobalDetail[vm.analysesRunningUuids[i]];
+    for (var i = 0; i < vm.analysesRunningList.length; i++) {
+      vm.updateAnalysesDetail(i);
     }
   };
 
   vm.updateAnalysesGlobalDetail = function (i) {
     (function (i) {
-      analysesFactory.getAnalysesDetail(vm.analysesRunningGlobalUuids[i]).then(function (response) {
-        vm.analysesGlobalDetail[vm.analysesRunningGlobalUuids[i]] = analysesFactory.analysesGlobalDetail[vm.analysesRunningGlobalUuids[i]];
+      analysesFactory.getAnalysesDetail(vm.analysesRunningGlobalList[i].uuid, "global").then(function (response) {
+        vm.analysesGlobalDetail[vm.analysesRunningGlobalList[i].uuid] = analysesFactory.analysesGlobalDetail[vm.analysesRunningGlobalList[i].uuid];
+      });
+    })(i);
+  };
+
+  vm.updateAnalysesDetail = function (i) {
+    (function (i) {
+      analysesFactory.getAnalysesDetail(vm.analysesRunningList[i].uuid).then(function (response) {
+        vm.analysesDetail[vm.analysesRunningList[i].uuid] = analysesFactory.analysesDetail[vm.analysesRunningList[i].uuid];
       });
     })(i);
   };
@@ -88,7 +97,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.isAnalysesRunningGlobal = function () {
-    if (vm.analysesRunningGlobalList.length > 0) {
+    if(vm.analysesRunningGlobalList.length > 0) {
       return true;
     } else {
       return false;
@@ -135,7 +144,6 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     var timerGlobalList = $timeout($scope.updateAnalysesGlobalList, 10000);
 
     if(timerStatus === "once"){
-      console.log("Stop the analysesGlobalList");
       $timeout.cancel(timerGlobalList);
     }
   };
