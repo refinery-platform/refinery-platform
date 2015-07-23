@@ -55,7 +55,9 @@ NodeSetManager.prototype.initialize = function () {
   if (self.elementId != null) {
     self.getList(function () {
       self.renderList();
-    }, function () { /* do nothing in case of error */
+    }, function () {
+      console.log("Failed to retrieve node set list.");
+      self.renderList();
     });
   }
   else {
@@ -254,6 +256,7 @@ NodeSetManager.prototype.getList = function (callback, errorCallback) {
       }
     },
     error: function (result) {
+      self.list = { objects: [] };
       if (errorCallback) {
         errorCallback(result);
       }
