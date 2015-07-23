@@ -70,7 +70,6 @@ function analysesFactory($http) {
     return $http({
       method: 'POST',
       url: '/analysis_manager/' + uuid + "/?format=json",
-      data: {'csrfmiddlewaretoken': csrf_token},
       headers: { "X-Requested-With" : 'XMLHttpRequest'}
     }).then(function(response){
       //console.log(response);
