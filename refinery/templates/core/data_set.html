@@ -733,8 +733,9 @@
         $(window).unbind('hashchange');
         $(document).trigger('refinery/analyze-tab-active');
 
-        $(window).bind('hashchange',function(e) {;
-          if (location.hash != "#/analyses"){
+        $(window).bind('hashchange',function(e) {
+          if (location.hash !== "#/analyses/"){
+            console.log("it all broke");
             $(document).trigger('refinery/analyze-tab-inactive');
             $(this).unbind();
           }
