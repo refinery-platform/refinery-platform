@@ -189,7 +189,7 @@ function refineryDataSetPreview () {
 
   DataSetPreviewCtrl.prototype.openPermissionEditor = function (model, uuid) {
     this.$modal.open({
-      templateUrl: '/static/partials/dashboard/partials/permission.modal.html',
+      templateUrl: '/static/partials/dashboard/partials/permission-dialog.html',
       controller: 'PermissionEditorCtrl as modal',
       resolve: {
         config: function () {
@@ -231,7 +231,7 @@ function refineryDataSetPreview () {
     scope: {
       close: '&'
     },
-    templateUrl: '/static/partials/dashboard/directives/dataSetPreview.html',
+    templateUrl: '/static/partials/dashboard/directives/data-set-preview.html',
     transclude: true
   };
 }
