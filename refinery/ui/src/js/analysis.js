@@ -78,6 +78,10 @@ angular.module('refineryAnalysis', [])
     var mins= currentDate.getMinutes();
     var sec = currentDate.getSeconds();
 
+    if(mins < 10){
+      mins = "0" + mins;
+    }
+
     var dateStr = year + "-" + month + "-" + day;
     var timeStr = "@" + hour + ":" + mins + ":" + sec;
 
