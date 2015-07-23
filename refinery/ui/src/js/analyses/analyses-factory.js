@@ -10,6 +10,7 @@ function analysesFactory($http) {
   var analysesGlobalDetail = {};
   var analysesRunningGlobalList = [];
   var analysesRunningList = [];
+  var analysesOne = [];
 
   var initializeAnalysesDetail = function(uuid, analysesObj){
     analysesObj[uuid]={
@@ -61,6 +62,16 @@ function analysesFactory($http) {
       console.error("Error accessing analyses API.");
     });
   };
+
+  var getAnalysesOne = function(uuid) {
+    return $http.get(serverUrl + '/?format=json&limit=1&uuid='+ uuid)
+      .then(function (response) {
+      angular.copy(response.data.objects,analysesOne);
+    }, function (response) {
+      console.error("Error accessing analyses API.");
+    });
+  };
+
 
   //http.post header needed to be adjusted because django was not recognizing it
   // as an ajax call.
@@ -150,11 +161,13 @@ function analysesFactory($http) {
    postCancelAnalysis: postCancelAnalysis,
    getAnalysesRunningGlobalList:getAnalysesRunningGlobalList,
    getAnalysesRunningList:getAnalysesRunningList,
+   getAnalysesOne: getAnalysesOne,
    analysesList: analysesList,
    analysesGlobalList: analysesGlobalList,
    analysesDetail: analysesDetail,
    analysesGlobalDetail: analysesGlobalDetail,
    analysesRunningList:analysesRunningList,
-   analysesRunningGlobalList:analysesRunningGlobalList
+   analysesRunningGlobalList:analysesRunningGlobalList,
+   analysesOne:analysesOne,
  };
 }
