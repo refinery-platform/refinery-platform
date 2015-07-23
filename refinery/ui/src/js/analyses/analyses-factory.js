@@ -144,9 +144,8 @@ function analysesFactory($http) {
   };
 
  return{
-
-   getAnalysesGlobalList: getAnalysesGlobalList,
    getAnalysesList: getAnalysesList,
+   getAnalysesGlobalList: getAnalysesGlobalList,
    getAnalysesDetail: getAnalysesDetail,
    postCancelAnalysis: postCancelAnalysis,
    getAnalysesRunningGlobalList:getAnalysesRunningGlobalList,

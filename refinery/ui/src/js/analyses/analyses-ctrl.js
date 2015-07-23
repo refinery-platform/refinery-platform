@@ -19,7 +19,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
       vm.refreshAnalysesDetail();
     });
 
-    var timerList =  $timeout(vm.updateAnalysesList, 30000);
+    var timerList =  $timeout(vm.updateAnalysesList, 10000);
 
     $scope.$on('refinery/analyze-tab-inactive', function(){
       $timeout.cancel(timerList);
@@ -32,7 +32,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     });
     var timerRunList = $timeout(vm.updateAnalysesRunningList, 10000);
 
-    if((typeof dataSetUuid === 'undefined' || dataSetUuid === "None")) {
+    if(typeof dataSetUuid === 'undefined' || dataSetUuid === "None"){
       $timeout.cancel(timerRunList);
     }
   };
@@ -61,17 +61,21 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
 
   vm.updateAnalysesDetail = function (i) {
     (function (i) {
-      analysesFactory.getAnalysesDetail(vm.analysesRunningList[i].uuid).then(function (response) {
-        vm.analysesDetail[vm.analysesRunningList[i].uuid] = analysesFactory.analysesDetail[vm.analysesRunningList[i].uuid];
-      });
+      if(typeof vm.analysesRunningList[i] !== 'undefined') {
+        analysesFactory.getAnalysesDetail(vm.analysesRunningList[i].uuid).then(function (response) {
+          vm.analysesDetail[vm.analysesRunningList[i].uuid] = analysesFactory.analysesDetail[vm.analysesRunningList[i].uuid];
+        });
+      }
     })(i);
   };
 
   vm.updateAnalysesGlobalDetail = function (i) {
     (function (i) {
-      analysesFactory.getAnalysesDetail(vm.analysesRunningGlobalList[i].uuid, "global").then(function (response) {
-        vm.analysesGlobalDetail[vm.analysesRunningGlobalList[i].uuid] = analysesFactory.analysesGlobalDetail[vm.analysesRunningGlobalList[i].uuid];
-      });
+      if(typeof vm.analysesRunningGlobalList[i] !== 'undefined') {
+        analysesFactory.getAnalysesDetail(vm.analysesRunningGlobalList[i].uuid, "global").then(function (response) {
+          vm.analysesGlobalDetail[vm.analysesRunningGlobalList[i].uuid] = analysesFactory.analysesGlobalDetail[vm.analysesRunningGlobalList[i].uuid];
+        });
+      }
     })(i);
   };
 
