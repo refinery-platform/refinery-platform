@@ -1,4 +1,4 @@
-<ul id="analyses-popover" ng-repeat ="analysis in analysesCtrl.analysesGlobalList">
+<ul id="analyses-popover" ng-repeat ="analysis in analysesCtrl.analysesGlobalList track by $index">
    <li>
      <span class="spinner"><i class="{{analysis.status | analysesStatusIcon}}"></i>
      </span>
@@ -15,9 +15,13 @@
       </span>
      &nbsp;
      <span ng-if="analysis.status == 'RUNNING'">
-       <i class="icon-circle-arrow-down"></i>
-       <i class="icon-cog"></i>
-       <i class="icon-circle-arrow-up"></i>
+       <i class="icon-circle-arrow-down">
+         {{ analysesCtrl.analysesGlobalDetail[analysis.uuid].preprocessing}}</i>
+       <i class="icon-cog">{{ analysesCtrl.analysesGlobalDetail[analysis.uuid]
+         .executionPercentDone}}</i>
+       <i class="icon-circle-arrow-up">
+         {{ analysesCtrl.analysesGlobalDetail[analysis.uuid]
+           .postprocessing}}</i>
      </span>
    </li>
 </ul>

@@ -8,6 +8,8 @@ function analysesFactory($http) {
   //var analysesDetail = {};
   var analysesGlobalDetail = {};
   var analysesGlobalList = [];
+  var analysesRunningGlobalList = [];
+  var analysesRunningList = [];
 
   var initializeAnalysesGlobalDetail = function(uuid){
     analysesGlobalDetail[uuid]={
@@ -24,9 +26,28 @@ function analysesFactory($http) {
   //Ajax calls
   var getAnalysesList = function() {
     return $http.get(serverUrl +
-      '/?format=json&limit=0&order_by=creation_date&data_set__uuid='+ dataSetUuid)
+      '/?format=json&limit=0&data_set__uuid='+ dataSetUuid)
       .then(function (response) {
-      angular.copy(response.data.objects.reverse(),analysesList);
+      angular.copy(response.data.objects,analysesList);
+    }, function (response) {
+      console.error("Error accessing analyses API.");
+    });
+  };
+
+  var getAnalysesRunningList = function() {
+    return $http.get(serverUrl +
+      '/?format=json&limit=0&data_set__uuid='+ dataSetUuid + '&status=RUNNING')
+      .then(function (response) {
+      angular.copy(response.data.objects,analysesRunningList);
+    }, function (response) {
+      console.error("Error accessing analyses API.");
+    });
+  };
+
+  var getAnalysesRunningGlobalList = function() {
+    return $http.get(serverUrl + '/?format=json&limit=0&status=RUNNING')
+      .then(function (response) {
+      angular.copy(response.data.objects,analysesRunningGlobalList);
     }, function (response) {
       console.error("Error accessing analyses API.");
     });
@@ -50,7 +71,7 @@ function analysesFactory($http) {
       data: {'csrfmiddlewaretoken': csrf_token},
       headers: { "X-Requested-With" : 'XMLHttpRequest'}
     }).then(function(response){
-      console.log(response);
+      //console.log(response);
       processAnalysesGlobalDetail(response.data, uuid);
       }, function(error){
         console.error("Error accessing analysis monitoring API");
@@ -118,15 +139,15 @@ function analysesFactory($http) {
   };
 
   /*Creates a list of analysis running uuids for getting analyses details*/
-  var createAnalysesRunningList = function(data){
-    var tempArr = [];
-    for(var i = 0; i<data.length; i++){
-      if(data[i].status === "RUNNING" || data[i].status === "INITIALIZED"){
-        tempArr.push(data[i].uuid);
-      }
-    }
-    return tempArr;
-  };
+  //var createAnalysesRunningList = function(data){
+  //  var tempArr = [];
+  //  for(var i = 0; i<data.length; i++){
+  //    if(data[i].status === "RUNNING" || data[i].status === "INITIALIZED"){
+  //      tempArr.push(data[i].uuid);
+  //    }
+  //  }
+  //  return tempArr;
+  //};
 
 
  return{
@@ -135,9 +156,13 @@ function analysesFactory($http) {
    getAnalysesList: getAnalysesList,
    getAnalysesDetail: getAnalysesDetail,
    postCancelAnalysis: postCancelAnalysis,
-   createAnalysesRunningList: createAnalysesRunningList,
+   getAnalysesRunningGlobalList:getAnalysesRunningGlobalList,
+   getAnalysesRunningList:getAnalysesRunningList,
+   //createAnalysesRunningList: createAnalysesRunningList,
    analysesList: analysesList,
    analysesGlobalList: analysesGlobalList,
-   analysesGlobalDetail: analysesGlobalDetail
+   analysesGlobalDetail: analysesGlobalDetail,
+   analysesRunningList:analysesRunningList,
+   analysesRunningGlobalList:analysesRunningGlobalList
  };
 }
