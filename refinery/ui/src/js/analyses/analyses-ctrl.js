@@ -125,7 +125,6 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
       flag = false;
     } else {
       flag = true;
-      vm.setAnalysesAlertMsg();
     }
     return flag;
   };

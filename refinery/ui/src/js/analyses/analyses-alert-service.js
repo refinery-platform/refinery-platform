@@ -8,21 +8,17 @@ function analysesAlertService(analysesFactory) {
   analysesMsg.name = "";
 
   vm.setAnalysesMsg = function (uuid) {
-     vm.findAnalysesAlertStatus(uuid);
+     vm.updateAnalysesAlertStatus(uuid);
   };
 
   vm.getAnalysesMsg = function(){
     return analysesMsg;
   };
 
-  vm.findAnalysesAlertStatus = function(uuid){
-    var copyAnalysesList =  analysesFactory.analysesList;
-    for(var i = 0; i<copyAnalysesList.length; i++){
-      if(uuid === copyAnalysesList[i].uuid){
-       analysesMsg.status=copyAnalysesList[i].status;
-       analysesMsg.name=copyAnalysesList[i].name;
-        break;
-      }
-    }
+  vm.updateAnalysesAlertStatus = function(uuid){
+    analysesFactory.getAnalysesOne(uuid).then(function(){
+      analysesMsg.status=analysesFactory.analysesOne[0].status;
+      analysesMsg.name=analysesFactory.analysesOne[0].name;
+    });
   };
 }
