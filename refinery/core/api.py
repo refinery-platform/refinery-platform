@@ -1252,7 +1252,7 @@ class GroupManagementResource(Resource):
                     if group.extendedgroup.manager_group.user_set.count() == 1:
                         return HttpForbidden('Last manager must delete group to leave')
 
-                group.user_set.remove(user);
+                group.user_set.remove(user)
 
                 if not self.is_manager_group(group):
                     group.extendedgroup.manager_group.user_set.remove(user)
@@ -1471,7 +1471,7 @@ class InvitationResource(ModelResource):
         group = self.get_group(int(data['group_id']))
 
         if not self.user_authorized(user, group):
-            raise ImmediateHttpResponse(HttpUnauthorized());
+            raise ImmediateHttpResponse(HttpUnauthorized())
 
         inv = Invitation(token_uuid=uuid.uuid1(), group_id=group.id)
         now = datetime.datetime.now()
@@ -1512,7 +1512,7 @@ class ExtendedGroupResource(ModelResource):
         resource_name = 'extended_groups'
         object_class = ExtendedGroup
         detail_uri_name = 'uuid'
-        authentication = SessionAuthentication()
+        # authentication = SessionAuthentication()
         authorization = Authorization()
 
     # More low-level group access
@@ -1585,6 +1585,15 @@ class ExtendedGroupResource(ModelResource):
         # This does not make sense semantically but somehow works.
         return ext_group_list.filter(managed_group=None)
         # return ext_group_list.filter(manager_group=None)
+
+    def obj_create(self, bundle, **kwargs):
+        user = bundle.request.user
+        data = json.loads(bundle.request.raw_post_data)
+        new_ext_group = ExtendedGroup(name=data['name'])
+        new_ext_group.save()
+        new_ext_group.user_set.add(user)
+        new_ext_group.manager_group.user_set.add(user)
+        return bundle
 
     # Extra things
     def prepend_urls(self):
