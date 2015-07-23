@@ -55,11 +55,13 @@ function RefineryStateProvider ($window, $stateProvider) {
  * @param  {string} name  $stateProvider's state name.
  * @param  {object} state $stateProvider's state object.
  * @param  {string} path  Path under which the state will be registered.
+ * @return {object}       Return `this` for chaining.
  */
 RefineryStateProvider.prototype.state = function (name, state, path) {
   if (this.$window.location.pathname === path) {
     this.$stateProvider.state(name, state);
   }
+  return this;
 };
 
 /**

@@ -25,7 +25,7 @@
   "ADMIN_MEDIA_PREFIX": "/static/admin/",
   "SECRET_KEY": "SECRET",
   "LOG_LEVEL": "DEBUG",
-  "TOKEN_DURATION": 1,
+  "TOKEN_DURATION": 3,
   "DEFAULT_FROM_EMAIL": "webmaster@localhost",
   "EMAIL_HOST": "localhost",
   "EMAIL_PORT": 25,

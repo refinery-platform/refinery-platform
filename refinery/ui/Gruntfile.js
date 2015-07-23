@@ -7,6 +7,27 @@ module.exports = function(grunt) {
   // Timer
   require('time-grunt')(grunt);
 
+  var config = grunt.file.readJSON('config.json');
+
+  var lessPlugins = [];
+
+  // `--autoprefix` will enable autoprefixing of CSS files for `grunt build`
+  if (grunt.option('autoprefix')) {
+    lessPlugins.push(
+      new (require('less-plugin-autoprefix'))({
+        browsers: [
+          '> 5%',
+          'last 2 versions',
+          'Firefox ESR',
+          'Explorer >= 10',
+          'iOS >= 6',
+          'Opera >= 12',
+          'Safari >= 6'
+        ]
+      })
+    );
+  }
+
   grunt.initConfig({
     /*
      * Add vendor prefixes to out CSS to ensure better browser support.
@@ -305,9 +326,9 @@ module.exports = function(grunt) {
        * When UI vendor assets change we copy them over.
        */
       uiVendor: {
-        files: [
-          '<%= cfg.vendorPath %>/**/*'
-        ],
+        files: config.files.vendor.map(function (file) {
+          return config.vendorPath + '/' + file;
+        }),
         tasks: [
           'copy:uiBuildVendor'
         ]
@@ -387,7 +408,8 @@ module.exports = function(grunt) {
           paths: [
             '<%= cfg.basePath.static.src %>/styles/less',
             '<%= cfg.basePath.static.src %>/js/bootstrap/less'
-          ]
+          ],
+          plugins: lessPlugins
         },
         files: {
           '<%= cfg.basePath.static.build %>/styles/css/font-awesome-ie7.css': '<%= cfg.basePath.static.src %>/styles/less/font-awesome-ie7.less',

@@ -28,7 +28,7 @@ from tastypie.resources import ModelResource, Resource
 from core.models import Project, NodeSet, NodeRelationship, NodePair, \
     Workflow, WorkflowInputRelationships, Analysis, DataSet, \
     ExternalToolStatus, ResourceStatistics, GroupManagement, ExtendedGroup, \
-    UserAuthentication, Invitation, EmailInvite, UserProfile
+    UserAuthentication, Invitation, UserProfile
 from core.tasks import check_tool_status
 from data_set_manager.api import StudyResource, AssayResource, \
     InvestigationResource
@@ -42,6 +42,7 @@ from django.http import HttpResponse
 import datetime
 from django.core.mail import EmailMessage
 from tastypie.utils import trailing_slash
+from django.template import loader, Context
 
 
 logger = logging.getLogger(__name__)
@@ -64,6 +65,9 @@ class SharableResourceAPIInterface(object):
         group_list = Group.objects.filter(id=int(group_id))
         return None if len(group_list) == 0 else group_list[0]
 
+    def is_manager_group(self, group):
+        return not group.extendedgroup.is_managed()
+
     def get_perms(self, res, group):
         # Default values.
         perms = {'read': False, 'change': False}
@@ -76,8 +80,12 @@ class SharableResourceAPIInterface(object):
         return perms
 
     def get_share_list(self, user, res):
+        # groups_in = filter(
+        #     lambda g: user in g.user_set.all(),
+        #     Group.objects.all())
+
         groups_in = filter(
-            lambda g: user in g.user_set.all(),
+            lambda g: not self.is_manager_group(g) and user in g.user_set.all(),
             Group.objects.all())
 
         return map(
@@ -939,7 +947,11 @@ class GroupManagementResource(Resource):
         return None if len(group_list) == 0 else group_list[0]
 
     def groups_with_user(self, user):
-        return filter(lambda g: user in g.user_set.all(), Group.objects.all())
+        # Allow or disallow manager groups to show in queries.
+        # return filter(lambda g: user in g.user_set.all(), Group.objects.all())
+        return filter(
+            lambda g: not self.is_manager_group(g) and user in g.user_set.all(),
+            Group.objects.all())
 
     def is_manager_group(self, group):
         return not group.extendedgroup.is_managed()
@@ -960,6 +972,8 @@ class GroupManagementResource(Resource):
             lambda u: {
                 'user_id': u.id,
                 'username': u.username,
+                'first_name': u.first_name,
+                'last_name': u.last_name,
                 'is_manager': True if ((not self.is_manager_group(group) and
                     u in group.extendedgroup.manager_group.user_set.all()) or
                     (self.is_manager_group(group) and
@@ -1409,19 +1423,21 @@ class InvitationResource(ModelResource):
     def send_email(self, invitation):
         group = self.get_group(invitation.group_id)
         subject = 'Invitation to join group %s' % group.name
-        body = """
-        You have been invited to join %s. Please use the following steps:
-
-        1. Make a refinery acount if you have not already and log in.
-        2. Click on this link: http://192.168.50.50:8000/group_invite/%s/
-        """ % (group.name, invitation.token_uuid)
-
-        email = EmailMessage(subject, body, to=[invitation.recipient_email])
+        temp_loader = loader.get_template('group_invitation/group_invite_email.txt')
+        context_dict = {
+            'group_name': group.name,
+            'token': invitation.token_uuid
+        }
+        email = EmailMessage(
+            subject,
+            temp_loader.render(Context(context_dict)),
+            to=[invitation.recipient_email])
         email.send()
         return HttpCreated("Email sent")
 
     # Filter to only show own resources.
     def obj_get_list(self, bundle, **kwargs):
+        self.update_db()
         get_dict = bundle.request.GET
         user = bundle.request.user
 
@@ -1438,9 +1454,12 @@ class InvitationResource(ModelResource):
 
         auth_group_id_set = map(lambda g: g.id, auth_group_list)
 
-        return filter(
+        inv_list = filter(
             lambda i: i.group_id in auth_group_id_set,
             Invitation.objects.all())
+
+        inv_list.sort(key=lambda i: i.id)
+        return inv_list
 
     # Handle POST requests for sending tokens.
     def obj_create(self, bundle, **kwargs):
@@ -1472,5 +1491,10 @@ class InvitationResource(ModelResource):
         if len(inv_list) == 0:
             raiseImmediateHttpResponse(HttpNotFound('Not found or expired'))
 
-        self.send_email(inv_list[0])
+        inv = inv_list[0]
+        now = datetime.datetime.now()
+        token_duration = datetime.timedelta(days=settings.TOKEN_DURATION)
+        inv.expires = now + token_duration
+        inv.save()
+        self.send_email(inv)
         return bundle

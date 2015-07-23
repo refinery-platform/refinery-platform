@@ -131,11 +131,12 @@
 
         <div class="nav-collapse collapse">
           <ul class="nav">
-            <li class="{{ navbar_class_home }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url "home" %}">Home</a></li>
             <!--
+            <li class="{{ navbar_class_home }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url "home" %}">Home</a></li>
             <li class="{{ navbar_class_search }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url "search" %}">Search</a></li>
             <li class="{{ navbar_class_contact }}"><a href="{% url "contact" %}">Contact</a></li>
             -->
+            <li class="{{ navbar_class_collaboration }}"><a href="{% url "collaboration" %}">Collaboration</a></li>
             <li class="{{ navbar_class_statistics }}"><a href="{% url "statistics" %}">Statistics</a></li>
             <li class="{{ navbar_class_about }}"><a href="{% url "about" %}">About</a></li>
           </ul>
@@ -201,6 +202,7 @@
   <script src="{% static "vendor/angular-xml/angular-xml.min.js" %}"></script>
   <script src="{% static "js/bootstrap/bootstrap.min.js" %}"></script>
   <script src="{% static "vendor/lodash-3/lodash.min.js" %}"></script>
+  <script src="{% static "vendor/humanize/humanize.js" %}"></script>
   <script type="text/javascript">
     // Assign lodash v3.9.3 to a special variable so it doesn't conflict with
     // lodash v2 or other libraries like underscore.
@@ -209,6 +211,7 @@
 
   <!-- Refinery Angular App -->
   <script src="{% static "js/refinery.js" %}"></script>
+  <script src="{% static "js/refinery.config.js" %}"></script>
   <script src="{% static "js/refinery.settings.js" %}"></script>
   <script src="{% static "js/refinery.libraries.js" %}"></script>
   <script src="{% static "js/globals.js" %}"></script>

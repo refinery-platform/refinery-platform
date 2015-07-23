@@ -1,13 +1,43 @@
 // Note: be careful to distinguish between groupId, group_id, userId, and user_id.
 // camelCase is for JS, while snake_case is for the Python TastyPie API.
 
-angular.module('refineryCollaboration', [])
-.controller('refineryCollaborationController', function ($scope, $modal, groupService, groupInviteService, groupMemberService) {
+var collab = angular.module('refineryCollaboration', []);
+
+collab.config(function (refineryStateProvider) {
+  refineryStateProvider
+    .state(
+      'selectedGroup',
+      {
+        url: '/{arg_group_id:int}/',
+        templateUrl: '/static/partials/collaboration.tpls.html',
+        controller: 'refineryCollaborationController'
+      },
+      '/collaboration/')
+    .state(
+      'defaultGroup',
+      {
+        url: '/',
+        templateUrl: '/static/partials/collaboration.tpls.html',
+        controller: 'refineryCollaborationController'
+      },
+      '/collaboration/')
+    .state(
+      'badGroup',
+      {
+        url: '/{random}/',
+        templateUrl:' /static/partials/collaboration.tpls.html',
+        controller: 'refineryCollaborationController'
+      },
+      '/collaboration/');
+});
+
+collab.controller('refineryCollaborationController', function ($scope, $state, $stateParams, $modal, groupService, groupInviteService, groupMemberService) {
   var that = this;
   var pageScope = $scope;
   that.groupService = groupService;
   that.groupInviteService = groupInviteService;
   that.groupMemberService = groupMemberService;
+  that.stateParams = $stateParams;
   updateGroupList();
 
   function updateGroupList() {
@@ -31,14 +61,25 @@ angular.module('refineryCollaboration', [])
 
   pageScope.$watch('groupList', function () {
     if (pageScope.groupList && pageScope.groupList instanceof(Array)) {
-      var accRes = pageScope.activeGroup ? 
+      var accRes = pageScope.activeGroup ?
         pageScope.groupList.reduce(function (a, b) {
           return a.group_id === pageScope.activeGroup.group_id ? a : b;
         }) : null;
 
-      if (!accRes) {
+      if (!accRes && !that.stateParams.arg_group_id) {
         pageScope.activeGroup = pageScope.groupList.length > 0 ?
           pageScope.groupList[0] : null;
+      } else if (!accRes && that.stateParams.arg_group_id) {
+        var reducedDefault = pageScope.groupList.reduce(function (a, b) {
+          return a.group_id === that.stateParams.arg_group_id ? a : b;
+        });
+
+        if (reducedDefault.group_id === that.stateParams.arg_group_id) {
+          pageScope.activeGroup = reducedDefault;
+        } else {
+          pageScope.activeGroup = pageScope.groupList.length > 0 ?
+            pageScope.groupList[0] : null;
+        }
       } else {
         pageScope.activeGroup = accRes;
       }
@@ -47,13 +88,38 @@ angular.module('refineryCollaboration', [])
     }
   });
 
+  // Thanks http://stackoverflow.com/a/13603311/2704964
+
+  function millisToTime(t) {
+    return {
+      d: Math.floor(t / 86400000),
+      h: Math.floor((t % 86400000) / 3600000),
+      m: Math.floor(((t % 86400000) % 3600000) / 60000),
+      s: Math.floor((((t % 86400000) % 3600000) % 60000) / 1000)
+    };
+  }
+
   pageScope.$watch('activeGroup', function () {
     if (pageScope.activeGroup) {
       groupInviteService.query({
         group_id: pageScope.activeGroup.group_id
       }).$promise.then(
         function (data) {
-          pageScope.activeGroupInviteList = data.objects;
+          pageScope.activeGroupInviteList = data.objects.map(function (i) {
+            var offset = new Date().getTimezoneOffset() * 60000;
+            var createdDate = new Date(new Date(i.created).getTime() + offset);
+            var expiresDate = new Date(new Date(i.expires).getTime() + offset);
+            var expireTime = millisToTime(expiresDate.getTime() - createdDate.getTime());
+            i.created = humanize.date('D Y-F-dS @ h:m:s A', createdDate);
+            i.expires = humanize.date('D Y-F-dS @ h:m:s A', expiresDate);
+            i.expireDuration =
+              humanize.relativeTime(humanize.time() +
+              expireTime.d * 86400 +
+              expireTime.h * 3600 +
+              expireTime.m * 60 +
+              expireTime.s);
+            return i;
+          });
         },
         function (error) {
           console.error(error);
@@ -199,6 +265,7 @@ angular.module('refineryCollaboration', [])
     }).$promise.then(
       function (data) {
         updateGroupList();
+        bootbox.alert("Revoked invitation");
       },
       function (error) {
         console.error(error);
@@ -218,12 +285,5 @@ angular.module('refineryCollaboration', [])
         console.error(error);
       }
     );
-  };
-})
-
-.directive('collaborateDisplay', function () {
-  return {
-    templateUrl: '/static/partials/collaboration.tpls.html',
-    restrict: 'A'
   };
 });

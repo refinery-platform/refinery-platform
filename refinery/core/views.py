@@ -82,10 +82,13 @@ def group_invite(request, token):
     # We are done using this token.
     inv.delete()
     return render_to_response(
-            'core/group_invite.html',
-            {'message': '%s has been added to the group %s!' % (user.username, group.name)},
-            context_instance=RequestContext(request))
-
+        'core/group_invite.html',
+        {
+            'message': '%s has been added to the group %s!' % (user.username, group.name),
+            'user': user,
+            'group': group
+        },
+        context_instance=RequestContext(request))
 
 
 def custom_error_page(request, template, context_dict):
@@ -385,27 +388,6 @@ def data_set_edit(request, uuid):
                                 "pre_isatab_archive": pre_isatab_archive,
                                'form': form
                               },
-                              context_instance=RequestContext(request))
-
-
-def samples(request, ds_uuid, study_uuid, assay_uuid):
-    data_set = get_object_or_404(DataSet, uuid=ds_uuid)
-
-    # getting current workflows
-    workflows = Workflow.objects.all()
-
-    start = datetime.now()
-    node_matrix = get_matrix(node_type="Raw Data File",
-                                                  study_uuid=study_uuid,
-                                                  assay_uuid=assay_uuid
-                                                )
-    end = datetime.now()
-    print("Time to retrieve node matrix: " + str(end - start))
-
-    # import json
-    # print json.dumps(node_matrix, indent=4)
-
-    return render_to_response('core/samples.html', {'workflows': workflows, 'data_set': data_set, "matrix": node_matrix},
                               context_instance=RequestContext(request))
 
 
