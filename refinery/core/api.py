@@ -65,6 +65,9 @@ class SharableResourceAPIInterface(object):
         group_list = Group.objects.filter(id=int(group_id))
         return None if len(group_list) == 0 else group_list[0]
 
+    def is_manager_group(self, group):
+        return not group.extendedgroup.is_managed()
+
     def get_perms(self, res, group):
         # Default values.
         perms = {'read': False, 'change': False}
@@ -77,8 +80,12 @@ class SharableResourceAPIInterface(object):
         return perms
 
     def get_share_list(self, user, res):
+        # groups_in = filter(
+        #     lambda g: user in g.user_set.all(),
+        #     Group.objects.all())
+
         groups_in = filter(
-            lambda g: user in g.user_set.all(),
+            lambda g: not self.is_manager_group(g) and user in g.user_set.all(),
             Group.objects.all())
 
         return map(
@@ -939,7 +946,11 @@ class GroupManagementResource(Resource):
         return None if len(group_list) == 0 else group_list[0]
 
     def groups_with_user(self, user):
-        return filter(lambda g: user in g.user_set.all(), Group.objects.all())
+        # Allow or disallow manager groups to show in queries.
+        # return filter(lambda g: user in g.user_set.all(), Group.objects.all())
+        return filter(
+            lambda g: not self.is_manager_group(g) and user in g.user_set.all(),
+            Group.objects.all())
 
     def is_manager_group(self, group):
         return not group.extendedgroup.is_managed()
