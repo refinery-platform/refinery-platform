@@ -12,7 +12,7 @@ from registration.backends.default.views import RegistrationView
 from tastypie.api import Api
 from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     NodeResource, NodeSetListResource, NodePairResource,\
-    NodeRelationshipResource, WorkflowResource,\
+    NodeRelationshipResource, WorkflowResource, ExtendedGroupResource, \
     WorkflowInputRelationshipsResource, DataSetResource,\
     ExternalToolStatusResource, StatisticsResource, GroupManagementResource, \
     UserAuthenticationResource, InvitationResource
@@ -63,6 +63,7 @@ v1_api.register(ProtocolReferenceResource())
 v1_api.register(ProtocolReferenceParameterResource())
 v1_api.register(PublicationResource())
 v1_api.register(AttributeResource())
+v1_api.register(ExtendedGroupResource())
 # v1_api.register(TaxonResource())
 # v1_api.register(GenomeBuildResource())
 # v1_api.register(CytoBandResource())

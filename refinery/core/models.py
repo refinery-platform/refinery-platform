@@ -910,6 +910,12 @@ class ExtendedGroup(Group):
     uuid = UUIDField(unique=True, auto=True)
     objects = ExtendedGroupManager()
     is_public = models.BooleanField(default=False, blank=False, null=False)
+    
+    # Dynamically generated for API.
+    member_list = []
+    perm_list = []
+    can_edit = False
+    manager_group_uuid = None
 
     def delete(self):
         if self.is_manager_group():
