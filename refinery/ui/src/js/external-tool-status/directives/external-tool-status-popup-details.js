@@ -1,12 +1,12 @@
 angular.module('refineryExternalToolStatus')
-    .directive("externalToolStatusDetails", externalToolStatusDetails);
+    .directive("externalToolStatusDetailsPopover", externalToolStatusDetailsPopover);
 
-function externalToolStatusDetails() {
+function externalToolStatusDetailsPopover() {
     "use strict";
 
   return {
     restrict: 'E',
-    templateUrl: '/static/partials/external_tool_status_details.tpls.html',
+    templateUrl: '/static/partials/external-tool-status/partials/external_tool_status_details_popover.tpls.html',
     controller: 'ExternalToolStatusController',
     controllerAs: 'externalToolStatusController',
     bindToController: {
