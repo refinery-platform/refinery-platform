@@ -19,7 +19,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
       vm.refreshAnalysesDetail();
     });
 
-    var timerList =  $timeout(vm.updateAnalysesList, 10000);
+    var timerList =  $timeout(vm.updateAnalysesList, 15000);
 
     $scope.$on('refinery/analyze-tab-inactive', function(){
       $timeout.cancel(timerList);
@@ -41,7 +41,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     analysesFactory.getAnalysesRunningGlobalList().then(function () {
       vm.analysesRunningGlobalList = analysesFactory.analysesRunningGlobalList;
     });
-    $timeout(vm.updateAnalysesRunningGlobalList, 15000);
+    $timeout(vm.updateAnalysesRunningGlobalList, 10000);
   };
 
   vm.refreshAnalysesDetail = function () {
@@ -149,7 +149,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
       vm.analysesGlobalList = analysesFactory.analysesGlobalList;
       vm.refreshAnalysesGlobalDetail();
     });
-    var timerGlobalList = $timeout($scope.updateAnalysesGlobalList, 10000);
+    var timerGlobalList = $timeout($scope.updateAnalysesGlobalList, 5000);
 
     if(timerStatus === "once"){
       $timeout.cancel(timerGlobalList);
