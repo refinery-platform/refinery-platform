@@ -6,7 +6,7 @@ function externalToolStatusDetails() {
 
   return {
     restrict: 'E',
-    templateUrl: '/static/partials/external-tool-status/partials/external_tool_status_details.tpls.html',
+    templateUrl: '/static/partials/external-tool-status/partials/external-tool-status-details.html',
     controller: 'ExternalToolStatusController',
     controllerAs: 'externalToolStatusController',
     bindToController: {
