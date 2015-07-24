@@ -6,7 +6,7 @@ function analysesList() {
 
   return {
     restrict: 'E',
-    templateUrl: '/static/partials/analyses-list.html',
+    templateUrl: '/static/partials/analyses/partials/analyses-list.html',
     controller: 'AnalysesCtrl',
     controllerAs: 'AnalysesCtrl',
     bindToController: {

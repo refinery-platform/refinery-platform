@@ -9,7 +9,7 @@ angular
           'launchPad',
           {
             url: '/',
-            templateUrl: '/static/partials/dashboard/views/launchPad.html',
+            templateUrl: '/static/partials/dashboard/views/launch-pad.html',
             controller: 'LaunchPadCtrl as launchPad'
           },
           '/'
@@ -18,7 +18,7 @@ angular
           'dataSetsExploration',
           {
             url: '/explore/',
-            templateUrl: '/static/partials/dashboard/views/dataSetsExploration.html',
+            templateUrl: '/static/partials/dashboard/views/data-sets-exploration.html',
             controller: 'DataSetsExplorationCtrl as dse'
           },
           '/'

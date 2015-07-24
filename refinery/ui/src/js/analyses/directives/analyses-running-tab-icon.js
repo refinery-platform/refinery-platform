@@ -6,7 +6,7 @@ function rpAnalysesRunningTabIcon() {
 
   return {
     restrict: 'A',
-    templateUrl: '/static/partials/analyses-running-tab-icon.html',
+    templateUrl: '/static/partials/analyses/partials/analyses-running-tab-icon.html',
     controller: 'AnalysesCtrl',
     controllerAs: 'AnalysesCtrl',
   };

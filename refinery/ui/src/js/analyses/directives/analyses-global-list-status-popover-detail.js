@@ -6,7 +6,7 @@ function rpAnalysesGlobalListStatusPopoverDetails() {
 
   return {
     restrict: 'E',
-    templateUrl: '/static/partials/analyses-global-list-status-popover.html',
+    templateUrl: '/static/partials/analyses/partials/analyses-global-list-status-popover.html',
     controller: 'AnalysesCtrl',
     controllerAs: 'analysesCtrl',
     bindToController: {

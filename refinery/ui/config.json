@@ -18,7 +18,8 @@
       "commons",
       "dashboard",
       "globals",
-      "analyses"
+      "analyses",
+      "external-tool-status"
     ],
     "vendor": [
       "angular-animate/angular-animate.min.js",

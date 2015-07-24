@@ -5,7 +5,7 @@ function rpAnalysesGlobalListStatus(){
   "use strict";
 
   return {
-    templateUrl: '/static/partials/analyses-global-list-status.html',
+    templateUrl: '/static/partials/analyses/partials/analyses-global-list-status.html',
     restrict: 'A',
   };
 }

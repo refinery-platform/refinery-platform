@@ -41,7 +41,10 @@
 
           <ul class="analysisRunningList">
             <li class="analysisRunningListItem">
-              Preprocessing
+              Input File Import
+              <span rp-analyses-input-tooltip>
+                <i class="icon-question-sign"></i>
+              </span>
               <div ng-switch on="AnalysesCtrl.analysesDetail[analysis.uuid]
               .preprocessing">
                 <div ng-switch-when="SUCCESS">
@@ -73,6 +76,9 @@
 
             <li class="analysisRunningListItem">
               Execution
+              <span rp-analyses-execution-tooltip>
+                <i class="icon-question-sign"></i>
+              </span>
               <div ng-switch on="AnalysesCtrl.analysesDetail[analysis.uuid].execution">
                 <div ng-switch-when="SUCCESS">
                   <div class="alert alert-success">
@@ -101,7 +107,10 @@
             </li>
 
             <li class="analysisRunningListItem">
-              Postprocessing
+              Output File Import
+              <span rp-analyses-output-tooltip>
+                <i class="icon-question-sign"></i>
+              </span>
               <div ng-switch on="AnalysesCtrl.analysesDetail[analysis.uuid].postprocessing">
                 <div ng-switch-when="SUCCESS">
                   <div class="alert alert-success">
