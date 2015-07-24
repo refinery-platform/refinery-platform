@@ -41,7 +41,7 @@
 
           <ul class="analysisRunningList">
             <li class="analysisRunningListItem">
-              Preprocessing
+              Workflow Input File Import
               <div ng-switch on="AnalysesCtrl.analysesDetail[analysis.uuid]
               .preprocessing">
                 <div ng-switch-when="SUCCESS">
@@ -72,7 +72,7 @@
             </li>
 
             <li class="analysisRunningListItem">
-              Execution
+              Workflow Execution
               <div ng-switch on="AnalysesCtrl.analysesDetail[analysis.uuid].execution">
                 <div ng-switch-when="SUCCESS">
                   <div class="alert alert-success">
@@ -101,7 +101,7 @@
             </li>
 
             <li class="analysisRunningListItem">
-              Postprocessing
+              Workflow Output File Import
               <div ng-switch on="AnalysesCtrl.analysesDetail[analysis.uuid].postprocessing">
                 <div ng-switch-when="SUCCESS">
                   <div class="alert alert-success">
