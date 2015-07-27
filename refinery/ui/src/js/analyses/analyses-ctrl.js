@@ -12,6 +12,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.analysesGlobalDetail = {};
   vm.analysesRunningList = [];
   vm.analysesRunningGlobalList = [];
+  var timerGlobalList;
 
   vm.updateAnalysesList = function () {
     analysesFactory.getAnalysesList().then(function () {
@@ -19,18 +20,36 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
       vm.refreshAnalysesDetail();
     });
 
-    var timerList =  $timeout(vm.updateAnalysesList, 15000);
+    var timerList =  $timeout(vm.updateAnalysesList, 30000);
 
     $scope.$on('refinery/analyze-tab-inactive', function(){
       $timeout.cancel(timerList);
     });
   };
 
+  vm.updateAnalysesGlobalList = function (timerStatus) {
+    timerStatus = timerStatus || "";
+
+    analysesFactory.getAnalysesGlobalList().then(function () {
+      vm.analysesGlobalList = analysesFactory.analysesGlobalList;
+      vm.refreshAnalysesGlobalDetail();
+    });
+    timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 30000);
+
+    if(timerStatus === "once"){
+      $timeout.cancel(timerGlobalList);
+    }
+  };
+
+  vm.cancelTimerGlobalList = function(){
+    $timeout.cancel(timerGlobalList);
+  };
+
   vm.updateAnalysesRunningList = function () {
     analysesFactory.getAnalysesRunningList().then(function () {
       vm.analysesRunningList = analysesFactory.analysesRunningList;
     });
-    var timerRunList = $timeout(vm.updateAnalysesRunningList, 10000);
+    var timerRunList = $timeout(vm.updateAnalysesRunningList, 30000);
 
     if(typeof dataSetUuid === 'undefined' || dataSetUuid === "None"){
       $timeout.cancel(timerRunList);
@@ -41,7 +60,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     analysesFactory.getAnalysesRunningGlobalList().then(function () {
       vm.analysesRunningGlobalList = analysesFactory.analysesRunningGlobalList;
     });
-    $timeout(vm.updateAnalysesRunningGlobalList, 10000);
+    $timeout(vm.updateAnalysesRunningGlobalList, 30000);
   };
 
   vm.refreshAnalysesDetail = function () {
@@ -72,8 +91,8 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.updateAnalysesGlobalDetail = function (i) {
     (function (i) {
       if(typeof vm.analysesRunningGlobalList[i] !== 'undefined') {
-        analysesFactory.getAnalysesDetail(vm.analysesRunningGlobalList[i].uuid, "global").then(function (response) {
-          vm.analysesGlobalDetail[vm.analysesRunningGlobalList[i].uuid] = analysesFactory.analysesGlobalDetail[vm.analysesRunningGlobalList[i].uuid];
+        analysesFactory.getAnalysesDetail(vm.analysesRunningGlobalList[i].uuid).then(function (response) {
+          vm.analysesGlobalDetail[vm.analysesRunningGlobalList[i].uuid] = analysesFactory.analysesDetail[vm.analysesRunningGlobalList[i].uuid];
         });
       }
     })(i);
@@ -113,11 +132,6 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     }
   };
 
-  //watches for analyze tab view to update AnalysesList
-  $scope.$on('refinery/analyze-tab-active', function () {
-    vm.updateAnalysesList();
-  });
-
   //checks url to see if view is filtered by analysis
   $scope.checkAnalysesViewFlag = function () {
     var flag;
@@ -130,30 +144,15 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   //custom popover event allowing hovering over textbox.
-  $scope.analysesPopoverEvents = function (element) {
+  vm.analysesPopoverEvents = function (element) {
     $('.popover').on('mouseenter', function() {
       $rootScope.insidePopover = true;
-      $scope.updateAnalysesGlobalList();
     });
     $('.popover').on('mouseleave', function() {
       $rootScope.insidePopover = false;
       $(element).popover('hide');
-      $scope.updateAnalysesGlobalList("once");
+      vm.cancelTimerGlobalList();
     });
-  };
-
-  $scope.updateAnalysesGlobalList = function (timerStatus) {
-    timerStatus = timerStatus || "";
-
-    analysesFactory.getAnalysesGlobalList().then(function () {
-      vm.analysesGlobalList = analysesFactory.analysesGlobalList;
-      vm.refreshAnalysesGlobalDetail();
-    });
-    var timerGlobalList = $timeout($scope.updateAnalysesGlobalList, 5000);
-
-    if(timerStatus === "once"){
-      $timeout.cancel(timerGlobalList);
-    }
   };
 
 }

@@ -11,9 +11,6 @@ function rpAnalysesGlobalListStatusPopoverDetails() {
     controllerAs: 'analysesCtrl',
     bindToController: {
        analysesGlobalList: '@'
-    },
-    link: function(scope){
-      scope.updateAnalysesGlobalList("once");
     }
   };
 }

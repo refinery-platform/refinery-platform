@@ -12,6 +12,11 @@ function analysesList() {
     bindToController: {
        analysesList: '@',
        analysesDetail: '@'
+    },
+    link: function(scope, element, attr){
+      scope.$on('refinery/analyze-tab-active', function () {
+        scope.AnalysesCtrl.updateAnalysesList();
+      });
     }
   };
 }

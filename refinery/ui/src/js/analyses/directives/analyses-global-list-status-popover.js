@@ -7,7 +7,7 @@ function rfAnalysesGlobalListStatusPopover($compile, $templateCache, $, $timeout
   return {
     restrict: "AE",
     controller: 'AnalysesCtrl',
-    controllerAs: 'AnalysesCtrl',
+    controllerAs: 'analysesCtrl',
     link: function (scope, element, attrs) {
       var template = $templateCache.get("analysesgloballist.html");
       var popOverContent = $compile(template)(scope);
@@ -20,10 +20,11 @@ function rfAnalysesGlobalListStatusPopover($compile, $templateCache, $, $timeout
       };
       $(element).popover(options);
       $(element).bind('mouseenter', function (e) {
+        scope.analysesCtrl.updateAnalysesGlobalList();
         $timeout(function () {
             if (!$rootScope.insidePopover) {
                 $(element).popover('show');
-                scope.analysesPopoverEvents(element);
+                scope.analysesCtrl.analysesPopoverEvents(element);
             }
         }, 200);
       });
