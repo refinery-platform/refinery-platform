@@ -3,16 +3,15 @@ function GroupListService(groupMemberService) {
 }
 
 GroupListService.prototype.update = function () {
-  this.groupMemberService.query()
-  .$promise
-  .then(function (data) {
-    this.list = data.objects.sort(function (a, b) {
-      return a.id > b.id;
-    });
-  }.bind(this))
-  .catch(function (error) {
-    console.error(error);
-  });
+  return this.groupMemberService.query()
+    .$promise
+      .then(function (data) {
+        this.list = data.objects.sort(function (a, b) {
+          return a.id > b.id;
+        });
+        
+        return this.list;
+      }.bind(this));
 };
 
 Object.defineProperty(
@@ -26,5 +25,5 @@ Object.defineProperty(
 );
 
 angular
-  .module('refineryApp')
+  .module('refineryCollaboration')
   .service('groupListService', ['groupMemberService', GroupListService]);
