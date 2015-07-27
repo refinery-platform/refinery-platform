@@ -19,7 +19,8 @@
       "dashboard",
       "globals",
       "analyses",
-      "external-tool-status"
+      "external-tool-status",
+      "collaboration"
     ],
     "vendor": [
       "angular-animate/angular-animate.min.js",
