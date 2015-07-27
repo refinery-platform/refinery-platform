@@ -115,11 +115,11 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   //watches for analyze tab view to update AnalysesList
-  vm.setTabTrigger = function() {
-    $scope.$on('refinery/analyze-tab-active', function () {
-      vm.updateAnalysesList();
-    });
-  };
+  //vm.setTabTrigger = function() {
+  //  $scope.$on('refinery/analyze-tab-active', function () {
+  //    vm.updateAnalysesList();
+  //  });
+  //};
 
   //checks url to see if view is filtered by analysis
   $scope.checkAnalysesViewFlag = function () {
