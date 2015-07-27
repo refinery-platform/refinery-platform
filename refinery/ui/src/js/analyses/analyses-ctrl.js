@@ -22,6 +22,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     var timerList =  $timeout(vm.updateAnalysesList, 30000);
 
     $scope.$on('refinery/analyze-tab-inactive', function(){
+      console.log("I'm out");
       $timeout.cancel(timerList);
     });
   };
@@ -114,9 +115,11 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   //watches for analyze tab view to update AnalysesList
-  $scope.$on('refinery/analyze-tab-active', function () {
-    vm.updateAnalysesList();
-  });
+  vm.setTabTrigger = function() {
+    $scope.$on('refinery/analyze-tab-active', function () {
+      vm.updateAnalysesList();
+    });
+  };
 
   //checks url to see if view is filtered by analysis
   $scope.checkAnalysesViewFlag = function () {

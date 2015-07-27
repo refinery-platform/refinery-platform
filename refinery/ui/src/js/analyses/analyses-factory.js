@@ -24,11 +24,21 @@ function analysesFactory($http) {
   };
 
   //Ajax calls
+
   var getAnalysesList = function() {
     return $http.get(serverUrl +
       '/?format=json&limit=0&data_set__uuid='+ dataSetUuid)
       .then(function (response) {
       angular.copy(response.data.objects,analysesList);
+    }, function (response) {
+      console.error("Error accessing analyses API.");
+    });
+  };
+
+  var getAnalysesGlobalList = function() {
+    return $http.get(serverUrl + '/?format=json&limit=10')
+      .then(function (response) {
+      angular.copy(response.data.objects, analysesGlobalList);
     }, function (response) {
       console.error("Error accessing analyses API.");
     });
@@ -53,15 +63,6 @@ function analysesFactory($http) {
     });
   };
 
-  var getAnalysesGlobalList = function() {
-    return $http.get(serverUrl + '/?format=json&limit=10')
-      .then(function (response) {
-      angular.copy(response.data.objects, analysesGlobalList);
-    }, function (response) {
-      console.error("Error accessing analyses API.");
-    });
-  };
-
   var getAnalysesOne = function(uuid) {
     return $http.get(serverUrl + '/?format=json&limit=1&uuid='+ uuid)
       .then(function (response) {
@@ -70,7 +71,6 @@ function analysesFactory($http) {
       console.error("Error accessing analyses API.");
     });
   };
-
 
   //http.post header needed to be adjusted because django was not recognizing it
   // as an ajax call.
@@ -132,7 +132,7 @@ function analysesFactory($http) {
   var setPostprocessingStatus = function(data, uuid){
      if( isNotPending(data.postprocessing[0].state)) {
        analysesDetail[uuid].postprocessing = data.postprocessing[0].state;
-       if(data.postprocessing[0].percent_done > analysesDetailuuid].postprocessingPercentDone) {
+       if(data.postprocessing[0].percent_done > analysesDetail[uuid].postprocessingPercentDone) {
         analysesDetail[uuid].postprocessingPercentDone = data.postprocessing[0].percent_done;
        }
     }
@@ -163,3 +163,4 @@ function analysesFactory($http) {
    analysesOne:analysesOne,
  };
 }
+
