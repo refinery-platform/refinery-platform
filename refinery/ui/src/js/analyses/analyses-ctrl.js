@@ -34,7 +34,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
       vm.analysesGlobalList = analysesFactory.analysesGlobalList;
       vm.refreshAnalysesGlobalDetail();
     });
-    timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 10000);
+    timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 30000);
 
     if(timerStatus === "once"){
       $timeout.cancel(timerGlobalList);
