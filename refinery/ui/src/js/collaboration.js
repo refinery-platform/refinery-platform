@@ -1,6 +1,3 @@
-// Note: be careful to distinguish between groupId, group_id, userId, and user_id.
-// camelCase is for JS, while snake_case is for the Python TastyPie API.
-
 var collab = angular.module('refineryCollaboration', []);
 
 collab.config(function (refineryStateProvider) {
@@ -8,8 +5,8 @@ collab.config(function (refineryStateProvider) {
     .state(
       'selectedGroup',
       {
-        url: '/{arg_group_id:int}/',
-        templateUrl: '/static/partials/collaboration.tpls.html',
+        url: '/{uuid}/',
+        templateUrl: '/static/partials/collaboration/partials/collaboration-main.html',
         controller: 'refineryCollaborationController'
       },
       '/collaboration/')
@@ -17,99 +14,94 @@ collab.config(function (refineryStateProvider) {
       'defaultGroup',
       {
         url: '/',
-        templateUrl: '/static/partials/collaboration.tpls.html',
-        controller: 'refineryCollaborationController'
-      },
-      '/collaboration/')
-    .state(
-      'badGroup',
-      {
-        url: '/{random}/',
-        templateUrl:' /static/partials/collaboration.tpls.html',
+        templateUrl: '/static/partials/collaboration/partials/collaboration-main.html',
         controller: 'refineryCollaborationController'
       },
       '/collaboration/');
 });
 
 collab.controller('refineryCollaborationController', function ($scope, $state, $stateParams, $modal, groupService, groupInviteService, groupMemberService) {
-  var that = this;
-  var pageScope = $scope;
+    var that = this;
+  that.scope = $scope;
+  that.params = $stateParams;
+  that.state = $state;
   that.groupService = groupService;
-  that.groupInviteService = groupInviteService;
   that.groupMemberService = groupMemberService;
-  that.stateParams = $stateParams;
-  updateGroupList();
+  that.groupInviteService = groupInviteService;
 
-  function updateGroupList() {
-    groupMemberService.query().$promise.then(
+
+  this.updateGroupList = function () {
+    that.groupMemberService.query().$promise.then(
       function (data) {
-        pageScope.groupList = data.objects.filter(function (g) {
-          return g.group_name.indexOf('.Managers') !== 0;
-        }).sort(function (a, b) {
-          return a.group_id > b.group_id;
+        $scope.groupList = data.objects.sort(function (a, b) {
+          return a.id > b.id;
         });
+
+        if (that.scope.groupList && that.scope.groupList instanceof (Array)) {
+          var accRes = that.scope.activeGroup ?
+            that.scope.groupList.reduce(function (a, b) {
+              return a.uuid === that.scope.activeGroup.uuid ? a : b;
+            }) : null;
+
+          if (!accRes && !that.params.uuid) {
+            that.scope.setActiveGroup(that.scope.groupList.length > 0 ?
+              that.scope.groupList[0] : null);
+          } else if (!accRes && that.params.uuid) {
+            var reducRes = that.scope.groupList.reduce(function (a, b) {
+              return a.uuid === that.params.uuid ? a : b;
+            });
+
+            if (reducRes.uuid === that.params.uuid) {
+              that.scope.setActiveGroup(reducRes);
+            } else {
+              that.scope.setActiveGroup(that.scope.groupList.length > 0 ?
+                that.scope.groupList[0] : null);
+            }
+          } else {
+            that.scope.setActiveGroup(accRes);
+          }
+        } else {
+          that.scope.setActiveGroup(null);
+        }
       },
       function (error) {
         console.error(error);
       }
     );
-  }
-
-  pageScope.setGroupActive = function (group) {
-    pageScope.activeGroup = group;
   };
 
-  pageScope.$watch('groupList', function () {
-    if (pageScope.groupList && pageScope.groupList instanceof(Array)) {
-      var accRes = pageScope.activeGroup ?
-        pageScope.groupList.reduce(function (a, b) {
-          return a.group_id === pageScope.activeGroup.group_id ? a : b;
-        }) : null;
+  this.updateGroupList();
 
-      if (!accRes && !that.stateParams.arg_group_id) {
-        pageScope.activeGroup = pageScope.groupList.length > 0 ?
-          pageScope.groupList[0] : null;
-      } else if (!accRes && that.stateParams.arg_group_id) {
-        var reducedDefault = pageScope.groupList.reduce(function (a, b) {
-          return a.group_id === that.stateParams.arg_group_id ? a : b;
-        });
-
-        if (reducedDefault.group_id === that.stateParams.arg_group_id) {
-          pageScope.activeGroup = reducedDefault;
-        } else {
-          pageScope.activeGroup = pageScope.groupList.length > 0 ?
-            pageScope.groupList[0] : null;
-        }
-      } else {
-        pageScope.activeGroup = accRes;
-      }
-    } else {
-      pageScope.activeGroup = null;
-    }
-  });
-
-  // Thanks http://stackoverflow.com/a/13603311/2704964
-
-  function millisToTime(t) {
+  this.millisToTime = function (t) {
     return {
       d: Math.floor(t / 86400000),
       h: Math.floor((t % 86400000) / 3600000),
       m: Math.floor(((t % 86400000) % 3600000) / 60000),
       s: Math.floor((((t % 86400000) % 3600000) % 60000) / 1000)
     };
-  }
+  };
 
-  pageScope.$watch('activeGroup', function () {
-    if (pageScope.activeGroup) {
+  this.scope.setActiveGroup = function (group) {
+    if (that.scope.activeGroup) {
+      that.scope.activeGroup.active = false;
+    }
+
+    if (group) {
+      group.active = true;
+    }
+
+    that.scope.activeGroup = group;
+
+    if (that.scope.activeGroup) {
       groupInviteService.query({
-        group_id: pageScope.activeGroup.group_id
+        uuid: that.scope.activeGroup.uuid
       }).$promise.then(
         function (data) {
-          pageScope.activeGroupInviteList = data.objects.map(function (i) {
+          that.scope.activeGroupInviteList = data.objects.map(function (i) {
             var offset = new Date().getTimezoneOffset() * 60000;
             var createdDate = new Date(new Date(i.created).getTime() + offset);
             var expiresDate = new Date(new Date(i.expires).getTime() + offset);
-            var expireTime = millisToTime(expiresDate.getTime() - createdDate.getTime());
+            var expireTime = that.millisToTime(expiresDate.getTime() - createdDate.getTime());
             i.created = humanize.date('D Y-F-dS @ h:m:s A', createdDate);
             i.expires = humanize.date('D Y-F-dS @ h:m:s A', expiresDate);
             i.expireDuration =
@@ -126,23 +118,46 @@ collab.controller('refineryCollaborationController', function ($scope, $state, $
         }
       );
     }
-  });
+  };
 
   // Handles groups.
-  pageScope.openGroupEditor = function () {
+  this.scope.openAddGroup = function () {
     var modalInstance = $modal.open({
-      templateUrl: '/static/partials/collaboration.groups.modal.html',
+      templateUrl: '/static/partials/collaboration/partials/collaboration-addgroups-modal.html',
       controller: function ($scope, $modalInstance) {
-        $scope.groupList = pageScope.groupList;
+        $scope.createGroup = function (name) {
+          that.groupService.create({
+            name: name
+          }).$promise.then(
+            function (data) {
+              that.updateGroupList();
+              $modalInstance.dismiss();
+              that.state.go(that.state.current, {}, {reload: true});
+            },
+            function (error) {
+              console.error(error);
+            }
+          );
+        };
+      }
+    });
+  };
+
+  this.scope.openGroupEditor = function (group) {
+    var modalInstance = $modal.open({
+      templateUrl: '/static/partials/collaboration/partials/collaboration-groups-modal.html',
+      controller: function ($scope, $modalInstance) {
+        $scope.group = group;
 
         $scope.leaveGroup = function (group) {
           that.groupMemberService.remove({
-            groupId: group.group_id,
+            uuid: group.uuid,
             userId: user_id
           }).$promise.then(
             function (data) {
-              updateGroupList();
+              that.updateGroupList();
               $modalInstance.dismiss();
+              that.state.go(that.state.current, {}, {reload: true});
             },
             function (error) {
               console.error(error);
@@ -152,25 +167,12 @@ collab.controller('refineryCollaborationController', function ($scope, $state, $
 
         $scope.deleteGroup = function (group) {
           that.groupService.delete({
-            groupId: group.group_id
+            uuid: group.uuid
           }).$promise.then(
             function (data) {
-              updateGroupList();
+              that.updateGroupList();
               $modalInstance.dismiss();
-            },
-            function (error) {
-              console.error(error);
-            }
-          );
-        };
-
-        $scope.createGroup = function (name) {
-          that.groupService.create({
-            name: name
-          }).$promise.then(
-            function (data) {
-              updateGroupList();
-              $modalInstance.dismiss();
+              that.state.go(that.state.current, {}, {reload: true});
             },
             function (error) {
               console.error(error);
@@ -182,20 +184,21 @@ collab.controller('refineryCollaborationController', function ($scope, $state, $
   };
 
   // Handles membership.
-  pageScope.openMemberEditor = function (member) {
+  this.scope.openMemberEditor = function (member) {
     var modalInstance = $modal.open({
-      templateUrl: '/static/partials/collaboration.members.modal.html',
+      templateUrl: '/static/partials/collaboration/partials/collaboration-members-modal.html',
       controller: function ($scope, $modalInstance) {
         $scope.member = member;
 
         $scope.promote = function (member) {
           that.groupMemberService.add({
-            groupId: pageScope.activeGroup.manager_group_id,
+            uuid: that.scope.activeGroup.manager_group_uuid,
             user_id: member.user_id
           }).$promise.then(
             function (data) {
-              updateGroupList();
+              that.updateGroupList();
               $modalInstance.dismiss();
+              that.state.go(that.state.current, {}, {reload: true});
             },
             function (error) {
               console.error(error);
@@ -205,12 +208,13 @@ collab.controller('refineryCollaborationController', function ($scope, $state, $
 
         $scope.demote = function (member) {
           that.groupMemberService.remove({
-            groupId: pageScope.activeGroup.manager_group_id,
+            uuid: that.scope.activeGroup.manager_group_uuid,
             userId: member.user_id
           }).$promise.then(
             function (data) {
-              updateGroupList();
+              that.updateGroupList();
               $modalInstance.dismiss();
+              that.state.go(that.state.current, {}, {reload: true});
             },
             function (error) {
               console.error(error);
@@ -220,12 +224,13 @@ collab.controller('refineryCollaborationController', function ($scope, $state, $
 
         $scope.remove = function (member) {
           that.groupMemberService.remove({
-            groupId: pageScope.activeGroup.group_id,
+            uuid: that.scope.activeGroup.uuid,
             userId: member.user_id
           }).$promise.then(
             function (data) {
-              updateGroupList();
+              that.updateGroupList();
               $modalInstance.dismiss();
+              that.state.go(that.state.current, {}, {reload: true});
             },
             function (error) {
               console.error(error);
@@ -236,18 +241,19 @@ collab.controller('refineryCollaborationController', function ($scope, $state, $
     });
   };
 
-  pageScope.openEmailInvite = function () {
+  this.scope.openEmailInvite = function () {
     var modalInstance = $modal.open({
-      templateUrl: '/static/partials/collaboration.addmembers.modal.html',
+      templateUrl: '/static/partials/collaboration/partials/collaboration-addmembers-modal.html',
       controller: function ($scope, $modalInstance) {
         $scope.sendInvite = function (email) {
           that.groupInviteService.send({
-            group_id: pageScope.activeGroup.group_id,
+            group_id: that.scope.activeGroup.id,
             email: email
           }).$promise.then(
             function (data) {
-              updateGroupList();
+              that.updateGroupList();
               $modalInstance.dismiss();
+              that.state.go(that.state.current, {}, {reload: true});
               bootbox.alert("Invitation successfully sent");
             },
             function (error) {
@@ -259,12 +265,13 @@ collab.controller('refineryCollaborationController', function ($scope, $state, $
     });
   };
 
-  pageScope.revokeInvitation = function (invite) {
+  this.scope.revokeInvitation = function (invite) {
     that.groupInviteService.revoke({
       token: invite.token_uuid
     }).$promise.then(
       function (data) {
-        updateGroupList();
+        that.updateGroupList();
+        that.state.go(that.state.current, {}, {reload: true});
         bootbox.alert("Revoked invitation");
       },
       function (error) {
@@ -273,12 +280,13 @@ collab.controller('refineryCollaborationController', function ($scope, $state, $
     );
   };
 
-  pageScope.resendInvitation = function (invite) {
+  this.scope.resendInvitation = function (invite) {
     that.groupInviteService.resend({
       token: invite.token_uuid
     }).$promise.then(
       function (data) {
-        updateGroupList();
+        that.updateGroupList();
+        that.state.go(that.state.current, {}, {reload: true});
         bootbox.alert("Invitation successfully re-sent");
       },
       function (error) {

@@ -1247,7 +1247,6 @@ class GroupManagementResource(Resource):
                 if self.is_manager_group(group) and group.user_set.count() == 1:
                     return HttpForbidden('Last manager must delete group to leave')
 
-                # When 
                 if not self.is_manager_group(group) and user in group.extendedgroup.manager_group.user_set.all():
                     if group.extendedgroup.manager_group.user_set.count() == 1:
                         return HttpForbidden('Last manager must delete group to leave')
@@ -1552,11 +1551,7 @@ class ExtendedGroupResource(ModelResource):
             'username': u.username,
             'first_name': u.first_name,
             'last_name': u.last_name,
-            'is_manager': True if ((not ext_group.is_manager_group() and
-                    ext_group.manager_group and 
-                    u in ext_group.manager_group.user_set.all())) or
-                    u in ext_group.user_set.all()
-                else False
+            'is_manager': self.user_authorized(u, ext_group)
             },
             ext_group.user_set.all())
 
@@ -1673,12 +1668,12 @@ class ExtendedGroupResource(ModelResource):
 
                 if (not ext_group.is_manager_group() and 
                     user in ext_group.manager_group.user_set.all() and
-                    ext_group.user_set.count() == 1):
+                    ext_group.manager_group.user_set.count() == 1):
                     return HttpForbidden('Last manager must delete group to leave')
 
                 ext_group.user_set.remove(user)
 
-                if not self.is_manager_group():
+                if not ext_group.is_manager_group():
                     ext_group.manager_group.user_set.remove(user)
 
                 return HttpNoContent()

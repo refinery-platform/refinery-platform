@@ -6,7 +6,7 @@ function externalToolStatusDetailsPopover() {
 
   return {
     restrict: 'E',
-    templateUrl: '/static/partials/external-tool-status/partials/external_tool_status_details_popover.tpls.html',
+    templateUrl: '/static/partials/external-tool-status/partials/external-tool-status-details-popover.html',
     controller: 'ExternalToolStatusController',
     controllerAs: 'externalToolStatusController',
     bindToController: {
