@@ -28,8 +28,22 @@ angular.module('refineryDataFileUpload', ['blueimp.fileupload'])
       autoUpload: false,
       formData: getFormData,
       chunkdone: chunkDone,
-      submit: uploadSubmit,
-      done: uploadDone
+      done: uploadDone,
+      processQueue: [
+        {
+          action: 'calculate_checksum',
+          acceptFileTypes: '@'
+        }
+      ]
+    };
+    $.blueimp.fileupload.prototype.processActions = {
+      calculate_checksum: function (data, options) {
+        console.log("Calculating checksum of " + data.files[data.index].name);
+        var dfd = $.Deferred();
+        calculate_md5(data.files[data.index], chunkSize);
+        dfd.resolveWith(this, [data]);
+        return dfd.promise();
+      }
     };
     $scope.loadingFiles = false;
     //$http.get(url)
@@ -80,7 +94,7 @@ angular.module('refineryDataFileUpload', ['blueimp.fileupload'])
 
 var url = '/data_set_manager/import/chunked-upload/',
     chunkSize = 10 * 1000 * 1000,  // 1MB
-    md5 = {},
+    md5 = {},// dictionary of file names and hash values
     csrf = "",
     formData = [];
     if ($("input[name='csrfmiddlewaretoken']")[0]) {
@@ -125,14 +139,10 @@ var chunkDone = function(e, data) {
   }
 };
 
-var uploadSubmit = function(e, data) {
-  "use strict";
-  calculate_md5(data.files[0], chunkSize);
-};
-
 var uploadDone = function(e, data) {
   "use strict";
-  console.log("Finished uploading chunks for:", data.files[0].name,
+  console.log(
+      "Finished uploading chunks for:", data.files[0].name,
       "md5 =", md5[data.files[0].name]);
   $.ajax({
     type: "POST",
