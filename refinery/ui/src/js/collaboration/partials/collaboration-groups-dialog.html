@@ -14,13 +14,13 @@
     <tbody>
     <tr>
       <td>
-        {{group.name}}
+        {{modal.group.name}}
       </td>
       <td>
-        <button type="button" class="btn btn-default" style="float:right" ng-click="leaveGroup(group)" ng-class="{disabled: group.member_list.length===1}"}>Leave</button>
+        <button type="button" class="btn btn-default" style="float:right" ng-click="modal.leaveGroup()" ng-class="{disabled: modal.group.member_list.length===1}"}>Leave</button>
       </td>
       <td>
-        <button type="button" class="btn btn-default" style="float:right" ng-click="deleteGroup(group)" ng-disabled="!group.can_edit">Delete</button>
+        <button type="button" class="btn btn-default" style="float:right" ng-click="modal.deleteGroup()" ng-disabled="!modal.group.can_edit">Delete</button>
       </td>
     </tr>
     </tbody>

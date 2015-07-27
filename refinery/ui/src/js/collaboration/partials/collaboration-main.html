@@ -7,10 +7,9 @@
                     <h3>
                         <i class="m-r-1-4 icon-group"></i>Groups
                     </h3>
-                    {{collab.groupList.length}}
                 </span>
                 <span class="refinery-header-right">
-                    <a ng-href="#/{{collab.activeGroup.uuid}}/" ng-click="openAddGroup()"><i class="icon-plus"></i></a>
+                    <a ng-href="#/{{collab.activeGroup.uuid}}/" ng-click="collab.openAddGroup()"><i class="icon-plus"></i></a>
                 </span>
             </div>
 
@@ -33,7 +32,7 @@
                                 </span>
                             </td>
                             <td>
-                                <a ng-href="#/{{group.uuid}}/" ng-click="openGroupEditor(group)">
+                                <a ng-href="#/{{group.uuid}}/" ng-click="collab.openGroupEditor(group)">
                                     <i class="icon-cog"></i>
                                 </a>
                             </td>

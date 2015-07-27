@@ -1,15 +1,27 @@
-function CollaborationCtrl ($stateParams, groupService, groupListService, groupMemberService, groupInviteService) {
+function CollaborationCtrl($stateParams, $modal, groupService, groupListService, groupMemberService, groupInviteService) {
   var that = this;
-  that.stateParams = $stateParams;
+  that.$stateParams = $stateParams;
+  that.$modal = $modal;
   that.groupService = groupService;
   that.groupListService = groupListService;
   that.groupMemberService = groupMemberService;
   that.groupInviteService = groupInviteService;
 
-  this.updateGroupList(that.stateParams);
+  this.updateGroupList(that.$stateParams);
 }
 
-CollaborationCtrl.prototype.updateGroupList = function (stateParams) {
+Object.defineProperty(
+  CollaborationCtrl.prototype,
+  'groupList', {
+    enumerable: true,
+    configurable: false,
+    get: function () {
+      return this.groupListService.list;
+    }
+  }
+);
+
+CollaborationCtrl.prototype.updateGroupList = function ($stateParams) {
   var that = this;
 
   this.groupListService.update()
@@ -22,19 +34,19 @@ CollaborationCtrl.prototype.updateGroupList = function (stateParams) {
           }) : null;
 
         // Doesn't exist and URL does not specify a target UUID.
-        if (!accRes && !stateParams.uuid) {
+        if (!accRes && !$stateParams.uuid) {
           that.setActiveGroup(null);
           that.setActiveGroup(groupListData.length > 0 ?
             groupListData[0] : null);
-        } else if (!accRes && stateParams.uuid) {
+        } else if (!accRes && $stateParams.uuid) {
           // If no acitve group but uuid present, reduce the list to get a 
           // matching group, if any.
           var reducRes = groupListData.reduce(function (a, b) {
-            return a.uuid === stateParams.uuid ? a : b;
+            return a.uuid === $stateParams.uuid ? a : b;
           });
 
           // If there is a match.
-          if (reducRes.uuid === stateParams.uuid) {
+          if (reducRes.uuid === $stateParams.uuid) {
             that.setActiveGroup(reducRes);
           } else {
             that.setActiveGroup(groupListData.length > 0 ?
@@ -105,21 +117,34 @@ CollaborationCtrl.prototype.setActiveGroup = function (group) {
   }
 };
 
-Object.defineProperty(
-  CollaborationCtrl.prototype,
-  'groupList', {
-    enumerable: true,
-    configurable: false,
-    get: function () {
-      return this.groupListService.list;
+// Opening modals:
+
+CollaborationCtrl.prototype.openAddGroup = function () {
+  var modalInstance = this.$modal.open({
+    templateUrl: '/static/partials/collaboration/partials/collaboration-addgroups-dialog.html',
+    controller: 'AddGroupCtrl as modal'
+  });
+};
+
+CollaborationCtrl.prototype.openGroupEditor = function (group) {
+  var modalInstance = this.$modal.open({
+    templateUrl: '/static/partials/collaboration/partials/collaboration-groups-dialog.html',
+    controller: 'GroupEditorCtrl as modal',
+    resolve: {
+      config: function () {
+        return {
+          group: group
+        };
+      }
     }
-  }
-);
+  });
+};
 
 angular
   .module('refineryCollaboration')
   .controller('refineryCollaborationController', [
     '$stateParams',
+    '$modal',
     'groupService',
     'groupListService',
     'groupMemberService',
