@@ -12,6 +12,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.analysesGlobalDetail = {};
   vm.analysesRunningList = [];
   vm.analysesRunningGlobalList = [];
+  var timerGlobalList;
 
   vm.updateAnalysesList = function () {
     analysesFactory.getAnalysesList().then(function () {
@@ -22,9 +23,26 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     var timerList =  $timeout(vm.updateAnalysesList, 30000);
 
     $scope.$on('refinery/analyze-tab-inactive', function(){
-      console.log("I'm out");
       $timeout.cancel(timerList);
     });
+  };
+
+  vm.updateAnalysesGlobalList = function (timerStatus) {
+    timerStatus = timerStatus || "";
+
+    analysesFactory.getAnalysesGlobalList().then(function () {
+      vm.analysesGlobalList = analysesFactory.analysesGlobalList;
+      vm.refreshAnalysesGlobalDetail();
+    });
+    timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 10000);
+
+    if(timerStatus === "once"){
+      $timeout.cancel(timerGlobalList);
+    }
+  };
+
+  vm.cancelTimerGlobalList = function(){
+    $timeout.cancel(timerGlobalList);
   };
 
   vm.updateAnalysesRunningList = function () {
@@ -114,13 +132,6 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     }
   };
 
-  //watches for analyze tab view to update AnalysesList
-  //vm.setTabTrigger = function() {
-  //  $scope.$on('refinery/analyze-tab-active', function () {
-  //    vm.updateAnalysesList();
-  //  });
-  //};
-
   //checks url to see if view is filtered by analysis
   $scope.checkAnalysesViewFlag = function () {
     var flag;
@@ -133,30 +144,15 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   //custom popover event allowing hovering over textbox.
-  $scope.analysesPopoverEvents = function (element) {
+  vm.analysesPopoverEvents = function (element) {
     $('.popover').on('mouseenter', function() {
       $rootScope.insidePopover = true;
-      $scope.updateAnalysesGlobalList();
     });
     $('.popover').on('mouseleave', function() {
       $rootScope.insidePopover = false;
       $(element).popover('hide');
-      $scope.updateAnalysesGlobalList("once");
+      vm.cancelTimerGlobalList();
     });
-  };
-
-  $scope.updateAnalysesGlobalList = function (timerStatus) {
-    timerStatus = timerStatus || "";
-
-    analysesFactory.getAnalysesGlobalList().then(function () {
-      vm.analysesGlobalList = analysesFactory.analysesGlobalList;
-      vm.refreshAnalysesGlobalDetail();
-    });
-    var timerGlobalList = $timeout($scope.updateAnalysesGlobalList, 30000);
-
-    if(timerStatus === "once"){
-      $timeout.cancel(timerGlobalList);
-    }
   };
 
 }
