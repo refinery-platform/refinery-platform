@@ -3,9 +3,9 @@ angular
   .factory('groupService', ['$resource', 'settings',
     function ($resource, settings) {
       return $resource(
-        settings.appRoot + settings.refineryApi + '/groups/',
+        settings.appRoot + settings.refineryApi + '/extended_groups/',
         {
-          groupId: '@groupId',
+          uuid: '@uuid',
         },
         {
           create: {
@@ -13,7 +13,7 @@ angular
           },
           delete: {
             method: 'DELETE',
-            url: settings.appRoot + settings.refineryApi + '/groups/:groupId/'
+            url: settings.appRoot + settings.refineryApi + '/extended_groups/:uuid/'
           }
         }
       );

@@ -9,23 +9,34 @@
                     </h3>
                 </span>
                 <span class="refinery-header-right">
-                    <a href="#/{{ activeGroup.group_id }}/" ng-click="openGroupEditor()"><i class="icon-cog"></i></a>
+                    <a ng-href="#/{{activeGroup.uuid}}/" ng-click="openAddGroup()"><i class="icon-plus"></i></a>
                 </span>
             </div>
 
             <div class="refinery-panel-content scrollable jquery-full-height">
-            <ul class="nav nav-list scrollable">
-                <li ng-repeat="group in groupList" ng-click="setGroupActive(group)"
-                    ng-class="group.group_id === activeGroup.group_id ? 'active' : ''">
-                    <a ng-href="#/{{ group.group_id }}/">
-                        {{ group.group_name }}
-            <span style="float:right;color:red" font-size="10px" ng-if="group.can_edit">
-              manager
-            </span>
-                    </a>
-                </li>
-            </ul>
-                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th width="90%">Name</th>
+                            <th width="10%">Edit</th>
+                        </tr>
+                    </thead>
+                    <tbody ng-repeat="group in groupList">
+                        <tr>
+                            <td ng-class="{'active-group':group.active}">
+                                <a ng-href="#/{{group.uuid}}/" ng-click="setActiveGroup(group)">
+                                    {{group.name}}
+                                </a>
+                            </td>
+                            <td>
+                                <a ng-href="#/{{group.uuid}}/" ng-click="openGroupEditor(group)">
+                                    <i ng-if="group.can_edit" class="icon-cog"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -38,19 +49,27 @@
                     </h3>
                 </span>
                 <span class="refinery-header-right">
-                    <a href="#/{{ activeGroup.group_id }}/" ng-click="openEmailInvite()"><i class="icon-plus"></i></a>
+                    <a href="#/{{ activeGroup.uuid }}/" ng-click="openEmailInvite()"><i class="icon-plus"></i></a>
                 </span>
             </div>
 
             <div class="refinery-panel-content scrollable jquery-full-height">
                 <ul class="nav nav-list scrollable">
                     <li ng-repeat="member in activeGroup.member_list">
-                        {{ member.first_name }} {{ member.last_name }} - ({{ member.username }})
+                        <!-- <span> -->
+                            <span ng-if="member.first_name !== '' && member.last_name !== ''" style="display=inline">
+                                {{member.first_name}} {{member.last_name}} ({{member.username}})
+                            </span>
+                            <span ng-if="member.first_name === '' || member.last_name === ''" style="display=inline">
+                                {{member.username}}
+                            </span>
+                        <!-- </span> -->
+                        
                         <span style="float:right" ng-if="activeGroup.can_edit">
                             <span ng-if="member.is_manager" style="float:left;color:red" font-size="5px">
                                 manager
                             </span>
-                            <a href="#/{{ activeGroup.group_id }}/" ng-click="openMemberEditor(member)" style="margin-left:10px">
+                            <a href="#/{{ activeGroup.uuid }}/" ng-click="openMemberEditor(member)" style="margin-left:10px">
                                 <i class="icon-cog"></i>
                             </a>
                         </span>
@@ -79,10 +98,10 @@
                         {{ invite.recipient_email }}
                         <span>
                             <span style="float:right;margin-left:10px">
-                                <a href="#/{{ activeGroup.group_id }}/" ng-click="revokeInvitation(invite)">Revoke</a>
+                                <a href="#/{{ activeGroup.uuid }}/" ng-click="revokeInvitation(invite)">Revoke</a>
                             </span>
                             <span style="float:right">
-                                <a href="#/{{ activeGroup.group_id }}/" ng-click="resendInvitation(invite)">Resend</a>
+                                <a href="#/{{ activeGroup.uuid }}/" ng-click="resendInvitation(invite)">Resend</a>
                             </span>
                         </span>
                         <br>
