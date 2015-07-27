@@ -63,20 +63,20 @@ def group_invite(request, token):
 
     inv = inv_list[0]
     user = request.user
-    group_list = Group.objects.filter(id=int(inv.group_id))
-    group = None if len(group_list) == 0 else group_list[0]
+    ext_group_list = ExtendedGroup.objects.filter(id=int(inv.group_id))
+    ext_group = None if len(ext_group_list) == 0 else ext_group_list[0]
 
-    if not group:
+    if not ext_group:
         return render_to_response(
             'core/group_invite.html',
             {'message': 'Invalid token. Unable to find pairing group'},
             context_instance=RequestContext(request))
 
-    group.user_set.add(user)
+    ext_group.user_set.add(user)
 
     # If the group is a manager group.
-    if not group.extendedgroup.is_managed():
-        for i in group.managed_group.all():
+    if ext_group.is_manager_group():
+        for i in ext_group.managed_group.all():
             i.user_set.add(user)
 
     # We are done using this token.
@@ -84,9 +84,9 @@ def group_invite(request, token):
     return render_to_response(
         'core/group_invite.html',
         {
-            'message': '%s has been added to the group %s!' % (user.username, group.name),
+            'message': '%s has been added to the group %s!' % (user.username, ext_group.name),
             'user': user,
-            'group': group
+            'ext_group': ext_group
         },
         context_instance=RequestContext(request))
 
