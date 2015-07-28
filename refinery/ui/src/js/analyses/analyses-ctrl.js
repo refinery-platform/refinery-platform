@@ -127,6 +127,14 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     }
   };
 
+  vm.isEmptyAnalysesGlobalList = function(){
+    if(vm.analysesGlobalList.length > 0){
+      return false;
+    }else{
+      return true;
+    }
+  };
+
   //checks url to see if view is filtered by analysis
   $scope.checkAnalysesViewFlag = function () {
     var flag;

@@ -1,35 +1,42 @@
-<ul id="analyses-popover" ng-repeat ="analysis in analysesCtrl.analysesGlobalList track by $index">
-   <li>
-     <span class="spinner"><i class="{{analysis.status | analysesStatusIcon}} analyses-status"></i>
-     </span>
-     &nbsp;
-    <span ng-switch on="analysis.status">
-        <span ng-switch-when="UNKNOWN">
-           {{ analysis.name }}
-        </span>
-        <span ng-switch-when="RUNNING">
-           <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/#/analyses">
+<div ng-if="!(analysesCtrl.isEmptyAnalysesGlobalList())">
+  <ul id="analyses-popover" ng-repeat ="analysis in analysesCtrl.analysesGlobalList track by $index">
+     <li>
+       <span class="spinner"><i class="{{analysis.status | analysesStatusIcon}} analyses-status"></i>
+       </span>
+       &nbsp;
+      <span ng-switch on="analysis.status">
+          <span ng-switch-when="UNKNOWN">
              {{ analysis.name }}
-           </a>
+          </span>
+          <span ng-switch-when="RUNNING">
+             <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/#/analyses">
+               {{ analysis.name }}
+             </a>
+          </span>
+          <span ng-switch-default>
+            <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
+              {{ analysis.name }}
+            </a>
+          </span>
         </span>
-        <span ng-switch-default>
-          <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
-            {{ analysis.name }}
-          </a>
-        </span>
-      </span>
-     <span ng-if="analysis.status == 'RUNNING'">
-       <br>
-       &nbsp;
-       <i class="icon-circle-arrow-down">
-         {{ analysesCtrl.analysesGlobalDetail[analysis.uuid].preprocessing}}</i>
-       &nbsp;
-       <i class="icon-cog">{{ analysesCtrl.analysesGlobalDetail[analysis.uuid]
-         .executionPercentDone}}</i>
-       &nbsp;
-       <i class="icon-circle-arrow-up">
-         {{ analysesCtrl.analysesGlobalDetail[analysis.uuid]
-           .postprocessing}}</i>
-     </span>
-   </li>
-</ul>
+       <span ng-if="analysis.status == 'RUNNING'">
+         <br>
+         &nbsp;
+         <i class="icon-circle-arrow-down">
+           {{ analysesCtrl.analysesGlobalDetail[analysis.uuid].preprocessing}}</i>
+         &nbsp;
+         <i class="icon-cog">{{ analysesCtrl.analysesGlobalDetail[analysis.uuid]
+           .executionPercentDone}}</i>
+         &nbsp;
+         <i class="icon-circle-arrow-up">
+           {{ analysesCtrl.analysesGlobalDetail[analysis.uuid]
+             .postprocessing}}</i>
+       </span>
+     </li>
+  </ul>
+</div>
+<div ng-if="analysesCtrl.isEmptyAnalysesGlobalList()">
+  <p>
+    No analyses performed.
+  </p>
+</div>
