@@ -1,6 +1,6 @@
 <ul id="analyses-popover" ng-repeat ="analysis in analysesCtrl.analysesGlobalList track by $index">
    <li>
-     <span class="spinner"><i class="{{analysis.status | analysesStatusIcon}}"></i>
+     <span class="spinner"><i class="{{analysis.status | analysesStatusIcon}} analyses-status"></i>
      </span>
      &nbsp;
     <span ng-switch on="analysis.status">

@@ -9,12 +9,13 @@ function rfAnalysesGlobalListStatusPopover($compile, $templateCache, $, $timeout
     controller: 'AnalysesCtrl',
     controllerAs: 'analysesCtrl',
     link: function (scope, element, attrs) {
+      //The script is in the base.html template.
       var template = $templateCache.get("analysesgloballist.html");
       var popOverContent = $compile(template)(scope);
       $rootScope.insidePopover = false;
       var options = {
         content: popOverContent,
-        placement: "bottom",
+        placement: "left",
         html: true,
         date: scope.date,
       };
