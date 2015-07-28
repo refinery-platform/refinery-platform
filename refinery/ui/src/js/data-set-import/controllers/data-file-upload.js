@@ -36,16 +36,40 @@ angular.module('refineryDataFileUpload', ['blueimp.fileupload'])
         }
       ]
     };
+    $scope.loadingFiles = false;
     $.blueimp.fileupload.prototype.processActions = {
       calculate_checksum: function (data, options) {
-        console.log("Calculating checksum of " + data.files[data.index].name);
         var dfd = $.Deferred();
-        calculate_md5(data.files[data.index], chunkSize);
-        dfd.resolveWith(this, [data]);
+        var file = data.files[data.index];
+        calculate_md5(file, chunkSize, dfd, this);
         return dfd.promise();
       }
     };
-    $scope.loadingFiles = false;
+    function calculate_md5(file, chunk_size, dfd, context) {
+      var slice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
+          chunks = Math.ceil(file.size / chunk_size),
+          current_chunk = 0,
+          spark = new SparkMD5.ArrayBuffer();
+      function onload(e) {
+        spark.append(e.target.result);  // append chunk
+        current_chunk++;
+        if (current_chunk < chunks) {
+          read_next_chunk();
+        } else {
+          md5[file.name] = spark.end();
+          dfd.resolveWith(context, [data]);
+        }
+      }
+      function read_next_chunk() {
+        var reader = new FileReader();
+        reader.onload = onload;
+        var start = current_chunk * chunk_size,
+            end = Math.min(start + chunk_size, file.size);
+        reader.readAsArrayBuffer(slice.call(file, start, end));
+      }
+      console.log("Calculating checksum of " + file.name);
+      read_next_chunk();
+    }
   }
 ])
 
@@ -83,39 +107,14 @@ angular.module('refineryDataFileUpload', ['blueimp.fileupload'])
 ]);
 
 var url = '/data_set_manager/import/chunked-upload/',
-    chunkSize = 10 * 1000 * 1000,  // 1MB
-    md5 = {},// dictionary of file names and hash values
+    chunkSize = 10 * 1000 * 1000,  // bytes
+    md5 = {},  // dictionary of file names and hash values
     csrf = "",
     formData = [];
     if ($("input[name='csrfmiddlewaretoken']")[0]) {
       csrf = $("input[name='csrfmiddlewaretoken']")[0].value;
       formData = [{"name": "csrfmiddlewaretoken", "value": csrf}];
     }
-
-function calculate_md5(file, chunk_size) {
-  "use strict";
-  var slice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
-      chunks = Math.ceil(file.size / chunk_size),
-      current_chunk = 0,
-      spark = new SparkMD5.ArrayBuffer();
-  function onload(e) {
-    spark.append(e.target.result);  // append chunk
-    current_chunk++;
-    if (current_chunk < chunks) {
-      read_next_chunk();
-    } else {
-      md5[file.name] = spark.end();
-    }
-  }
-  function read_next_chunk() {
-    var reader = new FileReader();
-    reader.onload = onload;
-    var start = current_chunk * chunk_size,
-        end = Math.min(start + chunk_size, file.size);
-    reader.readAsArrayBuffer(slice.call(file, start, end));
-  }
-  read_next_chunk();
-}
 
 var getFormData = function(form) {
   "use strict";
