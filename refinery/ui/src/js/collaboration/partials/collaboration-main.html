@@ -24,7 +24,7 @@
                     <tbody ng-repeat="group in collab.groupList">
                         <tr>
                             <td ng-class="{'active-group':group.active}">
-                                <a ng-href="#/{{group.uuid}}/" ng-click="setActiveGroup(group)">
+                                <a ng-href="#/{{group.uuid}}/">
                                     {{group.name}}
                                 </a>
                                 <span ng-if="group.can_edit" style="float:right;color:red">
@@ -52,7 +52,7 @@
                     </h3>
                 </span>
                 <span ng-if="collab.activeGroup.can_edit" class="refinery-header-right">
-                    <a href="#/{{ collab.activeGroup.uuid }}/" ng-click="openEmailInvite()"><i class="icon-plus"></i></a>
+                    <a href="#/{{ collab.activeGroup.uuid }}/" ng-click="collab.openEmailInvite()"><i class="icon-plus"></i></a>
                 </span>
             </div>
 
@@ -72,7 +72,7 @@
                             <span ng-if="member.is_manager" style="float:left;color:red" font-size="5px">
                                 manager
                             </span>
-                            <a href="#/{{ collab.activeGroup.uuid }}/" ng-click="openMemberEditor(member)" style="margin-left:10px">
+                            <a href="#/{{ collab.activeGroup.uuid }}/" ng-click="collab.openMemberEditor(member)" style="margin-left:10px">
                                 <i class="icon-cog"></i>
                             </a>
                         </span>
@@ -101,10 +101,10 @@
                         {{ invite.recipient_email }}
                         <span>
                             <span style="float:right;margin-left:10px">
-                                <a href="#/{{ collab.activeGroup.uuid }}/" ng-click="revokeInvitation(invite)">Revoke</a>
+                                <a href="#/{{ collab.activeGroup.uuid }}/" ng-click="collab.revokeInvitation(invite)">Revoke</a>
                             </span>
                             <span style="float:right">
-                                <a href="#/{{ collab.activeGroup.uuid }}/" ng-click="resendInvitation(invite)">Resend</a>
+                                <a href="#/{{ collab.activeGroup.uuid }}/" ng-click="collab.resendInvitation(invite)">Resend</a>
                             </span>
                         </span>
                         <br>

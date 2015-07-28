@@ -1,8 +1,8 @@
-function AddGroupCtrl($modalInstance, groupService, groupListService) {
+function AddGroupCtrl($modalInstance, groupService, groupDataService) {
   var that = this;
   that.$modalInstance = $modalInstance;
   that.groupService = groupService;
-  that.groupListService = groupListService;
+  that.groupDataService = groupDataService;
 }
 
 AddGroupCtrl.prototype.createGroup = function (name) {
@@ -12,7 +12,7 @@ AddGroupCtrl.prototype.createGroup = function (name) {
     name: name
   }).$promise.then(
     function (data) {
-      that.groupListService.update();
+      that.groupDataService.update();
       that.$modalInstance.dismiss();
     }
   ).catch(function (error) {
@@ -25,6 +25,6 @@ angular
   .controller('AddGroupCtrl', [
     '$modalInstance',
     'groupService',
-    'groupListService',
+    'groupDataService',
     AddGroupCtrl
   ]);

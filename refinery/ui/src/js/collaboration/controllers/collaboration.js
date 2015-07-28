@@ -1,13 +1,11 @@
-function CollaborationCtrl($stateParams, $modal, groupService, groupListService, groupMemberService, groupInviteService) {
+function CollaborationCtrl($stateParams, $modal, groupInviteService, groupDataService) {
   var that = this;
   that.$stateParams = $stateParams;
   that.$modal = $modal;
-  that.groupService = groupService;
-  that.groupListService = groupListService;
-  that.groupMemberService = groupMemberService;
   that.groupInviteService = groupInviteService;
+  that.groupDataService = groupDataService;
 
-  this.updateGroupList(that.$stateParams);
+  this.groupDataService.update(this.$stateParams); 
 }
 
 Object.defineProperty(
@@ -16,127 +14,115 @@ Object.defineProperty(
     enumerable: true,
     configurable: false,
     get: function () {
-      return this.groupListService.list;
+      return this.groupDataService.groupList;
     }
   }
 );
 
-CollaborationCtrl.prototype.updateGroupList = function ($stateParams) {
+Object.defineProperty(
+  CollaborationCtrl.prototype,
+  'activeGroup', {
+    enumerable: true,
+    configurable: false,
+    get: function () {
+      return this.groupDataService.activeGroup;
+    }
+  }
+);
+
+Object.defineProperty(
+  CollaborationCtrl.prototype,
+  'activeGroupInviteList', {
+    enumerable: true,
+    configurable: false,
+    get: function () {
+      return this.groupDataService.inviteList;
+    }
+  }
+);
+
+CollaborationCtrl.prototype.updateGroupList = function (params) {
+  this.groupDataService.update(params);
+};
+
+////////////////////////
+
+CollaborationCtrl.prototype.resendInvitation = function (invite) {
   var that = this;
 
-  this.groupListService.update()
-    .then(function (groupListData) {
-      if (groupListData && groupListData instanceof (Array)) {
-        // Check to see if acitve group exists in existing group list.
-        var accRes  = that.activeGroup ?
-          groupListData.reduce(function (a, b) {
-            return a.uuid === that.activeGroup.uuid;
-          }) : null;
-
-        // Doesn't exist and URL does not specify a target UUID.
-        if (!accRes && !$stateParams.uuid) {
-          that.setActiveGroup(null);
-          that.setActiveGroup(groupListData.length > 0 ?
-            groupListData[0] : null);
-        } else if (!accRes && $stateParams.uuid) {
-          // If no acitve group but uuid present, reduce the list to get a 
-          // matching group, if any.
-          var reducRes = groupListData.reduce(function (a, b) {
-            return a.uuid === $stateParams.uuid ? a : b;
-          });
-
-          // If there is a match.
-          if (reducRes.uuid === $stateParams.uuid) {
-            that.setActiveGroup(reducRes);
-          } else {
-            that.setActiveGroup(groupListData.length > 0 ?
-              groupListData[0] : null);
-          }
-        } else {
-          // No valid group list data nor active groups = no active groups.
-          that.setActiveGroup(null);
-        }
-      } else {
-        // No valid group list data = no active groups.
-        that.setActiveGroup(null);
-      }
-    })
-    .catch(function (error) {
-      console.error(error);
-    });
+  this.groupInviteService.resend({
+    token: invite.token_uuid
+  }).$promise.then(
+    function (data) {
+      that.updateGroupList();
+      bootbox.alert("Invitation successfully re-sent to " + invite.recipient_email);
+    }
+  ).catch(function (error) {
+    console.error(error);
+  });
 };
 
-CollaborationCtrl.prototype.millisToTime = function (t) {
-  return {
-    d: Math.floor(t / 86400000),
-    h: Math.floor((t % 86400000) / 3600000),
-    m: Math.floor(((t % 86400000) % 3600000) / 60000),
-    s: Math.floor((((t % 86400000) % 3600000) % 60000) / 1000)
-  };
-};
-
-CollaborationCtrl.prototype.setActiveGroup = function (group) {
+CollaborationCtrl.prototype.revokeInvitation = function (invite) {
   var that = this;
 
-  if (this.activeGroup) {
-    this.activeGroup.active = false;
-  }
-
-  if (group) {
-    group.active = true;
-  }
-
-  this.activeGroup = group;
-
-  if (this.activeGroup) {
-    this.groupInviteService.query({
-      uuid: this.activeGroup.uuid
-    }).$promise.then(
-      function (data) {
-        that.activeGroupInviteList = data.objects.map(function (i) {
-          console.log(i);
-          var offset = new Date().getTimezoneOffset() * 60000;
-          var createdDate = new Date(new Date(i.created).getTime() + offset);
-          var expiresDate = new Date(new Date(i.expires).getTime() + offset);
-          var expireTime = that.millisToTime(expiresDate.getTime() - createdDate.getTime());
-          console.log(createdDate, expiresDate);
-          i.created = humanize.date('D Y-F-dS @ h:m:s A', createdDate);
-          i.expires = humanize.date('D Y-F-dS @ h:m:s A', expiresDate);
-          i.expireDuration =
-            humanize.relativeTime(humanize.time() +
-            expireTime.d * 86400 +
-            expireTime.h * 3600 +
-            expireTime.m * 60 +
-            expireTime.s);
-          return i;
-        });
-      }
-    ).catch(function (error) {
-      console.error(error);
-    });
-  }
+  this.groupInviteService.revoke({
+    token: invite.token_uuid
+  }).$promise.then(
+    function (data) {
+      that.updateGroupList();
+      bootbox.alert("Invitation revoked from " + invite.recipient_email);
+    }
+  ).catch(function (error) {
+    console.error(error);
+  });
 };
+
 
 // Opening modals:
 
 CollaborationCtrl.prototype.openAddGroup = function () {
+  var that = this;
+
   var modalInstance = this.$modal.open({
     templateUrl: '/static/partials/collaboration/partials/collaboration-addgroups-dialog.html',
-    controller: 'AddGroupCtrl as modal'
+    controller: 'AddGroupCtrl as modal',
   });
 };
 
 CollaborationCtrl.prototype.openGroupEditor = function (group) {
+  var that = this;
+
   var modalInstance = this.$modal.open({
     templateUrl: '/static/partials/collaboration/partials/collaboration-groups-dialog.html',
     controller: 'GroupEditorCtrl as modal',
     resolve: {
-      config: function () {
-        return {
-          group: group
-        };
+      group: function () {
+        return group;
       }
     }
+  });
+};
+
+CollaborationCtrl.prototype.openMemberEditor = function (member) {
+  var that = this;
+
+  var modalInstance = this.$modal.open({
+    templateUrl: '/static/partials/collaboration/partials/collaboration-members-dialog.html',
+    controller: 'MemberEditorCtrl as modal',
+    resolve: {
+      member: function () {
+        return member;
+      }
+    }
+  });
+};
+
+CollaborationCtrl.prototype.openEmailInvite = function () {
+  var that = this;
+
+  var modalInstance = this.$modal.open({
+    templateUrl: '/static/partials/collaboration/partials/collaboration-addmembers-dialog.html',
+    controller: 'EmailInviteCtrl as modal',
   });
 };
 
@@ -145,9 +131,7 @@ angular
   .controller('refineryCollaborationController', [
     '$stateParams',
     '$modal',
-    'groupService',
-    'groupListService',
-    'groupMemberService',
     'groupInviteService',
+    'groupDataService',
     CollaborationCtrl
   ]);

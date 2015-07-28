@@ -1,10 +1,10 @@
-function GroupEditorCtrl($modalInstance, groupService, groupListService, groupMemberService, config) {
+function GroupEditorCtrl($modalInstance, groupService, groupMemberService, groupDataService, group) {
   var that = this;
   that.$modalInstance = $modalInstance;
   that.groupService = groupService;
-  that.groupListService = groupListService;
   that.groupMemberService = groupMemberService;
-  that.group = config.group;
+  that.groupDataService = groupDataService;
+  that.group = group;
 }
 
 GroupEditorCtrl.prototype.leaveGroup = function () {
@@ -15,7 +15,7 @@ GroupEditorCtrl.prototype.leaveGroup = function () {
     userId: user_id
   }).$promise.then(
     function (data) {
-      that.groupListService.update();
+      that.groupDataService.update();
       that.$modalInstance.dismiss();
     }
   ).catch(function (error) {
@@ -30,7 +30,7 @@ GroupEditorCtrl.prototype.deleteGroup = function () {
     uuid: this.group.uuid
   }).$promise.then(
     function (data) {
-      that.groupListService.update();
+      that.groupDataService.update();
       that.$modalInstance.dismiss();
     }
   ).catch(function (error) {
@@ -43,8 +43,8 @@ angular
   .controller('GroupEditorCtrl', [
     '$modalInstance',
     'groupService',
-    'groupListService',
     'groupMemberService',
-    'config',
+    'groupDataService',
+    'group',
     GroupEditorCtrl
   ]);
