@@ -12,25 +12,42 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.analysesGlobalDetail = {};
   vm.analysesRunningList = [];
   vm.analysesRunningGlobalList = [];
+  var timerGlobalList;
 
+  /*Updates overall analyses lists*/
   vm.updateAnalysesList = function () {
     analysesFactory.getAnalysesList().then(function () {
       vm.analysesList = analysesFactory.analysesList;
       vm.refreshAnalysesDetail();
     });
 
-    var timerList =  $timeout(vm.updateAnalysesList, 15000);
+    var timerList =  $timeout(vm.updateAnalysesList, 30000);
 
     $scope.$on('refinery/analyze-tab-inactive', function(){
       $timeout.cancel(timerList);
     });
   };
 
+  vm.updateAnalysesGlobalList = function () {
+    analysesFactory.getAnalysesGlobalList().then(function () {
+      vm.analysesGlobalList = analysesFactory.analysesGlobalList;
+      vm.refreshAnalysesGlobalDetail();
+    });
+    timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 30000);
+  };
+
+  vm.cancelTimerGlobalList = function(){
+    if(typeof timerGlobalList !== "undefined") {
+      $timeout.cancel(timerGlobalList);
+    }
+  };
+
+  /*Updates analyses list which are running.*/
   vm.updateAnalysesRunningList = function () {
     analysesFactory.getAnalysesRunningList().then(function () {
       vm.analysesRunningList = analysesFactory.analysesRunningList;
     });
-    var timerRunList = $timeout(vm.updateAnalysesRunningList, 10000);
+    var timerRunList = $timeout(vm.updateAnalysesRunningList, 30000);
 
     if(typeof dataSetUuid === 'undefined' || dataSetUuid === "None"){
       $timeout.cancel(timerRunList);
@@ -41,9 +58,10 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     analysesFactory.getAnalysesRunningGlobalList().then(function () {
       vm.analysesRunningGlobalList = analysesFactory.analysesRunningGlobalList;
     });
-    $timeout(vm.updateAnalysesRunningGlobalList, 10000);
+    $timeout(vm.updateAnalysesRunningGlobalList, 30000);
   };
 
+  /*Updates the running analyses stage details*/
   vm.refreshAnalysesDetail = function () {
     vm.analysesRunningList = analysesFactory.analysesRunningList;
     for (var i = 0; i < vm.analysesRunningList.length; i++) {
@@ -52,7 +70,6 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.refreshAnalysesGlobalDetail = function(){
-    var timerDetail;
     vm.analysesRunningGlobalList = analysesFactory.analysesRunningGlobalList;
     for (var i = 0; i < vm.analysesRunningGlobalList.length; i++) {
       vm.updateAnalysesGlobalDetail(i);
@@ -72,13 +89,14 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.updateAnalysesGlobalDetail = function (i) {
     (function (i) {
       if(typeof vm.analysesRunningGlobalList[i] !== 'undefined') {
-        analysesFactory.getAnalysesDetail(vm.analysesRunningGlobalList[i].uuid, "global").then(function (response) {
-          vm.analysesGlobalDetail[vm.analysesRunningGlobalList[i].uuid] = analysesFactory.analysesGlobalDetail[vm.analysesRunningGlobalList[i].uuid];
+        analysesFactory.getAnalysesDetail(vm.analysesRunningGlobalList[i].uuid).then(function (response) {
+          vm.analysesGlobalDetail[vm.analysesRunningGlobalList[i].uuid] = analysesFactory.analysesDetail[vm.analysesRunningGlobalList[i].uuid];
         });
       }
     })(i);
   };
 
+  //Cancels a running analyses
   vm.cancelAnalysis = function (uuid) {
     vm.analysesDetail[uuid].cancelingAnalyses = true;
     analysesFactory.postCancelAnalysis(uuid).then(function (result) {
@@ -91,6 +109,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     });
   };
 
+  //Alert message which show on analysis view filtered page
   vm.setAnalysesAlertMsg = function () {
     var uuid = window.analysisUuid;
     analysesAlertService.setAnalysesMsg(uuid);
@@ -113,12 +132,28 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     }
   };
 
-  //watches for analyze tab view to update AnalysesList
-  $scope.$on('refinery/analyze-tab-active', function () {
-    vm.updateAnalysesList();
-  });
+  vm.isEmptyAnalysesGlobalList = function(){
+    if(vm.analysesGlobalList.length > 0){
+      return false;
+    }else{
+      return true;
+    }
+  };
 
-  //checks url to see if view is filtered by analysis
+  //custom popover event allowing hovering over textbox.
+  vm.analysesPopoverEvents = function (element) {
+    $('.popover').on('mouseenter', function() {
+      $rootScope.insidePopover = true;
+    });
+    $('.popover').on('mouseleave', function() {
+      $rootScope.insidePopover = false;
+      $(element).popover('hide');
+      vm.cancelTimerGlobalList();
+    });
+  };
+
+  //checks url to see if view is filtered by analysis in data_set.html. Used
+  // with analyses alert msg.
   $scope.checkAnalysesViewFlag = function () {
     var flag;
     if (typeof window.analysisUuid === 'undefined' || window.analysisUuid === "None") {
@@ -127,33 +162,6 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
       flag = true;
     }
     return flag;
-  };
-
-  //custom popover event allowing hovering over textbox.
-  $scope.analysesPopoverEvents = function (element) {
-    $('.popover').on('mouseenter', function() {
-      $rootScope.insidePopover = true;
-      $scope.updateAnalysesGlobalList();
-    });
-    $('.popover').on('mouseleave', function() {
-      $rootScope.insidePopover = false;
-      $(element).popover('hide');
-      $scope.updateAnalysesGlobalList("once");
-    });
-  };
-
-  $scope.updateAnalysesGlobalList = function (timerStatus) {
-    timerStatus = timerStatus || "";
-
-    analysesFactory.getAnalysesGlobalList().then(function () {
-      vm.analysesGlobalList = analysesFactory.analysesGlobalList;
-      vm.refreshAnalysesGlobalDetail();
-    });
-    var timerGlobalList = $timeout($scope.updateAnalysesGlobalList, 5000);
-
-    if(timerStatus === "once"){
-      $timeout.cancel(timerGlobalList);
-    }
   };
 
 }

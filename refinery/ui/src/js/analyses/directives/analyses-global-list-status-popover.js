@@ -7,23 +7,25 @@ function rfAnalysesGlobalListStatusPopover($compile, $templateCache, $, $timeout
   return {
     restrict: "AE",
     controller: 'AnalysesCtrl',
-    controllerAs: 'AnalysesCtrl',
+    controllerAs: 'analysesCtrl',
     link: function (scope, element, attrs) {
+      //The script is in the base.html template.
       var template = $templateCache.get("analysesgloballist.html");
       var popOverContent = $compile(template)(scope);
       $rootScope.insidePopover = false;
       var options = {
         content: popOverContent,
-        placement: "bottom",
+        placement: "left",
         html: true,
         date: scope.date,
       };
       $(element).popover(options);
       $(element).bind('mouseenter', function (e) {
+        scope.analysesCtrl.updateAnalysesGlobalList();
         $timeout(function () {
             if (!$rootScope.insidePopover) {
                 $(element).popover('show');
-                scope.analysesPopoverEvents(element);
+                scope.analysesCtrl.analysesPopoverEvents(element);
             }
         }, 200);
       });
@@ -31,6 +33,7 @@ function rfAnalysesGlobalListStatusPopover($compile, $templateCache, $, $timeout
         $timeout(function () {
             if (!$rootScope.insidePopover) {
                 $(element).popover('hide');
+                scope.analysesCtrl.cancelTimerGlobalList();
             }
         }, 400);
       });

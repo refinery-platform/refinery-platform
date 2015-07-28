@@ -12,5 +12,8 @@ function rpAnalysesAlertMsg($location) {
     bindToController: {
       analysesMsg: '@',
     },
+    link: function(scope, element, attr){
+      scope.AnalysesCtrl.setAnalysesAlertMsg();
+    }
   };
 }

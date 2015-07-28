@@ -36,7 +36,7 @@ angular
   'refineryCollaboration',
 ])
 .config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
-  // http://stackoverflow.com/questions/11252780/whats-the-correct-way-to-communicate-between-controllers-in-angularjs
+  // http://stackoverflow.com/q/11252780
   $provide.decorator('$rootScope', ['$delegate', function ($delegate) {
     Object.defineProperty($delegate.constructor.prototype, '$onRootScope', {
       value: function (name, listener) {

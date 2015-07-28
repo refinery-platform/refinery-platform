@@ -28,20 +28,48 @@ angular.module('refineryDataFileUpload', ['blueimp.fileupload'])
       autoUpload: false,
       formData: getFormData,
       chunkdone: chunkDone,
-      submit: uploadSubmit,
-      done: uploadDone
+      done: uploadDone,
+      processQueue: [
+        {
+          action: 'calculate_checksum',
+          acceptFileTypes: '@'
+        }
+      ]
     };
     $scope.loadingFiles = false;
-    //$http.get(url)
-    //    .then(
-    //    function (response) {
-    //      $scope.loadingFiles = false;
-    //      $scope.queue = response.data.files || [];
-    //    },
-    //    function () {
-    //      $scope.loadingFiles = false;
-    //    }
-    //);
+    $.blueimp.fileupload.prototype.processActions = {
+      calculate_checksum: function (data, options) {
+        var dfd = $.Deferred();
+        var file = data.files[data.index];
+        calculate_md5(file, chunkSize, dfd, this);
+        return dfd.promise();
+      }
+    };
+    function calculate_md5(file, chunk_size, dfd, context) {
+      var slice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
+          chunks = Math.ceil(file.size / chunk_size),
+          current_chunk = 0,
+          spark = new SparkMD5.ArrayBuffer();
+      function onload(e) {
+        spark.append(e.target.result);  // append chunk
+        current_chunk++;
+        if (current_chunk < chunks) {
+          read_next_chunk();
+        } else {
+          md5[file.name] = spark.end();
+          dfd.resolveWith(context, [data]);
+        }
+      }
+      function read_next_chunk() {
+        var reader = new FileReader();
+        reader.onload = onload;
+        var start = current_chunk * chunk_size,
+            end = Math.min(start + chunk_size, file.size);
+        reader.readAsArrayBuffer(slice.call(file, start, end));
+      }
+      console.log("Calculating checksum of " + file.name);
+      read_next_chunk();
+    }
   }
 ])
 
@@ -79,39 +107,14 @@ angular.module('refineryDataFileUpload', ['blueimp.fileupload'])
 ]);
 
 var url = '/data_set_manager/import/chunked-upload/',
-    chunkSize = 10 * 1000 * 1000,  // 1MB
-    md5 = {},
+    chunkSize = 10 * 1000 * 1000,  // bytes
+    md5 = {},  // dictionary of file names and hash values
     csrf = "",
     formData = [];
     if ($("input[name='csrfmiddlewaretoken']")[0]) {
       csrf = $("input[name='csrfmiddlewaretoken']")[0].value;
       formData = [{"name": "csrfmiddlewaretoken", "value": csrf}];
     }
-
-function calculate_md5(file, chunk_size) {
-  "use strict";
-  var slice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
-      chunks = Math.ceil(file.size / chunk_size),
-      current_chunk = 0,
-      spark = new SparkMD5.ArrayBuffer();
-  function onload(e) {
-    spark.append(e.target.result);  // append chunk
-    current_chunk++;
-    if (current_chunk < chunks) {
-      read_next_chunk();
-    } else {
-      md5[file.name] = spark.end();
-    }
-  }
-  function read_next_chunk() {
-    var reader = new FileReader();
-    reader.onload = onload;
-    var start = current_chunk * chunk_size,
-        end = Math.min(start + chunk_size, file.size);
-    reader.readAsArrayBuffer(slice.call(file, start, end));
-  }
-  read_next_chunk();
-}
 
 var getFormData = function(form) {
   "use strict";
@@ -125,14 +128,10 @@ var chunkDone = function(e, data) {
   }
 };
 
-var uploadSubmit = function(e, data) {
-  "use strict";
-  calculate_md5(data.files[0], chunkSize);
-};
-
 var uploadDone = function(e, data) {
   "use strict";
-  console.log("Finished uploading chunks for:", data.files[0].name,
+  console.log(
+      "Finished uploading chunks for:", data.files[0].name,
       "md5 =", md5[data.files[0].name]);
   $.ajax({
     type: "POST",
