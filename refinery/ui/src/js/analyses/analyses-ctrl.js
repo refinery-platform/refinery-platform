@@ -27,18 +27,12 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     });
   };
 
-  vm.updateAnalysesGlobalList = function (timerStatus) {
-    timerStatus = timerStatus || "";
-
+  vm.updateAnalysesGlobalList = function () {
     analysesFactory.getAnalysesGlobalList().then(function () {
       vm.analysesGlobalList = analysesFactory.analysesGlobalList;
       vm.refreshAnalysesGlobalDetail();
     });
     timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 30000);
-
-    if(timerStatus === "once"){
-      $timeout.cancel(timerGlobalList);
-    }
   };
 
   vm.cancelTimerGlobalList = function(){
