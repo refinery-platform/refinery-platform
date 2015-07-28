@@ -18,12 +18,15 @@
           </a>
         </span>
       </span>
-     &nbsp;
      <span ng-if="analysis.status == 'RUNNING'">
+       <br>
+       &nbsp;
        <i class="icon-circle-arrow-down">
          {{ analysesCtrl.analysesGlobalDetail[analysis.uuid].preprocessing}}</i>
+       &nbsp;
        <i class="icon-cog">{{ analysesCtrl.analysesGlobalDetail[analysis.uuid]
          .executionPercentDone}}</i>
+       &nbsp;
        <i class="icon-circle-arrow-up">
          {{ analysesCtrl.analysesGlobalDetail[analysis.uuid]
            .postprocessing}}</i>
