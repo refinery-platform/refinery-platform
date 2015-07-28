@@ -33,6 +33,7 @@ function rfAnalysesGlobalListStatusPopover($compile, $templateCache, $, $timeout
         $timeout(function () {
             if (!$rootScope.insidePopover) {
                 $(element).popover('hide');
+                scope.analysesCtrl.cancelTimerGlobalList();
             }
         }, 400);
       });

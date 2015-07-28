@@ -36,7 +36,9 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.cancelTimerGlobalList = function(){
-    $timeout.cancel(timerGlobalList);
+    if(typeof timerGlobalList !== "undefined") {
+      $timeout.cancel(timerGlobalList);
+    }
   };
 
   vm.updateAnalysesRunningList = function () {
@@ -65,7 +67,6 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.refreshAnalysesGlobalDetail = function(){
-    var timerDetail;
     vm.analysesRunningGlobalList = analysesFactory.analysesRunningGlobalList;
     for (var i = 0; i < vm.analysesRunningGlobalList.length; i++) {
       vm.updateAnalysesGlobalDetail(i);
