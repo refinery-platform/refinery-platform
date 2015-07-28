@@ -15,11 +15,12 @@
   },
   "files": {
     "features": [
+      "analyses",
       "commons",
       "dashboard",
-      "globals",
-      "analyses",
-      "external-tool-status"
+      "data-set-import",
+      "external-tool-status",
+      "globals"
     ],
     "vendor": [
       "angular-animate/angular-animate.min.js",
