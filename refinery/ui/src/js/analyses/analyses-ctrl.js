@@ -14,6 +14,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.analysesRunningGlobalList = [];
   var timerGlobalList;
 
+  /*Updates overall analyses lists*/
   vm.updateAnalysesList = function () {
     analysesFactory.getAnalysesList().then(function () {
       vm.analysesList = analysesFactory.analysesList;
@@ -41,6 +42,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     }
   };
 
+  /*Updates analyses list which are running.*/
   vm.updateAnalysesRunningList = function () {
     analysesFactory.getAnalysesRunningList().then(function () {
       vm.analysesRunningList = analysesFactory.analysesRunningList;
@@ -59,6 +61,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     $timeout(vm.updateAnalysesRunningGlobalList, 30000);
   };
 
+  /*Updates the running analyses stage details*/
   vm.refreshAnalysesDetail = function () {
     vm.analysesRunningList = analysesFactory.analysesRunningList;
     for (var i = 0; i < vm.analysesRunningList.length; i++) {
@@ -93,6 +96,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     })(i);
   };
 
+  //Cancels a running analyses
   vm.cancelAnalysis = function (uuid) {
     vm.analysesDetail[uuid].cancelingAnalyses = true;
     analysesFactory.postCancelAnalysis(uuid).then(function (result) {
@@ -105,6 +109,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     });
   };
 
+  //Alert message which show on analysis view filtered page
   vm.setAnalysesAlertMsg = function () {
     var uuid = window.analysisUuid;
     analysesAlertService.setAnalysesMsg(uuid);
@@ -135,17 +140,6 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     }
   };
 
-  //checks url to see if view is filtered by analysis
-  $scope.checkAnalysesViewFlag = function () {
-    var flag;
-    if (typeof window.analysisUuid === 'undefined' || window.analysisUuid === "None") {
-      flag = false;
-    } else {
-      flag = true;
-    }
-    return flag;
-  };
-
   //custom popover event allowing hovering over textbox.
   vm.analysesPopoverEvents = function (element) {
     $('.popover').on('mouseenter', function() {
@@ -156,6 +150,18 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
       $(element).popover('hide');
       vm.cancelTimerGlobalList();
     });
+  };
+
+  //checks url to see if view is filtered by analysis in data_set.html. Used
+  // with analyses alert msg.
+  $scope.checkAnalysesViewFlag = function () {
+    var flag;
+    if (typeof window.analysisUuid === 'undefined' || window.analysisUuid === "None") {
+      flag = false;
+    } else {
+      flag = true;
+    }
+    return flag;
   };
 
 }
