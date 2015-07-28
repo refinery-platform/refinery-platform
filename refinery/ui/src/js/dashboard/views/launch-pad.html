@@ -172,11 +172,11 @@
         ng-if="dashboard.allAnalyses.meta.total_count > 0">
         <li ng-repeat="analysis in dashboard.allAnalyses.objects">
           <span ng-if="analysis.status == 'SUCCESS'">
-            <i class="icon-ok-sign"></i>
+            <i class="icon-ok-sign analyses-status"></i>
             <a ng-href="data_sets/{{ analysis.data_set__uuid }}/analysis/{{ analysis.uuid }}">{{ analysis.name }}</a>
           </span>
           <span ng-if="analysis.status == 'FAILURE'">
-            <i class="icon-warning-sign"></i>
+            <i class="icon-warning-sign analyses-status"></i>
             <a ng-href="data_sets/{{ analysis.data_set__uuid }}/analysis/{{ analysis.uuid }}">{{ analysis.name }}</a>
           </span>
         </li>
