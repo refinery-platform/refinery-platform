@@ -7,10 +7,9 @@ Created on May 11, 2012
 import shutil
 import simplejson as json
 from urlparse import urlparse
-from celery.result import AsyncResult
-from chunked_upload.models import ChunkedUpload
-from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
+
 from django import forms
+from django.core.exceptions import MultipleObjectsReturned
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse, \
     HttpResponseBadRequest
@@ -18,7 +17,12 @@ from django.shortcuts import render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
 from django.views.generic.base import TemplateView
+
+from celery.result import AsyncResult
+from chunked_upload.models import ChunkedUpload
+from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
 from haystack.query import SearchQuerySet
+
 from core.models import *
 from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import create_dataset, parse_isatab
@@ -380,23 +384,37 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
 
     def on_completion(self, uploaded_file, request):
         """Move file to the user's import directory"""
-        upload_id = request.POST.get('upload_id')
-        chunked_upload = ChunkedUpload.objects.get(upload_id=upload_id)
+        try:
+            upload_id = request.POST['upload_id']
+        except KeyError:
+            logger.error("Upload ID is missing from file upload request")
+            return
+        try:
+            chunked_upload = ChunkedUpload.objects.get(upload_id=upload_id)
+        except (ChunkedUpload.DoesNotExist, MultipleObjectsReturned) as exc:
+            logger.error(
+                "Error retrieving file upload instance with ID '%s': '%s'",
+                         upload_id, exc)
+            return
         user_import_dir = get_user_import_dir(request.user)
         if not os.path.exists(user_import_dir):
             try:
                 os.mkdir(user_import_dir)
+            except OSError as exc:
+                logger.error("Error creating user import directory '%s': %s",
+                             user_import_dir, exc)
+            else:
                 logger.info("Created user import directory '%s'",
                             user_import_dir)
-            except OSError as e:
-                logger.error("Error creating user import directory '%s': %s",
-                             user_import_dir, e)
         dst = os.path.join(user_import_dir, chunked_upload.filename)
         try:
             shutil.move(chunked_upload.file.path, dst)
-        except (shutil.Error, IOError) as e:
+        except (shutil.Error, IOError) as exc:
             logger.error(
-                "Error moving uploaded file to user's import directory: %s", e)
+                "Error moving uploaded file to user's import directory: %s",
+                exc)
 
     def get_response_data(self, chunked_upload, request):
-        return {'message': 'You successfully uploaded this file'}
+        message = "You have successfully uploaded {}".format(
+            chunked_upload.filename)
+        return {"message": message}
