@@ -32,8 +32,8 @@ InviteListService.prototype.update = function () {
           var createdDate = new Date(new Date(i.created).getTime() + offset);
           var expiresDate = new Date(new Date(i.expires).getTime() + offset);
           var expireTime = millisToTime(expiresDate.getTime() - createdDate.getTime());
-          i.created = humanize.date('D Y-F-dS @ h:m:s A', createdDate);
-          i.expires = humanize.date('D Y-F-dS @ h:m:s A', expiresDate);
+          i.created = humanize.date('M d @ h:m A', createdDate);
+          i.expires = humanize.date('M d @ h:m A', expiresDate);
           i.expireDuration =
             humanize.relativeTime(humanize.time() +
             expireTime.d * 86400 +
