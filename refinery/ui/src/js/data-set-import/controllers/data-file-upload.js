@@ -28,7 +28,9 @@ angular.module('refineryDataFileUpload', ['blueimp.fileupload'])
       autoUpload: false,
       formData: getFormData,
       chunkdone: chunkDone,
+      chunkfail: chunkFail,
       done: uploadDone,
+      always: uploadAlways,
       processQueue: [
         {
           action: 'calculate_checksum',
@@ -128,23 +130,35 @@ var chunkDone = function(e, data) {
   }
 };
 
+var chunkFail = function(e, data) {
+  "use strict";
+  console.error("Error uploading file:", data.errorThrown, "-", data.textStatus);
+};
+
 var uploadDone = function(e, data) {
   "use strict";
+  var file = data.files[0];
   console.log(
-      "Finished uploading chunks for:", data.files[0].name,
-      "md5 =", md5[data.files[0].name]);
+      "Finished uploading chunks for", file.name, "md5 =", md5[file.name]);
   $.ajax({
     type: "POST",
     url: "/data_set_manager/import/chunked-upload-complete/",
     data: {
         csrfmiddlewaretoken: csrf,
         upload_id: data.result.upload_id,
-        md5: md5[data.files[0].name]
+        md5: md5[file.name]
     },
     dataType: "json",
-    success: function(data) {
-      console.log(data);
+    success: function(response) {
+      console.log(response.message);
+    },
+    error: function(jqXHR, textStatus, errorThrown) {
+      console.error("Error uploading file:", textStatus, "-", errorThrown);
     }
   });
+};
+
+var uploadAlways = function(e, data) {
+  "use strict";
   formData.splice(1);  // clear upload_id for the next upload
 };
