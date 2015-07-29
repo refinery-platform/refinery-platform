@@ -30,6 +30,7 @@ angular.module('refineryDataFileUpload', ['blueimp.fileupload'])
       chunkdone: chunkDone,
       chunkfail: chunkFail,
       done: uploadDone,
+      always: uploadAlways,
       processQueue: [
         {
           action: 'calculate_checksum',
@@ -152,8 +153,12 @@ var uploadDone = function(e, data) {
       console.log(response.message);
     },
     error: function(jqXHR, textStatus, errorThrown) {
-      console.error("Error uploading file:", textStatus);
+      console.error("Error uploading file:", textStatus, "-", errorThrown);
     }
   });
+};
+
+var uploadAlways = function(e, data) {
+  "use strict";
   formData.splice(1);  // clear upload_id for the next upload
 };
