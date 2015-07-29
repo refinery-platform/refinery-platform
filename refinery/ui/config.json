@@ -17,6 +17,7 @@
     "features": [
       "commons",
       "dashboard",
+      "data-set-import",
       "globals",
       "analyses",
       "external-tool-status",
