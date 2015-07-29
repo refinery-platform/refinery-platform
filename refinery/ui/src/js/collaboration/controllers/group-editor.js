@@ -20,6 +20,7 @@ GroupEditorCtrl.prototype.leaveGroup = function () {
     }
   ).catch(function (error) {
     console.error(error);
+    bootbox.alert("Are you the only member or manager left?");
   });
 };
 
@@ -35,6 +36,7 @@ GroupEditorCtrl.prototype.deleteGroup = function () {
     }
   ).catch(function (error) {
     console.error(error);
+    bootbox.alert("Group could not be deleted");
   });
 };
 

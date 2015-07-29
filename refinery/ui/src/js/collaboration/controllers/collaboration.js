@@ -65,6 +65,7 @@ CollaborationCtrl.prototype.resendInvitation = function (invite) {
     }
   ).catch(function (error) {
     console.error(error);
+    bootbox.alert("Invitation sending failed");
   });
 };
 
@@ -80,6 +81,7 @@ CollaborationCtrl.prototype.revokeInvitation = function (invite) {
     }
   ).catch(function (error) {
     console.error(error);
+    bootbox.alert("Invitation could not be revoked");
   });
 };
 

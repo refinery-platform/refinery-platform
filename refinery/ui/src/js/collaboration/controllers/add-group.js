@@ -17,6 +17,7 @@ AddGroupCtrl.prototype.createGroup = function (name) {
     }
   ).catch(function (error) {
     console.error(error);
+    bootbox.alert("This name probably already exists - try a different name.");
   });
 };
 
