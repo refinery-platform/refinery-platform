@@ -82,6 +82,10 @@ angular.module('refineryAnalysis', [])
       mins = "0" + mins;
     }
 
+    if(sec < 10){
+      sec = "0" + sec;
+    }
+
     var dateStr = year + "-" + month + "-" + day;
     var timeStr = "@" + hour + ":" + mins + ":" + sec;
 
