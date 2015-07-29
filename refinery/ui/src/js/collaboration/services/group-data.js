@@ -39,8 +39,16 @@ Object.defineProperty(
 
 GroupDataService.prototype.update = function (p) {
   var params = p || {};
-  this.groupListService.update(params);
-  this.inviteListService.update();
+  var that = this;
+
+  // Make sure that the group list and active group are updated first.
+  this.groupListService.update(params)
+    .then(function (data) {
+      that.inviteListService.update();
+    })
+    .catch(function (error) {
+      console.error(error);
+    });
 };
 
 angular

@@ -1548,6 +1548,7 @@ class ExtendedGroupResource(ModelResource):
         return map(
             lambda u: {
             'user_id': u.id,
+            'uuid': u.userprofile.uuid,
             'username': u.username,
             'first_name': u.first_name,
             'last_name': u.last_name,

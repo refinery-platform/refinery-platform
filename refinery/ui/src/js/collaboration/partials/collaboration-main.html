@@ -17,21 +17,22 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th width="90%">Name</th>
-                            <th width="10%">Edit</th>
+                            <th width="60%">Group</th>
+                            <th width="30%" style="text-align:center">Permission</th>
+                            <th width="10%" style="text-align:center">Edit</th>
                         </tr>
                     </thead>
                     <tbody ng-repeat="group in collab.groupList">
-                        <tr>
-                            <td ng-class="{'active-group':group.active}">
-                                <a ng-href="#/{{group.uuid}}/">
-                                    {{group.name}}
-                                </a>
-                                <span ng-if="group.can_edit" style="float:right;color:red">
-                                    manager
-                                </span>
-                            </td>
+                        <tr ng-class="{'active-group': group.active}" style="cursor:pointer" ng-click="collab.setActiveGroup(group)">
                             <td>
+                                <a ng-href="#/{{group.uuid}}/">{{group.name}}</a>
+                            </td>
+                            <td style="text-align:center">
+                                <p ng-if="group.can_edit" style="color:red">
+                                    manager
+                                </p>
+                            </td>
+                            <td style="text-align:center">
                                 <a ng-href="#/{{group.uuid}}/" ng-click="collab.openGroupEditor(group)">
                                     <i class="icon-cog"></i>
                                 </a>
@@ -57,27 +58,34 @@
             </div>
 
             <div class="refinery-panel-content scrollable jquery-full-height">
-                <ul class="nav nav-list scrollable">
-                    <li ng-repeat="member in collab.activeGroup.member_list">
-                        <!-- <span> -->
-                            <span ng-if="member.first_name !== '' && member.last_name !== ''" style="display=inline">
-                                {{member.first_name}} {{member.last_name}} ({{member.username}})
-                            </span>
-                            <span ng-if="member.first_name === '' || member.last_name === ''" style="display=inline">
-                                {{member.username}}
-                            </span>
-                        <!-- </span> -->
-                        
-                        <span style="float:right" ng-if="collab.activeGroup.can_edit">
-                            <span ng-if="member.is_manager" style="float:left;color:red" font-size="5px">
-                                manager
-                            </span>
-                            <a href="#/{{ collab.activeGroup.uuid }}/" ng-click="collab.openMemberEditor(member)" style="margin-left:10px">
-                                <i class="icon-cog"></i>
-                            </a>
-                        </span>
-                    </li>
-                </ul>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th width="60%">Name</th>
+                            <th width="30%" style="text-align:center">Permission</th>
+                            <th width="10%" style="text-align:center">Edit</th>
+                        </tr>
+                    </thead>
+                    <tbody ng-repeat="member in collab.activeGroup.member_list">
+                        <tr>
+                            <td>
+                                <a ng-href="/users/{{member.uuid}}/">
+                                    {{(member.first_name + ' ' + member.last_name).trim().length > 0 && (member.first_name + ' ' + member.last_name).trim() || member.username}}
+                                </a>
+                            </td>
+                            <td style="text-align:center">
+                                <p ng-if="member.is_manager" style="color:red">
+                                    manager
+                                </p>
+                            </td>
+                            <td style="text-align:center">
+                                <a ng-if="collab.activeGroup.can_edit" ng-href="#/{{collab.activeGroup.uuid}}/" ng-click="collab.openMemberEditor(member)">
+                                    <i class="icon-cog"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -95,27 +103,38 @@
             </div>
 
             <div class="refinery-panel-content scrollable jquery-full-height">
-
-                <ul class="nav nav-list scrollable">
-                    <li ng-repeat="invite in collab.activeGroupInviteList">
-                        {{ invite.recipient_email }}
-                        <span>
-                            <span style="float:right;margin-left:10px">
-                                <a href="#/{{ collab.activeGroup.uuid }}/" ng-click="collab.revokeInvitation(invite)">Revoke</a>
-                            </span>
-                            <span style="float:right">
-                                <a href="#/{{ collab.activeGroup.uuid }}/" ng-click="collab.resendInvitation(invite)">Resend</a>
-                            </span>
-                        </span>
-                        <br>
-                        <span>
-                            Created: {{ invite.created }}
-                            <br>
-                            Expires: {{ invite.expireDuration }} on {{ invite.expires }}
-                        </span>
-                        <hr>
-                    </li>
-                </ul>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Created</th>
+                            <th>Expires</th>
+                            <th>Edit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="invite in collab.activeGroupInviteList">
+                            <td>
+                                {{invite.recipient_email}}
+                            </td>
+                            <td>
+                                {{invite.created}}
+                            </td>
+                            <td>
+                                {{invite.expireDuration}} on {{invite.expires}} 
+                            </td>
+                            <td>
+                                <a href="#/{{collab.activeGroup.uuid}}/" ng-click="collab.revokeInvitation(invite)">
+                                    Revoke
+                                </a>
+                                <a href="#/{{collab.activeGroup.uuid}}/" ng-click="collab.resendInvitation(invite)">
+                                    Resend
+                                </a>
+                            </td>
+                            Within the tr tags
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
