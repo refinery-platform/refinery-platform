@@ -38,8 +38,7 @@ GroupListService.prototype.update = function (p) {
   var params = p || {};
 
   return this.groupMemberService.query()
-    .$promise
-      .then(function (data) {
+    .$promise.then(function (data) {
         this.list = data.objects.sort(function (a, b) {
           return a.id > b.id;
         });

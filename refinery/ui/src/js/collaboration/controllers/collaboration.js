@@ -1,6 +1,8 @@
-function CollaborationCtrl($stateParams, $modal, groupInviteService, groupDataService) {
+function CollaborationCtrl($state, $stateParams, $location, $modal, groupInviteService, groupDataService) {
   var that = this;
+  that.$state = $state;
   that.$stateParams = $stateParams;
+  that.$location = $location;
   that.$modal = $modal;
   that.groupInviteService = groupInviteService;
   that.groupDataService = groupDataService;
@@ -47,6 +49,10 @@ CollaborationCtrl.prototype.updateGroupList = function (params) {
 
 ////////////////////////
 
+CollaborationCtrl.prototype.setActiveGroup = function (group) {
+  this.$location.url('/' + group.uuid + '/');
+};
+
 CollaborationCtrl.prototype.resendInvitation = function (invite) {
   var that = this;
 
@@ -59,6 +65,7 @@ CollaborationCtrl.prototype.resendInvitation = function (invite) {
     }
   ).catch(function (error) {
     console.error(error);
+    bootbox.alert("Invitation sending failed");
   });
 };
 
@@ -74,6 +81,7 @@ CollaborationCtrl.prototype.revokeInvitation = function (invite) {
     }
   ).catch(function (error) {
     console.error(error);
+    bootbox.alert("Invitation could not be revoked");
   });
 };
 
@@ -81,8 +89,6 @@ CollaborationCtrl.prototype.revokeInvitation = function (invite) {
 // Opening modals:
 
 CollaborationCtrl.prototype.openAddGroup = function () {
-  var that = this;
-
   var modalInstance = this.$modal.open({
     templateUrl: '/static/partials/collaboration/partials/collaboration-addgroups-dialog.html',
     controller: 'AddGroupCtrl as modal',
@@ -90,8 +96,6 @@ CollaborationCtrl.prototype.openAddGroup = function () {
 };
 
 CollaborationCtrl.prototype.openGroupEditor = function (group) {
-  var that = this;
-
   var modalInstance = this.$modal.open({
     templateUrl: '/static/partials/collaboration/partials/collaboration-groups-dialog.html',
     controller: 'GroupEditorCtrl as modal',
@@ -104,8 +108,6 @@ CollaborationCtrl.prototype.openGroupEditor = function (group) {
 };
 
 CollaborationCtrl.prototype.openMemberEditor = function (member) {
-  var that = this;
-
   var modalInstance = this.$modal.open({
     templateUrl: '/static/partials/collaboration/partials/collaboration-members-dialog.html',
     controller: 'MemberEditorCtrl as modal',
@@ -118,8 +120,6 @@ CollaborationCtrl.prototype.openMemberEditor = function (member) {
 };
 
 CollaborationCtrl.prototype.openEmailInvite = function () {
-  var that = this;
-
   var modalInstance = this.$modal.open({
     templateUrl: '/static/partials/collaboration/partials/collaboration-addmembers-dialog.html',
     controller: 'EmailInviteCtrl as modal',
@@ -128,8 +128,10 @@ CollaborationCtrl.prototype.openEmailInvite = function () {
 
 angular
   .module('refineryCollaboration')
-  .controller('refineryCollaborationController', [
+  .controller('refineryCollaborationCtrl', [
+    '$state',
     '$stateParams',
+    '$location',
     '$modal',
     'groupInviteService',
     'groupDataService',

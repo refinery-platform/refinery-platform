@@ -12,6 +12,7 @@ from django.conf import settings
 from sets import Set
 from django.conf.urls.defaults import url
 from django.contrib.auth.models import User, Group
+from django.contrib.sites.models import get_current_site
 from django.core.exceptions import ObjectDoesNotExist
 from guardian.shortcuts import get_objects_for_user, get_objects_for_group, \
     get_perms
@@ -1420,12 +1421,13 @@ class InvitationResource(ModelResource):
             if self.has_expired(i):
                 i.delete()
 
-    def send_email(self, invitation):
+    def send_email(self, request, invitation):
         group = self.get_group(invitation.group_id)
         subject = 'Invitation to join group %s' % group.name
         temp_loader = loader.get_template('group_invitation/group_invite_email.txt')
         context_dict = {
             'group_name': group.name,
+            'site': get_current_site(request),
             'token': invitation.token_uuid
         }
         email = EmailMessage(
@@ -1479,7 +1481,7 @@ class InvitationResource(ModelResource):
         inv.sender = user
         inv.recipient_email = data['email']
         inv.save()
-        self.send_email(inv)
+        self.send_email(request, inv)
         return bundle
 
     # Handle PUT requests for resending tokens.
@@ -1548,6 +1550,7 @@ class ExtendedGroupResource(ModelResource):
         return map(
             lambda u: {
             'user_id': u.id,
+            'uuid': u.userprofile.uuid,
             'username': u.username,
             'first_name': u.first_name,
             'last_name': u.last_name,

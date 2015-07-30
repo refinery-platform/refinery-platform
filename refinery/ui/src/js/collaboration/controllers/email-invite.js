@@ -18,7 +18,7 @@ EmailInviteCtrl.prototype.sendInvite = function (email) {
       that.$modalInstance.dismiss();
     }
   ).catch(function (error) {
-    console.error(error);
+    console.error(error);    
   });
 };
 
