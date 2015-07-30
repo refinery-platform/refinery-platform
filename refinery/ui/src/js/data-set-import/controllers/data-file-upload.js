@@ -24,37 +24,35 @@ angular
       $scope.loadingFiles = false;
       $.blueimp.fileupload.prototype.processActions = {
         calculate_checksum: function (data, options) {
+          var context = this;
           var dfd = $.Deferred();
           var file = data.files[data.index];
-          calculate_md5(file, chunkSize, dfd, this);
+          var slice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
+            chunks = Math.ceil(file.size / chunkSize),
+            current_chunk = 0,
+            spark = new SparkMD5.ArrayBuffer();
+          function onload(e) {
+            spark.append(e.target.result);  // append chunk
+            current_chunk++;
+            if (current_chunk < chunks) {
+              read_next_chunk();
+            } else {
+              md5[file.name] = spark.end();
+              dfd.resolveWith(context, [data]);
+            }
+          }
+          function read_next_chunk() {
+            var reader = new FileReader();
+            reader.onload = onload;
+            var start = current_chunk * chunkSize,
+              end = Math.min(start + chunkSize, file.size);
+            reader.readAsArrayBuffer(slice.call(file, start, end));
+          }
+          console.log("Calculating checksum of " + file.name);
+          read_next_chunk();
           return dfd.promise();
         }
       };
-      function calculate_md5(file, chunk_size, dfd, context) {
-        var slice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
-            chunks = Math.ceil(file.size / chunk_size),
-            current_chunk = 0,
-            spark = new SparkMD5.ArrayBuffer();
-        function onload(e) {
-          spark.append(e.target.result);  // append chunk
-          current_chunk++;
-          if (current_chunk < chunks) {
-            read_next_chunk();
-          } else {
-            md5[file.name] = spark.end();
-            dfd.resolveWith(context, [data]);
-          }
-        }
-        function read_next_chunk() {
-          var reader = new FileReader();
-          reader.onload = onload;
-          var start = current_chunk * chunk_size,
-              end = Math.min(start + chunk_size, file.size);
-          reader.readAsArrayBuffer(slice.call(file, start, end));
-        }
-        console.log("Calculating checksum of " + file.name);
-        read_next_chunk();
-      }
     }
   ])
   .controller('RefineryFileDestroyController', [
