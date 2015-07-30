@@ -16,6 +16,11 @@ function rpAnalysesRunningTabIcon() {
         scope.AnalysesCtrl.cancelTimerRunningList();
         scope.AnalysesCtrl.updateAnalysesRunningList();
       });
+
+      scope.$on("rf/cancelAnalysis", function(e){
+        scope.AnalysesCtrl.cancelTimerRunningList();
+        scope.AnalysesCtrl.updateAnalysesRunningList();
+      });
     }
   };
 }

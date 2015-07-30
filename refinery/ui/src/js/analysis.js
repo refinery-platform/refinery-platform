@@ -64,7 +64,6 @@ angular.module('refineryAnalysis', [])
       $log.debug("NodeSET: " + $scope.analysisConfig.nodeSetUuid);
       $log.debug("NodeREL: " + $scope.analysisConfig.nodeRelationshipUuid);
     //  $window.location.assign(response);
-      console.log("i've made an api request");
        $rootScope.$broadcast('rf/launchAnalysis');
     }).error(function (response, status) {
       $log.debug("Request failed: error " + status);

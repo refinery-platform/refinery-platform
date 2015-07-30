@@ -15,6 +15,11 @@ function rpAnalysesGlobalListStatus(){
         scope.AnalysesCtrl.cancelTimerRunningGlobalList();
         scope.AnalysesCtrl.updateAnalysesRunningGlobalList();
       });
+
+      scope.$on("rf/cancelAnalysis", function(e){
+        scope.AnalysesCtrl.cancelTimerRunningGlobalList();
+        scope.AnalysesCtrl.updateAnalysesRunningGlobalList();
+      });
     }
   };
 }
