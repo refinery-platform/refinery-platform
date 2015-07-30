@@ -1,8 +1,8 @@
 angular
   .module('refineryDataSetImport')
   .controller('RefineryFileUploadController', [
-    '$scope', '$http', '$filter', '$window',
-    function ($scope, $http) {
+    '$scope', '$',
+    function ($scope, $) {
       "use strict";
       $scope.options = {
         url: url,
