@@ -58,7 +58,10 @@ def group_invite(request, token):
     if len(inv_list) == 0:
         return render_to_response(
             'core/group_invite.html',
-            {'message': 'Invalid token. Not found or expired.'},
+            {
+                'site': get_current_site(request),
+                'message': 'Invalid token. Not found or expired.'
+            },
             context_instance=RequestContext(request))
 
     inv = inv_list[0]
@@ -69,7 +72,10 @@ def group_invite(request, token):
     if not ext_group:
         return render_to_response(
             'core/group_invite.html',
-            {'message': 'Invalid token. Unable to find pairing group'},
+            {
+                'site': get_current_site(request),
+                'message': 'Invalid token. Unable to find pairing group'
+            },
             context_instance=RequestContext(request))
 
     ext_group.user_set.add(user)
@@ -83,7 +89,8 @@ def group_invite(request, token):
     inv.delete()
     return render_to_response(
         'core/group_invite.html',
-        {
+        {    
+            'site': get_current_site(request),
             'message': '%s has been added to the group %s!' % (user.username, ext_group.name),
             'user': user,
             'ext_group': ext_group

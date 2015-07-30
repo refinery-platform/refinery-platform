@@ -9,7 +9,7 @@ angular
           {
             url: '/{uuid}/',
             templateUrl: '/static/partials/collaboration/partials/collaboration-main.html',
-            controller: 'refineryCollaborationController as collab'
+            controller: 'refineryCollaborationCtrl as collab'
           },
           '/collaboration/')
         .state(
@@ -17,7 +17,7 @@ angular
           {
             url: '/',
             templateUrl: '/static/partials/collaboration/partials/collaboration-main.html',
-            controller: 'refineryCollaborationController as collab'
+            controller: 'refineryCollaborationCtrl as collab'
           },
           '/collaboration/'
         );

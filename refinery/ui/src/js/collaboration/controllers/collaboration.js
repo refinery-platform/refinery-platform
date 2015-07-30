@@ -128,7 +128,7 @@ CollaborationCtrl.prototype.openEmailInvite = function () {
 
 angular
   .module('refineryCollaboration')
-  .controller('refineryCollaborationController', [
+  .controller('refineryCollaborationCtrl', [
     '$state',
     '$stateParams',
     '$location',
