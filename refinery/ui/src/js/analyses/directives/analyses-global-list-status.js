@@ -11,6 +11,10 @@ function rpAnalysesGlobalListStatus(){
     controllerAs: 'AnalysesCtrl',
     link: function(scope, element, attr){
       scope.AnalysesCtrl.updateAnalysesRunningGlobalList();
+      scope.$on("rf/launchAnalysis", function (e) {
+        scope.AnalysesCtrl.cancelTimerRunningGlobalList();
+        scope.AnalysesCtrl.updateAnalysesRunningGlobalList();
+      });
     }
   };
 }

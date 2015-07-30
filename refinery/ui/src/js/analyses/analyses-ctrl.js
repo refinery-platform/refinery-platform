@@ -12,7 +12,10 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.analysesGlobalDetail = {};
   vm.analysesRunningList = [];
   vm.analysesRunningGlobalList = [];
-  var timerGlobalList;
+  vm.timerRunGlobalList = {};
+  vm.timerGlobalList = undefined;
+  vm.timerRunList = undefined;
+
 
   /*Updates overall analyses lists*/
   vm.updateAnalysesList = function () {
@@ -33,12 +36,12 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
       vm.analysesGlobalList = analysesFactory.analysesGlobalList;
       vm.refreshAnalysesGlobalDetail();
     });
-    timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 30000);
+   vm. timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 30000);
   };
 
   vm.cancelTimerGlobalList = function(){
-    if(typeof timerGlobalList !== "undefined") {
-      $timeout.cancel(timerGlobalList);
+    if(typeof vm.timerGlobalList !== "undefined") {
+      $timeout.cancel(vm.timerGlobalList);
     }
   };
 
@@ -47,10 +50,11 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     analysesFactory.getAnalysesRunningList().then(function () {
       vm.analysesRunningList = analysesFactory.analysesRunningList;
     });
-    var timerRunList = $timeout(vm.updateAnalysesRunningList, 30000);
+
+    vm.timerRunList = $timeout(vm.updateAnalysesRunningList, 30000);
 
     if(typeof dataSetUuid === 'undefined' || dataSetUuid === "None"){
-      $timeout.cancel(timerRunList);
+      $timeout.cancel(vm.timerRunList);
     }
   };
 
@@ -58,7 +62,23 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     analysesFactory.getAnalysesRunningGlobalList().then(function () {
       vm.analysesRunningGlobalList = analysesFactory.analysesRunningGlobalList;
     });
-    $timeout(vm.updateAnalysesRunningGlobalList, 30000);
+    vm.timerRunGlobalList = $timeout(vm.updateAnalysesRunningGlobalList, 30000);
+
+    if(typeof dataSetUuid === 'undefined' || dataSetUuid === "None"){
+      $timeout.cancel(vm.timerRunList);
+    }
+  };
+
+  vm.cancelTimerRunningList = function(){
+    if(typeof vm.timerRunList !== "undefined") {
+      $timeout.cancel(vm.timerRunList);
+    }
+  };
+
+  vm.cancelTimerRunningGlobalList = function(){
+    if(typeof vm.timerRunGlobalList !== "undefined") {
+      $timeout.cancel(vm.timerRunGlobalList);
+    }
   };
 
   /*Updates the running analyses stage details*/
