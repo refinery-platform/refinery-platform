@@ -12,7 +12,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.analysesGlobalDetail = {};
   vm.analysesRunningList = [];
   vm.analysesRunningGlobalList = [];
-  vm.timerRunGlobalList = {};
+  vm.timerRunGlobalList = undefined;
   vm.timerGlobalList = undefined;
   vm.timerRunList = undefined;
 
@@ -34,7 +34,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
       vm.analysesGlobalList = analysesFactory.analysesGlobalList;
       vm.refreshAnalysesGlobalDetail();
     });
-   vm. timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 30000);
+   vm.timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 30000);
   };
 
   vm.cancelTimerGlobalList = function(){
