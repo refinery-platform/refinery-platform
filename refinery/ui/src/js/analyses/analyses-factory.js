@@ -13,11 +13,11 @@ function analysesFactory($http) {
 
   var initializeAnalysesDetail = function(uuid){
     analysesDetail[uuid]={
-      "preprocessing": 'PENDING',
+      "preprocessing": '',
       "preprocessingPercentDone":'0%',
-      "execution": 'PENDING',
+      "execution": '',
       "executionPercentDone":'0%',
-      "postprocessing": 'PENDING',
+      "postprocessing": '',
       "postprocessingPercentDone":'0%',
       "cancelingAnalyses":false,
     };

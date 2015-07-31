@@ -69,12 +69,14 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.cancelTimerRunningList = function(){
     if(typeof vm.timerRunList !== "undefined") {
       $timeout.cancel(vm.timerRunList);
+      console.log("canceltimerrunninglist");
     }
   };
 
   vm.cancelTimerRunningGlobalList = function(){
     if(typeof vm.timerRunGlobalList !== "undefined") {
       $timeout.cancel(vm.timerRunGlobalList);
+      console.log("canceltimerrunninglist");
     }
   };
 
@@ -152,6 +154,14 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
       return false;
     }else{
       return true;
+    }
+  };
+
+  vm.isAnalysisDetailLoaded = function(uuid){
+    if(typeof vm.analysesDetail[uuid] !== "undefined" && vm.analysesDetail[uuid].preprocessing !== ""){
+      return true;
+    }else{
+      return false;
     }
   };
 
