@@ -10,6 +10,8 @@ function RefineryFileUploadCtrl(
   if ($("input[name='csrfmiddlewaretoken']")[0]) {
     csrf = $("input[name='csrfmiddlewaretoken']")[0].value;
     formData = [{"name": "csrfmiddlewaretoken", "value": csrf}];
+  } else {
+    console.error("CSRF middleware token was not found in the upload form");
   }
   $.blueimp.fileupload.prototype.processActions = {
     calculate_checksum: function (data, options) {
