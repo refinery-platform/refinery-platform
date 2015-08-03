@@ -1,14 +1,16 @@
-var md5 = {},  // dictionary of file names and hash values
-    csrf = "",
-    formData = [];
-    if ($("input[name='csrfmiddlewaretoken']")[0]) {
-      csrf = $("input[name='csrfmiddlewaretoken']")[0].value;
-      formData = [{"name": "csrfmiddlewaretoken", "value": csrf}];
-    }
-
-function RefineryFileUploadCtrl($, $scope, dataSetImportSettings){
+function RefineryFileUploadCtrl(
+  $scope,
+  $,
+  dataSetImportSettings,
+  md5,
+  formData,
+  csrf){
   "use strict";
   $scope.loadingFiles = false;
+  if ($("input[name='csrfmiddlewaretoken']")[0]) {
+    csrf = $("input[name='csrfmiddlewaretoken']")[0].value;
+    formData = [{"name": "csrfmiddlewaretoken", "value": csrf}];
+  }
   $.blueimp.fileupload.prototype.processActions = {
     calculate_checksum: function (data, options) {
       var that = this;
@@ -85,6 +87,7 @@ function RefineryFileUploadCtrl($, $scope, dataSetImportSettings){
   };
 }
 
+// not used since delete functionality is not implemented in the backend yet
 function RefineryFileDestroyCtrl($scope, $http) {
   "use strict";
   var file = $scope.file,
@@ -117,9 +120,20 @@ function RefineryFileDestroyCtrl($scope, $http) {
 
 angular
   .module('refineryDataSetImport')
+  .value('md5', {})
+  .value('formData', [])
+  .value('csrf', "")
   .controller('RefineryFileUploadCtrl', [
-    '$', '$scope', 'dataSetImportSettings', RefineryFileUploadCtrl
+    '$scope',
+    '$',
+    'dataSetImportSettings',
+    'md5',
+    'formData',
+    'csrf',
+    RefineryFileUploadCtrl
   ])
   .controller('RefineryFileDestroyCtrl', [
-    '$scope', '$http', RefineryFileDestroyCtrl
+    '$scope',
+    '$http',
+    RefineryFileDestroyCtrl
   ]);
