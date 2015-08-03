@@ -219,13 +219,12 @@ def is_url(string):
 def generate_file_source_translator(username='', base_path=''):
     """Generate file source reference translator function based on username or
     base_path
+    username: user's subdirectory in settings.REFINERY_DATA_IMPORT_DIR
     base_path: absolute path to prepend to source if source is relative
-
     """
     def translate(source):
         """Convert file source to absolute path
         source: URL, absolute or relative file system path
-
         """
         source = source.strip()
         # convert URLs to file system paths by applying source map
@@ -255,8 +254,7 @@ def generate_file_source_translator(username='', base_path=''):
 
 
 class _FileStoreItemManager(models.Manager):
-    """Custom model manager to handle creation and retrieval of FileStoreItems.
-
+    """Custom model manager to handle creation and retrieval of FileStoreItems
     """
     def create_item(self, source, sharename='', filetype=''):
         """A "constructor" for FileStoreItem.
@@ -264,7 +262,6 @@ class _FileStoreItemManager(models.Manager):
         :param source: URL or absolute file system path to a file.
         :type source: str.
         :returns: FileStoreItem -- if success, None if failure.
-
         """
         # it doesn't make sense to create a FileStoreItem without a file source
         if not source:
@@ -283,14 +280,13 @@ class _FileStoreItemManager(models.Manager):
         return item
 
     def get_item(self, uuid):
-        '''Handles potential exceptions when retrieving a FileStoreItem.
+        """Handles potential exceptions when retrieving a FileStoreItem
 
         :param uuid: UUID of a FileStoreItem.
         :type uuid: str.
         :returns: FileStoreItem -- model instance if exactly one match is found,
         None otherwise.
-
-        '''
+        """
         try:
             item = FileStoreItem.objects.get(uuid=uuid)
         except FileStoreItem.DoesNotExist:
