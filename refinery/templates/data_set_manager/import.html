@@ -278,7 +278,7 @@
         <span class="refinery-header-left"><h3>Data file upload</h3></span>
       </div>
       <form id="fileupload" method="POST" enctype="multipart/form-data"
-            ng-controller="RefineryFileUploadController"
+            ng-controller="RefineryFileUploadCtrl"
             data-file-upload="options"
             ng-class="{'fileupload-processing': processing() || loadingFiles}">
         {% csrf_token %}
@@ -375,7 +375,7 @@
                 <i class="glyphicon glyphicon-ban-circle"></i>
                 <span>Cancel</span>
               </button>
-              <button data-ng-controller="RefineryFileDestroyController" type="button"
+              <button data-ng-controller="RefineryFileDestroyCtrl" type="button"
                       class="btn btn-danger destroy"
                       data-ng-click="file.$destroy()"
                       data-ng-hide="!file.$destroy">
