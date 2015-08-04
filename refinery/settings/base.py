@@ -74,7 +74,7 @@ MEDIA_URL = get_setting("MEDIA_URL")
 # Example: "/home/media/media.lawrence.com/static/"
 STATIC_ROOT = get_setting("STATIC_ROOT")
 if not os.path.isabs(STATIC_ROOT):
-    MEDIA_ROOT = os.path.join(BASE_DIR, "static")
+    STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
