@@ -30,10 +30,10 @@ angular
   'refineryStatistics',
   'refineryMetadataTableImport',
   'refineryProvvis',
-  'refineryDataFileUpload',
+  'refineryDataSetImport',
   'refineryDashboard',
   'refineryAnalyses',
-  'refineryCollaboration',
+  'refineryCollaboration'
 ])
 .config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
   // http://stackoverflow.com/q/11252780

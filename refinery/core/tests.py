@@ -1,28 +1,21 @@
-"""
-
-These will pass when you run "manage.py test".
-
-"""
-
-
 from django.contrib.auth.models import User, Group
 from django.utils import unittest, simplejson
+
 from guardian.shortcuts import assign_perm
 from tastypie.test import ResourceTestCase
+
 from core.api import AnalysisResource
 from core.management.commands.init_refinery import create_public_group
 from core.management.commands.create_user import init_user
-from core.models import NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,\
-    ExtendedGroup, DataSet, InvestigationLink, Project, Analysis, Workflow,\
-    WorkflowEngine
+from core.models import NodeSet, create_nodeset, get_nodeset, delete_nodeset,\
+    update_nodeset, ExtendedGroup, DataSet, InvestigationLink, Project,\
+    Analysis, Workflow, WorkflowEngine
 import data_set_manager
 from galaxy_connector.models import Instance
 
 
 class UserCreateTest(unittest.TestCase):
-    '''Test User instance creation
-
-    '''
+    """Test User instance creation"""
     def setUp(self):
         self.username = "testuser"
         self.password = "password"
@@ -31,33 +24,31 @@ class UserCreateTest(unittest.TestCase):
         self.last_name = "Sample"
         self.affiliation = "University"
         create_public_group()
-        self.public_group_name = ExtendedGroup.objects.public_group().name 
+        self.public_group_name = ExtendedGroup.objects.public_group().name
 
     def tearDown(self):
         User.objects.all().delete()
         Group.objects.all().delete()
 
     def test_add_new_user_to_public_group(self):
-        '''Test if User accounts are added to Public group
-
-        '''
+        """Test if User accounts are added to Public group"""
         new_user = User.objects.create_user(self.username)
-        self.assertEqual(new_user.groups.filter(name=self.public_group_name).count(), 1)
+        self.assertEqual(
+            new_user.groups.filter(name=self.public_group_name).count(), 1)
 
     def test_init_user(self):
-        '''Test if User account are created correctly using the management command
-
-        '''
+        """Test if User account are created correctly using the management
+        command
+        """
         init_user(self.username, self.password, self.email, self.first_name,
                   self.last_name, self.affiliation)
         new_user = User.objects.get(username=self.username)
-        self.assertEqual(new_user.groups.filter(name=self.public_group_name).count(), 1)
+        self.assertEqual(
+            new_user.groups.filter(name=self.public_group_name).count(), 1)
 
 
 class NodeSetTest(unittest.TestCase):
-    '''Test all NodeSet operations
-
-    '''
+    """Test all NodeSet operations"""
     def setUp(self):
         self.investigation = data_set_manager.models.Investigation.objects.create()
         self.study = data_set_manager.models.Study.objects.create(investigation=self.investigation)
@@ -83,9 +74,7 @@ class NodeSetTest(unittest.TestCase):
         })
 
     def test_create_minimal_nodeset(self):
-        '''Test adding a new NodeSet with required fields only
-
-        '''
+        """Test adding a new NodeSet with required fields only"""
         name = 'nodeset'
         nodeset = create_nodeset(name=name, study=self.study, assay=self.assay)
         self.assertIsInstance(nodeset, NodeSet)
@@ -107,81 +96,61 @@ class NodeSetTest(unittest.TestCase):
         self.assertEqual(nodeset.solr_query, self.query)
 
     def test_get_nodeset_with_valid_uuid(self):
-        '''Test retrieving an existing NodeSet instance
-
-        '''
+        """Test retrieving an existing NodeSet instance"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay)
         self.assertEqual(get_nodeset(nodeset.uuid), nodeset)
 
     def test_get_nodeset_with_invalid_uuid(self):
-        '''Test retrieving a NodeSet instance that doesn't exist
-
-        '''
+        """Test retrieving a NodeSet instance that doesn't exist"""
         self.assertRaises(NodeSet.DoesNotExist, get_nodeset, uuid='Invalid UUID')
 
     def test_delete_nodeset_with_valid_uuid(self):
-        '''Test deleting an existing NodeSet instance
-
-        '''
+        """Test deleting an existing NodeSet instance"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay)
         delete_nodeset(nodeset.uuid)
         self.assertRaises(NodeSet.DoesNotExist, NodeSet.objects.get, uuid=nodeset.uuid)
 
     def test_delete_nodeset_with_invalid_uuid(self):
-        '''Test deleting a NodeSet instance that doesn't exist
-
-        '''
+        """Test deleting a NodeSet instance that doesn't exist"""
         self.assertIsNone(delete_nodeset(uuid='Invalid UUID'))
 
     def test_update_nodeset_name(self):
-        '''Test updating NodeSet name
-
-        '''
+        """Test updating NodeSet name"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay)
         new_name = 'new nodeset name'
         update_nodeset(uuid=nodeset.uuid, name=new_name)
         self.assertEqual(NodeSet.objects.get(uuid=nodeset.uuid).name, new_name)
 
     def test_update_nodeset_summary(self):
-        '''Test updating NodeSet summary
-
-        '''
+        """Test updating NodeSet summary"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay)
         new_summary = 'new nodeset summary'
         update_nodeset(uuid=nodeset.uuid, summary=new_summary)
         self.assertEqual(NodeSet.objects.get(uuid=nodeset.uuid).summary, new_summary)
 
     def test_update_nodeset_study(self):
-        '''Test updating NodeSet study
-
-        '''
+        """Test updating NodeSet study"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay)
         new_study = data_set_manager.models.Study.objects.create(investigation=self.investigation)
         update_nodeset(uuid=nodeset.uuid, study=new_study)
         self.assertEqual(NodeSet.objects.get(uuid=nodeset.uuid).study, new_study)
 
     def test_update_nodeset_assay(self):
-        '''Test updating NodeSet assay
-
-        '''
+        """Test updating NodeSet assay"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay)
         new_assay = data_set_manager.models.Assay.objects.create(study=self.study)
         update_nodeset(uuid=nodeset.uuid, assay=new_assay)
         self.assertEqual(NodeSet.objects.get(uuid=nodeset.uuid).assay, new_assay)
 
     def test_update_nodeset_with_solr_query(self):
-        '''Test updating NodeSet with a new Solr query
-
-        '''
+        """Test updating NodeSet with a new Solr query"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
                                          assay=self.assay, solr_query='')
         update_nodeset(uuid=nodeset.uuid, solr_query=self.query)
         self.assertEqual(NodeSet.objects.get(uuid=nodeset.uuid).solr_query, self.query)
 
     def test_update_nodeset_with_blank_solr_query(self):
-        '''Test deleting Solr query from a NodeSet.
-
-        '''
+        """Test deleting Solr query from a NodeSet"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
                                          assay=self.assay, solr_query=self.query)
         new_query = ''
@@ -189,9 +158,7 @@ class NodeSetTest(unittest.TestCase):
         self.assertEqual(NodeSet.objects.get(uuid=nodeset.uuid).solr_query, new_query)
 
     def test_update_nodeset_with_invalid_uuid(self):
-        '''Test updating a NodeSet instance that doesn't exist
-
-        '''
+        """Test updating a NodeSet instance that doesn't exist"""
         self.assertRaises(NodeSet.DoesNotExist, update_nodeset, uuid='Invalid UUID')
 
 
@@ -633,12 +600,9 @@ class NodeSetListResourceTest(ResourceTestCase):
 
 
 class AnalysisResourceTest(ResourceTestCase):
-    '''Test Analysis REST API operations.
-
-    '''
+    """Test Analysis REST API operations"""
     def setUp(self):
         super(AnalysisResourceTest, self).setUp()
-
         self.project = Project.objects.create()
         self.dataset = DataSet.objects.create()
         self.dataset2 = DataSet.objects.create()
@@ -651,17 +615,15 @@ class AnalysisResourceTest(ResourceTestCase):
         self.user2 = User.objects.create_user(self.username2, '', self.password2)
 
     def get_credentials(self):
-        '''Authenticate as self.user
-
-        '''
+        """Authenticate as self.user"""
         # workaround required to use SessionAuthentication
         # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
         return self.api_client.client.login(username=self.username, password=self.password)
 
     def test_get_analysis(self):
-        '''Test retrieving an existing Analysis that belongs to a user who created it.
-
-        '''
+        """Test retrieving an existing Analysis that belongs to a user who
+        created it
+        """
         analysis = Analysis.objects.create(project=self.project,
                                            data_set=self.dataset,
                                            workflow=self.workflow)
