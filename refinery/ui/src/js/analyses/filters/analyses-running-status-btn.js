@@ -14,7 +14,7 @@ function analysesRunningStatusBtn(){
         return "icon-question-sign";
       }
     }else{
-      return "Loading...";
+      return "refinery-spinner analyses-view";
     }
   };
 }

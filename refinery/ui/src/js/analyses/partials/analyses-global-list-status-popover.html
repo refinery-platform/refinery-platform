@@ -1,26 +1,39 @@
 <div ng-if="!(analysesCtrl.isEmptyAnalysesGlobalList())">
   <ul id="analyses-popover" ng-repeat ="analysis in analysesCtrl.analysesGlobalList track by $index">
      <li>
-
        &nbsp;
       <span ng-switch on="analysis.status">
           <span ng-switch-when="UNKNOWN">
+             <div ng-if="(analysesCtrl.isAnalysesRunningGlobal())" class="analysis-running-percentage">
+              &nbsp;
+            </div>
             <i class="{{analysis.status | analysesStatusIcon}} analyses-status"></i>
-             {{ analysis.name }}
+            &nbsp;
+            <em>Unknown</em>
+            &nbsp;
+            {{ analysis.name }}
           </span>
           <span ng-switch-when="RUNNING">
-            <a class="btn btn-sm" href="#" id="analysis-popover-btn">
-             <i class="{{analysesCtrl.analysesGlobalDetail[analysis.uuid]|analysesRunningStatusBtn}}"></i>
+            <div ng-if="(analysesCtrl.isAnalysesRunningGlobal())" class="analysis-running-percentage">
               {{analysesCtrl.analysesGlobalDetail[analysis.uuid]|analysesRunningStatusPercent}}
+            </div>
+             <i class="{{analysesCtrl.analysesGlobalDetail[analysis.uuid]|analysesRunningStatusBtn}}"></i>
               &nbsp;
-            </a>
+             <em> Running</em>
+              &nbsp;
             <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/#/analyses">
-               {{ analysis.name }}
+              {{ analysis.name }}
             </a>
           </span>
           <span ng-switch-default>
-            <i class="{{analysis.status | analysesStatusIcon}} analyses-status"></i>
-            <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
+             <div ng-if="(analysesCtrl.isAnalysesRunningGlobal())" class="analysis-running-percentage">
+              &nbsp;
+            </div>
+              <i class="{{analysis.status | analysesStatusIcon}} analyses-status"></i>
+               &nbsp;
+              <em>Finished</em>
+              &nbsp;
+               <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
               {{ analysis.name }}
             </a>
           </span>
