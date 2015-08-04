@@ -3,12 +3,7 @@ angular.module('refineryAnalyses')
 
 function analysesFactory($http) {
   "use strict";
-  var serverUrl = "/api/v1/analysis";
-  var analysesList = [];
-  var analysesGlobalList = [];
   var analysesDetail = {};
-  var analysesRunningGlobalList = [];
-  var analysesRunningList = [];
   var analysesOne = [];
 
   var initializeAnalysesDetail = function(uuid){
@@ -24,53 +19,6 @@ function analysesFactory($http) {
   };
 
   //Ajax calls
-
-  var getAnalysesList = function() {
-    return $http.get(serverUrl +
-      '/?format=json&limit=0&data_set__uuid='+ dataSetUuid)
-      .then(function (response) {
-      angular.copy(response.data.objects,analysesList);
-    }, function (response) {
-      console.error("Error accessing analyses API.");
-    });
-  };
-
-  var getAnalysesGlobalList = function() {
-    return $http.get(serverUrl + '/?format=json&limit=10')
-      .then(function (response) {
-      angular.copy(response.data.objects, analysesGlobalList);
-    }, function (response) {
-      console.error("Error accessing analyses API.");
-    });
-  };
-
-  var getAnalysesRunningList = function() {
-    return $http.get(serverUrl +
-      '/?format=json&limit=0&data_set__uuid='+ dataSetUuid + '&status=RUNNING')
-      .then(function (response) {
-      angular.copy(response.data.objects,analysesRunningList);
-    }, function (response) {
-      console.error("Error accessing analyses API.");
-    });
-  };
-
-  var getAnalysesRunningGlobalList = function() {
-    return $http.get(serverUrl + '/?format=json&limit=0&status=RUNNING')
-      .then(function (response) {
-      angular.copy(response.data.objects,analysesRunningGlobalList);
-    }, function (response) {
-      console.error("Error accessing analyses API.");
-    });
-  };
-
-  var getAnalysesOne = function(uuid) {
-    return $http.get(serverUrl + '/?format=json&limit=1&uuid='+ uuid)
-      .then(function (response) {
-      angular.copy(response.data.objects,analysesOne);
-    }, function (response) {
-      console.error("Error accessing analyses API.");
-    });
-  };
 
   //http.post header needed to be adjusted because django was not recognizing it
   // as an ajax call.
@@ -148,19 +96,10 @@ function analysesFactory($http) {
   };
 
  return{
-   getAnalysesList: getAnalysesList,
-   getAnalysesGlobalList: getAnalysesGlobalList,
    getAnalysesDetail: getAnalysesDetail,
    postCancelAnalysis: postCancelAnalysis,
-   getAnalysesRunningGlobalList:getAnalysesRunningGlobalList,
-   getAnalysesRunningList:getAnalysesRunningList,
    getAnalysesOne: getAnalysesOne,
-   analysesList: analysesList,
-   analysesGlobalList: analysesGlobalList,
    analysesDetail: analysesDetail,
-   analysesRunningList:analysesRunningList,
-   analysesRunningGlobalList:analysesRunningGlobalList,
-   analysesOne:analysesOne,
  };
 }
 

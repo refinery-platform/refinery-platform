@@ -1,7 +1,7 @@
 angular.module('refineryAnalyses')
-    .service("analysesAlertService", ['analysesFactory', analysesAlertService]);
+    .service("analysesAlertService", ['analysesFactory', 'analysisService', analysesAlertService]);
 
-function analysesAlertService(analysesFactory) {
+function analysesAlertService(analysesFactory, analysisService) {
   var vm = this;
   var analysesMsg = {};
   analysesMsg.status = "";
@@ -16,9 +16,15 @@ function analysesAlertService(analysesFactory) {
   };
 
   vm.updateAnalysesAlertStatus = function(uuid){
-    analysesFactory.getAnalysesOne(uuid).then(function(){
-      analysesMsg.status=analysesFactory.analysesOne[0].status;
-      analysesMsg.name=analysesFactory.analysesOne[0].name;
+    var analysis = analysisService.query({
+      format:'json', limit: 1, 'uuid': uuid
+    });
+
+    analysis.$promise.then(function(response){
+      analysesMsg.status=response.objects[0].status;
+      analysesMsg.name=response.objects[0].name;
+    }, function(error){
+      console.log(error);
     });
   };
 }
