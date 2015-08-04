@@ -123,7 +123,6 @@ exec { "syncdb":
   user => $appuser,
   group => $appgroup,
   require => [
-               File["/vagrant/media"],
                Python::Requirements[$requirements],
                Postgresql::Server::Db["refinery"]
              ],
