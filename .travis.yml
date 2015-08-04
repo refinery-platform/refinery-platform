@@ -14,4 +14,14 @@ before_script:
   - cp config.json.sample config.json
   - python manage.py syncdb --migrate --noinput
 script:
+  - python manage.py test analysis_manager
+  - python manage.py test annotation_server
+  - python manage.py test core
+  - python manage.py test data_set_manager
+  - python manage.py test file_server
   - python manage.py test file_store
+  - python manage.py test galaxy_connector
+  - python manage.py test visualization_manager
+  - python manage.py test workflow_manager
+  - cd ui
+  - grunt
