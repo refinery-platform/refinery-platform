@@ -8,19 +8,19 @@ function rpAnalysesGlobalListStatus(){
     templateUrl: '/static/partials/analyses/partials/analyses-global-list-status.html',
     restrict: 'A',
     controller: 'AnalysesCtrl',
-    controllerAs: 'analysesCtrl',
+    controllerAs: 'AnalysesCtrl',
     bindToController: {
       launchAnalysisFlag: '='
     },
     link: function(scope, element, attr){
-      scope.analysesCtrl.updateAnalysesRunningGlobalList();
+      scope.AnalysesCtrl.updateAnalysesRunningGlobalList();
       scope.$on("rf/launchAnalysis", function (e) {
-        scope.analysesCtrl.launchAnalysisFlag = true;
+        scope.AnalysesCtrl.launchAnalysisFlag = true;
       });
 
       scope.$on("rf/cancelAnalysis", function(e){
-        scope.analysesCtrl.cancelTimerRunningGlobalList();
-        scope.analysesCtrl.updateAnalysesRunningGlobalList();
+        scope.AnalysesCtrl.cancelTimerRunningGlobalList();
+        scope.AnalysesCtrl.updateAnalysesRunningGlobalList();
       });
     }
   };

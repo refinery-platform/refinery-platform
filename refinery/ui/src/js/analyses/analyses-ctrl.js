@@ -47,6 +47,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.updateAnalysesRunningList = function () {
     analysesFactory.getAnalysesRunningList().then(function () {
       vm.analysesRunningList = analysesFactory.analysesRunningList;
+      vm.launchAnalysisFlag = false;
     });
 
     vm.timerRunList = $timeout(vm.updateAnalysesRunningList, 30000);
@@ -59,6 +60,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.updateAnalysesRunningGlobalList = function () {
     analysesFactory.getAnalysesRunningGlobalList().then(function () {
       vm.analysesRunningGlobalList = analysesFactory.analysesRunningGlobalList;
+      vm.launchAnalysisFlag = false;
     });
     vm.timerRunGlobalList = $timeout(vm.updateAnalysesRunningGlobalList, 30000);
 
@@ -141,7 +143,6 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.isAnalysesRunningGlobal = function () {
-
     if(vm.analysesRunningGlobalList.length > 0) {
       return true;
     } else {
@@ -154,14 +155,6 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
       return false;
     }else{
       return true;
-    }
-  };
-
-  vm.isAnalysesRunningGlobal = function(){
-    if(vm.analysesRunningGlobalList.length>0){
-      return true;
-    }else{
-      return false;
     }
   };
 

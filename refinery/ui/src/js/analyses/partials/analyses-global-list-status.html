@@ -1,10 +1,10 @@
 <span id="analysesCogIcon">
-  <span ng-if="analysesCtrl.isAnalysesRunningGlobal() || analysesCtrl.launchAnalysisFlag">
+  <span ng-if="AnalysesCtrl.isAnalysesRunningGlobal() || AnalysesCtrl.launchAnalysisFlag">
     <span class="spinner">
       <i class="icon-cog icon-spin"></i>
     </span>
   </span>
-     <span ng-if="!(analysesCtrl.isAnalysesRunningGlobal() || analysesCtrl.launchAnalysisFlag)">
-      <i class="icon-cog"></i>
-    </span>
+   <span ng-if="!(AnalysesCtrl.isAnalysesRunningGlobal() || AnalysesCtrl.launchAnalysisFlag)">
+    <i class="icon-cog"></i>
+  </span>
 </span>

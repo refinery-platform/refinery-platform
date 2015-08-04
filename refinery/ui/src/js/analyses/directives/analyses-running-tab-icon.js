@@ -18,7 +18,7 @@ function rpAnalysesRunningTabIcon() {
       scope.$on("rf/launchAnalysis", function (e) {
         scope.analysesCtrl.launchAnalysisFlag = true;
       });
-
+      
       scope.$on("rf/cancelAnalysis", function(e){
         scope.analysesCtrl.cancelTimerRunningList();
         scope.analysesCtrl.updateAnalysesRunningList();
