@@ -23,5 +23,3 @@ script:
   - python manage.py test galaxy_connector
   - python manage.py test visualization_manager
   - python manage.py test workflow_manager
-  - cd ui
-  - grunt
