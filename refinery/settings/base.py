@@ -73,7 +73,7 @@ MEDIA_URL = get_setting("MEDIA_URL")
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
 STATIC_ROOT = get_setting("STATIC_ROOT")
-if not os.path.isabs(MEDIA_ROOT):
+if not os.path.isabs(STATIC_ROOT):
     MEDIA_ROOT = os.path.join(BASE_DIR, "static")
 
 # URL prefix for static files.
