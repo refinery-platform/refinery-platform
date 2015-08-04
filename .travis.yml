@@ -1,11 +1,18 @@
 language: python
 python:
-  - "2.7"
+  - 2.7
+services:
+  - postgresql
 install:
-  - "pip install -r requirements.txt"
+  - pip install -r requirements.txt
 env:
   - DJANGO_SETTINGS_MODULE=settings.dev
+before_script:
+  - createuser --createdb --no-superuser --no-createrole vagrant
+  - createdb -O vagrant refinery
+  - cd refinery
+  - cp config.json.sample config.json
+  - python manage.py syncdb --migrate
 script:
   - cd refinery
-  - python manage.py syncdb --migrate
   - python manage.py file_store test
