@@ -1,6 +1,6 @@
 <span ng-if="AnalysesCtrl.analysesMsg.status=='SUCCESS'">
    <div class="alert alert-success" data-dismiss="alert">
-     <a href='#' class="close" data-dismiss="alert">
+     <a href='#' class="close analysis-alert" data-dismiss="alert">
        <i class="icon-remove"></i>
      </a>
      <h4>SUCCESSFUL</h4>
@@ -12,7 +12,7 @@
 </span>
  <span ng-if="AnalysesCtrl.analysesMsg.status=='FAILURE'">
  <div class="alert alert-error">
-  <a href="#" class="close" data-dismiss="alert">
+  <a href="#" class="close analysis-alert" data-dismiss="alert">
     <i class="icon-remove"></i>
   </a>
     <h4>FAILURE!</h4>
@@ -21,5 +21,6 @@
     added to your data set.
    </p>
   </div>
+
 </span>
 
