@@ -97,9 +97,7 @@ file { "virtualenvwrapper_project":
   group => $appgroup,
 }
 
-file { ["/vagrant/media",
-        "/vagrant/static",
-        "/vagrant/isa-tab",
+file { ["/vagrant/isa-tab",
         "/vagrant/import" ]:
   ensure => directory,
   owner => $appuser,
