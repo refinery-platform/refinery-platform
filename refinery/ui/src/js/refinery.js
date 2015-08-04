@@ -34,6 +34,7 @@ angular
   'refineryDashboard',
   'refineryAnalyses',
   'refineryCollaboration',
+  'refineryChart',
 ])
 .config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
   // http://stackoverflow.com/q/11252780
