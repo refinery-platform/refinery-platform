@@ -14,4 +14,4 @@ before_script:
   - cp config.json.sample config.json
   - python manage.py syncdb --migrate --noinput
 script:
-  - python manage.py file_store test
+  - python manage.py test file_store
