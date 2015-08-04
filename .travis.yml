@@ -12,7 +12,7 @@ before_script:
   - createdb -O vagrant refinery
   - cd refinery
   - cp config.json.sample config.json
-  - python manage.py syncdb --migrate
+  - python manage.py syncdb --migrate --noinput
 script:
   - cd refinery
   - python manage.py file_store test
