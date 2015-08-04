@@ -15,6 +15,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.timerRunGlobalList = undefined;
   vm.timerGlobalList = undefined;
   vm.timerRunList = undefined;
+  vm.launchAnalysisFlag = false;
 
   vm.updateAnalysesList = function () {
     analysesFactory.getAnalysesList().then(function () {
@@ -44,11 +45,8 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.updateAnalysesRunningList = function () {
-    console.log('running list request');
     analysesFactory.getAnalysesRunningList().then(function () {
       vm.analysesRunningList = analysesFactory.analysesRunningList;
-      console.log('running list request FULLFILLED');
-      console.log(vm.analysesRunningList);
     });
 
     vm.timerRunList = $timeout(vm.updateAnalysesRunningList, 30000);
@@ -59,11 +57,8 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.updateAnalysesRunningGlobalList = function () {
-    console.log('running global list request');
     analysesFactory.getAnalysesRunningGlobalList().then(function () {
       vm.analysesRunningGlobalList = analysesFactory.analysesRunningGlobalList;
-      console.log('running global list request FULLFILLED');
-      console.log(vm.analysesRunningGlobalList);
     });
     vm.timerRunGlobalList = $timeout(vm.updateAnalysesRunningGlobalList, 30000);
 
@@ -75,14 +70,12 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.cancelTimerRunningList = function(){
     if(typeof vm.timerRunList !== "undefined") {
       $timeout.cancel(vm.timerRunList);
-      console.log("canceltimerrunninglist");
     }
   };
 
   vm.cancelTimerRunningGlobalList = function(){
     if(typeof vm.timerRunGlobalList !== "undefined") {
       $timeout.cancel(vm.timerRunGlobalList);
-      console.log("canceltimerrunninglist");
     }
   };
 
@@ -140,8 +133,6 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.isAnalysesRunning = function () {
-    console.log("in is analyses running");
-    console.log(vm.analysesRunningList.length);
     if (vm.analysesRunningList.length > 0) {
       return true;
     } else {
@@ -150,8 +141,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.isAnalysesRunningGlobal = function () {
-    console.log("in is analyses global running");
-    console.log(vm.analysesRunningGlobalList.length);
+
     if(vm.analysesRunningGlobalList.length > 0) {
       return true;
     } else {
