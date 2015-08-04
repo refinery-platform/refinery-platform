@@ -16,6 +16,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.timerGlobalList = undefined;
   vm.timerRunList = undefined;
   vm.launchAnalysisFlag = false;
+  vm.analysesRunningGlobalListCount = 0;
 
   vm.updateAnalysesList = function () {
     analysesFactory.getAnalysesList().then(function () {
@@ -60,6 +61,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.updateAnalysesRunningGlobalList = function () {
     analysesFactory.getAnalysesRunningGlobalList().then(function () {
       vm.analysesRunningGlobalList = analysesFactory.analysesRunningGlobalList;
+      vm.analysesRunningGlobalListCount = vm.analysesRunningGlobalList.length;
       vm.launchAnalysisFlag = false;
     });
     vm.timerRunGlobalList = $timeout(vm.updateAnalysesRunningGlobalList, 30000);

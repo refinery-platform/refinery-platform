@@ -2,6 +2,7 @@
   <span ng-if="AnalysesCtrl.isAnalysesRunningGlobal() || AnalysesCtrl.launchAnalysisFlag">
     <span class="spinner">
       <i class="icon-cog icon-spin"></i>
+      {{ AnalysesCtrl.analysesRunningGlobalListCount }}
     </span>
   </span>
    <span ng-if="!(AnalysesCtrl.isAnalysesRunningGlobal() || AnalysesCtrl.launchAnalysisFlag)">

@@ -16,10 +16,12 @@ function rpAnalysesGlobalListStatus(){
       scope.AnalysesCtrl.updateAnalysesRunningGlobalList();
       scope.$on("rf/launchAnalysis", function (e) {
         scope.AnalysesCtrl.launchAnalysisFlag = true;
+        scope.AnalysesCtrl.analysesRunningGlobalListCount = scope.AnalysesCtrl.analysesRunningGlobalListCount + 1;
       });
 
       scope.$on("rf/cancelAnalysis", function(e){
         scope.AnalysesCtrl.cancelTimerRunningGlobalList();
+        scope.AnalysesCtrl.analysesRunningGlobalListCount = scope.AnalysesCtrl.analysesRunningGlobalListCount - 1;
         scope.AnalysesCtrl.updateAnalysesRunningGlobalList();
       });
     }
