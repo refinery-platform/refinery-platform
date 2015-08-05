@@ -235,15 +235,30 @@ class NodeSetResourceTest(ResourceTestCase):
         self.assertKeys(self.deserialize(response), keys)
 
     def test_get_nodeset_list(self):
-        '''Test retrieving a list of NodeSets that belong to a user who created them.
-
-        '''
-        nodeset1 = NodeSet.objects.create(name='ns1', study=self.study, assay=self.assay,
-                                         solr_query=simplejson.dumps(self.query))
-        assign_perm("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
-        nodeset2 = NodeSet.objects.create(name='ns2', study=self.study, assay=self.assay,
-                                         solr_query=simplejson.dumps(self.query))
-        assign_perm("read_%s" % nodeset2._meta.module_name, self.user2, nodeset2)
+        """Test retrieving a list of NodeSets that belong to a user who created them.
+        """
+        nodeset1 = NodeSet.objects.create(
+            name='ns1',
+            study=self.study,
+            assay=self.assay,
+            solr_query=simplejson.dumps(self.query)
+        )
+        assign_perm(
+            "read_%s" % nodeset1._meta.module_name,
+            self.user,
+            nodeset1
+        )
+        nodeset2 = NodeSet.objects.create(
+            name='ns2',
+            study=self.study,
+            assay=self.assay,
+            solr_query=simplejson.dumps(self.query)
+        )
+        assign_perm(
+            "read_%s" % nodeset2._meta.module_name,
+            self.user2,
+            nodeset2
+        )
         nodeset_uri = make_api_uri('nodeset')
         response = self.api_client.get(nodeset_uri, format='json',
                                        authentication=self.get_credentials())
