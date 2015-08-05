@@ -86,7 +86,6 @@ ChartCtrl.prototype.draw_per_sequence_gc_content = function (data_wrapper, confi
     data: {
       length: data_wrapper.data.length - 1,
       ymin: 0,
-      ymax: 100,
       columns: [
         data_wrapper.data
       ]
