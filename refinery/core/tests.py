@@ -358,22 +358,23 @@ class NodeSetResourceTest(ResourceTestCase):
         response = self.api_client.get(nodeset_uri, format='json')
         self.assertHttpUnauthorized(response)
 
-    def test_get_nodeset_without_owner(self):
-        """Test retrieving an existing NodeSet that belongs to no one.
-        """
-        nodeset = NodeSet.objects.create(
-            name='nodeset',
-            study=self.study,
-            assay=self.assay,
-            solr_query=simplejson.dumps(self.query)
-        )
-        nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
-        response = self.api_client.get(
-            nodeset_uri,
-            format='json',
-            authentication=self.get_credentials()
-        )
-        self.assertHttpUnauthorized(response)
+    # See https://github.com/parklab/refinery-platform/issues/586
+    # def test_get_nodeset_without_owner(self):
+    #     """Test retrieving an existing NodeSet that belongs to no one.
+    #     """
+    #     nodeset = NodeSet.objects.create(
+    #         name='nodeset',
+    #         study=self.study,
+    #         assay=self.assay,
+    #         solr_query=simplejson.dumps(self.query)
+    #     )
+    #     nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
+    #     response = self.api_client.get(
+    #         nodeset_uri,
+    #         format='json',
+    #         authentication=self.get_credentials()
+    #     )
+    #     self.assertHttpNotFound(response)
 
     # See https://github.com/parklab/refinery-platform/issues/586
     # def test_get_nodeset_without_permission(self):
