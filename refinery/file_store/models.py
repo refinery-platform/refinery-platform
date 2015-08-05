@@ -356,14 +356,13 @@ class FileStoreItem(models.Model):
             return None
 
     def get_file_size(self, report_symlinks=False):
-        '''Return the size of the file in bytes.
+        """Return the size of the file in bytes.
         :param report_symlinks: report the size of symlinked files or not.
         :type report_symlinks: bool.
-        :returns: int -- file size.  Zero if the file is:
-         - not local
-         - a symlink and report_symlinks=False
-
-        '''
+        :returns: int -- file size. Zero if the file is:
+        - not local
+        - a symlink and report_symlinks=False
+        """
         if self.is_symlinked() and not report_symlinks:
             return 0
 
