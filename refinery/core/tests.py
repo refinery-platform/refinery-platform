@@ -668,7 +668,7 @@ class AnalysisResourceTest(ResourceTestCase):
         analysis1 = Analysis.objects.create(
             name='a1',
             summary='keks',
-            project=self.project,
+            project=self.user_catch_all_project,
             data_set=self.dataset,
             workflow=self.workflow
         )
@@ -680,7 +680,7 @@ class AnalysisResourceTest(ResourceTestCase):
         analysis2 = Analysis.objects.create(
             name='a2',
             summary='keks',
-            project=self.project,
+            project=self.user_catch_all_project,
             data_set=self.dataset,
             workflow=self.workflow
         )
