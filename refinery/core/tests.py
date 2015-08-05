@@ -637,24 +637,43 @@ class AnalysisResourceTest(ResourceTestCase):
         self.assertEqual(data['uuid'], analysis.uuid)
 
     def test_get_analysis_list(self):
-        '''Test retrieving a list of Analysis instances that belong to a user who created them.
-
-        '''
-        analysis1 = Analysis.objects.create(name='a1',project=self.project,
-                                            data_set=self.dataset,
-                                            workflow=self.workflow)
-        assign_perm("read_%s" % Analysis._meta.module_name, self.user, analysis1)
-        analysis2 = Analysis.objects.create(name='a2',project=self.project,
-                                            data_set=self.dataset,
-                                            workflow=self.workflow)
-        assign_perm("read_%s" % Analysis._meta.module_name, self.user2, analysis2)
+        """Test retrieving a list of Analysis instances that belong to a user
+        who created them.
+        """
+        analysis1 = Analysis.objects.create(
+            name='a1',
+            project=self.project,
+            data_set=self.dataset,
+            workflow=self.workflow
+        )
+        assign_perm(
+            "read_%s" % Analysis._meta.module_name,
+            self.user, analysis1
+        )
+        analysis2 = Analysis.objects.create(
+            name='a2',
+            project=self.project,
+            data_set=self.dataset,
+            workflow=self.workflow
+        )
+        assign_perm(
+            "read_%s" % Analysis._meta.module_name,
+            self.user2,
+            analysis2
+        )
         analysis_uri = make_api_uri(Analysis._meta.module_name)
-        response = self.api_client.get(analysis_uri, format='json',
-                                       authentication=self.get_credentials())
+        response = self.api_client.get(
+            analysis_uri,
+            format='json',
+            authentication=self.get_credentials()
+        )
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)['objects']
         self.assertEqual(len(data), 1)
-        self.assertKeys(data[0], ['uuid', 'name', 'creation_date', 'resource_uri'])
+        self.assertKeys(
+            data[0],
+            ['uuid', 'name', 'creation_date', 'resource_uri']
+        )
         self.assertEqual(data[0]['name'], analysis1.name)
 
     def test_get_analysis_without_login(self):
