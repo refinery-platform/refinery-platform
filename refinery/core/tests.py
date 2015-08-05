@@ -220,18 +220,26 @@ class NodeSetResourceTest(ResourceTestCase):
                                             password=self.password)
 
     def test_get_nodeset(self):
-        '''Test retrieving an existing NodeSet that belongs to a user who created it.
-
-        '''
-        nodeset = NodeSet.objects.create(name='ns', study=self.study, assay=self.assay,
-                                         solr_query=simplejson.dumps(self.query))
+        """Test retrieving an existing NodeSet that belongs to a user who
+        created it.
+        """
+        nodeset = NodeSet.objects.create(
+            name='ns',
+            study=self.study,
+            assay=self.assay,
+            solr_query=simplejson.dumps(self.query)
+        )
         assign_perm("read_%s" % nodeset._meta.module_name, self.user, nodeset)
         nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
-        response = self.api_client.get(nodeset_uri, format='json',
-                                       authentication=self.get_credentials())
+        response = self.api_client.get(
+            nodeset_uri,
+            format='json',
+            authentication=self.get_credentials()
+        )
         self.assertValidJSONResponse(response)
         keys = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit',
-                'node_count', 'solr_query', 'solr_query_components', 'resource_uri']
+                'node_count', 'solr_query', 'solr_query_components',
+                'resource_uri']
         self.assertKeys(self.deserialize(response), keys)
 
     # Test fails because the API doesn't authorize users.
