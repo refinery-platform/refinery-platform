@@ -493,6 +493,33 @@ class NodeSetResourceTest(ResourceTestCase):
         self.assertEqual(nodeset.name, 'new_nodeset')
         self.assertTrue(nodeset.is_implicit)
 
+    # def test_update_failure_nodeset(self):
+    #     """Test failing update for an existing NodeSet instance when the user
+    #     has no change permission.
+    #     """
+    #     nodeset = NodeSet.objects.create(
+    #         name='nodeset',
+    #         study=self.study,
+    #         assay=self.assay
+    #     )
+    #     self.assertEqual(NodeSet.objects.count(), 1)
+    #     self.assertEqual(nodeset.name, 'nodeset')
+    #     self.assertFalse(nodeset.is_implicit)
+    #     nodeset.set_owner(self.user2)
+    #     new_nodeset_data = {'name': 'new_nodeset', 'is_implicit': True}
+    #     nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
+    #     response = self.api_client.put(
+    #         nodeset_uri,
+    #         format='json',
+    #         data=new_nodeset_data,
+    #         authentication=self.get_credentials()
+    #     )
+    #     self.assertHttpUnauthorized(response)
+    #     self.assertEqual(NodeSet.objects.count(), 1)
+    #     nodeset = NodeSet.objects.get(uuid=nodeset.uuid)
+    #     self.assertEqual(nodeset.name, 'nodeset')
+    #     self.assertFalse(nodeset.is_implicit)
+
     def test_delete_nodeset(self):
         '''Test deleting an existing NodeSet instance.
 
