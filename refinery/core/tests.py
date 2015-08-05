@@ -239,7 +239,7 @@ class NodeSetResourceTest(ResourceTestCase):
         self.assertValidJSONResponse(response)
         keys = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit',
                 'node_count', 'solr_query', 'solr_query_components',
-                'resource_uri']
+                'resource_uri', 'is_current']
         self.assertKeys(self.deserialize(response), keys)
 
     # Test fails because the API doesn't authorize users.
