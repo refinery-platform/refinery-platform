@@ -98,6 +98,8 @@ ul#externalToolListPopover li{
 ul.analysesList{
   list-style-type: none;
   width: 100%;
+  margin-left: 0;
+  padding-left: 0;
 }
 
 
@@ -106,11 +108,16 @@ ul.analysesRunningList{
     width: 100%;
 }
 
+li.analysesListItems:nth-of-type(odd){
+  background-color: rgba(0, 0, 0, 0.025);
+}
+
 li.analysesListItems{
   display: block;
   float: left;
   width: 100%;
   list-style-type: none;
+  border-top: 1px solid #dddddd;
 }
 
 li.analysisRunningListItem{
@@ -119,6 +126,7 @@ li.analysisRunningListItem{
   float: left;
   padding-right: 20px;
   width: 25%;
+
 }
 
 #analyses-cancel-notice{
@@ -205,6 +213,26 @@ div.analysis-retrieving{
 a.close.analysis-alert{
   margin-right: 25px !important;
   color: black;
+}
+
+.span4.analysis-name{
+  text-align: left;
+  a{
+    width:100%;
+    text-align: left;
+  }
+}
+
+.span1.analysis-icon{
+  text-align: right;
+}
+
+.span1.analysis-cancel{
+  text-align: right;
+}
+
+.row-fluid.analysis-header{
+
 }
 
 @media (max-width: 760px) {
