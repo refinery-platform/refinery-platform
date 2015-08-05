@@ -603,16 +603,6 @@ class AnalysisResourceTest(ResourceTestCase):
     """Test Analysis REST API operations"""
     def setUp(self):
         super(AnalysisResourceTest, self).setUp()
-        self.project = Project.objects.create()
-        self.dataset = DataSet.objects.create()
-        self.dataset2 = DataSet.objects.create()
-        self.galaxy_instance = Instance.objects.create()
-        self.workflow_engine = WorkflowEngine.objects.create(
-            instance=self.galaxy_instance
-        )
-        self.workflow = Workflow.objects.create(
-            workflow_engine=self.workflow_engine
-        )
         self.username = self.password = 'user'
         self.user = User.objects.create_user(
             self.username,
@@ -626,6 +616,18 @@ class AnalysisResourceTest(ResourceTestCase):
             self.password2
         )
         self.get_credentials()
+        self.project = UserProfile.objects.get(
+            user=self.user
+        ).catch_all_project
+        self.dataset = DataSet.objects.create()
+        self.dataset2 = DataSet.objects.create()
+        self.galaxy_instance = Instance.objects.create()
+        self.workflow_engine = WorkflowEngine.objects.create(
+            instance=self.galaxy_instance
+        )
+        self.workflow = Workflow.objects.create(
+            workflow_engine=self.workflow_engine
+        )
 
     def get_credentials(self):
         """Authenticate as self.user"""
@@ -641,14 +643,10 @@ class AnalysisResourceTest(ResourceTestCase):
         created it
         """
 
-        catch_all_project = UserProfile.objects.get(
-            user=self.user
-        ).catch_all_project
-
         analysis = Analysis.objects.create(
-            name="bla",
-            summary="keks",
-            project=catch_all_project,
+            name='bla',
+            summary='keks',
+            project=self.project,
             data_set=self.dataset,
             workflow=self.workflow
         )
@@ -669,39 +667,37 @@ class AnalysisResourceTest(ResourceTestCase):
         """
         analysis1 = Analysis.objects.create(
             name='a1',
+            summary='keks',
             project=self.project,
             data_set=self.dataset,
             workflow=self.workflow
         )
         assign_perm(
-            "read_%s" % Analysis._meta.module_name,
-            self.user, analysis1
+            'read_%s' % Analysis._meta.module_name,
+            self.user,
+            analysis1
         )
         analysis2 = Analysis.objects.create(
             name='a2',
+            summary='keks',
             project=self.project,
             data_set=self.dataset,
             workflow=self.workflow
         )
         assign_perm(
-            "read_%s" % Analysis._meta.module_name,
-            self.user2,
+            'read_%s' % Analysis._meta.module_name,
+            self.user,
             analysis2
         )
         analysis_uri = make_api_uri(Analysis._meta.module_name)
         response = self.api_client.get(
             analysis_uri,
-            format='json',
-            authentication=self.get_credentials()
+            format='json'
         )
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 1)
-        self.assertKeys(
-            data[0],
-            ['uuid', 'name', 'creation_date', 'resource_uri']
-        )
-        self.assertEqual(data[0]['name'], analysis1.name)
+        self.assertEqual(len(data), 2)
+        self.assertEqual(data[0]['name'], analysis2.name)
 
     def test_get_analysis_without_login(self):
         """Test retrieving an existing Analysis without logging in.
