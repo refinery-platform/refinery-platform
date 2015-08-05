@@ -5,9 +5,10 @@ from django.db import models
 from django_extensions.db.fields import UUIDField
 
 from bioblend import galaxy
-from celery.result import AsyncResult
+from celery.result import AsyncResult, TaskSetResult
 
 from core.models import Analysis
+from file_store.models import FileStoreItem
 
 
 logger = logging.getLogger(__name__)
@@ -105,39 +106,40 @@ def get_payload(ts_id):
                 temp_ret['state'] = ts.state
                 temp_ret['task_id'] = ts.task_id
                 payload.append(temp_ret)
-            elif ts.result.__class__.__name__ == 'TaskSetResult':
+            elif isinstance(ts.result, TaskSetResult):
                 n_tasks = len(ts.result.results)
-                if n_tasks > 0:
-                    for j in range(0, n_tasks):
-                        temp_ret = {}
-                        if ts.result.results[j].result:
-                            if ts.result.results[j].result.__class__.__name__ == 'FileStoreItem':
-                                temp_ret['state'] = ts.result.results[j].state
-                                temp_ret['task_id'] = ts.result.results[j].task_id
-                                payload.append(temp_ret)
-                            else:
-                                # if result returns as dictionary
-                                if isinstance(ts.result.results[j].result, dict):
-                                    temp_ret = ts.result.results[j].result
-                                # if result is just a string
-                                else:
-                                    temp_ret = {}
-                                temp_ret['state'] = str(ts.result.results[j].state)
-                                temp_ret['task_id'] = str(ts.result.results[j].task_id)
-                                payload.append(temp_ret)
-                        else:
+                for j in range(0, n_tasks):
+                    temp_ret = {}
+                    if ts.result.results[j].result:
+                        if isinstance(ts.result.results[j].result,
+                                      FileStoreItem):
                             temp_ret['state'] = ts.result.results[j].state
                             temp_ret['task_id'] = ts.result.results[j].task_id
                             payload.append(temp_ret)
+                        else:
+                            # if result returns as dictionary
+                            if isinstance(ts.result.results[j].result, dict):
+                                temp_ret = ts.result.results[j].result
+                            # if result is just a string
+                            else:
+                                temp_ret = {}
+                            temp_ret['state'] = str(ts.result.results[j].state)
+                            temp_ret['task_id'] = str(
+                                ts.result.results[j].task_id)
+                            payload.append(temp_ret)
+                    else:
+                        temp_ret['state'] = ts.result.results[j].state
+                        temp_ret['task_id'] = ts.result.results[j].task_id
+                        payload.append(temp_ret)
             else:
                 temp_ret = {'state': ts.state,
-                            'info':str(ts.result),
-                            'task_id':ts.task_id}
+                            'info': str(ts.result),
+                            'task_id': ts.task_id}
                 payload.append(temp_ret)
         else:
             temp_ret = {'state': ts.state, 'task_id': ts.task_id}
             payload.append(temp_ret)
     else:
-        temp_ret = {'state':"### WAITING ###"}
+        temp_ret = {'state': "### WAITING ###"}
         payload.append(temp_ret)
     return payload
