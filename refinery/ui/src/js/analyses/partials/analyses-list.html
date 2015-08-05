@@ -1,23 +1,44 @@
 <div class="row-fluid analysis-header">
-  <div class="span1 analysis-icon"></div>
+  <div class="span1 analysis-icon" id="header">
+    <a class="analysis-header" ng-click="order('status')">
+      <strong>Status</strong>
+      <span class="sortorder" ng-show="predicate === 'status'"
+        ng-class="{reverse:reverse}">
+         <i ng-class="analysisIcon"></i>
+      </span>
+    </a>
+  </div>
   <div class="span4 analysis-name">
-    <strong>Name</strong>
-  </div>
-   <div class="span1">
-    <strong>Status</strong>
-  </div>
-  <div class="span2">
-    <strong>Start Time</strong>
-  </div>
-  <div class="span2">
-    <strong>End Time</strong>
+    <a class="analysis-header" ng-click="order('name')">
+      <strong>Name</strong>
+      <span class="sortorder" ng-show="predicate === 'name'" ng-class="{reverse:reverse}">
+        <i ng-class="analysisIcon"></i>
+      </span>
+    </a>
   </div>
   <div class="span2">
+   <a class="analysis-header" ng-click="order('time_start')">
+     <strong>Start Time</strong>
+     <span class="sortorder" ng-show="predicate === 'time_start'"
+       ng-class="{reverse:reverse}">
+        <i ng-class="analysisIcon"></i>
+     </span>
+   </a>
   </div>
-
+  <div class="span2">
+    <a class="analysis-header" ng-click="order('time_end')">
+      <strong>End Time</strong>
+      <span class="sortorder" ng-show="predicate === 'time_end'"
+        ng-class="{reverse:reverse}">
+         <i ng-class="analysisIcon"></i>
+      </span>
+    </a>
+  </div>
+  <div class="span3">
+  </div>
 
 <ul class="analysesList">
-    <li class="analysesListItems" ng-repeat="analysis in AnalysesCtrl.analysesList track by analysis.uuid">
+    <li class="analysesListItems" ng-repeat="analysis in AnalysesCtrl.analysesList | orderBy:predicate:reverse  track by analysis.uuid">
        <div class="row-fluid">
         <div class="span1 analysis-icon">
          <span class="spinner"><i class="{{analysis.status | analysesStatusIcon}} analyses-status"></i>
@@ -35,11 +56,6 @@
                 </a>
             </span>
           </span>
-        </div>
-
-
-        <div class="span1">
-          {{ analysis.status }}
         </div>
 
          <div class="span2">
