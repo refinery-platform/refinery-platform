@@ -617,7 +617,7 @@ class AnalysisResourceTest(ResourceTestCase):
     def get_credentials(self):
         """Authenticate as self.user"""
         # workaround required to use SessionAuthentication
-        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
+        # http://javaguirre.net/2013/01/28/using-session-authentication-tastypie-tests/
         return self.api_client.client.login(username=self.username, password=self.password)
 
     def test_get_analysis(self):
