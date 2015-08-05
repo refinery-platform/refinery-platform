@@ -1,18 +1,32 @@
 function FastQCParserService() {
   // Index mapping.
+  // this.im = {
+  //   meta: 0,
+  //   per_base_sequence_quality: 1,
+  //   per_tile_sequence_quality: 2,
+  //   per_sequence_quality_scores: 3,
+  //   per_base_sequence_content: 4,
+  //   per_sequence_gc_content: 5,
+  //   per_base_n_content: 6,
+  //   sequence_length_distribution: 7,
+  //   sequence_duplication_level: 8,
+  //   overrepresented_sequences: 9,
+  //   adapter_content: 10,
+  //   kmer_content: 11
+  // };
   this.im = {
     meta: 0,
     per_base_sequence_quality: 1,
-    per_tile_sequence_quality: 2,
-    per_sequence_quality_scores: 3,
-    per_base_sequence_content: 4,
-    per_sequence_gc_content: 5,
-    per_base_n_content: 6,
-    sequence_length_distribution: 7,
-    sequence_duplication_level: 8,
-    overrepresented_sequences: 9,
-    adapter_content: 10,
-    kmer_content: 11
+    per_tile_sequence_quality: 1,
+    per_sequence_quality_scores: 2,
+    per_base_sequence_content: 3,
+    per_sequence_gc_content: 4,
+    per_base_n_content: 5,
+    sequence_length_distribution: 6,
+    sequence_duplication_level: 7,
+    overrepresented_sequences: 8,
+    adapter_content: 9,
+    kmer_content: 10
   };
 }
 
@@ -148,7 +162,7 @@ function parse_sequence_duplication_level(data) {
   var data_section = s.slice(3);
 
   // Assume only offers numbers 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 50, 100, 500, 1k, 5k, 10k+
-  for (var i = 0; i < 16; i++) {
+  for (var i = 0; i < data_section.length; i++) {
     var line = data_section[i].split(' ');
 
     if (i < 10) {
