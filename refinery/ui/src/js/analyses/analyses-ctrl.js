@@ -1,9 +1,9 @@
 angular.module('refineryAnalyses')
     .controller('AnalysesCtrl',
-    ['analysesFactory', 'analysesAlertService','$scope','$timeout', '$rootScope', AnalysesCtrl]);
+    ['analysesFactory', 'analysesAlertService','$scope','$timeout', '$rootScope','analysisService', AnalysesCtrl]);
 
 
-function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $rootScope) {
+function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $rootScope, analysisService) {
   "use strict";
   var vm = this;
   vm.analysesList = [];
@@ -19,7 +19,14 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.analysesRunningGlobalListCount = 0;
 
   vm.updateAnalysesList = function () {
-    analysesFactory.getAnalysesList().then(function () {
+
+    var param = {
+      format: 'json',
+      limit: 0,
+      'data_set__uuid': dataSetUuid,
+    };
+
+    analysesFactory.getAnalysesList(param).then(function () {
       vm.analysesList = analysesFactory.analysesList;
       vm.refreshAnalysesDetail();
     });
@@ -32,10 +39,13 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.updateAnalysesGlobalList = function () {
-    analysesFactory.getAnalysesGlobalList().then(function () {
+    var params = {format:'json', limit: 10};
+
+    analysesFactory.getAnalysesList(params).then(function () {
       vm.analysesGlobalList = analysesFactory.analysesGlobalList;
       vm.refreshAnalysesGlobalDetail();
     });
+
    vm.timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 30000);
   };
 
@@ -46,7 +56,15 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.updateAnalysesRunningList = function () {
-    analysesFactory.getAnalysesRunningList().then(function () {
+
+    var params = {
+      format: 'json',
+      limit: 0,
+      'data_set__uuid': dataSetUuid,
+      'status': 'RUNNING'
+    };
+
+    analysesFactory.getAnalysesList(params).then(function () {
       vm.analysesRunningList = analysesFactory.analysesRunningList;
       vm.launchAnalysisFlag = false;
     });
@@ -59,7 +77,12 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.updateAnalysesRunningGlobalList = function () {
-    analysesFactory.getAnalysesRunningGlobalList().then(function () {
+
+    var params = {
+      format:'json', limit: 0, 'status': 'RUNNING'
+    };
+
+    analysesFactory.getAnalysesList(params).then(function () {
       vm.analysesRunningGlobalList = analysesFactory.analysesRunningGlobalList;
       vm.analysesRunningGlobalListCount = vm.analysesRunningGlobalList.length;
       vm.launchAnalysisFlag = false;
@@ -137,7 +160,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.isAnalysesRunning = function () {
-    if (vm.analysesRunningList.length > 0) {
+    if (typeof vm.analysesRunningList !== 'undefined' && vm.analysesRunningList.length > 0) {
       return true;
     } else {
       return false;
@@ -145,7 +168,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.isAnalysesRunningGlobal = function () {
-    if(vm.analysesRunningGlobalList.length > 0) {
+    if(typeof vm.analysesRunningGlobalList !== 'undefined' && vm.analysesRunningGlobalList.length > 0) {
       return true;
     } else {
       return false;
@@ -153,7 +176,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.isEmptyAnalysesGlobalList = function(){
-    if(vm.analysesGlobalList.length > 0){
+    if(typeof vm.analysesRunningList !== 'undefined' && vm.analysesGlobalList.length > 0){
       return false;
     }else{
       return true;

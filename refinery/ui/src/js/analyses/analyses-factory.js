@@ -1,9 +1,13 @@
 angular.module('refineryAnalyses')
-    .factory("analysesFactory", ['$http', analysesFactory]);
+    .factory("analysesFactory", ['$http','analysisService', analysesFactory]);
 
-function analysesFactory($http) {
+function analysesFactory($http, analysisService) {
   "use strict";
+  var analysesList = [];
+  var analysesGlobalList = [];
   var analysesDetail = {};
+  var analysesRunningGlobalList = [];
+  var analysesRunningList = [];
   var analysesOne = [];
 
   var initializeAnalysesDetail = function(uuid){
@@ -19,6 +23,31 @@ function analysesFactory($http) {
   };
 
   //Ajax calls
+
+  var getAnalysesList = function(params) {
+    params = params || {};
+
+    var analysis = analysisService.query(params);
+    analysis.$promise.then(function(response){
+     processAnalysesList(response.objects, params);
+    }, function(error){
+      console.log(error);
+    });
+
+    return analysis.$promise;
+  };
+
+  var processAnalysesList = function(data, params){
+     if('status' in params && 'data_set__uuid' in params ) {
+        angular.copy(data, analysesRunningList);
+      }else if('status' in params){
+        angular.copy(data, analysesRunningGlobalList);
+      }else if('limit' in params &&  'data_set__uuid' in params){
+       angular.copy(data, analysesList);
+      }else{
+       angular.copy(data, analysesGlobalList);
+      }
+  };
 
   //http.post header needed to be adjusted because django was not recognizing it
   // as an ajax call.
@@ -96,10 +125,14 @@ function analysesFactory($http) {
   };
 
  return{
+   getAnalysesList: getAnalysesList,
    getAnalysesDetail: getAnalysesDetail,
    postCancelAnalysis: postCancelAnalysis,
-   getAnalysesOne: getAnalysesOne,
+   analysesList: analysesList,
+   analysesGlobalList: analysesGlobalList,
    analysesDetail: analysesDetail,
+   analysesRunningList:analysesRunningList,
+   analysesRunningGlobalList:analysesRunningGlobalList,
  };
 }
 
