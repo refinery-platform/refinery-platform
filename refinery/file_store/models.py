@@ -216,6 +216,17 @@ def is_url(string):
     return urlparse(string).scheme != ""
 
 
+def map_source(source):
+    """convert URLs to file system paths by applying file source map"""
+    for pattern, replacement in \
+            settings.REFINERY_FILE_SOURCE_MAP.iteritems():
+        translated_source = re.sub(pattern, replacement, source)
+        if source != translated_source:
+            source = translated_source
+            break
+    return source
+
+
 def generate_file_source_translator(username='', base_path=''):
     """Generate file source reference translator function based on username or
     base_path
@@ -227,13 +238,7 @@ def generate_file_source_translator(username='', base_path=''):
         source: URL, absolute or relative file system path
         """
         source = source.strip()
-        # convert URLs to file system paths by applying source map
-        for pattern, replacement in \
-                settings.REFINERY_FILE_SOURCE_MAP.iteritems():
-            translated_source = re.sub(pattern, replacement, source)
-            if source != translated_source:
-                source = translated_source
-                break
+        source = map_source(source)
 
         # ignore URLs and absolute file paths
         if is_url(source) or os.path.isabs(source):
@@ -268,7 +273,7 @@ class _FileStoreItemManager(models.Manager):
             logger.error("Source is required but was not provided")
             return None
 
-        item = self.create(source=source, sharename=sharename)
+        item = self.create(source=map_source(source), sharename=sharename)
 
         item.set_filetype(filetype)
 
