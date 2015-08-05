@@ -112,7 +112,9 @@ urlpatterns = patterns(
             'post_reset_redirect': '/accounts/login/?next=/'
         }
     ),
-    url(r'^accounts/profile/$', 'core.views.user_profile', name='user_profile'),
+    url(r'^accounts/profile/$',
+        'core.views.user_profile',
+        name='user_profile'),
     url(
         r'^accounts/profile/edit/$',
         'core.views.user_profile_edit',
