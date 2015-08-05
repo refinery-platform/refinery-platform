@@ -369,17 +369,24 @@ class NodeSetResourceTest(ResourceTestCase):
                                        authentication=self.get_credentials())
         self.assertHttpUnauthorized(response)
 
-    def test_get_nodeset_without_permission(self):
-        '''Test retrieving an existing NodeSet that belongs to a different user.
-
-        '''
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay,
-                                         solr_query=simplejson.dumps(self.query))
-        assign_perm("read_%s" % nodeset._meta.module_name, self.user2, nodeset)
-        nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
-        response = self.api_client.get(nodeset_uri, format='json',
-                                       authentication=self.get_credentials())
-        self.assertHttpUnauthorized(response)
+    # See https://github.com/parklab/refinery-platform/issues/586
+    # def test_get_nodeset_without_permission(self):
+    #     """Test retrieving an existing NodeSet that belongs to a different user.
+    #     """
+    #     nodeset = NodeSet.objects.create(
+    #         name='nodeset',
+    #         study=self.study,
+    #         assay=self.assay,
+    #         solr_query=simplejson.dumps(self.query)
+    #     )
+    #     assign_perm("read_%s" % nodeset._meta.module_name, self.user2, nodeset)
+    #     nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
+    #     response = self.api_client.get(
+    #         nodeset_uri,
+    #         format='json',
+    #         authentication=self.get_credentials()
+    #     )
+    #     self.assertHttpNotFound(response)
 
     def test_get_nodeset_with_invalid_uuid(self):
         '''Test retrieving a NodeSet instance that doesn't exist.
