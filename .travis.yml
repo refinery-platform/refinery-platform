@@ -1,28 +1,28 @@
 language: python
 python:
-- 2.7
+  - 2.7
 services:
-- postgresql
+  - postgresql
 install:
-- pip install -r requirements.txt
+  - pip install -r requirements.txt
 env:
-- DJANGO_SETTINGS_MODULE=settings.dev
+  - DJANGO_SETTINGS_MODULE=settings.dev
 before_script:
-- createuser --createdb --no-superuser --no-createrole vagrant
-- createdb -O vagrant refinery
-- cd refinery
-- cp config.json.sample config.json
-- python manage.py syncdb --migrate --noinput
+  - createuser --createdb --no-superuser --no-createrole vagrant
+  - createdb -O vagrant refinery
+  - cd refinery
+  - cp config.json.sample config.json
+  - python manage.py syncdb --migrate --noinput
 script:
-- python manage.py test analysis_manager
-- python manage.py test annotation_server
-- python manage.py test core
-- python manage.py test data_set_manager
-- python manage.py test file_server
-- python manage.py test file_store
-- python manage.py test galaxy_connector
-- python manage.py test visualization_manager
-- python manage.py test workflow_manager
+  - python manage.py test analysis_manager
+  - python manage.py test annotation_server
+  - python manage.py test core
+  - python manage.py test data_set_manager
+  - python manage.py test file_server
+  - python manage.py test file_store
+  - python manage.py test galaxy_connector
+  - python manage.py test visualization_manager
+  - python manage.py test workflow_manager
 notifications:
   slack:
     secure: nDs9Oj08nRizuD0edl6WcrSgaTPMyITQjZc4qPZpt+yOxUehWbrAmVhqYypfyvdj4qSi1E72rPTXftuBB1E1IZBgX4CCkrCkWGLgIxHaaValTd64oOX66eC3BbSehQxuJB7w1DWw54xBUkTy6+ufjAqiwhLpoEUeE296urAWYHU=
