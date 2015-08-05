@@ -60,7 +60,7 @@ def stage():
 @task
 def prod():
     """Set config for deployment on production VM"""
-    #TODO: add a warning message/confirmation about updating production VM?
+    # TODO: add a warning message/confirmation about updating production VM?
     setup()
     env.hosts = [env.prod_host]
 
@@ -144,7 +144,8 @@ def relaunch_refinery(dependencies=False, migrations=False):
         run("find . -name '*.pyc' -delete")
         if migrations:
             run("{refinery_app_dir}/manage.py syncdb --migrate".format(**env))
-        run("{refinery_app_dir}/manage.py collectstatic --noinput".format(**env))
+        run("{refinery_app_dir}/manage.py collectstatic --noinput"
+            .format(**env))
         run("supervisorctl restart all")
     with cd(env.refinery_project_dir):
         run("touch {refinery_app_dir}/wsgi.py".format(**env))

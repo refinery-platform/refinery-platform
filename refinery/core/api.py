@@ -558,7 +558,8 @@ class AnalysisResource(ModelResource):
         authorization = Authorization()
         allowed_methods = ["get"]
         fields = [
-            'data_set', 'creation_date', 'history_id', 'library_id', 'name',
+            'data_set', 'data_set__uuid', 'creation_date', 'history_id',
+            'library_id', 'name', 'workflow__uuid',
             'resource_uri', 'status', 'time_end', 'time_start', 'uuid',
             'workflow_copy', 'workflow_galaxy_id', 'workflow_steps_num'
         ]
@@ -1449,7 +1450,7 @@ class InvitationResource(ModelResource):
 
         if get_dict.get('group_id'):
             auth_group_list = filter(
-                lambda g: 
+                lambda g:
                     get_dict['group_id'].isdigit() and
                     g.id == int(get_dict['group_id']),
                 auth_group_list)
@@ -1524,7 +1525,7 @@ class ExtendedGroupResource(ModelResource):
     # Wrap get_ext_group and raise error if cannot be found.
     def get_ext_group_or_fail(self, uuid):
         ext_group = self._get_ext_group(uuid)
-        
+
         if ext_group:
             return ext_group
         else:
@@ -1669,7 +1670,7 @@ class ExtendedGroupResource(ModelResource):
                 if ext_group.is_manager_group() and ext_group.user_set.count() == 1:
                     return HttpForbidden('Last manager must delete group to leave')
 
-                if (not ext_group.is_manager_group() and 
+                if (not ext_group.is_manager_group() and
                     user in ext_group.manager_group.user_set.all() and
                     ext_group.manager_group.user_set.count() == 1):
                     return HttpForbidden('Last manager must delete group to leave')
@@ -1701,7 +1702,7 @@ class ExtendedGroupResource(ModelResource):
 
         if request.method == 'GET':
             ext_group_list = self.ext_groups_with_user(user)
-            
+
             for i in ext_group_list:
                 i.member_list = self.get_member_list(i)
                 i.can_edit = self.user_authorized(user, i)
@@ -1717,7 +1718,7 @@ class ExtendedGroupResource(ModelResource):
                         lambda g: self.full_dehydrate(self.build_bundle(obj=g, request=request)),
                         ext_group_list)
                 }
-            
+
             )
         else:
             return HttpMethodNotAllowed()
