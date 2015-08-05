@@ -482,14 +482,16 @@ class NodeSetResourceTest(ResourceTestCase):
 
         new_nodeset_data = {'name': 'new_nodeset', 'is_implicit': True}
         nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
-        response = self.api_client.put(nodeset_uri, format='json',
-                                       data=new_nodeset_data,
-                                       authentication=self.get_credentials())
-        self.assertHttpMethodNotAllowed(response)
+        self.api_client.put(
+            nodeset_uri,
+            format='json',
+            data=new_nodeset_data,
+            authentication=self.get_credentials()
+        )
         self.assertEqual(NodeSet.objects.count(), 1)
         nodeset = NodeSet.objects.get(uuid=nodeset.uuid)
-        self.assertEqual(nodeset.name, 'nodeset')
-        self.assertFalse(nodeset.is_implicit)
+        self.assertEqual(nodeset.name, 'new_nodeset')
+        self.assertTrue(nodeset.is_implicit)
 
     def test_delete_nodeset(self):
         '''Test deleting an existing NodeSet instance.
