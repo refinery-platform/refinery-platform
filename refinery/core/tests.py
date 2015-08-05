@@ -616,7 +616,8 @@ class AnalysisResourceTest(ResourceTestCase):
             self.password2
         )
         self.get_credentials()
-        self.project = UserProfile.objects.get(
+        self.project = Project.objects.create()
+        self.user_catch_all_project = UserProfile.objects.get(
             user=self.user
         ).catch_all_project
         self.dataset = DataSet.objects.create()
@@ -642,11 +643,10 @@ class AnalysisResourceTest(ResourceTestCase):
         """Test retrieving an existing Analysis that belongs to a user who
         created it
         """
-
         analysis = Analysis.objects.create(
             name='bla',
             summary='keks',
-            project=self.project,
+            project=self.user_catch_all_project,
             data_set=self.dataset,
             workflow=self.workflow
         )
@@ -702,29 +702,36 @@ class AnalysisResourceTest(ResourceTestCase):
     def test_get_analysis_without_login(self):
         """Test retrieving an existing Analysis without logging in.
         """
-        analysis = Analysis.objects.create(project=self.project,
-                                           data_set=self.dataset,
-                                           workflow=self.workflow)
-        assign_perm("read_%s" % Analysis._meta.module_name, self.user, analysis)
+        self.api_client.client.logout()
+        analysis = Analysis.objects.create(
+            name='bla',
+            summary='keks',
+            project=self.project,
+            data_set=self.dataset,
+            workflow=self.workflow
+        )
+        analysis.set_owner(self.user)
         analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
         response = self.api_client.get(analysis_uri, format='json')
-        self.assertHttpUnauthorized(response)
+        self.assertHttpNotFound(response)
 
     def test_get_analysis_without_permission(self):
-        '''Test retrieving an existing Analysis that belongs to a different user.
-
-        '''
-        analysis = Analysis.objects.create(project=self.project,
-                                           data_set=self.dataset,
-                                           workflow=self.workflow)
-        assign_perm(
-            "read_%s" % Analysis._meta.module_name,
-            self.user2, analysis
+        """Test retrieving an existing Analysis that belongs to a different user.
+        """
+        analysis = Analysis.objects.create(
+            name='bla',
+            summary='keks',
+            project=self.project,
+            data_set=self.dataset,
+            workflow=self.workflow
         )
+        analysis.set_owner(self.user2)
         analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
-        response = self.api_client.get(analysis_uri, format='json',
-                                       authentication=self.get_credentials())
-        self.assertHttpUnauthorized(response)
+        response = self.api_client.get(
+            analysis_uri,
+            format='json'
+        )
+        self.assertHttpNotFound(response)
 
     def test_get_analysis_with_invalid_uuid(self):
         '''Test retrieving an Analysis instance that doesn't exist.
