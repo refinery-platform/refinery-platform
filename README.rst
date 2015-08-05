@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/parklab/refinery-platform.svg?branch=develop
+    :target: https://travis-ci.org/parklab/refinery-platform
+
 Refinery Platform
 =================
 
