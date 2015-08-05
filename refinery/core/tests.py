@@ -9,7 +9,7 @@ from core.management.commands.init_refinery import create_public_group
 from core.management.commands.create_user import init_user
 from core.models import NodeSet, create_nodeset, get_nodeset, delete_nodeset,\
     update_nodeset, ExtendedGroup, DataSet, InvestigationLink, Project,\
-    Analysis, Workflow, WorkflowEngine
+    Analysis, Workflow, WorkflowEngine, UserProfile
 import data_set_manager
 from galaxy_connector.models import Instance
 
@@ -607,30 +607,57 @@ class AnalysisResourceTest(ResourceTestCase):
         self.dataset = DataSet.objects.create()
         self.dataset2 = DataSet.objects.create()
         self.galaxy_instance = Instance.objects.create()
-        self.workflow_engine = WorkflowEngine.objects.create(instance=self.galaxy_instance)
-        self.workflow = Workflow.objects.create(workflow_engine=self.workflow_engine)
+        self.workflow_engine = WorkflowEngine.objects.create(
+            instance=self.galaxy_instance
+        )
+        self.workflow = Workflow.objects.create(
+            workflow_engine=self.workflow_engine
+        )
         self.username = self.password = 'user'
-        self.user = User.objects.create_user(self.username, '', self.password)
+        self.user = User.objects.create_user(
+            self.username,
+            '',
+            self.password
+        )
         self.username2 = self.password2 = 'user2'
-        self.user2 = User.objects.create_user(self.username2, '', self.password2)
+        self.user2 = User.objects.create_user(
+            self.username2,
+            '',
+            self.password2
+        )
+        self.get_credentials()
 
     def get_credentials(self):
         """Authenticate as self.user"""
         # workaround required to use SessionAuthentication
         # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
-        return self.api_client.client.login(username=self.username, password=self.password)
+        return self.api_client.client.login(
+            username=self.username,
+            password=self.password
+        )
 
     def test_get_analysis(self):
         """Test retrieving an existing Analysis that belongs to a user who
         created it
         """
-        analysis = Analysis.objects.create(project=self.project,
-                                           data_set=self.dataset,
-                                           workflow=self.workflow)
-        assign_perm("read_%s" % Analysis._meta.module_name, self.user, analysis)
+
+        catch_all_project = UserProfile.objects.get(
+            user=self.user
+        ).catch_all_project
+
+        analysis = Analysis.objects.create(
+            name="bla",
+            summary="keks",
+            project=catch_all_project,
+            data_set=self.dataset,
+            workflow=self.workflow
+        )
+        analysis.set_owner(self.user)
         analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
-        response = self.api_client.get(analysis_uri, format='json',
-                                       authentication=self.get_credentials())
+        response = self.api_client.get(
+            analysis_uri,
+            format='json'
+        )
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)
         self.assertKeys(data, AnalysisResource.Meta.fields)
@@ -677,9 +704,8 @@ class AnalysisResourceTest(ResourceTestCase):
         self.assertEqual(data[0]['name'], analysis1.name)
 
     def test_get_analysis_without_login(self):
-        '''Test retrieving an existing Analysis without logging in.
-
-        '''
+        """Test retrieving an existing Analysis without logging in.
+        """
         analysis = Analysis.objects.create(project=self.project,
                                            data_set=self.dataset,
                                            workflow=self.workflow)
@@ -695,7 +721,10 @@ class AnalysisResourceTest(ResourceTestCase):
         analysis = Analysis.objects.create(project=self.project,
                                            data_set=self.dataset,
                                            workflow=self.workflow)
-        assign_perm("read_%s" % Analysis._meta.module_name, self.user2, analysis)
+        assign_perm(
+            "read_%s" % Analysis._meta.module_name,
+            self.user2, analysis
+        )
         analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
         response = self.api_client.get(analysis_uri, format='json',
                                        authentication=self.get_credentials())
