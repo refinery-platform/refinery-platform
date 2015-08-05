@@ -755,11 +755,6 @@ class AnalysisResourceTest(ResourceTestCase):
             workflow=self.workflow
         )
         analysis1.set_owner(self.user)
-        # assign_perm(
-        #     "read_%s" % Analysis._meta.module_name,
-        #     self.user,
-        #     analysis1
-        # )
         analysis2 = Analysis.objects.create(
             name='a2',
             project=self.user_catch_all_project,
@@ -767,11 +762,6 @@ class AnalysisResourceTest(ResourceTestCase):
             workflow=self.workflow
         )
         analysis2.set_owner(self.user)
-        # assign_perm(
-        #     "read_%s" % Analysis._meta.module_name,
-        #     self.user,
-        #     analysis2
-        # )
         analysis_uri = make_api_uri(Analysis._meta.module_name)
         response = self.api_client.get(
             analysis_uri,
@@ -789,30 +779,24 @@ class AnalysisResourceTest(ResourceTestCase):
         """
         analysis1 = Analysis.objects.create(
             name='a1',
-            project=self.project,
+            project=self.user_catch_all_project,
             data_set=self.dataset,
             workflow=self.workflow
         )
-        assign_perm(
-            "read_%s" % Analysis._meta.module_name,
-            self.user,
-            analysis1
-        )
+        analysis1.set_owner(self.user)
         analysis2 = Analysis.objects.create(
             name='a2',
-            project=self.project,
+            project=self.user_catch_all_project,
             data_set=self.dataset2,
             workflow=self.workflow
         )
-        assign_perm(
-            "read_%s" % Analysis._meta.module_name,
-            self.user,
-            analysis2
-        )
+        analysis2.set_owner(self.user)
         analysis_uri = make_api_uri(Analysis._meta.module_name)
-        response = self.api_client.get(analysis_uri, format='json',
-                                       authentication=self.get_credentials(),
-                                       data={'order_by': 'name'})
+        response = self.api_client.get(
+            analysis_uri,
+            format='json',
+            data={'order_by': 'name'}
+        )
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)['objects']
         self.assertEqual(len(data), 2)
