@@ -468,10 +468,13 @@ class NodeSetResourceTest(ResourceTestCase):
         self.assertEqual(NodeSet.objects.count(), 0)
 
     def test_update_nodeset(self):
-        '''Test updating an existing NodeSet instance with new data.
-
-        '''
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay)
+        """Test updating an existing NodeSet instance with new data.
+        """
+        nodeset = NodeSet.objects.create(
+            name='nodeset',
+            study=self.study,
+            assay=self.assay
+        )
         self.assertEqual(NodeSet.objects.count(), 1)
         self.assertEqual(nodeset.name, 'nodeset')
         self.assertFalse(nodeset.is_implicit)
