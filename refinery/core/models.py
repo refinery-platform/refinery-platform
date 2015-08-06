@@ -1428,3 +1428,8 @@ class Invitation(models.Model):
 
         return super(Invitation, self).save(*arg, **kwargs)
 
+
+# TODO - Back this with DB as a models.Model
+class FastQC(object):
+    def __init__(self, data=None):
+        self.data = data;
