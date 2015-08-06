@@ -38,7 +38,11 @@
   </div>
 
 <ul class="analysesList">
-    <li class="analysesListItems" ng-repeat="analysis in AnalysesCtrl.analysesList | orderBy:predicate:reverse  track by analysis.uuid">
+    <li class="analysesListItems" ng-repeat="analysis in AnalysesCtrl
+    .analysesList | orderBy:predicate:reverse |
+    analysesOffset:currentPage*itemsPerPage | limitTo: itemsPerPage track by
+    analysis.uuid">
+
        <div class="row-fluid">
         <div class="span1 analysis-icon">
          <span class="spinner"><i class="{{analysis.status | analysesStatusIcon}} analyses-status"></i>
@@ -207,5 +211,19 @@
       </div>
     </li>
   </ul>
-</div>
+
+  <div class="pagination analyses-tab">
+    <ul>
+      <li ng-class="prevPageDisabled()">
+        <a ng-click="prevPage()">«</a>
+      </li>
+      <li ng-repeat="n in range()" ng-class="{active: n==currentPage}" ng-click="setPage(n)">
+        <a> {{ n }}  </a>
+      </li>
+      <li ng-class="nextPageDisabled()">
+        <a href ng-click="nextPage()">»</a>
+      </li>
+    </ul>
+  </div>
+ </div>
 </div>

@@ -95,45 +95,7 @@ ul#externalToolListPopover li{
   width: 96%;
 }
 
-ul.analysesList{
-  list-style-type: none;
-  width: 100%;
-  margin-left: 0;
-  padding-left: 0;
-}
-
-
-ul.analysesRunningList{
-   display: block;
-    width: 100%;
-}
-
-li.analysesListItems:nth-of-type(odd){
-  background-color: rgba(0, 0, 0, 0.025);
-}
-
-li.analysesListItems{
-  display: block;
-  float: left;
-  width: 100%;
-  list-style-type: none;
-  border-top: 1px solid #dddddd;
-}
-
-li.analysisRunningListItem{
-  display: inline;
-  list-style-type: none;
-  float: left;
-  padding-right: 20px;
-  width: 25%;
-
-}
-
-#analyses-cancel-notice{
-  display: inline;
-  width:200px;
-}
-
+//Global analyses status icon/popover
 #analyses-popover {
   .popover {
     position: absolute;
@@ -181,6 +143,45 @@ a#analyses-popover-links:hover, a:focus{
 
 .icon-question-sign.analyses-status{
   color: #708090;
+}
+
+//Analyses Tab View Css
+ul.analysesList{
+  list-style-type: none;
+  width: 100%;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+ul.analysesRunningList{
+   display: block;
+    width: 100%;
+}
+
+li.analysesListItems:nth-of-type(odd){
+  background-color: rgba(0, 0, 0, 0.025);
+}
+
+li.analysesListItems{
+  display: block;
+  float: left;
+  width: 100%;
+  list-style-type: none;
+  border-top: 1px solid #dddddd;
+}
+
+li.analysisRunningListItem{
+  display: inline;
+  list-style-type: none;
+  float: left;
+  padding-right: 20px;
+  width: 25%;
+
+}
+
+#analyses-cancel-notice{
+  display: inline;
+  width:200px;
 }
 
 .refinery-spinner.analyses-view{
