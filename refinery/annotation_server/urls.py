@@ -5,14 +5,12 @@ urlpatterns = patterns(
     url(r'^search_genes/'
         r'(?P<genome>[a-zA-Z0-9]+)/(?P<search_string>[a-zA-Z0-9]+)/$',
         'search_genes'),
-    # extended genes
     url(r'^sequence/(?P<genome>[a-zA-Z0-9]+)/(?P<chrom>[a-zA-Z0-9]+)/'
         r'(?P<start>[0-9]+)/(?P<end>[0-9]+)/$',
         'get_sequence'),
     url(r'^genes/(?P<genome>[a-zA-Z0-9]+)/(?P<chrom>[a-zA-Z0-9]+)/'
         r'(?P<start>[0-9]+)/(?P<end>[0-9]+)/$',
         'get_genes'),
-    # extended genes
     url(r'^chromlength/(?P<genome>[a-zA-Z0-9]+)/(?P<chrom>[a-zA-Z0-9]+)/$',
         'get_chrom_length'),
     url(r'^chromlength/(?P<genome>[a-zA-Z0-9]+)/$', 'get_length'),
