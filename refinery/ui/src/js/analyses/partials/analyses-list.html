@@ -212,13 +212,17 @@
     </li>
   </ul>
 
-  <div class="pagination analyses-tab">
+  <br>
+  <br>
+
+  <div class="pagination analyses">
     <ul>
       <li ng-class="prevPageDisabled()">
         <a ng-click="prevPage()">«</a>
       </li>
-      <li ng-repeat="n in range()" ng-class="{active: n==currentPage}" ng-click="setPage(n)">
-        <a> {{ n }}  </a>
+      <li ng-repeat="pageNum in range()" ng-class="{active:pageNum==currentPage}"
+        ng-click="setPage(pageNum)">
+        <a> {{ pageNum }}  </a>
       </li>
       <li ng-class="nextPageDisabled()">
         <a href ng-click="nextPage()">»</a>
