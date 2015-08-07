@@ -69,13 +69,13 @@ def copy_object(obj, value=None, field=None, duplicate_order=None,
     :type copy_files: bool.
     :returns: copy of Model instance if successful.
     """
-    #key = original object, value = copy of original object
+    # key = original object, value = copy of original object
     associated_copy = dict()
     collector = Collector("default")
     collector.collect([obj])
     collector.sort()
     related_models = collector.data.keys()
-    data_snapshot =  {}
+    data_snapshot = {}
     for key in collector.data.keys():
         data_snapshot.update({
             key: dict(zip(
@@ -115,14 +115,14 @@ def copy_object(obj, value=None, field=None, duplicate_order=None,
             obj.id = None
 
             if copy_files:
-                #copy data files referenced in file_uuid field in a Node
+                # copy data files referenced in file_uuid field in a Node
                 try:
                     if obj.file_uuid:
                         obj.file_uuid = copy_file(obj.file_uuid)
                 except AttributeError:
                     pass
 
-                #copy metadata files associated with an Investigation
+                # copy metadata files associated with an Investigation
                 try:
                     if obj.isarchive_file or obj.pre_isarchive_file:
                         try:
