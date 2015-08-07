@@ -59,7 +59,7 @@ class NodeSetTest(unittest.TestCase):
         self.assay = data_set_manager.models.Assay.objects.create(
             study=self.study)
         self.query = simplejson.dumps({
-            "facets":{
+            "facets": {
                 "platform_Characteristics_10_5_s": [],
                 "cell_or_tissue_Characteristics_10_5_s": [],
                 "REFINERY_TYPE_10_5_s": [],
@@ -74,8 +74,8 @@ class NodeSetTest(unittest.TestCase):
                 "data_type_Characteristics_10_5_s": [],
                 "lab_Characteristics_10_5_s": []
                 },
-                "nodeSelection": [],
-                "nodeSelectionBlacklistMode": True
+            "nodeSelection": [],
+            "nodeSelectionBlacklistMode": True
         })
 
     def test_create_minimal_nodeset(self):
@@ -274,8 +274,8 @@ class NodeSetResourceTest(ResourceTestCase):
 
     # Test fails because the API doesn't authorize users.
     # def test_get_nodeset_list(self):
-    #     """Test retrieving a list of NodeSets that belong to a user who created
-    #     them.
+    #     """Test retrieving a list of NodeSets that belong to a user who
+    #     created them
     #     """
     #     nodeset1 = NodeSet.objects.create(
     #         name='ns1',
@@ -425,7 +425,8 @@ class NodeSetResourceTest(ResourceTestCase):
 
     # See https://github.com/parklab/refinery-platform/issues/586
     # def test_get_nodeset_without_permission(self):
-    #     """Test retrieving an existing NodeSet that belongs to a different user.
+    #     """Test retrieving an existing NodeSet that belongs to a different
+    #     user
     #     """
     #     nodeset = NodeSet.objects.create(
     #         name='nodeset',
@@ -433,7 +434,9 @@ class NodeSetResourceTest(ResourceTestCase):
     #         assay=self.assay,
     #         solr_query=simplejson.dumps(self.query)
     #     )
-    #     assign_perm("read_%s" % nodeset._meta.module_name, self.user2, nodeset)
+    #     assign_perm(
+    #         "read_%s" % nodeset._meta.module_name, self.user2, nodeset
+    #     )
     #     nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
     #     response = self.api_client.get(
     #         nodeset_uri,
@@ -593,7 +596,7 @@ class NodeSetListResourceTest(ResourceTestCase):
             study=self.study2
         )
         self.query = {
-            "facets":{
+            "facets": {
                 "platform_Characteristics_10_5_s": [],
                 "cell_or_tissue_Characteristics_10_5_s": [],
                 "REFINERY_TYPE_10_5_s": [],
@@ -627,8 +630,8 @@ class NodeSetListResourceTest(ResourceTestCase):
 
     # Same reason
     # def test_get_nodeset_list(self):
-    #     """Test retrieving a list of NodeSets that belong to a user who created
-    #     them.
+    #     """Test retrieving a list of NodeSets that belong to a user who
+    #     created them
     #     """
     #     nodeset1 = NodeSet.objects.create(
     #         name='ns1',
