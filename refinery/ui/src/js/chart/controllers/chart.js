@@ -1,11 +1,8 @@
-function ChartCtrl($http, $stateParams, fastqcDataService, refineryBoxPlotService, refineryC3LinePlotService) {
+function ChartCtrl($stateParams, fastqcDataService, refineryBoxPlotService) {
   var that = this;
   that.$stateParams = $stateParams;
   that.fastqcDataService = fastqcDataService;
   that.refineryBoxPlotService = refineryBoxPlotService;
-  that.refineryC3LinePlotService = refineryC3LinePlotService;
-
-  console.log(this.$stateParams);
 
   if (this.$stateParams &&
       this.$stateParams.uuid &&
@@ -34,7 +31,7 @@ Object.defineProperty(
         'per_sequence_gc_content',
         'per_base_n_content',
         'sequence_length_distribution',
-        'sequence_duplication_level',
+        'sequence_duplication_levels',
         'overrepresented_sequences',
         'adapter_content',
         'kmer_content'
@@ -79,6 +76,12 @@ function isValidUUID(uuid) {
   return true;
 }
 
+function make_array(size) {
+  return Array.apply(null, new Array(size)).map(function (a, i) {
+    return i + 1;
+  });
+}
+
 ChartCtrl.prototype.plot = function (data, mode) {
   var that = this;
   mode = mode && this.modeList.indexOf(mode) > -1 ?
@@ -86,36 +89,66 @@ ChartCtrl.prototype.plot = function (data, mode) {
 
   if (!data[mode] && !(data[mode] instanceof (Array))) {
     console.error("Invalid data type returned");
+    return;
   }
 
   if (mode === 'per_base_sequence_quality') {
     this.draw_per_base_sequence_quality(data[mode]);
   } else if (mode === 'per_sequence_quality_scores') {
-    this.draw_per_sequence_quality_scores(data[mode]);
+    this.draw_generic(data[mode]);
   } else if (mode === 'per_base_sequence_content') {
-    this.draw_per_base_sequence_content(data[mode]);
+    this.draw_generic(data[mode], {ymin: 0, ymax: 0});
   } else if (mode === 'per_sequence_gc_content') {
-    this.draw_per_sequence_gc_content(data[mode]);
+    this.draw_generic(data[mode]);
   } else if (mode === 'per_base_n_content') {
-    this.draw_per_base_n_content(data[mode]);
+    this.draw_generic(data[mode]);
   } else if (mode === 'sequence_length_distribution') {
-    this.draw_sequence_length_distribution(data[mode]);
-  } else if (mode === 'sequence_duplication_level') {
-    this.draw_sequence_duplication_level(data[mode]);
+    this.draw_generic(data[mode]);
+  } else if (mode === 'sequence_duplication_levels') {
+    this.draw_generic(data[mode].slice(1));
   } else if (mode === 'overrepresented_sequences') {
-    this.draw_overrepresented_sequences(data[mode]);
+    this.draw_generic(data[mode].map(function (d) { 
+      return d.slice(0, 3);
+    }));
   } else if (mode === 'adapter_content') {
-    this.draw_adapter_content(data[mode]);
+    this.draw_generic(data[mode]);
   } else if (mode === 'kmer_content') {
-    this.draw_kmer_content(data[mode]);
+    this.draw_generic(data[mode]);
   } else {
-    this.draw_per_base_sequence_quality(data[mode]);
+    this.draw_per_base_sequence_quality(data['per_base_sequence_quality']);
   }
 };
 
+ChartCtrl.prototype.draw_generic = function (data, config) {
+  config = config || {};
+
+  var chart = c3.generate({
+    bindto: this.bindto,
+    data: {
+      x: data[0][0],
+      columns: data[0].map(function (d, i) {
+        return data.map(function (d) {
+          return d[i];
+        });
+      })
+    },
+    axis: {
+      x: {
+        type: 'category'
+      },
+      y: {
+        min: config.ymin || 0,
+        max: config.ymax || null,
+        padding: {
+          bottom: config.bPad || 0,
+          top: config.tPad || 0
+        }
+      }
+    }
+  });
+};
 
 ChartCtrl.prototype.draw_per_base_sequence_quality = function (data) {
-  console.log(this);
   var chart = this.refineryBoxPlotService.generate({
     data: data.slice(1).map(function (d) {
       return {
@@ -135,100 +168,12 @@ ChartCtrl.prototype.draw_per_base_sequence_quality = function (data) {
   });
 };
 
-ChartCtrl.prototype.draw_per_sequence_quality_scores = function (data) {
-  var chart = this.refineryC3LinePlotService.generate({
-    bindto: config.bindto,
-    data: {
-      length: data_wrapper.data.length - 1,
-      ymin: 0,
-      columns: [data_wrapper.data]
-    }
-  });
-};
-
-ChartCtrl.prototype.draw_per_base_sequence_content = function (data) {
-  var chart = this.refineryC3LinePlotService.generate({
-    bindto: config.bindto,
-    data: {
-      length: data_wrapper.data.T.length - 1,
-      ymin: 0,
-      ymax: 100,
-      columns: [
-        data_wrapper.data.T,
-        data_wrapper.data.A,
-        data_wrapper.data.G,
-        data_wrapper.data.C
-      ]
-    }
-  });
-};
-
-ChartCtrl.prototype.draw_per_sequence_gc_content = function (data) {
-  var chart = this.refineryC3LinePlotService.generate({
-    bindto: config.bindto,
-    data: {
-      length: data_wrapper.data.length - 1,
-      ymin: 0,
-      columns: [
-        data_wrapper.data
-      ]
-    }
-  });
-};
-
-ChartCtrl.prototype.draw_per_base_n_content = function (data, config) {
-  var chart = this.refineryC3LinePlotService.generate({
-    bindto: config.bindto,
-    data: {
-      length: data_wrapper.data.length - 1,
-      ymin: 0,
-      ymax: 100,
-      columns: [
-        data_wrapper.data
-      ]
-    }
-  });
-};
-
-ChartCtrl.prototype.draw_sequence_length_distribution = function (data, config) {
-
-};
-
-ChartCtrl.prototype.draw_sequence_duplication_level = function (data, config) {
-  var chart = this.refineryC3LinePlotService.generate({
-    bindto: config.bindto,
-    data: {
-      length: data_wrapper.data.length - 1,
-      ymin: 0,
-      ymax: 100,
-      columns: [
-        data_wrapper.data
-      ]
-    }
-  });
-};
-
-ChartCtrl.prototype.draw_overrepresented_sequences = function (data, config) {
-
-};
-
-ChartCtrl.prototype.draw_adapter_content = function (data, config) {
-
-};
-
-ChartCtrl.prototype.draw_kmer_content = function (data, config) {
-
-};
-
-
 angular
   .module('refineryChart')
   .controller("refineryChartCtrl", [
-    '$http',
     '$stateParams',
     'fastqcDataService',
     'refineryBoxPlotService',
-    'refineryC3LinePlotService',
     ChartCtrl
   ]);
 

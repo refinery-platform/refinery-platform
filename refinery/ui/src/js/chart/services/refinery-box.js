@@ -179,7 +179,6 @@ RefineryBoxPlotService.prototype.generate = function (config) {
 
     yDomain = 35;
 
-    console.log(labels);
     xScale = d3.scale.ordinal().domain(labels).rangePoints([0, w], 1);
     yScale = d3.scale.linear().domain([0, yDomain]).range([h, 0]);
     xAxis = d3.svg.axis().scale(xScale).tickFormat(option.xTickFromat);
@@ -218,20 +217,15 @@ RefineryBoxPlotService.prototype.generate = function (config) {
       data[i].orderKey = i;
     }
 
-    console.log(data);
-
-    d3.nest.sortKeys = function (order) {
-      return null;
-    };
-
     var nest = d3.nest().key(function(d) {
       return d.kind;
     }).key(function(d) {
       return d.orderKey;
       // return d.label; // Done to prevent d3's nest from being too helpful.
+      // Otherwise it messes with the axis labels. For example, in terms of
+      // alphanumerical string sorting, '120' < '118-119', not wanted.
     }).entries(data);
 
-    console.log(nest);
     return boxPlot(d3.select(b).append('svg'), nest);
   };
 
