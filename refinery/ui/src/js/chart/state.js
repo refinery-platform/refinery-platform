@@ -5,7 +5,7 @@ angular
     function (refineryStateProvider) {
       refineryStateProvider
         .state(
-          'default',
+          'none',
           {
             url: '/',
             templateUrl: '/static/partials/chart/partials/charts-main.html',
@@ -14,9 +14,18 @@ angular
           '/chart-test/'
         )
         .state(
-          'valid',
+          'default',
           {
-            url: '/{mode}/',
+            url: '/{uuid}/',
+            templateUrl: '/static/partials/chart/partials/charts-main.html',
+            controller: 'refineryChartCtrl as chart'
+          },
+          '/chart-test/'
+        )
+        .state(
+          'full',
+          {
+            url: '/{uuid}/{mode}/',
             templateUrl: '/static/partials/chart/partials/charts-main.html',
             controller: 'refineryChartCtrl as chart'
           },

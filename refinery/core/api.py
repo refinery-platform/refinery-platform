@@ -1768,10 +1768,10 @@ class FastQCResource(Resource):
 
         parser = Fadapa(fadapa_input)
 
-        data_obj = FastQC({'Summary': {}})
+        tmp_dict = {'Summary': {}}
 
         for i in parser.summary()[1:]:
-            data_obj.data['Summary'][i[0]] = i[1]
+            tmp_dict['Summary'][i[0]] = i[1]
             parsed_data = parser.clean_data(i[0])
             clean_data = []
             
@@ -1781,15 +1781,21 @@ class FastQCResource(Resource):
                         float(d) if self.is_float(d) else d,
                     row[1:]))
 
-            data_obj.data[i[0]] = clean_data
+            tmp_dict[i[0]] = clean_data
 
-        # Modify the 'Basic Statistics' module if it exists
-        if data_obj.data.get('Basic Statistics'):
+        # Modify the 'Basic Statistics' module if it exists.
+        if tmp_dict.get('Basic Statistics'):
             mod = {}
             
-            for i in data_obj.data['Basic Statistics']:
+            for i in tmp_dict['Basic Statistics']:
                 mod[i[0]] = i[1]
 
-            data_obj.data['Basic Statistics'] = mod
+            tmp_dict['Basic Statistics'] = mod
 
-        return data_obj
+        # Rename to friendly format dict keys.
+        new = {}
+
+        for key in tmp_dict:
+            new[key.lower().replace(' ', '_')] = tmp_dict[key]
+
+        return FastQC(new)

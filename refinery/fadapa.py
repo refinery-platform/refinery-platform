@@ -46,7 +46,6 @@ class Fadapa(object):
 
         :return: Content
         """
-
         return '\n'.join(self._content)
 
     def raw_data(self, module):
