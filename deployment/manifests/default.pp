@@ -278,6 +278,7 @@ file { "${project_root}/supervisord.conf":
 ->
 exec { "supervisord":
   command => "${virtualenv}/bin/supervisord",
+  environment => ["DJANGO_SETTINGS_MODULE=settings.dev"],
   cwd => $project_root,
   creates => "/tmp/supervisord.pid",
   user => $appuser,
