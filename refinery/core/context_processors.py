@@ -10,6 +10,7 @@ Created on Aug 23, 2012
 from django.conf import settings
 from django.contrib.sites.models import Site
 
+
 def extra_context(context):
     """return values you want as a dictionary"""
     return {
@@ -23,10 +24,13 @@ def extra_context(context):
         "REFINERY_REPOSITORY_MODE": settings.REFINERY_REPOSITORY_MODE,
         "REFINERY_CONTACT_EMAIL": settings.DEFAULT_FROM_EMAIL,
         "REGISTRATION_OPEN": settings.REGISTRATION_OPEN,
-        "REFINERY_REGISTRATION_CLOSED_MESSAGE": settings.REFINERY_REGISTRATION_CLOSED_MESSAGE,
+        "REFINERY_REGISTRATION_CLOSED_MESSAGE":
+            settings.REFINERY_REGISTRATION_CLOSED_MESSAGE,
         "ACCOUNT_ACTIVATION_DAYS": settings.ACCOUNT_ACTIVATION_DAYS,
         "REFINERY_BANNER": settings.REFINERY_BANNER,
-        "REFINERY_BANNER_ANONYMOUS_ONLY": settings.REFINERY_BANNER_ANONYMOUS_ONLY,
+        "REFINERY_BANNER_ANONYMOUS_ONLY":
+            settings.REFINERY_BANNER_ANONYMOUS_ONLY,
         "REFINERY_EXTERNAL_AUTH": settings.REFINERY_EXTERNAL_AUTH,
-        "REFINERY_EXTERNAL_AUTH_MESSAGE": settings.REFINERY_EXTERNAL_AUTH_MESSAGE,
+        "REFINERY_EXTERNAL_AUTH_MESSAGE":
+            settings.REFINERY_EXTERNAL_AUTH_MESSAGE,
     }

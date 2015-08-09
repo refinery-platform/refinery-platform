@@ -34,6 +34,7 @@ from file_store.models import get_file_size, FileStoreItem
 from galaxy_connector.models import Instance
 from .utils import index_data_set
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -43,17 +44,16 @@ TYPE_1_N = '1-N'
 TYPE_N_1 = 'N-1'
 TYPE_REPLICATE = 'replicate'
 NR_TYPES = (
-            (TYPE_1_1, '1-1'),
-            (TYPE_1_N, '1-N'),
-            (TYPE_N_1, 'N-1'),
-            (TYPE_REPLICATE, 'replicate')
-           )
+    (TYPE_1_1, '1-1'),
+    (TYPE_1_N, '1-N'),
+    (TYPE_N_1, 'N-1'),
+    (TYPE_REPLICATE, 'replicate')
+)
 
 
 class UserProfile (models.Model):
     """Extends Django user model:
     https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional-information-about-users
-
     """
     uuid = UUIDField(unique=True, auto=True)
     user = models.OneToOneField(User)
@@ -106,16 +106,16 @@ def create_user_profile_registered(sender, user, request, **kwargs):
     UserProfile.objects.get_or_create(user=user)
 
     logger.info(
-        'user profile for user %s has been created after registration %s'
-        % (user, datetime.now())
+        "user profile for user %s has been created after registration %s",
+        user, datetime.now()
     )
     mail_admins(
         'New User Registered', 'User %s registered at %s'
         % (user, datetime.now())
     )
     logger.info(
-        'email has been sent to admins informing of registration of user %s'
-        % user
+        "email has been sent to admins informing of registration of user %s",
+        user
     )
 
 user_registered.connect(
@@ -153,14 +153,11 @@ user_logged_in.connect(create_catch_all_project)
 
 
 class BaseResource (models.Model):
-    '''
-    Abstract base class for core resources such as projects, analyses, datasets
-    and so on.
-
-    See
+    """Abstract base class for core resources such as projects, analyses,
+    datasets and so on. See
     https://docs.djangoproject.com/en/1.3/topics/db/models/#abstract-base-classes
     for details.
-    '''
+    """
     uuid = UUIDField(unique=True, auto=True)
     name = models.CharField(max_length=250, null=True)
     summary = models.CharField(max_length=1000, blank=True)
@@ -177,13 +174,11 @@ class BaseResource (models.Model):
 
 
 class OwnableResource (BaseResource):
-    '''Abstract base class for core resources that can be owned
-    (projects, data sets, workflows, workflow engines, etc.).
-
+    """Abstract base class for core resources that can be owned
+    (projects, data sets, workflows, workflow engines, etc.)
     IMPORTANT: expects derived classes to have "add/read/change/write_xxx"
     permissions, where "xxx" is the simple_modelname
-
-    '''
+    """
     def __unicode__(self):
         return self.name
 
@@ -224,13 +219,12 @@ class OwnableResource (BaseResource):
 
 
 class SharableResource (OwnableResource):
-    '''Abstract base class for core resources that can be shared
-    (projects, data sets, workflows, workflow engines, etc.).
-
+    """Abstract base class for core resources that can be shared
+    (projects, data sets, workflows, workflow engines, etc.)
     IMPORTANT:
     expects derived classes to have "add/read/change/write_xxx" + "share_xxx"
     permissions, where "xxx" is the simple_modelname
-    '''
+    """
     share_list = None
 
     def __unicode__(self):
@@ -316,10 +310,8 @@ class SharableResource (OwnableResource):
 
 
 class TemporaryResource:
-    '''Mix-in class for temporary resources like NodeSet instances.
-
-    '''
-    #: Expiration time and date of the instance
+    """Mix-in class for temporary resources like NodeSet instances"""
+    # Expiration time and date of the instance
     expiration = models.DateTimeField()
 
     def __unicode__(self):
@@ -330,11 +322,9 @@ class TemporaryResource:
 
 
 class ManageableResource:
-    '''Abstract base class for manageable resources such as disk space and
-    workflow engines.
-
-    '''
-
+    """Abstract base class for manageable resources such as disk space and
+    workflow engines
+    """
     def __unicode__(self):
         return self.name + " (" + self.uuid + ")"
 
@@ -383,12 +373,11 @@ class DataSet(SharableResource):
                 self.summary)
 
     def set_investigation(self, investigation, message=""):
-        '''Associate this data set with an investigation. If this data set has
+        """Associate this data set with an investigation. If this data set has
         an association with an investigation this association will be cleared
         first. Use update_investigation() to add a new version of the current
-        investigation.
-
-        '''
+        investigation
+        """
         self.investigationlink_set.filter(data_set=self).delete()
         link = InvestigationLink(
             data_set=self,
@@ -457,9 +446,7 @@ class DataSet(SharableResource):
         return il.investigation
 
     def get_file_count(self):
-        '''Returns the number of files in the data set.
-
-        '''
+        """Returns the number of files in the data set"""
         investigation = self.get_investigation()
         file_count = 0
 
@@ -473,9 +460,7 @@ class DataSet(SharableResource):
         return file_count
 
     def get_file_size(self):
-        '''Returns the disk space in bytes used by all files in the data set.
-
-        '''
+        """Returns the disk space in bytes used by all files in the data set"""
         investigation = self.get_investigation()
         file_size = 0
         include_symlinks = True
@@ -572,11 +557,10 @@ class DiskQuota(SharableResource, ManageableResource):
 
 
 class WorkflowInputRelationships(models.Model):
-    '''
-    Defines relationships between inputs based on the input string assoicated
-    with each workflow i.e refinery_relationship=[{"category":"1-1",
+    """Defines relationships between inputs based on the input string
+    assoicated with each workflow i.e refinery_relationship=[{"category":"1-1",
     "set1":"input_file", "set2":"exp_file"}]
-    '''
+    """
     category = models.CharField(max_length=15, choices=NR_TYPES, blank=True)
     set1 = models.CharField(max_length=50)
     set2 = models.CharField(max_length=50, blank=True, null=True)
@@ -588,7 +572,6 @@ class WorkflowInputRelationships(models.Model):
 
 
 class Workflow(SharableResource, ManageableResource):
-
     ANALYSIS_TYPE = "analysis"
     DOWNLOAD_TYPE = "download"
     TYPE_CHOICES = (
@@ -639,7 +622,8 @@ class Project(SharableResource):
 
     def __unicode__(self):
         return (
-            self.name + " - " + self.get_owner_username() + " - " + self.summary
+            self.name + " - " + self.get_owner_username() + " - " +
+            self.summary
         )
 
     class Meta:
@@ -746,9 +730,7 @@ class Analysis(OwnableResource):
         return self.status
 
     def set_status(self, status, message=''):
-        '''Set analysis status and perform additional actions as required
-
-        '''
+        """Set analysis status and perform additional actions as required"""
         self.status = status
         self.status_detail = message
         if status == self.FAILURE_STATUS or status == self.SUCCESS_STATUS:
@@ -762,9 +744,7 @@ class Analysis(OwnableResource):
         return self.workflow.workflow_engine.instance.galaxy_connection()
 
     def cleanup(self):
-        '''Delete library, workflow and history from Galaxy if they exist
-
-        '''
+        """Delete library, workflow and history from Galaxy if they exist"""
         connection = self.galaxy_connection()
         error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
 
@@ -782,7 +762,8 @@ class Analysis(OwnableResource):
 
         if self.history_id:
             try:
-                connection.histories.delete_history(self.history_id, purge=True)
+                connection.histories.delete_history(
+                    self.history_id, purge=True)
             except galaxy.client.ConnectionError as e:
                 logger.error(error_msg, 'history', self.name, e.message)
 
@@ -799,58 +780,38 @@ class Analysis(OwnableResource):
 INPUT_CONNECTION = 'in'
 OUTPUT_CONNECTION = 'out'
 WORKFLOW_NODE_CONNECTION_TYPES = (
-                                  (INPUT_CONNECTION, 'in'),
-                                  (OUTPUT_CONNECTION, 'out'),
-                                 )
+    (INPUT_CONNECTION, 'in'),
+    (OUTPUT_CONNECTION, 'out'),
+)
 
 
 class AnalysisNodeConnection(models.Model):
-    analysis = models.ForeignKey(
-        Analysis,
-        related_name="workflow_node_connections"
-    )
-
+    analysis = models.ForeignKey(Analysis,
+                                 related_name="workflow_node_connections")
     # an identifier assigned to all connections to a specific instance of the
     # workflow template
     # (unique within the analysis)
     subanalysis = IntegerField(null=True, blank=False)
-
-    node = models.ForeignKey(
-        Node,
-        related_name="workflow_node_connections",
-        null=True,
-        blank=True,
-        default=None
-    )
-
+    node = models.ForeignKey(Node, related_name="workflow_node_connections",
+                             null=True, blank=True, default=None)
     # step id in the expanded workflow template, e.g. 10
     step = models.IntegerField(null=False, blank=False)
 
     # (display) name for an output file "wig_outfile" or "outfile"
     # (unique for a given workflow template)
     name = models.CharField(null=False, blank=False, max_length=100)
-
     # file name of the connection, e.g. "wig_outfile" or "outfile"
     filename = models.CharField(null=False, blank=False, max_length=100)
-
     # file type if known
     filetype = models.CharField(null=True, blank=True, max_length=100)
-
     # direction of the connection, either an input or an output
-    direction = models.CharField(
-        null=False,
-        blank=False,
-        choices=WORKFLOW_NODE_CONNECTION_TYPES,
-        max_length=3
-    )
-
+    direction = models.CharField(null=False, blank=False,
+                                 choices=WORKFLOW_NODE_CONNECTION_TYPES,
+                                 max_length=3)
     # flag to indicate if file is a file that will (for outputs) or does (for
     # inputs) exist in Refinery
-    is_refinery_file = models.BooleanField(
-        null=False,
-        blank=False,
-        default=False
-    )
+    is_refinery_file = models.BooleanField(null=False, blank=False,
+                                           default=False)
 
     def __unicode__(self):
         return (
@@ -873,9 +834,7 @@ class Download(TemporaryResource, OwnableResource):
 
 
 def get_shared_groups(user1, user2, include_public_group=False):
-    '''
-    returns a list of extended groups of which both users are a member
-    '''
+    """returns a list of extended groups of which both users are a member"""
     shared_groups = list(set(user1.groups.all()) & set(user2.groups.all()))
 
     if not include_public_group:
@@ -898,9 +857,9 @@ class ExtendedGroupManager(models.Manager):
 
 
 class ExtendedGroup(Group):
-    '''Extends the default Django Group in auth with a group of users that own
+    """Extends the default Django Group in auth with a group of users that own
     and manage manageable resources for the group.
-    '''
+    """
     manager_group = models.ForeignKey(
         "self",
         related_name="managed_group",
@@ -910,7 +869,6 @@ class ExtendedGroup(Group):
     uuid = UUIDField(unique=True, auto=True)
     objects = ExtendedGroupManager()
     is_public = models.BooleanField(default=False, blank=False, null=False)
-    
     # Dynamically generated for API.
     member_list = []
     perm_list = []
@@ -947,9 +905,8 @@ class ExtendedGroup(Group):
 
 # automatic creation of a managed group when an extended group is created:
 def create_manager_group(sender, instance, created, **kwargs):
-    if created and \
-       instance.manager_group is None and \
-       not instance.name.startswith(".Managers "):
+    if (created and instance.manager_group is None and
+            not instance.name.startswith(".Managers ")):
         # create the manager group for the newly created group
         # (but don't create manager groups for manager groups ...)
         post_save.disconnect(create_manager_group, sender=ExtendedGroup)
@@ -964,17 +921,15 @@ post_save.connect(create_manager_group, sender=ExtendedGroup)
 
 
 class NodeSet(SharableResource, TemporaryResource):
-    '''A collection of Nodes representing data files.
+    """A collection of Nodes representing data files.
     Used to save selection state between sessions and to map data files to
     workflow inputs.
-
-    '''
+    """
     # Solr query representing a list of Nodes
     solr_query = models.TextField(blank=True, null=True)
     # components of Solr query representing a list of Nodes (required to
     # restore query object in JavaScript client)
     solr_query_components = models.TextField(blank=True, null=True)
-
     #: Number of nodes in the NodeSet (provided in POST/PUT/PATCH requests)
     node_count = models.IntegerField(blank=True, null=True)
     #: Implicit node is created "on the fly" to support an analysis while
@@ -982,7 +937,6 @@ class NodeSet(SharableResource, TemporaryResource):
     is_implicit = models.BooleanField()
     study = models.ForeignKey(Study)
     assay = models.ForeignKey(Assay)
-
     # is this the "current selection" node set for the associated study/assay?
     is_current = models.BooleanField(default=False)
 
@@ -1001,9 +955,7 @@ class NodeSet(SharableResource, TemporaryResource):
 
 
 def get_current_node_set(study_uuid, assay_uuid):
-    '''Retrieve current node set. Create current node set if does not exist.
-
-    '''
+    """Retrieve current node set. Create current node set if does not exist"""
     node_set = None
 
     try:
@@ -1023,15 +975,9 @@ def get_current_node_set(study_uuid, assay_uuid):
 
 
 @transaction.commit_manually()
-def create_nodeset(
-        name,
-        study,
-        assay,
-        summary='',
-        solr_query='',
-        solr_query_components=''):
-    '''Create a new NodeSet.
-
+def create_nodeset(name, study, assay, summary='', solr_query='',
+                   solr_query_components=''):
+    """Create a new NodeSet.
     :param name: name of the new NodeSet.
     :type name: str.
     :param study: Study model instance.
@@ -1047,8 +993,7 @@ def create_nodeset(
     :type solr_query_components: str.
     :returns: NodeSet -- new instance.
     :raises: IntegrityError, ValueError
-
-    '''
+    """
     try:
         nodeset = NodeSet.objects.create(
             name=name,
@@ -1068,14 +1013,12 @@ def create_nodeset(
 
 
 def get_nodeset(uuid):
-    '''Retrieve a NodeSet given its UUID.
-
+    """Retrieve a NodeSet given its UUID.
     :param uuid: NodeSet UUID.
     :type uuid: str.
     :returns: NodeSet -- instance that corresponds to the given UUID.
     :raises: DoesNotExist
-
-    '''
+    """
     try:
         return NodeSet.objects.get(uuid=uuid)
     except NodeSet.DoesNotExist:
@@ -1085,16 +1028,9 @@ def get_nodeset(uuid):
         raise
 
 
-def update_nodeset(
-        uuid,
-        name=None,
-        summary=None,
-        study=None,
-        assay=None,
-        solr_query=None,
-        solr_query_components=None):
-    '''Replace data in an existing NodeSet with the provided data.
-
+def update_nodeset(uuid, name=None, summary=None, study=None, assay=None,
+                   solr_query=None, solr_query_components=None):
+    """Replace data in an existing NodeSet with the provided data.
     :param uuid: NodeSet UUID.
     :type uuid: str.
     :param name: new NodeSet name.
@@ -1108,8 +1044,7 @@ def update_nodeset(
     :param solr_query: new Solr query.
     :type solr_query: str.
     :raises: DoesNotExist
-
-    '''
+    """
     try:
         nodeset = get_nodeset(uuid=uuid)
     except NodeSet.DoesNotExist:
@@ -1133,62 +1068,42 @@ def update_nodeset(
 
 
 def delete_nodeset(uuid):
-    '''Delete a NodeSet specified by UUID.
-
+    """Delete a NodeSet specified by UUID.
     :param uuid: NodeSet UUID.
     :type uuid: str.
-
-    '''
+    """
     NodeSet.objects.filter(uuid=uuid).delete()
 
 
 class NodePair(models.Model):
-    '''Linking of specific node relationships for a given node relationship
-
-    '''
+    """Linking of specific node relationships for a given node relationship"""
     uuid = UUIDField(unique=True, auto=True)
     #: specific file node
     node1 = models.ForeignKey(Node, related_name="node1")
     #: connected file node
-    node2 = models.ForeignKey(Node, related_name="node2", blank=True, null=True)
+    node2 = models.ForeignKey(Node, related_name="node2", blank=True,
+                              null=True)
     # defines a grouping of node relationships i.e. replicate
     group = models.IntegerField(blank=True, null=True)
 
 
 class NodeRelationship(BaseResource):
-    '''A collection of Nodes NodePair, representing connections between data
+    """A collection of Nodes NodePair, representing connections between data
     files, i.e. input/chip pairs. Used to define a collection of connections
     between data files for a specified data set.
-
-    '''
+    """
     #: must refer to type from noderelationshiptype
     type = models.CharField(max_length=15, choices=NR_TYPES, blank=True)
-
     #: references multiple nodepair relationships
-    node_pairs = models.ManyToManyField(
-        NodePair,
-        related_name='node_pairs',
-        blank=True,
-        null=True
-    )
-
+    node_pairs = models.ManyToManyField(NodePair, related_name='node_pairs',
+                                        blank=True, null=True)
     #: references node_sets that were used to determine this relationship
-    node_set_1 = models.ForeignKey(
-        NodeSet,
-        related_name='node_set_1',
-        blank=True,
-        null=True
-    )
-    node_set_2 = models.ForeignKey(
-        NodeSet,
-        related_name='node_set_2',
-        blank=True,
-        null=True
-    )
-
+    node_set_1 = models.ForeignKey(NodeSet, related_name='node_set_1',
+                                   blank=True, null=True)
+    node_set_2 = models.ForeignKey(NodeSet, related_name='node_set_2',
+                                   blank=True, null=True)
     study = models.ForeignKey(Study)
     assay = models.ForeignKey(Assay)
-
     # is this the "current mapping" node set for the associated study/assay?
     is_current = models.BooleanField(default=False)
 
@@ -1200,10 +1115,9 @@ class NodeRelationship(BaseResource):
 
 
 def get_current_node_relationship(study_uuid, assay_uuid):
-    '''Retrieve current node relationship. Create current node relationship if
+    """Retrieve current node relationship. Create current node relationship if
     does not exist.
-
-    '''
+    """
     relationship = None
 
     try:
@@ -1222,13 +1136,9 @@ def get_current_node_relationship(study_uuid, assay_uuid):
 
 
 class RefineryLDAPBackend(LDAPBackend):
-    '''Custom LDAP authentication class
-
-    '''
+    """Custom LDAP authentication class"""
     def get_or_create_user(self, username, ldap_user):
-        '''Send a welcome email to new users
-
-        '''
+        """Send a welcome email to new users"""
         (user, created) = super(RefineryLDAPBackend, self).get_or_create_user(
             username,
             ldap_user
@@ -1240,18 +1150,18 @@ class RefineryLDAPBackend(LDAPBackend):
                 email_attr_name = settings.AUTH_LDAP_USER_ATTR_MAP['email']
             except KeyError:
                 logger.error(
-                    "Cannot send welcome email to user '{}': key 'email' does "
-                    "not exist in AUTH_LDAP_USER_ATTR_MAP settings variable"
-                    .format(username)
+                    "Cannot send welcome email to user '%s': key 'email' does "
+                    "not exist in AUTH_LDAP_USER_ATTR_MAP settings variable",
+                    username
                 )
                 return user, created
             try:
                 email_address_list = ldap_user.attrs.data[email_attr_name]
             except KeyError:
                 logger.error(
-                    "Cannot send welcome email to user '{}': attribute '{}'"
-                    " was not provided by the LDAP server"
-                    .format(username, email_attr_name)
+                    "Cannot send welcome email to user '%s': attribute '%s'"
+                    " was not provided by the LDAP server",
+                    username, email_attr_name
                 )
                 return user, created
             try:
@@ -1260,26 +1170,23 @@ class RefineryLDAPBackend(LDAPBackend):
                           settings.DEFAULT_FROM_EMAIL, email_address_list)
             except smtplib.SMTPException:
                 logger.error(
-                    "Cannot send welcome email to: {}: SMTP server error"
-                    .format(email_address_list)
+                    "Cannot send welcome email to: %s: SMTP server error",
+                    email_address_list
                 )
             except socket.error as e:
                 logger.error(
-                    "Cannot send welcome email to: {}: {}"
-                    .format(email_address_list, e)
+                    "Cannot send welcome email to: %s: %s",
+                    email_address_list, e
                 )
         return user, created
 
 
 class ExternalToolStatus(models.Model):
-    '''Model to keep track of the status of external tools Refinery uses
-
-    '''
+    """Model to keep track of the status of external tools Refinery uses"""
     SUCCESS_STATUS = "SUCCESS"
     FAILURE_STATUS = "FAILURE"
     UNKNOWN_STATUS = "UNKNOWN"
     TIMEOUT_STATUS = "TIMEOUT"
-
     STATUS_CHOICES = (
         (
             SUCCESS_STATUS,
@@ -1298,7 +1205,6 @@ class ExternalToolStatus(models.Model):
             "It's been too long since the database was last updated"
         ),
     )
-
     '''If adding a new tool, user needs to fill out TOOL_NAME,
     INTERVAL_BETWEEN_CHECKS,
     TIMEOUT, STATUS_CHOICES, and TOOL_NAME_CHOICES in core/models.py
@@ -1308,47 +1214,32 @@ class ExternalToolStatus(models.Model):
     GALAXY_TOOL_NAME = "GALAXY"
 
     TOOL_NAME_CHOICES = (
-                     (CELERY_TOOL_NAME, "Celery"),
-                     (SOLR_TOOL_NAME, "Solr"),
-                     (GALAXY_TOOL_NAME, "Galaxy")
-                   )
-
+        (CELERY_TOOL_NAME, "Celery"),
+        (SOLR_TOOL_NAME, "Solr"),
+        (GALAXY_TOOL_NAME, "Galaxy")
+    )
     # default values for interval between checks and timeouts
     INTERVAL_BETWEEN_CHECKS = {
-                            CELERY_TOOL_NAME: 4.0,
-                            SOLR_TOOL_NAME: 5.0,
-                            GALAXY_TOOL_NAME: 5.0,
-                            }
-
+        CELERY_TOOL_NAME: 4.0,
+        SOLR_TOOL_NAME: 5.0,
+        GALAXY_TOOL_NAME: 5.0,
+    }
     TIMEOUT = {
-           CELERY_TOOL_NAME: 1.5,
-           SOLR_TOOL_NAME: 2.5,
-           GALAXY_TOOL_NAME: 2.0,
-           }
-
+        CELERY_TOOL_NAME: 1.5,
+        SOLR_TOOL_NAME: 2.5,
+        GALAXY_TOOL_NAME: 2.0,
+    }
     for k, v in settings.INTERVAL_BETWEEN_CHECKS.iteritems():
         INTERVAL_BETWEEN_CHECKS[k] = v
     for k, v in settings.TIMEOUT.iteritems():
         TIMEOUT[k] = v
 
-    status = models.TextField(
-        default=UNKNOWN_STATUS,
-        choices=STATUS_CHOICES,
-        blank=True,
-        null=True
-    )
+    status = models.TextField(default=UNKNOWN_STATUS, choices=STATUS_CHOICES,
+                              blank=True, null=True)
     last_time_check = models.DateTimeField(auto_now_add=True)
-    name = models.TextField(
-        choices=TOOL_NAME_CHOICES,
-        blank=True,
-        null=True
-    )
-    unique_instance_identifier = models.CharField(
-        max_length=256,
-        blank=True,
-        null=True,
-        default=None
-    )
+    name = models.TextField(choices=TOOL_NAME_CHOICES, blank=True, null=True)
+    unique_instance_identifier = models.CharField(max_length=256, blank=True,
+                                                  null=True, default=None)
     is_active = models.BooleanField(default=True)
 
     def __unicode__(self):
@@ -1425,6 +1316,4 @@ class Invitation(models.Model):
     def save(self, *arg, **kwargs):
         if not self.id:
             self.created = datetime.now()
-
         return super(Invitation, self).save(*arg, **kwargs)
-
