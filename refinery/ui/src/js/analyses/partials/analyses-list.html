@@ -45,6 +45,13 @@
 
        <div class="row-fluid">
         <div class="span1 analysis-icon">
+           <span ng-if="analysis.status=='RUNNING' || analysis.status=='INITIALIZED'">
+              <a ng-click="isCollapsed = !isCollapsed" data-toggle="collapse" data-target="#{{analysis.uuid}}">
+                <i ng-class="{'icon-caret-right icon-large analyses-collapse':
+                isCollapsed,'icon-caret-down icon-large analyses-collapse':!isCollapsed}"></i>
+              </a>
+           </span>
+          &nbsp;
          <span class="spinner"><i class="{{analysis.status | analysesStatusIcon}} analyses-status"></i>
          </span>
         </div>
@@ -74,17 +81,8 @@
 
         <span ng-if="analysis.status=='RUNNING' || analysis.status=='INITIALIZED'">
 
-         <div class="span1 analysis-cancel">
-            <a rp-analyses-cancel-confirm confirmed-click="AnalysesCtrl
-            .cancelAnalysis(analysis.uuid)" rp-analyses-cancel-tooltip>
-              <i class="icon-remove"></i>
-            </a>
+          <div class="span1">
             &nbsp;
-            <a ng-click="isCollapsed = !isCollapsed" data-toggle="collapse"
-               data-target="#{{analysis.uuid}}">
-              <i ng-class="{'icon-collapse': isCollapsed, 'icon-collapse-top':
-              !isCollapsed}"></i>
-            </a>
           </div>
           <div class="span11 analysis-running">
             <span ng-if="AnalysesCtrl.analysesDetail[analysis.uuid].cancelingAnalyses == true">
@@ -209,6 +207,11 @@
                         </div>
                       </div>
                     </div>
+                  </li>
+                  <li class="analysisRunningListItem">
+                     <a rp-analyses-cancel-confirm confirmed-click="AnalysesCtrl.cancelAnalysis(analysis.uuid)" rp-analyses-cancel-tooltip>
+                      <i class="icon-remove analyses-cancel"></i>
+                    </a>
                   </li>
                 </ul>
               </div>
