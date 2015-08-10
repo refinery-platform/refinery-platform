@@ -1096,3 +1096,6 @@ def pubmed_summary(request, id):
 
     response = requests.get(url, params=params, headers=headers)
     return HttpResponse(response, mimetype='application/json')
+
+def fastqc_viewer(request):
+    return render_to_response('core/fastqc-viewer.html', {}, context_instance=RequestContext(request))

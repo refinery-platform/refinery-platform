@@ -36,12 +36,14 @@ from tastypie.utils import trailing_slash
 from core.models import Project, NodeSet, NodeRelationship, NodePair, \
     Workflow, WorkflowInputRelationships, Analysis, DataSet, \
     ExternalToolStatus, ResourceStatistics, GroupManagement, ExtendedGroup, \
-    UserAuthentication, Invitation, UserProfile
+    UserAuthentication, Invitation, UserProfile, FastQC
 from core.tasks import check_tool_status
 from data_set_manager.api import StudyResource, AssayResource, \
     InvestigationResource
 from data_set_manager.models import Node, Study, Attribute
 from file_store.models import FileStoreItem
+
+from fadapa import Fadapa
 
 
 logger = logging.getLogger(__name__)
@@ -1769,3 +1771,83 @@ class ExtendedGroupResource(ModelResource):
             )
         else:
             return HttpMethodNotAllowed()
+
+
+# TODO: modify to be backed by a DB eventually.
+class FastQCResource(Resource):
+    data = fields.DictField(attribute='data', null=True)
+
+    class Meta:
+        resource_name = 'fastqc'
+        object_class = FastQC
+        detail_uri_name = 'analysis_uuid'
+        authentication = SessionAuthentication()
+
+    def is_float(self, value):
+        try:
+            float(value)
+            return True
+        except:
+            return False
+
+    def obj_get(self, bundle, **kwargs):
+        user = bundle.request.user
+
+        analysis = Analysis.objects.get(uuid=kwargs['analysis_uuid'])
+
+        if not analysis:
+            return HttpNotFound('Analysis not found')
+
+        analysis_results = analysis.results.all()
+
+        # For now assume fastqc files have a .txt extension.
+        fastqc_file_list = filter(lambda f: '.txt' in f.file_name, analysis_results)
+
+        if len(fastqc_file_list) == 0:
+            return HttpNotFound("Unable to find matching FastQC file")
+
+        # Pick the first one because there's only supposed to be one.
+        fastqc_file = FileStoreItem.objects.get(uuid=fastqc_file_list[0].file_store_uuid)
+
+        if not fastqc_file:
+            return HttpNotFound("Unable to find matching FastQC file in File Store")
+
+        fastqc_file_obj = fastqc_file.get_file_object()
+        fadapa_input = fastqc_file_obj.read().splitlines()
+
+        parser = Fadapa(fadapa_input)
+
+        tmp_dict = {'Summary': {}}
+
+        for i in parser.summary()[1:]:
+            tmp_dict['Summary'][i[0].lower().replace(' ', '_')] = {
+                'title': i[0],
+                'result': i[1]
+            }
+            parsed_data = parser.clean_data(i[0])
+            clean_data = []
+            
+            for row in parsed_data:
+                clean_data.append(row[0:1] + map(
+                    lambda d: 
+                        float(d) if self.is_float(d) else d,
+                    row[1:]))
+
+            tmp_dict[i[0]] = clean_data
+
+        # Modify the 'Basic Statistics' module if it exists.
+        if tmp_dict.get('Basic Statistics'):
+            mod = {}
+            
+            for i in tmp_dict['Basic Statistics']:
+                mod[i[0]] = i[1]
+
+            tmp_dict['Basic Statistics'] = mod
+
+        # Rename to friendly format dict keys.
+        new = {}
+
+        for key in tmp_dict:
+            new[key.lower().replace(' ', '_')] = tmp_dict[key]
+
+        return FastQC(new)

@@ -33,7 +33,8 @@ angular
   'refineryDataSetImport',
   'refineryDashboard',
   'refineryAnalyses',
-  'refineryCollaboration'
+  'refineryCollaboration',
+  'refineryChart',
 ])
 .config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
   // http://stackoverflow.com/q/11252780
