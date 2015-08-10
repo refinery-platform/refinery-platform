@@ -1,14 +1,16 @@
 from collections import OrderedDict
-from celery.task.sets import TaskSet
-from data_set_manager.tasks import parse_isatab
-from django.core.management.base import BaseCommand, CommandError
+import logging
 from optparse import make_option
 import os
 import re
 import sys
-import logging
 
-# get module logger
+from django.core.management.base import BaseCommand, CommandError
+
+from celery.task.sets import TaskSet
+
+from data_set_manager.tasks import parse_isatab
+
 logger = logging.getLogger(__name__)
 
 
@@ -19,7 +21,6 @@ class Command(BaseCommand):
     directory or file> [--base_pre_isa_dir <base pre-isatab directory or file>
     --public --file_base_path <base path if file locations are relative>]\n
     """
-
     option_list = BaseCommand.option_list + (
         make_option('--base_pre_isa_dir',
                     action='store',
@@ -53,36 +54,23 @@ class Command(BaseCommand):
         except:
             raise CommandError(self.help)
 
-        """
-        Get a list of all the isatab files in base_isa_dir.
-        """
+        # Get a list of all the isatab files in base_isa_dir
         isatab_dict = OrderedDict()
         for root, dirs, filenames in os.walk(base_isa_dir):
             for filename in filenames:
                 _, extension = os.path.splitext(filename)
-
                 if extension.lower() == '.zip':
                     isatab_dict[filename] = [os.path.join(root, filename)]
-
         isatab_dict = OrderedDict(sorted(isatab_dict.iteritems()))
-
-
-        """
-        If isatab_dict is empty, then base_isa_dir is a file, not a directory.
-        """
+        # If isatab_dict is empty, then base_isa_dir is a file, not a directory
         if not isatab_dict:
             isatab_dict[base_isa_dir] = [base_isa_dir]
-
-        """
-        Get a list of all the isatab files in base_pre_isa_dir.
-        """
+        # Get a list of all the isatab files in base_pre_isa_dir
         pre_isatab_files = 0
         try:
             for root, dirs, filenames in os.walk(options['base_pre_isa_dir']):
                 for filename in filenames:
-                    """
-                    Associate pre-isatab file with isatab file.
-                    """
+                    # Associate pre-isatab file with isatab file
                     for key in isatab_dict:
                         if re.search(r'%s$' % key, filename):
                             file = os.path.join(root, filename)
@@ -91,7 +79,6 @@ class Command(BaseCommand):
                             break
         except:
             pass
-
         """
         If base_pre_isa_dir is defined but pre_isatab_files is 0,
         then base_pre_isa_dir is a pre-ISA-Tab archive, not a directory
@@ -100,16 +87,13 @@ class Command(BaseCommand):
             isatab_dict[base_isa_dir].append(options['base_pre_isa_dir'])
 
         s_tasks = list()
-        """
-        Add subtasks to list
-        """
+        # Add subtasks to list
         for k, v_list in isatab_dict.items():
             isa_file = v_list.pop(0)
             try:
                 pre_file = v_list.pop(0)
             except:
                 pre_file = None
-
             sub_task = parse_isatab.subtask(
                 args=(
                     self._username,
@@ -130,34 +114,19 @@ class Command(BaseCommand):
         for (i, filename, skipped) in result.iterate():
             try:
                 if not skipped:
-                    print (
-                        "{num} / {total}: Successfully parsed {file} into "
-                        "DataSet with UUID {uuid}".format(
-                            num=task_num,
-                            total=total,
-                            file=filename,
-                            uuid=i
-                        )
-                    )
+                    logger.info(
+                        "%s / %s: Successfully parsed %s into "
+                        "DataSet with UUID %s",
+                        task_num, total, filename, i)
                 else:
-                    print (
-                        "{num} / {total}: Skipped {file} as it has been "
-                        "successfully parsed already. UUID {uuid}".format(
-                            num=task_num,
-                            total=total,
-                            file=filename,
-                            uuid=i
-                        )
-                    )
+                    logger.info(
+                        "%s / %s: Skipped %s as it has been "
+                        "successfully parsed already. UUID %s",
+                        task_num, total, filename, i)
                 task_num += 1
                 sys.stdout.flush()
             except:
-                print (
-                    "{num} / {total}: Unsuccessful parsed {file}".format(
-                        num=task_num,
-                        total=total,
-                        file=filename
-                    )
-                )
+                logger.info("%s / %s: Unsuccessful parsed %s",
+                            task_num, total, filename)
                 task_num += 1
                 sys.stdout.flush()
