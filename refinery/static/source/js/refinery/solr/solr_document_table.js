@@ -261,7 +261,11 @@ SolrDocumentTable.prototype._toggleIndicator = function(){
 
 SolrDocumentTable.prototype._generateTableBody = function(solrResponse) {
   var self = this;
-  var documents = solrResponse.getDocumentList();
+  var documents = [];
+  if(typeof solrResponse !== undefined && solrResponse !== null) {
+    documents = solrResponse.getDocumentList();
+  }
+
   var fields = self._query._fields;
   var rows = [];
   var analyses = self._dataSetMonitor.analyses;
