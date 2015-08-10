@@ -1606,3 +1606,26 @@ ul.badge-list {
 .active-group {
   background-color: darken(@grayLighter, 5%);
 }
+
+.fastqc-box {
+  color: rgba(0, 0, 0, 1);
+  fill: yellow;
+  stroke: rgba(0, 0, 0, 1);
+}
+
+.fastqc-box-axis line, .fastqc-box-axis path {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}
+
+.fastqc-chart-drawspace {
+  position: relative;
+  height: 100%;
+  width: 100%;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
