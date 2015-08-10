@@ -208,7 +208,8 @@ def _retrieve_nodes(study_uuid, assay_uuid=None,
             current_node["parents"].append(node["parents"])
         if node["attribute"] is not None:
             try:
-                current_node["attributes"].append(attributes[node["attribute"]])
+                current_node["attributes"].append(
+                    attributes[node["attribute"]])
             except:
                 pass
     # save last node
@@ -261,10 +262,10 @@ def get_matrix(node_type, study_uuid, assay_uuid=None,
             # Attribute.ALL_FIELDS
             for attribute in _get_parent_attributes(nodes, key):
                 results["data"][nodes[key]["uuid"]]["attributes"].append(
-                    attribute[3]) # 3 = value
+                    attribute[3])  # 3 = value
                 if attribute[4] is not None:
                     results["data"][nodes[key]["uuid"]]["attributes"][-1] += \
-                        " " + attribute[4] # 4 = value unit
+                        " " + attribute[4]  # 4 = value unit
             # store attribute labels in meta section (only for the first node
             # -> for all further nodes the assumption is that they have the
             # same attribute list)
@@ -273,7 +274,8 @@ def get_matrix(node_type, study_uuid, assay_uuid=None,
                 for attribute in _get_parent_attributes(nodes, key):
                     results["meta"]["attributes"].append(
                         {"type": attribute[1], "subtype": attribute[2]})
-            attribute_count += len(results["data"][nodes[key]["uuid"]]["attributes"])
+            attribute_count += len(
+                results["data"][nodes[key]["uuid"]]["attributes"])
     return results
 
 
@@ -372,12 +374,12 @@ def add_annotated_nodes(node_type, study_uuid, assay_uuid=None):
 
 
 def add_annotated_nodes_selection(node_uuids, node_type, study_uuid,
-        assay_uuid=None):
+                                  assay_uuid=None):
     _add_annotated_nodes(node_type, study_uuid, assay_uuid, node_uuids)
 
 
 def _add_annotated_nodes(node_type, study_uuid, assay_uuid=None,
-        node_uuids=None):
+                         node_uuids=None):
     study = Study.objects.filter(uuid=study_uuid)[0]
     if assay_uuid is not None:
         assay = Assay.objects.filter(uuid=assay_uuid)[0]
@@ -463,8 +465,7 @@ def _index_annotated_nodes(node_type, study_uuid, assay_uuid=None,
     node_index = NodeIndex()
     counter = 0
     for node in nodes:
-        node_index.update_object(node,using="data_set_manager")
+        node_index.update_object(node, using="data_set_manager")
         counter += 1
     end = time.time()
-    logger.info("%s nodes indexed in %s",
-                str(counter), str(end - start))
+    logger.info("%s nodes indexed in %s", str(counter), str(end - start))
