@@ -986,11 +986,11 @@ class GroupManagementResource(Resource):
                 'username': u.username,
                 'first_name': u.first_name,
                 'last_name': u.last_name,
-                'is_manager': True if ((not self.is_manager_group(group) and
-                    u in group.extendedgroup.manager_group.user_set.all()) or
-                    (self.is_manager_group(group) and
-                    u in group.user_set.all()))
-                    else False
+                'is_manager': self.is_manager_group(group) and
+                              u in group.user_set.all() or
+                              not self.is_manager_group(group) and
+                              u in
+                              group.extendedgroup.manager_group.user_set.all()
             },
             group.user_set.all())
 
@@ -1014,16 +1014,15 @@ class GroupManagementResource(Resource):
         return perms
 
     def get_perm_list(self, group):
-        f = lambda r: self.get_perms(r, group)
         dataset_perms = filter(
             lambda r: r['read'],
-            map(f, DataSet.objects.all()))
+            map(lambda r: self.get_perms(r, group), DataSet.objects.all()))
         project_perms = filter(
             lambda r: r['read'],
-            map(f, Project.objects.all()))
+            map(lambda r: self.get_perms(r, group), Project.objects.all()))
         workflow_perms = filter(
             lambda r: r['read'],
-            map(f, Workflow.objects.all()))
+            map(lambda r: self.get_perms(r, group), Workflow.objects.all()))
         # workflow_engine_perms = map(f, WorkflowEngine.objects.all())
         # analysis_perms = map(f, Analysis.objects.all())
         # download_perms = map(f, Download.objects.all())
@@ -1718,8 +1717,8 @@ class ExtendedGroupResource(ModelResource):
                         'Last manager must delete group to leave')
 
                 if (not ext_group.is_manager_group() and
-                    user in ext_group.manager_group.user_set.all() and
-                    ext_group.manager_group.user_set.count() == 1):
+                        user in ext_group.manager_group.user_set.all() and
+                        ext_group.manager_group.user_set.count() == 1):
                     return HttpForbidden(
                         'Last manager must delete group to leave')
 
@@ -1829,10 +1828,10 @@ class FastQCResource(Resource):
             }
             parsed_data = parser.clean_data(i[0])
             clean_data = []
-            
+
             for row in parsed_data:
                 clean_data.append(row[0:1] + map(
-                    lambda d: 
+                    lambda d:
                         float(d) if self.is_float(d) else d,
                     row[1:]))
 
@@ -1841,7 +1840,7 @@ class FastQCResource(Resource):
         # Modify the 'Basic Statistics' module if it exists.
         if tmp_dict.get('Basic Statistics'):
             mod = {}
-            
+
             for i in tmp_dict['Basic Statistics']:
                 mod[i[0]] = i[1]
 

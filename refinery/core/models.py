@@ -1322,4 +1322,4 @@ class Invitation(models.Model):
 # TODO - Back this with DB as a models.Model
 class FastQC(object):
     def __init__(self, data=None):
-        self.data = data;
+        self.data = data
