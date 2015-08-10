@@ -1801,16 +1801,19 @@ class FastQCResource(Resource):
         analysis_results = analysis.results.all()
 
         # For now assume fastqc files have a .txt extension.
-        fastqc_file_list = filter(lambda f: '.txt' in f.file_name, analysis_results)
+        fastqc_file_list = filter(
+            lambda f: '.txt' in f.file_name, analysis_results)
 
         if len(fastqc_file_list) == 0:
             return HttpNotFound("Unable to find matching FastQC file")
 
         # Pick the first one because there's only supposed to be one.
-        fastqc_file = FileStoreItem.objects.get(uuid=fastqc_file_list[0].file_store_uuid)
+        fastqc_file = FileStoreItem.objects.get(
+            uuid=fastqc_file_list[0].file_store_uuid)
 
         if not fastqc_file:
-            return HttpNotFound("Unable to find matching FastQC file in File Store")
+            return HttpNotFound(
+                "Unable to find matching FastQC file in File Store")
 
         fastqc_file_obj = fastqc_file.get_file_object()
         fadapa_input = fastqc_file_obj.read().splitlines()
