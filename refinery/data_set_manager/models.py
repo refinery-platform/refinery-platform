@@ -6,30 +6,30 @@ Created on May 10, 2012
 
 from datetime import datetime
 import logging
-from django.conf import settings
 import simplejson
 import urllib2
+
+from django.conf import settings
 from django.db import models
 from django_extensions.db.fields import UUIDField
+
 from data_set_manager.genomes import map_species_id_to_default_genome_build
 
 
-# get module logger
 logger = logging.getLogger(__name__)
 
 
-'''
+"""
 General:
 - xyz_term = accession number of an ontology term
 - xyz_source = reference to the ontology where xyz_term originates (defined in
     the investigation)
-'''
+"""
 
 
 class NodeCollection(models.Model):
-    '''
-    Base class for Investigation and Study
-    '''
+    """Base class for Investigation and Study
+    """
     uuid = UUIDField(unique=True, auto=True)
     identifier = models.TextField(blank=True, null=True)
     title = models.TextField(blank=True, null=True)
@@ -69,12 +69,10 @@ class NodeCollection(models.Model):
         )
 
     def normalize_date(self, dateString):
-        '''
-        Normalizes date strings in dd/mm/yyyy format to yyyy-mm-dd.
-
+        """Normalizes date strings in dd/mm/yyyy format to yyyy-mm-dd.
         Returns normalized date string if in expected unnormalized format or
         unnormalized date string.
-        '''
+        """
         logger.info("Converting date " + str(dateString) + " ...")
         try:
             # try reformatting incorrect date format used by Nature Scientific
@@ -96,9 +94,7 @@ class NodeCollection(models.Model):
 
 
 class Publication(models.Model):
-    '''
-    Investigation or Study Publication (ISA-Tab Spec 4.1.2.2, 4.1.3.3)
-    '''
+    """Investigation or Study Publication (ISA-Tab Spec 4.1.2.2, 4.1.3.3)"""
     collection = models.ForeignKey(NodeCollection)
     title = models.TextField(blank=True, null=True)
     authors = models.TextField(blank=True, null=True)
@@ -114,9 +110,7 @@ class Publication(models.Model):
 
 
 class Contact(models.Model):
-    '''
-    Investigation or Study Contact (ISA-Tab Spec 4.1.2.3, 4.1.3.7)
-    '''
+    """Investigation or Study Contact (ISA-Tab Spec 4.1.2.3, 4.1.3.7)"""
     collection = models.ForeignKey(NodeCollection)
     last_name = models.TextField(blank=True, null=True)
     first_name = models.TextField(blank=True, null=True)
@@ -181,9 +175,7 @@ class Investigation(NodeCollection):
 
 
 class Ontology(models.Model):
-    '''
-    Ontology Source Reference (ISA-Tab Spec 4.1.1)
-    '''
+    """Ontology Source Reference (ISA-Tab Spec 4.1.1)"""
     investigation = models.ForeignKey(Investigation)
     name = models.TextField(blank=True, null=True)
     file_name = models.TextField(blank=True, null=True)
@@ -207,9 +199,7 @@ class Study(NodeCollection):
 
 
 class Design(models.Model):
-    '''
-    Study Design Descriptor (ISA-Tab Spec 4.1.3.2)
-    '''
+    """Study Design Descriptor (ISA-Tab Spec 4.1.3.2)"""
     study = models.ForeignKey(Study)
     type = models.TextField(blank=True, null=True)
     type_accession = models.TextField(blank=True, null=True)
@@ -220,9 +210,7 @@ class Design(models.Model):
 
 
 class Factor(models.Model):
-    '''
-    Study Factor (ISA-Tab Spec 4.1.3.4)
-    '''
+    """Study Factor (ISA-Tab Spec 4.1.3.4)"""
     study = models.ForeignKey(Study)
     name = models.TextField(blank=True, null=True)
     type = models.TextField(blank=True, null=True)
@@ -234,9 +222,7 @@ class Factor(models.Model):
 
 
 class Assay(models.Model):
-    '''
-    Study Assay (ISA-Tab Spec 4.1.3.5)
-    '''
+    """Study Assay (ISA-Tab Spec 4.1.3.5)"""
     uuid = UUIDField(unique=True, auto=True)
     study = models.ForeignKey(Study)
     measurement = models.TextField(blank=True, null=True)
@@ -264,9 +250,7 @@ class Assay(models.Model):
 
 
 class Protocol(models.Model):
-    '''
-    Study Protocol (ISA-Tab Spec 4.1.3.6)
-    '''
+    """Study Protocol (ISA-Tab Spec 4.1.3.6)"""
     study = models.ForeignKey(Study)
     uuid = UUIDField(unique=True, auto=True)
     # workflow_uuid can be used to associate the protocol with a workflow
@@ -313,7 +297,6 @@ class NodeManager(models.Manager):
     def genome_builds_for_files(self, file_uuids, default_fallback=True):
         """Returns a dictionary that groups file nodes based on their genome
         build information
-
         """
         file_list = Node.objects.filter(file_uuid__in=file_uuids).values(
             "species", "genome_build", "file_uuid")
@@ -470,8 +453,8 @@ class Attribute(models.Model):
 
     node = models.ForeignKey(Node, db_index=True)
     type = models.TextField(db_index=True)
-    # subtype further qualifies the attribute type, e.g. type = factor value and
-    # subtype = age
+    # subtype further qualifies the attribute type, e.g. type = factor value
+    # and subtype = age
     subtype = models.TextField(blank=True, null=True, db_index=True)
     value = models.TextField(blank=True, null=True, db_index=True)
     value_unit = models.TextField(blank=True, null=True)
@@ -514,22 +497,16 @@ class AttributeDefinition(models.Model):
 class AttributeOrder(models.Model):
     study = models.ForeignKey(Study, db_index=True)
     assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
-
     solr_field = models.TextField(db_index=True)
-
     # position of the attribute in the facet list and table
     rank = models.IntegerField(blank=True, null=True)
-
     # should this attribute be exposed to the user? if false the attribute will
     # never be shown to non-owner users
     is_exposed = models.BooleanField(default=True)
-
     # should this attribute be used as a facet?
     is_facet = models.BooleanField(default=True)
-
     # should be shown in the table by default?
     is_active = models.BooleanField(default=True)
-
     # is this an internal attribute? (retrieved by solr by never exposed to any
     # user)
     is_internal = models.BooleanField(default=False)
@@ -565,8 +542,8 @@ class AnnotatedNode(models.Model):
     node_type = models.TextField(db_index=True)
     node_name = models.TextField(db_index=True)
     attribute_type = models.TextField(db_index=True)
-    # subtype further qualifies the attribute type, e.g. type = factor value and
-    # subtype = age
+    # subtype further qualifies the attribute type, e.g. type = factor value
+    # and subtype = age
     attribute_subtype = models.TextField(blank=True, null=True, db_index=True)
     attribute_value = models.TextField(blank=True, null=True, db_index=True)
     attribute_value_unit = models.TextField(blank=True, null=True)
@@ -613,19 +590,14 @@ def _is_exposed_attribute(attribute):
 
 
 def _is_ignored_attribute(attribute):
-    """
-    Ignore Django internal Solr fields.
-    """
+    """Ignore Django internal Solr fields"""
     return attribute in ["django_ct", "django_id", "id"]
 
 
 def _is_facet_attribute(attribute, study, assay):
-    """
-    Tests if a an attribute should be used as a facet by default.
-
+    """Tests if a an attribute should be used as a facet by default.
     :param attribute: The name of the attribute.
     :type attribute: string
-
     :returns: True if the ratio between items in the data set and the number of
     facet attribute values is smaller than
     settings.DEFAULT_FACET_ATTRIBUTE_VALUES_RATIO, false otherwise.
@@ -641,25 +613,20 @@ def _is_facet_attribute(attribute, study, assay):
         study.uuid +
         "%20AND%20assay_uuid:" +
         assay.uuid +
-        "%20AND%20is_annotation:false%20AND%20(type:%22Array%20Data%20File%22" +
-        "%20OR%20type:%22Derived%20Array%20Data%20File%22%20OR%20type:%22Raw%" +
-        "20Data%20File%22%20OR%20type:%20%22Derived%20Data%20File%22))&facet=" +
+        "%20AND%20is_annotation:false%20AND%20(type:%22Array%20Data%20File%22"
+        "%20OR%20type:%22Derived%20Array%20Data%20File%22%20OR%20type:%22Raw%"
+        "20Data%20File%22%20OR%20type:%20%22Derived%20Data%20File%22))&facet="
         "true&facet.field=" +
         attribute +
         "&facet.sort=count&facet.limit=-1")
 
-    # logger.debug( "Query for initialize_attribute_order: %s" % ( query, ) )
-
     # proper url encoding
     query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
-
     # opening solr query results
     results = urllib2.urlopen(query).read()
-
     logger.debug(
         "Query results for initialize_attribute_order: %s" % (results, )
     )
-
     # converting results into json for python
     results = simplejson.loads(results)
 
@@ -672,18 +639,14 @@ def _is_facet_attribute(attribute, study, assay):
 
 
 def initialize_attribute_order(study, assay):
-    """
-    Initializes the AttributeOrder table after all nodes for the given study and
-    assay have been indexed by Solr.
-
+    """Initializes the AttributeOrder table after all nodes for the given study
+    and assay have been indexed by Solr.
     :param study: Study object to query for in AnnotatedNode.
     :type study: Study
     :param assay: Assay object to query for in AnnotatedNode.
     :type assay: Assay
-
     :returns: Number of attributes that were indexed.
     """
-
     query = (
         settings.REFINERY_SOLR_BASE_URL +
         "data_set_manager" +
@@ -693,36 +656,28 @@ def initialize_attribute_order(study, assay):
         study.uuid +
         "%20AND%20assay_uuid:" +
         assay.uuid +
-        "%20AND%20is_annotation:false%20AND%20(type:%22Array%20Data%20File%22" +
-        "%20OR%20type:%22Derived%20Array%20Data%20File%22%20OR%20type:%22Raw%" +
-        "20Data%20File%22%20OR%20type:%20%22Derived%20Data%20File%22)"")&face" +
+        "%20AND%20is_annotation:false%20AND%20(type:%22Array%20Data%20File%22"
+        "%20OR%20type:%22Derived%20Array%20Data%20File%22%20OR%20type:%22Raw%"
+        "20Data%20File%22%20OR%20type:%20%22Derived%20Data%20File%22)"")&face"
         "t=true&facet.sort=count&facet.limit=-1"
     )
-
-    # logger.debug( "Query for initialize_attribute_order: %s" % ( query, ) )
-
     # proper url encoding
     query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
-
     # opening solr query results
     results = urllib2.urlopen(query).read()
-
     logger.debug(
         "Query results for initialize_attribute_order: %s" % (results, )
     )
-
     # converting results into json for python
     results = simplejson.loads(results)
 
     attribute_order_objects = []
     rank = 0
     for key in results["response"]["docs"][0]:
-
         is_facet = _is_facet_attribute(key, study, assay)
         is_exposed = _is_exposed_attribute(key)
         is_internal = _is_internal_attribute(key)
         is_active = _is_active_attribute(key)
-
         if not _is_ignored_attribute(key):
             attribute_order_objects.append(
                 AttributeOrder(
@@ -736,7 +691,6 @@ def initialize_attribute_order(study, assay):
                     is_active=is_active
                 )
             )
-
     # insert AttributeOrder objects into database
     AttributeOrder.objects.bulk_create(attribute_order_objects)
 
