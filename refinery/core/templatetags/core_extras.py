@@ -1,15 +1,18 @@
-from django import template
-from file_store.models import FileStoreItem, FileStoreItem
 import logging
-import os.path
+import os
+
+from django import template
+
+from file_store.models import FileStoreItem
+
 
 logger = logging.getLogger(__name__)
 register = template.Library()
 
+
 @register.filter(name='simple_name')
 def simple_name(arg):
     """Takes a file_store UUID and returns only the basename of the file.
-    
     :param arg: FilestoreItem UUID
     :type arg: str.
     :returns: Returns on file name from file_store UUID
