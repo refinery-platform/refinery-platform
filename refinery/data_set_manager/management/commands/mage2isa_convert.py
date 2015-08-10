@@ -49,7 +49,6 @@ class Command(BaseCommand):
             if e.errno != errno.EEXIST:
                 raise
 
-
     def _make_query(self, args):
         """creates an ArrayExpress query string from the command line
         arguments
@@ -113,7 +112,7 @@ class Command(BaseCommand):
                 # many accessions, so search for right one
                 for a in accessions:
                     if re.search(r'^E-', a):
-                        #take off the </ connected to the accession
+                        # take off the </ connected to the accession
                         a = a[:-2]
                         # will only convert new studies
                         if not Study.objects.filter(identifier=a):
