@@ -1771,7 +1771,10 @@ class FastQCResource(Resource):
         tmp_dict = {'Summary': {}}
 
         for i in parser.summary()[1:]:
-            tmp_dict['Summary'][i[0]] = i[1]
+            tmp_dict['Summary'][i[0].lower().replace(' ', '_')] = {
+                'title': i[0],
+                'result': i[1]
+            }
             parsed_data = parser.clean_data(i[0])
             clean_data = []
             

@@ -35,7 +35,7 @@ urlpatterns = patterns(
     url(r'^workflows/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/edit/$', 'workflow_edit', name="workflow_edit"),
     url(r'^workflows/(?P<slug>[a-zA-Z0-9\_]+)/$', 'workflow_slug', name="workflow_slug"),
     url(r'^workflow_engines/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'workflow_engine', name="workflow_engine"),
-    url(r'^chart-test/$', 'chart_test', name='chart_test'),
+    url(r'^fastqc_viewer/$', 'fastqc_viewer', name='fastqc_viewer'),
     url(r'^solr/igv/$', 'solr_igv'),
     url(
         r'^solr/core/select/$',

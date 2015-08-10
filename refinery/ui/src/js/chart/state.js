@@ -11,7 +11,7 @@ angular
             templateUrl: '/static/partials/chart/partials/charts-main.html',
             controller: 'refineryChartCtrl as chart'
           },
-          '/chart-test/'
+          '/fastqc_viewer/'
         )
         .state(
           'default',
@@ -20,7 +20,7 @@ angular
             templateUrl: '/static/partials/chart/partials/charts-main.html',
             controller: 'refineryChartCtrl as chart'
           },
-          '/chart-test/'
+          '/fastqc_viewer/'
         )
         .state(
           'full',
@@ -29,7 +29,7 @@ angular
             templateUrl: '/static/partials/chart/partials/charts-main.html',
             controller: 'refineryChartCtrl as chart'
           },
-          '/chart-test/'
+          '/fastqc_viewer/'
         );
     }
   ]

@@ -1,8 +1,12 @@
-function ChartCtrl($stateParams, fastqcDataService, refineryBoxPlotService) {
+function ChartCtrl($, $stateParams, fastqcDataService, refineryBoxPlotService) {
   var that = this;
+  that.$ = $;
   that.$stateParams = $stateParams;
   that.fastqcDataService = fastqcDataService;
   that.refineryBoxPlotService = refineryBoxPlotService;
+  that.uuid = this.$stateParams.uuid && isValidUUID(this.$stateParams.uuid) ? 
+    this.$stateParams.uuid : '';
+  that.mode = this.$stateParams.mode || 'basic_statistics';
 
   if (this.$stateParams &&
       this.$stateParams.uuid &&
@@ -10,11 +14,17 @@ function ChartCtrl($stateParams, fastqcDataService, refineryBoxPlotService) {
     this.fastqcDataService.get({
       uuid: that.$stateParams.uuid
     }).$promise.then(function (data) {
-        that.plot(data.data, that.$stateParams.mode);
+        that.data = data.data;
+        that.dataKeys = Object.keys(that.data.summary);
+        that.plot(that.data, that.$stateParams.mode);
       }).catch(function (error) {
+        that.errorMessage = 'Unable to display visualization for data. ' +
+          'Only FastQC data formats can be displayed.';
         console.error(error);
       }
     );
+  } else {
+    that.errorMessage = 'Improper or no analysis uuid.';
   }
 }
 
@@ -25,6 +35,7 @@ Object.defineProperty(
     configurable: false,
     get: function () {
       return [
+        'basic_statistics',
         'per_base_sequence_quality',
         'per_sequence_quality_scores',
         'per_base_sequence_content',
@@ -85,7 +96,7 @@ function make_array(size) {
 ChartCtrl.prototype.plot = function (data, mode) {
   var that = this;
   mode = mode && this.modeList.indexOf(mode) > -1 ?
-    mode : 'per_base_sequence_quality';
+    mode : 'basic_statistics';
 
   if (!data[mode] && !(data[mode] instanceof (Array))) {
     console.error("Invalid data type returned");
@@ -94,32 +105,78 @@ ChartCtrl.prototype.plot = function (data, mode) {
 
   if (mode === 'per_base_sequence_quality') {
     this.draw_per_base_sequence_quality(data[mode]);
+  } else if (mode === 'basic_statistics') {
+    this.draw_basic_statistics_table(data[mode]);
   } else if (mode === 'per_sequence_quality_scores') {
-    this.draw_generic(data[mode]);
+    this.draw_generic_line(data[mode]);
   } else if (mode === 'per_base_sequence_content') {
-    this.draw_generic(data[mode], {ymin: 0, ymax: 0});
+    this.draw_generic_line(data[mode], {ymin: 0, ymax: 0});
   } else if (mode === 'per_sequence_gc_content') {
-    this.draw_generic(data[mode]);
+    this.draw_generic_line(data[mode]);
   } else if (mode === 'per_base_n_content') {
-    this.draw_generic(data[mode]);
+    this.draw_generic_line(data[mode]);
   } else if (mode === 'sequence_length_distribution') {
-    this.draw_generic(data[mode]);
+    this.draw_generic_line(data[mode]);
   } else if (mode === 'sequence_duplication_levels') {
-    this.draw_generic(data[mode].slice(1));
+    this.draw_generic_line(data[mode].slice(1));
   } else if (mode === 'overrepresented_sequences') {
-    this.draw_generic(data[mode].map(function (d) { 
-      return d.slice(0, 3);
-    }));
+    this.draw_generic_table(data[mode]);
   } else if (mode === 'adapter_content') {
-    this.draw_generic(data[mode]);
+    this.draw_generic_line(data[mode]);
   } else if (mode === 'kmer_content') {
-    this.draw_generic(data[mode]);
+    this.draw_generic_table(data[mode]);
   } else {
-    this.draw_per_base_sequence_quality(data['per_base_sequence_quality']);
+    this.draw_basic_statistics_table(data['basic_statistics']);
   }
 };
 
-ChartCtrl.prototype.draw_generic = function (data, config) {
+ChartCtrl.prototype.draw_generic_bar = function (data, config) {
+  config = config || {};
+};
+
+ChartCtrl.prototype.draw_generic_table = function (data, config) {
+  config = config || {};
+
+  var tableHTML = '' +
+    '<table class="table">'+
+      '<thead>' +
+        '<tr>' + data[0].map(function (d) { return '<th>' + d + '</th>'; }) + '</tr>' +
+      '</thead>' +
+      '<tbody>' +
+        data.slice(1).map(function (d) {
+          return '<tr>' + d.map(function (f) { return '<td>' + f + '</td>'; }) + '</tr>';
+        }) +
+      '</tbody>' + 
+    '</table>';
+
+  $(this.bindto).html(tableHTML);
+};
+
+ChartCtrl.prototype.draw_basic_statistics_table = function (data, config) {
+  config = config || {};
+
+  var tableHTML = '' +
+    '<table class="table">'+
+      '<thead>' +
+        '<tr>' +
+          '<th>Measure</th>' + 
+          '<th>Value</th>' +
+        '</tr>' +
+      '</thead>' +
+      '<tbody>' +
+        Object.keys(data).map(function (k) {
+          return '' +
+            '<tr>'+
+              '<td>' + k + '</td>' + '<td>' + data[k] + '</td>' +
+            '</tr>';
+        }) +
+      '</tbody>' + 
+    '</table>';
+
+  $(this.bindto).html(tableHTML);
+};
+
+ChartCtrl.prototype.draw_generic_line = function (data, config) {
   config = config || {};
 
   var chart = c3.generate({
@@ -170,6 +227,7 @@ ChartCtrl.prototype.draw_per_base_sequence_quality = function (data) {
 angular
   .module('refineryChart')
   .controller("refineryChartCtrl", [
+    '$',
     '$stateParams',
     'fastqcDataService',
     'refineryBoxPlotService',

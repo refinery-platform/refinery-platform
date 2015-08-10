@@ -1,29 +1,34 @@
-<div>
-  <span>
-    <a href="#/e597063b-e469-45c3-bd04-43f14acaac8c/per_base_sequence_quality/">Per Base Sequence Quality</a>
-    <br>
-    <a href="#/e597063b-e469-45c3-bd04-43f14acaac8c/per_sequence_quality_scores/">Per Sequence Quality Scores</a>
-    <br>
-    <a href="#/e597063b-e469-45c3-bd04-43f14acaac8c/per_base_sequence_content/">Per Base Sequence Content</a>
-    <br>
-    <a href="#/e597063b-e469-45c3-bd04-43f14acaac8c/per_sequence_gc_content/">Per Sequence GC Content</a>
-    <br>
-    <a href="#/e597063b-e469-45c3-bd04-43f14acaac8c/per_base_n_content/">Per Base N Content</a>
-    <br>
-    <a href="#/e597063b-e469-45c3-bd04-43f14acaac8c/sequence_length_distribution/">Sequence Length Distribution</a>
-    <br>
-    <a href="#/e597063b-e469-45c3-bd04-43f14acaac8c/sequence_duplication_levels/">Sequence Duplication Level</a>
-    <br>
-    <a href="#/e597063b-e469-45c3-bd04-43f14acaac8c/overrepresented_sequences/">Overrepresented Sequences</a>
-    <br>
-    <a href="#/e597063b-e469-45c3-bd04-43f14acaac8c/adapter_content/">Adapter Content</a>
-    <br>
-    <a href="#/e597063b-e469-45c3-bd04-43f14acaac8c/kmer_content/">Kmer Content</a>
-  </span>
-  <hr>
-  <p ng-click="chart.plot('/media/file_store/7c/85/1_data_file.txt')">CLICK TO PLOT</p>
-
-  <div class="fastqc-chart-drawspace jquery-full-height" onload="chart.plot('/media/file_store/7c/85/1_data_file.txt')">
-
+<div class="refinery-panel">
+  <div class="refinery-header">
+    <span class="refinery-header-left">
+      <h3>
+      <i class="m-r-1-4 icon-bar-chart"></i>FastQC Visualization
+      </h3>
+    </span>
   </div>
+
+  <p ng-if="!chart.errorMessage">Select view</p>
+  <span ng-if="!chart.errorMessage" class="btn-group">
+    <button class="btn btn-default dropdown-toggle" id="modeMenu" data-toggle="dropdown" aria-has-popup="true" aria-expanded="true">
+      {{chart.data.summary[chart.mode].title}}
+      <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="modeMenu">
+      <li ng-repeat="item in chart.dataKeys">
+        <a ng-href="#/{{chart.uuid}}/{{item}}/">
+          [{{chart.data.summary[item].result}}] {{chart.data.summary[item].title}}
+        </a>
+      </li>
+    </ul>
+  </span>
+
+  <center>
+    <h4>
+      {{chart.data.summary[chart.mode].title}} - {{chart.data.summary[chart.mode].result}}
+    </h4>
+  </center>
+
+  <div>{{chart.errorMessage}}</div>
+
+  <div class="fastqc-chart-drawspace jquery-full-height"></div>
 </div>
