@@ -5,14 +5,17 @@ Created on Jul 2, 2012
 '''
 
 import logging
-from data_set_manager.models import Node, AnnotatedNode
-from data_set_manager.utils import get_node_types
+
 from django.db import models
 from django.template import loader
 from django.template.context import Context
+
 from haystack import indexes
 
-# get module logger
+from data_set_manager.models import Node, AnnotatedNode
+from data_set_manager.utils import get_node_types
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,23 +28,20 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     description = indexes.CharField(null=True)
     creation_date = indexes.DateTimeField(model_attr='creation_date')
     modification_date = indexes.DateTimeField(model_attr='modification_date')
-
     submitter = indexes.MultiValueField(null=True)
     measurement = indexes.MultiValueField(null=True, faceted=True)
     technology = indexes.MultiValueField(null=True, faceted=True)
-
-    # We only need one multi value field to story every id that has access since
-    # Solr only handles read permissions.
+    # We only need one multi value field to story every id that has access
+    # since Solr only handles read permissions
     access = indexes.MultiValueField(null=True)
-
-    # We add this for autocomplete.
+    # We add this for autocomplete
     content_auto = indexes.EdgeNgramField(null=True)
 
     def get_model(self):
         return models.get_model('core', 'DataSet')
 
     def index_queryset(self, using=None):
-        """Used when the entire index for model is updated."""
+        """Used when the entire index for model is updated"""
         return self.get_model().objects.all()
 
     def prepare_description(self, object):
@@ -75,7 +75,8 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
         studies = investigation.study_set.all()
         for study in studies:
             for contact in study.contact_set.all():
-                submitters.append(contact.last_name + ", " + contact.first_name)
+                submitters.append(
+                    contact.last_name + ", " + contact.first_name)
 
         return set(submitters)
 
@@ -118,15 +119,10 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     # also:
     # http://django-haystack.readthedocs.org/en/latest/searchindex_api.html
     def prepare(self, data_set):
-        logger.info(
-            "Start preparing \"" + data_set.name + "\" for indexing."
-        )
+        logger.info("Start preparing '%s' for indexing", data_set.name)
         data = super(DataSetIndex, self).prepare(data_set)
-
         investigation = data_set.get_investigation()
-
         nodes = []
-
         # TODO: optimize this query
         if investigation is not None:
             studies = investigation.study_set.all()
@@ -147,7 +143,6 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
                                 assay=assay
                             ).values()
                         )
-
             # for node in nodes:
             #    print node["node_name"] + " " + node["attribute_type"] + " " +
             #    node["attribute_value"]
@@ -163,11 +158,7 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
                     'nodes': nodes
                 })
             )
-
-        logger.info(
-            "Successfully prepared \"" + data_set.name + "\" for indexing."
-        )
-
+        logger.info("Successfully prepared '%s' for indexing", data_set.name)
         return data
 
 
@@ -180,10 +171,8 @@ class ProjectIndex(indexes.SearchIndex, indexes.Indexable):
     description = indexes.CharField(model_attr='description', null=True)
     creation_date = indexes.DateTimeField(model_attr='creation_date')
     modification_date = indexes.DateTimeField(model_attr='modification_date')
-
     # We add this for autocomplete.
     content_auto = indexes.EdgeNgramField(model_attr='name')
-    # content_auto = indexes.EdgeNgramField(model_attr='summary')
 
     def get_model(self):
         return models.get_model('core', 'Project')
