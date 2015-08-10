@@ -22,13 +22,15 @@
     </ul>
   </span>
 
-  <center>
-    <h4>
+  <div align="center">
+    <h4 ng-if="!chart.errorMessage">
       {{chart.data.summary[chart.mode].title}} - {{chart.data.summary[chart.mode].result}}
     </h4>
-  </center>
+  </div>
 
-  <div>{{chart.errorMessage}}</div>
+  <div ng-if="chart.errorMessage" class="alert alert-warning">
+    {{chart.errorMessage}}
+  </div>
 
   <div class="fastqc-chart-drawspace jquery-full-height"></div>
 </div>
