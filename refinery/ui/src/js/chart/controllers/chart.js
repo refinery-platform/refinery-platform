@@ -126,15 +126,14 @@ ChartCtrl.prototype.draw_generic = function (data, config) {
     bindto: this.bindto,
     data: {
       x: data[0][0],
-      columns: data[0].map(function (d, i) {
-        return data.map(function (d) {
-          return d[i];
-        });
-      })
+      rows: data
     },
     axis: {
       x: {
-        type: 'category'
+        type: 'category',
+        tick: {
+          count: 1 + data.length / 2
+        }
       },
       y: {
         min: config.ymin || 0,
