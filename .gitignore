@@ -65,6 +65,7 @@ deployment/Puppetfile.lock
 /isa-tab/
 /import/
 /static/
+/transfer/
 *.conflict
 *.sublime-*
 .editorconfig
