@@ -79,7 +79,13 @@
            {{analysis.time_end | date: 'medium'}}
            </div>
 
-           <div class="span3"></div>
+           <div ng-if="analysis.status=='RUNNING'"  class="span1">
+             <a rp-analyses-cancel-confirm confirmed-click="AnalysesCtrl.cancelAnalysis(analysis.uuid)" rp-analyses-cancel-tooltip>
+               <i class="icon-remove analyses-cancel"></i>
+             </a>
+           </div>
+
+           <div class="span2"></div>
 
           <span ng-if="analysis.status=='RUNNING' || analysis.status=='INITIALIZED'">
 
@@ -209,11 +215,6 @@
                           </div>
                         </div>
                       </div>
-                    </li>
-                    <li class="analysisRunningListItem">
-                       <a rp-analyses-cancel-confirm confirmed-click="AnalysesCtrl.cancelAnalysis(analysis.uuid)" rp-analyses-cancel-tooltip>
-                        <i class="icon-remove analyses-cancel"></i>
-                      </a>
                     </li>
                   </ul>
                 </div>
