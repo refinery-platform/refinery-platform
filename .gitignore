@@ -62,10 +62,10 @@ deployment/Puppetfile.lock
 /refinery/ui/bower_components/
 /refinery/ui/node_modules/
 /refinery/ui/.tmp/
-/media/
-/static/
 /isa-tab/
 /import/
+/static/
+/transfer/
 *.conflict
 *.sublime-*
 .editorconfig

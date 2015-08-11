@@ -1,93 +1,89 @@
-'''
+"""
 Created on Apr 21, 2012
 
-'''
+"""
 
 import struct
 import cStringIO
+
 from django.utils import unittest
-from file_store import models as fs_models
+
 from file_server import tdf_file, models
+from file_store import models as fs_models
 
 
 class TDFItemTest(unittest.TestCase):
-    '''Test all operations on TDFItem instances
-
-    '''
-    #TODO: add missing tests
+    """Test all operations on TDFItem instances"""
+    # TODO: add missing tests
     def setUp(self):
-        self.tdf_file = fs_models.FileStoreItem.objects.create_item("/example/path/test_file.tdf")
+        self.tdf_file = fs_models.FileStoreItem.objects.create_item(
+            "/example/path/test_file.tdf")
 
     def test_add_tdfitem(self):
         self.assertIsNotNone(models.add(self.tdf_file.uuid))
 
 
 class BigBEDItemTest(unittest.TestCase):
-    '''Test all operations on BigBEDItem instances
-
-    '''
+    """Test all operations on BigBEDItem instances"""
     def setUp(self):
-        self.bigbed_file = fs_models.FileStoreItem.objects.create_item("/example/path/test_file.bb")
+        self.bigbed_file = fs_models.FileStoreItem.objects.create_item(
+            "/example/path/test_file.bb")
 
     def test_add_bigbeditem(self):
         self.assertIsNotNone(models.add(self.bigbed_file.uuid))
 
     def test_get_bigbeditem(self):
-        bigbed_item = models.BigBEDItem.objects.create(data_file=self.bigbed_file)
+        bigbed_item = models.BigBEDItem.objects.create(
+            data_file=self.bigbed_file)
         self.assertEqual(models.get(bigbed_item), bigbed_item)
 
     def test_delete_bigbeditem(self):
-        bigbed_item = models.BigBEDItem.objects.create(data_file=self.bigbed_file)
+        bigbed_item = models.BigBEDItem.objects.create(
+            data_file=self.bigbed_file)
         self.assertTrue(models.delete(bigbed_item.data_file.uuid))
         self.assertRaises(models._FileServerItem.DoesNotExist,
-                          models.BigBEDItem.objects.get, data_file__uuid=bigbed_item.data_file.uuid)
+                          models.BigBEDItem.objects.get,
+                          data_file__uuid=bigbed_item.data_file.uuid)
 
 
 class BAMItemTest(unittest.TestCase):
-    '''Test all operations on BAMItem instances
-
-    '''
-    #TODO: add missing tests
+    """Test all operations on BAMItem instances"""
+    # TODO: add missing tests
     def setUp(self):
-        self.bam_file = fs_models.FileStoreItem.objects.create_item("/example/path/test_file.bam")
+        self.bam_file = fs_models.FileStoreItem.objects.create_item(
+            "/example/path/test_file.bam")
 
     def test_add_bamitem(self):
         self.assertIsNotNone(models.add(self.bam_file.uuid))
 
 
 class WIGItemTest(unittest.TestCase):
-    '''Test all operations on WIGItem instances
-
-    '''
-    #TODO: add missing tests
+    """Test all operations on WIGItem instances"""
+    # TODO: add missing tests
     def setUp(self):
-        self.wig_file = fs_models.FileStoreItem.objects.create_item("/example/path/test_file.wig")
+        self.wig_file = fs_models.FileStoreItem.objects.create_item(
+            "/example/path/test_file.wig")
 
     def test_add_wigitem(self):
         self.assertIsNotNone(models.add(self.wig_file.uuid))
 
 
 class InvalidItemTest(unittest.TestCase):
-    '''Test operations on invalid instances
-
-    '''
+    """Test operations on invalid instances"""
     def test_add_unknown_file_type(self):
-        # create a FileStoreItem without a file type 
-        undefined_file = fs_models.FileStoreItem.objects.create(source="/example/path/test_file")
+        # create a FileStoreItem without a file type
+        undefined_file = fs_models.FileStoreItem.objects.create(
+            source="/example/path/test_file")
         self.assertIsNone(models.add(undefined_file.uuid))
 
 
 class TDFByteStreamTest(unittest.TestCase):
-    '''TDFByteStream unit test base class.
-
-    '''
+    """TDFByteStream unit test base class"""
     endianness = '<'   # should match endianness of TDFByteStream
 
 
 class TDFByteStreamTestUpdateOffset(TDFByteStreamTest):
-    '''Test moving around the file.
-
-    '''
+    """Test moving around the file"""
     def setUp(self):
         self.data = [1, 2, 3]
         self.fmt = self.endianness + 'iii'  # three ints
@@ -106,17 +102,17 @@ class TDFByteStreamTestUpdateOffset(TDFByteStreamTest):
 
     def test_end_of_file(self):
         # check if we can seek past the end of the file
-        self.assertEqual(self.tdf.update_offset(len(self.data)+1), len(self.data)+1)
+        self.assertEqual(self.tdf.update_offset(len(self.data) + 1),
+                         len(self.data) + 1)
 
     def test_negative_offset(self):
-        # negative offsets should set current position to the beginning of the file
+        # negative offsets should set current position to the beginning of the
+        # file
         self.assertEqual(self.tdf.update_offset(-1), 0)
 
 
 class TDFByteStreamTestReadInteger(TDFByteStreamTest):
-    '''Test reading four byte integer values.
-
-    '''
+    """Test reading four byte integer values"""
     def setUp(self):
         self.data = [1, 2, 3]
         self.fmt = self.endianness + 'iii'  # three ints
@@ -131,9 +127,9 @@ class TDFByteStreamTestReadInteger(TDFByteStreamTest):
 
 
 class TDFByteStreamTestReadLong(TDFByteStreamTest):
-    '''Test reading eight byte integer values.
+    """Test reading eight byte integer values.
 
-    '''
+    """
     def setUp(self):
         self.data = [1, 2, 3]
         self.fmt = self.endianness + 'qqq'   # three longs
@@ -148,9 +144,9 @@ class TDFByteStreamTestReadLong(TDFByteStreamTest):
 
 
 class TDFByteStreamTestReadFloat(TDFByteStreamTest):
-    '''Test reading four byte floating point numbers.
+    """Test reading four byte floating point numbers.
 
-    '''
+    """
     def setUp(self):
         self.data = [1.1, 2.2, 3.3]
         self.fmt = self.endianness + 'fff'   # three floats
@@ -165,16 +161,17 @@ class TDFByteStreamTestReadFloat(TDFByteStreamTest):
 
 
 class TDFByteStreamTestReadBytes(TDFByteStreamTest):
-    '''Test reading a number of bytes.
+    """Test reading a number of bytes.
 
-    '''
+    """
     def setUp(self):
         self.data = ['a', 'b', 'c']
         self.fmt = self.endianness + 'ccc'  # three one-byte characters
         self.binary_data = struct.pack(self.fmt, *self.data)
         self.file_object = cStringIO.StringIO(self.binary_data)
         self.tdf = tdf_file.TDFByteStream(self.file_object)
-        self.length = struct.calcsize(self.fmt)  # total number of bytes used to encode the data
+        # total number of bytes used to encode the data
+        self.length = struct.calcsize(self.fmt)
 
     def test_read_zero_bytes(self):
         self.assertEqual(self.tdf.read_bytes(0), '')
@@ -197,7 +194,8 @@ class TDFByteStreamTestReadBytes(TDFByteStreamTest):
 
     def test_read_fixed_string(self):
         # read an arbitrary number of bytes as a string
-        self.assertEqual(self.tdf.read_string(len(self.data)), ''.join(self.data))
+        self.assertEqual(self.tdf.read_string(len(self.data)),
+                         ''.join(self.data))
 
     def test_read_string_end_of_file(self):
         # if number of bytes not provided, we should read until EOF
@@ -214,9 +212,9 @@ class TDFByteStreamTestReadBytes(TDFByteStreamTest):
 
 
 class TDFByteTestInvalidValues(TDFByteStreamTest):
-    '''Test reading invalid values.
+    """Test reading invalid values.
 
-    '''
+    """
     def setUp(self):
         self.data = 'a'
         self.fmt = self.endianness + 'c'  # char - one byte long
@@ -225,7 +223,8 @@ class TDFByteTestInvalidValues(TDFByteStreamTest):
         self.tdf = tdf_file.TDFByteStream(self.file_object)
 
     def test_read_int(self):
-        self.assertRaises(tdf_file.InsufficientBytesError, self.tdf.read_integer)
+        self.assertRaises(tdf_file.InsufficientBytesError,
+                          self.tdf.read_integer)
 
     def test_read_long(self):
         self.assertRaises(tdf_file.InsufficientBytesError, self.tdf.read_long)
@@ -235,16 +234,16 @@ class TDFByteTestInvalidValues(TDFByteStreamTest):
 
 
 class TDFByteStreamRegressionTest(unittest.TestCase):
-    '''Regression test against TDFBitStream class.
+    """Regression test against TDFBitStream class.
 
-    '''
+    """
     def setUp(self):
         self.endianness = '<'   # should match endianness of TDFByteStream
 
     def test_update_offset(self):
-        '''Test moving around the file.
+        """Test moving around the file.
 
-        '''
+        """
         data = [1, 2, 3]
         fmt = self.endianness + 'iii'
         binary_data = struct.pack(fmt, *data)
@@ -252,17 +251,17 @@ class TDFByteStreamRegressionTest(unittest.TestCase):
         bitstr = tdf_file.TDFBitStream(bytes=binary_data)
 
         # check if the initial position is set to the beginning of the file
-        self.assertEqual(bytestr.update_offset(None), bitstr.update_offset(None))
+        self.assertEqual(bytestr.update_offset(None),
+                         bitstr.update_offset(None))
         # go to random positions in the file
         self.assertEqual(bytestr.update_offset(2), bitstr.update_offset(2))
         self.assertEqual(bytestr.update_offset(1), bitstr.update_offset(1))
         # check if we can seek past the end of the file
-        self.assertEqual(bytestr.update_offset(len(data)+1), bitstr.update_offset(len(data)+1))
+        self.assertEqual(bytestr.update_offset(len(data) + 1),
+                         bitstr.update_offset(len(data) + 1))
 
     def test_read_integer(self):
-        '''Test reading four byte integers.
-
-        '''
+        """Test reading four byte integers"""
         data = [1, 2, 3]
         fmt = self.endianness + 'iih'   # two ints and a short
         binary_data = struct.pack(fmt, *data)
@@ -274,9 +273,9 @@ class TDFByteStreamRegressionTest(unittest.TestCase):
         self.assertEqual(bytestr.read_integer(), bitstr.read_integer())
 
     def test_read_long(self):
-        '''Test reading eight byte integers.
+        """Test reading eight byte integers.
 
-        '''
+        """
         data = [1, 2, 3]
         fmt = self.endianness + 'qqh'   # two long ints and a short
         binary_data = struct.pack(fmt, *data)
@@ -304,12 +303,14 @@ class TDFByteStreamRegressionTest(unittest.TestCase):
         self.assertEqual(bytestr.read_float(), bitstr.read_float())
         # test reading until the EOF
         self.assertEqual(bytestr.read_string(), bitstr.read_string())
-        # read bytes (first reset the offset to the beginning of the binary data stream)
+        # read bytes (first reset the offset to the beginning of the binary
+        # data stream)
         bytestr = tdf_file.TDFByteStream(cStringIO.StringIO(binary_data))
         bitstr = tdf_file.TDFBitStream(bytes=binary_data)
         self.assertEqual(bytestr.read_bytes(3), bitstr.read_bytes(3))
         # test update offset (
         bytestr = tdf_file.TDFByteStream(cStringIO.StringIO(binary_data))
         bitstr = tdf_file.TDFBitStream(bytes=binary_data)
-        self.assertEqual(bytestr.update_offset(None), bitstr.update_offset(None))
+        self.assertEqual(bytestr.update_offset(None),
+                         bitstr.update_offset(None))
         self.assertEqual(bytestr.update_offset(5), bitstr.update_offset(5))

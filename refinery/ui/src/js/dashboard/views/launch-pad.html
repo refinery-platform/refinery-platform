@@ -171,13 +171,18 @@
         class="no-list-style"
         ng-if="dashboard.allAnalyses.meta.total_count > 0">
         <li ng-repeat="analysis in dashboard.allAnalyses.objects">
-          <span ng-if="analysis.status == 'SUCCESS'">
-            <i class="icon-ok-sign"></i>
-            <a ng-href="data_sets/{{ analysis.data_set__uuid }}/analysis/{{ analysis.uuid }}">{{ analysis.name }}</a>
+          <span class="spinner"><i class="{{analysis.status | analysesStatusIcon}} analyses-status"
+               rp-analyses-status-tooltip></i>
           </span>
-          <span ng-if="analysis.status == 'FAILURE'">
-            <i class="icon-warning-sign"></i>
-            <a ng-href="data_sets/{{ analysis.data_set__uuid }}/analysis/{{ analysis.uuid }}">{{ analysis.name }}</a>
+          <span ng-switch on="analysis.status">
+            <span ng-switch-when="UNKNOWN">
+              {{ analysis.name }}
+            </span>
+            <span ng-switch-default>
+              <a ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
+                {{ analysis.name }}
+              </a>
+            </span>
           </span>
         </li>
       </ul>

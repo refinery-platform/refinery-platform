@@ -1,11 +1,11 @@
-<span id="analysesCogIcon" ng-init="AnalysesCtrl.updateAnalysesRunningGlobalList()">
-  <span ng-switch on="AnalysesCtrl.isAnalysesRunningGlobal()">
-    <span ng-switch-when=true>
-      <span class="spinner">
-        <i class="icon-cog icon-spin"></i>
-      </span>
+<span id="analysesCogIcon">
+  <span ng-if="AnalysesCtrl.isAnalysesRunningGlobal() || AnalysesCtrl.launchAnalysisFlag">
+    <span class="spinner">
+      <i class="icon-cog icon-spin"></i>
+      {{ AnalysesCtrl.analysesRunningGlobalListCount }}
     </span>
-    <span ng-switch-default>
-      <i class="icon-cog"></i>
-    </span>
+  </span>
+   <span ng-if="!(AnalysesCtrl.isAnalysesRunningGlobal() || AnalysesCtrl.launchAnalysisFlag)">
+    <i class="icon-cog"></i>
+  </span>
 </span>

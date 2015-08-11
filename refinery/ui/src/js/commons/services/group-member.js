@@ -3,9 +3,9 @@ angular
   .factory('groupMemberService', ['$resource', 'settings',
     function ($resource, settings) {
       return $resource(
-        settings.appRoot + settings.refineryApi + '/groups/members/',
+        settings.appRoot + settings.refineryApi + '/extended_groups/members/',
         {
-          groupId: '@groupId',
+          uuid: '@uuid',
           userId: '@userId',
           format: 'json'
         },
@@ -15,11 +15,11 @@ angular
           },
           add: {
             method: 'POST',
-            url: settings.appRoot + settings.refineryApi + '/groups/:groupId/members/'
+            url: settings.appRoot + settings.refineryApi + '/extended_groups/:uuid/members/'
           },
           remove: {
             method: 'DELETE',
-            url: settings.appRoot + settings.refineryApi + '/groups/:groupId/members/:userId/'
+            url: settings.appRoot + settings.refineryApi + '/extended_groups/:uuid/members/:userId/'
           }
         }
       );

@@ -4,15 +4,21 @@ Created on May 4, 2012
 @author: nils
 '''
 
+import datetime
 import json
 import logging
 import re
-import uuid
-from django.conf import settings
 from sets import Set
+import uuid
+
+from django.conf import settings
 from django.conf.urls.defaults import url
 from django.contrib.auth.models import User, Group
+from django.contrib.sites.models import get_current_site
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import EmailMessage
+from django.template import loader, Context
+
 from guardian.shortcuts import get_objects_for_user, get_objects_for_group, \
     get_perms
 from tastypie import fields
@@ -23,26 +29,21 @@ from tastypie.constants import ALL_WITH_RELATIONS, ALL
 from tastypie.exceptions import Unauthorized, ImmediateHttpResponse
 from tastypie.http import HttpNotFound, HttpForbidden, HttpBadRequest, \
     HttpUnauthorized, HttpMethodNotAllowed, HttpAccepted, HttpCreated, \
-    HttpNoContent, HttpGone, HttpForbidden
+    HttpNoContent, HttpGone
 from tastypie.resources import ModelResource, Resource
+from tastypie.utils import trailing_slash
+
 from core.models import Project, NodeSet, NodeRelationship, NodePair, \
     Workflow, WorkflowInputRelationships, Analysis, DataSet, \
     ExternalToolStatus, ResourceStatistics, GroupManagement, ExtendedGroup, \
-    UserAuthentication, Invitation, UserProfile
+    UserAuthentication, Invitation, UserProfile, FastQC
 from core.tasks import check_tool_status
 from data_set_manager.api import StudyResource, AssayResource, \
     InvestigationResource
 from data_set_manager.models import Node, Study, Attribute
 from file_store.models import FileStoreItem
-from GuardianTastypieAuthz import GuardianAuthorization
-from django.core.paginator import Paginator, InvalidPage, PageNotAnInteger, \
-    EmptyPage
-from haystack.query import SearchQuerySet, EmptySearchQuerySet
-from django.http import HttpResponse
-import datetime
-from django.core.mail import EmailMessage
-from tastypie.utils import trailing_slash
-from django.template import loader, Context
+
+from fadapa import Fadapa
 
 
 logger = logging.getLogger(__name__)
@@ -80,12 +81,9 @@ class SharableResourceAPIInterface(object):
         return perms
 
     def get_share_list(self, user, res):
-        # groups_in = filter(
-        #     lambda g: user in g.user_set.all(),
-        #     Group.objects.all())
-
         groups_in = filter(
-            lambda g: not self.is_manager_group(g) and user in g.user_set.all(),
+            lambda g:
+            not self.is_manager_group(g) and user in g.user_set.all(),
             Group.objects.all())
 
         return map(
@@ -184,7 +182,8 @@ class SharableResourceAPIInterface(object):
 
     def process_get_list(self, request, res_list, **kwargs):
         user = request.user
-        mod_res_list = self.transform_res_list(user, res_list, request, **kwargs)
+        mod_res_list = self.transform_res_list(
+            user, res_list, request, **kwargs)
         bundle_list = self.build_bundle_list(request, mod_res_list, **kwargs)
         object_list = self.build_object_list(bundle_list, **kwargs)
         return self.build_response(request, object_list, **kwargs)
@@ -328,7 +327,8 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
         return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
 
     def obj_get_list(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_get_list(self, bundle, **kwargs)
+        return SharableResourceAPIInterface.obj_get_list(
+            self, bundle, **kwargs)
 
     def get_object_list(self, request):
         obj_list = SharableResourceAPIInterface.get_object_list(self, request)
@@ -403,7 +403,8 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
 
     def obj_get_list(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_get_list(self, bundle, **kwargs)
+        return SharableResourceAPIInterface.obj_get_list(
+            self, bundle, **kwargs)
 
     def get_object_list(self, request):
         obj_list = SharableResourceAPIInterface.get_object_list(self, request)
@@ -488,7 +489,8 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
         return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
 
     def obj_get_list(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_get_list(self, bundle, **kwargs)
+        return SharableResourceAPIInterface.obj_get_list(
+            self, bundle, **kwargs)
 
     def get_object_list(self, request):
         obj_list = SharableResourceAPIInterface.get_object_list(self, request)
@@ -557,7 +559,8 @@ class AnalysisResource(ModelResource):
         authorization = Authorization()
         allowed_methods = ["get"]
         fields = [
-            'data_set', 'creation_date', 'history_id', 'library_id', 'name',
+            'data_set', 'data_set__uuid', 'creation_date', 'history_id',
+            'library_id', 'name', 'workflow__uuid',
             'resource_uri', 'status', 'time_end', 'time_start', 'uuid',
             'workflow_copy', 'workflow_galaxy_id', 'workflow_steps_num'
         ]
@@ -571,7 +574,7 @@ class AnalysisResource(ModelResource):
         ordering = ['name', 'creation_date']
 
     def get_object_list(self, request, **kwargs):
-        if(request.user.is_authenticated()):
+        if request.user.is_authenticated():
             return UserProfile.objects.get(
                 user=User.objects.get(
                     username=request.user
@@ -627,7 +630,9 @@ class NodeResource(ModelResource):
 
     def prepend_urls(self):
         return [
-            url(r"^(?P<resource_name>%s)/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$" %
+            url(r"^(?P<resource_name>%s)/(?P<uuid>"
+                r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"
+                r")/$" %
                 self._meta.resource_name,
                 self.wrap_view('dispatch_detail'),
                 name="api_dispatch_detail"),
@@ -654,7 +659,8 @@ class NodeResource(ModelResource):
 
     # def get_object_list(self, request):
     #     """
-    #     Temporarily removed for performance reasons (and not required without authorization)
+    #     Temporarily removed for performance reasons (and not required
+    #     without authorization)
     #     Get all nodes that are available to the current user (via data set)
     #     Temp workaround due to Node being not Ownable
     #
@@ -664,9 +670,10 @@ class NodeResource(ModelResource):
     #     if (user.is_authenticated()):
     #         allowed_datasets = get_objects_for_user(user, perm, DataSet)
     #     else:
-    #         allowed_datasets = get_objects_for_group(ExtendedGroup.objects.public_group(), perm, DataSet)
-    #     # get a list of node UUIDs that belong to all datasets available to the
-    #     # current user
+    #         allowed_datasets = get_objects_for_group(
+    #             ExtendedGroup.objects.public_group(), perm, DataSet)
+    #     # get a list of node UUIDs that belong to all datasets available to
+    #     # the current user
     #     all_allowed_studies = []
     #     for dataset in allowed_datasets:
     #         dataset_studies = dataset.get_investigation().study_set.all()
@@ -720,7 +727,9 @@ class NodeSetResource(ModelResource):
 
     def prepend_urls(self):
         return [
-            url(r"^(?P<resource_name>%s)/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$" %
+            url(r"^(?P<resource_name>%s)/(?P<uuid>"
+                r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"
+                r")/$" %
                 self._meta.resource_name,
                 self.wrap_view('dispatch_detail'),
                 name="api_dispatch_detail"),
@@ -730,7 +739,6 @@ class NodeSetResource(ModelResource):
         """Create a new NodeSet instance and assign current user as owner if
         current user has read permission on the data set referenced by the new
         NodeSet
-
         """
         # get the Study specified by the UUID in the new NodeSet
         study_uri = bundle.data['study']
@@ -748,7 +756,8 @@ class NodeSetResource(ModelResource):
         # an investigation is only associated with a single dataset even though
         # InvestigationLink is a many to many relationship
         try:
-            dataset = study.investigation.investigationlink_set.all()[0].data_set
+            dataset = \
+                study.investigation.investigationlink_set.all()[0].data_set
         except IndexError:
             logger.error("Data set not found in study '{}'".format(study.uuid))
             self.unauthorized_result(
@@ -928,8 +937,10 @@ class GroupManagementResource(Resource):
     member_list = fields.ListField(attribute='member_list', null=True)
     perm_list = fields.ListField(attribute='perm_list', null=True)
     can_edit = fields.BooleanField(attribute='can_edit', default=False)
-    manager_group = fields.BooleanField(attribute='is_manager_group', default=False)
-    manager_group_id = fields.IntegerField(attribute='manager_group_id', null=True)
+    manager_group = fields.BooleanField(attribute='is_manager_group',
+                                        default=False)
+    manager_group_id = fields.IntegerField(attribute='manager_group_id',
+                                           null=True)
 
     class Meta:
         resource_name = 'groups'
@@ -949,9 +960,9 @@ class GroupManagementResource(Resource):
 
     def groups_with_user(self, user):
         # Allow or disallow manager groups to show in queries.
-        # return filter(lambda g: user in g.user_set.all(), Group.objects.all())
         return filter(
-            lambda g: not self.is_manager_group(g) and user in g.user_set.all(),
+            lambda g:
+            not self.is_manager_group(g) and user in g.user_set.all(),
             Group.objects.all())
 
     def is_manager_group(self, group):
@@ -975,11 +986,11 @@ class GroupManagementResource(Resource):
                 'username': u.username,
                 'first_name': u.first_name,
                 'last_name': u.last_name,
-                'is_manager': True if ((not self.is_manager_group(group) and
-                    u in group.extendedgroup.manager_group.user_set.all()) or
-                    (self.is_manager_group(group) and
-                    u in group.user_set.all()))
-                    else False
+                'is_manager': self.is_manager_group(group) and
+                              u in group.user_set.all() or
+                              not self.is_manager_group(group) and
+                              u in
+                              group.extendedgroup.manager_group.user_set.all()
             },
             group.user_set.all())
 
@@ -1003,16 +1014,15 @@ class GroupManagementResource(Resource):
         return perms
 
     def get_perm_list(self, group):
-        f = lambda r: self.get_perms(r, group)
         dataset_perms = filter(
             lambda r: r['read'],
-            map(f, DataSet.objects.all()))
+            map(lambda r: self.get_perms(r, group), DataSet.objects.all()))
         project_perms = filter(
             lambda r: r['read'],
-            map(f, Project.objects.all()))
+            map(lambda r: self.get_perms(r, group), Project.objects.all()))
         workflow_perms = filter(
             lambda r: r['read'],
-            map(f, Workflow.objects.all()))
+            map(lambda r: self.get_perms(r, group), Workflow.objects.all()))
         # workflow_engine_perms = map(f, WorkflowEngine.objects.all())
         # analysis_perms = map(f, Analysis.objects.all())
         # download_perms = map(f, Download.objects.all())
@@ -1128,7 +1138,9 @@ class GroupManagementResource(Resource):
                 None,
                 self.user_authorized(user, group),
                 self.is_manager_group(group),
-                group.id if self.is_manager_group(group) else group.extendedgroup.manager_group.id)
+                group.id
+                if self.is_manager_group(group)
+                else group.extendedgroup.manager_group.id)
             return self.process_get(request, group_obj, **kwargs)
         elif request.method == 'DELETE':
             if not self.user_authorized(user, group):
@@ -1162,7 +1174,9 @@ class GroupManagementResource(Resource):
                     None,
                     self.user_authorized(user, g),
                     self.is_manager_group(g),
-                    g.id if self.is_manager_group(g) else g.extendedgroup.manager_group.id),
+                    g.id
+                    if self.is_manager_group(g)
+                    else g.extendedgroup.manager_group.id),
                 group_list)
 
             return self.process_get_list(request, group_obj_list, **kwargs)
@@ -1188,7 +1202,9 @@ class GroupManagementResource(Resource):
                 None,
                 self.user_authorized(user, group),
                 self.is_manager_group(group),
-                group.id if self.is_manager_group(group) else group.extendedgroup.manager_group.id)
+                group.id
+                if self.is_manager_group(group)
+                else group.extendedgroup.manager_group.id)
             kwargs['members'] = True
             return self.process_get(request, group_obj, **kwargs)
         elif request.method == 'PATCH':
@@ -1237,20 +1253,24 @@ class GroupManagementResource(Resource):
         if request.method == 'GET':
             raise NotImplementedError()
         elif request.method == 'DELETE':
-            # Removing yourself - can't leave a group if you're the last member,
-            # must delete it.
+            # Removing yourself - can't leave a group if you're the last
+            # member, must delete it.
             if user.id == int(kwargs['user_id']):
                 if group.user_set.count() == 1:
                     return HttpForbidden('Last member - must delete group')
 
                 # When demoting yourself while targetting manager group.
-                if self.is_manager_group(group) and group.user_set.count() == 1:
-                    return HttpForbidden('Last manager must delete group to leave')
+                if (self.is_manager_group(group) and
+                        group.user_set.count() == 1):
+                    return HttpForbidden(
+                        'Last manager must delete group to leave')
 
-                # When 
-                if not self.is_manager_group(group) and user in group.extendedgroup.manager_group.user_set.all():
+                if (not self.is_manager_group(group) and
+                        user
+                        in group.extendedgroup.manager_group.user_set.all()):
                     if group.extendedgroup.manager_group.user_set.count() == 1:
-                        return HttpForbidden('Last manager must delete group to leave')
+                        return HttpForbidden(
+                            'Last manager must delete group to leave')
 
                 group.user_set.remove(user)
 
@@ -1267,8 +1287,8 @@ class GroupManagementResource(Resource):
                 group.user_set.remove(int(kwargs['user_id']))
             else:
                 group.user_set.remove(int(kwargs['user_id']))
-                group.extendedgroup.manager_group.user_set.remove(int(kwargs['user_id']))
-
+                group.extendedgroup.manager_group.user_set.remove(
+                    int(kwargs['user_id']))
             return HttpNoContent()
         else:
             return HttpMethodNotAllowed()
@@ -1290,7 +1310,9 @@ class GroupManagementResource(Resource):
                     None,
                     self.user_authorized(user, g),
                     self.is_manager_group(g),
-                    g.id if self.is_manager_group(g) else g.extendedgroup.manager_group.id),
+                    g.id
+                    if self.is_manager_group(g)
+                    else g.extendedgroup.manager_group.id),
                 group_list)
 
             kwargs['members'] = True
@@ -1313,7 +1335,9 @@ class GroupManagementResource(Resource):
                 self.get_perm_list(group),
                 self.user_authorized(user, group),
                 self.is_manager_group(group),
-                group.id if self.is_manager_group(group) else group.extendedgroup.manager_group.id)
+                group.id
+                if self.is_manager_group(group)
+                else group.extendedgroup.manager_group.id)
             kwargs['perms'] = True
             return self.process_get(request, group_obj, **kwargs)
         elif request.method == 'PATCH':
@@ -1338,7 +1362,9 @@ class GroupManagementResource(Resource):
                     self.get_perm_list(g),
                     self.user_authorized(user, g),
                     self.is_manager_group(g),
-                    g.id if self.is_manager_group(g) else g.extendedgroup.manager_group.id),
+                    g.id
+                    if self.is_manager_group(g)
+                    else g.extendedgroup.manager_group.id),
                 group_list)
 
             kwargs['perms'] = True
@@ -1377,8 +1403,8 @@ class UserAuthenticationResource(Resource):
             is_logged_in,
             is_admin,
             user.id,
-            username)
-
+            username
+        )
         built_obj = self.build_bundle(obj=auth_obj, request=request)
         bundle = self.full_dehydrate(built_obj)
         return self.create_response(request, bundle)
@@ -1421,18 +1447,21 @@ class InvitationResource(ModelResource):
             if self.has_expired(i):
                 i.delete()
 
-    def send_email(self, invitation):
+    def send_email(self, request, invitation):
         group = self.get_group(invitation.group_id)
-        subject = 'Invitation to join group %s' % group.name
-        temp_loader = loader.get_template('group_invitation/group_invite_email.txt')
+        subject = "Invitation to join group {}".format(group.name)
+        temp_loader = loader.get_template(
+            'group_invitation/group_invite_email.txt')
         context_dict = {
             'group_name': group.name,
+            'site': get_current_site(request),
             'token': invitation.token_uuid
         }
         email = EmailMessage(
             subject,
             temp_loader.render(Context(context_dict)),
-            to=[invitation.recipient_email])
+            to=[invitation.recipient_email]
+        )
         email.send()
         return HttpCreated("Email sent")
 
@@ -1448,7 +1477,7 @@ class InvitationResource(ModelResource):
 
         if get_dict.get('group_id'):
             auth_group_list = filter(
-                lambda g: 
+                lambda g:
                     get_dict['group_id'].isdigit() and
                     g.id == int(get_dict['group_id']),
                 auth_group_list)
@@ -1480,7 +1509,7 @@ class InvitationResource(ModelResource):
         inv.sender = user
         inv.recipient_email = data['email']
         inv.save()
-        self.send_email(inv)
+        self.send_email(request, inv)
         return bundle
 
     # Handle PUT requests for resending tokens.
@@ -1490,7 +1519,7 @@ class InvitationResource(ModelResource):
         inv_list = Invitation.objects.filter(token_uuid=kwargs['token_uuid'])
 
         if len(inv_list) == 0:
-            raiseImmediateHttpResponse(HttpNotFound('Not found or expired'))
+            raise ImmediateHttpResponse(HttpNotFound('Not found or expired'))
 
         inv = inv_list[0]
         now = datetime.datetime.now()
@@ -1505,7 +1534,8 @@ class ExtendedGroupResource(ModelResource):
     member_list = fields.ListField(attribute='member_list', null=True)
     perm_list = fields.ListField(attribute='perm_list', null=True)
     can_edit = fields.BooleanField(attribute='can_edit', default=False)
-    manager_group_uuid = fields.CharField(attribute='manager_group_uuid', null=True)
+    manager_group_uuid = fields.CharField(attribute='manager_group_uuid',
+                                          null=True)
 
     class Meta:
         queryset = ExtendedGroup.objects.all()
@@ -1523,7 +1553,7 @@ class ExtendedGroupResource(ModelResource):
     # Wrap get_ext_group and raise error if cannot be found.
     def get_ext_group_or_fail(self, uuid):
         ext_group = self._get_ext_group(uuid)
-        
+
         if ext_group:
             return ext_group
         else:
@@ -1536,55 +1566,60 @@ class ExtendedGroupResource(ModelResource):
                 ExtendedGroup.objects.all())
         else:
             return filter(
-                lambda g: not g.is_manager_group() and user in g.user_set.all(),
+                lambda g:
+                not g.is_manager_group() and user in g.user_set.all(),
                 ExtendedGroup.objects.all())
 
     def user_authorized(self, user, ext_group):
         if ext_group.is_manager_group():
             return user in ext_group.user_set.all()
         else:
-            return ext_group.manager_group and user in ext_group.manager_group.user_set.all()
+            return (ext_group.manager_group and
+                    user in ext_group.manager_group.user_set.all())
 
     def get_member_list(self, ext_group):
         return map(
             lambda u: {
-            'user_id': u.id,
-            'username': u.username,
-            'first_name': u.first_name,
-            'last_name': u.last_name,
-            'is_manager': True if ((not ext_group.is_manager_group() and
-                    ext_group.manager_group and 
-                    u in ext_group.manager_group.user_set.all())) or
-                    u in ext_group.user_set.all()
-                else False
+                'user_id': u.id,
+                'uuid': u.userprofile.uuid,
+                'username': u.username,
+                'first_name': u.first_name,
+                'last_name': u.last_name,
+                'is_manager': self.user_authorized(u, ext_group)
             },
             ext_group.user_set.all())
 
     # Override ORM methods for customization.
     def obj_get(self, bundle, **kwargs):
         user = bundle.request.user
-        ext_group = super(ExtendedGroupResource, self).obj_get(bundle, **kwargs)
+        ext_group = super(ExtendedGroupResource, self).obj_get(
+            bundle, **kwargs)
         ext_group.can_edit = self.user_authorized(user, ext_group)
-        ext_group.manager_group_uuid = ext_group.uuid if ext_group.is_manager_group() else ext_group.manager_group.uuid
+        ext_group.manager_group_uuid = (
+            ext_group.uuid
+            if ext_group.is_manager_group()
+            else ext_group.manager_group.uuid
+        )
         return ext_group
 
     def obj_get_list(self, bundle, **kwargs):
         user = bundle.request.user
-        ext_group_list = super(ExtendedGroupResource, self).obj_get_list(bundle, **kwargs)
+        ext_group_list = super(ExtendedGroupResource, self).obj_get_list(
+            bundle, **kwargs)
 
         for i in ext_group_list:
             i.can_edit = self.user_authorized(user, i)
-            i.manager_group_uuid = i.uuid if i.is_manager_group() else i.manager_group.uuid
-
+            i.manager_group_uuid = (
+                i.uuid if i.is_manager_group() else i.manager_group.uuid
+            )
         return ext_group_list
 
     def get_object_list(self, bundle, **kwargs):
-        ext_group_list = super(ExtendedGroupResource, self).get_object_list(bundle, **kwargs)
-
+        ext_group_list = super(ExtendedGroupResource, self).get_object_list(
+            bundle, **kwargs)
         # Currently set so that manager groups are filtered out.
         # This does not make sense semantically but somehow works.
         return ext_group_list.filter(managed_group=None)
-        # return ext_group_list.filter(manager_group=None)
 
     def obj_create(self, bundle, **kwargs):
         user = bundle.request.user
@@ -1601,10 +1636,14 @@ class ExtendedGroupResource(ModelResource):
             url(r'^extended_groups/members/$',
                 self.wrap_view('ext_groups_members_list'),
                 name='api_ext_group_members_list'),
-            url(r'^extended_groups/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/members/$',
+            url(r'^extended_groups/(?P<uuid>'
+                r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
+                r')/members/$',
                 self.wrap_view('ext_groups_members_basic'),
                 name='api_ext_group_members_basic'),
-            url(r'^extended_groups/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/members/(?P<user_id>[0-9]+)/$',
+            url(r'^extended_groups/(?P<uuid>'
+                r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
+                r')/members/(?P<user_id>[0-9]+)/$',
                 self.wrap_view('ext_groups_members_detail'),
                 name='api_ext_group_members_detail'),
         ]
@@ -1616,7 +1655,11 @@ class ExtendedGroupResource(ModelResource):
         if request.method == 'GET':
             ext_group.member_list = self.get_member_list(ext_group)
             ext_group.can_edit = self.user_authorized(user, ext_group)
-            ext_group.manager_group_uuid = ext_group.uuid if ext_group.is_manager_group() else ext_group.manager_group.uuid
+            ext_group.manager_group_uuid = (
+                ext_group.uuid
+                if ext_group.is_manager_group()
+                else ext_group.manager_group.uuid
+            )
             bundle = self.build_bundle(obj=ext_group, request=request)
             return self.create_response(request, self.full_dehydrate(bundle))
         elif request.method == 'PATCH':
@@ -1668,17 +1711,20 @@ class ExtendedGroupResource(ModelResource):
                     return HttpForbidden('Last member - must delete group')
 
                 # When demoting yourself while targetting manager group.
-                if ext_group.is_manager_group() and ext_group.user_set.count() == 1:
-                    return HttpForbidden('Last manager must delete group to leave')
+                if (ext_group.is_manager_group() and
+                        ext_group.user_set.count() == 1):
+                    return HttpForbidden(
+                        'Last manager must delete group to leave')
 
-                if (not ext_group.is_manager_group() and 
-                    user in ext_group.manager_group.user_set.all() and
-                    ext_group.user_set.count() == 1):
-                    return HttpForbidden('Last manager must delete group to leave')
+                if (not ext_group.is_manager_group() and
+                        user in ext_group.manager_group.user_set.all() and
+                        ext_group.manager_group.user_set.count() == 1):
+                    return HttpForbidden(
+                        'Last manager must delete group to leave')
 
                 ext_group.user_set.remove(user)
 
-                if not self.is_manager_group():
+                if not ext_group.is_manager_group():
                     ext_group.manager_group.user_set.remove(user)
 
                 return HttpNoContent()
@@ -1692,8 +1738,8 @@ class ExtendedGroupResource(ModelResource):
                     ext_group.user_set.remove(int(kwargs['user_id']))
                 else:
                     ext_group.user_set.remove(int(kwargs['user_id']))
-                    ext_group.manager_group.user_set.remove(int(kwargs['user_id']))
-
+                    ext_group.manager_group.user_set.remove(
+                        int(kwargs['user_id']))
                 return HttpNoContent()
         else:
             return HttpMethodNotAllowed()
@@ -1703,12 +1749,13 @@ class ExtendedGroupResource(ModelResource):
 
         if request.method == 'GET':
             ext_group_list = self.ext_groups_with_user(user)
-            
+
             for i in ext_group_list:
                 i.member_list = self.get_member_list(i)
                 i.can_edit = self.user_authorized(user, i)
-                i.manager_group_uuid = i.uuid if i.is_manager_group() else i.manager_group.uuid
-
+                i.manager_group_uuid = (
+                    i.uuid if i.is_manager_group() else i.manager_group.uuid
+                )
             return self.create_response(
                 request,
                 {
@@ -1716,10 +1763,93 @@ class ExtendedGroupResource(ModelResource):
                         'total_count': len(ext_group_list)
                     },
                     'objects': map(
-                        lambda g: self.full_dehydrate(self.build_bundle(obj=g, request=request)),
+                        lambda g: self.full_dehydrate(
+                            self.build_bundle(obj=g, request=request)),
                         ext_group_list)
                 }
-            
             )
         else:
             return HttpMethodNotAllowed()
+
+
+# TODO: modify to be backed by a DB eventually.
+class FastQCResource(Resource):
+    data = fields.DictField(attribute='data', null=True)
+
+    class Meta:
+        resource_name = 'fastqc'
+        object_class = FastQC
+        detail_uri_name = 'analysis_uuid'
+        authentication = SessionAuthentication()
+
+    def is_float(self, value):
+        try:
+            float(value)
+            return True
+        except:
+            return False
+
+    def obj_get(self, bundle, **kwargs):
+        user = bundle.request.user
+
+        analysis = Analysis.objects.get(uuid=kwargs['analysis_uuid'])
+
+        if not analysis:
+            return HttpNotFound('Analysis not found')
+
+        analysis_results = analysis.results.all()
+
+        # For now assume fastqc files have a .txt extension.
+        fastqc_file_list = filter(
+            lambda f: '.txt' in f.file_name, analysis_results)
+
+        if len(fastqc_file_list) == 0:
+            return HttpNotFound("Unable to find matching FastQC file")
+
+        # Pick the first one because there's only supposed to be one.
+        fastqc_file = FileStoreItem.objects.get(
+            uuid=fastqc_file_list[0].file_store_uuid)
+
+        if not fastqc_file:
+            return HttpNotFound(
+                "Unable to find matching FastQC file in File Store")
+
+        fastqc_file_obj = fastqc_file.get_file_object()
+        fadapa_input = fastqc_file_obj.read().splitlines()
+
+        parser = Fadapa(fadapa_input)
+
+        tmp_dict = {'Summary': {}}
+
+        for i in parser.summary()[1:]:
+            tmp_dict['Summary'][i[0].lower().replace(' ', '_')] = {
+                'title': i[0],
+                'result': i[1]
+            }
+            parsed_data = parser.clean_data(i[0])
+            clean_data = []
+
+            for row in parsed_data:
+                clean_data.append(row[0:1] + map(
+                    lambda d:
+                        float(d) if self.is_float(d) else d,
+                    row[1:]))
+
+            tmp_dict[i[0]] = clean_data
+
+        # Modify the 'Basic Statistics' module if it exists.
+        if tmp_dict.get('Basic Statistics'):
+            mod = {}
+
+            for i in tmp_dict['Basic Statistics']:
+                mod[i[0]] = i[1]
+
+            tmp_dict['Basic Statistics'] = mod
+
+        # Rename to friendly format dict keys.
+        new = {}
+
+        for key in tmp_dict:
+            new[key.lower().replace(' ', '_')] = tmp_dict[key]
+
+        return FastQC(new)

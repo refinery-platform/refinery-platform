@@ -15,7 +15,7 @@ from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     NodeRelationshipResource, WorkflowResource, ExtendedGroupResource, \
     WorkflowInputRelationshipsResource, DataSetResource,\
     ExternalToolStatusResource, StatisticsResource, GroupManagementResource, \
-    UserAuthenticationResource, InvitationResource
+    UserAuthenticationResource, InvitationResource, FastQCResource
 from core.models import DataSet
 from data_set_manager.api import AttributeOrderResource, StudyResource,\
     AssayResource, InvestigationResource, ProtocolResource, \
@@ -64,6 +64,7 @@ v1_api.register(ProtocolReferenceParameterResource())
 v1_api.register(PublicationResource())
 v1_api.register(AttributeResource())
 v1_api.register(ExtendedGroupResource())
+v1_api.register(FastQCResource())
 # v1_api.register(TaxonResource())
 # v1_api.register(GenomeBuildResource())
 # v1_api.register(CytoBandResource())
@@ -112,7 +113,9 @@ urlpatterns = patterns(
             'post_reset_redirect': '/accounts/login/?next=/'
         }
     ),
-    url(r'^accounts/profile/$', 'core.views.user_profile', name='user_profile'),
+    url(r'^accounts/profile/$',
+        'core.views.user_profile',
+        name='user_profile'),
     url(
         r'^accounts/profile/edit/$',
         'core.views.user_profile_edit',

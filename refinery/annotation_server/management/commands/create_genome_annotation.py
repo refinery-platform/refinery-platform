@@ -1,28 +1,25 @@
-import os, zipfile, gzip
-import urllib2
-from optparse import make_option
-from django.core.management.base import LabelCommand, CommandError
-from annotation_server.models import *
+import gzip
 import logging
-from file_store.models import _mkdir
-from django.conf import settings
+import os
 import tarfile
-from data_set_manager.tasks import download_http_file
-from django.core.management.color import no_style
-from django.db import connection, transaction
+import zipfile
+
+from django.core.management.base import LabelCommand, CommandError
+from django.conf import settings
+
+from annotation_server.models import *
 from annotation_server.utils import *
+from data_set_manager.tasks import download_http_file
+from file_store.models import _mkdir
 
-'''
-Management command for creating basic annotation server
-for a specific species and genome build i.e. dm3, ce10, hg19
 
-'''
+logger = logging.getLogger(__name__)
+
 
 def extract_file(path, to_directory='.'):
-    '''
-    Extracts file from *.tar.gz files
+    """Extracts file from *.tar.gz files
     http://code.activestate.com/recipes/576714-extract-a-compressed-file/
-    '''
+    """
     logger.info("Extracting File %s to directory %s" % (path, to_directory))
 
     if path.endswith('.zip'):
@@ -32,28 +29,30 @@ def extract_file(path, to_directory='.'):
     elif path.endswith('.tar.bz2') or path.endswith('.tbz'):
         opener, mode = tarfile.open, 'r:bz2'
     else:
-        raise ValueError, "Could not extract `%s` as no appropriate extractor is found" % path
-
+        raise ValueError(
+            "Could not extract `{}` as no appropriate extractor is found"
+            .format(path)
+        )
     cwd = os.getcwd()
     os.chdir(to_directory)
-
     try:
         file = opener(path, mode)
-        print file.getmembers()
-        try: file.extractall()
-        finally: file.close()
+        logger.debug(file.getmembers())
+        try:
+            file.extractall()
+        finally:
+            file.close()
     finally:
         os.chdir(cwd)
 
 
-# get module logger
-logger = logging.getLogger(__name__)
-
 class Command(LabelCommand):
+    """Management command for creating basic annotation server
+    for a specific species and genome build i.e. dm3, ce10, hg19
+    """
     # allows Django settings to be used, define scratch space for download
     can_import_settings = True
     BASE_DOWNLOAD_URL = 'http://hgdownload.cse.ucsc.edu/goldenPath/%s/'
-    #SEQUENCE_FILES = 'bigZips/chromFa.tar.gz'
     SEQUENCE_FILES = 'chromosomes/'
     OTHER_FILES = 'database/'
     GENOME_BUILD = None
@@ -72,111 +71,110 @@ class Command(LabelCommand):
     main program; run the command
     """
     def handle_label(self, label, **options):
-        '''
-        This function creates an annotation_server for Refinery
+        """Creates an annotation_server for Refinery
         for a specific genome build: dm3, ce10, hg19
-        '''
+        """
         if label:
             if label in SUPPORTED_GENOMES:
                 self.GENOME_BUILD = GenomeBuild.objects.get(name=label)
                 self.GENOME_BUILD_NAME = self.GENOME_BUILD.name
                 self.BASE_DOWNLOAD_URL = self.BASE_DOWNLOAD_URL % label
-
-                # temp dir should be located on the same file system as the base dir
-                self.ANNOTATION_TEMP_DIR = os.path.join(self.ANNOTATION_BASE_DIR, label)
+                # temp dir should be located on the same file system as the
+                # base dir
+                self.ANNOTATION_TEMP_DIR = os.path.join(
+                    self.ANNOTATION_BASE_DIR, label)
                 # create this directory in case it doesn't exist
                 if not os.path.isdir(self.ANNOTATION_TEMP_DIR):
                     _mkdir(self.ANNOTATION_TEMP_DIR)
-
-                #self.createGenomeModels()
                 self.getChromInfo()
                 self.getCytoBand()
                 self.getGenes()
-
             else:
-                raise CommandError('Selected genome build currently not supported')
+                raise CommandError(
+                    'Selected genome build currently not supported')
         else:
-            raise CommandError('Please specify which genome to build i.e. hg19, dm3')
-
+            raise CommandError(
+                'Please specify which genome to build i.e. hg19, dm3')
 
     def getChromInfo(self):
-        # chrominfo
-
-        logger.debug("annotation_server.getChromInfo called for genome: %s" % self.GENOME_BUILD_NAME )
+        logger.debug("annotation_server.getChromInfo called for genome: %s",
+                     self.GENOME_BUILD_NAME)
 
         url, file_name = self.getUrlFile('chromInfo.txt.gz')
         download_http_file(url, '', self.ANNOTATION_TEMP_DIR, as_task=False)
-
         # deletes objects from ChromInfo table for that genome build
-        ChromInfo.objects.filter(genomebuild__name__exact=self.GENOME_BUILD_NAME).delete()
-
+        ChromInfo.objects.filter(
+            genomebuild__name__exact=self.GENOME_BUILD_NAME).delete()
         # reading gz file
         handle = gzip.open(file_name)
-
-        # http://stackoverflow.com/questions/3548495/download-extract-and-read-a-gzip-file-in-python
+        # http://stackoverflow.com/q/3548495
         for line in handle:
             t1 = line.strip().split('\t')
-
-            # Not including extraneous sequences i.e. chr6_ssto_hap7, chr6_random
+            # Not including extraneous sequences i.e. chr6_ssto_hap7,
+            # chr6_random
             if str(t1[0]).find('_') == -1:
-                item = ChromInfo(genomebuild=self.GENOME_BUILD, chrom=t1[0], size=t1[1], fileName=t1[2])
+                item = ChromInfo(genomebuild=self.GENOME_BUILD, chrom=t1[0],
+                                 size=t1[1], fileName=t1[2])
                 item.save()
-
         return
 
     def getCytoBand(self):
-        # chrominfo
-
-        logger.debug("annotation_server.getCytoBand called for genome: %s" % self.GENOME_BUILD_NAME )
+        logger.debug("annotation_server.getCytoBand called for genome: %s",
+                     self.GENOME_BUILD_NAME)
 
         url, file_name = self.getUrlFile('cytoBand.txt.gz')
         download_http_file(url, '', self.ANNOTATION_TEMP_DIR, as_task=False)
-
         # deletes all objects from table
-        CytoBand.objects.filter(genomebuild__name__exact=self.GENOME_BUILD_NAME).delete()
-
+        CytoBand.objects.filter(
+            genomebuild__name__exact=self.GENOME_BUILD_NAME).delete()
         # reading gz file
         handle = gzip.open(file_name)
         for line in handle:
             t1 = line.strip().split('\t')
-            item = current_table(genomebuild=self.GENOME_BUILD, chrom=t1[0], chromStart=t1[1], chromEnd=t1[2], name=t1[3], gieStain=t1[4])
+            # FIXME: current_table is unresolved
+            item = current_table(
+                genomebuild=self.GENOME_BUILD, chrom=t1[0], chromStart=t1[1],
+                chromEnd=t1[2], name=t1[3], gieStain=t1[4]
+            )
             item.save()
-
         return
 
     def getGenes(self):
-        # refGene
-
-        logger.debug("annotation_server.getGenes called for genome: %s" % self.GENOME_BUILD_NAME )
+        logger.debug("annotation_server.getGenes called for genome: %s",
+                     self.GENOME_BUILD_NAME)
 
         url, file_name = self.getUrlFile('ensGene.txt.gz')
         download_http_file(url, '', self.ANNOTATION_TEMP_DIR, as_task=False)
-
         # deletes all objects of that genome build from table
-        Gene.objects.filter(genomebuild__name__exact=self.GENOME_BUILD_NAME).delete()
-
+        Gene.objects.filter(
+            genomebuild__name__exact=self.GENOME_BUILD_NAME).delete()
         # reading gz file
         handle = gzip.open(file_name)
         for line in handle:
             t1 = line.strip().split('\t')
-            item = Gene(genomebuild=self.GENOME_BUILD, bin=t1[0], name=t1[1], chrom=t1[2], strand=t1[3], txStart=t1[4], txEnd=t1[5], cdsStart=t1[6], cdsEnd=t1[7], exonCount=t1[8], exonStarts=t1[9], exonEnds=t1[10], score=t1[11], name2=t1[12], cdsStartStat=t1[13], cdsEndStat=t1[14], exonFrames=t1[15])
+            item = Gene(
+                genomebuild=self.GENOME_BUILD, bin=t1[0], name=t1[1],
+                chrom=t1[2], strand=t1[3], txStart=t1[4], txEnd=t1[5],
+                cdsStart=t1[6], cdsEnd=t1[7], exonCount=t1[8],
+                exonStarts=t1[9], exonEnds=t1[10], score=t1[11], name2=t1[12],
+                cdsStartStat=t1[13], cdsEndStat=t1[14], exonFrames=t1[15]
+            )
             item.save()
-
         return
 
-
     def getUrlFile(self, file_to_download, sequence=False):
-        '''
-        Helper function to return UCSC url to download file and current path for file to download
-        '''
-        logger.debug("annotation_server.create_genome_annotation getUrlFile called build: %s file: %s" % (self.GENOME_BUILD_NAME, file_to_download) )
-
+        """Helper function to return UCSC url to download file and current path
+        for file to download
+        """
+        logger.debug("annotation_server.create_genome_annotation getUrlFile"
+                     "called build: %s file: %s",
+                     self.GENOME_BUILD_NAME, file_to_download)
         if sequence:
-            url = self.BASE_DOWNLOAD_URL + self.SEQUENCE_FILES + file_to_download;
+            url = self.BASE_DOWNLOAD_URL + self.SEQUENCE_FILES + \
+                  file_to_download
         else:
             url = self.BASE_DOWNLOAD_URL + self.OTHER_FILES + file_to_download
 
         file_name = os.path.join(self.ANNOTATION_TEMP_DIR, url.split('/')[-1])
 
         return url, file_name
-

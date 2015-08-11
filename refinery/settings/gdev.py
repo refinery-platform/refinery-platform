@@ -4,6 +4,6 @@
 from .dev import *
 
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, "static/development"),
-    os.path.join(BASE_DIR, "ui/development")
+    os.path.join(BASE_DIR, "refinery/static/development"),
+    os.path.join(BASE_DIR, "refinery/ui/development")
 )

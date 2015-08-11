@@ -4,27 +4,32 @@ Created on May 11, 2012
 @author: nils
 '''
 
+import logging
 import shutil
-import simplejson as json
 from urlparse import urlparse
-from celery.result import AsyncResult
-from chunked_upload.models import ChunkedUpload
-from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
+
 from django import forms
+from django.core.exceptions import MultipleObjectsReturned
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse, \
     HttpResponseBadRequest
 from django.shortcuts import render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
-from django.views.generic.base import TemplateView
+
+from chunked_upload.models import ChunkedUpload
+from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
 from haystack.query import SearchQuerySet
+import simplejson as json
+
 from core.models import *
 from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import create_dataset, parse_isatab
 from data_set_manager.utils import *
 from file_store.tasks import download_file, DownloadError
 from file_store.models import get_temp_dir, generate_file_source_translator
+
+logger = logging.getLogger(__name__)
 
 
 def index(request):
@@ -38,7 +43,7 @@ def nodes(request, type, study_uuid, assay_uuid=None):
     matrix = get_matrix(study_uuid=study_uuid, assay_uuid=assay_uuid,
                         node_type=type)
     end = datetime.now()
-    print( "Time to retrieve node matrix: " + str(end - start))
+    logger.debug("Time to retrieve node matrix: ", str(end - start))
     return HttpResponse(simplejson.dumps(matrix, indent=2),
                         mimetype='application/json')
 
@@ -53,45 +58,42 @@ def node_attributes(request, type, study_uuid, assay_uuid=None):
 
 def node_types(request, study_uuid, assay_uuid=None):
     return HttpResponse(simplejson.dumps(
-        get_node_types(study_uuid=study_uuid, assay_uuid=assay_uuid), indent=2),
-                        mimetype='application/json')
+        get_node_types(study_uuid=study_uuid, assay_uuid=assay_uuid),
+        indent=2),
+        mimetype='application/json')
 
 
 def node_types_files(request, study_uuid, assay_uuid=None):
     return HttpResponse(simplejson.dumps(
         get_node_types(study_uuid=study_uuid, assay_uuid=assay_uuid,
                        files_only=True, filter_set=Node.FILES), indent=2),
-                        mimetype='application/json')
+        mimetype='application/json')
 
 
 def node_annotate(request, type, study_uuid, assay_uuid=None):
-    return HttpResponse(simplejson.dumps(
-        update_annotated_nodes(study_uuid=study_uuid, assay_uuid=assay_uuid,
-                               node_type=type), indent=2),
-                        mimetype='application/json')
-    # return HttpResponse( update_annotated_nodes(study_uuid=study_uuid, assay_uuid=assay_uuid, node_type=type ), mimetype='application/json' )
+    return HttpResponse(
+        simplejson.dumps(
+            update_annotated_nodes(
+                study_uuid=study_uuid, assay_uuid=assay_uuid, node_type=type),
+            indent=2),
+        mimetype='application/json')
 
 
 def contents(request, study_uuid, assay_uuid):
     # getting current workflows
-    workflows = Workflow.objects.all();
-
+    workflows = Workflow.objects.all()
     return render_to_response('data_set_manager/contents.html', {
         "study_uuid": study_uuid,
         "assay_uuid": assay_uuid,
         "workflows": workflows,
-    },
-                              context_instance=RequestContext(request))
+    }, context_instance=RequestContext(request))
 
 
-# ajax function for returning typeahead queries
 def search_typeahead(request):
-    if (request.is_ajax()):
+    """ajax function for returning typeahead queries"""
+    if request.is_ajax():
         search_value = request.POST.getlist('search')
-
         results = SearchQuerySet().autocomplete(content_auto=search_value[0])
-        # results = SearchQuerySet().auto_query(search_value[0])
-
         ret_list = []
         for res in results:
             ret_list.append(res.name)
@@ -102,8 +104,7 @@ def search_typeahead(request):
 # Data set import
 
 class DataSetImportView(View):
-    """Main view for data set importing
-    """
+    """Main view for data set importing"""
     template_name = "data_set_manager/import.html"
     success_view_name = 'data_set'
     isa_tab_cookie_name = 'isa_tab_url'
@@ -133,8 +134,7 @@ class ImportISATabView(View):
 
 
 class ImportISATabFileForm(forms.Form):
-    """ISA archive upload form
-    """
+    """ISA archive upload form"""
     isa_tab_file = forms.FileField(label='ISA-Tab file', required=False)
     isa_tab_url = forms.URLField(label='ISA-Tab URL', required=False,
                                  widget=forms.TextInput(attrs={'size': '37'}))
@@ -147,18 +147,18 @@ class ImportISATabFileForm(forms.Form):
         if f or url:
             return cleaned_data
         else:
-            raise forms.ValidationError("Please provide either a file or a URL")
+            raise forms.ValidationError(
+                "Please provide either a file or a URL")
 
 
 class ProcessISATabView(View):
-    """Process ISA archive
-    """
+    """Process ISA archive"""
     template_name = 'data_set_manager/isa-tab-import.html'
     success_view_name = 'data_set'
     isa_tab_cookie_name = 'isa_tab_url'
 
-    # a workaround for automatic ISA archive import after logging in
     def get(self, request, *args, **kwargs):
+        # a workaround for automatic ISA archive import after logging in
         try:
             url_from_cookie = request.COOKIES[self.isa_tab_cookie_name]
         except KeyError:
@@ -191,11 +191,8 @@ class ProcessISATabView(View):
             response.delete_cookie(self.isa_tab_cookie_name)
             return response
         logger.debug("Temp file name: '%s'", temp_file_path)
-        dataset_uuid = (parse_isatab.delay(
-            request.user.username,
-            False,
-            temp_file_path
-        ).get())[0]
+        dataset_uuid = parse_isatab.delay(request.user.username, False,
+                                          temp_file_path).get()[0]
         # TODO: exception handling
         os.unlink(temp_file_path)
         if dataset_uuid:
@@ -220,13 +217,14 @@ class ProcessISATabView(View):
             logger.debug("ISA-Tab URL: %s", url)
             context = RequestContext(request, {'form': form})
             if url:
-                #TODO: replace with chain
-                #http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks
+                # TODO: replace with chain
+                # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks
                 u = urlparse(url)
                 file_name = u.path.split('/')[-1]
                 temp_file_path = os.path.join(get_temp_dir(), file_name)
                 try:
-                    #TODO: refactor download_file to take file handle instead of path
+                    # TODO: refactor download_file to take file handle instead
+                    # of path
                     download_file(url, temp_file_path)
                 except DownloadError as e:
                     logger.error("Problem downloading ISA-Tab file. %s", e)
@@ -274,24 +272,20 @@ class ProcessISATabView(View):
 
 
 def handle_uploaded_file(source_file, target_path):
-    '''Write contents of an uploaded file object to a file on disk
+    """Write contents of an uploaded file object to a file on disk
     Raises IOError
-
     :param source_file: uploaded file object
     :type source_file: file object
     :param target_path: absolute file system path to a temp file
     :type target_path: str
-
-    '''
+    """
     with open(target_path, 'wb+') as destination:
         for chunk in source_file.chunks():
             destination.write(chunk)
 
 
 class ProcessMetadataTableView(View):
-    """Create a new dataset from uploaded metadata table.
-
-    """
+    """Create a new dataset from uploaded metadata table"""
     template_name = 'data_set_manager/metadata-table-import.html'
     success_view_name = 'data_set'
 
@@ -316,9 +310,11 @@ class ProcessMetadataTableView(View):
         try:
             dataset_uuid = process_metadata_table(
                 username=request.user.username, title=title,
-                metadata_file=metadata_file, source_columns=source_column_index,
+                metadata_file=metadata_file,
+                source_columns=source_column_index,
                 data_file_column=data_file_column,
-                auxiliary_file_column=request.POST.get('aux_file_column', None),
+                auxiliary_file_column=request.POST.get('aux_file_column',
+                                                       None),
                 base_path=request.POST.get('base_path', ""),
                 data_file_permanent=request.POST.get('data_file_permanent',
                                                      False),
@@ -336,9 +332,7 @@ class ProcessMetadataTableView(View):
 
 
 class CheckDataFilesView(View):
-    """Check if given files exist, return list of files that don't exist
-
-    """
+    """Check if given files exist, return list of files that don't exist"""
     def post(self, request, *args, **kwargs):
         if not request.is_ajax() or not request.body:
             return HttpResponseBadRequest()
@@ -352,7 +346,6 @@ class CheckDataFilesView(View):
         bad_file_list = []
         translate_file_source = generate_file_source_translator(
             username=request.user.username, base_path=base_path)
-
         # check if files are available
         try:
             for file_path in file_data["list"]:
@@ -362,8 +355,8 @@ class CheckDataFilesView(View):
                 logger.debug("File path checked: '%s'", file_path)
         except KeyError:  # if there's no list provided
             return HttpResponseBadRequest()
-
-        # prefix output to protect from JSON vulnerability (stripped by Angular)
+        # prefix output to protect from JSON vulnerability (stripped by
+        # Angular)
         return HttpResponse(")]}',\n" + json.dumps(bad_file_list),
                             content_type="application/json")
 
@@ -380,23 +373,37 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
 
     def on_completion(self, uploaded_file, request):
         """Move file to the user's import directory"""
-        upload_id = request.POST.get('upload_id')
-        chunked_upload = ChunkedUpload.objects.get(upload_id=upload_id)
+        try:
+            upload_id = request.POST['upload_id']
+        except KeyError:
+            logger.error("Upload ID is missing from file upload request")
+            return
+        try:
+            chunked_upload = ChunkedUpload.objects.get(upload_id=upload_id)
+        except (ChunkedUpload.DoesNotExist, MultipleObjectsReturned) as exc:
+            logger.error(
+                "Error retrieving file upload instance with ID '%s': '%s'",
+                upload_id, exc)
+            return
         user_import_dir = get_user_import_dir(request.user)
         if not os.path.exists(user_import_dir):
             try:
                 os.mkdir(user_import_dir)
+            except OSError as exc:
+                logger.error("Error creating user import directory '%s': %s",
+                             user_import_dir, exc)
+            else:
                 logger.info("Created user import directory '%s'",
                             user_import_dir)
-            except OSError as e:
-                logger.error("Error creating user import directory '%s': %s",
-                             user_import_dir, e)
         dst = os.path.join(user_import_dir, chunked_upload.filename)
         try:
             shutil.move(chunked_upload.file.path, dst)
-        except (shutil.Error, IOError) as e:
+        except (shutil.Error, IOError) as exc:
             logger.error(
-                "Error moving uploaded file to user's import directory: %s", e)
+                "Error moving uploaded file to user's import directory: %s",
+                exc)
 
     def get_response_data(self, chunked_upload, request):
-        return {'message': 'You successfully uploaded this file'}
+        message = "You have successfully uploaded {}".format(
+            chunked_upload.filename)
+        return {"message": message}

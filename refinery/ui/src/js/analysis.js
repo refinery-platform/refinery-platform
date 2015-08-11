@@ -64,6 +64,7 @@ angular.module('refineryAnalysis', [])
       $log.debug("NodeSET: " + $scope.analysisConfig.nodeSetUuid);
       $log.debug("NodeREL: " + $scope.analysisConfig.nodeRelationshipUuid);
     //  $window.location.assign(response);
+       $rootScope.$broadcast('rf/launchAnalysis');
     }).error(function (response, status) {
       $log.debug("Request failed: error " + status);
     });
@@ -80,6 +81,10 @@ angular.module('refineryAnalysis', [])
 
     if(mins < 10){
       mins = "0" + mins;
+    }
+
+    if(sec < 10){
+      sec = "0" + sec;
     }
 
     var dateStr = year + "-" + month + "-" + day;

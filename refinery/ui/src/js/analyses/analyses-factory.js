@@ -1,94 +1,64 @@
 angular.module('refineryAnalyses')
-    .factory("analysesFactory", ['$http', analysesFactory]);
+    .factory("analysesFactory", ['$http','analysisService', analysesFactory]);
 
-function analysesFactory($http) {
+function analysesFactory($http, analysisService) {
   "use strict";
-  var serverUrl = "/api/v1/analysis";
   var analysesList = [];
   var analysesGlobalList = [];
   var analysesDetail = {};
-  var analysesGlobalDetail = {};
   var analysesRunningGlobalList = [];
   var analysesRunningList = [];
   var analysesOne = [];
 
-  var initializeAnalysesDetail = function(uuid, analysesObj){
-    analysesObj[uuid]={
-      "preprocessing": 'PENDING',
+  var initializeAnalysesDetail = function(uuid){
+    analysesDetail[uuid]={
+      "preprocessing": '',
       "preprocessingPercentDone":'0%',
-      "execution": 'PENDING',
+      "execution": '',
       "executionPercentDone":'0%',
-      "postprocessing": 'PENDING',
+      "postprocessing": '',
       "postprocessingPercentDone":'0%',
       "cancelingAnalyses":false,
     };
   };
 
   //Ajax calls
-  var getAnalysesList = function() {
-    return $http.get(serverUrl +
-      '/?format=json&limit=0&data_set__uuid='+ dataSetUuid)
-      .then(function (response) {
-      angular.copy(response.data.objects,analysesList);
-    }, function (response) {
-      console.error("Error accessing analyses API.");
+
+  var getAnalysesList = function(params) {
+    params = params || {};
+
+    var analysis = analysisService.query(params);
+    analysis.$promise.then(function(response){
+     processAnalysesList(response.objects, params);
+    }, function(error){
+      console.log(error);
     });
+
+    return analysis.$promise;
   };
 
-  var getAnalysesRunningList = function() {
-    return $http.get(serverUrl +
-      '/?format=json&limit=0&data_set__uuid='+ dataSetUuid + '&status=RUNNING')
-      .then(function (response) {
-      angular.copy(response.data.objects,analysesRunningList);
-    }, function (response) {
-      console.error("Error accessing analyses API.");
-    });
+  var processAnalysesList = function(data, params){
+     if('status' in params && 'data_set__uuid' in params ) {
+        angular.copy(data, analysesRunningList);
+      }else if('status' in params){
+        angular.copy(data, analysesRunningGlobalList);
+      }else if('limit' in params &&  'data_set__uuid' in params){
+       angular.copy(data, analysesList);
+      }else{
+       angular.copy(data, analysesGlobalList);
+      }
   };
-
-  var getAnalysesRunningGlobalList = function() {
-    return $http.get(serverUrl + '/?format=json&limit=0&status=RUNNING')
-      .then(function (response) {
-      angular.copy(response.data.objects,analysesRunningGlobalList);
-    }, function (response) {
-      console.error("Error accessing analyses API.");
-    });
-  };
-
-  var getAnalysesGlobalList = function() {
-    return $http.get(serverUrl + '/?format=json&limit=10')
-      .then(function (response) {
-      angular.copy(response.data.objects, analysesGlobalList);
-    }, function (response) {
-      console.error("Error accessing analyses API.");
-    });
-  };
-
-  var getAnalysesOne = function(uuid) {
-    return $http.get(serverUrl + '/?format=json&limit=1&uuid='+ uuid)
-      .then(function (response) {
-      angular.copy(response.data.objects,analysesOne);
-    }, function (response) {
-      console.error("Error accessing analyses API.");
-    });
-  };
-
 
   //http.post header needed to be adjusted because django was not recognizing it
   // as an ajax call.
-  var getAnalysesDetail = function(uuid, analysesType) {
-    analysesType = analysesType || "";
-    
+  var getAnalysesDetail = function(uuid) {
+
     return $http({
       method: 'POST',
       url: '/analysis_manager/' + uuid + "/?format=json",
       headers: { "X-Requested-With" : 'XMLHttpRequest'}
     }).then(function(response){
-      //console.log(response);
-        if(analysesType === "global") {
-          processAnalysesGlobalDetail(response.data, uuid, analysesGlobalDetail);
-        }else{
-          processAnalysesGlobalDetail(response.data, uuid, analysesDetail);
-        }
+          processAnalysesGlobalDetail(response.data, uuid);
       }, function(error){
         console.error("Error accessing analysis monitoring API");
       });
@@ -108,14 +78,14 @@ function analysesFactory($http) {
   };
 
   /*process responses from api*/
-  var processAnalysesGlobalDetail = function(data, uuid, analysesObj){
-    if(!(analysesObj.hasOwnProperty(uuid))){
-      initializeAnalysesDetail(uuid, analysesObj);
+  var processAnalysesGlobalDetail = function(data, uuid){
+    if(!(analysesDetail.hasOwnProperty(uuid))){
+      initializeAnalysesDetail(uuid);
     }
-    setPreprocessingStatus(data, uuid, analysesObj);
-    setPostprocessingStatus(data, uuid, analysesObj);
+    setPreprocessingStatus(data, uuid);
+    setPostprocessingStatus(data, uuid);
     if(data.execution != null){
-      setExecutionStatus(data, uuid, analysesObj);
+      setExecutionStatus(data, uuid);
     }
   };
 
@@ -127,47 +97,42 @@ function analysesFactory($http) {
     }
   };
 
-  var setPreprocessingStatus = function(data, uuid, analysesObj){
+  var setPreprocessingStatus = function(data, uuid){
      if( isNotPending(data.preprocessing[0].state)) {
-       analysesObj[uuid].preprocessing = data.preprocessing[0].state;
-       if( data.preprocessing[0].percent_done > analysesObj[uuid].preprocessingPercentDone) {
-        analysesObj[uuid].preprocessingPercentDone = data.preprocessing[0].percent_done;
+       analysesDetail[uuid].preprocessing = data.preprocessing[0].state;
+       if( data.preprocessing[0].percent_done > analysesDetail[uuid].preprocessingPercentDone) {
+        analysesDetail[uuid].preprocessingPercentDone = data.preprocessing[0].percent_done;
        }
     }
   };
 
-  var setPostprocessingStatus = function(data, uuid, analysesObj){
+  var setPostprocessingStatus = function(data, uuid){
      if( isNotPending(data.postprocessing[0].state)) {
-       analysesObj[uuid].postprocessing = data.postprocessing[0].state;
-       if(data.postprocessing[0].percent_done > analysesObj[uuid].postprocessingPercentDone) {
-        analysesObj[uuid].postprocessingPercentDone = data.postprocessing[0].percent_done;
+       analysesDetail[uuid].postprocessing = data.postprocessing[0].state;
+       if(data.postprocessing[0].percent_done > analysesDetail[uuid].postprocessingPercentDone) {
+        analysesDetail[uuid].postprocessingPercentDone = data.postprocessing[0].percent_done;
        }
     }
   };
 
-  var setExecutionStatus = function(data, uuid, analysesObj){
+  var setExecutionStatus = function(data, uuid){
      if(isNotPending(data.execution[0].state)) {
-       analysesObj[uuid].execution = data.execution[0].state;
-       if( data.execution[0].percent_done > analysesObj[uuid].executionPercentDone) {
-        analysesObj[uuid].executionPercentDone = data.execution[0].percent_done;
+       analysesDetail[uuid].execution = data.execution[0].state;
+       if( data.execution[0].percent_done > analysesDetail[uuid].executionPercentDone) {
+        analysesDetail[uuid].executionPercentDone = data.execution[0].percent_done;
        }
      }
   };
 
  return{
    getAnalysesList: getAnalysesList,
-   getAnalysesGlobalList: getAnalysesGlobalList,
    getAnalysesDetail: getAnalysesDetail,
    postCancelAnalysis: postCancelAnalysis,
-   getAnalysesRunningGlobalList:getAnalysesRunningGlobalList,
-   getAnalysesRunningList:getAnalysesRunningList,
-   getAnalysesOne: getAnalysesOne,
    analysesList: analysesList,
    analysesGlobalList: analysesGlobalList,
    analysesDetail: analysesDetail,
-   analysesGlobalDetail: analysesGlobalDetail,
    analysesRunningList:analysesRunningList,
    analysesRunningGlobalList:analysesRunningGlobalList,
-   analysesOne:analysesOne,
  };
 }
+

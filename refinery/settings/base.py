@@ -6,10 +6,10 @@ from django.core.exceptions import ImproperlyConfigured
 
 logger = logging.getLogger(__name__)
 
-# get the absolute path of the parent dir
-BASE_DIR = os.path.dirname(os.path.split(os.path.abspath(__file__))[0])
+# get the absolute path of the top level project dir
+BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(__file__), "../../.."))
 
-local_settings_file_path = os.path.join(BASE_DIR, 'config.json')
+local_settings_file_path = os.path.join(BASE_DIR, 'refinery/config.json')
 
 # load config.json
 try:
@@ -60,6 +60,8 @@ USE_L10N = get_setting("USE_L10N")
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = get_setting("MEDIA_ROOT")
+if not os.path.isabs(MEDIA_ROOT):
+    MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -71,6 +73,8 @@ MEDIA_URL = get_setting("MEDIA_URL")
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
 STATIC_ROOT = get_setting("STATIC_ROOT")
+if not os.path.isabs(STATIC_ROOT):
+    STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
@@ -82,8 +86,8 @@ STATIC_URL = get_setting("STATIC_URL")
 ADMIN_MEDIA_PREFIX = get_setting("ADMIN_MEDIA_PREFIX")
 
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, "static/production"),
-    os.path.join(BASE_DIR, "ui/production")
+    os.path.join(BASE_DIR, "refinery/static/production"),
+    os.path.join(BASE_DIR, "refinery/ui/production")
 )
 
 # List of finder classes that know how to find static files in
@@ -127,7 +131,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'refinery.urls'
 
 TEMPLATE_DIRS = (
-    os.path.join(BASE_DIR, "templates"),
+    os.path.join(BASE_DIR, "refinery/templates"),
     # Put strings here, like "/home/html/django_templates" or
     # "C:/www/django/templates".
     # Always use forward slashes, even on Windows.

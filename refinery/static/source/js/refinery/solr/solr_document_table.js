@@ -63,6 +63,11 @@ SolrDocumentTable = function(
           if (result.file_url != null) {
             var link = '<a title="Download linked file" href="' +
               result.file_url + '"><i class="icon-download"></i></a>';
+            if (result.file_url.slice(-4) === '.txt') {
+              // Should change .txt extension to FastQC specific later.
+              link += '<a title="View FastQC Result" href="/fastqc_viewer/#/' +
+                result.analysis_uuid + '"><i class="icon-bar-chart"></i></a>';
+            }
             $('#' + id).html(link)
           }
           else if (result.file_import_status != null) {
@@ -261,7 +266,11 @@ SolrDocumentTable.prototype._toggleIndicator = function(){
 
 SolrDocumentTable.prototype._generateTableBody = function(solrResponse) {
   var self = this;
-  var documents = solrResponse.getDocumentList();
+  var documents = [];
+  if(typeof solrResponse !== undefined && solrResponse !== null) {
+    documents = solrResponse.getDocumentList();
+  }
+
   var fields = self._query._fields;
   var rows = [];
   var analyses = self._dataSetMonitor.analyses;

@@ -1,9 +1,9 @@
 angular.module('refineryAnalyses')
     .controller('AnalysesCtrl',
-    ['analysesFactory', 'analysesAlertService','$scope','$timeout', '$rootScope', AnalysesCtrl]);
+    ['analysesFactory', 'analysesAlertService','$scope','$timeout', '$rootScope','$filter','analysisService', AnalysesCtrl]);
 
 
-function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $rootScope) {
+function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $rootScope, $filter, analysisService) {
   "use strict";
   var vm = this;
   vm.analysesList = [];
@@ -12,36 +12,104 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.analysesGlobalDetail = {};
   vm.analysesRunningList = [];
   vm.analysesRunningGlobalList = [];
+  vm.timerRunGlobalList = undefined;
+  vm.timerGlobalList = undefined;
+  vm.timerRunList = undefined;
+  vm.launchAnalysisFlag = false;
+  vm.analysesRunningGlobalListCount = 0;
+  vm.analysesLoadingFlag = "LOADING";
 
   vm.updateAnalysesList = function () {
-    analysesFactory.getAnalysesList().then(function () {
+
+    var param = {
+      format: 'json',
+      limit: 0,
+      'data_set__uuid': dataSetUuid,
+    };
+
+    analysesFactory.getAnalysesList(param).then(function () {
       vm.analysesList = analysesFactory.analysesList;
+      if(vm.analysesList.length === 0){
+        vm.analysesLoadingFlag = "EMPTY";
+      }else{
+        vm.analysesLoadingFlag = "DONE";
+      }
       vm.refreshAnalysesDetail();
     });
 
-    var timerList =  $timeout(vm.updateAnalysesList, 15000);
+    var timerList =  $timeout(vm.updateAnalysesList, 30000);
 
     $scope.$on('refinery/analyze-tab-inactive', function(){
       $timeout.cancel(timerList);
     });
   };
 
-  vm.updateAnalysesRunningList = function () {
-    analysesFactory.getAnalysesRunningList().then(function () {
-      vm.analysesRunningList = analysesFactory.analysesRunningList;
+  vm.updateAnalysesGlobalList = function () {
+    var params = {format:'json', limit: 10};
+
+    analysesFactory.getAnalysesList(params).then(function () {
+      vm.analysesGlobalList = analysesFactory.analysesGlobalList;
+      vm.refreshAnalysesGlobalDetail();
     });
-    var timerRunList = $timeout(vm.updateAnalysesRunningList, 10000);
+
+   vm.timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 30000);
+  };
+
+  vm.cancelTimerGlobalList = function(){
+    if(typeof vm.timerGlobalList !== "undefined") {
+      $timeout.cancel(vm.timerGlobalList);
+    }
+  };
+
+  vm.updateAnalysesRunningList = function () {
+
+    var params = {
+      format: 'json',
+      limit: 0,
+      'data_set__uuid': dataSetUuid,
+      'status': 'RUNNING'
+    };
+
+    analysesFactory.getAnalysesList(params).then(function () {
+      vm.analysesRunningList = analysesFactory.analysesRunningList;
+      vm.launchAnalysisFlag = false;
+    });
+
+    vm.timerRunList = $timeout(vm.updateAnalysesRunningList, 30000);
 
     if(typeof dataSetUuid === 'undefined' || dataSetUuid === "None"){
-      $timeout.cancel(timerRunList);
+      $timeout.cancel(vm.timerRunList);
     }
   };
 
   vm.updateAnalysesRunningGlobalList = function () {
-    analysesFactory.getAnalysesRunningGlobalList().then(function () {
+
+    var params = {
+      format:'json', limit: 0, 'status': 'RUNNING'
+    };
+
+    analysesFactory.getAnalysesList(params).then(function () {
       vm.analysesRunningGlobalList = analysesFactory.analysesRunningGlobalList;
+      vm.analysesRunningGlobalListCount = vm.analysesRunningGlobalList.length;
+      vm.launchAnalysisFlag = false;
     });
-    $timeout(vm.updateAnalysesRunningGlobalList, 10000);
+    vm.timerRunGlobalList = $timeout(vm.updateAnalysesRunningGlobalList, 30000);
+
+    if(typeof dataSetUuid === 'undefined' || dataSetUuid === "None"){
+      $timeout.cancel(vm.timerRunList);
+    }
+  };
+
+  vm.cancelTimerRunningList = function(){
+    if(typeof vm.timerRunList !== "undefined") {
+      $timeout.cancel(vm.timerRunList);
+    }
+  };
+
+  vm.cancelTimerRunningGlobalList = function(){
+    if(typeof vm.timerRunGlobalList !== "undefined") {
+      $timeout.cancel(vm.timerRunGlobalList);
+    }
   };
 
   vm.refreshAnalysesDetail = function () {
@@ -52,7 +120,6 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.refreshAnalysesGlobalDetail = function(){
-    var timerDetail;
     vm.analysesRunningGlobalList = analysesFactory.analysesRunningGlobalList;
     for (var i = 0; i < vm.analysesRunningGlobalList.length; i++) {
       vm.updateAnalysesGlobalDetail(i);
@@ -72,8 +139,8 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.updateAnalysesGlobalDetail = function (i) {
     (function (i) {
       if(typeof vm.analysesRunningGlobalList[i] !== 'undefined') {
-        analysesFactory.getAnalysesDetail(vm.analysesRunningGlobalList[i].uuid, "global").then(function (response) {
-          vm.analysesGlobalDetail[vm.analysesRunningGlobalList[i].uuid] = analysesFactory.analysesGlobalDetail[vm.analysesRunningGlobalList[i].uuid];
+        analysesFactory.getAnalysesDetail(vm.analysesRunningGlobalList[i].uuid).then(function (response) {
+          vm.analysesGlobalDetail[vm.analysesRunningGlobalList[i].uuid] = analysesFactory.analysesDetail[vm.analysesRunningGlobalList[i].uuid];
         });
       }
     })(i);
@@ -84,13 +151,14 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     analysesFactory.postCancelAnalysis(uuid).then(function (result) {
       bootbox.alert("Successfully canceled analysis.");
       vm.analysesDetail[uuid].cancelingAnalyses = false;
-      //vm.updateAnalysesList();
+      $rootScope.$broadcast("rf/cancelAnalysis");
     }, function (error) {
       bootbox.alert("Canceling analysis failed");
       vm.analysesDetail[uuid].cancelingAnalyses = false;
     });
   };
 
+  //Alert message which show on analysis view filtered page
   vm.setAnalysesAlertMsg = function () {
     var uuid = window.analysisUuid;
     analysesAlertService.setAnalysesMsg(uuid);
@@ -98,7 +166,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.isAnalysesRunning = function () {
-    if (vm.analysesRunningList.length > 0) {
+    if (typeof vm.analysesRunningList !== 'undefined' && vm.analysesRunningList.length > 0) {
       return true;
     } else {
       return false;
@@ -106,19 +174,42 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.isAnalysesRunningGlobal = function () {
-    if(vm.analysesRunningGlobalList.length > 0) {
+    if(typeof vm.analysesRunningGlobalList !== 'undefined' && vm.analysesRunningGlobalList.length > 0) {
       return true;
     } else {
       return false;
     }
   };
 
-  //watches for analyze tab view to update AnalysesList
-  $scope.$on('refinery/analyze-tab-active', function () {
-    vm.updateAnalysesList();
-  });
+  vm.isEmptyAnalysesGlobalList = function(){
+    if(typeof vm.analysesRunningList !== 'undefined' && vm.analysesGlobalList.length > 0){
+      return false;
+    }else{
+      return true;
+    }
+  };
 
-  //checks url to see if view is filtered by analysis
+  vm.isAnalysisDetailLoaded = function(uuid){
+    if(typeof vm.analysesDetail[uuid] !== "undefined" && vm.analysesDetail[uuid].preprocessing !== ""){
+      return true;
+    }else{
+      return false;
+    }
+  };
+
+  vm.analysesPopoverEvents = function (element) {
+    $('.popover').on('mouseenter', function() {
+      $rootScope.insidePopover = true;
+    });
+    $('.popover').on('mouseleave', function() {
+      $rootScope.insidePopover = false;
+      $(element).popover('hide');
+      vm.cancelTimerGlobalList();
+    });
+  };
+
+  //checks url to see if view is filtered by analysis in data_set.html. Used
+  // with analyses alert msg.
   $scope.checkAnalysesViewFlag = function () {
     var flag;
     if (typeof window.analysisUuid === 'undefined' || window.analysisUuid === "None") {
@@ -127,33 +218,6 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
       flag = true;
     }
     return flag;
-  };
-
-  //custom popover event allowing hovering over textbox.
-  $scope.analysesPopoverEvents = function (element) {
-    $('.popover').on('mouseenter', function() {
-      $rootScope.insidePopover = true;
-      $scope.updateAnalysesGlobalList();
-    });
-    $('.popover').on('mouseleave', function() {
-      $rootScope.insidePopover = false;
-      $(element).popover('hide');
-      $scope.updateAnalysesGlobalList("once");
-    });
-  };
-
-  $scope.updateAnalysesGlobalList = function (timerStatus) {
-    timerStatus = timerStatus || "";
-
-    analysesFactory.getAnalysesGlobalList().then(function () {
-      vm.analysesGlobalList = analysesFactory.analysesGlobalList;
-      vm.refreshAnalysesGlobalDetail();
-    });
-    var timerGlobalList = $timeout($scope.updateAnalysesGlobalList, 5000);
-
-    if(timerStatus === "once"){
-      $timeout.cancel(timerGlobalList);
-    }
   };
 
 }

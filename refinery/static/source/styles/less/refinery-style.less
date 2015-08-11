@@ -95,39 +95,22 @@ ul#externalToolListPopover li{
   width: 96%;
 }
 
-ul.analysesList{
-  list-style-type: none;
-  width: 100%;
-}
-
-
-ul.analysesRunningList{
-   display: block;
-    width: 100%;
-}
-
-li.analysesListItems{
-  display: block;
-  float: left;
-  width: 100%;
-  list-style-type: none;
-}
-
-li.analysisRunningListItem{
-  display: inline;
-  list-style-type: none;
-  float: left;
-  padding-right: 20px;
-  width: 25%;
-}
-
-#analyses-cancel-notice{
-  display: inline;
-  width:200px;
+//Global analyses status icon/popover
+#analyses-popover {
+  .popover {
+    position: absolute;
+    top: 20px !important;
+    left: 0;
+    z-index: 1010;
+    display: none;
+    max-width: 800px;
+    padding: 1px;
+    text-align: left;
+  }
 }
 
 ul#analyses-popover{
-  font-size: 0.8em;
+  font-size: .9em;
   list-style-type: none;
   margin: 0 0 10px 0;
   padding: 0px;
@@ -139,6 +122,7 @@ ul#analyses-popover{
 
 a#analyses-popover-links{
   color: #136382;
+  font-weight: normal;
 }
 
 a#analyses-popover-links:hover, a:focus{
@@ -147,7 +131,130 @@ a#analyses-popover-links:hover, a:focus{
 
 .tooltip-inner {
     max-width: 275px;
+}
 
+.icon-ok-sign.analyses-status{
+  color: rgb(0,158,115);
+}
+
+.icon-warning-sign.analyses-status{
+  color: rgb(213,94,0);
+}
+
+.icon-question-sign.analyses-status{
+  color: #708090;
+}
+
+//Analyses Tab View Css
+ul.analysesList{
+  list-style-type: none;
+  width: 100%;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+ul.analysesRunningList{
+   display: block;
+    width: 100%;
+}
+
+li.analysesListItems:nth-of-type(odd){
+  background-color: rgba(0, 0, 0, 0.025);
+}
+
+li.analysesListItems{
+  display: block;
+  float: left;
+  width: 100%;
+  list-style-type: none;
+  border-top: 1px solid #dddddd;
+}
+
+li.analysisRunningListItem{
+  display: inline;
+  list-style-type: none;
+  float: left;
+  padding: 5px 10px 0 0;
+  width: 11%;
+  .bar{
+    text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+  }
+}
+
+.progress-analyses-text{
+  padding-left: 10px;
+}
+
+.span11.analysis-running{
+  padding-left: 7px;
+  margin-left: 5px;
+
+}
+#analyses-cancel-notice{
+  display: inline;
+  width:200px;
+}
+
+.refinery-spinner.analyses-view{
+  float: left;
+  width: 10px;
+  height: 10px;
+  margin: 5px 0 0 5px;
+}
+
+div.analysis-retrieving{
+  color: black;
+  margin-left: 10px;
+}
+
+.analysis-popover-btn{
+  color: black;
+  padding: 0 2px 0 4px;
+  font-size: 0.9em;
+  margin-bottom: 7px;
+  width: 40px;
+}
+
+.analysis-running-percentage{
+  width: 25px;
+  max-width: 25px;
+  float: left;
+  text-align: center;
+}
+
+a.close.analysis-alert{
+  margin-right: 25px !important;
+  color: black;
+}
+
+.span4.analysis-name{
+  text-align: left;
+  a{
+    width:100%;
+    text-align: left;
+  }
+}
+
+.span1.analysis-icon{
+  text-align: right;
+  padding-right: 12px;
+}
+
+.span1.analysis-icon#header{
+  text-align: right;
+  padding-right: 0;
+}
+
+.span1.analysis-cancel{
+  text-align: right;
+}
+
+.analyses-collapse{
+  color: black;
+}
+
+a.analysis-header{
+  color: black;
 }
 
 @media (max-width: 760px) {
@@ -1494,4 +1601,31 @@ ul.badge-list {
 }
 .p-t-0 {
   padding-top: 0;
+}
+
+.active-group {
+  background-color: darken(@grayLighter, 5%);
+}
+
+.fastqc-box {
+  color: rgba(0, 0, 0, 1);
+  fill: yellow;
+  stroke: rgba(0, 0, 0, 1);
+}
+
+.fastqc-box-axis line, .fastqc-box-axis path {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}
+
+.fastqc-chart-drawspace {
+  position: relative;
+  height: 100%;
+  width: 100%;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
 }

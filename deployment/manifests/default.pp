@@ -97,10 +97,7 @@ file { "virtualenvwrapper_project":
   group => $appgroup,
 }
 
-file { ["/vagrant/media",
-        "/vagrant/static",
-        "/vagrant/isa-tab",
-        "/vagrant/import" ]:
+file { ["/vagrant/isa-tab", "/vagrant/import", "/vagrant/static"]:
   ensure => directory,
   owner => $appuser,
   group => $appgroup,
@@ -125,7 +122,6 @@ exec { "syncdb":
   user => $appuser,
   group => $appgroup,
   require => [
-               File["/vagrant/media"],
                Python::Requirements[$requirements],
                Postgresql::Server::Db["refinery"]
              ],
@@ -282,6 +278,7 @@ file { "${project_root}/supervisord.conf":
 ->
 exec { "supervisord":
   command => "${virtualenv}/bin/supervisord",
+  environment => ["DJANGO_SETTINGS_MODULE=settings.dev"],
   cwd => $project_root,
   creates => "/tmp/supervisord.pid",
   user => $appuser,

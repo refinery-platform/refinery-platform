@@ -14,8 +14,9 @@ class Command(BaseCommand):
         except User.DoesNotExist:
             raise CommandError("User '%s' does not exist" % args[0])
         public_group = ExtendedGroup.objects.public_group()
-        #TODO: optimize retrieving user's data sets
+        # TODO: optimize retrieving user's data sets
         for data_set in DataSet.objects.all():
             if user == data_set.get_owner():
-                self.stdout.write("Making public data set '%s'" % data_set.name)
+                self.stdout.write(
+                    "Making public data set '%s'" % data_set.name)
                 data_set.share(public_group)
