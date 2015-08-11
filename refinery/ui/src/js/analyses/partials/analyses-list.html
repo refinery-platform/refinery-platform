@@ -80,11 +80,11 @@
              </div>
 
            <div class="span2">
-            {{analysis.time_start | date: 'medium'}}
+            {{analysis.time_start | humanizeTime }}
            </div>
 
            <div class="span2">
-           {{analysis.time_end | date: 'medium'}}
+           {{analysis.time_end | analysesHumanizeTime}}
            </div>
 
            <div ng-if="analysis.status=='RUNNING'"  class="span1">
