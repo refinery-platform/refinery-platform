@@ -55,7 +55,9 @@ NodeSetManager.prototype.initialize = function () {
   if (self.elementId != null) {
     self.getList(function () {
       self.renderList();
-    }, function () { /* do nothing in case of error */
+    }, function () {
+      console.log("Failed to retrieve node set list.");
+      self.renderList();
     });
   }
   else {
@@ -200,6 +202,15 @@ NodeSetManager.prototype.updateState = function (state, callbackSuccess) {
       if ($.isEmptyObject(result)) {
         return;
       }
+    },
+    error: function(result) {
+      // save to sessionStorage
+      self.saveCurrentSelectionToSession(
+          data.name,
+          data.summary,
+          data.solr_query,
+          data.solr_query_components,
+          data.node_count );
     }
   });
 };
@@ -254,6 +265,14 @@ NodeSetManager.prototype.getList = function (callback, errorCallback) {
       }
     },
     error: function (result) {
+
+      // initialize to sessionStorage
+      self.saveCurrentSelectionToSession( self.currentSelectionNodeSetName, "", "", {}, 0 );
+
+      self.list = { objects: [ self.loadCurrentSelectionFromSession() ]};
+
+      self.currentSelectionNodeSet = self.list.objects[0];
+
       if (errorCallback) {
         errorCallback(result);
       }
@@ -370,4 +389,58 @@ NodeSetManager.prototype.postState = function(name, summary, solr_query,
     .fail(function (XMLHttpRequest, textStatus, errorThrown) {
       console.error("Creation of node set failed.", XMLHttpRequest, textStatus, errorThrown);
     });
+};
+
+
+NodeSetManager.prototype.createCurrentSelectionSessionKey = function() {
+
+  var self = this;
+
+  return (self.studyUuid + "_" + self.assayUuid + "_" + "currentSelection");
+};
+
+NodeSetManager.prototype.createCurrentSelectionSessionValue = function(
+    name, summary, solr_query, solr_query_components, node_count) {
+
+  var self = this;
+
+  var value = {
+    "study": "/api/v1/study/" + self.studyUuid + "/",
+    "assay": "/api/v1/assay/" + self.assayUuid + "/",
+    "name": name,
+    "summary": summary,
+    "solr_query": solr_query,
+    "solr_query_components": solr_query_components,
+    "node_count": node_count,
+    "is_current": true
+  }
+
+  return (value);
+};
+
+
+NodeSetManager.prototype.saveCurrentSelectionToSession = function(
+    name, summary, solr_query, solr_query_components, node_count ) {
+
+  var self = this;
+
+  if (sessionStorage) {
+    console.log( "Writing to session storage as " + self.createCurrentSelectionSessionKey() );
+    sessionStorage.setItem(
+        self.createCurrentSelectionSessionKey(),
+        JSON.stringify(self.createCurrentSelectionSessionValue(
+            name, summary, solr_query, solr_query_components, node_count)));
+  }
+};
+
+NodeSetManager.prototype.loadCurrentSelectionFromSession = function() {
+
+  var self = this;
+
+  if (sessionStorage) {
+    console.log( "Reading " + self.createCurrentSelectionSessionKey() + " from session storage" );
+    return JSON.parse( sessionStorage.getItem( self.createCurrentSelectionSessionKey() ) );
+  }
+
+  return null;
 };
