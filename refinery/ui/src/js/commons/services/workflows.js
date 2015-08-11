@@ -3,7 +3,7 @@ angular
   .factory('workflowService', ['$resource', 'settings',
     function ($resource, settings) {
 
-      var projects = $resource(
+      var workflows = $resource(
         settings.appRoot + settings.refineryApi + '/workflow/',
         {
           format: 'json'
@@ -16,6 +16,6 @@ angular
         }
       );
 
-      return projects;
+      return workflows;
     }
   ]);
