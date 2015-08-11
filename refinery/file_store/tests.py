@@ -29,7 +29,7 @@ class FileStoreModuleTest(SimpleTestCase):
 
     def test_file_path(self):
         """Check that the file store path contains share name and file name"""
-        #TODO: replace with assertRegexpMatches()?
+        # TODO: replace with assertRegexpMatches()?
         path = file_path(self.item_from_url, self.filename)
         self.assertIn(self.sharename, path)
         self.assertIn(self.filename, path)
@@ -110,7 +110,7 @@ class FileStoreItemTest(SimpleTestCase):
         # data file doesn't exist on disk and source is a URL
         self.assertEqual(item_from_url.get_file_extension(),
                          os.path.splitext(self.filename)[1])
-        #TODO: data file exists on disk
+        # TODO: data file exists on disk
 
     def test_get_file_type(self):
         """Check that the correct file type is returned"""
@@ -228,9 +228,10 @@ class FileSourceTranslationTest(SimpleTestCase):
         translate_file_source = \
             generate_file_source_translator(username=self.username)
         source = translate_file_source(self.rel_path_source)
-        self.assertEqual(source, os.path.join(settings.REFINERY_DATA_IMPORT_DIR,
-                                              self.username,
-                                              self.rel_path_source))
+        self.assertEqual(source, os.path.join(
+            settings.REFINERY_DATA_IMPORT_DIR,
+            self.username,
+            self.rel_path_source))
 
     def test_translate_from_relative_path_without_username_or_base_path(self):
         translate_file_source = generate_file_source_translator()
