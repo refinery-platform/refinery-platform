@@ -1,7 +1,7 @@
 angular
   .module('refineryDashboard')
-  .factory('dashboardDataSetListService', ['$q', 'dataSetService',
-    function ($q, dataSetService) {
+  .factory('dashboardDataSetListService', ['dataSetService',
+    function (dataSetService) {
       return function (limit, offset) {
         var query = dataSetService.query({
               limit: limit,

@@ -1,16 +1,14 @@
 angular
   .module('refineryDashboard')
   .factory('dashboardDataSetSearchService', [
-    '$q',
     '$sce',
     'settings',
     'solrService',
     'sessionService',
-    function ($q, $sce, settings, solrService, sessionService) {
+    function ($sce, settings, solrService, sessionService) {
       return function (searchQuery) {
         return function (limit, offset) {
-          var deferred = $q.defer(),
-              query = solrService.get({
+          var query = solrService.get({
                 // Extended DisMax
                 'defType': 'edismax',
                 // Alternative field for `content_auto` when no highlights were
@@ -46,7 +44,8 @@ angular
               }, {
                 index: 'core'
               });
-          query
+
+          return query
             .$promise
             .then(function (data) {
               var doc,
@@ -80,18 +79,13 @@ angular
                 }
               }
 
-              deferred.resolve({
+              return {
                 meta: {
                   total_count: data.response.numFound
                 },
                 objects: data.response.docs
-              });
-            })
-          .catch(function (error) {
-              deferred.reject(error);
-          });
-
-          return deferred.promise;
+              };
+            });
         };
       };
     }
