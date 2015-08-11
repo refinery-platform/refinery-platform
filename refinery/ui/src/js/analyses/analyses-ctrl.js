@@ -189,6 +189,14 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     }
   };
 
+  vm.isAnalysisDetailLoaded = function(uuid){
+    if(typeof vm.analysesDetail[uuid] !== "undefined" && vm.analysesDetail[uuid].preprocessing !== ""){
+      return true;
+    }else{
+      return false;
+    }
+  };
+
   vm.analysesPopoverEvents = function (element) {
     $('.popover').on('mouseenter', function() {
       $rootScope.insidePopover = true;
