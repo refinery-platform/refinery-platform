@@ -53,36 +53,47 @@ function DashboardCtrl (
     this.userIsAdmin = isAdmin;
   }.bind(this));
 
-  // Get data
-  this.getProjects()
-    .then(function (results) {
-      this.allProjects = results;
-    }.bind(this))
-    .catch(function (error) {
-      this.allProjects = [];
-    }.bind(this));
-
-  this.getAnalyses()
-    .then(function (results) {
-      this.allAnalyses = results;
-    }.bind(this))
-    .catch(function (error) {
-      this.allAnalyses = [];
-    }.bind(this));
-
-  this.getWorkflows()
-    .then(function (results) {
-      this.allWorkflows = results;
-    }.bind(this))
-    .catch(function (error) {
-      this.allWorkflows = [];
-    }.bind(this));
-
-  // this.dataSets = dashboardDataSetService;
+  // Set up dataSets for `uiScroll`
   this.dataSets = new UiScrollSource(
     'dashboard/dataSets',
     10,
     this.dashboardDataSetListService
+  );
+
+  // Set up analyses for `uiScroll`
+  this.analyses = new UiScrollSource(
+    'dashboard/analyses',
+    1,
+    function (limit, offset) {
+      return this.analysisService.query({
+        limit: limit,
+        offset: offset
+      }).$promise;
+    }.bind(this)
+  );
+
+  // Set up projects for `uiScroll`
+  // this.projects = new UiScrollSource(
+  //   'dashboard/projects',
+  //   1,
+  //   function (limit, offset) {
+  //     return this.projectService.query({
+  //       limit: limit,
+  //       offset: offset
+  //     }).$promise;
+  //   }.bind(this)
+  // );
+
+  // Set up workflows for `uiScroll`
+  this.workflows = new UiScrollSource(
+    'dashboard/workflows',
+    1,
+    function (limit, offset) {
+      return this.workflowService.query({
+        limit: limit,
+        offset: offset
+      }).$promise;
+    }.bind(this)
   );
 
   this.searchDataSets = this._.debounce(
@@ -167,73 +178,6 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
       that.dashboardDataSetReloadService.reload();
     }
   }
-};
-
-DashboardCtrl.prototype.getProjects = function (limit, offset) {
-  var that = this,
-      projects;
-
-  that.projectServiceLoading = true;
-
-  projects = that.projectService.query();
-  projects
-    .$promise
-    .then(
-      /* Success */
-      function (results) {
-        that.projectServiceLoading = false;
-      },
-      /* Failure */
-      function (error) {
-        that.projectServiceLoading = false;
-      }
-    );
-  return projects.$promise;
-};
-
-DashboardCtrl.prototype.getAnalyses = function (limit, offset) {
-  var that = this,
-      analysis;
-
-  that.analysisServiceLoading = true;
-
-  analysis = that.analysisService.query();
-  analysis
-    .$promise
-    .then(
-      /* Success */
-      function (results) {
-        that.analysisServiceLoading = false;
-      },
-      /* Failure */
-      function (error) {
-        that.analysisServiceLoading = false;
-      }
-    );
-  return analysis.$promise;
-};
-
-DashboardCtrl.prototype.getWorkflows = function (limit, offset) {
-  var that = this,
-      workflows;
-
-  that.workflowServiceLoading = true;
-
-  workflows = that.workflowService.query();
-  workflows
-    .$promise
-    .then(
-      /* Success */
-      function (results) {
-        that.workflowServiceLoading = false;
-      },
-      /* Failure */
-      function (error) {
-        that.workflowServiceLoading = false;
-      }
-    );
-
-  return workflows.$promise;
 };
 
 DashboardCtrl.prototype.showDataSetPreview = function (dataSet) {

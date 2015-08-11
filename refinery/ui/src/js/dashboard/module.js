@@ -3,5 +3,6 @@ angular
     'ngAnimate',
     'ngSanitize',
     'ui.scroll',
-    'cut'
+    'cut',
+    'toolTip'
   ]);
