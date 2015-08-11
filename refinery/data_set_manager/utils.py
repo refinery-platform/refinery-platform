@@ -448,15 +448,6 @@ def _index_annotated_nodes(node_type, study_uuid, assay_uuid=None,
                 Q(study__uuid=study_uuid, assay__uuid__isnull=True) |
                 Q(study__uuid=study_uuid, assay__uuid=assay_uuid),
                 type=node_type)
-        if assay_uuid is None:
-            nodes = Node.objects.filter(
-                Q(study__uuid=study_uuid, assay__uuid__isnull=True),
-                type=node_type)
-        else:
-            nodes = Node.objects.filter(
-                Q(study__uuid=study_uuid, assay__uuid__isnull=True) |
-                Q(study__uuid=study_uuid, assay__uuid=assay_uuid),
-                type=node_type)
     else:
         nodes = Node.objects.filter(uuid__in=node_uuids)
     logger.info("%s nodes for indexing", str(nodes.count()))
