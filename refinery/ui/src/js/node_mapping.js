@@ -525,7 +525,7 @@ angular.module('refineryNodeMapping', [
   };
 })
 
-.controller('NodeSetListApiCtrl', function($scope, $rootScope, NodeSetList) {
+.controller('NodeSetListApiCtrl', function($scope, $rootScope, $window, NodeSetList) {
   'use strict';
 
   $scope.updateCurrentNodeSet = function() {
@@ -546,8 +546,19 @@ angular.module('refineryNodeMapping', [
       }).$promise.then(function(data){
         $scope.nodesetList = data.objects;
         $scope.updateCurrentNodeSet();
+
       },function(error){
-        console.log(error);
+        console.log("Couldn't read node set list.");
+        if ($window.sessionStorage) {
+            var currentSelectionSessionKey = externalStudyUuid + "_" + externalAssayUuid + "_" + "currentSelection";
+            console.log( "Reading " + currentSelectionSessionKey + " from session storage" );
+            $scope.nodesetList = [angular.fromJson( $window.sessionStorage.getItem(currentSelectionSessionKey))];
+            $scope.updateCurrentNodeSet();
+        }
+        else {
+          console.log(error);
+        }
+
     });
   };
 

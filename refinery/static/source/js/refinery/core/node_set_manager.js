@@ -190,14 +190,6 @@ NodeSetManager.prototype.updateState = function (state, callbackSuccess) {
 
   var data = state;
 
-  // save to sessionStorage
-  self.saveCurrentSelectionToSession(
-      data.name,
-      data.summary,
-      data.solr_query,
-      data.solr_query_components,
-      data.node_count );
-
   $.ajax({
     url: self.createUpdateUrl(state),
     type: "PUT",
@@ -210,6 +202,15 @@ NodeSetManager.prototype.updateState = function (state, callbackSuccess) {
       if ($.isEmptyObject(result)) {
         return;
       }
+    },
+    error: function(result) {
+      // save to sessionStorage
+      self.saveCurrentSelectionToSession(
+          data.name,
+          data.summary,
+          data.solr_query,
+          data.solr_query_components,
+          data.node_count );
     }
   });
 };
