@@ -318,7 +318,6 @@ angular
            * @param   {String}  id          Identifier for the data source.
            */
           set: function (dataSource, id) {
-            console.log(dataSource);
             if (dataSource &&
               typeof dataSource === 'function' &&
               dataSource.length === 2) {
@@ -330,7 +329,7 @@ angular
                *   return $q.defer().promise;
                * }
                *
-               * @type  {Object}
+               * @type  {Function}
                */
               this.dataSource = dataSource;
               this.resetCache(id);
@@ -368,7 +367,6 @@ angular
           totalReadable: 0
         };
 
-        // Init the cache to get started.
         return source.initialize();
       }
 
