@@ -5,11 +5,59 @@ angular
     '$q',
     function ($cacheFactory, $q) {
 
+      /**
+       * Exception handler
+       *
+       * @method  UiScrollSourceException
+       * @author  Fritz Lekschas
+       * @date    2015-08-12
+       *
+       * @class
+       * @param   {String}  message  Error message.
+       */
       function UiScrollSourceException(message) {
         this.message = message;
         this.name = 'UiScrollSourceException';
       }
 
+      /**
+       * Creates a source object, which can be used by `uiScroll`
+       *
+       * @description
+       * Ui-Scroll expects a source object with a _get_ function, which accepts
+       * two parameters, `limit` and `offset`, in order to construct and
+       * deconstruct the scrollable list diynamically. In order to reduce the
+       * amount of DNS queries and increase performance, we cache each retrieved
+       * data entries. Moreover, we cache caches to speeds up performance
+       * when changing the data source function often, which is the case when
+       * user reformulate their search query often as every list of results is
+       * a new data source.
+       *
+       * @example <caption>Invoke the service</caption>
+       * ```
+       * this.news = new UiScrollSource(
+       *    'app/news',
+       *    5,
+       *    function (limit, offset) {
+       *      return News.query({
+       *        limit: limit,
+       *        offset: offset
+       *      }).$promise;
+       *    }.bind(this)
+       *  );
+       * ```
+       *
+       * @method  UiScrollSource
+       * @author  Fritz Lekschas
+       * @date    2015-08-12
+       *
+       * @class
+       * @param   {String}    id             Source identification used for
+       *   identifying the cache object.
+       * @param   {Number}    cacheCapacity  Number of sources to be cached.
+       * @param   {Function}  dataSource     Method for retrieving the actual.
+       *   data.
+       */
       function UiScrollSource (id, cacheCapacity, dataSource) {
         if (!id) {
           throw new UiScrollSourceException('No or empty `id` given.');
