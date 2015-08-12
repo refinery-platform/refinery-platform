@@ -380,16 +380,9 @@ module.exports = function(grunt) {
         'Gruntfile.js'
       ],
       options: {
-        curly: true,
-        // If `force` is true, Grunt will continue running, no matter if
-        // `jshint` throws errors or not.
-        force: false,
-        immed: true,
-        newcap: true,
-        noarg: true,
-        sub: true,
-        boss: true,
-        eqnull: true
+        // All jsHint configs are located in `.jshintrc`. This is useful as
+        // editor plugins can pick up this file as well.
+        jshintrc: true
       }
     },
 

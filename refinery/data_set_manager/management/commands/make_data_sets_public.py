@@ -13,6 +13,8 @@ class Command(BaseCommand):
             user = User.objects.get(username=args[0])
         except User.DoesNotExist:
             raise CommandError("User '%s' does not exist" % args[0])
+        except IndexError:
+            raise CommandError("Please provide a username")
         public_group = ExtendedGroup.objects.public_group()
         # TODO: optimize retrieving user's data sets
         for data_set in DataSet.objects.all():

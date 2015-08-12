@@ -60,7 +60,7 @@
             class="refinery-notification-info"
             ng-show="dashboard.dataSets.total === 0 && dashboard.searchQueryDataSets.length === 0">
             <strong>Info</strong>
-            No data sets are available.
+            No data sets available.
           </div>
         </div>
         <div class="floatbox">
@@ -113,11 +113,8 @@
               ng-if="dataSet.description"
               ng-bind-html="dataSet.description"></p>
           </li>
-          <li
-            ng-if="dashboard.dataSetsAdapter.isLoading">
-            <div
-              class="refinery-request-loading"
-              ng-if="dashboard.dataSetsAdapter.isLoading">
+          <li ng-if="dashboard.dataSetsAdapter.isLoading">
+            <div class="refinery-request-loading">
               <span class="refinery-spinner"></span>
             </div>
           </li>
@@ -144,54 +141,21 @@
       <span class="refinery-header-left">
         <h3>
           <span>
-            <i class="m-r-1-4 icon-folder-open"></i>Projects
+            <i class="m-r-1-4 icon-bar-chart"></i>Analyses
           </span>
         </h3>
       </span>
       <span class="refinery-header-right">
-        <a
+<!--         <a
           href="./projects/new/"
           class="no-underline"
           ng-if="dashboard.userIsAuthenticated">
           <i class="icon-plus-sign"></i>
-        </a>
+        </a> -->
       </span>
     </div>
-    <div class="refinery-panel-header">
-      <div class="floatbox">
-        <div class="floatbox-min-right">
-        </div>
-        <div class="floatbox-max-left">
-          <h4>Name</h4>
-        </div>
-      </div>
-    </div>
-    <div class="refinery-panel-content scrollable jquery-full-height">
-      <ul
-        class="no-list-style"
-        ng-if="dashboard.allAnalyses.meta.total_count > 0">
-        <li ng-repeat="analysis in dashboard.allAnalyses.objects">
-          <span class="spinner"><i class="{{analysis.status | analysesStatusIcon}} analyses-status"
-               rp-analyses-status-tooltip></i>
-          </span>
-          <span ng-switch on="analysis.status">
-            <span ng-switch-when="UNKNOWN">
-              {{ analysis.name }}
-            </span>
-            <span ng-switch-default>
-              <a ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
-                {{ analysis.name }}
-              </a>
-            </span>
-          </span>
-        </li>
-      </ul>
-      <div
-        class="refinery-request-loading"
-        ng-if="dashboard.analysisServiceLoading">
-        <span class="refinery-spinner"></span>
-      </div>
-      <div class="separator"></div>
+    <div class="refinery-sub-panel">
+      <!--
       <ul
         class="no-list-style"
         ng-if="dashboard.allProjects.meta.total_count > 0">
@@ -210,6 +174,62 @@
         ng-if="dashboard.allProjects.meta.total_count === 0 && dashboard.allAnalyses.meta.total_count === 0">
         No projects found.
       </span>
+      -->
+
+      <div class="refinery-panel-header">
+        <div class="refinery-notification">
+          <div
+            class="refinery-notification-info"
+            ng-show="dashboard.analyses.total === 0">
+            <strong>Info</strong>
+            No analyses available.
+          </div>
+        </div>
+        <div class="floatbox">
+          <div class="floatbox-min-right">
+          </div>
+          <div class="floatbox-max-left">
+            <h4>
+              {{ dashboard.analyses.totalReadable }}
+              {{ dashboard.analyses.totalReadable > 1 ? 'analyses' : 'analysis' }}
+            </h4>
+          </div>
+        </div>
+      </div>
+      <div
+        class="refinery-panel-content scrollable jquery-full-height"
+        ui-scroll-viewport
+        refinery-dashboard-panel>
+        <ul
+          class="results no-list-style">
+          <li
+            ui-scroll="analysis in dashboard.analyses"
+            adapter="dashboard.analysesAdapter">
+            <span class="spinner">
+              <i
+                class="analyses-status {{ analysis.status | analysisStatusIcon }}"
+                title="{{ analysis.status | analysisStatusTitle }}"
+                tool-tip
+                tool-tip-container="body"
+                tool-tip-placement="left">
+              </i>
+            </span>
+            <span ng-if="analysis.status === 'UNKNOWN'">
+              {{ analysis.name }}
+            </span>
+            <span ng-if="analysis.status !== 'UNKNOWN'">
+              <a ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
+                {{ analysis.name }}
+              </a>
+            </span>
+          </li>
+          <li ng-if="dashboard.analysesAdapter.isLoading">
+            <div class="refinery-request-loading">
+              <span class="refinery-spinner"></span>
+            </div>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 </div>
@@ -223,32 +243,97 @@
         <h3><i class="m-r-1-4 icon-cog"></i>Workflows</h3>
       </span>
     </div>
-
-    <div class="refinery-panel-header">
-      <div class="floatbox">
-        <div class="floatbox-max-left">
-          <h4>Name</h4>
+    <div class="refinery-sub-panel">
+      <div class="refinery-panel-header">
+        <div class="refinery-notification">
+          <div
+            class="refinery-notification-info"
+            ng-show="dashboard.workflows.total === 0">
+            <strong>Info</strong>
+            No workflows available.
+          </div>
+        </div>
+        <div class="floatbox">
+          <div class="floatbox-min-right">
+          </div>
+          <div class="floatbox-max-left">
+            <h4>
+              {{ dashboard.workflows.totalReadable }}
+              {{ dashboard.workflows.totalReadable > 1 ? 'workflows' : 'workflow' }}
+            </h4>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="refinery-panel-content scrollable jquery-full-height">
-      <ul
-        class="no-list-style"
-        ng-if="dashboard.allWorkflows.meta.total_count > 0">
-        <li ng-repeat="workflow in dashboard.allWorkflows.objects">
-          <a ng-href="workflows/{{ workflow.uuid }}">{{ workflow.name }}</a>
-        </li>
-      </ul>
       <div
-        class="refinery-request-loading"
-        ng-if="dashboard.workflowServiceLoading">
-        <span class="refinery-spinner"></span>
+        class="refinery-panel-content scrollable jquery-full-height"
+        ui-scroll-viewport
+        refinery-dashboard-panel>
+        <ul
+          class="results no-list-style">
+          <li
+            ui-scroll="workflow in dashboard.workflows"
+            adapter="dashboard.workflowsAdapter">
+            <a ng-href="workflows/{{ workflow.uuid }}">{{ workflow.name }}</a>
+          </li>
+          <li ng-if="dashboard.workflowsAdapter.isLoading">
+            <div class="refinery-request-loading">
+              <span class="refinery-spinner"></span>
+            </div>
+          </li>
+        </ul>
       </div>
-      <span
-        class="alert alert-info"
-        ng-if="dashboard.allWorkflows.meta.total_count == 0">
-        No workflows found.
-      </span>
     </div>
   </div>
 </div>
+
+<!-- <div
+  class="span4 pushable"
+  ng-class="{'pushed': dashboard.dataSetPreview}">
+  <div class="refinery-panel">
+    <div class="refinery-header">
+      <span class="refinery-header-left">
+        <h3><i class="m-r-1-4 icon-folder-open"></i>Projects</h3>
+      </span>
+    </div>
+    <div class="refinery-sub-panel">
+      <div class="refinery-panel-header">
+        <div class="refinery-notification">
+          <div
+            class="refinery-notification-info"
+            ng-show="dashboard.projects.total === 0">
+            <strong>Info</strong>
+            No projects available.
+          </div>
+        </div>
+        <div class="floatbox">
+          <div class="floatbox-min-right">
+          </div>
+          <div class="floatbox-max-left">
+            <h4>
+              {{ dashboard.projects.totalReadable }}
+              {{ dashboard.projects.totalReadable > 1 ? 'projects' : 'project' }}
+            </h4>
+          </div>
+        </div>
+      </div>
+      <div
+        class="refinery-panel-content scrollable jquery-full-height"
+        ui-scroll-viewport
+        refinery-dashboard-panel>
+        <ul
+          class="results no-list-style">
+          <li
+            ui-scroll="project in dashboard.projects"
+            adapter="dashboard.projectsAdapter">
+            <a ng-href="projects/{{ project.uuid }}">{{ project.name }}</a>
+          </li>
+          <li ng-if="dashboard.projectsAdapter.isLoading">
+            <div class="refinery-request-loading">
+              <span class="refinery-spinner"></span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div> -->

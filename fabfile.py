@@ -14,7 +14,7 @@ Requirements:
 
 import os
 from fabric.api import settings, run, env, sudo, execute
-from fabric.context_managers import hide, prefix, cd
+from fabric.context_managers import hide, prefix, cd, shell_env
 from fabric.contrib.files import sed
 from fabric.decorators import task, with_settings
 from fabric.operations import require
@@ -107,7 +107,11 @@ def update_refinery():
     """Perform full update of a Refinery Platform instance"""
     puts("Updating Refinery")
     with cd(env.refinery_project_dir):
-        run("git pull")
+        # avoid explaining automatic merge commits with both new and old git
+        # versions running on different VMs
+        # https://raw.githubusercontent.com/gitster/git/master/Documentation/RelNotes/1.7.10.txt
+        with shell_env(GIT_MERGE_AUTOEDIT='no'):
+            run("git pull")
     with cd(env.refinery_ui_dir):
         run("npm prune && npm update")
         run("bower prune && bower update --config.interactive=false")

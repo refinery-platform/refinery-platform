@@ -1,10 +1,9 @@
 angular
   .module('refineryDashboard')
-  .factory('dashboardDataSetListService', ['$q', 'dataSetService',
-    function ($q, dataSetService) {
+  .factory('dashboardDataSetListService', ['dataSetService',
+    function (dataSetService) {
       return function (limit, offset) {
-        var deferred = $q.defer(),
-            query = dataSetService.query({
+        var query = dataSetService.query({
               limit: limit,
               offset: offset
             });
@@ -13,7 +12,7 @@ angular
          * This extra promise is needed to normalize the APIs output. Most
          * importantely the name has be split into a title.
          */
-        query
+        return query
           .$promise
           .then(function (data) {
             for (var i = 0, len = data.objects.length; i < len; i++) {
@@ -26,13 +25,8 @@ angular
                 obj.title = obj.name;
               }
             }
-            deferred.resolve(data);
-          })
-          .catch(function (e) {
-            deferred.reject(e);
+            return data;
           });
-
-        return deferred.promise;
       };
     }
   ]);

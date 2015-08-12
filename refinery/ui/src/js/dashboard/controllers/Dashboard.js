@@ -12,105 +12,113 @@ function DashboardCtrl (
   projectService,
   analysisService,
   workflowService,
-  dashboardDataSetService,
+  UiScrollSource,
   dashboardDataSetListService,
   dashboardDataSetSearchService,
-  dashboardDataSetSourceService,
   dashboardDataSetReloadService,
   dashboardWidthFixerService,
   dashboardExpandablePanelService,
   dashboardDataSetPreviewService) {
-  // Store the context.
-  var that = this;
-
   // Construct Angular modules
-  that.$q = $q;
-  that.$state = $state;
-  that.$timeout = $timeout;
+  this.$q = $q;
+  this.$state = $state;
+  this.$timeout = $timeout;
 
   // Construct 3rd party library
-  that._ = _;
+  this._ = _;
 
   // Construct Refinery modules
-  that.authService = authService;
-  that.projectService = projectService;
-  that.analysisService = analysisService;
-  that.workflowService = workflowService;
-  that.dashboardDataSetListService = dashboardDataSetListService;
-  that.dashboardDataSetSearchService = dashboardDataSetSearchService;
-  that.dashboardDataSetSourceService = dashboardDataSetSourceService;
-  that.dashboardDataSetReloadService = dashboardDataSetReloadService;
-  that.dashboardWidthFixerService = dashboardWidthFixerService;
-  that.dashboardExpandablePanelService = dashboardExpandablePanelService;
-  that.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
+  this.authService = authService;
+  this.projectService = projectService;
+  this.analysisService = analysisService;
+  this.workflowService = workflowService;
+  this.dashboardDataSetListService = dashboardDataSetListService;
+  this.dashboardDataSetSearchService = dashboardDataSetSearchService;
+  this.dashboardDataSetReloadService = dashboardDataSetReloadService;
+  this.dashboardWidthFixerService = dashboardWidthFixerService;
+  this.dashboardExpandablePanelService = dashboardExpandablePanelService;
+  this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
 
   // Construct class variables
-  that.dataSetServiceLoading = false;
-  that.dataSetPreviewBorder = false;
+  this.dataSetServiceLoading = false;
+  this.dataSetPreviewBorder = false;
 
   // Check authentication
   // This should idealy be moved to the global APP controller, which we don't
   // have right now.
-  that.authService.isAuthenticated().then(function (isAuthenticated) {
-    that.userIsAuthenticated = isAuthenticated;
-  });
-  that.authService.isAdmin().then(function (isAdmin) {
-    that.userIsAdmin = isAdmin;
-  });
+  this.authService.isAuthenticated().then(function (isAuthenticated) {
+    this.userIsAuthenticated = isAuthenticated;
+  }.bind(this));
+  this.authService.isAdmin().then(function (isAdmin) {
+    this.userIsAdmin = isAdmin;
+  }.bind(this));
 
-  // Get data
-  that.getProjects()
-    .then(function (results) {
-      that.allProjects = results;
-    })
-    .catch(function (error) {
-      that.allProjects = [];
-    });
-
-  that.getAnalyses()
-    .then(function (results) {
-      that.allAnalyses = results;
-    })
-    .catch(function (error) {
-      that.allAnalyses = [];
-    });
-
-  that.getWorkflows()
-    .then(function (results) {
-      that.allWorkflows = results;
-    })
-    .catch(function (error) {
-      that.allWorkflows = [];
-    });
-
-  that.dataSets = dashboardDataSetService;
-
-  that.searchDataSets = that._.debounce(
-    that.setDataSetSource,
-    settings.debounceSearch
+  // Set up dataSets for `uiScroll`
+  this.dataSets = new UiScrollSource(
+    'dashboard/dataSets',
+    10,
+    this.dashboardDataSetListService
   );
 
-  // Initilize data set source
-  that.setDataSetSource();
+  // Set up analyses for `uiScroll`
+  this.analyses = new UiScrollSource(
+    'dashboard/analyses',
+    1,
+    function (limit, offset) {
+      return this.analysisService.query({
+        limit: limit,
+        offset: offset
+      }).$promise;
+    }.bind(this)
+  );
+
+  // Set up projects for `uiScroll`
+  // this.projects = new UiScrollSource(
+  //   'dashboard/projects',
+  //   1,
+  //   function (limit, offset) {
+  //     return this.projectService.query({
+  //       limit: limit,
+  //       offset: offset
+  //     }).$promise;
+  //   }.bind(this)
+  // );
+
+  // Set up workflows for `uiScroll`
+  this.workflows = new UiScrollSource(
+    'dashboard/workflows',
+    1,
+    function (limit, offset) {
+      return this.workflowService.query({
+        limit: limit,
+        offset: offset
+      }).$promise;
+    }.bind(this)
+  );
+
+  this.searchDataSets = this._.debounce(
+    this.setDataSetSource,
+    settings.debounceSearch
+  ).bind(this);
 
   // Set reloader
-  that.dashboardDataSetReloadService.setReload(function (hardReset) {
+  this.dashboardDataSetReloadService.setReload(function (hardReset) {
     if (hardReset) {
       that.dataSets.resetCache(undefined, hardReset);
     }
     // Reset current list and reload uiScroll
-    if (that.dataSetsAdapter) {
-      that.dataSetsAdapter.applyUpdates(function (item, scope) {
+    if (this.dataSetsAdapter) {
+      this.dataSetsAdapter.applyUpdates(function (item, scope) {
         return [];
       });
-      that.dataSetsAdapter.reload();
+      this.dataSetsAdapter.reload();
     }
-  });
+  }.bind(this));
 
 
   this.dashboardWidthFixerService.resetter.push(function () {
-    that.dataSetPreviewBorder = false;
-  });
+    this.dataSetPreviewBorder = false;
+  }.bind(this));
 
   $rootScope.$on('$stateChangeSuccess', function () {
     $timeout(window.sizing, 0);
@@ -155,86 +163,21 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
   if (searchQuery) {
     if (searchQuery.length > 1) {
       that.searchDataSet = true;
-      var searchResults = new that.dashboardDataSetSearchService(searchQuery);
-      that.dashboardDataSetSourceService.setSource(searchResults);
-      that.dataSets.resetCache(searchQuery);
+      var searchResults = new this.dashboardDataSetSearchService(searchQuery);
+      this.dataSets.set(searchResults, searchQuery);
+      // that.dashboardDataSetSourceService.setSource(searchResults);
+      // that.dataSets.resetCache(searchQuery);
       that.dashboardDataSetReloadService.reload();
     }
   } else {
-    that.dashboardDataSetSourceService.setSource(that.dashboardDataSetListService);
-    that.dataSets.resetCache();
+    // that.dashboardDataSetSourceService.setSource(that.dashboardDataSetListService);
+    // that.dataSets.resetCache();
+    this.dataSets.set(this.dashboardDataSetListService);
     if (that.searchDataSet) {
       that.searchDataSet = false;
       that.dashboardDataSetReloadService.reload();
     }
   }
-};
-
-DashboardCtrl.prototype.getProjects = function (limit, offset) {
-  var that = this,
-      projects;
-
-  that.projectServiceLoading = true;
-
-  projects = that.projectService.query();
-  projects
-    .$promise
-    .then(
-      /* Success */
-      function (results) {
-        that.projectServiceLoading = false;
-      },
-      /* Failure */
-      function (error) {
-        that.projectServiceLoading = false;
-      }
-    );
-  return projects.$promise;
-};
-
-DashboardCtrl.prototype.getAnalyses = function (limit, offset) {
-  var that = this,
-      analysis;
-
-  that.analysisServiceLoading = true;
-
-  analysis = that.analysisService.query();
-  analysis
-    .$promise
-    .then(
-      /* Success */
-      function (results) {
-        that.analysisServiceLoading = false;
-      },
-      /* Failure */
-      function (error) {
-        that.analysisServiceLoading = false;
-      }
-    );
-  return analysis.$promise;
-};
-
-DashboardCtrl.prototype.getWorkflows = function (limit, offset) {
-  var that = this,
-      workflows;
-
-  that.workflowServiceLoading = true;
-
-  workflows = that.workflowService.query();
-  workflows
-    .$promise
-    .then(
-      /* Success */
-      function (results) {
-        that.workflowServiceLoading = false;
-      },
-      /* Failure */
-      function (error) {
-        that.workflowServiceLoading = false;
-      }
-    );
-
-  return workflows.$promise;
 };
 
 DashboardCtrl.prototype.showDataSetPreview = function (dataSet) {
@@ -274,10 +217,9 @@ angular
     'projectService',
     'analysisService',
     'workflowService',
-    'dashboardDataSetService',
+    'UiScrollSource',
     'dashboardDataSetListService',
     'dashboardDataSetSearchService',
-    'dashboardDataSetSourceService',
     'dashboardDataSetReloadService',
     'dashboardWidthFixerService',
     'dashboardExpandablePanelService',
