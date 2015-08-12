@@ -267,7 +267,7 @@ SolrDocumentTable.prototype._toggleIndicator = function(){
 SolrDocumentTable.prototype._generateTableBody = function(solrResponse) {
   var self = this;
   var documents = [];
-  if(typeof solrResponse !== undefined && solrResponse !== null) {
+  if(typeof solrResponse !== 'undefined' && solrResponse !== null) {
     documents = solrResponse.getDocumentList();
   }
 
