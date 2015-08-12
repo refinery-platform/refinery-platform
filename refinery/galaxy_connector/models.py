@@ -1,6 +1,9 @@
-from bioblend import galaxy
 from django.db import models
-from galaxy_connector.galaxy_workflow import GalaxyWorkflow, GalaxyWorkflowInput
+
+from bioblend import galaxy
+
+from galaxy_connector.galaxy_workflow import GalaxyWorkflow, \
+    GalaxyWorkflowInput
 
 
 class Instance(models.Model):
@@ -22,9 +25,11 @@ class Instance(models.Model):
         connection = self.galaxy_connection()
         workflows = []
         for workflow_entry in connection.workflows.get_workflows():
-            workflow = GalaxyWorkflow(workflow_entry['name'], workflow_entry['id'])
+            workflow = GalaxyWorkflow(workflow_entry['name'],
+                                      workflow_entry['id'])
             # get workflow inputs
-            workflow_inputs = connection.workflows.show_workflow(workflow.identifier)['inputs']
+            workflow_inputs = \
+            connection.workflows.show_workflow(workflow.identifier)['inputs']
             for input_identifier, input_description in workflow_inputs.items():
                 workflow_input = GalaxyWorkflowInput(
                     input_description['label'], input_identifier)
@@ -33,10 +38,9 @@ class Instance(models.Model):
         return workflows
 
     def get_history_file_list(self, history_id):
-        '''Returns a list of dictionaries that contain the name, type, state and
-        download URL of all _files_ in a history.
-
-        '''
+        """Returns a list of dictionaries that contain the name, type, state
+        and download URL of all _files_ in a history.
+        """
         files = []
         connection = self.galaxy_connection()
 
@@ -49,10 +53,10 @@ class Instance(models.Model):
             if history_content_entry["type"] != "file":
                 continue
 
-            file_info = {}
-            file_info["name"] = history_content_entry["name"]
-            file_info["url"] = history_content_entry["url"]
-
+            file_info = {
+                "name": history_content_entry["name"],
+                "url": history_content_entry["url"]
+            }
             history_content = connection.histories.show_dataset(
                 history_id, history_content_entry["id"])
 
@@ -89,7 +93,7 @@ class Instance(models.Model):
             if "genome_build" not in history_content:
                 file_info["genome_build"] = None
             else:
-                file_info["genome_build"] = history_content["genome_build"]   
+                file_info["genome_build"] = history_content["genome_build"]
 
             if "misc_info" not in history_content:
                 file_info["misc_info"] = None
@@ -103,4 +107,4 @@ class Instance(models.Model):
 
             files.append(file_info)
 
-        return files    
+        return files
