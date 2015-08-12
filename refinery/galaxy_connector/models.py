@@ -28,8 +28,8 @@ class Instance(models.Model):
             workflow = GalaxyWorkflow(workflow_entry['name'],
                                       workflow_entry['id'])
             # get workflow inputs
-            workflow_inputs = \
-            connection.workflows.show_workflow(workflow.identifier)['inputs']
+            workflow_inputs = connection.workflows.show_workflow(
+                workflow.identifier)['inputs']
             for input_identifier, input_description in workflow_inputs.items():
                 workflow_input = GalaxyWorkflowInput(
                     input_description['label'], input_identifier)
