@@ -43,7 +43,7 @@ function analysesFactory($http, analysisService) {
       }else if('status' in params){
         angular.copy(data, analysesRunningGlobalList);
       }else if('limit' in params &&  'data_set__uuid' in params){
-       angular.copy(data, analysesList);
+        addElapseTime(data);
       }else{
        angular.copy(data, analysesGlobalList);
       }
@@ -78,6 +78,39 @@ function analysesFactory($http, analysisService) {
   };
 
   /*process responses from api*/
+  var addElapseTime = function(data){
+    angular.copy(data, analysesList);
+    for(var j=0; j < analysesList.length; j++){
+      analysesList[j].elapseTime = createElapseTime(analysesList[j]);
+    }
+  };
+
+  var createElapseTime = function(timeObj){
+    if(isParamValid(timeObj)) {
+      var startTime = formatMilliTime(timeObj.time_start);
+      var endTime = formatMilliTime(timeObj.time_end);
+      var elapseMilliTime = endTime - startTime;
+      return elapseMilliTime;
+    }else{
+      return null;
+    }
+  };
+
+  var formatMilliTime = function(timeStr){
+    var milliTime = Date.parse(timeStr);
+    return milliTime;
+  };
+
+  var isParamValid = function(data){
+     if(typeof data !== 'undefined' && typeof data.time_start !== 'undefined' &&
+       typeof data.time_end !== 'undefined' && data.time_start !== null &&
+       data.time_end !== null){
+        return true;
+     }else{
+       return false;
+     }
+  };
+
   var processAnalysesGlobalDetail = function(data, uuid){
     if(!(analysesDetail.hasOwnProperty(uuid))){
       initializeAnalysesDetail(uuid);
