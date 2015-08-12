@@ -346,4 +346,4 @@ def process_metadata_table(username, title, metadata_file, source_columns,
 
     return create_dataset(
         investigation_uuid=investigation.uuid, username=username,
-        dataset_title=title, slug=slug, public=is_public)
+        dataset_name=title, slug=slug, public=is_public)
