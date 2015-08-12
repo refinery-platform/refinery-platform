@@ -92,7 +92,9 @@
              </div>
 
             <div class="span2">
-              {{analysis.time_start | analysesHumanizeTime }}
+              <span  rp-analyses-start-time-tooltip>
+                {{analysis.time_start | analysesHumanizeTime }}
+              </span>
             </div>
 
             <div class="span2">
@@ -100,7 +102,9 @@
             </div>
 
             <div class="span2">
-              {{analysis.time_end | analysesHumanizeTime}}
+              <span  rp-analyses-end-time-tooltip>
+                {{analysis.time_end | analysesHumanizeTime}}
+              </span>
             </div>
 
            <div ng-if="analysis.status=='RUNNING'"  class="span1">
