@@ -28,6 +28,11 @@ module.exports = function(grunt) {
     );
   }
 
+  // Enable using `--fast`.
+  // Double `!!` converts a value into a Boolean representation and third `!`
+  // flips its value.
+  var spawn = !!!grunt.option('fast');
+
   grunt.initConfig({
     /*
      * Add vendor prefixes to out CSS to ensure better browser support.
@@ -295,7 +300,10 @@ module.exports = function(grunt) {
           'jshint:src',
           'copy:uiBuildScripts',
           'concat-by-feature:build'
-        ]
+        ],
+        options: {
+          spawn: spawn
+        }
       },
 
       /*
@@ -376,9 +384,7 @@ module.exports = function(grunt) {
       src: [
         '<%= cfg.basePath.ui.src %>/js/**/*.js'
       ],
-      gruntfile: [
-        'Gruntfile.js'
-      ],
+      gruntfile: 'Gruntfile.js',
       options: {
         // All jsHint configs are located in `.jshintrc`. This is useful as
         // editor plugins can pick up this file as well.
@@ -625,6 +631,14 @@ module.exports = function(grunt) {
       }
     }
   );
+
+  // Event handling
+  if (!spawn) {
+    grunt.event.on('watch', function(action, filepath){
+      // Update the config to only build the changed less file.
+      grunt.config(['jshint', 'src'], filepath);
+    });
+  }
 
   // Default task.
   grunt.registerTask('default', ['build', 'compile']);
