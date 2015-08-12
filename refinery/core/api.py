@@ -354,6 +354,8 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         # authorization = GuardianAuthorization()
         filtering = {
             'uuid': ALL,
+            'is_owner': ALL,
+            'public': ALL
         }
 
     def prepend_urls(self):
