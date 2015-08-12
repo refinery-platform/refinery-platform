@@ -104,10 +104,11 @@
                 <td><strong>Source Column Index</strong></td>
                 <td>
                   {% verbatim %}
-                  <select ng-model="sourceColumnIndex" name="source_column_index"
+                  <select ng-model="sourceColumnIndex"
+                          name="source_column_index"
                           required multiple
                           size="{{ metadataHeader.length || 10 }}"
-                          ng-options="heading for heading in metadataHeader">
+                          ng-options="id as heading for (id, heading) in metadataHeader">
                   </select>
                   {% endverbatim %}
                 </td>
@@ -124,7 +125,7 @@
                 <td>
                   <select ng-model="dataFileColumn" name="data_file_column"
                           required
-                          ng-options="heading for heading in metadataHeader">
+                          ng-options="heading for (id, heading) in metadataHeader track by id">
                     <!-- needed to make required option to work properly -->
                     <option></option>
                   </select>

@@ -237,13 +237,10 @@ def generate_file_source_translator(username='', base_path=''):
         """Convert file source to absolute path
         source: URL, absolute or relative file system path
         """
-        source = source.strip()
-        source = map_source(source)
-
+        source = map_source(source.strip())
         # ignore URLs and absolute file paths
         if is_url(source) or os.path.isabs(source):
             return source
-
         # process relative path
         if base_path:
             source = os.path.join(base_path, source)
@@ -251,9 +248,8 @@ def generate_file_source_translator(username='', base_path=''):
             source = os.path.join(
                 settings.REFINERY_DATA_IMPORT_DIR, username, source)
         else:
-            error_msg = "Failed to translate relative source path: "
-            error_msg += "must provide either username or base_path"
-            raise ValueError(error_msg)
+            raise ValueError("Failed to translate relative source path: "
+                             "must provide either username or base_path")
         return source
     return translate
 

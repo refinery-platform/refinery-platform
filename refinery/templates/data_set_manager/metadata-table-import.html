@@ -25,7 +25,7 @@
     <style>
       .gridStyle {
           border: 1px solid rgb(212,212,212);
-          width: 100%; 
+          width: 100%;
           height: 200px;
       }
     </style>
@@ -72,7 +72,7 @@
                 <select ng-model="sourceColumnIndex" name="source_column_index"
                         required multiple
                         size="{{ metadataHeader.length || 10 }}"
-                        ng-options="heading for heading in metadataHeader">
+                        ng-options="id as heading for (id, heading) in metadataHeader">
                 </select>
                 {% endverbatim %}
               </td>
@@ -89,7 +89,7 @@
               <td>
                 <select ng-model="dataFileColumn" name="data_file_column"
                         required
-                        ng-options="heading for heading in metadataHeader">
+                        ng-options="heading for (id, heading) in metadataHeader track by id">
                   <!-- needed to make required option to work properly -->
                   <option></option>
                 </select>
@@ -237,11 +237,11 @@
 
       $("#import-button").on( "click", function() {
         $("#import-errors").html( "")
-        var target = document.getElementById('spinner');    
+        var target = document.getElementById('spinner');
         //var spinner = new Spinner(opts).spin(target);
 
       var spinner = new Spinner(opts).spin();
-      target.appendChild(spinner.el);       
+      target.appendChild(spinner.el);
         $("#import-message").html( "Running ...")
       });
   </script>
