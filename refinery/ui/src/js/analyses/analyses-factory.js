@@ -44,7 +44,6 @@ function analysesFactory($http, analysisService) {
         angular.copy(data, analysesRunningGlobalList);
       }else if('limit' in params &&  'data_set__uuid' in params){
         addElapseTime(data);
-       console.log(analysesList);
       }else{
        angular.copy(data, analysesGlobalList);
       }
