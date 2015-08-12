@@ -9,8 +9,6 @@
             </div>
             <i class="{{analysis.status | analysesStatusIcon}} analyses-status"></i>
             &nbsp;
-            <em>Unknown</em>
-            &nbsp;
             {{ analysis.name }}
           </span>
           <span ng-switch-when="RUNNING">
@@ -18,8 +16,6 @@
               {{analysesCtrl.analysesGlobalDetail[analysis.uuid]|analysesRunningStatusPercent}}
             </div>
              <i class="{{analysesCtrl.analysesGlobalDetail[analysis.uuid]|analysesRunningStatusBtn}}"></i>
-              &nbsp;
-             <em> Running</em>
               &nbsp;
             <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/#/analyses">
               {{ analysis.name }}
@@ -31,8 +27,6 @@
             </div>
               <i class="{{analysis.status | analysesStatusIcon}} analyses-status"></i>
                &nbsp;
-              <em>Finished</em>
-              &nbsp;
                <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
               {{ analysis.name }}
             </a>

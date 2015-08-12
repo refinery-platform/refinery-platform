@@ -34,6 +34,18 @@
          </span>
        </a>
       </div>
+
+      <div class="span2">
+        <a class="analysis-header" ng-click="order('elapseTime')">
+          <strong>Elapsed Time</strong>
+          <span class="sortorder" ng-show="predicate === 'elapseTime'"
+            ng-class="{reverse:reverse}">
+             <i ng-class="analysisIcon"></i>
+          </span>
+        </a>
+      </div>
+
+
       <div class="span2">
         <a class="analysis-header" ng-click="order('time_end')">
           <strong>End Time</strong>
@@ -43,7 +55,7 @@
           </span>
         </a>
       </div>
-      <div class="span3">
+      <div class="span1">
       </div>
 
       <ul class="analysesList">
@@ -79,21 +91,27 @@
               </span>
              </div>
 
-           <div class="span2">
-            {{analysis.time_start | date: 'medium'}}
-           </div>
+            <div class="span2">
+              <span  rp-analyses-start-time-tooltip>
+                {{analysis.time_start | analysesHumanizeTime }}
+              </span>
+            </div>
 
-           <div class="span2">
-           {{analysis.time_end | date: 'medium'}}
-           </div>
+            <div class="span2">
+              {{analysis.elapseTime | analysesFormatMilliTime}}
+            </div>
+
+            <div class="span2">
+              <span  rp-analyses-end-time-tooltip>
+                {{analysis.time_end | analysesHumanizeTime}}
+              </span>
+            </div>
 
            <div ng-if="analysis.status=='RUNNING'"  class="span1">
              <a rp-analyses-cancel-confirm confirmed-click="AnalysesCtrl.cancelAnalysis(analysis.uuid)" rp-analyses-cancel-tooltip>
                <i class="icon-remove analyses-cancel"></i>
              </a>
            </div>
-
-           <div class="span2"></div>
 
            <span ng-if="analysis.status=='RUNNING' || analysis.status=='INITIALIZED'">
 

@@ -20,7 +20,7 @@ function analysesList() {
       });
 
       //Analyses view sorting
-      scope.predicate = 'name';
+      scope.predicate = 'time_start';
       scope.reverse = true;
       scope.analysisIcon = "icon-arrow-up";
       scope.order = function(predicate) {
