@@ -43,7 +43,9 @@
       </form>
 
       <div class="refinery-panel-header">
-        <div class="refinery-notification">
+        <div
+          class="refinery-notification"
+          ng-class="{'active': dashboard.searchQueryDataSets.length > 0 || dashboard.dataSets.total === 0}">
           <div
             class="refinery-notification-info"
             ng-show="dashboard.searchQueryDataSets.length === 1">
@@ -65,6 +67,15 @@
         </div>
         <div class="floatbox">
           <div class="floatbox-min-right">
+            <button
+              class="icon-only"
+              title="Filter &amp; Sort"
+              tool-tip
+              tool-tip-container="body"
+              tool-tip-placement="right">
+              <i
+                class="icon-filter"></i>
+            </button>
           </div>
           <div class="floatbox-max-left">
             <h4>
@@ -177,7 +188,9 @@
       -->
 
       <div class="refinery-panel-header">
-        <div class="refinery-notification">
+        <div
+          class="refinery-notification"
+          ng-class="{'active': dashboard.analyses.total === 0}">
           <div
             class="refinery-notification-info"
             ng-show="dashboard.analyses.total === 0">
@@ -245,7 +258,9 @@
     </div>
     <div class="refinery-sub-panel">
       <div class="refinery-panel-header">
-        <div class="refinery-notification">
+        <div
+          class="refinery-notification"
+          ng-class="{'active': dashboard.workflows.total === 0}">
           <div
             class="refinery-notification-info"
             ng-show="dashboard.workflows.total === 0">

@@ -693,10 +693,14 @@ a.analysis-header{
         position: absolute;
         top: 0;
         right: -10px;
-        bottom: -1px;
+        bottom: 100%;
         left: -10px;
         overflow: hidden;
         font-size: 14px;
+
+        &.active {
+          bottom: -1px;
+        }
 
         [class^='refinery-notification'] {
           position: absolute;
