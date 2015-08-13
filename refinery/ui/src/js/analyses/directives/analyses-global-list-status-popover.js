@@ -1,5 +1,14 @@
 angular.module('refineryAnalyses')
-    .directive("rfAnalysesGlobalListStatusPopover", ['$compile', '$templateCache', '$', '$timeout', '$rootScope', rfAnalysesGlobalListStatusPopover]);
+    .directive(
+  "rfAnalysesGlobalListStatusPopover",
+  ['$compile',
+    '$templateCache',
+    '$',
+    '$timeout',
+    '$rootScope',
+    rfAnalysesGlobalListStatusPopover
+  ]
+);
 
 function rfAnalysesGlobalListStatusPopover($compile, $templateCache, $, $timeout, $rootScope) {
   "use strict";
@@ -17,25 +26,24 @@ function rfAnalysesGlobalListStatusPopover($compile, $templateCache, $, $timeout
         content: popOverContent,
         placement: "left",
         html: true,
-        date: scope.date,
+        toggle: "popover",
       };
       $(element).popover(options);
-      $(element).bind('mouseenter', function (e) {
-        scope.analysesCtrl.updateAnalysesGlobalList();
-        $timeout(function () {
-            if (!$rootScope.insidePopover) {
-                $(element).popover('show');
-                scope.analysesCtrl.analysesPopoverEvents(element);
-            }
-        }, 200);
-      });
-      $(element).bind('mouseleave', function (e) {
-        $timeout(function () {
-            if (!$rootScope.insidePopover) {
-                $(element).popover('hide');
-                scope.analysesCtrl.cancelTimerGlobalList();
-            }
-        }, 400);
+
+      //catches all clicks, so popover will hide if you click anywhere other
+      // than icon & popover
+      $("body").on('click', function (e) {
+        //starts api calls if icon is clicked
+        if(e.target.id === 'global-analysis-status-run' ||
+           e.target.id === 'global-analysis-status'){
+          scope.analysesCtrl.updateAnalysesGlobalList();
+        }
+        if ((e.target.id !== 'global-analysis-status-run' &&
+          e.target.id !== 'global-analysis-status') &&
+          $(e.target).parents('.popover.in').length === 0) {
+          $(element).popover('hide');
+          scope.analysesCtrl.cancelTimerGlobalList();
+        }
       });
     },
   };

@@ -197,17 +197,6 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     }
   };
 
-  vm.analysesPopoverEvents = function (element) {
-    $('.popover').on('mouseenter', function() {
-      $rootScope.insidePopover = true;
-    });
-    $('.popover').on('mouseleave', function() {
-      $rootScope.insidePopover = false;
-      $(element).popover('hide');
-      vm.cancelTimerGlobalList();
-    });
-  };
-
   //checks url to see if view is filtered by analysis in data_set.html. Used
   // with analyses alert msg.
   $scope.checkAnalysesViewFlag = function () {
