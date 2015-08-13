@@ -36,6 +36,8 @@ function rfAnalysesGlobalListStatusPopover($compile, $templateCache, $, $timeout
         //starts api calls if icon is clicked
         if(e.target.id === 'global-analysis-status-run' ||
            e.target.id === 'global-analysis-status'){
+          $('#global-analysis-status-run').tooltip('hide');
+          $('#global-analysis-status').tooltip('hide');
           scope.analysesCtrl.updateAnalysesGlobalList();
         }
         if ((e.target.id !== 'global-analysis-status-run' &&
