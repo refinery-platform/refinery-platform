@@ -52,7 +52,7 @@ function PubSub (_) {
    * @param   {String}   event  Event identifier.
    * @return  {Boolean}         Returns `true` if an event stack was found.
    */
-  Event.prototype.trigger = function (event) {
+  Event.prototype.trigger = function (event, data) {
     if (_.isArray(stack[event])) {
       // Traversing from the end to the start, which has the advantage that
       // deletion of events, i.e. calling `Event.off()` doesn't affect the index
@@ -61,7 +61,7 @@ function PubSub (_) {
         // Instead of checking whether `stack[event][i]` is a function here,
         // we do it just once when we add the function to the stack.
         if (stack[event][i].times--) {
-          stack[event][i].callback();
+          stack[event][i].callback(data);
         } else {
           this.off(event, i);
         }
