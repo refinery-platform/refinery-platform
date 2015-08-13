@@ -14,9 +14,9 @@ angular
   /*
    * Angular App globals
    */
-  'containsDomElement',
   'errors',
   'pubSub',
+  'closeOnOuterClick',
 
   /*
    * Refinery modules
@@ -38,18 +38,28 @@ angular
   'refineryCollaboration',
   'refineryChart',
 ])
-.config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
-  // http://stackoverflow.com/q/11252780
-  $provide.decorator('$rootScope', ['$delegate', function ($delegate) {
-    Object.defineProperty($delegate.constructor.prototype, '$onRootScope', {
-      value: function (name, listener) {
-        var unsubscribe = $delegate.$on(name, listener);
-        this.$on('$destroy', unsubscribe);
-      },
-      enumerable: false
-    });
-    return $delegate;
-  }]);
+.config([
+  '$provide',
+  '$httpProvider',
+  '$compileProvider',
+  function ($provide, $httpProvider, $compileProvider) {
+    // Disable debug info as it is not needed in general and decreases the
+    // performance
+    // More: https://docs.angularjs.org/guide/production
+    $compileProvider.debugInfoEnabled(false);
+
+    // http://stackoverflow.com/q/11252780
+    $provide.decorator('$rootScope', ['$delegate', function ($delegate) {
+      Object.defineProperty($delegate.constructor.prototype, '$onRootScope', {
+        value: function (name, listener) {
+          var unsubscribe = $delegate.$on(name, listener);
+          this.$on('$destroy', unsubscribe);
+        },
+        enumerable: false
+      });
+      return $delegate;
+    }
+  ]);
 
   // use Django XSRF/CSRF lingo to enable communication with API
   $httpProvider.defaults.xsrfCookieName = 'csrftoken';

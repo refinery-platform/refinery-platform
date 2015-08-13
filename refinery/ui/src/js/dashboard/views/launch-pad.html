@@ -68,15 +68,15 @@
         <div class="floatbox">
           <div class="floatbox-min-right">
             <button
-              class="icon-only"
+              class="icon-only icon-filter"
               title="Filter &amp; Sort"
               ng-class="{'active':dashboard.showFilterSort}"
               ng-click="dashboard.showFilterSort = !!!dashboard.showFilterSort"
               ng-show="!dashboard.searchQueryDataSets.length"
+              close-on-outer-click-external-trigger="dashboard.filterSort"
               tool-tip
               tool-tip-container="body"
               tool-tip-placement="right">
-              <i class="icon-filter"></i>
             </button>
           </div>
           <div class="floatbox-max-left">
@@ -89,7 +89,9 @@
       </div>
       <div
         class="refinery-filter-sort"
-        ng-show="dashboard.showFilterSort">
+        ng-show="dashboard.showFilterSort"
+        close-on-outer-click="dashboard.showFilterSort"
+        close-on-outer-click-id="dashboard.filterSort">
         <h5>Filter by</h5>
         <label class="checkbox">
           <input
