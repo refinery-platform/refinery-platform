@@ -689,6 +689,23 @@ a.analysis-header{
         line-height: 1em;
       }
 
+      button.icon-only {
+        margin: 0;
+        padding: 5px;
+        background: fade(lighten(@grayLight, 25%), 0%);
+        transition: background @fastTransitionSpeed @easeInOutCubic;
+
+        [class^='icon-'] {
+          height: 1em;
+          line-height: 1em;
+        }
+
+        &.active {
+          color: #000;
+          background: fade(lighten(@grayLight, 25%), 100%);
+        }
+      }
+
       .refinery-notification {
         position: absolute;
         top: 0;
@@ -697,9 +714,11 @@ a.analysis-header{
         left: -10px;
         overflow: hidden;
         font-size: 14px;
+        transition: bottom 0s @easeInOutCubic @slowTransitionSpeed;
 
         &.active {
           bottom: -1px;
+          transition: none;
         }
 
         [class^='refinery-notification'] {
@@ -722,6 +741,42 @@ a.analysis-header{
 
         [class^='refinery-notification'].ng-hide {
           transform: translate3d(0, -25px, 0);
+        }
+      }
+    }
+
+    .refinery-filter-sort {
+      position: absolute;
+      z-index: 2;
+      right: 10px;
+      left: 10px;
+      padding: 5px;
+      background: fade(lighten(@grayLight, 30%), 96%);
+      overflow: hidden;
+      opacity: 1;
+      border-right: 1px solid lighten(@grayLight, 25%);
+      border-bottom: 1px solid lighten(@grayLight, 25%);
+      border-left: 1px solid lighten(@grayLight, 25%);
+      border-radius: 0 0 0.25em 0.25em;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+
+      &.ng-hide-add.ng-hide-add-active,
+      &.ng-hide-remove.ng-hide-remove-active {
+        height: auto;
+        transition: opacity @fastTransitionSpeed @easeInOutCubic;
+      }
+
+      &.ng-hide {
+        height: 0;
+        opacity: 0;
+        transition: opacity @fastTransitionSpeed @easeInOutCubic;
+      }
+
+      h5 {
+        font-weight: bold;
+
+        &:first-child {
+          margin-top: 0;
         }
       }
     }

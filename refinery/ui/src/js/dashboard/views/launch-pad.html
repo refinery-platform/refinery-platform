@@ -70,11 +70,13 @@
             <button
               class="icon-only"
               title="Filter &amp; Sort"
+              ng-class="{'active':dashboard.showFilterSort}"
+              ng-click="dashboard.showFilterSort = !!!dashboard.showFilterSort"
+              ng-show="!dashboard.searchQueryDataSets.length"
               tool-tip
               tool-tip-container="body"
               tool-tip-placement="right">
-              <i
-                class="icon-filter"></i>
+              <i class="icon-filter"></i>
             </button>
           </div>
           <div class="floatbox-max-left">
@@ -84,6 +86,38 @@
             </h4>
           </div>
         </div>
+      </div>
+      <div
+        class="refinery-filter-sort"
+        ng-show="dashboard.showFilterSort">
+        <h5>Filter by</h5>
+        <label class="checkbox">
+          <input
+            type="checkbox"
+            id="data-sets-filter-owner"
+            ng-model="dashboard.dataSetsFilterOwner"> Own
+        </label>
+        <label class="checkbox">
+          <input
+            type="checkbox"
+            id="data-sets-filter-public"
+            ng-model="dashboard.dataSetsFilterPublic"> Public
+        </label>
+        <h5>Sort by</h5>
+        <div ng-if="dashboard.dataSets.firstData">
+          <select
+            id="data-sets-sort-by"
+            ng-options="attr for attr in dashboard.dataSetOptions"
+            ng-model="dashboard.dataSetsSortBy">
+            <option value=""></option>
+          </select>
+        </div>
+        <label class="checkbox">
+          <input
+            type="checkbox"
+            id="data-sets-sort-desc"
+            ng-model="dashboard.dataSetsSortDesc"> Descending
+        </label>
       </div>
       <div
         class="refinery-panel-content scrollable jquery-full-height"
