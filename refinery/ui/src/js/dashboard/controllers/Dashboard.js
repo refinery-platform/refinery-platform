@@ -123,6 +123,8 @@ function DashboardCtrl (
   $rootScope.$on('$stateChangeSuccess', function () {
     $timeout(window.sizing, 0);
   });
+
+  this.dataSetsSorting = settings.dashboard.dataSetsSorting;
 }
 
 /*
@@ -189,48 +191,37 @@ Object.defineProperty(
     },
     set: function (value) {
       this._dataSetsSortBy = value;
-      if (value) {
-        this.dataSets.extraParameters['order_by'] = this.dataSetsSortDesc ? '-' + value : value;
-      } else {
-        delete this.dataSets.extraParameters['order_by'];
-      }
-      this.dataSets.newOrCachedCache(undefined, true);
-      this.dashboardDataSetReloadService.reload();
+      this.dataSetsSortOrder = 0;
+      this.dataSetsSortDesc = false;
+
+      this.triggerDataSetSorting();
     }
 });
 
-Object.defineProperty(
-  DashboardCtrl.prototype,
-  'dataSetsSortDesc', {
-    enumerable: true,
-    configurable: false,
-    get: function () {
-      return this._dataSetsSortDesc;
-    },
-    set: function (value) {
-      this._dataSetsSortDesc = value;
-      if (this.dataSetsSortBy) {
-        this.dataSetsSortBy = this.dataSetsSortBy;
-      }
-    }
-});
+DashboardCtrl.prototype.triggerDataSetSorting = function () {
+  if (this.dataSetsSortBy) {
+    this.dataSets.extraParameters['order_by'] = this.dataSetsSortDesc ?
+      '-' + this.dataSetsSortBy : this.dataSetsSortBy;
+  } else {
+    delete this.dataSets.extraParameters['order_by'];
+  }
 
-Object.defineProperty(
-  DashboardCtrl.prototype,
-  'dataSetOptions', {
-    enumerable: true,
-    configurable: false,
-    get: function () {
-      if (!this._dataSetOptions && !this._getDataSetOptions) {
-        this._getDataSetOptions = true;
-        this.getDataSetOptions();
-      }
-      return this._dataSetOptions;
-    },
-    set: function (value) {
-      this._dataSetOptions = value;
-    }
-});
+  this.dataSets.newOrCachedCache(undefined, true);
+  this.dashboardDataSetReloadService.reload();
+};
+
+DashboardCtrl.prototype.toggleSortOrder = function (sortBy) {
+  this.dataSetsSortOrder = (this.dataSetsSortOrder + 1) % 3;
+
+  if (this.dataSetsSortOrder === 0) {
+    this.dataSetsSortBy = undefined;
+  }
+
+  if (this.dataSetsSortOrder === 2) {
+    this.dataSetsSortDesc = true;
+    this.triggerDataSetSorting();
+  }
+};
 
 DashboardCtrl.prototype.getDataSetOptions = function () {
   this.dataSets

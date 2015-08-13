@@ -96,29 +96,24 @@
         <label class="checkbox">
           <input
             type="checkbox"
-            id="data-sets-filter-owner"
             ng-model="dashboard.dataSetsFilterOwner"> Own
         </label>
         <label class="checkbox">
           <input
             type="checkbox"
-            id="data-sets-filter-public"
             ng-model="dashboard.dataSetsFilterPublic"> Public
         </label>
         <h5>Sort by</h5>
-        <div ng-if="dashboard.dataSets.firstData">
-          <select
-            id="data-sets-sort-by"
-            ng-options="attr for attr in dashboard.dataSetOptions"
-            ng-model="dashboard.dataSetsSortBy">
-            <option value=""></option>
-          </select>
-        </div>
-        <label class="checkbox">
+        <label class="radio" ng-repeat="sorting in dashboard.dataSetsSorting track by $index">
           <input
-            type="checkbox"
-            id="data-sets-sort-desc"
-            ng-model="dashboard.dataSetsSortDesc"> Descending
+            type="radio"
+            value="{{ sorting.djangoAttribute }}"
+            ng-click="dashboard.toggleSortOrder(dashboard.dataSetsSortBy)"
+            ng-model="dashboard.dataSetsSortBy">
+            {{ sorting.label }}
+            <i
+              ng-if="sorting.djangoAttribute === dashboard.dataSetsSortBy"
+              ng-class="{'icon-sort-by-attributes': !dashboard.dataSetsSortDesc, 'icon-sort-by-attributes-alt': dashboard.dataSetsSortDesc}"></i>
         </label>
       </div>
       <div
