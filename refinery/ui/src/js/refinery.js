@@ -14,7 +14,9 @@ angular
   /*
    * Angular App globals
    */
+  'containsDomElement',
   'errors',
+  'pubSub',
 
   /*
    * Refinery modules
