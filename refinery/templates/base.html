@@ -115,8 +115,9 @@
         {% endif %}
           {% if request.user.is_superuser %}
          	&nbsp;&nbsp;|&nbsp;&nbsp;
-         	<span ng-controller="ExternalToolStatusController">
-                <a external-tool-status-popover data-placement="bottom" title="External Tool Status">
+         	<span ng-controller="ExternalToolStatusController"
+            id="external-tool-status-popover">
+                <a external-tool-status-popover title="External Tool Status">
                     <span external-tool-status></span>
                 </a>
             </span>
