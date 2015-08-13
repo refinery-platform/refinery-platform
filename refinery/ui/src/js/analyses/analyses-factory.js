@@ -134,7 +134,7 @@ function analysesFactory($http, analysisService) {
      if( isNotPending(data.preprocessing[0].state)) {
        analysesDetail[uuid].preprocessing = data.preprocessing[0].state;
        if( data.preprocessing[0].percent_done > analysesDetail[uuid].preprocessingPercentDone) {
-        analysesDetail[uuid].preprocessingPercentDone = data.preprocessing[0].percent_done;
+        analysesDetail[uuid].preprocessingPercentDone = Math.floor(data.preprocessing[0].percent_done.replace("%","")) + "%";
        }
     }
   };
@@ -143,7 +143,7 @@ function analysesFactory($http, analysisService) {
      if( isNotPending(data.postprocessing[0].state)) {
        analysesDetail[uuid].postprocessing = data.postprocessing[0].state;
        if(data.postprocessing[0].percent_done > analysesDetail[uuid].postprocessingPercentDone) {
-        analysesDetail[uuid].postprocessingPercentDone = data.postprocessing[0].percent_done;
+        analysesDetail[uuid].postprocessingPercentDone = Math.floor(data.postprocessing[0].percent_done.replace("%","")) + "%";
        }
     }
   };
@@ -152,7 +152,7 @@ function analysesFactory($http, analysisService) {
      if(isNotPending(data.execution[0].state)) {
        analysesDetail[uuid].execution = data.execution[0].state;
        if( data.execution[0].percent_done > analysesDetail[uuid].executionPercentDone) {
-        analysesDetail[uuid].executionPercentDone = data.execution[0].percent_done;
+        analysesDetail[uuid].executionPercentDone = Math.floor(data.execution[0].percent_done.replace("%","")) + "%";
        }
      }
   };
