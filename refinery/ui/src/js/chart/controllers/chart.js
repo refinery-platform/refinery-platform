@@ -148,15 +148,16 @@ ChartCtrl.prototype.draw_generic_table = function (data, config) {
     var tableHTML = '' +
       '<table class="table">'+
         '<thead>' +
-          '<tr>' + data[0].map(function (d) { return '<th>' + d + '</th>'; }) + '</tr>' +
+          '<tr>' + data[0].map(function (d) { return '<th>' + d + '</th>'; }).join('') + '</tr>' +
         '</thead>' +
         '<tbody>' +
           data.slice(1).map(function (d) {
-            return '<tr>' + d.map(function (f) { return '<td>' + f + '</td>'; }) + '</tr>';
-          }) +
+            return '<tr>' + d.map(function (f) { return '<td>' + f + '</td>'; }).join('') + '</tr>';
+          }).join('') +
         '</tbody>' +
       '</table>';
 
+    console.log( tableHTML);
     $(this.bindto).html(tableHTML);
   }
 };
@@ -178,7 +179,7 @@ ChartCtrl.prototype.draw_basic_statistics_table = function (data, config) {
             '<tr>'+
               '<td>' + k + '</td>' + '<td>' + data[k] + '</td>' +
             '</tr>';
-        }) +
+        }).join('') +
       '</tbody>' +
     '</table>';
 
