@@ -4,7 +4,7 @@ function ChartCtrl($, $stateParams, fastqcDataService, refineryBoxPlotService) {
   that.$stateParams = $stateParams;
   that.fastqcDataService = fastqcDataService;
   that.refineryBoxPlotService = refineryBoxPlotService;
-  that.uuid = this.$stateParams.uuid && isValidUUID(this.$stateParams.uuid) ? 
+  that.uuid = this.$stateParams.uuid && isValidUUID(this.$stateParams.uuid) ?
     this.$stateParams.uuid : '';
   that.mode = this.$stateParams.mode || 'basic_statistics';
 
@@ -24,7 +24,7 @@ function ChartCtrl($, $stateParams, fastqcDataService, refineryBoxPlotService) {
       }
     );
   } else {
-    that.errorMessage = 'Improper or no analysis uuid.';
+    that.errorMessage = 'Incompatible or no analysis selected.';
   }
 }
 
@@ -137,19 +137,28 @@ ChartCtrl.prototype.draw_generic_bar = function (data, config) {
 ChartCtrl.prototype.draw_generic_table = function (data, config) {
   config = config || {};
 
-  var tableHTML = '' +
-    '<table class="table">'+
-      '<thead>' +
-        '<tr>' + data[0].map(function (d) { return '<th>' + d + '</th>'; }) + '</tr>' +
-      '</thead>' +
-      '<tbody>' +
-        data.slice(1).map(function (d) {
-          return '<tr>' + d.map(function (f) { return '<td>' + f + '</td>'; }) + '</tr>';
-        }) +
-      '</tbody>' + 
-    '</table>';
+  if ( data.length === 0 ) {
 
-  $(this.bindto).html(tableHTML);
+
+    var message = '<div class="alert alert-warning">No data available for plotting.</div>';
+
+    $(this.bindto).html(message);
+  }
+  else {
+    var tableHTML = '' +
+      '<table class="table">'+
+        '<thead>' +
+          '<tr>' + data[0].map(function (d) { return '<th>' + d + '</th>'; }) + '</tr>' +
+        '</thead>' +
+        '<tbody>' +
+          data.slice(1).map(function (d) {
+            return '<tr>' + d.map(function (f) { return '<td>' + f + '</td>'; }) + '</tr>';
+          }) +
+        '</tbody>' +
+      '</table>';
+
+    $(this.bindto).html(tableHTML);
+  }
 };
 
 ChartCtrl.prototype.draw_basic_statistics_table = function (data, config) {
@@ -159,7 +168,7 @@ ChartCtrl.prototype.draw_basic_statistics_table = function (data, config) {
     '<table class="table">'+
       '<thead>' +
         '<tr>' +
-          '<th>Measure</th>' + 
+          '<th>Measure</th>' +
           '<th>Value</th>' +
         '</tr>' +
       '</thead>' +
@@ -170,7 +179,7 @@ ChartCtrl.prototype.draw_basic_statistics_table = function (data, config) {
               '<td>' + k + '</td>' + '<td>' + data[k] + '</td>' +
             '</tr>';
         }) +
-      '</tbody>' + 
+      '</tbody>' +
     '</table>';
 
   $(this.bindto).html(tableHTML);
