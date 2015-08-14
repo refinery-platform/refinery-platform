@@ -1,6 +1,6 @@
 angular
   .module('refineryDashboard')
-  .factory('dashboardDataSetReloadService', ['$q',
+  .factory('dashboardDataSetsReloadService', ['$q',
     function ($q) {
       return {
         /**
