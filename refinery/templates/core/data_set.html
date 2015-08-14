@@ -153,7 +153,6 @@
             {% if has_change_dataset_permission %}
               <li><a href="#configuration" data-toggle="tab">Attributes</a></li>
             {% endif %}
-            {% if has_change_dataset_permission %}
               <li>
                 <a href="#analyses" data-toggle="tab" id="analyze-tab">
                   <span ng-controller="AnalysesCtrl">
@@ -162,7 +161,6 @@
                   Analyses
                 </a>
               </li>
-            {% endif %}
             <li><a href="#downloads" data-toggle="tab">Downloads</a></li>
             <li><a href="#details" data-toggle="tab">Details</a></li>
             <li><a href="#sharing" data-toggle="tab">Sharing</a></li>
@@ -436,7 +434,6 @@
             </div>
           {% endif %}
 
-          {% if has_change_dataset_permission %}
             <div class="tab-pane fade" id="analyses">
               <div class="refinery-header">
                 <span class="refinery-header-left">
@@ -449,7 +446,6 @@
                 </div>
               </p>
             </div>
-          {% endif %}
 
           <div class="tab-pane fade" id="downloads">
             <div class="refinery-header">
