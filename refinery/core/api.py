@@ -586,6 +586,7 @@ class AnalysisResource(ModelResource):
     data_set__uuid = fields.CharField(attribute='data_set__uuid', use_in='all')
     workflow__uuid = fields.CharField(attribute='workflow__uuid', use_in='all')
     creation_date = fields.CharField(attribute='creation_date', use_in='all')
+    modification_date = fields.CharField(attribute='modification_date', use_in='all')
     workflow_steps_num = fields.IntegerField(
         attribute='workflow_steps_num', blank=True, null=True, use_in='detail')
     workflow_copy = fields.CharField(
@@ -613,10 +614,11 @@ class AnalysisResource(ModelResource):
         authorization = Authorization()
         allowed_methods = ["get"]
         fields = [
-            'data_set', 'data_set__uuid', 'creation_date', 'history_id',
-            'library_id', 'name', 'workflow__uuid',
-            'resource_uri', 'status', 'time_end', 'time_start', 'uuid',
-            'workflow_galaxy_id', 'workflow_steps_num', 'workflow_copy'
+            'data_set', 'data_set__uuid', 'creation_date',
+            'modification_date', 'history_id', 'library_id', 'name',
+            'workflow__uuid', 'resource_uri', 'status', 'time_end',
+            'time_start', 'uuid', 'workflow_galaxy_id', 'workflow_steps_num',
+            'workflow_copy'
         ]
         filtering = {
             'data_set': ALL_WITH_RELATIONS,
