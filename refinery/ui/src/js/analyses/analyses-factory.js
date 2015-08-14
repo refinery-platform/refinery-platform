@@ -10,78 +10,102 @@ function analysesFactory($http, analysisService) {
   var analysesRunningList = [];
   var analysesOne = [];
 
-  var initializeAnalysesDetail = function(uuid){
-    analysesDetail[uuid]={
+  var initializeAnalysesDetail = function (uuid) {
+    analysesDetail[uuid] = {
       "preprocessing": '',
-      "preprocessingPercentDone":'0%',
+      "preprocessingPercentDone": '0%',
       "execution": '',
-      "executionPercentDone":'0%',
+      "executionPercentDone": '0%',
       "postprocessing": '',
-      "postprocessingPercentDone":'0%',
-      "cancelingAnalyses":false,
+      "postprocessingPercentDone": '0%',
+      "cancelingAnalyses": false,
     };
   };
 
   //Ajax calls
 
-  var getAnalysesList = function(params) {
+  var getAnalysesList = function (params) {
     params = params || {};
 
     var analysis = analysisService.query(params);
-    analysis.$promise.then(function(response){
-     processAnalysesList(response.objects, params);
-    }, function(error){
+    analysis.$promise.then(function (response) {
+      processAnalysesList(response.objects, params);
+    }, function (error) {
       console.log(error);
     });
 
     return analysis.$promise;
   };
 
-  var processAnalysesList = function(data, params){
-     if('status' in params && 'data_set__uuid' in params ) {
-        angular.copy(data, analysesRunningList);
-      }else if('status' in params){
-        angular.copy(data, analysesRunningGlobalList);
-      }else if('limit' in params &&  'data_set__uuid' in params){
-        addElapseTime(data);
-      }else{
-       angular.copy(data, analysesGlobalList);
-      }
+  var processAnalysesList = function (data, params) {
+    if ('status' in params && 'data_set__uuid' in params) {
+      angular.copy(data, analysesRunningList);
+    } else if ('status' in params) {
+      angular.copy(data, analysesRunningGlobalList);
+    } else if ('limit' in params && 'data_set__uuid' in params) {
+      addElapseAndHumanTime(data);
+    } else {
+      angular.copy(data, analysesGlobalList);
+    }
   };
 
   //http.post header needed to be adjusted because django was not recognizing it
   // as an ajax call.
-  var getAnalysesDetail = function(uuid) {
+  var getAnalysesDetail = function (uuid) {
 
     return $http({
       method: 'POST',
       url: '/analysis_manager/' + uuid + "/?format=json",
-      headers: { "X-Requested-With" : 'XMLHttpRequest'}
-    }).then(function(response){
-          processAnalysesGlobalDetail(response.data, uuid);
-      }, function(error){
-        console.error("Error accessing analysis monitoring API");
-      });
+      headers: {"X-Requested-With": 'XMLHttpRequest'}
+    }).then(function (response) {
+      processAnalysesGlobalDetail(response.data, uuid);
+    }, function (error) {
+      console.error("Error accessing analysis monitoring API");
+    });
   };
 
-  var postCancelAnalysis = function(uuid){
+  var postCancelAnalysis = function (uuid) {
     return $http({
       method: 'POST',
       url: '/analysis_manager/analysis_cancel/',
       data: {'csrfmiddlewaretoken': csrf_token, 'uuid': uuid},
-      headers: { "X-Requested-With" : 'XMLHttpRequest'}
-    }).then(function(response){
+      headers: {"X-Requested-With": 'XMLHttpRequest'}
+    }).then(function (response) {
       console.log(response);
-    }, function(error){
+    }, function (error) {
       console.error("Error accessing analysis_cancel API");
     });
   };
 
   /*process responses from api*/
-  var addElapseTime = function(data){
+  var addElapseAndHumanTime = function (data) {
     angular.copy(data, analysesList);
-    for(var j=0; j < analysesList.length; j++){
+    for (var j = 0; j < analysesList.length; j++) {
       analysesList[j].elapseTime = createElapseTime(analysesList[j]);
+      if (isObjExist(analysesList[j].time_start) && isObjExist(analysesList[j].time_end)){
+        analysesList[j].humanizeStartTime = humanizeTimeObj(analysesList[j].time_start);
+        analysesList[j].humanizeEndTime = humanizeTimeObj(analysesList[j].time_end);
+      }
+    }
+  };
+
+  var humanizeTimeObj = function(param){
+    var a = param.split(/[^0-9]/);
+        var testDate = Date.UTC(a[0], a[1] - 1, a[2], a[3], a[4], a[5]);
+        var curDate = new Date().getTimezoneOffset() * 60 * 1000;
+        var offsetDate = testDate + curDate;
+        var unixtime = offsetDate / 1000;
+
+        return (
+          humanize.relativeTime(unixtime)
+        );
+  };
+
+  var isObjExist = function (data) {
+    if (typeof data !== "undefined" && data !== null){
+      return true;
+      }else{
+      return false;
     }
   };
 
