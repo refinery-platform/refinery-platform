@@ -43,7 +43,9 @@
       </form>
 
       <div class="refinery-panel-header">
-        <div class="refinery-notification">
+        <div
+          class="refinery-notification"
+          ng-class="{'active': dashboard.searchQueryDataSets.length > 0 || dashboard.dataSets.total === 0}">
           <div
             class="refinery-notification-info"
             ng-show="dashboard.searchQueryDataSets.length === 1">
@@ -65,6 +67,17 @@
         </div>
         <div class="floatbox">
           <div class="floatbox-min-right">
+            <button
+              class="icon-only icon-filter"
+              title="Filter &amp; Sort"
+              ng-class="{'active':dashboard.showFilterSort}"
+              ng-click="dashboard.showFilterSort = !!!dashboard.showFilterSort"
+              ng-show="!dashboard.searchQueryDataSets.length"
+              close-on-outer-click-external-trigger="dashboard.filterSort"
+              tool-tip
+              tool-tip-container="body"
+              tool-tip-placement="right">
+            </button>
           </div>
           <div class="floatbox-max-left">
             <h4>
@@ -73,6 +86,35 @@
             </h4>
           </div>
         </div>
+      </div>
+      <div
+        class="refinery-filter-sort"
+        ng-show="dashboard.showFilterSort"
+        close-on-outer-click="dashboard.showFilterSort"
+        close-on-outer-click-id="dashboard.filterSort">
+        <h5>Filter by</h5>
+        <label class="checkbox">
+          <input
+            type="checkbox"
+            ng-model="dashboard.dataSetsFilterOwner"> Own
+        </label>
+        <label class="checkbox">
+          <input
+            type="checkbox"
+            ng-model="dashboard.dataSetsFilterPublic"> Public
+        </label>
+        <h5>Sort by</h5>
+        <label class="radio" ng-repeat="sorting in dashboard.dataSetsSorting track by $index">
+          <input
+            type="radio"
+            value="{{ sorting.djangoAttribute }}"
+            ng-click="dashboard.toggleSortOrder(dashboard.dataSetsSortBy)"
+            ng-model="dashboard.dataSetsSortBy">
+            {{ sorting.label }}
+            <i
+              ng-if="sorting.djangoAttribute === dashboard.dataSetsSortBy"
+              ng-class="{'icon-sort-by-attributes': !dashboard.dataSetsSortDesc, 'icon-sort-by-attributes-alt': dashboard.dataSetsSortDesc}"></i>
+        </label>
       </div>
       <div
         class="refinery-panel-content scrollable jquery-full-height"
@@ -177,7 +219,9 @@
       -->
 
       <div class="refinery-panel-header">
-        <div class="refinery-notification">
+        <div
+          class="refinery-notification"
+          ng-class="{'active': dashboard.analyses.total === 0}">
           <div
             class="refinery-notification-info"
             ng-show="dashboard.analyses.total === 0">
@@ -245,7 +289,9 @@
     </div>
     <div class="refinery-sub-panel">
       <div class="refinery-panel-header">
-        <div class="refinery-notification">
+        <div
+          class="refinery-notification"
+          ng-class="{'active': dashboard.workflows.total === 0}">
           <div
             class="refinery-notification-info"
             ng-show="dashboard.workflows.total === 0">

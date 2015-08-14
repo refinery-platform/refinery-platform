@@ -307,6 +307,10 @@ class ProcessMetadataTableView(View):
             error = {'error_message':
                      'Import failed because no source columns were selected'}
             return render(request, self.template_name, error)
+        # workaround for breaking change in Angular
+        # https://github.com/angular/angular.js/commit/7fda214c4f65a6a06b25cf5d5aff013a364e9cef
+        source_column_index = [column.replace("string:", "")
+                               for column in source_column_index]
         try:
             dataset_uuid = process_metadata_table(
                 username=request.user.username, title=title,
@@ -349,10 +353,13 @@ class CheckDataFilesView(View):
         # check if files are available
         try:
             for file_path in file_data["list"]:
-                file_path = translate_file_source(file_path)
-                if not os.path.exists(file_path):
+                if not isinstance(file_path, str):
                     bad_file_list.append(file_path)
-                logger.debug("File path checked: '%s'", file_path)
+                else:
+                    file_path = translate_file_source(file_path)
+                    if not os.path.exists(file_path):
+                        bad_file_list.append(file_path)
+                logger.debug("Checked file path: '%s'", file_path)
         except KeyError:  # if there's no list provided
             return HttpResponseBadRequest()
         # prefix output to protect from JSON vulnerability (stripped by

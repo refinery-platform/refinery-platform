@@ -1,12 +1,13 @@
 angular
   .module('refineryDashboard')
-  .factory('dashboardDataSetListService', ['dataSetService',
-    function (dataSetService) {
-      return function (limit, offset) {
-        var query = dataSetService.query({
+  .factory('dashboardDataSetListService', ['dataSetService', '_',
+    function (dataSetService, _) {
+      return function (limit, offset, extra) {
+        var params = _.merge(_.cloneDeep(extra) || {}, {
               limit: limit,
               offset: offset
-            });
+            }),
+            query = dataSetService.query(params);
 
         /*
          * This extra promise is needed to normalize the APIs output. Most

@@ -56,7 +56,7 @@
     {% endblock %}
 </head>
 
-<body ng-app="{% block ng_app %}refineryApp{% endblock %}">
+<body ng-app="{% block ng_app %}refineryApp{% endblock %}" ng-controller="AppCtrl as app" ng-click="app.globalClick($event)">
   <!-- header navigation bar -->
   <div class="navbar navbar-fixed-top">
     <div class="navbar-inner">
@@ -215,6 +215,7 @@
   <script src="{% static "js/refinery-config.js" %}"></script>
   <script src="{% static "js/refinery-settings.js" %}"></script>
   <script src="{% static "js/refinery-libraries.js" %}"></script>
+  <script src="{% static "js/refinery-controller.js" %}"></script>
   <script src="{% static "js/globals.js" %}"></script>
   <script src="{% static "js/commons.js" %}"></script>
   <script src="{% static "js/analyses.js" %}"></script>

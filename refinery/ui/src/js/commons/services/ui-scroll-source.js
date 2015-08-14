@@ -123,8 +123,10 @@ angular
              */
             get: function (offset, limit, success) {
               if (this.isEnabled) {
-                if (this.getItems(offset, limit, success)) {
-                  return true;
+                var cachedItems = this.getItems(offset, limit, success);
+
+                if (cachedItems) {
+                  return $q.when(cachedItems);
                 }
 
                 return source.queryEndpoint(offset, limit, function (results) {
@@ -161,7 +163,7 @@ angular
 
               success(results);
 
-              return true;
+              return results;
             },
 
             /**
@@ -178,6 +180,7 @@ angular
               this.id = id || this.defaultId;
               this.isEnabled = true;
               this.items = {};
+              this.firstData = false;
             },
 
             /**
@@ -205,6 +208,9 @@ angular
               for (var i = 0, len = results.length; i < len; i++) {
                 this.items[offset + i] = results[i];
               }
+              if (!source.firstData) {
+                source.firstData = true;
+              }
             }
           },
 
@@ -221,6 +227,31 @@ angular
               return $q.defer().promise;
             }
           },
+
+          /**
+           * Object holding a set of extra parameters for querying the data
+           * source.
+           *
+           * @author  Fritz Lekschas
+           * @date    2015-08-12
+           *
+           * @type  {Object}
+           */
+          extraParameters: {},
+
+          /**
+           * After the first batch of data has been loaded this will be true.
+           *
+           * @description
+           * This property can be used to determine the time when to access an
+           * example object of the list.
+           *
+           * @author  Fritz Lekschas
+           * @date    2015-08-12
+           *
+           * @type  {Boolean}
+           */
+          firstData: false,
 
           /**
            * Wrapper function that adjusts the offset and redirects the request
@@ -255,9 +286,9 @@ angular
             }
 
             if (this.cache.isEnabled) {
-              this.cache.get(offset, limit, success);
+              return this.cache.get(offset, limit, success);
             } else {
-              this.queryEndpoint(offset, limit, success);
+              return this.queryEndpoint(offset, limit, success);
             }
           },
 
@@ -278,6 +309,55 @@ angular
           },
 
           /**
+           * Sets up a new or cached cache.
+           *
+           * @method  newOrCachedCache
+           * @author  Fritz Lekschas
+           * @date    2015-08-12
+           *
+           * @param   {String}   id     Identifier for the data source.
+           * @param   {Boolean}  reset  If `true` re-initializes the cache with
+           *   id `id`.
+           */
+          newOrCachedCache: function (id, reset) {
+            id = id || this.cache.defaultId;
+
+            // Cache current cache store.
+            // (Yes we cache the cache!)
+            cacheStore.put(this.cache.id, {
+              firstData: this.firstData,
+              initializedWithData: this.initializedWithData,
+              items: this.cache.items,
+              total: this.total,
+              totalReadable: this.totalReadable
+            });
+
+            // Reset cached instance
+            if (reset) {
+              cacheStore.remove(id);
+            }
+
+            // Get cached data or initialize data
+            var cached = cacheStore.get(id) || {
+              firstData: false,
+              initializedWithData: false,
+              items: {},
+              total: Number.POSITIVE_INFINITY,
+              totalReadable: 0
+            };
+
+            // Restore former cache or reset cache.
+            this.cache.items = cached.items;
+            // Set new id
+            this.cache.id = id;
+            // Reset init
+            this.initializedWithData = cached.initializedWithData;
+            // Reset total
+            this.total = cached.total;
+            this.totalReadable = this.initializedWithData ? cached.totalReadable : this.totalReadable;
+          },
+
+          /**
            * Query the actualy service for data.
            *
            * @method  queryEndpoint
@@ -289,9 +369,9 @@ angular
            * @param   {Function}  success  Callback function on success.
            */
           queryEndpoint: function (offset, limit, success) {
-            var query = this.dataSource(limit, offset);
+            var query = this.dataSource(limit, offset, this.extraParameters);
 
-            query
+            return query
               // Success
               .then(function (response) {
                 success(response.objects);
@@ -300,53 +380,34 @@ angular
                   this.total = response.meta.total_count;
                   this.totalReadable = response.meta.total_count;
                 }
+                return response.objects;
               }.bind(this))
               // Error
               .catch(function (error) {
-                success([]);
+                success(results);
               });
           },
 
           /**
-           * Reset the cache
+           * Remove all cached caches and initialize a new clean cache or re-
+           * initialize `id` cache.
            *
            * @method  resetCache
            * @author  Fritz Lekschas
-           * @date    2015-08-11
+           * @date    2015-08-12
            *
-           * @param   {String}  id         Identifier for the data source.
-           * @param   {[type]}  hardReset  If `true` resets the while cache.
+           * @return  {String}  Cache identifier
            */
-          resetCache: function (id, hardReset) {
+          resetCache: function (id) {
             id = id || this.cache.defaultId;
-            if (hardReset) {
+
+            if (!id) {
+
+              // Remove all cached caches
               cacheStore.removeAll();
-            } else {
-              // Cache current cache store.
-              // (Yes we cache the cache!)
-              cacheStore.put(this.cache.id, {
-                initializedWithData: this.initializedWithData,
-                items: this.cache.items,
-                total: this.total,
-                totalReadable: this.totalReadable
-              });
             }
-            // Get cached data or initialize data
-            var cached = cacheStore.get(id) || {
-              initializedWithData: false,
-              items: {},
-              total: Number.POSITIVE_INFINITY,
-              totalReadable: 0
-            };
-            // Restore former cache or reset cache.
-            this.cache.items = cached.items;
-            // Set new id
-            this.cache.id = id;
-            // Reset init
-            this.initializedWithData = cached.initializedWithData;
-            // Reset total
-            this.total = cached.total;
-            this.totalReadable = this.initializedWithData ? cached.totalReadable : this.totalReadable;
+            // Initialize a cache again
+            this.cache.initialize();
           },
 
           /**
@@ -362,13 +423,14 @@ angular
            * @date    2015-08-11
            *
            * @param   {Object}  dataSource  Object with a `get` function, which
-           *   accepts two parameters, offset and limit, and returns a promise.
+           *   accepts at least two parameters, offset and limit, and returns a
+           *   promise.
            * @param   {String}  id          Identifier for the data source.
            */
           set: function (dataSource, id) {
             if (dataSource &&
               typeof dataSource === 'function' &&
-              dataSource.length === 2) {
+              dataSource.length >= 2) {
               /**
                * The actual data source.
                *
@@ -380,7 +442,7 @@ angular
                * @type  {Function}
                */
               this.dataSource = dataSource;
-              this.resetCache(id);
+              this.newOrCachedCache(id);
             } else {
               throw new UiScrollSourceException(
                 'Data source doesn\'t have a `get` function, which accepts ' +

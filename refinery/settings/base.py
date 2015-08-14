@@ -80,11 +80,6 @@ if not os.path.isabs(STATIC_ROOT):
 # Example: "http://media.lawrence.com/static/"
 STATIC_URL = get_setting("STATIC_URL")
 
-# URL prefix for admin static files -- CSS, JavaScript and images.
-# Make sure to use a trailing slash.
-# Examples: "http://foo.com/static/admin/", "/static/admin/".
-ADMIN_MEDIA_PREFIX = get_setting("ADMIN_MEDIA_PREFIX")
-
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "refinery/static/production"),
     os.path.join(BASE_DIR, "refinery/ui/production")
@@ -202,8 +197,8 @@ LOGGING = {
     },
     'formatters': {
         'default': {
-            'format': '%(asctime)s %(levelname)-8s %(module)s %(funcName)s: '
-                      '%(message)s',
+            'format': '%(asctime)s %(levelname)-8s %(name)s:%(lineno)s '
+                      '%(funcName)s() - %(message)s',
             'datefmt': '%Y-%m-%d %H:%M:%S'
         },
     },

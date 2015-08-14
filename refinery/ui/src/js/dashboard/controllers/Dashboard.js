@@ -104,7 +104,7 @@ function DashboardCtrl (
   // Set reloader
   this.dashboardDataSetReloadService.setReload(function (hardReset) {
     if (hardReset) {
-      that.dataSets.resetCache(undefined, hardReset);
+      that.dataSets.resetCache();
     }
     // Reset current list and reload uiScroll
     if (this.dataSetsAdapter) {
@@ -123,6 +123,8 @@ function DashboardCtrl (
   $rootScope.$on('$stateChangeSuccess', function () {
     $timeout(window.sizing, 0);
   });
+
+  this.dataSetsSorting = settings.dashboard.dataSetsSorting;
 }
 
 /*
@@ -138,6 +140,96 @@ Object.defineProperty(
     value: false,
     writable: true
 });
+
+Object.defineProperty(
+  DashboardCtrl.prototype,
+  'dataSetsFilterOwner', {
+    enumerable: true,
+    configurable: false,
+    get: function () {
+      return this._dataSetsFilterOwner;
+    },
+    set: function (value) {
+      this._dataSetsFilterOwner = value;
+      if (value) {
+        this.dataSets.extraParameters['is_owner'] = 'True';
+      } else {
+        delete this.dataSets.extraParameters['is_owner'];
+      }
+      this.dataSets.newOrCachedCache(undefined, true);
+      this.dashboardDataSetReloadService.reload();
+    }
+});
+
+Object.defineProperty(
+  DashboardCtrl.prototype,
+  'dataSetsFilterPublic', {
+    enumerable: true,
+    configurable: false,
+    get: function () {
+      return this._dataSetsFilterPublic;
+    },
+    set: function (value) {
+      this._dataSetsFilterPublic = value;
+      if (value) {
+        this.dataSets.extraParameters['public'] = 'True';
+      } else {
+        delete this.dataSets.extraParameters['public'];
+      }
+      this.dataSets.newOrCachedCache(undefined, true);
+      this.dashboardDataSetReloadService.reload();
+    }
+});
+
+Object.defineProperty(
+  DashboardCtrl.prototype,
+  'dataSetsSortBy', {
+    enumerable: true,
+    configurable: false,
+    get: function () {
+      return this._dataSetsSortBy;
+    },
+    set: function (value) {
+      this._dataSetsSortBy = value;
+      this.dataSetsSortOrder = 0;
+      this.dataSetsSortDesc = false;
+
+      this.triggerDataSetSorting();
+    }
+});
+
+DashboardCtrl.prototype.triggerDataSetSorting = function () {
+  if (this.dataSetsSortBy) {
+    this.dataSets.extraParameters['order_by'] = this.dataSetsSortDesc ?
+      '-' + this.dataSetsSortBy : this.dataSetsSortBy;
+  } else {
+    delete this.dataSets.extraParameters['order_by'];
+  }
+
+  this.dataSets.newOrCachedCache(undefined, true);
+  this.dashboardDataSetReloadService.reload();
+};
+
+DashboardCtrl.prototype.toggleSortOrder = function (sortBy) {
+  this.dataSetsSortOrder = (this.dataSetsSortOrder + 1) % 3;
+
+  if (this.dataSetsSortOrder === 0) {
+    this.dataSetsSortBy = undefined;
+  }
+
+  if (this.dataSetsSortOrder === 2) {
+    this.dataSetsSortDesc = true;
+    this.triggerDataSetSorting();
+  }
+};
+
+DashboardCtrl.prototype.getDataSetOptions = function () {
+  this.dataSets
+    .get(1, 1, function () {})
+    .then(function (data) {
+      this.dataSetOptions = Object.keys(data[0]);
+    }.bind(this));
+};
 
 DashboardCtrl.prototype.toggleDataSetsExploration = function () {
   var that = this;
@@ -160,18 +252,16 @@ DashboardCtrl.prototype.resetDataSetSearch = function () {
 DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
   var that = this;
 
+  this.showFilterSort = false;
+
   if (searchQuery) {
     if (searchQuery.length > 1) {
       that.searchDataSet = true;
       var searchResults = new this.dashboardDataSetSearchService(searchQuery);
       this.dataSets.set(searchResults, searchQuery);
-      // that.dashboardDataSetSourceService.setSource(searchResults);
-      // that.dataSets.resetCache(searchQuery);
       that.dashboardDataSetReloadService.reload();
     }
   } else {
-    // that.dashboardDataSetSourceService.setSource(that.dashboardDataSetListService);
-    // that.dataSets.resetCache();
     this.dataSets.set(this.dashboardDataSetListService);
     if (that.searchDataSet) {
       that.searchDataSet = false;

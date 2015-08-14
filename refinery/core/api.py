@@ -354,7 +354,39 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         # authorization = GuardianAuthorization()
         filtering = {
             'uuid': ALL,
+            'is_owner': ALL,
+            'public': ALL
         }
+
+    def apply_sorting(self, obj_list, options=None):
+        """Manually sorting the list of objects returned by
+        `SharableResourceAPIInterface`. Ordering is being triggered in the same
+        way it normally is.
+
+        Example:
+        # Ascending
+        /api/v1/resource/?order_by=attribute
+        # Descending
+        /api/v1/resource/?order_by=-attribute
+        """
+        if options and 'order_by' in options:
+            if options['order_by'][0] == '-':
+                reverse = True
+                sorting = options['order_by'][1:]
+            else:
+                reverse = False
+                sorting = options['order_by']
+        else:
+            # Default sorting
+            sorting = 'modification_date'
+            reverse = True
+
+        obj_list.sort(
+            key=lambda x: getattr(x, sorting),
+            reverse=reverse
+        )
+
+        return obj_list
 
     def prepend_urls(self):
         prepend_urls_list = SharableResourceAPIInterface.prepend_urls(self) + [
@@ -419,7 +451,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         except ObjectDoesNotExist:
             return HttpGone()
 
-        # Assuming 1 to 1 relationship between DataSet and investigation
+        # Assuming 1 to 1 relationship between DataSet and Investigation
         return InvestigationResource().get_detail(
             request,
             uuid=data_set.get_investigation().uuid
