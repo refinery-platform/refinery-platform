@@ -1,11 +1,15 @@
 <span id="analysesCogIcon">
   <span ng-if="AnalysesCtrl.isAnalysesRunningGlobal() || AnalysesCtrl.launchAnalysisFlag">
     <span class="spinner">
-      <i class="icon-cog icon-spin"></i>
+      <i class="icon-cog icon-spin" id="global-analysis-status-run"
+        tool-tip tool-tip-container="body" tool-tip-placement="left"
+         title="View Recent Analyses"></i>
       {{ AnalysesCtrl.analysesRunningGlobalListCount }}
     </span>
   </span>
    <span ng-if="!(AnalysesCtrl.isAnalysesRunningGlobal() || AnalysesCtrl.launchAnalysisFlag)">
-    <i class="icon-cog"></i>
+    <i class="icon-cog" id="global-analysis-status" tool-tip tool-tip-container="body"
+      tool-tip-placement="left" title="Recent
+      Analyses"></i>
   </span>
 </span>
