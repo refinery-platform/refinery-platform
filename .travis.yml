@@ -14,7 +14,7 @@ before_script:
   - cp config.json.sample config.json
   - python manage.py syncdb --migrate --noinput
   - npm install --quiet -g grunt-cli karma bower
-  - cd refinery/ui && npm install --quiet -g grunt-cli karma bower && npm install && bower install && cd ../../
+  - cd refinery/ui && npm install && bower install && cd ../../
 script:
   - python manage.py test analysis_manager
   - python manage.py test annotation_server
