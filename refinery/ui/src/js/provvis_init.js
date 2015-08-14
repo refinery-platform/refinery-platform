@@ -459,7 +459,7 @@ var provvisInit = (function () {
       } else if (an.wfName.indexOf("analog") > -1) {
         an.wfCode = "SPP";
       } else {
-        an.wfCode = "N/A";
+        an.wfCode = an.wfName;
       }
     });
 
