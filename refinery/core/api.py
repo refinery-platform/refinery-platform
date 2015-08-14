@@ -625,7 +625,7 @@ class AnalysisResource(ModelResource):
             'status': ALL,
             'uuid': ALL
         }
-        ordering = ['name', 'creation_date']
+        ordering = ['name', 'creation_date', 'time_start', 'time_end']
 
     def get_object_list(self, request, **kwargs):
         if request.user.is_authenticated():
