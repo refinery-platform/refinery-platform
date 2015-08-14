@@ -257,7 +257,7 @@
               title="Filter &amp; Sort"
               ng-class="{'showing': dashboard.showAnalysesFilterSort, 'active': dashboard.analysesFilterSort}"
               ng-click="dashboard.showAnalysesFilterSort = !!!dashboard.showAnalysesFilterSort"
-              ng-if="dashboard.analyses.totalReadable"
+              ng-if="dashboard.analyses.totalReadable || dashboard.analysesFilterSort"
               close-on-outer-click-external-trigger="dashboard.analysesFilterSort"
               tool-tip
               tool-tip-container="body"
@@ -279,37 +279,42 @@
         close-on-outer-click-id="dashboard.analysesFilterSort">
         <h5>Filter by</h5>
         <div class="entry">
-          <label class="checkbox">
+          <label class="radio">
             <input
-              type="checkbox"
-              ng-model="dashboard.analysesFilterStatusRunning">
+              type="radio"
+              value="RUNNING"
+              ng-click="dashboard.toogleRadio('analysesFilterStatus')"
+              ng-model="dashboard.analysesFilterStatus">
               Running
               <i class="info-icon analyses-status icon-cog icon-spin"></i>
           </label>
         </div>
         <div class="entry">
-          <label class="checkbox">
+          <label class="radio">
             <input
-              type="checkbox"
-              ng-model="dashboard.analysesFilterStatusSuccessful">
+              type="radio"
+              value="SUCCESS"
+              ng-model="dashboard.analysesFilterStatus">
               Successful
               <i class="info-icon analyses-status icon-ok-sign"></i>
           </label>
         </div>
         <div class="entry">
-          <label class="checkbox">
+          <label class="radio">
             <input
-              type="checkbox"
-              ng-model="dashboard.analysesFilterStatusFailed">
+              type="radio"
+              value="FAILURE"
+              ng-model="dashboard.analysesFilterStatus">
               Failed
               <i class="info-icon analyses-status icon-warning-sign"></i>
           </label>
         </div>
         <div class="entry">
-          <label class="checkbox">
+          <label class="radio">
             <input
-              type="checkbox"
-              ng-model="dashboard.analysesFilterStatusUnknown">
+              type="radio"
+              value="UNKNOWN"
+              ng-model="dashboard.analysesFilterStatus">
               Unknown
               <i class="info-icon analyses-status icon-question-sign"></i>
           </label>
@@ -318,7 +323,7 @@
         <div
           class="entry"
           ng-repeat="sorting in dashboard.analysesSorting track by $index">
-          <label class="radio">
+          <label class="radio radio-button-hide">
             <input
               type="radio"
               value="{{ sorting.djangoAttribute }}"

@@ -236,6 +236,28 @@ Object.defineProperty(
 
 Object.defineProperty(
   DashboardCtrl.prototype,
+  'analysesFilterStatus', {
+    enumerable: true,
+    configurable: false,
+    get: function () {
+      return this._analysesFilterStatus;
+    },
+    set: function (value) {
+      this.analysesFilterStatusCounter = 0;
+      this._analysesFilterStatus = value;
+      if (value) {
+        this.analyses.extraParameters['status'] = value;
+      } else {
+        delete this.analyses.extraParameters['status'];
+      }
+      this.analyses.newOrCachedCache(undefined, true);
+      this.dashboardAnalysesReloadService.reload();
+      this.checkAnalysesFilterSort();
+    }
+});
+
+Object.defineProperty(
+  DashboardCtrl.prototype,
   'analysesSortBy', {
     enumerable: true,
     configurable: false,
@@ -270,20 +292,14 @@ Object.defineProperty(
     }
 });
 
+DashboardCtrl.prototype.toogleRadio = function (attr) {
+  if (this[attr + 'Counter']++) {
+    this[attr] = undefined;
+  }
+};
+
 DashboardCtrl.prototype.checkAnalysesFilterSort = function () {
-  if (this.analysesFilterStatusRunning) {
-    this.analysesFilterSort = true;
-    return;
-  }
-  if (this.analysesFilterStatusSuccessful) {
-    this.analysesFilterSort = true;
-    return;
-  }
-  if (this.analysesFilterStatusFailed) {
-    this.analysesFilterSort = true;
-    return;
-  }
-  if (this.analysesFilterStatusUnknown) {
+  if (this.analysesFilterStatus) {
     this.analysesFilterSort = true;
     return;
   }
