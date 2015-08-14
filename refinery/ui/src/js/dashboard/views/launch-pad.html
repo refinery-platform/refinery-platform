@@ -111,7 +111,7 @@
         <div
           class="entry"
           ng-repeat="sorting in dashboard.dataSetsSorting track by $index">
-          <label class="radio">
+          <label class="radio radio-button-hide">
             <input
               type="radio"
               value="{{ sorting.djangoAttribute }}"
@@ -430,7 +430,7 @@
         <div
           class="entry"
           ng-repeat="sorting in dashboard.workflowsSorting track by $index">
-          <label class="radio">
+          <label class="radio radio-button-hide">
             <input
               type="radio"
               value="{{ sorting.djangoAttribute }}"
