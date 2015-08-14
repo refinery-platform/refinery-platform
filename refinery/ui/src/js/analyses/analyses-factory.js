@@ -82,8 +82,10 @@ function analysesFactory($http, analysisService) {
     angular.copy(data, analysesList);
     for (var j = 0; j < analysesList.length; j++) {
       analysesList[j].elapseTime = createElapseTime(analysesList[j]);
-      if (isObjExist(analysesList[j].time_start) && isObjExist(analysesList[j].time_end)){
+      if (isObjExist(analysesList[j].time_start)){
         analysesList[j].humanizeStartTime = humanizeTimeObj(analysesList[j].time_start);
+      }
+      if( isObjExist(analysesList[j].time_end)){
         analysesList[j].humanizeEndTime = humanizeTimeObj(analysesList[j].time_end);
       }
     }
