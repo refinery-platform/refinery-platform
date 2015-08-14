@@ -5055,11 +5055,11 @@ var provvisRender = (function () {
       if ($(this).hasClass('active')) {
         $("#provenance-sidebar")
             .animate({left: '-355'}, nodeLinkTransitionTime);
-        $(this).html("OFF");
+        $(this).html("Show");
       } else {
         $("#provenance-sidebar")
             .animate({left: '20'}, nodeLinkTransitionTime);
-        $(this).html("ON");
+        $(this).html("Hide");
 
         /* TODO: Temporary fix for sidbear div. */
         $("#provvis-sidebar-content").css({"height": "720px"});

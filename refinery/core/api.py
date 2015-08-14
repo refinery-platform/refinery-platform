@@ -566,8 +566,8 @@ class AnalysisResource(ModelResource):
     creation_date = fields.CharField(attribute='creation_date', use_in='all')
     workflow_steps_num = fields.IntegerField(
         attribute='workflow_steps_num', blank=True, null=True, use_in='detail')
-    # workflow_copy = fields.CharField(
-    #     attribute='workflow_copy', blank=True, null=True, use_in='detail')
+    workflow_copy = fields.CharField(
+         attribute='workflow_copy', blank=True, null=True, use_in='detail')
     history_id = fields.CharField(
         attribute='history_id', blank=True, null=True, use_in='detail')
     workflow_galaxy_id = fields.CharField(
