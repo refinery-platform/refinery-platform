@@ -19,6 +19,8 @@ function DashboardCtrl (
   dashboardWidthFixerService,
   dashboardExpandablePanelService,
   dashboardDataSetPreviewService) {
+  var that = this;
+
   // Construct Angular modules
   this.$q = $q;
   this.$state = $state;
@@ -64,11 +66,13 @@ function DashboardCtrl (
   this.analyses = new UiScrollSource(
     'dashboard/analyses',
     1,
-    function (limit, offset) {
-      return this.analysisService.query({
-        limit: limit,
-        offset: offset
-      }).$promise;
+    function (limit, offset, extra) {
+      var params = this._.merge(this._.cloneDeep(extra) || {}, {
+            limit: limit,
+            offset: offset
+          });
+
+      return this.analysisService.query(params).$promise;
     }.bind(this)
   );
 
@@ -88,11 +92,13 @@ function DashboardCtrl (
   this.workflows = new UiScrollSource(
     'dashboard/workflows',
     1,
-    function (limit, offset) {
-      return this.workflowService.query({
-        limit: limit,
-        offset: offset
-      }).$promise;
+    function (limit, offset, extra) {
+      var params = this._.merge(this._.cloneDeep(extra) || {}, {
+            limit: limit,
+            offset: offset
+          });
+
+      return this.workflowService.query(params).$promise;
     }.bind(this)
   );
 
@@ -119,11 +125,11 @@ function DashboardCtrl (
   // `dashboardDataSetsReloadService`.
   this.dashboardAnalysesReloadService = {
     reload: function () {
-      if (this.analysesAdapter) {
-        this.analysesAdapter.applyUpdates(function (item, scope) {
+      if (that.analysesAdapter) {
+        that.analysesAdapter.applyUpdates(function (item, scope) {
           return [];
         });
-        this.analysesAdapter.reload();
+        that.analysesAdapter.reload();
       }
     }
   };
@@ -132,11 +138,11 @@ function DashboardCtrl (
   // `dashboardDataSetsReloadService`.
   this.dashboardWorkflowsReloadService = {
     reload: function () {
-      if (this.workflowsAdapter) {
-        this.workflowsAdapter.applyUpdates(function (item, scope) {
+      if (that.workflowsAdapter) {
+        that.workflowsAdapter.applyUpdates(function (item, scope) {
           return [];
         });
-        this.workflowsAdapter.reload();
+        that.workflowsAdapter.reload();
       }
     }
   };
