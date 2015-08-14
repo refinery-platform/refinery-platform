@@ -1858,7 +1858,13 @@ class FastQCResource(Resource):
                 'title': i[0],
                 'result': i[1]
             }
-            parsed_data = parser.clean_data(i[0])
+            parsed_data = []
+
+            try:
+                parsed_data = parser.clean_data(i[0])
+            except:
+                logger.warn( "No data found for " + i[0] + " in file " + fastqc_file_list[0].file_store_uuid )
+
             clean_data = []
 
             for row in parsed_data:
