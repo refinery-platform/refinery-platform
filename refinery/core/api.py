@@ -514,6 +514,28 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
         # authentication = SessionAuthentication()
         # authorization = GuardianAuthorization()
 
+    def apply_sorting(self, obj_list, options=None):
+        """Same as dataSet sorting
+        """
+        if options and 'order_by' in options:
+            if options['order_by'][0] == '-':
+                reverse = True
+                sorting = options['order_by'][1:]
+            else:
+                reverse = False
+                sorting = options['order_by']
+        else:
+            # Default sorting
+            sorting = 'name'
+            reverse = False
+
+        obj_list.sort(
+            key=lambda x: getattr(x, sorting),
+            reverse=reverse
+        )
+
+        return obj_list
+
     def prepend_urls(self):
         return SharableResourceAPIInterface.prepend_urls(self)
 
