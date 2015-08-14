@@ -17,6 +17,7 @@
           </span>
         </a>
       </div>
+
       <div class="span4 analysis-name">
         <a class="analysis-header" ng-click="order('name')">
           <strong>Name</strong>
@@ -25,6 +26,7 @@
           </span>
         </a>
       </div>
+
       <div class="span2">
        <a class="analysis-header" ng-click="order('time_start')">
          <strong>Start Time</strong>
@@ -45,7 +47,6 @@
         </a>
       </div>
 
-
       <div class="span2">
         <a class="analysis-header" ng-click="order('time_end')">
           <strong>End Time</strong>
@@ -55,7 +56,8 @@
           </span>
         </a>
       </div>
-      <div class="span1">
+
+      <div class="span1 analysis-cancel-col">
       </div>
 
       <ul class="analysesList">
@@ -89,11 +91,18 @@
                   </a>
                 </span>
               </span>
+              <span ng-if="analysis.status=='RUNNING'"
+              class="analysis-cancel-col">
+                &nbsp;
+               <a rp-analyses-cancel-confirm confirmed-click="AnalysesCtrl.cancelAnalysis(analysis.uuid)" rp-analyses-cancel-tooltip>
+                 <i class="icon-remove-sign analyses-cancel"></i>
+               </a>
+              </span>
              </div>
 
             <div class="span2">
               <span  rp-analyses-start-time-tooltip>
-                {{analysis.time_start | analysesHumanizeTime }}
+                {{analysis.humanizeStartTime }}
               </span>
             </div>
 
@@ -103,15 +112,9 @@
 
             <div class="span2">
               <span  rp-analyses-end-time-tooltip>
-                {{analysis.time_end | analysesHumanizeTime}}
+                 {{analysis.humanizeEndTime }}
               </span>
             </div>
-
-           <div ng-if="analysis.status=='RUNNING'"  class="span1">
-             <a rp-analyses-cancel-confirm confirmed-click="AnalysesCtrl.cancelAnalysis(analysis.uuid)" rp-analyses-cancel-tooltip>
-               <i class="icon-remove analyses-cancel"></i>
-             </a>
-           </div>
 
            <span ng-if="analysis.status=='RUNNING' || analysis.status=='INITIALIZED'">
 
