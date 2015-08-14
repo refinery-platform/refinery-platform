@@ -2,7 +2,7 @@ function PermissionEditorCtrl (
   $modalInstance,
   _,
   sharingService,
-  dashboardDataSetReloadService,
+  dashboardDataSetsReloadService,
   config) {
   var that = this;
 
@@ -10,7 +10,7 @@ function PermissionEditorCtrl (
   this.config = config;
   this.$modalInstance = $modalInstance;
   this.sharingService = sharingService;
-  this.dashboardDataSetReloadService = dashboardDataSetReloadService;
+  this.dashboardDataSetsReloadService = dashboardDataSetsReloadService;
 
   this.getPermissions(
     this.config.model,
@@ -125,7 +125,7 @@ PermissionEditorCtrl.prototype.save = function () {
     })
     .$promise
       .then(function () {
-        that.dashboardDataSetReloadService.reload(true);
+        that.dashboardDataSetsReloadService.reload(true);
         that.$modalInstance.dismiss('saved');
       })
       .catch(function (error) {
@@ -142,7 +142,7 @@ angular
     '$modalInstance',
     '_',
     'sharingService',
-    'dashboardDataSetReloadService',
+    'dashboardDataSetsReloadService',
     'config',
     PermissionEditorCtrl
   ]);

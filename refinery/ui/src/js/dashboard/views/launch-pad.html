@@ -70,10 +70,10 @@
             <button
               class="icon-only icon-filter"
               title="Filter &amp; Sort"
-              ng-class="{'showing': dashboard.showFilterSort, 'active': dashboard.dataSetsFilterSort}"
-              ng-click="dashboard.showFilterSort = !!!dashboard.showFilterSort"
+              ng-class="{'showing': dashboard.showDataSetsFilterSort, 'active': dashboard.dataSetsFilterSort}"
+              ng-click="dashboard.showDataSetsFilterSort = !!!dashboard.showDataSetsFilterSort"
               ng-show="!dashboard.searchQueryDataSets.length"
-              close-on-outer-click-external-trigger="dashboard.filterSort"
+              close-on-outer-click-external-trigger="dashboard.dataSetsfilterSort"
               tool-tip
               tool-tip-container="body"
               tool-tip-placement="right">
@@ -89,9 +89,9 @@
       </div>
       <div
         class="refinery-filter-sort"
-        ng-show="dashboard.showFilterSort"
-        close-on-outer-click="dashboard.showFilterSort"
-        close-on-outer-click-id="dashboard.filterSort">
+        ng-show="dashboard.showDataSetsFilterSort"
+        close-on-outer-click="dashboard.showDataSetsFilterSort"
+        close-on-outer-click-id="dashboard.dataSetsfilterSort">
         <h5>Filter by</h5>
         <div class="entry">
           <label class="checkbox">
@@ -111,11 +111,11 @@
         <div
           class="entry"
           ng-repeat="sorting in dashboard.dataSetsSorting track by $index">
-          <label class="radio">
+          <label class="radio radio-button-hide">
             <input
               type="radio"
               value="{{ sorting.djangoAttribute }}"
-              ng-click="dashboard.toggleSortOrder(dashboard.dataSetsSortBy)"
+              ng-click="dashboard.toggleSortOrder('dataSets')"
               ng-model="dashboard.dataSetsSortBy">
               <i
                 class="sort-icon sort-active"
@@ -252,6 +252,17 @@
         </div>
         <div class="floatbox">
           <div class="floatbox-min-right">
+            <button
+              class="icon-only icon-filter"
+              title="Filter &amp; Sort"
+              ng-class="{'showing': dashboard.showAnalysesFilterSort, 'active': dashboard.analysesFilterSort}"
+              ng-click="dashboard.showAnalysesFilterSort = !!!dashboard.showAnalysesFilterSort"
+              ng-if="dashboard.analyses.totalReadable || dashboard.analysesFilterSort"
+              close-on-outer-click-external-trigger="dashboard.analysesFilterSort"
+              tool-tip
+              tool-tip-container="body"
+              tool-tip-placement="right">
+            </button>
           </div>
           <div class="floatbox-max-left">
             <h4>
@@ -259,6 +270,74 @@
               {{ dashboard.analyses.totalReadable > 1 ? 'analyses' : 'analysis' }}
             </h4>
           </div>
+        </div>
+      </div>
+      <div
+        class="refinery-filter-sort"
+        ng-show="dashboard.showAnalysesFilterSort"
+        close-on-outer-click="dashboard.showAnalysesFilterSort"
+        close-on-outer-click-id="dashboard.analysesFilterSort">
+        <h5>Filter by</h5>
+        <div class="entry">
+          <label class="radio">
+            <input
+              type="radio"
+              value="RUNNING"
+              ng-click="dashboard.toogleRadio('analysesFilterStatus')"
+              ng-model="dashboard.analysesFilterStatus">
+              Running
+              <i class="info-icon analyses-status icon-cog icon-spin"></i>
+          </label>
+        </div>
+        <div class="entry">
+          <label class="radio">
+            <input
+              type="radio"
+              value="SUCCESS"
+              ng-model="dashboard.analysesFilterStatus">
+              Successful
+              <i class="info-icon analyses-status icon-ok-sign"></i>
+          </label>
+        </div>
+        <div class="entry">
+          <label class="radio">
+            <input
+              type="radio"
+              value="FAILURE"
+              ng-model="dashboard.analysesFilterStatus">
+              Failed
+              <i class="info-icon analyses-status icon-warning-sign"></i>
+          </label>
+        </div>
+        <div class="entry">
+          <label class="radio">
+            <input
+              type="radio"
+              value="UNKNOWN"
+              ng-model="dashboard.analysesFilterStatus">
+              Unknown
+              <i class="info-icon analyses-status icon-question-sign"></i>
+          </label>
+        </div>
+        <h5>Sort by</h5>
+        <div
+          class="entry"
+          ng-repeat="sorting in dashboard.analysesSorting track by $index">
+          <label class="radio radio-button-hide">
+            <input
+              type="radio"
+              value="{{ sorting.djangoAttribute }}"
+              ng-click="dashboard.toggleSortOrder('analyses')"
+              ng-model="dashboard.analysesSortBy">
+              <i
+                class="sort-icon sort-active"
+                ng-if="sorting.djangoAttribute === dashboard.analysesSortBy"
+                ng-class="{'icon-sort-up': !dashboard.analysesSortDesc, 'icon-sort-down': dashboard.analysesSortDesc}"></i>
+              <i
+                class="sort-icon icon-sort"
+                ng-if="sorting.djangoAttribute !== dashboard.analysesSortBy"></i>
+              {{ sorting.label }}
+          </label>
         </div>
       </div>
       <div
@@ -322,6 +401,17 @@
         </div>
         <div class="floatbox">
           <div class="floatbox-min-right">
+            <button
+              class="icon-only icon-filter"
+              title="Filter &amp; Sort"
+              ng-class="{'showing': dashboard.showWorkflowsFilterSort, 'active': dashboard.workflowsFilterSort}"
+              ng-click="dashboard.showWorkflowsFilterSort = !!!dashboard.showWorkflowsFilterSort"
+              ng-if="dashboard.workflows.totalReadable"
+              close-on-outer-click-external-trigger="dashboard.workflowsFilterSort"
+              tool-tip
+              tool-tip-container="body"
+              tool-tip-placement="left">
+            </button>
           </div>
           <div class="floatbox-max-left">
             <h4>
@@ -329,6 +419,32 @@
               {{ dashboard.workflows.totalReadable > 1 ? 'workflows' : 'workflow' }}
             </h4>
           </div>
+        </div>
+      </div>
+      <div
+        class="refinery-filter-sort"
+        ng-show="dashboard.showWorkflowsFilterSort"
+        close-on-outer-click="dashboard.showWorkflowsFilterSort"
+        close-on-outer-click-id="dashboard.workflowsFilterSort">
+        <h5>Sort by</h5>
+        <div
+          class="entry"
+          ng-repeat="sorting in dashboard.workflowsSorting track by $index">
+          <label class="radio radio-button-hide">
+            <input
+              type="radio"
+              value="{{ sorting.djangoAttribute }}"
+              ng-click="dashboard.toggleSortOrder('workflows')"
+              ng-model="dashboard.workflowsSortBy">
+              <i
+                class="sort-icon sort-active"
+                ng-if="sorting.djangoAttribute === dashboard.workflowsSortBy"
+                ng-class="{'icon-sort-up': !dashboard.workflowsSortDesc, 'icon-sort-down': dashboard.workflowsSortDesc}"></i>
+              <i
+                class="sort-icon icon-sort"
+                ng-if="sorting.djangoAttribute !== dashboard.workflowsSortBy"></i>
+              {{ sorting.label }}
+          </label>
         </div>
       </div>
       <div

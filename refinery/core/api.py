@@ -514,6 +514,28 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
         # authentication = SessionAuthentication()
         # authorization = GuardianAuthorization()
 
+    def apply_sorting(self, obj_list, options=None):
+        """Same as dataSet sorting
+        """
+        if options and 'order_by' in options:
+            if options['order_by'][0] == '-':
+                reverse = True
+                sorting = options['order_by'][1:]
+            else:
+                reverse = False
+                sorting = options['order_by']
+        else:
+            # Default sorting
+            sorting = 'name'
+            reverse = False
+
+        obj_list.sort(
+            key=lambda x: getattr(x, sorting),
+            reverse=reverse
+        )
+
+        return obj_list
+
     def prepend_urls(self):
         return SharableResourceAPIInterface.prepend_urls(self)
 
@@ -603,17 +625,24 @@ class AnalysisResource(ModelResource):
             'status': ALL,
             'uuid': ALL
         }
-        ordering = ['name', 'creation_date']
+        ordering = ['name', 'creation_date', 'time_start', 'time_end']
 
     def get_object_list(self, request, **kwargs):
-        if request.user.is_authenticated():
-            return UserProfile.objects.get(
-                user=User.objects.get(
-                    username=request.user
-                )
-            ).catch_all_project.analyses.all().order_by("-time_start")
+        user = request.user
+        perm = 'read_%s' % DataSet._meta.module_name
+        if (user.is_authenticated()):
+            allowed_datasets = get_objects_for_user(user, perm, DataSet)
         else:
-            return Analysis.objects.none()
+            allowed_datasets = get_objects_for_group(
+                ExtendedGroup.objects.public_group(), perm, DataSet)
+
+        allowed_datasets.prefetch_related('analysis')
+
+        all_allowed_analyses = Analysis.objects.none()
+        for dataset in allowed_datasets:
+            all_allowed_analyses = all_allowed_analyses | dataset.analysis_set.all()
+
+        return all_allowed_analyses
 
 
 class NodeResource(ModelResource):
