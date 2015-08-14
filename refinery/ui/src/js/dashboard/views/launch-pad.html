@@ -137,15 +137,24 @@
             <i
               class="icon-user"
               title="You own this data set"
-              ng-if="dataSet.is_owner"></i>
+              ng-if="dataSet.is_owner"
+              tool-tip
+              tool-tip-container="body"
+              tool-tip-placement="top"></i>
             <i
               class="icon-group"
               title="This data set is shared with you"
-              ng-if="!dataSet.is_owner"></i>
+              ng-if="!dataSet.is_owner"
+              tool-tip
+              tool-tip-container="body"
+              tool-tip-placement="top"></i>
             <i
               class="icon-globe"
               title="This file is publicly available"
-              ng-if="dataSet.public"></i>
+              ng-if="dataSet.public"
+              tool-tip
+              tool-tip-container="body"
+              tool-tip-placement="top"></i>
             <a
               class="title"
               ng-href="data_sets/{{ dataSet.uuid }}"
