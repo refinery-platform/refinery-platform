@@ -196,9 +196,9 @@ def make_api_uri(resource_name, resource_id=''):
     """Helper function to build Tastypie REST URIs"""
     base_url = '/api/v1'
     if resource_id:
-        return '/'.join([base_url, resource_name, resource_id]) + '/'
+        return '/'.join([base_url, resource_name, resource_id]) + '/?format=json'
     else:
-        return '/'.join([base_url, resource_name]) + '/'
+        return '/'.join([base_url, resource_name]) + '/?format=json'
 
 
 class NodeSetResourceTest(ResourceTestCase):
@@ -790,6 +790,9 @@ class AnalysisResourceTest(ResourceTestCase):
         """Test retrieving an existing Analysis that belongs to a user who
         created it
         """
+
+        self.dataset.set_owner(self.user)
+
         analysis = Analysis.objects.create(
             name='bla',
             summary='keks',
@@ -812,6 +815,9 @@ class AnalysisResourceTest(ResourceTestCase):
         """Test retrieving a list of Analysis instances that belong to a user
         who created them.
         """
+
+        self.dataset.set_owner(self.user)
+
         analysis1 = Analysis.objects.create(
             name='a1',
             summary='keks',
@@ -896,6 +902,9 @@ class AnalysisResourceTest(ResourceTestCase):
 
     def test_get_analysis_list_for_given_dataset(self):
         """Test retrieving a list of Analysis instances for a given dataset"""
+
+        self.dataset.set_owner(self.user)
+
         analysis1 = Analysis.objects.create(
             name='a1',
             project=self.user_catch_all_project,
@@ -925,6 +934,11 @@ class AnalysisResourceTest(ResourceTestCase):
         """Get a list of Analysis instances with sorting params applied
         (e.g., order_by=name)
         """
+
+        self.dataset.set_owner(self.user)
+        self.dataset2.set_owner(self.user)
+
+
         analysis1 = Analysis.objects.create(
             name='a1',
             project=self.user_catch_all_project,
