@@ -70,7 +70,7 @@
             <button
               class="icon-only icon-filter"
               title="Filter &amp; Sort"
-              ng-class="{'active':dashboard.showFilterSort}"
+              ng-class="{'showing': dashboard.showFilterSort, 'active': dashboard.dataSetsFilterSort}"
               ng-click="dashboard.showFilterSort = !!!dashboard.showFilterSort"
               ng-show="!dashboard.searchQueryDataSets.length"
               close-on-outer-click-external-trigger="dashboard.filterSort"
@@ -93,28 +93,40 @@
         close-on-outer-click="dashboard.showFilterSort"
         close-on-outer-click-id="dashboard.filterSort">
         <h5>Filter by</h5>
-        <label class="checkbox">
-          <input
-            type="checkbox"
-            ng-model="dashboard.dataSetsFilterOwner"> Own
-        </label>
-        <label class="checkbox">
-          <input
-            type="checkbox"
-            ng-model="dashboard.dataSetsFilterPublic"> Public
-        </label>
+        <div class="entry">
+          <label class="checkbox">
+            <input
+              type="checkbox"
+              ng-model="dashboard.dataSetsFilterOwner"> Own
+          </label>
+        </div>
+        <div class="entry">
+          <label class="checkbox">
+            <input
+              type="checkbox"
+              ng-model="dashboard.dataSetsFilterPublic"> Public
+          </label>
+        </div>
         <h5>Sort by</h5>
-        <label class="radio" ng-repeat="sorting in dashboard.dataSetsSorting track by $index">
-          <input
-            type="radio"
-            value="{{ sorting.djangoAttribute }}"
-            ng-click="dashboard.toggleSortOrder(dashboard.dataSetsSortBy)"
-            ng-model="dashboard.dataSetsSortBy">
-            {{ sorting.label }}
-            <i
-              ng-if="sorting.djangoAttribute === dashboard.dataSetsSortBy"
-              ng-class="{'icon-sort-by-attributes': !dashboard.dataSetsSortDesc, 'icon-sort-by-attributes-alt': dashboard.dataSetsSortDesc}"></i>
-        </label>
+        <div
+          class="entry"
+          ng-repeat="sorting in dashboard.dataSetsSorting track by $index">
+          <label class="radio">
+            <input
+              type="radio"
+              value="{{ sorting.djangoAttribute }}"
+              ng-click="dashboard.toggleSortOrder(dashboard.dataSetsSortBy)"
+              ng-model="dashboard.dataSetsSortBy">
+              <i
+                class="sort-icon sort-active"
+                ng-if="sorting.djangoAttribute === dashboard.dataSetsSortBy"
+                ng-class="{'icon-sort-up': !dashboard.dataSetsSortDesc, 'icon-sort-down': dashboard.dataSetsSortDesc}"></i>
+              <i
+                class="sort-icon icon-sort"
+                ng-if="sorting.djangoAttribute !== dashboard.dataSetsSortBy"></i>
+              {{ sorting.label }}
+          </label>
+        </div>
       </div>
       <div
         class="refinery-panel-content scrollable jquery-full-height"
@@ -137,15 +149,24 @@
             <i
               class="icon-user"
               title="You own this data set"
-              ng-if="dataSet.is_owner"></i>
+              ng-if="dataSet.is_owner"
+              tool-tip
+              tool-tip-container="body"
+              tool-tip-placement="top"></i>
             <i
               class="icon-group"
               title="This data set is shared with you"
-              ng-if="!dataSet.is_owner"></i>
+              ng-if="!dataSet.is_owner"
+              tool-tip
+              tool-tip-container="body"
+              tool-tip-placement="top"></i>
             <i
               class="icon-globe"
               title="This file is publicly available"
-              ng-if="dataSet.public"></i>
+              ng-if="dataSet.public"
+              tool-tip
+              tool-tip-container="body"
+              tool-tip-placement="top"></i>
             <a
               class="title"
               ng-href="data_sets/{{ dataSet.uuid }}"

@@ -594,7 +594,7 @@ class AnalysisResource(ModelResource):
             'data_set', 'data_set__uuid', 'creation_date', 'history_id',
             'library_id', 'name', 'workflow__uuid',
             'resource_uri', 'status', 'time_end', 'time_start', 'uuid',
-            'workflow_galaxy_id', 'workflow_steps_num'
+            'workflow_galaxy_id', 'workflow_steps_num', 'workflow_copy'
         ]
         filtering = {
             'data_set': ALL_WITH_RELATIONS,
