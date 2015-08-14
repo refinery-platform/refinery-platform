@@ -628,14 +628,21 @@ class AnalysisResource(ModelResource):
         ordering = ['name', 'creation_date', 'time_start', 'time_end']
 
     def get_object_list(self, request, **kwargs):
-        if request.user.is_authenticated():
-            return UserProfile.objects.get(
-                user=User.objects.get(
-                    username=request.user
-                )
-            ).catch_all_project.analyses.all().order_by("-time_start")
+        user = request.user
+        perm = 'read_%s' % DataSet._meta.module_name
+        if (user.is_authenticated()):
+            allowed_datasets = get_objects_for_user(user, perm, DataSet)
         else:
-            return Analysis.objects.none()
+            allowed_datasets = get_objects_for_group(
+                ExtendedGroup.objects.public_group(), perm, DataSet)
+
+        allowed_datasets.prefetch_related('analysis')
+
+        all_allowed_analyses = Analysis.objects.none()
+        for dataset in allowed_datasets:
+            all_allowed_analyses = all_allowed_analyses | dataset.analysis_set.all()
+
+        return all_allowed_analyses
 
 
 class NodeResource(ModelResource):
