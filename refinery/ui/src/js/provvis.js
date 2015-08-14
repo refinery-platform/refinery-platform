@@ -84,7 +84,7 @@ var provvis = (function () {
 
     $("<p/>", {
       "id": "doiTitle",
-      "html": "DOI Components"
+      "html": "Degree-Of-Interest"
     }).appendTo(doiContainer);
 
     $("<div/>", {
