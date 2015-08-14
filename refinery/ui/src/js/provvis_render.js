@@ -5052,14 +5052,13 @@ var provvisRender = (function () {
 
     /* Switch sidebar on or off. */
     $("#prov-ctrl-toggle-sidebar").click(function () {
-      if ($(this).hasClass('active')) {
+
+      if (!$("#prov-ctrl-toggle-sidebar")[0].checked) {
         $("#provenance-sidebar")
             .animate({left: '-355'}, nodeLinkTransitionTime);
-        $(this).html("Show");
       } else {
         $("#provenance-sidebar")
             .animate({left: '20'}, nodeLinkTransitionTime);
-        $(this).html("Hide");
 
         /* TODO: Temporary fix for sidbear div. */
         $("#provvis-sidebar-content").css({"height": "720px"});
@@ -5068,12 +5067,10 @@ var provvisRender = (function () {
 
     /* Switch fit to screen on or off. */
     $("#prov-ctrl-toggle-fit").click(function () {
-      if ($(this).hasClass('active')) {
+      if (!$("#prov-ctrl-toggle-fit")[0].checked) {
         fitToWindow = false;
-        $(this).html("OFF");
       } else {
         fitToWindow = true;
-        $(this).html("ON");
       }
     });
   };
