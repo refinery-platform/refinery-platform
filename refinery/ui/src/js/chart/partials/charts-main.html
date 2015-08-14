@@ -22,13 +22,13 @@
     </ul>
   </span>
 
-  <div align="center">
+  <div align="left">
     <h4 ng-if="!chart.errorMessage">
       {{chart.data.summary[chart.mode].title}} - {{chart.data.summary[chart.mode].result}}
     </h4>
   </div>
 
-  <div ng-if="chart.errorMessage" class="alert alert-warning">
+  <div ng-if="chart.errorMessage" class="alert alert-error">
     {{chart.errorMessage}}
   </div>
 
