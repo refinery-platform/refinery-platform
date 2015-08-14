@@ -7,7 +7,7 @@
     </span>
   </div>
 
-  <p ng-if="!chart.errorMessage">Select view</p>
+  <!-- <p ng-if="!chart.errorMessage">Select view</p> -->
   <span ng-if="!chart.errorMessage" class="btn-group">
     <button class="btn btn-default dropdown-toggle" id="modeMenu" data-toggle="dropdown" aria-has-popup="true" aria-expanded="true">
       {{chart.data.summary[chart.mode].title}}
@@ -22,7 +22,7 @@
     </ul>
   </span>
 
-  <div align="left">
+  <div align="center">
     <h4 ng-if="!chart.errorMessage">
       {{chart.data.summary[chart.mode].title}} - {{chart.data.summary[chart.mode].result}}
     </h4>
