@@ -716,13 +716,18 @@ a.analysis-header{
         // background: radial-gradient(at bottom, red, white, white);
         transition: background @fastTransitionSpeed @easeInOutCubic;
 
-        &.active {
+        &.showing {
           color: @blueActive;
           text-shadow: 0 0 3px fade(@blueActive, 33%), 0 0 6px fade(@blueActive, 10%);
 
           &:after {
             background: radial-gradient(at bottom, fade(@blueActive, 66%), transparent, transparent);
           }
+        }
+
+        &.active {
+          color: @yellow;
+          text-shadow: 0 0 3px fade(@yellowShadow, 50%);
         }
 
         &:before {
@@ -810,15 +815,43 @@ a.analysis-header{
 
       h5 {
         font-weight: bold;
+        margin: 5px 0;
 
         &:first-child {
           margin-top: 0;
         }
       }
 
-      label {
+      .entry {
+        margin-left: -5px;
+        margin-right: -5px;
+        padding: 3px 5px;
+
         &:hover {
-          background: #ccc;
+          background: darken(@grayLighter, 5%);
+        }
+
+        label {
+          position: relative;
+          margin-bottom: 0;
+        }
+
+        input[type=radio] {
+          display: none;
+        }
+
+        .sort-icon {
+          position: absolute;
+          top: 3px;
+          left: 0;
+          width: 1em;
+          opacity: 0.33;
+          text-align: center;
+          transition: opacity @fastTransitionSpeed @easeInOutCubic;
+
+          &.sort-active {
+            opacity: 1;
+          }
         }
       }
     }

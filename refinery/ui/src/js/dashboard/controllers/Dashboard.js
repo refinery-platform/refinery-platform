@@ -158,6 +158,7 @@ Object.defineProperty(
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetReloadService.reload();
+      this.checkFilterSort();
     }
 });
 
@@ -178,6 +179,7 @@ Object.defineProperty(
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetReloadService.reload();
+      this.checkFilterSort();
     }
 });
 
@@ -195,8 +197,25 @@ Object.defineProperty(
       this.dataSetsSortDesc = false;
 
       this.triggerDataSetSorting();
+      this.checkFilterSort();
     }
 });
+
+DashboardCtrl.prototype.checkFilterSort = function () {
+  if (this.dataSetsFilterOwner) {
+    this.dataSetsFilterSort = true;
+    return;
+  }
+  if (this.dataSetsFilterPublic) {
+    this.dataSetsFilterSort = true;
+    return;
+  }
+  if (this.dataSetsSortBy) {
+    this.dataSetsFilterSort = true;
+    return;
+  }
+  this.dataSetsFilterSort = false;
+};
 
 DashboardCtrl.prototype.triggerDataSetSorting = function () {
   if (this.dataSetsSortBy) {
