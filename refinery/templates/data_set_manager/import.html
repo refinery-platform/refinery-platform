@@ -27,7 +27,7 @@
 
 {% block subheader %}
 <div class="page-header">
-  <h1>Data set import&nbsp;
+  <h1>Data Set Import&nbsp;
     <small id="import-message"></small>
   </h1>
 </div>
@@ -40,10 +40,10 @@
     <div class="span10">
       <ul class="nav nav-tabs" id="tabs">
         <li class="active">
-          <a href="#metadata" data-toggle="tab">Metadata</a>
+          <a href="#metadata" data-toggle="tab">Step 1. Upload Metadata</a>
         </li>
         <li>
-          <a href="#data" data-toggle="tab">Data</a>
+          <a href="#data" data-toggle="tab">Step 2. Upload Data (Optional)</a>
         </li>
       </ul>
     </div>
@@ -56,7 +56,7 @@
     <div class="tab-pane fade active in" id="metadata">
       <!-- tabular file -->
       <div class="refinery-header">
-        <span class="refinery-header-left"><h3>Tabular file</h3></span>
+        <span class="refinery-header-left"><h3>Option 1. Tabular file</h3></span>
       </div>
       <style>
         .gridStyle {
@@ -71,7 +71,7 @@
               action="{% url 'process_metadata_table' %}" method="post">
           {% csrf_token %}
 
-          <p>Please select a file containing a metadata table in tab-delimited format:</p>
+          <p>Please select a file containing a metadata table in tab-delimited format.</p>
           <input type="file" ng-file-select="onFileSelect($files)" name="file"
                  required/>
 
@@ -239,8 +239,11 @@
       <!-- end tabular file -->
       <!-- ISA archive form -->
       <div class="refinery-header">
-        <span class="refinery-header-left"><h3>ISA archive</h3></span>
+        <span class="refinery-header-left"><h3>Option 2. ISA Archive</h3></span>
       </div>
+      <p>
+          Please provide a ZIP archive containing an investigation, study, and assay files.
+      </p>
       <form id="isaTabImportForm" enctype="multipart/form-data"
             action="{% url "process_isa_tab" %}" method="post">
         {% csrf_token %}
@@ -249,7 +252,7 @@
         <p>{{ error }}</p>
 
         <div class="refinery-subheader">
-          <h4>From Disk</h4>
+          <h4>Option A. Upload from local computer</h4>
         </div>
         <p>
           {{ form.isa_tab_file.errors}}
@@ -257,7 +260,7 @@
         </p>
 
         <div class="refinery-subheader">
-          <h4>From URL</h4>
+          <h4>Option B. Provide a URL</h4>
         </div>
         <p>
           {{ form.isa_tab_url.errors }}
