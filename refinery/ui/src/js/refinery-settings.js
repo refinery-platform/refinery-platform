@@ -8,6 +8,20 @@ angular
     refineryApi: '/api/v1',
     solrApi: '/solr',
     dashboard: {
+      analysesSorting: [
+        {
+          djangoAttribute: 'name',
+          label: 'Name'
+        },
+        {
+          djangoAttribute: 'time_start',
+          label: 'Start time'
+        },
+        {
+          djangoAttribute: 'time_end',
+          label: 'End time'
+        }
+      ],
       dataSetsSorting: [
         {
           djangoAttribute: 'creation_date',
@@ -20,6 +34,12 @@ angular
         {
           djangoAttribute: 'modification_date',
           label: 'Modification date'
+        }
+      ],
+      workflowsSorting: [
+        {
+          djangoAttribute: 'name',
+          label: 'Name'
         }
       ]
     }
