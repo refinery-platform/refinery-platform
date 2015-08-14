@@ -265,11 +265,19 @@ Object.defineProperty(
 });
 
 DashboardCtrl.prototype.checkAnalysesFilterSort = function () {
-  if (this.analysesFilterOwner) {
+  if (this.analysesFilterStatusRunning) {
     this.analysesFilterSort = true;
     return;
   }
-  if (this.analysesFilterPublic) {
+  if (this.analysesFilterStatusSuccessful) {
+    this.analysesFilterSort = true;
+    return;
+  }
+  if (this.analysesFilterStatusFailed) {
+    this.analysesFilterSort = true;
+    return;
+  }
+  if (this.analysesFilterStatusUnknown) {
     this.analysesFilterSort = true;
     return;
   }
@@ -297,14 +305,6 @@ DashboardCtrl.prototype.checkDataSetsFilterSort = function () {
 };
 
 DashboardCtrl.prototype.checkWorkflowsFilterSort = function () {
-  if (this.workflowsFilterOwner) {
-    this.workflowsFilterSort = true;
-    return;
-  }
-  if (this.workflowsFilterPublic) {
-    this.workflowsFilterSort = true;
-    return;
-  }
   if (this.workflowsSortBy) {
     this.workflowsFilterSort = true;
     return;
