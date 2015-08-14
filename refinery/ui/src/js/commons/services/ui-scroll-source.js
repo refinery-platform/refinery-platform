@@ -35,21 +35,27 @@ angular
        *
        * @example <caption>Invoke the service</caption>
        * ```
-       * this.news = new UiScrollSource(
-       *    'app/news',
-       *    5,
-       *    function (limit, offset) {
-       *      return News.query({
-       *        limit: limit,
-       *        offset: offset
-       *      }).$promise;
-       *    }.bind(this)
-       *  );
+       * function Dashboard (News, _) {
+       *   this.News = News;
+       *   this._ = _;
+       *
+       *   this.news = new UiScrollSource(
+       *      'app/news',
+       *      5,
+       *      function (limit, offset, extra) {
+       *        var params = this._.merge(this._.cloneDeep(extra) || {}, {
+       *              limit: limit,
+       *              offset: offset
+       *            });
+       *        return this.News.query(params).$promise;
+       *      }.bind(this)
+       *    );
+       *  }
        * ```
        *
        * @method  UiScrollSource
        * @author  Fritz Lekschas
-       * @date    2015-08-12
+       * @date    2015-08-14
        *
        * @class
        * @param   {String}    id             Source identification used for
