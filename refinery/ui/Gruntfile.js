@@ -1,3 +1,5 @@
+var hasbin = require('hasbin');
+
 module.exports = function(grunt) {
   'use strict';
 
@@ -382,15 +384,19 @@ module.exports = function(grunt) {
     env: {
       compile: {
         PHANTOMJS_BIN: function() {
+          // Use global phantomjs if it's in $path
+          if (hasbin.sync('phantomjs')) {
+            return 'phantomjs';
+          } else {
+            console.log('shouldnt;');
+          }
+
           // Look for system-wide `PHANTOMJS_BIN` environmental variable first.
           if (process.env.PHANTOMJS_BIN) {
             return process.env.PHANTOMJS_BIN;
-          } else {
-            if (process.env.phantomjs) {
-              return process.env.phantomjs;
-            }
-            return './node_modules/phantomjs/lib/phantom/bin/phantomjs';
           }
+
+          return './node_modules/phantomjs/lib/phantom/bin/phantomjs';
         }
       }
     },
