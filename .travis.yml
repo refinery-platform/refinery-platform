@@ -13,6 +13,8 @@ before_script:
   - cd refinery
   - cp config.json.sample config.json
   - python manage.py syncdb --migrate --noinput
+  - npm install --quiet -g grunt-cli karma bower
+  - cd ui && npm install && bower install && cd ../
 script:
   - python manage.py test analysis_manager
   - python manage.py test annotation_server
@@ -23,6 +25,7 @@ script:
   - python manage.py test galaxy_connector
   - python manage.py test visualization_manager
   - python manage.py test workflow_manager
+  - cd ui && grunt
 notifications:
   slack:
     secure: nDs9Oj08nRizuD0edl6WcrSgaTPMyITQjZc4qPZpt+yOxUehWbrAmVhqYypfyvdj4qSi1E72rPTXftuBB1E1IZBgX4CCkrCkWGLgIxHaaValTd64oOX66eC3BbSehQxuJB7w1DWw54xBUkTy6+ufjAqiwhLpoEUeE296urAWYHU=

@@ -586,6 +586,7 @@ class AnalysisResource(ModelResource):
     data_set__uuid = fields.CharField(attribute='data_set__uuid', use_in='all')
     workflow__uuid = fields.CharField(attribute='workflow__uuid', use_in='all')
     creation_date = fields.CharField(attribute='creation_date', use_in='all')
+    modification_date = fields.CharField(attribute='modification_date', use_in='all')
     workflow_steps_num = fields.IntegerField(
         attribute='workflow_steps_num', blank=True, null=True, use_in='detail')
     workflow_copy = fields.CharField(
@@ -613,10 +614,11 @@ class AnalysisResource(ModelResource):
         authorization = Authorization()
         allowed_methods = ["get"]
         fields = [
-            'data_set', 'data_set__uuid', 'creation_date', 'history_id',
-            'library_id', 'name', 'workflow__uuid',
-            'resource_uri', 'status', 'time_end', 'time_start', 'uuid',
-            'workflow_galaxy_id', 'workflow_steps_num', 'workflow_copy'
+            'data_set', 'data_set__uuid', 'creation_date',
+            'modification_date', 'history_id', 'library_id', 'name',
+            'workflow__uuid', 'resource_uri', 'status', 'time_end',
+            'time_start', 'uuid', 'workflow_galaxy_id', 'workflow_steps_num',
+            'workflow_copy'
         ]
         filtering = {
             'data_set': ALL_WITH_RELATIONS,
@@ -628,14 +630,21 @@ class AnalysisResource(ModelResource):
         ordering = ['name', 'creation_date', 'time_start', 'time_end']
 
     def get_object_list(self, request, **kwargs):
-        if request.user.is_authenticated():
-            return UserProfile.objects.get(
-                user=User.objects.get(
-                    username=request.user
-                )
-            ).catch_all_project.analyses.all().order_by("-time_start")
+        user = request.user
+        perm = 'read_%s' % DataSet._meta.module_name
+        if (user.is_authenticated()):
+            allowed_datasets = get_objects_for_user(user, perm, DataSet)
         else:
-            return Analysis.objects.none()
+            allowed_datasets = get_objects_for_group(
+                ExtendedGroup.objects.public_group(), perm, DataSet)
+
+        allowed_datasets.prefetch_related('analysis')
+
+        all_allowed_analyses = Analysis.objects.none()
+        for dataset in allowed_datasets:
+            all_allowed_analyses = all_allowed_analyses | dataset.analysis_set.all()
+
+        return all_allowed_analyses
 
 
 class NodeResource(ModelResource):
