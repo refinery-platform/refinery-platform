@@ -29,7 +29,7 @@
     "grunt-env": "^0.4.4",
     "grunt-karma": "^0.11.0",
     "grunt-ng-annotate": "^1.0.1",
-    "hasbin": "^1.1.0",
+    "isbinaryfile": "^3.0.0",
     "jasmine-core": "^2.3.4",
     "karma": "^0.12.35",
     "karma-chrome-launcher": "^0.1.12",
