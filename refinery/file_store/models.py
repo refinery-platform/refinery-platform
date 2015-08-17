@@ -54,7 +54,8 @@ if not settings.FILE_STORE_DIR:
     settings.FILE_STORE_DIR = 'file_store'   # relative to MEDIA_ROOT
 
 # absolute path to the file store root dir
-FILE_STORE_BASE_DIR = os.path.join(settings.MEDIA_ROOT, settings.FILE_STORE_DIR)
+FILE_STORE_BASE_DIR = os.path.join(settings.MEDIA_ROOT,
+                                   settings.FILE_STORE_DIR)
 # create this directory in case it doesn't exist
 if not os.path.isdir(FILE_STORE_BASE_DIR):
     _mkdir(FILE_STORE_BASE_DIR)
@@ -73,8 +74,9 @@ if not settings.FILE_UPLOAD_TEMP_DIR:
 if not settings.FILE_UPLOAD_MAX_MEMORY_SIZE:
     settings.FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
-# http://stackoverflow.com/questions/4832626/how-does-django-construct-the-url-returned-by-filesystemstorage
-FILE_STORE_BASE_URL = urljoin(settings.MEDIA_URL, settings.FILE_STORE_DIR) + '/'
+# http://stackoverflow.com/q/4832626
+FILE_STORE_BASE_URL = \
+    urljoin(settings.MEDIA_URL, settings.FILE_STORE_DIR) + '/'
 
 # TODO: expand the list of file types. Reference:
 # http://wiki.g2.bx.psu.edu/Admin/Datatypes/Adding%20Datatypes
@@ -184,7 +186,7 @@ FILE_EXTENSIONS = {
 
 
 def file_path(instance, filename):
-    '''Construct relative file system path for new file store files relative to
+    """Construct relative file system path for new file store files relative to
     FILE_STORE_BASE_DIR.
     Based on
     http://michaelandrews.typepad.com/the_technical_times/2009/10/creating-a-hashed-directory-structure.html
@@ -194,12 +196,11 @@ def file_path(instance, filename):
     :param filename: requested filename.
     :type filename: str.
     :returns: str -- if success, None if failure.
-
-    '''
+    """
     hashcode = hash(filename)
     mask = 255  # bitmask
-    # use the first and second bytes of the hash code represented as zero-padded
-    # hex numbers as directory names
+    # use the first and second bytes of the hash code represented as
+    # zero-padded hex numbers as directory names
     # provides 256 * 256 = 65536 of possible directory combinations
     dir1 = "{:0>2x}".format(hashcode & mask)
     dir2 = "{:0>2x}".format((hashcode >> 8) & mask)
@@ -210,9 +211,7 @@ def file_path(instance, filename):
 
 
 def is_url(string):
-    """Check if a given string is a URL
-
-    """
+    """Check if a given string is a URL"""
     return urlparse(string).scheme != ""
 
 
@@ -282,11 +281,10 @@ class _FileStoreItemManager(models.Manager):
 
     def get_item(self, uuid):
         """Handles potential exceptions when retrieving a FileStoreItem
-
         :param uuid: UUID of a FileStoreItem.
         :type uuid: str.
-        :returns: FileStoreItem -- model instance if exactly one match is found,
-        None otherwise.
+        :returns: FileStoreItem -- model instance if exactly one match is
+        found, None otherwise.
         """
         try:
             item = FileStoreItem.objects.get(uuid=uuid)
@@ -463,20 +461,19 @@ class FileStoreItem(models.Model):
         return False
 
     def delete_datafile(self):
-        '''Delete datafile if it exists on disk.
+        """Delete datafile if it exists on disk.
 
         :returns: bool -- True if deletion succeeded, False otherwise.
-
-        '''
+        """
         if self.datafile.name:
             logger.debug("Deleting datafile '%s'", self.datafile.name)
             try:
                 self.datafile.delete()
             except OSError as e:
                 logger.error(
-                    "Error deleting file. OSError: [Errno: %s], file name: %s, "
-                    "error: %s", e.errno, e.filename, e.strerror
-                )
+                    "Error deleting file. "
+                    "OSError: [Errno: %s], file name: %s, error: %s",
+                    e.errno, e.filename, e.strerror)
                 return False
             logger.info("Datafile deleted")
             return True
@@ -550,16 +547,14 @@ class FileStoreItem(models.Model):
         """Return the full URL (including hostname) for the datafile.
 
         :returns: str -- local URL or source if it's a remote file
-
         """
         if self.is_local():
             try:
                 current_site = Site.objects.get_current()
             except Site.DoesNotExist:
                 logger.error(
-                    "Cannot provide a full URL: no sites configured or SITE_ID "
-                    "is not set correctly"
-                )
+                    "Cannot provide a full URL: no sites configured or "
+                    "SITE_ID is not set correctly")
                 return None
             # FIXME: provide a URL without the domain portion
             # visualization_manager.views may be expecting a full URL
@@ -575,20 +570,16 @@ class FileStoreItem(models.Model):
                 return self.source
 
     def get_import_status(self):
-        """Return file import task state
-
-        """
+        """Return file import task state"""
         return AsyncResult(self.import_task_id).state
 
 
 def is_local(uuid):
-    '''Check if this FileStoreItem can be used as a file object
-
+    """Check if this FileStoreItem can be used as a file object
     :param uuid: UUID of a FileStoreItem
     :type uuid: str.
     :returns: bool -- True if yes, False if no.
-
-    '''
+    """
     try:
         item = FileStoreItem.objects.get(uuid=uuid)
     except FileStoreItem.DoesNotExist:
@@ -673,11 +664,11 @@ def get_file_object(file_name):
 
 @receiver(pre_delete, sender=FileStoreItem)
 def _delete_datafile(sender, **kwargs):
-    '''Delete the FileStoreItem datafile when model is deleted.
+    """Delete the FileStoreItem datafile when model is deleted.
     Signal handler is required because QuerySet delete() method does a bulk
     delete and does not call any delete() methods on the models.
 
-    '''
+    """
     item = kwargs.get('instance')
     logger.debug("Deleting FileStoreItem with UUID '%s'", item.uuid)
     item.delete_datafile()
@@ -702,10 +693,9 @@ def _symlink_file_on_disk(source, target):
             os.makedirs(target_dir)
         except OSError as e:
             logger.error(
-                "Error creating file store directory. OSError: [Errno %s], file"
-                " name: %s, error: %s", target_dir, e.errno, e.filename,
-                e.strerror
-            )
+                "Error creating file store directory. "
+                "OSError: [Errno %s], file name: %s, error: %s",
+                target_dir, e.errno, e.filename, e.strerror)
             return False
 
     # create symlink
@@ -713,9 +703,9 @@ def _symlink_file_on_disk(source, target):
         os.symlink(source, target)
     except OSError as e:
         logger.error(
-            "Error creating file store symlink\nOSError: [Errno %s], file name:"
-            " %s, error: %s", e.errno, e.filename, e.strerror
-        )
+            "Error creating file store symlink. "
+            "OSError: [Errno %s], file name: %s, error: %s",
+            e.errno, e.filename, e.strerror)
         return False
 
     logger.debug("Symlinked %s to %s", source, target)
