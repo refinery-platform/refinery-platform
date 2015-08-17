@@ -386,6 +386,9 @@ module.exports = function(grunt) {
           if (process.env.PHANTOMJS_BIN) {
             return process.env.PHANTOMJS_BIN;
           } else {
+            if (process.env.phantomjs) {
+              return process.env.phantomjs;
+            }
             return './node_modules/phantomjs/lib/phantom/bin/phantomjs';
           }
         }
