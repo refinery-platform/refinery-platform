@@ -381,7 +381,14 @@ module.exports = function(grunt) {
      */
     env: {
       compile: {
-        PHANTOMJS_BIN: './node_modules/phantomjs/lib/phantom/bin/phantomjs'
+        PHANTOMJS_BIN: function() {
+          // Look for system-wide `PHANTOMJS_BIN` environmental variable first.
+          if (process.env.PHANTOMJS_BIN) {
+            return process.env.PHANTOMJS_BIN;
+          } else {
+            return './node_modules/phantomjs/lib/phantom/bin/phantomjs';
+          }
+        }
       }
     },
 
