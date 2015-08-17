@@ -359,6 +359,8 @@ class DataSet(SharableResource):
     accession = models.CharField(max_length=32, blank=True,  null=True)
     # name of source database for the accession number (e.g. "ArrayExpress")
     accession_source = models.CharField(max_length=128, blank=True,  null=True)
+    # actual title of the dataset
+    title = models.CharField(max_length=250, blank=True,  null=True)
 
     class Meta:
         verbose_name = "dataset"
