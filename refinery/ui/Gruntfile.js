@@ -377,6 +377,15 @@ module.exports = function(grunt) {
     },
 
     /*
+     * Set environmental variables
+     */
+    env: {
+      compile: {
+        PHANTOMJS_BIN: './node_modules/phantomjs/lib/phantom/bin/phantomjs'
+      }
+    },
+
+    /*
      * Lint source JS files to find possible flaws that could lead to errors.
      * Custom code
      */
@@ -392,9 +401,19 @@ module.exports = function(grunt) {
       }
     },
 
+    /*
+     * The Karma configurations.
+     */
     karma: {
+      options: {
+        configFile: 'karma.config.js'
+      },
       unit: {
-      configFile: 'karma.conf.js'
+        port: 9019,
+        background: true
+      },
+      continuous: {
+        singleRun: true
       }
     },
 
@@ -661,6 +680,7 @@ module.exports = function(grunt) {
 
   // Do all the heavy lifting to get Refinery ready for production.
   grunt.registerTask('compile', [
+    'env:compile',
     'jshint',
     'clean:uiCompile',
     'clean:staticCompile',
@@ -677,7 +697,8 @@ module.exports = function(grunt) {
     'copy:uiCompileTemplates',
     'copy:uiCompileVendor',
     'copy:staticCompile',
-    'clean:uiTmp'
+    'clean:uiTmp',
+    'karma'
   ]);
 
   grunt.renameTask('watch', 'delta');
