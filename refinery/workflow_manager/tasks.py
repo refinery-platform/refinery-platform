@@ -46,10 +46,9 @@ def get_workflows(workflow_engine):
     try:
         # get all workflows
         workflows = workflow_engine.instance.get_complete_workflows()
-    except galaxy.client.ConnectionError:
-        msg = "Unable to retrieve workflows from '{}' - skipping ..."
-        msg = msg.format(workflow_engine.instance.base_url)
-        logger.exception(msg)
+    except galaxy.client.ConnectionError as e:
+        logger.error("Unable to retrieve workflows from '%s' - skipping - %s",
+                     workflow_engine.instance.base_url, e)
 
     # make existing workflows for this workflow engine inactive
     # (deleting the workflows would remove provenance information
