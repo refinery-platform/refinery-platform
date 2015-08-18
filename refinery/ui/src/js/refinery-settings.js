@@ -34,6 +34,10 @@ angular
         {
           djangoAttribute: 'modification_date',
           label: 'Modification date'
+        },
+        {
+          djangoAttribute: 'title',
+          label: 'Name'
         }
       ],
       workflowsSorting: [
