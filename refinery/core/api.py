@@ -652,9 +652,9 @@ class NodeResource(ModelResource):
         'data_set_manager.api.AttributeResource',
         attribute=lambda bundle: (
             Attribute.objects
-                .exclude(value__isnull=True)
-                .exclude(value__exact='')
-                .filter(
+            .exclude(value__isnull=True)
+            .exclude(value__exact='')
+            .filter(
                 node=bundle.obj,
                 subtype='organism'
             )
@@ -1319,13 +1319,12 @@ class GroupManagementResource(Resource):
 
                 # When demoting yourself while targetting manager group.
                 if (self.is_manager_group(group) and
-                            group.user_set.count() == 1):
+                        group.user_set.count() == 1):
                     return HttpForbidden(
                         'Last manager must delete group to leave')
 
                 if (not self.is_manager_group(group) and
-                            user
-                        in group.extendedgroup.manager_group.user_set.all()):
+                        user in group.extendedgroup.manager_group.user_set.all()):
                     if group.extendedgroup.manager_group.user_set.count() == 1:
                         return HttpForbidden(
                             'Last manager must delete group to leave')
@@ -1770,13 +1769,13 @@ class ExtendedGroupResource(ModelResource):
 
                 # When demoting yourself while targetting manager group.
                 if (ext_group.is_manager_group() and
-                            ext_group.user_set.count() == 1):
+                        ext_group.user_set.count() == 1):
                     return HttpForbidden(
                         'Last manager must delete group to leave')
 
                 if (not ext_group.is_manager_group() and
-                            user in ext_group.manager_group.user_set.all() and
-                            ext_group.manager_group.user_set.count() == 1):
+                        user in ext_group.manager_group.user_set.all() and
+                        ext_group.manager_group.user_set.count() == 1):
                     return HttpForbidden(
                         'Last manager must delete group to leave')
 
