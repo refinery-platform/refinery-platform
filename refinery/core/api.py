@@ -590,7 +590,7 @@ class AnalysisResource(ModelResource):
     workflow_steps_num = fields.IntegerField(
         attribute='workflow_steps_num', blank=True, null=True, use_in='detail')
     workflow_copy = fields.CharField(
-         attribute='workflow_copy', blank=True, null=True, use_in='detail')
+        attribute='workflow_copy', blank=True, null=True, use_in='detail')
     history_id = fields.CharField(
         attribute='history_id', blank=True, null=True, use_in='detail')
     workflow_galaxy_id = fields.CharField(
@@ -629,6 +629,7 @@ class AnalysisResource(ModelResource):
         }
         ordering = ['name', 'creation_date', 'time_start', 'time_end']
 
+
     def get_object_list(self, request, **kwargs):
         user = request.user
         perm = 'read_%s' % DataSet._meta.module_name
@@ -638,13 +639,7 @@ class AnalysisResource(ModelResource):
             allowed_datasets = get_objects_for_group(
                 ExtendedGroup.objects.public_group(), perm, DataSet)
 
-        allowed_datasets.prefetch_related('analysis')
-
-        all_allowed_analyses = Analysis.objects.none()
-        for dataset in allowed_datasets:
-            all_allowed_analyses = all_allowed_analyses | dataset.analysis_set.all()
-
-        return all_allowed_analyses
+        return Analysis.objects.filter( data_set__in=allowed_datasets.values_list("id",flat=True) )
 
 
 class NodeResource(ModelResource):
