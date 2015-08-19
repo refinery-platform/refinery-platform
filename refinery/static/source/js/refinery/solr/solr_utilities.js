@@ -1,6 +1,6 @@
 /*
  * @author: Nils Gehlenborg
- * 
+ *
  * Utility functions for dealing with Solr queries and results.
  */
 
@@ -9,7 +9,7 @@ NODE_INDEX_NAME_PREFIX = "REFINERY_NAME"
 NODE_INDEX_WORKFLOW_OUTPUT_PREFIX = "REFINERY_WORKFLOW_OUTPUT"
 NODE_INDEX_ANALYSIS_UUID_PREFIX = "REFINERY_ANALYSIS_UUID"
 NODE_INDEX_SUBANALYSIS_PREFIX = "REFINERY_SUBANALYSIS"
-NODE_INDEX_FILETYPE_PREFIX = "REFINERY_FILETYPE" 
+NODE_INDEX_FILETYPE_PREFIX = "REFINERY_FILETYPE"
 
 REQUIRED_FACET_PREFIXES = [ NODE_INDEX_ANALYSIS_UUID_PREFIX, NODE_INDEX_SUBANALYSIS_PREFIX, NODE_INDEX_WORKFLOW_OUTPUT_PREFIX ];
 
@@ -52,19 +52,19 @@ function composeFacetId( facet ) {
 
 
 function prettifySolrFieldName( name, isTitle )
-{	
+{
 	isTitle = isTitle || false;
-	
+
 	var position = name.indexOf( "_Characteristics_" );
 	if ( position != -1 ) {
 		name = name.substr( 0, position );
-	}	
+	}
 
 	var position = name.indexOf( "_Factor_" );
 	if ( position != -1 ) {
 		name = name.substr( 0, position );
 	}
-	
+
 	var position = name.indexOf( "_Comment_" );
 	if ( position != -1 ) {
 		name = name.substr( 0, position );
@@ -102,7 +102,7 @@ function prettifySolrFieldName( name, isTitle )
 
 	var position = name.indexOf( "REFINERY_SUBANALYSIS_" );
 	if ( position == 0 ) {
-		name = "Subanalysis";
+		name = "Analysis Group";
 	}
 
 	var position = name.indexOf( "REFINERY_WORKFLOW_OUTPUT_" );
@@ -113,13 +113,13 @@ function prettifySolrFieldName( name, isTitle )
 
 
 	name = name.replace( /\_/g, " " );
-	
+
 	if ( isTitle )
 	{
 		name = name.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
 	}
 
-	return name;	
+	return name;
 }
 
 
@@ -128,9 +128,9 @@ function isRequiredFacet( facet ) {
 	for ( var p = 0; p < REQUIRED_FACET_PREFIXES.length; ++p ) {
 		if ( facet.indexOf( REQUIRED_FACET_PREFIXES[p] ) == 0 ) {
 			return true;
-		}			
-	}	
-	
+		}
+	}
+
 	return false;
 }
 

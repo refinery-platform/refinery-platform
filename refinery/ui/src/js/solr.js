@@ -15,21 +15,21 @@ angular.module('refinerySolr', [])
 .service('solrService', function(){
 
   this.prettifyFieldName = function( name, isTitle )
-  { 
+  {
     isTitle = isTitle || false;
-    
+
     var position;
 
     position = name.indexOf( "_Characteristics_" );
     if ( position !== -1 ) {
       name = name.substr( 0, position );
-    } 
+    }
 
     position = name.indexOf( "_Factor_" );
     if ( position !== -1 ) {
       name = name.substr( 0, position );
     }
-    
+
     position = name.indexOf( "_Comment_" );
     if ( position !== -1 ) {
       name = name.substr( 0, position );
@@ -67,7 +67,7 @@ angular.module('refinerySolr', [])
 
     position = name.indexOf( "REFINERY_SUBANALYSIS_" );
     if ( position === 0 ) {
-      name = "Subanalysis";
+      name = "Analysis Group";
     }
 
     position = name.indexOf( "REFINERY_WORKFLOW_OUTPUT_" );
@@ -76,11 +76,11 @@ angular.module('refinerySolr', [])
     }
 
     name = name.replace( /\_/g, " " );
-    
+
     if ( isTitle ) {
       name = name.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
     }
 
-    return name;  
+    return name;
   };
 });

@@ -4333,7 +4333,7 @@ var provvisRender = (function () {
       case "subanalysis":
         data = vis.graph.workflowData.get(selNode.parent.wfUuid);
         if (typeof data !== "undefined") {
-          title = '<i class="icon-cog"></i>&nbsp; Subanalysis';
+          title = '<i class="icon-cog"></i>&nbsp; Analysis Group';
           titleLink = '<a href=/workflows/' + selNode.wfUuid +
               ' target="_blank">' +
               selNode.parent.wfName + '</a>';
