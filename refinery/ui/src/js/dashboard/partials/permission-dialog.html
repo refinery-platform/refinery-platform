@@ -3,41 +3,46 @@
     <h4 id="modal-description"></h4>
 </div>
 <div class="modal-body">
-<table class="table table-hover" id="permission-table">
-  <thead>
-    <tr>
-      <th>Group</th>
-      <th>None</th>
-      <th>Read-only</th>
-      <th>Edit</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr ng-repeat="group in modal.permissions.groups track by $index">
-      <td>
-        {{ group.name }}
-      </td>
-      <td>
-        <input
-          type="radio"
-          value="none"
-          ng-model="group.permission">
-      </td>
-      <td>
-        <input
-          type="radio"
-          value="read"
-          ng-model="group.permission">
-      </td>
-      <td>
-        <input
-          type="radio"
-          value="edit"
-          ng-model="group.permission">
-      </td>
-    </tr>
-  </tbody>
-</table>
+    <div ng-show="modal.permissions.groups.length > 0">
+        <table class="table table-hover" id="permission-table" >
+          <thead>
+            <tr>
+              <th>Group</th>
+              <th>None</th>
+              <th>Read-only</th>
+              <th>Edit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="group in modal.permissions.groups track by $index">
+              <td>
+                {{ group.name }}
+              </td>
+              <td>
+                <input
+                  type="radio"
+                  value="none"
+                  ng-model="group.permission">
+              </td>
+              <td>
+                <input
+                  type="radio"
+                  value="read"
+                  ng-model="group.permission">
+              </td>
+              <td>
+                <input
+                  type="radio"
+                  value="edit"
+                  ng-model="group.permission">
+              </td>
+            </tr>
+          </tbody>
+        </table>
+    </div>
+    <div ng-show="modal.permissions.groups === undefined" class="alert alert-error">
+        You are not authorized to change or view permissions.
+    </div>
 </div>
 <div class="modal-footer">
   <div class="float-left">
