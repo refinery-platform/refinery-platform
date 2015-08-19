@@ -30,17 +30,19 @@
                   value="read"
                   ng-model="group.permission">
               </td>
-              <td>
+              <td ng-if="group.id !== 100">
                 <input
                   type="radio"
                   value="edit"
                   ng-model="group.permission">
               </td>
+              <td ng-if="group.id === 100">
+              </td>
             </tr>
           </tbody>
         </table>
     </div>
-    <div ng-if="typeof modal.permissions.groups === 'undefined'"
+    <div ng-if="!(modal.permissions.groups.length > 0)"
          class="alert alert-error" ng-cloak>
         You are not authorized to change or view permissions.
     </div>
