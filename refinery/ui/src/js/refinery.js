@@ -33,6 +33,7 @@ angular
   'refineryMetadataTableImport',
   'refineryProvvis',
   'refineryDataSetImport',
+  'refineryDataSetNav',
   'refineryDashboard',
   'refineryAnalyses',
   'refineryCollaboration',
