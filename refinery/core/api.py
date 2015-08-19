@@ -585,8 +585,10 @@ class AnalysisResource(ModelResource):
     data_set__uuid = fields.CharField(attribute='data_set__uuid', use_in='all')
     workflow__uuid = fields.CharField(attribute='workflow__uuid', use_in='all')
     creation_date = fields.CharField(attribute='creation_date', use_in='all')
-    modification_date = fields.CharField(attribute='modification_date',
-        use_in='all')
+    modification_date = fields.CharField(
+        attribute='modification_date',
+        use_in='all'
+    )
     workflow_steps_num = fields.IntegerField(
         attribute='workflow_steps_num', blank=True, null=True, use_in='detail')
     workflow_copy = fields.CharField(
@@ -1327,7 +1329,7 @@ class GroupManagementResource(Resource):
                         'Last manager must delete group to leave')
 
                 if (not self.is_manager_group(group) and user in
-                            group.extendedgroup.manager_group.user_set.all()):
+                        group.extendedgroup.manager_group.user_set.all()):
                     if group.extendedgroup.manager_group.user_set.count() == 1:
                         return HttpForbidden(
                             'Last manager must delete group to leave')
@@ -1891,8 +1893,10 @@ class FastQCResource(Resource):
             try:
                 parsed_data = parser.clean_data(i[0])
             except:
-                logger.warn("No data found for " + i[0] + " in file " +
-                    fastqc_file_list[0].file_store_uuid)
+                logger.warn(
+                    "No data found for " + i[0] + " in file " +
+                    fastqc_file_list[0].file_store_uuid
+                )
 
             clean_data = []
 
