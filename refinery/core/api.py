@@ -244,6 +244,9 @@ class SharableResourceAPIInterface(object):
         if not res:
             return HttpBadRequest()
 
+        if user.is_authenticated and user != res.get_owner():
+            return HttpUnauthorized()
+
         # User not authenticated, res is not public.
         if not user.is_authenticated() and res and not res.is_public():
             return HttpUnauthorized()
