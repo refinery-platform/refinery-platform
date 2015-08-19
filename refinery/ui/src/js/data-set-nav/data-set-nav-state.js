@@ -22,11 +22,17 @@ angular
     '$stateProvider', '$urlRouterProvider',
     function ($stateProvider, $urlRouterProvider) {
 
+      // Default state
+      $urlRouterProvider.otherwise(function($injector) {
+        var $state = $injector.get('$state');
+        $state.go('files');
+      });
+
       $stateProvider
         .state(
-          'content',
+          'files',
           {
-            url: '/content/',
+            url: '/files/',
           }
       )
         .state(
@@ -37,9 +43,9 @@ angular
           }
       )
       .state(
-          'configuration',
+          'attributes',
           {
-            url: '/configuration/',
+            url: '/attributes/',
             }
       )
       .state(

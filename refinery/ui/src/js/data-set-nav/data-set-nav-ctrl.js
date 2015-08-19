@@ -16,6 +16,7 @@ function DataSetNavCtrl($rootScope, $scope, $location, $state){
   //when the url changes this hides/show
   $scope.$on('$stateChangeSuccess',function(e, to, toParams, from, fromParams){
     var tab = to.name;
+    //grabs the list of tab names to avoid collisions with other tabs.
     if(tabNames.indexOf(tab) >= 0){
       $(".tabContent").hide();
       $("#" + tab).show();
@@ -33,4 +34,12 @@ function DataSetNavCtrl($rootScope, $scope, $location, $state){
       }
     }
   });
+
+  $scope.isFileView = function(){
+    if(location.hash === "#/files/"){
+      return true;
+    }else{
+      return false;
+    }
+  };
 }

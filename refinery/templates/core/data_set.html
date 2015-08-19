@@ -138,7 +138,8 @@
       <div class="row-fluid">
 
         <div class="span2">
-          <div class="btn-group">
+          <div class="btn-group" ng-if="isFileView()">
+          <!-- ng-hide if the file tab is not selected -->
             <a type="button" class="btn btn-warning" ng-class="{active: $root.mode==='browse'}" ui-sref="browse">Browse</a>
               {% if has_change_dataset_permission %}
                 <a type="button" class="btn btn-warning" ng-class="{active:$root.mode==='analyze'}" ui-sref="analyze" >Analyze</a>
@@ -151,10 +152,10 @@
         <div class="span10">
           <ul class="nav nav-tabs" id="tabs" style="float: right;">
             <li ui-sref-active="active" class="active"><a
-              ui-sref="content" class="tabClicker">Files</a></li>
+              ui-sref="files" class="tabClicker">Files</a></li>
             {% if has_change_dataset_permission %}
               <li ui-sref-active="active" class="active"><a
-              ui-sref="configuration" class="tabClicker">Attributes</a></li>
+              ui-sref="attributes" class="tabClicker">Attributes</a></li>
             {% endif %}
               <li ui-sref-active="active" class="active">
                 <a ui-sref="analyses" id="analyze-tab" class="tabClicker">
@@ -195,7 +196,7 @@
           <input type="hidden" name="study_uuid" value="{{ study_uuid }}"/>
         </form>
 
-          <div class="tabContent ng-cloak" id="content">
+          <div class="tabContent ng-cloak" id="files">
             <!-- <div ng-controller="FileMappingCtrl"> -->
             <div class="row-fluid">
 
@@ -432,10 +433,10 @@
           </div>
 
           {% if has_change_dataset_permission %}
-            <div class="tabContent ng-cloak" id="configuration">
+            <div class="tabContent ng-cloak" id="attributes">
               <div class="refinery-header">
                 <span class="refinery-header-left">
-                    <h3>Configuration</h3>
+                    <h3>Attributes</h3>
                 </span>
               </div>
 
