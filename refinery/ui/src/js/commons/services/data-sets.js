@@ -6,7 +6,8 @@ angular
       var dataSets = $resource(
         settings.appRoot + settings.refineryApi + '/data_sets/',
         {
-          format: 'json'
+          format: 'json',
+          order_by: '-modification_date'
         },
         {
           query: {

@@ -292,9 +292,9 @@ Object.defineProperty(
     }
 });
 
-DashboardCtrl.prototype.toogleRadio = function (attr) {
-  if (this[attr + 'Counter']++) {
-    this[attr] = undefined;
+DashboardCtrl.prototype.toogleRadio = function () {
+  if (this['analysesFilterStatusCounter']++) {
+    this['analysesFilterStatus'] = undefined;
   }
 };
 

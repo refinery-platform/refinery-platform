@@ -7,7 +7,8 @@ from django.core.exceptions import ImproperlyConfigured
 logger = logging.getLogger(__name__)
 
 # get the absolute path of the top level project dir
-BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(__file__), "../../.."))
+BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(__file__),
+                                         "../../.."))
 
 local_settings_file_path = os.path.join(BASE_DIR, 'refinery/config.json')
 
@@ -34,8 +35,8 @@ djcelery.setup_loader()
 # (convert JSON list of lists to tuple of tuples)
 ADMINS = tuple(map(lambda x: tuple(x), get_setting("ADMINS")))
 
-# A tuple in the same format as ADMINS that specifies who should get broken link
-# notifications when BrokenLinkEmailsMiddleware is enabled.
+# A tuple in the same format as ADMINS that specifies who should get broken
+# link notifications when BrokenLinkEmailsMiddleware is enabled
 MANAGERS = ADMINS
 
 DATABASES = get_setting("DATABASES")
@@ -309,7 +310,8 @@ CHUNKED_UPLOAD_ABSTRACT_MODEL = False
 # for registration module
 ACCOUNT_ACTIVATION_DAYS = get_setting("ACCOUNT_ACTIVATION_DAYS")
 REGISTRATION_OPEN = get_setting("REGISTRATION_OPEN")
-# message to display on registration page when REGISTRATION_OPEN is set to False
+# message to display on registration page when REGISTRATION_OPEN is set to
+# False
 REFINERY_REGISTRATION_CLOSED_MESSAGE = get_setting(
     "REFINERY_REGISTRATION_CLOSED_MESSAGE")
 
@@ -410,8 +412,8 @@ REFINERY_WELCOME_EMAIL_MESSAGE = get_setting("REFINERY_WELCOME_EMAIL_MESSAGE")
 # Use external authentication system like django-auth-ldap (disables password
 # management URLs)
 REFINERY_EXTERNAL_AUTH = get_setting("REFINERY_EXTERNAL_AUTH")
-# Message to display on password management pages when REFINERY_EXTERNAL_AUTH is
-# set to True
+# Message to display on password management pages when REFINERY_EXTERNAL_AUTH
+# is set to True
 REFINERY_EXTERNAL_AUTH_MESSAGE = get_setting("REFINERY_EXTERNAL_AUTH_MESSAGE")
 
 # external tool status settings
@@ -434,4 +436,6 @@ if REFINERY_EXTERNAL_AUTH:
                                            get_setting("AUTH_LDAP_FILTERSTR"))
         # populate Django user profile from the LDAP directory
         AUTH_LDAP_USER_ATTR_MAP = get_setting("AUTH_LDAP_USER_ATTR_MAP")
-        AUTHENTICATION_BACKENDS += ('refinery.core.models.RefineryLDAPBackend',)
+        AUTHENTICATION_BACKENDS += (
+            'refinery.core.models.RefineryLDAPBackend',
+        )

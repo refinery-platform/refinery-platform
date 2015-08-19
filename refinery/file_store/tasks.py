@@ -22,7 +22,7 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
     :type source: str.
     :param sharename: Group share name.
     :type sharename: str.
-    :param filetype: File type (must be one of the types declared in models.py).
+    :param filetype: File type (must be one of the types declared in models.py)
     :type filetype: str.
     :param permanent: Flag indicating whether to add this instance to the cache
         or not.
@@ -38,7 +38,8 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
     item = FileStoreItem.objects.create_item(
         source=source, sharename=sharename, filetype=filetype)
     if not item:
-        logger.error("Failed to create FileStoreItem using source '%s'", source)
+        logger.error("Failed to create FileStoreItem using source '%s'",
+                     source)
         return None
 
     logger.info("FileStoreItem created with UUID %s", item.uuid)
@@ -163,9 +164,9 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
             os.rename(tmpfile.name, abs_dst_path)
         except OSError as e:
             logger.error(
-                "Error moving temp file into the file store. OSError: %s, file "
-                "name: %s, error: %s", e.errno, e.filename, e.strerror
-            )
+                "Error moving temp file into the file store. "
+                "OSError: %s, file name: %s, error: %s",
+                e.errno, e.filename, e.strerror)
             return False
         # temp file is only accessible by the owner by default which prevents
         # access by the web server if it is running as it's own user
@@ -224,17 +225,17 @@ def delete(uuid):
 
 @task()
 def update(uuid, source):
-    '''Replace the file using the new source while keeping the same UUID.
+    """Replace the file using the new source while keeping the same UUID.
 
     :param uuid: UUID of a FileStoreItem.
     :type uuid: str.
     :param source: New source of the FileStoreItem.
     :type source: str.
     :returns: FileStoreItem -- model instance if update succeeded, None if
-        failed.
-
-    '''
-    # TODO: check for number of affected rows to determine if there was an error
+    failed.
+    """
+    # TODO: check for number of affected rows to determine if there was an
+    # error
     # https://docs.djangoproject.com/en/dev/ref/models/querysets/#django.db.models.query.QuerySet.update
     FileStoreItem.objects.filter(uuid=uuid).update(source=source)
 
@@ -297,7 +298,8 @@ def download_file(url, target_path, file_size=1):
 
     # get remote file size, provide a default value in case Content-Length is
     # missing
-    remotefilesize = int(response.info().getheader("Content-Length", file_size))
+    remotefilesize = int(
+        response.info().getheader("Content-Length", file_size))
 
     # TODO: handle IOError
     with open(target_path, 'wb+') as destination:

@@ -7,7 +7,8 @@ angular
         settings.appRoot + settings.refineryApi + '/analysis/',
         {
           format: 'json',
-          limit: 0
+          limit: 0,
+          'order_by': '-time_start'
         },
         {
           query: {

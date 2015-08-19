@@ -196,9 +196,9 @@ def make_api_uri(resource_name, resource_id=''):
     """Helper function to build Tastypie REST URIs"""
     base_url = '/api/v1'
     if resource_id:
-        return '/'.join([base_url, resource_name, resource_id]) + '/?format=json'
+        return '/'.join([base_url, resource_name, resource_id]) + '/'
     else:
-        return '/'.join([base_url, resource_name]) + '/?format=json'
+        return '/'.join([base_url, resource_name]) + '/'
 
 
 class NodeSetResourceTest(ResourceTestCase):
@@ -934,11 +934,8 @@ class AnalysisResourceTest(ResourceTestCase):
         """Get a list of Analysis instances with sorting params applied
         (e.g., order_by=name)
         """
-
         self.dataset.set_owner(self.user)
         self.dataset2.set_owner(self.user)
-
-
         analysis1 = Analysis.objects.create(
             name='a1',
             project=self.user_catch_all_project,

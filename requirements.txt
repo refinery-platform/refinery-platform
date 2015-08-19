@@ -37,6 +37,7 @@ mock==0.8.0
 ndg-httpsclient==0.3.2
 networkx==1.7
 pathtools==0.1.2
+pep8==1.6.2
 poster==0.8.1
 psycopg2==2.4.5
 pyasn1==0.1.7
