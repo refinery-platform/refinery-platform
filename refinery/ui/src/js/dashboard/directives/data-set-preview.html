@@ -66,15 +66,18 @@
         class="no-list-style"
         ng-if="preview.numAnalyses">
         <li ng-repeat="analysis in preview.analyses">
-          <span ng-if="analysis.status == 'SUCCESS'">
-            <i class="icon-ok-sign"></i>
-            <a ng-href="data_sets/{{ analysis.data_set__uuid }}/analysis/{{ analysis.uuid }}">
-              {{ analysis.name }}
-            </a>
+          <i
+            class="analyses-status {{ analysis.status | analysisStatusIcon }}"
+            title="{{ analysis.status | analysisStatusTitle }}"
+            tool-tip
+            tool-tip-container="body"
+            tool-tip-placement="left">
+          </i>
+          <span ng-if="analysis.status === 'UNKNOWN'">
+            {{ analysis.name }}
           </span>
-          <span ng-if="analysis.status == 'FAILURE'">
-            <i class="icon-warning-sign"></i>
-            <a ng-href="analysis_manager/{{ analysis.uuid }}">
+          <span ng-if="analysis.status !== 'UNKNOWN'">
+            <a ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
               {{ analysis.name }}
             </a>
           </span>
