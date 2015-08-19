@@ -150,32 +150,32 @@
 
         <div class="span10">
           <ul class="nav nav-tabs" id="tabs" style="float: right;">
-            <li ui-sref-active="active" class="tabClicker active"><a
-              ui-sref="content">Files</a></li>
+            <li ui-sref-active="active" class="active"><a
+              ui-sref="content" class="tabClicker">Files</a></li>
             {% if has_change_dataset_permission %}
-              <li ui-sref-active="active" class="tabClicker active"><a
-              ui-sref="configuration">Attributes</a></li>
+              <li ui-sref-active="active" class="active"><a
+              ui-sref="configuration" class="tabClicker">Attributes</a></li>
             {% endif %}
-              <li ui-sref-active="active" class="tabClicker active">
-                <a ui-sref="analyses" id="analyze-tab">
+              <li ui-sref-active="active" class="active">
+                <a ui-sref="analyses" id="analyze-tab" class="tabClicker">
                   <span ng-controller="AnalysesCtrl">
                     <span rp-analyses-running-tab-icon></span>
                   </span>
                   Analyses
                 </a>
               </li>
-            <li ui-sref-active="active" class="tabClicker active">
-              <a ui-sref="downloads">
+            <li ui-sref-active="active" class="active">
+              <a ui-sref="downloads" class="tabClicker">
                 Downloads
               </a>
             </li>
-            <li ui-sref-active="active" class="tabClicker active">
-              <a ui-sref="details" >
+            <li ui-sref-active="active" class="active">
+              <a ui-sref="details" class="tabClicker" >
                 Details
               </a>
             </li>
-            <li ui-sref-active="active" class="tabClicker active">
-              <a ui-sref="sharing">
+            <li ui-sref-active="active" class=" active">
+              <a ui-sref="sharing" class="tabClicker">
                 Sharing
               </a>
             </li>
