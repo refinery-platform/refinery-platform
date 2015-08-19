@@ -45,7 +45,6 @@ from file_store.models import FileStoreItem
 
 from fadapa import Fadapa
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -347,7 +346,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
     class Meta:
         queryset = DataSet.objects.all()
-        detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
+        detail_uri_name = 'uuid'  # for using UUIDs instead of pk in URIs
         # allowed_methods = ['get']
         resource_name = 'data_sets'
         # authentication = SessionAuthentication()
@@ -391,28 +390,28 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     def prepend_urls(self):
         prepend_urls_list = SharableResourceAPIInterface.prepend_urls(self) + [
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/investigation%s$' % (
-                    self._meta.resource_name,
-                    self.uuid_regex,
-                    trailing_slash()
-                ),
+                self._meta.resource_name,
+                self.uuid_regex,
+                trailing_slash()
+            ),
                 self.wrap_view('get_investigation'),
                 name='api_%s_get_investigation' % (
                     self._meta.resource_name)
                 ),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/studies%s$' % (
-                    self._meta.resource_name,
-                    self.uuid_regex,
-                    trailing_slash()
-                ),
+                self._meta.resource_name,
+                self.uuid_regex,
+                trailing_slash()
+            ),
                 self.wrap_view('get_studies'),
                 name='api_%s_get_studies' % (
                     self._meta.resource_name
                 )),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/analyses%s$' % (
-                    self._meta.resource_name,
-                    self.uuid_regex,
-                    trailing_slash()
-                ),
+                self._meta.resource_name,
+                self.uuid_regex,
+                trailing_slash()
+            ),
                 self.wrap_view('get_analyses'),
                 name='api_%s_get_analyses' % (
                     self._meta.resource_name
@@ -608,7 +607,7 @@ class AnalysisResource(ModelResource):
     class Meta:
         queryset = Analysis.objects.all()
         resource_name = Analysis._meta.module_name
-        detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
+        detail_uri_name = 'uuid'  # for using UUIDs instead of pk in URIs
         # required for public data set access by anonymous users
         authentication = Authentication()
         authorization = Authorization()
@@ -629,7 +628,6 @@ class AnalysisResource(ModelResource):
         }
         ordering = ['name', 'creation_date', 'time_start', 'time_end']
 
-
     def get_object_list(self, request, **kwargs):
         user = request.user
         perm = 'read_%s' % DataSet._meta.module_name
@@ -639,7 +637,9 @@ class AnalysisResource(ModelResource):
             allowed_datasets = get_objects_for_group(
                 ExtendedGroup.objects.public_group(), perm, DataSet)
 
-        return Analysis.objects.filter( data_set__in=allowed_datasets.values_list("id",flat=True) )
+        return Analysis.objects.filter(
+            data_set__in=allowed_datasets.values_list("id", flat=True)
+        )
 
 
 class NodeResource(ModelResource):
@@ -652,12 +652,12 @@ class NodeResource(ModelResource):
         'data_set_manager.api.AttributeResource',
         attribute=lambda bundle: (
             Attribute.objects
-                     .exclude(value__isnull=True)
-                     .exclude(value__exact='')
-                     .filter(
-                         node=bundle.obj,
-                         subtype='organism'
-                     )
+                .exclude(value__isnull=True)
+                .exclude(value__exact='')
+                .filter(
+                node=bundle.obj,
+                subtype='organism'
+            )
         ),
         use_in='all',
         full=True,
@@ -667,7 +667,7 @@ class NodeResource(ModelResource):
     class Meta:
         queryset = Node.objects.all()
         resource_name = 'node'
-        detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
+        detail_uri_name = 'uuid'  # for using UUIDs instead of pk in URIs
         # required for public data set access by anonymous users
         authentication = Authentication()
         authorization = Authorization()
@@ -715,33 +715,33 @@ class NodeResource(ModelResource):
             bundle.data['file_import_status'] = file_item.get_import_status()
         return bundle
 
-    # def get_object_list(self, request):
-    #     """
-    #     Temporarily removed for performance reasons (and not required
-    #     without authorization)
-    #     Get all nodes that are available to the current user (via data set)
-    #     Temp workaround due to Node being not Ownable
-    #
-    #     """
-    #     user = request.user
-    #     perm = 'read_%s' % DataSet._meta.module_name
-    #     if (user.is_authenticated()):
-    #         allowed_datasets = get_objects_for_user(user, perm, DataSet)
-    #     else:
-    #         allowed_datasets = get_objects_for_group(
-    #             ExtendedGroup.objects.public_group(), perm, DataSet)
-    #     # get a list of node UUIDs that belong to all datasets available to
-    #     # the current user
-    #     all_allowed_studies = []
-    #     for dataset in allowed_datasets:
-    #         dataset_studies = dataset.get_investigation().study_set.all()
-    #         all_allowed_studies.extend([study for study in dataset_studies])
-    #     allowed_nodes = []
-    #     for study in all_allowed_studies:
-    #         allowed_nodes.extend(study.node_set.all().values('uuid'))
-    #     # filter nodes using that list
-    #     return super(NodeResource, self).get_object_list(request).filter(
-    #         uuid__in=[node['uuid'] for node in allowed_nodes])
+        # def get_object_list(self, request):
+        #     """
+        #     Temporarily removed for performance reasons (and not required
+        #     without authorization)
+        #     Get all nodes that are available to the current user (via data set)
+        #     Temp workaround due to Node being not Ownable
+        #
+        #     """
+        #     user = request.user
+        #     perm = 'read_%s' % DataSet._meta.module_name
+        #     if (user.is_authenticated()):
+        #         allowed_datasets = get_objects_for_user(user, perm, DataSet)
+        #     else:
+        #         allowed_datasets = get_objects_for_group(
+        #             ExtendedGroup.objects.public_group(), perm, DataSet)
+        #     # get a list of node UUIDs that belong to all datasets available to
+        #     # the current user
+        #     all_allowed_studies = []
+        #     for dataset in allowed_datasets:
+        #         dataset_studies = dataset.get_investigation().study_set.all()
+        #         all_allowed_studies.extend([study for study in dataset_studies])
+        #     allowed_nodes = []
+        #     for study in all_allowed_studies:
+        #         allowed_nodes.extend(study.node_set.all().values('uuid'))
+        #     # filter nodes using that list
+        #     return super(NodeResource, self).get_object_list(request).filter(
+        #         uuid__in=[node['uuid'] for node in allowed_nodes])
 
 
 class NodeSetResource(ModelResource):
@@ -764,7 +764,7 @@ class NodeSetResource(ModelResource):
         # defined on resource
         queryset = NodeSet.objects.all().order_by('-is_current', 'name')
         resource_name = 'nodeset'
-        detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
+        detail_uri_name = 'uuid'  # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
         authorization = Authorization()
         fields = [
@@ -844,7 +844,7 @@ class NodeSetListResource(ModelResource):
         # NG: introduced to get correct resource IDs
         detail_resource_name = 'nodeset'
         resource_name = 'nodesetlist'
-        detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
+        detail_uri_name = 'uuid'  # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
         authorization = Authorization()
         fields = ['is_current', 'name', 'summary', 'assay', 'study', 'uuid']
@@ -1319,12 +1319,12 @@ class GroupManagementResource(Resource):
 
                 # When demoting yourself while targetting manager group.
                 if (self.is_manager_group(group) and
-                        group.user_set.count() == 1):
+                            group.user_set.count() == 1):
                     return HttpForbidden(
                         'Last manager must delete group to leave')
 
                 if (not self.is_manager_group(group) and
-                        user
+                            user
                         in group.extendedgroup.manager_group.user_set.all()):
                     if group.extendedgroup.manager_group.user_set.count() == 1:
                         return HttpForbidden(
@@ -1536,8 +1536,8 @@ class InvitationResource(ModelResource):
         if get_dict.get('group_id'):
             auth_group_list = filter(
                 lambda g:
-                    get_dict['group_id'].isdigit() and
-                    g.id == int(get_dict['group_id']),
+                get_dict['group_id'].isdigit() and
+                g.id == int(get_dict['group_id']),
                 auth_group_list)
 
         auth_group_id_set = map(lambda g: g.id, auth_group_list)
@@ -1770,13 +1770,13 @@ class ExtendedGroupResource(ModelResource):
 
                 # When demoting yourself while targetting manager group.
                 if (ext_group.is_manager_group() and
-                        ext_group.user_set.count() == 1):
+                            ext_group.user_set.count() == 1):
                     return HttpForbidden(
                         'Last manager must delete group to leave')
 
                 if (not ext_group.is_manager_group() and
-                        user in ext_group.manager_group.user_set.all() and
-                        ext_group.manager_group.user_set.count() == 1):
+                            user in ext_group.manager_group.user_set.all() and
+                            ext_group.manager_group.user_set.count() == 1):
                     return HttpForbidden(
                         'Last manager must delete group to leave')
 
@@ -1889,14 +1889,14 @@ class FastQCResource(Resource):
             try:
                 parsed_data = parser.clean_data(i[0])
             except:
-                logger.warn( "No data found for " + i[0] + " in file " + fastqc_file_list[0].file_store_uuid )
+                logger.warn("No data found for " + i[0] + " in file " + fastqc_file_list[0].file_store_uuid)
 
             clean_data = []
 
             for row in parsed_data:
                 clean_data.append(row[0:1] + map(
                     lambda d:
-                        float(d) if self.is_float(d) else d,
+                    float(d) if self.is_float(d) else d,
                     row[1:]))
 
             tmp_dict[i[0]] = clean_data
