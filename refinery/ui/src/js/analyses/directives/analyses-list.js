@@ -1,5 +1,5 @@
 angular.module('refineryAnalyses')
-    .directive("analysesList", analysesList);
+    .directive("analysesList", ['$rootScope',analysesList]);
 
 function analysesList() {
     "use strict";
@@ -16,6 +16,7 @@ function analysesList() {
     link: function(scope, element, attr){
 
       scope.$on('refinery/analyze-tab-active', function () {
+        console.log("start analyseslist");
         scope.AnalysesCtrl.updateAnalysesList();
       });
 

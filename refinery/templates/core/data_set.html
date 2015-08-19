@@ -130,7 +130,7 @@
     </div>
   </span>
 
-
+<div ng-controller="DataSetNavCtrl">
   <div ng-controller="DataSetUiModeCtrl">
 
     <div class="refinery-panel-tabs">
@@ -147,28 +147,43 @@
           </div>
         </div>
 
+
         <div class="span10">
           <ul class="nav nav-tabs" id="tabs" style="float: right;">
-            <li class="active"><a href="#content" data-toggle="tab">Files</a></li>
+            <li ui-sref-active="active" class="tabClicker active"><a
+              ui-sref="content">Files</a></li>
             {% if has_change_dataset_permission %}
-              <li><a href="#configuration" data-toggle="tab">Attributes</a></li>
+              <li ui-sref-active="active" class="tabClicker active"><a
+              ui-sref="configuration">Attributes</a></li>
             {% endif %}
-              <li>
-                <a href="#analyses" data-toggle="tab" id="analyze-tab">
+              <li ui-sref-active="active" class="tabClicker active">
+                <a ui-sref="analyses" id="analyze-tab">
                   <span ng-controller="AnalysesCtrl">
                     <span rp-analyses-running-tab-icon></span>
                   </span>
                   Analyses
                 </a>
               </li>
-            <li><a href="#downloads" data-toggle="tab">Downloads</a></li>
-            <li><a href="#details" data-toggle="tab">Details</a></li>
-            <li><a href="#sharing" data-toggle="tab">Sharing</a></li>
+            <li ui-sref-active="active" class="tabClicker active">
+              <a ui-sref="downloads">
+                Downloads
+              </a>
+            </li>
+            <li ui-sref-active="active" class="tabClicker active">
+              <a ui-sref="details" >
+                Details
+              </a>
+            </li>
+            <li ui-sref-active="active" class="tabClicker active">
+              <a ui-sref="sharing">
+                Sharing
+              </a>
+            </li>
           </ul>
         </div>
       </div>
-
     </div>
+
 
     <div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
 
@@ -180,9 +195,7 @@
           <input type="hidden" name="study_uuid" value="{{ study_uuid }}"/>
         </form>
 
-        <div class="tab-content">
-          <div class="tab-pane fade active in" id="content">
-
+          <div class="tabContent" id="content">
             <!-- <div ng-controller="FileMappingCtrl"> -->
             <div class="row-fluid">
 
@@ -419,7 +432,7 @@
           </div>
 
           {% if has_change_dataset_permission %}
-            <div class="tab-pane" id="configuration">
+            <div class="tabContent" id="configuration">
               <div class="refinery-header">
                 <span class="refinery-header-left">
                     <h3>Configuration</h3>
@@ -434,20 +447,21 @@
             </div>
           {% endif %}
 
-            <div class="tab-pane fade" id="analyses">
-              <div class="refinery-header">
-                <span class="refinery-header-left">
-                    <h3>Analyses</h3>
-                </span>
-              </div>
-              <p>
-                <div class="row-fluid">
-                  <analyses-list></analyses-list>
-                </div>
-              </p>
+          <div class="tabContent" id="analyses">
+            <div class="refinery-header">
+              <span class="refinery-header-left">
+                  <h3>Analyses</h3>
+              </span>
             </div>
+            <p>
+              <div class="row-fluid">
+                <analyses-list></analyses-list>
+              </div>
+            </p>
+          </div>
 
-          <div class="tab-pane fade" id="downloads">
+
+          <div class="tabContent" id="downloads">
             <div class="refinery-header">
               <span class="refinery-header-left"><h3>Downloads</h3></span>
             </div>
@@ -467,7 +481,7 @@
             </p>
           </div>
 
-          <div class="tab-pane fade" id="details">
+          <div class="tabContent" id="details">
 
             <div class="refinery-header">
               <span class="refinery-header-left">
@@ -557,7 +571,7 @@
           </div>
 
 
-          <div class="tab-pane fade" id="sharing">
+          <div class="tabContent" id="sharing">
             <div class="refinery-header">
                     <span class="refinery-header-left">
                         <h3>Sharing</h3>
@@ -621,6 +635,8 @@
   </div>
 
   </div>
+</div>
+
 {% endblock %}
 
 {% block script %}
@@ -721,20 +737,6 @@
       $( "#view-selector" ).on("change", function(event) {
         console.log( event.added.element[0].value );
         $( '#navigation-tabs a[href="#' + event.added.element[0].value + '"]').tab('show');
-      });
-
-
-  /*This triggers the analyses monitoring event when the tab is active*/
-      $('#analyze-tab').on("mouseup", function(e) {
-        $(window).unbind('hashchange');
-        $(document).trigger('refinery/analyze-tab-active');
-
-        $(window).bind('hashchange',function(e) {
-          if (location.hash !== "#/analyses/"){
-            $(document).trigger('refinery/analyze-tab-inactive');
-            $(this).unbind();
-          }
-        });
       });
 
       $("[rel=tooltip]").tooltip();
