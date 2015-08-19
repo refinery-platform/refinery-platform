@@ -3,7 +3,7 @@
     <h4 id="modal-description"></h4>
 </div>
 <div class="modal-body">
-    <div ng-show="modal.permissions.groups.length > 0">
+    <div ng-if="modal.permissions.groups.length > 0">
         <table class="table table-hover" id="permission-table" >
           <thead>
             <tr>
@@ -40,7 +40,7 @@
           </tbody>
         </table>
     </div>
-    <div ng-show="modal.permissions.groups === undefined" class="alert alert-error">
+    <div ng-if="modal.permissions.groups === undefined" class="alert alert-error">
         You are not authorized to change or view permissions.
     </div>
 </div>
@@ -50,6 +50,6 @@
   </div>
   <div class="float-right">
     <button class="btn" ng-click="modal.cancel()">Cancel</button>
-    <button class="btn btn-primary" ng-click="modal.save()">Save</button>
+    <button class="btn btn-primary" ng-click="modal.save()" ng-if="modal.permissions.groups.length > 0">Save</button>
   </div>
 </div>
