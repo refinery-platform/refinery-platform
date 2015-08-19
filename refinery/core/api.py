@@ -585,7 +585,8 @@ class AnalysisResource(ModelResource):
     data_set__uuid = fields.CharField(attribute='data_set__uuid', use_in='all')
     workflow__uuid = fields.CharField(attribute='workflow__uuid', use_in='all')
     creation_date = fields.CharField(attribute='creation_date', use_in='all')
-    modification_date = fields.CharField(attribute='modification_date', use_in='all')
+    modification_date = fields.CharField(attribute='modification_date',
+        use_in='all')
     workflow_steps_num = fields.IntegerField(
         attribute='workflow_steps_num', blank=True, null=True, use_in='detail')
     workflow_copy = fields.CharField(
@@ -719,7 +720,7 @@ class NodeResource(ModelResource):
         #     """
         #     Temporarily removed for performance reasons (and not required
         #     without authorization)
-        #     Get all nodes that are available to the current user (via data set)
+        #     Get all nodes available to the current user (via dataset)
         #     Temp workaround due to Node being not Ownable
         #
         #     """
@@ -730,12 +731,14 @@ class NodeResource(ModelResource):
         #     else:
         #         allowed_datasets = get_objects_for_group(
         #             ExtendedGroup.objects.public_group(), perm, DataSet)
-        #     # get a list of node UUIDs that belong to all datasets available to
+        #     # get list of node UUIDs that belong to all datasets available to
         #     # the current user
         #     all_allowed_studies = []
         #     for dataset in allowed_datasets:
         #         dataset_studies = dataset.get_investigation().study_set.all()
-        #         all_allowed_studies.extend([study for study in dataset_studies])
+        #         all_allowed_studies.extend(
+        #               [study for study in dataset_studies]
+        #         )
         #     allowed_nodes = []
         #     for study in all_allowed_studies:
         #         allowed_nodes.extend(study.node_set.all().values('uuid'))
@@ -1323,8 +1326,8 @@ class GroupManagementResource(Resource):
                     return HttpForbidden(
                         'Last manager must delete group to leave')
 
-                if (not self.is_manager_group(group) and
-                        user in group.extendedgroup.manager_group.user_set.all()):
+                if (not self.is_manager_group(group) and user in
+                            group.extendedgroup.manager_group.user_set.all()):
                     if group.extendedgroup.manager_group.user_set.count() == 1:
                         return HttpForbidden(
                             'Last manager must delete group to leave')
@@ -1888,7 +1891,8 @@ class FastQCResource(Resource):
             try:
                 parsed_data = parser.clean_data(i[0])
             except:
-                logger.warn("No data found for " + i[0] + " in file " + fastqc_file_list[0].file_store_uuid)
+                logger.warn("No data found for " + i[0] + " in file " +
+                    fastqc_file_list[0].file_store_uuid)
 
             clean_data = []
 
