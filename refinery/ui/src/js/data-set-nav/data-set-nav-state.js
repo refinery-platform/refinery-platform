@@ -21,10 +21,6 @@ angular
   .config([
     '$stateProvider', '$urlRouterProvider',
     function ($stateProvider, $urlRouterProvider) {
-      $urlRouterProvider.otherwise(function($injector) {
-       var $state = $injector.get('$state');
-       $state.go('content');
-      });
 
       $stateProvider
         .state(
@@ -61,7 +57,7 @@ angular
       .state(
           'sharing',
           {
-            url: '/details/',
+            url: '/sharing/',
             }
       );
     }
