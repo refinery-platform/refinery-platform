@@ -63,7 +63,7 @@ SolrDocumentTable = function(
           if (result.file_url != null) {
             var link = '<a title="Download linked file" href="' +
               result.file_url + '"><i class="icon-download"></i></a>';
-            if (result.file_url.includes("fastqc_results")) {
+            if (result.file_url.indexOf("fastqc_results") >= 0) {
               // Should change .txt extension to FastQC specific later.
               link += '&nbsp;<a title="View FastQC Result" href="/fastqc_viewer/#/' +
                 result.analysis_uuid + '"><i class="icon-bar-chart"></i></a>';
