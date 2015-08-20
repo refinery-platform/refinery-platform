@@ -1,21 +1,3 @@
-//angular
-//  .module('refineryDataSetNav')
-//  .config([
-//    'refineryStateProvider', 'refineryUrlRouterProvider',
-//    function (refineryStateProvider, refineryUrlRouterProvider) {
-//      refineryStateProvider
-//        .state(
-//          'analyses',
-//          {
-//            url: '/testing/this/analyses',
-//            templateUrl: '/static/partials/data-set-nav/partials/analyses.html',
-//            controller: 'AnalysesCtrl as analysesCtrl'
-//          }, '/data_sets/'
-//      );
-//    }
-//  ]
-//);
-
 angular
   .module('refineryDataSetNav')
   .config([
