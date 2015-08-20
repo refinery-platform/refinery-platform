@@ -35,13 +35,15 @@ function rfAnalysesGlobalListStatusPopover($compile, $templateCache, $, $timeout
       $("body").on('click', function (e) {
         //starts api calls if icon is clicked
         if(e.target.id === 'global-analysis-status-run' ||
-           e.target.id === 'global-analysis-status'){
-          $('#global-analysis-status-run').tooltip('hide');
+           e.target.id === 'global-analysis-status' ||
+           e.target.id === 'global-analysis-status-run-div'){
+          $('#global-analysis-status-run-div').tooltip('hide');
           $('#global-analysis-status').tooltip('hide');
           scope.analysesCtrl.updateAnalysesGlobalList();
         }
         if ((e.target.id !== 'global-analysis-status-run' &&
           e.target.id !== 'global-analysis-status') &&
+          e.target.id !== 'global-analysis-status-run-div' &&
           $(e.target).parents('.popover.in').length === 0) {
           $(element).popover('hide');
           scope.analysesCtrl.cancelTimerGlobalList();
