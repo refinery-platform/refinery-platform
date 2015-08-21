@@ -20,7 +20,8 @@
             <li>
               <a
                 class="clickable"
-                ng-click="preview.openPermissionEditor('data_sets', preview.dataSet.uuid)">
+                ng-class="{'disabled':!preview.permissions}"
+                ng-click="preview.openPermissionEditor()">
                 Permissions
               </a>
             </li>

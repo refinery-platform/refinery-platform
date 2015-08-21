@@ -23,6 +23,17 @@ p {
 
 a.clickable {
   cursor: pointer;
+
+  &.disabled {
+    font-style: italic;
+    cursor: not-allowed;
+    opacity: 0.33;
+
+    &:hover {
+      color: inherit;
+      background: inherit;
+    }
+  }
 }
 
 
