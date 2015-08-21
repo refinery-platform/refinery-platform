@@ -6,7 +6,7 @@ services:
 install:
   - pip install -r requirements.txt
 env:
-  - DJANGO_SETTINGS_MODULE=settings.dev
+  - DJANGO_SETTINGS_MODULE=config.settings.dev
 before_script:
   - createuser --createdb --no-superuser --no-createrole vagrant
   - createdb -O vagrant refinery
