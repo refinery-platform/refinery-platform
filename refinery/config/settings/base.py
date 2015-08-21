@@ -8,9 +8,10 @@ logger = logging.getLogger(__name__)
 
 # get the absolute path of the top level project dir
 BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(__file__),
-                                         "../../.."))
+                                         "../../../.."))
 
-local_settings_file_path = os.path.join(BASE_DIR, 'refinery/config.json')
+local_settings_file_path = os.path.join(BASE_DIR,
+                                        'refinery/config/config.json')
 
 # load config.json
 try:
@@ -124,7 +125,7 @@ MIDDLEWARE_CLASSES = (
     'core.middleware.DatabaseFailureMiddleware',
 )
 
-ROOT_URLCONF = 'refinery.urls'
+ROOT_URLCONF = 'config.urls'
 
 TEMPLATE_DIRS = (
     os.path.join(BASE_DIR, "refinery/templates"),

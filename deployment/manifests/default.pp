@@ -3,6 +3,7 @@ $appgroup = "vagrant"
 $virtualenv = "/home/${appuser}/.virtualenvs/refinery-platform"
 $requirements = "/vagrant/requirements.txt"
 $project_root = "/vagrant/refinery"
+$django_settings_module = "config.settings.dev"
 $ui_app_root = "${project_root}/ui"
 
 # to make logs easier to read
@@ -105,12 +106,12 @@ file { ["/vagrant/isa-tab", "/vagrant/import", "/vagrant/static"]:
 
 file_line { "django_settings_module":
   path => "/home/${appuser}/.profile",
-  line => "export DJANGO_SETTINGS_MODULE=settings.dev",
+  line => "export DJANGO_SETTINGS_MODULE=${django_settings_module}",
 }
 ->
-file { "${project_root}/config.json":
+file { "${project_root}/config/config.json":
   ensure => file,
-  source => "${project_root}/config.json.sample",
+  source => "${project_root}/config/config.json.sample",
   owner => $appuser,
   group => $appgroup,
   replace => false,
@@ -118,7 +119,7 @@ file { "${project_root}/config.json":
 ->
 exec { "syncdb":
   command => "${virtualenv}/bin/python ${project_root}/manage.py syncdb --migrate --noinput",
-  environment => ["DJANGO_SETTINGS_MODULE=settings.dev"],
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user => $appuser,
   group => $appgroup,
   require => [
@@ -129,21 +130,21 @@ exec { "syncdb":
 ->
 exec { "create_superuser":
   command => "${virtualenv}/bin/python ${project_root}/manage.py loaddata superuser.json",
-  environment => ["DJANGO_SETTINGS_MODULE=settings.dev"],
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user => $appuser,
   group => $appgroup,
 }
 ->
 exec { "init_refinery":
   command => "${virtualenv}/bin/python ${project_root}/manage.py init_refinery 'Refinery' '192.168.50.50:8000'",
-  environment => ["DJANGO_SETTINGS_MODULE=settings.dev"],
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user => $appuser,
   group => $appgroup,
 }
 ->
 exec { "create_user":
   command => "${virtualenv}/bin/python ${project_root}/manage.py create_user 'guest' 'guest' 'guest@example.com' 'Guest' '' ''",
-  environment => ["DJANGO_SETTINGS_MODULE=settings.dev"],
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user => $appuser,
   group => $appgroup,
 }
@@ -151,13 +152,13 @@ exec { "create_user":
 exec {
   "build_core_schema":
     command => "${virtualenv}/bin/python ${project_root}/manage.py build_solr_schema --using=core > solr/core/conf/schema.xml",
-    environment => ["DJANGO_SETTINGS_MODULE=settings.dev"],
+    environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
     cwd => $project_root,
     user => $appuser,
     group => $appgroup;
   "build_data_set_manager_schema":
     command => "${virtualenv}/bin/python ${project_root}/manage.py build_solr_schema --using=data_set_manager > solr/data_set_manager/conf/schema.xml",
-    environment => ["DJANGO_SETTINGS_MODULE=settings.dev"],
+    environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
     cwd => $project_root,
     user => $appuser,
     group => $appgroup;
@@ -261,7 +262,7 @@ class ui {
   ->
   exec { "collectstatic":
     command => "${virtualenv}/bin/python ${project_root}/manage.py collectstatic --clear --noinput",
-    environment => ["DJANGO_SETTINGS_MODULE=settings.dev"],
+    environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
     user => $appuser,
     group => $appgroup,
     require => Python::Requirements[$requirements],
@@ -278,7 +279,7 @@ file { "${project_root}/supervisord.conf":
 ->
 exec { "supervisord":
   command => "${virtualenv}/bin/supervisord",
-  environment => ["DJANGO_SETTINGS_MODULE=settings.dev"],
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   cwd => $project_root,
   creates => "/tmp/supervisord.pid",
   user => $appuser,
