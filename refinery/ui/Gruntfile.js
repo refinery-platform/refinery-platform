@@ -411,7 +411,7 @@ module.exports = function(grunt) {
       options: {
         // All jsHint configs are located in `.jshintrc`. This is useful as
         // editor plugins can pick up this file as well.
-        jshintrc: true
+        jshintrc: './.jshintrc'
       }
     },
 
