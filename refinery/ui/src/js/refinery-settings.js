@@ -9,6 +9,9 @@ angular
     refineryApi: '/api/v1',
     solrApi: '/solr',
     dashboard: {
+      preview: {
+        maxBadges: 20
+      },
       analysesSorting: [
         {
           djangoAttribute: 'name',

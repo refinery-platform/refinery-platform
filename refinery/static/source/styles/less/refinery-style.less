@@ -1524,8 +1524,14 @@ button.icon-only {
   transform: rotate(180deg);
 }
 
-.inline-container * {
-  display: inline !important;
+.inline-container {
+  * {
+    display: inline;
+  }
+
+  .is-mirrorable {
+    display: inline-block !important;
+  }
 }
 
 ol.badge-list,

@@ -4,6 +4,7 @@ function refineryDataSetPreview () {
   function DataSetPreviewCtrl (
     _,
     $modal,
+    settings,
     authService,
     studyService,
     sharingService,
@@ -16,6 +17,7 @@ function refineryDataSetPreview () {
 
     this._ = _;
     this.$modal = $modal;
+    this.settings = settings;
     this.user = authService;
     this.studyService = studyService;
     this.sharingService = sharingService;
@@ -24,6 +26,8 @@ function refineryDataSetPreview () {
     this.dashboardWidthFixerService = dashboardWidthFixerService;
     this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
     this.dashboardExpandablePanelService = dashboardExpandablePanelService;
+
+    this.maxBadges = this.settings.dashboard.preview.maxBadges;
 
     this.dashboardWidthFixerService.fixer.push(function () {
       that.style = {
@@ -272,11 +276,35 @@ function refineryDataSetPreview () {
     }
   };
 
+  /**
+   * Toggle abstract length
+   *
+   * @method  toggleAbstract
+   * @author  Fritz Lekschas
+   * @date    2015-08-21
+   *
+   * @param   {Object  citation  Citation object.
+   */
   DataSetPreviewCtrl.prototype.toggleAbstract = function (citation) {
     if (citation.abstractLength < Number.POSITIVE_INFINITY) {
       citation.abstractLength = Number.POSITIVE_INFINITY;
     } else {
       citation.abstractLength = this.abstractLength;
+    }
+  };
+
+  /**
+   * Toggle number of visible badges.
+   *
+   * @method  toggleBadges
+   * @author  Fritz Lekschas
+   * @date    2015-08-21
+   */
+  DataSetPreviewCtrl.prototype.toggleBadges = function () {
+    if (this.maxBadges < Number.POSITIVE_INFINITY) {
+      this.maxBadges = Number.POSITIVE_INFINITY;
+    } else {
+      this.maxBadges = this.settings.dashboard.preview.maxBadges;
     }
   };
 
@@ -287,6 +315,7 @@ function refineryDataSetPreview () {
     controller: [
       '_',
       '$modal',
+      'settings',
       'authService',
       'studyService',
       'sharingService',
