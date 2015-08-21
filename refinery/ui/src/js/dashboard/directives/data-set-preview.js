@@ -6,6 +6,7 @@ function refineryDataSetPreview () {
     $modal,
     authService,
     studyService,
+    sharingService,
     citationService,
     analysisService,
     dashboardWidthFixerService,
@@ -17,6 +18,7 @@ function refineryDataSetPreview () {
     this.$modal = $modal;
     this.user = authService;
     this.studyService = studyService;
+    this.sharingService = sharingService;
     this.citationService = citationService;
     this.analysisService = analysisService;
     this.dashboardWidthFixerService = dashboardWidthFixerService;
@@ -79,6 +81,7 @@ function refineryDataSetPreview () {
           this._currentDataset = ds.id;
           this.getStudies(ds.uuid);
           this.getAnalysis(ds.uuid);
+          this.getPermissions(ds.uuid);
         }
         return ds;
       }
@@ -187,19 +190,86 @@ function refineryDataSetPreview () {
       });
   };
 
-  DataSetPreviewCtrl.prototype.openPermissionEditor = function (model, uuid) {
-    this.$modal.open({
-      templateUrl: '/static/partials/dashboard/partials/permission-dialog.html',
-      controller: 'PermissionEditorCtrl as modal',
-      resolve: {
-        config: function () {
-          return {
-            model: model,
-            uuid: uuid
-          };
+  /**
+   * Load permissions for this dataset.
+   *
+   * @method  getPermissions
+   * @author  Fritz Lekschas
+   * @date    2015-08-21
+   *
+   * @param   {string}  uuid   UUID of the exact model entity.
+   * @return  {object}         Angular promise.
+   */
+  DataSetPreviewCtrl.prototype.getPermissions = function (uuid) {
+    var that = this;
+
+    this.sharingService.get({
+      model: 'data_sets',
+      uuid: uuid
+    }).$promise
+      .then(function (data) {
+        groups = [];
+        for (var i = 0, len = data.share_list.length; i < len; i++) {
+          groups.push({
+            id: data.share_list[i].group_id,
+            name: data.share_list[i].group_name,
+            permission: that.getPermissionLevel(data.share_list[i].perms)
+          });
         }
-      }
-    });
+        this.permissions = {
+          isOwner: data.is_owner,
+          groups: groups
+        };
+      }.bind(this));
+  };
+
+  /**
+   * Turns permission object into a simple string.
+   *
+   * @method  getPermissions
+   * @author  Fritz Lekschas
+   * @date    2015-08-21
+   *
+   * @param   {Object}  perms  Object of the precise permissions.
+   * @return  {String}         Permission's name.
+   */
+  DataSetPreviewCtrl.prototype.getPermissionLevel = function (perms) {
+    if (perms.read === false) {
+      return 'none';
+    }
+    if (perms.change === true) {
+      return 'edit';
+    }
+    return 'read';
+  };
+
+  /**
+   * Open the permission modal
+   *
+   * @method  openPermissionEditor
+   * @author  Fritz Lekschas
+   * @date    2015-08-21
+   */
+  DataSetPreviewCtrl.prototype.openPermissionEditor = function () {
+    var that = this;
+
+    if (this.permissions) {
+      this.$modal.open({
+        templateUrl: '/static/partials/dashboard/partials/permission-dialog.html',
+        controller: 'PermissionEditorCtrl as modal',
+        resolve: {
+          config: function () {
+            return {
+              model: 'data_sets',
+              uuid: that.dataSet.uuid
+            };
+          },
+          permissions: function () {
+            return that.permissions;
+          }
+        }
+      });
+    }
   };
 
   DataSetPreviewCtrl.prototype.toggleAbstract = function (citation) {
@@ -219,6 +289,7 @@ function refineryDataSetPreview () {
       '$modal',
       'authService',
       'studyService',
+      'sharingService',
       'citationService',
       'analysisService',
       'dashboardWidthFixerService',
