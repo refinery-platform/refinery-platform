@@ -116,17 +116,36 @@ ul#externalToolListPopover li{
 #analyses-popover {
   .popover {
     position: absolute;
+    display: block;
     top: 20px !important;
     right: 0 !important;
-    max-width: 425px;
+    max-width: 450px;
     z-index: 1010;
-    display: none;
     padding: 1px;
     text-align: left;
   }
  .popover.left .arrow:after, .arrow {
       display: none;
     }
+}
+
+.analyses-global-text-icon{
+  display: inline-block;
+  float:left;
+  text-align: left;
+  width: 25px;
+}
+
+.analyses-global-text{
+  display: inline-block;
+  width: 375px;
+}
+
+.analysis-running-percentage{
+  display: inline-block;
+  width: 25px;
+  max-width: 25px;
+  text-align: center;
 }
 
 ul#analyses-popover{
@@ -137,6 +156,7 @@ ul#analyses-popover{
   li{
     padding: 0;
     margin: 0;
+    width: 450px;
   }
 }
 
@@ -233,13 +253,6 @@ div.analysis-retrieving{
   font-size: 0.9em;
   margin-bottom: 7px;
   width: 40px;
-}
-
-.analysis-running-percentage{
-  width: 25px;
-  max-width: 25px;
-  float: left;
-  text-align: center;
 }
 
 a.close.analysis-alert{
