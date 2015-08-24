@@ -34,12 +34,4 @@ function DataSetNavCtrl($rootScope, $scope, $location, $state){
       }
     }
   });
-
-  $scope.isFileView = function(){
-    if(location.hash === "#/files/"){
-      return true;
-    }else{
-      return false;
-    }
-  };
 }
