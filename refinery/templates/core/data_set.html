@@ -140,11 +140,16 @@
         <div class="span2">
           <div class="btn-group">
           <!-- ng-hide if the file tab is not selected -->
-            <a type="button" class="btn btn-warning" ng-class="{active: $root.mode==='browse'}" ui-sref="browse">Browse</a>
+            <a type="button" class="btn btn-warning data-set-view-tabs"
+              ng-class="{active:
+            $root.mode==='browse'}" ui-sref="browse">Browse</a>
               {% if has_change_dataset_permission %}
-                <a type="button" class="btn btn-warning" ng-class="{active:$root.mode==='analyze'}" ui-sref="analyze" >Analyze</a>
+                <a type="button" class="btn btn-warning data-set-view-tabs"
+                  ng-class="{active:$root.mode==='analyze'}" ui-sref="analyze" >Analyze</a>
               {% endif %}
-            <a type="button" class="btn btn-warning" ng-class="{active: $root.mode==='visualize'}" ui-sref="visualize">Visualize</a>
+            <a type="button" class="btn btn-warning data-set-view-tabs"
+              ng-class="{active:
+            $root.mode==='visualize'}" ui-sref="visualize">Visualize</a>
           </div>
         </div>
 

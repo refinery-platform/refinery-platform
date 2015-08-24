@@ -18,6 +18,7 @@ function DataSetNavCtrl($rootScope, $scope, $location, $state){
     var tab = to.name;
     //grabs the list of tab names to avoid collisions with other tabs.
     if(tabNames.indexOf(tab) >= 0){
+      $('.data-set-view-tabs.active').removeClass('active');
       $(".tabContent").hide();
       $("#" + tab).show();
 
