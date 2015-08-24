@@ -321,6 +321,33 @@ var provvis = (function () {
               (-1.5 * scaleFactor * vis.radius) + "," +
               (-1.5 * scaleFactor * vis.radius) + ")" +
               "scale(" + (+1 / d3.event.scale) + ")");
+
+          /* Trim nodeAttrLabel */
+          /* Get current node label pixel width. */
+          var maxLabelPixelWidth = (cell.width - 2 * scaleFactor * vis.radius) *
+              d3.event.scale;
+
+          /* Get label text. */
+          d3.selectAll(".node").select(".nodeAttrLabel").each(function (d) {
+            var attrText = d.name;
+            if (d.nodeType === "stored") {
+              var selAttrName = "";
+              $("#prov-ctrl-visible-attribute-list > li").each(function () {
+                if ($(this).find("input[type='radio']").prop("checked")) {
+                  selAttrName = $(this).find("label").text();
+                }
+              });
+              attrText = d.attributes.get(selAttrName);
+            }
+
+            /* Set label text. */
+            d3.select(this).text(attrText);
+            var trimRatio = parseInt(attrText.length *
+                (maxLabelPixelWidth / this.getComputedTextLength()), 10);
+            if (trimRatio < attrText.length) {
+              d3.select(this).text(attrText.substr(0, trimRatio - 3) + "...");
+            }
+          });
         };
 
         /* Main canvas drawing area. */
