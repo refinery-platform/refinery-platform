@@ -34,6 +34,14 @@ autostart = true
 autorestart = true
 startsecs = 10
 
+[program:neo4j]
+command = /opt/neo4j/bin/neo4j console
+autostart = false
+autorestart = true
+startsecs = 5
+stopasgroup = true
+killasgroup = true
+
 [group:celeryd]
 programs = worker1,worker2
 priority = 995

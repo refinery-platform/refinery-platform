@@ -193,6 +193,48 @@ class solr {
 }
 include solr
 
+class neo4j {
+  $neo4j_version = "2.2.4"
+  $neo4j_name = "neo4j-community-${neo4j_version}"
+  $neo4j_archive = "${neo4j_name}.tar.gz"
+  $neo4j_url = "http://neo4j.com/artifact.php?name=neo4j-community-${neo4j_version}-unix.tar.gz"
+
+  exec { "neo4j_wget":
+    command => "wget ${neo4j_url} -O /usr/src/${neo4j_archive}",
+    creates => "/usr/src/${neo4j_archive}",
+    path => "/usr/bin:/bin",
+    timeout => 600,  # downloading can take a long time
+  }
+  ->
+  exec { "neo4j_unpack":
+    command => "mkdir -p /opt && tar -xzf /usr/src/${neo4j_archive} -C /opt && chown -R ${appuser}:${appuser} /opt/${neo4j_name}",
+    creates => "/opt/${neo4j_name}",
+    path => "/usr/bin:/bin",
+  }
+  ->
+  file { "/opt/neo4j":
+    ensure => link,
+    target => "${neo4j_name}",
+  }
+  ->
+  file_line { "neo4j_no_authentication":
+    path => "/opt/${neo4j_name}/conf/neo4j-server.properties",
+    line => "dbms.security.auth_enabled=false",
+    match => "^dbms.security.auth_enabled=",
+  }
+  ->
+  file_line { "neo4j_increase_max_open_files_soft_limit":
+    path => "/etc/security/limits.conf",
+    line => "vagrant soft nofile 40000",
+  }
+  ->
+  file_line { "neo4j_increase_max_open_files_hard_limit":
+    path => "/etc/security/limits.conf",
+    line => "vagrant hard nofile 40000",
+  }
+}
+include neo4j
+
 class rabbit {
   package { 'curl': }
   ->
@@ -284,7 +326,7 @@ exec { "supervisord":
   creates => "/tmp/supervisord.pid",
   user => $appuser,
   group => $appgroup,
-  require => [ Class["ui"], Class["solr"], Class ["rabbit"] ],
+  require => [ Class["ui"], Class["solr"], Class["neo4j"], Class ["rabbit"] ],
 }
 
 package { 'libapache2-mod-wsgi': }
