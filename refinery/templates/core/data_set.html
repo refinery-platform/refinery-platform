@@ -141,28 +141,36 @@
           <div class="btn-group">
           <!-- ng-hide if the file tab is not selected -->
             <a type="button" class="btn btn-warning data-set-view-tabs"
-              ng-class="{active:
-            $root.mode==='browse'}" ui-sref="browse">Browse</a>
+              ng-class="{active: $root.mode==='browse'}" ui-sref="browse"
+              ui-sref-active="active">
+              Browse
+            </a>
               {% if has_change_dataset_permission %}
                 <a type="button" class="btn btn-warning data-set-view-tabs"
-                  ng-class="{active:$root.mode==='analyze'}" ui-sref="analyze" >Analyze</a>
+                  ng-class="{active:$root.mode==='analyze'}"
+                  ui-sref="analyze" ui-sref-active="active">
+                  Analyze
+                </a>
               {% endif %}
-            <a type="button" class="btn btn-warning data-set-view-tabs"
+            <a type="button" id="visualizeTab" class="btn btn-warning data-set-view-tabs"
               ng-class="{active:
-            $root.mode==='visualize'}" ui-sref="visualize">Visualize</a>
+            $root.mode==='visualize'}" ui-sref="visualize"
+              ui-sref-active="active">
+              Visualize
+            </a>
           </div>
         </div>
 
 
         <div class="span10">
           <ul class="nav nav-tabs" id="tabs" style="float: right;">
-            <li ui-sref-active="active" class="active"><a
+            <li ui-sref-active="active" id="filesTab"><a
               ui-sref="files" class="tabClicker">Files</a></li>
             {% if has_change_dataset_permission %}
-              <li ui-sref-active="active" class="active"><a
+              <li ui-sref-active="active"><a
               ui-sref="attributes" class="tabClicker">Attributes</a></li>
             {% endif %}
-              <li ui-sref-active="active" class="active">
+              <li ui-sref-active="active">
                 <a ui-sref="analyses" id="analyze-tab" class="tabClicker">
                   <span ng-controller="AnalysesCtrl">
                     <span rp-analyses-running-tab-icon></span>
@@ -170,17 +178,17 @@
                   Analyses
                 </a>
               </li>
-            <li ui-sref-active="active" class="active">
+            <li ui-sref-active="active">
               <a ui-sref="downloads" class="tabClicker">
                 Downloads
               </a>
             </li>
-            <li ui-sref-active="active" class="active">
+            <li ui-sref-active="active">
               <a ui-sref="details" class="tabClicker" >
                 Details
               </a>
             </li>
-            <li ui-sref-active="active" class=" active">
+            <li ui-sref-active="active">
               <a ui-sref="sharing" class="tabClicker">
                 Sharing
               </a>

@@ -13,6 +13,7 @@ function DataSetNavCtrl($rootScope, $scope, $location, $state){
   });
   $scope.$state = $state;
 
+
   //when the url changes this hides/show
   $scope.$on('$stateChangeSuccess',function(e, to, toParams, from, fromParams){
     var tab = to.name;
@@ -33,6 +34,11 @@ function DataSetNavCtrl($rootScope, $scope, $location, $state){
           }
         });
       }
+    }
+
+    if(tab === 'analyze' || tab === 'visualize'){
+      $(".tabContent").hide();
+      $("#files").show();
     }
   });
 }
