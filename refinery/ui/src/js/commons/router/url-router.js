@@ -1,16 +1,32 @@
 /**
  * RefineryUrlRouterProvider Class
- * @param {object} $window            Angular's window object.
- * @param {object} $urlRouterProvider UI-Router's $urlRouterProvider.
+ *
+ * @method  RefineryUrlRouterProvider
+ * @author  Fritz Lekschas
+ * @date    2015-08-25
+ *
+ * @class
+ * @param  {Object}    $window            Angular's window object.
+ * @param  {Object}    $urlRouterProvider UI-Router's $urlRouterProvider.
+ * @param  {Object}    _                  Lodash.
+ * @param  {Function}  locationTest       Function for testing if the current
+ *   location matches a given path.
  */
-function RefineryUrlRouterProvider ($window, $urlRouterProvider) {
-  this.$window = $window;
+function RefineryUrlRouterProvider (
+  $window, $urlRouterProvider, _, locationTest) {
   this.$urlRouterProvider = $urlRouterProvider;
+  this.$window = $window;
+  this._ = _;
+  this.locationTest = locationTest;
 }
 
 /**
  * Default URL route initialization only when the location's path matches the
  * given path.
+ *
+ * @method  otherwise
+ * @author  Fritz Lekschas
+ * @date    2015-08-25
  *
  * @description
  * Wraps the original $urlRouterProvider's `otherwise` method, to restrict
@@ -65,17 +81,46 @@ function RefineryUrlRouterProvider ($window, $urlRouterProvider) {
  * });
  * </pre>
  *
- * @param  {string} url  Default route.
- * @param  {strign} path Path under which the default route will be registered.
+ * @param   {String}        url    Default route.
+ * @param   {String|Array}  paths  Location paths under, which the state will be
+ *   registered at. These paths should equal the exact pathname of
+ *   `window.location`. If `regex` is `true` this parameter should be a regex
+ *   string.
+ * @param   {Boolean}       regex  If `true` it assumes that all `paths` are
+ *   regex strings.
+ * @return  {Object}               Return `this` for chaining.
  */
-RefineryUrlRouterProvider.prototype.otherwise = function (url, path) {
-  if (this.$window.location.pathname === path) {
-    this.$urlRouterProvider.otherwise(url);
+RefineryUrlRouterProvider.prototype.otherwise = function (url, paths, regex) {
+  var pathname = this.$window.location.pathname;
+
+  if (this._.isArray(paths)) {
+    for (var i = paths.length; i--;) {
+      if (this._.isObject(paths[i])) {
+        if (this.locationTest(pathname, paths[i].path, paths[i].regex)) {
+          this.$urlRouterProvider.otherwise(url);
+        }
+      } else {
+        if (this.locationTest(pathname, paths[i], regex)) {
+          this.$urlRouterProvider.otherwise(url);
+        }
+      }
+    }
+  } else {
+    if (this.locationTest(pathname, paths, regex)) {
+      this.$urlRouterProvider.otherwise(url);
+    }
   }
+
+  return this;
 };
 
 /**
  * Return $urlRouterProvider's `$.get` function.
+ *
+ * @method  $get
+ * @author  Fritz Lekschas
+ * @date    2015-08-25
+ *
  * @return {function} Super $.get()
  */
 RefineryUrlRouterProvider.prototype.$get = function () {
@@ -87,9 +132,11 @@ angular
   .provider('refineryUrlRouter', [
     '$windowProvider',
     '$urlRouterProvider',
-    function ($windowProvider, $urlRouterProvider) {
+    '_',
+    'locationTest',
+    function ($windowProvider, $urlRouterProvider, _, locationTest) {
       var $window = $windowProvider.$get();
 
-      return new RefineryUrlRouterProvider($window, $urlRouterProvider);
+      return new RefineryUrlRouterProvider($window, $urlRouterProvider, _, locationTest);
     }
   ]);

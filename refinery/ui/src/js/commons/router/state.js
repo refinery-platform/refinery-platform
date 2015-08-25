@@ -6,12 +6,17 @@
  * @date    2015-08-25
  *
  * @class
- * @param  {Object}  $window         Angular's window object.
- * @param  {Object}  $stateProvider  UI-Router's $stateProvider.
+ * @param  {Object}    $window         Angular's window object.
+ * @param  {Object}    $stateProvider  UI-Router's $stateProvider.
+ * @param  {Object}    _               Lodash.
+ * @param  {Function}  locationTest    Function for testing if the current
+ *   location matches a given path.
  */
-function RefineryStateProvider ($window, $stateProvider) {
-  this.$window = $window;
+function RefineryStateProvider ($window, $stateProvider, _, locationTest) {
   this.$stateProvider = $stateProvider;
+  this.$window = $window;
+  this._ = _;
+  this.locationTest = locationTest;
 }
 
 /**
@@ -81,24 +86,42 @@ function RefineryStateProvider ($window, $stateProvider) {
  *        templateUrl: '/static/partials/group/edit.html',
  *        controller: 'DataSetsCtrl as dataSets'
  *      },
- *      '^\/data_sets\/.*\/$');
+ *      '^\/data_sets\/.*\/$', true);
  * });
  * </pre>
  *
- * @param   {String}   name   $stateProvider's state name.
- * @param   {Object}   state  $stateProvider's state object.
- * @param   {String}   path   Location path under which the state will be
- *   registered. This path should equal the exact pathname of `window.location`.
- *   If `regex` is `true` this parameter should be a regex string.
- * @param   {Boolean}  regex  If true it assumes that `path` is a regex string.
- * @return  {Object}          Return `this` for chaining.
+ * @param   {String}        name   $stateProvider's state name.
+ * @param   {Object}        state  $stateProvider's state object.
+ * @param   {String|Array}  paths  Location paths under, which the state will be
+ *   registered at. These paths should equal the exact pathname of
+ *   `window.location`. If `regex` is `true` this parameter should be a regex
+ *   string.
+ * @param   {Boolean}       regex  If `true` it assumes that all `paths` are
+ *   regex strings. If `paths` is an array of objects with a path specific
+ *   regex attribite this variable will be overwritten.
+ * @return  {Object}               Return `this` for chaining.
  */
-RefineryStateProvider.prototype.state = function (name, state, path, regex) {
+RefineryStateProvider.prototype.state = function (name, state, paths, regex) {
   var pathname = this.$window.location.pathname;
 
-  if ((regex && new RegExp(path).test(pathname)) || pathname === path) {
-    this.$stateProvider.state(name, state);
+  if (this._.isArray(paths)) {
+    for (var i = paths.length; i--;) {
+      if (this._.isObject(paths[i])) {
+        if (this.locationTest(pathname, paths[i].path, paths[i].regex)) {
+          this.$stateProvider.state(name, state);
+        }
+      } else {
+        if (this.locationTest(pathname, paths[i], regex)) {
+          this.$stateProvider.state(name, state);
+        }
+      }
+    }
+  } else {
+    if (this.locationTest(pathname, paths, regex)) {
+      this.$stateProvider.state(name, state);
+    }
   }
+
   return this;
 };
 
@@ -120,9 +143,11 @@ angular
   .provider('refineryState', [
     '$windowProvider',
     '$stateProvider',
-    function ($windowProvider, $stateProvider) {
+    '_',
+    'locationTest',
+    function ($windowProvider, $stateProvider, _, locationTest) {
       var $window = $windowProvider.$get();
 
-      return new RefineryStateProvider($window, $stateProvider);
+      return new RefineryStateProvider($window, $stateProvider, _, locationTest);
     }
   ]);
