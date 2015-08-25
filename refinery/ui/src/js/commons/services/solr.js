@@ -86,9 +86,10 @@ angular
         return name;
       };
 
-      return ({
-        query: query,
+      query.extra = {
         prettifyFieldName: prettifyFieldName
-      });
+      };
+
+      return query;
     }
   ]);

@@ -311,7 +311,7 @@ angular.module('refineryNodeMapping', [
         var attributes = [];
         if ( data.response.docs.length == 1 ) {
           angular.forEach( $scope.attributeOrderList, function( attribute ) {
-            attributes.push( { "name": solrService.prettifyFieldName( attribute, true ), "value": data.response.docs[0][attribute] } );
+            attributes.push( { "name": solrService.extra.prettifyFieldName( attribute, true ), "value": data.response.docs[0][attribute] } );
           });
         }
         else {
