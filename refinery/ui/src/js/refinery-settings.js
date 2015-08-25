@@ -4,10 +4,14 @@ angular
     appRoot: document.location.protocol + '//' + document.location.host,
     authThrottling: 60000,
     debounceSearch: 250,
+    debounceWindowResize: 250,
     publicGroupId: window.publicGroupId,
     refineryApi: '/api/v1',
     solrApi: '/solr',
     dashboard: {
+      preview: {
+        maxBadges: 20
+      },
       analysesSorting: [
         {
           djangoAttribute: 'name',
@@ -34,6 +38,10 @@ angular
         {
           djangoAttribute: 'modification_date',
           label: 'Modification date'
+        },
+        {
+          djangoAttribute: 'title',
+          label: 'Name'
         }
       ],
       workflowsSorting: [

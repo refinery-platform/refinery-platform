@@ -2874,10 +2874,10 @@ var provvisRender = (function () {
             .attr("id", "bbClipId-" + d.autoId)
             .append("rect")
             .attr("transform", function () {
-              return "translate(" + (-cell.width * 1 / 2) + "," +
+              return "translate(" + (-1.5 * scaleFactor * vis.radius) + "," +
                   (-cell.height * 3 / 4) + ")";
             })
-            .attr("width", cell.width)
+            .attr("width", cell.width - 2 * scaleFactor * vis.radius)
             .attr("height", cell.height + 1 * scaleFactor * vis.radius);
 
         var nGlyph = self.append("g").classed({"glyph": true}),
@@ -2972,8 +2972,7 @@ var provvisRender = (function () {
                                 d.name.length - d.name.indexOf(' ')
                             ) : d.name
                     );
-              }).attr("class", "nodeAttrLabel")
-          ;
+              }).attr("class", "nodeAttrLabel");
         });
 
         nLabels.each(function (d) {
@@ -3935,6 +3934,34 @@ var provvisRender = (function () {
         (-1.5 * scaleFactor * vis.radius) + "," +
         (-1.5 * scaleFactor * vis.radius) + ") " +
         "scale(" + (1 / newScale) + ")");
+
+    /* Trim nodeAttrLabel */
+    /* Get current node label pixel width. */
+    var maxLabelPixelWidth = (cell.width - 2 * scaleFactor * vis.radius) *
+        d3.transform(d3.select(".canvas").select("g").select("g")
+            .attr("transform")).scale[0];
+
+    /* Get label text. */
+    d3.selectAll(".node").select(".nodeAttrLabel").each(function (d) {
+      var attrText = d.name;
+      if (d.nodeType === "stored") {
+        var selAttrName = "";
+        $("#prov-ctrl-visible-attribute-list > li").each(function () {
+          if ($(this).find("input[type='radio']").prop("checked")) {
+            selAttrName = $(this).find("label").text();
+          }
+        });
+        attrText = d.attributes.get(selAttrName);
+      }
+
+      /* Set label text. */
+      d3.select(this).text(attrText);
+      var trimRatio = parseInt(attrText.length *
+          (maxLabelPixelWidth / this.getComputedTextLength()), 10);
+      if (trimRatio < attrText.length) {
+        d3.select(this).text(attrText.substr(0, trimRatio - 3) + "...");
+      }
+    });
   };
 
   /**
@@ -4333,7 +4360,7 @@ var provvisRender = (function () {
       case "subanalysis":
         data = vis.graph.workflowData.get(selNode.parent.wfUuid);
         if (typeof data !== "undefined") {
-          title = '<i class="icon-cog"></i>&nbsp; Subanalysis';
+          title = '<i class="icon-cog"></i>&nbsp; Analysis Group';
           titleLink = '<a href=/workflows/' + selNode.wfUuid +
               ' target="_blank">' +
               selNode.parent.wfName + '</a>';
@@ -4518,6 +4545,21 @@ var provvisRender = (function () {
       d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", true);
       self.select(".labels").attr("clip-path", "");
 
+      /* Get current node label pixel width. */
+      var attrText = d.name;
+      if (d.nodeType === "stored") {
+        var selAttrName = "";
+        $("#prov-ctrl-visible-attribute-list > li").each(function () {
+          if ($(this).find("input[type='radio']").prop("checked")) {
+            selAttrName = $(this).find("label").text();
+          }
+        });
+        attrText = d.attributes.get(selAttrName);
+      }
+
+      /* Set label text. */
+      self.select(".nodeAttrLabel").text(attrText);
+
       d3.selectAll(".node:not(#nodeId-" + d.autoId +
           ")").selectAll(".nodeAttrLabel").transition()
           .duration(nodeLinkTransitionTime).attr("opacity", 0);
@@ -4542,6 +4584,31 @@ var provvisRender = (function () {
       d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", false);
       self.select(".labels").attr("clip-path",
           "url(#bbClipId-" + d.autoId + ")");
+
+
+      /* Get current node label pixel width. */
+      var maxLabelPixelWidth = (cell.width - 2 * scaleFactor * vis.radius) *
+          d3.transform(d3.select(".canvas").select("g").select("g")
+              .attr("transform")).scale[0];
+      var attrText = d.name;
+      if (d.nodeType === "stored") {
+        var selAttrName = "";
+        $("#prov-ctrl-visible-attribute-list > li").each(function () {
+          if ($(this).find("input[type='radio']").prop("checked")) {
+            selAttrName = $(this).find("label").text();
+          }
+        });
+        attrText = d.attributes.get(selAttrName);
+      }
+
+      /* Set label text. */
+      self.select(".nodeAttrLabel").text(attrText);
+      var trimRatio = parseInt(attrText.length * (maxLabelPixelWidth /
+          self.select(".nodeAttrLabel").node().getComputedTextLength()), 10);
+      if (trimRatio < attrText.length) {
+        self.select(".nodeAttrLabel").text(attrText.substr(0, trimRatio - 3) +
+            "...");
+      }
 
       d3.selectAll(".nodeAttrLabel").transition()
           .duration(nodeLinkTransitionTime).attr("opacity", 1);
@@ -5044,8 +5111,30 @@ var provvisRender = (function () {
       graph.nodes.filter(function (d) {
         return d.nodeType === "stored";
       }).forEach(function (n) {
-        d3.select("#nodeId-" + n.autoId)
-            .select(".nodeAttrLabel").text(n.attributes.get(selAttrName));
+        var self = d3.select("#nodeId-" + n.autoId);
+
+        var maxLabelPixelWidth = (cell.width - 2 * scaleFactor * vis.radius) *
+            d3.transform(d3.select(".canvas").select("g").select("g")
+                .attr("transform")).scale[0];
+        var attrText = n.name;
+        if (n.nodeType === "stored") {
+          var selAttrName = "";
+          $("#prov-ctrl-visible-attribute-list > li").each(function () {
+            if ($(this).find("input[type='radio']").prop("checked")) {
+              selAttrName = $(this).find("label").text();
+            }
+          });
+          attrText = n.attributes.get(selAttrName);
+        }
+
+        /* Set label text. */
+        self.select(".nodeAttrLabel").text(attrText);
+        var trimRatio = parseInt(attrText.length * (maxLabelPixelWidth /
+            self.select(".nodeAttrLabel").node().getComputedTextLength()), 10);
+        if (trimRatio < attrText.length) {
+          self.select(".nodeAttrLabel").text(attrText.substr(0, trimRatio - 3) +
+              "...");
+        }
       });
 
     });

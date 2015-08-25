@@ -23,6 +23,17 @@ p {
 
 a.clickable {
   cursor: pointer;
+
+  &.disabled {
+    font-style: italic;
+    cursor: not-allowed;
+    opacity: 0.33;
+
+    &:hover {
+      color: inherit;
+      background: inherit;
+    }
+  }
 }
 
 
@@ -1529,6 +1540,10 @@ button.icon-only {
 .inline-container {
   * {
     display: inline;
+  }
+
+  .is-mirrorable {
+    display: inline-block !important;
   }
 }
 

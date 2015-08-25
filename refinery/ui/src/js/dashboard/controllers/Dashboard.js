@@ -7,6 +7,7 @@ function DashboardCtrl (
   // 3rd party library
   _,
   // Refinery modules
+  pubSub,
   settings,
   authService,
   projectService,
@@ -158,6 +159,12 @@ function DashboardCtrl (
   this.analysesSorting = settings.dashboard.analysesSorting;
   this.dataSetsSorting = settings.dashboard.dataSetsSorting;
   this.workflowsSorting = settings.dashboard.workflowsSorting;
+
+  pubSub.on('resize', function () {
+    this.dataSetsAdapter.reload();
+    this.analysesAdapter.reload();
+    this.workflowsAdapter.reload();
+  }.bind(this));
 }
 
 /*
@@ -292,9 +299,9 @@ Object.defineProperty(
     }
 });
 
-DashboardCtrl.prototype.toogleRadio = function (attr) {
-  if (this[attr + 'Counter']++) {
-    this[attr] = undefined;
+DashboardCtrl.prototype.toogleRadio = function () {
+  if (this['analysesFilterStatusCounter']++) {
+    this['analysesFilterStatus'] = undefined;
   }
 };
 
@@ -446,6 +453,7 @@ angular
     '$timeout',
     '$rootScope',
     '_',
+    'pubSub',
     'settings',
     'authService',
     'projectService',

@@ -1,3 +1,6 @@
+var fs           = require('fs');
+var isBinaryFile = require('isbinaryfile');
+
 module.exports = function(grunt) {
   'use strict';
 
@@ -377,6 +380,26 @@ module.exports = function(grunt) {
     },
 
     /*
+     * Set environmental variables
+     */
+    env: {
+      compile: {
+        PHANTOMJS_BIN: function() {
+          var localPhantomJS = 'node_modules/phantomjs/lib/phantom/bin/phantomjs';
+
+          // Look for local phantomjs first.
+          if (fs.existsSync(localPhantomJS) &&
+              isBinaryFile.sync(localPhantomJS)) {
+            return localPhantomJS;
+          }
+
+          // Use global phantomjs if it's in $path
+          return 'phantomjs';
+        }
+      }
+    },
+
+    /*
      * Lint source JS files to find possible flaws that could lead to errors.
      * Custom code
      */
@@ -388,13 +411,23 @@ module.exports = function(grunt) {
       options: {
         // All jsHint configs are located in `.jshintrc`. This is useful as
         // editor plugins can pick up this file as well.
-        jshintrc: true
+        jshintrc: './.jshintrc'
       }
     },
 
+    /*
+     * The Karma configurations.
+     */
     karma: {
+      options: {
+        configFile: 'karma.config.js'
+      },
       unit: {
-      configFile: 'karma.conf.js'
+        port: 9019,
+        background: true
+      },
+      continuous: {
+        singleRun: true
       }
     },
 
@@ -661,6 +694,7 @@ module.exports = function(grunt) {
 
   // Do all the heavy lifting to get Refinery ready for production.
   grunt.registerTask('compile', [
+    'env:compile',
     'jshint',
     'clean:uiCompile',
     'clean:staticCompile',
@@ -677,7 +711,8 @@ module.exports = function(grunt) {
     'copy:uiCompileTemplates',
     'copy:uiCompileVendor',
     'copy:staticCompile',
-    'clean:uiTmp'
+    'clean:uiTmp',
+    'karma'
   ]);
 
   grunt.renameTask('watch', 'delta');

@@ -38,7 +38,6 @@ Thumbs.db
 # machine/user specific files #
 ###############################
 setup_refinery.sh
-/refinery/config.json
 /docs/_build/*
 /docs/_static/*
 .idea/
@@ -53,8 +52,9 @@ codekit-config.json
 .vagrant/
 /deployment/.librarian/
 /deployment/.tmp/
-deployment/Puppetfile.lock
+/deployment/Puppetfile.lock
 /refinery/celerybeat-schedule*
+/refinery/config/config.json
 /refinery/static/production/
 /refinery/static/development/
 /refinery/ui/production/

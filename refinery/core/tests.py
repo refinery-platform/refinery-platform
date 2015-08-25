@@ -934,11 +934,8 @@ class AnalysisResourceTest(ResourceTestCase):
         """Get a list of Analysis instances with sorting params applied
         (e.g., order_by=name)
         """
-
         self.dataset.set_owner(self.user)
         self.dataset2.set_owner(self.user)
-
-
         analysis1 = Analysis.objects.create(
             name='a1',
             project=self.user_catch_all_project,

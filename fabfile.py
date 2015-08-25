@@ -75,10 +75,12 @@ def conf(mode=None):
     if mode not in modes:
         abort("Mode must be one of {}".format(modes))
     puts("Switching Refinery running on Vagrant VM to '{}' mode".format(mode))
-    env.shell_before = "export DJANGO_SETTINGS_MODULE=settings.*"
-    env.shell_after = "export DJANGO_SETTINGS_MODULE=settings.{}".format(mode)
-    env.apache_before = "SetEnv DJANGO_SETTINGS_MODULE settings.*"
-    env.apache_after = "SetEnv DJANGO_SETTINGS_MODULE settings.{}".format(mode)
+    env.shell_before = "export DJANGO_SETTINGS_MODULE=config.settings.*"
+    env.shell_after = \
+        "export DJANGO_SETTINGS_MODULE=config.settings.{}".format(mode)
+    env.apache_before = "SetEnv DJANGO_SETTINGS_MODULE config.settings.*"
+    env.apache_after = \
+        "SetEnv DJANGO_SETTINGS_MODULE config.settings.{}".format(mode)
     # stop supervisord and Apache
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("supervisorctl shutdown")
@@ -125,7 +127,7 @@ def update_refinery():
             .format(**env))
         run("supervisorctl reload")
     with cd(env.refinery_project_dir):
-        run("touch {refinery_app_dir}/wsgi.py".format(**env))
+        run("touch {refinery_app_dir}/config/wsgi.py".format(**env))
 
 
 @task(alias="relaunch")
@@ -152,4 +154,4 @@ def relaunch_refinery(dependencies=False, migrations=False):
             .format(**env))
         run("supervisorctl restart all")
     with cd(env.refinery_project_dir):
-        run("touch {refinery_app_dir}/wsgi.py".format(**env))
+        run("touch {refinery_app_dir}/config/wsgi.py".format(**env))

@@ -283,7 +283,7 @@
             <input
               type="radio"
               value="RUNNING"
-              ng-click="dashboard.toogleRadio('analysesFilterStatus')"
+              ng-click="dashboard.toogleRadio()"
               ng-model="dashboard.analysesFilterStatus">
               Running
               <i class="info-icon analyses-status icon-cog icon-spin"></i>
@@ -294,6 +294,7 @@
             <input
               type="radio"
               value="SUCCESS"
+              ng-click="dashboard.toogleRadio()"
               ng-model="dashboard.analysesFilterStatus">
               Successful
               <i class="info-icon analyses-status icon-ok-sign"></i>
@@ -304,6 +305,7 @@
             <input
               type="radio"
               value="FAILURE"
+              ng-click="dashboard.toogleRadio()"
               ng-model="dashboard.analysesFilterStatus">
               Failed
               <i class="info-icon analyses-status icon-warning-sign"></i>
@@ -314,6 +316,7 @@
             <input
               type="radio"
               value="UNKNOWN"
+              ng-click="dashboard.toogleRadio()"
               ng-model="dashboard.analysesFilterStatus">
               Unknown
               <i class="info-icon analyses-status icon-question-sign"></i>
