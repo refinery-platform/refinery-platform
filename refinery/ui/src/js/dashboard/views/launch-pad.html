@@ -361,25 +361,17 @@
                 tool-tip-placement="left">
               </i>
             </span>
-            <span ng-switch="analysis.status">
+            <span ng-if="analysis.status === 'RUNNING' || analysis.status === 'UNKNOWN'">
               <a
-                ng-switch-when="RUNNING"
                 ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}/#/analyses">
                 {{ analysis.name }}
               </a>
+            </span>
+            <span ng-if="analysis.status !== 'RUNNING' && analysis.status !== 'UNKNOWN'">
               <a
-                ng-switch-when="SUCCESS"
-                ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
+                ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}/">
                 {{ analysis.name }}
               </a>
-              <a
-                ng-switch-when="FAILURE"
-                ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
-                {{ analysis.name }}
-              </a>
-              <span ng-switch-default>
-                {{ analysis.name }}
-              </span>
             </span>
           </li>
           <li ng-if="dashboard.analysesAdapter.isLoading">
