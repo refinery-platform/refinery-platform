@@ -5,10 +5,10 @@ angular
 
 function DataSetNavCtrl($rootScope, $scope, $location, $state){
   var vm = this;
-  var allTabs = $('.tabClicker');
+  var allTabs = $('.dataSetTabs');
   var tabNames = [];
 
-  $('.tabClicker').each(function(ind, link){
+  $('.dataSetTabs').each(function(ind, link){
     tabNames.push(link.getAttribute('ui-sref'));
   });
   $scope.$state = $state;
@@ -20,7 +20,7 @@ function DataSetNavCtrl($rootScope, $scope, $location, $state){
     //grabs the list of tab names to avoid collisions with other tabs.
     if(tabNames.indexOf(tab) >= 0){
       $('.data-set-view-tabs.active').removeClass('active');
-      $(".tabContent").hide();
+      $(".dataSetTabContent").hide();
       $("#" + tab).show();
 
       if(tab === 'analyses') {
@@ -36,8 +36,8 @@ function DataSetNavCtrl($rootScope, $scope, $location, $state){
       }
     }
 
-    if(tab === 'analyze' || tab === 'visualize'){
-      $(".tabContent").hide();
+    if(tab === 'analyze' || tab === 'visualize' || tab === 'browse'){
+      $(".dataSetTabContent").hide();
       $("#files").show();
     }
   });

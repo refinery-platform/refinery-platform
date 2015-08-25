@@ -165,13 +165,13 @@
         <div class="span10">
           <ul class="nav nav-tabs" id="tabs" style="float: right;">
             <li ui-sref-active="active" id="filesTab"><a
-              ui-sref="files" class="tabClicker">Files</a></li>
+              ui-sref="files" class="dataSetTabs">Files</a></li>
             {% if has_change_dataset_permission %}
               <li ui-sref-active="active"><a
-              ui-sref="attributes" class="tabClicker">Attributes</a></li>
+              ui-sref="attributes" class="dataSetTabs">Attributes</a></li>
             {% endif %}
               <li ui-sref-active="active">
-                <a ui-sref="analyses" id="analyze-tab" class="tabClicker">
+                <a ui-sref="analyses" id="analyze-tab" class="dataSetTabs">
                   <span ng-controller="AnalysesCtrl">
                     <span rp-analyses-running-tab-icon></span>
                   </span>
@@ -179,17 +179,17 @@
                 </a>
               </li>
             <li ui-sref-active="active">
-              <a ui-sref="downloads" class="tabClicker">
+              <a ui-sref="downloads" class="dataSetTabs">
                 Downloads
               </a>
             </li>
             <li ui-sref-active="active">
-              <a ui-sref="details" class="tabClicker" >
+              <a ui-sref="details" class="dataSetTabs" >
                 Details
               </a>
             </li>
             <li ui-sref-active="active">
-              <a ui-sref="sharing" class="tabClicker">
+              <a ui-sref="sharing" class="dataSetTabs">
                 Sharing
               </a>
             </li>
@@ -209,7 +209,7 @@
           <input type="hidden" name="study_uuid" value="{{ study_uuid }}"/>
         </form>
 
-          <div class="tabContent ng-cloak" id="files">
+          <div class="dataSetTabContent ng-cloak" id="files">
             <!-- <div ng-controller="FileMappingCtrl"> -->
             <div class="row-fluid">
 
@@ -446,7 +446,7 @@
           </div>
 
           {% if has_change_dataset_permission %}
-            <div class="tabContent ng-cloak" id="attributes">
+            <div class="dataSetTabContent ng-cloak" id="attributes">
               <div class="refinery-header">
                 <span class="refinery-header-left">
                     <h3>Attributes</h3>
@@ -461,7 +461,7 @@
             </div>
           {% endif %}
 
-          <div class="tabContent ng-cloak" id="analyses">
+          <div class="dataSetTabContent ng-cloak" id="analyses">
             <div class="refinery-header">
               <span class="refinery-header-left">
                   <h3>Analyses</h3>
@@ -474,7 +474,7 @@
             </p>
           </div>
 
-          <div class="tabContent ng-cloak" id="downloads">
+          <div class="dataSetTabContent ng-cloak" id="downloads">
             <div class="refinery-header">
               <span class="refinery-header-left"><h3>Downloads</h3></span>
             </div>
@@ -494,7 +494,7 @@
             </p>
           </div>
 
-          <div class="tabContent ng-cloak" id="details">
+          <div class="dataSetTabContent ng-cloak" id="details">
 
             <div class="refinery-header">
               <span class="refinery-header-left">
@@ -584,7 +584,7 @@
           </div>
 
 
-          <div class="tabContent ng-cloak" id="sharing">
+          <div class="dataSetTabContent ng-cloak" id="sharing">
             <div class="refinery-header">
                     <span class="refinery-header-left">
                         <h3>Sharing</h3>
