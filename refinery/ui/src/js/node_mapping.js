@@ -49,13 +49,6 @@ angular.module('refineryNodeMapping', [
   'ui.bootstrap',
 ])
 
-
-.config(['$httpProvider', function($httpProvider) {
-  // use Django XSRF/CSRF lingo to enable communication with API
-  $httpProvider.defaults.xsrfCookieName = 'csrftoken';
-  $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
-}])
-
 // http://jsfiddle.net/jgoemat/CPRda/1/
 .directive('nodeDraggable', function () {
   return {
