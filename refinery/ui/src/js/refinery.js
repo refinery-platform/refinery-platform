@@ -8,7 +8,6 @@ angular
   /*
    * Third party modules
    */
-  'xml',
   'ui.router',
 
   /*
