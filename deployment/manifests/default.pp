@@ -196,8 +196,8 @@ include solr
 class neo4j {
   $neo4j_version = "2.2.4"
   $neo4j_name = "neo4j-community-${neo4j_version}"
-  $neo4j_archive = "${neo4j_name}.tar.gz"
-  $neo4j_url = "http://neo4j.com/artifact.php?name=neo4j-community-${neo4j_version}-unix.tar.gz"
+  $neo4j_archive = "${neo4j_name}-unix.tar.gz"
+  $neo4j_url = "http://neo4j.com/artifact.php?name=${neo4j_archive}"
 
   exec { "neo4j_wget":
     command => "wget ${neo4j_url} -O /usr/src/${neo4j_archive}",
