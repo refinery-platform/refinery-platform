@@ -19,9 +19,10 @@
           <ul class="dropdown-menu pull-right">
             <li>
               <a
-                class="clickable"
+                class="clickable spinnable"
                 ng-class="{'disabled':!preview.permissions}"
                 ng-click="preview.openPermissionEditor()">
+                <div class="refinery-spinner" ng-if="preview.permissionsLoading !== false"></div>
                 Permissions
               </a>
             </li>
