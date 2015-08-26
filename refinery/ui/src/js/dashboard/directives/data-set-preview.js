@@ -182,8 +182,6 @@ function refineryDataSetPreview () {
    * @return  {object}         Angular promise.
    */
   DataSetPreviewCtrl.prototype.getPermissions = function (uuid) {
-    var that = this;
-
     return promise = this.sharingService.get({
         model: 'data_sets',
         uuid: uuid
