@@ -14,8 +14,6 @@ function PermissionEditorCtrl (
   this.sharingService = sharingService;
   this.dashboardDataSetsReloadService = dashboardDataSetsReloadService;
 
-  console.log('modal', this.permissions);
-
   // Used as a shorthand to avoid complicated permission checking in `ngRepeat`
   this.permissionLevel = {
     none: {
