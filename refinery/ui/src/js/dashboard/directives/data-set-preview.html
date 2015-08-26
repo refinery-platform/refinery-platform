@@ -29,12 +29,12 @@
         </div>
       </div>
       <div class="floatbox-max-left">
-        <div
-          class="refinery-spinner"
-          ng-if="preview.loading !== false"></div>
         <h4 ng-bind-html="preview.dataSet.title"></h4>
       </div>
     </div>
+  </div>
+  <div class="refinery-global-spinner" ng-if="preview.loading !== false">
+    <div class="refinery-spinner"></div>
   </div>
   <div class="content scrollable">
     <div

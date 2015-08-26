@@ -1005,11 +1005,6 @@ a.analysis-header{
       .refinery-panel-topbar {
         overflow: hidden;
 
-        .refinery-spinner {
-          float: left;
-          margin-top: 3px;
-        }
-
         h4 em {
           font-weight: bold;
           font-style: normal;
@@ -1019,6 +1014,40 @@ a.analysis-header{
       .allow-overflow {
         overflow: visible;
       }
+
+      .refinery-global-spinner {
+        position: absolute;
+        z-index: 2;
+        top: 36px;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        padding: 5px;
+        background: rgba(255, 255, 255, 0.66);
+        opacity: 1;
+
+        &.ng-enter, &.ng-leave {
+          transition: opacity @fastTransitionSpeed @easeInOutCubic;
+        }
+
+        &.ng-enter,
+        &.ng-leave.ng-leave-active {
+          opacity: 0;
+        }
+
+        &.ng-leave,
+        &.ng-enter.ng-enter-active {
+          opacity: 1;
+        }
+
+        .refinery-spinner {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          margin: -10px 0 0 -10px;
+        }
+      }
+
 
       .content {
         position: absolute;
