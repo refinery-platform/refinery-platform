@@ -199,7 +199,6 @@ function refineryDataSetPreview () {
             isOwner: data.is_owner,
             groups: groups
           };
-          return true;
         }.bind(this));
   };
 
@@ -254,6 +253,7 @@ function refineryDataSetPreview () {
    */
   DataSetPreviewCtrl.prototype.loadData = function (uuid) {
     this.loading = true;
+    this.permissionsLoading = true;
 
     var studies = this.getStudies(uuid),
         analyses = this.getAnalysis(uuid),
@@ -261,15 +261,21 @@ function refineryDataSetPreview () {
 
     this
       .$q
-      .all([studies, analyses, permissions])
+      .all([studies, analyses])
         .then(function () {
           this.loading = false;
         }.bind(this))
         .catch(function (e) {
-          // Add visual hint for the user.
+          // Should disable an error if both failed
           this.loading = false;
-          console.error(e);
-        });
+        }.bind(this));
+
+    console.log(studies, permissions);
+
+    permissions
+      .finally(function () {
+        this.permissionsLoading = false;
+      }.bind(this));
   };
 
   /**

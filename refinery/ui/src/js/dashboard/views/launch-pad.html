@@ -173,7 +173,7 @@
               ng-bind-html="dataSet.title"></a>
             <p
               class="snippet"
-              ng-if="dataSet.description"
+              ng-if="dataSet.description && dashboard.searchDataSet"
               ng-bind-html="dataSet.description"></p>
           </li>
           <li ng-if="dashboard.dataSetsAdapter.isLoading">
