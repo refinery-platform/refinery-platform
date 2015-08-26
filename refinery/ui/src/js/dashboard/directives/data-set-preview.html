@@ -29,6 +29,9 @@
         </div>
       </div>
       <div class="floatbox-max-left">
+        <div
+          class="refinery-spinner"
+          ng-if="preview.loading !== false"></div>
         <h4 ng-bind-html="preview.dataSet.title"></h4>
       </div>
     </div>
@@ -56,6 +59,7 @@
         </ul>
         <button
           class="is-mirrorable icon-only"
+          ng-if="preview.maxBadges < this.infinity && preview.maxBadges < preview.studies.sources.length"
           ng-click="preview.toggleBadges()"
           ng-class="{'is-mirrored': preview.maxBadges > preview.studies.sources.length}">
           <i class="icon-chevron-sign-right"></i>
