@@ -222,15 +222,11 @@ class neo4j {
     line => "dbms.security.auth_enabled=false",
     match => "^dbms.security.auth_enabled=",
   }
-  ->
-  file_line { "neo4j_increase_max_open_files_soft_limit":
-    path => "/etc/security/limits.conf",
-    line => "vagrant soft nofile 40000",
-  }
-  ->
-  file_line { "neo4j_increase_max_open_files_hard_limit":
-    path => "/etc/security/limits.conf",
-    line => "vagrant hard nofile 40000",
+  limits::fragment {
+    "vagrant/soft/nofile":
+      value => "40000";
+    "vagrant/hard/nofile":
+      value => "40000";
   }
 }
 include neo4j
