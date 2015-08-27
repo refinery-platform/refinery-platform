@@ -24,7 +24,7 @@
     "angular-ui-utils": "flekschas/ui-utils#expose-reload",
     "c3": "0.3.0",
     "dagre": "0.7.1",
-    "floatThead": "1.2.12",
+    "floatThead": "1.2.13",
     "graphlib": "1.0.1",
     "humanize": "0.0.9",
     "jquery": "2.1.1",

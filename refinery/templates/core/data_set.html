@@ -855,6 +855,7 @@
          * Start floatThead
          */
         $table.floatThead({
+          autoReflow: true,
           scrollContainer: function($table){
             return $table.closest('.scrollable-floatThead');
           },
@@ -864,11 +865,13 @@
         /*
          * Reflow floatThead when the browser's window size changes
          */
-        $window.on('resize orientationchange', debounce(function () {
-          if ($table.is(":visible")) {
-            $table.floatThead('reflow');
-          }
-        }, 250));
+        $window.on('resize.floatThead orientationchange.floatThead',
+          debounce(function () {
+            if ($table.is(":visible")) {
+              $table.floatThead('reflow');
+            }
+          }, 250)
+        );
 
         /*
          * Reflow floatThead when an custom script makes changes that change
@@ -885,6 +888,8 @@
 
       function destroyFloatThead () {
         $table.floatThead('destroy');
+        $window.off('refinery/floatThead/reflow');
+        $window.off('resize.floatThead orientationchange.floatThead');
       }
 
       /*
