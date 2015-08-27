@@ -36,16 +36,16 @@ function analysesList() {
 
       //Analyses view pagination
       scope.itemsPerPage = 20;
-      scope.currentPage = 0;
+      scope.currentPage = 1;
 
       scope.prevPage = function() {
-        if (scope.currentPage > 0) {
+        if (scope.currentPage > 1) {
           scope.currentPage--;
         }
       };
 
       scope.prevPageDisabled = function() {
-        return scope.currentPage === 0 ? "disabled" : "";
+        return scope.currentPage === 1 ? "disabled" : "";
       };
 
       scope.nextPage = function() {
@@ -74,7 +74,7 @@ function analysesList() {
         var tempNum = scope.pageCount();
         var rangeArr = [];
 
-        for(var i = 0; i < tempNum; i++){
+        for(var i = 1; i < tempNum; i++){
           rangeArr.push(i);
         }
         return rangeArr;
