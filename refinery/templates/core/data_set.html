@@ -748,9 +748,13 @@
     $(document).ready(function () {
       $( "#view-selector" ).select2({minimumResultsForSearch: -1});
       $( "#view-selector" ).on("change", function(event) {
-        console.log( event.added.element[0].value );
         $( '#navigation-tabs a[href="#' + event.added.element[0].value + '"]').tab('show');
       });
+
+      $("#navigation-tabs a").on('shown', function (e) {
+        sizing();
+        $(window).trigger('refinery/floatThead/reflow');
+      })
 
       $("[rel=tooltip]").tooltip();
 
@@ -861,7 +865,9 @@
          * Reflow floatThead when the browser's window size changes
          */
         $window.on('resize orientationchange', debounce(function () {
-          $table.floatThead('reflow');
+          if ($table.is(":visible")) {
+            $table.floatThead('reflow');
+          }
         }, 250));
 
         /*
@@ -869,8 +875,10 @@
          * the tables layout.
          */
         $window.on('refinery/floatThead/reflow', debounce(function () {
-          $table.floatThead('reflow');
-        }, 50));
+          if ($table.is(":visible")) {
+            $table.floatThead('reflow');
+          }
+        }, 100));
 
         $solrTable.on('refinery/solrTable/destroy', destroyFloatThead);
       }
