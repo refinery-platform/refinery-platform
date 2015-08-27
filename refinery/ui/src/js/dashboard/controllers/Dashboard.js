@@ -183,6 +183,19 @@ Object.defineProperty(
 
 Object.defineProperty(
   DashboardCtrl.prototype,
+  'analysesIsFilterable', {
+    enumerable: true,
+    configurable: false,
+    get: function () {
+      if (!this._analysesIsFilterable && this.analyses.totalReadable) {
+        this._analysesIsFilterable = true;
+      }
+      return this._analysesIsFilterable;
+    }
+});
+
+Object.defineProperty(
+  DashboardCtrl.prototype,
   'dataSetsFilterOwner', {
     enumerable: true,
     configurable: false,

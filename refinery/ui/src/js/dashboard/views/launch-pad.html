@@ -72,7 +72,7 @@
               title="Filter &amp; Sort"
               ng-class="{'showing': dashboard.showDataSetsFilterSort, 'active': dashboard.dataSetsFilterSort}"
               ng-click="dashboard.showDataSetsFilterSort = !!!dashboard.showDataSetsFilterSort"
-              ng-show="!dashboard.searchQueryDataSets.length"
+              ng-if="!dashboard.searchQueryDataSets.length"
               close-on-outer-click-external-trigger="dashboard.dataSetsfilterSort"
               tool-tip
               tool-tip-container="body"
@@ -257,7 +257,7 @@
               title="Filter &amp; Sort"
               ng-class="{'showing': dashboard.showAnalysesFilterSort, 'active': dashboard.analysesFilterSort}"
               ng-click="dashboard.showAnalysesFilterSort = !!!dashboard.showAnalysesFilterSort"
-              ng-if="dashboard.analyses.totalReadable || dashboard.analysesFilterSort"
+              ng-if="dashboard.analysesIsFilterable"
               close-on-outer-click-external-trigger="dashboard.analysesFilterSort"
               tool-tip
               tool-tip-container="body"
