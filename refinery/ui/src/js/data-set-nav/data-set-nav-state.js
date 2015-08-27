@@ -3,13 +3,11 @@ angular
   .controller(
     'refineryDataSetNavFilesCtrl',
     [
-      '$scope',
       '$rootScope',
       '$timeout',
       '$window',
       '$',
-      '$state',
-      function($scope, $rootScope, $timeout, $window, $, $state) {
+      function($rootScope, $timeout, $window, $) {
         $rootScope.mode = "browse";
         $rootScope.showCtrlTab = false;
         $rootScope.mainTabSpanSize = "span12 no-margin";
@@ -18,7 +16,9 @@ angular
         // calls global resizing function implemented in base.html to rescale
         // height of scrollable elements timeout is needed to execute after DOM
         // changes
-        $timeout(sizing, 0);
+        if ($window.sizing) {
+          $timeout(sizing, 0);
+        }
 
         $($window).trigger('refinery/floatThead/reflow');
       }
@@ -30,13 +30,11 @@ angular
   .controller(
     'refineryDataSetNavFilesBrowseCtrl',
     [
-      '$scope',
       '$rootScope',
       '$timeout',
       '$window',
       '$',
-      '$state',
-      function($scope, $rootScope, $timeout, $window, $, $state) {
+      function($rootScope, $timeout, $window, $) {
         $('#filesTab').addClass('active');
         $rootScope.mode = "browse";
         $rootScope.showCtrlTab = false;
@@ -46,7 +44,9 @@ angular
         // calls global resizing function implemented in base.html to rescale
         // height of scrollable elements timeout is needed to execute after DOM
         // changes
-        $timeout(sizing, 0);
+        if ($window.sizing) {
+          $timeout(sizing, 0);
+        }
 
         $($window).trigger('refinery/floatThead/reflow');
       }
@@ -58,13 +58,11 @@ angular
   .controller(
     'refineryDataSetNavAnalyzeCtrl',
     [
-      '$scope',
       '$rootScope',
       '$timeout',
       '$window',
       '$',
-      '$state',
-      function($scope, $rootScope, $timeout, $window, $, $state) {
+      function($rootScope, $timeout, $window, $) {
         $('#filesTab').addClass('active');
         $rootScope.mode = "analyze";
         $rootScope.showCtrlTab = true;
@@ -74,7 +72,9 @@ angular
         // calls global resizing function implemented in base.html to rescale
         // height of scrollable elements timeout is needed to execute after DOM
         // changes
-        $timeout(sizing, 0);
+        if ($window.sizing) {
+          $timeout(sizing, 0);
+        }
 
         $($window).trigger('refinery/floatThead/reflow');
       }
@@ -86,13 +86,11 @@ angular
   .controller(
     'refineryDataSetNavVisualizeCtrl',
     [
-      '$scope',
       '$rootScope',
       '$timeout',
       '$window',
       '$',
-      '$state',
-      function($scope, $rootScope, $timeout, $window, $, $state) {
+      function($rootScope, $timeout, $window, $) {
         $('#filesTab').addClass('active');
         $rootScope.mode = "visualize";
         $rootScope.showCtrlTab = true;
@@ -102,9 +100,29 @@ angular
         // calls global resizing function implemented in base.html to rescale
         // height of scrollable elements timeout is needed to execute after DOM
         // changes
-        $timeout(sizing, 0);
+        if ($window.sizing) {
+          $timeout(sizing, 0);
+        }
 
         $($window).trigger('refinery/floatThead/reflow');
+      }
+    ]
+  );
+
+// This is just a placeholder controller until we re-implement that tab's
+// content in Angular.
+angular
+  .module('refineryDataSetNav')
+  .controller(
+    'refineryDataSetNavBlueprintCtrl',
+    [
+      '$timeout',
+      '$window',
+      '$',
+      function($timeout, $window, $) {
+        if ($window.sizing) {
+          $timeout(sizing, 0);
+        }
       }
     ]
   );
@@ -160,6 +178,7 @@ angular
           {
             url: '/analyses/',
             templateUrl: '/static/partials/analyses/partials/analyses-list.html',
+            controller: 'refineryDataSetNavBlueprintCtrl'
           },
           '^\/data_sets\/.*\/$',
           true
@@ -168,6 +187,7 @@ angular
           'attributes',
           {
             url: '/attributes/',
+            controller: 'refineryDataSetNavBlueprintCtrl'
           },
           '^\/data_sets\/.*\/$',
           true
@@ -176,6 +196,7 @@ angular
           'downloads',
           {
             url: '/downloads/',
+            controller: 'refineryDataSetNavBlueprintCtrl'
           },
           '^\/data_sets\/.*\/$',
           true
@@ -184,6 +205,7 @@ angular
           'details',
           {
             url: '/details/',
+            controller: 'refineryDataSetNavBlueprintCtrl'
           },
           '^\/data_sets\/.*\/$',
           true
@@ -192,6 +214,7 @@ angular
           'sharing',
           {
             url: '/sharing/',
+            controller: 'refineryDataSetNavBlueprintCtrl'
           },
           '^\/data_sets\/.*\/$',
           true
