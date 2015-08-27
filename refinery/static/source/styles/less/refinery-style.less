@@ -76,6 +76,33 @@ body {
   color: darken( @grayLighter, 5% );
 }
 
+.popover{
+  color: #000000;
+  text-align: left;
+}
+
+.popover-title{
+  font-size: 0.9em;
+}
+
+#external-tool-status-popover{
+  cursor:pointer;
+
+  .popover{
+    position: absolute;
+    top: 20px !important;
+    right: 0 !important;
+    max-width: 200px;
+    z-index: 1010;
+    display: none;
+    padding: 1px;
+    text-align: left;
+  }
+  .popover.left .arrow:after, .arrow {
+      display: none;
+    }
+}
+
 ul.externalToolList{
   list-style-type: none;
   float: left;
@@ -90,31 +117,6 @@ ul.externalToolList li{
 
 ul.externalToolList li#lastTimeCheck{
   width: 240px;
-}
-
-.popover{
-  color: #000000;
-  text-align: left;
-}
-
-.popover-title{
-  font-size: 0.9em;
-}
-
-#external-tool-status-popover{
-  .popover{
-    position: absolute;
-    top: 20px !important;
-    right: 0 !important;
-    max-width: 200px;
-    z-index: 1010;
-    display: none;
-    padding: 1px;
-    text-align: left;
-  }
-  .popover.left .arrow:after, .arrow {
-      display: none;
-    }
 }
 
 ul#externalToolListPopover{
@@ -149,6 +151,10 @@ ul#externalToolListPopover li{
  .popover.left .arrow:after, .arrow {
       display: none;
     }
+}
+
+#global-analysis-status-run-div{
+  cursor:pointer;
 }
 
 .analyses-global-text-icon{
