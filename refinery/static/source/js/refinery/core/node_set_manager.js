@@ -56,15 +56,15 @@ NodeSetManager.prototype.initialize = function () {
     self.getList(function () {
       self.renderList();
     }, function () {
-      console.log("Failed to retrieve node set list.");
+      // console.log("Failed to retrieve node set list.");
       self.renderList();
     });
   }
   else {
     self.getList(function () {
-      console.log("Successfully retrieved node set list.");
+      // console.log("Successfully retrieved node set list.");
     }, function () {
-      console.log("Failed to retrieve node set list.");
+      // console.log("Failed to retrieve node set list.");
     });
   }
   return null;
@@ -128,7 +128,7 @@ NodeSetManager.prototype.renderList = function () {
   //} );
 
   $("#" + nodeSetListElementId).on("change", function (event) {
-    console.log(event.added.element[0].id);
+    // console.log(event.added.element[0].id);
     if (event.added.element[0].id !== self.currentSelectionNodeSetId) {
       var nodeSetUuid = event.added.element[0].id;
       self.getDetail(nodeSetUuid, self.loadSelectionCallback)
@@ -249,12 +249,12 @@ NodeSetManager.prototype.getList = function (callback, errorCallback) {
 
       if (self.list.objects.length > 0 && self.list.objects[0].is_current) {
         self.currentSelectionNodeSet = self.list.objects[0];
-        console.log('"' + self.currentSelectionNodeSetName + '" found.');
+        // console.log('"' + self.currentSelectionNodeSetName + '" found.');
 
         callback(result);
       }
       else {
-        console.log('"' + self.currentSelectionNodeSetName + '" not found. Creating "' + self.currentSelectionNodeSetName + '"');
+        // console.log('"' + self.currentSelectionNodeSetName + '" not found. Creating "' + self.currentSelectionNodeSetName + '"');
 
         // create empty selection and reload list
         self.createCurrentSelection(function () {
@@ -289,7 +289,7 @@ NodeSetManager.prototype.createGetDetailUrl = function(uuid) {
   var self = this;
   var url = self.apiBaseUrl + self.apiEndpoint + "/"
     + uuid + "/" + "?" + "format=json";
-  console.log(url);
+  // console.log(url);
   return url;
 };
 
@@ -425,7 +425,7 @@ NodeSetManager.prototype.saveCurrentSelectionToSession = function(
   var self = this;
 
   if (sessionStorage) {
-    console.log( "Writing to session storage as " + self.createCurrentSelectionSessionKey() );
+    // console.log( "Writing to session storage as " + self.createCurrentSelectionSessionKey() );
     sessionStorage.setItem(
         self.createCurrentSelectionSessionKey(),
         JSON.stringify(self.createCurrentSelectionSessionValue(
@@ -438,7 +438,7 @@ NodeSetManager.prototype.loadCurrentSelectionFromSession = function() {
   var self = this;
 
   if (sessionStorage) {
-    console.log( "Reading " + self.createCurrentSelectionSessionKey() + " from session storage" );
+    // console.log( "Reading " + self.createCurrentSelectionSessionKey() + " from session storage" );
     return JSON.parse( sessionStorage.getItem( self.createCurrentSelectionSessionKey() ) );
   }
 

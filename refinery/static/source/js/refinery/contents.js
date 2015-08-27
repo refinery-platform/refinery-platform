@@ -176,7 +176,7 @@
 
 
       clientCommands.addHandler(SOLR_QUERY_UPDATED_COMMAND, function (arguments) {
-        console.log(SOLR_QUERY_UPDATED_COMMAND + ' executed');
+        // console.log(SOLR_QUERY_UPDATED_COMMAND + ' executed');
 
         // update global query strings
         if (!showAnnotation) {
@@ -190,7 +190,7 @@
             nodeSetManager.updateState(nodeSetManager.currentSelectionNodeSet,
             function(){ $(document).trigger('refinery/updateCurrentNodeSelection')});
               //global event to update angularjs nodeSetList);
-            console.log("Updated current selection node set (facet selection).");
+            // console.log("Updated current selection node set (facet selection).");
           }
         }
         else {
@@ -236,7 +236,7 @@
       });
 
       documentTableCommands.addHandler(SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, function (arguments) {
-        console.log(SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND + ' executed');
+        // console.log(SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND + ' executed');
         //console.log( arguments );
 
         // update global query strings
@@ -252,7 +252,7 @@
               function(){ $(document).trigger('refinery/updateCurrentNodeSelection')}
               //global event to update angularjs nodeSetList
             );
-            console.log("Updated current selection node set (document selection).");
+            // console.log("Updated current selection node set (document selection).");
           }
         }
         else {
@@ -351,9 +351,9 @@
 
 
       dataSetMonitorCommands.addHandler(DATA_SET_MONITOR_ANALYSES_UPDATED_COMMAND, function (arguments) {
-        console.log(DATA_SET_MONITOR_ANALYSES_UPDATED_COMMAND + ' executed');
-        console.log(arguments);
-        console.log("Updating tables ...");
+        // console.log(DATA_SET_MONITOR_ANALYSES_UPDATED_COMMAND + ' executed');
+        // console.log(arguments);
+        // console.log("Updating tables ...");
         //method is called before the analysisView and tableViews are created
         if('undefined'!== typeof(analysisView)) {
           analysisView.render(lastSolrResponse);
@@ -584,12 +584,12 @@
 
     event.preventDefault(); // cancel default behavior
 
-    console.log("workflowActions: REFINERY_REPOSITORY_MODE");
-    console.log(REFINERY_REPOSITORY_MODE);
+    // console.log("workflowActions: REFINERY_REPOSITORY_MODE");
+    // console.log(REFINERY_REPOSITORY_MODE);
 
     var the_workflow_uuid = $('#submitReposBtn').data().workflow_id;
-    console.log("the_workflow_uuid");
-    console.log(the_workflow_uuid);
+    // console.log("the_workflow_uuid");
+    // console.log(the_workflow_uuid);
 
     // function for getting current solr query
     var solr_url = dataQueryString; //buildSolrQuery( currentAssayUuid, currentStudyUuid, currentNodeType, 0, 10000, facets, fields, {}, false );
@@ -637,7 +637,7 @@
       data: {'query': solr_url, 'workflow_choice': the_workflow_uuid, 'study_uuid': $('input[name=study_uuid]').val(),
           'node_selection': nodeSelection, 'node_selection_blacklist_mode': nodeSelectionBlacklistMode },
       success: function (result) {
-          console.log(result);
+          // console.log(result);
           window.location = result;
       }
     });
