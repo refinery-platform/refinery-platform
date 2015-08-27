@@ -85,7 +85,7 @@ function analysesFactory($http, analysisService) {
       if (isObjExist(analysesList[j].time_start)){
         analysesList[j].humanizeStartTime = humanizeTimeObj(analysesList[j].time_start);
       }
-      if( isObjExist(analysesList[j].time_end)){
+      if (isObjExist(analysesList[j].time_end)) {
         analysesList[j].humanizeEndTime = humanizeTimeObj(analysesList[j].time_end);
       }
     }
@@ -112,10 +112,19 @@ function analysesFactory($http, analysisService) {
   };
 
   var createElapseTime = function(timeObj){
-    if(isParamValid(timeObj)) {
-      var startTime = formatMilliTime(timeObj.time_start);
-      var endTime = formatMilliTime(timeObj.time_end);
-      var elapseMilliTime = endTime - startTime;
+    var startTime;
+    var endTime;
+    var elapseMilliTime;
+
+    if(isParamValid(timeObj) === 'complete') {
+      startTime = formatMilliTime(timeObj.time_start);
+      endTime = formatMilliTime(timeObj.time_end);
+      elapseMilliTime = endTime - startTime;
+      return elapseMilliTime;
+    }else if (isParamValid(timeObj) === 'running'){
+      var curTime = new Date() - new Date().getTimezoneOffset() * 60 * 1000;
+      startTime = formatMilliTime(timeObj.time_start);
+      elapseMilliTime =  curTime - startTime;
       return elapseMilliTime;
     }else{
       return null;
@@ -131,9 +140,12 @@ function analysesFactory($http, analysisService) {
      if(typeof data !== 'undefined' && typeof data.time_start !== 'undefined' &&
        typeof data.time_end !== 'undefined' && data.time_start !== null &&
        data.time_end !== null){
-        return true;
+        return 'complete';
+     }else if(typeof data !== 'undefined' && typeof data.time_start !== 'undefined' &&
+       data.time_start !== null){
+       return 'running';
      }else{
-       return false;
+       return 'false';
      }
   };
 

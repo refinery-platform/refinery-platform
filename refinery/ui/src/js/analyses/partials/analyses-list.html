@@ -94,7 +94,9 @@
               <span ng-if="analysis.status=='RUNNING'"
               class="analysis-cancel-col">
                 &nbsp;
-               <a rp-analyses-cancel-confirm confirmed-click="AnalysesCtrl.cancelAnalysis(analysis.uuid)" rp-analyses-cancel-tooltip>
+               <a rp-analyses-cancel-confirm confirmed-click="AnalysesCtrl.cancelAnalysis(analysis.uuid)"
+                  tool-tip tool-tip-container="body" tool-tip-placement="right"
+                  title="Cancel Analysis">
                  <i class="icon-remove-sign analyses-cancel"></i>
                </a>
               </span>
