@@ -1,9 +1,9 @@
 /*
  * data_set_configurator.js
- *  
- * Author: Nils Gehlenborg 
+ *
+ * Author: Nils Gehlenborg
  * Created: 2 December 2012
- * 
+ *
  * This provides a UI and REST API interactions to allow data set owners configure how a data set is presented:
  * order of facets/table column, which attributes are facets, always ignored or initially hidden.
  */
@@ -19,42 +19,42 @@
 
 
 DataSetConfigurator = function( studyUuid, assayUuid, elementId, apiBaseUrl, crsfMiddlewareToken ) {
-  	
+
   	var self = this;
 
   	// API related properties
   	self.apiEndpoint = "attributeorder";
   	self.apiBaseUrl = apiBaseUrl;
-  	self.crsfMiddlewareToken = crsfMiddlewareToken;  
-  	
+  	self.crsfMiddlewareToken = crsfMiddlewareToken;
+
   	// data set to configure
   	self.studyUuid = studyUuid;
   	self.assayUuid = assayUuid;
 
-	// parent element for UI 
+	// parent element for UI
   	self.elementId = elementId;
-  	
+
   	// current state (read/written from/to REST API)
   	self.state = null
-  	
-};	
-	
-	
+
+};
+
+
 DataSetConfigurator.prototype.initialize = function( callback ) {
 	var self = this;
-	
+
 	self.getState( function() {
 		self.render();
 
-		if ( typeof callback !== 'undefined' ) {			
+		if ( typeof callback !== 'undefined' ) {
 			callback();
 		}
 	 } );
-	 
-	return null;	
+
+	return null;
 };
-	
-	
+
+
 /*
  * Render the user interface components into element defined by self.elementId.
  */
@@ -62,129 +62,129 @@ DataSetConfigurator.prototype.render = function () {
 	var self = this;
 
 	$( "#" + self.elementId ).html("");
-	
+
 	var code = "";
 	code += "<table id=\"attribute-table\" class=\"table table-striped table-condensed\">";
 
-	code += "<thead>";		                 			
-	code += "<tr>";		                 			
-	
-	code += "<th>";		                 			
-	code +=  "";		                 			
-	code += "</th>";		                 			
+	code += "<thead>";
+	code += "<tr>";
 
-	code += "<th>";		                 			
-	code +=  "Attribute";		                 			
-	code += "</th>";		                 			
+	code += "<th>";
+	code +=  "";
+	code += "</th>";
 
-	code += "<th>";		                 			
+	code += "<th>";
+	code +=  "Attribute";
+	code += "</th>";
+
+	code += "<th>";
 	code += "Expose to User";
-	code += "</th>";		                 			
+	code += "</th>";
 
-	code += "<th>";		                 			
+	code += "<th>";
 	code += "Use as Facet";
-	code += "</th>";		                 			
+	code += "</th>";
 
-	code += "<th>";		                 			
+	code += "<th>";
 	code += "Show by Default";
-	code += "</th>";		                 			
+	code += "</th>";
 
 	code += "</tr>";
-	code += "</thead>";		                 			
+	code += "</thead>";
 
-	code += "<tbody>";		                 			
-	
+	code += "<tbody>";
+
 	for ( var i = 0; i < self.state.objects.length; ++i ) {
 		var object = self.state.objects[i];
-		
+
 		if ( object.is_internal ) {
 			continue;
 		}
-		
-		code += "<tr class=\"\" data-id=\"" + object.id + "\" data-resource_uri=\"" + object.resource_uri + "\" id=\"attributeorder_" + object.id + "\">";		                 			
 
-		code += "<td class=\"\">";		                 			
+		code += "<tr class=\"\" data-id=\"" + object.id + "\" data-resource_uri=\"" + object.resource_uri + "\" id=\"attributeorder_" + object.id + "\">";
+
+		code += "<td class=\"\">";
 		code += "<span class=\"refinery-dnd-handle\"><i class=\"icon-reorder\"></i></span>";
-		code += "</td>";		                 			
-		
-		code += "<td class=\"\">";		                 			
-		code +=  prettifySolrFieldName( object.solr_field, true );		                 			
-		code += "</td>";		                 			
+		code += "</td>";
 
-		code += "<td class=\"\">";		                 			
-		code += "<label>"		                 			
+		code += "<td class=\"\">";
+		code +=  prettifySolrFieldName( object.solr_field, true );
+		code += "</td>";
+
+		code += "<td class=\"\">";
+		code += "<label>"
 		if ( isRequiredFacet( object.solr_field ) ) {
-	  		code += "";			
+	  		code += "";
 		}
 		else {
-  			code += "<input id=\"attributeorder_" + object.id + "_exposed\" type=\"checkbox\" value=\"\"" + ( object.is_exposed ? "checked" : "" ) + ">";				
+  			code += "<input id=\"attributeorder_" + object.id + "_exposed\" type=\"checkbox\" value=\"\"" + ( object.is_exposed ? "checked" : "" ) + ">";
 		}
-		code += "</label>"		                 			
-		code += "</td>";		                 			
+		code += "</label>"
+		code += "</td>";
 
-		code += "<td class=\"\">";		                 			
-		code += "<label>"		                 			
+		code += "<td class=\"\">";
+		code += "<label>"
 		if ( isRequiredFacet( object.solr_field ) ) {
-	  		code += "";			
+	  		code += "";
 		}
 		else {
   			code += "<input id=\"attributeorder_" + object.id + "_facet\" type=\"checkbox\" value=\"\"" + ( object.is_facet ? "checked" : "" ) + ">";
   		}
-		code += "</label>"		                 			
-		code += "</td>";	                 			
+		code += "</label>"
+		code += "</td>";
 
-		code += "<td class=\"\">";		                 			
-		code += "<label>"		                 			
+		code += "<td class=\"\">";
+		code += "<label>"
   		code += "<input id=\"attributeorder_" + object.id + "_active\" type=\"checkbox\" value=\"\"" + ( object.is_active ? "checked" : "" ) + ">";
-		code += "</label>"		                 			  		
-		code += "</td>";		                 			
+		code += "</label>"
+		code += "</td>";
 
 		code += "</tr>";
-	}	
+	}
 
-	code += "</tbody>";	
-	code += "</table>";	
-	
-	$( "#" + self.elementId ).html( code );		
-	
+	code += "</tbody>";
+	code += "</table>";
+
+	$( "#" + self.elementId ).html( code );
+
 	// update database when user selects/deselects checkboxes
 	for ( var i = 0; i < self.state.objects.length; ++i ) {
 		var id = self.state.objects[i].id;
 		var flag;
 		var callback = function() { /* TODO: cancel spinner? */ };
-		
+
 		flag = "facet";
-		self.makeFlagClickEvent( flag, id, callback );	
+		self.makeFlagClickEvent( flag, id, callback );
 
 		flag = "exposed";
-		self.makeFlagClickEvent( flag, id, callback );	
+		self.makeFlagClickEvent( flag, id, callback );
 
 		flag = "active";
-		self.makeFlagClickEvent( flag, id, callback );			
-	}	
-	
+		self.makeFlagClickEvent( flag, id, callback );
+	}
+
 	// implement drag and drop
 	$("#attribute-table tbody").sortable({
 		// inspiration for helper: http://www.foliotek.com/devblog/make-table-rows-sortable-using-jquery-ui-sortable/
     	helper: self.fixHelperModified,
     	// bulk update: https://django-tastypie.readthedocs.org/en/latest/interacting.html#bulk-operations
-    	update: function( event, ui ) { 
+    	update: function( event, ui ) {
     			var array = $( "#attribute-table tbody" ).sortable( "toArray" );
-    			
+
     			var rank = 1;
     			var ranks = array.map( function(id) {
 	    				return { "id": $( "#" + id ).data().id, "rank": rank++, "resource_uri": $( "#" + id ).data().resource_uri };
     				});
-    			
-    			self.updateState( ranks, function() { alert( "Callback!"); } );  			 
+
+    			self.updateState( ranks, function() { alert( "Callback!"); } );
     		}
-	}).disableSelection();	
+	}).disableSelection();
 };
 
 
 DataSetConfigurator.prototype.makeFlagClickEvent = function( flag, id, callback ) {
-	var self = this; 
-	$( "#" + "attributeorder_" + id + "_" + flag ).click( function() { 
+	var self = this;
+	$( "#" + "attributeorder_" + id + "_" + flag ).click( function() {
 		// get data attributes from parent tr
 		var data = $(this).closest('tr').data();
 		var flags = { "id": data.id, "resource_uri": data.resource_uri };
@@ -207,10 +207,10 @@ DataSetConfigurator.prototype.fixHelperModified = function(e, tr) {
 
 DataSetConfigurator.prototype.createUpdateUrl = function() {
 	var self = this;
-		
-	var url = self.apiBaseUrl + self.apiEndpoint + "/";		
-	console.log( url );
-	return url;		
+
+	var url = self.apiBaseUrl + self.apiEndpoint + "/";
+	// console.log( url );
+	return url;
 };
 
 
@@ -236,12 +236,12 @@ DataSetConfigurator.prototype.updateState = function( state, callback ) {
 	    return cookieValue;
 	}
 	var csrftoken = getCookie('csrftoken');
-	
+
 	function csrfSafeMethod(method) {
     	// these HTTP methods do not require CSRF protection
 	    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
 	}
-	
+
 	$.ajaxSetup({
 	    crossDomain: false, // obviates need for sameOrigin test
 	    beforeSend: function(xhr, settings) {
@@ -254,23 +254,23 @@ DataSetConfigurator.prototype.updateState = function( state, callback ) {
 
 
 	var data = { "objects": state };
-	
-	console.log( data );
-	
+
+	// console.log( data );
+
 	$.ajax({
      url: self.createUpdateUrl(),
      type: "PATCH",
      data: JSON.stringify( data ),
 	 contentType: "application/json",
 	 dataType: "application/json",
-  	 processData:  false,     
+  	 processData:  false,
      success: function( result ) {
-     		console.log( result );
-     		alert( "Patch successful!" );     	
+     		// console.log( result );
+     		alert( "Patch successful!" );
 	     	if ( $.isEmptyObject( result ) ) {
 	     		// do nothing
 	     		return;
-	     	} 
+	     	}
     	}
 	});
 };
@@ -278,15 +278,15 @@ DataSetConfigurator.prototype.updateState = function( state, callback ) {
 
 DataSetConfigurator.prototype.createGetUrl = function() {
 	var self = this;
-		
+
 	var url = self.apiBaseUrl + self.apiEndpoint + "/" +
 		"?" + "format=json" +
 		"&" + "limit=0" +
 		"&" + "study__uuid=" + self.studyUuid +
 		"&" + "assay__uuid=" + self.assayUuid;
-		
-	console.log( url );
-	return url;		
+
+	// console.log( url );
+	return url;
 };
 
 
@@ -298,16 +298,16 @@ DataSetConfigurator.prototype.getState = function( callback ) {
      type: "GET",
      dataType: "json",
      data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
-     success: function( result ) {     	
+     success: function( result ) {
 	     	if ( $.isEmptyObject( result ) ) {
 	     		// do nothing
 	     		return;
-	     	} 
-	     	
-	     	self.state = result;    	
-     	     	
+	     	}
+
+	     	self.state = result;
+
 			// callback
-			callback( result );										
+			callback( result );
     	}
 	});
 };
