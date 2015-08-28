@@ -271,7 +271,7 @@
           </li>
           <li ng-repeat="pageNum in range()" ng-class="{active:pageNum==currentPage}"
             ng-click="setPage(pageNum)">
-            <a> {{ pageNum }}  </a>
+            <a> {{ pageNum + 1 }}  </a>
           </li>
           <li ng-class="nextPageDisabled()">
             <a href ng-click="nextPage()">»</a>
