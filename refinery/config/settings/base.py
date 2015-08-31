@@ -438,5 +438,5 @@ if REFINERY_EXTERNAL_AUTH:
         # populate Django user profile from the LDAP directory
         AUTH_LDAP_USER_ATTR_MAP = get_setting("AUTH_LDAP_USER_ATTR_MAP")
         AUTHENTICATION_BACKENDS += (
-            'refinery.core.models.RefineryLDAPBackend',
+            'core.models.RefineryLDAPBackend',
         )

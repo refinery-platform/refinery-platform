@@ -1,11 +1,22 @@
 /**
  * RefineryStateProvider Class
- * @param {object} $window        Angular's window object.
- * @param {object} $stateProvider UI-Router's $stateProvider.
+ *
+ * @method  RefineryStateProvider
+ * @author  Fritz Lekschas
+ * @date    2015-08-25
+ *
+ * @class
+ * @param  {Object}    $window         Angular's window object.
+ * @param  {Object}    $stateProvider  UI-Router's $stateProvider.
+ * @param  {Object}    _               Lodash.
+ * @param  {Function}  locationTest    Function for testing if the current
+ *   location matches a given path.
  */
-function RefineryStateProvider ($window, $stateProvider) {
-  this.$window = $window;
+function RefineryStateProvider ($window, $stateProvider, _, locationTest) {
   this.$stateProvider = $stateProvider;
+  this.$window = $window;
+  this._ = _;
+  this.locationTest = locationTest;
 }
 
 /**
@@ -13,60 +24,115 @@ function RefineryStateProvider ($window, $stateProvider) {
  *
  * @description
  * Wraps the original $stateProvider's `state` method, to restrict state
- * registration to a given path. This is useful when using Angular together with
- * another non-JavaScript framework that has it's own URL router.
+ * registration to a given location path. This is useful when using Angular
+ * together with another non-JavaScript framework that has it's own URL router.
+ * It is important tht that `path` equals the pathname of `window.location`,
+ * thus a leading **and** trailing slash are mandatory!
  *
  * This way we can specify the same route multiple times but restrict it to a
  * given path.
  *
+ * @method  state
+ * @author  Fritz Lekschas
+ * @date    2015-08-25
+ *
  * @example
+ * We want to have an _edit_ state under the URL `.../#/edit` for two
+ * different locations: `/users/` and `/groups/`. The final URLs would look like
+ * this:
+ * http://sub.domain.tld:port/users/#/edit
+ * http://sub.domain.tld:port/groups/#/edit
+ * http://sub.domain.tld:port/data_sets//#/edit
+ *
  * <pre>
  * var app = angular.module('app', ['refineryRouter']);
  *
- * var user = angular.module('app.user', []);
+ * var users = angular.module('app.users', []);
  *
- * user.config(function (refineryStateProvider) {
+ * users.config(function (refineryStateProvider) {
  *  refineryStateProvider
  *    .state(
  *      'edit',
  *      {
  *        url: '/edit',
  *        templateUrl: '/static/partials/user/edit.html',
- *        controller: 'UserCtrl as user'
+ *        controller: 'UsersCtrl as users'
  *      },
  *      '/users/');
  * });
  *
- * var group = angular.module('app.group', []);
+ * var groups = angular.module('app.groups', []);
  *
- * group.config(function (refineryStateProvider) {
+ * groups.config(function (refineryStateProvider) {
  *  refineryStateProvider
  *    .state(
  *      'edit',
  *      {
  *        url: '/edit',
  *        templateUrl: '/static/partials/group/edit.html',
- *        controller: 'GroupCtrl as group'
+ *        controller: 'GroupsCtrl as groups'
  *      },
  *      '/groups/');
  * });
+ *
+ * var dataSets = angular.module('app.dataSets', []);
+ *
+ * dataSets.config(function (refineryStateProvider) {
+ *  refineryStateProvider
+ *    .state(
+ *      'edit',
+ *      {
+ *        url: '/edit',
+ *        templateUrl: '/static/partials/group/edit.html',
+ *        controller: 'DataSetsCtrl as dataSets'
+ *      },
+ *      '^\/data_sets\/.*\/$', true);
+ * });
  * </pre>
  *
- * @param  {string} name  $stateProvider's state name.
- * @param  {object} state $stateProvider's state object.
- * @param  {string} path  Path under which the state will be registered.
- * @return {object}       Return `this` for chaining.
+ * @param   {String}        name   $stateProvider's state name.
+ * @param   {Object}        state  $stateProvider's state object.
+ * @param   {String|Array}  paths  Location paths under, which the state will be
+ *   registered at. These paths should equal the exact pathname of
+ *   `window.location`. If `regex` is `true` this parameter should be a regex
+ *   string.
+ * @param   {Boolean}       regex  If `true` it assumes that all `paths` are
+ *   regex strings. If `paths` is an array of objects with a path specific
+ *   regex attribite this variable will be overwritten.
+ * @return  {Object}               Return `this` for chaining.
  */
-RefineryStateProvider.prototype.state = function (name, state, path) {
-  if (this.$window.location.pathname === path) {
-    this.$stateProvider.state(name, state);
+RefineryStateProvider.prototype.state = function (name, state, paths, regex) {
+  var pathname = this.$window.location.pathname;
+
+  if (this._.isArray(paths)) {
+    for (var i = paths.length; i--;) {
+      if (this._.isObject(paths[i])) {
+        if (this.locationTest(pathname, paths[i].path, paths[i].regex)) {
+          this.$stateProvider.state(name, state);
+        }
+      } else {
+        if (this.locationTest(pathname, paths[i], regex)) {
+          this.$stateProvider.state(name, state);
+        }
+      }
+    }
+  } else {
+    if (this.locationTest(pathname, paths, regex)) {
+      this.$stateProvider.state(name, state);
+    }
   }
+
   return this;
 };
 
 /**
  * Return $stateProvider's `$.get` function.
- * @return {function} Super $.get()
+ *
+ * @method  $get
+ * @author  Fritz Lekschas
+ * @date    2015-08-25
+ *
+ * @return  {Function}  Super `$.get()` method.
  */
 RefineryStateProvider.prototype.$get = function () {
   return this.$stateProvider.$get;
@@ -77,9 +143,11 @@ angular
   .provider('refineryState', [
     '$windowProvider',
     '$stateProvider',
-    function ($windowProvider, $stateProvider) {
+    '_',
+    'locationTest',
+    function ($windowProvider, $stateProvider, _, locationTest) {
       var $window = $windowProvider.$get();
 
-      return new RefineryStateProvider($window, $stateProvider);
+      return new RefineryStateProvider($window, $stateProvider, _, locationTest);
     }
   ]);

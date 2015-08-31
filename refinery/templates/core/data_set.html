@@ -130,7 +130,7 @@
     </div>
   </span>
 
-
+<div ng-controller="DataSetNavCtrl" ng-cloak>
   <div ng-controller="DataSetUiModeCtrl">
 
     <div class="refinery-panel-tabs">
@@ -139,36 +139,65 @@
 
         <div class="span2">
           <div class="btn-group">
-            <a type="button" class="btn btn-warning" ng-class="{active: $root.mode==='browse'}" ui-sref="browse">Browse</a>
+          <!-- ng-hide if the file tab is not selected -->
+            <a type="button" class="btn btn-warning data-set-view-tabs"
+              ng-class="{active: $root.mode==='browse'}" ui-sref="browse"
+              ui-sref-active="active">
+              Browse
+            </a>
               {% if has_change_dataset_permission %}
-                <a type="button" class="btn btn-warning" ng-class="{active:$root.mode==='analyze'}" ui-sref="analyze" >Analyze</a>
+                <a type="button" class="btn btn-warning data-set-view-tabs"
+                  ng-class="{active:$root.mode==='analyze'}"
+                  ui-sref="analyze" ui-sref-active="active">
+                  Analyze
+                </a>
               {% endif %}
-            <a type="button" class="btn btn-warning" ng-class="{active: $root.mode==='visualize'}" ui-sref="visualize">Visualize</a>
+            <a type="button" id="visualizeTab" class="btn btn-warning data-set-view-tabs"
+              ng-class="{active:
+            $root.mode==='visualize'}" ui-sref="visualize"
+              ui-sref-active="active">
+              Visualize
+            </a>
           </div>
         </div>
 
+
         <div class="span10">
           <ul class="nav nav-tabs" id="tabs" style="float: right;">
-            <li class="active"><a href="#content" data-toggle="tab">Files</a></li>
+            <li ui-sref-active="active" id="filesTab"><a
+              ui-sref="files" class="dataSetTabs">Files</a></li>
             {% if has_change_dataset_permission %}
-              <li><a href="#configuration" data-toggle="tab">Attributes</a></li>
+              <li ui-sref-active="active"><a
+              ui-sref="attributes" class="dataSetTabs">Attributes</a></li>
             {% endif %}
-              <li>
-                <a href="#analyses" data-toggle="tab" id="analyze-tab">
+              <li ui-sref-active="active">
+                <a ui-sref="analyses" id="analyze-tab" class="dataSetTabs">
                   <span ng-controller="AnalysesCtrl">
                     <span rp-analyses-running-tab-icon></span>
                   </span>
                   Analyses
                 </a>
               </li>
-            <li><a href="#downloads" data-toggle="tab">Downloads</a></li>
-            <li><a href="#details" data-toggle="tab">Details</a></li>
-            <li><a href="#sharing" data-toggle="tab">Sharing</a></li>
+            <li ui-sref-active="active">
+              <a ui-sref="downloads" class="dataSetTabs">
+                Downloads
+              </a>
+            </li>
+            <li ui-sref-active="active">
+              <a ui-sref="details" class="dataSetTabs" >
+                Details
+              </a>
+            </li>
+            <li ui-sref-active="active">
+              <a ui-sref="sharing" class="dataSetTabs">
+                Sharing
+              </a>
+            </li>
           </ul>
         </div>
       </div>
-
     </div>
+
 
     <div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
 
@@ -180,9 +209,7 @@
           <input type="hidden" name="study_uuid" value="{{ study_uuid }}"/>
         </form>
 
-        <div class="tab-content">
-          <div class="tab-pane fade active in" id="content">
-
+          <div class="dataSetTabContent ng-cloak" id="files">
             <!-- <div ng-controller="FileMappingCtrl"> -->
             <div class="row-fluid">
 
@@ -419,10 +446,10 @@
           </div>
 
           {% if has_change_dataset_permission %}
-            <div class="tab-pane" id="configuration">
+            <div class="dataSetTabContent ng-cloak" id="attributes">
               <div class="refinery-header">
                 <span class="refinery-header-left">
-                    <h3>Configuration</h3>
+                    <h3>Attributes</h3>
                 </span>
               </div>
 
@@ -434,20 +461,20 @@
             </div>
           {% endif %}
 
-            <div class="tab-pane fade" id="analyses">
-              <div class="refinery-header">
-                <span class="refinery-header-left">
-                    <h3>Analyses</h3>
-                </span>
-              </div>
-              <p>
-                <div class="row-fluid">
-                  <analyses-list></analyses-list>
-                </div>
-              </p>
+          <div class="dataSetTabContent ng-cloak" id="analyses">
+            <div class="refinery-header">
+              <span class="refinery-header-left">
+                  <h3>Analyses</h3>
+              </span>
             </div>
+            <p>
+              <div class="row-fluid">
+                <analyses-list></analyses-list>
+              </div>
+            </p>
+          </div>
 
-          <div class="tab-pane fade" id="downloads">
+          <div class="dataSetTabContent ng-cloak" id="downloads">
             <div class="refinery-header">
               <span class="refinery-header-left"><h3>Downloads</h3></span>
             </div>
@@ -467,7 +494,7 @@
             </p>
           </div>
 
-          <div class="tab-pane fade" id="details">
+          <div class="dataSetTabContent ng-cloak" id="details">
 
             <div class="refinery-header">
               <span class="refinery-header-left">
@@ -557,7 +584,7 @@
           </div>
 
 
-          <div class="tab-pane fade" id="sharing">
+          <div class="dataSetTabContent ng-cloak" id="sharing">
             <div class="refinery-header">
                     <span class="refinery-header-left">
                         <h3>Sharing</h3>
@@ -621,6 +648,8 @@
   </div>
 
   </div>
+</div>
+
 {% endblock %}
 
 {% block script %}
@@ -719,23 +748,13 @@
     $(document).ready(function () {
       $( "#view-selector" ).select2({minimumResultsForSearch: -1});
       $( "#view-selector" ).on("change", function(event) {
-        console.log( event.added.element[0].value );
         $( '#navigation-tabs a[href="#' + event.added.element[0].value + '"]').tab('show');
       });
 
-
-  /*This triggers the analyses monitoring event when the tab is active*/
-      $('#analyze-tab').on("mouseup", function(e) {
-        $(window).unbind('hashchange');
-        $(document).trigger('refinery/analyze-tab-active');
-
-        $(window).bind('hashchange',function(e) {
-          if (location.hash !== "#/analyses/"){
-            $(document).trigger('refinery/analyze-tab-inactive');
-            $(this).unbind();
-          }
-        });
-      });
+      $("#navigation-tabs a").on('shown', function (e) {
+        sizing();
+        $(window).trigger('refinery/floatThead/reflow');
+      })
 
       $("[rel=tooltip]").tooltip();
 
@@ -836,6 +855,7 @@
          * Start floatThead
          */
         $table.floatThead({
+          autoReflow: true,
           scrollContainer: function($table){
             return $table.closest('.scrollable-floatThead');
           },
@@ -845,23 +865,31 @@
         /*
          * Reflow floatThead when the browser's window size changes
          */
-        $window.on('resize orientationchange', debounce(function () {
-          $table.floatThead('reflow');
-        }, 250));
+        $window.on('resize.floatThead orientationchange.floatThead',
+          debounce(function () {
+            if ($table.is(":visible")) {
+              $table.floatThead('reflow');
+            }
+          }, 250)
+        );
 
         /*
          * Reflow floatThead when an custom script makes changes that change
          * the tables layout.
          */
         $window.on('refinery/floatThead/reflow', debounce(function () {
-          $table.floatThead('reflow');
-        }, 50));
+          if ($table.is(":visible")) {
+            $table.floatThead('reflow');
+          }
+        }, 100));
 
         $solrTable.on('refinery/solrTable/destroy', destroyFloatThead);
       }
 
       function destroyFloatThead () {
         $table.floatThead('destroy');
+        $window.off('refinery/floatThead/reflow');
+        $window.off('resize.floatThead orientationchange.floatThead');
       }
 
       /*

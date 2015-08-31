@@ -7,29 +7,41 @@
              <div ng-if="(analysesCtrl.isAnalysesRunningGlobal())" class="analysis-running-percentage">
               &nbsp;
             </div>
-            <i class="{{analysis.status | analysesStatusIcon}} analyses-status"></i>
-            &nbsp;
-            {{ analysis.name }}
+            <div class="analyses-global-text-icon">
+              <i class="{{analysis.status | analysesStatusIcon}} analyses-status"></i>
+              &nbsp;
+            </div>
+            <div class="analyses-global-text">
+              {{ analysis.name }}
+            </div>
           </span>
           <span ng-switch-when="RUNNING">
             <div ng-if="(analysesCtrl.isAnalysesRunningGlobal())" class="analysis-running-percentage">
               {{analysesCtrl.analysesGlobalDetail[analysis.uuid]|analysesRunningStatusPercent}}
             </div>
-             <i class="{{analysesCtrl.analysesGlobalDetail[analysis.uuid]|analysesRunningStatusBtn}}"></i>
-              &nbsp;
-            <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/#/analyses">
-              {{ analysis.name }}
-            </a>
+            <div class="analyses-global-text-icon">
+               <i class="{{analysesCtrl.analysesGlobalDetail[analysis.uuid]|analysesRunningStatusBtn}}"></i>
+                &nbsp;
+            </div>
+            <div class="analyses-global-text">
+              <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/#/analyses">
+                {{ analysis.name }}
+              </a>
+            </div>
           </span>
           <span ng-switch-default>
-             <div ng-if="(analysesCtrl.isAnalysesRunningGlobal())" class="analysis-running-percentage">
+            <div ng-if="(analysesCtrl.isAnalysesRunningGlobal())" class="analysis-running-percentage">
               &nbsp;
             </div>
-              <i class="{{analysis.status | analysesStatusIcon}} analyses-status"></i>
-               &nbsp;
-               <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
+            <div class="analyses-global-text-icon">
+            <i class="{{analysis.status | analysesStatusIcon}} analyses-status"></i>
+            &nbsp;
+            </div>
+            <div class="analyses-global-text">
+            <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
               {{ analysis.name }}
             </a>
+              </div>
           </span>
         </span>
      </li>

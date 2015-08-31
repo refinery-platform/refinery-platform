@@ -1,4 +1,5 @@
 <div ng-switch on="AnalysesCtrl.analysesLoadingFlag">
+
   <span ng-switch-when="EMPTY">
     <em>No analyses performed. </em>
   </span>
@@ -18,7 +19,7 @@
         </a>
       </div>
 
-      <div class="span4 analysis-name">
+      <div class="span5 analysis-name">
         <a class="analysis-header" ng-click="order('name')">
           <strong>Name</strong>
           <span class="sortorder" ng-show="predicate === 'name'" ng-class="{reverse:reverse}">
@@ -56,84 +57,85 @@
           </span>
         </a>
       </div>
+    </div>
 
-      <div class="span1">
-      </div>
+    <ul class="analysesList">
+      <li class="analysesListItems" ng-repeat="analysis in AnalysesCtrl
+      .analysesList | orderBy:predicate:reverse |
+      analysesOffset:currentPage*itemsPerPage | limitTo: itemsPerPage track by
+      analysis.uuid">
 
-      <ul class="analysesList">
-        <li class="analysesListItems" ng-repeat="analysis in AnalysesCtrl
-        .analysesList | orderBy:predicate:reverse |
-        analysesOffset:currentPage*itemsPerPage | limitTo: itemsPerPage track by
-        analysis.uuid">
+        <div class="row-fluid">
+          <div class="span1 analysis-icon">
+            <a id="collapse-analysis-run"
+              ng-click="isCollapsed = !isCollapsed"
+              data-target=" #{{analysis.uuid}}"
+              data-ng-show="analysis.status=='RUNNING' ||
+               analysis.status=='INITIALIZED'">
+              <i ng-class="{'icon-caret-right icon-large analyses-collapse':
+                 isCollapsed,'icon-caret-down icon-large analyses-collapse':!isCollapsed}">
+              </i>
+            </a>
 
-          <div class="row-fluid">
-            <div class="span1 analysis-icon">
-              <span ng-if="analysis.status=='RUNNING' || analysis.status=='INITIALIZED'">
-                <a ng-click="isCollapsed = !isCollapsed" data-toggle="collapse" data-target="#{{analysis.uuid}}">
-                  <i ng-class="{'icon-caret-right icon-large analyses-collapse':
-                   isCollapsed,'icon-caret-down icon-large analyses-collapse':!isCollapsed}"></i>
+            &nbsp;
+            <span class="spinner"><i class=
+               "{{analysis.status | analysesStatusIcon}} analyses-status"
+             rp-analyses-status-tooltip></i>
+            </span>
+          </div>
+          <div class="span5 analysis-name">
+            <span ng-switch on="analysis.status">
+              <span ng-switch-when="UNKNOWN">
+                {{ analysis.name }}
+              </span>
+              <span ng-switch-default>
+                <a ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
+                  {{ analysis.name }}
                 </a>
               </span>
+            </span>
+            <span ng-if="analysis.status=='RUNNING'"
+            class="analysis-cancel-col">
               &nbsp;
-              <span class="spinner"><i class=
-                 "{{analysis.status | analysesStatusIcon}} analyses-status"
-               rp-analyses-status-tooltip></i>
-              </span>
-            </div>
-            <div class="span4 analysis-name">
-              <span ng-switch on="analysis.status">
-                <span ng-switch-when="UNKNOWN">
-                  {{ analysis.name }}
-                </span>
-                <span ng-switch-default>
-                  <a ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
-                    {{ analysis.name }}
-                  </a>
-                </span>
-              </span>
-              <span ng-if="analysis.status=='RUNNING'"
-              class="analysis-cancel-col">
-                &nbsp;
-               <a rp-analyses-cancel-confirm confirmed-click="AnalysesCtrl.cancelAnalysis(analysis.uuid)" rp-analyses-cancel-tooltip>
-                 <i class="icon-remove-sign analyses-cancel"></i>
-               </a>
-              </span>
-             </div>
+             <a rp-analyses-cancel-confirm confirmed-click="AnalysesCtrl.cancelAnalysis(analysis.uuid)"
+                tool-tip tool-tip-container="body" tool-tip-placement="right"
+                title="Cancel Analysis">
+               <i class="icon-remove-sign analyses-cancel"></i>
+             </a>
+            </span>
+           </div>
 
-            <div class="span2">
-              <span  rp-analyses-start-time-tooltip>
-                {{analysis.humanizeStartTime }}
-              </span>
-            </div>
-
-            <div class="span2">
-              {{analysis.elapseTime | analysesFormatMilliTime}}
-            </div>
-
-            <div class="span2">
-              <span  rp-analyses-end-time-tooltip>
-                 {{analysis.humanizeEndTime }}
-              </span>
-            </div>
-
-            <div class="span1">
-            </div>
+          <div class="span2">
+            <span  rp-analyses-start-time-tooltip>
+              {{analysis.humanizeStartTime }}
+            </span>
           </div>
 
-           <span ng-if="analysis.status=='RUNNING' || analysis.status=='INITIALIZED'">
-            <div class="row-fluid">
+          <div class="span2">
+            {{analysis.elapseTime | analysesFormatMilliTime}}
+          </div>
 
-              <div class="span1">
+          <div class="span2">
+            <span  rp-analyses-end-time-tooltip>
+               {{analysis.humanizeEndTime }}
+            </span>
+          </div>
+
+        </div>
+
+        <span ng-if="analysis.status=='RUNNING' || analysis.status=='INITIALIZED'">
+          <div class="row-fluid">
+            <div class="span1">
               &nbsp;
             </div>
-              <div class="span11 analysis-running">
+            <div class="span11 analysis-running">
               <span ng-if="AnalysesCtrl.analysesDetail[analysis.uuid].cancelingAnalyses == true">
                 <div class="alert alert-danger" id="analyses-cancel-notice">
                   Canceling Analysis in Progress
                 </div>
               </span>
 
-              <div id="{{analysis.uuid}}" class="collapse in">
+              <div id="{{analysis.uuid}}" collapse="isCollapsed">
 
                 <div ng-hide="AnalysesCtrl.isAnalysisDetailLoaded(analysis.uuid)"
                   class="ng-hide">
@@ -254,28 +256,27 @@
                 </div>
               </div>
             </div>
-            </div>
-           </span>
+          </div>
+        </span>
+      </li>
+    </ul>
+
+    <br>
+    <br>
+
+    <div ng-if="AnalysesCtrl.analysesList.length > itemsPerPage" class="pagination analyses">
+      <ul>
+        <li ng-class="prevPageDisabled()">
+          <a ng-click="prevPage()">«</a>
+        </li>
+        <li ng-repeat="pageNum in range()" ng-class="{active:pageNum==currentPage}"
+          ng-click="setPage(pageNum)">
+          <a> {{ pageNum + 1 }}  </a>
+        </li>
+        <li ng-class="nextPageDisabled()">
+          <a href ng-click="nextPage()">»</a>
         </li>
       </ul>
-
-      <br>
-      <br>
-
-      <div ng-if="AnalysesCtrl.analysesList.length > itemsPerPage" class="pagination analyses">
-        <ul>
-          <li ng-class="prevPageDisabled()">
-            <a ng-click="prevPage()">«</a>
-          </li>
-          <li ng-repeat="pageNum in range()" ng-class="{active:pageNum==currentPage}"
-            ng-click="setPage(pageNum)">
-            <a> {{ pageNum }}  </a>
-          </li>
-          <li ng-class="nextPageDisabled()">
-            <a href ng-click="nextPage()">»</a>
-          </li>
-        </ul>
-      </div>
     </div>
   </span>
 </div>

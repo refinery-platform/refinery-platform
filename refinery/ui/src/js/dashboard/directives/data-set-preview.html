@@ -19,9 +19,10 @@
           <ul class="dropdown-menu pull-right">
             <li>
               <a
-                class="clickable"
+                class="clickable spinnable"
                 ng-class="{'disabled':!preview.permissions}"
                 ng-click="preview.openPermissionEditor()">
+                <div class="refinery-spinner" ng-if="preview.permissionsLoading !== false"></div>
                 Permissions
               </a>
             </li>
@@ -32,6 +33,9 @@
         <h4 ng-bind-html="preview.dataSet.title"></h4>
       </div>
     </div>
+  </div>
+  <div class="refinery-global-spinner" ng-if="preview.loading !== false">
+    <div class="refinery-spinner"></div>
   </div>
   <div class="content scrollable">
     <div
@@ -56,6 +60,7 @@
         </ul>
         <button
           class="is-mirrorable icon-only"
+          ng-if="preview.maxBadges < this.infinity && preview.maxBadges < preview.studies.sources.length"
           ng-click="preview.toggleBadges()"
           ng-class="{'is-mirrored': preview.maxBadges > preview.studies.sources.length}">
           <i class="icon-chevron-sign-right"></i>

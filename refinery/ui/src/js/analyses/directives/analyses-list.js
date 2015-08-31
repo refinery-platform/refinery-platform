@@ -1,5 +1,5 @@
 angular.module('refineryAnalyses')
-    .directive("analysesList", analysesList);
+    .directive("analysesList", ['$rootScope',analysesList]);
 
 function analysesList() {
     "use strict";
@@ -19,6 +19,8 @@ function analysesList() {
         scope.AnalysesCtrl.updateAnalysesList();
       });
 
+      scope.isCollapsed = false;
+
       //Analyses view sorting
       scope.predicate = 'time_start';
       scope.reverse = true;
@@ -32,7 +34,6 @@ function analysesList() {
           scope.analysisIcon = "icon-arrow-down";
         }
       };
-
 
       //Analyses view pagination
       scope.itemsPerPage = 20;
@@ -83,6 +84,7 @@ function analysesList() {
       scope.setPage = function(n){
           scope.currentPage = n;
       };
+
     }
   };
 }

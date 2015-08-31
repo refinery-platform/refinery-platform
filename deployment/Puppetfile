@@ -1,10 +1,11 @@
 forge "https://forgeapi.puppetlabs.com"
 
-mod 'puppetlabs/stdlib', '4.5.1'
 mod 'puppetlabs/apt', '1.8.0'
+mod 'puppetlabs/limits', '0.1.0'
+mod 'puppetlabs/nodejs', '0.7.1'
 mod 'puppetlabs/postgresql', '4.3.0'
 mod 'puppetlabs/rabbitmq', '5.1.0'
-mod 'stankevich/python', '1.9.1'
-mod 'puppetlabs/nodejs', '0.7.1'
-mod 'thias/sysctl', '1.0.2'
+mod 'puppetlabs/stdlib', '4.5.1'
 mod 'saz/timezone', '3.2.0'
+mod 'stankevich/python', '1.9.1'
+mod 'thias/sysctl', '1.0.2'

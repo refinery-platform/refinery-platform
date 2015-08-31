@@ -22,7 +22,8 @@
       "analyses",
       "external-tool-status",
       "collaboration",
-      "chart"
+      "chart",
+      "data-set-nav"
     ],
     "vendor": [
       "angular-animate/angular-animate.min.js",

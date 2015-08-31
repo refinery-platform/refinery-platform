@@ -1,7 +1,7 @@
 angular
   .module('refineryApp')
-  .factory('pubmedService', ['$q', '$http', '$resource', 'x2js', 'settings',
-    function ($q, $http, $resource, x2js, settings) {
+  .factory('pubmedService', ['$q', '$http', '$resource', 'settings',
+    function ($q, $http, $resource, settings) {
 
       /*
        * Search

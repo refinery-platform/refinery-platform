@@ -2,6 +2,7 @@ function refineryDataSetPreview () {
   'use strict';
 
   function DataSetPreviewCtrl (
+    $q,
     _,
     $modal,
     settings,
@@ -15,6 +16,7 @@ function refineryDataSetPreview () {
     dashboardExpandablePanelService) {
     var that = this;
 
+    this.$q = $q;
     this._ = _;
     this.$modal = $modal;
     this.settings = settings;
@@ -28,6 +30,7 @@ function refineryDataSetPreview () {
     this.dashboardExpandablePanelService = dashboardExpandablePanelService;
 
     this.maxBadges = this.settings.dashboard.preview.maxBadges;
+    this.infinity = Number.POSITIVE_INFINITY;
 
     this.dashboardWidthFixerService.fixer.push(function () {
       that.style = {
@@ -83,9 +86,7 @@ function refineryDataSetPreview () {
         var ds = this.dashboardDataSetPreviewService.dataSet;
         if (ds && ds.uuid && this._currentDataset !== ds.id) {
           this._currentDataset = ds.id;
-          this.getStudies(ds.uuid);
-          this.getAnalysis(ds.uuid);
-          this.getPermissions(ds.uuid);
+          this.loadData(ds.uuid);
         }
         return ds;
       }
@@ -128,7 +129,7 @@ function refineryDataSetPreview () {
   });
 
   DataSetPreviewCtrl.prototype.getAnalysis = function (uuid) {
-    this.analysisService
+    return this.analysisService
       .query({
         data_set__uuid: uuid
       })
@@ -154,7 +155,7 @@ function refineryDataSetPreview () {
   };
 
   DataSetPreviewCtrl.prototype.getStudies = function (uuid) {
-    this.studyService
+    return this.studyService
       .get({
         uuid: uuid
       })
@@ -167,13 +168,62 @@ function refineryDataSetPreview () {
           } else {
             this.studies = data.objects;
           }
-        }.bind(this))
-        .catch(function (error) {
-          console.error(error);
-        });
+        }.bind(this));
   };
 
-  DataSetPreviewCtrl.prototype.loadCitation = function (publications, index, id) {
+  /**
+   * Load permissions for this dataset.
+   *
+   * @method  getPermissions
+   * @author  Fritz Lekschas
+   * @date    2015-08-21
+   *
+   * @param   {string}  uuid   UUID of the exact model entity.
+   * @return  {object}         Angular promise.
+   */
+  DataSetPreviewCtrl.prototype.getPermissions = function (uuid) {
+    return promise = this.sharingService.get({
+        model: 'data_sets',
+        uuid: uuid
+      }).$promise
+        .then(function (data) {
+          groups = [];
+          for (var i = 0, len = data.share_list.length; i < len; i++) {
+            groups.push({
+              id: data.share_list[i].group_id,
+              name: data.share_list[i].group_name,
+              permission: this.getPermissionLevel(data.share_list[i].perms)
+            });
+          }
+          this.permissions = {
+            isOwner: data.is_owner,
+            groups: groups
+          };
+        }.bind(this));
+  };
+
+  /**
+   * Turns permission object into a simple string.
+   *
+   * @method  getPermissions
+   * @author  Fritz Lekschas
+   * @date    2015-08-21
+   *
+   * @param   {Object}  perms  Object of the precise permissions.
+   * @return  {String}         Permission's name.
+   */
+  DataSetPreviewCtrl.prototype.getPermissionLevel = function (perms) {
+    if (perms.read === false) {
+      return 'none';
+    }
+    if (perms.change === true) {
+      return 'edit';
+    }
+    return 'read';
+  };
+
+  DataSetPreviewCtrl.prototype.loadCitation = function (
+    publications, index, id) {
     this.studies.publications[index].citation = {
       isLoading: true
     };
@@ -195,56 +245,37 @@ function refineryDataSetPreview () {
   };
 
   /**
-   * Load permissions for this dataset.
+   * Load all relevant data for the preview.
    *
-   * @method  getPermissions
+   * @method  loadData
    * @author  Fritz Lekschas
-   * @date    2015-08-21
-   *
-   * @param   {string}  uuid   UUID of the exact model entity.
-   * @return  {object}         Angular promise.
+   * @date    2015-08-25
    */
-  DataSetPreviewCtrl.prototype.getPermissions = function (uuid) {
-    var that = this;
+  DataSetPreviewCtrl.prototype.loadData = function (uuid) {
+    this.loading = true;
+    this.permissionsLoading = true;
 
-    this.sharingService.get({
-      model: 'data_sets',
-      uuid: uuid
-    }).$promise
-      .then(function (data) {
-        groups = [];
-        for (var i = 0, len = data.share_list.length; i < len; i++) {
-          groups.push({
-            id: data.share_list[i].group_id,
-            name: data.share_list[i].group_name,
-            permission: that.getPermissionLevel(data.share_list[i].perms)
-          });
-        }
-        this.permissions = {
-          isOwner: data.is_owner,
-          groups: groups
-        };
+    var studies = this.getStudies(uuid),
+        analyses = this.getAnalysis(uuid),
+        permissions = this.getPermissions(uuid);
+
+    this
+      .$q
+      .all([studies, analyses])
+        .then(function () {
+          this.loading = false;
+        }.bind(this))
+        .catch(function (e) {
+          // Should disable an error if both failed
+          this.loading = false;
+        }.bind(this));
+
+    console.log(studies, permissions);
+
+    permissions
+      .finally(function () {
+        this.permissionsLoading = false;
       }.bind(this));
-  };
-
-  /**
-   * Turns permission object into a simple string.
-   *
-   * @method  getPermissions
-   * @author  Fritz Lekschas
-   * @date    2015-08-21
-   *
-   * @param   {Object}  perms  Object of the precise permissions.
-   * @return  {String}         Permission's name.
-   */
-  DataSetPreviewCtrl.prototype.getPermissionLevel = function (perms) {
-    if (perms.read === false) {
-      return 'none';
-    }
-    if (perms.change === true) {
-      return 'edit';
-    }
-    return 'read';
   };
 
   /**
@@ -313,6 +344,7 @@ function refineryDataSetPreview () {
       close: '&'
     },
     controller: [
+      '$q',
       '_',
       '$modal',
       'settings',

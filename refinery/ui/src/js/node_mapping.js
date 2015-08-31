@@ -49,80 +49,6 @@ angular.module('refineryNodeMapping', [
   'ui.bootstrap',
 ])
 
-
-.config(['$httpProvider', function($httpProvider) {
-  // use Django XSRF/CSRF lingo to enable communication with API
-  $httpProvider.defaults.xsrfCookieName = 'csrftoken';
-  $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
-}])
-
-
-.config([
-  '$stateProvider',
-  '$urlRouterProvider',
-  function($stateProvider, $urlRouterProvider) {
-  // Default state
-  $urlRouterProvider.otherwise(function($injector) {
-    var $state = $injector.get('$state');
-    $state.go('browse');
-  });
-
-  $stateProvider
-    .state('browse', {
-      templateUrl: '/static/partials/data_set_ui_mode_browse.html',
-      //url: '/browse',
-      controller: function($scope, $rootScope, $timeout, $) {
-        $rootScope.mode = "browse";
-        $rootScope.showCtrlTab = false;
-        $rootScope.mainTabSpanSize = "span12 no-margin";
-        $rootScope.ctrlTabSpanSize = "";
-
-        // calls global resizing function implemented in base.html to rescale height of scrollable elements
-        // timeout is needed to execute after DOM changes
-        $timeout(sizing, 0);
-
-        $(window).trigger('refinery/floatThead/reflow');
-      }
-    });
-
-  $stateProvider
-    .state('analyze', {
-      templateUrl: "/static/partials/data_set_ui_mode_analyze.html",
-      //url: '/analyze',
-      controller: function($scope, $rootScope, $timeout, $window, $) {
-        $rootScope.mode = "analyze";
-        $rootScope.showCtrlTab = true;
-        $rootScope.mainTabSpanSize = "span10";
-        $rootScope.ctrlTabSpanSize = "span2";
-
-        // calls global resizing function implemented in base.html to rescale height of scrollable elements
-        // timeout is needed to execute after DOM changes
-        $timeout(sizing, 0);
-
-        $(window).trigger('refinery/floatThead/reflow');
-      }
-    });
-
-  $stateProvider
-    .state('visualize', {
-      templateUrl: "/static/partials/data_set_ui_mode_visualize.html",
-      //url: '/visualize',
-      controller: function($scope,$rootScope,$timeout, $window, $) {
-        $rootScope.mode = "visualize";
-        $rootScope.showCtrlTab = true;
-        $rootScope.mainTabSpanSize = "span10";
-        $rootScope.ctrlTabSpanSize = "span2";
-
-        // calls global resizing function implemented in base.html to rescale height of scrollable elements
-        // timeout is needed to execute after DOM changes
-        $timeout(sizing, 0);
-
-        $(window).trigger('refinery/floatThead/reflow');
-      }
-    });
-
-}])
-
 // http://jsfiddle.net/jgoemat/CPRda/1/
 .directive('nodeDraggable', function () {
   return {
@@ -311,7 +237,7 @@ angular.module('refineryNodeMapping', [
         var attributes = [];
         if ( data.response.docs.length == 1 ) {
           angular.forEach( $scope.attributeOrderList, function( attribute ) {
-            attributes.push( { "name": solrService.prettifyFieldName( attribute, true ), "value": data.response.docs[0][attribute] } );
+            attributes.push( { "name": solrService.extra.prettifyFieldName( attribute, true ), "value": data.response.docs[0][attribute] } );
           });
         }
         else {
