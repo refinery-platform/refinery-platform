@@ -67,8 +67,11 @@
 
         <div class="row-fluid">
           <div class="span1 analysis-icon">
-            <a ng-click="isCollapsed = !isCollapsed" data-target=" #{{analysis.uuid}}"
-              data-ng-show="analysis.status=='RUNNING' || analysis.status=='INITIALIZED'">
+            <a id="collapse-analysis-run"
+              ng-click="isCollapsed = !isCollapsed"
+              data-target=" #{{analysis.uuid}}"
+              data-ng-show="analysis.status=='RUNNING' ||
+               analysis.status=='INITIALIZED'">
               <i ng-class="{'icon-caret-right icon-large analyses-collapse':
                  isCollapsed,'icon-caret-down icon-large analyses-collapse':!isCollapsed}">
               </i>
