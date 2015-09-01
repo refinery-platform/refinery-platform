@@ -96,9 +96,6 @@
             </span>
             <span ng-show="analysis.status=='RUNNING' ||
             analysis.status=='INITIALIZED'" class="analysis-cancel-col">
-              <span ng-if="analysis.status=='INITIALIZED'">
-              Analysis UUid:  {{ analysis.uuid }}
-              </span>
               &nbsp;
              <a rp-analyses-cancel-confirm confirmed-click="AnalysesCtrl.cancelAnalysis(analysis.uuid)"
                 tool-tip tool-tip-container="body" tool-tip-placement="right"
