@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 
 # Data set import
 
+
 class DataSetImportView(View):
     """Main view for data set importing"""
     template_name = "data_set_manager/import.html"
