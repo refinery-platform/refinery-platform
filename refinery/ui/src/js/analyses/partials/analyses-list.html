@@ -94,8 +94,11 @@
                 </a>
               </span>
             </span>
-            <span ng-if="analysis.status=='RUNNING'"
-            class="analysis-cancel-col">
+            <span ng-show="analysis.status=='RUNNING' ||
+            analysis.status=='INITIALIZED'" class="analysis-cancel-col">
+              <span ng-if="analysis.status=='INITIALIZED'">
+              Analysis UUid:  {{ analysis.uuid }}
+              </span>
               &nbsp;
              <a rp-analyses-cancel-confirm confirmed-click="AnalysesCtrl.cancelAnalysis(analysis.uuid)"
                 tool-tip tool-tip-container="body" tool-tip-placement="right"
@@ -129,7 +132,9 @@
               &nbsp;
             </div>
             <div class="span11 analysis-running">
-              <span ng-if="AnalysesCtrl.analysesDetail[analysis.uuid].cancelingAnalyses == true">
+              <span ng-if="AnalysesCtrl.analysesDetail[analysis.uuid]
+              .cancelingAnalyses == true ||
+              AnalysesCtrl.initializedFlag[analysis.uuid] == true">
                 <div class="alert alert-danger" id="analyses-cancel-notice">
                   Canceling Analysis in Progress
                 </div>
