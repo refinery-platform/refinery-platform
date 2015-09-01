@@ -19,6 +19,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.launchAnalysisFlag = false;
   vm.analysesRunningGlobalListCount = 0;
   vm.analysesLoadingFlag = "LOADING";
+  vm.analysesGlobalLoadingFlag = "LOADING";
   vm.initializedFlag = {};
 
   vm.updateAnalysesList = function () {
@@ -50,6 +51,11 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
 
     analysesFactory.getAnalysesList(params).then(function () {
       vm.analysesGlobalList = analysesFactory.analysesGlobalList;
+      if(vm.analysesGlobalList.length === 0){
+        vm.analysesGlobalLoadingFlag = "EMPTY";
+      }else{
+        vm.analysesGlobalLoadingFlag = "DONE";
+      }
       vm.refreshAnalysesGlobalDetail();
     });
 

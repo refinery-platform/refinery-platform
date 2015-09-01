@@ -1,5 +1,15 @@
-<div ng-if="!(analysesCtrl.isEmptyAnalysesGlobalList())">
-  <ul id="analyses-popover" ng-repeat ="analysis in analysesCtrl.analysesGlobalList track by $index">
+<div ng-switch on="analysesCtrl.analysesGlobalLoadingFlag">
+  <div ng-switch-when="EMPTY">
+    <p>
+      No analyses performed.
+    </p>
+  </div>
+  <div ng-switch-when="LOADING">
+    <span class="refinery-spinner analyses-view"></span>
+    &nbsp;<em>Retrieving recent analyses.</em>
+  </div>
+  <div ng-switch-default>
+    <ul id="analyses-popover" ng-repeat ="analysis in analysesCtrl.analysesGlobalList track by $index">
      <li>
        &nbsp;
       <span ng-switch on="analysis.status">
@@ -46,9 +56,5 @@
         </span>
      </li>
   </ul>
-</div>
-<div ng-if="analysesCtrl.isEmptyAnalysesGlobalList()">
-  <p>
-    No analyses performed.
-  </p>
+  </div>
 </div>
