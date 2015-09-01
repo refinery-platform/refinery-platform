@@ -23,11 +23,6 @@ urlpatterns = patterns(
         name='import_isa_tab'),
     url(r'^import/isa-tab-form/$', login_required(ProcessISATabView.as_view()),
         name='process_isa_tab'),
-    url(r'^contents/(?P<study_uuid>'
-        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/'
-        r'(?P<assay_uuid>'
-        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
-        "contents", name="data_set_manager_contents"),
     url(r'^import/metadata-table-form/$',
         login_required(ProcessMetadataTableView.as_view()),
         name='process_metadata_table'),
