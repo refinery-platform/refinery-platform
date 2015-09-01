@@ -12,8 +12,9 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.analysesGlobalDetail = {};
   vm.analysesRunningList = [];
   vm.analysesRunningGlobalList = [];
-  vm.timerRunGlobalList = undefined;
+  vm.timerList = undefined;
   vm.timerGlobalList = undefined;
+  vm.timerRunGlobalList = undefined;
   vm.timerRunList = undefined;
   vm.launchAnalysisFlag = false;
   vm.analysesRunningGlobalListCount = 0;
@@ -21,7 +22,6 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.initializedFlag = {};
 
   vm.updateAnalysesList = function () {
-
     var param = {
       format: 'json',
       limit: 0,
@@ -38,10 +38,10 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
       vm.refreshAnalysesDetail();
     });
 
-    var timerList =  $timeout(vm.updateAnalysesList, 30000);
+    vm.timerList =  $timeout(vm.updateAnalysesList, 30000);
 
     $scope.$on('refinery/analyze-tab-inactive', function(){
-      $timeout.cancel(timerList);
+      $timeout.cancel(vm.timerList);
     });
   };
 
@@ -148,16 +148,21 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.cancelAnalysis = function (uuid) {
-
     vm.setCancelAnalysisFlag(true, uuid);
 
     analysesFactory.postCancelAnalysis(uuid).then(function (result) {
-      bootbox.alert("Successfully canceled analysis.");
-      vm.setCancelAnalysisFlag(false, uuid);
-      $rootScope.$broadcast("rf/cancelAnalysis");
+      $timeout.cancel(vm.timerList);
+      vm.updateAnalysesList().then(function() {
+        bootbox.alert("Successfully canceled analysis.");
+        vm.setCancelAnalysisFlag(false, uuid);
+        $rootScope.$broadcast("rf/cancelAnalysis");
+      });
     }, function (error) {
-      bootbox.alert("Canceling analysis failed");
-      vm.setCancelAnalysisFlag(false, uuid);
+      $timeout.cancel(vm.timerList);
+      vm.updateAnalysesList().then(function() {
+        bootbox.alert("Canceling analysis failed");
+        vm.setCancelAnalysisFlag(false, uuid);
+      });
     });
   };
 
