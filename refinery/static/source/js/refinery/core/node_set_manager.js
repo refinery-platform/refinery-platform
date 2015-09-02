@@ -86,46 +86,21 @@ NodeSetManager.prototype.renderList = function () {
 
   var code = "";
 
-  //code += '<div class="btn-group">';
-
-  if (self.list.objects.length > 0) {
-    //code += '<a class="btn btn-warning dropdown-toggle" id="show-node-sets-button" data-toggle="dropdown" href="#">';
-  }
-  else {
-    //code += '<a class="btn btn-warning disabled dropdown-toggle" id="show-node-sets-button" data-toggle="dropdown" href="#">';
-  }
-
-  //code += '<span class="caret"></span>';
-  //code += '</a>';
-  //code += '<ul id="' + nodeSetListElementId + '" class="dropdown-menu" style="' +  nodeSetListElementStyle + '">';
   code += '<select id="' + nodeSetListElementId + '" style="width:100%">';
 
   for (var i = 0; i < self.list.objects.length; ++i) {
     var object = self.list.objects[i];
 
     code += '<option id="' + object.uuid + '" data-uuid="' + object.uuid + '" data-resource-uri="' + object.resource_uri + '">' + object.name + '</option>'
-    //code += '<li><a id="' + object.uuid + '" data-uuid="' + object.uuid + '" data-resource-uri="' + object.resource_uri + '">';
-    //code += object.name + ' (' + object.node_count + ')';
-    //code += "</a></li>";
   }
 
-  //code += '</ul>'
   code += '</select>'
-  //code += '</div>'
-
-  //code += '<a id="' + nodeSetSaveSelectionButtonElementId + '"class="btn btn-warning" href="#">';
-  //code += 'Save';
-  //code += '</a>';
 
   $("#" + self.elementId).html(code);
 
   $("#" + nodeSetListElementId).select2();
 
 
-  //$( "#" + nodeSetListElementId ).children().click( function(event) {
-  //	var nodeSetUuid = $( "#" + event.target.id ).data().uuid;
-  //	self.getDetail( nodeSetUuid, self.loadSelectionCallback )
-  //} );
 
   $("#" + nodeSetListElementId).on("change", function (event) {
     // console.log(event.added.element[0].id);
