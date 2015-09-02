@@ -763,6 +763,7 @@ class NodeSetResource(ModelResource):
     solr_query_components = fields.CharField(
         attribute='solr_query_components', null=True)
     node_count = fields.IntegerField(attribute='node_count', null=True)
+    owner = fields.IntegerField(attribute='owner', null=True)
     is_implicit = fields.BooleanField(attribute='is_implicit')
     study = fields.ToOneField(StudyResource, 'study')
     assay = fields.ToOneField(AssayResource, 'assay')
@@ -776,7 +777,7 @@ class NodeSetResource(ModelResource):
         authentication = SessionAuthentication()
         authorization = Authorization()
         fields = [
-            'is_current', 'name', 'summary', 'assay', 'study', 'uuid',
+            'owner', 'is_current', 'name', 'summary', 'assay', 'study', 'uuid',
             'is_implicit', 'node_count', 'solr_query', 'solr_query_components'
         ]
         ordering = [
