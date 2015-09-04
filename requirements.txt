@@ -40,6 +40,7 @@ pathtools==0.1.2
 pep8==1.6.2
 poster==0.8.1
 psycopg2==2.4.5
+py2neo==2.0.7
 pyasn1==0.1.7
 pycparser==2.13
 Pygments==1.6rc1
