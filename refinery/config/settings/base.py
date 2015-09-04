@@ -427,6 +427,9 @@ LIBS_DIR = get_setting("LIBS_DIR")
 # Neo4J settings
 NEO4J_BASE_URL = get_setting("NEO4J_BASE_URL")
 
+# Java settings
+JAVA_ENTITY_EXPANSION_LIMIT = get_setting("JAVA_ENTITY_EXPANSION_LIMIT")
+
 if REFINERY_EXTERNAL_AUTH:
     # enable LDAP authentication
     try:

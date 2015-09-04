@@ -37,6 +37,7 @@
     "SOLR": 10.0
   },
   "ISA_TAB_DIR": "/vagrant/isa-tab",
+  "JAVA_ENTITY_EXPANSION_LIMIT": 100000,
   "LANGUAGE_CODE": "en-us",
   "LIBS_DIR": "/vagrant/libs",
   "LOG_LEVEL": "DEBUG",
