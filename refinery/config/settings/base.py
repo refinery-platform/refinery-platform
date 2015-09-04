@@ -421,6 +421,12 @@ REFINERY_EXTERNAL_AUTH_MESSAGE = get_setting("REFINERY_EXTERNAL_AUTH_MESSAGE")
 INTERVAL_BETWEEN_CHECKS = get_setting("INTERVAL_BETWEEN_CHECKS")
 TIMEOUT = get_setting("TIMEOUT")
 
+# Directory for custom libraries
+LIBS_DIR = get_setting("LIBS_DIR")
+
+# Neo4J settings
+NEO4J_BASE_URL = get_setting("NEO4J_BASE_URL")
+
 if REFINERY_EXTERNAL_AUTH:
     # enable LDAP authentication
     try:
