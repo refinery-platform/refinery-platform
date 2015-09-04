@@ -1,5 +1,7 @@
 # Refinery Platform [![Build Status](https://travis-ci.org/parklab/refinery-platform.svg?branch=develop)](https://travis-ci.org/parklab/refinery-platform)
 
+Additional information about how to administrate and develop Refinery can be found in the [wiki](http://github.com/parklab/refinery-platform/wiki).
+
 ## Installing and Launching for Development
 
 ### Prerequisites

@@ -12,15 +12,17 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   vm.analysesGlobalDetail = {};
   vm.analysesRunningList = [];
   vm.analysesRunningGlobalList = [];
-  vm.timerRunGlobalList = undefined;
+  vm.timerList = undefined;
   vm.timerGlobalList = undefined;
+  vm.timerRunGlobalList = undefined;
   vm.timerRunList = undefined;
   vm.launchAnalysisFlag = false;
   vm.analysesRunningGlobalListCount = 0;
   vm.analysesLoadingFlag = "LOADING";
+  vm.analysesGlobalLoadingFlag = "LOADING";
+  vm.initializedFlag = {};
 
   vm.updateAnalysesList = function () {
-
     var param = {
       format: 'json',
       limit: 0,
@@ -37,10 +39,10 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
       vm.refreshAnalysesDetail();
     });
 
-    var timerList =  $timeout(vm.updateAnalysesList, 30000);
+    vm.timerList =  $timeout(vm.updateAnalysesList, 30000);
 
     $scope.$on('refinery/analyze-tab-inactive', function(){
-      $timeout.cancel(timerList);
+      $timeout.cancel(vm.timerList);
     });
   };
 
@@ -49,6 +51,11 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
 
     analysesFactory.getAnalysesList(params).then(function () {
       vm.analysesGlobalList = analysesFactory.analysesGlobalList;
+      if(vm.analysesGlobalList.length === 0){
+        vm.analysesGlobalLoadingFlag = "EMPTY";
+      }else{
+        vm.analysesGlobalLoadingFlag = "DONE";
+      }
       vm.refreshAnalysesGlobalDetail();
     });
 
@@ -147,15 +154,30 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   };
 
   vm.cancelAnalysis = function (uuid) {
-    vm.analysesDetail[uuid].cancelingAnalyses = true;
+    vm.setCancelAnalysisFlag(true, uuid);
+
     analysesFactory.postCancelAnalysis(uuid).then(function (result) {
-      bootbox.alert("Successfully canceled analysis.");
-      vm.analysesDetail[uuid].cancelingAnalyses = false;
-      $rootScope.$broadcast("rf/cancelAnalysis");
+      $timeout.cancel(vm.timerList);
+      vm.updateAnalysesList().then(function() {
+        bootbox.alert("Successfully canceled analysis.");
+        vm.setCancelAnalysisFlag(false, uuid);
+        $rootScope.$broadcast("rf/cancelAnalysis");
+      });
     }, function (error) {
-      bootbox.alert("Canceling analysis failed");
-      vm.analysesDetail[uuid].cancelingAnalyses = false;
+      $timeout.cancel(vm.timerList);
+      vm.updateAnalysesList().then(function() {
+        bootbox.alert("Canceling analysis failed");
+        vm.setCancelAnalysisFlag(false, uuid);
+      });
     });
+  };
+
+  vm.setCancelAnalysisFlag = function(logic,uuid){
+    if(typeof vm.analysesDetail[uuid] !== 'undefined'){
+      vm.analysesDetail[uuid].cancelingAnalyses = logic;
+    }else{
+      vm.initializedFlag[uuid] = logic;
+    }
   };
 
   //Alert message which show on analysis view filtered page

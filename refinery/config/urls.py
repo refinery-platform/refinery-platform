@@ -21,7 +21,6 @@ from data_set_manager.api import AttributeOrderResource, StudyResource,\
     AssayResource, InvestigationResource, ProtocolResource, \
     ProtocolReferenceResource, ProtocolReferenceParameterResource, \
     PublicationResource, AttributeResource
-from data_set_manager.views import search_typeahead
 
 
 logger = logging.getLogger(__name__)
@@ -149,7 +148,6 @@ urlpatterns = patterns(
         ),
         name='search'
     ),
-    url(r'^typeahead/$', search_typeahead),
 
     # (r'^favicon\.ico$',
     # 'django.views.generic.simple.redirect_to',

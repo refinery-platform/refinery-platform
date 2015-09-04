@@ -271,7 +271,10 @@
 	    	}
 		}
 
-		$(window).resize(sizing);
+    $(window).on(
+      'resize.jqfullheight orientationchange.jqfullheight',
+      sizing
+    );
 
 		$(document).ready( function(){
 			sizing();

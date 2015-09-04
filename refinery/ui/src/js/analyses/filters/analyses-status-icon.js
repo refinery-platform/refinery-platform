@@ -9,6 +9,8 @@ function analysesStatusIcon(){
         return "icon-warning-sign";
       case "RUNNING":
         return "icon-cog icon-spin";
+      case "INITIALIZED":
+        return "icon-cog icon-spin";
       default:
         return "icon-question-sign";
     }

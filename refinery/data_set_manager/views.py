@@ -31,77 +31,8 @@ from file_store.models import get_temp_dir, generate_file_source_translator
 
 logger = logging.getLogger(__name__)
 
-
-def index(request):
-    return HttpResponse(
-        simplejson.dumps(get_nodes(study_id=2, assay_id=2), indent=2),
-        mimetype='application/json')
-
-
-def nodes(request, type, study_uuid, assay_uuid=None):
-    start = datetime.now()
-    matrix = get_matrix(study_uuid=study_uuid, assay_uuid=assay_uuid,
-                        node_type=type)
-    end = datetime.now()
-    logger.debug("Time to retrieve node matrix: ", str(end - start))
-    return HttpResponse(simplejson.dumps(matrix, indent=2),
-                        mimetype='application/json')
-
-
-def node_attributes(request, type, study_uuid, assay_uuid=None):
-    attributes = get_node_attributes(study_uuid=study_uuid,
-                                     assay_uuid=assay_uuid,
-                                     node_type=type)
-    return HttpResponse(simplejson.dumps(attributes, indent=2),
-                        mimetype='application/json')
-
-
-def node_types(request, study_uuid, assay_uuid=None):
-    return HttpResponse(simplejson.dumps(
-        get_node_types(study_uuid=study_uuid, assay_uuid=assay_uuid),
-        indent=2),
-        mimetype='application/json')
-
-
-def node_types_files(request, study_uuid, assay_uuid=None):
-    return HttpResponse(simplejson.dumps(
-        get_node_types(study_uuid=study_uuid, assay_uuid=assay_uuid,
-                       files_only=True, filter_set=Node.FILES), indent=2),
-        mimetype='application/json')
-
-
-def node_annotate(request, type, study_uuid, assay_uuid=None):
-    return HttpResponse(
-        simplejson.dumps(
-            update_annotated_nodes(
-                study_uuid=study_uuid, assay_uuid=assay_uuid, node_type=type),
-            indent=2),
-        mimetype='application/json')
-
-
-def contents(request, study_uuid, assay_uuid):
-    # getting current workflows
-    workflows = Workflow.objects.all()
-    return render_to_response('data_set_manager/contents.html', {
-        "study_uuid": study_uuid,
-        "assay_uuid": assay_uuid,
-        "workflows": workflows,
-    }, context_instance=RequestContext(request))
-
-
-def search_typeahead(request):
-    """ajax function for returning typeahead queries"""
-    if request.is_ajax():
-        search_value = request.POST.getlist('search')
-        results = SearchQuerySet().autocomplete(content_auto=search_value[0])
-        ret_list = []
-        for res in results:
-            ret_list.append(res.name)
-        return HttpResponse(simplejson.dumps(ret_list, indent=2),
-                            mimetype='application/json')
-
-
 # Data set import
+
 
 class DataSetImportView(View):
     """Main view for data set importing"""

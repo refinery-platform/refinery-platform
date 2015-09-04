@@ -1,4 +1,4 @@
-function CollaborationCtrl($state, $stateParams, $location, $modal, groupInviteService, groupDataService) {
+function CollaborationCtrl($timeout, $state, $stateParams, $location, $modal, groupInviteService, groupDataService) {
   var that = this;
   that.$state = $state;
   that.$stateParams = $stateParams;
@@ -7,7 +7,9 @@ function CollaborationCtrl($state, $stateParams, $location, $modal, groupInviteS
   that.groupInviteService = groupInviteService;
   that.groupDataService = groupDataService;
 
-  this.groupDataService.update(this.$stateParams); 
+  this.groupDataService.update(this.$stateParams);
+
+  $timeout(window.sizing, 0);
 }
 
 Object.defineProperty(
@@ -129,6 +131,7 @@ CollaborationCtrl.prototype.openEmailInvite = function () {
 angular
   .module('refineryCollaboration')
   .controller('refineryCollaborationCtrl', [
+    '$timeout',
     '$state',
     '$stateParams',
     '$location',

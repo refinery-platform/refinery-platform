@@ -539,7 +539,6 @@
                 <p><strong>{{study.identifier}}</strong>: {{study.title}}</p>
                 <ul>
                   {% for assay in study.assay_set.all %}
-                    <!-- <li>Assay - <a href="{% url "data_set_manager_contents" study.uuid assay.uuid %}">{{assay}}</a></li> -->
                     <li>Assay - {{assay}}</li>
                   {% endfor %}
                 </ul>
