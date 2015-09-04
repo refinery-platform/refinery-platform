@@ -18,6 +18,7 @@ class Command(BaseCommand):
      -a,--abbreviation   Ontology abbreviation (E.g. go)
      -n,--name           Ontology name (E.g. Gene Ontology)
      -o,--ontology       Path to OWL file (E.g. /vagrant/transfer/GO.owl)
+     -v,--verbose        Increase verbosity [0, 1, 2]
 
     Note: All options are required!
 
@@ -52,20 +53,38 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
+        # Wrap strings in double quotes in case they contain white spaces.
+        if not options['ontology_file']:
+            options['ontology_file'] = ''
+
+        if options['ontology_abbr']:
+            options['ontology_abbr'] = '"' + options['ontology_abbr'] + '"'
+        else:
+            options['ontology_abbr'] = ''
+
+        if options['ontology_name']:
+            options['ontology_name'] = '"' + options['ontology_name'] + '"'
+        else:
+            options['ontology_name'] = ''
+
         try:
-            subprocess.check_call(
-                [
-                    'java',
-                    '-jar',
-                    '-DentityExpansionLimit ' +
-                    settings.JAVA_ENTITY_EXPANSION_LIMIT,
-                    settings.LIBS_DIR + '/owl2neo4j.jar',
-                    '-o ' + str(options['ontology_file'] or ''),
-                    '-n "' + str(options['ontology_name'] or '') + '"',
-                    '-a ' + str(options['ontology_abbr'] or ''),
-                    '-s ' + settings.NEO4J_BASE_URL
-                ]
-            )
+            cmd = 'java -jar -DentityExpansionLimit={eel} '\
+                '{lib}/owl2neo4j.jar -o {ontology} -n {name} -a {abbr} ' \
+                '-s {server} {verbosity}'.format(
+                    eel=settings.JAVA_ENTITY_EXPANSION_LIMIT,
+                    lib=settings.LIBS_DIR,
+                    ontology=options['ontology_file'],
+                    name=options['ontology_name'],
+                    abbr=options['ontology_abbr'],
+                    server=settings.NEO4J_BASE_URL,
+                    verbosity=('-v' if int(options['verbosity']) == 2 else '')
+                )
+
+            # Note that `owl2neo4j.jar` handles all other possible errors.
+            if int(options['verbosity']) > 0:
+                subprocess.check_call(cmd, shell=True)
+            else:
+                subprocess.check_output(cmd, shell=True)
         except Exception, e:
-            logger.error(e.message)
+            logger.error(e.output)
             sys.exit(1)
