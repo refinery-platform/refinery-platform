@@ -9,20 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = """
-    Imports an OWL ontology into Neo4J using the Owl2neo4J converter [1].
-
-    Usage: python manage.py import_ontology -o <Path> -n <String> -a <String>
-           [--verbosity]
-
-     -a,--abbreviation   Ontology abbreviation (E.g. go)
-     -n,--name           Ontology name (E.g. Gene Ontology)
-     -o,--ontology       Path to OWL file (E.g. /vagrant/transfer/GO.owl)
-     -v,--verbose        Increase verbosity [0, 1, 2]
-
-    Note: All options are required!
-
-    [1]: https://github.com/flekschas/owl2neo4j
+    help = """Imports an OWL ontology into Neo4J using the Owl2neo4J converter
+    from https://github.com/flekschas/owl2neo4j.
     """
 
     option_list = BaseCommand.option_list + (
