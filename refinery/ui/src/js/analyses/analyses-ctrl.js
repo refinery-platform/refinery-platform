@@ -29,26 +29,26 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
       'data_set__uuid': dataSetUuid,
     };
 
-    var deferred = $q.defer();
-    analysesFactory.getAnalysesList(param).then(function (response) {
-      vm.analysesList = analysesFactory.analysesList;
-      if(vm.analysesList.length === 0){
-        vm.analysesLoadingFlag = "EMPTY";
-      }else{
-        vm.analysesLoadingFlag = "DONE";
-      }
-      vm.refreshAnalysesDetail();
-      deferred.resolve(response);
-       // promise is returned
-    });
-
     vm.timerList =  $timeout(vm.updateAnalysesList, 30000);
 
     $scope.$on('refinery/analyze-tab-inactive', function(){
       $timeout.cancel(vm.timerList);
     });
 
-    return deferred.promise;
+    return analysesFactory.getAnalysesList(param).then(function (response) {
+      vm.analysesList = analysesFactory.analysesList;
+      vm.setAnalysesLoadingFlag();
+      vm.refreshAnalysesDetail();
+      return response;
+    });
+  };
+
+  vm.setAnalysesLoadingFlag = function(){
+    if(vm.analysesList.length === 0){
+        vm.analysesLoadingFlag = "EMPTY";
+      }else{
+        vm.analysesLoadingFlag = "DONE";
+      }
   };
 
   vm.updateAnalysesGlobalList = function () {
@@ -56,15 +56,19 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
 
     analysesFactory.getAnalysesList(params).then(function () {
       vm.analysesGlobalList = analysesFactory.analysesGlobalList;
-      if(vm.analysesGlobalList.length === 0){
-        vm.analysesGlobalLoadingFlag = "EMPTY";
-      }else{
-        vm.analysesGlobalLoadingFlag = "DONE";
-      }
+      vm.setAnalysesGlobalLoadingFlag();
       vm.refreshAnalysesGlobalDetail();
     });
 
    vm.timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 30000);
+  };
+
+  vm.setAnalysesGlobalLoadingFlag = function(){
+    if(vm.analysesGlobalList.length === 0){
+      vm.analysesGlobalLoadingFlag = "EMPTY";
+    }else{
+      vm.analysesGlobalLoadingFlag = "DONE";
+    }
   };
 
   vm.cancelTimerGlobalList = function(){
@@ -166,11 +170,10 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
       $timeout.cancel(vm.timerList);
       vm.updateAnalysesList().then(function(response) {
         bootbox.alert("Successfully canceled analysis.");
-        vm.setCancelAnalysisFlag(false, uuid);
         $rootScope.$broadcast("rf/cancelAnalysis");
+        vm.setCancelAnalysisFlag(false, uuid);
       });
     }, function (error) {
-      $timeout.cancel(vm.timerList);
       bootbox.alert("Canceling analysis failed");
       vm.setCancelAnalysisFlag(false, uuid);
     });
