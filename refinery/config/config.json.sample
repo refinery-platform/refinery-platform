@@ -69,5 +69,7 @@
     "first_name": "givenName",
     "last_name": "sn",
     "email": "mail"
-  }
+  },
+  "LIBS_DIR": "/vagrant/libs"
+  "NEO4J_BASE_URL": "http://localhost:7474"
 }
