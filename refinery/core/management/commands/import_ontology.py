@@ -57,6 +57,8 @@ class Command(BaseCommand):
                 [
                     'java',
                     '-jar',
+                    '-DentityExpansionLimit ' +
+                    settings.JAVA_ENTITY_EXPANSION_LIMIT,
                     settings.LIBS_DIR + '/owl2neo4j.jar',
                     '-o ' + str(options['ontology_file'] or ''),
                     '-n "' + str(options['ontology_name'] or '') + '"',
