@@ -261,55 +261,6 @@ def project_edit(request, uuid):
                               context_instance=RequestContext(request))
 
 
-def data_sets(request):
-    if not request.user.is_authenticated():
-        group = ExtendedGroup.objects.public_group()
-        dataset_list = get_objects_for_group(group, "core.read_dataset")
-    else:
-        dataset_list = get_objects_for_user(request.user, 'core.read_dataset')
-
-    investigation_titles = list()
-    studies = list()
-    assays = list()
-    for dataset in dataset_list:
-        try:
-            investigation = dataset.get_investigation()
-            investigation_titles.append(investigation.get_title())
-
-            study_count = investigation.get_study_count()
-            if study_count > 1:
-                studies.append("%d studies" % study_count)
-            else:
-                studies.append("1 study")
-
-            assay_count = investigation.get_assay_count()
-            if assay_count > 1:
-                assays.append("%d assays" % assay_count)
-            else:
-                assays.append("1 assay")
-        except:
-            investigation_titles.append("--")
-            studies.append("0 studies")
-            assays.append("0 assays")
-
-    datasets_info = zip(dataset_list, investigation_titles, studies, assays)
-    # pagination
-    paginator = Paginator(datasets_info, 15)
-    page = request.GET.get('page')
-    try:
-        datasets = paginator.page(page)
-    except PageNotAnInteger:
-        datasets = paginator.page(1)
-    except EmptyPage:
-        datasets = paginator.page(paginator.num_pages)
-    except TypeError:
-        datasets = paginator.page(1)
-
-    return render_to_response("core/data_sets.html",
-                              {'datasets': datasets},
-                              context_instance=RequestContext(request))
-
-
 def data_set_slug(request, slug):
     d = get_object_or_404(DataSet, slug=slug)
     return data_set(request, d.uuid)

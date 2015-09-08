@@ -41,7 +41,6 @@ urlpatterns = patterns(
     url(r'^analyses/(?P<analysis_uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
         'analysis', name="analysis"),
-    url(r'^data_sets/$', 'data_sets'),
     url(r'^data_sets/(?P<data_set_uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
         'data_set', name="data_set"),
