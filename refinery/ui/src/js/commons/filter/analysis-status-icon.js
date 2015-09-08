@@ -8,7 +8,7 @@ angular
         case 'FAILURE':
           return 'icon-warning-sign';
         case 'RUNNING':
-          return 'icon-cog icon-spin';
+          return 'icon-cog';
         default:
           return 'icon-question-sign';
       }
