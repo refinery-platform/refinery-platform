@@ -14,8 +14,8 @@ from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     NodeResource, NodeSetListResource, NodePairResource,\
     NodeRelationshipResource, WorkflowResource, ExtendedGroupResource, \
     WorkflowInputRelationshipsResource, DataSetResource,\
-    ExternalToolStatusResource, StatisticsResource, GroupManagementResource, \
-    UserAuthenticationResource, InvitationResource, FastQCResource
+     StatisticsResource, GroupManagementResource, \
+    UserAuthenticationResource, InvitationResource, FastQCResource #, ExternalToolStatusResource
 from core.models import DataSet
 from data_set_manager.api import AttributeOrderResource, StudyResource,\
     AssayResource, InvestigationResource, ProtocolResource, \
@@ -51,7 +51,6 @@ v1_api.register(NodePairResource())
 v1_api.register(NodeRelationshipResource())
 v1_api.register(WorkflowResource())
 v1_api.register(WorkflowInputRelationshipsResource())
-v1_api.register(ExternalToolStatusResource())
 v1_api.register(StatisticsResource())
 v1_api.register(GroupManagementResource())
 v1_api.register(UserAuthenticationResource())

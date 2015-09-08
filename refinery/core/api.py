@@ -35,9 +35,8 @@ from tastypie.utils import trailing_slash
 
 from core.models import Project, NodeSet, NodeRelationship, NodePair, \
     Workflow, WorkflowInputRelationships, Analysis, DataSet, \
-    ExternalToolStatus, ResourceStatistics, GroupManagement, ExtendedGroup, \
+    ResourceStatistics, GroupManagement, ExtendedGroup, \
     UserAuthentication, Invitation, UserProfile, FastQC
-from core.tasks import check_tool_status
 from data_set_manager.api import StudyResource, AssayResource, \
     InvestigationResource
 from data_set_manager.models import Node, Study, Attribute
@@ -909,26 +908,6 @@ class NodeRelationshipResource(ModelResource):
         # fields = ['type', 'study', 'assay', 'node_pairs']
         ordering = ['is_current', 'name', 'type', 'node_pairs']
         filtering = {'study': ALL_WITH_RELATIONS, 'assay': ALL_WITH_RELATIONS}
-
-
-class ExternalToolStatusResource(ModelResource):
-    class Meta:
-        queryset = ExternalToolStatus.objects.all()
-        resource_name = 'externaltoolstatus'
-        authentication = Authentication()
-        authorization = Authorization()
-        allowed_methods = ["get"]
-        fields = [
-            'name',
-            'is_active',
-            'last_time_check',
-            'unique_instance_identifier'
-        ]
-
-    def dehydrate(self, bundle):
-        # call to method
-        bundle.data['status'] = check_tool_status(bundle.data['name'])[1]
-        return bundle
 
 
 class StatisticsResource(Resource):

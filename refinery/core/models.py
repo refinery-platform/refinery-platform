@@ -525,7 +525,7 @@ class WorkflowEngine (OwnableResource, ManageableResource):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
         )
 
-
+'''
 @receiver(post_delete, sender=WorkflowEngine)
 def delete_associated_externaltoolstatus(sender, instance, **kwargs):
     try:
@@ -538,7 +538,7 @@ def delete_associated_externaltoolstatus(sender, instance, **kwargs):
             "There's no ExternalToolStatus with the unique instance identifier"
         )
 
-
+'''
 class DiskQuota(SharableResource, ManageableResource):
     # quota is given in bytes
     maximum = models.IntegerField()
@@ -1182,7 +1182,7 @@ class RefineryLDAPBackend(LDAPBackend):
                 )
         return user, created
 
-
+'''
 class ExternalToolStatus(models.Model):
     """Model to keep track of the status of external tools Refinery uses"""
     SUCCESS_STATUS = "SUCCESS"
@@ -1207,10 +1207,10 @@ class ExternalToolStatus(models.Model):
             "It's been too long since the database was last updated"
         ),
     )
-    '''If adding a new tool, user needs to fill out TOOL_NAME,
-    INTERVAL_BETWEEN_CHECKS,
-    TIMEOUT, STATUS_CHOICES, and TOOL_NAME_CHOICES in core/models.py
-    '''
+    #If adding a new tool, user needs to fill out TOOL_NAME,
+    #INTERVAL_BETWEEN_CHECKS,
+    #TIMEOUT, STATUS_CHOICES, and TOOL_NAME_CHOICES in core/models.py
+
     CELERY_TOOL_NAME = "CELERY"
     SOLR_TOOL_NAME = "SOLR"
     GALAXY_TOOL_NAME = "GALAXY"
@@ -1254,7 +1254,7 @@ class ExternalToolStatus(models.Model):
     class Meta:
         unique_together = ('name', 'unique_instance_identifier')
 
-
+'''
 class ResourceStatistics(object):
     def __init__(
             self,
