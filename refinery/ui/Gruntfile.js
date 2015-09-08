@@ -1,4 +1,5 @@
 var fs           = require('fs');
+var hasbin       = require('hasbin');
 var isBinaryFile = require('isbinaryfile');
 
 module.exports = function(grunt) {
@@ -36,8 +37,9 @@ module.exports = function(grunt) {
   // flips its value.
   var spawn = !!!grunt.option('fast');
 
-  // Local testing starts all major browsers and can be invoked with `--local`.
-  var browsers = !!grunt.option('local') ?
+  // Local testing, i.e. triggered on your host machine, starts all major
+  // browsers and can be invoked with `--host`.
+  var browsers = !!grunt.option('host') ?
     ['PhantomJS', 'Chrome', 'Firefox', 'Safari'] : ['PhantomJS'];
 
   grunt.initConfig({
@@ -391,10 +393,18 @@ module.exports = function(grunt) {
         PHANTOMJS_BIN: function() {
           var localPhantomJS = 'node_modules/phantomjs/lib/phantom/bin/phantomjs';
 
-          // Look for local phantomjs first.
+          // Look for a phantomjs binary of the VM by default when no `--host`
+          // flag is passed to grunt
           if (fs.existsSync(localPhantomJS) &&
-              isBinaryFile.sync(localPhantomJS)) {
+              isBinaryFile.sync(localPhantomJS) &&
+              !!!grunt.option('host')) {
             return localPhantomJS;
+          }
+
+          if (!!grunt.option('host') && !hasbin.sync('phantomjs')) {
+            throw new Error(
+              'No global phantomjs binary found on your host machine.'
+            );
           }
 
           // Use global phantomjs if it's in $path
@@ -680,6 +690,9 @@ module.exports = function(grunt) {
 
   // Default task.
   grunt.registerTask('default', ['build', 'compile']);
+
+  // Task for running unit tests
+  grunt.registerTask('test', ['env:compile', 'karma']);
 
   // Do as little as possible to get Refinery running to keep grunt watch
   // responsive.
