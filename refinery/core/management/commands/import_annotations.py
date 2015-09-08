@@ -1,6 +1,6 @@
 import logging
-import sys
 import py2neo
+import sys
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import connection
@@ -12,7 +12,7 @@ class Command(BaseCommand):
     help = """Annotate available ontology terms with datasets.
     """
 
-    def query_db():
+    def query_db(self):
         cursor = connection.cursor()
 
         sql = """SELECT
@@ -86,7 +86,7 @@ class Command(BaseCommand):
             for row in cursor.fetchall()
         ]
 
-    def normalize_ont_ids(annotations):
+    def normalize_ont_ids(self, annotations):
         new_annotations = []
         for annotation in annotations:
             underscore_pos = annotation['value_accession'].rfind('_')
@@ -109,11 +109,13 @@ class Command(BaseCommand):
                 continue
         return new_annotations
 
-    def push_annotations_to_neo4j(annotations):
-        py2neo.authenticate(settings.NEO4J_BASE_URL)
+    def push_annotations_to_neo4j(self, annotations):
+        # We currently disabled authentication as Neo4J is only accessible
+        # locally.
+        # py2neo.authenticate(settings.NEO4J_BASE_URL)
 
         # Connects to `http://localhost:7474/db/data/` by default.
-        graph = py2neo.Graph()
+        graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
 
         # Begin transaction
         tx = graph.cypher.begin()
@@ -163,6 +165,6 @@ class Command(BaseCommand):
         tx.commit()
 
     def handle(self, *args, **options):
-        annotations = query_db()
-        annotations = normalize_ont_ids(annotations)
-        push_annotations_to_neo4j(annotations)
+        annotations = self.query_db()
+        annotations = self.normalize_ont_ids(annotations)
+        self.push_annotations_to_neo4j(annotations)
