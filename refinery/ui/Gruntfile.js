@@ -36,6 +36,10 @@ module.exports = function(grunt) {
   // flips its value.
   var spawn = !!!grunt.option('fast');
 
+  // Local testing starts all major browsers and can be invoked with `--local`.
+  var browsers = !!grunt.option('local') ?
+    ['PhantomJS', 'Chrome', 'Firefox', 'Safari'] : ['PhantomJS'];
+
   grunt.initConfig({
     /*
      * Add vendor prefixes to out CSS to ensure better browser support.
@@ -420,7 +424,8 @@ module.exports = function(grunt) {
      */
     karma: {
       options: {
-        configFile: 'karma.config.js'
+        configFile: 'karma.config.js',
+        browsers: browsers
       },
       unit: {
         port: 9019,

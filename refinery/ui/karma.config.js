@@ -67,7 +67,9 @@ module.exports = function(config) {
     plugins: [
       'karma-phantomjs-launcher',
       'karma-jasmine',
-      'karma-chrome-launcher'
+      'karma-chrome-launcher',
+      'karma-firefox-launcher',
+      'karma-safari-launcher'
     ],
 
     // start these browsers
