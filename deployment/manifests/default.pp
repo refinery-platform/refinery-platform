@@ -222,6 +222,12 @@ class neo4j {
     line => "dbms.security.auth_enabled=false",
     match => "^dbms.security.auth_enabled=",
   }
+  ->
+  file_line { "neo4j_all_ips":
+    path => "/opt/${neo4j_name}/conf/neo4j-server.properties",
+    line => "org.neo4j.server.webserver.address=0.0.0.0",
+    match => "^#org.neo4j.server.webserver.address=",
+  }
   limits::fragment {
     "vagrant/soft/nofile":
       value => "40000";
