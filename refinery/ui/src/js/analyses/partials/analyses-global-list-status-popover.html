@@ -10,15 +10,15 @@
   </div>
   <div ng-switch-default>
     <ul id="analyses-popover" ng-repeat ="analysis in analysesCtrl.analysesGlobalList track by $index">
-     <li>
-       &nbsp;
-      <span ng-switch on="analysis.status">
+      <li>
+        &nbsp;
+        <span ng-switch on="analysis.status">
           <span ng-switch-when="UNKNOWN">
              <div ng-if="(analysesCtrl.isAnalysesRunningGlobal())" class="analysis-running-percentage">
               &nbsp;
             </div>
             <div class="analyses-global-text-icon">
-              <i class="{{analysis.status | analysesStatusIcon}} analyses-status"></i>
+              <i class="{{analysis.status | analysisStatusIcon}} analyses-status"></i>
               &nbsp;
             </div>
             <div class="analyses-global-text">
@@ -54,7 +54,7 @@
               </div>
           </span>
         </span>
-     </li>
-  </ul>
+      </li>
+    </ul>
   </div>
 </div>
