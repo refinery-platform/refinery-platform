@@ -1,9 +1,10 @@
 import logging
 import py2neo
-import sys
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import connection
+from core.models import DataSet
+from itertools import chain
 
 logger = logging.getLogger(__name__)
 
@@ -164,7 +165,47 @@ class Command(BaseCommand):
         # Commit transaction
         tx.commit()
 
+    def push_users(self):
+        datasets = DataSet.objects.all()
+
+        graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+
+        tx = graph.cypher.begin()
+
+        statement_user = (
+            "MERGE (u:User {id:{id}})"
+        )
+
+        statement_user = (
+            "MERGE (u:User {id:{user_id}, name:{user_name}}) WITH u "
+            "MATCH (ds:DataSet {uuid:{ds_uuid}})"
+            "MERGE (ds)<-[:`read_access`]-(u)"
+        )
+
+        for dataset in datasets:
+            users = [dataset.get_owner()]
+            groups = dataset.get_groups()
+
+            # Collect all users per group
+            for group in groups:
+                users = list(chain(users, group['group'].user_set.all()))
+
+            for user in users:
+                tx.append(
+                    statement_user,
+                    {
+                        'user_id': user.id,
+                        'user_name': str(user),
+                        'ds_uuid': dataset.uuid
+                    }
+                )
+
+            tx.process()
+
+        tx.commit()
+
     def handle(self, *args, **options):
         annotations = self.query_db()
         annotations = self.normalize_ont_ids(annotations)
         self.push_annotations_to_neo4j(annotations)
+        self.push_users()
