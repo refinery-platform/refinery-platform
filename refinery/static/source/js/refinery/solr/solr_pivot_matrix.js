@@ -497,37 +497,41 @@ SolrPivotMatrix.prototype._generateFacetSelectionControls = function( parentElem
 	
 	var facets = self._query._facetSelection;
 	
-	pivot1List.push( "<option value=\"\"></option>" );
-	pivot2List.push( "<option value=\"\"></option>" );
-	
+	//pivot1List.push( "<option value=\"\"></option>" );
+	//pivot2List.push( "<option value=\"\"></option>" );
 	for ( facet in facets ) {
 		if ( facets.hasOwnProperty( facet ) ) {
-			
+
 			var facetValues = self._query.getNumberOfFacetValues( facet ).total;
-			
-			if ( self._facet1 === facet ) {
-				pivot1List.push( "<option selected value=\"" + facet + "\">" + prettifySolrFieldName( facet, true ) + " (" + facetValues + ")</option>" );
-			}
-			else {
-				pivot1List.push( "<option value=\"" + facet + "\">" + prettifySolrFieldName( facet, true ) + " (" + facetValues + ")</option>" );				
-			}
-			
-			if ( self._facet2 === facet ) {
-				pivot2List.push( "<option selected value=\"" + facet + "\">" + prettifySolrFieldName( facet, true ) + " (" + facetValues + ")</option>" );
-			}
-			else {
-				pivot2List.push( "<option value=\"" + facet + "\">" + prettifySolrFieldName( facet, true ) + " (" + facetValues + ")</option>" );				
+
+			if(facet.indexOf("ANALYSIS") > -1 || facet.indexOf("WORKFLOW_OUTPUT") > -1) {
+				facetValues = facetValues - 1;
+			}else{
+
+				if (self._facet1 === facet) {
+					pivot1List.push("<option selected value=\"" + facet + "\">" + prettifySolrFieldName(facet, true) + " (" + facetValues + ")</option>");
+				}
+				else {
+					pivot1List.push("<option value=\"" + facet + "\">" + prettifySolrFieldName(facet, true) + " (" + facetValues + ")</option>");
+				}
+
+				if (self._facet2 === facet) {
+					pivot2List.push("<option selected value=\"" + facet + "\">" + prettifySolrFieldName(facet, true) + " (" + facetValues + ")</option>");
+				}
+				else {
+					pivot2List.push("<option value=\"" + facet + "\">" + prettifySolrFieldName(facet, true) + " (" + facetValues + ")</option>");
+				}
 			}
 		}
 	}
-	
+
 	$( "#" + parentElementId ).html( "" );
 	
 	$( "<span/>", { "class": "refinery-facet-label", html: "Rows" } ).appendTo( "#" + parentElementId );	
 	$( "<select/>", { "class": "combobox", "id": "pivot_x1_choice", html: pivot1List.join("") } ).appendTo( "#" + parentElementId );	
 	$( "<span/>", { "style": "margin-left: 15px", "class": "refinery-facet-label", html: "Columns" } ).appendTo( "#" + parentElementId );	
 	$( "<select/>", { "class": "combobox", "id": "pivot_y1_choice", html: pivot2List.join("") } ).appendTo( "#" + parentElementId );
-		
+
 	// events on pivot dimensions
 	$( "#pivot_x1_choice" ).change( function( ) {
 		var pivot_x1 = this.value;
@@ -578,7 +582,7 @@ SolrPivotMatrix.prototype._generateMatrix = function( pivotCounts, facet1, facet
 	
 	// get lookup table for facets (mapping from facet value to facet value index)
 	var facetValue1Lookup = self._query.getFacetValueLookupTable( facet1 );		
-	var facetValue2Lookup = self._query.getFacetValueLookupTable( facet2 );		
+	var facetValue2Lookup = self._query.getFacetValueLookupTable( facet2 );
 
 	// make empty 2D array of the expected dimensions
 	var pivotMatrix = new Array( Object.keys( facetValue1Lookup ).length );
