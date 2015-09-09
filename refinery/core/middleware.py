@@ -5,9 +5,6 @@ from django.template import RequestContext
 
 from psycopg2 import OperationalError
 
-from core.models import  WorkflowEngine
-
-
 
 class DatabaseFailureMiddleware(object):
     def process_exception(self, request, exception):

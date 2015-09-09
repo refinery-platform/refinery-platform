@@ -14,7 +14,7 @@ from core.models import (
     ExtendedGroup, InvestigationLink, NodePair, NodeRelationship, NodeSet,
     Project, UserProfile, Workflow, WorkflowDataInput, WorkflowDataInputMap,
     WorkflowEngine, WorkflowFilesDL, WorkflowInputRelationships, Download,
-    Invitation #ExternalToolStatus
+    Invitation
 )
 
 
