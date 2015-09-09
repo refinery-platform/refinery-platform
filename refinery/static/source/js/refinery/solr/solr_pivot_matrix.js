@@ -425,8 +425,8 @@ SolrPivotMatrix.prototype.render = function ( solrResponse ) {
     t.selectAll(".row")
         .attr("transform", function(d, i) { return "translate(0," + y(i) + ")"; });
   }
-  
-  
+
+
   function orderColumns(order) {
     x.domain(order);
 
@@ -504,6 +504,8 @@ SolrPivotMatrix.prototype._generateFacetSelectionControls = function( parentElem
 
 			var facetValues = self._query.getNumberOfFacetValues( facet ).total;
 
+			//conditional is required because visibleFacets has incorrect
+			// isExposed attributes
 			if(facet.indexOf("ANALYSIS") > -1 || facet.indexOf("WORKFLOW_OUTPUT") > -1) {
 				facetValues = facetValues - 1;
 			}else{
@@ -528,7 +530,7 @@ SolrPivotMatrix.prototype._generateFacetSelectionControls = function( parentElem
 	$( "#" + parentElementId ).html( "" );
 	
 	$( "<span/>", { "class": "refinery-facet-label", html: "Rows" } ).appendTo( "#" + parentElementId );	
-	$( "<select/>", { "class": "combobox", "id": "pivot_x1_choice", html: pivot1List.join("") } ).appendTo( "#" + parentElementId );	
+	$( "<select/>", { "class": "combobox", "id": "pivot_x1_choice", html: pivot1List.join("") } ).appendTo( "#" + parentElementId );
 	$( "<span/>", { "style": "margin-left: 15px", "class": "refinery-facet-label", html: "Columns" } ).appendTo( "#" + parentElementId );	
 	$( "<select/>", { "class": "combobox", "id": "pivot_y1_choice", html: pivot2List.join("") } ).appendTo( "#" + parentElementId );
 

@@ -159,16 +159,32 @@
 
             for (var i = 0; i < configurator.state.objects.length; ++i) {
               var attribute = configurator.state.objects[i];
-
               if (attribute.is_facet && attribute.is_exposed && !attribute.is_internal) {
                 visibleFacets.push(attribute.solr_field);
               }
             }
 
-            pivotMatrixView.setFacet1(visibleFacets[0]);
-            pivotMatrixView.setFacet2(visibleFacets[1]);
-
-            query.setPivots(visibleFacets[0], visibleFacets[1])
+            var evenInd = 0;
+            var oddInd = 1;
+            //conditional is required because visibleFacets has incorrect
+            // isExposed attributes
+            while(evenInd <= visibleFacets.length - 1) {
+              if(!(visibleFacets[evenInd].indexOf("ANALYSIS") > -1 || visibleFacets[evenInd].indexOf("WORKFLOW_OUTPUT") > -1)) {
+                pivotMatrixView.setFacet1(visibleFacets[evenInd]);
+                break;
+              } else {
+                evenInd = evenInd + 2;
+              }
+            };
+            while(oddInd <= visibleFacets.length - 1){
+              if(!(visibleFacets[oddInd].indexOf("ANALYSIS") > -1 || visibleFacets[oddInd].indexOf("WORKFLOW_OUTPUT") > -1)) {
+                pivotMatrixView.setFacet2(visibleFacets[oddInd]);
+                break;
+              }else{
+                oddInd = oddInd + 1;
+              }
+            };
+         query.setPivots(visibleFacets[evenInd], visibleFacets[oddInd]);
           }
 
           client.run(query, SOLR_FULL_QUERY);
