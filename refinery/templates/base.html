@@ -113,15 +113,6 @@
         {% endif %}
         <i class="icon-signin"></i>&nbsp;<a rel="tooltip" data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
         {% endif %}
-          {% if request.user.is_superuser %}
-         	&nbsp;&nbsp;|&nbsp;&nbsp;
-         	<span ng-controller="ExternalToolStatusController"
-            id="external-tool-status-popover">
-                <a external-tool-status-popover title="External Tool Status">
-                    <span external-tool-status></span>
-                </a>
-            </span>
-          {% endif %}
         &nbsp;&nbsp;|&nbsp;&nbsp;
         <span ng-controller="AnalysesCtrl" id="analyses-popover">
           <a tabindex="0" rf-analyses-global-list-status-popover
@@ -178,9 +169,6 @@
   </div>
 
   <!-- Script for popup content in the tool status and analyses icon-->
-    <script type="text/ng-template" id="externaltool.html">
-        <external-tool-status-details-popover></external-tool-status-details-popover>
-    </script>
      <script type="text/ng-template" id="analysesgloballist.html">
         <rp-analyses-global-list-status-popover-details>
         </rp-analyses-global-list-status-popover-details>
@@ -221,7 +209,6 @@
   <script src="{% static "js/workflows.js" %}"></script>
   <script src="{% static "js/analysis.js" %}"></script>
   <script src="{% static "js/solr.js" %}"></script>
-  <script src="{% static "js/external-tool-status.js" %}"></script>
   <script src="{% static "js/data-set-nav.js" %}"></script>
   <script src="{% static "js/node_relationship.js" %}"></script>
   <script src="{% static "js/igv.js" %}"></script>

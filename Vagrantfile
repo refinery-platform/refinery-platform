@@ -28,7 +28,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 #    puts("INFO: Using host directory #{ENV['GALAXY_DATABASE_DIR']} to exchange data with Galaxy.")
     config.vm.synced_folder ENV['GALAXY_DATABASE_DIR'], ENV['GALAXY_DATABASE_DIR']
   else
-#   puts("WARNING: $GALAXY_DATABASE_DIR is not set: copying files from local Galaxy instance will not work.")
+    config.vm.provision :shell, :inline =>
+<<GALAXY_WARNING_SCRIPT
+    echo 1>&2 'WARNING: $GALAXY_DATABASE_DIR is not set: copying files from local Galaxy instance will not work.'
+GALAXY_WARNING_SCRIPT
   end
 
   # If you'd like to be able to copy data from your host into the VM, set

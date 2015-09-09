@@ -417,9 +417,11 @@ REFINERY_EXTERNAL_AUTH = get_setting("REFINERY_EXTERNAL_AUTH")
 # is set to True
 REFINERY_EXTERNAL_AUTH_MESSAGE = get_setting("REFINERY_EXTERNAL_AUTH_MESSAGE")
 
+"""
 # external tool status settings
 INTERVAL_BETWEEN_CHECKS = get_setting("INTERVAL_BETWEEN_CHECKS")
 TIMEOUT = get_setting("TIMEOUT")
+"""
 
 # Directory for custom libraries
 LIBS_DIR = get_setting("LIBS_DIR")

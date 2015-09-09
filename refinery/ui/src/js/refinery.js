@@ -25,7 +25,6 @@ angular
   'refineryNodeMapping',
   'refineryAnalysis',
   'refinerySolr',
-  'refineryExternalToolStatus',
   'refineryNodeRelationship',
   'refineryIgv',
   'refineryStatistics',
