@@ -239,7 +239,12 @@ SolrPivotMatrix.prototype.render = function ( solrResponse ) {
       		else {
       			facets[p[0].yfacet][p[0].ylab].isSelected = !facets[p[0].yfacet][p[0].ylab].isSelected;
       			
-      			self._commands.execute( SOLR_FACET_SELECTION_UPDATED_COMMAND, { 'facet': p[0].yfacet, 'value': p[0].ylab, 'isSelected': facets[p[0].yfacet][p[0].ylab].isSelected } ); 
+      			self._commands.execute( SOLR_FACET_SELECTION_UPDATED_COMMAND,
+							{
+								'facet': p[0].yfacet, 'value': p[0].ylab, 'isSelected':
+								facets[p[0].yfacet][p[0].ylab].isSelected
+							}
+						);
       		} 
       	}, true );
             
@@ -511,17 +516,21 @@ SolrPivotMatrix.prototype._generateFacetSelectionControls = function( parentElem
 			}else{
 
 				if (self._facet1 === facet) {
-					pivot1List.push("<option selected value=\"" + facet + "\">" + prettifySolrFieldName(facet, true) + " (" + facetValues + ")</option>");
+					pivot1List.push("<option selected value=\"" + facet + "\">" +
+						prettifySolrFieldName(facet, true) + " (" + facetValues + ")</option>");
 				}
 				else {
-					pivot1List.push("<option value=\"" + facet + "\">" + prettifySolrFieldName(facet, true) + " (" + facetValues + ")</option>");
+					pivot1List.push("<option value=\"" + facet + "\">" +
+						prettifySolrFieldName(facet, true) + " (" + facetValues + ")</option>");
 				}
 
 				if (self._facet2 === facet) {
-					pivot2List.push("<option selected value=\"" + facet + "\">" + prettifySolrFieldName(facet, true) + " (" + facetValues + ")</option>");
+					pivot2List.push("<option selected value=\"" + facet + "\">" +
+						prettifySolrFieldName(facet, true) + " (" + facetValues + ")</option>");
 				}
 				else {
-					pivot2List.push("<option value=\"" + facet + "\">" + prettifySolrFieldName(facet, true) + " (" + facetValues + ")</option>");
+					pivot2List.push("<option value=\"" + facet + "\">" +
+						prettifySolrFieldName(facet, true) + " (" + facetValues + ")</option>");
 				}
 			}
 		}
@@ -529,10 +538,25 @@ SolrPivotMatrix.prototype._generateFacetSelectionControls = function( parentElem
 
 	$( "#" + parentElementId ).html( "" );
 	
-	$( "<span/>", { "class": "refinery-facet-label", html: "Rows" } ).appendTo( "#" + parentElementId );	
-	$( "<select/>", { "class": "combobox", "id": "pivot_x1_choice", html: pivot1List.join("") } ).appendTo( "#" + parentElementId );
-	$( "<span/>", { "style": "margin-left: 15px", "class": "refinery-facet-label", html: "Columns" } ).appendTo( "#" + parentElementId );	
-	$( "<select/>", { "class": "combobox", "id": "pivot_y1_choice", html: pivot2List.join("") } ).appendTo( "#" + parentElementId );
+	$( "<span/>",
+		{
+			"class": "refinery-facet-label", html: "Rows"
+		}
+	).appendTo( "#" + parentElementId );
+	$( "<select/>",
+		{
+			"class": "combobox", "id": "pivot_x1_choice", html: pivot1List.join("")
+		}
+	).appendTo( "#" + parentElementId );
+	$( "<span/>",
+		{ "style": "margin-left: 15px", "class": "refinery-facet-label", html: "Columns"
+		}
+	).appendTo( "#" + parentElementId );
+	$( "<select/>",
+		{
+			"class": "combobox", "id": "pivot_y1_choice", html: pivot2List.join("")
+		}
+	).appendTo( "#" + parentElementId );
 
 	// events on pivot dimensions
 	$( "#pivot_x1_choice" ).change( function( ) {
@@ -595,7 +619,15 @@ SolrPivotMatrix.prototype._generateMatrix = function( pivotCounts, facet1, facet
 		pivotMatrix[i] = new Array( Object.keys( facetValue2Lookup ).length );
 		
 		for ( var j = 0; j < pivotMatrix[i].length; ++j ) {
-			pivotMatrix[i][j] = { x: j, y: i, xlab: Object.keys( facetValue2Lookup )[j], xfacet: self._facet2, ylab: Object.keys( facetValue1Lookup )[i], yfacet: self._facet1, count: 0 };
+			pivotMatrix[i][j] =
+			{
+				x: j,
+				y: i,
+				xlab: Object.keys( facetValue2Lookup )[j],
+				xfacet: self._facet2,
+				ylab: Object.keys( facetValue1Lookup )[i],
+				yfacet: self._facet1, count: 0
+			};
 		}
 	}
 			

@@ -169,7 +169,9 @@
             //conditional is required because visibleFacets has incorrect
             // isExposed attributes
             while(evenInd <= visibleFacets.length - 1) {
-              if(!(visibleFacets[evenInd].indexOf("ANALYSIS") > -1 || visibleFacets[evenInd].indexOf("WORKFLOW_OUTPUT") > -1)) {
+              if(!(visibleFacets[evenInd].indexOf("ANALYSIS") > -1 ||
+                visibleFacets[evenInd].indexOf("WORKFLOW_OUTPUT") > -1))
+              {
                 pivotMatrixView.setFacet1(visibleFacets[evenInd]);
                 break;
               } else {
@@ -177,10 +179,12 @@
               }
             };
             while(oddInd <= visibleFacets.length - 1){
-              if(!(visibleFacets[oddInd].indexOf("ANALYSIS") > -1 || visibleFacets[oddInd].indexOf("WORKFLOW_OUTPUT") > -1)) {
+              if(!(visibleFacets[oddInd].indexOf("ANALYSIS") > -1 ||
+                visibleFacets[oddInd].indexOf("WORKFLOW_OUTPUT") > -1))
+              {
                 pivotMatrixView.setFacet2(visibleFacets[oddInd]);
                 break;
-              }else{
+              } else {
                 oddInd = oddInd + 1;
               }
             };
