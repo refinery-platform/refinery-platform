@@ -239,10 +239,10 @@ include neo4j
 
 class owl2neo4j {
   $owl2neo4j_version = "0.2.0"
-  $owl2neo4j_url = "https://github.com/flekschas/owl2neo4j/releases/download/v${neo4j_version}/owl2neo4j.jar"
+  $owl2neo4j_url = "https://github.com/flekschas/owl2neo4j/releases/download/v${owl2neo4j_version}/owl2neo4j.jar"
 
-  exec { "neo4j_wget":
-    command => "wget ${neo4j_url} -P /opt/",
+  exec { "owl2neo4j_wget":
+    command => "wget ${owl2neo4j_url} -P /opt/",
     creates => "/opt/owl2neo4j",
     path => "/usr/bin:/bin",
     timeout => 120,  # downloading can take some time
