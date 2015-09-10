@@ -39,7 +39,7 @@
   "ISA_TAB_DIR": "/vagrant/isa-tab",
   "JAVA_ENTITY_EXPANSION_LIMIT": 100000,
   "LANGUAGE_CODE": "en-us",
-  "LIBS_DIR": "/vagrant/libs",
+  "LIBS_DIR": "/opt",
   "LOG_LEVEL": "DEBUG",
   "MEDIA_ROOT": "",
   "MEDIA_URL": "/media/",
