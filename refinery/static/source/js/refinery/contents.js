@@ -156,7 +156,6 @@
           if (pivotMatrixView.getFacet1() === undefined && pivotMatrixView.getFacet2() === undefined) {
 
             var visibleFacets = [];
-
             for (var i = 0; i < configurator.state.objects.length; ++i) {
               var attribute = configurator.state.objects[i];
               if (attribute.is_facet && attribute.is_exposed && !attribute.is_internal) {
@@ -185,7 +184,7 @@
                 pivotMatrixView.setFacet2(visibleFacets[oddInd]);
                 break;
               } else {
-                oddInd = oddInd + 1;
+                oddInd = oddInd + 2;
               }
             };
          query.setPivots(visibleFacets[evenInd], visibleFacets[oddInd]);
