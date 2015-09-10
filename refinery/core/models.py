@@ -526,19 +526,6 @@ class WorkflowEngine (OwnableResource, ManageableResource):
         )
 
 
-@receiver(post_delete, sender=WorkflowEngine)
-def delete_associated_externaltoolstatus(sender, instance, **kwargs):
-    try:
-        externaltool = ExternalToolStatus.objects.get(
-            unique_instance_identifier=instance.instance.api_key
-        )
-        externaltool.delete()
-    except:
-        logger.error(
-            "There's no ExternalToolStatus with the unique instance identifier"
-        )
-
-
 class DiskQuota(SharableResource, ManageableResource):
     # quota is given in bytes
     maximum = models.IntegerField()
@@ -1181,78 +1168,6 @@ class RefineryLDAPBackend(LDAPBackend):
                     email_address_list, e
                 )
         return user, created
-
-
-class ExternalToolStatus(models.Model):
-    """Model to keep track of the status of external tools Refinery uses"""
-    SUCCESS_STATUS = "SUCCESS"
-    FAILURE_STATUS = "FAILURE"
-    UNKNOWN_STATUS = "UNKNOWN"
-    TIMEOUT_STATUS = "TIMEOUT"
-    STATUS_CHOICES = (
-        (
-            SUCCESS_STATUS,
-            "Tool is running"
-        ),
-        (
-            FAILURE_STATUS,
-            "Tool is not running"
-        ),
-        (
-            UNKNOWN_STATUS,
-            "Cannot reach tool"
-        ),
-        (
-            TIMEOUT_STATUS,
-            "It's been too long since the database was last updated"
-        ),
-    )
-    '''If adding a new tool, user needs to fill out TOOL_NAME,
-    INTERVAL_BETWEEN_CHECKS,
-    TIMEOUT, STATUS_CHOICES, and TOOL_NAME_CHOICES in core/models.py
-    '''
-    CELERY_TOOL_NAME = "CELERY"
-    SOLR_TOOL_NAME = "SOLR"
-    GALAXY_TOOL_NAME = "GALAXY"
-
-    TOOL_NAME_CHOICES = (
-        (CELERY_TOOL_NAME, "Celery"),
-        (SOLR_TOOL_NAME, "Solr"),
-        (GALAXY_TOOL_NAME, "Galaxy")
-    )
-    # default values for interval between checks and timeouts
-    INTERVAL_BETWEEN_CHECKS = {
-        CELERY_TOOL_NAME: 4.0,
-        SOLR_TOOL_NAME: 5.0,
-        GALAXY_TOOL_NAME: 5.0,
-    }
-    TIMEOUT = {
-        CELERY_TOOL_NAME: 1.5,
-        SOLR_TOOL_NAME: 2.5,
-        GALAXY_TOOL_NAME: 2.0,
-    }
-    for k, v in settings.INTERVAL_BETWEEN_CHECKS.iteritems():
-        INTERVAL_BETWEEN_CHECKS[k] = v
-    for k, v in settings.TIMEOUT.iteritems():
-        TIMEOUT[k] = v
-
-    status = models.TextField(default=UNKNOWN_STATUS, choices=STATUS_CHOICES,
-                              blank=True, null=True)
-    last_time_check = models.DateTimeField(auto_now_add=True)
-    name = models.TextField(choices=TOOL_NAME_CHOICES, blank=True, null=True)
-    unique_instance_identifier = models.CharField(max_length=256, blank=True,
-                                                  null=True, default=None)
-    is_active = models.BooleanField(default=True)
-
-    def __unicode__(self):
-        retstr = self.name
-        if self.unique_instance_identifier:
-            retstr += " (%s)" % self.unique_instance_identifier
-        retstr += ": %s" % self.status
-        return retstr
-
-    class Meta:
-        unique_together = ('name', 'unique_instance_identifier')
 
 
 class ResourceStatistics(object):
