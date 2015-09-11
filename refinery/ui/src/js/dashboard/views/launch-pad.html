@@ -54,15 +54,21 @@
           </div>
           <div
             class="refinery-notification-alert"
-            ng-show="dashboard.dataSets.total === 0 && dashboard.searchQueryDataSets.length > 1">
+            ng-show="dashboard.dataSets.total === 0 && dashboard.searchQueryDataSets.length > 1 && !dashboard.dataSets.error">
             <strong>No luck!</strong>
             No data sets found.
           </div>
           <div
             class="refinery-notification-info"
-            ng-show="dashboard.dataSets.total === 0 && dashboard.searchQueryDataSets.length === 0">
+            ng-show="dashboard.dataSets.total === 0 && dashboard.searchQueryDataSets.length === 0 && !dashboard.dataSets.error">
             <strong>Info</strong>
             No data sets available.
+          </div>
+          <div
+            class="refinery-notification-error"
+            ng-show="dashboard.searchQueryDataSets.length > 1 && dashboard.dataSets.error">
+            <strong>Error</strong>
+            Something when wrong! Please contact the admin.
           </div>
         </div>
         <div class="floatbox">

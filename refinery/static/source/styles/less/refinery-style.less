@@ -327,9 +327,39 @@ a.analysis-header{
   color: black;
 }
 
+#view-selector-div {
+  float:right;
+  display: block;
+  #label-display{
+    dispaly: inline;
+    float:left;
+    margin-top: 3px;
+    margin-right: 5px;
+  }
+  #s2id_view-selector{
+    width:100px;
+  }
+  .view-selector {
+    display: inline;
+    float: left;
+  }
+  #help-view-selector-button{
+    height: 20px;
+    width: 20px;
+    .icon-question-sign{
+      font-size: 20px;
+      margin-left: 5px;
+      margin-right: 0px;
+      position: relative;
+      top: 5px;
+    }
+  }
+}
+
 @media (max-width: 760px) {
    #textToolStatus{
     width: 100%;
+
     heigth: 200px;
   }
 
@@ -1274,6 +1304,11 @@ a.analysis-header{
     color: @yellow;
     background: mix(@yellow, @white, 5%);
     border-bottom: 1px solid darken(mix(@yellow, @white, 5%), 5%);
+  }
+  .refinery-notification-error {
+    color: @red;
+    background: mix(@red, @white, 5%);
+    border-bottom: 1px solid darken(mix(@red, @white, 5%), 5%);
   }
   .refinery-notification-info {
     color: @blue;

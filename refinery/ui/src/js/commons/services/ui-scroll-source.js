@@ -235,6 +235,17 @@ angular
           },
 
           /**
+           * Used to indicate some internal server error, which usually happens
+           * when Solr is down.
+           *
+           * @author  Fritz Lekschas
+           * @date    2015-09-11
+           *
+           * @type  {Boolean}
+           */
+          error: false,
+
+          /**
            * Object holding a set of extra parameters for querying the data
            * source.
            *
@@ -326,6 +337,12 @@ angular
            *   id `id`.
            */
           newOrCachedCache: function (id, reset) {
+            // Reset the error to false to re-evaluate once a new search is
+            // being triggered.
+            if (!id) {
+              this.error = false;
+            }
+
             id = id || this.cache.defaultId;
 
             // Cache current cache store.
@@ -390,8 +407,9 @@ angular
               }.bind(this))
               // Error
               .catch(function (error) {
-                success(results);
-              });
+                this.error = true;
+                success([]);
+              }.bind(this));
           },
 
           /**
@@ -408,10 +426,10 @@ angular
             id = id || this.cache.defaultId;
 
             if (!id) {
-
               // Remove all cached caches
               cacheStore.removeAll();
             }
+
             // Initialize a cache again
             this.cache.initialize();
           },

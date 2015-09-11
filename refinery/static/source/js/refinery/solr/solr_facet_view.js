@@ -205,63 +205,74 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 		}											
 	}	
 
-	for ( var facet in facetCounts ) {
+	var visibleFacetCount = 0;
+	for (var facet in facetCounts) {
 
-		if ( facetCounts.hasOwnProperty( facet ) ) {
-			var unselectedItems = [];
-			var selectedItems = [];
-			
-			var facetValues = facetCounts[facet];
-			
-			for ( var facetValue in facetValues ) {
-				if ( facetValues.hasOwnProperty( facetValue ) ) {
-					
-					var facetValueCount = facetValues[facetValue];
-					
-					if ( ( facetValue === "" ) || ( facetValue === undefined ) ) {
-						facetValue = "undefined";
-					}
-					
-					if ( self._query._facetSelection[facet][facetValue] === undefined ) {					
-						self._query._facetSelection[facet][facetValue] = { count: 0, isSelected: false };
-					}
+			if (facetCounts.hasOwnProperty(facet)) {
+				visibleFacetCount = visibleFacetCount + 1;
+				var unselectedItems = [];
+				var selectedItems = [];
 
-					if ( self._query._facetSelection[facet][facetValue].isSelected ) {						
-						self._query._facetSelection[facet][facetValue] = { count: facetValueCount,
-							isSelected: self._query._facetSelection[facet][facetValue].isSelected };
-						
-			    		selectedItems.push("<tr class=\"facet-value\" id=\"" +
-								self._composeFacetValueId( facet, facetValue ) + "\"><td>" +
+				var facetValues = facetCounts[facet];
+
+				for (var facetValue in facetValues) {
+					if (facetValues.hasOwnProperty(facetValue)) {
+
+						var facetValueCount = facetValues[facetValue];
+
+						if (( facetValue === "" ) || ( facetValue === undefined )) {
+							facetValue = "undefined";
+						}
+
+						if (self._query._facetSelection[facet][facetValue] === undefined) {
+							self._query._facetSelection[facet][facetValue] = {
+								count: 0,
+								isSelected: false
+							};
+						}
+
+						if (self._query._facetSelection[facet][facetValue].isSelected) {
+							self._query._facetSelection[facet][facetValue] = {
+								count: facetValueCount,
+								isSelected: self._query._facetSelection[facet][facetValue].isSelected
+							};
+
+							selectedItems.push("<tr class=\"facet-value\" id=\"" +
+								self._composeFacetValueId(facet, facetValue) + "\"><td>" +
 								'<label class="checkbox"><input type="checkbox" checked></label>' +
 								"</td><td width=100%>" + facetValue + "</td><td align=right>" +
-								facetValueCount + "</td>"  + "</tr>" );
-		    			unselectedItems.push("<tr class=\"facet-value\" id=\"" +
-								self._composeFacetValueId( facet, facetValue ) + "\"><td>" +
+								facetValueCount + "</td>" + "</tr>");
+							unselectedItems.push("<tr class=\"facet-value\" id=\"" +
+								self._composeFacetValueId(facet, facetValue) + "\"><td>" +
 								'<label class="checkbox"><input type="checkbox" checked></label>' +
 								"</td><td width=100%>" + facetValue + "</td><td align=right>" +
-								facetValueCount + "</td>"  + "</tr>" );
+								facetValueCount + "</td>" + "</tr>");
+						}
+						else {
+							self._query._facetSelection[facet][facetValue] = {
+								count: facetValueCount,
+								isSelected: self._query._facetSelection[facet][facetValue].isSelected
+							};
+
+							unselectedItems.push("<tr class=\"facet-value\" id=\"" +
+								self._composeFacetValueId(facet, facetValue) + "\"><td>" +
+								'<label class="checkbox"><input type="checkbox"></label>' +
+								"</td><td width=100%>" + facetValue + "</td><td align=right>" +
+								facetValueCount + "</td><td></td>" + "</tr>");
+						}
 					}
-					else {
-						self._query._facetSelection[facet][facetValue] = {
-							count: facetValueCount,
-							isSelected: self._query._facetSelection[facet][facetValue].isSelected
-						};
-						
-						unselectedItems.push("<tr class=\"facet-value\" id=\"" +
-							self._composeFacetValueId( facet, facetValue ) + "\"><td>" +
-							'<label class="checkbox"><input type="checkbox"></label>' +
-							"</td><td width=100%>" + facetValue + "</td><td align=right>" +
-							facetValueCount + "</td><td></td>"  + "</tr>" );
-					}										
-				}			
+				}
+
+				$("#" + self._composeFacetId(facet + "___active"))
+					.html("<table class=\"\"><tbody>" + selectedItems.join('') + "</tbody></table>");
+				$("#" + self._composeFacetId(facet + "___inactive"))
+					.html("<table class=\"\"><tbody>" + unselectedItems.join('') + "</tbody></table>");
 			}
-			
-			$( "#" + self._composeFacetId( facet + "___active" ) )
-				.html( "<table class=\"\"><tbody>" + selectedItems.join('') + "</tbody></table>" );
-			$( "#" + self._composeFacetId( facet + "___inactive" ) )
-				.html( "<table class=\"\"><tbody>" + unselectedItems.join('') + "</tbody></table>" );
-		}		
-    }
+		}
+
+	if(visibleFacetCount === 0) {
+		$('#solr-facet-view').text("No attribute filters available.");
+	}
 }
 
 SolrFacetView.prototype._countFacetValues = function( keyName, facetObj ) {

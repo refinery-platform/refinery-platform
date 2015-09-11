@@ -305,15 +305,15 @@
                           {% endfor %}
                         {% endif %}
 
-                        <div style="float:right; display: block;">
-                          <label style="dispaly: inline; float:left; margin-top: 3px; margin-right: 5px;">Display </label>
-                          <select id="view-selector" style="display: inline; float:left;">
+                        <div id="view-selector-div">
+                          <label id="label-display">Display </label>
+                          <select id="view-selector">
                             <option value="table-view-tab">Table</option>
                             <option value="pivot-view-tab">Matrix</option>
                             <option value="provenance-view-tab">Provenance</option>
                           </select>
-                          <a href="#" id="help-view-selector-button" style="height: 20px; width: 20px;">
-                            <i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 0px; position: relative; top: 5px;"></i>
+                          <a href="#" id="help-view-selector-button">
+                            <i class="icon-question-sign"></i>
                           </a>
                         </div>
 
