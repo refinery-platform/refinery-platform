@@ -524,7 +524,12 @@ def run(request):
 
         # ANALYSIS MODEL
         # How to create a simple analysis object
-        temp_name = curr_workflow.name + " " + str(datetime.now())
+        if not custom_name:
+            temp_name = curr_workflow.name + " " + datetime.now().strftime(
+                "%Y-%m-%d @ %H:%M:%S")
+        else:
+            temp_name = custom_name
+
         summary_name = "None provided."
 
         analysis = Analysis(
