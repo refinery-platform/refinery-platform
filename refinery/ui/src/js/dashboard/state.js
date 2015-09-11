@@ -8,7 +8,7 @@ angular
         .state(
           'launchPad',
           {
-            url: '/',
+            url: '/?q',
             templateUrl: '/static/partials/dashboard/views/launch-pad.html',
             controller: 'LaunchPadCtrl as launchPad'
           },

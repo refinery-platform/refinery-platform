@@ -152,9 +152,13 @@ function DashboardCtrl (
     this.dataSetPreviewBorder = false;
   }.bind(this));
 
-  $rootScope.$on('$stateChangeSuccess', function () {
+  $rootScope.$on('$stateChangeSuccess', function (event, toState, toParams) {
     $timeout(window.sizing, 0);
-  });
+    if (toParams.q) {
+      this.searchQueryDataSets = toParams.q;
+      this.setDataSetSource(toParams.q);
+    }
+  }.bind(this));
 
   this.analysesSorting = settings.dashboard.analysesSorting;
   this.dataSetsSorting = settings.dashboard.dataSetsSorting;
@@ -417,6 +421,17 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
   var that = this;
 
   this.showFilterSort = false;
+
+  this.$state.transitionTo(
+    this.$state.current,
+    {
+      q: searchQuery ? searchQuery : null
+    },
+    {
+      reload: false,
+      notify: false
+    }
+  );
 
   if (searchQuery) {
     if (searchQuery.length > 1) {
