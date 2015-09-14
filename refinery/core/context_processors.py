@@ -14,7 +14,7 @@ from django.contrib.sites.models import Site
 def extra_context(context):
     """return values you want as a dictionary"""
     return {
-        "ADMINS":settings.ADMINS[0][1],
+        "ADMINS" : settings.ADMINS[0][1],
         "REFINERY_CSS": settings.REFINERY_CSS,
         "REFINERY_MAIN_LOGO": settings.REFINERY_MAIN_LOGO,
         "REFINERY_INNER_NAVBAR_HEIGHT": settings.REFINERY_INNER_NAVBAR_HEIGHT,
