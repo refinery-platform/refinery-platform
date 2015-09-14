@@ -298,6 +298,7 @@ DataSetConfigurator.prototype.getState = function( callback ) {
      type: "GET",
      dataType: "json",
      data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
+
      success: function( result ) {
 	     	if ( $.isEmptyObject( result ) ) {
 	     		// do nothing
@@ -305,7 +306,6 @@ DataSetConfigurator.prototype.getState = function( callback ) {
 	     	}
 
 	     	self.state = result;
-
 			// callback
 			callback( result );
     	}

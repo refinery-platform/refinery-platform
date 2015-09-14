@@ -36,6 +36,8 @@ class WorkflowEngineAdmin(GuardedModelAdmin):
 
 class DataSetAdmin(GuardedModelAdmin):
     readonly_fields = ('uuid',)
+    list_display = ['id', '__unicode__', 'get_owner_username', 'file_size', 'file_count', 'accession', 'accession_source', 'title', 'uuid',
+                    'get_version', 'get_version_details', 'get_investigation']
 
 
 class InvestigationLinkAdmin(GuardedModelAdmin):
