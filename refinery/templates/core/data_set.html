@@ -695,6 +695,8 @@
     var dataSetUuid = "{{ data_set.uuid }}";
     var analysisUuid = "{{ analysis_uuid }}";
 
+    document.write("<input id='ADMIN_EMAIL' type='hidden' value='{{ ADMINS }}'>")
+
     {% if REFINERY_REPOSITORY_MODE %}
       var REFINERY_REPOSITORY_MODE = true;
     {% else %}

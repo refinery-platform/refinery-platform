@@ -17,7 +17,6 @@
 SOLR_ERROR_TRIGGER = 0;
 SOLR_QUERY_INITIALIZED_COMMAND = 'solr_query_initialized';
 SOLR_QUERY_UPDATED_COMMAND = 'solr_query_updated';
-
 SolrClient = function( apiBaseUrl, apiEndpoint, crsfMiddlewareToken, baseQuery, baseFilter, commands ) {
   	var self = this;
 
@@ -61,6 +60,7 @@ SolrClient.prototype.initialize = function ( query, resetQuery, callback ) {
 
 		statusCode: {
         500: function() {
+
 			SOLR_ERROR_TRIGGER += 1;
 			if (SOLR_ERROR_TRIGGER > 1){
 				bootbox.alert(
@@ -69,8 +69,11 @@ SolrClient.prototype.initialize = function ( query, resetQuery, callback ) {
            	 	"It looks one or more services are not running." +
             	"</p>" +
 				"<p>" +
-				"Please contact your system administrator." +
-				"</p>"
+				"Please contact your " +
+				"<a href='mailto:" +
+				document.getElementById("ADMIN_EMAIL").value +
+				"?Subject=Refinery%20Error' target='_top'>System Administrator</a>" +
+				".</p>"
         );
 			}
 
@@ -116,8 +119,11 @@ SolrClient.prototype.run = function ( query, queryComponents, callback ) {
            	 	"It looks one or more services are not running." +
             	"</p>" +
 				"<p>" +
-				"Please contact your system administrator." +
-				"</p>"
+				"Please contact your " +
+				"<a href='mailto:" +
+				document.getElementById("ADMIN_EMAIL").value +
+				"?Subject=Refinery%20Error' target='_top'>System Administrator</a>" +
+				".</p>"
         );
 
 			}
