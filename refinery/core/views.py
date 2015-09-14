@@ -554,9 +554,7 @@ def solr_select(request, core):
     url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
     data = request.GET.urlencode()
     req = urllib2.Request(url, data)  # {'Content-Type': 'application/json'})
-
     f = urllib2.urlopen(req)
-
     response = f.read()
     f.close()
     return HttpResponse(response, mimetype='application/json')

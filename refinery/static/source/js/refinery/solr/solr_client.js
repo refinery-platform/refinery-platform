@@ -14,7 +14,7 @@
  * Dependencies:
  * - SolrQuery
  */
-SOLR_ERROR_TRIGGER = 0;
+
 SOLR_QUERY_INITIALIZED_COMMAND = 'solr_query_initialized';
 SOLR_QUERY_UPDATED_COMMAND = 'solr_query_updated';
 
@@ -57,44 +57,23 @@ SolrClient.prototype.initialize = function ( query, resetQuery, callback ) {
 	var self = this;	
 	var url = self._createBaseUrl( query.getDocumentIndex(), query.getDocumentIndex() + 1 ) + query.create( SOLR_FILTER_QUERY );
 		
-	$.ajax( { type: "GET", dataType: "jsonp", url: url,
-
-		statusCode: {
-        500: function() {
-			SOLR_ERROR_TRIGGER += 1;
-			if (SOLR_ERROR_TRIGGER > 1){
-				bootbox.alert(
-            	"<h3 style='color:red;'>Error: 500</h3>" +
-            	"<p>" +
-           	 	"It looks like <b>Solr</b> is down!" +
-            	"</p>" +
-				"<p>" +
-				new Date().toString() +
-				"</p>"
-        );
-			}
-
-        }
-		},
-
-		success: function(data) {
-
-			if (resetQuery) {
-				query.initialize();
-			}
-
-			query.setTotalDocumentCount(data.response.numFound);
-			query.setCurrentDocumentCount(data.response.numFound);
-
-			self._commands.execute(SOLR_QUERY_INITIALIZED_COMMAND, {'query': query});
-
-			if (typeof callback !== 'undefined') {
-				callback(query);
-			}
+	$.ajax( { type: "GET", dataType: "jsonp", url: url, success: function(data) {
+		
+		if ( resetQuery ) {
+			query.initialize();			
 		}
+		
+		query.setTotalDocumentCount( data.response.numFound );
+		query.setCurrentDocumentCount( data.response.numFound );
 
-	});
+		self._commands.execute( SOLR_QUERY_INITIALIZED_COMMAND, { 'query': query } );
+								
+		if ( typeof callback !== 'undefined' ) {						
+			callback( query );
+		}
+	}});
 };
+
 
 /*
  * Executes a DataSetSolrQuery: can be a DATA_SET_FULL_QUERY or a DATA_SET_PIVOT_QUERY or any other combination 
@@ -104,41 +83,19 @@ SolrClient.prototype.run = function ( query, queryComponents, callback ) {
 	var self = this;	
 	var url = self.createUrl( query, queryComponents );
 		
-	$.ajax( { type: "GET", dataType: "jsonp", url: url,
-
-		statusCode: {
-        500: function() {
-			if (SOLR_ERROR_TRIGGER == 0) {
-
-        	bootbox.alert(
-            	"<h3 style='color:red;'>Error: 500</h3>" +
-            	"<p>" +
-           	 	"It looks like <b>Solr</b> is down!" +
-            	"</p>" +
-				"<p>" +
-				new Date().toString() +
-				"</p>"
-        );
-
-			}
-        }
-    },
-
-		success: function(data) {
+	$.ajax( { type: "GET", dataType: "jsonp", url: url, success: function(data) {
 				
-			var response = new SolrResponse( query );
-			response.initialize( data );
+		var response = new SolrResponse( query );		
+		response.initialize( data );
+		
+		query.setCurrentDocumentCount( data.response.numFound );
+		
+		self._commands.execute( SOLR_QUERY_UPDATED_COMMAND, { 'query': query, 'response': response } );
 
-			query.setCurrentDocumentCount( data.response.numFound );
-
-			self._commands.execute( SOLR_QUERY_UPDATED_COMMAND, { 'query': query, 'response': response } );
-
-			if ( typeof callback !== 'undefined' ) {
-				callback(response);
-			}
+		if ( typeof callback !== 'undefined' ) {				
+			callback( response );
 		}
-
-	});
+	}});		
 };
 
 

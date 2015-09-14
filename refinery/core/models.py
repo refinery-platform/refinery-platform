@@ -206,9 +206,6 @@ class OwnableResource (BaseResource):
         else:
             return "(no owner assigned)"
 
-    #Specify Column Title in Admin interface
-    get_owner_username.short_description = 'Owner username'
-
     def get_owner_full_name(self):
         owner = self.get_owner()
         if owner:
@@ -371,10 +368,8 @@ class DataSet(SharableResource):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
         )
-        ordering = ('id', 'name') # sort by id then name.
 
     def __unicode__(self):
-
         return (self.name + " - " +
                 self.get_owner_username() + " - " +
                 self.summary)
