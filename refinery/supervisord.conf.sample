@@ -5,7 +5,7 @@
 
 [supervisord]
 logfile = %(here)s/log/supervisord.log
-logfile_maxbytes = 1MB
+logfile_maxbytes = 5MB
 logfile_backups = 4
 pidfile = /tmp/supervisord.pid
 nocleanup = true
@@ -27,7 +27,7 @@ supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 command = java -Dlog4j.configuration=file://%(here)s/solr/log4j.properties -Djava.awt.headless=true -Dsolr.solr.home=%(here)s/solr/ -jar start.jar
 directory = /opt/solr/example
 stdout_logfile = %(here)s/log/solr.log
-stdout_logfile_maxbytes = 1MB
+stdout_logfile_maxbytes = 5MB
 stdout_logfile_backups = 4
 redirect_stderr = true
 autostart = true
@@ -51,7 +51,7 @@ priority = 995
 command = python %(here)s/manage.py celeryd -c 4 -Q celery --events
 environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
 stdout_logfile = %(here)s/log/celeryd-w1.log
-stdout_logfile_maxbytes = 1MB
+stdout_logfile_maxbytes = 5MB
 stdout_logfile_backups = 4
 redirect_stderr = true
 autostart = true
@@ -69,7 +69,7 @@ priority = 995
 command = python %(here)s/manage.py celeryd -c 1 -Q file_import --events
 environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
 stdout_logfile = %(here)s/log/celeryd-w2.log
-stdout_logfile_maxbytes = 1MB
+stdout_logfile_maxbytes = 5MB
 stdout_logfile_backups = 4
 redirect_stderr = true
 autostart = true
@@ -86,7 +86,7 @@ priority = 995
 command = python %(here)s/manage.py celerycam
 environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
 stdout_logfile = %(here)s/log/celerycam.log
-stdout_logfile_maxbytes = 1MB
+stdout_logfile_maxbytes = 5MB
 stdout_logfile_backups = 4
 redirect_stderr = true
 autostart = true
@@ -98,7 +98,7 @@ priority= 994
 command = python %(here)s/manage.py celerybeat
 environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
 stdout_logfile = %(here)s/log/celerybeat.log
-stdout_logfile_maxbytes = 1MB
+stdout_logfile_maxbytes = 5MB
 stdout_logfile_backups = 4
 redirect_stderr = true
 autostart = true
@@ -110,7 +110,7 @@ priority= 996
 command = python %(here)s/manage.py runserver 0.0.0.0:8000 --noreload
 environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
 stdout_logfile = %(here)s/log/refinery.log
-stdout_logfile_maxbytes = 1MB
+stdout_logfile_maxbytes = 5MB
 stdout_logfile_backups = 4
 redirect_stderr = true
 autostart = true
