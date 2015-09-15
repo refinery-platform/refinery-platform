@@ -374,10 +374,6 @@ class DataSet(SharableResource):
                 self.get_owner_username() + " - " +
                 self.summary)
 
-    def save(self, *args, **kwargs):
-        super(DataSet, self).save(*args, **kwargs)
-        update_data_set_index(self)
-
     def delete(self, *args, **kwargs):
         delete_data_set_index(self)
         super(DataSet, self).delete(*args, **kwargs)
