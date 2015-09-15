@@ -179,11 +179,6 @@
                 </a>
               </li>
             <li ui-sref-active="active">
-              <a ui-sref="downloads" class="dataSetTabs">
-                Downloads
-              </a>
-            </li>
-            <li ui-sref-active="active">
               <a ui-sref="details" class="dataSetTabs" >
                 Details
               </a>
@@ -471,26 +466,6 @@
               <div class="row-fluid">
                 <analyses-list></analyses-list>
               </div>
-            </p>
-          </div>
-
-          <div class="dataSetTabContent ng-cloak" id="downloads">
-            <div class="refinery-header">
-              <span class="refinery-header-left"><h3>Downloads</h3></span>
-            </div>
-            <p>
-              {% if data_set.download_set.all|length > 0 %}
-                {% for download in data_set.download_set.all %}
-                  <a href="{{download.file_store_item.get_full_url}}">
-                    {{ download.name }}
-                  </a>
-                  ({{ download.file_store_item.get_file_size|filesizeformat }})
-                  <br/>
-                {% endfor %}
-              {% else %}
-                None.<br>
-                  <i>Any downloads associated with this data set would be shown here.</i>
-              {% endif %}
             </p>
           </div>
 
