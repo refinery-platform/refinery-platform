@@ -71,7 +71,7 @@ SolrClient.prototype.initialize = function ( query, resetQuery, callback ) {
 				"<p>" +
 				"Please contact your " +
 				"<a href='mailto:" +
-				document.getElementById("ADMIN_EMAIL").value +
+				window.refineryAdminMail +
 				"?Subject=Refinery%20Error' target='_top'>System Administrator</a>" +
 				".</p>"
         );
@@ -121,7 +121,7 @@ SolrClient.prototype.run = function ( query, queryComponents, callback ) {
 				"<p>" +
 				"Please contact your " +
 				"<a href='mailto:" +
-				document.getElementById("ADMIN_EMAIL").value +
+				window.refineryAdminMail +
 				"?Subject=Refinery%20Error' target='_top'>System Administrator</a>" +
 				".</p>"
         );
