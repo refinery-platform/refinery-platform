@@ -896,7 +896,7 @@ class ExtendedGroup(Group):
             logger.error("Group name cannot be empty.")
             return
         else:
-            super(ExtendedGroup, self).save(*args, **kwargs)  # Call the "real" save() method.
+            super(ExtendedGroup, self).save(*args, **kwargs)
 
 
 # automatic creation of a managed group when an extended group is created:
