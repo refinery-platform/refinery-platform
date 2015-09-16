@@ -9,6 +9,8 @@ angular
           return 'Analysis failed.';
         case 'RUNNING':
           return 'Analysis is running.';
+        case 'INITIALIZED':
+          return 'Analysis is initializing.';
         default:
           return 'Analysis status unknown.';
       }
