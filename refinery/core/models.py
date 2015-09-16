@@ -32,7 +32,7 @@ from registration.signals import user_registered, user_activated
 from data_set_manager.models import Investigation, Node, Study, Assay
 from file_store.models import get_file_size, FileStoreItem
 from galaxy_connector.models import Instance
-from .utils import index_data_set
+from .utils import update_data_set_index, delete_data_set_index
 
 
 logger = logging.getLogger(__name__)
@@ -374,6 +374,10 @@ class DataSet(SharableResource):
                 self.get_owner_username() + " - " +
                 self.summary)
 
+    def delete(self, *args, **kwargs):
+        delete_data_set_index(self)
+        super(DataSet, self).delete(*args, **kwargs)
+
     def set_investigation(self, investigation, message=""):
         """Associate this data set with an investigation. If this data set has
         an association with an investigation this association will be cleared
@@ -479,11 +483,11 @@ class DataSet(SharableResource):
 
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
-        index_data_set(self)
+        update_data_set_index(self)
 
     def unshare(self, group):
         super(DataSet, self).unshare(group)
-        index_data_set(self)
+        update_data_set_index(self)
 
 
 class InvestigationLink(models.Model):

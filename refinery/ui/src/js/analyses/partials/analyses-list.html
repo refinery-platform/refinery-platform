@@ -78,9 +78,11 @@
             </a>
 
             &nbsp;
-            <span class="spinner"><i class=
-               "{{analysis.status | analysisStatusIcon}} analyses-status"
-             rp-analyses-status-tooltip></i>
+            <span class="spinner">
+              <i class="{{analysis.status | analysisStatusIcon}} analyses-status"
+                tool-tip tool-tip-container="body" tool-tip-placement="bottom"
+                title="{{ analysis.status | analysisStatusTitle }}">
+              </i>
             </span>
           </div>
           <div class="span5 analysis-name">
