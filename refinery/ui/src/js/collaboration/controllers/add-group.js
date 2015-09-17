@@ -7,13 +7,18 @@ function AddGroupCtrl($modalInstance, groupService, groupDataService) {
 
 function isEmptyOrSpaces(str){
 
-    return str === undefined || str === "" || str == " " || str === null || str.match(/^\s*$/) !== null || str.length === 0;
+  if (str.length === 0) {
+    return true;
+  }
+
 }
 
 
 AddGroupCtrl.prototype.createGroup = function (name) {
   var that = this;
-
+  if (name === undefined){
+    name = "";
+  }
   this.groupService.create({name: name }).$promise.then(function (data) {
 
       that.groupDataService.update();

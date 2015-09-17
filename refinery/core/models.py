@@ -53,7 +53,8 @@ NR_TYPES = (
 
 class UserProfile (models.Model):
     """Extends Django user model:
-    https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional-information-about-users
+    https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional
+    -information-about-users
     """
     uuid = UUIDField(unique=True, auto=True)
     user = models.OneToOneField(User)
@@ -155,7 +156,8 @@ user_logged_in.connect(create_catch_all_project)
 class BaseResource (models.Model):
     """Abstract base class for core resources such as projects, analyses,
     datasets and so on. See
-    https://docs.djangoproject.com/en/1.3/topics/db/models/#abstract-base-classes
+    https://docs.djangoproject.com/en/1.3/topics/db/models/#abstract
+    -base-classes
     for details.
     """
     uuid = UUIDField(unique=True, auto=True)
@@ -897,7 +899,7 @@ class ExtendedGroup(Group):
             return None
 
     def save(self, *args, **kwargs):
-        if len(self.name) == 0 or self.name is False:
+        if len(self.name) == 0:
             logger.error("Group name cannot be empty.")
             return
         else:
