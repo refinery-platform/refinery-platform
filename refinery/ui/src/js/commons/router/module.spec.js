@@ -12,6 +12,6 @@ describe('Module: RefineryRouter', function(){
 
   it('module should be registered', function(){
     expect(module).not.toEqual(null);
-  })
+  });
 
 });
