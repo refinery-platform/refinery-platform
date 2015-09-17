@@ -19,7 +19,7 @@ from django.core.mail import mail_admins, send_mail
 from django.db import models, transaction
 from django.db.models import Max
 from django.db.models.fields import IntegerField
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, pre_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
 
@@ -374,10 +374,6 @@ class DataSet(SharableResource):
                 self.get_owner_username() + " - " +
                 self.summary)
 
-    def delete(self, *args, **kwargs):
-        delete_data_set_index(self)
-        super(DataSet, self).delete(*args, **kwargs)
-
     def set_investigation(self, investigation, message=""):
         """Associate this data set with an investigation. If this data set has
         an association with an investigation this association will be cleared
@@ -488,6 +484,11 @@ class DataSet(SharableResource):
     def unshare(self, group):
         super(DataSet, self).unshare(group)
         update_data_set_index(self)
+
+
+@receiver(pre_delete, sender=DataSet)
+def _dataset_delete(sender, instance, *args, **kwargs):
+    delete_data_set_index(instance)
 
 
 class InvestigationLink(models.Model):
