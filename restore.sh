@@ -1,7 +1,12 @@
 #!/bin/bash
 
+# Restores a backup created by `./backup.sh`
+#
+# Author: Fritz Lekschas
+# Date:   2015-09-17
+#
 # Call:
-# ./restore.sh 20150915.tar.gz
+# ./restore.sh /vagrant/transfer/20150915.tar.gz
 
 # Backup Configuration
 # ------------------------------------------------------------------------------

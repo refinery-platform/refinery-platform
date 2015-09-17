@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Creates a compress backup archive and moves it into the synced directory
+#
+# Author: Fritz Lekschas
+# Date:   2015-09-17
+#
+# Call:
+# ./backup.sh
+
 # Backup Configuration
 # ------------------------------------------------------------------------------
 BACKUP_TEMP="/tmp/backups"
