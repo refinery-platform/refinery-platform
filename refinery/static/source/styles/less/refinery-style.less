@@ -993,6 +993,7 @@ a.analysis-header{
           border-top-color: @white;
 
           .preview,
+          .preview:active,
           .preview:hover,
           .preview:focus {
             color: @white !important;
@@ -1022,12 +1023,20 @@ a.analysis-header{
           }
         }
 
-        &:hover .preview {
-          color: @grayLight;
-          background: rgba(0, 0, 0, 0.07);
+        &:hover {
 
-          &:hover {
-            color: @black;
+          .preview {
+            color: @grayLight;
+            background: rgba(0, 0, 0, 0.07);
+
+            &:hover {
+              color: @black;
+            }
+          }
+
+          &.previewing .preview {
+            color: white;
+            background: #326180;
           }
         }
       }
@@ -1309,6 +1318,11 @@ a.analysis-header{
     color: @red;
     background: mix(@red, @white, 5%);
     border-bottom: 1px solid darken(mix(@red, @white, 5%), 5%);
+
+    a {
+      color: inherit;
+      text-decoration: underline;
+    }
   }
   .refinery-notification-info {
     color: @blue;

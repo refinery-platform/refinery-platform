@@ -20,7 +20,7 @@ from django.core.management import call_command
 from celery.task import task
 
 from core.models import *
-from core.utils import index_data_set
+from core.utils import update_data_set_index
 from data_set_manager.isa_tab_parser import IsaTabParser
 from data_set_manager.models import Investigation, Node, \
     initialize_attribute_order
@@ -361,7 +361,7 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
         dataset.file_count = dataset.get_file_count()
         dataset.save()
         # Finally index data set
-        index_data_set(dataset)
+        update_data_set_index(dataset)
         return dataset.uuid
     return None
 

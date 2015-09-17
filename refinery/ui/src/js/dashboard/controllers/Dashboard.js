@@ -4,6 +4,7 @@ function DashboardCtrl (
   $state,
   $timeout,
   $rootScope,
+  $window,
   // 3rd party library
   _,
   // Refinery modules
@@ -26,6 +27,7 @@ function DashboardCtrl (
   this.$q = $q;
   this.$state = $state;
   this.$timeout = $timeout;
+  this.$window = $window;
 
   // Construct 3rd party library
   this._ = _;
@@ -45,6 +47,9 @@ function DashboardCtrl (
   // Construct class variables
   this.dataSetServiceLoading = false;
   this.dataSetPreviewBorder = false;
+
+  // --! HACKY !--
+  this.adminMail = $window.refineryAdminMail;
 
   // Check authentication
   // This should idealy be moved to the global APP controller, which we don't
@@ -480,6 +485,7 @@ angular
     '$state',
     '$timeout',
     '$rootScope',
+    '$window',
     '_',
     'pubSub',
     'settings',

@@ -19,7 +19,7 @@ from django.core.mail import mail_admins, send_mail
 from django.db import models, transaction
 from django.db.models import Max
 from django.db.models.fields import IntegerField
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, pre_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
 
@@ -32,7 +32,7 @@ from registration.signals import user_registered, user_activated
 from data_set_manager.models import Investigation, Node, Study, Assay
 from file_store.models import get_file_size, FileStoreItem
 from galaxy_connector.models import Instance
-from .utils import index_data_set
+from .utils import update_data_set_index, delete_data_set_index
 
 
 logger = logging.getLogger(__name__)
@@ -53,7 +53,8 @@ NR_TYPES = (
 
 class UserProfile (models.Model):
     """Extends Django user model:
-    https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional-information-about-users
+    https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional
+    -information-about-users
     """
     uuid = UUIDField(unique=True, auto=True)
     user = models.OneToOneField(User)
@@ -155,7 +156,8 @@ user_logged_in.connect(create_catch_all_project)
 class BaseResource (models.Model):
     """Abstract base class for core resources such as projects, analyses,
     datasets and so on. See
-    https://docs.djangoproject.com/en/1.3/topics/db/models/#abstract-base-classes
+    https://docs.djangoproject.com/en/1.3/topics/db/models/#abstract
+    -base-classes
     for details.
     """
     uuid = UUIDField(unique=True, auto=True)
@@ -479,11 +481,16 @@ class DataSet(SharableResource):
 
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
-        index_data_set(self)
+        update_data_set_index(self)
 
     def unshare(self, group):
         super(DataSet, self).unshare(group)
-        index_data_set(self)
+        update_data_set_index(self)
+
+
+@receiver(pre_delete, sender=DataSet)
+def _dataset_delete(sender, instance, *args, **kwargs):
+    delete_data_set_index(instance)
 
 
 class InvestigationLink(models.Model):
@@ -890,6 +897,13 @@ class ExtendedGroup(Group):
             return (self.managed_group.all()[0])
         except:
             return None
+
+    def save(self, *args, **kwargs):
+        if len(self.name) == 0:
+            logger.error("Group name cannot be empty.")
+            return
+        else:
+            super(ExtendedGroup, self).save(*args, **kwargs)
 
 
 # automatic creation of a managed group when an extended group is created:

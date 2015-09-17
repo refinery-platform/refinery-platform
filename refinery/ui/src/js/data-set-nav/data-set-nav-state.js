@@ -193,15 +193,6 @@ angular
           true
         )
         .state(
-          'downloads',
-          {
-            url: '/downloads/',
-            controller: 'refineryDataSetNavBlueprintCtrl'
-          },
-          '^\/data_sets\/.*\/$',
-          true
-        )
-        .state(
           'details',
           {
             url: '/details/',

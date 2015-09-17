@@ -68,7 +68,7 @@
             class="refinery-notification-error"
             ng-show="dashboard.searchQueryDataSets.length > 1 && dashboard.dataSets.error">
             <strong>Error</strong>
-            Something when wrong! Please contact the admin.
+            Something went wrong! Please contact the <a ng-href="mailto:{{ dashboard.adminMail }}">admin</a>.
           </div>
         </div>
         <div class="floatbox">
