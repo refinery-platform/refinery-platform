@@ -1,6 +1,6 @@
 {
   "name": "refinery-platform-ui",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Web GUI for Refinery Platform",
   "main": "index.js",
   "scripts": {
