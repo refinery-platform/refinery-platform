@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Backup Configuration
+# ------------------------------------------------------------------------------
 BACKUP_TEMP="/tmp/backups"
 BACKUP_FINAL="/vagrant/transfer"
 
@@ -8,9 +9,9 @@ REFINERY_BASE_DIR="/vagrant/refinery"
 CONFIG_DIR="config"
 CONFIG_FILE="config.json"
 
+
 # Do not edit the code below that line!
 # ------------------------------------------------------------------------------
-
 
 NOW=$(date +%Y%m%d)
 
@@ -36,7 +37,7 @@ echo -e "Settings... \c"
 TIME_INTERMEDIATE_START=$(date +"%s")
 
 mkdir -p "$BACKUP_TEMP/$NOW/settings"
-gzip -c < "$REFINERY_BASE_DIR/$CONFIG_DIR/$CONFIG/$CONFIG_FILE" > "$BACKUP_TEMP/$NOW/settings/$CONFIG_FILE.gz"
+cp "$REFINERY_BASE_DIR/$CONFIG_DIR/$CONFIG/$CONFIG_FILE" "$BACKUP_TEMP/$NOW/settings/$CONFIG_FILE"
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
