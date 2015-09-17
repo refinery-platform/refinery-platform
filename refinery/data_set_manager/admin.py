@@ -4,15 +4,19 @@ Created on May 11, 2012
 @author: nils
 '''
 
-from data_set_manager.models import *
 from django.contrib import admin
 from django_extensions.admin import ForeignKeyAutocompleteAdmin
 
+from data_set_manager.models import *
+
+
 class NodeAdmin(ForeignKeyAutocompleteAdmin):
-    raw_id_fields = ("parents","children")    
+    raw_id_fields = ("parents", "children")
+
 
 class AnnotatedNodeAdmin(ForeignKeyAutocompleteAdmin):
-    raw_id_fields = ("node","attribute","study","assay")    
+    raw_id_fields = ("node", "attribute", "study", "assay")
+
 
 admin.site.register(NodeCollection)
 admin.site.register(Investigation)
@@ -26,10 +30,9 @@ admin.site.register(Assay)
 admin.site.register(Protocol)
 admin.site.register(ProtocolReference)
 admin.site.register(ProtocolReferenceParameter)
-admin.site.register(Node,NodeAdmin)
+admin.site.register(Node, NodeAdmin)
 admin.site.register(Attribute)
 admin.site.register(AttributeOrder)
 admin.site.register(AttributeDefinition)
-admin.site.register(AnnotatedNode,AnnotatedNodeAdmin)
+admin.site.register(AnnotatedNode, AnnotatedNodeAdmin)
 admin.site.register(AnnotatedNodeRegistry)
-

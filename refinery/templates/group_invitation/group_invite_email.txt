@@ -1,0 +1,7 @@
+You have been invited to join {{group_name}}! Please use the following steps to join this group:
+
+1. Make a Refinery account if you have not already.
+2. Log into your Refinery account.
+3. Click on this link: http://{{site}}/group_invite/{{token}}/
+
+Thank you!

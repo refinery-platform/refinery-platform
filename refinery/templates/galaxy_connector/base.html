@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="{{ STATIC_URL }}galaxy_connector/style.css" />
+    <link rel="stylesheet" href="{{ STATIC_URL }}styles/galaxy_connector.css" />
     <title>Refinery Galaxy Connector {% block title %}{% endblock %}</title>
 </head>
 
@@ -13,14 +13,14 @@
         <h3>{% block subheader %}{% endblock %}</h3>
     </div>
     <div id="navigation">
-        {% block navigation %}        
+        {% block navigation %}
         {% endblock %}
     </div>
 
     <div id="content">
         {% block content %}{% endblock %}
     </div>
-    
+
     <div id="footer">
         <small>Copyright &copy; 2012 Park Lab | Center for Biomedical Informatics at Harvard Medical School. All rights reserved.</small>
     </div>

@@ -13,12 +13,28 @@
     "tests"
   ],
   "dependencies": {
-    "jquery": "2.0.3",
-    "angular": "1.2.9",
-    "angular-resource": "1.2.9",
-    "angular-ui-select2": "0.0.5",
-    "angular-ui-router": "0.2.7",
+    "angular": "1.4.5",
+    "angular-animate": "1.4.5",
     "angular-bootstrap": "0.8.0",
+    "angular-mocks": "1.4.5",
+    "angular-resource": "1.4.5",
+    "angular-sanitize": "1.4.5",
+    "angular-ui-router": "0.2.15",
+    "angular-ui-select2": "0.0.5",
+    "angular-ui-utils": "flekschas/ui-utils#expose-reload",
+    "c3": "0.3.0",
+    "dagre": "0.7.1",
+    "floatThead": "1.2.13",
+    "graphlib": "1.0.1",
+    "humanize": "0.0.9",
+    "jquery": "2.1.1",
+    "jquery-file-upload": "9.10.4",
+    "lodash": "2.4.1",
+    "lodash-3": "lodash#3.9.3",
+    "ng-file-upload": "1.6.6",
+    "ng-grid": "2.0.13",
+    "spark-md5": "0.0.5",
+    "spectrum": "1.7.0",
     "tipsy": "0.1.7"
   }
 }

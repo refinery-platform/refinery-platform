@@ -1,0 +1,73 @@
+{
+  "ADMINS": [
+    ["Refinery Admin", "admin@example.org"]
+  ],
+  "ALLOWED_HOSTS": ["localhost", "127.0.0.1", "192.168.50.50"],
+  "DATABASES": {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": "refinery",
+        "USER": "vagrant",
+        "PASSWORD": "",
+        "HOST": "",
+        "PORT": ""
+    }
+  },
+  "BROKER_URL": "amqp://guest:guest@localhost:5672//",
+  "TIME_ZONE": "America/New_York",
+  "LANGUAGE_CODE": "en-us",
+  "USE_I18N": true,
+  "USE_L10N": true,
+  "MEDIA_ROOT": "",
+  "MEDIA_URL": "/media/",
+  "STATIC_ROOT": "",
+  "STATIC_URL": "/static/",
+  "SECRET_KEY": "SECRET",
+  "LOG_LEVEL": "DEBUG",
+  "TOKEN_DURATION": 3,
+  "DEFAULT_FROM_EMAIL": "webmaster@localhost",
+  "EMAIL_HOST": "localhost",
+  "EMAIL_PORT": 25,
+  "SERVER_EMAIL": "root@localhost",
+  "EMAIL_SUBJECT_PREFIX": "[Refinery] ",
+  "CELERYD_MAX_TASKS_PER_CHILD": 100,
+  "ACCOUNT_ACTIVATION_DAYS": 7,
+  "REGISTRATION_OPEN": true,
+  "REFINERY_REGISTRATION_CLOSED_MESSAGE": "",
+  "ISA_TAB_DIR": "/vagrant/isa-tab",
+  "REFINERY_FILE_SOURCE_MAP": {},
+  "REFINERY_DATA_IMPORT_DIR": "/vagrant/import",
+  "REFINERY_SOLR_BASE_URL": "http://localhost:8983/solr/",
+  "REFINERY_SOLR_SPACE_DYNAMIC_FIELDS": "_",
+  "REFINERY_INNER_NAVBAR_HEIGHT": 20,
+  "REFINERY_MAIN_LOGO": "",
+  "REFINERY_GOOGLE_ANALYTICS_ID": "",
+  "REFINERY_REPOSITORY_MODE": false,
+  "REFINERY_BANNER": "",
+  "REFINERY_BANNER_ANONYMOUS_ONLY": false,
+  "REFINERY_WELCOME_EMAIL_SUBJECT": "Welcome to Refinery",
+  "REFINERY_WELCOME_EMAIL_MESSAGE": "Please fill out your user profile",
+  "REFINERY_EXTERNAL_AUTH": false,
+  "REFINERY_EXTERNAL_AUTH_MESSAGE": "",
+  "INTERVAL_BETWEEN_CHECKS": {
+    "CELERY": 10.0,
+    "SOLR": 10.0,
+    "GALAXY": 10.0
+  },
+  "TIMEOUT": {
+    "CELERY": 2.0,
+    "SOLR": 2.5,
+    "GALAXY": 2.0
+  },
+  "AUTH_LDAP_SERVER_URI": "ldap://auth.example.org",
+  "AUTH_LDAP_BIND_DN": "",
+  "AUTH_LDAP_BIND_PASSWORD": "",
+  "AUTH_LDAP_BASE_DN": "OU=Domain Users,DC=Domain",
+  "AUTH_LDAP_SCOPE": 2,
+  "AUTH_LDAP_FILTERSTR": "(uid=%(user)s)",
+  "AUTH_LDAP_USER_ATTR_MAP": {
+    "first_name": "givenName",
+    "last_name": "sn",
+    "email": "mail"
+  }
+}

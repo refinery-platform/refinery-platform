@@ -1,20 +1,18 @@
 angular.module('refineryAnalysis', [])
 
-.controller('AnalysisCtrl', function($scope, $rootScope, $http, $window, $log, $timeout, workflow, externalToolStatusService) {
-  'use strict';
+.controller('AnalysisCtrl', function(
+    $scope, $rootScope, $http, $window, $log, $timeout, workflow) {
+    "use strict";
+
+    var vm = this;
 
   $scope.analysisConfig = {
     studyUuid: $window.externalStudyUuid,
     workflowUuid: null,
     nodeSetUuid: null,
-    nodeRelationshipUuid: null
+    nodeRelationshipUuid: null,
+    name: null,
   };
-
-  // get Galaxy instance status for a particular workflow
-  (function tick() {
-    $scope.galaxyStatus = externalToolStatusService.isGalaxyInstanceUp(workflow.getGalaxyInstanceId());
-    $timeout(tick, 1000);
-  })();
 
   $scope.$onRootScope('nodeSetChangedEvent', function(event, currentNodeSet) {
     $scope.analysisConfig.nodeSetUuid = currentNodeSet.uuid;
@@ -35,22 +33,64 @@ angular.module('refineryAnalysis', [])
     $scope.analysisConfig.nodeSetUuid = null;
   });
 
-  $scope.launchAnalysis = function() {
-    $scope.analysisConfig.workflowUuid = workflow.getUuid();
+  $scope.setAnalysisName = function(){
+    var timeStamp = vm.getTimeStamp();
+    var workflowUuid = workflow.getName();
+    var tempName = workflowUuid + " " + timeStamp;
+    bootbox.prompt("Enter an Analysis Name", "Cancel Analysis", "Launch" +
+      " Analysis", function(name) {
+      if (name == null) {
+        bootbox.alert("Analysis was canceled.");
+      }else {
+        vm.launchAnalysis(name);
+        var msg = "<h3> Analysis Launched.</h3>" +
+        "<p>View progess in Analyses Tab.</p>";
+        bootbox.alert(msg);
+      }
+    }, tempName).addClass("bootboxAnalysisWidth");
+  };
 
+  vm.launchAnalysis = function(analysisName) {
+    $scope.analysisConfig.name = analysisName;
+    $scope.analysisConfig.workflowUuid = workflow.getUuid();
     $http({
       method: 'POST',
       url: '/analysis_manager/run/',
       headers: {'X-Requested-With': 'XMLHttpRequest'},
       data: $scope.analysisConfig,
-    }).success(function(response) {
+    }).success(function (response) {
       $log.debug("Launching analysis with config:");
       $log.debug("Workflow: " + $scope.analysisConfig.workflowUuid);
       $log.debug("NodeSET: " + $scope.analysisConfig.nodeSetUuid);
       $log.debug("NodeREL: " + $scope.analysisConfig.nodeRelationshipUuid);
-      $window.location.assign(response);
-    }).error(function(response, status) {
+    //  $window.location.assign(response);
+       $rootScope.$broadcast('rf/launchAnalysis');
+    }).error(function (response, status) {
       $log.debug("Request failed: error " + status);
     });
+  };
+
+  vm.getTimeStamp = function(){
+    var currentDate = new Date();
+    var month = currentDate.getMonth() + 1;
+    var day = currentDate.getDate();
+    var year = currentDate.getFullYear();
+    var hour = currentDate.getHours();
+    var mins= currentDate.getMinutes();
+    var sec = currentDate.getSeconds();
+
+    if(mins < 10){
+      mins = "0" + mins;
+    }
+
+    if(sec < 10){
+      sec = "0" + sec;
+    }
+
+    var dateStr = year + "-" + month + "-" + day;
+    var timeStr = "@" + hour + ":" + mins + ":" + sec;
+
+    return (dateStr + timeStr);
+
   };
 });

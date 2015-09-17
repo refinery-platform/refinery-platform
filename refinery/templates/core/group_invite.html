@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} - Group Invitation
+{% endblock %}
+
+{% block content %}
+<div>
+  {{message}}
+</div>
+
+<div>
+  Click here to view group information:
+  <br>
+  <a href="http://{{site}}/collaboration/#/{{ext_group.uuid}}/">View group information</a>
+</div>
+{% endblock %}

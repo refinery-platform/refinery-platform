@@ -4,7 +4,7 @@
 ; your environment.
 
 [supervisord]
-logfile = %(here)s/supervisord.log
+logfile = %(here)s/log/supervisord.log
 logfile_maxbytes = 1MB
 logfile_backups = 4
 pidfile = /tmp/supervisord.pid
@@ -26,7 +26,7 @@ supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 [program:solr]
 command = java -Dlog4j.configuration=file://%(here)s/solr/log4j.properties -Djava.awt.headless=true -Dsolr.solr.home=%(here)s/solr/ -jar start.jar
 directory = /opt/solr/example
-stdout_logfile = %(here)s/solr.log
+stdout_logfile = %(here)s/log/solr.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
 redirect_stderr = true
@@ -34,10 +34,23 @@ autostart = true
 autorestart = true
 startsecs = 10
 
-[program:celeryd]
-command = python %(here)s/manage.py celeryd --events
+[program:neo4j]
+command = /opt/neo4j/bin/neo4j console
+autostart = false
+autorestart = true
+startsecs = 5
+stopasgroup = true
+killasgroup = true
+
+[group:celeryd]
+programs = worker1,worker2
+priority = 995
+
+[program:worker1]
+; minimum of four processes required to avoid problems with monitoring tasks
+command = python %(here)s/manage.py celeryd -c 4 -Q celery --events
 environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
-stdout_logfile = %(here)s/celeryd.log
+stdout_logfile = %(here)s/log/celeryd-w1.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
 redirect_stderr = true
@@ -45,6 +58,25 @@ autostart = true
 autorestart = true
 startsecs = 5
 stopasgroup = true
+killasgroup = true
+; Need to wait for currently executing tasks to finish at shutdown.
+; Increase this if you have very long running tasks.
+;stopwaitsecs = 60
+priority = 995
+
+[program:worker2]
+; limits concurrency of file imports to one to avoid overloading system IO
+command = python %(here)s/manage.py celeryd -c 1 -Q file_import --events
+environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
+stdout_logfile = %(here)s/log/celeryd-w2.log
+stdout_logfile_maxbytes = 1MB
+stdout_logfile_backups = 4
+redirect_stderr = true
+autostart = true
+autorestart = true
+startsecs = 5
+stopasgroup = true
+killasgroup = true
 ; Need to wait for currently executing tasks to finish at shutdown.
 ; Increase this if you have very long running tasks.
 ;stopwaitsecs = 60
@@ -53,7 +85,7 @@ priority = 995
 [program:celerycam]
 command = python %(here)s/manage.py celerycam
 environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
-stdout_logfile = %(here)s/celerycam.log
+stdout_logfile = %(here)s/log/celerycam.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
 redirect_stderr = true
@@ -65,7 +97,7 @@ priority= 994
 [program:celerybeat]
 command = python %(here)s/manage.py celerybeat
 environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
-stdout_logfile = %(here)s/celerybeat.log
+stdout_logfile = %(here)s/log/celerybeat.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
 redirect_stderr = true
@@ -77,12 +109,11 @@ priority= 996
 [program:runserver]
 command = python %(here)s/manage.py runserver 0.0.0.0:8000 --noreload
 environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
-stdout_logfile = %(here)s/refinery.log
+stdout_logfile = %(here)s/log/refinery.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
 redirect_stderr = true
 autostart = true
 autorestart = true
 startsecs = 3
-stopwaitsecs = 0
 priority = 999

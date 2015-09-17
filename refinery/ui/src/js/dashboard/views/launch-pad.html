@@ -1,0 +1,535 @@
+<div
+  class="span4"
+  refinery-expandable-panel>
+  <div class="refinery-panel">
+    <div class="refinery-header">
+      <span class="refinery-header-left">
+        <h3>
+          <i class="m-r-1-4 icon-file"></i>Data Sets
+        </h3>
+      </span>
+      <span class="refinery-header-right">
+        <!--
+        <button
+          class="no-underline"
+          ng-click="dashboard.toggleDataSetsExploration()">
+          <i class="icon-compass" title="Explore data sets"></i>
+        </button>
+        -->
+        <a
+          href="./data_set_manager/import/"
+          class="no-underline"
+          ng-if="dashboard.userIsAuthenticated">
+          <i class="icon-plus-sign"></i>
+        </a>
+      </span>
+    </div>
+
+    <div
+      class="refinery-sub-panel"
+      ng-class="{'border': dashboard.dataSetPreviewBorder}"
+      refinery-width-fixer>
+      <form class="navbar-search">
+        <i class="icon-search"></i>
+        <i class="icon-remove-sign"
+          ng-if="dashboard.searchQueryDataSets"
+          ng-click="dashboard.resetDataSetSearch()"></i>
+        <input
+          type="text"
+          class="search-query"
+          placeholder="Search"
+          ng-model="dashboard.searchQueryDataSets"
+          ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)">
+      </form>
+
+      <div class="refinery-panel-header">
+        <div
+          class="refinery-notification"
+          ng-class="{'active': dashboard.searchQueryDataSets.length > 0 || dashboard.dataSets.total === 0}">
+          <div
+            class="refinery-notification-info"
+            ng-show="dashboard.searchQueryDataSets.length === 1">
+            <strong>Too short!</strong>
+            Enter at least 2 characters to search.
+          </div>
+          <div
+            class="refinery-notification-alert"
+            ng-show="dashboard.dataSets.total === 0 && dashboard.searchQueryDataSets.length > 1 && !dashboard.dataSets.error">
+            <strong>No luck!</strong>
+            No data sets found.
+          </div>
+          <div
+            class="refinery-notification-info"
+            ng-show="dashboard.dataSets.total === 0 && dashboard.searchQueryDataSets.length === 0 && !dashboard.dataSets.error">
+            <strong>Info</strong>
+            No data sets available.
+          </div>
+          <div
+            class="refinery-notification-error"
+            ng-show="dashboard.searchQueryDataSets.length > 1 && dashboard.dataSets.error">
+            <strong>Error</strong>
+            Something went wrong! Please contact the admin.
+          </div>
+        </div>
+        <div class="floatbox">
+          <div class="floatbox-min-right">
+            <button
+              class="icon-only icon-filter"
+              title="Filter &amp; Sort"
+              ng-class="{'showing': dashboard.showDataSetsFilterSort, 'active': dashboard.dataSetsFilterSort}"
+              ng-click="dashboard.showDataSetsFilterSort = !!!dashboard.showDataSetsFilterSort"
+              ng-if="!dashboard.searchQueryDataSets.length"
+              close-on-outer-click-external-trigger="dashboard.dataSetsfilterSort"
+              tool-tip
+              tool-tip-container="body"
+              tool-tip-placement="right">
+            </button>
+          </div>
+          <div class="floatbox-max-left">
+            <h4>
+              {{ dashboard.dataSets.totalReadable }}
+              {{ dashboard.searchQueryDataSets.length > 1 ? 'results' : 'data sets' }}
+            </h4>
+          </div>
+        </div>
+      </div>
+      <div
+        class="refinery-filter-sort"
+        ng-show="dashboard.showDataSetsFilterSort"
+        close-on-outer-click="dashboard.showDataSetsFilterSort"
+        close-on-outer-click-id="dashboard.dataSetsfilterSort">
+        <h5>Filter by</h5>
+        <div class="entry">
+          <label class="checkbox">
+            <input
+              type="checkbox"
+              ng-model="dashboard.dataSetsFilterOwner"> Own
+          </label>
+        </div>
+        <div class="entry">
+          <label class="checkbox">
+            <input
+              type="checkbox"
+              ng-model="dashboard.dataSetsFilterPublic"> Public
+          </label>
+        </div>
+        <h5>Sort by</h5>
+        <div
+          class="entry"
+          ng-repeat="sorting in dashboard.dataSetsSorting track by $index">
+          <label class="radio radio-button-hide">
+            <input
+              type="radio"
+              value="{{ sorting.djangoAttribute }}"
+              ng-click="dashboard.toggleSortOrder('dataSets')"
+              ng-model="dashboard.dataSetsSortBy">
+              <i
+                class="sort-icon sort-active"
+                ng-if="sorting.djangoAttribute === dashboard.dataSetsSortBy"
+                ng-class="{'icon-sort-up': !dashboard.dataSetsSortDesc, 'icon-sort-down': dashboard.dataSetsSortDesc}"></i>
+              <i
+                class="sort-icon icon-sort"
+                ng-if="sorting.djangoAttribute !== dashboard.dataSetsSortBy"></i>
+              {{ sorting.label }}
+          </label>
+        </div>
+      </div>
+      <div
+        class="refinery-panel-content scrollable jquery-full-height"
+        ui-scroll-viewport
+        refinery-dashboard-panel>
+        <ul
+          class="results no-list-style"
+          ng-class="{'search': dashboard.searchDataSet}">
+          <li
+            ui-scroll="dataSet in dashboard.dataSets"
+            adapter="dashboard.dataSetsAdapter"
+            ng-class="{'previewing': dataSet.preview}">
+            <button
+              class="preview"
+              ng-click="dashboard.showDataSetPreview(dataSet, $index)">
+              <i
+                class="icon-double-angle-right is-mirrorable"
+                ng-class="{'is-mirrored': dataSet.preview}"></i>
+            </button>
+            <i
+              class="icon-user"
+              title="You own this data set"
+              ng-if="dataSet.is_owner"
+              tool-tip
+              tool-tip-container="body"
+              tool-tip-placement="top"></i>
+            <i
+              class="icon-group"
+              title="This data set is shared with you"
+              ng-if="!dataSet.is_owner"
+              tool-tip
+              tool-tip-container="body"
+              tool-tip-placement="top"></i>
+            <i
+              class="icon-globe"
+              title="This file is publicly available"
+              ng-if="dataSet.public"
+              tool-tip
+              tool-tip-container="body"
+              tool-tip-placement="top"></i>
+            <a
+              class="title"
+              ng-href="data_sets/{{ dataSet.uuid }}"
+              ng-bind-html="dataSet.title"></a>
+            <p
+              class="snippet"
+              ng-if="dataSet.description && dashboard.searchDataSet"
+              ng-bind-html="dataSet.description"></p>
+          </li>
+          <li ng-if="dashboard.dataSetsAdapter.isLoading">
+            <div class="refinery-request-loading">
+              <span class="refinery-spinner"></span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <refinery-data-set-preview
+      class="preview-container"
+      close="dashboard.hideDataSetPreview()">
+    </refinery-data-set-preview>
+  </div>
+</div>
+
+<div
+  class="span4 shadowPanel"
+  ng-if="dashboard.dataSetPreviewBorder">
+</div>
+
+<div
+  class="span4 pushable"
+  ng-class="{'pushed': dashboard.dataSetPreview}">
+  <div class="refinery-panel">
+    <div class="refinery-header">
+      <span class="refinery-header-left">
+        <h3>
+          <span>
+            <i class="m-r-1-4 icon-bar-chart"></i>Analyses
+          </span>
+        </h3>
+      </span>
+      <span class="refinery-header-right">
+<!--         <a
+          href="./projects/new/"
+          class="no-underline"
+          ng-if="dashboard.userIsAuthenticated">
+          <i class="icon-plus-sign"></i>
+        </a> -->
+      </span>
+    </div>
+    <div class="refinery-sub-panel">
+      <!--
+      <ul
+        class="no-list-style"
+        ng-if="dashboard.allProjects.meta.total_count > 0">
+        <li ng-repeat="project in dashboard.allProjects.objects">
+          <i class="icon-user"></i>
+          <a ng-href="projects/{{ project.uuid }}">{{ project.name }}</a>
+        </li>
+      </ul>
+      <div
+        class="refinery-request-loading"
+        ng-if="dashboard.projectServiceLoading">
+        <span class="refinery-spinner"></span>
+      </div>
+      <span
+        class="alert alert-info"
+        ng-if="dashboard.allProjects.meta.total_count === 0 && dashboard.allAnalyses.meta.total_count === 0">
+        No projects found.
+      </span>
+      -->
+
+      <div class="refinery-panel-header">
+        <div
+          class="refinery-notification"
+          ng-class="{'active': dashboard.analyses.total === 0}">
+          <div
+            class="refinery-notification-info"
+            ng-show="dashboard.analyses.total === 0">
+            <strong>Info</strong>
+            No analyses available.
+          </div>
+        </div>
+        <div class="floatbox">
+          <div class="floatbox-min-right">
+            <button
+              class="icon-only icon-filter"
+              title="Filter &amp; Sort"
+              ng-class="{'showing': dashboard.showAnalysesFilterSort, 'active': dashboard.analysesFilterSort}"
+              ng-click="dashboard.showAnalysesFilterSort = !!!dashboard.showAnalysesFilterSort"
+              ng-if="dashboard.analysesIsFilterable"
+              close-on-outer-click-external-trigger="dashboard.analysesFilterSort"
+              tool-tip
+              tool-tip-container="body"
+              tool-tip-placement="right">
+            </button>
+          </div>
+          <div class="floatbox-max-left">
+            <h4>
+              {{ dashboard.analyses.totalReadable }}
+              {{ dashboard.analyses.totalReadable > 1 ? 'analyses' : 'analysis' }}
+            </h4>
+          </div>
+        </div>
+      </div>
+      <div
+        class="refinery-filter-sort"
+        ng-show="dashboard.showAnalysesFilterSort"
+        close-on-outer-click="dashboard.showAnalysesFilterSort"
+        close-on-outer-click-id="dashboard.analysesFilterSort">
+        <h5>Filter by</h5>
+        <div class="entry">
+          <label class="radio">
+            <input
+              type="radio"
+              value="RUNNING"
+              ng-click="dashboard.toogleRadio()"
+              ng-model="dashboard.analysesFilterStatus">
+              Running
+              <i class="info-icon analyses-status icon-cog icon-spin"></i>
+          </label>
+        </div>
+        <div class="entry">
+          <label class="radio">
+            <input
+              type="radio"
+              value="SUCCESS"
+              ng-click="dashboard.toogleRadio()"
+              ng-model="dashboard.analysesFilterStatus">
+              Successful
+              <i class="info-icon analyses-status icon-ok-sign"></i>
+          </label>
+        </div>
+        <div class="entry">
+          <label class="radio">
+            <input
+              type="radio"
+              value="FAILURE"
+              ng-click="dashboard.toogleRadio()"
+              ng-model="dashboard.analysesFilterStatus">
+              Failed
+              <i class="info-icon analyses-status icon-warning-sign"></i>
+          </label>
+        </div>
+        <div class="entry">
+          <label class="radio">
+            <input
+              type="radio"
+              value="UNKNOWN"
+              ng-click="dashboard.toogleRadio()"
+              ng-model="dashboard.analysesFilterStatus">
+              Unknown
+              <i class="info-icon analyses-status icon-question-sign"></i>
+          </label>
+        </div>
+        <h5>Sort by</h5>
+        <div
+          class="entry"
+          ng-repeat="sorting in dashboard.analysesSorting track by $index">
+          <label class="radio radio-button-hide">
+            <input
+              type="radio"
+              value="{{ sorting.djangoAttribute }}"
+              ng-click="dashboard.toggleSortOrder('analyses')"
+              ng-model="dashboard.analysesSortBy">
+              <i
+                class="sort-icon sort-active"
+                ng-if="sorting.djangoAttribute === dashboard.analysesSortBy"
+                ng-class="{'icon-sort-up': !dashboard.analysesSortDesc, 'icon-sort-down': dashboard.analysesSortDesc}"></i>
+              <i
+                class="sort-icon icon-sort"
+                ng-if="sorting.djangoAttribute !== dashboard.analysesSortBy"></i>
+              {{ sorting.label }}
+          </label>
+        </div>
+      </div>
+      <div
+        class="refinery-panel-content scrollable jquery-full-height"
+        ui-scroll-viewport
+        refinery-dashboard-panel>
+        <ul
+          class="results no-list-style">
+          <li
+            ui-scroll="analysis in dashboard.analyses"
+            adapter="dashboard.analysesAdapter">
+            <span class="spinner">
+              <i
+                class="analyses-status {{ analysis.status | analysisStatusIcon }}"
+                title="{{ analysis.status | analysisStatusTitle }}"
+                tool-tip
+                tool-tip-container="body"
+                tool-tip-placement="left">
+              </i>
+            </span>
+            <span ng-if="analysis.status === 'RUNNING' || analysis.status === 'UNKNOWN'">
+              <a
+                ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}/#/analyses">
+                {{ analysis.name }}
+              </a>
+            </span>
+            <span ng-if="analysis.status !== 'RUNNING' && analysis.status !== 'UNKNOWN'">
+              <a
+                ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}/">
+                {{ analysis.name }}
+              </a>
+            </span>
+          </li>
+          <li ng-if="dashboard.analysesAdapter.isLoading">
+            <div class="refinery-request-loading">
+              <span class="refinery-spinner"></span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  class="span4 pushable"
+  ng-class="{'pushed': dashboard.dataSetPreview}">
+  <div class="refinery-panel">
+    <div class="refinery-header">
+      <span class="refinery-header-left">
+        <h3><i class="m-r-1-4 icon-cog"></i>Workflows</h3>
+      </span>
+    </div>
+    <div class="refinery-sub-panel">
+      <div class="refinery-panel-header">
+        <div
+          class="refinery-notification"
+          ng-class="{'active': dashboard.workflows.total === 0}">
+          <div
+            class="refinery-notification-info"
+            ng-show="dashboard.workflows.total === 0">
+            <strong>Info</strong>
+            No workflows available.
+          </div>
+        </div>
+        <div class="floatbox">
+          <div class="floatbox-min-right">
+            <button
+              class="icon-only icon-filter"
+              title="Filter &amp; Sort"
+              ng-class="{'showing': dashboard.showWorkflowsFilterSort, 'active': dashboard.workflowsFilterSort}"
+              ng-click="dashboard.showWorkflowsFilterSort = !!!dashboard.showWorkflowsFilterSort"
+              ng-if="dashboard.workflows.totalReadable"
+              close-on-outer-click-external-trigger="dashboard.workflowsFilterSort"
+              tool-tip
+              tool-tip-container="body"
+              tool-tip-placement="left">
+            </button>
+          </div>
+          <div class="floatbox-max-left">
+            <h4>
+              {{ dashboard.workflows.totalReadable }}
+              {{ dashboard.workflows.totalReadable > 1 ? 'workflows' : 'workflow' }}
+            </h4>
+          </div>
+        </div>
+      </div>
+      <div
+        class="refinery-filter-sort"
+        ng-show="dashboard.showWorkflowsFilterSort"
+        close-on-outer-click="dashboard.showWorkflowsFilterSort"
+        close-on-outer-click-id="dashboard.workflowsFilterSort">
+        <h5>Sort by</h5>
+        <div
+          class="entry"
+          ng-repeat="sorting in dashboard.workflowsSorting track by $index">
+          <label class="radio radio-button-hide">
+            <input
+              type="radio"
+              value="{{ sorting.djangoAttribute }}"
+              ng-click="dashboard.toggleSortOrder('workflows')"
+              ng-model="dashboard.workflowsSortBy">
+              <i
+                class="sort-icon sort-active"
+                ng-if="sorting.djangoAttribute === dashboard.workflowsSortBy"
+                ng-class="{'icon-sort-up': !dashboard.workflowsSortDesc, 'icon-sort-down': dashboard.workflowsSortDesc}"></i>
+              <i
+                class="sort-icon icon-sort"
+                ng-if="sorting.djangoAttribute !== dashboard.workflowsSortBy"></i>
+              {{ sorting.label }}
+          </label>
+        </div>
+      </div>
+      <div
+        class="refinery-panel-content scrollable jquery-full-height"
+        ui-scroll-viewport
+        refinery-dashboard-panel>
+        <ul
+          class="results no-list-style">
+          <li
+            ui-scroll="workflow in dashboard.workflows"
+            adapter="dashboard.workflowsAdapter">
+            <a ng-href="workflows/{{ workflow.uuid }}">{{ workflow.name }}</a>
+          </li>
+          <li ng-if="dashboard.workflowsAdapter.isLoading">
+            <div class="refinery-request-loading">
+              <span class="refinery-spinner"></span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- <div
+  class="span4 pushable"
+  ng-class="{'pushed': dashboard.dataSetPreview}">
+  <div class="refinery-panel">
+    <div class="refinery-header">
+      <span class="refinery-header-left">
+        <h3><i class="m-r-1-4 icon-folder-open"></i>Projects</h3>
+      </span>
+    </div>
+    <div class="refinery-sub-panel">
+      <div class="refinery-panel-header">
+        <div class="refinery-notification">
+          <div
+            class="refinery-notification-info"
+            ng-show="dashboard.projects.total === 0">
+            <strong>Info</strong>
+            No projects available.
+          </div>
+        </div>
+        <div class="floatbox">
+          <div class="floatbox-min-right">
+          </div>
+          <div class="floatbox-max-left">
+            <h4>
+              {{ dashboard.projects.totalReadable }}
+              {{ dashboard.projects.totalReadable > 1 ? 'projects' : 'project' }}
+            </h4>
+          </div>
+        </div>
+      </div>
+      <div
+        class="refinery-panel-content scrollable jquery-full-height"
+        ui-scroll-viewport
+        refinery-dashboard-panel>
+        <ul
+          class="results no-list-style">
+          <li
+            ui-scroll="project in dashboard.projects"
+            adapter="dashboard.projectsAdapter">
+            <a ng-href="projects/{{ project.uuid }}">{{ project.name }}</a>
+          </li>
+          <li ng-if="dashboard.projectsAdapter.isLoading">
+            <div class="refinery-request-loading">
+              <span class="refinery-spinner"></span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div> -->

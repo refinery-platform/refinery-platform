@@ -148,11 +148,11 @@
 
     <field name="technology_exact" type="string" indexed="true" stored="true" multiValued="true" />
 
-    <field name="group_ids" type="text_en" indexed="true" stored="true" multiValued="true" />
-
     <field name="uuid" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="modification_date" type="date" indexed="true" stored="true" multiValued="false" />
+
+    <field name="title" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
 
@@ -161,6 +161,8 @@
     <field name="name" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="creation_date" type="date" indexed="true" stored="true" multiValued="false" />
+
+    <field name="access" type="text_en" indexed="true" stored="true" multiValued="true" />
 
     <field name="content_auto" type="edge_ngram" indexed="true" stored="true" multiValued="false" />
 
@@ -171,8 +173,6 @@
     <field name="summary" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="technology" type="text_en" indexed="true" stored="true" multiValued="true" />
-
-    <field name="owner_id" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="description" type="text_en" indexed="true" stored="true" multiValued="false" />
 

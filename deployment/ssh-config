@@ -1,0 +1,3 @@
+Host github.com
+  UserKnownHostsFile /dev/null
+  StrictHostKeyChecking no

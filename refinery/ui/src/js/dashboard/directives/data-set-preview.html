@@ -1,0 +1,169 @@
+<div ng-style="preview.style">
+  <div
+    class="refinery-panel-topbar"
+    ng-class="{'allow-overflow': preview.animationFinished}">
+    <div
+      class="floatbox"
+      ng-class="{'allow-overflow': preview.animationFinished}">
+      <div class="floatbox-min-right">
+        <button
+          class="close-preview btn"
+          ng-click="preview.close()">
+          <i class="icon-double-angle-left"></i>
+          Close
+        </button>
+        <div class="btn-group dropdown" ng-if="preview.user.isAuthenticated">
+          <button type="button" class="btn dropdown-toggle">
+            <i class="icon-edit"></i> Edit <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu pull-right">
+            <li>
+              <a
+                class="clickable spinnable"
+                ng-class="{'disabled':!preview.permissions}"
+                ng-click="preview.openPermissionEditor()">
+                <div class="refinery-spinner" ng-if="preview.permissionsLoading !== false"></div>
+                Permissions
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="floatbox-max-left">
+        <h4 ng-bind-html="preview.dataSet.title"></h4>
+      </div>
+    </div>
+  </div>
+  <div class="refinery-global-spinner" ng-if="preview.loading !== false">
+    <div class="refinery-spinner"></div>
+  </div>
+  <div class="content scrollable">
+    <div
+      class="singleStudy"
+      ng-if="preview.numStudies === 1">
+      <h5 class="refinery-subheader">Summary</h5>
+      <div class="inline-container">
+        <h6>Description</h6>
+        <p>{{ preview.studies.description }}</p>
+      </div>
+      <div class="inline-container" ng-if="preview.studies.sources.length">
+        <h6>Sources</h6>
+        <ul class="badge-list">
+          <li ng-repeat="source in preview.studies.sources | limitTo: preview.maxBadges track by $index ">
+            {{ source.name }}
+            <span
+              class="badge-characteristic"
+              ng-if="source.attributes.length">
+              {{ source.attributes[0].value }}
+            </span>
+          </li>
+        </ul>
+        <button
+          class="is-mirrorable icon-only"
+          ng-if="preview.maxBadges < this.infinity && preview.maxBadges < preview.studies.sources.length"
+          ng-click="preview.toggleBadges()"
+          ng-class="{'is-mirrored': preview.maxBadges > preview.studies.sources.length}">
+          <i class="icon-chevron-sign-right"></i>
+        </button>
+      </div>
+      <div class="inline-container">
+        <h6>Number of files</h6>
+        <p>{{ preview.dataSet.file_count }}</p>
+      </div>
+      <h5 class="refinery-subheader">
+        Analyses
+        <span class="badge">{{ preview.numAnalyses }}</span>
+      </h5>
+      <ol
+        class="no-list-style"
+        ng-if="preview.numAnalyses">
+        <li ng-repeat="analysis in preview.analyses">
+          <i
+            class="analyses-status {{ analysis.status | analysisStatusIcon }}"
+            title="{{ analysis.status | analysisStatusTitle }}"
+            tool-tip
+            tool-tip-container="body"
+            tool-tip-placement="left">
+          </i>
+          <span ng-if="analysis.status === 'UNKNOWN'">
+            {{ analysis.name }}
+          </span>
+          <span ng-if="analysis.status !== 'UNKNOWN'">
+            <a ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
+              {{ analysis.name }}
+            </a>
+          </span>
+        </li>
+      </ol>
+      <h5 class="refinery-subheader">
+        Protocols
+        <span class="badge">{{ preview.studies.protocols.length }}</span>
+      </h5>
+      <ol
+        class="numbered-list protocols"
+        ng-if="preview.studies.protocols.length">
+        <li ng-repeat="protocol in preview.studies.protocols track by $index">
+          <h6>{{ protocol.name }}</h6>
+          <p class="description" ng-if="protocol.description.length">
+            {{ protocol.description }}
+          </p>
+        </li>
+      </ol>
+      <h5 class="refinery-subheader">
+        References
+        <span class="badge">{{ preview.studies.publications.length }}</span>
+      </h5>
+      <ul
+        class="no-list-style references"
+        ng-if="preview.studies.publications.length">
+        <li ng-repeat="publication in preview.studies.publications track by $index">
+          <span
+            class="refinery-spinner"
+            ng-if="publication.citation.isLoading !== false"></span>
+          <div ng-if="publication.citation.isLoading === false">
+            <span class="title">{{ publication.citation.title }}</span>
+            <span class="authors">{{ publication.citation.authors }}</span>
+            <span class="journal">
+              <em>{{ publication.citation.journal }}</em>
+              ({{ publication.citation.year }}),
+              {{ publication.citation.volume }},
+              {{ publication.citation.issue }},
+              {{ publication.citation.pages }}
+            <span>
+            <span class="links">
+              <a
+                target="_blank"
+                ng-if="publication.doi"
+                ng-href="http://dx.doi.org/{{ publication.doi }}">
+                <i class="icon-external-link-sign" aria-hidden="true"></i>
+                Source
+              </a>
+              <a
+                target="_blank"
+                ng-if="publication.pubmed_id"
+                ng-href="http://www.ncbi.nlm.nih.gov/pubmed/{{ publication.pubmed_id }}">
+                <i class="icon-external-link-sign" aria-hidden="true"></i>
+                PubMed
+              </a>
+            </span>
+            <span class="abstract inline-container">
+              <h6>Abstract</h6>
+              <p>{{ publication.citation.abstract | cut:true:publication.citation.abstractLength }}</p>
+              <button
+                class="is-mirrorable icon-only"
+                ng-click="preview.toggleAbstract(publication.citation)"
+                ng-class="{'is-mirrored': publication.citation.abstractLength > preview.abstractLength}">
+                <i class="icon-chevron-sign-right"></i>
+              </button>
+            </span>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div
+      class="multiStudies"
+      ng-if="preview.numStudies > 1">
+      <p>Multiple studies per data set are not supported yet.</p>
+    </div>
+  </div>
+</div>

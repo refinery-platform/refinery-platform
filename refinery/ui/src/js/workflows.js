@@ -60,7 +60,7 @@ angular.module('refineryWorkflows', [])
     else {
       // is this necessary?
       return true;
-    }
+      }
   };
 
   this.getUuid = function() {

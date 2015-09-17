@@ -1,31 +1,42 @@
 {% extends "base.html" %}
 
+{% load static %}
+
 {% block title %}
 {{ block.super }} - Home
 {% endblock %}
 
+{% block head_html %}
+<link href="{% static 'styles/css/animate.css' %}" rel="stylesheet">
+<script type="text/javascript">
+  // Global variables for the JavaScript world
+  window.publicGroupId = {{ public_group_id }};
+</script>
+{% endblock %}
+
 {% block subheader %}
   <div class="page-header">
-  	<h1>
-  		Launch Pad
-		{% if user.is_authenticated %}
-			<small>
-				{% if user.first_name != "" or user.last_name != "" %}
-					{{ user.first_name }} {{ user.last_name }}
-				{% else %}
-					{{ user.username }}				
-				{% endif %}
-			</small>
-		{% endif %} 
-	</h1>  	  	
+    <h1>
+      Launch Pad
+    {% if user.is_authenticated %}
+      <small>
+        {% if user.first_name != "" or user.last_name != "" %}
+          {{ user.first_name }} {{ user.last_name }}
+        {% else %}
+          {{ user.username }}
+        {% endif %}
+      </small>
+      <div id="user-id" style="display:none;">{{ user.id }}</div>
+    {% endif %}
+  </h1>
   </div>
 {% endblock %}
 
 {% block content %}
 {% if users %}
-	<!-- only super users get to see this -->
-	<!--
-	<h2>Users ({{ users|length}})</h2> 
+  <!-- only super users get to see this -->
+  <!--
+  <h2>Users ({{ users|length}})</h2>
     <ul>
     {% for user in users %}
         <li><a href="users/{{ user.username }}">{{ user.username }}</a>: {{ user.first_name }} {{ user.last_name }} ({{ user.get_profile.affiliation }}): {{ user.email }}</li>
@@ -34,322 +45,10 @@
    -->
 {% endif %}
 
-<div class="row-fluid">
-	{% if REFINERY_REPOSITORY_MODE %}
-		<div class="span8">
-	{% else %}
-		<div class="span4">
-	{% endif %}	
-		<div class="refinery-panel refinery-panel-content scrollable">
-			<div class="refinery-header">
-				<span class="refinery-header-left">
-					<h3><i class="icon-file"></i>&nbsp;&nbsp;Data Sets</h3>
-				</span>
-				{% if user.is_authenticated and not REFINERY_REPOSITORY_MODE %}       
-					<span class="refinery-header-right">
-						<h4><a href={% url "import_isa_tab" %}><i class="icon-plus-sign"></i></a></h4>
-					</span> 
-				{% endif %}				
-			</div>
-		
-		{% if data_sets %}	
-			<table class="table table-condensed">
-				<thead>
-					<tr>
-						<th colspan="2">
-							Name
-						</th>
-						{% if REFINERY_REPOSITORY_MODE %}
-						<th>
-							Description
-						</th>
-						{% endif %}	    
-					</tr>
-				</thead>
-				<tbody>
-		    	{% for data_set in data_sets %}
-		        	<tr>
-		    	    	<td width="0">
-							{% if data_set.get_owner == user %}
-								<i class="icon-user"></i>
-							{% else %}
-								{% if data_set.is_public %}
-									<i class="icon-globe"></i>
-								{% else %}
-									<i class="icon-group"></i>								
-								{% endif %}
-							{% endif %}
-						</td>
-				    	<td width="100%">
-							<a href="{% url "data_set" data_set.uuid %}">{{ data_set.name }}</a>
-							{% if data_set.download_set.all|length > 0 %}
-								<table class="table-condensed" width="100%">
-									{% for download in data_set.download_set.all %}
-									<tr>
-										<td>
-											<i class="icon-download"></i>
-										</td>																		
-										<td>
-											<a href="{{download.file_store_item.get_full_url}}">{{ download.name }}</a>
-										</td>																		
-										<td>
-											{{ download.file_store_item.get_file_size|filesizeformat }}
-										</td>																		
-									</tr>
-									{% endfor %}
-								</table>
-							{% endif %}
-			        	</td>
-						{% if REFINERY_REPOSITORY_MODE %}
-				    	<td width="100%">
-							{{ data_set.summary }}
-						</td>
-						{% endif %}	    
-			        </tr>
-		    	{% endfor %}
-				</tbody>		
-			</table>
-			 
-		{% else %}
-			<div class="alert alert-info">
-				{% if user.is_authenticated %}       
-					No data sets available.
-				{% else %}
-					No public data sets available.
-				{% endif %}		  
-			</div>
-		{% endif %}
-		
-		</div>	
-	</div>	
-	
-<div class="span4">
-
-<div class="refinery-panel refinery-panel-content scrollable">
-<div class="refinery-header">
-	<span class="refinery-header-left">
-		{% if REFINERY_REPOSITORY_MODE %}
-		<h3><i class="icon-download"></i>&nbsp;&nbsp;Downloads</h3>
-		{% else %}
-		<h3><i class="icon-folder-open"></i>&nbsp;&nbsp;Projects</h3>		
-		{% endif %}
-	</span>
-
-	{% if user.is_authenticated and not REFINERY_REPOSITORY_MODE %}       
-		<span class="refinery-header-right">
-			<h4><a href="{% url "project_new" %}"><i class="icon-plus-sign"></i></a></h4> 
-		</span>	
-	{% endif %}		
+<div
+  class="row-fluid refinery-dashboard"
+  ng-controller="DashboardCtrl as dashboard"
+  ui-view>
 </div>
 
-
-{% if projects or unassigned_analyses %}
-
-<table class="table table-condensed">
-	<thead>
-		<tr>
-			<th width="100%">
-				Name
-			</th>    
-			<th width="0%">
-				{% if REFINERY_REPOSITORY_MODE %}
-				Archives
-				{% else %}
-				Analyses		
-				{% endif %}
-			</th>    
-		</tr>
-	</thead>
-	<tbody>
-		
-	{% if unassigned_analyses %}
-		{% if unassigned_analyses.all|length > 0 %}
-			{% if not REFINERY_REPOSITORY_MODE %}
-		    <tr>
-		        <td>
-		        	<i class="icon-exclamation-sign"></i>&nbsp;Unassigned Analyses
-		        </td>
-		        </td>
-		    	<td>
-		        	{{unassigned_analyses.all|length}}
-		        </td>
-		    </tr>
-		    {% endif %}
-			{% for analysis in unassigned_analyses.all %}
-			    <tr>
-			    	<td>
-			    		{% if analysis.status == "SUCCESS" %}
-				    		<a href="{% url "data_set_analysis" analysis.data_set.uuid analysis.uuid %}">{{ analysis.name }} {{analysis.workflow.type}}</a>
-			    		{% else %}
-				    		<a href="{% url "analysis_status" analysis.uuid %}">{{ analysis.name }} {{analysis.workflow.type}}</a>
-			    		{% endif %}
-			    	</td>
-			    	<td>
-			    		{% if analysis.status == "SUCCESS" %}
-				    		<span class="badge badge-info"><i class="icon-ok"></i></span>
-			    		{% else %}
-				    		<span id="analysis-{{ analysis.uuid }}-status"></span>
-			    		{% endif %}
-			    	</td>
-			    </tr>
-			{% endfor %}	
-		{% endif %}
-	{% endif %}
-
-	{% if not REFINERY_REPOSITORY_MODE %}
-	    {% for project in projects %}
-	    <tr>
-	    	<td>
-				{% if project.get_owner == user %}
-					<i class="icon-user"></i>
-				{% else %}
-					{% if project.is_public %}
-						<i class="icon-globe"></i>
-					{% else %}
-						<i class="icon-group"></i>								
-					{% endif %}
-				{% endif %}
-	        	&nbsp;<a href="{% url "project" project.uuid %}">{{ project.name }}</a>
-	        </td>
-	    	<td>
-	        {{project.analyses.all|length}}
-	        </td>
-	    </tr>
-			{% for analysis in project.analyses.all %}
-			    <tr>
-			    	<td>
-			    		{% if analysis.status == "SUCCESS" %}
-				    		<a href="{% url "data_set_analysis" analysis.data_set.uuid analysis.uuid %}">{{ analysis.name }} {{analysis.workflow.type}}</a>
-			    		{% else %}
-				    		<a href="{% url "analysis_status" analysis.uuid %}">{{ analysis.name }} {{analysis.workflow.type}}</a>
-			    		{% endif %}
-			    	</td>
-				    <td>
-			    		{% if analysis.status == "SUCCESS" %}
-				    		<span class="badge badge-info"><i class="icon-ok"></i></span>
-			    		{% else %}
-				    		<span id="analysis-{{ analysis.uuid }}-status"></span>
-			    		{% endif %}
-				    </td>
-			    </tr>
-			{% endfor %}
-	    {% endfor %}
-	{% endif %}
-		
-	</tbody>
-</table>
-{% else %}
-
-	<div class="alert alert-info">
-		{% if REFINERY_REPOSITORY_MODE %}
-			{% if user.is_authenticated %}       
-				No archives available.
-			{% else %}
-				No public archives available.
-			{% endif %}		  
-		{% else %}
-			{% if user.is_authenticated %}       
-				No projects available.
-			{% else %}
-				No public projects available.
-			{% endif %}		  
-		{% endif %}	
-	</div>
-{% endif %}
-</div> 		
-</div>
-
-
-{% if not REFINERY_REPOSITORY_MODE %}
-<div class="span4">
-<div class="refinery-panel refinery-panel-content scrollable">	
-<div class="refinery-header">
-	<span class="refinery-header-left">
-		<h3><i class="icon-cog"></i>&nbsp;&nbsp;Workflows</h3>
-	</span>
-</div>
-	
-{% if workflows %}
-	<table class="table table-condensed">
-		<thead>
-			<tr>
-				<th>
-					Name
-				</th>    
-			</tr>
-		</thead>
-		<tbody>
-		{% for workflow in workflows %}
-        <tr>
-        	<td>
-        		<a href="{% url "workflow" workflow.uuid %}">{{ workflow.name }}</a>
-        	</td>
-        </tr>
-    	{% endfor %}
-		</tbody>		
-	</table>
-{% else %}
-	<div class="alert alert-info">
-		{% if user.is_authenticated %}       
-			No workflows available.
-		{% else %}
-			No public workflows available.
-		{% endif %}		  
-	</div>
-{% endif %}
-	
-</div>
-</div>
-{% endif %}
-
-</div>
-{% endblock %}
-
-{% block script %}
-  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/analysis_manager/analysis_monitor.js"></script>
-
-  <script>	    	
-    $(document).ready(function() {		
-      var monitors = [];
-      var callbacks = [];
-      var intervalIds = [];
-
-      {% for analysis in unassigned_analyses.all %}
-        monitors["{{ analysis.uuid }}"] = new AnalysisMonitor(
-          "{{ analysis.uuid }}",
-          document.location.protocol + "//" + document.location.host,
-          "",
-          "{{ csrf_token }}"
-        );
-
-        callbacks["{{ analysis.uuid }}"] = function() {
-          monitors["{{ analysis.uuid }}"].getAnalysisProgress(
-            function(percentDone) {
-              $("#analysis-{{ analysis.uuid }}-status")
-              .html("<span class=\"badge\"><i class=\"icon-cog icon-spin\"></i>&nbsp;" + percentDone + "</span>");
-            },
-            function(result) {
-              if (result.overall === 'SUCCESS') {
-                $("#analysis-{{ analysis.uuid }}-status")
-                .html("<span class=\"badge badge-info\"><i class=\"icon-ok\"></i></span>");
-              }
-              else {
-                $("#analysis-{{ analysis.uuid }}-status")
-                .html("<span class=\"badge badge-info\"><i class=\"icon-warning-sign\"></i></span>");
-              }
-              // analysis has finished successfully - no more monitoring required
-              clearInterval( intervalIds["{{ analysis.uuid }}"] );
-              delete callbacks["{{ analysis.uuid }}"];
-              delete monitors["{{ analysis.uuid }}"];
-            }
-          );
-        };
-
-        //monitors["{{ analysis.uuid }}"].isAnalysisRunning( callbacks["{{ analysis.uuid }}"]() );
-        callbacks["{{ analysis.uuid }}"]();			
-
-        intervalIds["{{ analysis.uuid }}"] = setInterval( callbacks["{{ analysis.uuid }}"], 5000 );
-      {% endfor %}
-    });    		
-  </script>
 {% endblock %}

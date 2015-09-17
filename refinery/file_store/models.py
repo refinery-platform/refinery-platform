@@ -18,6 +18,7 @@ import os
 import re
 import logging
 from urlparse import urlparse, urljoin
+from celery.result import AsyncResult
 from django.conf import settings
 from django.dispatch import receiver
 from django.db import models
@@ -31,22 +32,20 @@ logger = logging.getLogger('file_store')
 
 
 def _mkdir(path):
-    '''Create directory given absolute file system path.
+    """Create directory given absolute file system path.
     Does not create intermediate dirs if they don't exist.
 
     :param path: Absolute file system path.
     :type path: str.
     :returns: bool -- True if directory was created, False if it wasn't.
-
-    '''
-    logger.debug("Creating directory %s", path)
+    """
+    logger.debug("Creating directory '%s'", path)
     try:
         os.mkdir(path)
     except OSError as e:
-        logger.error("Error creating directory. OSError: [Errno %s], error: %s, path: %s",
-                     e.errno, e.strerror, e.filename)
+        logger.error("Error creating directory '%s': %s", path, e)
         return False
-    logger.info("Directory %s created", path)
+    logger.info("Created directory '%s'", path)
     return True
 
 
@@ -55,7 +54,8 @@ if not settings.FILE_STORE_DIR:
     settings.FILE_STORE_DIR = 'file_store'   # relative to MEDIA_ROOT
 
 # absolute path to the file store root dir
-FILE_STORE_BASE_DIR = os.path.join(settings.MEDIA_ROOT, settings.FILE_STORE_DIR)
+FILE_STORE_BASE_DIR = os.path.join(settings.MEDIA_ROOT,
+                                   settings.FILE_STORE_DIR)
 # create this directory in case it doesn't exist
 if not os.path.isdir(FILE_STORE_BASE_DIR):
     _mkdir(FILE_STORE_BASE_DIR)
@@ -66,17 +66,19 @@ FILE_STORE_TEMP_DIR = os.path.join(FILE_STORE_BASE_DIR, 'temp')
 if not os.path.isdir(FILE_STORE_TEMP_DIR):
     _mkdir(FILE_STORE_TEMP_DIR)
 
-# To make sure we can move uploaded files into file store quickly instead of copying
+# To make sure we can move uploaded files into file store quickly instead of
+# copying
 if not settings.FILE_UPLOAD_TEMP_DIR:
     settings.FILE_UPLOAD_TEMP_DIR = FILE_STORE_TEMP_DIR
 # To keep uploaded files always on disk
 if not settings.FILE_UPLOAD_MAX_MEMORY_SIZE:
     settings.FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
-# http://stackoverflow.com/questions/4832626/how-does-django-construct-the-url-returned-by-filesystemstorage
-FILE_STORE_BASE_URL = urljoin(settings.MEDIA_URL, settings.FILE_STORE_DIR) + '/'
+# http://stackoverflow.com/q/4832626
+FILE_STORE_BASE_URL = \
+    urljoin(settings.MEDIA_URL, settings.FILE_STORE_DIR) + '/'
 
-#TODO: expand the list of file types. Reference:
+# TODO: expand the list of file types. Reference:
 # http://wiki.g2.bx.psu.edu/Admin/Datatypes/Adding%20Datatypes
 # http://en.wikipedia.org/wiki/List_of_file_formats#Biology
 # list of file types in alphabetical order for convenience
@@ -119,7 +121,7 @@ FILE_TYPES = (
     (BED, 'BED file'),
     (BIGBED, 'Big BED'),
     (BIGWIG, 'Big WIG'),
-    (CBS, 'Circular Binary Segmentation File'), # see SEG below
+    (CBS, 'Circular Binary Segmentation File'),  # see SEG below
     (CEL, 'Affymetrix Probe Results file'),
     (CSV, 'Comma Separated Values'),
     (ELAND, 'Eland file'),
@@ -136,7 +138,7 @@ FILE_TYPES = (
     (FASTQSOLEXA, 'FASTQ Solexa'),
     (PDF, 'Portable Document Format'),
     (SAM, 'Sequence Alignment/Map'),
-    (SEG, 'Segmented Data File'), # http://broadinstitute.org/software/igv/SEG
+    (SEG, 'Segmented Data File'),  # http://broadinstitute.org/software/igv/SEG
     (TABULAR, 'Tabular file'),
     (TDF, 'TDF file'),
     (TGZ, 'Gzip compressed tar archive'),
@@ -184,7 +186,7 @@ FILE_EXTENSIONS = {
 
 
 def file_path(instance, filename):
-    '''Construct relative file system path for new file store files relative to
+    """Construct relative file system path for new file store files relative to
     FILE_STORE_BASE_DIR.
     Based on
     http://michaelandrews.typepad.com/the_technical_times/2009/10/creating-a-hashed-directory-structure.html
@@ -194,12 +196,11 @@ def file_path(instance, filename):
     :param filename: requested filename.
     :type filename: str.
     :returns: str -- if success, None if failure.
-
-    '''
+    """
     hashcode = hash(filename)
     mask = 255  # bitmask
-    # use the first and second bytes of the hash code represented as zero-padded
-    # hex numbers as directory names
+    # use the first and second bytes of the hash code represented as
+    # zero-padded hex numbers as directory names
     # provides 256 * 256 = 65536 of possible directory combinations
     dir1 = "{:0>2x}".format(hashcode & mask)
     dir2 = "{:0>2x}".format((hashcode >> 8) & mask)
@@ -209,49 +210,82 @@ def file_path(instance, filename):
     return os.path.join(instance.sharename, dir1, dir2, filename)
 
 
-class _FileStoreItemManager(models.Manager):
-    '''Custom model manager to handle creation and retrieval of FileStoreItems.
+def is_url(string):
+    """Check if a given string is a URL"""
+    return urlparse(string).scheme != ""
 
-    '''
+
+def map_source(source):
+    """convert URLs to file system paths by applying file source map"""
+    for pattern, replacement in \
+            settings.REFINERY_FILE_SOURCE_MAP.iteritems():
+        translated_source = re.sub(pattern, replacement, source)
+        if source != translated_source:
+            source = translated_source
+            break
+    return source
+
+
+def generate_file_source_translator(username='', base_path=''):
+    """Generate file source reference translator function based on username or
+    base_path
+    username: user's subdirectory in settings.REFINERY_DATA_IMPORT_DIR
+    base_path: absolute path to prepend to source if source is relative
+    """
+    def translate(source):
+        """Convert file source to absolute path
+        source: URL, absolute or relative file system path
+        """
+        source = map_source(source.strip())
+        # ignore URLs and absolute file paths
+        if is_url(source) or os.path.isabs(source):
+            return source
+        # process relative path
+        if base_path:
+            source = os.path.join(base_path, source)
+        elif username:
+            source = os.path.join(
+                settings.REFINERY_DATA_IMPORT_DIR, username, source)
+        else:
+            raise ValueError("Failed to translate relative source path: "
+                             "must provide either username or base_path")
+        return source
+    return translate
+
+
+class _FileStoreItemManager(models.Manager):
+    """Custom model manager to handle creation and retrieval of FileStoreItems
+    """
     def create_item(self, source, sharename='', filetype=''):
-        '''A "constructor" for FileStoreItem.
-        
+        """A "constructor" for FileStoreItem.
+
         :param source: URL or absolute file system path to a file.
         :type source: str.
         :returns: FileStoreItem -- if success, None if failure.
-
-        '''
+        """
         # it doesn't make sense to create a FileStoreItem without a file source
         if not source:
             logger.error("Source is required but was not provided")
             return None
-        # translate source if necessary
-        for pattern, replacement in settings.REFINERY_FILE_SOURCE_MAP.iteritems():
-            translated_source = re.sub(pattern, replacement, source)
-            if source != translated_source:
-                source = translated_source
-                break
 
-        item = self.create(source=source, sharename=sharename)
+        item = self.create(source=map_source(source), sharename=sharename)
 
-        # assign a file type
         item.set_filetype(filetype)
 
-        # try symlinking
-        if os.path.isabs(item.source):
+        # symlink if source is a file system path outside of the import dir
+        if (os.path.isabs(item.source) and
+                settings.REFINERY_DATA_IMPORT_DIR not in item.source):
             item.symlink_datafile()
 
         return item
 
     def get_item(self, uuid):
-        '''Handles potential exceptions when retrieving a FileStoreItem.
-
+        """Handles potential exceptions when retrieving a FileStoreItem
         :param uuid: UUID of a FileStoreItem.
         :type uuid: str.
-        :returns: FileStoreItem -- model instance if exactly one match is found,
-        None otherwise.
-
-        '''
+        :returns: FileStoreItem -- model instance if exactly one match is
+        found, None otherwise.
+        """
         try:
             item = FileStoreItem.objects.get(uuid=uuid)
         except FileStoreItem.DoesNotExist:
@@ -279,11 +313,15 @@ symlinked_storage = SymlinkedFileSystemStorage(location=FILE_STORE_BASE_DIR,
 
 class FileStoreItem(models.Model):
     '''Represents data files on disk.
-    
+
     '''
     #: file on disk
-    datafile = models.FileField(upload_to=file_path, storage=symlinked_storage,
-                                blank=True, max_length=1024)
+    datafile = models.FileField(
+        upload_to=file_path,
+        storage=symlinked_storage,
+        blank=True,
+        max_length=1024
+    )
     #: unique ID
     uuid = UUIDField(unique=True, auto=True)
     #: source URL or absolute file system path
@@ -293,6 +331,8 @@ class FileStoreItem(models.Model):
     sharename = models.CharField(max_length=20, blank=True)
     #: type of the file
     filetype = models.CharField(max_length=15, choices=FILE_TYPES, blank=True)
+    #: file import task ID
+    import_task_id = UUIDField(blank=True)
 
     objects = _FileStoreItemManager()
 
@@ -300,30 +340,25 @@ class FileStoreItem(models.Model):
         return self.uuid + ' - ' + self.datafile.name
 
     def get_absolute_path(self):
-        '''Compute the absolute path to the data file.
-        
+        """Compute the absolute path to the data file.
         :returns: str -- the absolute path to the data file or None if the file
         does not exist on disk.
-        
-        '''
+        """
         if self.datafile and self.datafile.storage.exists(self.datafile.path):
             return self.datafile.path
         else:
-            logger.warn("Datafile doesn't exist in FileStoreItem '{}'"
-                        .format(self.uuid))
             return None
 
     def get_file_size(self, report_symlinks=False):
-        '''Return the size of the file in bytes.
-        
+        """Return the size of the file in bytes.
         :param report_symlinks: report the size of symlinked files or not.
         :type report_symlinks: bool.
-        :returns: int -- file size.  Zero if the file is:
-         - not local
-         - a symlink and report_symlinks=False
-
-        '''
-        if self.is_symlinked() and not report_symlinks: return 0
+        :returns: int -- file size. Zero if the file is:
+        - not local
+        - a symlink and report_symlinks=False
+        """
+        if self.is_symlinked() and not report_symlinks:
+            return 0
 
         try:
             return self.datafile.size
@@ -332,11 +367,12 @@ class FileStoreItem(models.Model):
 
     def get_file_extension(self):
         '''Return extension of the file on disk or from the source.
-        
+
         :returns: str -- file extension that begins with a period.
-        
+
         '''
-        if self.datafile.name:  # try to get extension from file on disk if exists
+        # try to get extension from file on disk if exists
+        if self.datafile.name:
             return get_extension_from_path(self.datafile.name)
         else:   # otherwise get it from file source
             if os.path.isabs(self.source):
@@ -354,7 +390,8 @@ class FileStoreItem(models.Model):
 
         '''
         try:
-            # FieldFile.open() and File.open() don't return file objects, so accessing it directly
+            # FieldFile.open() and File.open() don't return file objects, so
+            # accessing it directly
             return self.datafile.file.file  # FileStoreItem.FieldFile.File.file
         except ValueError as e:
             logger.error("%s [%s]", e.message, self.uuid)
@@ -362,7 +399,7 @@ class FileStoreItem(models.Model):
 
     def get_filetype(self):
         '''Retrieve the type of the datafile.
-        
+
         :returns: str -- type of the datafile.
 
         '''
@@ -396,7 +433,7 @@ class FileStoreItem(models.Model):
 
     def is_symlinked(self):
         '''Check if the data file is a symlink.
-        
+
         :returns: True if the datafile is a symlink, False if not.
 
         '''
@@ -409,7 +446,8 @@ class FileStoreItem(models.Model):
     def is_local(self):
         '''Check if the datafile can be used as a file object.
 
-        :returns: bool -- True if the datafile can be used as a file object, False otherwise.
+        :returns: bool -- True if the datafile can be used as a file object,
+            False otherwise.
 
         '''
         path = self.get_absolute_path()
@@ -423,18 +461,19 @@ class FileStoreItem(models.Model):
         return False
 
     def delete_datafile(self):
-        '''Delete datafile if it exists on disk.
+        """Delete datafile if it exists on disk.
 
         :returns: bool -- True if deletion succeeded, False otherwise.
-
-        '''
+        """
         if self.datafile.name:
             logger.debug("Deleting datafile '%s'", self.datafile.name)
             try:
                 self.datafile.delete()
             except OSError as e:
-                logger.error("Error deleting file. OSError: [Errno: %s], file name: %s, error: %s",
-                             e.errno, e.filename, e.strerror)
+                logger.error(
+                    "Error deleting file. "
+                    "OSError: [Errno: %s], file name: %s, error: %s",
+                    e.errno, e.filename, e.strerror)
                 return False
             logger.info("Datafile deleted")
             return True
@@ -442,26 +481,30 @@ class FileStoreItem(models.Model):
             return False
 
     def rename_datafile(self, name):
-        '''Change name of the data file.
-        New name may not be the same as the requested name in case of conflict with an existing file.
+        """Change name of the data file.
+        New name may not be the same as the requested name in case of conflict
+        with an existing file.
 
         :param name: new data file name.
         :type name: str.
         :returns: str -- new name if renaming succeeded, None otherwise.
 
-        '''
+        """
         logger.debug("Renaming datafile %s to %s", self.datafile.name, name)
 
         if self.is_local():
             # obtain a new path based on requested name
-            new_rel_path = self.datafile.storage.get_available_name(file_path(self, name))
+            new_rel_path = self.datafile.storage.get_available_name(
+                file_path(self, name)
+            )
             new_abs_path = os.path.join(FILE_STORE_BASE_DIR, new_rel_path)
-            
+
             # rename the physical file
             if _rename_file_on_disk(self.datafile.path, new_abs_path):
                 # update the model with new path
                 self.datafile.name = new_rel_path
-                self.save() #TODO: update FileField only: update_fields=['name']
+                # TODO: update FileField only: update_fields=['name']
+                self.save()
                 logger.info("Datafile renamed")
                 return os.path.basename(self.datafile.name)
             else:
@@ -472,17 +515,18 @@ class FileStoreItem(models.Model):
             return None
 
     def symlink_datafile(self):
-        '''Create a symlink to the file pointed by source.
+        """Create a symlink to the file pointed by source.
         Does not check that the source is an absolute file system path.
 
         :returns: bool -- True if success, False if failure.
 
-        '''
+        """
         logger.debug("Symlinking datafile to %s", self.source)
 
         if os.path.isfile(self.source):
             # construct symlink target path based on source file name
-            rel_dst_path = self.datafile.storage.get_available_name(file_path(self, os.path.basename(self.source)))
+            rel_dst_path = self.datafile.storage.get_available_name(
+                file_path(self, os.path.basename(self.source)))
             abs_dst_path = os.path.join(FILE_STORE_BASE_DIR, rel_dst_path)
 
             # create symlink
@@ -500,34 +544,42 @@ class FileStoreItem(models.Model):
             return False
 
     def get_full_url(self):
-        '''Return the full URL (including hostname) for the datafile.
+        """Return the full URL (including hostname) for the datafile.
 
         :returns: str -- local URL or source if it's a remote file
-
-        '''
+        """
         if self.is_local():
             try:
                 current_site = Site.objects.get_current()
             except Site.DoesNotExist:
-                logger.error("Cannot provide a full URL: no sites configured or SITE_ID is not set correctly")
-            #FIXME: provide a protocol-neutral URL
+                logger.error(
+                    "Cannot provide a full URL: no sites configured or "
+                    "SITE_ID is not set correctly")
+                return None
+            # FIXME: provide a URL without the domain portion
+            # visualization_manager.views may be expecting a full URL
             return 'http://{}{}'.format(current_site.domain, self.datafile.url)
         else:
+            # data file doesn't exist on disk
             if os.path.isabs(self.source):
-                # in case source is a file system path but file doesn't exist on disk
+                # source is a file system path
+                logger.error("File not found at '%s'", self.datafile.name)
                 return None
             else:
+                # source is a URL
                 return self.source
+
+    def get_import_status(self):
+        """Return file import task state"""
+        return AsyncResult(self.import_task_id).state
 
 
 def is_local(uuid):
-    '''Check if this FileStoreItem can be used as a file object
-    
+    """Check if this FileStoreItem can be used as a file object
     :param uuid: UUID of a FileStoreItem
     :type uuid: str.
     :returns: bool -- True if yes, False if no.
-    
-    '''
+    """
     try:
         item = FileStoreItem.objects.get(uuid=uuid)
     except FileStoreItem.DoesNotExist:
@@ -539,7 +591,7 @@ def is_local(uuid):
 
 def is_permanent(uuid):
     '''Check if FileStoreItem instance is referenced in the cache.
-    
+
     :param uuid: UUID of a FileStoreItem.
     :type uuid: str.
 
@@ -558,11 +610,11 @@ def get_temp_dir():
 
 def get_file_extension(uuid):
     '''Return file extension of the file specified by UUID.
-    
+
     :param uuid: UUID of a FileStoreItem.
     :type uuid: str.
     :returns: str -- extension of the data file.
-    
+
     '''
     try:
         item = FileStoreItem.objects.get(uuid=uuid)
@@ -575,7 +627,7 @@ def get_file_extension(uuid):
 
 def get_file_size(uuid, report_symlinks=False):
     '''Return size of the file specified by UUID.
-    
+
     :param uuid: UUID of a FileStoreItem.
     :type uuid: UUID.
     :param report_symlinks: report the size of symlinked files or not.
@@ -603,25 +655,29 @@ def get_file_object(file_name):
     try:
         return open(file_name, 'rb')
     except IOError as e:
-        logger.error("Could not open file: %s - error(%s): %s", file_name, e.errno, e.strerror)
+        logger.error(
+            "Could not open file: %s - error(%s): %s",
+            file_name, e.errno, e.strerror
+        )
         return None
 
 
 @receiver(pre_delete, sender=FileStoreItem)
 def _delete_datafile(sender, **kwargs):
-    '''Delete the FileStoreItem datafile when model is deleted.
-    Signal handler is required because QuerySet delete() method does a bulk delete
-    and does not call any delete() methods on the models.
+    """Delete the FileStoreItem datafile when model is deleted.
+    Signal handler is required because QuerySet delete() method does a bulk
+    delete and does not call any delete() methods on the models.
 
-    '''
+    """
     item = kwargs.get('instance')
     logger.debug("Deleting FileStoreItem with UUID '%s'", item.uuid)
     item.delete_datafile()
 
 
 def _symlink_file_on_disk(source, target):
-    '''Symlink source path to target path creating intermediate directories if they don't exist.
-    
+    '''Symlink source path to target path creating intermediate directories if
+    they don't exist.
+
     :param source: absolute file system path of the source file.
     :type source: str.
     :param target: absolute file system path of the symlink.
@@ -636,16 +692,20 @@ def _symlink_file_on_disk(source, target):
         try:
             os.makedirs(target_dir)
         except OSError as e:
-            logger.error("Error creating file store directory. OSError: [Errno %s], file name: %s, error: %s",
-                         target_dir, e.errno, e.filename, e.strerror)
+            logger.error(
+                "Error creating file store directory. "
+                "OSError: [Errno %s], file name: %s, error: %s",
+                target_dir, e.errno, e.filename, e.strerror)
             return False
 
     # create symlink
     try:
         os.symlink(source, target)
     except OSError as e:
-        logger.error("Error creating file store symlink\nOSError: [Errno %s], file name: %s, error: %s",
-                     e.errno, e.filename, e.strerror)
+        logger.error(
+            "Error creating file store symlink. "
+            "OSError: [Errno %s], file name: %s, error: %s",
+            e.errno, e.filename, e.strerror)
         return False
 
     logger.debug("Symlinked %s to %s", source, target)
@@ -653,8 +713,9 @@ def _symlink_file_on_disk(source, target):
 
 
 def _rename_file_on_disk(current_path, new_path):
-    '''Rename a file using absolute paths, creating intermediate directories if they don't exist.
-    
+    '''Rename a file using absolute paths, creating intermediate directories if
+    they don't exist.
+
     :param current_path: Existing absolute file system path.
     :type current_path: str.
     :param new_path: New absolute file system path.
@@ -665,8 +726,11 @@ def _rename_file_on_disk(current_path, new_path):
     try:
         os.renames(current_path, new_path)
     except OSError as e:
-        logger.error("Error renaming file on disk\nOSError: [Errno %s], file name: %s, error: %s. Current file name: %s. New file name: %s",
-                     e.errno, e.filename, e.strerror, current_path, new_path)
+        logger.error(
+            "Error renaming file on disk\nOSError: [Errno %s], file name: %s, "
+            "error: %s. Current file name: %s. New file name: %s",
+            e.errno, e.filename, e.strerror, current_path, new_path
+        )
         return False
 
     logger.debug("Renamed %s to %s", current_path, new_path)
@@ -688,5 +752,3 @@ class FileStoreCache:
     '''
     # doubly-linked list or heapq
     pass
-
-

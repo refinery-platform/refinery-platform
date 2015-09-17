@@ -1,190 +1,741 @@
+var fs           = require('fs');
+var hasbin       = require('hasbin');
+var isBinaryFile = require('isbinaryfile');
+
 module.exports = function(grunt) {
+  'use strict';
 
-  // Project configuration.
+  // Auto-load all packages
+  require('load-grunt-tasks')(grunt);
+
+  // Timer
+  require('time-grunt')(grunt);
+
+  var config = grunt.file.readJSON('config.json');
+
+  var lessPlugins = [];
+
+  // `--autoprefix` will enable autoprefixing of CSS files for `grunt build`
+  if (grunt.option('autoprefix')) {
+    lessPlugins.push(
+      new (require('less-plugin-autoprefix'))({
+        browsers: [
+          '> 5%',
+          'last 2 versions',
+          'Firefox ESR',
+          'Explorer >= 10',
+          'iOS >= 6',
+          'Opera >= 12',
+          'Safari >= 6'
+        ]
+      })
+    );
+  }
+
+  // Enable using `--fast`.
+  // Double `!!` converts a value into a Boolean representation and third `!`
+  // flips its value.
+  var spawn = !!!grunt.option('fast');
+
+  // Local testing, i.e. triggered on your host machine, starts all major
+  // browsers and can be invoked with `--host`.
+  var browsers = !!grunt.option('host') ?
+    ['PhantomJS', 'Chrome', 'Firefox', 'Safari'] : ['PhantomJS'];
+
   grunt.initConfig({
-
-    pkg: grunt.file.readJSON('package.json'),
-
-    source_dir: 'src',
-    vendor_dir: 'bower_components',
-    release_dir: 'app',
-    styles_dir: '../static/styles',
-
-    source_files: {
-      js: ['**/*.js'],
-      css: ['**/*.css'],
-      html: ['**/*.html'],
-    },
-    vendor_files: {
-      js: [
-        'select2/select2.min.js',
-        'jquery/jquery.min.js',
-        'angular/angular.min.js',
-        'angular-ui-select2/release/select2.min.js',
-        'angular-bootstrap/ui-bootstrap-tpls.min.js',
-        'angular-resource/angular-resource.min.js',
-        'angular-ui-router/release/angular-ui-router.min.js',
-        'angular-bootstrap/ui-bootstrap-tpls.min.js',
-        'angular-bootstrap/ui-bootstrap.min.js',
-        'tipsy/src/javascripts/jquery.tipsy.js',
-      ],
-      css: [
-        'select2/select2.css',
-        'tipsy/src/stylesheets/tipsy.css',
-      ],
-      img: [
-        'select2/select2.png',
-        'select2/select2-spinner.gif',
-        'tipsy/src/images/tipsy.gif',
-      ],
+    /*
+     * Add vendor prefixes to out CSS to ensure better browser support.
+     */
+    autoprefixer: {
+      options: {
+        browsers: [
+          '> 5%',
+          'last 2 versions',
+          'Firefox ESR',
+          'Explorer >= 10',
+          'iOS >= 6',
+          'Opera >= 12',
+          'Safari >= 6'
+        ]
+      },
+      styles: {
+        files: [
+          {
+            expand: true,
+            cwd: '<%= cfg.basePath.ui.src %>/styles',
+            src: ['**/*.css'],
+            dest: '<%= cfg.basePath.ui.tmp %>/styles'
+          }
+        ]
+      }
     },
 
-    less: {
-      development: {
+    /*
+     * Read configs from `config.json`. Separating scripts and configs help
+     * to keep things readable.
+     */
+    cfg: grunt.file.readJSON('config.json'),
+
+    /*
+     * Cleaning tasks for all non-source directory for building and compiling
+     * assets.
+     */
+    clean: {
+      options: {
+        // We need this because the static dirs are outside of Grunt's root
+        force: true
+      },
+      uiBuild: [
+        '<%= cfg.basePath.ui.build %>'
+      ],
+      uiCompile: [
+        '<%= cfg.basePath.ui.compile %>'
+      ],
+      uiTmp: [
+        '<%= cfg.basePath.ui.tmp %>'
+      ],
+      staticBuild: [
+        '<%= cfg.basePath.static.build %>'
+      ],
+      staticCompile: [
+        '<%= cfg.basePath.static.compile %>'
+      ]
+    },
+
+    /*
+     *
+     */
+    copy: {
+      uiBuildImages: {
+        files: [{
+          expand: true,
+          cwd: '<%= cfg.basePath.ui.src %>/images/',
+          src: ['**/*'],
+          dest: '<%= cfg.basePath.ui.build %>/images/'
+        }]
+      },
+      uiBuildScripts: {
+        files: [{
+          expand: true,
+          cwd: '<%= cfg.basePath.ui.src %>/js/',
+          src: ['**/*.js'],
+          dest: '<%= cfg.basePath.ui.build %>/js/'
+        }]
+      },
+      uiBuildStyles: {
+        files: [{
+          expand: true,
+          cwd: '<%= cfg.basePath.ui.src %>/styles/',
+          src: ['**/*.css'],
+          dest: '<%= cfg.basePath.ui.build %>/styles/'
+        }]
+      },
+      uiBuildTemplates: {
+        files: [{
+          expand: true,
+          cwd: '<%= cfg.basePath.ui.src %>/partials/',
+          src: ['**/*.html'],
+          dest: '<%= cfg.basePath.ui.build %>/partials/'
+        }, {
+          expand: true,
+          cwd: '<%= cfg.basePath.ui.src %>/js/',
+          src: ['**/*.html'],
+          dest: '<%= cfg.basePath.ui.build %>/partials/'
+        }]
+      },
+      uiBuildVendor: {
+        files: [{
+          expand: true,
+          cwd: '<%= cfg.vendorPath %>/',
+          src: ['<%= cfg.files.vendor %>'],
+          dest: '<%= cfg.basePath.ui.build %>/vendor/'
+        }]
+      },
+      uiCompileImages: {
+        files: [{
+          expand: true,
+          cwd: '<%= cfg.basePath.ui.src %>/images/',
+          src: ['**/*'],
+          dest: '<%= cfg.basePath.ui.compile %>/images/'
+        }]
+      },
+      uiCompileTemplates: {
+        files: [{
+          expand: true,
+          cwd: '<%= cfg.basePath.ui.src %>/partials/',
+          src: ['**/*.html'],
+          dest: '<%= cfg.basePath.ui.compile %>/partials/'
+        }, {
+          expand: true,
+          cwd: '<%= cfg.basePath.ui.src %>/js/',
+          src: ['**/*.html'],
+          dest: '<%= cfg.basePath.ui.compile %>/partials/'
+        }]
+      },
+      uiCompileVendor: {
+        files: [{
+          expand: true,
+          cwd: '<%= cfg.vendorPath %>/',
+          src: ['<%= cfg.files.vendor %>'],
+          dest: '<%= cfg.basePath.ui.compile %>/vendor/'
+        }]
+      },
+      staticBuild: {
+        files: [{
+          expand: true,
+          cwd: '<%= cfg.basePath.static.src %>/images/',
+          src: ['**/*'],
+          dest: '<%= cfg.basePath.static.build %>/images/'
+        }, {
+          expand: true,
+          cwd: '<%= cfg.basePath.static.src %>/js/',
+          src: ['**/*'],
+          dest: '<%= cfg.basePath.static.build %>/js/'
+        }, {
+          expand: true,
+          cwd: '<%= cfg.basePath.static.src %>/styles/font/',
+          src: ['**/*'],
+          dest: '<%= cfg.basePath.static.build %>/styles/font/'
+        }, {
+          expand: true,
+          cwd: '<%= cfg.basePath.static.src %>/styles/img/',
+          src: ['**/*'],
+          dest: '<%= cfg.basePath.static.build %>/styles/img/'
+        }]
+      },
+      staticCompile: {
+        files: [{
+          expand: true,
+          cwd: '<%= cfg.basePath.static.src %>/images/',
+          src: ['**/*'],
+          dest: '<%= cfg.basePath.static.compile %>/images/'
+        }, {
+          expand: true,
+          cwd: '<%= cfg.basePath.static.src %>/js/',
+          src: ['**/*'],
+          dest: '<%= cfg.basePath.static.compile %>/js/'
+        }, {
+          expand: true,
+          cwd: '<%= cfg.basePath.static.src %>/styles/font/',
+          src: ['**/*'],
+          dest: '<%= cfg.basePath.static.compile %>/styles/font/'
+        }, {
+          expand: true,
+          cwd: '<%= cfg.basePath.static.src %>/styles/img/',
+          src: ['**/*'],
+          dest: '<%= cfg.basePath.static.compile %>/styles/img/'
+        }]
+      }
+    },
+
+    /*
+     * Minify CSS.
+     */
+    cssmin: {
+      ui: {
+        files: [{
+          expand: true,
+          cwd: '<%= cfg.basePath.ui.tmp %>/styles',
+          src: ['**/*.css'],
+          dest: '<%= cfg.basePath.ui.compile %>/styles'
+        }]
+      }
+    },
+
+    /*
+     * And for rapid development, we have a watch set up that checks to see if
+     * any of the files listed below change, and then to execute the listed
+     * tasks when they do. This just saves us from having to type "grunt" into
+     * the command-line every time we want to see what we're working on; we can
+     * instead just leave "grunt watch" running in a background terminal. Set it
+     * and forget it, as Ron Popeil used to tell us.
+     *
+     * But we don't need the same thing to happen for all the files.
+     */
+    delta: {
+      /*
+       * By default, we want the Live Reload to work for all tasks; this is
+       * overridden in some tasks (like this file) where browser resources are
+       * unaffected. It runs by default on port 35729, which your browser
+       * plugin should auto-detect.
+       */
+      options: {
+        livereload: 35729
+      },
+
+      /*
+       * When the Gruntfile changes, we just want to lint it. In fact, when
+       * your Gruntfile changes, it will automatically be reloaded!
+       */
+      config: {
+        files: 'config.json',
+        tasks: [
+          'build'
+        ]
+      },
+
+      /*
+       * When the Gruntfile changes, we just want to lint it. In fact, when
+       * your Gruntfile changes, it will automatically be reloaded!
+       */
+      gruntfile: {
+        files: 'Gruntfile.js',
+        tasks: [
+          'jshint:gruntfile',
+          'build'
+        ]
+      },
+
+      /*
+       * When UI images change we copy them over.
+       */
+      uiImages: {
+        files: [
+          '<%= cfg.basePath.ui.src %>/images/**/*'
+        ],
+        tasks: [
+          'copy:uiBuildImages'
+        ]
+      },
+
+      /*
+       * When UI script files change we lint them and copy them over.
+       */
+      uiScripts: {
+        files: [
+          '<%= cfg.basePath.ui.src %>/js/**/*.js'
+        ],
+        tasks: [
+          'jshint:src',
+          'copy:uiBuildScripts',
+          'concat-by-feature:build'
+        ],
         options: {
-          compress: true,
-          yuicompress: true,
-          ieCompat: false,
-          optimization: 2,
-          paths: ["<%= styles_dir %>/less", "../static/js/bootstrap/less"]
-        },
-        files: {
-          // target.css file: source.less file
-          "<%= styles_dir %>/css/font-awesome.css": "<%= styles_dir %>/less/font-awesome.less",
-          "<%= styles_dir %>/css/font-awesome-ie7.css": "<%= styles_dir %>/less/font-awesome-ie7.less",
-          "<%= styles_dir %>/css/variables.css": "<%= styles_dir %>/less/variables.less",
-          "<%= styles_dir %>/css/refinery-style.css": "<%= styles_dir %>/less/refinery-style.less",
-          // the following fail to compile:
-          //"<%= styles_dir %>/css/refinery-style-bootstrap.css": "<%= styles_dir %>/less/refinery-style-bootstrap.less",
-          //"<%= styles_dir %>/css/refinery-style-bootstrap-responsive.css": "<%= styles_dir %>/less/refinery-style-bootstrap-responsive.less",
+          spawn: spawn
+        }
+      },
+
+      /*
+       * When UI styles change we copy them over.
+       */
+      uiStyles: {
+        files: [
+          '<%= cfg.basePath.ui.src %>/styles/**/*.css'
+        ],
+        tasks: [
+          'copy:uiBuildStyles'
+        ]
+      },
+
+      /*
+       * When UI templates change we copy them over.
+       */
+      uiTemplates: {
+        files: [
+          '<%= cfg.basePath.ui.src %>/**/*.html'
+        ],
+        tasks: [
+          'copy:uiBuildTemplates'
+        ]
+      },
+
+      /*
+       * When UI vendor assets change we copy them over.
+       */
+      uiVendor: {
+        files: config.files.vendor.map(function (file) {
+          return config.vendorPath + '/' + file;
+        }),
+        tasks: [
+          'copy:uiBuildVendor'
+        ]
+      },
+
+      /*
+       * When static script files change we copy them over.
+       */
+      staticScripts: {
+        files: [
+          '<%= cfg.basePath.static.src %>/js/**/*.js'
+        ],
+        tasks: [
+          'copy:staticBuild'
+        ]
+      },
+
+      /*
+       * When static LESS files change we translate them.
+       */
+      staticStyles: {
+        files: [
+          '<%= cfg.basePath.static.src %>/styles/less/*.less'
+        ],
+        tasks: [
+          'less:build'
+        ]
+      },
+
+      /*
+       * When any of the django templates changes we just trigger a page reload
+       */
+      djangoTemplates: {
+        files: [
+          '<%= cfg.basePath.djangoTemplates %>/**/*'
+        ]
+      },
+    },
+
+    /*
+     * Set environmental variables
+     */
+    env: {
+      compile: {
+        PHANTOMJS_BIN: function() {
+          var localPhantomJS = 'node_modules/phantomjs/lib/phantom/bin/phantomjs';
+
+          // Look for a phantomjs binary of the VM by default when no `--host`
+          // flag is passed to grunt
+          if (fs.existsSync(localPhantomJS) &&
+              isBinaryFile.sync(localPhantomJS) &&
+              !!!grunt.option('host')) {
+            return localPhantomJS;
+          }
+
+          if (!!grunt.option('host') && !hasbin.sync('phantomjs')) {
+            throw new Error(
+              'No global phantomjs binary found on your host machine.'
+            );
+          }
+
+          // Use global phantomjs if it's in $path
+          return 'phantomjs';
         }
       }
     },
 
+    /*
+     * Lint source JS files to find possible flaws that could lead to errors.
+     * Custom code
+     */
     jshint: {
-      files: [
-        'Gruntfile.js',
-        '<%= source_dir %>/<%= source_files.js %>'
+      src: [
+        '<%= cfg.basePath.ui.src %>/js/**/*.js'
       ],
+      gruntfile: 'Gruntfile.js',
+      options: {
+        // All jsHint configs are located in `.jshintrc`. This is useful as
+        // editor plugins can pick up this file as well.
+        jshintrc: './.jshintrc'
+      }
     },
 
+    /*
+     * The Karma configurations.
+     */
+    karma: {
+      options: {
+        configFile: 'karma.config.js',
+        browsers: browsers
+      },
+      unit: {
+        port: 9019,
+        background: true
+      },
+      continuous: {
+        singleRun: true
+      }
+    },
+
+    /*
+     * Translate LESS into CSS. While compiling also minify and autoprefix.
+     */
+    less: {
+      build: {
+        options: {
+          paths: [
+            '<%= cfg.basePath.static.src %>/styles/less',
+            '<%= cfg.basePath.static.src %>/js/bootstrap/less'
+          ],
+          plugins: lessPlugins
+        },
+        files: {
+          '<%= cfg.basePath.static.build %>/styles/css/font-awesome-ie7.css': '<%= cfg.basePath.static.src %>/styles/less/font-awesome-ie7.less',
+          '<%= cfg.basePath.static.build %>/styles/css/font-awesome.css': '<%= cfg.basePath.static.src %>/styles/less/font-awesome.less',
+          '<%= cfg.basePath.static.build %>/styles/css/galaxy_connector.css': '<%= cfg.basePath.static.src %>/styles/less/galaxy_connector.less',
+          '<%= cfg.basePath.static.build %>/styles/css/refinery-style-bootstrap-responsive.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style-bootstrap-responsive.less',
+          '<%= cfg.basePath.static.build %>/styles/css/refinery-style-bootstrap.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style-bootstrap.less',
+          '<%= cfg.basePath.static.build %>/styles/css/refinery-style.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style.less',
+          '<%= cfg.basePath.static.build %>/styles/css/variables.css': '<%= cfg.basePath.static.src %>/styles/less/variables.less',
+          '<%= cfg.basePath.static.build %>/styles/css/workflow_visualization.css': '<%= cfg.basePath.static.src %>/styles/less/workflow_visualization.less',
+          '<%= cfg.basePath.static.build %>/styles/css/animate.css': '<%= cfg.basePath.static.src %>/styles/less/animate.less',
+        }
+      },
+      compile: {
+        options: {
+          paths: [
+            '<%= cfg.basePath.static.src %>/styles/less',
+            '<%= cfg.basePath.static.src %>/js/bootstrap/less'
+          ],
+          plugins: [
+            new (require('less-plugin-autoprefix'))({
+              browsers: [
+                '> 5%',
+                'last 2 versions',
+                'Firefox ESR',
+                'Explorer >= 10',
+                'iOS >= 6',
+                'Opera >= 12',
+                'Safari >= 6'
+              ]
+            }),
+            new (require('less-plugin-clean-css'))()
+          ]
+        },
+        files: {
+          '<%= cfg.basePath.static.compile %>/styles/css/font-awesome-ie7.css': '<%= cfg.basePath.static.src %>/styles/less/font-awesome-ie7.less',
+          '<%= cfg.basePath.static.compile %>/styles/css/font-awesome.css': '<%= cfg.basePath.static.src %>/styles/less/font-awesome.less',
+          '<%= cfg.basePath.static.compile %>/styles/css/galaxy_connector.css': '<%= cfg.basePath.static.src %>/styles/less/galaxy_connector.less',
+          '<%= cfg.basePath.static.compile %>/styles/css/refinery-style-bootstrap-responsive.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style-bootstrap-responsive.less',
+          '<%= cfg.basePath.static.compile %>/styles/css/refinery-style-bootstrap.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style-bootstrap.less',
+          '<%= cfg.basePath.static.compile %>/styles/css/refinery-style.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style.less',
+          '<%= cfg.basePath.static.compile %>/styles/css/variables.css': '<%= cfg.basePath.static.src %>/styles/less/variables.less',
+          '<%= cfg.basePath.static.compile %>/styles/css/workflow_visualization.css': '<%= cfg.basePath.static.src %>/styles/less/workflow_visualization.less',
+          '<%= cfg.basePath.static.compile %>/styles/css/animate.css': '<%= cfg.basePath.static.src %>/styles/less/animate.less',
+        }
+      }
+    },
+
+    /*
+     * `ng-annotate` annotates the sources before minifying. That is, it
+     * provides a back up solution if we forgot about the array syntax. Still
+     * we should not trust the plugin to cover all cases.
+     */
+    ngAnnotate: {
+      options: {
+        singleQuotes: true
+      },
+      compile: {
+        files: [
+          {
+            expand: true,
+            cwd: '<%= cfg.basePath.ui.src %>/js',
+            src: ['**/*.js'],
+            dest: '<%= cfg.basePath.ui.tmp %>/js'
+          }
+        ]
+      },
+    },
+
+    /*
+     * Load `package.json` for meta data.
+     */
+    pkg: grunt.file.readJSON('package.json'),
+
+    /*
+     * Minify JS
+     */
     uglify: {
       options: {
-        banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+        banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
+        sourceMap: true
       },
-      app_files: {
+      ui: {
         files: [
           {
             expand: true,
-            cwd: '<%= source_dir %>/',
-            src: '<%= source_files.js %>',
-            dest: '<%= release_dir %>/',
-            ext: '.min.js',
-          },
+            cwd: '<%= cfg.basePath.ui.tmp %>/js',
+            src: '**/*.js',
+            dest: '<%= cfg.basePath.ui.compile %>/js'
+          }
         ]
-      },
-      vendor_files: {
-        files: [
-          {
-            '<%= vendor_dir %>/angular-ui-select2/release/select2.min.js':
-            ['<%= vendor_dir %>/angular-ui-select2/src/select2.js']
-          },
-        ]
-      },
-    },
-
-    copy: {
-      app_scripts: {
-        files: [
-          {
-            expand: true,
-            cwd: '<%= source_dir %>/',
-            src: ['<%= source_files.js %>'],
-            dest: '<%= release_dir %>/',
-          },
-        ],
-      },
-      app_styles: {
-        files: [
-          {
-            expand: true,
-            cwd: '<%= source_dir %>/',
-            src: ['<%= source_files.css %>'],
-            dest: '<%= release_dir %>/',
-          },
-        ],
-      },
-      app_templates: {
-        files: [
-          {
-            expand: true,
-            cwd: '<%= source_dir %>/',
-            src: ['<%= source_files.html %>'],
-            dest: '<%= release_dir %>/',
-          },
-        ],
       },
       vendor_assets: {
         files: [
           {
-            expand: true,
-            cwd: 'bower_components/',
-            src: [
-              '<%= vendor_files.js %>',
-              '<%= vendor_files.css %>',
-              '<%= vendor_files.img %>',
-            ],
-            dest: '<%= release_dir %>/vendor/',
-          },
-        ],
-      },
-    },
-
-    clean: {
-      app_scripts: ['<%= release_dir %>/js'],
-      app_styles: ['<%= release_dir %>/styles'],
-      app_templates: ['<%= release_dir %>/partials'],
-      vendor_assets: ['<%= release_dir %>/vendor'],
-    },
-
-    watch: {
-      app_scripts: {
-        files: ['<%= source_dir %>/<%= source_files.js %>'],
-        tasks: ['jshint', 'clean:app_scripts', 'copy:app_scripts'],
-      },
-      app_styles: {
-        files: ['<%= source_dir %>/<%= source_files.css %>'],
-        tasks: ['clean:app_styles', 'copy:app_styles'],
-      },
-      app_templates: {
-        files: ['<%= source_dir %>/<%= source_files.html %>'],
-        tasks: ['clean:app_templates', 'copy:app_templates'],
-      },
-      vendor_assets: {
-        files: ['<%= vendor_dir %>/<%= vendor_files.js %>',
-                '<%= vendor_dir %>/<%= vendor_files.css %>',
-                '<%= vendor_dir %>/<%= vendor_files.img %>'],
-        tasks: ['copy:vendor_assets'],        
-      },
-      styles: {
-        files: ['<%= styles_dir %>/less/*.less'],
-        tasks: ['less'],
-        options: {
-          nospawn: true
-        }
-      }      
-    },
+            '<%= cfg.vendorPath %>/angular-ui-select2/release/select2.min.js':
+            ['<%= cfg.vendorPath %>/angular-ui-select2/src/select2.js']
+          }
+        ]
+      }
+    }
   });
 
-  // Load the plugin that provides the "uglify" task.
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-contrib-less');  
-  
-  // Default task(s).
-  grunt.registerTask('default', ['jshint', 'clean', 'uglify', 'less', 'copy']);
+  grunt.registerTask(
+    'concat-by-feature',
+    'Concat files by features excluding `spec` files',
+    function(mode) {
+      /*
+       * A utility function for sorting JavaScript sources.
+       */
+      function importanceSortJS (a, b) {
+        /*
+         * Give each type of JavaScript file a category according to then they
+         * should be loaded. The lower the number the earlier the files should
+         * be loaded.
+         */
+        var objs = [a, b];
+        for (var i = objs.length - 1; i >= 0; i--) {
+          switch (true) {
+            case objs[i].indexOf('vendor') >= 0:
+              objs[i] = 0;
+              break;
+            case objs[i].indexOf('module') >= 0:
+              objs[i] = 1;
+              break;
+            case objs[i].indexOf('settings') >= 0:
+              objs[i] = 2;
+              break;
+            case objs[i].indexOf('config') >= 0:
+              objs[i] = 3;
+              break;
+            case objs[i].indexOf('state') >= 0:
+              objs[i] = 4;
+              break;
+            case objs[i].indexOf('controller') >= 0:
+              objs[i] = 5;
+              break;
+            case objs[i].indexOf('directives') >= 0:
+              objs[i] = 6;
+              break;
+            case objs[i].indexOf('services') >= 0:
+              objs[i] = 7;
+              break;
+            case objs[i].indexOf('filters') >= 0:
+              objs[i] = 8;
+              break;
+            case objs[i].indexOf('libraries') >= 0:
+              objs[i] = 9;
+              break;
+            default:
+              objs[i] = 10;
+              break;
+          }
+        }
+        return objs[0] - objs[1];
+      }
 
+      // Read config
+      var cfg = grunt.file.readJSON('config.json'),
+          concat = grunt.config.get('concat') || {},
+          destination = mode === 'build' ? cfg.basePath.ui.build : cfg.basePath.ui.tmp,
+          features = cfg.files.features,
+          files,
+          ngAnnotate = grunt.config.get('ngAnnotate') || {};
+
+      // Loop over all features
+      features.forEach(function (feature) {
+        files = [];
+        // Get all files within a feature
+        grunt
+          .file
+          .expand([
+            cfg.basePath.ui.src + '/js/' + feature + '/**/*.js',
+            '!' + cfg.basePath.ui.src + '/js/' + feature + '/**/*.spec.js'
+          ])
+          .forEach(function (file) {
+            files.push(file);
+          });
+
+        // Sort files
+        files.sort(importanceSortJS);
+
+        // Add module prefix and suffix
+        files.unshift('module.prefix');
+        files.push('module.suffix');
+
+        concat[feature] = {
+          options: {
+            // Remove all 'use strict' statements
+            process: function(src, filepath) {
+              return '// Source: ' + filepath + '\n' +
+                src.replace(/(^|\n)[ \t]*('use strict'|"use strict");?\s*/g, '$1');
+            },
+          },
+          src: files,
+          dest: destination + '/js/' + feature.replace('/', '.') + '.js'
+        };
+      });
+      // save the new concat configuration
+      grunt.config.set('concat', concat);
+
+      // when finished run the concatinations
+      grunt.task.run('concat');
+
+      // Make sure to annotate features in place.
+      // ngAnnotate will be called by the compile script just after this task
+      // has finished.
+      if (mode === 'compile') {
+        ngAnnotate.features = {
+          files: [{
+            expand: true,
+            src: features.map(function (feature) {
+              return feature + '.js';
+            }),
+            cwd: cfg.basePath.ui.tmp + '/js',
+            dest: cfg.basePath.ui.tmp + '/js'
+          }]
+        };
+        grunt.config.set('ngAnnotate', ngAnnotate);
+      }
+    }
+  );
+
+  // Event handling
+  if (!spawn) {
+    grunt.event.on('watch', function(action, filepath){
+      // Update the config to only build the changed less file.
+      grunt.config(['jshint', 'src'], filepath);
+    });
+  }
+
+  // Default task.
+  grunt.registerTask('default', ['build', 'compile']);
+
+  // Task for running unit tests
+  grunt.registerTask('test', ['env:compile', 'karma']);
+
+  // Do as little as possible to get Refinery running to keep grunt watch
+  // responsive.
+  grunt.registerTask('build', [
+    'jshint',
+    'clean:uiBuild',
+    'clean:staticBuild',
+    'less:build',
+    'copy:uiBuildImages',
+    'copy:uiBuildScripts',
+    'copy:uiBuildStyles',
+    'copy:uiBuildTemplates',
+    'copy:uiBuildVendor',
+    'copy:staticBuild',
+    'concat-by-feature:build'
+  ]);
+
+  // Do all the heavy lifting to get Refinery ready for production.
+  grunt.registerTask('compile', [
+    'env:compile',
+    'jshint',
+    'clean:uiCompile',
+    'clean:staticCompile',
+    'less:compile',
+    'autoprefixer',
+    'cssmin',
+    // IMPORTANT:
+    // `concat-by-feature:compile` has to be called before `ngAnnotate` because
+    // it adds features to the `ngAnnotate` task.
+    'concat-by-feature:compile',
+    'ngAnnotate',
+    'uglify',
+    'copy:uiCompileImages',
+    'copy:uiCompileTemplates',
+    'copy:uiCompileVendor',
+    'copy:staticCompile',
+    'clean:uiTmp',
+    'karma'
+  ]);
+
+  grunt.renameTask('watch', 'delta');
+  grunt.registerTask('watch', [
+    'build',
+    'delta'
+  ]);
 };

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block head_html %}
+  <script src="{% static "vendor/d3/d3.min.js" %}"></script>
+  <script src="{% static "vendor/c3/c3.min.js" %}"></script>
+  <link rel="stylesheet" href="{% static "vendor/c3/c3.css" %}" />
+{% endblock %}
+
+{% block subheader %}
+<div class="page-header">
+  <h1>View FastQC Report
+  </h1>
+</div>
+{% endblock %}
+
+
+{% block content %}
+  <div ui-view></div>
+{% endblock %}

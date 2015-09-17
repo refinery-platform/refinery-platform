@@ -13,7 +13,7 @@
 {% block content %}
 <div class="refinery-panel refinery-panel-content scrollable">
 	<div class="row-fluid">
-		<form method="post" action="" class="wide" id="registration-form">
+		<form method="post" action="." class="wide" id="registration-form">
 			{% csrf_token %}
   			{% if form.errors %}
   			<div class="alert alert-error">Please correct the errors below.{{ form.non_field_errors }}</div>
