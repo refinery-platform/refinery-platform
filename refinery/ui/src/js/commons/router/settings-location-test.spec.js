@@ -6,6 +6,8 @@ describe('Constant: LocationTest', function(){
     expect(LocationTest).toBeDefined();
   });
 
+/* jshint ignore:start */
+
   it('should return true when matchpath is found', function() {
     expect(
       LocationTest("www.refinery.com","www.refinery.com", 'true')
@@ -44,4 +46,5 @@ describe('Constant: LocationTest', function(){
     ).toBe(false);
   });
 
+/* jshint ignore:end */
 });
