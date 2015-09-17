@@ -39,13 +39,8 @@ angular.module('refineryAnalysis', [])
     var tempName = workflowUuid + " " + timeStamp;
     bootbox.prompt("Enter an Analysis Name", "Cancel Analysis", "Launch" +
       " Analysis", function(name) {
-      if (name == null) {
-        bootbox.alert("Analysis was canceled.");
-      }else {
+      if (name !== null) {
         vm.launchAnalysis(name);
-        var msg = "<h3> Analysis Launched.</h3>" +
-        "<p>View progess in Analyses Tab.</p>";
-        bootbox.alert(msg);
       }
     }, tempName).addClass("bootboxAnalysisWidth");
   };
@@ -64,10 +59,28 @@ angular.module('refineryAnalysis', [])
       $log.debug("NodeSET: " + $scope.analysisConfig.nodeSetUuid);
       $log.debug("NodeREL: " + $scope.analysisConfig.nodeRelationshipUuid);
     //  $window.location.assign(response);
+      var msg = "<h3> Analysis Launched.</h3>" +
+        "<p>View progess in Analyses Tab.</p>";
+        vm.bootboxDialog(msg);
        $rootScope.$broadcast('rf/launchAnalysis');
     }).error(function (response, status) {
       $log.debug("Request failed: error " + status);
+      var msg = "<h3> Analysis launch failed.</h3>" +
+       "<p>Please check galaxy history.</p>";
+        vm.bootboxDialog(msg);
     });
+  };
+
+  vm.bootboxDialog = function( msg){
+    bootbox.dialog(msg, [{
+      "label" : "Close"
+    }, {
+      "label" : "View Analysis",
+      "class" : "btn-primary",
+      "callback": function() {
+        $window.location.href = '/data_sets/' + dataSetUuid + '/#/analyses';
+      }
+    }]);
   };
 
   vm.getTimeStamp = function(){
