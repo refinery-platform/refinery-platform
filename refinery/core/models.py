@@ -668,6 +668,13 @@ class AnalysisResult(models.Model):
     def __unicode__(self):
         return str(self.file_name) + " <-> " + self.analysis_uuid
 
+    class Meta:
+        verbose_name = "analysis result"
+        verbose_name_plural = "analysis results"
+        permissions = (
+            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
+        )
+
 
 class Analysis(OwnableResource):
 
