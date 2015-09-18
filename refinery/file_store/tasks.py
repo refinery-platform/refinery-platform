@@ -125,10 +125,10 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
             response.info().getheader("Content-Length", file_size)
         )
 
-        logger.debug("Starting download from '%s'", item.source)
+        logger.debug("Downloading from '%s'", item.source)
         # download and save the file
         localfilesize = 0
-        blocksize = 8 * 2 ** 10    # 8 Kbytes
+        blocksize = 1 * 1024 * 1024  # 1MB
         for buf in iter(lambda: response.read(blocksize), ''):
             localfilesize += len(buf)
             tmpfile.write(buf)
