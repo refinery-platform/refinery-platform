@@ -91,7 +91,11 @@ if [ ! -f "$BACKUP_TEMP/$BACKUP/postgresql/refinery.dump" ]; then
   echo -e "$RED\xE2\x9A\xA0 PostgreSQL dump not found!$DEFAULT"
   exit 1
 fi
-pg_restore -d refinery -c "$BACKUP_TEMP/$BACKUP/postgresql/refinery.dump"
+# We restore only public data (-n public) to avoid permission errors regarding
+# plpgsql extension.
+#
+# See http://stackoverflow.com/a/11776053/981933
+pg_restore -n public -d refinery -c "$BACKUP_TEMP/$BACKUP/postgresql/refinery.dump"
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
