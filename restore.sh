@@ -21,8 +21,6 @@ CONFIG_FILE="config.json"
 # Do not edit the code below that line!
 # ------------------------------------------------------------------------------
 
-NOW=$(date +%Y%m%d)
-
 BACKUP_FILE=$(basename $BACKUP_FILE_PATH)
 BACKUP="${BACKUP_FILE%%.*}"
 
@@ -34,9 +32,6 @@ RESET="\e[0m"
 YELLOW="\e[93m"
 
 TIME_START=$(date +"%s")
-
-# Check if the backup directory exist and if it doesn't create it
-mkdir -p "$BACKUP_TEMP/$NOW"
 
 if [ ! -f "$BACKUP_FILE_PATH" ]; then
   echo -e "$RED\xE2\x9A\xA0 Backup file not found!$DEFAULT"
@@ -95,7 +90,9 @@ fi
 # plpgsql extension.
 #
 # See http://stackoverflow.com/a/11776053/981933
-pg_restore -n public -d refinery -c "$BACKUP_TEMP/$BACKUP/postgresql/refinery.dump"
+dropdb refinery
+createdb refinery
+pg_restore --schema=public --dbname=refinery "$BACKUP_TEMP/$BACKUP/postgresql/refinery.dump"
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
@@ -124,7 +121,7 @@ if [ ! -d "$BACKUP_TEMP/$BACKUP/neo4j/" ]; then
   echo -e "$RED\xE2\x9A\xA0 Neo4J graph db not found!$DEFAULT"
   exit 1
 fi
-if [ "$(supervisorctl pid neo4j)" == "0" ] ; then
+if [ ! `pgrep supervisord` ] || [ "$(supervisorctl pid neo4j)" == "0" ]; then
   # Neo4J is not running
   rsync -az "$BACKUP_TEMP/$BACKUP/neo4j/" "/opt/neo4j/data/graph.db"
 else
@@ -141,4 +138,30 @@ rm -rf "$BACKUP_TEMP/$BACKUP"
 TIME_END=$(date +"%s")
 TIME_DIFF=$(($TIME_END-$TIME_START))
 
-echo -e "$GREEN\xE2\x9C\x93 Backup completely restored! $DEFAULT$DIM($(($TIME_DIFF / 60)) min and $(($TIME_DIFF % 60)) sec)$RESET"
+echo -e "$GREEN\xE2\x9C\x93 Backup completely loaded! $DEFAULT$DIM($(($TIME_DIFF / 60)) min and $(($TIME_DIFF % 60)) sec)$RESET"
+
+# Index data
+echo -e "Indexing data. This might take a while... \c"
+TIME_INTERMEDIATE_START=$(date +"%s")
+
+if [ ! `pgrep supervisord` ]; then
+  workon refinery-platform
+  supervisord
+fi
+if [ "$(supervisorctl pid solr)" == "0" ]; then
+  supervisorctl start solr && python ./manage.py update_index --batch-size 25
+else
+  python ./manage.py update_index --batch-size 25
+fi
+
+TIME_INTERMEDIATE_END=$(date +"%s")
+TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
+echo -e "done! $DIM($(($TIME_INTERMEDIATE_DIFF / 60)) min and $(($TIME_INTERMEDIATE_DIFF % 60)) sec)$RESET"
+
+rm "$BACKUP_TEMP/$BACKUP_FILE"
+rm -rf "$BACKUP_TEMP/$BACKUP"
+
+TIME_END=$(date +"%s")
+TIME_DIFF=$(($TIME_END-$TIME_START))
+
+echo -e "$GREEN\xE2\x9C\x93 Refinery completely restored! $DEFAULT$DIM($(($TIME_DIFF / 60)) min and $(($TIME_DIFF % 60)) sec)$RESET"
