@@ -33,6 +33,8 @@ YELLOW="\e[93m"
 
 TIME_START=$(date +"%s")
 
+SUPERVISOR=$(ps -ef | grep "supervisorctl" | grep -v "grep" | wc -l)
+
 if [ ! -f "$BACKUP_FILE_PATH" ]; then
   echo -e "$RED\xE2\x9A\xA0 Backup file not found!$DEFAULT"
   exit 1
@@ -121,7 +123,7 @@ if [ ! -d "$BACKUP_TEMP/$BACKUP/neo4j/" ]; then
   echo -e "$RED\xE2\x9A\xA0 Neo4J graph db not found!$DEFAULT"
   exit 1
 fi
-if [ "$(supervisorctl pid neo4j)" == "0" ]; then
+if [ "$SUPERVISOR" == "0" ] || [ "$(supervisorctl pid neo4j)" == "0" ]; then
   # Neo4J is not running
   rsync -az "$BACKUP_TEMP/$BACKUP/neo4j/" "/opt/neo4j/data/graph.db"
 else
