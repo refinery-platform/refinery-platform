@@ -16,6 +16,7 @@ BACKUP_FILE_PATH=$1
 REFINERY_BASE_DIR="/vagrant/refinery"
 CONFIG_DIR="config"
 CONFIG_FILE="config.json"
+LOG_FILE="restore.log"
 
 
 # Do not edit the code below that line!
@@ -37,6 +38,9 @@ if [ ! -f "$BACKUP_FILE_PATH" ]; then
   echo -e "$RED\xE2\x9A\xA0 Backup file not found!$DEFAULT"
   exit 1
 fi
+
+# Reset log
+> "$BACKUP_TEMP/$BACKUP/$LOG_FILE"
 
 # Copy backup archive into the VM
 echo -e "Backup... \c"
@@ -90,9 +94,9 @@ fi
 # plpgsql extension.
 #
 # See http://stackoverflow.com/a/11776053/981933
-dropdb refinery
-createdb refinery
-pg_restore --schema=public --dbname=refinery "$BACKUP_TEMP/$BACKUP/postgresql/refinery.dump"
+dropdb refinery > "$BACKUP_TEMP/$BACKUP/$LOG_FILE"
+createdb refinery > "$BACKUP_TEMP/$BACKUP/$LOG_FILE"
+pg_restore --schema=public --dbname=refinery "$BACKUP_TEMP/$BACKUP/postgresql/refinery.dump" > "$BACKUP_TEMP/$BACKUP/$LOG_FILE"
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
@@ -107,7 +111,7 @@ if [ ! -d "$BACKUP_TEMP/$BACKUP/file_store/" ]; then
   exit 1
 fi
 mkdir -p "/vagrant/media/file_store"
-rsync -az "$BACKUP_TEMP/$BACKUP/file_store/" "/vagrant/media/file_store"
+rsync -az --partial "$BACKUP_TEMP/$BACKUP/file_store/" "/vagrant/media/file_store"
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
@@ -123,9 +127,9 @@ if [ ! -d "$BACKUP_TEMP/$BACKUP/neo4j/" ]; then
 fi
 if [ ! `pgrep supervisord` ] || [ "$(supervisorctl pid neo4j)" == "0" ]; then
   # Neo4J is not running
-  rsync -az "$BACKUP_TEMP/$BACKUP/neo4j/" "/opt/neo4j/data/graph.db"
+  rsync -az --partial "$BACKUP_TEMP/$BACKUP/neo4j/" "/opt/neo4j/data/graph.db"
 else
-  supervisorctl stop neo4j && rsync -az "$BACKUP_TEMP/$BACKUP/neo4j/" "/opt/neo4j/data/graph.db" && supervisorctl start neo4j
+  supervisorctl stop neo4j && rsync -az --partial "$BACKUP_TEMP/$BACKUP/neo4j/" "/opt/neo4j/data/graph.db" && supervisorctl start neo4j
 fi
 
 TIME_INTERMEDIATE_END=$(date +"%s")
@@ -149,7 +153,7 @@ if [ ! `pgrep supervisord` ]; then
   supervisord
 fi
 if [ "$(supervisorctl pid solr)" == "0" ]; then
-  supervisorctl start solr && python ./manage.py update_index --batch-size 25
+  supervisorctl start solr && python ./manage.py update_index --batch-size 25 > "$BACKUP_TEMP/$BACKUP/$LOG_FILE"
 else
   python ./manage.py update_index --batch-size 25
 fi
