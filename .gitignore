@@ -43,7 +43,6 @@ setup_refinery.sh
 .idea/
 .project
 .pydevproject
-.settings/*
 /refinery/*.pid
 /refinery/solr/*/data
 /refinery/fabric/

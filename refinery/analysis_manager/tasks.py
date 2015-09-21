@@ -582,10 +582,10 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
                         file_id =\
                             connection.libraries.upload_file_from_local_path(
                                 library_id, file_path)[0]['id']
-                    except galaxy.client.ConnectionError:
-                        error_msg = "Failed adding file '%s' to "
-                        error_msg += "Galaxy library '%s'"
-                        logger.error(error_msg, curr_file_uuid, library_id)
+                    except (galaxy.client.ConnectionError, IOError) as exc:
+                        logger.error("Failed adding file '%s' to Galaxy "
+                                     "library '%s': %s",
+                                     curr_file_uuid, library_id, exc)
                         raise
                     cur_item["id"] = file_id
                 else:

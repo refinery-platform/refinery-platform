@@ -121,6 +121,7 @@ SolrFacetView.prototype._renderTree = function( solrResponse ) {
 SolrFacetView.prototype._generateTree = function( solrResponse ) {
 	var self = this;			
 	var facetCounts = solrResponse._facetCounts;
+	var visibleFacetCount = 0;
 
 	for ( var i = 0; i < configurator.state.objects.length; ++i ) {
 		var attribute = configurator.state.objects[i];
@@ -137,9 +138,9 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 			continue;
 		}
 
-	
 		if ( attribute.is_facet && attribute.is_exposed && !attribute.is_internal &&
 			self._countFacetValues(attribute.solr_field, facetCounts) > 1 ) {
+			visibleFacetCount = visibleFacetCount + 1;
 			//facets[attribute.solr_field] = [];
       //Commented out the following methods which are not being used.
 	    //var counts = self._query.getNumberOfFacetValues( attribute.solr_field );
@@ -205,16 +206,13 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 		}											
 	}	
 
-	var visibleFacetCount = 0;
 	for (var facet in facetCounts) {
 
 			if (facetCounts.hasOwnProperty(facet)) {
-				visibleFacetCount = visibleFacetCount + 1;
 				var unselectedItems = [];
 				var selectedItems = [];
 
 				var facetValues = facetCounts[facet];
-
 				for (var facetValue in facetValues) {
 					if (facetValues.hasOwnProperty(facetValue)) {
 
@@ -236,7 +234,6 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 								count: facetValueCount,
 								isSelected: self._query._facetSelection[facet][facetValue].isSelected
 							};
-
 							selectedItems.push("<tr class=\"facet-value\" id=\"" +
 								self._composeFacetValueId(facet, facetValue) + "\"><td>" +
 								'<label class="checkbox"><input type="checkbox" checked></label>' +
@@ -253,7 +250,6 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 								count: facetValueCount,
 								isSelected: self._query._facetSelection[facet][facetValue].isSelected
 							};
-
 							unselectedItems.push("<tr class=\"facet-value\" id=\"" +
 								self._composeFacetValueId(facet, facetValue) + "\"><td>" +
 								'<label class="checkbox"><input type="checkbox"></label>' +

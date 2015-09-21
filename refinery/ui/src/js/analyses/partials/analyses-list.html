@@ -78,9 +78,11 @@
             </a>
 
             &nbsp;
-            <span class="spinner"><i class=
-               "{{analysis.status | analysisStatusIcon}} analyses-status"
-             rp-analyses-status-tooltip></i>
+            <span class="spinner">
+              <i class="{{analysis.status | analysisStatusIcon}} analyses-status"
+                tool-tip tool-tip-container="body" tool-tip-placement="bottom"
+                title="{{ analysis.status | analysisStatusTitle }}">
+              </i>
             </span>
           </div>
           <div class="span5 analysis-name">
@@ -124,7 +126,7 @@
         </div>
 
         <span ng-if="analysis.status=='RUNNING' || analysis.status=='INITIALIZED'">
-          <div class="row-fluid">
+          <div class="row-fluid" id="{{analysis.uuid}}" collapse="isCollapsed">
             <div class="span1">
               &nbsp;
             </div>
@@ -137,9 +139,7 @@
                 </div>
               </span>
 
-              <div id="{{analysis.uuid}}" collapse="isCollapsed">
-
-                <div ng-hide="AnalysesCtrl.isAnalysisDetailLoaded(analysis.uuid)"
+              <div ng-hide="AnalysesCtrl.isAnalysisDetailLoaded(analysis.uuid)"
                   class="ng-hide">
                   <div class = "analysis-retrieving">
                      <span class="refinery-spinner analyses-view"></span>
@@ -147,7 +147,7 @@
                    </div>
                 </div>
 
-                <div ng-show="AnalysesCtrl.isAnalysisDetailLoaded(analysis.uuid)">
+              <div ng-show="AnalysesCtrl.isAnalysisDetailLoaded(analysis.uuid)">
                   <ul class="analysisRunningList">
                     <li class="analysisRunningListItem">
                       Input File Import
@@ -256,7 +256,6 @@
                     </li>
                   </ul>
                 </div>
-              </div>
             </div>
           </div>
         </span>

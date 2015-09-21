@@ -270,8 +270,6 @@ function refineryDataSetPreview () {
           this.loading = false;
         }.bind(this));
 
-    console.log(studies, permissions);
-
     permissions
       .finally(function () {
         this.permissionsLoading = false;
