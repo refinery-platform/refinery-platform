@@ -21,8 +21,6 @@ CONFIG_FILE="config.json"
 # Do not edit the code below that line!
 # ------------------------------------------------------------------------------
 
-NOW=$(date +%Y%m%d)
-
 BACKUP_FILE=$(basename $BACKUP_FILE_PATH)
 BACKUP="${BACKUP_FILE%%.*}"
 
@@ -34,9 +32,6 @@ RESET="\e[0m"
 YELLOW="\e[93m"
 
 TIME_START=$(date +"%s")
-
-# Check if the backup directory exist and if it doesn't create it
-mkdir -p "$BACKUP_TEMP/$NOW"
 
 if [ ! -f "$BACKUP_FILE_PATH" ]; then
   echo -e "$RED\xE2\x9A\xA0 Backup file not found!$DEFAULT"
@@ -126,7 +121,7 @@ if [ ! -d "$BACKUP_TEMP/$BACKUP/neo4j/" ]; then
   echo -e "$RED\xE2\x9A\xA0 Neo4J graph db not found!$DEFAULT"
   exit 1
 fi
-if [ "$(supervisorctl pid neo4j)" == "0" ] ; then
+if [ "$(supervisorctl pid neo4j)" == "0" ]; then
   # Neo4J is not running
   rsync -az "$BACKUP_TEMP/$BACKUP/neo4j/" "/opt/neo4j/data/graph.db"
 else
