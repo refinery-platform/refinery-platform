@@ -32,7 +32,8 @@ from registration.signals import user_registered, user_activated
 from data_set_manager.models import Investigation, Node, Study, Assay
 from file_store.models import get_file_size, FileStoreItem
 from galaxy_connector.models import Instance
-from .utils import update_data_set_index, delete_data_set_index
+from .utils import update_data_set_index, delete_data_set_index, \
+    add_read_access_in_neo4j, remove_read_access_in_neo4j
 
 
 logger = logging.getLogger(__name__)
@@ -482,10 +483,12 @@ class DataSet(SharableResource):
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
         update_data_set_index(self)
+        add_read_access_in_neo4j(self, group)
 
     def unshare(self, group):
         super(DataSet, self).unshare(group)
         update_data_set_index(self)
+        remove_read_access_in_neo4j(self, group)
 
 
 @receiver(pre_delete, sender=DataSet)
