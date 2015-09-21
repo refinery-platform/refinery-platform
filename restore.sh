@@ -95,7 +95,9 @@ fi
 # plpgsql extension.
 #
 # See http://stackoverflow.com/a/11776053/981933
-pg_restore -n public -d refinery -c "$BACKUP_TEMP/$BACKUP/postgresql/refinery.dump"
+dropdb refinery
+createdb refinery
+pg_restore --schema=public --dbname=refinery "$BACKUP_TEMP/$BACKUP/postgresql/refinery.dump"
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
