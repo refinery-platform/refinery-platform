@@ -67,7 +67,7 @@ echo -e "File store... \c"
 TIME_INTERMEDIATE_START=$(date +"%s")
 
 mkdir -p "$BACKUP_TEMP/$NOW/file_store"
-rsync -az "/vagrant/media/file_store/" "$BACKUP_TEMP/$NOW/file_store"
+rsync -az --partial "/vagrant/media/file_store/" "$BACKUP_TEMP/$NOW/file_store"
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
@@ -80,9 +80,9 @@ TIME_INTERMEDIATE_START=$(date +"%s")
 mkdir -p "$BACKUP_TEMP/$NOW/neo4j"
 if [ "$(supervisorctl pid neo4j)" == "0" ] ; then
   # Neo4J is not running
-  rsync -az "/opt/neo4j/data/graph.db/" "$BACKUP_TEMP/$NOW/neo4j"
+  rsync -az --partial "/opt/neo4j/data/graph.db/" "$BACKUP_TEMP/$NOW/neo4j"
 else
-  supervisorctl stop neo4j && rsync -az "/opt/neo4j/data/graph.db/" "$BACKUP_TEMP/$NOW/neo4j" && supervisorctl start neo4j
+  supervisorctl stop neo4j && rsync -az --partial "/opt/neo4j/data/graph.db/" "$BACKUP_TEMP/$NOW/neo4j" && supervisorctl start neo4j
 fi
 
 TIME_INTERMEDIATE_END=$(date +"%s")
