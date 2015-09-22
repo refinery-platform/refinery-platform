@@ -34,20 +34,6 @@
       <div>
         <p></p>
       </div>
-
-      <!-- using external tool status for Galaxy -->
-      <!--
-        <button class="btn btn-warning" ng-click="launchAnalysis()" ng-disabled="!(currentNodeSet && currentNodeSet.node_count > 0 && galaxyStatus)" style="width: 100%">Launch Analysis</button>
-        <div ng-hide="galaxyStatus">
-          Galaxy is down!
-        </div>  
-      -->
-
-      <!-- no external tool status monitoring -->
-   <!--    <button class="btn btn-warning" ng-click="setAnalysisName()"
-                ng-disabled="!(currentNodeSet && currentNodeSet.node_count >
-                0)" style="width: 100%">Launch Analysis</button>-->
-
       <button class="btn" rf-analysis-launch-modal ng-click="open()"
         ng-disabled="!(currentNodeSet && currentNodeSet.node_count > 0)">
         Launch Analysis
@@ -67,24 +53,12 @@
       <div>
         <p></p>
       </div>
-      <!-- using external tool status for Galaxy -->
-      <!--      
-        <button class="btn btn-warning" ng-click="launchAnalysis()" ng-disabled="!(currentNodeRelationship && currentNodeRelationship.node_pairs.length > 0 && galaxyStatus)" style="width: 100%">Launch Analysis</button>
-        <div ng-hide="galaxyStatus">
-          Galaxy is down!
-        </div>
-      -->
-      <!-- no external tool status monitoring -->
-      <!--  <button class="btn btn-warning" ng-click="setAnalysisName()"
-      ng-disabled="!(currentNodeRelationship && currentNodeRelationship
-      .node_pairs.length > 0 )" style="width: 100%">Launch Analysis</button>-->
+
       <button class="btn" rf-analysis-launch-modal ng-click="open()"
         ng-disabled="!(currentNodeRelationship && currentNodeRelationship
       .node_pairs.length > 0)">
         Launch Analysis
       </button>
-
-
     </div>
   </div>
 </div>
