@@ -173,10 +173,6 @@ class Command(BaseCommand):
         tx = graph.cypher.begin()
 
         statement_user = (
-            "MERGE (u:User {id:{id}})"
-        )
-
-        statement_user = (
             "MERGE (u:User {id:{user_id}, name:{user_name}}) WITH u "
             "MATCH (ds:DataSet {uuid:{ds_uuid}})"
             "MERGE (ds)<-[:`read_access`]-(u)"
