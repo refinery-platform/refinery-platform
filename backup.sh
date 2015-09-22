@@ -1,6 +1,15 @@
 #!/bin/bash
 
+# Creates a compress backup archive and moves it into the synced directory
+#
+# Author: Fritz Lekschas
+# Date:   2015-09-17
+#
+# Call:
+# ./backup.sh
+
 # Backup Configuration
+# ------------------------------------------------------------------------------
 BACKUP_TEMP="/tmp/backups"
 BACKUP_FINAL="/vagrant/transfer"
 
@@ -8,9 +17,9 @@ REFINERY_BASE_DIR="/vagrant/refinery"
 CONFIG_DIR="config"
 CONFIG_FILE="config.json"
 
+
 # Do not edit the code below that line!
 # ------------------------------------------------------------------------------
-
 
 NOW=$(date +%Y%m%d)
 
@@ -36,7 +45,7 @@ echo -e "Settings... \c"
 TIME_INTERMEDIATE_START=$(date +"%s")
 
 mkdir -p "$BACKUP_TEMP/$NOW/settings"
-gzip -c < "$REFINERY_BASE_DIR/$CONFIG_DIR/$CONFIG/$CONFIG_FILE" > "$BACKUP_TEMP/$NOW/settings/$CONFIG_FILE.gz"
+cp "$REFINERY_BASE_DIR/$CONFIG_DIR/$CONFIG/$CONFIG_FILE" "$BACKUP_TEMP/$NOW/settings/$CONFIG_FILE"
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
@@ -58,7 +67,7 @@ echo -e "File store... \c"
 TIME_INTERMEDIATE_START=$(date +"%s")
 
 mkdir -p "$BACKUP_TEMP/$NOW/file_store"
-rsync -az "/vagrant/media/file_store/" "$BACKUP_TEMP/$NOW/file_store"
+rsync -az --partial "/vagrant/media/file_store/" "$BACKUP_TEMP/$NOW/file_store"
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
@@ -71,9 +80,9 @@ TIME_INTERMEDIATE_START=$(date +"%s")
 mkdir -p "$BACKUP_TEMP/$NOW/neo4j"
 if [ "$(supervisorctl pid neo4j)" == "0" ] ; then
   # Neo4J is not running
-  rsync -az "/opt/neo4j/data/graph.db/" "$BACKUP_TEMP/$NOW/neo4j"
+  rsync -az --partial "/opt/neo4j/data/graph.db/" "$BACKUP_TEMP/$NOW/neo4j"
 else
-  supervisorctl stop neo4j && rsync -az "/opt/neo4j/data/graph.db/" "$BACKUP_TEMP/$NOW/neo4j" && supervisorctl start neo4j
+  supervisorctl stop neo4j && rsync -az --partial "/opt/neo4j/data/graph.db/" "$BACKUP_TEMP/$NOW/neo4j" && supervisorctl start neo4j
 fi
 
 TIME_INTERMEDIATE_END=$(date +"%s")
