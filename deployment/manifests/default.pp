@@ -238,11 +238,15 @@ class neo4j {
 include neo4j
 
 class owl2neo4j {
-  $owl2neo4j_version = "0.3.0"
+  $owl2neo4j_version = "0.3.1"
   $owl2neo4j_url = "https://github.com/flekschas/owl2neo4j/releases/download/v${owl2neo4j_version}/owl2neo4j.jar"
 
+  # Need to remove the old file manually as wget throws a weird
+  # `HTTP request sent, awaiting response... 403 Forbidden` error when the file
+  # already exists.
+
   exec { "owl2neo4j_wget":
-    command => "wget ${owl2neo4j_url} -P /opt/",
+    command => "rm /opt/owl2neo4j.jar && wget -P /opt/ ${owl2neo4j_url}",
     creates => "/opt/owl2neo4j",
     path => "/usr/bin:/bin",
     timeout => 120,  # downloading can take some time
