@@ -3,11 +3,33 @@
     Enter an Analysis Name
   </div>
   <div class="modal-body bootboxAnalysisWidth" id="modal-launch-analysis-body">
-    Name: <input type="text" ng-model="dataObj.name">
+    <div ng-switch on="analysisLaunchFlag">
+      <span ng-switch-when="NOCALL">
+        Name: <input type="text" ng-model="dataObj.name">
+      </span>
+      <span ng-switch-when="LOADING">
+        <span class="refinery-spinner analyses-view"></span>
+        &nbsp;<em>Retrieving analyses list.</em>
+      </span>
+       <span ng-switch-when="COMPLETE">
+        Analysis Launched.
+      </span>
+    </div>
   </div>
   <div class="modal-footer" id="modal-launch-analysis-footer">
-    <button class="btn btn-warning" ng-click="cancel()">Cancel Analysis</button>
-    <button class="btn btn-primary" ng-click="ok()">Launch Analysis</button>
+    <div ng-switch on="analysisLaunchFlag">
+      <span ng-switch-when="NOCALL">
+        <button class="btn btn-warning" ng-click="cancel()">Cancel Analysis</button>
+        <button class="btn btn-primary" ng-click="ok()">Launch Analysis</button>
+      </span>
+      <span ng-switch-when="LOADING">
+        <button class="btn btn-warning" ng-click="cancel()">Cancel Analysis</button>
+      </span>
+       <span ng-switch-when="COMPLETE">
+        <button class="btn btn-warning" ng-click="close()">Close</button>
+        <button class="btn btn-primary" ng-click="view()">View Analysis</button>
+      </span>
+    </div>
   </div>
 </div>
 

@@ -56,19 +56,21 @@ function rfAnalysisLaunchModal($window, $compile, $templateCache,$log, $modal, t
           $modal.open({
             template:modalContent,
             controller: function($scope, $modalInstance) {
-            //  $scope.analysisCtrl.setAnalysisName();
+              $scope.analysisLaunchFlag = "NOCALL";
               $scope.dataObj = {
                 "name":workflowName + " " + nowTimeStamp
               };
               analysisConfig.workflowUuid = workflow.getUuid();
               $scope.ok = function () {
+                $scope.analysisLaunchFlag = "LOADING";
                 if($scope.tempName !== null){
                   analysisConfig.name = $scope.dataObj.name;
                   scope.analysisCtrl.launchAnalysis(analysisConfig)
                     .then(function(response){
-                      $modalInstance.close('ok');
+                      $scope.analysisLaunchFlag = "COMPLETE";
                    }, function(error){
                      console.log(error);
+                      $scope.analysisLaunchFlag = "COMPLETE";
                    });
                 }else{
                   console.log("Please enter a valid name");
@@ -76,6 +78,13 @@ function rfAnalysisLaunchModal($window, $compile, $templateCache,$log, $modal, t
               };
               $scope.cancel = function () {
                 $modalInstance.dismiss('cancel');
+              };
+              $scope.close = function () {
+                $modalInstance.close('close');
+              };
+              $scope.view = function () {
+                $modalInstance.close('view');
+                $window.location.href = '/data_sets/' + dataSetUuid + '/#/analyses';
               };
             }
           });

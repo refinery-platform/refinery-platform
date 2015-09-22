@@ -6,31 +6,31 @@ angular.module('refineryAnalysis')
 
   var vm = this;
 
-  $scope.analysisConfig = {
-    studyUuid: $window.externalStudyUuid,
-    workflowUuid: null,
-    nodeSetUuid: null,
-    nodeRelationshipUuid: null,
-    name: null,
-  };
-
-  $scope.$onRootScope('nodeSetChangedEvent', function(event, currentNodeSet) {
-    $scope.analysisConfig.nodeSetUuid = currentNodeSet.uuid;
-    $scope.analysisConfig.nodeRelationshipUuid = null;
-    $log.debug("new nodeset: " + $scope.analysisConfig.nodeSetUuid);
-  });
-
-  $scope.$onRootScope('nodeRelationshipChangedEvent', function(event, currentNodeRelationship) {
-    if (!currentNodeRelationship) {
-      $scope.analysisConfig.nodeRelationshipUuid = null;
-      $log.debug("new noderel undefined");
-    }
-    else {
-      $scope.analysisConfig.nodeRelationshipUuid = currentNodeRelationship.uuid;
-      $log.debug("new noderel: " + $scope.analysisConfig.nodeRelationshipUuid);
-    }
-    $scope.analysisConfig.nodeSetUuid = null;
-  });
+  //$scope.analysisConfig = {
+  //  studyUuid: $window.externalStudyUuid,
+  //  workflowUuid: null,
+  //  nodeSetUuid: null,
+  //  nodeRelationshipUuid: null,
+  //  name: null,
+  //};
+  //
+  //$scope.$onRootScope('nodeSetChangedEvent', function(event, currentNodeSet) {
+  //  $scope.analysisConfig.nodeSetUuid = currentNodeSet.uuid;
+  //  $scope.analysisConfig.nodeRelationshipUuid = null;
+  //  $log.debug("new nodeset: " + $scope.analysisConfig.nodeSetUuid);
+  //});
+  //
+  //$scope.$onRootScope('nodeRelationshipChangedEvent', function(event, currentNodeRelationship) {
+  //  if (!currentNodeRelationship) {
+  //    $scope.analysisConfig.nodeRelationshipUuid = null;
+  //    $log.debug("new noderel undefined");
+  //  }
+  //  else {
+  //    $scope.analysisConfig.nodeRelationshipUuid = currentNodeRelationship.uuid;
+  //    $log.debug("new noderel: " + $scope.analysisConfig.nodeRelationshipUuid);
+  //  }
+  //  $scope.analysisConfig.nodeSetUuid = null;
+  //});
 
   $scope.setAnalysisName = function() {
     var nowTimeStamp = timeStamp.getTimeStamp();
