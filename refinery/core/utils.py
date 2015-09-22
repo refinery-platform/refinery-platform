@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import logging
 import py2neo
 from django.conf import settings
+from django.db import connection
 
 from .search_indexes import DataSetIndex
 
@@ -21,15 +22,55 @@ def add_data_set_to_neo4j(data_set, owner):
 
     graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
 
+    # Get annotations of the data_set
+    annotations = get_data_set_annotations(data_set)
+
     try:
         tx = graph.cypher.begin()
 
         # Add dataset and annotations to Neo4J
-        statement = (
-            "MATCH (ds:DataSet {uuid:{ds_uuid}})"
-            "MERGE (u:User {id:{user_id}})"
-            "MERGE (ds)<-[:`read_access`]-(u)"
+        counter = 1
+
+        statement_name = (
+            "MATCH (term:Class {name:{ont_id}}) "
+            "MERGE (ds:DataSet {uuid:{ds_uuid}}) "
+            "MERGE ds-[:`annotated_with`]->term"
         )
+
+        statement_uri = (
+            "MATCH (term:Class {uri:{uri}}) "
+            "MERGE (ds:DataSet {uuid:{ds_uuid}}) "
+            "MERGE ds-[:`annotated_with`]->term"
+        )
+
+        for annotation in annotations:
+            if ('value_uri' in annotation):
+                tx.append(
+                    statement_uri,
+                    {
+                        'uri': annotation['value_uri'],
+                        'ds_uuid': annotation['data_set_uuid']
+                    }
+                )
+            else:
+                tx.append(
+                    statement_name,
+                    {
+                        'ont_id': (
+                            annotation['value_source'] +
+                            ':' +
+                            annotation['value_accession']
+                        ),
+                        'ds_uuid': annotation['data_set_uuid']
+                    }
+                )
+
+            # Send batches of 50 Cypher queries to Neo4J
+            if (counter % 50 == 0):
+                tx.process()
+
+            # Increase counter
+            counter = counter + 1
 
         for user in group.user_set.all():
             tx.append(
@@ -137,3 +178,108 @@ def delete_data_set_index(data_set):
 def delete_data_set_neo4j(data_set):
     logger.debug('Deleted data set (uuid: %s) in Neo4J', data_set.uuid)
     DataSetIndex().remove_object(data_set, using='core')
+
+
+def normalize_annotation_ont_ids(annotations):
+    new_annotations = []
+    for annotation in annotations:
+        underscore_pos = annotation['value_accession'].rfind('_')
+        if (underscore_pos >= 0):
+            annotation['value_accession'] = \
+                annotation['value_accession'][(underscore_pos + 1):]
+            new_annotations.append(annotation)
+            continue
+
+        hash_pos = annotation['value_accession'].rfind('#')
+        if (hash_pos >= 0):
+            annotation['value_accession'] = \
+                annotation['value_accession'][(hash_pos + 1):]
+            new_annotations.append(annotation)
+            continue
+
+        if (annotation['value_source'] == 'CL'):
+            annotation['value_accession'] = \
+                annotation['value_accession'].zfill(7)
+            continue
+    return new_annotations
+
+
+def get_data_set_annotations(data_set):
+    cursor = connection.cursor()
+
+    sql = """SELECT
+        data_set.uuid AS data_set_uuid,
+        data_set.id AS data_set_id,
+        annotated_study.investigation_id,
+        annotated_study.study_id,
+        annotated_study.assay_id,
+        annotated_study.id AS node_id,
+        annotated_study.file_uuid,
+        annotated_study.type,
+        annotated_study.subtype,
+        annotated_study.value,
+        annotated_study.value_source,
+        annotated_study.value_accession
+      FROM
+        (
+          SELECT
+            core_dataset.uuid,
+            core_dataset.id,
+            investigation.investigation_id
+          FROM
+            core_dataset
+            JOIN
+            core_investigationlink AS investigation
+            ON
+            core_dataset.id = investigation.data_set_id
+          %s
+        ) AS data_set
+        JOIN
+        (
+          SELECT
+            study.investigation_id AS investigation_id,
+            annotated_node.*
+          FROM
+            data_set_manager_study AS study
+            JOIN
+            (
+              SELECT
+                node.id,
+                node.study_id,
+                node.type,
+                node.file_uuid,
+                node.assay_id,
+                attr.subtype,
+                attr.value,
+                attr.value_source,
+                attr.value_accession
+              FROM
+                data_set_manager_node AS node
+                JOIN
+                data_set_manager_attribute AS attr
+                ON
+                node.id = attr.node_id
+              WHERE
+                attr.value_source IS NOT NULL AND
+                attr.value_source NOT LIKE ''
+            ) AS annotated_node
+            ON
+            annotated_node.study_id = study.nodecollection_ptr_id
+        ) AS annotated_study
+        ON
+        data_set.investigation_id = annotated_study.investigation_id
+        """
+
+    ds = 'WHERE core_dataset.id = ' + data_set.id if data_set else ''
+
+    # According to the docs, `cursor.execute()` automatically escapes all
+    # instances of `%s`.
+    # https://docs.djangoproject.com/en/1.8/topics/db/sql/#connections-and-cursors
+    cursor.execute(sql, ds)
+
+    desc = cursor.description
+
+    return [
+        dict(zip([col[0] for col in desc], row))
+        for row in cursor.fetchall()
+    ]
