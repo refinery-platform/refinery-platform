@@ -14,6 +14,55 @@ def update_data_set_index(data_set):
     DataSetIndex().update_object(data_set, using='core')
 
 
+def add_data_set_to_neo4j(data_set, owner):
+    logger.debug(
+        'Adding read access to data set (uuid: %s) in Neo4J', data_set.uuid
+    )
+
+    graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+
+    try:
+        tx = graph.cypher.begin()
+
+        # Add dataset and annotations to Neo4J
+        statement = (
+            "MATCH (ds:DataSet {uuid:{ds_uuid}})"
+            "MERGE (u:User {id:{user_id}})"
+            "MERGE (ds)<-[:`read_access`]-(u)"
+        )
+
+        for user in group.user_set.all():
+            tx.append(
+                statement,
+                {
+                    'ds_uuid': data_set.uuid,
+                    'user_id': owner.id
+                }
+            )
+
+        # Link owner with the added dataset
+        statement = (
+            "MATCH (ds:DataSet {uuid:{ds_uuid}})"
+            "MERGE (u:User {id:{user_id}})"
+            "MERGE (ds)<-[:`read_access`]-(u)"
+        )
+
+        tx.append(
+            statement,
+            {
+                'ds_uuid': data_set.uuid,
+                'user_id': owner.id
+            }
+        )
+
+        tx.commit()
+    except Exception, e:
+        logger.error(
+            'Failed to add read access to data set (uuid: %s) in Neo4J. '
+            'Exception: %s', e
+        )
+
+
 def add_read_access_in_neo4j(data_set, group):
     logger.debug(
         'Adding read access to data set (uuid: %s) in Neo4J', data_set.uuid
@@ -22,7 +71,8 @@ def add_read_access_in_neo4j(data_set, group):
     graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
 
     statement = (
-        "MATCH (ds:DataSet {uuid:{ds_uuid}}), (u:User {id:{user_id}})"
+        "MATCH (ds:DataSet {uuid:{ds_uuid}})"
+        "MERGE (u:User {id:{user_id}})"
         "MERGE (ds)<-[:`read_access`]-(u)"
     )
 

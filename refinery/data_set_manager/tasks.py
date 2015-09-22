@@ -20,7 +20,7 @@ from django.core.management import call_command
 from celery.task import task
 
 from core.models import *
-from core.utils import update_data_set_index
+from core.utils import update_data_set_index, add_data_set_to_neo4j
 from data_set_manager.isa_tab_parser import IsaTabParser
 from data_set_manager.models import Investigation, Node, \
     initialize_attribute_order
@@ -362,6 +362,7 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
         dataset.save()
         # Finally index data set
         update_data_set_index(dataset)
+        add_data_set_to_neo4j(dataset, user)
         return dataset.uuid
     return None
 
