@@ -36,7 +36,15 @@ class Command(BaseCommand):
             action='store',
             dest='ontology_abbr',
             type='string',
-            help='Ontology abbreviation or prefix, e.g. go'
+            help='Ontology abbreviation or prefix, e.g. GO'
+        ),
+        make_option(
+            '--eqp',
+            action='store',
+            dest='eqp',
+            type='string',
+            help=('Existencial quantification property, e.g. ' +
+                  'http://purl.obolibrary.org/obo/RO_0002202')
         ),
     )
 
@@ -55,15 +63,21 @@ class Command(BaseCommand):
         else:
             options['ontology_name'] = ''
 
+        if options['eqp']:
+            options['eqp'] = '-eqp ' + options['eqp']
+        else:
+            options['eqp'] = ''
+
         try:
             cmd = 'java -jar -DentityExpansionLimit={eel} '\
                 '{lib}/owl2neo4j.jar -o {ontology} -n {name} -a {abbr} ' \
-                '-s {server} {verbosity}'.format(
+                '{eqp} -s {server} {verbosity}'.format(
                     eel=settings.JAVA_ENTITY_EXPANSION_LIMIT,
                     lib=settings.LIBS_DIR,
                     ontology=options['ontology_file'],
                     name=options['ontology_name'],
                     abbr=options['ontology_abbr'],
+                    eqp=options['eqp'],
                     server=settings.NEO4J_BASE_URL,
                     verbosity=('-v' if int(options['verbosity']) == 2 else '')
                 )
