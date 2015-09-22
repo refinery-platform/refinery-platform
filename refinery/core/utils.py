@@ -24,6 +24,7 @@ def add_data_set_to_neo4j(data_set, owner):
 
     # Get annotations of the data_set
     annotations = get_data_set_annotations(data_set)
+    annotations = normalize_annotation_ont_ids(annotations)
 
     try:
         tx = graph.cypher.begin()
@@ -71,15 +72,6 @@ def add_data_set_to_neo4j(data_set, owner):
 
             # Increase counter
             counter = counter + 1
-
-        for user in group.user_set.all():
-            tx.append(
-                statement,
-                {
-                    'ds_uuid': data_set.uuid,
-                    'user_id': owner.id
-                }
-            )
 
         # Link owner with the added dataset
         statement = (
