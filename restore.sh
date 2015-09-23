@@ -153,9 +153,9 @@ if [ ! `pgrep supervisord` ]; then
   supervisord
 fi
 if [ "$(supervisorctl pid solr)" == "0" ]; then
-  supervisorctl start solr && python ./manage.py update_index --batch-size 25 > "$BACKUP_TEMP/$BACKUP/$LOG_FILE"
+  supervisorctl start solr && python "$REFINERY_BASE_DIR/manage.py" update_index --batch-size 25 > "$BACKUP_TEMP/$BACKUP/$LOG_FILE"
 else
-  python ./manage.py update_index --batch-size 25
+  python "$REFINERY_BASE_DIR/manage.py" update_index --batch-size 25
 fi
 
 TIME_INTERMEDIATE_END=$(date +"%s")
