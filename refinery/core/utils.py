@@ -11,11 +11,18 @@ logger = logging.getLogger(__name__)
 
 
 def update_data_set_index(data_set):
+    """Update a dataset's corresponding document in Solr.
+    """
+
     logger.debug('Updated data set (uuid: %s) index', data_set.uuid)
     DataSetIndex().update_object(data_set, using='core')
 
 
 def add_data_set_to_neo4j(data_set, owner):
+    """Add a node in Neo4J for a dataset and give the owner read access.
+    Note: Neo4J manages read access only.
+    """
+
     logger.debug(
         'Adding read access to data set (uuid: %s) in Neo4J', data_set.uuid
     )
@@ -135,6 +142,9 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
 
 
 def remove_read_access_in_neo4j(data_set, group):
+    """Remove read access for one or multiple users to one or more datasets.
+    """
+
     logger.debug(
         'Removing read access from data set (uuid: %s) in Neo4J', data_set.uuid
     )
@@ -168,16 +178,27 @@ def remove_read_access_in_neo4j(data_set, group):
 
 
 def delete_data_set_index(data_set):
+    """Remove a dataset's related document from Solr's index.
+    """
+
     logger.debug('Deleted data set (uuid: %s) index', data_set.uuid)
     DataSetIndex().remove_object(data_set, using='core')
 
 
 def delete_data_set_neo4j(data_set):
+    """Remove a dataset's related node in Neo4J.
+    """
+
     logger.debug('Deleted data set (uuid: %s) in Neo4J', data_set.uuid)
-    DataSetIndex().remove_object(data_set, using='core')
+
 
 
 def normalize_annotation_ont_ids(annotations):
+    """Normalize ontology id across annotations. The background is that some
+    annotations provide a URI, some a ontology id in form of IDSPACE:ID and
+    some only provide the ID.
+    """
+
     new_annotations = []
     for annotation in annotations:
         underscore_pos = annotation['value_accession'].rfind('_')
@@ -202,6 +223,10 @@ def normalize_annotation_ont_ids(annotations):
 
 
 def get_data_set_annotations(data_set):
+    """Extract ontology annotaions from the database for all or a specific
+    datasets.
+    """
+
     cursor = connection.cursor()
 
     sql = """SELECT
