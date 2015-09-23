@@ -105,7 +105,7 @@ class Command(BaseCommand):
         tx.commit()
 
     def handle(self, *args, **options):
-        annotations = get_data_set_annotations()
+        annotations = get_data_set_annotations(None)
         annotations = normalize_annotation_ont_ids(annotations)
         self.push_annotations_to_neo4j(annotations)
         self.push_users()
