@@ -27,13 +27,14 @@ from bioblend import galaxy
 from django_extensions.db.fields import UUIDField
 from django_auth_ldap.backend import LDAPBackend
 from guardian.shortcuts import get_users_with_perms, \
-    get_groups_with_perms, assign_perm, remove_perm
+    get_groups_with_perms, assign_perm, remove_perm, get_objects_for_group
 from registration.signals import user_registered, user_activated
 from data_set_manager.models import Investigation, Node, Study, Assay
 from file_store.models import get_file_size, FileStoreItem
 from galaxy_connector.models import Instance
 from .utils import update_data_set_index, delete_data_set_index, \
-    add_read_access_in_neo4j, remove_read_access_in_neo4j
+    add_read_access_in_neo4j, remove_read_access_in_neo4j, \
+    delete_data_set_neo4j
 
 
 logger = logging.getLogger(__name__)
@@ -496,7 +497,7 @@ class DataSet(SharableResource):
         users = group.user_set.all()
         user_ids = []
         for user in users:
-            if not user.has_perm('read_DataSet', DataSet):
+            if not user.has_perm('core.read_dataset', DataSet):
                 user_ids.append(user.id)
 
         if user_ids:
@@ -509,6 +510,7 @@ class DataSet(SharableResource):
 @receiver(pre_delete, sender=DataSet)
 def _dataset_delete(sender, instance, *args, **kwargs):
     delete_data_set_index(instance)
+    delete_data_set_neo4j(instance.uuid)
 
 
 class InvestigationLink(models.Model):
@@ -1281,9 +1283,14 @@ class FastQC(object):
         self.data = data
 
 
-@receiver(user_registered)
-def _add_user_to_neo4j(sender, instance, *args, **kwargs):
-    public_dataset_uuids = map(
-        lambda x: x.uuid, DataSet.objects.filter(is_public=True)
+@receiver(post_save, sender=User)
+def _add_user_to_neo4j(sender, **kwargs):
+    add_read_access_in_neo4j(
+        map(
+            lambda ds: ds.uuid, get_objects_for_group(
+                ExtendedGroup.objects.public_group(),
+                'core.read_dataset'
+            )
+        ),
+        [kwargs['instance'].id]
     )
-    add_read_access_in_neo4j(public_dataset_uuids, [instance.id])
