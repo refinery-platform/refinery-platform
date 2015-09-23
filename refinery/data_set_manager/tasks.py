@@ -350,6 +350,8 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
             dataset = DataSet.objects.create(name=dataset_name)
             dataset.set_investigation(investigation)
             dataset.set_owner(user)
+            dataset.accession = identifier
+            dataset.title = title
             logger.info("create_dataset: Created data set '%s'", dataset_name)
         if public:
             public_group = ExtendedGroup.objects.public_group()
