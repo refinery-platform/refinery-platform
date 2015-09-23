@@ -483,12 +483,27 @@ class DataSet(SharableResource):
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
         update_data_set_index(self)
-        add_read_access_in_neo4j(self, group)
+        add_read_access_in_neo4j(
+            [self.uuid],
+            map(lambda user: user.id, group.user_set.all())
+        )
 
     def unshare(self, group):
         super(DataSet, self).unshare(group)
         update_data_set_index(self)
-        remove_read_access_in_neo4j(self, group)
+        # Need to check if the users of the group that is unshared still have
+        # access via other groups or by ownership
+        users = group.user_set.all()
+        user_ids = []
+        for user in users:
+            if not user.has_perm('read_DataSet', DataSet):
+                user_ids.append(user.id)
+
+        if user_ids:
+            remove_read_access_in_neo4j(
+                [self.uuid],
+                user_ids
+            )
 
 
 @receiver(pre_delete, sender=DataSet)
@@ -1264,3 +1279,11 @@ class Invitation(models.Model):
 class FastQC(object):
     def __init__(self, data=None):
         self.data = data
+
+
+@receiver(user_registered)
+def _add_user_to_neo4j(sender, instance, *args, **kwargs):
+    public_dataset_uuids = map(
+        lambda x: x.uuid, DataSet.objects.filter(is_public=True)
+    )
+    add_read_access_in_neo4j(public_dataset_uuids, [instance.id])
