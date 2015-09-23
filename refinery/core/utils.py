@@ -199,7 +199,7 @@ def delete_data_set_neo4j(dataset_uuid):
     statement = (
         "MATCH (ds:DataSet {uuid:{dataset_uuid}}) "
         "OPTIONAL MATCH (ds)-[r]-() "
-        "DELETE n, r"
+        "DELETE ds, r"
     )
 
     try:
