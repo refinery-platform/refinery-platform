@@ -83,8 +83,8 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
 
         # Link owner with the added dataset
         statement = (
-            "MATCH (ds:DataSet {uuid:{ds_uuid}})"
-            "MERGE (u:User {id:{user_id}})"
+            "MATCH (ds:DataSet {uuid:{ds_uuid}}) "
+            "MERGE (u:User {id:{user_id}}) "
             "MERGE (ds)<-[:`read_access`]-(u)"
         )
 
@@ -116,8 +116,8 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
     graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
 
     statement = (
-        "MATCH (ds:DataSet {uuid:{dataset_uuid}})"
-        "MERGE (u:User {id:{user_id}})"
+        "MATCH (ds:DataSet {uuid:{dataset_uuid}}) "
+        "MERGE (u:User {id:{user_id}}) "
         "MERGE (ds)<-[:`read_access`]-(u)"
     )
 
@@ -154,8 +154,8 @@ def remove_read_access_in_neo4j(dataset_uuids, user_ids):
     graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
 
     statement = (
-        "MATCH (ds:DataSet {uuid:{dataset_uuid}}), (u:User {id:{user_id}})"
-        "MATCH (ds)<-[r:`read_access`]-(u)"
+        "MATCH (ds:DataSet {uuid:{dataset_uuid}}), (u:User {id:{user_id}}) "
+        "MATCH (ds)<-[r:`read_access`]-(u) "
         "DELETE r"
     )
 
@@ -197,8 +197,8 @@ def delete_data_set_neo4j(dataset_uuid):
     graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
 
     statement = (
-        "MATCH (ds:DataSet {uuid:{dataset_uuid}})"
-        "OPTIONAL MATCH (ds)-[r]-()"
+        "MATCH (ds:DataSet {uuid:{dataset_uuid}}) "
+        "OPTIONAL MATCH (ds)-[r]-() "
         "DELETE n, r"
     )
 
@@ -216,7 +216,7 @@ def delete_data_set_neo4j(dataset_uuid):
     except Exception, e:
         logger.error(
             'Failed to remove dataset (uuid: %s) in Neo4J. '
-            'Exception: %s', e
+            'Exception: %s', dataset_uuid, e
         )
 
 
