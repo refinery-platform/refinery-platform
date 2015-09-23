@@ -96,15 +96,19 @@ def add_data_set_to_neo4j(data_set, owner):
         )
 
 
-def add_read_access_in_neo4j(data_set, group):
-    logger.debug(
-        'Adding read access to data set (uuid: %s) in Neo4J', data_set.uuid
+def add_read_access_in_neo4j(dataset_uuids, user_ids):
+    """Give one or more user read access to one or more datasets.
+    """
+
+    logger.info(
+        'Adding read access for users (%s) to data sets (%s) in Neo4J',
+        dataset_uuids, user_ids
     )
 
     graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
 
     statement = (
-        "MATCH (ds:DataSet {uuid:{ds_uuid}})"
+        "MATCH (ds:DataSet {uuid:{dataset_uuid}})"
         "MERGE (u:User {id:{user_id}})"
         "MERGE (ds)<-[:`read_access`]-(u)"
     )
@@ -112,14 +116,15 @@ def add_read_access_in_neo4j(data_set, group):
     try:
         tx = graph.cypher.begin()
 
-        for user in group.user_set.all():
-            tx.append(
-                statement,
-                {
-                    'ds_uuid': data_set.uuid,
-                    'user_id': user.id
-                }
-            )
+        for dataset_uuid in dataset_uuids:
+            for user_id in user_ids:
+                tx.append(
+                    statement,
+                    {
+                        'dataset_uuid': dataset_uuid,
+                        'user_id': user_id
+                    }
+                )
 
         tx.commit()
     except Exception, e:
@@ -224,7 +229,7 @@ def get_data_set_annotations(data_set):
             core_investigationlink AS investigation
             ON
             core_dataset.id = investigation.data_set_id
-          %s
+          {}
         ) AS data_set
         JOIN
         (
@@ -262,12 +267,22 @@ def get_data_set_annotations(data_set):
         data_set.investigation_id = annotated_study.investigation_id
         """
 
-    ds = 'WHERE core_dataset.id = ' + data_set.id if data_set else ''
+    # Double string replacement, i.e. `sql` will be replace with a replacement
+    # string for a data set id in case `data_set` has been passed. This is
+    # needed as `cursor.execute()` only inserts escaped strings.
+    ds = ''
+    if data_set:
+        ds = 'WHERE core_dataset.id = %s'
+
+    sql = sql.format(ds)
 
     # According to the docs, `cursor.execute()` automatically escapes all
     # instances of `%s`.
     # https://docs.djangoproject.com/en/1.8/topics/db/sql/#connections-and-cursors
-    cursor.execute(sql, ds)
+    if data_set:
+        cursor.execute(sql, [data_set.id])
+    else:
+        cursor.execute(sql)
 
     desc = cursor.description
 
