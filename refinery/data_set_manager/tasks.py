@@ -362,7 +362,7 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
         dataset.save()
         # Finally index data set
         update_data_set_index(dataset)
-        add_data_set_to_neo4j(dataset, user)
+        add_data_set_to_neo4j(dataset.uuid, user.id)
         return dataset.uuid
     return None
 

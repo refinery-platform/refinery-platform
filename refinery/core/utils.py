@@ -18,19 +18,19 @@ def update_data_set_index(data_set):
     DataSetIndex().update_object(data_set, using='core')
 
 
-def add_data_set_to_neo4j(data_set, owner):
+def add_data_set_to_neo4j(dataset_uuid, user_id):
     """Add a node in Neo4J for a dataset and give the owner read access.
     Note: Neo4J manages read access only.
     """
 
     logger.debug(
-        'Adding read access to data set (uuid: %s) in Neo4J', data_set.uuid
+        'Adding read access to data set (uuid: %s) in Neo4J', dataset_uuid
     )
 
     graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
 
     # Get annotations of the data_set
-    annotations = get_data_set_annotations(data_set)
+    annotations = get_data_set_annotations(dataset_uuid)
     annotations = normalize_annotation_ont_ids(annotations)
 
     try:
@@ -90,8 +90,8 @@ def add_data_set_to_neo4j(data_set, owner):
         tx.append(
             statement,
             {
-                'ds_uuid': data_set.uuid,
-                'user_id': owner.id
+                'ds_uuid': dataset_uuid,
+                'user_id': user_id
             }
         )
 
@@ -192,7 +192,6 @@ def delete_data_set_neo4j(data_set):
     logger.debug('Deleted data set (uuid: %s) in Neo4J', data_set.uuid)
 
 
-
 def normalize_annotation_ont_ids(annotations):
     """Normalize ontology id across annotations. The background is that some
     annotations provide a URI, some a ontology id in form of IDSPACE:ID and
@@ -222,7 +221,7 @@ def normalize_annotation_ont_ids(annotations):
     return new_annotations
 
 
-def get_data_set_annotations(data_set):
+def get_data_set_annotations(dataset_uuid):
     """Extract ontology annotaions from the database for all or a specific
     datasets.
     """
@@ -296,7 +295,7 @@ def get_data_set_annotations(data_set):
     # string for a data set id in case `data_set` has been passed. This is
     # needed as `cursor.execute()` only inserts escaped strings.
     ds = ''
-    if data_set:
+    if dataset_uuid:
         ds = 'WHERE core_dataset.id = %s'
 
     sql = sql.format(ds)
@@ -304,8 +303,8 @@ def get_data_set_annotations(data_set):
     # According to the docs, `cursor.execute()` automatically escapes all
     # instances of `%s`.
     # https://docs.djangoproject.com/en/1.8/topics/db/sql/#connections-and-cursors
-    if data_set:
-        cursor.execute(sql, [data_set.id])
+    if dataset_uuid:
+        cursor.execute(sql, [dataset_uuid])
     else:
         cursor.execute(sql)
 
