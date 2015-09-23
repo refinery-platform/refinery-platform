@@ -24,8 +24,8 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
     """
 
     logger.info(
-        'Add dataset (uuid: %s) to Neo4J and give read access to user (id: %s)',
-        dataset_uuid, user_id
+        'Add dataset (uuid: %s) to Neo4J and give read access to user ' +
+        '(id: %s)', dataset_uuid, user_id
     )
 
     graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
