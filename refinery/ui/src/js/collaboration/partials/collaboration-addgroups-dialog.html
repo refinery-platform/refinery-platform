@@ -5,6 +5,8 @@
 <div class="modal-body">
   <form class="navbar-form" style="text-align:center">
     <input type="text" class="form-control" placeholder="Group name" ng-model="groupName">
-    <button type="submit" class="btn btn-default" ng-click="modal.createGroup(groupName)">Create group</button>
+      <button type="submit" class="btn btn-default" ng-click="$close()">Cancel</button>
+    <button type="submit" class="btn btn-primary" ng-click="modal.createGroup
+    (groupName)">Create group</button>
   </form>
 </div>

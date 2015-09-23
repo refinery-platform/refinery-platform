@@ -125,7 +125,7 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
     'class': '',
     'id': topControlsId,
     'html': ''
-  }).appendTo('#' + self._parentElementId);
+  }).insertBefore("#table-view-tab");
 
   $('<span/>', {
     'class': 'dropdown',
@@ -521,89 +521,98 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function (parentElem
   });
 };
 
-SolrDocumentTable.prototype._generatePagerControl = function(
-    parentElementId, visiblePages, padLower, padUpper) {
-  var self = this;
 
-  $("#" + parentElementId).html("");
 
-  var availablePages = Math.max(0, Math.floor((self._query.getCurrentDocumentCount(false) - 1) / self._documentsPerPage));
-  var currentPage = Math.floor(self._query.getDocumentIndex() / self._documentsPerPage);
+  SolrDocumentTable.prototype._generatePagerControl = function (parentElementId, visiblePages, padLower, padUpper) {
 
-  if (currentPage > availablePages) {
-    currentPage = availablePages;
-  }
+    var self = this;
+    //Hide paginator if getCurrentDocumentCount() >= _documentsPerPage
+    if (self._query.getCurrentDocumentCount() >= self._documentsPerPage) {
 
-  if (availablePages < visiblePages) {
-    if (currentPage < padLower) {
-      padUpper = padUpper + padLower;
-      padLower = currentPage;
-      padUpper = padUpper - padLower;
-    }
-  }
-  else if (currentPage < padLower) {
-    padUpper = padUpper + padLower;
-    padLower = currentPage;
-    padUpper = padUpper - padLower;
-  }
-  else if (currentPage > availablePages - padLower) {
-    padLower = padLower + padUpper - ( availablePages - currentPage );
-    padUpper = availablePages - currentPage;
-  }
+      $("#" + parentElementId).html("");
 
-  var items = [];
-  if (currentPage == 0) {
-    items.push("<li class=\"disabled\"><a>&laquo;</a></li>");
-  }
-  else {
-    items.push("<li><a href=\"#\" id=\"page-first\">&laquo;</a></li>");
-  }
+      var availablePages = Math.max(0, Math.floor((self._query.getCurrentDocumentCount(false) - 1) / self._documentsPerPage));
+      console.log("available:", availablePages);
+      var currentPage = Math.floor(self._query.getDocumentIndex() / self._documentsPerPage);
+      console.log("currentpage", currentPage + 1);
+      if (currentPage > availablePages) {
+        currentPage = availablePages;
+      }
 
-  for (var i = currentPage - padLower; i <= currentPage + padUpper; ++i) {
-    if (i == currentPage) {
-      items.push("<li class=\"active\"><a href=\"#\" id=\"page-" + (i + 1) + "\">" + (i + 1) + "</a></li>")
-    }
-    else {
-      if (i > availablePages) {
-        items.push("<li class=\"disabled\"><a>" + (i + 1) + "</a></li>")
+      if (availablePages < visiblePages) {
+        if (currentPage < padLower) {
+          padUpper = padUpper + padLower;
+          padLower = currentPage;
+          padUpper = padUpper - padLower;
+        }
+      }
+      else if (currentPage < padLower) {
+        padUpper = padUpper + padLower;
+        padLower = currentPage;
+        padUpper = padUpper - padLower;
+      }
+      else if (currentPage > availablePages - padLower) {
+        padLower = padLower + padUpper - ( availablePages - currentPage );
+        padUpper = availablePages - currentPage;
+      }
+
+      var items = [];
+      if (currentPage == 0) {
+        items.push("<li class=\"disabled\"><a>&laquo;</a></li>");
       }
       else {
-        items.push("<li><a href=\"#\" id=\"page-" + (i + 1) + "\">" + (i + 1) + "</a></li>")
+        items.push("<li><a href=\"#\" id=\"page-first\">&laquo;</a></li>");
       }
+
+      for (var i = currentPage - padLower; i <= currentPage + padUpper; ++i) {
+        if (i == currentPage) {
+          items.push("<li class=\"active\"><a href=\"#\" id=\"page-" + (i + 1) + "\">" + (i + 1) + "</a></li>")
+        }
+        else {
+          if (i > availablePages) {
+            items.push("<li class=\"disabled\"><a>" + (i + 1) + "</a></li>")
+          }
+          else {
+            items.push("<li><a href=\"#\" id=\"page-" + (i + 1) + "\">" + (i + 1) + "</a></li>")
+          }
+        }
+      }
+
+      if (currentPage == availablePages) {
+        items.push("<li class=\"disabled\"><a>&raquo;</a></li>");
+      }
+      else {
+        items.push("<li><a href=\"#\" id=\"page-last\">&raquo;</a></li>")
+      }
+
+      $("#" + parentElementId).html("");
+
+      $('<div/>', {
+        'class': "pagination",
+        html: "<ul>" + items.join('') + "</ul>"
+      }).appendTo("#" + parentElementId);
+
+      $("[id^=page-]").on("click", function () {
+
+        page = this.id.split("-")[1];
+
+        if (page === "first") {
+          currentPage = 0;
+        } else if (page === "last") {
+          currentPage = availablePages;
+        } else {
+          currentPage = page - 1;
+        }
+
+        self._query.setDocumentIndex(currentPage * self._documentsPerPage);
+        self._commands.execute(
+            SOLR_DOCUMENT_TABLE_PAGE_CHANGED_COMMAND, {'page': currentPage});
+      });
     }
-  }
-
-  if (currentPage == availablePages) {
-    items.push("<li class=\"disabled\"><a>&raquo;</a></li>");
-  }
-  else {
-    items.push("<li><a href=\"#\" id=\"page-last\">&raquo;</a></li>")
-  }
-
-  $("#" + parentElementId).html("");
-
-  $('<div/>', {
-    'class': "pagination",
-    html: "<ul>" + items.join('') + "</ul>"
-  }).appendTo("#" + parentElementId);
-
-  $("[id^=page-]").on("click", function () {
-
-    page = this.id.split("-")[1];
-
-    if (page === "first") {
-      currentPage = 0;
-    } else if (page === "last") {
-      currentPage = availablePages;
-    } else {
-      currentPage = page - 1;
+    else {
+      $( ".pagination" ).css('display', 'none');
     }
-
-    self._query.setDocumentIndex(currentPage * self._documentsPerPage);
-    self._commands.execute(
-      SOLR_DOCUMENT_TABLE_PAGE_CHANGED_COMMAND, {'page': currentPage});
-  });
-};
+  };
 
 SolrDocumentTable.prototype._composeFieldId = function(field) {
   var self = this;

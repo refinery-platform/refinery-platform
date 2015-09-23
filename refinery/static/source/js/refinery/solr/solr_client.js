@@ -66,7 +66,7 @@ SolrClient.prototype.initialize = function ( query, resetQuery, callback ) {
 				bootbox.alert(
             	"<h3 style='color:red;'>Error: 500</h3>" +
             	"<p>" +
-           	 	"It looks one or more services are not running." +
+           	 	"It looks like one or more services are not running." +
             	"</p>" +
 				"<p>" +
 				"Please contact your " +
@@ -116,7 +116,7 @@ SolrClient.prototype.run = function ( query, queryComponents, callback ) {
         	bootbox.alert(
             	"<h3 style='color:red;'>Error: 500</h3>" +
             	"<p>" +
-           	 	"It looks one or more services are not running." +
+           	 	"It looks like one or more services are not running." +
             	"</p>" +
 				"<p>" +
 				"Please contact your " +
@@ -125,6 +125,9 @@ SolrClient.prototype.run = function ( query, queryComponents, callback ) {
 				"?Subject=Refinery%20Error' target='_top'>System Administrator</a>" +
 				".</p>"
         );
+				SOLR_ERROR_TRIGGER+=1;
+
+
 
 			}
         }

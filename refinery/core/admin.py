@@ -78,10 +78,11 @@ class InvestigationLinkAdmin(GuardedModelAdmin):
 
 
 class AnalysisAdmin(GuardedModelAdmin):
-    list_display = ['__unicode__', 'id', 'project', 'data_set', 'workflow',
-                    'workflow_steps_num', 'history_id',
+
+    list_display = ['__unicode__', 'id', 'project', 'data_set',
+                    'workflow', 'workflow_steps_num', 'history_id',
                     'workflow_galaxy_id', 'library_id',  'time_start',
-                    'time_end', 'status', 'status_detail', 'cancel']
+                    'time_end', 'status', 'status_detail']
 
 
 class DiskQuotaAdmin(GuardedModelAdmin):
