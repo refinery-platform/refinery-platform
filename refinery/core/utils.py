@@ -14,7 +14,7 @@ def update_data_set_index(data_set):
     """Update a dataset's corresponding document in Solr.
     """
 
-    logger.debug('Updated data set (uuid: %s) index', data_set.uuid)
+    logger.info('Updated data set (uuid: %s) index', data_set.uuid)
     DataSetIndex().update_object(data_set, using='core')
 
 
@@ -23,8 +23,9 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
     Note: Neo4J manages read access only.
     """
 
-    logger.debug(
-        'Adding read access to data set (uuid: %s) in Neo4J', dataset_uuid
+    logger.info(
+        'Adding read access for user (id: %s) to data set (uuid: %s) in Neo4J',
+        user_id, dataset_uuid
     )
 
     graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
@@ -109,7 +110,7 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
 
     logger.info(
         'Adding read access for users (%s) to data sets (%s) in Neo4J',
-        dataset_uuids, user_ids
+        user_ids, dataset_uuids
     )
 
     graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
@@ -174,7 +175,7 @@ def remove_read_access_in_neo4j(dataset_uuids, user_ids):
         tx.commit()
     except Exception, e:
         logger.error(
-            'Failed to remove read access from data set (uuid: %s) in Neo4J. '
+            'Failed to remove read access from dataset (uuid: %s) in Neo4J. '
             'Exception: %s', e
         )
 
@@ -187,11 +188,36 @@ def delete_data_set_index(data_set):
     DataSetIndex().remove_object(data_set, using='core')
 
 
-def delete_data_set_neo4j(data_set):
+def delete_data_set_neo4j(dataset_uuid):
     """Remove a dataset's related node in Neo4J.
     """
 
-    logger.debug('Deleted data set (uuid: %s) in Neo4J', data_set.uuid)
+    logger.debug('Deleted data set (uuid: %s) in Neo4J', dataset_uuid)
+
+    graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+
+    statement = (
+        "MATCH (ds:DataSet {uuid:{dataset_uuid}})"
+        "OPTIONAL MATCH (ds)-[r]-()"
+        "DELETE n, r"
+    )
+
+    try:
+        tx = graph.cypher.begin()
+
+        tx.append(
+            statement,
+            {
+                'dataset_uuid': dataset_uuid
+            }
+        )
+
+        tx.commit()
+    except Exception, e:
+        logger.error(
+            'Failed to remove dataset (uuid: %s) in Neo4J. '
+            'Exception: %s', e
+        )
 
 
 def normalize_annotation_ont_ids(annotations):
