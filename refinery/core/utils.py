@@ -141,18 +141,19 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
         )
 
 
-def remove_read_access_in_neo4j(data_set, group):
+def remove_read_access_in_neo4j(dataset_uuids, user_ids):
     """Remove read access for one or multiple users to one or more datasets.
     """
 
     logger.debug(
-        'Removing read access from data set (uuid: %s) in Neo4J', data_set.uuid
+        'Removing read access from users (%s) to data set (uuid: %s) in Neo4J',
+        user_ids, dataset_uuids
     )
 
     graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
 
     statement = (
-        "MATCH (ds:DataSet {uuid:{ds_uuid}}), (u:User {id:{user_id}})"
+        "MATCH (ds:DataSet {uuid:{dataset_uuid}}), (u:User {id:{user_id}})"
         "MATCH (ds)<-[r:`read_access`]-(u)"
         "DELETE r"
     )
@@ -160,14 +161,15 @@ def remove_read_access_in_neo4j(data_set, group):
     try:
         tx = graph.cypher.begin()
 
-        for user in group.user_set.all():
-            tx.append(
-                statement,
-                {
-                    'ds_uuid': data_set.uuid,
-                    'user_id': user.id
-                }
-            )
+        for dataset_uuid in dataset_uuids:
+            for user_id in user_ids:
+                tx.append(
+                    statement,
+                    {
+                        'dataset_uuid': dataset_uuid,
+                        'user_id': user_id
+                    }
+                )
 
         tx.commit()
     except Exception, e:
