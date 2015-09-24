@@ -1,7 +1,7 @@
 angular.module('refineryAnalysis')
     .factory("analysisLaunchFactory", ['$http','$rootScope','$log', analysesLaunchFactory]);
 
-function analysesLaunchFactory($http,$rootScope,$log) {
+function analysesLaunchFactory($http, $rootScope, $log) {
   "use strict";
 
   var postLaunchAnalysis = function (paramObj) {
