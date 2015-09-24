@@ -1,37 +1,41 @@
 angular.module('refineryAnalysis')
   .controller('AnalysisCtrl',
   [
-    $scope,
-    $rootScope,
-    $http,
-    $window,
-    $log
-    , AnalysisCtrl
+    '$scope',
+    '$log',
+    'analysisConfigService',
+    AnalysisCtrl
   ]
 );
 
 
-function AnalysisCtrl($scope, $rootScope, $http, $window, $log) {
+function AnalysisCtrl($scope, $log, analysisConfigService ) {
     "use strict";
 
   var vm = this;
 
   $scope.$onRootScope('nodeSetChangedEvent', function(event, currentNodeSet) {
-    $scope.analysisConfig.nodeSetUuid = currentNodeSet.uuid;
-    $scope.analysisConfig.nodeRelationshipUuid = null;
-    $log.debug("new nodeset: " + $scope.analysisConfig.nodeSetUuid);
-  });
+    analysisConfigService.setAnalysisConfig(
+      {
+        nodeSetUuid: currentNodeSet.uuid,
+        nodeRelationshipUuid: null
+      });
+    });
 
   $scope.$onRootScope('nodeRelationshipChangedEvent', function(event, currentNodeRelationship) {
     if (!currentNodeRelationship) {
-      $scope.analysisConfig.nodeRelationshipUuid = null;
-      $log.debug("new noderel undefined");
+      analysisConfigService.setAnalysisConfig(
+      {
+        nodeSetUuid: null,
+        nodeRelationshipUuid: null
+      });
     }
     else {
-      $scope.analysisConfig.nodeRelationshipUuid = currentNodeRelationship.uuid;
-      $log.debug("new noderel: " + $scope.analysisConfig.nodeRelationshipUuid);
+      analysisConfigService.setAnalysisConfig(
+      {
+        nodeSetUuid: null,
+        nodeRelationshipUuid: currentNodeRelationship.uuid
+      });
     }
-    $scope.analysisConfig.nodeSetUuid = null;
   });
-
-};
+}

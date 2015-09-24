@@ -3,53 +3,23 @@ angular
   .directive(
     'rfAnalysisLaunchModal',
     [
-      '$window',
       '$compile',
       '$templateCache',
-      '$log',
       '$modal',
-      'timeStamp',
-      'workflow',
+      'analysisConfigService',
       rfAnalysisLaunchModal
     ]
   );
 
-function rfAnalysisLaunchModal($window, $compile, $templateCache,$log, $modal, timeStamp, workflow) {
+function rfAnalysisLaunchModal($compile, $templateCache, $modal, analysisConfigService) {
   "use strict";
   return {
     restrict: 'AE',
     controller: 'AnalysisCtrl',
-    controllerAs: 'AnalysisCtrl',
-    replace: false,
+    controllerAs: 'analysisCtrl',
     link: function(scope, element, attrs) {
 
-      var analysisConfig = {
-        studyUuid: $window.externalStudyUuid,
-        workflowUuid: null,
-        nodeSetUuid: null,
-        nodeRelationshipUuid: null,
-        name: null,
-      };
-
-       scope.$onRootScope('nodeSetChangedEvent', function(event, currentNodeSet) {
-        analysisConfig.nodeSetUuid = currentNodeSet.uuid;
-        analysisConfig.nodeRelationshipUuid = null;
-      });
-
-      scope.$onRootScope('nodeRelationshipChangedEvent', function(event, currentNodeRelationship) {
-        if (!currentNodeRelationship) {
-          analysisConfig.nodeRelationshipUuid = null;
-          analysisConfig.nodeRelationshipUuid = null;
-        }
-        else {
-          analysisConfig.nodeRelationshipUuid = currentNodeRelationship.uuid;
-        }
-        analysisConfig.nodeSetUuid = null;
-      });
-
       element.bind("click", function(e) {
-        var nowTimeStamp = timeStamp.getTimeStamp();
-        var workflowName = workflow.getName();
         var template = $templateCache.get("analysislaunchmodal.html");
         var modalContent = $compile(template)(scope);
 
