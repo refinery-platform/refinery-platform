@@ -41,10 +41,10 @@ function AnalysisModalCtrl($scope, $modalInstance, $window, timeStamp, workflow,
       var launchParams = analysisConfigService.getAnalysisConfig();
       analysisLaunchFactory.postLaunchAnalysis(launchParams)
         .then(function(response){
-          $scope.analysisLaunchFlag = "COMPLETE";
+          $scope.analysisLaunchFlag = "SUCCESS";
        }, function(error){
          console.log(error);
-          $scope.analysisLaunchFlag = "COMPLETE";
+          $scope.analysisLaunchFlag = "FAILED";
        });
     }else{
       //add error handling

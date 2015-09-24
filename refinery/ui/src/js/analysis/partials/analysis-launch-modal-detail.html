@@ -28,12 +28,22 @@
       <div class="modal-header">
         Analysis Launch Status
       </div>
-      <div class="modal-body bootboxAnalysisWidth">
-        Analysis Launched.
+      <div ng-if="analysisLaunchFlag==='SUCCESS'">
+        <div class="modal-body bootboxAnalysisWidth">
+          Analysis Launch Successful.
+        </div>
+        <div class="modal-footer" id="modal-launch-analysis-footer">
+          <button class="btn btn-warning" ng-click="close()">Close</button>
+          <button class="btn btn-primary" ng-click="view()">View Analysis</button>
+        </div>
       </div>
-      <div class="modal-footer" id="modal-launch-analysis-footer">
-        <button class="btn btn-warning" ng-click="close()">Close</button>
-        <button class="btn btn-primary" ng-click="view()">View Analysis</button>
+      <div ng-if="analysisLaunchFlag==='FAILED'">
+        <div class="modal-body bootboxAnalysisWidth">
+          Analysis Launch Failed.
+        </div>
+        <div class="modal-footer" id="modal-launch-analysis-footer">
+          <button class="btn btn-warning" ng-click="close()">Close</button>
+        </div>
       </div>
     </span>
   </div>
