@@ -46,9 +46,6 @@ function AnalysisModalCtrl($scope, $modalInstance, $window, timeStamp, workflow,
          console.log(error);
           $scope.analysisLaunchFlag = "FAILED";
        });
-    }else{
-      //add error handling
-      console.log("Please enter a valid name");
     }
   };
 
