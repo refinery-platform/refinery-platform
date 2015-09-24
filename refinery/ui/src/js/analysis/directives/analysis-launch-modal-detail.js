@@ -14,7 +14,5 @@ function rfAnalysisLaunchModalDetail( $log, $modal) {
     return {
     restrict: 'AE',
     templateUrl: '/static/partials/analysis/partials/analysis-launch-modal-detail.html',
-    controller: 'AnalysisCtrl',
-    controllerAs: 'analysisCtrl',
     };
 }
