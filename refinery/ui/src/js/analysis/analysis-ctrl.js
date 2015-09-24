@@ -1,7 +1,17 @@
 angular.module('refineryAnalysis')
+  .controller('AnalysisCtrl',
+  [
+    $scope,
+    $rootScope,
+    $http,
+    $window,
+    $log
+    , AnalysisCtrl
+  ]
+);
 
-.controller('AnalysisCtrl', function(
-    $scope, $rootScope, $http, $window, $log, $timeout, workflow, timeStamp) {
+
+function AnalysisCtrl($scope, $rootScope, $http, $window, $log) {
     "use strict";
 
   var vm = this;
@@ -24,4 +34,4 @@ angular.module('refineryAnalysis')
     $scope.analysisConfig.nodeSetUuid = null;
   });
 
-});
+};
