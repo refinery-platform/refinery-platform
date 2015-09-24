@@ -12,7 +12,6 @@ function AnalysisCtrl($scope, $log, analysisConfigService ) {
     "use strict";
 
   $scope.$onRootScope('nodeSetChangedEvent', function(event, currentNodeSet) {
-    console.log("in nodesetchangedevent");
     analysisConfigService.setAnalysisConfig(
       {
         nodeSetUuid: currentNodeSet.uuid,
