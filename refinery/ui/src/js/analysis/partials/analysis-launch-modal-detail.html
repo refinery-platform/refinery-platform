@@ -1,35 +1,40 @@
 <div class="modal hide"></div>
-  <div class="modal-header" id="modal-launch-analysis-header">
-    Enter an Analysis Name
-  </div>
-  <div class="modal-body bootboxAnalysisWidth" id="modal-launch-analysis-body">
-    <div ng-switch on="analysisLaunchFlag">
-      <span ng-switch-when="NOCALL">
+  <div ng-switch on="analysisLaunchFlag">
+    <span ng-switch-when="NOCALL">
+      <div class="modal-header">
+        Enter an Analysis Name
+      </div>
+      <div class="modal-body bootboxAnalysisWidth">
         Name: <input type="text" ng-model="dataObj.name">
-      </span>
-      <span ng-switch-when="LOADING">
-        <span class="refinery-spinner analyses-view"></span>
-        &nbsp;<em>Retrieving analyses list.</em>
-      </span>
-       <span ng-switch-when="COMPLETE">
-        Analysis Launched.
-      </span>
-    </div>
-  </div>
-  <div class="modal-footer" id="modal-launch-analysis-footer">
-    <div ng-switch on="analysisLaunchFlag">
-      <span ng-switch-when="NOCALL">
+      </div>
+      <div class="modal-footer">
         <button class="btn btn-warning" ng-click="cancel()">Cancel Analysis</button>
         <button class="btn btn-primary" ng-click="ok()">Launch Analysis</button>
-      </span>
-      <span ng-switch-when="LOADING">
+      </div>
+    </span>
+    <span ng-switch-when="LOADING">
+      <div class="modal-header">
+        Analysis Launch Status Loading
+      </div>
+      <div class="modal-body bootboxAnalysisWidth">
+        <span class="refinery-spinner analyses-view"></span>
+        &nbsp;<em>Retrieving analyses list.</em>
+      </div>
+      <div class="modal-footer">
         <button class="btn btn-warning" ng-click="cancel()">Cancel Analysis</button>
-      </span>
-       <span ng-switch-when="COMPLETE">
+      </div>
+    </span>
+    <span ng-switch-default>
+      <div class="modal-header">
+        Analysis Launch Status
+      </div>
+      <div class="modal-body bootboxAnalysisWidth">
+        Analysis Launched.
+      </div>
+      <div class="modal-footer" id="modal-launch-analysis-footer">
         <button class="btn btn-warning" ng-click="close()">Close</button>
         <button class="btn btn-primary" ng-click="view()">View Analysis</button>
-      </span>
-    </div>
+      </div>
+    </span>
   </div>
 </div>
-
