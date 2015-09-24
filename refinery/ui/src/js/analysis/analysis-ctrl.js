@@ -8,19 +8,17 @@ angular.module('refineryAnalysis')
   ]
 );
 
-
 function AnalysisCtrl($scope, $log, analysisConfigService ) {
     "use strict";
 
-  var vm = this;
-
   $scope.$onRootScope('nodeSetChangedEvent', function(event, currentNodeSet) {
+    console.log("in nodesetchangedevent");
     analysisConfigService.setAnalysisConfig(
       {
         nodeSetUuid: currentNodeSet.uuid,
         nodeRelationshipUuid: null
       });
-    });
+  });
 
   $scope.$onRootScope('nodeRelationshipChangedEvent', function(event, currentNodeRelationship) {
     if (!currentNodeRelationship) {
@@ -29,6 +27,7 @@ function AnalysisCtrl($scope, $log, analysisConfigService ) {
         nodeSetUuid: null,
         nodeRelationshipUuid: null
       });
+      $log.debug("new noderel undefined");
     }
     else {
       analysisConfigService.setAnalysisConfig(
