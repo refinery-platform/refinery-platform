@@ -166,7 +166,7 @@ class BaseResource (models.Model):
     creation_date = models.DateTimeField(auto_now_add=True)
     modification_date = models.DateTimeField(auto_now=True)
     description = models.TextField(max_length=5000, blank=True)
-    slug = models.CharField(max_length=250, blank=True, null=True)
+    slug = models.CharField(unique=True, max_length=250, blank=True, null=True)
 
     def __unicode__(self):
         return self.name + " (" + self.uuid + ")"

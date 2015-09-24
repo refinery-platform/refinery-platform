@@ -98,15 +98,15 @@
         ng-show="dashboard.showDataSetsFilterSort"
         close-on-outer-click="dashboard.showDataSetsFilterSort"
         close-on-outer-click-id="dashboard.dataSetsfilterSort">
-        <h5>Filter by</h5>
-        <div class="entry">
+        <h5 ng-if="dashboard.userIsAuthenticated">Filter by</h5>
+        <div class="entry" ng-if="dashboard.userIsAuthenticated">
           <label class="checkbox">
             <input
               type="checkbox"
               ng-model="dashboard.dataSetsFilterOwner"> Own
           </label>
         </div>
-        <div class="entry">
+        <div class="entry" ng-if="dashboard.userIsAuthenticated">
           <label class="checkbox">
             <input
               type="checkbox"
