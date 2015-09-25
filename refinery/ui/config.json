@@ -25,25 +25,6 @@
       "chart",
       "data-set-nav"
     ],
-    "karma": [
-      "source/js/refinery.js",
-      "source/js/commons/router/module.js",
-      "source/js/commons/router/*.js",
-      "source/js/commons/filter/*.js",
-      "source/js/commons/services/*.js",
-      "source/js/commons/router/*.js",
-      "source/js/**/**/*module.js",
-      "source/js/**/*module.js",
-      "source/js/**/**/state.js",
-      "source/js/**/*state.js",
-      "source/js/**/**/*url-router.js",
-      "source/js/**/*ctrl.js",
-      "source/js/**/*factory.js",
-      "source/js/**/*.js",
-      "source/js/**/**/*.js",
-      "source/js/**/**/*spec.js",
-      "source/js/**/*spec.js"
-    ],
     "vendor": {
       "css": [
         "c3/c3.css",
