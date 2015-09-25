@@ -714,6 +714,7 @@ module.exports = function(grunt) {
   grunt.registerTask('compile', [
     'env:compile',
     'jshint',
+    'karma',
     'clean:uiCompile',
     'clean:staticCompile',
     'less:compile',
@@ -729,8 +730,7 @@ module.exports = function(grunt) {
     'copy:uiCompileTemplates',
     'copy:uiCompileVendor',
     'copy:staticCompile',
-    'clean:uiTmp',
-    'karma'
+    'clean:uiTmp'
   ]);
 
   grunt.renameTask('watch', 'delta');
