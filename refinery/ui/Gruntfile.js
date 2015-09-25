@@ -751,8 +751,6 @@ module.exports = function(grunt) {
     }
   );
 
-  console.log(jsFilesByImportance(true));
-
   // Event handling
   if (!spawn) {
     grunt.event.on('watch', function(action, filepath){
