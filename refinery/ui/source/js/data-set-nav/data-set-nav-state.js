@@ -137,7 +137,7 @@ angular
           'files',
           {
             url: '/files/',
-            templateUrl: '/static/partials/data_set_ui_mode_browse.html',
+            templateUrl: '/static/partials/data-set-ui-mode-browse.html',
             controller: 'refineryDataSetNavFilesCtrl'
           },
           '^\/data_sets\/.*\/$',
@@ -147,7 +147,7 @@ angular
           'browse',
           {
             url: '/files/browse',
-            templateUrl: '/static/partials/data_set_ui_mode_browse.html',
+            templateUrl: '/static/partials/data-set-ui-mode-browse.html',
             controller: 'refineryDataSetNavFilesBrowseCtrl'
           },
           '^\/data_sets\/.*\/$',
@@ -157,7 +157,7 @@ angular
           'analyze',
           {
             url: '/files/analyze/',
-            templateUrl: '/static/partials/data_set_ui_mode_analyze.html',
+            templateUrl: '/static/partials/data-set-ui-mode-analyze.html',
             controller: 'refineryDataSetNavAnalyzeCtrl'
           },
           '^\/data_sets\/.*\/$',
@@ -166,7 +166,7 @@ angular
         .state(
           'visualize',
           {
-            templateUrl: "/static/partials/data_set_ui_mode_visualize.html",
+            templateUrl: "/static/partials/data-set-ui-mode-visualize.html",
             url: '/files/visualize/',
             controller: 'refineryDataSetNavVisualizeCtrl'
           },
