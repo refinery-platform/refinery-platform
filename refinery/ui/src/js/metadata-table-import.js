@@ -104,7 +104,7 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ngGrid'])
           };
         }
         var modalInstance = $modal.open({
-          templateUrl: '/static/partials/list_confirmation_dialog.tpls.html',
+          templateUrl: '/static/partials/list_confirmation_dialog.html',
           controller: ConfirmationDialogInstanceCtrl,
           size: 'lg',
           resolve: {
