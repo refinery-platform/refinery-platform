@@ -43,6 +43,7 @@
         "tipsy/src/images/tipsy.gif"
       ],
       "js": [
+        "jquery/dist/jquery.min.js",
         "angular/angular.min.js",
         "angular-animate/angular-animate.min.js",
         "angular-bootstrap/ui-bootstrap-tpls.min.js",
@@ -51,9 +52,7 @@
         "angular-resource/angular-resource.min.js",
         "angular-sanitize/angular-sanitize.min.js",
         "angular-ui-router/release/angular-ui-router.min.js",
-        "angular-ui-select2/release/select2.min.js",
         "angular-ui-scroll/dist/ui-scroll.min.js",
-        "jquery/dist/jquery.min.js",
         "d3/d3.min.js",
         "c3/c3.min.js",
         "graphlib/dist/graphlib.core.min.js",
@@ -68,6 +67,7 @@
         "lodash/dist/lodash.min.js",
         "ng-grid/build/ng-grid.min.js",
         "select2/select2.min.js",
+        "angular-ui-select2/release/select2.min.js",
         "spark-md5/spark-md5.js",
         "spectrum/spectrum.js",
         "tipsy/src/javascripts/jquery.tipsy.js"
