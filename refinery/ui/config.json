@@ -41,7 +41,7 @@
       "angular-ui-router/release/angular-ui-router.min.js",
       "angular-ui-select2/release/select2.min.js",
       "angular-ui-select2/release/select2.min.js.map",
-      "angular-ui-utils/modules/scroll/scroll.js",
+      "angular-ui-scroll/dist/ui-scroll.min.js",
       "angular-xml/angular-xml.min.js",
       "angular/angular.js",
       "angular/angular.min.js",

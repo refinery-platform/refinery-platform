@@ -21,7 +21,7 @@
     "angular-sanitize": "1.4.5",
     "angular-ui-router": "0.2.15",
     "angular-ui-select2": "0.0.5",
-    "angular-ui-utils": "flekschas/ui-utils#expose-reload",
+    "angular-ui-scroll": "flekschas/ui-scroll#visible-items",
     "c3": "0.3.0",
     "dagre": "0.7.1",
     "floatThead": "1.2.13",
