@@ -4,7 +4,7 @@
     "ui": {
       "build": "development",
       "compile": "production",
-      "src": "src",
+      "src": "source",
       "tmp": ".tmp"
     },
     "static": {
@@ -19,6 +19,7 @@
       "dashboard",
       "data-set-import",
       "globals",
+      "analysis",
       "analyses",
       "collaboration",
       "chart",

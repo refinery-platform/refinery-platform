@@ -372,7 +372,7 @@ angular.module('refineryNodeMapping', [
 
 .directive('diffAttributeList', function($log) {
   return {
-    templateUrl: '/static/partials/diff_attribute_list.tpls.html',
+    templateUrl: '/static/partials/diff-attribute-list.html',
     restrict: 'A',
     scope: {
       setA: '=',
