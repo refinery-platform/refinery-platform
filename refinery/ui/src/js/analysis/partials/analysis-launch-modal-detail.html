@@ -12,6 +12,7 @@
           analysisLaunchForm.launchName.$error.required">
             Names must be 3 characters long.
           </span>
+        </div>
         <div class="modal-footer">
           <button class="btn btn-warning" ng-click="cancel()">Cancel Analysis</button>
           <button class="btn btn-primary"
@@ -38,7 +39,7 @@
       <div class="modal-header">
         Analysis Launch Status
       </div>
-      <div ng-if="analysisLaunchFlag==='SUCCESS'">
+      <div ng-if="analysisLaunchFlag=='SUCCESS'">
         <div class="modal-body bootboxAnalysisWidth">
           Analysis Launch Successful.
         </div>
@@ -47,7 +48,7 @@
           <button class="btn btn-primary" ng-click="view()">View Analysis</button>
         </div>
       </div>
-      <div ng-if="analysisLaunchFlag==='FAILED'">
+      <div ng-if="analysisLaunchFlag=='FAILED'">
         <div class="modal-body bootboxAnalysisWidth">
           Analysis Launch Failed.
         </div>
