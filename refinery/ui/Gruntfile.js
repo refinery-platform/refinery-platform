@@ -146,8 +146,12 @@ module.exports = function(grunt) {
       uiBuildVendor: {
         files: [{
           expand: true,
-          cwd: '<%= cfg.vendorPath %>/',
-          src: ['<%= cfg.files.vendor %>'],
+          src: [
+            '<%= cfg.files.vendor.css %>',
+            '<%= cfg.files.vendor.images %>',
+            '<%= cfg.files.vendor.js %>',
+            '<%= cfg.files.vendor.maps %>'
+          ],
           dest: '<%= cfg.basePath.ui.build %>/vendor/'
         }]
       },
@@ -175,8 +179,12 @@ module.exports = function(grunt) {
       uiCompileVendor: {
         files: [{
           expand: true,
-          cwd: '<%= cfg.vendorPath %>/',
-          src: ['<%= cfg.files.vendor %>'],
+          src: [
+            '<%= cfg.files.vendor.css %>',
+            '<%= cfg.files.vendor.images %>',
+            '<%= cfg.files.vendor.js %>',
+            '<%= cfg.files.vendor.maps %>'
+          ],
           dest: '<%= cfg.basePath.ui.compile %>/vendor/'
         }]
       },
@@ -343,9 +351,14 @@ module.exports = function(grunt) {
        * When UI vendor assets change we copy them over.
        */
       uiVendor: {
-        files: config.files.vendor.map(function (file) {
-          return config.vendorPath + '/' + file;
-        }),
+        files: [].concat.apply(
+          [],
+          Object.keys(config.files.vendor).map(
+            function (key) {
+              return config.files.vendor[key];
+            }
+          )
+        ),
         tasks: [
           'copy:uiBuildVendor'
         ]
@@ -434,8 +447,37 @@ module.exports = function(grunt) {
      */
     karma: {
       options: {
+        browsers: browsers,
         configFile: 'karma.config.js',
-        browsers: browsers
+        files: [].concat.apply(
+          [],
+          [
+            config.files.vendor.js.map(function (script) {
+              var include = true;
+              if (script.indexOf('graphlib') >= 0 || script.indexOf('dagre') >= 0) {
+                include = false;
+              }
+              return {
+                pattern: script,
+                watched: false,
+                included: include
+              };
+            }),
+            [{
+              pattern: 'bower_components/angular-mocks/angular-mocks.js',
+              watched: false
+            }],
+            [{
+              pattern: './karma.lodash.noConflict.js',
+              watched: false
+            }],
+            config.files.karma.map(function (script) {
+              return {
+                pattern: script
+              };
+            })
+          ]
+        )
       },
       unit: {
         port: 9019,
@@ -552,8 +594,8 @@ module.exports = function(grunt) {
       vendor_assets: {
         files: [
           {
-            '<%= cfg.vendorPath %>/angular-ui-select2/release/select2.min.js':
-            ['<%= cfg.vendorPath %>/angular-ui-select2/src/select2.js']
+            './bower_components/angular-ui-select2/release/select2.min.js':
+            ['./bower_components/angular-ui-select2/src/select2.js']
           }
         ]
       }
