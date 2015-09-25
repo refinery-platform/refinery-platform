@@ -1,5 +1,6 @@
-angular.module('refineryAnalyses')
-    .directive(
+angular
+  .module('refineryAnalysis')
+  .directive(
   "rfAnalysesGlobalListStatusPopover",
   ['$compile',
     '$templateCache',
