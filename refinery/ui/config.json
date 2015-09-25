@@ -4,7 +4,7 @@
     "ui": {
       "build": "development",
       "compile": "production",
-      "src": "src",
+      "src": "source",
       "tmp": ".tmp"
     },
     "static": {
