@@ -673,7 +673,7 @@ module.exports = function(grunt) {
       vendor_assets: {
         files: [
           {
-            './bower_components/angular-ui-select2/release/select2.min.js':
+            './bower_components/angular-ui-select2/dist/select2.min.js':
             ['./bower_components/angular-ui-select2/src/select2.js']
           }
         ]
@@ -785,7 +785,6 @@ module.exports = function(grunt) {
   grunt.registerTask('compile', [
     'env:compile',
     'jshint',
-    'karma',
     'clean:uiCompile',
     'clean:staticCompile',
     'less:compile',
@@ -801,7 +800,8 @@ module.exports = function(grunt) {
     'copy:uiCompileTemplates',
     'copy:uiCompileVendor',
     'copy:staticCompile',
-    'clean:uiTmp'
+    'clean:uiTmp',
+    'karma'
   ]);
 
   grunt.renameTask('watch', 'delta');
