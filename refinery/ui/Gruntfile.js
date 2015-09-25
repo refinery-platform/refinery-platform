@@ -146,6 +146,7 @@ module.exports = function(grunt) {
       uiBuildVendor: {
         files: [{
           expand: true,
+          cwd: '<%= cfg.vendorPath %>',
           src: [
             '<%= cfg.files.vendor.css %>',
             '<%= cfg.files.vendor.images %>',
@@ -179,6 +180,7 @@ module.exports = function(grunt) {
       uiCompileVendor: {
         files: [{
           expand: true,
+          cwd: '<%= cfg.vendorPath %>',
           src: [
             '<%= cfg.files.vendor.css %>',
             '<%= cfg.files.vendor.images %>',
@@ -458,7 +460,7 @@ module.exports = function(grunt) {
                 include = false;
               }
               return {
-                pattern: script,
+                pattern: config.vendorPath + '/' + script,
                 watched: false,
                 included: include
               };
