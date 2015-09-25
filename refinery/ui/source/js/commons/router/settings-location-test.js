@@ -8,4 +8,4 @@ function LocationTest (currentPath, matchPath, regex) {
 
 angular
   .module('refineryRouter')
-  .constant("locationTest", LocationTest);
+  .constant('locationTest', LocationTest);
