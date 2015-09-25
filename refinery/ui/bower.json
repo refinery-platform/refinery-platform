@@ -13,12 +13,12 @@
     "tests"
   ],
   "dependencies": {
-    "angular": "1.4.5",
-    "angular-animate": "1.4.5",
+    "angular": "1.4.6",
+    "angular-animate": "1.4.6",
     "angular-bootstrap": "0.8.0",
-    "angular-mocks": "1.4.5",
-    "angular-resource": "1.4.5",
-    "angular-sanitize": "1.4.5",
+    "angular-mocks": "1.4.6",
+    "angular-resource": "1.4.6",
+    "angular-sanitize": "1.4.6",
     "angular-ui-router": "0.2.15",
     "angular-ui-select2": "0.0.5",
     "angular-ui-scroll": "flekschas/ui-scroll#visible-items",
