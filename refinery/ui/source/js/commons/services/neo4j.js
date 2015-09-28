@@ -1,6 +1,6 @@
 function Neo4J ($resource, settings) {
   return $resource(
-    settings.appRoot + settings.neo4jApi + '/:res',
+    settings.appRoot + settings.neo4jApi + '/:res/',
     {
       res: '@res'
     },
