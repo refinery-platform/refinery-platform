@@ -15,11 +15,9 @@ angular
           '/'
         )
         .state(
-          'dataSetsExploration',
+          'launchPad.exploration',
           {
-            url: '/exploration/?q',
-            templateUrl: '/static/partials/dashboard/views/data-sets-exploration.html',
-            controller: 'DataSetsExplorationCtrl as dse'
+            url: 'exploration',
           },
           '/'
         )
