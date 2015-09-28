@@ -229,9 +229,10 @@ var provvis = (function () {
         var cell = {width: r * 5, height: r * 3};
 
         /* Initialize canvas dimensions. */
-        var width = $("div#provenance-canvas").width() - margin.left -
+        var width = $("div#provenance-graph").width() - margin.left -
                 margin.right,
-            height = 740/*window.innerHeight*/ - margin.top - margin.bottom;
+            height = $("div#provenance-graph").height() - margin.top -
+                margin.bottom;
 
         var scaleFactor = 0.75;
 
@@ -348,8 +349,10 @@ var provvis = (function () {
             .append("svg")
             .attr("transform", "translate(" +
             vis.margin.left + "," + vis.margin.top + ")")
-            .attr("viewBox", "0 0 " + (width) + " " + (height))
-            .attr("preserveAspectRatio", "xMinYMin meet")
+            .attr("width", width)
+            .attr("height", height)
+            /*.attr("viewBox", "0 0 " + (width) + " " + (height))*/
+            /*.attr("preserveAspectRatio", "xMinYMin meet")*/
             .attr("pointer-events", "all")
             .classed("canvas", true)
             .append("g")
