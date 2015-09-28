@@ -5150,7 +5150,7 @@ var provvisRender = (function () {
             .animate({left: '20'}, nodeLinkTransitionTime);
 
         /* TODO: Temporary fix for sidbear div. */
-        $("#provvis-sidebar-content").css({"height": "720px"});
+        $("#provvis-sidebar-content").css({"height": vis.canvas.height});
       }
     });
 
