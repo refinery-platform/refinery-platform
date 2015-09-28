@@ -722,8 +722,22 @@
   <script type="text/javascript" src="{{ STATIC_URL }}js/provvis_render.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/provvis.js"></script>
 
+
   <script type="application/javascript">
     $(document).ready(function () {
+
+       setInterval(function(){
+      if (document.getElementById('select2-chosen-1').innerHTML.match
+              ('Provenance') || document.getElementById('select2-chosen-1').innerHTML.match
+              ('Matrix')) {
+        console.log(document.getElementById('select2-chosen-1').innerHTML);
+        $('#solrdoctab1-top-controls').hide();
+      }
+      else {
+        console.log(document.getElementById('select2-chosen-1').innerHTML);
+        $('#solrdoctab1-top-controls').show();
+      } }, 750);
+
       $( "#view-selector" ).select2({minimumResultsForSearch: -1});
       $( "#view-selector" ).on("change", function(event) {
         $( '#navigation-tabs a[href="#' + event.added.element[0].value + '"]').tab('show');
@@ -883,7 +897,9 @@
       } else {
         initFloatThead();
       }
-    })(window, jQuery);
+    }
+    )(window, jQuery);
+
   </script>
 
 {% endblock %}
