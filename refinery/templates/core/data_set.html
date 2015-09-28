@@ -164,7 +164,6 @@
           </div>
         </div>
 
-
         <div class="span10">
           <ul class="nav nav-tabs" id="tabs" style="float: right;">
             <li ui-sref-active="active" id="filesTab"><a
@@ -198,7 +197,6 @@
 
 
     <div class="refinery-panel refinery-panel-content jquery-full-height">
-
       {% if data_set %}
         <!-- tabs -->
         <form id="sampleForm" method="post" class="form-inline" hidden>
@@ -388,7 +386,7 @@
                           </div>
                         </div>
                       </div>
-                  </div>
+                    </div>
 
                   <!--
                   <div class="span2" id="process_container" style="opacity: 0; ">
@@ -439,7 +437,7 @@
                   -->
 
                 </div>
-              </div>
+                </div>
             </div>
             <!-- </div> --> <!-- FileMappingCtrl -->
           </div>
@@ -510,9 +508,9 @@
 
             {% if not REFINERY_REPOSITORY_MODE %}
               <div class="refinery-header">
-                        <span class="refinery-header-left">
-                            <h3>Studies</h3>
-                        </span>
+                <span class="refinery-header-left">
+                    <h3>Studies</h3>
+                </span>
               </div>
               {% for study in studies %}
                 <p><strong>{{study.identifier}}</strong>: {{study.title}}</p>
@@ -525,14 +523,14 @@
             {% endif %}
 
             <div class="refinery-header">
-                    <span class="refinery-header-left">
-                        <h3>Files</h3>
-                    </span>
+              <span class="refinery-header-left">
+                  <h3>Files</h3>
+              </span>
             </div>
 
-                <span class="refinery-subheader">
-                    <h3>Meta Data</h3>
-                </span>
+            <span class="refinery-subheader">
+                <h3>Meta Data</h3>
+            </span>
             {% if isatab_archive or pre_isatab_archive %}
               {% load core_extras %}
               {% if isatab_archive %}
@@ -546,27 +544,24 @@
             {% endif %}
 
             <span class="refinery-subheader">
-                    <h3>Data Files</h3>
-                </span>
+              <h3>Data Files</h3>
+            </span>
             <p>{{ data_set.file_count }} files using {{ data_set.file_size|filesizeformat }}</p>
 
             <div class="refinery-header">
-                    <span class="refinery-header-left">
-                        <h3>History</h3>
-                    </span>
+              <span class="refinery-header-left">
+                  <h3>History</h3>
+              </span>
             </div>
             <p>Current version <i>{{ data_set.get_version_details.version }}</i> created <i>{{ data_set.get_version_details.date }}</i>.
               Data set created <i>{{ data_set.creation_date }}</i>. Last modified <i>{{ data_set.modification_date }}</i>.</p>
-
-
           </div>
-
 
           <div class="dataSetTabContent ng-cloak" id="sharing">
             <div class="refinery-header">
-                    <span class="refinery-header-left">
-                        <h3>Sharing</h3>
-                    </span>
+              <span class="refinery-header-left">
+                  <h3>Sharing</h3>
+              </span>
             </div>
             <div class="refinery-subheader">
               <h4>Owner</h4>
@@ -598,11 +593,7 @@
                 {% endfor %}
               </p>
             {% endif %}
-
-
           </div>
-
-        </div>
 
       {% else %}
         <p>No valid data set.</p>
@@ -621,9 +612,6 @@
         <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
       </div>
     </div>
-
-
-  </div>
 
   </div>
 </div>
