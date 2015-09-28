@@ -128,29 +128,27 @@
         <span ng-if="analysis.status=='RUNNING' || analysis.status=='INITIALIZED'">
           <div class="row-fluid" id="{{analysis.uuid}}" collapse="isCollapsed">
             <div class="span1">
-             &nbsp;
+              &nbsp;
             </div>
             <div class="span11 analysis-running">
+              <span ng-if="AnalysesCtrl.analysesDetail[analysis.uuid]
+              .cancelingAnalyses == true ||
+              AnalysesCtrl.initializedFlag[analysis.uuid] == true">
+                <div class="alert alert-danger" id="analyses-cancel-notice">
+                  Canceling Analysis in Progress
+                </div>
+              </span>
+
               <div ng-hide="AnalysesCtrl.isAnalysisDetailLoaded(analysis.uuid)"
-                class="ng-hide">
-                <div class = "analysis-retrieving">
+                  class="ng-hide">
+                  <div class = "analysis-retrieving">
                      <span class="refinery-spinner analyses-view"></span>
                     &nbsp;Retrieving analysis details.
                    </div>
-              </div>
+                </div>
 
               <div ng-show="AnalysesCtrl.isAnalysisDetailLoaded(analysis.uuid)">
-                <ul class="analysisRunningList">
-                    <span ng-if="AnalysesCtrl.analysesDetail[analysis.uuid]
-                      .cancelingAnalyses == true ||
-                      AnalysesCtrl.initializedFlag[analysis.uuid] == true">
-                      <li id="analyses-cancel-notice">
-                        <div class="alert alert-warning">
-                          Canceling...
-                        </div>
-                      </li>
-                    </span>
-
+                  <ul class="analysisRunningList">
                     <li class="analysisRunningListItem">
                       Input File Import
                       <span rp-analyses-input-tooltip>
@@ -257,7 +255,7 @@
                       </div>
                     </li>
                   </ul>
-              </div>
+                </div>
             </div>
           </div>
         </span>
