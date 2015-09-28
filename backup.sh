@@ -8,20 +8,22 @@
 # Call:
 # ./backup.sh
 
+
 # Backup Configuration
 # ------------------------------------------------------------------------------
-BACKUP_TEMP="/tmp/backups"
+# Final backup location
 BACKUP_FINAL="/vagrant/transfer"
-
-REFINERY_BASE_DIR="/vagrant/refinery"
-CONFIG_DIR="config"
-CONFIG_FILE="config.json"
 
 
 # Do not edit the code below that line!
 # ------------------------------------------------------------------------------
-
 NOW=$(date +%Y%m%d)
+
+BACKUP_TEMP="/tmp/backups"
+
+REFINERY_BASE_DIR="/vagrant/refinery"
+CONFIG_DIR="config"
+CONFIG_FILE="config.json"
 
 DEFAULT="\e[39m"
 DIM="\e[2m"

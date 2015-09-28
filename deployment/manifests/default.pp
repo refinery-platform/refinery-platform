@@ -292,7 +292,7 @@ class ui {
   }
   ->
   package {
-    'bower': ensure => '1.5.2', provider => 'npm';
+    'bower': ensure => '1.5.3', provider => 'npm';
     'grunt-cli': ensure => '0.1.13', provider => 'npm';
   }
   ->

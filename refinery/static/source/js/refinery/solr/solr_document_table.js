@@ -532,9 +532,7 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function (parentElem
       $("#" + parentElementId).html("");
 
       var availablePages = Math.max(0, Math.floor((self._query.getCurrentDocumentCount(false) - 1) / self._documentsPerPage));
-      console.log("available:", availablePages);
       var currentPage = Math.floor(self._query.getDocumentIndex() / self._documentsPerPage);
-      console.log("currentpage", currentPage + 1);
       if (currentPage > availablePages) {
         currentPage = availablePages;
       }

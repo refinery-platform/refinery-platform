@@ -2,6 +2,56 @@ var fs           = require('fs');
 var hasbin       = require('hasbin');
 var isBinaryFile = require('isbinaryfile');
 
+/*
+ * A utility function for sorting JavaScript sources.
+ */
+var importanceSortJS = function (a, b) {
+  /*
+   * Give each type of JavaScript file a category according to then they
+   * should be loaded. The lower the number the earlier the files should
+   * be loaded.
+   */
+  var objs = [a, b];
+  for (var i = objs.length - 1; i >= 0; i--) {
+    switch (true) {
+      case objs[i].indexOf('refinery.js') >= 0:
+        objs[i] = 0;
+        break;
+      case objs[i].indexOf('module') >= 0:
+        objs[i] = 1;
+        break;
+      case objs[i].indexOf('settings') >= 0:
+        objs[i] = 2;
+        break;
+      case objs[i].indexOf('config') >= 0:
+        objs[i] = 3;
+        break;
+      case objs[i].indexOf('route') >= 0:
+        objs[i] = 4;
+        break;
+      case objs[i].indexOf('controller') >= 0:
+        objs[i] = 5;
+        break;
+      case objs[i].indexOf('directives') >= 0:
+        objs[i] = 6;
+        break;
+      case objs[i].indexOf('services') >= 0:
+        objs[i] = 7;
+        break;
+      case objs[i].indexOf('filters') >= 0:
+        objs[i] = 8;
+        break;
+      case objs[i].indexOf('libraries') >= 0:
+        objs[i] = 9;
+        break;
+      default:
+        objs[i] = 10;
+        break;
+    }
+  }
+  return objs[0] - objs[1];
+};
+
 module.exports = function(grunt) {
   'use strict';
 
@@ -41,6 +91,37 @@ module.exports = function(grunt) {
   // browsers and can be invoked with `--host`.
   var browsers = !!grunt.option('host') ?
     ['PhantomJS', 'Chrome', 'Firefox', 'Safari'] : ['PhantomJS'];
+
+  var jsFilesByImportance = function (spec) {
+    var files = [];
+
+    // Get all files within a feature
+    grunt
+      .file
+      .expand([
+        config.basePath.ui.src + '/js/**/*.js',
+        '!' + config.basePath.ui.src + '/js/**/*.spec.js'
+      ])
+      .forEach(function (file) {
+        files.push(file);
+      });
+
+    // Sort files
+    files.sort(importanceSortJS);
+
+    if (spec) {// Get all files within a feature
+      grunt
+        .file
+        .expand([
+          config.basePath.ui.src + '/js/**/*.spec.js'
+        ])
+        .forEach(function (file) {
+          files.push(file);
+        });
+    }
+
+    return files;
+  };
 
   grunt.initConfig({
     /*
@@ -146,8 +227,13 @@ module.exports = function(grunt) {
       uiBuildVendor: {
         files: [{
           expand: true,
-          cwd: '<%= cfg.vendorPath %>/',
-          src: ['<%= cfg.files.vendor %>'],
+          cwd: '<%= cfg.vendorPath %>',
+          src: [
+            '<%= cfg.files.vendor.css %>',
+            '<%= cfg.files.vendor.images %>',
+            '<%= cfg.files.vendor.js %>',
+            '<%= cfg.files.vendor.maps %>'
+          ],
           dest: '<%= cfg.basePath.ui.build %>/vendor/'
         }]
       },
@@ -175,8 +261,13 @@ module.exports = function(grunt) {
       uiCompileVendor: {
         files: [{
           expand: true,
-          cwd: '<%= cfg.vendorPath %>/',
-          src: ['<%= cfg.files.vendor %>'],
+          cwd: '<%= cfg.vendorPath %>',
+          src: [
+            '<%= cfg.files.vendor.css %>',
+            '<%= cfg.files.vendor.images %>',
+            '<%= cfg.files.vendor.js %>',
+            '<%= cfg.files.vendor.maps %>'
+          ],
           dest: '<%= cfg.basePath.ui.compile %>/vendor/'
         }]
       },
@@ -343,9 +434,14 @@ module.exports = function(grunt) {
        * When UI vendor assets change we copy them over.
        */
       uiVendor: {
-        files: config.files.vendor.map(function (file) {
-          return config.vendorPath + '/' + file;
-        }),
+        files: [].concat.apply(
+          [],
+          Object.keys(config.files.vendor).map(
+            function (key) {
+              return config.files.vendor[key];
+            }
+          )
+        ),
         tasks: [
           'copy:uiBuildVendor'
         ]
@@ -434,8 +530,33 @@ module.exports = function(grunt) {
      */
     karma: {
       options: {
+        browsers: browsers,
         configFile: 'karma.config.js',
-        browsers: browsers
+        files: [].concat.apply(
+          [],
+          [
+            config.files.vendor.js.map(function (script) {
+              var include = true;
+              if (script.indexOf('graphlib') >= 0 || script.indexOf('dagre') >= 0) {
+                include = false;
+              }
+              return {
+                pattern: config.vendorPath + '/' + script,
+                watched: false,
+                included: include
+              };
+            }),
+            [{
+              pattern: 'bower_components/angular-mocks/angular-mocks.js',
+              watched: false
+            }],
+            [{
+              pattern: './karma.lodash.noConflict.js',
+              watched: false
+            }],
+            jsFilesByImportance(true)
+          ]
+        )
       },
       unit: {
         port: 9019,
@@ -552,8 +673,8 @@ module.exports = function(grunt) {
       vendor_assets: {
         files: [
           {
-            '<%= cfg.vendorPath %>/angular-ui-select2/release/select2.min.js':
-            ['<%= cfg.vendorPath %>/angular-ui-select2/src/select2.js']
+            './bower_components/angular-ui-select2/dist/select2.min.js':
+            ['./bower_components/angular-ui-select2/src/select2.js']
           }
         ]
       }
@@ -564,56 +685,6 @@ module.exports = function(grunt) {
     'concat-by-feature',
     'Concat files by features excluding `spec` files',
     function(mode) {
-      /*
-       * A utility function for sorting JavaScript sources.
-       */
-      function importanceSortJS (a, b) {
-        /*
-         * Give each type of JavaScript file a category according to then they
-         * should be loaded. The lower the number the earlier the files should
-         * be loaded.
-         */
-        var objs = [a, b];
-        for (var i = objs.length - 1; i >= 0; i--) {
-          switch (true) {
-            case objs[i].indexOf('vendor') >= 0:
-              objs[i] = 0;
-              break;
-            case objs[i].indexOf('module') >= 0:
-              objs[i] = 1;
-              break;
-            case objs[i].indexOf('settings') >= 0:
-              objs[i] = 2;
-              break;
-            case objs[i].indexOf('config') >= 0:
-              objs[i] = 3;
-              break;
-            case objs[i].indexOf('state') >= 0:
-              objs[i] = 4;
-              break;
-            case objs[i].indexOf('controller') >= 0:
-              objs[i] = 5;
-              break;
-            case objs[i].indexOf('directives') >= 0:
-              objs[i] = 6;
-              break;
-            case objs[i].indexOf('services') >= 0:
-              objs[i] = 7;
-              break;
-            case objs[i].indexOf('filters') >= 0:
-              objs[i] = 8;
-              break;
-            case objs[i].indexOf('libraries') >= 0:
-              objs[i] = 9;
-              break;
-            default:
-              objs[i] = 10;
-              break;
-          }
-        }
-        return objs[0] - objs[1];
-      }
-
       // Read config
       var cfg = grunt.file.readJSON('config.json'),
           concat = grunt.config.get('concat') || {},

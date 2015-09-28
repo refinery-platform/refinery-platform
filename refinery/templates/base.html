@@ -173,6 +173,10 @@
         <rp-analyses-global-list-status-popover-details>
         </rp-analyses-global-list-status-popover-details>
     </script>
+     <script type="text/ng-template" id="analysislaunchmodal.html">
+        <rf-analysis-launch-modal-detail>
+        </rf-analysis-launch-modal-detail>
+    </script>
 
   <!-- 3rd party libraries -->
   <script src="{% static "vendor/jquery/dist/jquery.min.js" %}"></script>
@@ -180,11 +184,11 @@
   <script src="{% static "vendor/angular/angular.min.js" %}"></script>
   <script src="{% static "vendor/angular-animate/angular-animate.min.js" %}"></script>
   <script src="{% static "vendor/select2/select2.min.js" %}"></script>
-  <script src="{% static "vendor/angular-ui-select2/release/select2.min.js" %}"></script>
+  <script src="{% static "vendor/angular-ui-select2/dist/select2.min.js" %}"></script>
   <script src="{% static "vendor/angular-resource/angular-resource.min.js" %}"></script>
   <script src="{% static "vendor/angular-sanitize/angular-sanitize.min.js" %}"></script>
   <script src="{% static "vendor/angular-ui-router/release/angular-ui-router.min.js" %}"></script>
-  <script src="{% static "vendor/angular-ui-utils/modules/scroll/scroll.js" %}"></script>
+  <script src="{% static "vendor/angular-ui-scroll/dist/ui-scroll.min.js" %}"></script>
   <script src="{% static "vendor/angular-bootstrap/ui-bootstrap.min.js" %}"></script>
   <script src="{% static "vendor/angular-bootstrap/ui-bootstrap-tpls.min.js" %}"></script>
   <script src="{% static "js/bootstrap/bootstrap.min.js" %}"></script>
@@ -204,13 +208,13 @@
   <script src="{% static "js/refinery-controller.js" %}"></script>
   <script src="{% static "js/globals.js" %}"></script>
   <script src="{% static "js/commons.js" %}"></script>
-  <script src="{% static "js/analyses.js" %}"></script>
-  <script src="{% static "js/node_mapping.js" %}"></script>
-  <script src="{% static "js/workflows.js" %}"></script>
   <script src="{% static "js/analysis.js" %}"></script>
+  <script src="{% static "js/analyses.js" %}"></script>
+  <script src="{% static "js/node-mapping.js" %}"></script>
+  <script src="{% static "js/workflows.js" %}"></script>
   <script src="{% static "js/solr.js" %}"></script>
   <script src="{% static "js/data-set-nav.js" %}"></script>
-  <script src="{% static "js/node_relationship.js" %}"></script>
+  <script src="{% static "js/node-relationship.js" %}"></script>
   <script src="{% static "js/igv.js" %}"></script>
   <script src="{% static "js/statistics.js" %}"></script>
   <script src="{% static "js/provvis.js" %}"></script>
@@ -220,7 +224,7 @@
 
   <script src="{% static "vendor/ng-file-upload/angular-file-upload.min.js" %}"></script>
   <script src="{% static "vendor/ng-grid/build/ng-grid.min.js" %}"></script>
-  <script src="{% static "js/metadata_table_import.js" %}"></script>
+  <script src="{% static "js/metadata-table-import.js" %}"></script>
   <!-- The File Upload Angular JS module -->
   <script src="{% static "vendor/jquery-file-upload/js/jquery.fileupload-angular.js" %}"></script>
   <script src="{% static "js/data-set-import.js" %}"></script>

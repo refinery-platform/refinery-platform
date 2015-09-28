@@ -159,7 +159,7 @@ angular.module('refineryNodeRelationship', [
     $scope.newMappingDialogConfig = { title: 'New File Mapping', text: 'Enter a name for the mapping.', val: 'New Mapping' };
 
     var modalInstance = $modal.open({
-      templateUrl: '/static/partials/input_dialog.tpls.html',
+      templateUrl: '/static/partials/input-dialog.html',
       controller: InputDialogInstanceController,
       resolve: {
         config: function () {
@@ -180,7 +180,7 @@ angular.module('refineryNodeRelationship', [
     $scope.renameMappingDialogConfig = { title: 'Rename File Mapping', text: 'Enter a new name for the mapping "' + nodeRelationship.name + '".', val:  nodeRelationship.name };
 
     var modalInstance = $modal.open({
-      templateUrl: '/static/partials/input_dialog.tpls.html',
+      templateUrl: '/static/partials/input-dialog.html',
       controller: InputDialogInstanceController,
       resolve: {
         config: function () {
@@ -207,7 +207,7 @@ angular.module('refineryNodeRelationship', [
     };
 
     var modalInstance = $modal.open({
-      templateUrl: '/static/partials/confirmation_dialog.tpls.html',
+      templateUrl: '/static/partials/confirmation-dialog.html',
       controller: ConfirmationDialogInstanceController,
       resolve: {
         config: function () {

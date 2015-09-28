@@ -120,9 +120,6 @@ function DashboardCtrl (
     }
     // Reset current list and reload uiScroll
     if (this.dataSetsAdapter) {
-      this.dataSetsAdapter.applyUpdates(function (item, scope) {
-        return [];
-      });
       this.dataSetsAdapter.reload();
     }
   }.bind(this));
@@ -132,9 +129,6 @@ function DashboardCtrl (
   this.dashboardAnalysesReloadService = {
     reload: function () {
       if (that.analysesAdapter) {
-        that.analysesAdapter.applyUpdates(function (item, scope) {
-          return [];
-        });
         that.analysesAdapter.reload();
       }
     }
@@ -145,9 +139,6 @@ function DashboardCtrl (
   this.dashboardWorkflowsReloadService = {
     reload: function () {
       if (that.workflowsAdapter) {
-        that.workflowsAdapter.applyUpdates(function (item, scope) {
-          return [];
-        });
         that.workflowsAdapter.reload();
       }
     }
@@ -181,6 +172,16 @@ function DashboardCtrl (
  * Define prototype
  * -----------------------------------------------------------------------------
  */
+Object.defineProperty(
+  DashboardCtrl.prototype,
+  'visibleDataSets', {
+    enumerable: true,
+    configurable: false,
+    get: function () {
+      return this.dataSetsAdapter.visibleItems('uuid');
+    }
+});
+
 Object.defineProperty(
   DashboardCtrl.prototype,
   'expandDataSetPanel', {

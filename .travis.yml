@@ -16,7 +16,7 @@ before_script:
   - npm install --quiet -g grunt-cli karma bower
   - cd ui && npm install && bower install && cd ../
 script:
-  - pep8 --exclude=migrations ..
+  - pep8 --exclude=migrations,ui ..
   - python manage.py test analysis_manager
   - python manage.py test annotation_server
   - python manage.py test core
