@@ -9,19 +9,17 @@
         </h3>
       </span>
       <span class="refinery-header-right">
-        <!--
-        <button
-          class="no-underline"
-          ng-click="dashboard.toggleDataSetsExploration()">
-          <i class="icon-compass" title="Explore data sets"></i>
-        </button>
-        -->
         <a
           href="./data_set_manager/import/"
-          class="no-underline"
+          class="no-underline btn"
           ng-if="dashboard.userIsAuthenticated">
-          <i class="icon-plus-sign"></i>
+          <i class="icon-plus-sign"></i> Upload
         </a>
+        <button
+          class="no-underline btn"
+          ng-click="dashboard.toggleDataSetsExploration()">
+          <i class="icon-compass" title="Explore data sets"></i> Explore
+        </button>
       </span>
     </div>
 
