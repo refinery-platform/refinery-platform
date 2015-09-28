@@ -8,6 +8,7 @@ angular
     publicGroupId: window.publicGroupId,
     refineryApi: '/api/v1',
     solrApi: '/solr',
+    neo4jApi: '/neo4j',
     dashboard: {
       preview: {
         maxBadges: 20

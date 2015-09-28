@@ -16,6 +16,7 @@ angular
   'errors',
   'pubSub',
   'closeOnOuterClick',
+  'colors',
 
   /*
    * Refinery modules
