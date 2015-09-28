@@ -17,14 +17,14 @@ angular.module("refineryProvvis", [])
 
     .directive("provvisNavBar", function () {
       return {
-        templateUrl: "/static/partials/provvis_navbar.tpls.html",
+        templateUrl: "/static/partials/provvis/partials/provvis-navbar.html",
         restrict: "A"
       };
     })
 
     .directive("provvisCanvas", function () {
       return {
-        templateUrl: "/static/partials/provvis_canvas.tpls.html",
+        templateUrl: "/static/partials/provvis/partials/provvis-canvas.html",
         restrict: "A"
       };
     });
