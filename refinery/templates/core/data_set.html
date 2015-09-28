@@ -714,16 +714,28 @@
   <script type="text/javascript" src="{% static "vendor/dagre/dist/dagre.core.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/spectrum/spectrum.js" %}"></script>
 
-  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis_helpers.js"></script>
-  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis_decl.js"></script>
-  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis_init.js"></script>
-  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis_layout.js"></script>
-  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis_motifs.js"></script>
-  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis_render.js"></script>
-  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis-helpers.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis-decl.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis-init.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis-layout.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis-motifs.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis-render.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis.js"></script>
+
 
   <script type="application/javascript">
     $(document).ready(function () {
+
+       setInterval(function(){
+      if (document.getElementById('select2-chosen-1').innerHTML.match
+              ('Provenance') || document.getElementById('select2-chosen-1').innerHTML.match
+              ('Matrix')) {
+        $('#solrdoctab1-top-controls').hide();
+      }
+      else {
+        $('#solrdoctab1-top-controls').show();
+      } }, 750);
+
       $( "#view-selector" ).select2({minimumResultsForSearch: -1});
       $( "#view-selector" ).on("change", function(event) {
         $( '#navigation-tabs a[href="#' + event.added.element[0].value + '"]').tab('show');
@@ -883,7 +895,9 @@
       } else {
         initFloatThead();
       }
-    })(window, jQuery);
+    }
+    )(window, jQuery);
+
   </script>
 
 {% endblock %}
