@@ -165,25 +165,18 @@ var provvis = (function () {
   };
 
   /**
-   * Adds a spinning loader icon to the parent div while the provenance
+   * Display a spinning loader icon div while the provenance
    * visualization is loading.
    */
-  var addProvvisLoaderIcon = function () {
-    $("<div>", {
-      "id": "provvis-loader"
-    }).appendTo("#" + "main-area");
-
-    $("<i>", {
-      "class": "icon-spinner spin-icon-infinite",
-      "id": "provvis-loader-icon"
-    }).appendTo("#" + "provvis-loader");
+  var showProvvisLoaderIcon = function () {
+    $('#provvis-loader').css("display","inline-block");
   };
 
   /**+
-   * Removes the loader icon again.
+   * Hide the loader icon again.
    */
-  var removeProvvisLoaderIcon = function () {
-    $("#provvis-loader").remove();
+  var hideProvvisLoaderIcon = function () {
+    $("#provvis-loader").css("display", "none");
   };
 
   /**
@@ -194,7 +187,7 @@ var provvis = (function () {
    */
   var runProvVisPrivate = function (studyUuid, studyAnalyses, solrResponse) {
 
-    addProvvisLoaderIcon();
+    showProvvisLoaderIcon();
 
     /* Only allow one instance of ProvVis. */
     if (vis instanceof provvisDecl.ProvVis === false) {
@@ -383,7 +376,7 @@ var provvis = (function () {
         /* Render graph. */
         provvisRender.run(vis);
 
-        removeProvvisLoaderIcon();
+        hideProvvisLoaderIcon();
 
 
         /* TODO: Refine to only redraw affected canvas components. */
@@ -391,7 +384,7 @@ var provvis = (function () {
         $("#prov-layering-method > button").click(function () {
           layerMethod = $(this).prop('value');
 
-          addProvvisLoaderIcon();
+          showProvvisLoaderIcon();
 
           $(".aHLinks").remove();
           $(".aLinks").remove();
@@ -419,7 +412,7 @@ var provvis = (function () {
           /* Render graph. */
           provvisRender.run(vis);
 
-          removeProvvisLoaderIcon();
+          hideProvvisLoaderIcon();
         });
       });
     }
