@@ -197,8 +197,7 @@
     </div>
 
 
-    <div class="refinery-panel refinery-panel-content jquery-full-height"
-         >
+    <div class="refinery-panel refinery-panel-content jquery-full-height">
 
       {% if data_set %}
         <!-- tabs -->
@@ -225,6 +224,7 @@
               {% verbatim %}
                 <div class="{{ $root.mainTabSpanSize }}"
                      ng-init="$root.mainTabSpanSize='span12'" ng-cloak>
+                </div>
               {% endverbatim %}
 
                 <div class="row-fluid" ng-if="$root.mode==='analyze'">
