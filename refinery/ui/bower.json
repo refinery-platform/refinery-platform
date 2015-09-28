@@ -38,5 +38,8 @@
     "spark-md5": "0.0.5",
     "spectrum": "1.7.0",
     "tipsy": "0.1.7"
+  },
+  "resolutions": {
+    "d3": "~3.5.6"
   }
 }
