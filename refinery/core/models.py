@@ -484,9 +484,16 @@ class DataSet(SharableResource):
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
         update_data_set_index(self)
+
+        user_ids = map(lambda user: user.id, group.user_set.all())
+
+        # We need to give the anonymous user read access too.
+        if group.id == ExtendedGroup.objects.public_group().id:
+            user_ids.append(-1)
+
         add_read_access_in_neo4j(
             [self.uuid],
-            map(lambda user: user.id, group.user_set.all())
+            user_ids
         )
 
     def unshare(self, group):
@@ -499,6 +506,10 @@ class DataSet(SharableResource):
         for user in users:
             if not user.has_perm('core.read_dataset', DataSet):
                 user_ids.append(user.id)
+
+        # We need to give the anonymous user read access too.
+        if group.id == ExtendedGroup.objects.public_group().id:
+            user_ids.append(-1)
 
         if user_ids:
             remove_read_access_in_neo4j(
