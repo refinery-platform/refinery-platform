@@ -2,6 +2,7 @@ function DashboardCtrl (
   // Angular modules
   $q,
   $state,
+  $stateParams,
   $timeout,
   $rootScope,
   $window,
@@ -26,6 +27,7 @@ function DashboardCtrl (
   // Construct Angular modules
   this.$q = $q;
   this.$state = $state;
+  this.$stateParams = $stateParams;
   this.$timeout = $timeout;
   this.$window = $window;
 
@@ -153,6 +155,9 @@ function DashboardCtrl (
     if (toParams.q) {
       this.searchQueryDataSets = toParams.q;
       this.setDataSetSource(toParams.q);
+    }
+    if (toState.name === 'launchPad.preview') {
+      //this.showDataSetPreview(this.findDataSet(toParams.uuid));
     }
   }.bind(this));
 
@@ -434,7 +439,7 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
       q: searchQuery ? searchQuery : null
     },
     {
-      reload: false,
+      inherit: true,
       notify: false
     }
   );
@@ -457,6 +462,18 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
 
 DashboardCtrl.prototype.showDataSetPreview = function (dataSet) {
   this.dataSetExploration = false;
+
+  this.$state.transitionTo(
+    'launchPad.preview',
+    {
+      uuid: dataSet.uuid
+    },
+    {
+      inherit: true,
+      notify: false
+    }
+  );
+
   if (!this.dashboardDataSetPreviewService.previewing) {
     if (!this.expandDataSetPanel) {
       this.expandDataSetPanel = true;
@@ -476,6 +493,15 @@ DashboardCtrl.prototype.showDataSetPreview = function (dataSet) {
 };
 
 DashboardCtrl.prototype.hideDataSetPreview = function (dataSet) {
+  this.$state.transitionTo(
+    'launchPad',
+    {},
+    {
+      inherit: true,
+      notify: false
+    }
+  );
+
   this.dashboardDataSetPreviewService.close();
   this.expandDataSetPanel = false;
   this.dataSetPreview = false;
@@ -505,11 +531,16 @@ DashboardCtrl.prototype.collapseDatasetExploration = function () {
   this.dashboardExpandablePanelService.trigger('collapser');
 };
 
+DashboardCtrl.prototype.findDataSet = function (uuid) {
+  // Need to implement a method that can find an item in a ui-scroll resource.
+};
+
 angular
   .module('refineryDashboard')
   .controller('DashboardCtrl', [
     '$q',
     '$state',
+    '$stateParams',
     '$timeout',
     '$rootScope',
     '$window',

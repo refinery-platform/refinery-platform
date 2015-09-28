@@ -22,6 +22,13 @@ angular
             controller: 'DataSetsExplorationCtrl as dse'
           },
           '/'
+        )
+        .state(
+          'launchPad.preview',
+          {
+            url: 'preview/{uuid}',
+          },
+          '/'
         );
 
       refineryUrlRouterProvider
