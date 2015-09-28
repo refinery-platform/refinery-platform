@@ -3,6 +3,7 @@ import os
 import re
 import urllib
 import xmltodict
+import py2neo
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -781,3 +782,42 @@ def pubmed_summary(request, id):
 def fastqc_viewer(request):
     return render_to_response('core/fastqc-viewer.html', {},
                               context_instance=RequestContext(request))
+
+
+def neo4j_dataset_annotations(request):
+    """Query Neo4J for dataset annotations per user
+    """
+
+    user_id = -1 if request.user.id is None else request.user.id
+
+    url = '{}/db/data/transaction/commit'.format(settings.NEO4J_BASE_URL)
+
+    headers = {
+        'Accept': 'application/json; charset=UTF-8',
+        'Content-type': 'application/json'
+    }
+
+    # sub = sub class
+    # sup = super class
+    # ds = dataset
+    #
+    # Note: this returns the while subclass hierarchy tree but only adds
+    # associates dataset annotations the user has read access to.
+    cql = (
+        'MATCH (sup:CL:Class)<-[:`RDFS:subClassOf`]-(sub) ' +
+        'OPTIONAL MATCH (ds:DataSet), ' +
+        '               (u:User {id:%s}), ' +
+        '               (ds)-[:`annotated_with`]->(sub), ' +
+        '               (u)-[:`read_access`]->(ds) ' +
+        'RETURN sup, sub, ds'
+    ) % user_id
+
+    stmt = {
+        'statements': [{
+            'statement': cql
+        }]
+    }
+
+    response = requests.post(url, json=stmt, headers=headers)
+
+    return HttpResponse(response, mimetype='application/json')
