@@ -2,9 +2,8 @@ import logging
 import py2neo
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from core.models import DataSet
+from core.models import DataSet, ExtendedGroup
 from core.utils import normalize_annotation_ont_ids, get_data_set_annotations
-from itertools import chain
 
 logger = logging.getLogger(__name__)
 
@@ -78,24 +77,42 @@ class Command(BaseCommand):
 
         statement_user = (
             "MERGE (u:User {id:{user_id}, name:{user_name}}) WITH u "
-            "MATCH (ds:DataSet {uuid:{ds_uuid}})"
+            "MATCH (ds:DataSet {uuid:{ds_uuid}}) "
             "MERGE (ds)<-[:`read_access`]-(u)"
         )
 
+        public_group_id = ExtendedGroup.objects.public_group().id
+
         for dataset in datasets:
-            users = [dataset.get_owner()]
+            owner = dataset.get_owner()
+            users = [{
+                'id': owner.id,
+                'name': str(owner)
+            }]
             groups = dataset.get_groups()
 
             # Collect all users per group
             for group in groups:
-                users = list(chain(users, group['group'].user_set.all()))
+
+                users += map(
+                    lambda u: {'id': u.id, 'name': str(u)},
+                    group['group'].user_set.all()
+                )
+
+                # We need to add an anonymous user so that people who haven't
+                # logged in can still see some visualization.
+                if group['group'].id is public_group_id:
+                    users += [{
+                        'id': -1,
+                        'name': 'Anonymous'
+                    }]
 
             for user in users:
                 tx.append(
                     statement_user,
                     {
-                        'user_id': user.id,
-                        'user_name': str(user),
+                        'user_id': user['id'],
+                        'user_name': user['name'],
                         'ds_uuid': dataset.uuid
                     }
                 )
