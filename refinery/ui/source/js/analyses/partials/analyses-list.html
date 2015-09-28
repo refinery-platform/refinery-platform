@@ -132,15 +132,15 @@
             </div>
             <div class="span11 analysis-running">
               <div ng-hide="AnalysesCtrl.isAnalysisDetailLoaded(analysis.uuid)"
-                  class="ng-hide">
-                  <div class = "analysis-retrieving">
+                class="ng-hide">
+                <div class = "analysis-retrieving">
                      <span class="refinery-spinner analyses-view"></span>
                     &nbsp;Retrieving analysis details.
                    </div>
-                </div>
+              </div>
 
               <div ng-show="AnalysesCtrl.isAnalysisDetailLoaded(analysis.uuid)">
-                  <ul class="analysisRunningList">
+                <ul class="analysisRunningList">
                     <span ng-if="AnalysesCtrl.analysesDetail[analysis.uuid]
                       .cancelingAnalyses == true ||
                       AnalysesCtrl.initializedFlag[analysis.uuid] == true">
@@ -257,7 +257,7 @@
                       </div>
                     </li>
                   </ul>
-                </div>
+              </div>
             </div>
           </div>
         </span>
