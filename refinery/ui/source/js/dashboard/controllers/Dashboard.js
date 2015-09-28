@@ -46,7 +46,7 @@ function DashboardCtrl (
 
   // Construct class variables
   this.dataSetServiceLoading = false;
-  this.dataSetPreviewBorder = false;
+  this.expandedDataSetPanelBorder = false;
 
   // --! HACKY !--
   this.adminMail = $window.refineryAdminMail;
@@ -145,7 +145,7 @@ function DashboardCtrl (
   };
 
   this.dashboardWidthFixerService.resetter.push(function () {
-    this.dataSetPreviewBorder = false;
+    this.expandedDataSetPanelBorder = false;
   }.bind(this));
 
   $rootScope.$on('$stateChangeSuccess', function (event, toState, toParams) {
@@ -405,18 +405,18 @@ DashboardCtrl.prototype.getDataSetOptions = function () {
     }.bind(this));
 };
 
-DashboardCtrl.prototype.toggleDataSetsExploration = function () {
-  var that = this;
+// DashboardCtrl.prototype.toggleDataSetsExploration = function () {
+//   var that = this;
 
-  that.expandDataSetPanel = !that.expandDataSetPanel;
-  that.$timeout(function () {
-    if (that.expandDataSetPanel === true) {
-      that.$state.go('dataSetsExploration');
-    } else {
-      that.$state.go('launchPad');
-    }
-  }, 250);
-};
+//   that.expandDataSetPanel = !that.expandDataSetPanel;
+//   that.$timeout(function () {
+//     if (that.expandDataSetPanel === true) {
+//       that.$state.go('dataSetsExploration');
+//     } else {
+//       that.$state.go('launchPad');
+//     }
+//   }, 250);
+// };
 
 DashboardCtrl.prototype.resetDataSetSearch = function () {
   this.searchQueryDataSets = '';
@@ -456,13 +456,16 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
 };
 
 DashboardCtrl.prototype.showDataSetPreview = function (dataSet) {
+  this.dataSetExploration = false;
   if (!this.dashboardDataSetPreviewService.previewing) {
+    if (!this.expandDataSetPanel) {
+      this.expandDataSetPanel = true;
+      this.expandedDataSetPanelBorder = true;
+      this.dashboardWidthFixerService.trigger('fixer');
+      this.dashboardExpandablePanelService.trigger('expander');
+    }
     this.dashboardDataSetPreviewService.preview(dataSet);
-    this.dashboardWidthFixerService.trigger('fixer');
-    this.expandDataSetPanel = true;
     this.dataSetPreview = true;
-    this.dataSetPreviewBorder = true;
-    this.dashboardExpandablePanelService.trigger('expander');
   } else {
     if (dataSet.preview) {
       this.hideDataSetPreview(dataSet);
@@ -476,6 +479,29 @@ DashboardCtrl.prototype.hideDataSetPreview = function (dataSet) {
   this.dashboardDataSetPreviewService.close();
   this.expandDataSetPanel = false;
   this.dataSetPreview = false;
+  this.dashboardExpandablePanelService.trigger('collapser');
+};
+
+DashboardCtrl.prototype.toggleDataSetsExploration = function () {
+  this.dataSetPreview = false;
+  if (this.expandDataSetPanel) {
+    this.collapseDatasetExploration();
+  } else {
+    this.expandDatasetExploration();
+  }
+};
+
+DashboardCtrl.prototype.expandDatasetExploration = function () {
+  this.dataSetExploration = true;
+  this.expandDataSetPanel = true;
+  this.expandedDataSetPanelBorder = true;
+  this.dashboardWidthFixerService.trigger('fixer');
+  this.dashboardExpandablePanelService.trigger('expander');
+};
+
+DashboardCtrl.prototype.collapseDatasetExploration = function () {
+  this.dataSetExploration = false;
+  this.expandDataSetPanel = false;
   this.dashboardExpandablePanelService.trigger('collapser');
 };
 

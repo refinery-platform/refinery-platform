@@ -339,7 +339,8 @@ function refineryDataSetPreview () {
 
   return {
     bindToController: {
-      close: '&'
+      close: '&',
+      active: '='
     },
     controller: [
       '$q',
@@ -359,7 +360,8 @@ function refineryDataSetPreview () {
     restrict: 'E',
     replace: true,
     scope: {
-      close: '&'
+      close: '&',
+      active: '='
     },
     templateUrl: '/static/partials/dashboard/directives/data-set-preview.html',
     transclude: true

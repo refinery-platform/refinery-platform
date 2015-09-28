@@ -17,6 +17,7 @@
         </a>
         <button
           class="no-underline btn"
+          ng-class="{'active': dashboard.dataSetExploration}"
           ng-click="dashboard.toggleDataSetsExploration()">
           <i class="icon-compass" title="Explore data sets"></i> Explore
         </button>
@@ -25,7 +26,7 @@
 
     <div
       class="refinery-sub-panel"
-      ng-class="{'border': dashboard.dataSetPreviewBorder}"
+      ng-class="{'border': dashboard.expandedDataSetPanelBorder}"
       refinery-width-fixer>
       <form class="navbar-search">
         <i class="icon-search"></i>
@@ -190,19 +191,20 @@
     </div>
     <refinery-data-set-preview
       class="preview-container"
-      close="dashboard.hideDataSetPreview()">
+      close="dashboard.hideDataSetPreview()"
+      active="dashboard.dataSetPreview">
     </refinery-data-set-preview>
   </div>
 </div>
 
 <div
   class="span4 shadowPanel"
-  ng-if="dashboard.dataSetPreviewBorder">
+  ng-if="dashboard.expandedDataSetPanelBorder">
 </div>
 
 <div
   class="span4 pushable"
-  ng-class="{'pushed': dashboard.dataSetPreview}">
+  ng-class="{'pushed': dashboard.expandDataSetPanel}">
   <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
@@ -391,7 +393,7 @@
 
 <div
   class="span4 pushable"
-  ng-class="{'pushed': dashboard.dataSetPreview}">
+  ng-class="{'pushed': dashboard.expandDataSetPanel}">
   <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
