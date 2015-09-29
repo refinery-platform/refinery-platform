@@ -19,8 +19,8 @@
       "dashboard",
       "data-set-import",
       "globals",
-      "analysis",
-      "analyses",
+      "analysis-launch",
+      "analysis-monitor",
       "collaboration",
       "chart",
       "data-set-nav"
