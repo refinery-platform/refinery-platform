@@ -15,8 +15,10 @@
  * @param   {Object}     D3Colors   Service for creating D3 color scalings.
  * @param   {Object}     settings   App wide this.settings.
  */
-function TreemapCtrl ($element, $q, $, d3, neo4jToD3, HEX, D3Colors,
-  treemapSettings, pubSub) {
+function TreemapCtrl ($element, $q, $, d3, HEX, D3Colors, treemapSettings,
+  pubSub, dashboardTreemapPreloader) {
+  console.log('Init Treemap');
+
   this.$ = $;
   this.$q = $q;
   this.d3 = d3;
@@ -73,8 +75,8 @@ function TreemapCtrl ($element, $q, $, d3, neo4jToD3, HEX, D3Colors,
   /* ----------------------------- [END: STATIC] ---------------------------- */
 
   /* ----------------------------- [START: LIVE] ---------------------------- */
-  neo4jToD3
-    .get()
+  dashboardTreemapPreloader
+    .data
     .then(function (data) {
       this.data = data;
       this.pubSub.trigger('treemap.loaded');
@@ -1039,10 +1041,10 @@ angular
     '$q',
     '$',
     'd3',
-    'neo4jToD3',
     'HEX',
     'D3Colors',
     'settings',
     'pubSub',
+    'dashboardTreemapPreloader',
     TreemapCtrl
   ]);

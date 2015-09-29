@@ -124,15 +124,9 @@ Neo4jToD3.prototype.get = function () {
       console.error(error);
     });
 
-  var d3Data = neo4jData.promise.then(function (data) {
+  return neo4jData.promise.then(function (data) {
     return this.treeWorker.run(data);
   }.bind(this));
-
-  d3Data.then(function (tree) {
-    return tree;
-  });
-
-  return d3Data;
 };
 
 angular

@@ -1,11 +1,12 @@
 function refineryExplorationWrapper () {
   'use strict';
 
-  function ExplorationWrapperCtrl ($q, pubSub) {
-    var that = this;
-
+  function ExplorationWrapperCtrl ($q, pubSub, dashboardTreemapPreloader) {
     this.$q = $q;
     this.pubSub = pubSub;
+
+    // Trigger preloading / precomputing of D3 data for exploration.
+    dashboardTreemapPreloader.load();
 
     this.loading = true;
     this.treemapLoading = $q.defer();
@@ -32,7 +33,12 @@ function refineryExplorationWrapper () {
     bindToController: {
       active: '='
     },
-    controller: ['$q', 'pubSub', ExplorationWrapperCtrl],
+    controller: [
+      '$q',
+      'pubSub',
+      'dashboardTreemapPreloader',
+      ExplorationWrapperCtrl
+    ],
     controllerAs: 'explorationWrapper',
     restrict: 'E',
     replace: true,
