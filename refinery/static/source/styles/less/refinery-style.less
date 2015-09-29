@@ -1599,20 +1599,28 @@ button.icon-only {
   clear: both;
   overflow: hidden;
 
-  [class^='floatbox-'] {
+  [class^='floatbox-'],
+  [class*=' floatbox-'] {
     width: auto;
   }
 
-  [class^='floatbox-max-'] {
+  [class^='floatbox-max-'],
+  [class*=' floatbox-max-'] {
     overflow: hidden;
   }
 
-  [class$='min-left'] {
+  [class$='min-left'],
+  [class*='min-left '] {
     float: left;
   }
 
-  [class$='min-right'] {
+  [class$='min-right'],
+  [class*='min-right '] {
     float: right;
+  }
+
+  .floatbox-max-right {
+    width: auto;
   }
 }
 
@@ -1943,4 +1951,9 @@ ul.badge-list {
 }
 div.refinery-panel.refinery-panel-content.jquery-full-height {
   padding-bottom:10px;
+}
+
+.horizontal-list li {
+  display: block;
+  float: left;
 }

@@ -589,6 +589,7 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.static.build %>/styles/css/variables.css': '<%= cfg.basePath.static.src %>/styles/less/variables.less',
           '<%= cfg.basePath.static.build %>/styles/css/workflow_visualization.css': '<%= cfg.basePath.static.src %>/styles/less/workflow_visualization.less',
           '<%= cfg.basePath.static.build %>/styles/css/animate.css': '<%= cfg.basePath.static.src %>/styles/less/animate.less',
+          '<%= cfg.basePath.static.build %>/styles/css/treemap.css': '<%= cfg.basePath.static.src %>/styles/less/treemap.less',
         }
       },
       compile: {
