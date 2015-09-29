@@ -1,2 +1,2 @@
 angular
-  .module( 'refineryAnalysis', [] );
+  .module( 'refineryAnalysisLaunch', [] );

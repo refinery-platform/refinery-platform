@@ -1,5 +1,5 @@
 angular
-  .module('refineryAnalysis')
+  .module('refineryAnalysisLaunch')
   .directive(
     'rfAnalysisLaunchModal',
     [
@@ -15,8 +15,8 @@ function rfAnalysisLaunchModal($compile, $templateCache, $modal, analysisConfigS
   "use strict";
   return {
     restrict: 'AE',
-    controller: 'AnalysisCtrl',
-    controllerAs: 'analysisCtrl',
+    controller: 'AnalysisLaunchCtrl',
+    controllerAs: 'analysisLaunchCtrl',
     link: function(scope, element, attrs) {
 
       element.bind("click", function(e) {
@@ -25,7 +25,7 @@ function rfAnalysisLaunchModal($compile, $templateCache, $modal, analysisConfigS
 
         $modal.open({
           template:modalContent,
-          controller: 'AnalysisModalCtrl'
+          controller: 'AnalysisLaunchModalCtrl'
         });
       });
     }

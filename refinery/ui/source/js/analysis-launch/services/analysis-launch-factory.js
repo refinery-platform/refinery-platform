@@ -1,4 +1,4 @@
-angular.module('refineryAnalysis')
+angular.module('refineryAnalysisLaunch')
     .factory("analysisLaunchFactory", ['$http','$rootScope','$log', analysesLaunchFactory]);
 
 function analysesLaunchFactory($http, $rootScope, $log) {

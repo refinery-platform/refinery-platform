@@ -1,5 +1,5 @@
-angular.module('refineryAnalysis')
-    .controller('AnalysisModalCtrl',
+angular.module('refineryAnalysisLaunch')
+    .controller('AnalysisLaunchModalCtrl',
     [
       '$scope',
       '$modalInstance',
@@ -13,7 +13,7 @@ angular.module('refineryAnalysis')
 );
 
 
-function AnalysisModalCtrl($scope, $modalInstance, $window, timeStamp, workflow, analysisConfigService, analysisLaunchFactory){
+function AnalysisLaunchModalCtrl($scope, $modalInstance, $window, timeStamp, workflow, analysisConfigService, analysisLaunchFactory){
   var nowTimeStamp = timeStamp.getTimeStamp();
   var workflowName = workflow.getName();
 

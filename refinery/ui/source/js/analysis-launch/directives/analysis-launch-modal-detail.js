@@ -1,5 +1,5 @@
 angular
-  .module('refineryAnalysis')
+  .module('refineryAnalysisLaunch')
   .directive(
     'rfAnalysisLaunchModalDetail',
     [

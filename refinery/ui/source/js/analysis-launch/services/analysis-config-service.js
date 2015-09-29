@@ -1,4 +1,4 @@
-angular.module('refineryAnalysis')
+angular.module('refineryAnalysisLaunch')
     .service("analysisConfigService", [
     '$window',
     analysisConfigService
