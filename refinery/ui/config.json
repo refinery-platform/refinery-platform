@@ -55,6 +55,8 @@
         "angular-sanitize/angular-sanitize.min.js",
         "angular-ui-router/release/angular-ui-router.min.js",
         "angular-ui-scroll/dist/ui-scroll.min.js",
+        "ng-webworker/src/ng-webworker.min.js",
+        "ng-webworker/src/worker_wrapper.min.js",
         "d3/d3.min.js",
         "c3/c3.min.js",
         "graphlib/dist/graphlib.core.min.js",

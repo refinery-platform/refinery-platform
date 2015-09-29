@@ -95,14 +95,18 @@ function buildTree (results) {
   return JSON.parse(JSON.stringify(nodes['owl:Thing']));
 }
 
-function Neo4jToD3 ($q, neo4j, settings) {
+function Neo4jToD3 ($q, neo4j, Webworker) {
   this.$q = $q;
   this.neo4j = neo4j;
+
+  this.treeWorker = Webworker.create(buildTree);
 }
 
 Neo4jToD3.prototype.get = function () {
-  // Private
-  var d3Deferred = this.$q.defer();
+  // Intermediate promise. We can't use the promise returned by ngResource
+  // because Neo4J doesn't report errors via HTTP codes but as part of the
+  // returned body.
+  var neo4jData = this.$q.defer();
 
   this.neo4j.query({
       res: 'dataset-annotations'
@@ -110,41 +114,32 @@ Neo4jToD3.prototype.get = function () {
     .$promise
     .then(function (response) {
       if (response.errors.length === 0) {
-        try {
-          var start = performance.now();
-          var d3Data = buildTree(response.results[0]);
-          var end = performance.now();
-          d3Deferred.resolve(d3Data);
-          var time = (end - start).toFixed(3);
-          console.log('Neo4J to D3 conversion took ' + time + ' ms.');
-        } catch (error) {
-          d3Deferred.reject(error);
-          console.error(error);
-        }
+        neo4jData.resolve(response.results[0]);
+      } else {
+        neo4jData.reject(response.errors);
       }
-      this.neo4jResponse = response;
     }.bind(this))
     .catch(function (error) {
-      d3Deferred.reject(error);
+      neo4jData.reject(error);
       console.error(error);
     });
 
-  return d3Deferred.promise;
-};
+  var d3Data = neo4jData.promise.then(function (data) {
+    return this.treeWorker.run(data);
+  }.bind(this));
 
-Object.defineProperty(
-  Neo4jToD3.prototype,
-  'neo4jResponse', {
-    configurable: false,
-    enumerable: true,
-    writable: true
-});
+  d3Data.then(function (tree) {
+    return tree;
+  });
+
+  return d3Data;
+};
 
 angular
   .module('refineryApp')
   .service('neo4jToD3', [
     '$q',
     'neo4j',
-    'settings',
+    'Webworker',
     Neo4jToD3
   ]);

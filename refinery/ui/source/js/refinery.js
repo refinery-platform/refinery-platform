@@ -9,6 +9,7 @@ angular
    * Third party modules
    */
   'ui.router',
+  'ngWebworker',
 
   /*
    * Angular App globals
