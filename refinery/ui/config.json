@@ -62,6 +62,8 @@
         "floatThead/dist/jquery.floatThead.min.js",
         "humanize/humanize.js",
         "ng-file-upload/angular-file-upload.min.js",
+        "jquery-file-upload/js/jquery.fileupload.js",
+        "jquery-file-upload/js/jquery.fileupload-process.js",
         "jquery-file-upload/js/jquery.fileupload-angular.js",
         "jquery-file-upload/js/jquery.iframe-transport.js",
         "jquery-file-upload/js/vendor/jquery.ui.widget.js",
