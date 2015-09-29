@@ -1,14 +1,14 @@
-angular.module('refineryAnalysis')
-  .controller('AnalysisCtrl',
+angular.module('refineryAnalysisLaunch')
+  .controller('AnalysisLaunchCtrl',
   [
     '$scope',
     '$log',
     'analysisConfigService',
-    AnalysisCtrl
+    AnalysisLaunchCtrl
   ]
 );
 
-function AnalysisCtrl($scope, $log, analysisConfigService ) {
+function AnalysisLaunchCtrl($scope, $log, analysisConfigService ) {
     "use strict";
 
   $scope.$onRootScope('nodeSetChangedEvent', function(event, currentNodeSet) {
