@@ -608,13 +608,13 @@ TreemapCtrl.prototype.fadeIn = function (selection, firstTime) {
     .transition()
     .duration(function () {
       if (firstTime) {
-        return that.settings.treeMapFadeInDuration + (Math.random() * that.settings.treeMapFadeInDuration);
+        return that.settings.treemapFadeInDuration + (Math.random() * that.settings.treemapFadeInDuration);
       }
-      return that.settings.treeMapFadeInDuration;
+      return that.settings.treemapFadeInDuration;
     })
     .delay(function () {
       if (firstTime) {
-        return Math.random() * that.settings.treeMapFadeInDuration;
+        return Math.random() * that.settings.treemapFadeInDuration;
       }
       return 0;
     })
@@ -718,15 +718,15 @@ TreemapCtrl.prototype.rect = function (elements, reduction) {
 
   elements
     .attr('x', function (data) {
-      return that.treeMap.x(data.x) + reduction;
+      return that.treemap.x(data.x) + reduction;
     })
     .attr('y', function (data) {
-      return that.treeMap.y(data.y) + reduction;
+      return that.treemap.y(data.y) + reduction;
     })
     .attr('width', function (data) {
       data.cache.width = Math.max(0, (
-        that.treeMap.x(data.x + data.dx) -
-        that.treeMap.x(data.x) -
+        that.treemap.x(data.x + data.dx) -
+        that.treemap.x(data.x) -
         (2 * reduction)
       ));
 
@@ -734,8 +734,8 @@ TreemapCtrl.prototype.rect = function (elements, reduction) {
     })
     .attr('height', function (data) {
       data.cache.height = Math.max(0, (
-        that.treeMap.y(data.y + data.dy) -
-        that.treeMap.y(data.y) -
+        that.treemap.y(data.y + data.dy) -
+        that.treemap.y(data.y) -
         (2 * reduction)
       ));
 
@@ -887,11 +887,11 @@ TreemapCtrl.prototype.transition = function (el, data) {
       newGroups = newGroups[0];
       newGroupsTrans = newGroupsTrans = newGroups
         .transition()
-        .duration(this.settings.treeMapZoomDuration);
+        .duration(this.settings.treemapZoomDuration);
       formerGroupWrapper = this.treemap.formerGroupWrapper;
       formerGroupWrapperTrans = formerGroupWrapper
         .transition()
-        .duration(this.settings.treeMapZoomDuration);
+        .duration(this.settings.treemapZoomDuration);
 
       // Update the domain only after entering new elements.
       this.treemap.x.domain([data.x, data.x + data.dx]);
