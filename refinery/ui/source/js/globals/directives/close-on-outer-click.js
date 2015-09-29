@@ -63,8 +63,7 @@ function closeOnOuterClick (pubSub, containsDomElement) {
    */
   Ctrl.prototype.on = function() {
     this.eventId = pubSub.on('globalClick', function (e) {
-      var trigger = angular
-        .element(e.toElement)
+      var trigger = angular.element(e.toElement || e.target)
         .attr('close-on-outer-click-external-trigger');
 
       if (trigger !== this.closeOnOuterClickId) {

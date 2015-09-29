@@ -200,7 +200,7 @@
     </div>
 
 
-    <div class="refinery-panel refinery-panel-content jquery-full-height">
+    <div class="refinery-panel refinery-panel-content jquery-full-height handle-overflow">
       {% if data_set %}
         <!-- tabs -->
         <form id="sampleForm" method="post" class="form-inline" hidden>
@@ -728,10 +728,10 @@
         $('#solrdoctab1-top-controls').show();
       } }, 750);
 
-      $(window).resize(function(){
+      setInterval(function(){
           sizing();
-          $(window).trigger('refinery/floatThead/reflow');
-      });
+          
+      }, 500);
 
       $( "#view-selector" ).select2({minimumResultsForSearch: -1});
       $( "#view-selector" ).on("change", function(event) {
