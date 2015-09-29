@@ -151,20 +151,33 @@ function DashboardCtrl (
   }.bind(this));
 
   $rootScope.$on('$stateChangeSuccess', function (event, toState, toParams) {
-    $timeout(window.sizing, 0);
-    if (toParams.q) {
-      this.searchQueryDataSets = toParams.q;
-      this.setDataSetSource(toParams.q);
-    }
-    if (toState.name === 'launchPad.preview') {
-      //this.showDataSetPreview(this.findDataSet(toParams.uuid));
-    }
-    if (toState.name === 'launchPad.exploration') {
-      // Need to wait one digestion cycle to ensure the layout is set properly.
-      $timeout(function () {
-        this.expandDatasetExploration(true);
-      }.bind(this), 0);
-    }
+    // We have to wait until the first digestion cycle has finished to make sure
+    // that all listeners etc. are set up correctly.
+    // `$timeout(function () {}, 0);` is equals one digestion cycle.
+    $timeout(function () {
+      $window.sizing();
+      if (toParams.q) {
+        this.searchQueryDataSets = toParams.q;
+        this.setDataSetSource(toParams.q);
+      }
+      // Need to implement a method for finding a dataset by uuid first. The
+      // reason why is that we need to link to the specific dataset object
+      // which originates form the ui-scroll resource service.
+      // if (toState.name === 'launchPad.preview') {
+      //   // Need to wait another digestion cycle to ensure the layout is set
+      //   // properly.
+      //   $timeout(function () {
+      //     this.showDataSetPreview(this.findDataSet(toParams.uuid), true);
+      //   }.bind(this), 0);
+      // }
+      if (toState.name === 'launchPad.exploration') {
+        // Need to wait another digestion cycle to ensure the layout is set
+        // properly.
+        $timeout(function () {
+          this.expandDatasetExploration(true);
+        }.bind(this), 0);
+      }
+    }.bind(this), 0);
   }.bind(this));
 
   this.analysesSorting = settings.dashboard.analysesSorting;
@@ -466,19 +479,21 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
   }
 };
 
-DashboardCtrl.prototype.showDataSetPreview = function (dataSet) {
+DashboardCtrl.prototype.showDataSetPreview = function (dataSet, fromStateEvent) {
   this.dataSetExploration = false;
 
-  this.$state.transitionTo(
-    'launchPad.preview',
-    {
-      uuid: dataSet.uuid
-    },
-    {
-      inherit: true,
-      notify: false
-    }
-  );
+  if (!fromStateEvent) {
+    this.$state.transitionTo(
+      'launchPad.preview',
+      {
+        uuid: dataSet.uuid
+      },
+      {
+        inherit: true,
+        notify: false
+      }
+    );
+  }
 
   if (!this.dashboardDataSetPreviewService.previewing) {
     if (!this.expandDataSetPanel) {
