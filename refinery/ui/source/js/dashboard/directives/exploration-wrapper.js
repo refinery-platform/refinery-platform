@@ -1,19 +1,30 @@
 function refineryExplorationWrapper () {
   'use strict';
 
-  function ExplorationWrapperCtrl (pubSub) {
+  function ExplorationWrapperCtrl ($q, pubSub) {
     var that = this;
 
+    this.$q = $q;
     this.pubSub = pubSub;
+
+    this.loading = true;
+    this.treemapLoading = $q.defer();
 
     this.pubSub.on('expandFinished', function () {
       this.ready = true;
-      console.log('ready');
     }.bind(this));
 
     this.pubSub.on('collapsing', function () {
       this.ready = false;
-      console.log('ratting');
+    }.bind(this));
+
+    this.pubSub.on('treemap.loaded', function () {
+      this.treemapLoading.resolve();
+    }.bind(this));
+
+    // Will be useful in the future when multiple services need to load.
+    this.$q.all([this.treemapLoading.promise]).then(function () {
+      this.loading = false;
     }.bind(this));
   }
 
@@ -21,7 +32,7 @@ function refineryExplorationWrapper () {
     bindToController: {
       active: '='
     },
-    controller: ['pubSub', ExplorationWrapperCtrl],
+    controller: ['$q', 'pubSub', ExplorationWrapperCtrl],
     controllerAs: 'explorationWrapper',
     restrict: 'E',
     replace: true,

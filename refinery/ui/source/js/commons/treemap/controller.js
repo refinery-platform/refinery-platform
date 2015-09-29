@@ -16,7 +16,7 @@
  * @param   {Object}     settings   App wide this.settings.
  */
 function TreemapCtrl ($element, $q, $, d3, neo4jToD3, HEX, D3Colors,
-  treemapSettings) {
+  treemapSettings, pubSub) {
   this.$ = $;
   this.$q = $q;
   this.d3 = d3;
@@ -24,6 +24,7 @@ function TreemapCtrl ($element, $q, $, d3, neo4jToD3, HEX, D3Colors,
   this.$element = this.$($element);
   this.$d3Element = this.$element.find('.treemap svg');
   this.settings = treemapSettings;
+  this.pubSub = pubSub;
 
   this._visibleDepth = 1;
   this.currentLevel = 0;
@@ -76,6 +77,7 @@ function TreemapCtrl ($element, $q, $, d3, neo4jToD3, HEX, D3Colors,
     .get()
     .then(function (data) {
       this.data = data;
+      this.pubSub.trigger('treemap.loaded');
       this.draw();
     }.bind(this));
   /* ------------------------------ [END: LIVE] ----------------------------- */
@@ -1041,5 +1043,6 @@ angular
     'HEX',
     'D3Colors',
     'settings',
+    'pubSub',
     TreemapCtrl
   ]);
