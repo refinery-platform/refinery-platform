@@ -13,7 +13,7 @@
  * @param   {Object}     neo4jToD3  Neo4J to D3 converter.
  * @param   {Object}     HEX        HEX class.
  * @param   {Object}     D3Colors   Service for creating D3 color scalings.
- * @param   {Object}     settings   App wide this.settings.
+ * @param   {Object}     settings   Treemap settings.
  */
 function TreemapCtrl ($element, $q, $, d3, HEX, D3Colors, treemapSettings,
   pubSub, dashboardTreemapPreloader) {
@@ -1043,7 +1043,7 @@ angular
     'd3',
     'HEX',
     'D3Colors',
-    'settings',
+    'treemapSettings',
     'pubSub',
     'dashboardTreemapPreloader',
     TreemapCtrl
