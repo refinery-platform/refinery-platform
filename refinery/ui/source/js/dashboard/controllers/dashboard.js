@@ -54,7 +54,7 @@ function DashboardCtrl (
   this.adminMail = $window.refineryAdminMail;
 
   // Check authentication
-  // This should idealy be moved to the global APP controller, which we don't
+  // This should ideally be moved to the global APP controller, which we don't
   // have right now.
   this.authService.isAuthenticated().then(function (isAuthenticated) {
     this.userIsAuthenticated = isAuthenticated;
