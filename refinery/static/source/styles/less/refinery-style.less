@@ -1065,7 +1065,7 @@ a.analysis-header{
       }
     }
 
-    .preview-container {
+    .expansion-panel {
       position: absolute;
       z-index: 0;
       top: 42px;
@@ -1073,6 +1073,18 @@ a.analysis-header{
       right: 0;
       bottom: 20px;
       overflow: hidden;
+
+      .content-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+
+        &.hidden {
+          visibility: hidden;
+        }
+      }
 
       .btn {
         padding: 2px 10px 3px;

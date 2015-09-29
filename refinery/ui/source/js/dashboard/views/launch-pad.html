@@ -189,11 +189,15 @@
         </ul>
       </div>
     </div>
-    <refinery-data-set-preview
-      class="preview-container"
-      close="dashboard.hideDataSetPreview()"
-      active="dashboard.dataSetPreview">
-    </refinery-data-set-preview>
+    <refinery-expansion-panel>
+      <refinery-data-set-preview
+        close="dashboard.hideDataSetPreview()"
+        active="dashboard.dataSetPreview">
+      </refinery-data-set-preview>
+      <refinery-exploration-wrapper
+        active="dashboard.dataSetExploration">
+      </refinery-exploration-wrapper>
+    </refinery-expansion-panel>
   </div>
 </div>
 

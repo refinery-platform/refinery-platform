@@ -11,9 +11,7 @@ function refineryDataSetPreview () {
     sharingService,
     citationService,
     analysisService,
-    dashboardWidthFixerService,
-    dashboardDataSetPreviewService,
-    dashboardExpandablePanelService) {
+    dashboardDataSetPreviewService) {
     var that = this;
 
     this.$q = $q;
@@ -25,29 +23,10 @@ function refineryDataSetPreview () {
     this.sharingService = sharingService;
     this.citationService = citationService;
     this.analysisService = analysisService;
-    this.dashboardWidthFixerService = dashboardWidthFixerService;
     this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
-    this.dashboardExpandablePanelService = dashboardExpandablePanelService;
 
     this.maxBadges = this.settings.dashboard.preview.maxBadges;
     this.infinity = Number.POSITIVE_INFINITY;
-
-    this.dashboardWidthFixerService.fixer.push(function () {
-      that.style = {
-        left: this.fixedWidth + 1
-      };
-    });
-
-    this.dashboardDataSetPreviewService.addListener(
-      'expandFinished',
-      function () {
-        this.animationFinished = true;
-      }.bind(this)
-    );
-
-    this.dashboardExpandablePanelService.collapser.push(function () {
-      this.animationFinished = false;
-    }.bind(this));
   }
 
   Object.defineProperty(
@@ -65,15 +44,6 @@ function refineryDataSetPreview () {
       configurable: false,
       enumerable: true,
       value: {},
-      writable: true
-  });
-
-  Object.defineProperty(
-    DataSetPreviewCtrl.prototype,
-    'animationFinished', {
-      configurable: false,
-      enumerable: true,
-      value: false,
       writable: true
   });
 
@@ -352,9 +322,7 @@ function refineryDataSetPreview () {
       'sharingService',
       'citationService',
       'analysisService',
-      'dashboardWidthFixerService',
       'dashboardDataSetPreviewService',
-      'dashboardExpandablePanelService',
       DataSetPreviewCtrl],
     controllerAs: 'preview',
     restrict: 'E',

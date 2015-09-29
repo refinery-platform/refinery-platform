@@ -1,8 +1,7 @@
-<div ng-style="preview.style">
+<div class="content-container" ng-class="{'hidden': !preview.active}">
   <div ng-if="preview.active">
   <div
     class="refinery-panel-topbar"
-    ng-if="preview.active"
     ng-class="{'allow-overflow': preview.animationFinished}">
     <div
       class="floatbox"
