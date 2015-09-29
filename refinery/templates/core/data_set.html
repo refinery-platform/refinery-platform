@@ -728,10 +728,10 @@
         $('#solrdoctab1-top-controls').show();
       } }, 750);
 
-      setInterval(function(){
+      $(window).resize(function(){
           sizing();
           $(window).trigger('refinery/floatThead/reflow');
-      }, 500);
+      });
 
       $( "#view-selector" ).select2({minimumResultsForSearch: -1});
       $( "#view-selector" ).on("change", function(event) {
