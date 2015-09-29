@@ -148,39 +148,40 @@
               ui-sref-active="active">
               Browse
             </a>
-              {% if has_change_dataset_permission %}
-                <a type="button" class="btn btn-warning data-set-view-tabs"
-                  ng-class="{active:$root.mode==='analyze'}"
-                  ui-sref="analyze" ui-sref-active="active">
-                  Analyze
-                </a>
-              {% endif %}
+            {% if has_change_dataset_permission %}
+              <a type="button" class="btn btn-warning data-set-view-tabs"
+                ng-class="{active:$root.mode==='analyze'}"
+                ui-sref="analyze" ui-sref-active="active">
+                Analyze
+              </a>
+            {% endif %}
             <a type="button" id="visualizeTab" class="btn btn-warning data-set-view-tabs"
-              ng-class="{active:
-            $root.mode==='visualize'}" ui-sref="visualize"
+              ng-class="{active:$root.mode==='visualize'}" ui-sref="visualize"
               ui-sref-active="active">
               Visualize
             </a>
           </div>
         </div>
 
-
         <div class="span10">
           <ul class="nav nav-tabs" id="tabs" style="float: right;">
-            <li ui-sref-active="active" id="filesTab"><a
-              ui-sref="files" class="dataSetTabs">Files</a></li>
+            <li ui-sref-active="active" id="filesTab">
+              <a ui-sref="files" class="dataSetTabs">
+                Files
+              </a>
+            </li>
             {% if has_change_dataset_permission %}
               <li ui-sref-active="active"><a
               ui-sref="attributes" class="dataSetTabs">Attributes</a></li>
             {% endif %}
-              <li ui-sref-active="active">
-                <a ui-sref="analyses" id="analyze-tab" class="dataSetTabs">
-                  <span ng-controller="AnalysesCtrl">
-                    <span rp-analyses-running-tab-icon></span>
-                  </span>
-                  Analyses
-                </a>
-              </li>
+            <li ui-sref-active="active">
+              <a ui-sref="analyses" id="analyze-tab" class="dataSetTabs">
+                <span ng-controller="AnalysesCtrl">
+                  <span rp-analyses-running-tab-icon></span>
+                </span>
+                Analyses
+              </a>
+            </li>
             <li ui-sref-active="active">
               <a ui-sref="details" class="dataSetTabs" >
                 Details
@@ -193,13 +194,13 @@
             </li>
           </ul>
         </div>
+
       </div>
+
     </div>
 
 
-    <div class="refinery-panel refinery-panel-content jquery-full-height"
-         >
-
+    <div class="refinery-panel refinery-panel-content jquery-full-height">
       {% if data_set %}
         <!-- tabs -->
         <form id="sampleForm" method="post" class="form-inline" hidden>
@@ -227,62 +228,62 @@
                      ng-init="$root.mainTabSpanSize='span12'" ng-cloak>
               {% endverbatim %}
 
-                <div class="row-fluid" ng-if="$root.mode==='analyze'">
-                  <div ng-include="'/static/partials/data-set-ui-node-mapping.html'"></div>
-                  <div ui-view="data-set-ui-mapping-controls"></div>
-                  <!-- <div ui-view></div> -->
-                </div>
+                  <div class="row-fluid" ng-if="$root.mode==='analyze'">
+                    <div ng-include="'/static/partials/data-set-ui-node-mapping.html'"></div>
+                    <div ui-view="data-set-ui-mapping-controls"></div>
+                    <!-- <div ui-view></div> -->
+                  </div>
 
-                <div class="row-fluid">
-                  <div class="span2">
-                    {% if not REFINERY_REPOSITORY_MODE %}
-                      <div class="row-fluid" style="margin-bottom: 5px;">
-                        <div class="span12">
-                            <span id="node-set-manager-panel">
-                              <!-- <label class="control-label"
-                              style="font-size: large; margin-left: 15px;
-                              margin-right: 5px; position: relative; top: 3px;">
-                              Selection
-                              </label> -->
-                              <span id="node-set-manager-controls"></span>
-                            </span>
-                        </div>
-                      </div>
-                      <div class="row-fluid" style="margin-bottom: 5px;">
-                        <div class="span12">
-                          <div style="width: 100%;">
-                            <div id="node-set-save-button" class="btn btn-mini">
-                              Save
-                            </div>
-                            <div id="clear-facets" class="btn btn-mini">
-                              Reset
-                            </div>
-                            <!-- <div id="" class="btn btn-mini">Download</div> -->
+                  <div class="row-fluid">
+                    <div class="span2">
+                      {% if not REFINERY_REPOSITORY_MODE %}
+                        <div class="row-fluid" style="margin-bottom: 5px;">
+                          <div class="span12">
+                              <span id="node-set-manager-panel">
+                                <!-- <label class="control-label"
+                                style="font-size: large; margin-left: 15px;
+                                margin-right: 5px; position: relative; top: 3px;">
+                                Selection
+                                </label> -->
+                                <span id="node-set-manager-controls"></span>
+                              </span>
                           </div>
                         </div>
-                      </div>
-                    {% endif %}
+                        <div class="row-fluid" style="margin-bottom: 5px;">
+                          <div class="span12">
+                            <div style="width: 100%;">
+                              <div id="node-set-save-button" class="btn btn-mini">
+                                Save
+                              </div>
+                              <div id="clear-facets" class="btn btn-mini">
+                                Reset
+                              </div>
+                              <!-- <div id="" class="btn btn-mini">Download</div> -->
+                            </div>
+                          </div>
+                        </div>
+                      {% endif %}
 
                     <!--
                     <ul class="nav nav-pills" id="navigation-tabs">
                         <li class="active"><a href="#solr-facet-view" data-toggle="pill">Facets</a></li>
                     </ul>
                     -->
-                    <div class="row-fluid y-scrollable">
-                      <div class="span12">
-                        <label style="font-style: italic; color: darkgray;">Attribute Filter</label>
-                        <div id="solr-facet-view" class="accordion"></div>
-                      </div>
-                      <div class="span12">
-                        <label style="font-style: italic; color: darkgray;">Analysis Filter</label>
-                        <div id="solr-analysis-view" class="accordion"></div>
+                      <div class="row-fluid y-scrollable">
+                        <div class="span12">
+                          <label style="font-style: italic; color: darkgray;">Attribute Filter</label>
+                          <div id="solr-facet-view" class="accordion"></div>
+                        </div>
+                        <div class="span12">
+                          <label style="font-style: italic; color: darkgray;">Analysis Filter</label>
+                          <div id="solr-analysis-view" class="accordion"></div>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
                   {% verbatim %}
-                  <div class="span10" id="main-area">
-                    {% endverbatim %}
+                    <div class="span10" id="main-area">
+                  {% endverbatim %}
 
                     <div class="row-fluid" style="margin-bottom: 5px;">
                       <div class="span3">
@@ -374,7 +375,8 @@
                             </div>
                           </div>
                           <div class="tab-pane fade in" id="provenance-view-tab">
-                              <div id="provenance-graph">
+                              <div class="refinery-panel-content">
+                                <div id="provenance-graph" class="jquery-full-height">
                                   <div id="provvis-nav-bar" ng-controller="provvisNavbarController">
                                       <div provvis-nav-bar></div>
                                   </div>
@@ -382,13 +384,12 @@
                                       <div provvis-canvas></div>
                                   </div>
                                   <!-- the provenance graph -->
-                            </div>
+                                </div>
+                              </div>
                           </div>
                         </div>
                       </div>
                     </div>
-
-                  </div>
 
                   <!--
                   <div class="span2" id="process_container" style="opacity: 0; ">
@@ -438,8 +439,9 @@
                   </div>
                   -->
 
+                    </div>
+                  </div>
                 </div>
-              </div>
             </div>
             <!-- </div> --> <!-- FileMappingCtrl -->
           </div>
@@ -510,9 +512,9 @@
 
             {% if not REFINERY_REPOSITORY_MODE %}
               <div class="refinery-header">
-                        <span class="refinery-header-left">
-                            <h3>Studies</h3>
-                        </span>
+                <span class="refinery-header-left">
+                    <h3>Studies</h3>
+                </span>
               </div>
               {% for study in studies %}
                 <p><strong>{{study.identifier}}</strong>: {{study.title}}</p>
@@ -525,14 +527,14 @@
             {% endif %}
 
             <div class="refinery-header">
-                    <span class="refinery-header-left">
-                        <h3>Files</h3>
-                    </span>
+              <span class="refinery-header-left">
+                  <h3>Files</h3>
+              </span>
             </div>
 
-                <span class="refinery-subheader">
-                    <h3>Meta Data</h3>
-                </span>
+            <span class="refinery-subheader">
+                <h3>Meta Data</h3>
+            </span>
             {% if isatab_archive or pre_isatab_archive %}
               {% load core_extras %}
               {% if isatab_archive %}
@@ -546,27 +548,24 @@
             {% endif %}
 
             <span class="refinery-subheader">
-                    <h3>Data Files</h3>
-                </span>
+              <h3>Data Files</h3>
+            </span>
             <p>{{ data_set.file_count }} files using {{ data_set.file_size|filesizeformat }}</p>
 
             <div class="refinery-header">
-                    <span class="refinery-header-left">
-                        <h3>History</h3>
-                    </span>
+              <span class="refinery-header-left">
+                  <h3>History</h3>
+              </span>
             </div>
             <p>Current version <i>{{ data_set.get_version_details.version }}</i> created <i>{{ data_set.get_version_details.date }}</i>.
               Data set created <i>{{ data_set.creation_date }}</i>. Last modified <i>{{ data_set.modification_date }}</i>.</p>
-
-
           </div>
-
 
           <div class="dataSetTabContent ng-cloak" id="sharing">
             <div class="refinery-header">
-                    <span class="refinery-header-left">
-                        <h3>Sharing</h3>
-                    </span>
+              <span class="refinery-header-left">
+                  <h3>Sharing</h3>
+              </span>
             </div>
             <div class="refinery-subheader">
               <h4>Owner</h4>
@@ -598,11 +597,7 @@
                 {% endfor %}
               </p>
             {% endif %}
-
-
           </div>
-
-        </div>
 
       {% else %}
         <p>No valid data set.</p>
@@ -621,9 +616,6 @@
         <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
       </div>
     </div>
-
-
-  </div>
 
   </div>
 </div>
@@ -714,16 +706,33 @@
   <script type="text/javascript" src="{% static "vendor/dagre/dist/dagre.core.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/spectrum/spectrum.js" %}"></script>
 
-  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis_helpers.js"></script>
-  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis_decl.js"></script>
-  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis_init.js"></script>
-  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis_layout.js"></script>
-  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis_motifs.js"></script>
-  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis_render.js"></script>
-  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis-helpers.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis-decl.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis-init.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis-layout.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis-motifs.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis-render.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis.js"></script>
+
 
   <script type="application/javascript">
     $(document).ready(function () {
+
+       setInterval(function(){
+      if (document.getElementById('select2-chosen-1').innerHTML.match
+              ('Provenance') || document.getElementById('select2-chosen-1').innerHTML.match
+              ('Matrix')) {
+        $('#solrdoctab1-top-controls').hide();
+      }
+      else {
+        $('#solrdoctab1-top-controls').show();
+      } }, 750);
+
+      $(window).resize(function(){
+          sizing();
+          $(window).trigger('refinery/floatThead/reflow');
+      });
+
       $( "#view-selector" ).select2({minimumResultsForSearch: -1});
       $( "#view-selector" ).on("change", function(event) {
         $( '#navigation-tabs a[href="#' + event.added.element[0].value + '"]').tab('show');
@@ -883,7 +892,9 @@
       } else {
         initFloatThead();
       }
-    })(window, jQuery);
+    }
+    )(window, jQuery);
+
   </script>
 
 {% endblock %}
