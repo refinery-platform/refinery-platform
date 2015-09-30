@@ -48,8 +48,7 @@ function DashboardCtrl (
   this.dataSetServiceLoading = false;
   this.dataSetPreviewBorder = false;
 
-  // --! HACKY !--
-  this.adminMail = $window.refineryAdminMail;
+  this.adminMail = refinerySettings.ADMINS[0][1];
 
   // Check authentication
   // This should idealy be moved to the global APP controller, which we don't
