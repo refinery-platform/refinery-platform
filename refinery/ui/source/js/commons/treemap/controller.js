@@ -66,15 +66,6 @@ function TreemapCtrl ($element, $q, $, d3, HEX, D3Colors, treemapSettings,
   this.treemap.$grandParent = this.$(this.treemap.grandParent.node());
   this.treemap.$grandParentContainer = this.treemap.$grandParent.parent();
 
-  /* ---------------------------- [START: STATIC] --------------------------- */
-  // this.d3.json('data/cl.json', function(error, data) {
-  //   if (error) return console.warn(error);
-  //   this.data = data;
-  //   this.draw();
-  // }.bind(this));
-  /* ----------------------------- [END: STATIC] ---------------------------- */
-
-  /* ----------------------------- [START: LIVE] ---------------------------- */
   dashboardTreemapPreloader
     .data
     .then(function (data) {
@@ -82,7 +73,6 @@ function TreemapCtrl ($element, $q, $, d3, HEX, D3Colors, treemapSettings,
       this.pubSub.trigger('treemap.loaded');
       this.draw();
     }.bind(this));
-  /* ------------------------------ [END: LIVE] ----------------------------- */
 }
 
 /*
@@ -567,6 +557,10 @@ TreemapCtrl.prototype.display = function (node, firstTime) {
 /**
  * Draw the treemap.
  *
+ * This is kind of a constructor for the actual visualization. It executes all
+ * methods needed to get prepare the data, register event listeners and finally
+ * calls the drawing.
+ *
  * @method  draw
  * @author  Fritz Lekschas
  * @date    2015-08-03
@@ -576,9 +570,17 @@ TreemapCtrl.prototype.draw = function () {
     return false;
   }
 
-  this.initialize(this.data);
-  this.accumulateAndPrune(this.data, 'numDataSets');
-  this.layout(this.data, 0);
+  // We only need to prepare the data once. Since the preloader service stores
+  // the data we can skip this step the second time the treemap is initialized.
+  if (!this.data.ready) {
+    this.initialize(this.data);
+    this.accumulateAndPrune(this.data, 'numDataSets');
+    this.layout(this.data, 0);
+
+    // Mark data as ready so that we can skip the former steps next time.
+    this.data.ready = true;
+  }
+
   this.display(this.data, true);
 
   this.addEventListeners();
