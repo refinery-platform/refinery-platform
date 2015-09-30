@@ -1,16 +1,16 @@
 angular
   .module('refineryAnalysisLaunch')
   .directive(
-    'rfAnalysisLaunchModal',
+    'rpAnalysisLaunchModal',
     [
       '$compile',
       '$templateCache',
       '$modal',
-      rfAnalysisLaunchModal
+      rpAnalysisLaunchModal
     ]
   );
 
-function rfAnalysisLaunchModal($compile, $templateCache, $modal) {
+function rpAnalysisLaunchModal($compile, $templateCache, $modal) {
   "use strict";
   return {
     restrict: 'AE',

@@ -1,17 +1,17 @@
 angular
   .module('refineryAnalysisMonitor')
   .directive(
-  "rfAnalysisMonitorGlobalListStatusPopover",
+  "rpAnalysisMonitorGlobalListStatusPopover",
   ['$compile',
     '$templateCache',
     '$',
     '$timeout',
     '$rootScope',
-    rfAnalysisMonitorGlobalListStatusPopover
+    rpAnalysisMonitorGlobalListStatusPopover
   ]
 );
 
-function rfAnalysisMonitorGlobalListStatusPopover(
+function rpAnalysisMonitorGlobalListStatusPopover(
   $compile, $templateCache, $, $timeout, $rootScope
 ) {
   "use strict";
