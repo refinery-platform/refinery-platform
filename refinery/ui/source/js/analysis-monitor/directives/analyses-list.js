@@ -13,7 +13,7 @@ function analysisMonitorAnalysesList() {
     restrict: 'E',
     templateUrl: '/static/partials/analysis-monitor/partials/analyses-list.html',
     controller: 'AnalysisMonitorCtrl',
-    controllerAs: 'AnalysisMonitorCtrl',
+    controllerAs: 'AMCtrl',
     bindToController: {
        analysesList: '@',
        analysesDetail: '@'
@@ -21,7 +21,7 @@ function analysisMonitorAnalysesList() {
     link: function(scope, element, attr){
 
       scope.$on('refinery/analyze-tab-active', function () {
-        scope.AnalysesCtrl.updateAnalysesList();
+        scope.AMCtrl.updateAnalysesList();
       });
 
       scope.isCollapsed = false;
@@ -70,7 +70,7 @@ function analysisMonitorAnalysesList() {
 
       scope.pageCount = function() {
         var totalPages = Math.ceil(
-          scope.AnalysisMonitorCtrl.analysesList.length/scope.itemsPerPage
+          scope.AMCtrl.analysesList.length/scope.itemsPerPage
         );
 
         return totalPages;
