@@ -19,7 +19,7 @@ function rfAnalysisMonitorGlobalListStatusPopover(
   return {
     restrict: "AE",
     controller: 'AnalysisMonitorCtrl',
-    controllerAs: 'analysisMonitorCtrl',
+    controllerAs: 'AMCtrl',
     link: function (scope, element, attrs) {
       //The script is in the base.html template.
       var template = $templateCache.get("analysesgloballist.html");
@@ -42,14 +42,14 @@ function rfAnalysisMonitorGlobalListStatusPopover(
            e.target.id === 'global-analysis-status-run-div'){
           $('#global-analysis-status-run-div').tooltip('hide');
           $('#global-analysis-status').tooltip('hide');
-          scope.analysesCtrl.updateAnalysesGlobalList();
+          scope.AMCtrl.updateAnalysesGlobalList();
         }
         if ((e.target.id !== 'global-analysis-status-run' &&
           e.target.id !== 'global-analysis-status') &&
           e.target.id !== 'global-analysis-status-run-div' &&
           $(e.target).parents('.popover.in').length === 0) {
           $(element).popover('hide');
-          scope.analysisMonitorCtrl.cancelTimerGlobalList();
+          scope.AMCtrl.cancelTimerGlobalList();
         }
       });
     },

@@ -6,7 +6,7 @@ angular.module('refineryAnalysisLaunch')
       '$window',
       'timeStamp',
       'workflow',
-      'analysisConfigService',
+      'analysisLaunchConfigService',
       'analysisLaunchFactory',
       AnalysisLaunchModalCtrl
     ]
@@ -39,7 +39,7 @@ function AnalysisLaunchModalCtrl(
 
     if($scope.tempName !== null){
 
-      analysisConfigService.setAnalysisConfig(
+      analysisLaunchConfigService.setAnalysisConfig(
         {
           name:$scope.dataObj.name
         }

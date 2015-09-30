@@ -3,16 +3,16 @@ angular.module('refineryAnalysisLaunch')
   [
     '$scope',
     '$log',
-    'analysisConfigService',
+    'analysisLaunchConfigService',
     AnalysisLaunchCtrl
   ]
 );
 
-function AnalysisLaunchCtrl($scope, $log, analysisConfigService ) {
+function AnalysisLaunchCtrl($scope, $log, analysisLaunchConfigService ) {
     "use strict";
 
   $scope.$onRootScope('nodeSetChangedEvent', function(event, currentNodeSet) {
-    analysisConfigService.setAnalysisConfig(
+    analysisLaunchConfigService.setAnalysisConfig(
       {
         nodeSetUuid: currentNodeSet.uuid,
         nodeRelationshipUuid: null
@@ -21,7 +21,7 @@ function AnalysisLaunchCtrl($scope, $log, analysisConfigService ) {
 
   $scope.$onRootScope('nodeRelationshipChangedEvent', function(event, currentNodeRelationship) {
     if (!currentNodeRelationship) {
-      analysisConfigService.setAnalysisConfig(
+      analysisLaunchConfigService.setAnalysisConfig(
       {
         nodeSetUuid: null,
         nodeRelationshipUuid: null
@@ -29,7 +29,7 @@ function AnalysisLaunchCtrl($scope, $log, analysisConfigService ) {
       $log.debug("new noderel undefined");
     }
     else {
-      analysisConfigService.setAnalysisConfig(
+      analysisLaunchConfigService.setAnalysisConfig(
       {
         nodeSetUuid: null,
         nodeRelationshipUuid: currentNodeRelationship.uuid

@@ -14,14 +14,14 @@ function rpAnalysisMonitorRunningTabIcon() {
     },
     link: function (scope, element, attr) {
       //if an analysis is launched, then the running list needs to be updated.
-     scope.analysisMonitorCtrl.updateAnalysesRunningList();
+     scope.AMCtrl.updateAnalysesRunningList();
       scope.$on("rf/launchAnalysis", function (e) {
-        scope.analysisMonitorCtrl.launchAnalysisFlag = true;
+        scope.AMCtrl.launchAnalysisFlag = true;
       });
       
       scope.$on("rf/cancelAnalysis", function(e){
-        scope.analysisMonitorCtrl.cancelTimerRunningList();
-        scope.analysisMonitorCtrl.updateAnalysesRunningList();
+        scope.AMCtrl.cancelTimerRunningList();
+        scope.AMCtrl.updateAnalysesRunningList();
       });
     }
   };

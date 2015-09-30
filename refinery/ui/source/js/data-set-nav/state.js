@@ -177,7 +177,7 @@ angular
           'analyses',
           {
             url: '/analyses/',
-            templateUrl: '/static/partials/analyses/partials/analyses-list.html',
+            templateUrl: '/static/partials/analysis-monitor/partials/analyses-list.html',
             controller: 'refineryDataSetNavBlueprintCtrl'
           },
           '^\/data_sets\/.*\/$',

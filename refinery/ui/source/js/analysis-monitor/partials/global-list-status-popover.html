@@ -29,11 +29,12 @@
           <span ng-switch-when="RUNNING">
             <div ng-if="(AMCtrl.isAnalysesRunningGlobal())"
               class="analysis-running-percentage">
-              {{analysesCtrl.analysesGlobalDetail[analysis.uuid]|analysesRunningStatusPercent}}
+              {{ analysesCtrl.analysesGlobalDetail[analysis.uuid]|
+                analysisMonitorRunningStatusPercent }}
             </div>
             <div class="analyses-global-text-icon">
                <i class="{{AMCtrl.analysesGlobalDetail[analysis
-                 .uuid]|analysisRunningStatusBtn}}"></i>
+                 .uuid]|analysisMonitorRunningStatusBtn}}"></i>
                 &nbsp;
             </div>
             <div class="analyses-global-text">

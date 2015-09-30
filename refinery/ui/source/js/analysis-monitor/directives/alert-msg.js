@@ -13,7 +13,7 @@ function rpAnalysisMonitorAlertMsg($location) {
       analysesMsg: '@',
     },
     link: function(scope, element, attr){
-      scope.AnalysisMonitorCtrl.setAnalysesAlertMsg();
+      scope.AMCtrl.setAnalysesAlertMsg();
     }
   };
 }

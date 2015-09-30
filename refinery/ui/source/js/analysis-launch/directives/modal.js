@@ -6,12 +6,11 @@ angular
       '$compile',
       '$templateCache',
       '$modal',
-      'analysisConfigService',
       rfAnalysisLaunchModal
     ]
   );
 
-function rfAnalysisLaunchModal($compile, $templateCache, $modal, analysisConfigService) {
+function rfAnalysisLaunchModal($compile, $templateCache, $modal) {
   "use strict";
   return {
     restrict: 'AE',
