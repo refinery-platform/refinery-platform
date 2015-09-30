@@ -1,4 +1,4 @@
-<div ng-switch on="analysesCtrl.analysesGlobalLoadingFlag">
+<div ng-switch on="AMCtrl.analysesGlobalLoadingFlag">
   <div ng-switch-when="EMPTY">
     <p>
       No analyses performed.
@@ -14,7 +14,8 @@
         &nbsp;
         <span ng-switch on="analysis.status">
           <span ng-switch-when="UNKNOWN">
-             <div ng-if="(analysesCtrl.isAnalysesRunningGlobal())" class="analysis-running-percentage">
+             <div ng-if="(analysisMonitorCtrl.isAnalysesRunningGlobal())"
+               class="analysis-running-percentage">
               &nbsp;
             </div>
             <div class="analyses-global-text-icon">
@@ -26,11 +27,13 @@
             </div>
           </span>
           <span ng-switch-when="RUNNING">
-            <div ng-if="(analysesCtrl.isAnalysesRunningGlobal())" class="analysis-running-percentage">
+            <div ng-if="(AMCtrl.isAnalysesRunningGlobal())"
+              class="analysis-running-percentage">
               {{analysesCtrl.analysesGlobalDetail[analysis.uuid]|analysesRunningStatusPercent}}
             </div>
             <div class="analyses-global-text-icon">
-               <i class="{{analysesCtrl.analysesGlobalDetail[analysis.uuid]|analysesRunningStatusBtn}}"></i>
+               <i class="{{AMCtrl.analysesGlobalDetail[analysis
+                 .uuid]|analysisRunningStatusBtn}}"></i>
                 &nbsp;
             </div>
             <div class="analyses-global-text">
@@ -40,7 +43,8 @@
             </div>
           </span>
           <span ng-switch-default>
-            <div ng-if="(analysesCtrl.isAnalysesRunningGlobal())" class="analysis-running-percentage">
+            <div ng-if="(AMCtrl.isAnalysesRunningGlobal())"
+              class="analysis-running-percentage">
               &nbsp;
             </div>
             <div class="analyses-global-text-icon">

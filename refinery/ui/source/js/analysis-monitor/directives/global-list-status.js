@@ -8,7 +8,7 @@ function rpAnalysisMonitorGlobalListStatus(){
     templateUrl: '/static/partials/analysis-monitor/partials/global-list-status.html',
     restrict: 'A',
     controller: 'AnalysisMonitorCtrl',
-    controllerAs: 'AnalysisMonitorCtrl',
+    controllerAs: 'AMCtrl',
     bindToController: {
       launchAnalysisFlag: '='
     },
