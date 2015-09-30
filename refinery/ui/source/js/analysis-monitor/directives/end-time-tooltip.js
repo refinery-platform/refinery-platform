@@ -1,7 +1,7 @@
-angular.module('refineryAnalyses')
-  .directive("rpAnalysesEndTimeTooltip", ["$filter", rpAnalysesEndTimeTooltip]);
+angular.module('refineryAnalysisMonitor')
+  .directive("rpAnalysisMonitorEndTimeTooltip", ["$filter", rpAnalysisMonitorEndTimeTooltip]);
 
-function rpAnalysesEndTimeTooltip($filter) {
+function rpAnalysisMonitorEndTimeTooltip($filter) {
   "use strict";
 
   return {
