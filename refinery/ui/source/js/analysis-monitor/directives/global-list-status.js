@@ -13,18 +13,18 @@ function rpAnalysisMonitorGlobalListStatus(){
       launchAnalysisFlag: '='
     },
     link: function(scope, element, attr){
-      scope.AnalysisMonitorCtrl.updateAnalysesRunningGlobalList();
+      scope.AMCtrl.updateAnalysesRunningGlobalList();
       scope.$on("rf/launchAnalysis", function (e) {
-        scope.AnalysisMonitorCtrl.launchAnalysisFlag = true;
-        scope.AnalysisMonitorCtrl.analysesRunningGlobalListCount =
-          scope.AnalysisMonitorCtrl.analysesRunningGlobalListCount + 1;
+        scope.AMCtrl.launchAnalysisFlag = true;
+        scope.AMCtrl.analysesRunningGlobalListCount =
+          scope.AMCtrl.analysesRunningGlobalListCount + 1;
       });
 
       scope.$on("rf/cancelAnalysis", function(e){
-        scope.AnalysisMonitorCtrl.cancelTimerRunningGlobalList();
-        scope.AnalysisMonitorCtrl.analysesRunningGlobalListCount =
-          scope.AnalysisMonitorCtrl.analysesRunningGlobalListCount - 1;
-        scope.AnalysisMonitorCtrl.updateAnalysesRunningGlobalList();
+        scope.AMCtrl.cancelTimerRunningGlobalList();
+        scope.AMCtrl.analysesRunningGlobalListCount =
+          scope.AMCtrl.analysesRunningGlobalListCount - 1;
+        scope.AMCtrl.updateAnalysesRunningGlobalList();
       });
     }
   };
