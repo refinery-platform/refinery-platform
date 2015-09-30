@@ -1,9 +1,9 @@
 angular.module('refineryAnalyses')
-    .controller('AnalysesCtrl',
-    ['analysesFactory', 'analysesAlertService','$scope','$timeout', '$rootScope','$filter','analysisService', '$q', AnalysesCtrl]);
+    .controller('AnalysisMonitorCtrl',
+    ['analysisMonitorFactory', 'analysisMonitorAlertService','$scope','$timeout', '$rootScope','$filter','analysisMonitorService', '$q', AMCtrl]);
 
 
-function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $rootScope, $filter, analysisService, $q) {
+function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService, $scope, $timeout, $rootScope, $filter, analysisMonitorService, $q) {
   "use strict";
   var vm = this;
   vm.analysesList = [];
@@ -55,7 +55,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     var params = {format:'json', limit: 10};
 
     analysesFactory.getAnalysesList(params).then(function () {
-      vm.analysesGlobalList = analysesFactory.analysesGlobalList;
+      vm.analysesGlobalList = analysisMonitorFactory.analysesGlobalList;
       vm.setAnalysesGlobalLoadingFlag();
       vm.refreshAnalysesGlobalDetail();
     });
@@ -87,7 +87,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     };
 
     analysesFactory.getAnalysesList(params).then(function () {
-      vm.analysesRunningList = analysesFactory.analysesRunningList;
+      vm.analysesRunningList = analysisMonitorFactory.analysesRunningList;
       vm.launchAnalysisFlag = false;
     });
 
@@ -104,8 +104,8 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
       format:'json', limit: 0, 'status': 'RUNNING'
     };
 
-    analysesFactory.getAnalysesList(params).then(function () {
-      vm.analysesRunningGlobalList = analysesFactory.analysesRunningGlobalList;
+    analysisMonitorFactory.getAnalysesList(params).then(function () {
+      vm.analysesRunningGlobalList = analysisMonitorFactory.analysesRunningGlobalList;
       vm.analysesRunningGlobalListCount = vm.analysesRunningGlobalList.length;
       vm.launchAnalysisFlag = false;
     });
@@ -146,7 +146,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     (function (i) {
       if(typeof vm.analysesRunningList[i] !== 'undefined') {
         var runningUuid = vm.analysesRunningList[i].uuid;
-        analysesFactory.getAnalysesDetail(runningUuid).then(function (response) {
+        analysisMonitorFactory.getAnalysesDetail(runningUuid).then(function (response) {
           vm.analysesDetail[runningUuid] = analysesFactory.analysesDetail[runningUuid];
         });
       }
@@ -157,7 +157,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
     (function (i) {
       if(typeof vm.analysesRunningGlobalList[i] !== 'undefined') {
         var runningUuid = vm.analysesRunningGlobalList[i].uuid;
-        analysesFactory.getAnalysesDetail(runningUuid).then(function (response) {
+        analysisMonitorFactory.getAnalysesDetail(runningUuid).then(function (response) {
           vm.analysesGlobalDetail[runningUuid] = analysesFactory.analysesDetail[runningUuid];
         });
       }
@@ -166,7 +166,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
 
   vm.cancelAnalysis = function (uuid) {
     vm.setCancelAnalysisFlag(true, uuid);
-    analysesFactory.postCancelAnalysis(uuid).then(function (result) {
+    analysisMonitorFactory.postCancelAnalysis(uuid).then(function (result) {
       $timeout.cancel(vm.timerList);
       vm.updateAnalysesList().then(function(response) {
         bootbox.alert("Successfully canceled analysis.");
@@ -190,7 +190,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $
   //Alert message which show on analysis view filtered page
   vm.setAnalysesAlertMsg = function () {
     var uuid = window.analysisUuid;
-    analysesAlertService.setAnalysesMsg(uuid);
+    analysisMonitorAlertService.setAnalysesMsg(uuid);
     vm.analysesMsg = analysesAlertService.getAnalysesMsg();
   };
 
