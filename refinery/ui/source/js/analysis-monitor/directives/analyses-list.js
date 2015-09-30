@@ -1,4 +1,4 @@
-angular.module('refineryAnalyses')
+angular.module('refineryAnalysisMonitor')
     .directive("analysesList", ['$rootScope',analysesList]);
 
 function analysesList() {
@@ -6,9 +6,9 @@ function analysesList() {
 
   return {
     restrict: 'E',
-    templateUrl: '/static/partials/analyses/partials/analyses-list.html',
-    controller: 'AnalysesCtrl',
-    controllerAs: 'AnalysesCtrl',
+    templateUrl: '/static/partials/analysis-monitor/partials/analyses-list.html',
+    controller: 'AnalysisMonitorCtrl',
+    controllerAs: 'AnalysisMonitorCtrl',
     bindToController: {
        analysesList: '@',
        analysesDetail: '@'
