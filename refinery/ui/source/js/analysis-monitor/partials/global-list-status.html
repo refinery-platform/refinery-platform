@@ -1,0 +1,16 @@
+<span id="analysesCogIcon">
+  <span ng-if="AMCtrl.isAnalysesRunningGlobal() ||
+  AMCtrl.launchAnalysisFlag">
+    <span class="spinner" id="global-analysis-status-run-div"
+        tool-tip tool-tip-container="body" tool-tip-placement="left"
+         title="View Recent Analyses">
+      <i class="icon-cog" id="global-analysis-status-run"></i>
+      {{ AMCtrl.analysesRunningGlobalListCount }}
+    </span>
+  </span>
+   <span ng-if="!(AMCtrl.isAnalysesRunningGlobal() ||
+   AMCtrl.launchAnalysisFlag)">
+    <i class="icon-cog" id="global-analysis-status" tool-tip tool-tip-container="body"
+      tool-tip-placement="left" title="Recent Analyses"></i>
+  </span>
+</span>

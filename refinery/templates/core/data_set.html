@@ -127,9 +127,9 @@
   {% endif %}
 
 
-  <span ng-controller="AnalysesCtrl">
+  <span ng-controller="AnalysisMonitorCtrl">
     <div ng-if="checkAnalysesViewFlag()">
-      <span rp-analyses-alert-msg></span>
+      <span rp-analysis-monitor-alert-msg></span>
     </div>
   </span>
 
@@ -176,8 +176,8 @@
             {% endif %}
             <li ui-sref-active="active">
               <a ui-sref="analyses" id="analyze-tab" class="dataSetTabs">
-                <span ng-controller="AnalysesCtrl">
-                  <span rp-analyses-running-tab-icon></span>
+                <span ng-controller="AnalysisMonitorCtrl">
+                  <span rp-analysis-monitor-running-tab-icon></span>
                 </span>
                 Analyses
               </a>
@@ -470,7 +470,7 @@
             </div>
             <p>
               <div class="row-fluid">
-                <analyses-list></analyses-list>
+                <analysis-monitor-analyses-list></analysis-monitor-analyses-list>
               </div>
             </p>
           </div>

@@ -113,10 +113,10 @@
         <i class="icon-signin"></i>&nbsp;<a rel="tooltip" data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
         {% endif %}
         &nbsp;&nbsp;|&nbsp;&nbsp;
-        <span ng-controller="AnalysesCtrl" id="analyses-popover">
-          <a tabindex="0" rf-analyses-global-list-status-popover
+        <span id="analyses-popover">
+          <a tabindex="0" rp-analysis-monitor-global-list-status-popover
             title="Recent Analyses">
-             <span rp-analyses-global-list-status></span>
+             <span rp-analysis-monitor-global-list-status></span>
           </a>
         </span>
 
@@ -169,12 +169,12 @@
 
   <!-- Script for popup content in the tool status and analyses icon-->
      <script type="text/ng-template" id="analysesgloballist.html">
-        <rp-analyses-global-list-status-popover-details>
-        </rp-analyses-global-list-status-popover-details>
+        <rp-analysis-monitor-global-list-status-popover-details>
+        </rp-analysis-monitor-global-list-status-popover-details>
     </script>
      <script type="text/ng-template" id="analysislaunchmodal.html">
-        <rf-analysis-launch-modal-detail>
-        </rf-analysis-launch-modal-detail>
+        <rp-analysis-launch-modal-detail>
+        </rp-analysis-launch-modal-detail>
     </script>
 
   <!-- 3rd party libraries -->
@@ -207,8 +207,8 @@
   <script src="{% static "js/refinery-controller.js" %}"></script>
   <script src="{% static "js/globals.js" %}"></script>
   <script src="{% static "js/commons.js" %}"></script>
-  <script src="{% static "js/analysis.js" %}"></script>
-  <script src="{% static "js/analyses.js" %}"></script>
+  <script src="{% static "js/analysis-launch.js" %}"></script>
+  <script src="{% static "js/analysis-monitor.js" %}"></script>
   <script src="{% static "js/node-mapping.js" %}"></script>
   <script src="{% static "js/workflows.js" %}"></script>
   <script src="{% static "js/solr.js" %}"></script>
