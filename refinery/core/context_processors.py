@@ -7,31 +7,29 @@ Created on Aug 23, 2012
 # a context processor to pass settings variables to views by default
 # from: http://stackoverflow.com/q/433162
 
+import json
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.core import serializers
 
 
 def extra_context(context):
-    """return values you want as a dictionary"""
+    site_model = serializers.serialize("json", Site.objects.all())
+
+    class UI_ACCESSIBLE_SETTINGS:
+        pass
+
+    for setting in dir(settings):
+        if setting in settings.UI_ACCESSIBLE_SETTINGS:
+            setattr(UI_ACCESSIBLE_SETTINGS, setting, getattr(settings,
+                                                             setting))
+
+    setattr(UI_ACCESSIBLE_SETTINGS, "REFINERY_BASE_URL",
+            json.loads(site_model)[0]["fields"]["domain"])
+    setattr(UI_ACCESSIBLE_SETTINGS, "REFINERY_INSTANCE_NAME", json.loads(
+        site_model)[0]["fields"]["name"])
+
     return {
-        "ADMINS": settings.ADMINS[0][1],
-        "REFINERY_CSS": settings.REFINERY_CSS,
-        "REFINERY_MAIN_LOGO": settings.REFINERY_MAIN_LOGO,
-        "REFINERY_INNER_NAVBAR_HEIGHT": settings.REFINERY_INNER_NAVBAR_HEIGHT,
-        "REFINERY_BASE_URL": Site.objects.get_current().domain,
-        "REFINERY_SOLR_BASE_URL": settings.REFINERY_SOLR_BASE_URL,
-        "REFINERY_GOOGLE_ANALYTICS_ID": settings.REFINERY_GOOGLE_ANALYTICS_ID,
-        "REFINERY_INSTANCE_NAME": Site.objects.get_current().name,
-        "REFINERY_REPOSITORY_MODE": settings.REFINERY_REPOSITORY_MODE,
-        "REFINERY_CONTACT_EMAIL": settings.DEFAULT_FROM_EMAIL,
-        "REGISTRATION_OPEN": settings.REGISTRATION_OPEN,
-        "REFINERY_REGISTRATION_CLOSED_MESSAGE":
-            settings.REFINERY_REGISTRATION_CLOSED_MESSAGE,
-        "ACCOUNT_ACTIVATION_DAYS": settings.ACCOUNT_ACTIVATION_DAYS,
-        "REFINERY_BANNER": settings.REFINERY_BANNER,
-        "REFINERY_BANNER_ANONYMOUS_ONLY":
-            settings.REFINERY_BANNER_ANONYMOUS_ONLY,
-        "REFINERY_EXTERNAL_AUTH": settings.REFINERY_EXTERNAL_AUTH,
-        "REFINERY_EXTERNAL_AUTH_MESSAGE":
-            settings.REFINERY_EXTERNAL_AUTH_MESSAGE,
+        "refinerySettings": UI_ACCESSIBLE_SETTINGS.__dict__,
+        "refinerySettingsObj": json.dumps(UI_ACCESSIBLE_SETTINGS.__dict__)
     }

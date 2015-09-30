@@ -127,9 +127,9 @@
   {% endif %}
 
 
-  <span ng-controller="AnalysesCtrl">
+  <span ng-controller="AnalysisMonitorCtrl">
     <div ng-if="checkAnalysesViewFlag()">
-      <span rp-analyses-alert-msg></span>
+      <span rp-analysis-monitor-alert-msg></span>
     </div>
   </span>
 
@@ -176,8 +176,8 @@
             {% endif %}
             <li ui-sref-active="active">
               <a ui-sref="analyses" id="analyze-tab" class="dataSetTabs">
-                <span ng-controller="AnalysesCtrl">
-                  <span rp-analyses-running-tab-icon></span>
+                <span ng-controller="AnalysisMonitorCtrl">
+                  <span rp-analysis-monitor-running-tab-icon></span>
                 </span>
                 Analyses
               </a>
@@ -200,7 +200,7 @@
     </div>
 
 
-    <div class="refinery-panel refinery-panel-content jquery-full-height">
+    <div class="refinery-panel refinery-panel-content jquery-full-height handle-overflow">
       {% if data_set %}
         <!-- tabs -->
         <form id="sampleForm" method="post" class="form-inline" hidden>
@@ -470,7 +470,7 @@
             </div>
             <p>
               <div class="row-fluid">
-                <analyses-list></analyses-list>
+                <analysis-monitor-analyses-list></analysis-monitor-analyses-list>
               </div>
             </p>
           </div>
@@ -701,7 +701,7 @@
   <script type="text/javascript" src="{% static "vendor/floatThead/dist/jquery.floatThead.min.js" %}"></script>
 
   <!-- provenance visualization -->
-  <script type="text/javascript" src="{% static "vendor/lodash/dist/lodash.min.js" %}"></script>
+  <script type="text/javascript" src="{% static "vendor/lodash-3/lodash.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/graphlib/dist/graphlib.core.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/dagre/dist/dagre.core.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/spectrum/spectrum.js" %}"></script>
@@ -728,10 +728,10 @@
         $('#solrdoctab1-top-controls').show();
       } }, 750);
 
-      $(window).resize(function(){
+      setInterval(function(){
           sizing();
-          $(window).trigger('refinery/floatThead/reflow');
-      });
+          
+      }, 500);
 
       $( "#view-selector" ).select2({minimumResultsForSearch: -1});
       $( "#view-selector" ).on("change", function(event) {

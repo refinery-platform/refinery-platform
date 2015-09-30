@@ -25,7 +25,7 @@ angular
   'refineryRouter',
   'refineryWorkflows',
   'refineryNodeMapping',
-  'refineryAnalysis',
+  'refineryAnalysisLaunch',
   'refinerySolr',
   'refineryNodeRelationship',
   'refineryIgv',
@@ -35,7 +35,7 @@ angular
   'refineryDataSetImport',
   'refineryDataSetNav',
   'refineryDashboard',
-  'refineryAnalyses',
+  'refineryAnalysisMonitor',
   'refineryCollaboration',
   'refineryChart',
 ])

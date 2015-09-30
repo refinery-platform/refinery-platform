@@ -173,6 +173,7 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
   self._generatePagerControl(pagerControlId, 5, 2, 2);
 
   // attach events
+
   $(".field-header-sort").on("click", function(event) {
     var fieldName = $(event.target).data("fieldname");
     self._query.toggleFieldDirection(fieldName);
@@ -198,11 +199,11 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
       SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, {'event': event});
   });
 
+
   $(".document-checkbox-select").on("click", function(event) {
     var uuid = $(event.target).data("uuid");
     var uuidIndex = self._query._documentSelection.indexOf(uuid);
     var event = "";
-
     if (uuidIndex != -1) {
       // remove element
       self._query._documentSelection.splice(uuidIndex, 1);
@@ -212,6 +213,24 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
       // add element
       self._query._documentSelection.push(uuid);
       event = 'add';
+    }
+
+    var checkAllNodes = document.getElementById("node-selection-mode");
+    var totalCheckbox = $(".document-checkbox-select").length;
+    var totalCheckboxSelect = $('.document-checkbox-select:checked').length;
+
+    if(totalCheckboxSelect > 0 && totalCheckboxSelect < totalCheckbox){
+      checkAllNodes.checked = true;
+      checkAllNodes.indeterminate = true;
+      self._query.setDocumentSelectionBlacklistMode(true);
+    }else if(totalCheckboxSelect > 0 && totalCheckboxSelect === totalCheckbox) {
+      checkAllNodes.indeterminate = false;
+      checkAllNodes.checked = true;
+      self._query.setDocumentSelectionBlacklistMode(true);
+    }else{
+      checkAllNodes.indeterminate = false;
+      checkAllNodes.checked = false;
+      self._query.setDocumentSelectionBlacklistMode(false);
     }
 
     self._commands.execute(
@@ -406,6 +425,7 @@ SolrDocumentTable.prototype._generateTableHead = function(solrResponse) {
   //$( "#" + "node-selection-column-header" ).html( nodeSelectionModeCheckbox );
   row.push('<th align="left" width="0">' + '</th>');
   row.push('<th align="left" width="0" id="node-selection-column-header">' + nodeSelectionModeCheckbox + '</th>');
+
 
   // headers for additional columns
   for (var i = 0; i < self._additionalColumns.length; ++i) {
