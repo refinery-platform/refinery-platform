@@ -1,11 +1,11 @@
 angular.module('refineryAnalysisLaunch')
-    .service("analysisConfigService", [
+    .service("analysisLaunchConfigService", [
     '$window',
     analysisConfigService
   ]
 );
 
-function analysisConfigService($window) {
+function analysisLaunchConfigService($window) {
   var vm = this;
 
   var analysisConfig = {

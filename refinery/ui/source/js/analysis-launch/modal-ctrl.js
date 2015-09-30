@@ -8,12 +8,19 @@ angular.module('refineryAnalysisLaunch')
       'workflow',
       'analysisConfigService',
       'analysisLaunchFactory',
-      AnalysisModalCtrl
+      AnalysisLaunchModalCtrl
     ]
 );
 
 
-function AnalysisLaunchModalCtrl($scope, $modalInstance, $window, timeStamp, workflow, analysisConfigService, analysisLaunchFactory){
+function AnalysisLaunchModalCtrl(
+  $scope,
+  $modalInstance,
+  $window, timeStamp,
+  workflow,
+  analysisLaunchConfigService,
+  analysisLaunchFactory
+){
   var nowTimeStamp = timeStamp.getTimeStamp();
   var workflowName = workflow.getName();
 
@@ -21,7 +28,7 @@ function AnalysisLaunchModalCtrl($scope, $modalInstance, $window, timeStamp, wor
   $scope.dataObj = {
     "name":workflowName + " " + nowTimeStamp
   };
-  analysisConfigService.setAnalysisConfig(
+  analysisLaunchConfigService.setAnalysisConfig(
     {
       workflowUuid: workflow.getUuid()
       }
@@ -38,7 +45,7 @@ function AnalysisLaunchModalCtrl($scope, $modalInstance, $window, timeStamp, wor
         }
       );
 
-      var launchParams = analysisConfigService.getAnalysisConfig();
+      var launchParams = analysisLaunchConfigService.getAnalysisConfig();
       analysisLaunchFactory.postLaunchAnalysis(launchParams)
         .then(function(response){
           $scope.analysisLaunchFlag = "SUCCESS";
