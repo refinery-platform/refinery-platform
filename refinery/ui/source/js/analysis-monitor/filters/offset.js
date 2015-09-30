@@ -1,4 +1,5 @@
-angular.module('refineryAnalysisMonitor').filter('analysisMonitorOffset',analysisMonitorOffset);
+angular.module('refineryAnalysisMonitor')
+  .filter('analysisMonitorOffset',analysisMonitorOffset);
 
 function analysisMonitorOffset(){
   return function(input, start) {

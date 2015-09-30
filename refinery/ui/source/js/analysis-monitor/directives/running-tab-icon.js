@@ -1,7 +1,7 @@
 angular.module('refineryAnalysisMonitor')
   .directive("rpAnalysisMonitorRunningTabIcon", rpAnalysisMonitorRunningTabIcon);
 
-function rpAnalysisRunningTabIcon() {
+function rpAnalysisMonitorRunningTabIcon() {
   "use strict";
 
   return {

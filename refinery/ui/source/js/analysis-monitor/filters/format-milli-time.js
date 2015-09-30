@@ -1,4 +1,5 @@
-angular.module('refineryAnalysisMonitor').filter('analysisMonitorFormatMilliTime',analysisMonitorFormatMilliTime);
+angular.module('refineryAnalysisMonitor')
+  .filter('analysisMonitorFormatMilliTime',analysisMonitorFormatMilliTime);
 
 function analysisMonitorFormatMilliTime(){
 
