@@ -8,7 +8,7 @@ function rpAnalysisRunningTabIcon() {
     restrict: 'A',
     templateUrl: '/static/partials/analysis-monitor/partials/running-tab-icon.html',
     controller: 'AnalysisMonitorCtrl',
-    controllerAs: 'analysisMonitorCtrl',
+    controllerAs: 'AMCtrl',
     bindToController: {
       launchAnalysisFlag: '='
     },
