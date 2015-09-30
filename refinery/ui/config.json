@@ -69,7 +69,7 @@
         "jquery-file-upload/js/vendor/jquery.ui.widget.js",
         "jquery-file-upload/js/jquery.fileupload.js",
         "jquery-file-upload/js/jquery.fileupload-process.js",
-        "lodash-3/lodash.min.js",
+        "lodash/lodash.min.js",
         "ng-grid/build/ng-grid.min.js",
         "spark-md5/spark-md5.js",
         "spectrum/spectrum.js",
