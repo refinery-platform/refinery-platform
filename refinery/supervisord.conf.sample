@@ -36,7 +36,7 @@ startsecs = 10
 
 [program:neo4j]
 command = /opt/neo4j/bin/neo4j console
-autostart = false
+autostart = true
 autorestart = true
 startsecs = 5
 stopasgroup = true
