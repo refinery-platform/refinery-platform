@@ -6,9 +6,9 @@ function rpAnalysisMonitorAlertMsg($location) {
 
   return {
     restrict: 'A',
-    templateUrl: '/static/partials/analyses/partials/alert-msg.html',
+    templateUrl: '/static/partials/analysis-monitor/partials/alert-msg.html',
     controller: 'AnalysisMonitorCtrl',
-    controllerAs: 'AnalysisMonitorCtrl',
+    controllerAs: 'AMCtrl',
     bindToController: {
       analysesMsg: '@',
     },
