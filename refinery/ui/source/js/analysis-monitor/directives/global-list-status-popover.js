@@ -1,23 +1,25 @@
 angular
-  .module('refineryAnalysis')
+  .module('refineryAnalysisMonitor')
   .directive(
-  "rfAnalysesGlobalListStatusPopover",
+  "rfAnalysisMonitorGlobalListStatusPopover",
   ['$compile',
     '$templateCache',
     '$',
     '$timeout',
     '$rootScope',
-    rfAnalysesGlobalListStatusPopover
+    rfAnalysisMonitorGlobalListStatusPopover
   ]
 );
 
-function rfAnalysesGlobalListStatusPopover($compile, $templateCache, $, $timeout, $rootScope) {
+function rfAnalysisMonitorGlobalListStatusPopover(
+  $compile, $templateCache, $, $timeout, $rootScope
+) {
   "use strict";
 
   return {
     restrict: "AE",
-    controller: 'AnalysesCtrl',
-    controllerAs: 'analysesCtrl',
+    controller: 'AnalysisMonitorCtrl',
+    controllerAs: 'analysisMonitorCtrl',
     link: function (scope, element, attrs) {
       //The script is in the base.html template.
       var template = $templateCache.get("analysesgloballist.html");
@@ -47,7 +49,7 @@ function rfAnalysesGlobalListStatusPopover($compile, $templateCache, $, $timeout
           e.target.id !== 'global-analysis-status-run-div' &&
           $(e.target).parents('.popover.in').length === 0) {
           $(element).popover('hide');
-          scope.analysesCtrl.cancelTimerGlobalList();
+          scope.analysisMonitorCtrl.cancelTimerGlobalList();
         }
       });
     },

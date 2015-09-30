@@ -1,14 +1,15 @@
-angular.module('refineryAnalyses')
-    .directive("rpAnalysesGlobalListStatusPopoverDetails", rpAnalysesGlobalListStatusPopoverDetails);
+angular.module('refineryAnalysisMonitor')
+    .directive("rpAnalysisMonitorGlobalListStatusPopoverDetails",
+  rpAnalysisMonitorGlobalListStatusPopoverDetails);
 
-function rpAnalysesGlobalListStatusPopoverDetails() {
+function rpAnalysisMonitorGlobalListStatusPopoverDetails() {
     "use strict";
 
   return {
     restrict: 'E',
-    templateUrl: '/static/partials/analyses/partials/analyses-global-list-status-popover.html',
-    controller: 'AnalysesCtrl',
-    controllerAs: 'analysesCtrl',
+    templateUrl: '/static/partials/analysis-monitor/partials/global-list-status-popover.html',
+    controller: 'AnalysisMonitorCtrl',
+    controllerAs: 'analysisMonitorCtrl',
     bindToController: {
        analysesGlobalList: '@'
     }
