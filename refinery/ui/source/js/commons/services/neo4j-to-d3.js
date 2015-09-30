@@ -16,7 +16,7 @@ function buildTree (results) {
       len,
       nodes = {
         'owl:Thing': {
-          // Fortunately `owl:Thing` the mandatory root for any ontology.
+          // Fortunately `owl:Thing` is the mandatory root for any ontology.
           name: 'owl:Thing',
           children: []
         }
@@ -85,7 +85,9 @@ function buildTree (results) {
       childIndex[currentParent.name] = {};
     }
 
-    if (!(currentChild.name in childIndex[currentParent.name])) {
+    // According to https://jsperf.com/key-or-array-search/9
+    // void 0 (which is _undefined_) scales best.
+    if (childIndex[currentParent.name][currentChild.name] === void 0) {
       nodes[currentParent.name].children.push(nodes[currentChild.name]);
       childIndex[currentParent.name][currentChild.name] = true;
     }
