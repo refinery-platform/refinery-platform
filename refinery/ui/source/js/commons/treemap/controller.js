@@ -17,8 +17,6 @@
  */
 function TreemapCtrl ($element, $q, $, d3, HEX, D3Colors, treemapSettings,
   pubSub, dashboardTreemapPreloader) {
-  console.log('Init Treemap');
-
   this.$ = $;
   this.$q = $q;
   this.d3 = d3;
