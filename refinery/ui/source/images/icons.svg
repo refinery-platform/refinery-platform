@@ -1,5 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg">
   <symbol id="arrow-left" viewBox="0 0 24 24">
-    <path d="M17 5.856L14.11 3 5 12l9.11 9L17 18.145 10.78 12 17 5.856z"/>
+    <path
+      d="M17 5.856L14.11 3 5 12l9.11 9L17 18.145 10.78 12 17 5.856z"
+      fill="currentColor"/>
   </symbol>
 </svg>

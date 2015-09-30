@@ -1,15 +1,26 @@
+@import "variables.less";
+
+@top-bar-height: 24px;
+
 .treemapWrapper .top-bar {
   position: relative;
-  top: 0;
+  top: -5px;
   left: 0;
   width: 100%;
   height: 100%;
-}
-
-.treemapWrapper .top-bar {
-  height: 3em;
+  height: @top-bar-height + 1px;
   color: #444;
-  border-bottom: 1px solid #dcdcdc;
+  box-shadow: inset 0 -1px 0 0 lighten(@grayLight, 25%);
+
+  label {
+    margin: 0;
+    padding: 0;
+    line-height: @top-bar-height;
+  }
+
+  .floatbox-max-right {
+    height: 100%;
+  }
 }
 
 .treemapWrapper .top-bar ul {
@@ -22,7 +33,7 @@
   li {
     display: inline-block;
     position: relative;
-    line-height: 3em;
+    line-height: @top-bar-height;
     max-width: 25%;
 
     &:first-child {
@@ -34,50 +45,58 @@
     position: relative;
     display: inline-block;
     top: 0;
-    width: 0.8em;
-    height: 0.8em;
-    margin-right: 0.25em;
+    width: 0.66em;
+    height: 0.66em;
   }
 
   .text {
     display: inline-block;
-    line-height: 2em;
+    line-height: @top-bar-height;
+  }
+
+  .icon-arrow-left {
+    color: @grayLight;
   }
 
   .current-root {
-
     .text {
-      padding: 0 0.5em;
+      position: relative;
+      padding: 0 0.25em;
       color: #000;
       font-weight: bold;
-      border-radius: 0.25em;
-      background: #efefef;
+
+      &:before {
+        position: absolute;
+        display: block;
+        content: '';
+        bottom: -1px;
+        left: 4px;
+        right: 4px;
+        height: 1px;
+        background: fade(@blueShadow, 50%);
+        box-shadow: 0 0 8px 0 @blueShadow;
+      }
     }
   }
 
   a {
     display: block;
-    line-height: 3em;
+    line-height: @top-bar-height;
     padding: 0 0.25em;
-    transition: all $transitionFast $easeInOutCubic;
+    transition: all @fastTransitionSpeed @easeInOutCubic;
     cursor: pointer;
 
     &:hover {
-      background: rgba(255, 247, 217, 0.5);
-      box-shadow: 0 1px 0 0 rgba(255, 150, 0, 1);
-    }
-
-    &:focus,
-    &:active {
-      outline: none;
-      background: rgba(255, 247, 217, 1);
-      box-shadow: 0 1px 0 0 rgba(255, 150, 0, 1), inset 0 -2px 0 0 rgba(255, 150, 0, 1);
+      .text {
+        color: @black;
+        text-decoration: underline;
+      }
     }
   }
 }
 
 .treemapWrapper .top-bar > div {
-  line-height: 3em;
+  line-height: @top-bar-height;
 }
 
 .treemapWrapper .top-bar > .left {
@@ -86,7 +105,7 @@
   left: 0;
   right: 20%;
   bottom: 0;
-  margin: 0 0.5em;
+  margin: 0 0.5em 0 0;
   overflow: hidden;
 }
 
@@ -103,25 +122,26 @@
 .treemapWrapper .top-bar > .right:before {
   position: absolute;
   content: '';
-  dispplay: block;
   top: 0;
   left: 0;
   bottom: 0;
   width: 1px;
-  background: #dcdcdc;
+  background: lighten(@grayLight, 25%);
 }
 
 .treemapWrapper .top-bar input,
 .treemapWrapper .top-bar button {
-  display: inline-block;
-  margin: 0 0.25em;
-  padding: 1em;
+  display: block;
+  margin: 0;
+  padding: 0 0.25em;
   color: inherit;
   font-size: 1em;
   font-weight: 300;
-  line-height: 1em;
+  line-height: @top-bar-height;
   border: 0;
   background: transparent;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .treemapWrapper .top-bar button {
@@ -145,142 +165,29 @@
 }
 
 .treemapWrapper .top-bar input {
-  height: 1em;
+  box-sizing: border-box;
+  height: 100%;
   width: 100%;
-  transition: all $transitionFast $easeInOutCubic;
+  transition: all @fastTransitionSpeed @easeInOutCubic;
 }
 
 .treemapWrapper .top-bar input:hover {
-  background: rgba(255, 247, 217, 0.5);
-  box-shadow: 0 1px 0 0 rgba(255, 150, 0, 1);
+  box-shadow: inset 0 -1px 0 0 fade(@blueShadow, 50%);
 }
 
 .treemapWrapper .top-bar input:focus,
 .treemapWrapper .top-bar input:active {
   outline: none;
-  background: rgba(255, 247, 217, 1);
-  box-shadow: 0 1px 0 0 rgba(255, 150, 0, 1), inset 0 -2px 0 0 rgba(255, 150, 0, 1);
+  box-shadow: inset 0 -1px 0 0 fade(@blueShadow, 50%), inset 10px 0 8px -8px white, inset -10px 0 8px -8px white, inset 0 -8px 8px -8px @blueShadow;
 }
 
 .treemap {
   position: absolute;
-  top: 3.5em;
-  right: 0.5em;
-  bottom: 0.5em;
-  left: 0.5em;
+  top: @top-bar-height + 5px;
+  right: 5px;
+  bottom: 5px;
+  left: 5px;
 }
-
-// DIV
-
-.treemap.div {
-  overflow: hidden;
-
-  .wrapper {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    transform-origin: 0 0;
-    transition: transform 5s $easeInOutCubic;
-  }
-
-  .node {
-    font-size: 1em;
-    overflow: hidden;
-    position: absolute;
-    transition: opacity   $transitionSemiFast $easeInOutQuadric,
-                transform $transitionSemiFast $easeInOutQuadric,
-                transform $transitionSemiFast $easeInOutQuadric,
-                top 5s $easeInOutCubic,
-                left 5s $easeInOutCubic,
-                width 5s $easeInOutCubic,
-                height 5s $easeInOutCubic;
-
-    .name {
-      display: none;
-      position: absolute;
-      top: 0.25em;
-      left: 0.25em;
-      font-size: 0.8em;
-      line-height: 1.25em;
-      cursor: default;
-      -webkit-touch-callout: none;
-        -webkit-user-select: none;
-         -khtml-user-select: none;
-           -moz-user-select: none;
-            -ms-user-select: none;
-                user-select: none;
-
-      &.rotated {
-        height: 1em;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        // Left: 1em Top: center (= 50%)
-        transform-origin: 0.5em center;  // 0.5 / 0.8 em
-        transform: rotate(90deg);
-      }
-    }
-
-    &.last,
-    &.leaf {
-      box-shadow: inset 0 0 0 1px white;
-
-      .name {
-        display: block;
-      }
-    }
-
-    &.inner-node {
-      &.last {
-        box-shadow: inset 0 0 0 1px white, inset 0 0 0 2px rgba(0, 0, 0, 1);
-
-        &:hover {
-          cursor: pointer;
-
-          &:after {
-            position: absolute;
-            z-index: 1;
-            content: '';
-            top: 1px;
-            right: 1px;
-            bottom: 1px;
-            left: 1px;
-            background: rgba(0, 0, 0, 0.66);
-          }
-
-          .name {
-            z-index: 2;
-            color: #fff;
-            cursor: pointer;
-          }
-        }
-      }
-    }
-
-    &.leaf:before {
-      position: absolute;
-      content: '';
-      top: 2px;
-      right: 2px;
-      bottom: 2px;
-      left: 2px;
-      box-sizing: border-box;
-      border: 1px dashed white;
-    }
-
-    &.hidden {
-      display: none;
-    }
-  }
-
-  .group {
-
-  }
-}
-
-// SVG
 
 .treemap svg {
   width: 100%;

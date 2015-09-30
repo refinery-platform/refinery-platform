@@ -815,7 +815,7 @@ TreemapCtrl.prototype.setBreadCrumb = function (node) {
       .append('svg')
         .attr('class', 'icon-arrow-left is-mirrored')
         .append('use')
-          .attr('xlink:href', 'assets/images/icons.svg#arrow-left');
+          .attr('xlink:href', '/static/images/icons.svg#arrow-left');
   }
 
   current
@@ -836,7 +836,7 @@ TreemapCtrl.prototype.setBreadCrumb = function (node) {
         .append('svg')
           .attr('class', 'icon-arrow-left is-mirrored')
           .append('use')
-            .attr('xlink:href', 'assets/images/icons.svg#arrow-left');
+            .attr('xlink:href', '/static/images/icons.svg#arrow-left');
     }
 
     crumb
