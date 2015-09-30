@@ -9,12 +9,13 @@
     &nbsp;<em>Retrieving recent analyses.</em>
   </div>
   <div ng-switch-default>
-    <ul id="analyses-popover" ng-repeat ="analysis in analysesCtrl.analysesGlobalList track by $index">
+    <ul id="analyses-popover"
+      ng-repeat ="analysis in AMCtrl.analysesGlobalList track by $index">
       <li>
         &nbsp;
         <span ng-switch on="analysis.status">
           <span ng-switch-when="UNKNOWN">
-             <div ng-if="(analysisMonitorCtrl.isAnalysesRunningGlobal())"
+             <div ng-if="(AMCtrl.isAnalysesRunningGlobal())"
                class="analysis-running-percentage">
               &nbsp;
             </div>
@@ -29,7 +30,7 @@
           <span ng-switch-when="RUNNING">
             <div ng-if="(AMCtrl.isAnalysesRunningGlobal())"
               class="analysis-running-percentage">
-              {{ analysesCtrl.analysesGlobalDetail[analysis.uuid]|
+              {{ AMCtrl.analysesGlobalDetail[analysis.uuid]|
                 analysisMonitorRunningStatusPercent }}
             </div>
             <div class="analyses-global-text-icon">
