@@ -170,6 +170,12 @@ function DashboardCtrl (
       //     this.showDataSetPreview(this.findDataSet(toParams.uuid), true);
       //   }.bind(this), 0);
       // }
+      if (toState.name === 'launchPad') {
+        $timeout(function () {
+          this.collapseDataSetPreview();
+          this.collapseDatasetExploration();
+        }.bind(this), 0);
+      }
       if (toState.name === 'launchPad.exploration') {
         // Need to wait another digestion cycle to ensure the layout is set
         // properly.
@@ -429,19 +435,6 @@ DashboardCtrl.prototype.getDataSetOptions = function () {
     }.bind(this));
 };
 
-// DashboardCtrl.prototype.toggleDataSetsExploration = function () {
-//   var that = this;
-
-//   that.expandDataSetPanel = !that.expandDataSetPanel;
-//   that.$timeout(function () {
-//     if (that.expandDataSetPanel === true) {
-//       that.$state.go('dataSetsExploration');
-//     } else {
-//       that.$state.go('launchPad');
-//     }
-//   }, 250);
-// };
-
 DashboardCtrl.prototype.resetDataSetSearch = function () {
   this.searchQueryDataSets = '';
   this.setDataSetSource();
@@ -506,14 +499,14 @@ DashboardCtrl.prototype.showDataSetPreview = function (dataSet, fromStateEvent) 
     this.dataSetPreview = true;
   } else {
     if (dataSet.preview) {
-      this.hideDataSetPreview(dataSet);
+      this.collapseDataSetPreview(dataSet);
     } else {
       this.dashboardDataSetPreviewService.preview(dataSet);
     }
   }
 };
 
-DashboardCtrl.prototype.hideDataSetPreview = function (dataSet) {
+DashboardCtrl.prototype.collapseDataSetPreview = function (dataSet) {
   this.$state.transitionTo(
     'launchPad',
     {},
