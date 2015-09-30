@@ -21,8 +21,7 @@ def extra_context(context):
 
     for setting in dir(settings):
         if setting in settings.UI_ACCESSIBLE_SETTINGS:
-            setattr(UiAccessibleSettings, setting, getattr(settings,
-                                                             setting))
+            setattr(UiAccessibleSettings, setting, getattr(settings, setting))
 
     setattr(UiAccessibleSettings, "REFINERY_BASE_URL",
             json.loads(site_model)[0]["fields"]["domain"])
