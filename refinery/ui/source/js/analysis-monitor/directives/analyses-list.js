@@ -70,7 +70,7 @@ function analysisMonitorAnalysesList() {
 
       scope.pageCount = function() {
         var totalPages = Math.ceil(
-          scope.AnalysisMonitorCtrl.analysesList.length/scope.itemsPerPage
+          scope.AMCtrl.analysesList.length/scope.itemsPerPage
         );
 
         return totalPages;
