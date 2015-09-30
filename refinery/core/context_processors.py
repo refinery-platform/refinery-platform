@@ -16,20 +16,20 @@ from django.core import serializers
 def extra_context(context):
     site_model = serializers.serialize("json", Site.objects.all())
 
-    class UI_ACCESSIBLE_SETTINGS:
+    class UiAccessibleSettings:
         pass
 
     for setting in dir(settings):
         if setting in settings.UI_ACCESSIBLE_SETTINGS:
-            setattr(UI_ACCESSIBLE_SETTINGS, setting, getattr(settings,
+            setattr(UiAccessibleSettings, setting, getattr(settings,
                                                              setting))
 
-    setattr(UI_ACCESSIBLE_SETTINGS, "REFINERY_BASE_URL",
+    setattr(UiAccessibleSettings, "REFINERY_BASE_URL",
             json.loads(site_model)[0]["fields"]["domain"])
-    setattr(UI_ACCESSIBLE_SETTINGS, "REFINERY_INSTANCE_NAME", json.loads(
+    setattr(UiAccessibleSettings, "REFINERY_INSTANCE_NAME", json.loads(
         site_model)[0]["fields"]["name"])
 
     return {
-        "refinerySettings": UI_ACCESSIBLE_SETTINGS.__dict__,
-        "refinerySettingsObj": json.dumps(UI_ACCESSIBLE_SETTINGS.__dict__)
+        "refinerySettings": UiAccessibleSettings.__dict__,
+        "refinerySettingsObj": json.dumps(UiAccessibleSettings.__dict__)
     }
