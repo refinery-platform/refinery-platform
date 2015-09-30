@@ -1,6 +1,6 @@
-angular.module('refineryAnalyses').filter('analysesOffset',analysesOffset);
+angular.module('refineryAnalysisMonitor').filter('analysisMonitorOffset',analysisMonitorOffset);
 
-function analysesOffset(){
+function analysisMonitorOffset(){
   return function(input, start) {
     start = parseInt(start, 10);
     return input.slice(start);

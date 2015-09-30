@@ -1,6 +1,6 @@
-angular.module('refineryAnalyses').filter('analysesFormatMilliTime',analysesFormatMilliTime);
+angular.module('refineryAnalysisMonitor').filter('analysisMonitorFormatMilliTime',analysisMonitorFormatMilliTime);
 
-function analysesFormatMilliTime(){
+function analysisMonitorFormatMilliTime(){
 
   var milliToReadStr = function(milliSec){
     var days = Math.floor(milliSec / 86400000);

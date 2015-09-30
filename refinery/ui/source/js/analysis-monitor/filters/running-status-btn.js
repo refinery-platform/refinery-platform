@@ -1,7 +1,8 @@
-angular.module('refineryAnalyses').filter('analysesRunningStatusBtn',analysesRunningStatusBtn);
+angular.module('refineryAnalysisMonitor')
+  .filter('analysisMonitorRunningStatusBtn',analysisMonitorRunningStatusBtn);
 
 //stage icon for the global analysis
-function analysesRunningStatusBtn(){
+function analysisMonitorRunningStatusBtn(){
   return function(param){
     if (typeof param !== "undefined") {
       if (param.preprocessing !== "SUCCESS") {

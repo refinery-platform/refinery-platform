@@ -1,7 +1,8 @@
-angular.module('refineryAnalyses').filter('analysesRunningStatusPercent',analysesRunningStatusPercent);
+angular.module('refineryAnalysisMonitor')
+  .filter('analysisMonitorRunningStatusPercent',analysisMonitorRunningStatusPercent);
 
 //stage percent for the global analysis
-function analysesRunningStatusPercent(){
+function analysisMonitorRunningStatusPercent(){
   return function(param) {
     if (typeof param !== "undefined") {
       if (param.preprocessing !== "SUCCESS") {
