@@ -1,7 +1,12 @@
-angular.module('refineryAnalyses')
-  .directive("rpAnalysesStartTimeTooltip", ["$filter", rpAnalysesStartTimeTooltip]);
+angular.module('refineryAnalysisMonitor')
+  .directive("rpAnalysisMonitorStartTimeTooltip",
+  [
+    "$filter",
+    rpAnalysisMonitorStartTimeTooltip
+  ]
+);
 
-function rpAnalysesStartTimeTooltip($filter) {
+function rpAnalysisMonitorStartTimeTooltip($filter) {
   "use strict";
 
   return {

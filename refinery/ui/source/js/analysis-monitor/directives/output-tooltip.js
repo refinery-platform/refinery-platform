@@ -1,7 +1,7 @@
-angular.module('refineryAnalyses')
-  .directive("rpAnalysesOutputTooltip", rpAnalysesOutputTooltip);
+angular.module('refineryAnalysisMonitor')
+  .directive("rpAnalysisMonitorOutputTooltip", rpAnalysisMonitorOutputTooltip);
 
-function rpAnalysesOutputTooltip() {
+function rpAnalysisMonitorOutputTooltip() {
   "use strict";
 
   return {

@@ -1,7 +1,12 @@
 angular.module('refineryAnalysisMonitor')
-    .directive("analysesList", ['$rootScope',analysesList]);
+    .directive("analysisMonitorAnalysesList",
+  [
+    '$rootScope',
+    analysisMonitorAnalysesList
+  ]
+);
 
-function analysesList() {
+function analysisMonitorAnalysesList() {
     "use strict";
 
   return {
@@ -65,7 +70,7 @@ function analysesList() {
 
       scope.pageCount = function() {
         var totalPages = Math.ceil(
-          scope.AnalysesCtrl.analysesList.length/scope.itemsPerPage
+          scope.AnalysisMonitorCtrl.analysesList.length/scope.itemsPerPage
         );
 
         return totalPages;

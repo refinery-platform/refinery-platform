@@ -1,27 +1,27 @@
-angular.module('refineryAnalyses')
-  .directive("rpAnalysesRunningTabIcon", rpAnalysesRunningTabIcon);
+angular.module('refineryAnalysisMonitor')
+  .directive("rpAnalysisMonitorRunningTabIcon", rpAnalysisMonitorRunningTabIcon);
 
-function rpAnalysesRunningTabIcon() {
+function rpAnalysisRunningTabIcon() {
   "use strict";
 
   return {
     restrict: 'A',
-    templateUrl: '/static/partials/analyses/partials/analyses-running-tab-icon.html',
-    controller: 'AnalysesCtrl',
-    controllerAs: 'analysesCtrl',
+    templateUrl: '/static/partials/analysis-monitor/partials/running-tab-icon.html',
+    controller: 'AnalysisMonitorCtrl',
+    controllerAs: 'analysisMonitorCtrl',
     bindToController: {
       launchAnalysisFlag: '='
     },
     link: function (scope, element, attr) {
       //if an analysis is launched, then the running list needs to be updated.
-     scope.analysesCtrl.updateAnalysesRunningList();
+     scope.analysisMonitorCtrl.updateAnalysesRunningList();
       scope.$on("rf/launchAnalysis", function (e) {
-        scope.analysesCtrl.launchAnalysisFlag = true;
+        scope.analysisMonitorCtrl.launchAnalysisFlag = true;
       });
       
       scope.$on("rf/cancelAnalysis", function(e){
-        scope.analysesCtrl.cancelTimerRunningList();
-        scope.analysesCtrl.updateAnalysesRunningList();
+        scope.analysisMonitorCtrl.cancelTimerRunningList();
+        scope.analysisMonitorCtrl.updateAnalysesRunningList();
       });
     }
   };
