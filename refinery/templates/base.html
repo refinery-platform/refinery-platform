@@ -6,7 +6,7 @@
 <html lang="en">
 <head>
     <meta content="text/html">
-  	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
 
@@ -21,7 +21,7 @@
     <!-- Le styles -->
     {% for css_file in refinerySettings.REFINERY_CSS %}
     <link href="{% static css_file %}" rel="stylesheet">
-   	{% endfor %}
+    {% endfor %}
     <style type="text/css">
       body {
         /*padding-top: {{ refinerySettings.REFINERY_INNER_NAVBAR_HEIGHT|add:"20" }}px;*/
@@ -37,20 +37,20 @@
 
     {% block tracking %}
 
-	    {% if refinerySettings.REFINERY_GOOGLE_ANALYTICS_ID != "" %}
-			<script type="text/javascript">
+      {% if refinerySettings.REFINERY_GOOGLE_ANALYTICS_ID != "" %}
+      <script type="text/javascript">
 
-			  var _gaq = _gaq || [];
-			  _gaq.push(['_setAccount', '{{ refinerySettings.REFINERY_GOOGLE_ANALYTICS_ID }}']);
-			  _gaq.push(['_trackPageview']);
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', '{{ refinerySettings.REFINERY_GOOGLE_ANALYTICS_ID }}']);
+        _gaq.push(['_trackPageview']);
 
-			  (function() {
-			    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-			    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-			    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-			  })();
-			</script>
-		{% endif %}
+        (function() {
+          var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+          ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+          var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+      </script>
+    {% endif %}
 
     {% endblock %}
 </head>
@@ -71,7 +71,7 @@
         <a class="brand" href="{% url "home" %}">
           {% if refinerySettings.REFINERY_MAIN_LOGO != False %}
             {% if refinerySettings.REFINERY_MAIN_LOGO != '' %}
-          	<img
+            <img
               class="m-r-1-5"
               style="height: {{ REFINERY_INNER_NAVBAR_HEIGHT }} px"
               src="{% static refinerySettings.REFINERY_MAIN_LOGO %}" />
@@ -147,9 +147,9 @@
   </div>
 
   {% if refinerySettings.REFINERY_BANNER %}
-      {% if not refinerySettings.REFINERY_BANNER_ANONYMOUS_ONLY or not user.is_authenticated %}
-          <div class="alert text-center">{{ refinerySettings.REFINERY_BANNER|safe }}</div>
-      {% endif %}
+    {% if not refinerySettings.REFINERY_BANNER_ANONYMOUS_ONLY or not user.is_authenticated %}
+      <div class="alert text-center">{{ refinerySettings.REFINERY_BANNER|safe }}</div>
+    {% endif %}
   {% endif %}
 
   <div class="container-fluid {% if main_container_no_padding %}p-l-0 p-r-0{% endif %}">
@@ -168,14 +168,14 @@
   </div>
 
   <!-- Script for popup content in the tool status and analyses icon-->
-     <script type="text/ng-template" id="analysesgloballist.html">
-        <rp-analysis-monitor-global-list-status-popover-details>
-        </rp-analysis-monitor-global-list-status-popover-details>
-    </script>
-     <script type="text/ng-template" id="analysislaunchmodal.html">
-        <rp-analysis-launch-modal-detail>
-        </rp-analysis-launch-modal-detail>
-    </script>
+  <script type="text/ng-template" id="analysesgloballist.html">
+    <rp-analysis-monitor-global-list-status-popover-details>
+    </rp-analysis-monitor-global-list-status-popover-details>
+  </script>
+  <script type="text/ng-template" id="analysislaunchmodal.html">
+    <rp-analysis-launch-modal-detail>
+    </rp-analysis-launch-modal-detail>
+  </script>
 
   <!-- 3rd party libraries -->
   <script src="{% static "vendor/jquery/dist/jquery.min.js" %}"></script>
@@ -193,7 +193,7 @@
   <script src="{% static "vendor/ng-webworker/src/ng-webworker.min.js" %}"></script>
   <script src="{% static "vendor/ng-webworker/src/worker_wrapper.min.js" %}"></script>
   <script src="{% static "js/bootstrap/bootstrap.min.js" %}"></script>
-  <script src="{% static "vendor/lodash-3/lodash.min.js" %}"></script>
+  <script src="{% static "vendor/lodash/lodash.min.js" %}"></script>
   <script type="text/javascript">
     // Assign lodash v3.9.3 to a special variable so it doesn't conflict with
     // lodash v2 or other libraries like underscore.
@@ -238,88 +238,87 @@
   <script src="{% static "js/data-set-import.js" %}"></script>
 
   {% block script %}
-	{% endblock %}
+  {% endblock %}
 
-	<script type="text/javascript">
-		// activate bootstrap tooltips
-	    $('a[rel=tooltip]').tooltip();
+  <script type="text/javascript">
+    // activate bootstrap tooltips
+      $('a[rel=tooltip]').tooltip();
 
     var username = '{{ user.username }}';
     var user_id = '{{ user.id }}';
     var refinerySettings = JSON.parse('{{ refinerySettingsObj|safe }}');
-        console.log(refinerySettings);
 
 
-		function sizing() {
-		    var windowWidth = $(window).width(),
+    function sizing() {
+        var windowWidth = $(window).width(),
             windowHeight = $(window).height();
 
-		    if(windowWidth <= 767) {
-		    	$('.jquery-full-height').css('height', 'inherit' );
-		    }
-		    else {
-			    $('.jquery-full-height').map( function() {
+        if(windowWidth <= 767) {
+          $('.jquery-full-height').css('height', 'inherit' );
+        }
+        else {
+          $('.jquery-full-height').map( function() {
             var $this = $(this),
                 targetHeight = (windowHeight - $this.offset().top - 40),
                 minHeight = parseInt($this.css("min-height")),
                 newHeight = Math.max(targetHeight, minHeight);
 
-			    	$this.css('height', newHeight + 'px');
-		    	});
-	    	}
-		}
+            $this.css('height', newHeight + 'px');
+          });
+        }
+    }
 
     $(window).on(
       'resize.jqfullheight orientationchange.jqfullheight',
       sizing
     );
 
-		$(document).ready( function(){
-			sizing();
+    $(document).ready( function(){
+      sizing();
 
-			// detect IE: https://gist.github.com/527683
-			// ----------------------------------------------------------
-			// A short snippet for detecting versions of IE in JavaScript
-			// without resorting to user-agent sniffing
-			// ----------------------------------------------------------
-			// If you're not in IE (or IE version is less than 5) then:
-			//     ie === undefined
-			// If you're in IE (>=5) then you can determine which version:
-			//     ie === 7; // IE7
-			// Thus, to detect IE:
-			//     if (ie) {}
-			// And to detect the version:
-			//     ie === 6 // IE6
-			//     ie > 7 // IE8, IE9 ...
-			//     ie < 9 // Anything less than IE9
-			// ----------------------------------------------------------
+      // detect IE: https://gist.github.com/527683
+      // ----------------------------------------------------------
+      // A short snippet for detecting versions of IE in JavaScript
+      // without resorting to user-agent sniffing
+      // ----------------------------------------------------------
+      // If you're not in IE (or IE version is less than 5) then:
+      //     ie === undefined
+      // If you're in IE (>=5) then you can determine which version:
+      //     ie === 7; // IE7
+      // Thus, to detect IE:
+      //     if (ie) {}
+      // And to detect the version:
+      //     ie === 6 // IE6
+      //     ie > 7 // IE8, IE9 ...
+      //     ie < 9 // Anything less than IE9
+      // ----------------------------------------------------------
 
-			// UPDATE: Now using Live NodeList idea from @jdalton
+      // UPDATE: Now using Live NodeList idea from @jdalton
 
-			var ie = (function(){
+      var ie = (function(){
 
-			    var undef,
-			        v = 3,
-			        div = document.createElement('div'),
-			        all = div.getElementsByTagName('i');
+          var undef,
+              v = 3,
+              div = document.createElement('div'),
+              all = div.getElementsByTagName('i');
 
-			    while (
-			        div.innerHTML = '<!--[if gt IE ' + (++v) + ']><i></i><![endif]-->',
-			        all[0]
-			    );
+          while (
+              div.innerHTML = '<!--[if gt IE ' + (++v) + ']><i></i><![endif]-->',
+              all[0]
+          );
 
-			    return v > 4 ? v : undef;
+          return v > 4 ? v : undef;
 
-			}());
+      }());
 
-	  // jQuery > 1.9.0 no longer supports UA sniffing
+    // jQuery > 1.9.0 no longer supports UA sniffing
       // if ( ie !== undefined || $.browser.msie ) {
       if ( ie !== undefined ) {
-				// detected IE
-				$( "#warning-ie-not-supported" ).show();
-				sizing();
-			}
-		});
-	</script>
+        // detected IE
+        $( "#warning-ie-not-supported" ).show();
+        sizing();
+      }
+    });
+  </script>
 </body>
 </html>
