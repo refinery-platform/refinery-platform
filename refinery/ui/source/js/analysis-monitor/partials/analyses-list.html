@@ -142,17 +142,17 @@
                    </div>
                 </div>
 
-              <div ng-show="AMCtrl.isAnalysisDetailLoaded(analysis.uuid)">
+                <div ng-show="AMCtrl.isAnalysisDetailLoaded(analysis.uuid)">
                   <ul class="analysisRunningList">
-                    <span ng-if="AnalysesCtrl.analysesDetail[analysis.uuid]
-+                      .cancelingAnalyses == true ||
-+                      AnalysesCtrl.initializedFlag[analysis.uuid] == true">
-+                      <li id="analyses-cancel-notice">
-+                        <div class="alert alert-warning">
-+                          Canceling...
-+                        </div>
-+                      </li>
-+                    </span>
+                    <span ng-if="AMCtrl.analysesDetail[analysis.uuid]
+                    .cancelingAnalyses == true ||
+                    AMCtrl.initializedFlag[analysis.uuid] == true">
+                     <li id="analyses-cancel-notice">
+                        <div class="alert alert-warning">
+                          Canceling...
+                        </div>
+                      </li>
+                    </span>
 
                     <li class="analysisRunningListItem">
                       Input File Import
