@@ -1,10 +1,11 @@
-angular.module('refineryAnalyses').directive("rpAnalysesCancelConfirm", rpAnalysesCancelConfirm);
+angular.module('refineryAnalysisMonitor')
+  .directive("rpAnalysisMonitorCancelConfirm", rpAnalysisMonitorCancelConfirm);
 
 
-function rpAnalysesCancelConfirm() {
+function rpAnalysisMonitorCancelConfirm() {
   "use strict";
   return {
-    controller: 'AnalysesCtrl',
+    controller: 'AnalysisMonitorCtrl',
     link: function (scope, element, attr) {
       var msg = "<h3>Cancel Analysis?</h3><p>Are you sure you want to" +
         " cancel this analysis?</p>";
