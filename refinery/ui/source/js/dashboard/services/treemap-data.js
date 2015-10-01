@@ -1,5 +1,9 @@
-function DashboardTreemapPreloader ($q, neo4jToD3) {
+function DashboardTreemapData ($q, neo4jToD3) {
   var deferred = $q.defer();
+
+  function updateAnnotationData (data, annotations) {
+
+  }
 
   function Data () {}
 
@@ -12,6 +16,12 @@ function DashboardTreemapPreloader ($q, neo4jToD3) {
       .catch(function (e) {
         deferred.reject(e);
       });
+  };
+
+  Data.prototype.updateAnnotations = function () {
+    this.data.then(function (data) {
+
+    });
   };
 
   Object.defineProperty(
@@ -29,8 +39,8 @@ function DashboardTreemapPreloader ($q, neo4jToD3) {
 
 angular
   .module('refineryDashboard')
-  .factory('dashboardTreemapPreloader', [
+  .factory('dashboardTreemapData', [
     '$q',
     'neo4jToD3',
-    DashboardTreemapPreloader
+    DashboardTreemapData
   ]);
