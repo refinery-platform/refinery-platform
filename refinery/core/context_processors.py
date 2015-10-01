@@ -7,7 +7,8 @@ Created on Aug 23, 2012
 # a context processor to pass settings variables to views by default
 # from: http://stackoverflow.com/q/433162
 
-import json, logging
+import json
+import logging
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core import serializers
