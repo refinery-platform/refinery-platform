@@ -6,14 +6,20 @@ function rpAnalysisMonitorGlobalListStatus(){
 
   return {
     templateUrl: '/static/partials/analysis-monitor/partials/global-list-status.html',
-    restrict: 'A',
+    restrict: 'AE',
     controller: 'AnalysisMonitorCtrl',
     controllerAs: 'AMCtrl',
     bindToController: {
-      launchAnalysisFlag: '='
+      launchAnalysisFlag: '=',
+      analysesRunningGlobalListCount: '=',
+      analysesRunningGlobalList: '&',
     },
-    link: function(scope, element, attr){
+    link: function(scope, element, attr, AMCtrl){
       scope.AMCtrl.updateAnalysesRunningGlobalList();
+      console.log("in global");
+       console.log(scope.$id);
+
+
       scope.$on("rf/launchAnalysis", function (e) {
         scope.AMCtrl.launchAnalysisFlag = true;
         scope.AMCtrl.analysesRunningGlobalListCount =
