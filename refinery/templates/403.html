@@ -23,7 +23,7 @@
 			If you would like to {{msg}}, click <a href="{% url 'django.contrib.auth.views.logout' %}?next={% url 'django.contrib.auth.views.login' %}?next={% if request.path %}{{ request.path|safe }}{% else %}{% url 'home' %}{% endif %}">here</a> to log out and log in again as a different user.
 			<br /><br />
 			If you believe you reached this page in error, please contact your
-            <a href='mailto:{{refinerySettings.ADMINS.0.1}}?Subject=Refinery%20Error' target='_top'>System Administrator</a>.
+            <a href='mailto:{{ADMINS.0.1}}?Subject=Refinery%20Error' target='_top'>System Administrator</a>.
 		</p>
 	</div>
 </div>
