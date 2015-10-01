@@ -9,7 +9,7 @@ function rpAnalysisMonitorGlobalListStatusPopoverDetails() {
     restrict: 'E',
     templateUrl: '/static/partials/analysis-monitor/partials/global-list-status-popover.html',
     controller: 'AnalysisMonitorCtrl',
-    controllerAs: 'AMCtrl',
+    controllerAs: 'PopAMCtrl',
     bindToController: {
        analysesGlobalList: '@'
     }
