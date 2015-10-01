@@ -1,0 +1,22 @@
+<div class="content-container" ng-class="{'hidden': !visWrapper.active}">
+  <div ng-if="visWrapper.active">
+    <div
+      class="refinery-panel-topbar"
+      ng-class="{'allow-overflow': visWrapper.ready}">
+      <div
+        class="floatbox"
+        ng-class="{'allow-overflow': visWrapper.ready}">
+        <div class="floatbox-min-right"></div>
+        <div class="floatbox-max-left">
+          <h4>Repository exploration</h4>
+        </div>
+      </div>
+    </div>
+    <div class="refinery-global-spinner" ng-if="visWrapper.loading !== false">
+      <div class="refinery-spinner"></div>
+    </div>
+    <div class="content">
+      <treemap ng-if="visWrapper.ready"></treemap>
+    </div>
+  </div>
+</div>

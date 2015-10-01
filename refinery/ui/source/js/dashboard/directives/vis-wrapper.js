@@ -1,12 +1,12 @@
-function refineryExplorationWrapper () {
+function refineryDashboardVisWrapper () {
   'use strict';
 
-  function ExplorationWrapperCtrl ($q, pubSub, dashboardTreemapPreloader) {
+  function VisWrapperCtrl ($q, pubSub, dashboardTreemapData, treemapContext) {
     this.$q = $q;
     this.pubSub = pubSub;
 
     // Trigger preloading / precomputing of D3 data for exploration.
-    dashboardTreemapPreloader.load();
+    dashboardTreemapData.load();
 
     this.loading = true;
     this.treemapLoading = $q.defer();
@@ -36,21 +36,22 @@ function refineryExplorationWrapper () {
     controller: [
       '$q',
       'pubSub',
-      'dashboardTreemapPreloader',
-      ExplorationWrapperCtrl
+      'dashboardTreemapData',
+      'treemapContext',
+      VisWrapperCtrl
     ],
-    controllerAs: 'explorationWrapper',
+    controllerAs: 'visWrapper',
     restrict: 'E',
     replace: true,
     scope: {
       active: '='
     },
-    templateUrl: '/static/partials/dashboard/directives/exploration-wrapper.html'
+    templateUrl: '/static/partials/dashboard/directives/vis-wrapper.html'
   };
 }
 
 angular
   .module('refineryDashboard')
-  .directive('refineryExplorationWrapper', [
-    refineryExplorationWrapper
+  .directive('refineryDashboardVisWrapper', [
+    refineryDashboardVisWrapper
   ]);
