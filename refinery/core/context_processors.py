@@ -19,10 +19,12 @@ def extra_context(context):
     class UiAccessibleSettings:
         pass
 
-    for setting in dir(settings):
-        if setting in settings.UI_ACCESSIBLE_SETTINGS:
-            setattr(UiAccessibleSettings, setting, getattr(settings, setting))
+    # populate UiAccessibleSettings based on the settings specified within
+    # UI_ACCESSIBLE_SETTINGS in config.json
+    [setattr(UiAccessibleSettings, setting, getattr(settings, setting)) for
+     setting in dir(settings) if setting in settings.UI_ACCESSIBLE_SETTINGS]
 
+    # Add settings from the Site model
     setattr(UiAccessibleSettings, "REFINERY_BASE_URL",
             json.loads(site_model)[0]["fields"]["domain"])
     setattr(UiAccessibleSettings, "REFINERY_INSTANCE_NAME", json.loads(
