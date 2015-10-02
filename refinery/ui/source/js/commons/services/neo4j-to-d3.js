@@ -17,7 +17,9 @@ function buildTree (results) {
       nodes = {
         'owl:Thing': {
           // Fortunately `owl:Thing` is the mandatory root for any ontology.
-          name: 'owl:Thing',
+          name: 'Root',
+          ontID: 'OWL:Thing',
+          uri: 'http://www.w3.org/2002/07/owl#Thing',
           children: []
         }
       },
