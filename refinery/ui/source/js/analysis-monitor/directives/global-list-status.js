@@ -16,9 +16,6 @@ function rpAnalysisMonitorGlobalListStatus(){
     },
     link: function(scope, element, attr, AMCtrl){
       scope.AMCtrl.updateAnalysesRunningGlobalList();
-      console.log("in global");
-       console.log(scope.$id);
-
 
       scope.$on("rf/launchAnalysis", function (e) {
         scope.AMCtrl.launchAnalysisFlag = true;
