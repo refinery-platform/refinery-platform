@@ -9,6 +9,7 @@ Created on Aug 23, 2012
 
 import json
 import logging
+
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core import serializers
@@ -27,7 +28,7 @@ def extra_context(context):
         try:
             ui_accessible_settings[setting] = getattr(settings, setting)
         except AttributeError:
-            logger.error("%s not found in config.json" % setting)
+            logger.warn("%s not found in config.json" % setting)
 
     # Add settings from the Site model
     ui_accessible_settings["REFINERY_BASE_URL"] = json.loads(site_model)[
