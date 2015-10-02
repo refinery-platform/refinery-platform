@@ -343,7 +343,7 @@
 
       var facetSelectionUpdated = function (arguments) {
         query.clearDocumentSelection();
-        query.setDocumentSelectionBlacklistMode(true);
+        query.setDocumentSelectionBlacklistMode(false);
         client.run(query, SOLR_FULL_QUERY);
 
         // clone query to update pivot matrix view
