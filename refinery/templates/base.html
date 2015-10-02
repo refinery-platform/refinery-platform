@@ -68,7 +68,7 @@
           <span class="icon-bar"></span>
         </a>
 
-        <a class="brand" href="{% url "home" %}">
+        <a class="brand" href="{% url "home" %}" tabindex=1>
           {% if REFINERY_MAIN_LOGO != False %}
             {% if REFINERY_MAIN_LOGO != '' %}
           	<img
@@ -96,25 +96,34 @@
         <p class="navbar-text pull-right">
         {% if user.is_authenticated %}
           <i class="icon-user"></i>
-          <a href="{% url "user" user.get_profile.uuid %}">
+          <a href="{% url "user" user.get_profile.uuid %}" tabindex=5>
           {% if user.first_name != "" or user.last_name != "" %}
             {{ user.first_name }} {{ user.last_name }}
           {% else %}
             {{ user.username }}
           {% endif %}
           </a>&nbsp;&nbsp;|&nbsp;&nbsp;
-          <i class="icon-signout"></i>&nbsp;<a href="{% url "django.contrib.auth.views.logout" %}?next={% url "home" %}">Logout</a>
+          <i class="icon-signout"></i>&nbsp;
+          <a href="
+          {% url "django.contrib.auth.views.logout" %}?next={% url "home" %}"
+          tabindex=6>
+            Logout
+          </a>
         {% else %}
           {% url 'registration.views.register' as registration_url %}
           {% url 'django.contrib.auth.views.login' as login_url %}
           {% if REGISTRATION_OPEN %}
-          <a rel="tooltip" data-placement="left" title="Sign Up" href="{{registration_url}}">Register</a>&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+          <a rel="tooltip" data-placement="left" title="Sign Up"
+            href="{{registration_url}}" tabindex=7>
+            Register
+          </a>&nbsp;&nbsp;
+            &nbsp;&nbsp;|&nbsp;&nbsp;
         {% endif %}
         <i class="icon-signin"></i>&nbsp;<a rel="tooltip" data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
         {% endif %}
         &nbsp;&nbsp;|&nbsp;&nbsp;
         <span id="analyses-popover">
-          <a rp-analysis-monitor-global-list-status-popover
+          <a tabindex=8 rp-analysis-monitor-global-list-status-popover
             title="Recent Analyses">
              <span rp-analysis-monitor-global-list-status></span>
           </a>
@@ -127,9 +136,15 @@
             <li class="{{ navbar_class_search }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url "search" %}">Search</a></li>
             <li class="{{ navbar_class_contact }}"><a href="{% url "contact" %}">Contact</a></li>
             -->
-            <li class="{{ navbar_class_collaboration }}"><a href="{% url "collaboration" %}">Collaboration</a></li>
-            <li class="{{ navbar_class_statistics }}"><a href="{% url "statistics" %}">Statistics</a></li>
-            <li class="{{ navbar_class_about }}"><a href="{% url "about" %}">About</a></li>
+            <li class="{{ navbar_class_collaboration }}">
+              <a href="{% url "collaboration" %}" tabindex=2>Collaboration</a>
+            </li>
+            <li class="{{ navbar_class_statistics }}">
+              <a href="{% url "statistics" %}" tabindex=3>Statistics</a>
+            </li>
+            <li class="{{ navbar_class_about }}">
+              <a href="{% url "about" %}" tabindex=4>About</a>
+            </li>
           </ul>
         </div>
       </div>
