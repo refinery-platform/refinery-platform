@@ -21,7 +21,8 @@ function DashboardCtrl (
   dashboardDataSetsReloadService,
   dashboardWidthFixerService,
   dashboardExpandablePanelService,
-  dashboardDataSetPreviewService) {
+  dashboardDataSetPreviewService,
+  treemapContext) {
   var that = this;
 
   // Construct Angular modules
@@ -45,6 +46,7 @@ function DashboardCtrl (
   this.dashboardWidthFixerService = dashboardWidthFixerService;
   this.dashboardExpandablePanelService = dashboardExpandablePanelService;
   this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
+  this.treemapContext = treemapContext;
 
   // Construct class variables
   this.dataSetServiceLoading = false;
@@ -176,6 +178,9 @@ function DashboardCtrl (
         }.bind(this), 0);
       }
       if (toState.name === 'launchPad.exploration') {
+        if (toParams.context) {
+          this.treemapRoot = toParams.context;
+        }
         // Need to wait another digestion cycle to ensure the layout is set
         // properly.
         $timeout(function () {
@@ -193,6 +198,19 @@ function DashboardCtrl (
     this.dataSetsAdapter.reload();
     this.analysesAdapter.reload();
     this.workflowsAdapter.reload();
+  }.bind(this));
+
+  this.treemapContext.on('root', function (root) {
+    this.$state.transitionTo(
+      this.$state.current,
+      {
+        context: root ? root : null
+      },
+      {
+        inherit: true,
+        notify: false
+      }
+    );
   }.bind(this));
 }
 
@@ -348,6 +366,19 @@ Object.defineProperty(
 
       this.triggerSorting('workflows');
       this.checkWorkflowsFilterSort();
+    }
+});
+
+Object.defineProperty(
+  DashboardCtrl.prototype,
+  'treemapRoot', {
+    enumerable: true,
+    configurable: false,
+    get: function () {
+      return this.treemapContext.get('root');
+    },
+    set: function (value) {
+      this.treemapContext.set('root', value);
     }
 });
 
@@ -591,5 +622,6 @@ angular
     'dashboardWidthFixerService',
     'dashboardExpandablePanelService',
     'dashboardDataSetPreviewService',
+    'treemapContext',
     DashboardCtrl
   ]);

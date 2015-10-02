@@ -16,7 +16,7 @@
  * @param   {Object}     settings   Treemap settings.
  */
 function TreemapCtrl ($element, $q, $, d3, HEX, D3Colors, treemapSettings,
-  pubSub, dashboardTreemapPreloader) {
+  pubSub, dashboardTreemapData, treemapContext) {
   this.$ = $;
   this.$q = $q;
   this.d3 = d3;
@@ -25,6 +25,7 @@ function TreemapCtrl ($element, $q, $, d3, HEX, D3Colors, treemapSettings,
   this.$d3Element = this.$element.find('.treemap svg');
   this.settings = treemapSettings;
   this.pubSub = pubSub;
+  this.treemapContext = treemapContext;
 
   this._visibleDepth = 1;
   this.currentLevel = 0;
@@ -64,7 +65,7 @@ function TreemapCtrl ($element, $q, $, d3, HEX, D3Colors, treemapSettings,
   this.treemap.$grandParent = this.$(this.treemap.grandParent.node());
   this.treemap.$grandParentContainer = this.treemap.$grandParent.parent();
 
-  dashboardTreemapPreloader
+  dashboardTreemapData
     .data
     .then(function (data) {
       this.data = data;
@@ -582,6 +583,12 @@ TreemapCtrl.prototype.draw = function () {
   this.display(this.data, true);
 
   this.addEventListeners();
+
+  if (this.treemapContext.get('root')) {
+    console.log('not implemented yet');
+  } else {
+    this.treemapContext.set('root', this.data.ontID);
+  }
 };
 
 /**
@@ -883,7 +890,7 @@ TreemapCtrl.prototype.transition = function (el, data) {
 
   // After all newly added inner nodes and leafs have been faded in we call the
   // zoom transition.
-  newGroups[1]
+  var transition = newGroups[1]
     .then(function () {
       // Fade in animations finished
       newGroups = newGroups[0];
@@ -935,6 +942,10 @@ TreemapCtrl.prototype.transition = function (el, data) {
     .catch(function (e) {
       console.error(e);
     });
+
+  transition.then(function () {
+    this.treemapContext.set('root', data.ontID);
+  }.bind(this));
 };
 
 
@@ -1045,6 +1056,7 @@ angular
     'D3Colors',
     'treemapSettings',
     'pubSub',
-    'dashboardTreemapPreloader',
+    'dashboardTreemapData',
+    'treemapContext',
     TreemapCtrl
   ]);

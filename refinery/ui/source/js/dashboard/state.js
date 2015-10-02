@@ -17,7 +17,7 @@ angular
         .state(
           'launchPad.exploration',
           {
-            url: 'exploration',
+            url: 'exploration?context',
           },
           '/'
         )
