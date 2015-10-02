@@ -22,8 +22,16 @@
       <h4>Inputs ({{currentWorkflow.getCategory()}})</h4>
     </div>
     <div>
-      <label style="color: #6A41AE;"><b><i>{{currentWorkflow.getInputSet(1)}}<br/></i></b></label>
-      <label style="color: #278F63;" ng-hide="currentWorkflow.isSingleInput()"><b><i>{{currentWorkflow.getInputSet(2)}}<br/></i></b></label>
+      <span style="color: #6A41AE;">
+        <b><i>
+        {{currentWorkflow.getInputSet(1)}}
+        <br/></i></b>
+      </span>
+      <span style="color: #278F63;" ng-hide="currentWorkflow.isSingleInput()">
+        <b><i>
+          {{currentWorkflow.getInputSet(2)}}
+          <br/></i></b>
+      </span>
     </div>
 
     <div ng-controller="NodeSetListApiCtrl" ng-if="currentWorkflow.isSingleInput()">
