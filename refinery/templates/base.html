@@ -22,13 +22,6 @@
     {% for css_file in REFINERY_CSS %}
     <link href="{% static css_file %}" rel="stylesheet">
    	{% endfor %}
-    <style type="text/css">
-      body {
-        /*padding-top: {{ REFINERY_INNER_NAVBAR_HEIGHT|add:"20" }}px;*/
-        /*padding-bottom: 40px;*/
-         /*position: relative;*/
-      }
-    </style>
 
     {% block head_html %}
     {% endblock %}
