@@ -312,7 +312,7 @@
                         {% endif %}
 
                         <div id="view-selector-div">
-                          <span id="label-display">Display </span>
+                          <label id="label-display" for="s2id_autogen1">Display</label>
                           <select id="view-selector">
                             <option value="table-view-tab">Table</option>
                             <option value="pivot-view-tab">Matrix</option>
@@ -736,7 +736,6 @@
 
       setInterval(function(){
           sizing();
-          
       }, 500);
 
       $( "#view-selector" ).select2({minimumResultsForSearch: -1});
