@@ -172,10 +172,12 @@ function DashboardCtrl (
       //   }.bind(this), 0);
       // }
       if (toState.name === 'launchPad') {
-        $timeout(function () {
-          this.collapseDataSetPreview();
-          this.collapseDatasetExploration();
-        }.bind(this), 0);
+        if (this.expandDataSetPanel) {
+          $timeout(function () {
+            this.collapseDataSetPreview();
+            this.collapseDatasetExploration();
+          }.bind(this), 0);
+        }
       }
       if (toState.name === 'launchPad.exploration') {
         if (toParams.context) {
