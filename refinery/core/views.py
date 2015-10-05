@@ -526,11 +526,18 @@ def analysis(request, analysis_uuid):
 
 
 def solr_core_search(request):
-    """Augmenting Solr queries to ensure only allowed access, is currently only
-    available for querying core indexes
+    """Query Solr's core index for search.
+
+    Queries are augmented with user and group information so that no datasets
+    is returned for which the user has no access.
     """
     url = settings.REFINERY_SOLR_BASE_URL + "core/select"
-    data = request.GET.dict()
+
+    headers = {
+        'Accept': 'application/json'
+    }
+
+    params = request.GET.dict()
     # Generate access list
     if not request.user.is_superuser:
         if request.user.id is None:
@@ -539,12 +546,11 @@ def solr_core_search(request):
             access = ['u_{}'.format(request.user.id)]
             for group in request.user.groups.all():
                 access.append('g_{}'.format(group.id))
-        data['fq'] = data['fq'] + ' AND access:({})'.format(
+        params['fq'] = params['fq'] + ' AND access:({})'.format(
             ' OR '.join(access))
-    req = urllib2.Request(url, urllib.urlencode(data))
-    f = urllib2.urlopen(req)
-    response = f.read()
-    f.close()
+
+    response = requests.get(url, params=params, headers=headers)
+
     return HttpResponse(response, mimetype='application/json')
 
 
