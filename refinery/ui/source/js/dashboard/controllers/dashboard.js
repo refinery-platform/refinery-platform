@@ -181,7 +181,10 @@ function DashboardCtrl (
       }
       if (toState.name === 'launchPad.exploration') {
         if (toParams.context) {
-          this.treemapRoot = toParams.context;
+          this.treemapRoot = {
+            branchId: toParams.branchId ? toParams.branchId : 0,
+            ontId: toParams.context
+          };
         }
         // Need to wait another digestion cycle to ensure the layout is set
         // properly.
@@ -206,7 +209,8 @@ function DashboardCtrl (
     this.$state.transitionTo(
       this.$state.current,
       {
-        context: root ? root : null
+        context: root ? root.ontId : null,
+        branchId: root ? root.branchId : null,
       },
       {
         inherit: true,

@@ -311,7 +311,7 @@ TreemapCtrl.prototype.addEventListeners = function () {
      * this = the clicked DOM element
      * data = data
      */
-    that.transition(this, this.__data__);
+    that.transition(this.__data__);
   });
 
   this.treemap.$element.on(
@@ -329,7 +329,7 @@ TreemapCtrl.prototype.addEventListeners = function () {
         return;
       }
 
-      that.transition(this, this.__data__);
+      that.transition(this.__data__);
     }
   );
 
@@ -554,7 +554,7 @@ TreemapCtrl.prototype.display = function (node, firstTime) {
 };
 
 /**
- * Draw the treemap.
+ * Draws the treemap.
  *
  * This is kind of a constructor for the actual visualization. It executes all
  * methods needed to get prepare the data, register event listeners and finally
@@ -582,13 +582,26 @@ TreemapCtrl.prototype.draw = function () {
 
   this.display(this.data, true);
 
-  this.addEventListeners();
+  var rootNodeData;
 
-  if (this.treemapContext.get('root')) {
-    console.log('not implemented yet');
-  } else {
-    this.treemapContext.set('root', this.data.ontID);
+  try {
+    rootNodeData = this.cacheTerms[this.rootNode.ontId][this.rootNode.branchId];
+  } catch (e) {
+    console.error('Node not found.', e);
   }
+
+  if (rootNodeData) {
+    this.transition(
+      rootNodeData
+    );
+  } else {
+    this.rootNode = {
+      branchId: 0,
+      ontId: this.data.ontID
+    };
+  }
+
+  this.addEventListeners();
 };
 
 /**
@@ -673,6 +686,14 @@ TreemapCtrl.prototype.layout = function (parent, depth) {
   // Initialize a cache object used later
   parent.cache = {};
   parent.meta.depth = depth;
+  // Cache the the branch id for each node, which is needed to uniquely identify
+  // the position of a selected term.
+  if (parent.ontID in this.cacheTerms) {
+    parent.cache.branchId = this.cacheTerms[parent.ontID].push(parent) - 1;
+  } else {
+    this.cacheTerms[parent.ontID] = [parent];
+    parent.cache.branchId = 0;
+  }
   if (parent._children && parent._children.length) {
     this.depth = Math.max(this.depth, depth + 1);
     // This creates an anonymous 1px x 1px treemap and sets the children's
@@ -876,7 +897,7 @@ TreemapCtrl.prototype.setBreadCrumb = function (node) {
  * @date    2015-08-03
  * @param   {Object}  data  D3 data object of the node to transition to.
  */
-TreemapCtrl.prototype.transition = function (el, data) {
+TreemapCtrl.prototype.transition = function (data) {
   if (this.treemap.transitioning || !data) {
     return;
   }
@@ -944,7 +965,10 @@ TreemapCtrl.prototype.transition = function (el, data) {
     });
 
   transition.then(function () {
-    this.treemapContext.set('root', data.ontID);
+    this.rootNode = {
+      ontId: data.ontID,
+      branchId: data.cache.branchId
+    };
   }.bind(this));
 };
 
@@ -954,6 +978,23 @@ TreemapCtrl.prototype.transition = function (el, data) {
  * Properties
  * -----------------------------------------------------------------------------
  */
+
+/**
+ * Cache objects of ontology terms pointing to the nodes in the tree.
+ *
+ * @author  Fritz Lekschas
+ * @date    2015-10-02
+ * @type  {Object}
+ */
+Object.defineProperty(
+  TreemapCtrl.prototype,
+  'cacheTerms',
+  {
+    configurable: false,
+    enumerable: true,
+    value: {},
+    writable: true
+});
 
 /**
  * Holds all nodes per level.
@@ -977,8 +1018,8 @@ Object.defineProperty(
  * D3 data object.
  *
  * @author  Fritz Lekschas
- * @date    2015-08-04
- * @type    {Boolean}
+ * @date    2015-10-02
+ * @type    {Object}
  */
 Object.defineProperty(
   TreemapCtrl.prototype,
@@ -1008,6 +1049,51 @@ Object.defineProperty(
 });
 
 /**
+ * Current root node.
+ *
+ * This variable is needed to distinguish context changes initiated by the
+ * treemap form external changes.
+ *
+ * @author  Fritz Lekschas
+ * @date    2015-10-05
+ * @type    {Boolean}
+ */
+Object.defineProperty(
+  TreemapCtrl.prototype,
+  'rootNode',
+  {
+    configurable: false,
+    enumerable: true,
+    get: function () {
+      return this.treemapContext.get('root');
+    },
+    set: function (root) {
+      this.treemapContext.set('root', {
+        ontId: root.ontId,
+        branchId: root.branchId
+      });
+      this.transition(this.cacheTerms[root.ontId][root.branchId]);
+    }
+});
+
+/**
+ * Object holding the actual D3 treemap and related data.
+ *
+ * @author  Fritz Lekschas
+ * @date    2015-10-02
+ * @type  {Object}
+ */
+Object.defineProperty(
+  TreemapCtrl.prototype,
+  'treemap',
+  {
+    configurable: false,
+    enumerable: true,
+    value: {},
+    writable: true
+});
+
+/**
  * Number of visible levels below the current level.
  *
  * @author  Fritz Lekschas
@@ -1028,21 +1114,6 @@ Object.defineProperty(
       this._visibleDepth = Math.min(Math.max(1, visibleDepth), this.depth);
       this.adjustLevelDepth(oldVisibleDepth);
     }
-});
-
-/**
- * Object holding the actual D3 treemap and related data.
- *
- * @type  {Object}
- */
-Object.defineProperty(
-  TreemapCtrl.prototype,
-  'treemap',
-  {
-    configurable: false,
-    enumerable: true,
-    value: {},
-    writable: true
 });
 
 angular
