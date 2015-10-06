@@ -159,7 +159,7 @@ function DashboardCtrl (
       $window.sizing();
       if (toParams.q) {
         this.searchQueryDataSets = toParams.q;
-        this.setDataSetSource(toParams.q);
+        this.setDataSetSource(toParams.q, true);
       }
       // Need to implement a method for finding a dataset by uuid first. The
       // reason why is that we need to link to the specific dataset object
@@ -476,28 +476,36 @@ DashboardCtrl.prototype.resetDataSetSearch = function () {
   this.setDataSetSource();
 };
 
-DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
+DashboardCtrl.prototype.setDataSetSource = function (searchQuery,
+  fromStateEvent) {
   var that = this;
 
   this.showFilterSort = false;
 
-  this.$state.transitionTo(
-    this.$state.current,
-    {
-      q: searchQuery ? searchQuery : null
-    },
-    {
-      inherit: true,
-      notify: false
-    }
-  );
+  if (!fromStateEvent) {
+    this.$state.transitionTo(
+      this.$state.current,
+      {
+        q: searchQuery ? searchQuery : null
+      },
+      {
+        inherit: true,
+        notify: false
+      }
+    );
+  }
 
   if (searchQuery) {
     if (searchQuery.length > 1) {
       that.searchDataSet = true;
       var searchResults = new this.dashboardDataSetSearchService(searchQuery);
       this.dataSets.set(searchResults, searchQuery);
-      that.dashboardDataSetsReloadService.reload();
+      // Sometimes the `ui-scroll` didn't stop showing the loading spinner. It
+      // seems like we need to wait for one digestion cycle before reloading the
+      // directive.
+      this.$timeout(function() {
+        that.dashboardDataSetsReloadService.reload();
+      }, 0);
     }
   } else {
     this.dataSets.set(this.dashboardDataSetListService);
