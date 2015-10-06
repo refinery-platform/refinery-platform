@@ -543,11 +543,11 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function (parentElem
 
     var self = this;
     //Hide paginator if getCurrentDocumentCount() >= _documentsPerPage
-    if (self._query.getCurrentDocumentCount() >= self._documentsPerPage) {
+    if (self._query.getTotalDocumentCount() >= self._documentsPerPage) {
 
       $("#" + parentElementId).html("");
 
-      var availablePages = Math.max(0, Math.floor((self._query.getCurrentDocumentCount(false) - 1) / self._documentsPerPage));
+      var availablePages = Math.max(0, Math.floor((self._query.getTotalDocumentCount(false) - 1) / self._documentsPerPage));
       var currentPage = Math.floor(self._query.getDocumentIndex() / self._documentsPerPage);
       if (currentPage > availablePages) {
         currentPage = availablePages;
