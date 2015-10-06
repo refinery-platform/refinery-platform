@@ -392,28 +392,28 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     def prepend_urls(self):
         prepend_urls_list = SharableResourceAPIInterface.prepend_urls(self) + [
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/investigation%s$' % (
-                self._meta.resource_name,
-                self.uuid_regex,
-                trailing_slash()
-            ),
+                    self._meta.resource_name,
+                    self.uuid_regex,
+                    trailing_slash()
+                ),
                 self.wrap_view('get_investigation'),
                 name='api_%s_get_investigation' % (
                     self._meta.resource_name)
                 ),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/studies%s$' % (
-                self._meta.resource_name,
-                self.uuid_regex,
-                trailing_slash()
-            ),
+                    self._meta.resource_name,
+                    self.uuid_regex,
+                    trailing_slash()
+                ),
                 self.wrap_view('get_studies'),
                 name='api_%s_get_studies' % (
                     self._meta.resource_name
                 )),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/analyses%s$' % (
-                self._meta.resource_name,
-                self.uuid_regex,
-                trailing_slash()
-            ),
+                    self._meta.resource_name,
+                    self.uuid_regex,
+                    trailing_slash()
+                ),
                 self.wrap_view('get_analyses'),
                 name='api_%s_get_analyses' % (
                     self._meta.resource_name
