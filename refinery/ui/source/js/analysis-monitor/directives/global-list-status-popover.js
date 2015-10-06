@@ -19,7 +19,7 @@ function rpAnalysisMonitorGlobalListStatusPopover(
   return {
     restrict: "AE",
     controller: 'AnalysisMonitorCtrl',
-    controllerAs: 'AMCtrl',
+    controllerAs: 'PopAMCtrl',
     link: function (scope, element, attrs) {
       //The script is in the base.html template.
       var template = $templateCache.get("analysesgloballist.html");
@@ -42,14 +42,14 @@ function rpAnalysisMonitorGlobalListStatusPopover(
            e.target.id === 'global-analysis-status-run-div'){
           $('#global-analysis-status-run-div').tooltip('hide');
           $('#global-analysis-status').tooltip('hide');
-          scope.AMCtrl.updateAnalysesGlobalList();
+          scope.PopAMCtrl.updateAnalysesGlobalList();
         }
         if ((e.target.id !== 'global-analysis-status-run' &&
           e.target.id !== 'global-analysis-status') &&
           e.target.id !== 'global-analysis-status-run-div' &&
           $(e.target).parents('.popover.in').length === 0) {
           $(element).popover('hide');
-          scope.AMCtrl.cancelTimerGlobalList();
+          scope.PopAMCtrl.cancelTimerGlobalList();
         }
       });
     },

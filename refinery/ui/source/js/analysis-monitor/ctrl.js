@@ -169,12 +169,10 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
     analysisMonitorFactory.postCancelAnalysis(uuid).then(function (result) {
       $timeout.cancel(vm.timerList);
       vm.updateAnalysesList().then(function(response) {
-        bootbox.alert("Successfully canceled analysis.");
         $rootScope.$broadcast("rf/cancelAnalysis");
         vm.setCancelAnalysisFlag(false, uuid);
       });
     }, function (error) {
-      bootbox.alert("Canceling analysis failed");
       vm.setCancelAnalysisFlag(false, uuid);
     });
   };

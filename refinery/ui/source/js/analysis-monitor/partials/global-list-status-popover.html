@@ -1,4 +1,4 @@
-<div ng-switch on="AMCtrl.analysesGlobalLoadingFlag">
+<div ng-switch on="PopAMCtrl.analysesGlobalLoadingFlag">
   <div ng-switch-when="EMPTY">
     <p>
       No analyses performed.
@@ -10,12 +10,12 @@
   </div>
   <div ng-switch-default>
     <ul id="analyses-popover"
-      ng-repeat ="analysis in AMCtrl.analysesGlobalList track by $index">
+      ng-repeat ="analysis in PopAMCtrl.analysesGlobalList track by $index">
       <li>
         &nbsp;
         <span ng-switch on="analysis.status">
           <span ng-switch-when="UNKNOWN">
-             <div ng-if="(AMCtrl.isAnalysesRunningGlobal())"
+             <div ng-if="(PopAMCtrl.isAnalysesRunningGlobal())"
                class="analysis-running-percentage">
               &nbsp;
             </div>
@@ -28,13 +28,13 @@
             </div>
           </span>
           <span ng-switch-when="RUNNING">
-            <div ng-if="(AMCtrl.isAnalysesRunningGlobal())"
+            <div ng-if="(PopAMCtrl.isAnalysesRunningGlobal())"
               class="analysis-running-percentage">
-              {{ AMCtrl.analysesGlobalDetail[analysis.uuid]|
+              {{ PopAMCtrl.analysesGlobalDetail[analysis.uuid]|
                 analysisMonitorRunningStatusPercent }}
             </div>
             <div class="analyses-global-text-icon">
-               <i class="{{AMCtrl.analysesGlobalDetail[analysis
+               <i class="{{PopAMCtrl.analysesGlobalDetail[analysis
                  .uuid]|analysisMonitorRunningStatusBtn}}"></i>
                 &nbsp;
             </div>
@@ -45,7 +45,7 @@
             </div>
           </span>
           <span ng-switch-default>
-            <div ng-if="(AMCtrl.isAnalysesRunningGlobal())"
+            <div ng-if="(PopAMCtrl.isAnalysesRunningGlobal())"
               class="analysis-running-percentage">
               &nbsp;
             </div>
