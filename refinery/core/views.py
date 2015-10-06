@@ -5,6 +5,7 @@ import urllib
 import xmltodict
 import py2neo
 
+from django.utils import simplejson
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -530,6 +531,11 @@ def solr_core_search(request):
 
     Queries are augmented with user and group information so that no datasets
     is returned for which the user has no access.
+
+    For visualizing the repository it's important to know all datasets right
+    from the beginning. Because Django and Solr most likely run on the same
+    server, it's better to prefetch all dataset uuid and send them back
+    altogether rather than having to query from the client side twice.
     """
     url = settings.REFINERY_SOLR_BASE_URL + "core/select"
 
@@ -549,7 +555,41 @@ def solr_core_search(request):
         params['fq'] = params['fq'] + ' AND access:({})'.format(
             ' OR '.join(access))
 
+    all_uuids = False
+    if 'allUuids' in params:
+        all_uuids = True
+        # Remove the special parameter to avoid conflicts with Solr
+        del params['allUuids']
+
     response = requests.get(url, params=params, headers=headers)
+
+    if all_uuids:
+        # Query for all uuids given the same query. Solr shold be very fast
+        # because we just queried for almost the same information, only limited
+        # in size.
+        uuid_params = {
+            'defType': params['defType'],
+            'fl': 'uuid',
+            'fq': params['fq'],
+            'q': params['q'],
+            'qf': params['qf'],
+            'rows': 2147483647,
+            'start': 0,
+            'wt': 'json'
+        }
+        response_uuids = requests.get(url, params=uuid_params, headers=headers)
+
+        if response_uuids.status_code == 200:
+            response_uuids = response_uuids.json()
+            uuids = []
+            for uuid in response_uuids['response']['docs']:
+                uuids.append(uuid['uuid'])
+
+            response = response.json()
+            response['response']['uuid'] = uuids
+
+            # response = json.dumps(response)
+            response = simplejson.dumps(response)
 
     return HttpResponse(response, mimetype='application/json')
 
