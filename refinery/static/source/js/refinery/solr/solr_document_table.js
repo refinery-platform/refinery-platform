@@ -183,7 +183,7 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
 
   // attach event to node selection mode checkbox
   $("#" + "node-selection-mode").click(function(event) {
-    if (self._query.getDocumentSelectionBlacklistMode()) {
+    if (!($(this).prop("checked"))){
       self._query.setDocumentSelectionBlacklistMode(false);
       self._query.clearDocumentSelection();
       // update individual checkboxes in table
@@ -219,20 +219,16 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
     var totalCheckbox = $(".document-checkbox-select").length;
     var totalCheckboxSelect = $('.document-checkbox-select:checked').length;
 
-    if(totalCheckboxSelect > 0 && totalCheckboxSelect < totalCheckbox){
+    if(totalCheckboxSelect > 0 && totalCheckboxSelect < totalCheckbox) {
       checkAllNodes.checked = true;
       checkAllNodes.indeterminate = true;
-      self._query.setDocumentSelectionBlacklistMode(true);
     }else if(totalCheckboxSelect > 0 && totalCheckboxSelect === totalCheckbox) {
       checkAllNodes.indeterminate = false;
       checkAllNodes.checked = true;
-      self._query.setDocumentSelectionBlacklistMode(true);
     }else{
       checkAllNodes.indeterminate = false;
       checkAllNodes.checked = false;
-      self._query.setDocumentSelectionBlacklistMode(false);
     }
-
     self._commands.execute(
       SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, {'uuid': uuid, 'event': event});
   });
