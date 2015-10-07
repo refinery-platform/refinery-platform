@@ -48,6 +48,8 @@
   "REFINERY_BANNER_ANONYMOUS_ONLY": false,
   "REFINERY_DATA_IMPORT_DIR": "/vagrant/import",
   "REFINERY_EXTERNAL_AUTH": false,
+  "REFINERY_EXTERNAL_AUTH": false,
+  "REFINERY_EXTERNAL_AUTH_MESSAGE": "",
   "REFINERY_EXTERNAL_AUTH_MESSAGE": "",
   "REFINERY_FILE_SOURCE_MAP": {},
   "REFINERY_GOOGLE_ANALYTICS_ID": "",
@@ -65,11 +67,12 @@
   "STATIC_ROOT": "",
   "STATIC_URL": "/static/",
   "TIME_ZONE": "America/New_York",
+  "TIMEOUT": {
+    "CELERY": 2.0,
+    "GALAXY": 2.0,
+    "SOLR": 2.5
+  },
   "TOKEN_DURATION": 3,
-  "USE_I18N": true,
-  "USE_L10N": true,
-  "REFINERY_EXTERNAL_AUTH": false,
-  "REFINERY_EXTERNAL_AUTH_MESSAGE": "",
   "UI_ACCESSIBLE_SETTINGS": [
     "ADMINS",
     "REFINERY_CSS",
@@ -90,9 +93,6 @@
     "REFINERY_EXTERNAL_AUTH_MESSAGE",
     "STATIC_URL"
   ],
-  "TIMEOUT": {
-    "CELERY": 2.0,
-    "GALAXY": 2.0,
-    "SOLR": 2.5
-  }
+  "USE_I18N": true,
+  "USE_L10N": true
 }
