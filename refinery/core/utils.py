@@ -217,7 +217,10 @@ def delete_data_set_neo4j(dataset_uuid):
 
 
 def delete_ontology_from_neo4j(acronym):
-    """Remove all classes that belong exclusively to an ontology.
+    """Remove ontology and all class nodes that belong exclusively to an
+    ontology.
+
+    Class nodes associated to multiple ontology will not be deleted.
     """
 
     logger.debug('Deleting ontology (acronym: %s) from Neo4J', acronym)
@@ -231,16 +234,24 @@ def delete_ontology_from_neo4j(acronym):
     # Note 2: The reason for using the oldschool, e.g. `%`, way of composing
     # the string is due to the fact that `format()` conflicts with the
     # parameterized Cypher query.
-    statement = (
+    statement_nodes = (
         "MATCH (c:Class:%s) "
         "WHERE ALL (l IN labels(c) WHERE l='Class' OR l={acronym})"
         "OPTIONAL MATCH (c)-[r]-() "
         "DELETE c, r"
     ) % acronym
 
+    statement_ontology = "MATCH (o:Ontology {acronym:{acronym}}) DELETE o"
+
     try:
         graph.cypher.execute(
-            statement,
+            statement_nodes,
+            parameters={
+                'acronym': acronym
+            }
+        )
+        graph.cypher.execute(
+            statement_ontology,
             parameters={
                 'acronym': acronym
             }

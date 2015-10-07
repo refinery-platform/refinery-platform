@@ -105,6 +105,13 @@ class Command(BaseCommand):
                 }
             )
 
+            version = graph.cypher.execute_one(
+                'MATCH (o:Ontology {acronym:{acronym}}) RETURN o.version',
+                parameters={
+                    'acronym': options['ontology_abbr']
+                }
+            )
+
             if not uri:
                 raise Exception(
                     'No ontology with the given name was found. It is most ' +
@@ -114,7 +121,8 @@ class Command(BaseCommand):
             create_update_ontology(
                 options['ontology_name'],
                 options['ontology_abbr'],
-                uri
+                uri,
+                version
             )
         except Exception, e:
             logger.error(e)
