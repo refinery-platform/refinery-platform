@@ -14,6 +14,8 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.signals import user_logged_in
+from django.contrib.messages import get_messages
+from django.contrib.messages import info
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.mail import mail_admins, send_mail
 from django.db import models, transaction
@@ -125,8 +127,17 @@ user_registered.connect(
 )
 
 
+def messages_dedup(request, msg):
+    # Gets rid duplicate messages in the message queue, provided w/ a
+    # message  to check for
+    if msg not in [m.message for m in get_messages(request)]:
+        info(request, msg)
+
+
 def register_handler(request, sender, user, **kwargs):
+    messages_dedup(request, 'Thank you!  Your account has been activated.')
     messages.success(request, 'Thank you!  Your account has been activated.')
+
 
 user_activated.connect(register_handler, dispatch_uid='activated')
 
