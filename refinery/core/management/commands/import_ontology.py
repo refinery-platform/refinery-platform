@@ -57,14 +57,14 @@ class Command(BaseCommand):
 
         if options['ontology_abbr']:
             options['ontology_abbr'] = options['ontology_abbr'].upper()
-            options['ontology_abbr'] = '"' + options['ontology_abbr'] + '"'
+            ontology_abbr = '"' + options['ontology_abbr'] + '"'
         else:
-            options['ontology_abbr'] = ''
+            ontology_abbr = ''
 
         if options['ontology_name']:
-            options['ontology_name'] = '"' + options['ontology_name'] + '"'
+            ontology_name = '"' + options['ontology_name'] + '"'
         else:
-            options['ontology_name'] = ''
+            ontology_name = ''
 
         if options['eqp']:
             options['eqp'] = '-eqp ' + options['eqp']
@@ -78,8 +78,8 @@ class Command(BaseCommand):
                     eel=settings.JAVA_ENTITY_EXPANSION_LIMIT,
                     lib=settings.LIBS_DIR,
                     ontology=options['ontology_file'],
-                    name=options['ontology_name'],
-                    abbr=options['ontology_abbr'],
+                    name=ontology_name,
+                    abbr=ontology_abbr,
                     eqp=options['eqp'],
                     server=settings.NEO4J_BASE_URL,
                     verbosity=('-v' if int(options['verbosity']) == 2 else '')
@@ -98,21 +98,14 @@ class Command(BaseCommand):
             # Connects to `http://localhost:7474/db/data/` by default.
             graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
 
-            results = graph.cypher.execute(
-                'MATCH (o:Ontology {acronym:{acronym}}) RETURN o',
+            uri = graph.cypher.execute_one(
+                'MATCH (o:Ontology {acronym:{acronym}}) RETURN o.uri',
                 parameters={
                     'acronym': options['ontology_abbr']
                 }
             )
 
-            if len(results) == 1:
-                base_uri = results[0]['uri']
-            elif len(results) > 1:
-                raise Exception(
-                    'Multiple ontologies with the same name were found. ' +
-                    'Please clean up the mess first!'
-                )
-            else:
+            if not uri:
                 raise Exception(
                     'No ontology with the given name was found. It is most ' +
                     'likely that the actual import into Neo4J failed.'
@@ -121,8 +114,8 @@ class Command(BaseCommand):
             create_update_ontology(
                 options['ontology_name'],
                 options['ontology_abbr'],
-                base_uri
+                uri
             )
         except Exception, e:
-            logger.error(e.output)
+            logger.error(e)
             sys.exit(1)
