@@ -252,6 +252,9 @@ def delete_ontology_from_neo4j(acronym):
         )
         graph.cypher.execute(
             statement_ontology,
+            parameters={
+                'acronym': acronym
+            }
         )
     except Exception, e:
         logger.error(
