@@ -1305,3 +1305,22 @@ def _add_user_to_neo4j(sender, **kwargs):
         ),
         [kwargs['instance'].id]
     )
+
+
+class Ontology (models.Model):
+    """Store meta information of imported ontologies
+    """
+
+    # Full name of the ontology
+    # E.g.: Gene Ontology
+    name = models.CharField(max_length=64, blank=True)
+
+    # Equals the abbreviation / acronym / prefix specified during the import.
+    # Note that prefix constist of uppercase letters only. Similar to the OBO
+    # naming convention.
+    # E.g.: GO
+    prefix = models.CharField(max_length=8, blank=True)
+
+    # Base URI of the ontology
+    # E.g.: http://purl.obolibrary.org/obo/go.owl
+    uri = models.CharField(max_length=128, blank=True)
