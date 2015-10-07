@@ -1336,6 +1336,14 @@ class Ontology (models.Model):
     # Stores the most recent date when the model was updated in whatever way.
     update_date = models.DateTimeField(auto_now=True)
 
+    # Stores the versionIRI of the ontology. Can be useful to check which
+    # version is currently imported.
+    version = models.CharField(
+        max_length=256,
+        null=True,
+        blank=True
+    )
+
     def __unicode__(self):
         return '{name} ({acronym})'.format(
             name=self.name,

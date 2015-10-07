@@ -223,7 +223,7 @@ def copy_dataset(dataset, owner, versions=None, copy_files=False):
     return dataset_copy
 
 
-def create_update_ontology(name, acronym, uri):
+def create_update_ontology(name, acronym, uri, version):
     """Creates or updates an ontology entry after importing.
     """
 
@@ -233,7 +233,8 @@ def create_update_ontology(name, acronym, uri):
         ontology = Ontology.objects.create(
             acronym=acronym,
             name=name,
-            uri=uri
+            uri=uri,
+            version=version
         )
         logger.info('Created %s', ontology)
     else:
