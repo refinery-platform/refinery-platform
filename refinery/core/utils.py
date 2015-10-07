@@ -225,13 +225,18 @@ def delete_ontology_from_neo4j(acronym):
     graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
 
     # Only matches class nodes that exclusively belong to an ontology.
+    # Note: Using an ordinary string replacement in addition to a parameterized
+    # query is due to the inability of Neo4J to parameterize label...
+    # http://stackoverflow.com/a/24274528/981933
+    # Note 2: The reason for using the oldschool, e.g. `%`, way of composing
+    # the string is due to the fact that `format()` conflicts with the
+    # parameterized Cypher query.
     statement = (
-        "MATCH (c:Class) "
-        "WHERE c :{acronym} AND "
-        "ALL (l IN labels(c) WHERE l='Class' OR l={acronym})"
+        "MATCH (c:Class:%s) "
+        "WHERE ALL (l IN labels(c) WHERE l='Class' OR l={acronym})"
         "OPTIONAL MATCH (c)-[r]-() "
         "DELETE c, r"
-    )
+    ) % acronym
 
     try:
         graph.cypher.execute(
