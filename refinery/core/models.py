@@ -34,7 +34,7 @@ from file_store.models import get_file_size, FileStoreItem
 from galaxy_connector.models import Instance
 from .utils import update_data_set_index, delete_data_set_index, \
     add_read_access_in_neo4j, remove_read_access_in_neo4j, \
-    delete_data_set_neo4j
+    delete_data_set_neo4j, delete_ontology_from_neo4j
 
 
 logger = logging.getLogger(__name__)
@@ -1311,6 +1311,8 @@ class Ontology (models.Model):
     """Store meta information of imported ontologies
     """
 
+    import_date = models.DateField(auto_now_add=True)
+
     # Full name of the ontology
     # E.g.: Gene Ontology
     name = models.CharField(max_length=64, blank=True)
@@ -1319,8 +1321,15 @@ class Ontology (models.Model):
     # Note that prefix constist of uppercase letters only. Similar to the OBO
     # naming convention.
     # E.g.: GO
-    prefix = models.CharField(max_length=8, blank=True)
+    acronym = models.CharField(max_length=8, blank=True, unique=True)
 
     # Base URI of the ontology
     # E.g.: http://purl.obolibrary.org/obo/go.owl
-    uri = models.CharField(max_length=128, blank=True)
+    uri = models.CharField(max_length=128, blank=True, unique=True)
+
+    update_date = models.DateField(default=datetime.now)
+
+
+@receiver(pre_delete, sender=Ontology)
+def _ontology_delete(sender, instance, *args, **kwargs):
+    delete_ontology_from_neo4j(instance.acronym)
