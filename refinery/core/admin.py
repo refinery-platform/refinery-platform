@@ -14,7 +14,7 @@ from core.models import (
     ExtendedGroup, InvestigationLink, NodePair, NodeRelationship, NodeSet,
     Project, UserProfile, Workflow, WorkflowDataInput, WorkflowDataInputMap,
     WorkflowEngine, WorkflowFilesDL, WorkflowInputRelationships, Download,
-    Invitation
+    Invitation, Ontology
 )
 
 
@@ -120,6 +120,11 @@ class UserProfileAdmin(GuardedModelAdmin):
                     'catch_all_project', 'is_public']
 
 
+class OntologyAdmin(GuardedModelAdmin):
+    list_display = ['__unicode__', 'id', 'acronym', 'name', 'uri',
+                    'import_date', 'update_date']
+
+
 admin.site.register(ExtendedGroup, ExtendedGroupAdmin)
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(DataSet, DataSetAdmin)
@@ -141,3 +146,4 @@ admin.site.register(Invitation, InvitationAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(WorkflowInputRelationships,
                     WorkflowInputRelationshipsAdmin)
+admin.site.register(Ontology, OntologyAdmin)
