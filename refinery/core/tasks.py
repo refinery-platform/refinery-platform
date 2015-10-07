@@ -1,27 +1,16 @@
-from datetime import datetime, timedelta
 import logging
-import requests
-import socket
-import urlparse
+import datetime
 
-from django.conf import settings
 from django.db.models.deletion import Collector
 from django.db.models.fields.related import ForeignKey
 
-from amqplib.client_0_8.exceptions import (
-    AMQPChannelException, AMQPConnectionException
-)
-from celery.exceptions import TimeLimitExceeded, TaskRevokedError
-from celery.task import task, periodic_task
-from celery.task.control import ping
-
-from core.models import (
-    DataSet, InvestigationLink, WorkflowEngine
-)
+from core.models import DataSet, InvestigationLink, Ontology
 from data_set_manager.models import Investigation, Study
 from data_set_manager.tasks import annotate_nodes
 from file_store.models import is_permanent
 from file_store.tasks import create, read, import_file
+
+from celery.task import task
 
 
 logger = logging.getLogger(__name__)
@@ -232,3 +221,23 @@ def copy_dataset(dataset, owner, versions=None, copy_files=False):
     dataset_copy.save()
 
     return dataset_copy
+
+
+def create_update_ontology(name, acronym, uri):
+    """Creates or updates an ontology entry after importing.
+    """
+
+    ontology = Ontology.objects.filter(acronym=acronym)
+
+    if not ontology:
+        ontology = Ontology.objects.create(
+            acronym=acronym,
+            name=name,
+            uri=uri
+        )
+        logger.info('Created %s', ontology)
+    else:
+        ontology = ontology[0]
+        ontology.import_date = datetime.datetime.now()
+        ontology.save()
+        logger.info('Updated %s', ontology)

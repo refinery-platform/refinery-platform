@@ -34,7 +34,7 @@ from file_store.models import get_file_size, FileStoreItem
 from galaxy_connector.models import Instance
 from .utils import update_data_set_index, delete_data_set_index, \
     add_read_access_in_neo4j, remove_read_access_in_neo4j, \
-    delete_data_set_neo4j
+    delete_data_set_neo4j, delete_ontology_from_neo4j
 
 
 logger = logging.getLogger(__name__)
@@ -1305,3 +1305,44 @@ def _add_user_to_neo4j(sender, **kwargs):
         ),
         [kwargs['instance'].id]
     )
+
+
+class Ontology (models.Model):
+    """Store meta information of imported ontologies
+    """
+
+    # Stores the most recent import date, i.e. this will be overwritten when a
+    # ontology is re-imported.
+    import_date = models.DateTimeField(
+        default=datetime.now,
+        editable=False,
+        auto_now=False
+    )
+
+    # Full name of the ontology
+    # E.g.: Gene Ontology
+    name = models.CharField(max_length=64, blank=True)
+
+    # Equals the abbreviation / acronym / prefix specified during the import.
+    # Note that prefix constist of uppercase letters only. Similar to the OBO
+    # naming convention.
+    # E.g.: GO
+    acronym = models.CharField(max_length=8, blank=True, unique=True)
+
+    # Base URI of the ontology
+    # E.g.: http://purl.obolibrary.org/obo/go.owl
+    uri = models.CharField(max_length=128, blank=True, unique=True)
+
+    # Stores the most recent date when the model was updated in whatever way.
+    update_date = models.DateTimeField(auto_now=True)
+
+    def __unicode__(self):
+        return '{name} ({acronym})'.format(
+            name=self.name,
+            acronym=self.acronym
+        )
+
+
+@receiver(pre_delete, sender=Ontology)
+def _ontology_delete(sender, instance, *args, **kwargs):
+    delete_ontology_from_neo4j(instance.acronym)

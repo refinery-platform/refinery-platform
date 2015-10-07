@@ -1,15 +1,17 @@
 import logging
 import sys
 import subprocess
+import py2neo
 from optparse import make_option
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from core.tasks import create_update_ontology
 
 logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = """Imports an OWL ontology into Neo4J using the Owl2neo4J converter
+    help = """Imports an OWL ontology into Neo4J using the Owl2Neo4J converter
     from https://github.com/flekschas/owl2neo4j.
     """
 
@@ -54,14 +56,15 @@ class Command(BaseCommand):
             options['ontology_file'] = ''
 
         if options['ontology_abbr']:
-            options['ontology_abbr'] = '"' + options['ontology_abbr'] + '"'
+            options['ontology_abbr'] = options['ontology_abbr'].upper()
+            ontology_abbr = '"' + options['ontology_abbr'] + '"'
         else:
-            options['ontology_abbr'] = ''
+            ontology_abbr = ''
 
         if options['ontology_name']:
-            options['ontology_name'] = '"' + options['ontology_name'] + '"'
+            ontology_name = '"' + options['ontology_name'] + '"'
         else:
-            options['ontology_name'] = ''
+            ontology_name = ''
 
         if options['eqp']:
             options['eqp'] = '-eqp ' + options['eqp']
@@ -75,8 +78,8 @@ class Command(BaseCommand):
                     eel=settings.JAVA_ENTITY_EXPANSION_LIMIT,
                     lib=settings.LIBS_DIR,
                     ontology=options['ontology_file'],
-                    name=options['ontology_name'],
-                    abbr=options['ontology_abbr'],
+                    name=ontology_name,
+                    abbr=ontology_abbr,
                     eqp=options['eqp'],
                     server=settings.NEO4J_BASE_URL,
                     verbosity=('-v' if int(options['verbosity']) == 2 else '')
@@ -89,4 +92,30 @@ class Command(BaseCommand):
                 subprocess.check_output(cmd, shell=True)
         except Exception, e:
             logger.error(e.output)
+            sys.exit(1)
+
+        try:
+            # Connects to `http://localhost:7474/db/data/` by default.
+            graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+
+            uri = graph.cypher.execute_one(
+                'MATCH (o:Ontology {acronym:{acronym}}) RETURN o.uri',
+                parameters={
+                    'acronym': options['ontology_abbr']
+                }
+            )
+
+            if not uri:
+                raise Exception(
+                    'No ontology with the given name was found. It is most ' +
+                    'likely that the actual import into Neo4J failed.'
+                )
+
+            create_update_ontology(
+                options['ontology_name'],
+                options['ontology_abbr'],
+                uri
+            )
+        except Exception, e:
+            logger.error(e)
             sys.exit(1)

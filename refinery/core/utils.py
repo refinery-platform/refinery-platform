@@ -203,20 +203,52 @@ def delete_data_set_neo4j(dataset_uuid):
     )
 
     try:
-        tx = graph.cypher.begin()
-
-        tx.append(
+        graph.cypher.execute(
             statement,
-            {
+            parameters={
                 'dataset_uuid': dataset_uuid
             }
         )
-
-        tx.commit()
     except Exception, e:
         logger.error(
             'Failed to remove dataset (uuid: %s) in Neo4J. '
             'Exception: %s', dataset_uuid, e
+        )
+
+
+def delete_ontology_from_neo4j(acronym):
+    """Remove all classes that belong exclusively to an ontology.
+    """
+
+    logger.debug('Deleting ontology (acronym: %s) from Neo4J', acronym)
+
+    graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+
+    # Only matches class nodes that exclusively belong to an ontology.
+    # Note: Using an ordinary string replacement in addition to a parameterized
+    # query is due to the inability of Neo4J to parameterize label...
+    # http://stackoverflow.com/a/24274528/981933
+    # Note 2: The reason for using the oldschool, e.g. `%`, way of composing
+    # the string is due to the fact that `format()` conflicts with the
+    # parameterized Cypher query.
+    statement = (
+        "MATCH (c:Class:%s) "
+        "WHERE ALL (l IN labels(c) WHERE l='Class' OR l={acronym})"
+        "OPTIONAL MATCH (c)-[r]-() "
+        "DELETE c, r"
+    ) % acronym
+
+    try:
+        graph.cypher.execute(
+            statement,
+            parameters={
+                'acronym': acronym
+            }
+        )
+    except Exception, e:
+        logger.error(
+            'Failed to remove ontology (acronym: %s) from Neo4J. '
+            'Exception: %s', acronym, e
         )
 
 
