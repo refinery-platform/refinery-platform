@@ -173,6 +173,7 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
   self._generatePagerControl(pagerControlId, 5, 2, 2);
 
   // attach events
+
   $(".field-header-sort").on("click", function(event) {
     var fieldName = $(event.target).data("fieldname");
     self._query.toggleFieldDirection(fieldName);
@@ -182,7 +183,7 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
 
   // attach event to node selection mode checkbox
   $("#" + "node-selection-mode").click(function(event) {
-    if (self._query.getDocumentSelectionBlacklistMode()) {
+    if (!($(this).prop("checked"))){
       self._query.setDocumentSelectionBlacklistMode(false);
       self._query.clearDocumentSelection();
       // update individual checkboxes in table
@@ -198,11 +199,11 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
       SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, {'event': event});
   });
 
+
   $(".document-checkbox-select").on("click", function(event) {
     var uuid = $(event.target).data("uuid");
     var uuidIndex = self._query._documentSelection.indexOf(uuid);
     var event = "";
-
     if (uuidIndex != -1) {
       // remove element
       self._query._documentSelection.splice(uuidIndex, 1);
@@ -214,6 +215,20 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
       event = 'add';
     }
 
+    var checkAllNodes = document.getElementById("node-selection-mode");
+    var totalCheckbox = $(".document-checkbox-select").length;
+    var totalCheckboxSelect = $('.document-checkbox-select:checked').length;
+
+    if(totalCheckboxSelect > 0 && totalCheckboxSelect < totalCheckbox) {
+      checkAllNodes.checked = true;
+      checkAllNodes.indeterminate = true;
+    }else if(totalCheckboxSelect > 0 && totalCheckboxSelect === totalCheckbox) {
+      checkAllNodes.indeterminate = false;
+      checkAllNodes.checked = true;
+    }else{
+      checkAllNodes.indeterminate = false;
+      checkAllNodes.checked = false;
+    }
     self._commands.execute(
       SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, {'uuid': uuid, 'event': event});
   });
@@ -407,6 +422,7 @@ SolrDocumentTable.prototype._generateTableHead = function(solrResponse) {
   row.push('<th align="left" width="0">' + '</th>');
   row.push('<th align="left" width="0" id="node-selection-column-header">' + nodeSelectionModeCheckbox + '</th>');
 
+
   // headers for additional columns
   for (var i = 0; i < self._additionalColumns.length; ++i) {
     var column = self._additionalColumns[i];
@@ -527,11 +543,11 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function (parentElem
 
     var self = this;
     //Hide paginator if getCurrentDocumentCount() >= _documentsPerPage
-    if (self._query.getCurrentDocumentCount() >= self._documentsPerPage) {
+    if (self._query.getTotalDocumentCount() >= self._documentsPerPage) {
 
       $("#" + parentElementId).html("");
 
-      var availablePages = Math.max(0, Math.floor((self._query.getCurrentDocumentCount(false) - 1) / self._documentsPerPage));
+      var availablePages = Math.max(0, Math.floor((self._query.getTotalDocumentCount(false) - 1) / self._documentsPerPage));
       var currentPage = Math.floor(self._query.getDocumentIndex() / self._documentsPerPage);
       if (currentPage > availablePages) {
         currentPage = availablePages;

@@ -537,15 +537,17 @@
   -moz-animation: spin 2s infinite linear;
 }
 
+#provvis-loader {
+  vertical-align: middle;
+  display: inline-block;
+  margin-left: 20px;
+}
+
 #provvis-loader-icon {
-  font-size: 30px;
-  width: 30px;
-  height: 30px;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
   margin: auto;
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 30%;
   color: #333333;
   opacity: 0.7;
 }

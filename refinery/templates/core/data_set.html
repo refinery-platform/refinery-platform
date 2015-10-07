@@ -127,9 +127,9 @@
   {% endif %}
 
 
-  <span ng-controller="AnalysesCtrl">
+  <span ng-controller="AnalysisMonitorCtrl">
     <div ng-if="checkAnalysesViewFlag()">
-      <span rp-analyses-alert-msg></span>
+      <span rp-analysis-monitor-alert-msg></span>
     </div>
   </span>
 
@@ -176,8 +176,8 @@
             {% endif %}
             <li ui-sref-active="active">
               <a ui-sref="analyses" id="analyze-tab" class="dataSetTabs">
-                <span ng-controller="AnalysesCtrl">
-                  <span rp-analyses-running-tab-icon></span>
+                <span ng-controller="AnalysisMonitorCtrl">
+                  <span rp-analysis-monitor-running-tab-icon></span>
                 </span>
                 Analyses
               </a>
@@ -200,7 +200,7 @@
     </div>
 
 
-    <div class="refinery-panel refinery-panel-content jquery-full-height">
+    <div class="refinery-panel refinery-panel-content jquery-full-height handle-overflow">
       {% if data_set %}
         <!-- tabs -->
         <form id="sampleForm" method="post" class="form-inline" hidden>
@@ -271,11 +271,15 @@
                     -->
                       <div class="row-fluid y-scrollable">
                         <div class="span12">
-                          <label style="font-style: italic; color: darkgray;">Attribute Filter</label>
+                          <span style="font-style: italic; color: darkgray;">
+                            Attribute Filter
+                          </span>
                           <div id="solr-facet-view" class="accordion"></div>
                         </div>
                         <div class="span12">
-                          <label style="font-style: italic; color: darkgray;">Analysis Filter</label>
+                          <span style="font-style: italic; color: darkgray;">
+                            Analysis Filter
+                          </span>
                           <div id="solr-analysis-view" class="accordion"></div>
                         </div>
                       </div>
@@ -287,7 +291,9 @@
 
                     <div class="row-fluid" style="margin-bottom: 5px;">
                       <div class="span3">
-                        <label class="control-label" id="solr-document-count-view" style="float: left; margin-top: 3px;"></label>
+                        <span class="control-label"
+                          id="solr-document-count-view" style="float: left;
+                          margin-top: 3px;"></span>
                         <a href="#" id="help-selection-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
                       </div>
 
@@ -306,7 +312,7 @@
                         {% endif %}
 
                         <div id="view-selector-div">
-                          <label id="label-display">Display </label>
+                          <label id="label-display" for="s2id_autogen1">Display</label>
                           <select id="view-selector">
                             <option value="table-view-tab">Table</option>
                             <option value="pivot-view-tab">Matrix</option>
@@ -470,7 +476,7 @@
             </div>
             <p>
               <div class="row-fluid">
-                <analyses-list></analyses-list>
+                <analysis-monitor-analyses-list></analysis-monitor-analyses-list>
               </div>
             </p>
           </div>
@@ -701,7 +707,7 @@
   <script type="text/javascript" src="{% static "vendor/floatThead/dist/jquery.floatThead.min.js" %}"></script>
 
   <!-- provenance visualization -->
-  <script type="text/javascript" src="{% static "vendor/lodash/dist/lodash.min.js" %}"></script>
+  <script type="text/javascript" src="{% static "vendor/lodash-3/lodash.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/graphlib/dist/graphlib.core.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/dagre/dist/dagre.core.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/spectrum/spectrum.js" %}"></script>
@@ -728,10 +734,9 @@
         $('#solrdoctab1-top-controls').show();
       } }, 750);
 
-      $(window).resize(function(){
+      setInterval(function(){
           sizing();
-          $(window).trigger('refinery/floatThead/reflow');
-      });
+      }, 500);
 
       $( "#view-selector" ).select2({minimumResultsForSearch: -1});
       $( "#view-selector" ).on("change", function(event) {
