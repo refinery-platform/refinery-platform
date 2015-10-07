@@ -1311,7 +1311,13 @@ class Ontology (models.Model):
     """Store meta information of imported ontologies
     """
 
-    import_date = models.DateField(auto_now_add=True)
+    # Stores the most recent import date, i.e. this will be overwritten when a
+    # ontology is re-imported.
+    import_date = models.DateTimeField(
+        default=datetime.now,
+        editable=False,
+        auto_now=False
+    )
 
     # Full name of the ontology
     # E.g.: Gene Ontology
@@ -1327,7 +1333,14 @@ class Ontology (models.Model):
     # E.g.: http://purl.obolibrary.org/obo/go.owl
     uri = models.CharField(max_length=128, blank=True, unique=True)
 
-    update_date = models.DateField(default=datetime.now)
+    # Stores the most recent date when the model was updated in whatever way.
+    update_date = models.DateTimeField(auto_now=True)
+
+    def __unicode__(self):
+        return '{name} ({acronym})'.format(
+            name=self.name,
+            acronym=self.acronym
+        )
 
 
 @receiver(pre_delete, sender=Ontology)
