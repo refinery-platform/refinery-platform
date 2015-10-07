@@ -235,6 +235,9 @@ def create_update_ontology(name, acronym, uri):
             name=name,
             uri=uri
         )
+        logger.info('Created %s', ontology)
     else:
+        ontology = ontology[0]
         ontology.import_date = datetime.datetime.now()
         ontology.save()
+        logger.info('Updated %s', ontology)
