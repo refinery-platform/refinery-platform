@@ -9,6 +9,8 @@ from data_set_manager.tasks import annotate_nodes
 from file_store.models import is_permanent
 from file_store.tasks import create, read, import_file
 
+from celery.task import task
+
 
 logger = logging.getLogger(__name__)
 
