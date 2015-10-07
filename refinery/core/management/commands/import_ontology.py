@@ -1,9 +1,11 @@
 import logging
 import sys
 import subprocess
+import py2neo
 from optparse import make_option
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from core.tasks import create_update_ontology
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +56,7 @@ class Command(BaseCommand):
             options['ontology_file'] = ''
 
         if options['ontology_abbr']:
+            options['ontology_abbr'] = upper(options['ontology_abbr'])
             options['ontology_abbr'] = '"' + options['ontology_abbr'] + '"'
         else:
             options['ontology_abbr'] = ''
@@ -87,6 +90,39 @@ class Command(BaseCommand):
                 subprocess.check_call(cmd, shell=True)
             else:
                 subprocess.check_output(cmd, shell=True)
+        except Exception, e:
+            logger.error(e.output)
+            sys.exit(1)
+
+        try:
+            # Connects to `http://localhost:7474/db/data/` by default.
+            graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+
+            results = graph.cypher.execute(
+                'MATCH (o:Ontology {acronym:{acronym}}) RETURN o',
+                parameters={
+                    'acronym': options['ontology_abbr']
+                }
+            )
+
+            if len(results) == 1:
+                base_uri = results[0]['uri']
+            elif len(results) > 1:
+                raise Exception(
+                    'Multiple ontologies with the same name were found. ' +
+                    'Please clean up the mess first!'
+                )
+            else:
+                raise Exception(
+                    'No ontology with the given name was found. It is most ' +
+                    'likely that the actual import into Neo4J failed.'
+                )
+
+            create_update_ontology(
+                options['ontology_name'],
+                options['ontology_abbr'],
+                base_uri
+            )
         except Exception, e:
             logger.error(e.output)
             sys.exit(1)
