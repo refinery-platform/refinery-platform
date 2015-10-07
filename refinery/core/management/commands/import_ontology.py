@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = """Imports an OWL ontology into Neo4J using the Owl2neo4J converter
+    help = """Imports an OWL ontology into Neo4J using the Owl2Neo4J converter
     from https://github.com/flekschas/owl2neo4j.
     """
 
@@ -56,7 +56,7 @@ class Command(BaseCommand):
             options['ontology_file'] = ''
 
         if options['ontology_abbr']:
-            options['ontology_abbr'] = upper(options['ontology_abbr'])
+            options['ontology_abbr'] = options['ontology_abbr'].upper()
             options['ontology_abbr'] = '"' + options['ontology_abbr'] + '"'
         else:
             options['ontology_abbr'] = ''
