@@ -449,4 +449,7 @@ if REFINERY_EXTERNAL_AUTH:
 # CURRENT_COMMIT retrieves the most recent commit used allowing for easier
 # debugging of a Refinery instance
 
-CURRENT_COMMIT = check_output(['git', 'rev-parse', "HEAD"])
+try:
+    CURRENT_COMMIT = check_output(['git', 'rev-parse', "HEAD"])
+except:
+    CURRENT_COMMIT = "Error Retrieving Most Recent Commit"
