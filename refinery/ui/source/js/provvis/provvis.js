@@ -234,6 +234,9 @@ var provvis = (function () {
             height = $("div#provenance-graph").height() - margin.top -
                 margin.bottom;
 
+        // TODO: Temporary fix for sidebar height
+        $("#provenance-sidebar").css("height", height - 16);
+
         var scaleFactor = 0.75;
 
         var layerMethod = "weak";
