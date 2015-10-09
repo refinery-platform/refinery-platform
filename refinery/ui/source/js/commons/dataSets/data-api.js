@@ -10,7 +10,7 @@ function DataSetDataApiFactory (_, dataSetService) {
   function DataSetDataApi (extra) {
     var params = _.cloneDeep(extra) || {};
 
-    return function (limit, offset, extra) {
+    return function (limit, offset) {
       params.limit = limit;
       params.offset = offset;
 
