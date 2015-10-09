@@ -5,11 +5,23 @@ function DataSetDataApiFactory (_, dataSetService) {
    * @method  DataSetDataApi
    * @author  Fritz Lekschas
    * @date    2015-10-09
-   * @param   {[type]}        extra  [description]
+   *
+   * @param   {Object}  extra  Parameters other than `limit` and `offset`.
    */
   function DataSetDataApi (extra) {
     var params = _.cloneDeep(extra) || {};
 
+    /**
+     * Actual method being exported after constructing the class.
+     *
+     * @method
+     * @author  Fritz Lekschas
+     * @date    2015-10-09
+     *
+     * @param   {Number}  limit   Number of data objects to be fetched.
+     * @param   {Number}  offset  Starting point for retrieving data objects.
+     * @return  {Object}          Promise of the actual data.
+     */
     return function (limit, offset) {
       params.limit = limit;
       params.offset = offset;
