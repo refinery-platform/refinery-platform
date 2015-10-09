@@ -59,16 +59,23 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
    *
    * @method  UiScrollSource
    * @author  Fritz Lekschas
-   * @date    2015-08-14
+   * @date    2015-10-09
    *
    * @class
-   * @param   {String}    id             Source identification used for
+   * @param   {String}         id             Source identification used for
    *   identifying the cache object.
-   * @param   {Number}    cacheCapacity  Number of sources to be cached.
-   * @param   {Function}  dataSource     Method for retrieving the actual.
+   * @param   {Number}         cacheCapacity  Number of sources to be cached.
+   * @param   {Function}       dataSource     Method for retrieving the actual.
    *   data.
+   * @param   {Number|String}  dataProperty   Name of the property holding an
+   *   array of the actual data objects.
    */
-  function UiScrollSource (id, cacheCapacity, dataSource) {
+  function UiScrollSource (
+    id,
+    cacheCapacity,
+    dataSource,
+    dataProperty,
+    totalProperty) {
     if (!id) {
       throw new UiScrollSourceException('No or empty `id` given.');
     }
@@ -223,6 +230,27 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
           }
         }
       },
+
+      /**
+       * Property of the response object holding an array of data objects.
+       *
+       * @description
+       * Example response where `...` could be anything, default property name
+       * is assumed to be `data`.
+       * ```
+       * {
+       *   "meta": {...},
+       *   "data": [
+       *     {...},
+       *     {...},
+       *     ...
+       *   ]
+       * }
+       * ```
+       *
+       * @type  {Number|String}
+       */
+      dataProperty: dataProperty || 'data',
 
       /**
        * Actual data source object that will be queried.
@@ -381,7 +409,8 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
         this.initializedWithData = cached.initializedWithData;
         // Reset total
         this.total = cached.total;
-        this.totalReadable = this.initializedWithData ? cached.totalReadable : this.totalReadable;
+        this.totalReadable = this.initializedWithData ?
+          cached.totalReadable : this.totalReadable;
       },
 
       /**
@@ -401,13 +430,13 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
         return query
           // Success
           .then(function (response) {
-            success(response.objects);
+            success(response[this.dataProperty]);
             if (!this.initializedWithData) {
               this.initializedWithData = true;
-              this.total = response.meta.total_count;
-              this.totalReadable = response.meta.total_count;
+              this.total = response.meta[this.totalProperty];
+              this.totalReadable = response.meta[this.totalProperty];
             }
-            return response.objects;
+            return response[this.dataProperty];
           }.bind(this))
           // Error
           .catch(function (error) {
@@ -488,6 +517,13 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
        * @type  {Number}
        */
       total: Number.POSITIVE_INFINITY,
+
+      /**
+       * Property holding the total number of available data objects.
+       *
+       * @type  {Integer|String}
+       */
+      totalProperty: totalProperty || 'total',
 
       /**
        * Total number of data entries available in a human readable format.
