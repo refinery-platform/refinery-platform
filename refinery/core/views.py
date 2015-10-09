@@ -864,6 +864,22 @@ def neo4j_dataset_annotations(request):
         }]
     }
 
-    response = requests.post(url, json=stmt, headers=headers)
+    try:
+        response = requests.post(url, json=stmt, headers=headers)
+    except requests.exceptions.ConnectionError as e:
+        logger.error('Neo4J seems to be offline.')
+        logger.error(e)
+        return HttpResponse(
+            'Neo4J seems to be offline.',
+            mimetype='application/json',
+            status=503
+        )
+    except requests.exceptions.RequestException as e:
+        logger.error(e)
+        return HttpResponse(
+            response,
+            mimetype='application/json',
+            status=500
+        )
 
     return HttpResponse(response, mimetype='application/json')
