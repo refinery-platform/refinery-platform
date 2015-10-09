@@ -18,14 +18,6 @@ function refineryExpansionPanel () {
         left: this.fixedWidth + 1
       };
     });
-
-    this.pubSub.on('expandFinished', function () {
-      this.animationFinished = true;
-    }.bind(this));
-
-    this.dashboardExpandablePanelService.collapser.push(function () {
-      this.animationFinished = false;
-    }.bind(this));
   }
 
   return {
