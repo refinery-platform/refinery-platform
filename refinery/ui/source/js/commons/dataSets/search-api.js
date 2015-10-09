@@ -1,5 +1,5 @@
 function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
-  function DataSetSearchApi (searchQuery, allUuids) {
+  function DataSetSearchApi (searchQuery) {
     return function (limit, offset) {
       var query = solrService.get(
         {
@@ -40,8 +40,6 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
           index: 'core'
         }
       );
-
-      console.log('All UUIDS?', !!allUuids);
 
       return query
         .$promise
@@ -93,7 +91,7 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
 
 angular
   .module('dataset')
-  .factory('dataSetSearchApi', [
+  .factory('DataSetSearchApi', [
     '$sce',
     'settings',
     'solrService',
