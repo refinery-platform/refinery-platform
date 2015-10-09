@@ -5,18 +5,21 @@ function refineryDataSetPreview () {
     $q,
     _,
     $modal,
+    pubSub,
     settings,
     authService,
     studyService,
     sharingService,
     citationService,
     analysisService,
-    dashboardDataSetPreviewService) {
+    dashboardDataSetPreviewService,
+    dashboardExpandablePanelService) {
     var that = this;
 
     this.$q = $q;
     this._ = _;
     this.$modal = $modal;
+    this.pubSub = pubSub;
     this.settings = settings;
     this.user = authService;
     this.studyService = studyService;
@@ -24,6 +27,7 @@ function refineryDataSetPreview () {
     this.citationService = citationService;
     this.analysisService = analysisService;
     this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
+    this.dashboardExpandablePanelService = dashboardExpandablePanelService;
 
     this.maxBadges = this.settings.dashboard.preview.maxBadges;
     this.infinity = Number.POSITIVE_INFINITY;
@@ -324,6 +328,7 @@ function refineryDataSetPreview () {
       '$q',
       '_',
       '$modal',
+      'pubSub',
       'settings',
       'authService',
       'studyService',
@@ -331,6 +336,7 @@ function refineryDataSetPreview () {
       'citationService',
       'analysisService',
       'dashboardDataSetPreviewService',
+      'dashboardExpandablePanelService',
       DataSetPreviewCtrl],
     controllerAs: 'preview',
     restrict: 'E',
