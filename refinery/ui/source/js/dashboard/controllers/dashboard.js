@@ -11,6 +11,7 @@ function DashboardCtrl (
   // Refinery modules
   pubSub,
   settings,
+  dataSet,
   authService,
   projectService,
   analysisService,
@@ -36,6 +37,7 @@ function DashboardCtrl (
   this._ = _;
 
   // Construct Refinery modules
+  this.dataSet = dataSet;
   this.authService = authService;
   this.projectService = projectService;
   this.analysisService = analysisService;
@@ -68,7 +70,7 @@ function DashboardCtrl (
   this.dataSets = new UiScrollSource(
     'dashboard/dataSets',
     10,
-    this.dashboardDataSetListService
+    this.dataSet.getInclMeta
   );
 
   // Set up analyses for `uiScroll`
@@ -82,7 +84,9 @@ function DashboardCtrl (
           });
 
       return this.analysisService.query(params).$promise;
-    }.bind(this)
+    }.bind(this),
+    'objects',
+    'total_count'
   );
 
   // Set up projects for `uiScroll`
@@ -108,7 +112,9 @@ function DashboardCtrl (
           });
 
       return this.workflowService.query(params).$promise;
-    }.bind(this)
+    }.bind(this),
+    'objects',
+    'total_count'
   );
 
   this.searchDataSets = this._.debounce(
@@ -625,6 +631,7 @@ angular
     '_',
     'pubSub',
     'settings',
+    'dataSet',
     'authService',
     'projectService',
     'analysisService',

@@ -5,5 +5,6 @@ angular
     'ui.scroll',
     'cut',
     'toolTip',
-    'treemap'
+    'treemap',
+    'dataSet'
   ]);
