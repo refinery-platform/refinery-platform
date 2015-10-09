@@ -30,6 +30,8 @@ function DataSetDataApiFactory (_, dataSetService) {
           Object.getOwnPropertyDescriptor(data, 'objects')
         );
         delete data['objects'];
+
+        return data;
       });
     };
   }
