@@ -9,6 +9,9 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    * Stores the individual browse steps to be able to reconstruct previous
    * selections.
    *
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
    * @type  {Array}
    */
   var _browsePath = [];
@@ -38,6 +41,9 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    *
    * @description
    * This
+   *
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
    *
    * @type  {Object}
    */
@@ -76,9 +82,22 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    * Reference to the actual source function, e.g. `DataSetDataApi`,
    * `DataSetSearchApi`
    *
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
    * @type  {Function}
    */
   var _source;
+
+  /**
+   * Total number of currently available data objects.
+   *
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
+   * @type  {Number}
+   */
+  var _total = Infinity;
 
   /**
    * Clear the cache of ordered data objects.
@@ -88,6 +107,7 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    * @date    2015-10-08
    */
   function _clearOrderCache () {
+    _total = Infinity;
     _orderCache = [];
     _clearSelectionCache();
   }
@@ -143,6 +163,21 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
   /**
    * Get data from the source and trigger caching.
    *
+   * @description
+   * It is required that the source method returns an object of the following
+   * structure.
+   * ```
+   * {
+   *   "meta": {
+   *     limit: 10,
+   *     offset: 0,
+   *     total: 100
+   *   },
+   *   "data": []
+   * }
+   * ```
+   * It's okay if the object has further properties.
+   *
    * @method  _getDataFromSource
    * @author  Fritz Lekschas
    * @date    2015-10-08
@@ -157,6 +192,9 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
       for (var i = offset, len = data.length; i < len; i++) {
         _dataStore.add(source[i].id, source[i]);
         _cacheOrder(i, _dataStore.get(source[i].id));
+      }
+      if (_total === Infinity) {
+        _total = data.meta.total;
       }
 
       return _orderCache.slice(offset, limit + offset);
@@ -176,7 +214,7 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    */
   function _getDataFromOrderCache (limit, offset) {
     var data = _orderCache.slice(offset, limit + offset);
-    if (data.length < totalLen - offset) {
+    if (data.length < _total - offset) {
       data = _getDataFromSource(limit, offset);
     }
     return $q.when(data);
@@ -368,8 +406,8 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
     if (Object.keys(_selection).length > 0) {
       data = _selectionCache.slice(offset, limit + offset);
       if (
-        data.length !== Math.min(limit, totalLen) &&
-        _selectionCacheLastIndex !== totalLen
+        data.length !== Math.min(limit, _total) &&
+        _selectionCacheLastIndex !== _total
       ) {
         data = _getSelection(limit, offset);
       }
