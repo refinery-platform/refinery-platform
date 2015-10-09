@@ -4,15 +4,6 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    * --------------------------------- Private ---------------------------------
    */
 
-  /**
-   * Stores IDs of the selected data objects.
-   *
-   * @description
-   * This
-   *
-   * @type  {Object}
-   */
-  var _selection = {};
 
   /**
    * Stores the individual browse steps to be able to reconstruct previous
@@ -21,14 +12,6 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    * @type  {Array}
    */
   var _browsePath = [];
-
-  /**
-   * Reference to the actual source function, e.g. `DataSetDataApi`,
-   * `DataSetSearchApi`
-   *
-   * @type  {Function}
-   */
-  var _source;
 
   /**
    * Caches the data objects in a central place.
@@ -49,6 +32,16 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    * @type  {Array}
    */
   var _orderCache = [];
+
+  /**
+   * Stores IDs of the selected data objects.
+   *
+   * @description
+   * This
+   *
+   * @type  {Object}
+   */
+  var _selection = {};
 
   /**
    * Caches the currently selected data objects, based on the current order.
@@ -78,6 +71,14 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    * @type  {Number}
    */
   var _selectionCacheLastIndex = 0;
+
+  /**
+   * Reference to the actual source function, e.g. `DataSetDataApi`,
+   * `DataSetSearchApi`
+   *
+   * @type  {Function}
+   */
+  var _source;
 
   /**
    * Clear the cache of ordered data objects.
@@ -368,7 +369,7 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
       data = _selectionCache.slice(offset, limit + offset);
       if (
         data.length !== Math.min(limit, totalLen) &&
-        selectionCacheLastIndex !== totalLen
+        _selectionCacheLastIndex !== totalLen
       ) {
         data = _getSelection(limit, offset);
       }
@@ -378,11 +379,6 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
 
     return $q.when(data);
   };
-
-
-
-  function _get (limit, offset) {
-  }
 
   /**
    * [select description]
