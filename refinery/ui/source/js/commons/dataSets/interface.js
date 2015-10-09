@@ -188,13 +188,13 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    *   objects.
    */
   function _getDataFromSource (limit, offset) {
-    return _source(limit, offset).then(function (data) {
-      for (var i = offset, len = data.length; i < len; i++) {
-        _dataStore.add(source[i].id, source[i]);
-        _cacheOrder(i, _dataStore.get(source[i].id));
+    return _source(limit, offset).then(function (response) {
+      for (var i = offset, len = response.data.length; i < len; i++) {
+        _dataStore.add(response.data[i].id, response.data[i]);
+        _cacheOrder(i, _dataStore.get(response.data[i].id));
       }
       if (_total === Infinity) {
-        _total = data.meta.total;
+        _total = response.meta.total;
       }
 
       return _orderCache.slice(offset, limit + offset);
@@ -300,6 +300,35 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
     }
   }
 
+  /**
+   * Request a set of data objects.
+   *
+   * @method  _get
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
+   * @param   {Number}  limit   Number of data objects to be fetched.
+   * @param   {Number}  offset  Starting point for retrieving data objects.
+   * @return  {Object}          Promise with data objects.
+   */
+  function _get (limit, offset) {
+    var data;
+
+    if (this.selectionActive) {
+      data = _selectionCache.slice(offset, limit + offset);
+      if (
+        data.length !== Math.min(limit, _total) &&
+        _selectionCacheLastIndex !== _total
+      ) {
+        data = _getSelection(limit, offset);
+      }
+    } else {
+      data = _getDataFromOrderCache(limit, offset);
+    }
+
+    return $q.when(data);
+  }
+
   /*
    * --------------------------------- Public ----------------------------------
    */
@@ -395,27 +424,32 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    * @method  get
    * @author  Fritz Lekschas
    * @date    2015-10-08
+   */
+  DataSet.prototype.get = _get;
+
+  /**
+   * Get data objects including meta data.
+   *
+   * @description
+   * This is needed for some services like `UiScollSource`.
+   *
+   * @method  getInclMeta
+   * @author  Fritz Lekschas
+   * @date    2015-10-09
    *
    * @param   {Number}  limit   Number of data objects to be fetched.
    * @param   {Number}  offset  Starting point for retrieving data objects.
    * @return  {Object}          Promise with data objects.
    */
-  DataSet.prototype.get = function (limit, offset) {
-    var data;
-
-    if (Object.keys(_selection).length > 0) {
-      data = _selectionCache.slice(offset, limit + offset);
-      if (
-        data.length !== Math.min(limit, _total) &&
-        _selectionCacheLastIndex !== _total
-      ) {
-        data = _getSelection(limit, offset);
-      }
-    } else {
-      data = _getDataFromOrderCache(limit, offset);
-    }
-
-    return $q.when(data);
+  DataSet.prototype.getInclMeta = function (limit, offset) {
+    return _get(limit, offset).then(function (data) {
+      return {
+        meta: {
+          total: _total
+        },
+        data: data
+      };
+    });
   };
 
   /**
@@ -468,13 +502,15 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    */
   Object.defineProperty(
     DataSet.prototype,
-    'selection', {
+    'selection',
+    {
       enumerable: true,
       configurable: false,
       get: function () {
         return _selection;
       }
-  });
+    }
+  );
 
   /**
    * Boolean whether some data objects are currently selected.
@@ -486,13 +522,15 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    */
   Object.defineProperty(
     DataSet.prototype,
-    'selectionActive', {
+    'selectionActive',
+    {
       enumerable: true,
       configurable: false,
       get: function () {
         return !!Object.keys(_selection).length;
       }
-  });
+    }
+  );
 
   /**
    * Current path of selections.
@@ -504,13 +542,35 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    */
   Object.defineProperty(
     DataSet.prototype,
-    'selectionPath', {
+    'selectionPath',
+    {
       enumerable: true,
       configurable: false,
       get: function () {
         return _browsePath;
       }
-  });
+    }
+  );
+
+  /**
+   * Current total number of data objects.
+   *
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
+   * @type    {Number}
+   */
+  Object.defineProperty(
+    DataSet.prototype,
+    'total',
+    {
+      enumerable: true,
+      configurable: false,
+      get: function () {
+        return _total;
+      }
+    }
+  );
 
   return new DataSet();
 }
