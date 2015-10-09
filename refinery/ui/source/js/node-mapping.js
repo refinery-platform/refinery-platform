@@ -186,13 +186,17 @@ angular.module('refineryNodeMapping', [
     $log.debug( "Loading pair " + index + "... ");
 
     if ( $scope.currentNodeRelationship.node_pairs.length > index ) {
-      $scope.currentNodePair = $resource( $scope.currentNodeRelationship.node_pairs[index], { format: 'json', uuid: '@uuid' }, { update : 'put'} ).get( {}, function ( data ) {
+
+      var uriArr = $scope.currentNodeRelationship.node_pairs[index].split("/");
+      var tempUuid = _.compact(uriArr).pop();
+       $scope.currentNodePair = new NodePairResource.get( {uuid : tempUuid}, function ( data ) {
         $scope.updateNodeDropzone( 0, data.node1.split("/").reverse()[1] );
         $scope.updateNodeDropzone( 1, data.node2.split("/").reverse()[1] );
       }, function ( error ) {
         $scope.currentNodePair = null;
         console.error( "Failed to load mapping." );
       } );
+
     }
     else {
       $scope.initializeNodeDropzones();
@@ -317,11 +321,20 @@ angular.module('refineryNodeMapping', [
           });
         } else {
           $log.debug("Updating existing file pair ...");
-          console.log($scope.currentNodePair);
-          $scope.currentNodePair.$update( function( response, responseHeaders) {
-            $scope.currentNodePair = response;
-            $log.debug("Existing file pair updated.");
-            console.log($scope.currentNodePair);
+          $scope.currentNodePair.node1 = "/api/v1/node/" + $scope.nodeDropzones[0].uuid + "/";
+          $scope.currentNodePair.node2 = "/api/v1/node/" + $scope.nodeDropzones[1].uuid + "/";
+          $scope.currentNodePair.$update( function( response, responseHeaders ) {
+            if($scope.currentNodePair === response) {
+              $log.debug("Existing file pair updated.");
+            }else{
+              $log.debug("Error updating file pair, please try again.");
+              var node1Arr = $scope.currentNodePair.node1.split("/");
+              var node2Arr = $scope.currentNodePair.node2.split("/");
+              var tempUuid1 = _.compact(node1Arr).pop();
+              var tempUuid2 = _.compact(node2Arr).pop();
+              $scope.updateNodeDropzone( 0, tempUuid1 );
+              $scope.updateNodeDropzone( 1, tempUuid2 );
+            }
           });
         }
 
