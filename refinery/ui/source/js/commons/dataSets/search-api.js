@@ -77,9 +77,11 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
 
           return {
             meta: {
-              total_count: data.response.numFound
+              limit: limit,
+              offset: offset,
+              total: data.response.numFound
             },
-            objects: data.response.docs
+            data: data.response.docs
           };
         }
       );

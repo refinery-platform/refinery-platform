@@ -14,7 +14,23 @@ function DataSetDataApiFactory (_, dataSetService) {
       params.limit = limit;
       params.offset = offset;
 
-      return dataSetService.query(params).$promise;
+      return dataSetService.query(params).$promise.then(function (data) {
+        // Rename `meta.total_count` into `meta.total`.
+        Object.defineProperty(
+          data.meta,
+          'total',
+          Object.getOwnPropertyDescriptor(data.meta, 'total_count')
+        );
+        delete data.meta['total_count'];
+
+        // Rename `objects` into `data`.
+        Object.defineProperty(
+          data,
+          'data',
+          Object.getOwnPropertyDescriptor(data, 'objects')
+        );
+        delete data['objects'];
+      });
     };
   }
 
