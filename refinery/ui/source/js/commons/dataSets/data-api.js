@@ -1,10 +1,12 @@
 function DataSetDataApiFactory (_, dataSetService) {
-  function DataSetDataApi () {
+  function DataSetDataApi (extra) {
+    var params = _.cloneDeep(extra) || {};
+
     return function (limit, offset, extra) {
-      return dataSetService.query(_.merge(_.cloneDeep(extra) || {}, {
-        limit: limit,
-        offset: offset
-      })).$promise;
+      params.limit = limit;
+      params.offset = offset;
+
+      return dataSetService.query(params).$promise;
     };
   }
 
@@ -13,7 +15,7 @@ function DataSetDataApiFactory (_, dataSetService) {
 
 angular
   .module('dataset')
-  .factory('dataSetDataApi', [
+  .factory('DataSetDataApi', [
     '_',
     'dataSetService',
     DataSetDataApiFactory
