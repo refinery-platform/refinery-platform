@@ -186,7 +186,7 @@ angular.module('refineryNodeMapping', [
     $log.debug( "Loading pair " + index + "... ");
 
     if ( $scope.currentNodeRelationship.node_pairs.length > index ) {
-      $scope.currentNodePair = $resource( $scope.currentNodeRelationship.node_pairs[index], { format: 'json' } ).get( {}, function ( data ) {
+      $scope.currentNodePair = $resource( $scope.currentNodeRelationship.node_pairs[index], { format: 'json', uuid: '@uuid' }, { update : 'put'} ).get( {}, function ( data ) {
         $scope.updateNodeDropzone( 0, data.node1.split("/").reverse()[1] );
         $scope.updateNodeDropzone( 1, data.node2.split("/").reverse()[1] );
       }, function ( error ) {
@@ -309,20 +309,19 @@ angular.module('refineryNodeMapping', [
         if ( $scope.isPending() ) {
           $log.debug("Saving new file pair ...");
           $scope.currentNodePair = new NodePairResource( { node1: "/api/v1/node/" + $scope.nodeDropzones[0].uuid + "/", node2: "/api/v1/node/" + $scope.nodeDropzones[1].uuid + "/" } );
-
           $scope.currentNodePair.$save( function( response, responseHeaders) {
             $scope.currentNodePair = response;
             $scope.currentNodeRelationship.node_pairs.push( $scope.currentNodePair.resource_uri );
             NodeRelationshipResource.update( { uuid: $scope.currentNodeRelationship.uuid }, $scope.currentNodeRelationship );
             $log.debug("New file pair saved.");
           });
-        }
-        else {
+        } else {
           $log.debug("Updating existing file pair ...");
-
-          $scope.currentNodePair.$save( function( response, responseHeaders) {
+          console.log($scope.currentNodePair);
+          $scope.currentNodePair.$update( function( response, responseHeaders) {
             $scope.currentNodePair = response;
             $log.debug("Existing file pair updated.");
+            console.log($scope.currentNodePair);
           });
         }
 
