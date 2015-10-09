@@ -327,6 +327,7 @@ angular.module('refineryNodeMapping', [
             if($scope.currentNodePair === response) {
               $log.debug("Existing file pair updated.");
             }else{
+              $scope.currentNodePair = response;
               $log.debug("Error updating file pair, please try again.");
               var node1Arr = $scope.currentNodePair.node1.split("/");
               var node2Arr = $scope.currentNodePair.node2.split("/");
