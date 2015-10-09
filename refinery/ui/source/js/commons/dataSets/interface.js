@@ -474,11 +474,11 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
       }
   });
 
-  return DataSet;
+  return new DataSet();
 }
 
 angular
-  .module('dataset')
+  .module('dataSet')
   .factory('dataSet', [
     '$q',
     '_',

@@ -90,7 +90,7 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
 }
 
 angular
-  .module('dataset')
+  .module('dataSet')
   .factory('DataSetSearchApi', [
     '$sce',
     'settings',

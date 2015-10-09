@@ -95,7 +95,7 @@ function DataSetStoreFactory (_) {
 }
 
 angular
-  .module('dataset')
+  .module('dataSet')
   .factory('DataSetStore', [
     '_',
     DataSetStoreFactory

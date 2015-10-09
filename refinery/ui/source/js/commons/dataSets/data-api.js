@@ -22,7 +22,7 @@ function DataSetDataApiFactory (_, dataSetService) {
 }
 
 angular
-  .module('dataset')
+  .module('dataSet')
   .factory('DataSetDataApi', [
     '_',
     'dataSetService',

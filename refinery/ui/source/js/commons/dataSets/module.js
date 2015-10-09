@@ -1,2 +1,2 @@
 angular
-  .module('dataset', []);
+  .module('dataSet', []);
