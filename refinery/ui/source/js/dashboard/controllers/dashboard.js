@@ -442,10 +442,20 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
       reloadService = 'dashboard' + source.charAt(0).toUpperCase() + source.slice(1) + 'ReloadService';
 
   if (this[sortBy]) {
-    this[source].extraParameters['order_by'] = this[sortDesc] ?
-      '-' + this[sortBy] : this[sortBy];
+    var params = this[sortDesc] ? '-' + this[sortBy] : this[sortBy];
+    // Todo: Unify data sources. Currently datasets are handled nicely and
+    // more generic than others e.g. analyses and workflows.
+    if (source === 'dataSets') {
+      this.dataSet.order(params);
+    } else {
+      this[source].extraParameters['order_by'] = params;
+    }
   } else {
-    delete this[source].extraParameters['order_by'];
+    if (source === 'dataSets') {
+      this.dataSet.all();
+    } else {
+      delete this[source].extraParameters['order_by'];
+    }
   }
 
   this[source].newOrCachedCache(undefined, true);
@@ -502,8 +512,8 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery,
   if (searchQuery) {
     if (searchQuery.length > 1) {
       this.searchDataSet = true;
-      var searchResults = new this.dashboardDataSetSearchService(searchQuery);
-      this.dataSets.set(searchResults, searchQuery);
+      this.dataSet.search(searchQuery);
+      this.dataSets.newOrCachedCache(searchQuery);
       // Sometimes the `ui-scroll` didn't stop showing the loading spinner. It
       // seems like we need to wait for one digestion cycle before reloading the
       // directive.
@@ -512,11 +522,10 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery,
       }.bind(this), 0);
     }
   } else {
-    this.dataSets.set(this.dashboardDataSetListService);
-    if (this.searchDataSet) {
-      this.searchDataSet = false;
-      this.dashboardDataSetsReloadService.reload();
-    }
+    this.dataSet.search(searchQuery);
+    this.dataSets.newOrCachedCache(searchQuery);
+    this.searchDataSet = false;
+    this.dashboardDataSetsReloadService.reload();
   }
 };
 

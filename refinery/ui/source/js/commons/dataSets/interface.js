@@ -375,7 +375,10 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    */
   DataSet.prototype.filter = function (filter) {
     _browsePath = [];
-    _source = new DataSetDataApi(filter);
+    _clearOrderCache();
+    _source = new DataSetDataApi({
+      'filter_by': filter
+    });
 
     return DataSet;
   };
@@ -392,7 +395,10 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    */
   DataSet.prototype.order = function (order) {
     _browsePath = [];
-    _source = new DataSetDataApi(order);
+    _clearOrderCache();
+    _source = new DataSetDataApi({
+      'order_by': order
+    });
 
     return DataSet;
   };
