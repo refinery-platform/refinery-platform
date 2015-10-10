@@ -9,7 +9,11 @@ function DataSetDataApiFactory (_, dataSetService) {
    * @param   {Object}  extra  Parameters other than `limit` and `offset`.
    */
   function DataSetDataApi (extra) {
-    var params = _.cloneDeep(extra) || {};
+    var params = {};
+
+    if (_.isObject(extra)) {
+      params = _.cloneDeep(extra);
+    }
 
     /**
      * Actual method being exported after constructing the class.
