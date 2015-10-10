@@ -189,9 +189,9 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    */
   function _getDataFromSource (limit, offset) {
     return _source(limit, offset).then(function (response) {
-      for (var i = offset, len = response.data.length; i < len; i++) {
+      for (var i = 0, len = response.data.length; i < len; i++) {
         _dataStore.add(response.data[i].id, response.data[i]);
-        _cacheOrder(i, _dataStore.get(response.data[i].id));
+        _cacheOrder(offset + i, _dataStore.get(response.data[i].id));
       }
       if (_total === Infinity) {
         _total = response.meta.total;
@@ -217,6 +217,7 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
     if (data.length < _total - offset) {
       data = _getDataFromSource(limit, offset);
     }
+
     return $q.when(data);
   }
 
