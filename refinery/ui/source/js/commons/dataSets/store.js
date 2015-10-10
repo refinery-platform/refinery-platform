@@ -91,6 +91,26 @@ function DataSetStoreFactory (_) {
     return DataSetStore;
   };
 
+  /**
+   * Number of files currently stored.
+   *
+   * @author  Fritz Lekschas
+   * @date    2015-10-09
+   *
+   * @type  {Number}
+   */
+  Object.defineProperty(
+    DataSetStore.prototype,
+    'length',
+    {
+      enumerable: true,
+      configurable: false,
+      get: function () {
+        return Object.keys(_store).length;
+      }
+    }
+  );
+
   return DataSetStore;
 }
 
