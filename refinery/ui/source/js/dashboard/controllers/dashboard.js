@@ -484,8 +484,6 @@ DashboardCtrl.prototype.resetDataSetSearch = function () {
 
 DashboardCtrl.prototype.setDataSetSource = function (searchQuery,
   fromStateEvent) {
-  var that = this;
-
   this.showFilterSort = false;
 
   if (!fromStateEvent) {
@@ -503,21 +501,21 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery,
 
   if (searchQuery) {
     if (searchQuery.length > 1) {
-      that.searchDataSet = true;
+      this.searchDataSet = true;
       var searchResults = new this.dashboardDataSetSearchService(searchQuery);
       this.dataSets.set(searchResults, searchQuery);
       // Sometimes the `ui-scroll` didn't stop showing the loading spinner. It
       // seems like we need to wait for one digestion cycle before reloading the
       // directive.
       this.$timeout(function() {
-        that.dashboardDataSetsReloadService.reload();
-      }, 0);
+        this.dashboardDataSetsReloadService.reload();
+      }.bind(this), 0);
     }
   } else {
     this.dataSets.set(this.dashboardDataSetListService);
-    if (that.searchDataSet) {
-      that.searchDataSet = false;
-      that.dashboardDataSetsReloadService.reload();
+    if (this.searchDataSet) {
+      this.searchDataSet = false;
+      this.dashboardDataSetsReloadService.reload();
     }
   }
 };
