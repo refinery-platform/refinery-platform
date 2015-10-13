@@ -46,6 +46,19 @@
 					<p>
 						{% flatblock "about.website.funding" evaluated %}
 					</p>
+                    <div class="refinery-header">
+						<span class="refinery-header-left">
+							<h3>Most Recent Code for this Instance</h3>
+						</span>
+					</div>
+					<p>
+                        {% if CURRENT_COMMIT != "Error Retrieving Most Recent Commit" %}
+						    <a href="https://github.com/parklab/refinery-platform/commit/{{ CURRENT_COMMIT }}">{{ CURRENT_COMMIT }}</a>
+                        {% else %}
+                            <span>{{ CURRENT_COMMIT }}</span>
+                        {% endif %}
+                    </p>
+
 
 				</div>
 			</div>
