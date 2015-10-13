@@ -8,6 +8,7 @@ from django.core.management.base import BaseCommand
 from core.tasks import create_update_ontology
 
 logger = logging.getLogger(__name__)
+root_logger = logging.getLogger()
 
 
 class Command(BaseCommand):
@@ -51,6 +52,21 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
+        verbosity = int(options['verbosity'])
+
+        if verbosity == 0:
+            logger.setLevel(logging.ERROR)
+            root_logger.setLevel(logging.ERROR)
+        elif verbosity == 1:  # default
+            logger.setLevel(logging.WARNING)
+            root_logger.setLevel(logging.WARNING)
+        elif verbosity > 1:
+            logger.setLevel(logging.INFO)
+            root_logger.setLevel(logging.INFO)
+        if verbosity > 2:
+            logger.setLevel(logging.DEBUG)
+            root_logger.setLevel(logging.DEBUG)
+
         # Wrap strings in double quotes in case they contain white spaces.
         if not options['ontology_file']:
             options['ontology_file'] = ''
@@ -82,7 +98,7 @@ class Command(BaseCommand):
                     abbr=ontology_abbr,
                     eqp=options['eqp'],
                     server=settings.NEO4J_BASE_URL,
-                    verbosity=('-v' if int(options['verbosity']) == 2 else '')
+                    verbosity=('-v' if verbosity == 2 else '')
                 )
 
             # Note that `owl2neo4j.jar` handles all other possible errors.
