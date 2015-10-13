@@ -4,7 +4,7 @@ function buildTree (results) {
       // The only difference to `nodes` is that the `children` is an object
       // holding the name of the child node.
       childIndex = {
-        'owl:Thing': {}
+        'OWL:Thing': {}
       },
       currentChild,
       currentDataSet,
@@ -15,7 +15,7 @@ function buildTree (results) {
       lastNode,
       len,
       nodes = {
-        'owl:Thing': {
+        'OWL:Thing': {
           // Fortunately `owl:Thing` is the mandatory root for any ontology.
           name: 'Root',
           ontID: 'OWL:Thing',
@@ -96,7 +96,7 @@ function buildTree (results) {
   }
 
   // Deep clone object to be usable by D3
-  return JSON.parse(JSON.stringify(nodes['owl:Thing']));
+  return JSON.parse(JSON.stringify(nodes['OWL:Thing']));
 }
 
 function Neo4jToD3 ($q, neo4j, Webworker) {
