@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 import logging
 import py2neo
+import core
+import datetime
 from django.conf import settings
 from django.db import connection
 
@@ -385,3 +387,24 @@ def get_data_set_annotations(dataset_uuid):
         dict(zip([col[0] for col in desc], row))
         for row in cursor.fetchall()
     ]
+
+
+def create_update_ontology(name, acronym, uri, version):
+    """Creates or updates an ontology entry after importing.
+    """
+
+    ontology = core.models.Ontology.objects.filter(acronym=acronym)
+
+    if not ontology:
+        ontology = core.models.Ontology.objects.create(
+            acronym=acronym,
+            name=name,
+            uri=uri,
+            version=version
+        )
+        logger.info('Created %s', ontology)
+    else:
+        ontology = ontology[0]
+        ontology.import_date = datetime.datetime.now()
+        ontology.save()
+        logger.info('Updated %s', ontology)

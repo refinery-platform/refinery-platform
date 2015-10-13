@@ -5,7 +5,7 @@ import py2neo
 from optparse import make_option
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from core.tasks import create_update_ontology
+from core.utils import create_update_ontology
 
 logger = logging.getLogger(__name__)
 root_logger = logging.getLogger()
