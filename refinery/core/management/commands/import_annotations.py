@@ -1,11 +1,13 @@
 import logging
 import py2neo
+import time
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from core.models import DataSet, ExtendedGroup
 from core.utils import normalize_annotation_ont_ids, get_data_set_annotations
 
 logger = logging.getLogger(__name__)
+root_logger = logging.getLogger()
 
 
 class Command(BaseCommand):
@@ -122,7 +124,34 @@ class Command(BaseCommand):
         tx.commit()
 
     def handle(self, *args, **options):
+        verbosity = int(options['verbosity'])
+
+        if verbosity == 0:
+            root_logger.setLevel(logging.ERROR)
+        elif verbosity == 1:  # default
+            root_logger.setLevel(logging.WARNING)
+        elif verbosity > 1:
+            root_logger.setLevel(logging.INFO)
+        if verbosity > 2:
+            root_logger.setLevel(logging.DEBUG)
+
+        print('Import annotations...')
+
+        start = time.time()
+
         annotations = get_data_set_annotations(None)
         annotations = normalize_annotation_ont_ids(annotations)
         self.push_annotations_to_neo4j(annotations)
         self.push_users()
+
+        end = time.time()
+        minutes = (end - start) // 60
+        seconds = int(round((end - start) % 60))
+
+        print(
+            u'Import annotations... \033[32m\u2713\033[0m ' +
+            '\033[2m({} min and {} sec)\033[22m'.format(
+                minutes,
+                seconds
+            )
+        )
