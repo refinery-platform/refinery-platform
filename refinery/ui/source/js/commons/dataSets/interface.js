@@ -338,7 +338,7 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
   }
 
   /*
-   * --------------------------------- Public ----------------------------------
+   * ------------------------------- Public ------------------------------------
    */
 
   /**
@@ -354,157 +354,7 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
     this.all();
   }
 
-  /**
-   * Set the data source to the general unrestricted data API.
-   *
-   * @method  all
-   * @author  Fritz Lekschas
-   * @date    2015-10-08
-   *
-   * @return  {Object}  Return the class itself for chaining.
-   */
-  DataSet.prototype.all = function () {
-    _browsePath = [];
-    _source = new DataSetDataApi();
-
-    return DataSet;
-  };
-
-  /**
-   * Set the data source to the general data API and add a filter option.
-   *
-   * @method  filter
-   * @author  Fritz Lekschas
-   * @date    2015-10-08
-   *
-   * @param   {String}  filter  String that determines the filter.
-   * @return  {Object}          Return the class itself for chaining.
-   */
-  DataSet.prototype.filter = function (filter) {
-    _browsePath = [];
-    _clearOrderCache();
-    _source = new DataSetDataApi({
-      'filter_by': filter
-    });
-
-    return DataSet;
-  };
-
-  /**
-   * Set the data source to the general data API and add a order option.
-   *
-   * @method  order
-   * @author  Fritz Lekschas
-   * @date    2015-10-08
-   *
-   * @param   {String}  order  String that determines the order.
-   * @return  {Object}         Return the class itself for chaining.
-   */
-  DataSet.prototype.order = function (order) {
-    _browsePath = [];
-    _clearOrderCache();
-    _source = new DataSetDataApi({
-      'order_by': order
-    });
-
-    return DataSet;
-  };
-
-  /**
-   * Set the data source to the search endpoint.
-   *
-   * @method  search
-   * @author  Fritz Lekschas
-   * @date    2015-10-08
-   *
-   * @param   {String}  query  Keywords for searching.
-   * @return  {Object}         Return the class itself for chaining.
-   */
-  DataSet.prototype.search = function (query) {
-    _source = new DataSetSearchApi(query);
-    _addBrowsePath({
-      type: 'search',
-      query: query
-    });
-
-    _clearOrderCache();
-
-    return DataSet;
-  };
-
-  /**
-   * Request a set of data objects.
-   *
-   * @method  get
-   * @author  Fritz Lekschas
-   * @date    2015-10-08
-   */
-  DataSet.prototype.get = _get;
-
-  /**
-   * Get data objects including meta data.
-   *
-   * @description
-   * This is needed for some services like `UiScollSource`.
-   *
-   * @method  getInclMeta
-   * @author  Fritz Lekschas
-   * @date    2015-10-09
-   *
-   * @param   {Number}  limit   Number of data objects to be fetched.
-   * @param   {Number}  offset  Starting point for retrieving data objects.
-   * @return  {Object}          Promise with data objects.
-   */
-  DataSet.prototype.getInclMeta = function (limit, offset) {
-    return _get(limit, offset).then(function (data) {
-      return {
-        meta: {
-          total: _total
-        },
-        data: data
-      };
-    });
-  };
-
-  /**
-   * [select description]
-   *
-   * @method  select
-   * @author  Fritz Lekschas
-   * @date    2015-10-08
-   *
-   * @param   {Object|Array}   set  Selected data objects.
-   * @return  {Object}              Return the class itself for chaining.
-   */
-  DataSet.prototype.select = function (set) {
-    _setSelection(set);
-    _addBrowsePath({
-      type: 'select',
-      query: set
-    });
-
-    return DataSet;
-  };
-
-  /**
-   * Deselect currently selected data objects.
-   *
-   * @method  deselect
-   * @author  Fritz Lekschas
-   * @date    2015-10-08
-   *
-   * @return  {Object}  Return the class itself for chaining.
-   */
-  DataSet.prototype.deselect = function () {
-    if (_browsePath.length &&
-        _browsePath[_browsePath.length - 1].type === 'select') {
-      _browsePath.pop();
-    }
-
-    _selection = [];
-
-    return DataSet;
-  };
+  /* ------------------------------ Variables ------------------------------- */
 
   /**
    * Current selection.
@@ -585,6 +435,160 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
       }
     }
   );
+
+  /* ------------------------------- Methods -------------------------------- */
+
+  /**
+   * Set the data source to the general unrestricted data API.
+   *
+   * @method  all
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
+   * @return  {Object}  Return the class itself for chaining.
+   */
+  DataSet.prototype.all = function () {
+    _browsePath = [];
+    _source = new DataSetDataApi();
+
+    return DataSet;
+  };
+
+  /**
+   * Deselect currently selected data objects.
+   *
+   * @method  deselect
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
+   * @return  {Object}  Return the class itself for chaining.
+   */
+  DataSet.prototype.deselect = function () {
+    if (_browsePath.length &&
+        _browsePath[_browsePath.length - 1].type === 'select') {
+      _browsePath.pop();
+    }
+
+    _selection = [];
+
+    return DataSet;
+  };
+
+  /**
+   * Set the data source to the general data API and add a filter option.
+   *
+   * @method  filter
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
+   * @param   {String}  filter  String that determines the filter.
+   * @return  {Object}          Return the class itself for chaining.
+   */
+  DataSet.prototype.filter = function (filter) {
+    _browsePath = [];
+    _clearOrderCache();
+    _source = new DataSetDataApi({
+      'filter_by': filter
+    });
+
+    return DataSet;
+  };
+
+  /**
+   * Request a set of data objects.
+   *
+   * @method  get
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   */
+  DataSet.prototype.get = _get;
+
+  /**
+   * Get data objects including meta data.
+   *
+   * @description
+   * This is needed for some services like `UiScollSource`.
+   *
+   * @method  getInclMeta
+   * @author  Fritz Lekschas
+   * @date    2015-10-09
+   *
+   * @param   {Number}  limit   Number of data objects to be fetched.
+   * @param   {Number}  offset  Starting point for retrieving data objects.
+   * @return  {Object}          Promise with data objects.
+   */
+  DataSet.prototype.getInclMeta = function (limit, offset) {
+    return _get(limit, offset).then(function (data) {
+      return {
+        meta: {
+          total: _total
+        },
+        data: data
+      };
+    });
+  };
+
+  /**
+   * Set the data source to the general data API and add a order option.
+   *
+   * @method  order
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
+   * @param   {String}  order  String that determines the order.
+   * @return  {Object}         Return the class itself for chaining.
+   */
+  DataSet.prototype.order = function (order) {
+    _browsePath = [];
+    _clearOrderCache();
+    _source = new DataSetDataApi({
+      'order_by': order
+    });
+
+    return DataSet;
+  };
+
+  /**
+   * Set the data source to the search endpoint.
+   *
+   * @method  search
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
+   * @param   {String}  query  Keywords for searching.
+   * @return  {Object}         Return the class itself for chaining.
+   */
+  DataSet.prototype.search = function (query) {
+    _source = new DataSetSearchApi(query);
+    _addBrowsePath({
+      type: 'search',
+      query: query
+    });
+
+    _clearOrderCache();
+
+    return DataSet;
+  };
+
+  /**
+   * [select description]
+   *
+   * @method  select
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
+   * @param   {Object|Array}   set  Selected data objects.
+   * @return  {Object}              Return the class itself for chaining.
+   */
+  DataSet.prototype.select = function (set) {
+    _setSelection(set);
+    _addBrowsePath({
+      type: 'select',
+      query: set
+    });
+
+    return DataSet;
+  };
 
   return new DataSet();
 }
