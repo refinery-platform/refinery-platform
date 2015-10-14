@@ -53,9 +53,6 @@ LANGUAGE_CODE = get_setting("LANGUAGE_CODE")
 
 SITE_ID = 1
 
-# Settings to be accessible throughout all views
-UI_ACCESSIBLE_SETTINGS = get_setting("UI_ACCESSIBLE_SETTINGS")
-
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
 USE_I18N = get_setting("USE_I18N")
@@ -452,4 +449,5 @@ if REFINERY_EXTERNAL_AUTH:
 try:
     CURRENT_COMMIT = check_output(['git', 'rev-parse', "HEAD"])
 except:
+    logger.debug("Error Retrieving Most Recent Commit")
     CURRENT_COMMIT = "Error Retrieving Most Recent Commit"
