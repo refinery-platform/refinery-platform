@@ -224,6 +224,12 @@ function DashboardCtrl (
       }
     );
   }.bind(this));
+
+  this.treemapContext.on('dataSets', function (response) {
+    response.then(function (dataSets) {
+      this.selectDataSets(dataSets);
+    }.bind(this));
+  }.bind(this));
 }
 
 /*
@@ -619,11 +625,30 @@ DashboardCtrl.prototype.collapseDatasetExploration = function () {
 
   this.dataSetExploration = false;
   this.expandDataSetPanel = false;
+  this.deselectDataSets();
   this.dashboardExpandablePanelService.trigger('collapser');
 };
 
 DashboardCtrl.prototype.findDataSet = function (uuid) {
   // Need to implement a method that can find an item in a ui-scroll resource.
+};
+
+DashboardCtrl.prototype.selectDataSets = function (ids) {
+  this.dataSet.select(ids);
+  this.dataSets.newOrCachedCache(
+    'termSelection.' + this.treemapRoot.ontId + '.' + this.treemapRoot.branchId
+  );
+  this.$timeout(function() {
+    this.dashboardDataSetsReloadService.reload();
+  }.bind(this), 0);
+};
+
+DashboardCtrl.prototype.deselectDataSets = function () {
+  this.dataSet.deselect();
+  this.dataSets.newOrCachedCache();
+  this.$timeout(function() {
+    this.dashboardDataSetsReloadService.reload();
+  }.bind(this), 0);
 };
 
 angular
