@@ -1,8 +1,10 @@
 function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) {
 
   /*
-   * --------------------------------- Private ---------------------------------
+   * ------------------------------- Private -----------------------------------
    */
+
+  /* ------------------------------ Variables ------------------------------- */
 
   /**
    * Stores the individual browse steps to be able to reconstruct previous
@@ -98,6 +100,80 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    */
   var _total = Infinity;
 
+  /* ------------------------------- Methods -------------------------------- */
+
+  /**
+   * Add a new step to the browsing path or modify the existing one if its the
+   * same type.
+   *
+   * @method  _addBrowsePath
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
+   * @param   {Object}  step  Object with a type and query description.
+   */
+  function _addBrowsePath (step) {
+    if (_browsePath.length &&
+        _browsePath[_browsePath.length - 1].type !== step.type) {
+      _browsePath[_browsePath.length - 1].query = step.query;
+    } else {
+      _browsePath.push(step);
+    }
+  }
+
+  /**
+   * Recursively builds up the selection based on promises.
+   *
+   * @method  _buildSelection
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
+   * @param   {Array}   selection  Array of references of selected data objects.
+   * @param   {Number}  limit      Total number of requested objects.
+   * @return  {Object}             Promise of `selection`.
+   */
+  function _buildSelection (selection, limit) {
+    return _getDataFromOrderCache(limit, selectionCacheLastIndex)
+      .then(function (data) {
+        var dataLen = data.length,
+            selectionCacheLen;
+        for (var i = 0; i < dataLen; i++) {
+          if (!!_selection[data[i].id]) {
+            selectionCacheLen = _selectionCache.push(data[i]);
+            if (selectionCacheLen > offset) {
+              selection.push(data[i]);
+            }
+          }
+          selectionCacheLastIndex++;
+        }
+        // Stop looping when no more data is available.
+        if (dataLen === 0) {
+          return selection;
+        }
+        if (selection.length < limit) {
+          return _buildSelection(selection, limit);
+        }
+        return selection;
+      })
+      .catch(function (e) {
+        deferred.reject(e);
+      });
+  }
+
+  /**
+   * Caches the position of a data object.
+   *
+   * @method  _cacheOrder
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
+   * @param   {Number}  index  Position of the data object.
+   * @param   {Object}  data   Reference to the data object.
+   */
+  function _cacheOrder (index, data) {
+    _orderCache[index] = data;
+  }
+
   /**
    * Clear the cache of ordered data objects.
    *
@@ -124,43 +200,52 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
   }
 
   /**
-   * [_select description]
+   * Get cached data from `_orderCache`.
    *
-   * @method  _setSelection
+   * @method  _getDataFromOrderCache
    * @author  Fritz Lekschas
    * @date    2015-10-08
    *
-   * @param   {Object|Array}  set  Set of data objects to be selected.
+   * @param   {Number}  limit   Number of data objects to be fetched.
+   * @param   {Number}  offset  Starting point for retrieving data objects.
+   * @return  {Object}          Promise of list of references to the data.
    */
-  function _setSelection (set) {
-    var selection = {};
-
-    if (_.isObject(set)) {
-      selection = set;
+  function _getDataFromOrderCache (limit, offset) {
+    var data = _orderCache.slice(offset, limit + offset);
+    if (data.length < _total - offset) {
+      data = _getDataFromSource(limit, offset);
     }
 
-    if (_.isArray(set)) {
-      for (var i = set.length; i--;) {
-        selection[i] = true;
-      }
-    }
-
-    _selection = selection;
-    _clearSelectionCache();
+    return $q.when(data);
   }
 
   /**
-   * Caches the position of a data object.
+   * Request a set of data objects.
    *
-   * @method  _cacheOrder
+   * @method  _get
    * @author  Fritz Lekschas
    * @date    2015-10-08
    *
-   * @param   {Number}  index  Position of the data object.
-   * @param   {Object}  data   Reference to the data object.
+   * @param   {Number}  limit   Number of data objects to be fetched.
+   * @param   {Number}  offset  Starting point for retrieving data objects.
+   * @return  {Object}          Promise with data objects.
    */
-  function _cacheOrder (index, data) {
-    _orderCache[index] = data;
+  function _get (limit, offset) {
+    var data;
+
+    if (this.selectionActive) {
+      data = _selectionCache.slice(offset, limit + offset);
+      if (
+        data.length !== Math.min(limit, _total) &&
+        _selectionCacheLastIndex !== _total
+      ) {
+        data = _getSelection(limit, offset);
+      }
+    } else {
+      data = _getDataFromOrderCache(limit, offset);
+    }
+
+    return $q.when(data);
   }
 
   /**
@@ -205,65 +290,6 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
   }
 
   /**
-   * Get cached data from `_orderCache`.
-   *
-   * @method  _getDataFromOrderCache
-   * @author  Fritz Lekschas
-   * @date    2015-10-08
-   *
-   * @param   {Number}  limit   Number of data objects to be fetched.
-   * @param   {Number}  offset  Starting point for retrieving data objects.
-   * @return  {Object}          Promise of list of references to the data.
-   */
-  function _getDataFromOrderCache (limit, offset) {
-    var data = _orderCache.slice(offset, limit + offset);
-    if (data.length < _total - offset) {
-      data = _getDataFromSource(limit, offset);
-    }
-
-    return $q.when(data);
-  }
-
-  /**
-   * Recursively builds up the selection based on promises.
-   *
-   * @method  _buildSelection
-   * @author  Fritz Lekschas
-   * @date    2015-10-08
-   *
-   * @param   {Array}   selection  Array of references of selected data objects.
-   * @param   {Number}  limit      Total number of requested objects.
-   * @return  {Object}             Promise of `selection`.
-   */
-  function _buildSelection (selection, limit) {
-    return _getDataFromOrderCache(limit, selectionCacheLastIndex)
-      .then(function (data) {
-        var dataLen = data.length,
-            selectionCacheLen;
-        for (var i = 0; i < dataLen; i++) {
-          if (!!_selection[data[i].id]) {
-            selectionCacheLen = _selectionCache.push(data[i]);
-            if (selectionCacheLen > offset) {
-              selection.push(data[i]);
-            }
-          }
-          selectionCacheLastIndex++;
-        }
-        // Stop looping when no more data is available.
-        if (dataLen === 0) {
-          return selection;
-        }
-        if (selection.length < limit) {
-          return _buildSelection(selection, limit);
-        }
-        return selection;
-      })
-      .catch(function (e) {
-        deferred.reject(e);
-      });
-  }
-
-  /**
    * Get the data objects related to a selection.
    *
    * @method  _getSelection
@@ -286,51 +312,29 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
   }
 
   /**
-   * Add a new step to the browsing path or modify the existing one if its the
-   * same type.
+   * [_select description]
    *
-   * @method  _addBrowsePath
+   * @method  _setSelection
    * @author  Fritz Lekschas
    * @date    2015-10-08
    *
-   * @param   {Object}  step  Object with a type and query description.
+   * @param   {Object|Array}  set  Set of data objects to be selected.
    */
-  function _addBrowsePath (step) {
-    if (_browsePath.length &&
-        _browsePath[_browsePath.length - 1].type !== step.type) {
-      _browsePath[_browsePath.length - 1].query = step.query;
-    } else {
-      _browsePath.push(step);
+  function _setSelection (set) {
+    var selection = {};
+
+    if (_.isObject(set)) {
+      selection = set;
     }
-  }
 
-  /**
-   * Request a set of data objects.
-   *
-   * @method  _get
-   * @author  Fritz Lekschas
-   * @date    2015-10-08
-   *
-   * @param   {Number}  limit   Number of data objects to be fetched.
-   * @param   {Number}  offset  Starting point for retrieving data objects.
-   * @return  {Object}          Promise with data objects.
-   */
-  function _get (limit, offset) {
-    var data;
-
-    if (this.selectionActive) {
-      data = _selectionCache.slice(offset, limit + offset);
-      if (
-        data.length !== Math.min(limit, _total) &&
-        _selectionCacheLastIndex !== _total
-      ) {
-        data = _getSelection(limit, offset);
+    if (_.isArray(set)) {
+      for (var i = set.length; i--;) {
+        selection[i] = true;
       }
-    } else {
-      data = _getDataFromOrderCache(limit, offset);
     }
 
-    return $q.when(data);
+    _selection = selection;
+    _clearSelectionCache();
   }
 
   /*
