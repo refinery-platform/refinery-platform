@@ -4,7 +4,6 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    * --------------------------------- Private ---------------------------------
    */
 
-
   /**
    * Stores the individual browse steps to be able to reconstruct previous
    * selections.
