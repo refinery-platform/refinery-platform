@@ -100,6 +100,16 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    */
   var _total = Infinity;
 
+  /**
+   * Total number of currently selected data objects.
+   *
+   * @author  Fritz Lekschas
+   * @date    2015-10-14
+   *
+   * @type  {Number}
+   */
+  var _totalSelection = Infinity;
+
   /* ------------------------------- Methods -------------------------------- */
 
   /**
@@ -126,14 +136,15 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    *
    * @method  _buildSelection
    * @author  Fritz Lekschas
-   * @date    2015-10-08
+   * @date    2015-10-14
    *
-   * @param   {Array}   selection  Array of references of selected data objects.
    * @param   {Number}  limit      Total number of requested objects.
+   * @param   {Number}  offset     Starting point for retrieving data objects.
+   * @param   {Array}   selection  Array of references of selected data objects.
    * @return  {Object}             Promise of `selection`.
    */
-  function _buildSelection (selection, limit) {
-    return _getDataFromOrderCache(limit, selectionCacheLastIndex)
+  function _buildSelection (limit, offset, selection) {
+    return _getDataFromOrderCache(limit, _selectionCacheLastIndex)
       .then(function (data) {
         var dataLen = data.length,
             selectionCacheLen;
@@ -144,14 +155,14 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
               selection.push(data[i]);
             }
           }
-          selectionCacheLastIndex++;
+          _selectionCacheLastIndex++;
         }
         // Stop looping when no more data is available.
         if (dataLen === 0) {
           return selection;
         }
         if (selection.length < limit) {
-          return _buildSelection(selection, limit);
+          return _buildSelection(limit, offset, selection);
         }
         return selection;
       })
@@ -195,6 +206,7 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    * @date    2015-10-08
    */
   function _clearSelectionCache () {
+    _totalSelection = Infinity;
     _selectionCache = [];
     _selectionCacheLastIndex = 0;
   }
@@ -213,7 +225,7 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
   function _get (limit, offset) {
     var data;
 
-    if (this.selectionActive) {
+    if (_selectionLen()) {
       data = _selectionCache.slice(offset, limit + offset);
       if (
         data.length !== Math.min(limit, _total) &&
@@ -241,7 +253,7 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    */
   function _getDataFromOrderCache (limit, offset) {
     var data = _orderCache.slice(offset, limit + offset);
-    if (data.length < _total - offset) {
+    if (data.length < offset && data.length < (_totalSelection || _total)) {
       data = _getDataFromSource(limit, offset);
     }
 
@@ -303,12 +315,25 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
   function _getSelection (limit, offset) {
     var deferred = $q.defer();
 
-    return _buildSelection(selection, limit).then(function (selection) {
+    return _buildSelection(limit, offset, []).then(function (selection) {
       // Need to slice off items that are out of the range due to looping
       return selection.slice(0, limit);
     }).catch(function (e) {
       deferred.reject(e);
     });
+  }
+
+  /**
+   * Return `true` if some data objects are currently selected.
+   *
+   * @method  _selectionLen
+   * @author  Fritz Lekschas
+   * @date    2015-10-14
+   *
+   * @return  {Boolean}
+   */
+  function _selectionLen () {
+    return Object.keys(_selection).length;
   }
 
   /**
@@ -334,6 +359,7 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
     }
 
     _selection = selection;
+    _totalSelection = _selectionLen();
     _clearSelectionCache();
   }
 
@@ -391,7 +417,7 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
       enumerable: true,
       configurable: false,
       get: function () {
-        return !!Object.keys(_selection).length;
+        return !!_selectionLen();
       }
     }
   );
@@ -521,7 +547,7 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
     return _get(limit, offset).then(function (data) {
       return {
         meta: {
-          total: _total
+          total: _totalSelection || _total
         },
         data: data
       };
