@@ -18,7 +18,7 @@ function buildTree (results) {
         'OWL:Thing': {
           // Fortunately `owl:Thing` is the mandatory root for any ontology.
           name: 'Root',
-          ontID: 'OWL:Thing',
+          ontId: 'OWL:Thing',
           uri: 'http://www.w3.org/2002/07/owl#Thing',
           children: []
         }
@@ -56,7 +56,7 @@ function buildTree (results) {
         dataSets: [],
         name: currentParent.name,
         numDataSets: 0,
-        ontID: currentParent.name
+        ontId: currentParent.name
       };
     }
 
@@ -66,7 +66,7 @@ function buildTree (results) {
         dataSets: [],
         name: currentChild.name,
         numDataSets: 0,
-        ontID: currentChild.name
+        ontId: currentChild.name
       };
     }
 

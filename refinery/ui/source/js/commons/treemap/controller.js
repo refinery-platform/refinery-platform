@@ -597,7 +597,7 @@ TreemapCtrl.prototype.draw = function () {
   } else {
     this.rootNode = {
       branchId: 0,
-      ontId: this.data.ontID
+      ontId: this.data.ontId
     };
   }
 
@@ -688,10 +688,10 @@ TreemapCtrl.prototype.layout = function (parent, depth) {
   parent.meta.depth = depth;
   // Cache the the branch id for each node, which is needed to uniquely identify
   // the position of a selected term.
-  if (parent.ontID in this.cacheTerms) {
-    parent.cache.branchId = this.cacheTerms[parent.ontID].push(parent) - 1;
+  if (parent.ontId in this.cacheTerms) {
+    parent.cache.branchId = this.cacheTerms[parent.ontId].push(parent) - 1;
   } else {
-    this.cacheTerms[parent.ontID] = [parent];
+    this.cacheTerms[parent.ontId] = [parent];
     parent.cache.branchId = 0;
   }
   if (parent._children && parent._children.length) {
@@ -966,7 +966,7 @@ TreemapCtrl.prototype.transition = function (data) {
 
   transition.then(function () {
     this.rootNode = {
-      ontId: data.ontID,
+      ontId: data.ontId,
       branchId: data.cache.branchId
     };
   }.bind(this));
