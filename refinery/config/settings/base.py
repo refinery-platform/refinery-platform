@@ -432,7 +432,10 @@ TIMEOUT = get_setting("TIMEOUT")
 LIBS_DIR = get_setting("LIBS_DIR")
 
 # Neo4J settings
-NEO4J_BASE_URL = get_setting("NEO4J_BASE_URL")
+neo4j_settings = get_setting("NEO4J")
+
+NEO4J_BASE_URL = get_setting("BASE_URL", neo4j_settings)
+NEO4J_CONSTRAINTS = get_setting("CONSTRAINTS", neo4j_settings)
 
 # Java settings
 JAVA_ENTITY_EXPANSION_LIMIT = get_setting("JAVA_ENTITY_EXPANSION_LIMIT")

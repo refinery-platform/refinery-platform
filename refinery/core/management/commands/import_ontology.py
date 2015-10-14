@@ -87,6 +87,31 @@ class Command(BaseCommand):
         else:
             options['eqp'] = ''
 
+        # Check if constraints have already been added or add them
+        try:
+            graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+
+            for constraint in settings.NEO4J_CONSTRAINTS:
+                existing_prop_const = graph.schema.get_uniqueness_constraints(
+                    constraint['label']
+                )
+                for prop in constraint['properties']:
+                    if prop['name'] not in existing_prop_const:
+                        if prop['unique']:
+                            graph.schema.create_uniqueness_constraint(
+                                constraint['label'],
+                                prop['name']
+                            )
+                        else:
+                            graph.schema.create_index(
+                                constraint['label'],
+                                prop['name']
+                            )
+        except Exception, e:
+            logger.error(e)
+            sys.exit(1)
+
+        # Import or re-import ontology
         try:
             cmd = 'java -jar -DentityExpansionLimit={eel} '\
                 '{lib}/owl2neo4j.jar -o {ontology} -n {name} -a {abbr} ' \
@@ -107,7 +132,7 @@ class Command(BaseCommand):
             else:
                 subprocess.check_output(cmd, shell=True)
         except Exception, e:
-            logger.error(e.output)
+            logger.error(e)
             sys.exit(1)
 
         try:
