@@ -108,7 +108,7 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    *
    * @type  {Number}
    */
-  var _totalSelection = Infinity;
+  var _totalSelection = 0;
 
   /* ------------------------------- Methods -------------------------------- */
 
@@ -206,7 +206,7 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    * @date    2015-10-08
    */
   function _clearSelectionCache () {
-    _totalSelection = Infinity;
+    _totalSelection = 0;
     _selectionCache = [];
     _selectionCacheLastIndex = 0;
   }
@@ -253,7 +253,7 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    */
   function _getDataFromOrderCache (limit, offset) {
     var data = _orderCache.slice(offset, limit + offset);
-    if (data.length < offset && data.length < (_totalSelection || _total)) {
+    if (data.length < limit && data.length < (_totalSelection || _total)) {
       data = _getDataFromSource(limit, offset);
     }
 
@@ -358,9 +358,10 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
       }
     }
 
+    _clearSelectionCache();
+
     _selection = selection;
     _totalSelection = _selectionLen();
-    _clearSelectionCache();
   }
 
   /*
