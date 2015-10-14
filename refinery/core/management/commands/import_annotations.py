@@ -14,6 +14,16 @@ class Command(BaseCommand):
     help = """Annotate available ontology terms with datasets.
     """
 
+    option_list = BaseCommand.option_list + (
+        make_option(
+            '-c',
+            '--clear',
+            action='store_true',
+            dest='clear',
+            help='Clear annotations before import'
+        )
+    )
+
     def push_annotations_to_neo4j(self, annotations):
         # We currently disabled authentication as Neo4J is only accessible
         # locally.
@@ -29,12 +39,12 @@ class Command(BaseCommand):
 
         statement_name = (
             "MATCH (term:Class {name:{ont_id}}) "
-            "MERGE (ds:DataSet {uuid:{ds_uuid}}) "
+            "MERGE (ds:DataSet {id:{ds_id},uuid:{ds_uuid}}) "
             "MERGE ds-[:`annotated_with`]->term"
         )
         statement_uri = (
             "MATCH (term:Class {uri:{uri}}) "
-            "MERGE (ds:DataSet {uuid:{ds_uuid}}) "
+            "MERGE (ds:DataSet {id:{ds_id},uuid:{ds_uuid}}) "
             "MERGE ds-[:`annotated_with`]->term"
         )
 
@@ -44,6 +54,7 @@ class Command(BaseCommand):
                     statement_uri,
                     {
                         'uri': annotation['value_uri'],
+                        'ds_id': annotation['data_set_id'],
                         'ds_uuid': annotation['data_set_uuid']
                     }
                 )
@@ -56,6 +67,7 @@ class Command(BaseCommand):
                             ':' +
                             annotation['value_accession']
                         ),
+                        'ds_id': annotation['data_set_id'],
                         'ds_uuid': annotation['data_set_uuid']
                     }
                 )
@@ -134,6 +146,32 @@ class Command(BaseCommand):
             root_logger.setLevel(logging.INFO)
         if verbosity > 2:
             root_logger.setLevel(logging.DEBUG)
+
+        if options['clear']:
+            print('Clear existing annotations and users...')
+            start = time.time()
+
+            graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+
+            graph.cypher.execute(
+                'MATCH (ds:DataSet) OPTIONAL MATCH (ds)-[r]-() DELETE ds, r',
+            )
+
+            graph.cypher.execute(
+                'MATCH (u:User) OPTIONAL MATCH (u)-[r]-() DELETE u, r',
+            )
+
+            end = time.time()
+            minutes = (end - start) // 60
+            seconds = int(round((end - start) % 60))
+            print(
+                u'Clear existing annotations and users... ' +
+                '\033[32m\u2713\033[0m ' +
+                '\033[2m({} min and {} sec)\033[22m'.format(
+                    minutes,
+                    seconds
+                )
+            )
 
         print('Import annotations...')
 
