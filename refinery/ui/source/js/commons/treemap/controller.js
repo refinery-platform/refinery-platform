@@ -1,5 +1,31 @@
 /* global angular:false */
 
+function getAssociatedDataSets (node) {
+  var dataSetIds = {};
+
+  console.log('bratwurst');
+
+  function collectIds (node, dataSetIds) {
+    var i;
+
+    if (node.dataSets) {
+      for (i = node.dataSets.length; i--;) {
+        dataSetIds[node.dataSets[i]] = true;
+      }
+    }
+
+    if (node._children) {
+      for (i = node._children.length; i--;) {
+        collectIds(node._children[i], dataSetIds);
+      }
+    }
+  }
+
+  collectIds(node, dataSetIds);
+
+  return dataSetIds;
+}
+
 /**
  * TreeMap controller constructor.
  *
@@ -16,7 +42,7 @@
  * @param   {Object}     settings   Treemap settings.
  */
 function TreemapCtrl ($element, $q, $, d3, HEX, D3Colors, treemapSettings,
-  pubSub, dashboardTreemapData, treemapContext) {
+  pubSub, dashboardTreemapData, treemapContext, Webworker) {
   this.$ = $;
   this.$q = $q;
   this.d3 = d3;
@@ -26,6 +52,8 @@ function TreemapCtrl ($element, $q, $, d3, HEX, D3Colors, treemapSettings,
   this.settings = treemapSettings;
   this.pubSub = pubSub;
   this.treemapContext = treemapContext;
+
+  this.Webworker = Webworker;
 
   this._visibleDepth = 1;
   this.currentLevel = 0;
@@ -1072,6 +1100,15 @@ Object.defineProperty(
         ontId: root.ontId,
         branchId: root.branchId
       });
+
+      this.treemapContext.set(
+        'dataSets',
+        this.Webworker.create(getAssociatedDataSets).run(
+          this.cacheTerms[root.ontId][root.branchId]
+        ),
+        true
+      );
+
       this.transition(this.cacheTerms[root.ontId][root.branchId]);
     }
 });
@@ -1129,5 +1166,6 @@ angular
     'pubSub',
     'dashboardTreemapData',
     'treemapContext',
+    'Webworker',
     TreemapCtrl
   ]);
