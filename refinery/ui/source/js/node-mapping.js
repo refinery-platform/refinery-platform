@@ -161,9 +161,22 @@ angular.module('refineryNodeMapping', [
 
       NodeRelationshipResource.update(
         {
-          uuid: $scope.currentNodeRelationship.uuid},
+          uuid: $scope.currentNodeRelationship.uuid
+        },
           $scope.currentNodeRelationship,
           function(){
+
+            // delete node pair, can't delete pair until the
+            // noderelationship resource call is complete
+            NodePairResource.delete(
+              {
+                uuid: $scope.currentNodePair.uuid
+              },
+              function(){
+                $log.debug( "Deleted pair." );
+              }
+            );
+
             $log.debug("Removed pair from node mapping.");
             if ($scope.hasNextMapping()) {
               $scope.loadPreviousMapping();
@@ -179,17 +192,8 @@ angular.module('refineryNodeMapping', [
         // TODO: show error message
         }
       );
-
-      // delete node pair
-      NodePairResource.delete(
-        {
-          uuid: $scope.currentNodePair.uuid
-        },
-        function(){
-          $log.debug( "Deleted pair." );
-        }
-      );
     }
+
     $scope.initializeNodeDropzones(
       $scope.currentWorkflow.input_relationships[0].set1,
       $scope.currentWorkflow.input_relationships[0].set2
@@ -372,6 +376,8 @@ angular.module('refineryNodeMapping', [
               node2: "/api/v1/node/" + $scope.nodeDropzones[1].uuid + "/"
             }
           );
+
+          //PROBLEM AREA
           $scope.currentNodePair.$save( function( response, responseHeaders) {
             $scope.currentNodePair = response;
             $scope.currentNodeRelationship.node_pairs
@@ -382,6 +388,7 @@ angular.module('refineryNodeMapping', [
               }, $scope.currentNodeRelationship );
             $log.debug("New file pair saved.");
           });
+
         } else {
           $log.debug("Updating existing file pair ...");
           $scope.currentNodePair.node1 = "/api/v1/node/" +
