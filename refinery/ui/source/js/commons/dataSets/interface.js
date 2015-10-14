@@ -200,26 +200,6 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
   }
 
   /**
-   * Get cached data from `_orderCache`.
-   *
-   * @method  _getDataFromOrderCache
-   * @author  Fritz Lekschas
-   * @date    2015-10-08
-   *
-   * @param   {Number}  limit   Number of data objects to be fetched.
-   * @param   {Number}  offset  Starting point for retrieving data objects.
-   * @return  {Object}          Promise of list of references to the data.
-   */
-  function _getDataFromOrderCache (limit, offset) {
-    var data = _orderCache.slice(offset, limit + offset);
-    if (data.length < _total - offset) {
-      data = _getDataFromSource(limit, offset);
-    }
-
-    return $q.when(data);
-  }
-
-  /**
    * Request a set of data objects.
    *
    * @method  _get
@@ -243,6 +223,26 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
       }
     } else {
       data = _getDataFromOrderCache(limit, offset);
+    }
+
+    return $q.when(data);
+  }
+
+  /**
+   * Get cached data from `_orderCache`.
+   *
+   * @method  _getDataFromOrderCache
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
+   * @param   {Number}  limit   Number of data objects to be fetched.
+   * @param   {Number}  offset  Starting point for retrieving data objects.
+   * @return  {Object}          Promise of list of references to the data.
+   */
+  function _getDataFromOrderCache (limit, offset) {
+    var data = _orderCache.slice(offset, limit + offset);
+    if (data.length < _total - offset) {
+      data = _getDataFromSource(limit, offset);
     }
 
     return $q.when(data);
