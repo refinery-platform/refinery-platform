@@ -135,6 +135,10 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
   function _setSelection (set) {
     var selection = {};
 
+    if (_.isObject(set)) {
+      selection = set;
+    }
+
     if (_.isArray(set)) {
       for (var i = set.length; i--;) {
         selection[i] = true;
