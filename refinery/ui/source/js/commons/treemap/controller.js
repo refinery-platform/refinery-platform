@@ -3,8 +3,6 @@
 function getAssociatedDataSets (node) {
   var dataSetIds = {};
 
-  console.log('bratwurst');
-
   function collectIds (node, dataSetIds) {
     var i;
 
