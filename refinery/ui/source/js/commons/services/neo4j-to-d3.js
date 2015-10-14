@@ -80,7 +80,7 @@ function buildTree (results) {
 
     if (currentDataSet !== null) {
       nodes[currentChild.name].numDataSets++;
-      nodes[currentChild.name].dataSets.push(currentDataSet.uuid);
+      nodes[currentChild.name].dataSets.push(currentDataSet.id);
     }
 
     if (!(currentParent.name in childIndex)) {
@@ -103,7 +103,7 @@ function Neo4jToD3 ($q, neo4j, Webworker) {
   this.$q = $q;
   this.neo4j = neo4j;
 
-  this.treeWorker = Webworker.create(buildTree);
+  this.Webworker = Webworker;
 }
 
 Neo4jToD3.prototype.get = function () {
@@ -129,7 +129,7 @@ Neo4jToD3.prototype.get = function () {
     });
 
   return neo4jData.promise.then(function (data) {
-    return this.treeWorker.run(data);
+    return this.Webworker.create(buildTree).run(data);
   }.bind(this));
 };
 
