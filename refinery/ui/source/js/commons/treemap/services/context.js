@@ -2,10 +2,6 @@ function TreemapContext ($timeout) {
   var dataStore = {},
       stack = {};
 
-  function setDataStore () {
-
-  }
-
   function Context () {}
 
   Context.prototype.constructor = Context;
@@ -14,9 +10,9 @@ function TreemapContext ($timeout) {
     return dataStore[key];
   };
 
-  Context.prototype.set = function (key, value) {
+  Context.prototype.set = function (key, value, force) {
     var old = dataStore[key];
-    if (old !== value) {
+    if (old !== value || force === true) {
       if (!!stack[key]) {
         for (var i = stack[key].length; i--;) {
           if (typeof stack[key][i] === "function") {
