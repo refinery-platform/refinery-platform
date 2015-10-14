@@ -1,6 +1,7 @@
 import logging
 import py2neo
 import time
+from optparse import make_option
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from core.models import DataSet, ExtendedGroup
@@ -21,7 +22,7 @@ class Command(BaseCommand):
             action='store_true',
             dest='clear',
             help='Clear annotations before import'
-        )
+        ),
     )
 
     def push_annotations_to_neo4j(self, annotations):
@@ -162,12 +163,12 @@ class Command(BaseCommand):
             )
 
             end = time.time()
-            minutes = (end - start) // 60
+            minutes = int(round((end - start) // 60))
             seconds = int(round((end - start) % 60))
             print(
                 u'Clear existing annotations and users... ' +
-                '\033[32m\u2713\033[0m ' +
-                '\033[2m({} min and {} sec)\033[22m'.format(
+                u'\033[32m\u2713\033[0m ' +
+                u'\033[2m({} min and {} sec)\033[22m'.format(
                     minutes,
                     seconds
                 )
@@ -183,12 +184,12 @@ class Command(BaseCommand):
         self.push_users()
 
         end = time.time()
-        minutes = (end - start) // 60
+        minutes = int(round((end - start) // 60))
         seconds = int(round((end - start) % 60))
 
         print(
             u'Import annotations... \033[32m\u2713\033[0m ' +
-            '\033[2m({} min and {} sec)\033[22m'.format(
+            u'\033[2m({} min and {} sec)\033[22m'.format(
                 minutes,
                 seconds
             )
