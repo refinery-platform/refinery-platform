@@ -214,22 +214,22 @@ angular.module('refineryNodeMapping', [
       $scope.currentNodeRelationship,
       function(){
       $log.debug("Removed all pairs from node mapping.");
+      // delete node pairs
+      // TODO: handle errors
+      for ( var i = 0; i < nodePairsForDeletion.length; ++i ) {
+        NodePairResource.delete(
+          {
+            uuid: nodePairsForDeletion[i].split("/").reverse()[1]
+          }
+        );
+      }
+
       $scope.createMapping();
     }, function() {
       $log.error( "Unable to remove all pairs from mapping " +
         $scope.currentNodeRelationship.name );
       // TODO: show error message
     });
-
-    // delete node pairs
-    // TODO: handle errors
-    for ( var i = 0; i < nodePairsForDeletion.length; ++i ) {
-      NodePairResource.delete(
-        {
-          uuid: nodePairsForDeletion[i].split("/").reverse()[1]
-        }
-      );
-    }
 
     $scope.initializeNodeDropzones( $scope.currentWorkflow.input_relationships[0]
       .set1, $scope.currentWorkflow.input_relationships[0].set2 );
