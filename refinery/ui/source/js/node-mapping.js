@@ -379,7 +379,6 @@ angular.module('refineryNodeMapping', [
               }
             );
 
-            //PROBLEM AREA
             $scope.currentNodePair.$save(function (response, responseHeaders) {
               $scope.currentNodePair = response;
               $scope.currentNodeRelationship.node_pairs
