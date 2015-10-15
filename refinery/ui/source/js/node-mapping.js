@@ -333,7 +333,6 @@ angular.module('refineryNodeMapping', [
       // grab dropped data (coming in a string)
       var dataString = e.dataTransfer.getData('text/plain');
       var data = null;
-      var dataStringUuid;
 
       // get dropzone index
       var dropzoneIndex = null;
