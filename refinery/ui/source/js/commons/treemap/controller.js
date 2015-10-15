@@ -4,11 +4,12 @@ function getAssociatedDataSets (node) {
   var dataSetIds = {};
 
   function collectIds (node, dataSetIds) {
-    var i;
+    var i, keys;
 
     if (node.dataSets) {
-      for (i = node.dataSets.length; i--;) {
-        dataSetIds[node.dataSets[i]] = true;
+      keys = Object.keys(node.dataSets);
+      for (i = keys.length; i--;) {
+        dataSetIds[keys[i]] = true;
       }
     }
 

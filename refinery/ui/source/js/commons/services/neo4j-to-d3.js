@@ -15,12 +15,14 @@ function buildTree (results) {
       lastNode,
       len,
       nodes = {
+        // Fortunately `owl:Thing` is the mandatory root for any ontology.
         'OWL:Thing': {
-          // Fortunately `owl:Thing` is the mandatory root for any ontology.
+          children: [],
+          dataSets: {},
           name: 'Root',
+          numDataSets: 0,
           ontId: 'OWL:Thing',
           uri: 'http://www.w3.org/2002/07/owl#Thing',
-          children: []
         }
       },
       parent;
@@ -53,7 +55,7 @@ function buildTree (results) {
     if (!(currentParent.name in nodes)) {
       nodes[currentParent.name] = {
         children: [],
-        dataSets: [],
+        dataSets: {},
         name: currentParent.name,
         numDataSets: 0,
         ontId: currentParent.name
@@ -63,7 +65,7 @@ function buildTree (results) {
     if (!(currentChild.name in nodes)) {
       nodes[currentChild.name] = {
         children: [],
-        dataSets: [],
+        dataSets: {},
         name: currentChild.name,
         numDataSets: 0,
         ontId: currentChild.name
@@ -78,9 +80,10 @@ function buildTree (results) {
       nodes[currentChild.name].uri = currentChild.uri;
     }
 
-    if (currentDataSet !== null) {
+    if (currentDataSet !== null &&
+        !nodes[currentChild.name].dataSets[currentDataSet.id]) {
       nodes[currentChild.name].numDataSets++;
-      nodes[currentChild.name].dataSets.push(currentDataSet.id);
+      nodes[currentChild.name].dataSets[currentDataSet.id] = true;
     }
 
     if (!(currentParent.name in childIndex)) {
