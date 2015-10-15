@@ -51,5 +51,8 @@ angular
           label: 'Name'
         }
       ]
+    },
+    treemap: {
+      singleRequestLimit: 200
     }
   });

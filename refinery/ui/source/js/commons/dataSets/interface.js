@@ -1,4 +1,5 @@
-function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) {
+function DataSetFactory (
+  $q, _, settings, DataSetDataApi, DataSetSearchApi, DataSetStore) {
 
   /*
    * ------------------------------- Private -----------------------------------
@@ -144,7 +145,12 @@ function DataSetFactory ($q, _, DataSetDataApi, DataSetSearchApi, DataSetStore) 
    * @return  {Object}             Promise of `selection`.
    */
   function _buildSelection (limit, offset, selection) {
-    return _getDataFromOrderCache(limit, _selectionCacheLastIndex)
+    // Initially building the selection can be extremely tedious. Building the
+    // selection for CL:0008001 requires to load almost 300 datasets before all
+    // enough datasets that fall within the selection. For that reason it makes
+    // sense to increase the limit.
+    var realLimit = Math.max(limit, settings.treemap.singleRequestLimit);
+    return _getDataFromOrderCache(realLimit, _selectionCacheLastIndex)
       .then(function (data) {
         var dataLen = data.length,
             selectionCacheLen;
@@ -625,6 +631,7 @@ angular
   .factory('dataSet', [
     '$q',
     '_',
+    'settings',
     'DataSetDataApi',
     'DataSetSearchApi',
     'DataSetStore',
