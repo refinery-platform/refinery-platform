@@ -165,7 +165,7 @@ exec {
 }
 
 class solr {
-  $solr_version = "4.4.0"
+  $solr_version = "4.10.4"
   $solr_archive = "solr-${solr_version}.tgz"
   $solr_url = "http://archive.apache.org/dist/lucene/solr/${solr_version}/${solr_archive}"
 
