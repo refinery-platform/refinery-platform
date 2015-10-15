@@ -333,87 +333,91 @@ angular.module('refineryNodeMapping', [
       // grab dropped data (coming in a string)
       var dataString = e.dataTransfer.getData('text/plain');
       var data = null;
+      var dataStringUuid;
 
       // get dropzone index
       var dropzoneIndex = null;
       try {
         // here we have to deal with browser specific differences in the dropevent event data structure
-        if ( e.srcElement ) {
+        if (e.srcElement) {
           // safari, chrome
           dropzoneIndex = e.srcElement.attributes['node-dropzone-index'].value;
         }
-        else if ( e.originalTarget ) {
+        else if (e.originalTarget) {
           // firefox
           dropzoneIndex = e.originalTarget.attributes['node-dropzone-index'].value;
         }
         else {
           // this browser doesn't seem to support any dragstart known to us
-          console.error( "Unable to obtain dropzone index of droppable.");
+          console.error("Unable to obtain dropzone index of droppable.");
         }
       }
-      catch( exception ) {
-        console.error( "No dropzone index." );
+      catch (exception) {
+        console.error("No dropzone index.");
       }
 
       // parse incoming data into object
       try {
-        data = JSON.parse( dataString );
+        data = JSON.parse(dataString);
       }
-      catch ( exception ) {
-        console.error("Parsing error: " + exception);
+      catch (exception) {
+        console.error("Please select a node, by dragging/dropping the" +
+          " reorder icon located on the far left of each row.");
       }
 
-      // update dropzone
-      $scope.updateNodeDropzone( dropzoneIndex, data.uuid );
+      if( data !== null){
+        // update dropzone
+        $scope.updateNodeDropzone(dropzoneIndex, data.uuid);
 
-      // save node pair?
-      if ( $scope.nodeDropzones[0].uuid && $scope.nodeDropzones[1].uuid ) {
-        if ( $scope.isPending() ) {
-          $log.debug("Saving new file pair ...");
-          $scope.currentNodePair = new NodePairResource(
-            {
-              node1: "/api/v1/node/" + $scope.nodeDropzones[0].uuid + "/",
-              node2: "/api/v1/node/" + $scope.nodeDropzones[1].uuid + "/"
-            }
-          );
-
-          //PROBLEM AREA
-          $scope.currentNodePair.$save( function( response, responseHeaders) {
-            $scope.currentNodePair = response;
-            $scope.currentNodeRelationship.node_pairs
-              .push( $scope.currentNodePair.resource_uri );
-            NodeRelationshipResource.update(
+        // save node pair?
+        if ($scope.nodeDropzones[0].uuid && $scope.nodeDropzones[1].uuid) {
+          if ($scope.isPending()) {
+            $log.debug("Saving new file pair ...");
+            $scope.currentNodePair = new NodePairResource(
               {
-                uuid: $scope.currentNodeRelationship.uuid
-              }, $scope.currentNodeRelationship );
-            $log.debug("New file pair saved.");
-          });
+                node1: "/api/v1/node/" + $scope.nodeDropzones[0].uuid + "/",
+                node2: "/api/v1/node/" + $scope.nodeDropzones[1].uuid + "/"
+              }
+            );
 
-        } else {
-          $log.debug("Updating existing file pair ...");
-          $scope.currentNodePair.node1 = "/api/v1/node/" +
-            $scope.nodeDropzones[0].uuid + "/";
-          $scope.currentNodePair.node2 = "/api/v1/node/" +
-            $scope.nodeDropzones[1].uuid + "/";
-          $scope.currentNodePair.$update( function( response, responseHeaders ) {
-            if($scope.currentNodePair === response) {
-              $log.debug("Existing file pair updated.");
-            }else{
+            //PROBLEM AREA
+            $scope.currentNodePair.$save(function (response, responseHeaders) {
               $scope.currentNodePair = response;
-              $log.debug("Error updating file pair, please try again.");
-              var node1Arr = $scope.currentNodePair.node1.split("/");
-              var node2Arr = $scope.currentNodePair.node2.split("/");
-              var tempUuid1 = _.compact(node1Arr).pop();
-              var tempUuid2 = _.compact(node2Arr).pop();
-              $scope.updateNodeDropzone( 0, tempUuid1 );
-              $scope.updateNodeDropzone( 1, tempUuid2 );
-            }
-          });
+              $scope.currentNodeRelationship.node_pairs
+                .push($scope.currentNodePair.resource_uri);
+              NodeRelationshipResource.update(
+                {
+                  uuid: $scope.currentNodeRelationship.uuid
+                }, $scope.currentNodeRelationship);
+              $log.debug("New file pair saved.");
+            });
+
+          } else {
+            $log.debug("Updating existing file pair ...");
+            $scope.currentNodePair.node1 = "/api/v1/node/" +
+              $scope.nodeDropzones[0].uuid + "/";
+            $scope.currentNodePair.node2 = "/api/v1/node/" +
+              $scope.nodeDropzones[1].uuid + "/";
+            $scope.currentNodePair.$update(function (response, responseHeaders) {
+              if ($scope.currentNodePair === response) {
+                $log.debug("Existing file pair updated.");
+              } else {
+                $scope.currentNodePair = response;
+                $log.debug("Error updating file pair, please try again.");
+                var node1Arr = $scope.currentNodePair.node1.split("/");
+                var node2Arr = $scope.currentNodePair.node2.split("/");
+                var tempUuid1 = _.compact(node1Arr).pop();
+                var tempUuid2 = _.compact(node2Arr).pop();
+                $scope.updateNodeDropzone(0, tempUuid1);
+                $scope.updateNodeDropzone(1, tempUuid2);
+              }
+            });
+          }
+
         }
 
+        $scope.$apply();
       }
-
-      $scope.$apply();
   };
 
   $scope.handleNodeDragEnter = function (e) {
