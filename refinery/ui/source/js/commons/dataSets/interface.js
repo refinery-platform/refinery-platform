@@ -167,6 +167,7 @@ function DataSetFactory (
         if (dataLen === 0) {
           return selection;
         }
+        // Recursively call itself when not enough data has been found.
         if (selection.length < limit) {
           return _buildSelection(limit, offset, selection);
         }
@@ -238,7 +239,7 @@ function DataSetFactory (
     if (_selectionLen()) {
       data = _selectionCache.slice(offset, limit + offset);
       if (
-        data.length !== Math.min(limit, _totalSelection) &&
+        data.length !== Math.min(limit, Math.min(_totalSelection, _total)) &&
         _selectionCacheLastIndex !== _total
       ) {
         data = _getSelection(limit, offset);
