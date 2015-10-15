@@ -11,20 +11,20 @@ angular
           var query = solrService.get({
                 // Extended DisMax
                 'defType': 'edismax',
-                // Alternative field for `content_auto` when no highlights were
+                // Alternative field for `title` when no highlights were
                 // found
-                'f.content_auto.hl.alternateField': 'title',
+                'f.title.hl.alternateField': 'title',
                 // Alternative field for `description` when no highlights were
                 // found
-                'f.description.hl.alternateField': 'description',
+                'f.description.hl.alternateField': 'text',
                 // Fields that are returned
-                'fl': 'id,uuid,access',
+                'fl': 'dbid,uuid,access',
                 // Limit search space to data sets only
                 'fq': 'django_ct:core.dataset',
                 // Highlighting enabled
                 'hl': true,
                 // Fields that are highlighted
-                'hl.fl': 'content_auto,description',
+                'hl.fl': 'title,description',
                 // Limit the alternate fields to 128 characters at most.
                 // This could also be set on per field bases like so:
                 // `f.description.hl.maxAlternateFieldLength = 256`
@@ -36,7 +36,7 @@ angular
                 // Query
                 'q': searchQuery,
                 // Query fields
-                'qf': 'content_auto^0.5 submitter text',
+                'qf': 'title^0.5 accession submitter text',
                 // # results returned
                 'rows': limit,
                 // Start of return
@@ -49,22 +49,27 @@ angular
             .$promise
             .then(function (data) {
               var doc,
+                  id,
                   userId = sessionService.get('userId');
 
               for (var i = 0, len = data.response.docs.length; i < len; i++) {
                 doc = data.response.docs[i];
-                if (data.highlighting[doc.id].content_auto) {
+                id = 'core.dataset.' + doc.dbid;
+
+                doc.id = doc.dbid;
+
+                if (data.highlighting[id].title) {
                   doc.title = $sce.trustAsHtml(
-                    data.highlighting[doc.id].content_auto[0]
+                    data.highlighting[id].title[0]
                   );
                 } else {
                   doc.title = sce.trustAsHtml(
                     '<span class="is-unknown">Unknown</span>'
                   );
                 }
-                if (data.highlighting[doc.id].description) {
+                if (data.highlighting[id].description) {
                   doc.description = $sce.trustAsHtml(
-                    data.highlighting[doc.id].description[0]
+                    data.highlighting[id].description[0]
                   );
                 } else {
                   doc.description = null;
