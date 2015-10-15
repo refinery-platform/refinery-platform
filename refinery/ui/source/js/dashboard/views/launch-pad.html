@@ -142,6 +142,7 @@
           ng-class="{'search': dashboard.searchDataSet}">
           <li
             ui-scroll="dataSet in dashboard.dataSets"
+            buffer-size="50"
             adapter="dashboard.dataSetsAdapter"
             ng-class="{'previewing': dataSet.preview}">
             <button
@@ -361,6 +362,7 @@
           class="results no-list-style">
           <li
             ui-scroll="analysis in dashboard.analyses"
+            buffer-size="50"
             adapter="dashboard.analysesAdapter">
             <span class="spinner">
               <i
@@ -472,6 +474,7 @@
           class="results no-list-style">
           <li
             ui-scroll="workflow in dashboard.workflows"
+            buffer-size="50"
             adapter="dashboard.workflowsAdapter">
             <a ng-href="workflows/{{ workflow.uuid }}">{{ workflow.name }}</a>
           </li>
