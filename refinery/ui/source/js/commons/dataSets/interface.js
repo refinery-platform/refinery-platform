@@ -578,7 +578,7 @@ function DataSetFactory (
     return _get(limit, offset).then(function (data) {
       return {
         meta: {
-          total: Math.min(_totalSelection || _total)
+          total: Math.min(_totalSelection, _total)
         },
         data: data
       };
