@@ -109,7 +109,7 @@ function DataSetFactory (
    *
    * @type  {Number}
    */
-  var _totalSelection = 0;
+  var _totalSelection = Infinity;
 
   /* ------------------------------- Methods -------------------------------- */
 
@@ -125,7 +125,7 @@ function DataSetFactory (
    */
   function _addBrowsePath (step) {
     if (_browsePath.length &&
-        _browsePath[_browsePath.length - 1].type !== step.type) {
+        _browsePath[_browsePath.length - 1].type === step.type) {
       _browsePath[_browsePath.length - 1].query = step.query;
     } else {
       _browsePath.push(step);
@@ -209,10 +209,14 @@ function DataSetFactory (
    *
    * @method  _clearSelectionCache
    * @author  Fritz Lekschas
-   * @date    2015-10-08
+   * @date    2015-10-15
+   *
+   * @param   {Boolean}  deselection  `true` if triggered by deselection event.
    */
-  function _clearSelectionCache () {
-    _totalSelection = 0;
+  function _clearSelectionCache (deselection) {
+    if (deselection) {
+      _totalSelection = Infinity;
+    }
     _selectionCache = [];
     _selectionCacheLastIndex = 0;
   }
@@ -234,7 +238,7 @@ function DataSetFactory (
     if (_selectionLen()) {
       data = _selectionCache.slice(offset, limit + offset);
       if (
-        data.length !== Math.min(limit, _total) &&
+        data.length !== Math.min(limit, _totalSelection) &&
         _selectionCacheLastIndex !== _total
       ) {
         data = _getSelection(limit, offset);
@@ -481,7 +485,12 @@ function DataSetFactory (
    * @return  {Object}  Return the class itself for chaining.
    */
   DataSet.prototype.all = function () {
-    _browsePath = [];
+    if (_browsePath.length &&
+        _browsePath[_browsePath.length - 1].type === 'search') {
+      _browsePath.pop();
+      _clearOrderCache();
+    }
+
     _source = new DataSetDataApi();
 
     return DataSet;
@@ -503,6 +512,7 @@ function DataSetFactory (
     }
 
     _selection = [];
+    _clearSelectionCache(true);
 
     return DataSet;
   };
@@ -537,6 +547,19 @@ function DataSetFactory (
   DataSet.prototype.get = _get;
 
   /**
+   * Get the current browse state
+   *
+   * @method  getCurrentBrowseState
+   * @author  Fritz Lekschas
+   * @date    2015-10-15
+   *
+   * @return  {Object}  State object.
+   */
+  DataSet.prototype.getCurrentBrowseState = function () {
+    return _browsePath.length ? _browsePath[_browsePath.length - 1] : void 0;
+  };
+
+  /**
    * Get data objects including meta data.
    *
    * @description
@@ -554,7 +577,7 @@ function DataSetFactory (
     return _get(limit, offset).then(function (data) {
       return {
         meta: {
-          total: _totalSelection || _total
+          total: Math.min(_totalSelection || _total)
         },
         data: data
       };
@@ -610,14 +633,16 @@ function DataSetFactory (
    * @author  Fritz Lekschas
    * @date    2015-10-08
    *
-   * @param   {Object|Array}   set  Selected data objects.
-   * @return  {Object}              Return the class itself for chaining.
+   * @param   {Object|Array}  set    Selected data objects.
+   * @param   {String}        query  Unique identifier of the selection. E.g.
+   *   an ontology term.
+   * @return  {Object}               Return the class itself for chaining.
    */
-  DataSet.prototype.select = function (set) {
+  DataSet.prototype.select = function (set, query) {
     _setSelection(set);
     _addBrowsePath({
       type: 'select',
-      query: set
+      query: query || set
     });
 
     return DataSet;
