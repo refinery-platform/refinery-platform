@@ -722,12 +722,10 @@
 
 
   <script type="application/javascript">
-    $(document).ready(function () {
-
-      setInterval(function(){
+    setTimeout(function() {
           sizing();
-      }, 500);
-
+      }, 750);
+    $(document).ready(function () {
       $( "#view-selector" ).select2({minimumResultsForSearch: -1});
       $( "#view-selector" ).on("change", function(event) {
         $( '#navigation-tabs a[href="#' + event.added.element[0].value + '"]').tab('show');
