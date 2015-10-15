@@ -147,7 +147,7 @@
             ng-class="{'previewing': dataSet.preview}">
             <button
               class="preview"
-              ng-click="dashboard.showDataSetPreview(dataSet, $index)">
+              ng-click="dashboard.expandDataSetPreview(dataSet, $index)">
               <i
                 class="icon-double-angle-right is-mirrorable"
                 ng-class="{'is-mirrored': dataSet.preview}"></i>
@@ -192,7 +192,7 @@
     </div>
     <refinery-expansion-panel>
       <refinery-data-set-preview
-        close="dashboard.hideDataSetPreview()"
+        close="dashboard.collapseDataSetPreview()"
         active="dashboard.dataSetPreview">
       </refinery-data-set-preview>
       <refinery-dashboard-vis-wrapper

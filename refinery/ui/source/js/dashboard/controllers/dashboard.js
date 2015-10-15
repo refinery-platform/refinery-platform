@@ -174,7 +174,7 @@ function DashboardCtrl (
       //   // Need to wait another digestion cycle to ensure the layout is set
       //   // properly.
       //   $timeout(function () {
-      //     this.showDataSetPreview(this.findDataSet(toParams.uuid), true);
+      //     this.expandDataSetPreview(this.findDataSet(toParams.uuid), true);
       //   }.bind(this), 0);
       // }
       if (toState.name === 'launchPad') {
@@ -535,7 +535,7 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery,
   }
 };
 
-DashboardCtrl.prototype.showDataSetPreview = function (dataSet, fromStateEvent) {
+DashboardCtrl.prototype.expandDataSetPreview = function (dataSet, fromStateEvent) {
   this.dataSetExploration = false;
 
   if (!fromStateEvent) {
