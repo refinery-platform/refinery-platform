@@ -639,10 +639,8 @@ TreemapCtrl.prototype.draw = function () {
 
   var rootNodeData;
 
-  try {
+  if (this.rootNode) {
     rootNodeData = this.cacheTerms[this.rootNode.ontId][this.rootNode.branchId];
-  } catch (e) {
-    console.error('Node not found.', e);
   }
 
   if (rootNodeData) {
