@@ -724,16 +724,6 @@
   <script type="application/javascript">
     $(document).ready(function () {
 
-       setInterval(function(){
-      if (document.getElementById('select2-chosen-1').innerHTML.match
-              ('Provenance') || document.getElementById('select2-chosen-1').innerHTML.match
-              ('Matrix')) {
-        $('#solrdoctab1-top-controls').hide();
-      }
-      else {
-        $('#solrdoctab1-top-controls').show();
-      } }, 750);
-
       setInterval(function(){
           sizing();
       }, 500);
@@ -811,6 +801,20 @@
 
     });
 
+    document.getElementById('view-selector').onclick = function()
+    {
+      if (document.getElementById('select2-chosen-1').innerHTML.match
+              ('Provenance') ||
+          document.getElementById('select2-chosen-1').innerHTML.match
+              ('Matrix'))
+      {
+        $('#solrdoctab1-top-controls').hide();
+      }
+      else
+      {
+        $('#solrdoctab1-top-controls').show();
+      }
+    };
     /*
      * Sticky table header using floatThead.js
      */
