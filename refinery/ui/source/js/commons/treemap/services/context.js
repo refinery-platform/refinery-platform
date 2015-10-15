@@ -10,6 +10,15 @@ function TreemapContext ($timeout) {
     return dataStore[key];
   };
 
+  Context.prototype.on = function (key, callback) {
+    if (key in stack) {
+      return stack[key].push(callback);
+    } else {
+      stack[key] = [callback];
+      return 0;
+    }
+  };
+
   Context.prototype.set = function (key, value, force) {
     var old = dataStore[key];
     if (old !== value || force === true) {
@@ -21,15 +30,6 @@ function TreemapContext ($timeout) {
         }
       }
       dataStore[key] = value;
-    }
-  };
-
-  Context.prototype.on = function (key, callback) {
-    if (key in stack) {
-      return stack[key].push(callback);
-    } else {
-      stack[key] = [callback];
-      return 0;
     }
   };
 
