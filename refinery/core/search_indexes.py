@@ -13,7 +13,6 @@ from django.template.context import Context
 from haystack import indexes
 
 from data_set_manager.models import Node, AnnotatedNode
-from data_set_manager.utils import get_node_types
 
 
 logger = logging.getLogger(__name__)
@@ -22,7 +21,9 @@ logger = logging.getLogger(__name__)
 class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
     name = indexes.CharField(model_attr='name', null=True)
-    title = indexes.CharField(null=True)
+    accession = indexes.EdgeNgramField(model_attr='accession')
+    title = indexes.EdgeNgramField(model_attr='title')
+    dbid = indexes.IntegerField(model_attr='id')
     uuid = indexes.CharField(model_attr='uuid')
     summary = indexes.CharField(model_attr='summary', null=True)
     description = indexes.CharField(null=True)
@@ -35,7 +36,7 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     # since Solr only handles read permissions
     access = indexes.MultiValueField(null=True)
     # We add this for autocomplete
-    content_auto = indexes.EdgeNgramField(null=True)
+    # content_auto = indexes.EdgeNgramField(null=True)
 
     def get_model(self):
         return models.get_model('core', 'DataSet')
@@ -46,12 +47,6 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_description(self, object):
         return object.get_investigation().get_description()
-
-    def prepare_title(self, object):
-        return object.get_investigation().get_title()
-
-    def prepare_content_auto(self, object):
-        return object.get_investigation().get_title()
 
     def prepare_access(self, object):
         access_list = []
@@ -110,10 +105,6 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
 
         return set(technologies)
 
-    # Why?
-    # def prepare_name(self, object):
-    #     return object.name
-
     # from:
     # http://django-haystack.readthedocs.org/en/latest/rich_content_extraction.html
     # also:
@@ -123,29 +114,22 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
         data = super(DataSetIndex, self).prepare(data_set)
         investigation = data_set.get_investigation()
         nodes = []
-        # TODO: optimize this query
         if investigation is not None:
             studies = investigation.study_set.all()
             for study in studies:
                 assays = study.assay_set.all()
                 for assay in assays:
-                    node_types = get_node_types(
-                        study.uuid,
-                        assay.uuid,
-                        files_only=True,  # This parameter is never
-                        filter_set=Node.FILES
-                    )
-                    for node_type in node_types:
-                        nodes = nodes + list(
-                            AnnotatedNode.objects.filter(
-                                node_type=node_type,
-                                study=study,
-                                assay=assay
-                            ).values()
-                        )
-            # for node in nodes:
-            #    print node["node_name"] + " " + node["attribute_type"] + " " +
-            #    node["attribute_value"]
+                    nodes = list(AnnotatedNode.objects.filter(
+                        study__uuid=study.uuid,
+                        assay__uuid=assay.uuid,
+                        node_type__in=Node.FILES
+                    ).distinct(
+                        'node_name',
+                        'attribute_type',
+                        'attribute_subtype',
+                        'attribute_value',
+                        'attribute_value_unit'
+                    ))
 
             # perform the template processing to render the
             # text field with *all* of our node data visible for indexing

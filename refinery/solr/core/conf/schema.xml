@@ -152,19 +152,19 @@
 
     <field name="modification_date" type="date" indexed="true" stored="true" multiValued="false" />
 
-    <field name="title" type="text_en" indexed="true" stored="true" multiValued="false" />
+    <field name="title" type="edge_ngram" indexed="true" stored="true" multiValued="false" />
 
     <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
 
-    <field name="measurement" type="text_en" indexed="true" stored="true" multiValued="true" />
-
-    <field name="name" type="text_en" indexed="true" stored="true" multiValued="false" />
+    <field name="accession" type="edge_ngram" indexed="true" stored="true" multiValued="false" />
 
     <field name="creation_date" type="date" indexed="true" stored="true" multiValued="false" />
 
     <field name="access" type="text_en" indexed="true" stored="true" multiValued="true" />
 
-    <field name="content_auto" type="edge_ngram" indexed="true" stored="true" multiValued="false" />
+    <field name="dbid" type="long" indexed="true" stored="true" multiValued="false" />
+
+    <field name="measurement" type="text_en" indexed="true" stored="true" multiValued="true" />
 
     <field name="submitter" type="text_en" indexed="true" stored="true" multiValued="true" />
 
@@ -174,7 +174,11 @@
 
     <field name="technology" type="text_en" indexed="true" stored="true" multiValued="true" />
 
+    <field name="name" type="text_en" indexed="true" stored="true" multiValued="false" />
+
     <field name="description" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="content_auto" type="edge_ngram" indexed="true" stored="true" multiValued="false" />
 
   </fields>
 
