@@ -1,8 +1,35 @@
 /* global angular:false */
 
+/**
+ * Collect all data sets associated with a node i.e. ontology term by traversing
+ * the tree down to the leaves.
+ *
+ * @description
+ * As this could potentially be very resource intensive, this methods wrapped
+ * in a separate web worker and runs in parallel to other code to avoid blocking
+ * the ui.
+ *
+ * @method  getAssociatedDataSets
+ * @author  Fritz Lekschas
+ * @date    2015-10-14
+ *
+ * @param   {Object}  node  Starting node for the traversion.
+ * @return  {Object}        Object of boolean keys representing the dataset IDs.
+ */
 function getAssociatedDataSets (node) {
   var dataSetIds = {};
 
+  /**
+   * Recursively collecting dataset IDs to an object passed by reference.
+   *
+   * @method  collectIds
+   * @author  Fritz Lekschas
+   * @date    2015-10-14
+   *
+   * @param   {[type]}  node        Current node, i.e. ontology term.
+   * @param   {[type]}  dataSetIds  Object of boolean keys representing the
+   *   dataset IDs.
+   */
   function collectIds (node, dataSetIds) {
     var i, keys;
 
@@ -31,14 +58,15 @@ function getAssociatedDataSets (node) {
  * @method  TreemapCtrl
  * @author  Fritz Lekschas
  * @date    2015-08-04
- * @param   {Object}     $element   Directive's root element.
- * @param   {Object}     $q         Angular's promise service.
- * @param   {Object}     $          jQuery.
- * @param   {Object}     d3         D3.
- * @param   {Object}     neo4jToD3  Neo4J to D3 converter.
- * @param   {Object}     HEX        HEX class.
- * @param   {Object}     D3Colors   Service for creating D3 color scalings.
- * @param   {Object}     settings   Treemap settings.
+ *
+ * @param   {Object}  $element   Directive's root element.
+ * @param   {Object}  $q         Angular's promise service.
+ * @param   {Object}  $          jQuery.
+ * @param   {Object}  d3         D3.
+ * @param   {Object}  neo4jToD3  Neo4J to D3 converter.
+ * @param   {Object}  HEX        HEX class.
+ * @param   {Object}  D3Colors   Service for creating D3 color scalings.
+ * @param   {Object}  settings   Treemap settings.
  */
 function TreemapCtrl ($element, $q, $, d3, HEX, D3Colors, treemapSettings,
   pubSub, dashboardTreemapData, treemapContext, Webworker) {
