@@ -528,8 +528,19 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery,
       }.bind(this), 0);
     }
   } else {
-    this.dataSet.search(searchQuery);
-    this.dataSets.newOrCachedCache(searchQuery);
+    this.dataSet.all();
+
+    var browseState = this.dataSet.getCurrentBrowseState();
+
+    if (
+      browseState &&
+      browseState.type === 'select' &&
+      this._.isString(browseState.query)
+    ) {
+      browseState = 'selection.' + browseState.query;
+    }
+
+    this.dataSets.newOrCachedCache(browseState);
     this.searchDataSet = false;
     this.dashboardDataSetsReloadService.reload();
   }
@@ -634,9 +645,9 @@ DashboardCtrl.prototype.findDataSet = function (uuid) {
 };
 
 DashboardCtrl.prototype.selectDataSets = function (ids) {
-  this.dataSet.select(ids);
+  this.dataSet.select(ids, this.treemapRoot.ontId);
   this.dataSets.newOrCachedCache(
-    'termSelection.' + this.treemapRoot.ontId + '.' + this.treemapRoot.branchId
+    'selection.' + this.treemapRoot.ontId
   );
   this.$timeout(function() {
     this.dashboardDataSetsReloadService.reload();
