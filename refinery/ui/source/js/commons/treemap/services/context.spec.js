@@ -23,11 +23,11 @@ describe('Treemap.services.context: unit tests', function () {
     });
 
     it('should have a public "on" method', function () {
-      expect(typeof service.get).toEqual('function');
+      expect(typeof service.on).toEqual('function');
     });
 
     it('should have a public "set" method', function () {
-      expect(typeof service.get).toEqual('function');
+      expect(typeof service.set).toEqual('function');
     });
 
     it('should set and get a value', function () {
