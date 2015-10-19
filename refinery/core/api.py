@@ -363,7 +363,10 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         }
 
     def dehydrate(self, bundle):
-        bundle.data['owner'] = bundle.obj.get_owner().userprofile.uuid
+        if bundle.obj.get_owner() is not None:
+            bundle.data['owner'] = bundle.obj.get_owner().userprofile.uuid
+        else:
+            bundle.data['owner'] = None
         return bundle
 
     def apply_sorting(self, obj_list, options=None):
@@ -629,7 +632,7 @@ class AnalysisResource(ModelResource):
             'modification_date', 'history_id', 'library_id', 'name',
             'workflow__uuid', 'resource_uri', 'status', 'time_end',
             'time_start', 'uuid', 'workflow_galaxy_id', 'workflow_steps_num',
-            'workflow_copy'
+            'workflow_copy', 'owner'
         ]
         filtering = {
             'data_set': ALL_WITH_RELATIONS,
@@ -641,7 +644,10 @@ class AnalysisResource(ModelResource):
         ordering = ['name', 'creation_date', 'time_start', 'time_end']
 
     def dehydrate(self, bundle):
-        bundle.data['owner'] = bundle.obj.get_owner().userprofile.uuid
+        if bundle.obj.get_owner() is not None:
+            bundle.data['owner'] = bundle.obj.get_owner().userprofile.uuid
+        else:
+            bundle.data['owner'] = None
         return bundle
 
     def get_object_list(self, request, **kwargs):
