@@ -160,16 +160,16 @@
               tool-tip-container="body"
               tool-tip-placement="top"></i>
             <i
-              class="icon-group"
-              title="This data set is shared"
-              ng-if="!dataSet.is_owner && dashboard.userIsAuthenticated"
+              class="icon-group icon-shared-out"
+              title="You privately share this data set"
+              ng-if="dataSet.is_shared && dataSet.is_owner"
               tool-tip
               tool-tip-container="body"
               tool-tip-placement="top"></i>
             <i
-              class="icon-globe"
-              title="This file is publicly available"
-              ng-if="dataSet.public && dashboard.userIsAuthenticated"
+              class="icon-group icon-shared-in"
+              title="This data set is shared with you"
+              ng-if="dataSet.is_shared && !dataSet.is_owner && dashboard.userIsAuthenticated"
               tool-tip
               tool-tip-container="body"
               tool-tip-placement="top"></i>
