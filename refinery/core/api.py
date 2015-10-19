@@ -41,6 +41,7 @@ from data_set_manager.api import StudyResource, AssayResource, \
     InvestigationResource
 from data_set_manager.models import Node, Study, Attribute
 from file_store.models import FileStoreItem
+from guardian.shortcuts import get_groups_with_perms
 
 from fadapa import Fadapa
 
@@ -341,6 +342,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
+    is_shared = fields.BooleanField(attribute='is_shared', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, DataSet)
@@ -358,6 +360,10 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             'is_owner': ALL,
             'public': ALL
         }
+
+    def dehydrate(self, bundle):
+        bundle.data['owner'] = bundle.obj.get_owner().userprofile.uuid
+        return bundle
 
     def apply_sorting(self, obj_list, options=None):
         """Manually sorting the list of objects returned by
@@ -632,6 +638,10 @@ class AnalysisResource(ModelResource):
             'uuid': ALL
         }
         ordering = ['name', 'creation_date', 'time_start', 'time_end']
+
+    def dehydrate(self, bundle):
+        bundle.data['owner'] = bundle.obj.get_owner().userprofile.uuid
+        return bundle
 
     def get_object_list(self, request, **kwargs):
         user = request.user
