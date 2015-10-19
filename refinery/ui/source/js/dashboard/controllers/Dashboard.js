@@ -149,7 +149,7 @@ function DashboardCtrl (
 
   $rootScope.$on('$stateChangeSuccess', function (event, toState, toParams) {
     $timeout(window.sizing, 0);
-    if (toParams.q) {
+    if (toParams.q && toParams.q !== this.searchDataSetQuery) {
       this.searchQueryDataSets = toParams.q;
       this.setDataSetSource(toParams.q);
     }
@@ -434,13 +434,14 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
     },
     {
       reload: false,
-      notify: false
+      notify: true
     }
   );
 
   if (searchQuery) {
     if (searchQuery.length > 1) {
       that.searchDataSet = true;
+      that.searchDataSetQuery = searchQuery;
       var searchResults = new this.dashboardDataSetSearchService(searchQuery);
       this.dataSets.set(searchResults, searchQuery);
       that.dashboardDataSetsReloadService.reload();
@@ -449,6 +450,7 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
     this.dataSets.set(this.dashboardDataSetListService);
     if (that.searchDataSet) {
       that.searchDataSet = false;
+      that.searchDataSetQuery = void 0;
       that.dashboardDataSetsReloadService.reload();
     }
   }

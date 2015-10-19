@@ -1,4 +1,4 @@
-function AppCtrl ($window, $, _, pubSub, settings) {
+function AppCtrl ($, $rootScope, $timeout, $window, _, pubSub, settings) {
   this.$window = $window;
   this.$ = $;
   this._ = _;
@@ -14,6 +14,19 @@ function AppCtrl ($window, $, _, pubSub, settings) {
       this.settings.debounceWindowResize
     )
   );
+
+  $rootScope.$on('$stateChangeSuccess', function (e, toState, toParams, fromState, fromParams) {
+    $timeout(function () {
+      if (fromState.url !== '^' && window.ga) {
+        ga(
+          'send',
+          'pageview',
+          $window.location.pathname + $window.location.hash
+        );
+      }
+    }, 0);
+  });
+
 }
 
 AppCtrl.prototype.globalClick = function ($event) {
@@ -23,8 +36,10 @@ AppCtrl.prototype.globalClick = function ($event) {
 angular
   .module('refineryApp')
   .controller('AppCtrl', [
-    '$window',
     '$',
+    '$rootScope',
+    '$timeout',
+    '$window',
     '_',
     'pubSub',
     'settings',
