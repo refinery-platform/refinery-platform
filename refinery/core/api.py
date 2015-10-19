@@ -142,6 +142,7 @@ class SharableResourceAPIInterface(object):
         for res in res_list:
             setattr(res, 'is_owner', res.id in owned_res_set)
             setattr(res, 'public', res.id in public_res_set)
+            setattr(res, 'is_shared', len(get_groups_with_perms(res)) > 0)
 
             if 'sharing' in kwargs and kwargs['sharing']:
                 setattr(res, 'share_list', self.get_share_list(user, res))
