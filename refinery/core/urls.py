@@ -4,8 +4,11 @@ Created on Feb 20, 2012
 @author: nils
 '''
 
-from django.conf.urls.defaults import patterns, url
+from django.conf.urls.defaults import *
+from .api import UserProfileResource
 
+
+user_profile_resource = UserProfileResource()
 
 urlpatterns = patterns(
     'core.views',
@@ -76,4 +79,7 @@ urlpatterns = patterns(
         name="pubmed_search"),
     url(r'^pubmed/summary/(?P<id>.+)/', 'pubmed_summary',
         name="pubmed_summary"),
+    url(r'^api/v1/', include(user_profile_resource.urls),
+        name="user_profiles"),
+
 )
