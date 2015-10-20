@@ -5,8 +5,8 @@
  * @author  Fritz Lekschas
  * @date    2015-09-30
  *
- * @param   {[type]}  $cacheFactory  Angular's cache factory.
- * @param   {[type]}  $q             Angular's promise library.
+ * @param   {Object}  $cacheFactory  Angular's cache factory.
+ * @param   {Object}  $q             Angular's promise library.
  */
 function UiScrollSourceFactory ($cacheFactory, $q) {
   /**

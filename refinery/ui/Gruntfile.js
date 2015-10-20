@@ -510,6 +510,20 @@ module.exports = function(grunt) {
     },
 
     /*
+     * Generate documentation
+     */
+    jsdoc : {
+      dist : {
+        src: [
+          '<%= cfg.basePath.ui.src %>/**/!(*spec).js'
+        ],
+        options: {
+          destination: '<%= cfg.basePath.ui.docs %>'
+        }
+      }
+    },
+
+    /*
      * Lint source JS files to find possible flaws that could lead to errors.
      * Custom code
      */
@@ -802,7 +816,8 @@ module.exports = function(grunt) {
     'copy:uiCompileVendor',
     'copy:staticCompile',
     'clean:uiTmp',
-    'karma'
+    'karma',
+    'jsdoc'
   ]);
 
   grunt.renameTask('watch', 'delta');

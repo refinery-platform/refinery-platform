@@ -1,6 +1,7 @@
 {
   "basePath": {
     "djangoTemplates": "../templates",
+    "docs": "docs",
     "ui": {
       "build": "development",
       "compile": "production",

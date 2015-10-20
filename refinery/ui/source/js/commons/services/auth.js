@@ -5,10 +5,6 @@ angular
       var auth = {},
           authLastCheck = 0;
 
-      /**
-       * [checkUserStatus description]
-       * @return {[type]} [description]
-       */
       function checkUserStatus () {
         var query = $resource(
               settings.appRoot + settings.refineryApi + '/user_authentication/',

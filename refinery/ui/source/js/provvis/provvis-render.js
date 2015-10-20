@@ -783,7 +783,7 @@ var provvisRender = (function () {
     /**
      * Get lower and upper date threshold date in timeline view.
      * @param l Time line.
-     * @returns {*[]} An array of size 2 containing both the lower and upper
+     * @returns {Array} An array of size 2 containing both the lower and upper
      * threshold date.
      */
     var getTimeLineThresholds = function (l) {

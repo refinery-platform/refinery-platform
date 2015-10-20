@@ -27,6 +27,7 @@
     "grunt-contrib-uglify": "~0.9.1",
     "grunt-contrib-watch": "~0.6.1",
     "grunt-env": "^0.4.4",
+    "grunt-jsdoc": "^1.0.0",
     "grunt-karma": "^0.11.0",
     "grunt-ng-annotate": "^1.0.1",
     "hasbin": "^1.1.1",

@@ -26,8 +26,8 @@ function getAssociatedDataSets (node) {
    * @author  Fritz Lekschas
    * @date    2015-10-14
    *
-   * @param   {[type]}  node        Current node, i.e. ontology term.
-   * @param   {[type]}  dataSetIds  Object of boolean keys representing the
+   * @param   {Object}  node        Current node, i.e. ontology term.
+   * @param   {Object}  dataSetIds  Object of boolean keys representing the
    *   dataset IDs.
    */
   function collectIds (node, dataSetIds) {
@@ -400,7 +400,8 @@ TreemapCtrl.prototype.addEventListeners = function () {
  * @method  addInnerNodes
  * @author  Fritz Lekschas
  * @date    2015-08-05
- * @param   {[type]}       parents  [description]
+ *
+ * @param   {Object}  parents  Selection of parent nodes.
  */
 TreemapCtrl.prototype.addInnerNodes = function (parents) {
   // D3 selection of all children with children
