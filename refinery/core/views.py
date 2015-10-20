@@ -540,9 +540,9 @@ def solr_core_search(request):
                 access.append('g_{}'.format(group.id))
         data['fq'] = data['fq'] + ' AND access:({})'.format(
             ' OR '.join(access))
-    req = urllib2.Request(url, urllib.urlencode(data))
-    f = urllib2.urlopen(req)
-    response = f.read()
+    req = requests.Request(url, data = data)
+    f = requests.get(req, stream = True)
+    response = f.raw.read()
     f.close()
     return HttpResponse(response, mimetype='application/json')
 
@@ -553,9 +553,9 @@ def solr_select(request, core):
     # TODO: handle runtime errors when making GET request
     url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
     data = request.GET.urlencode()
-    req = urllib2.Request(url, data)  # {'Content-Type': 'application/json'})
-    f = urllib2.urlopen(req)
-    response = f.read()
+    req = requests.Request(url, data = data)
+    f = requests.get(req, stream = True)
+    response = f.raw.read()
     f.close()
     return HttpResponse(response, mimetype='application/json')
 
@@ -643,11 +643,11 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
         replace_rows_str = '&rows=' + str(10000)
         query = query.replace(m_obj.group(), replace_rows_str)
 
-    # proper url encoding
-    query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
+    # with requests we don't need to urlencode
+   # query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
 
     # opening solr query results
-    results = urllib2.urlopen(query).read()
+    results = requests.get(query, stream = True).raw.read()
 
     # converting results into json for python
     results = simplejson.loads(results)
