@@ -1,4 +1,4 @@
-function AppCtrl ($, $rootScope, $timeout, $window, _, pubSub, settings) {
+function AppCtrl ($window, $, _, pubSub, settings) {
   this.$window = $window;
   this.$ = $;
   this._ = _;
@@ -14,38 +14,6 @@ function AppCtrl ($, $rootScope, $timeout, $window, _, pubSub, settings) {
       this.settings.debounceWindowResize
     )
   );
-
-  $rootScope.$on('$stateChangeSuccess', function (e, toState, toParams, fromState, fromParams) {
-    $timeout(function () {
-      if (fromState.url !== '^' && $window.ga) {
-        $window.ga(
-          'send',
-          'pageview',
-          $window.location.pathname + $window.location.hash
-        );
-      }
-    }, 0);
-  });
-
-  $rootScope.$on('$reloadlessStateChangeSuccess', function (e, a) {
-  console.log('hard aber ranzig', e, a);
-    $timeout(function () {
-      if ($window.ga) {
-        var hash = $window.location.hash,
-            path = $window.location.pathname;
-
-        if (hash.length > 2) {
-          path = path + hash;
-        }
-
-        $window.ga(
-          'send',
-          'pageview',
-          path
-        );
-      }
-    }, 0);
-  });
 }
 
 AppCtrl.prototype.globalClick = function ($event) {
@@ -55,10 +23,8 @@ AppCtrl.prototype.globalClick = function ($event) {
 angular
   .module('refineryApp')
   .controller('AppCtrl', [
-    '$',
-    '$rootScope',
-    '$timeout',
     '$window',
+    '$',
     '_',
     'pubSub',
     'settings',

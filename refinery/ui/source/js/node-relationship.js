@@ -7,7 +7,6 @@ angular.module('refineryNodeRelationship', [
 
   return $resource(
     "/api/v1/noderelationship/:uuid/", {
-      uuid: "@uuid",
       format: "json",
     },
     {
@@ -21,12 +20,8 @@ angular.module('refineryNodeRelationship', [
   'use strict';
 
   return $resource(
-    '/api/v1/nodepair/:uuid/',{
-      uuid: "@uuid",
-      format: 'json',
-    },
-    {
-      'update': { method: 'PUT' }
+    '/api/v1/nodepair/:uuid/', {
+      format: 'json'
     }
   );
 })
@@ -45,6 +40,7 @@ angular.module('refineryNodeRelationship', [
     //internal method -- call createNodeRelationship or createCurrentNodeRelationship
 
     var resource = new NodeRelationshipResource( {study: "/api/v1/study/" + externalStudyUuid + "/", assay: "/api/v1/assay/" + externalAssayUuid + "/", node_pairs: [], name: name, summary: summary, type: type, is_current: is_current } );
+
     resource.$save( success, error );
   };
 

@@ -25,7 +25,6 @@ function DashboardCtrl (
 
   // Construct Angular modules
   this.$q = $q;
-  this.$rootScope = $rootScope;
   this.$state = $state;
   this.$timeout = $timeout;
   this.$window = $window;
@@ -49,7 +48,8 @@ function DashboardCtrl (
   this.dataSetServiceLoading = false;
   this.dataSetPreviewBorder = false;
 
-  this.adminMail = refinerySettings.ADMINS[0][1];
+  // --! HACKY !--
+  this.adminMail = $window.refineryAdminMail;
 
   // Check authentication
   // This should idealy be moved to the global APP controller, which we don't
@@ -152,7 +152,7 @@ function DashboardCtrl (
     $timeout(window.sizing, 0);
     if (toParams.q) {
       this.searchQueryDataSets = toParams.q;
-      this.setDataSetSource(toParams.q, true);
+      this.setDataSetSource(toParams.q);
     }
   }.bind(this));
 
@@ -423,36 +423,25 @@ DashboardCtrl.prototype.resetDataSetSearch = function () {
   this.setDataSetSource();
 };
 
-DashboardCtrl.prototype.setDataSetSource = function (searchQuery, fromState) {
+DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
   var that = this;
 
   this.showFilterSort = false;
 
-  if (!fromState) {
-    var stateChange = this.$state.go(
-      '.',
-      {
-        q: searchQuery ? searchQuery : null
-      }
-    );
-
-    stateChange.then(function (a, b, c) {
-      // ! HACK !
-      // Currently state changes do not trigger a controller reload, hence no
-      // `$stateChangeSuccess` is triggered. Without triggering this event the
-      // root controller doesn't recognize any changes of the query parameter.
-      // If we inform the root controller and trigger the event the template
-      // will be refreshed which causes an ugly usability bug in which the
-      // search input is deselected for a short moment and preventing from
-      // typing further...
-      this.$rootScope.$emit('$reloadlessStateChangeSuccess', this.$state.current);
-    }.bind(this));
-  }
+  this.$state.transitionTo(
+    this.$state.current,
+    {
+      q: searchQuery ? searchQuery : null
+    },
+    {
+      reload: false,
+      notify: false
+    }
+  );
 
   if (searchQuery) {
     if (searchQuery.length > 1) {
       that.searchDataSet = true;
-      that.searchDataSetQuery = searchQuery;
       var searchResults = new this.dashboardDataSetSearchService(searchQuery);
       this.dataSets.set(searchResults, searchQuery);
       that.dashboardDataSetsReloadService.reload();
@@ -461,7 +450,6 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery, fromState) {
     this.dataSets.set(this.dashboardDataSetListService);
     if (that.searchDataSet) {
       that.searchDataSet = false;
-      that.searchDataSetQuery = void 0;
       that.dashboardDataSetsReloadService.reload();
     }
   }

@@ -127,9 +127,9 @@
   {% endif %}
 
 
-  <span ng-controller="AnalysisMonitorCtrl">
+  <span ng-controller="AnalysesCtrl">
     <div ng-if="checkAnalysesViewFlag()">
-      <span rp-analysis-monitor-alert-msg></span>
+      <span rp-analyses-alert-msg></span>
     </div>
   </span>
 
@@ -176,8 +176,8 @@
             {% endif %}
             <li ui-sref-active="active">
               <a ui-sref="analyses" id="analyze-tab" class="dataSetTabs">
-                <span ng-controller="AnalysisMonitorCtrl">
-                  <span rp-analysis-monitor-running-tab-icon></span>
+                <span ng-controller="AnalysesCtrl">
+                  <span rp-analyses-running-tab-icon></span>
                 </span>
                 Analyses
               </a>
@@ -271,15 +271,11 @@
                     -->
                       <div class="row-fluid y-scrollable">
                         <div class="span12">
-                          <span style="font-style: italic; color: darkgray;">
-                            Attribute Filter
-                          </span>
+                          <label style="font-style: italic; color: darkgray;">Attribute Filter</label>
                           <div id="solr-facet-view" class="accordion"></div>
                         </div>
                         <div class="span12">
-                          <span style="font-style: italic; color: darkgray;">
-                            Analysis Filter
-                          </span>
+                          <label style="font-style: italic; color: darkgray;">Analysis Filter</label>
                           <div id="solr-analysis-view" class="accordion"></div>
                         </div>
                       </div>
@@ -291,9 +287,7 @@
 
                     <div class="row-fluid" style="margin-bottom: 5px;">
                       <div class="span3">
-                        <span class="control-label"
-                          id="solr-document-count-view" style="float: left;
-                          margin-top: 3px;"></span>
+                        <label class="control-label" id="solr-document-count-view" style="float: left; margin-top: 3px;"></label>
                         <a href="#" id="help-selection-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
                       </div>
 
@@ -312,7 +306,7 @@
                         {% endif %}
 
                         <div id="view-selector-div">
-                          <label id="label-display" for="s2id_autogen1">Display</label>
+                          <label id="label-display">Display </label>
                           <select id="view-selector">
                             <option value="table-view-tab">Table</option>
                             <option value="pivot-view-tab">Matrix</option>
@@ -476,7 +470,7 @@
             </div>
             <p>
               <div class="row-fluid">
-                <analysis-monitor-analyses-list></analysis-monitor-analyses-list>
+                <analyses-list></analyses-list>
               </div>
             </p>
           </div>
@@ -629,15 +623,15 @@
 {% endblock %}
 
 {% block script %}
-  <script type="text/javascript" src="{% static "js/d3/d3.v3.min.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/d3/fisheye.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/underscore/underscore-min.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/backbone/backbone-min.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/backbone-marionette/backbone.marionette.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/bootbox/bootbox.min.js" %}"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v3.min.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/d3/fisheye.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/underscore/underscore-min.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/backbone/backbone-min.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/backbone-marionette/backbone.marionette.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/bootbox/bootbox.min.js"></script>
 
   <!-- adding spinner -->
-  <script language="javascript" type="text/javascript" src="{% static "js/spin/spin.min.js" %}"></script>
+  <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/spin/spin.min.js"></script>
 
   <script language="javascript" type="text/javascript">
     var opts = {
@@ -687,22 +681,22 @@
     var csrf_token = "{{ csrf_token }}";
   </script>
 
-  <script type="text/javascript" src="{% static "js/refinery/solr/solr_utilities.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/solr/solr_client.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/solr/solr_query.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/solr/solr_response.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/solr/solr_document_table.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/solr/solr_facet_view.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/solr/solr_analysis_view.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/solr/solr_document_count_view.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/solr/solr_pivot_matrix.js" %}"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_utilities.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_client.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_query.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_response.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_document_table.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_facet_view.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_analysis_view.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_document_count_view.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_pivot_matrix.js"></script>
   <script type="text/javascript" src="{% static "vendor/tipsy/src/javascripts/jquery.tipsy.js" %}"></script>
 
-  <script type="text/javascript" src="{% static "js/refinery/contents.js" %}">var query;</script>
-  <script type="text/javascript" src="{% static "js/refinery/data_set_manager/data_set_configurator.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/core/node_set_manager.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/core/analysis_api_client.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/core/data_set_monitor.js" %}"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js">var query;</script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/data_set_manager/data_set_configurator.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/node_set_manager.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/analysis_api_client.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/data_set_monitor.js"></script>
 
   <script type="text/javascript" src="{% static "vendor/floatThead/dist/jquery.floatThead.min.js" %}"></script>
 
@@ -712,20 +706,33 @@
   <script type="text/javascript" src="{% static "vendor/dagre/dist/dagre.core.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/spectrum/spectrum.js" %}"></script>
 
-  <script type="text/javascript" src="{% static "js/provvis/provvis-helpers.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/provvis/provvis-decl.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/provvis/provvis-init.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/provvis/provvis-layout.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/provvis/provvis-motifs.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/provvis/provvis-render.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/provvis/provvis.js" %}"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis-helpers.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis-decl.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis-init.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis-layout.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis-motifs.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis-render.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provvis/provvis.js"></script>
 
 
   <script type="application/javascript">
-    setTimeout(function() {
-          sizing();
-      }, 750);
     $(document).ready(function () {
+
+       setInterval(function(){
+      if (document.getElementById('select2-chosen-1').innerHTML.match
+              ('Provenance') || document.getElementById('select2-chosen-1').innerHTML.match
+              ('Matrix')) {
+        $('#solrdoctab1-top-controls').hide();
+      }
+      else {
+        $('#solrdoctab1-top-controls').show();
+      } }, 750);
+
+      setInterval(function(){
+          sizing();
+          
+      }, 500);
+
       $( "#view-selector" ).select2({minimumResultsForSearch: -1});
       $( "#view-selector" ).on("change", function(event) {
         $( '#navigation-tabs a[href="#' + event.added.element[0].value + '"]').tab('show');
@@ -799,20 +806,6 @@
 
     });
 
-    document.getElementById('view-selector').onclick = function()
-    {
-      if (document.getElementById('select2-chosen-1').innerHTML.match
-              ('Provenance') ||
-          document.getElementById('select2-chosen-1').innerHTML.match
-              ('Matrix'))
-      {
-        $('#solrdoctab1-top-controls').hide();
-      }
-      else
-      {
-        $('#solrdoctab1-top-controls').show();
-      }
-    };
     /*
      * Sticky table header using floatThead.js
      */
