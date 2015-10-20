@@ -24,15 +24,13 @@ serverurl = http://localhost:9001 ; use an http:// url to specify an inet socket
 supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 
 [program:solr]
-command = java -Dlog4j.configuration=file://%(here)s/solr/log4j.properties -Djava.awt.headless=true -Dsolr.solr.home=%(here)s/solr/ -jar start.jar
-directory = /opt/solr/example
-stdout_logfile = %(here)s/log/solr.log
-stdout_logfile_maxbytes = 5MB
-stdout_logfile_backups = 4
-redirect_stderr = true
-autostart = true
+command = /opt/solr/bin/solr start -f
+environment = SOLR_INCLUDE="/var/solr/solr.in.sh"
+autostart = false
 autorestart = true
 startsecs = 10
+stopasgroup = true
+killasgroup = true
 
 [program:neo4j]
 command = /opt/neo4j/bin/neo4j console
