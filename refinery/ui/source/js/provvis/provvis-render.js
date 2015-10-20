@@ -5148,6 +5148,9 @@ var provvisRender = (function () {
       } else {
         $("#provenance-sidebar")
             .animate({left: '20'}, nodeLinkTransitionTime);
+
+        /* TODO: Temporary fix for sidbear div. */
+        $("#provvis-sidebar-content").css({"height": vis.canvas.height});
       }
     });
 
