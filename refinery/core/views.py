@@ -643,9 +643,6 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
         replace_rows_str = '&rows=' + str(10000)
         query = query.replace(m_obj.group(), replace_rows_str)
 
-    # with requests we don't need to urlencode
-   # query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
-
     # opening solr query results
     results = requests.get(query, stream = True).raw.read()
 
