@@ -778,7 +778,7 @@ module.exports = function(grunt) {
   }
 
   // Default task.
-  grunt.registerTask('default', ['build', 'compile']);
+  grunt.registerTask('default', ['build', 'compile', 'test']);
 
   // Task for running unit tests
   grunt.registerTask('test', ['env:compile', 'karma']);
@@ -819,7 +819,6 @@ module.exports = function(grunt) {
     'copy:uiCompileVendor',
     'copy:staticCompile',
     'clean:uiTmp',
-    'karma',
     'jsdoc'
   ]);
 
