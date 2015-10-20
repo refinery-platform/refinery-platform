@@ -41,6 +41,7 @@ from data_set_manager.api import StudyResource, AssayResource, \
     InvestigationResource
 from data_set_manager.models import Node, Study, Attribute
 from file_store.models import FileStoreItem
+from guardian.shortcuts import get_groups_with_perms
 
 from fadapa import Fadapa
 
@@ -141,6 +142,7 @@ class SharableResourceAPIInterface(object):
         for res in res_list:
             setattr(res, 'is_owner', res.id in owned_res_set)
             setattr(res, 'public', res.id in public_res_set)
+            setattr(res, 'is_shared', len(get_groups_with_perms(res)) > 0)
 
             if 'sharing' in kwargs and kwargs['sharing']:
                 setattr(res, 'share_list', self.get_share_list(user, res))
@@ -360,6 +362,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
+    is_shared = fields.BooleanField(attribute='is_shared', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, DataSet)
@@ -377,6 +380,13 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             'is_owner': ALL,
             'public': ALL
         }
+
+    def dehydrate(self, bundle):
+        if bundle.obj.get_owner() is not None:
+            bundle.data['owner'] = bundle.obj.get_owner().userprofile.uuid
+        else:
+            bundle.data['owner'] = None
+        return bundle
 
     def apply_sorting(self, obj_list, options=None):
         """Manually sorting the list of objects returned by
@@ -641,7 +651,7 @@ class AnalysisResource(ModelResource):
             'modification_date', 'history_id', 'library_id', 'name',
             'workflow__uuid', 'resource_uri', 'status', 'time_end',
             'time_start', 'uuid', 'workflow_galaxy_id', 'workflow_steps_num',
-            'workflow_copy'
+            'workflow_copy', 'owner', 'is_owner'
         ]
         filtering = {
             'data_set': ALL_WITH_RELATIONS,
@@ -651,6 +661,16 @@ class AnalysisResource(ModelResource):
             'uuid': ALL
         }
         ordering = ['name', 'creation_date', 'time_start', 'time_end']
+
+    def dehydrate(self, bundle):
+        bundle.data['is_owner'] = False
+        if bundle.obj.get_owner() is not None:
+            bundle.data['owner'] = bundle.obj.get_owner().userprofile.uuid
+            if bundle.request.user.userprofile.uuid == bundle.data['owner']:
+                bundle.data['is_owner'] = True
+        else:
+            bundle.data['owner'] = None
+        return bundle
 
     def get_object_list(self, request, **kwargs):
         user = request.user
