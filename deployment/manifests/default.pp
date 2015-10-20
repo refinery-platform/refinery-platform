@@ -150,12 +150,12 @@ exec { "create_user":
 }
 
 class solr {
-  $solr_version = "4.10.4"
+  $solr_version = "5.3.1"
   $solr_archive = "solr-${solr_version}.tgz"
   $solr_url = "http://archive.apache.org/dist/lucene/solr/${solr_version}/${solr_archive}"
 
   package { 'java':
-    name => 'openjdk-7-jre-headless',
+    name => 'openjdk-7-jdk',
   }
 
   exec { "solr_wget":
@@ -165,15 +165,21 @@ class solr {
     timeout => 600,  # downloading can take a long time
   }
   ->
-  exec { "solr_unpack":
-    command => "mkdir -p /opt && tar -xzf /usr/src/${solr_archive} -C /opt && chown -R ${appuser}:${appuser} /opt/solr-${solr_version}",
+  exec { "solr_unpack_installer":
+    command => "mkdir -p /opt && tar -xzf /usr/src/${solr_archive} -C /usr/src solr-${solr_version}/bin/install_solr_service.sh --strip-components=2",
     creates => "/opt/solr-${solr_version}",
     path => "/usr/bin:/bin",
   }
   ->
-  file { "/opt/solr":
-    ensure => link,
-    target => "solr-${solr_version}",
+  exec { "solr_install_as_service":
+    command => "sudo bash /usr/src/install_solr_service.sh /usr/src/${solr_archive} -d /vagrant/refinery/solr -u vagrant && chown -R ${appuser}:${appuser} /opt/solr-${solr_version}",
+    creates => "/opt/solr-${solr_version}",
+    path => "/usr/bin:/bin",
+  }
+  ->
+  exec { "start_solr_on_boot":
+    command => "sudo update-rc.d solr defaults",
+    path => "/usr/bin:/bin",
   }
 }
 include solr
@@ -299,7 +305,7 @@ class ui {
   }
   ->
   exec { "grunt":
-    command => "/usr/bin/grunt",
+    command => "/usr/bin/grunt build && /usr/bin/grunt compile",
     cwd => $ui_app_root,
     logoutput => on_failure,
     user => $appuser,
