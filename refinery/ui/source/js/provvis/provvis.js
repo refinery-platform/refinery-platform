@@ -207,7 +207,7 @@ var provvis = (function () {
             rect = Object.create(null);
 
         /* Initialize margin conventions */
-        var margin = {top: 20, right: 10, bottom: 20, left: 10};
+        var margin = {top: 0, right: 0, bottom: 0, left: 0};
 
         /* Set drawing constants. */
         var r = 7,
@@ -229,13 +229,13 @@ var provvis = (function () {
         var cell = {width: r * 5, height: r * 3};
 
         /* Initialize canvas dimensions. */
-        var width = $("div#provenance-graph").width() - margin.left -
-                margin.right,
-            height = $("div#provenance-graph").height() - margin.top -
-                margin.bottom;
+        var width = $("div#provenance-graph").width(),
+            height = $("div#provenance-graph").height() - 35;
 
-        // TODO: Temporary fix for sidebar height
-        $("#provenance-sidebar").css("height", height - 16);
+        /* TODO: Temp fix for sidebar height. */
+        $("#provenance-sidebar").css("height", height);
+        /* TODO: Temp fix for sidebar max height. */
+        $('#provvis-sidebar-content').css("max-height", height-31);
 
         var scaleFactor = 0.75;
 
@@ -350,8 +350,8 @@ var provvis = (function () {
         /* Main canvas drawing area. */
         vis.canvas = d3.select("#provenance-canvas")
             .append("svg")
-            .attr("transform", "translate(" +
-            vis.margin.left + "," + vis.margin.top + ")")
+            /*.attr("transform", "translate(" +
+            vis.margin.left + "," + vis.margin.top + ")")*/
             .attr("width", width)
             .attr("height", height)
             /*.attr("viewBox", "0 0 " + (width) + " " + (height))*/
