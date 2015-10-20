@@ -22,8 +22,16 @@
       <h4>Inputs ({{currentWorkflow.getCategory()}})</h4>
     </div>
     <div>
-      <label style="color: #6A41AE;"><b><i>{{currentWorkflow.getInputSet(1)}}<br/></i></b></label>
-      <label style="color: #278F63;" ng-hide="currentWorkflow.isSingleInput()"><b><i>{{currentWorkflow.getInputSet(2)}}<br/></i></b></label>
+      <span style="color: #6A41AE;">
+        <b><i>
+        {{currentWorkflow.getInputSet(1)}}
+        <br/></i></b>
+      </span>
+      <span style="color: #278F63;" ng-hide="currentWorkflow.isSingleInput()">
+        <b><i>
+          {{currentWorkflow.getInputSet(2)}}
+          <br/></i></b>
+      </span>
     </div>
 
     <div ng-controller="NodeSetListApiCtrl" ng-if="currentWorkflow.isSingleInput()">
@@ -34,7 +42,7 @@
       <div>
         <p></p>
       </div>
-      <button class="btn btn-warning" rf-analysis-launch-modal ng-click="open()"
+      <button class="btn btn-warning" rp-analysis-launch-modal ng-click="open()"
         ng-disabled="!(currentNodeSet && currentNodeSet.node_count > 0)">
         Launch Analysis
       </button>
@@ -48,13 +56,17 @@
       </select>
 
       <a class="btn btn-mini" ng-click="openNewMappingDialog()">New ...</a>
-      <a class="btn btn-mini" ng-disabled="!(currentNodeRelationship && !currentNodeRelationship.is_current)" ng-click="openRenameMappingDialog(currentNodeRelationship)">Rename</a>
-      <a class="btn btn-mini" ng-disabled="!(currentNodeRelationship && !currentNodeRelationship.is_current)" ng-click='openDeleteMappingDialog(currentNodeRelationship)'>Delete</a> 
+      <button class="btn btn-mini" ng-disabled="!(currentNodeRelationship &&
+      !currentNodeRelationship.is_current)" ng-click="openRenameMappingDialog
+      (currentNodeRelationship)">Rename</button>
+      <button class="btn btn-mini" ng-disabled="!(currentNodeRelationship &&
+      !currentNodeRelationship.is_current)" ng-click='openDeleteMappingDialog
+      (currentNodeRelationship)'>Delete</button>
       <div>
         <p></p>
       </div>
 
-      <button class="btn btn-warning" rf-analysis-launch-modal ng-click="open()"
+      <button class="btn btn-warning" rp-analysis-launch-modal ng-click="open()"
         ng-disabled="!(currentNodeRelationship && currentNodeRelationship
       .node_pairs.length > 0)">
         Launch Analysis

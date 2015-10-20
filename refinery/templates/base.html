@@ -5,55 +5,45 @@
 
 <html lang="en">
 <head>
-    <meta content="text/html">
-  	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="">
+  <meta content="text/html">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
 
-    <!-- http://www.jonathantneal.com/blog/understand-the-favicon/ -->
-    <link rel="apple-touch-icon" href="{% static "images/touchicon.png" %}">
-    <link rel="icon" href="{% static "images/favicon.png" %}">
-    <!--[if IE]><link rel="shortcut icon" href="{% static "images/favicon.ico" %}"><![endif]-->
-    <!-- IE10 Win 8 -->
-    <meta name="msapplication-TileColor" content="#FFFFFF">
-    <meta name="msapplication-TileImage" content="{% static "images/tileicon.png" %}">
+  <!-- http://www.jonathantneal.com/blog/understand-the-favicon/ -->
+  <link rel="apple-touch-icon" href="{% static "images/touchicon.png" %}">
+  <link rel="icon" href="{% static "images/favicon.png" %}">
+  <!--[if IE]>
+    <link rel="shortcut icon" href="{% static "images/favicon.ico" %}">
+  <![endif]-->
+  <!-- IE10 Win 8 -->
+  <meta name="msapplication-TileColor" content="#FFFFFF">
+  <meta name="msapplication-TileImage" content="{% static "images/tileicon.png" %}">
 
-    <!-- Le styles -->
-    {% for css_file in REFINERY_CSS %}
+  <!-- Le styles -->
+  {% for css_file in REFINERY_CSS %}
     <link href="{% static css_file %}" rel="stylesheet">
-   	{% endfor %}
+  {% endfor %}
 
-    <style type="text/css">
-      body {
-        /*padding-top: {{ REFINERY_INNER_NAVBAR_HEIGHT|add:"20" }}px;*/
-        /*padding-bottom: 40px;*/
-         /*position: relative;*/
-      }
-    </style>
+  {% block head_html %}
+  {% endblock %}
 
-    {% block head_html %}
-    {% endblock %}
+  <title>{{ REFINERY_INSTANCE_NAME }}{% block title %}{% endblock %}</title>
 
-    <title>{{REFINERY_INSTANCE_NAME}} {% block title %}{% endblock %}</title>
+  {% block tracking %}
 
-    {% block tracking %}
+    {% if REFINERY_GOOGLE_ANALYTICS_ID != "" %}
+      <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', '{{ REFINERY_GOOGLE_ANALYTICS_ID }}', 'auto');
+        ga('send', 'pageview');
+      </script>
+    {% endif %}
 
-	    {% if REFINERY_GOOGLE_ANALYTICS_ID != "" %}
-			<script type="text/javascript">
-
-			  var _gaq = _gaq || [];
-			  _gaq.push(['_setAccount', '{{ REFINERY_GOOGLE_ANALYTICS_ID }}']);
-			  _gaq.push(['_trackPageview']);
-
-			  (function() {
-			    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-			    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-			    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-			  })();
-			</script>
-		{% endif %}
-
-    {% endblock %}
+  {% endblock %}
 </head>
 
 <body ng-app="{% block ng_app %}refineryApp{% endblock %}" ng-controller="AppCtrl as app" ng-click="app.globalClick($event)">
@@ -69,7 +59,7 @@
           <span class="icon-bar"></span>
         </a>
 
-        <a class="brand" href="{% url "home" %}">
+        <a class="brand" href="{% url "home" %}" tabindex=1>
           {% if REFINERY_MAIN_LOGO != False %}
             {% if REFINERY_MAIN_LOGO != '' %}
           	<img
@@ -97,27 +87,36 @@
         <p class="navbar-text pull-right">
         {% if user.is_authenticated %}
           <i class="icon-user"></i>
-          <a href="{% url "user" user.get_profile.uuid %}">
+          <a href="{% url "user" user.get_profile.uuid %}" tabindex=5>
           {% if user.first_name != "" or user.last_name != "" %}
             {{ user.first_name }} {{ user.last_name }}
           {% else %}
             {{ user.username }}
           {% endif %}
           </a>&nbsp;&nbsp;|&nbsp;&nbsp;
-          <i class="icon-signout"></i>&nbsp;<a href="{% url "django.contrib.auth.views.logout" %}?next={% url "home" %}">Logout</a>
+          <i class="icon-signout"></i>&nbsp;
+          <a href="
+          {% url "django.contrib.auth.views.logout" %}?next={% url "home" %}"
+          tabindex=6>
+            Logout
+          </a>
         {% else %}
           {% url 'registration.views.register' as registration_url %}
           {% url 'django.contrib.auth.views.login' as login_url %}
           {% if REGISTRATION_OPEN %}
-          <a rel="tooltip" data-placement="left" title="Sign Up" href="{{registration_url}}">Register</a>&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+          <a rel="tooltip" data-placement="left" title="Sign Up"
+            href="{{registration_url}}" tabindex=7>
+            Register
+          </a>&nbsp;&nbsp;
+            &nbsp;&nbsp;|&nbsp;&nbsp;
         {% endif %}
         <i class="icon-signin"></i>&nbsp;<a rel="tooltip" data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
         {% endif %}
         &nbsp;&nbsp;|&nbsp;&nbsp;
-        <span ng-controller="AnalysesCtrl" id="analyses-popover">
-          <a tabindex="0" rf-analyses-global-list-status-popover
+        <span id="analyses-popover">
+          <a tabindex=8 rp-analysis-monitor-global-list-status-popover
             title="Recent Analyses">
-             <span rp-analyses-global-list-status></span>
+             <span rp-analysis-monitor-global-list-status></span>
           </a>
         </span>
 
@@ -128,9 +127,15 @@
             <li class="{{ navbar_class_search }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url "search" %}">Search</a></li>
             <li class="{{ navbar_class_contact }}"><a href="{% url "contact" %}">Contact</a></li>
             -->
-            <li class="{{ navbar_class_collaboration }}"><a href="{% url "collaboration" %}">Collaboration</a></li>
-            <li class="{{ navbar_class_statistics }}"><a href="{% url "statistics" %}">Statistics</a></li>
-            <li class="{{ navbar_class_about }}"><a href="{% url "about" %}">About</a></li>
+            <li class="{{ navbar_class_collaboration }}">
+              <a href="{% url "collaboration" %}" tabindex=2>Collaboration</a>
+            </li>
+            <li class="{{ navbar_class_statistics }}">
+              <a href="{% url "statistics" %}" tabindex=3>Statistics</a>
+            </li>
+            <li class="{{ navbar_class_about }}">
+              <a href="{% url "about" %}" tabindex=4>About</a>
+            </li>
           </ul>
         </div>
       </div>
@@ -170,12 +175,12 @@
 
   <!-- Script for popup content in the tool status and analyses icon-->
      <script type="text/ng-template" id="analysesgloballist.html">
-        <rp-analyses-global-list-status-popover-details>
-        </rp-analyses-global-list-status-popover-details>
+        <rp-analysis-monitor-global-list-status-popover-details>
+        </rp-analysis-monitor-global-list-status-popover-details>
     </script>
      <script type="text/ng-template" id="analysislaunchmodal.html">
-        <rf-analysis-launch-modal-detail>
-        </rf-analysis-launch-modal-detail>
+        <rp-analysis-launch-modal-detail>
+        </rp-analysis-launch-modal-detail>
     </script>
 
   <!-- 3rd party libraries -->
@@ -199,6 +204,7 @@
     // lodash v2 or other libraries like underscore.
     window.lodash3 = _.noConflict();
   </script>
+  <script src="{% static "vendor/d3/d3.min.js" %}"></script>
 
   <!-- Refinery Angular App -->
   <script src="{% static "js/refinery.js" %}"></script>
@@ -208,8 +214,8 @@
   <script src="{% static "js/refinery-controller.js" %}"></script>
   <script src="{% static "js/globals.js" %}"></script>
   <script src="{% static "js/commons.js" %}"></script>
-  <script src="{% static "js/analysis.js" %}"></script>
-  <script src="{% static "js/analyses.js" %}"></script>
+  <script src="{% static "js/analysis-launch.js" %}"></script>
+  <script src="{% static "js/analysis-monitor.js" %}"></script>
   <script src="{% static "js/node-mapping.js" %}"></script>
   <script src="{% static "js/workflows.js" %}"></script>
   <script src="{% static "js/solr.js" %}"></script>
@@ -238,11 +244,12 @@
 
     var username = '{{ user.username }}';
     var user_id = '{{ user.id }}';
-    var refineryAdminMail = '{{ ADMINS }}';
     if (username === 'None' || user_id === 'None') {
         username = undefined;
         user_id = undefined;
     }
+
+    var refinerySettings = JSON.parse("{{refinerySettings|escapejs}}");
 
 		function sizing() {
 		    var windowWidth = $(window).width(),

@@ -24,6 +24,10 @@ p {
   //font-size: @baseFontSize * 1.1;
 }
 
+.attribute-header{
+  cursor: text;
+}
+
 a.clickable {
   cursor: pointer;
 
@@ -329,6 +333,7 @@ a.close.analysis-alert{
 
 a.analysis-header{
   color: black;
+  cursor: pointer;
 }
 
 #view-selector-div {
@@ -1919,4 +1924,29 @@ div.refinery-panel.refinery-panel-content.jquery-full-height {
   overflow: auto;
 }
 
+.icon-group.icon-shared-in,
+.icon-group.icon-shared-out {
+  position: relative;
+  display: inline-block;
+  margin-right: 0.5em;
+}
+
+.icon-group.icon-shared-in:after,
+.icon-group.icon-shared-out:after {
+  position: absolute;
+  display: inline-block;
+  top: 0.1em;
+  font-size: 0.8em;
+  opacity: 0.5;
+}
+
+.icon-group.icon-shared-in:after {
+  content: '\f149';
+  right: -0.6em;
+}
+
+.icon-group.icon-shared-out:after {
+  content: '\f148';
+  right: -0.5em;
+}
 

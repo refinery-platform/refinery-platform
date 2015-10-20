@@ -70,6 +70,13 @@
         <h6>Number of files</h6>
         <p>{{ preview.dataSet.file_count }}</p>
       </div>
+      <div class="inline-container">
+        <h6>Owner</h6>
+        <p ng-if="preview.dataSet.is_owner">You!</p>
+        <p ng-if="!preview.dataSet.is_owner">
+          <a ng-href="/users/{{ preview.dataSet.owner }}/">{{ preview.dataSet.owner }}</a>
+        </p>
+      </div>
       <h5 class="refinery-subheader">
         Analyses
         <span class="badge">{{ preview.numAnalyses }}</span>
