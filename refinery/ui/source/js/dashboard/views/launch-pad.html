@@ -160,16 +160,23 @@
               tool-tip-container="body"
               tool-tip-placement="top"></i>
             <i
-              class="icon-group"
+              class="icon-group icon-shared-out"
+              title="You privately share this data set"
+              ng-if="dataSet.is_shared && dataSet.is_owner"
+              tool-tip
+              tool-tip-container="body"
+              tool-tip-placement="top"></i>
+            <i
+              class="icon-group icon-shared-in"
               title="This data set is shared with you"
-              ng-if="!dataSet.is_owner"
+              ng-if="dataSet.is_shared && !dataSet.is_owner && dashboard.userIsAuthenticated"
               tool-tip
               tool-tip-container="body"
               tool-tip-placement="top"></i>
             <i
               class="icon-globe"
               title="This file is publicly available"
-              ng-if="dataSet.public"
+              ng-if="dataSet.public && dashboard.userIsAuthenticated"
               tool-tip
               tool-tip-container="body"
               tool-tip-placement="top"></i>
@@ -373,6 +380,20 @@
                 tool-tip-placement="left">
               </i>
             </span>
+            <i
+              class="icon-user"
+              title="You ran this analysis"
+              ng-if="analysis.is_owner"
+              tool-tip
+              tool-tip-container="body"
+              tool-tip-placement="top"></i>
+            <i
+              class="icon-group icon-shared-in"
+              title="Some collaborator ran this analysis"
+              ng-if="!analysis.is_owner"
+              tool-tip
+              tool-tip-container="body"
+              tool-tip-placement="top"></i>
             <span ng-if="analysis.status === 'RUNNING' || analysis.status === 'UNKNOWN'">
               <a
                 ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}/#/analyses">

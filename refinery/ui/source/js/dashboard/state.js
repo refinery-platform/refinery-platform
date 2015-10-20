@@ -9,6 +9,7 @@ angular
           'launchPad',
           {
             url: '/?q',
+            reloadOnSearch: false,
             templateUrl: '/static/partials/dashboard/views/launch-pad.html',
             controller: 'LaunchPadCtrl as launchPad'
           },
@@ -21,6 +22,7 @@ angular
             // multiple times. Instead of storing the whole path back to the
             // root, we store the branch ID to specify which path the user took.
             url: 'exploration?context&branchId',
+            reloadOnSearch: false,
           },
           '/'
         )
