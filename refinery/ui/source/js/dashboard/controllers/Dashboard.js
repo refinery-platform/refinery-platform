@@ -25,6 +25,7 @@ function DashboardCtrl (
 
   // Construct Angular modules
   this.$q = $q;
+  this.$rootScope = $rootScope;
   this.$state = $state;
   this.$timeout = $timeout;
   this.$window = $window;
@@ -149,9 +150,9 @@ function DashboardCtrl (
 
   $rootScope.$on('$stateChangeSuccess', function (event, toState, toParams) {
     $timeout(window.sizing, 0);
-    if (toParams.q && toParams.q !== this.searchDataSetQuery) {
+    if (toParams.q) {
       this.searchQueryDataSets = toParams.q;
-      this.setDataSetSource(toParams.q);
+      this.setDataSetSource(toParams.q, true);
     }
   }.bind(this));
 
@@ -422,21 +423,31 @@ DashboardCtrl.prototype.resetDataSetSearch = function () {
   this.setDataSetSource();
 };
 
-DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
+DashboardCtrl.prototype.setDataSetSource = function (searchQuery, fromState) {
   var that = this;
 
   this.showFilterSort = false;
 
-  this.$state.transitionTo(
-    this.$state.current,
-    {
-      q: searchQuery ? searchQuery : null
-    },
-    {
-      reload: false,
-      notify: true
-    }
-  );
+  if (!fromState) {
+    var stateChange = this.$state.go(
+      '.',
+      {
+        q: searchQuery ? searchQuery : null
+      }
+    );
+
+    stateChange.then(function (a, b, c) {
+      // ! HACK !
+      // Currently state changes do not trigger a controller reload, hence no
+      // `$stateChangeSuccess` is triggered. Without triggering this event the
+      // root controller doesn't recognize any changes of the query parameter.
+      // If we inform the root controller and trigger the event the template
+      // will be refreshed which causes an ugly usability bug in which the
+      // search input is deselected for a short moment and preventing from
+      // typing further...
+      this.$rootScope.$emit('$reloadlessStateChangeSuccess', this.$state.current);
+    }.bind(this));
+  }
 
   if (searchQuery) {
     if (searchQuery.length > 1) {
