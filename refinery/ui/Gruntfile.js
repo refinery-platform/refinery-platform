@@ -518,7 +518,10 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.ui.src %>/**/!(*spec).js'
         ],
         options: {
-          destination: '<%= cfg.basePath.ui.docs %>'
+          // Doesn't seem to work right now, so we have to specify the right
+          // location manually
+          //destination: '<%= cfg.basePath.ui.docs %>'
+          destination: 'docs'
         }
       }
     },
