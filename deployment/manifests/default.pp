@@ -148,21 +148,21 @@ exec { "create_user":
   user => $appuser,
   group => $appgroup,
 }
-->
-exec {
-  "build_core_schema":
-    command => "${virtualenv}/bin/python ${project_root}/manage.py build_solr_schema --using=core > solr/core/conf/schema.xml",
-    environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-    cwd => $project_root,
-    user => $appuser,
-    group => $appgroup;
-  "build_data_set_manager_schema":
-    command => "${virtualenv}/bin/python ${project_root}/manage.py build_solr_schema --using=data_set_manager > solr/data_set_manager/conf/schema.xml",
-    environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-    cwd => $project_root,
-    user => $appuser,
-    group => $appgroup;
-}
+# ->
+# exec {
+#   "build_core_schema":
+#     command => "${virtualenv}/bin/python ${project_root}/manage.py build_solr_schema --using=core > solr/core/conf/schema.xml",
+#     environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+#     cwd => $project_root,
+#     user => $appuser,
+#     group => $appgroup;
+#   "build_data_set_manager_schema":
+#     command => "${virtualenv}/bin/python ${project_root}/manage.py build_solr_schema --using=data_set_manager > solr/data_set_manager/conf/schema.xml",
+#     environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+#     cwd => $project_root,
+#     user => $appuser,
+#     group => $appgroup;
+# }
 
 class solr {
   $solr_version = "4.10.4"
