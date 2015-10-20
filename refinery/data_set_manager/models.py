@@ -7,7 +7,7 @@ Created on May 10, 2012
 from datetime import datetime
 import logging
 import simplejson
-import urllib2
+import requests
 
 from django.conf import settings
 from django.db import models
@@ -621,9 +621,9 @@ def _is_facet_attribute(attribute, study, assay):
         "&facet.sort=count&facet.limit=-1")
 
     # proper url encoding
-    query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
+   # query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
     # opening solr query results
-    results = urllib2.urlopen(query).read()
+    results = requests.get(query, stream = True).raw.read()
     logger.debug(
         "Query results for initialize_attribute_order: %s" % (results, )
     )
@@ -662,9 +662,9 @@ def initialize_attribute_order(study, assay):
         "t=true&facet.sort=count&facet.limit=-1"
     )
     # proper url encoding
-    query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
+    #query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
     # opening solr query results
-    results = urllib2.urlopen(query).read()
+    results = requests.get(query, stream = True).raw.read()
     logger.debug(
         "Query results for initialize_attribute_order: %s" % (results, )
     )
