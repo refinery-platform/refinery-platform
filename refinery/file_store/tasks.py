@@ -1,7 +1,7 @@
 import os
 import stat
 import logging
-import urllib2
+import requests
 from urlparse import urlparse
 from tempfile import NamedTemporaryFile
 from celery.task import task
@@ -102,14 +102,14 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
             logger.error("Copying failed: source is not a file")
             return None
     else:
-        req = urllib2.Request(item.source)
+        req = requests.Request(item.source)
         # check if source file can be downloaded
         try:
-            response = urllib2.urlopen(req)
-        except urllib2.HTTPError as e:
+            response = requests.get(req, stream = True)
+        except requests.exceptions.HTTPError as e:
             logger.error("Could not open URL '%s'", item.source)
             return None
-        except urllib2.URLError as e:
+        except requests.exceptions.ConnectionError as e:
             logger.error("Could not open URL '%s'. Reason: '%s'",
                          item.source, e.reason)
             return None
@@ -122,14 +122,15 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
 
         # provide a default value in case Content-Length is missing
         remotefilesize = int(
-            response.info().getheader("Content-Length", file_size)
+           # response.info().getheader("Content-Length", file_size)
+            response.headers['Content-Length', file_size]
         )
 
         logger.debug("Downloading from '%s'", item.source)
         # download and save the file
         localfilesize = 0
         blocksize = 1 * 1024 * 1024  # 1MB
-        for buf in iter(lambda: response.read(blocksize), ''):
+        for buf in iter(lambda: response.raw.read(blocksize), ''):
             localfilesize += len(buf)
             tmpfile.write(buf)
             # check if we have a sane value for file size
@@ -285,12 +286,12 @@ def download_file(url, target_path, file_size=1):
     # TODO: handle out of disk space condition
     logger.debug("Downloading file from '%s'", url)
 
-    req = urllib2.Request(url)
+    req = requests.Request(url)
     # check if source file can be downloaded
     # TODO: refactor to use requests
     try:
-        response = urllib2.urlopen(req)
-    except urllib2.URLError as e:
+        response = requests.get(req, stream = True)
+    except requests.exceptions.ConnectionError as e:
         raise DownloadError(
             "Could not open URL '{}'. Reason: '{}'".format(url, e.reason))
     except ValueError as e:
@@ -299,14 +300,14 @@ def download_file(url, target_path, file_size=1):
     # get remote file size, provide a default value in case Content-Length is
     # missing
     remotefilesize = int(
-        response.info().getheader("Content-Length", file_size))
+        response.header["Content-Length", file_size])
 
     # TODO: handle IOError
     with open(target_path, 'wb+') as destination:
         # download and save the file
         localfilesize = 0
         blocksize = 8 * 2 ** 10    # 8 Kbytes
-        for buf in iter(lambda: response.read(blocksize), ''):
+        for buf in iter(lambda: response.raw.read(blocksize), ''):
             localfilesize += len(buf)
             destination.write(buf)
             # check if we have a sane value for file size
