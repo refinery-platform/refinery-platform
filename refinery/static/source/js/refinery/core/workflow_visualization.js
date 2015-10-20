@@ -32,9 +32,9 @@ workflowVisualizationModule = function () {
      */
     var clear_svg = function () {
         if (canvas) {
-            d3.selectAll(".link").remove();
-            d3.selectAll(".node").remove();
-            d3.selectAll("svg").remove();
+            d3.select(canvas).selectAll(".link").remove();
+            d3.select(canvas).selectAll(".node").remove();
+            d3.select(canvas).selectAll("svg").remove();
         }
         d3.select("#workflowtbl").remove();
 
@@ -462,7 +462,7 @@ workflowVisualizationModule = function () {
         var new_height = parseInt(d3.select("#vis_workflow").style("height"), 10);
 
         // set svg
-        d3.select("svg")
+        d3.select("#vis_workflow").select("svg")
             .attr("width", new_width + "px")
             .attr("height", new_height + "px");
 
@@ -1670,7 +1670,7 @@ workflowVisualizationModule = function () {
 
         // zoom behavior (only with ctrl key down)
         zoom = d3.behavior.zoom();
-        d3.select("svg").call(zoom.on("zoom", geometric_zoom))
+        d3.select("#vis_workflow").select("svg").call(zoom.on("zoom", geometric_zoom))
             .on("dblclick.zoom", null)
             .on("mousewheel.zoom", null)
             .on("DOMMouseScroll.zoom", null)
@@ -1679,12 +1679,12 @@ workflowVisualizationModule = function () {
         // zoom is allowed with ctrl-key down only
         d3.select("body").on("keydown", function () {
             if (d3.event.ctrlKey)
-                d3.select("svg").call(zoom.on("zoom", geometric_zoom));
+                d3.select("#vis_workflow").select("svg").call(zoom.on("zoom", geometric_zoom));
         });
 
         // on zoomend, disable zoom behavior again
         zoom.on("zoomend", function () {
-            d3.select("svg").call(zoom.on("zoom", geometric_zoom))
+            d3.select("#vis_workflow").select("svg").call(zoom.on("zoom", geometric_zoom))
                 .on("dblclick.zoom", null)
                 .on("mousewheel.zoom", null)
                 .on("DOMMouseScroll.zoom", null)
