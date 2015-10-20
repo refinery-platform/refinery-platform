@@ -2,6 +2,7 @@ import json
 import os
 import re
 import urllib
+import urllib2
 import xmltodict
 
 from django.conf import settings
@@ -540,10 +541,10 @@ def solr_core_search(request):
                 access.append('g_{}'.format(group.id))
         data['fq'] = data['fq'] + ' AND access:({})'.format(
             ' OR '.join(access))
-    req = requests.Request(url, data = data)
-    f = requests.get(req, stream = True)
-    response = f.raw.read()
-    f.close()
+
+    fullResponse = requests.get(url, params = urllib.urlencode(data))
+    response = fullResponse.content
+
     return HttpResponse(response, mimetype='application/json')
 
 
@@ -551,12 +552,11 @@ def solr_select(request, core):
     # core format is <name_of_core>
     # query.GET is a querydict containing all parts of the query
     # TODO: handle runtime errors when making GET request
+
     url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
     data = request.GET.urlencode()
-    req = requests.Request(url, data = data)
-    f = requests.get(req, stream = True)
-    response = f.raw.read()
-    f.close()
+    fullResponse = requests.get(url, params = data)
+    response = fullResponse.content
     return HttpResponse(response, mimetype='application/json')
 
 
