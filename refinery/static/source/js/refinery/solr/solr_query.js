@@ -81,7 +81,7 @@ SolrQuery = function( configurator, commands ) {
 	self._documentSelection = [];
 	// if true, the nodeSelection list is to be subtracted from the Solr query results (blacklist)
 	// if false, the nodeSelection list is to be used instead of the Solr query results (whitelist)
-	self._documentSelectionBlacklistMode = false;
+	self._documentSelectionBlacklistMode = true;
 	
 	// --------------------------------------------------------------
 	// facets

@@ -163,35 +163,31 @@
               }
             }
 
-            var facetOneInd = 0;
+            var evenInd = 0;
+            var oddInd = 1;
             //conditional is required because visibleFacets has incorrect
             // isExposed attributes
-            while(facetOneInd <= visibleFacets.length - 1) {
-              if(!(visibleFacets[facetOneInd].indexOf("ANALYSIS") > -1 ||
-                visibleFacets[facetOneInd].indexOf("WORKFLOW_OUTPUT") > -1))
+            while(evenInd <= visibleFacets.length - 1) {
+              if(!(visibleFacets[evenInd].indexOf("ANALYSIS") > -1 ||
+                visibleFacets[evenInd].indexOf("WORKFLOW_OUTPUT") > -1))
               {
-                pivotMatrixView.setFacet1(visibleFacets[facetOneInd]);
+                pivotMatrixView.setFacet1(visibleFacets[evenInd]);
                 break;
               } else {
-                facetOneInd = facetOneInd + 1;
+                evenInd = evenInd + 2;
               }
             };
-
-            var facetTwoInd = facetOneInd + 1;
-            while(facetTwoInd <= visibleFacets.length - 1){
-              if(!(visibleFacets[facetTwoInd].indexOf("ANALYSIS") > -1 ||
-                visibleFacets[facetTwoInd].indexOf("WORKFLOW_OUTPUT") > -1))
+            while(oddInd <= visibleFacets.length - 1){
+              if(!(visibleFacets[oddInd].indexOf("ANALYSIS") > -1 ||
+                visibleFacets[oddInd].indexOf("WORKFLOW_OUTPUT") > -1))
               {
-                pivotMatrixView.setFacet2(visibleFacets[facetTwoInd]);
+                pivotMatrixView.setFacet2(visibleFacets[oddInd]);
                 break;
               } else {
-                facetTwoInd = facetTwoInd + 1;
+                oddInd = oddInd + 2;
               }
             };
-
-            if(pivotMatrixView.getFacet1 !== undefined && pivotMatrixView.getFacet2 !== undefined ) {
-              query.setPivots(visibleFacets[facetOneInd], visibleFacets[facetTwoInd]);
-            }
+         query.setPivots(visibleFacets[evenInd], visibleFacets[oddInd]);
           }
 
           client.run(query, SOLR_FULL_QUERY);

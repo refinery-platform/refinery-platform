@@ -69,23 +69,23 @@ DataSetConfigurator.prototype.render = function () {
 	code += "<thead>";
 	code += "<tr>";
 
-	code += "<th class='attribute-header'>";
+	code += "<th>";
 	code +=  "";
 	code += "</th>";
 
-	code += "<th class='attribute-header'>";
+	code += "<th>";
 	code +=  "Attribute";
 	code += "</th>";
 
-	code += "<th class='attribute-header'>";
+	code += "<th>";
 	code += "Expose to User";
 	code += "</th>";
 
-	code += "<th class='attribute-header'>";
+	code += "<th>";
 	code += "Use as Facet";
 	code += "</th>";
 
-	code += "<th class='attribute-header'>";
+	code += "<th>";
 	code += "Show by Default";
 	code += "</th>";
 

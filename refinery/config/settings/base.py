@@ -2,9 +2,7 @@ import json
 import logging
 import os
 import djcelery
-from subprocess import check_output
 from django.core.exceptions import ImproperlyConfigured
-
 
 logger = logging.getLogger(__name__)
 
@@ -207,10 +205,10 @@ LOGGING = {
         },
     },
     'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
-        }
-    },
+         'require_debug_false': {
+             '()': 'django.utils.log.RequireDebugFalse'
+         }
+     },
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
@@ -442,12 +440,3 @@ if REFINERY_EXTERNAL_AUTH:
         AUTHENTICATION_BACKENDS += (
             'core.models.RefineryLDAPBackend',
         )
-
-# CURRENT_COMMIT retrieves the most recent commit used allowing for easier
-# debugging of a Refinery instance
-
-try:
-    CURRENT_COMMIT = check_output(['git', 'rev-parse', "HEAD"])
-except:
-    logger.debug("Error Retrieving Most Recent Commit")
-    CURRENT_COMMIT = "Error Retrieving Most Recent Commit"
