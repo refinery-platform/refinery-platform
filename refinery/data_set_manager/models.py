@@ -620,8 +620,6 @@ def _is_facet_attribute(attribute, study, assay):
         attribute +
         "&facet.sort=count&facet.limit=-1")
 
-    # proper url encoding
-   # query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
     # opening solr query results
     results = requests.get(query, stream = True).raw.read()
     logger.debug(
@@ -661,8 +659,7 @@ def initialize_attribute_order(study, assay):
         "20Data%20File%22%20OR%20type:%20%22Derived%20Data%20File%22)"")&face"
         "t=true&facet.sort=count&facet.limit=-1"
     )
-    # proper url encoding
-    #query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
+
     # opening solr query results
     results = requests.get(query, stream = True).raw.read()
     logger.debug(
