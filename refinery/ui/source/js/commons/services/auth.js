@@ -6,8 +6,13 @@ angular
           authLastCheck = 0;
 
       /**
-       * [checkUserStatus description]
-       * @return {[type]} [description]
+       * Check whether a user is authenticated or not.
+       *
+       * @method  checkUserStatus
+       * @author  Fritz Lekschas
+       * @date    2015-10-21
+       *
+       * @return  {Object}  Angular promise
        */
       function checkUserStatus () {
         var query = $resource(
