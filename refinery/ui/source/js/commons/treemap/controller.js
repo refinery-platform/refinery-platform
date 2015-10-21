@@ -1,5 +1,3 @@
-/* global angular:false */
-
 /**
  * Collect all data sets associated with a node i.e. ontology term by traversing
  * the tree down to the leaves.
