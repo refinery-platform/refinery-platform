@@ -42,15 +42,6 @@
 		</div>
 		<p>{% if profile_user.get_profile.affiliation %} {{ profile_user.get_profile.affiliation }} {% else %} <i>None provided.</i>{% endif %}</p>
 
-		<div class="refinery-subheader">
-			<h4>Profile Visibility</h4>
-		</div>
-		{% if profile_user.get_profile.is_public %}
-			<p><i class="icon-eye-open"></i>&nbsp;Profile is visible to the public.</p>
-		{% else %}
-			<p><i class="icon-eye-close"></i>&nbsp;Profile is not visible to the public.</p>
-		{% endif %}
-
         <div class="refinery-subheader">
             <h4>Password</h4>
         </div>

@@ -117,7 +117,7 @@ class NodeSetAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
 
 class UserProfileAdmin(GuardedModelAdmin):
     list_display = ['__unicode__', 'id', 'uuid', 'user', 'affiliation',
-                    'catch_all_project', 'is_public']
+                    'catch_all_project']
 
 
 class OntologyAdmin(GuardedModelAdmin):
