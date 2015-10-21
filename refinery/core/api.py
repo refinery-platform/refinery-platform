@@ -338,6 +338,25 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
         return filter(lambda o: not o.is_catch_all, obj_list)
 
 
+class UserResource(ModelResource):
+    class Meta:
+        queryset = User.objects.all()
+        allowed_methods = ['get']
+        excludes = ('is_active', 'is_staff', 'is_superuser', 'last_login',
+                    'password', 'date_joined')
+
+
+class UserProfileResource(ModelResource):
+    user = fields.ForeignKey(UserResource, 'user', full=True)
+
+    class Meta:
+        queryset = UserProfile.objects.all()
+        detail_uri_name = 'uuid'
+        resource_name = 'users'
+        authentication = Authentication()
+        authorization = Authorization()
+
+
 class DataSetResource(ModelResource, SharableResourceAPIInterface):
     uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
     share_list = fields.ListField(attribute='share_list', null=True)

@@ -4,7 +4,7 @@ import os
 import re
 import string
 import sys
-import urllib2
+import requests
 
 from django.conf import settings
 from django.core.management import call_command
@@ -86,14 +86,14 @@ class Command(BaseCommand):
             last_date_run = date.today()
 
         logger.info("getting %s", ae_query)
-        u = urllib2.urlopen(ae_query)
+        u = requests.get(ae_query, stream=True)
         logger.info("writing to file %s", ae_file)
         # TODO: use context manager for file operations
         f = open(ae_file, 'w')
         # download in pieces to make sure you're never biting off too much
         block_sz = 8192
         while True:
-            buffer = u.read(block_sz)  # read block_sz bytes from url
+            buffer = u.raw.read(block_sz)  # read block_sz bytes from url
             if not buffer:
                 break
             f.write(buffer)  # write what you read from url to file

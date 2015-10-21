@@ -436,7 +436,7 @@ var provvisLayout = (function () {
       /* Analysis layout. */
       reorderSubanalysisNodes(bclgNodes, cell);
     } else {
-      console.log("Error: Graph is not acyclic!");
+      throw "Graph is not acyclic.";
     }
     return bclgNodes;
   };
