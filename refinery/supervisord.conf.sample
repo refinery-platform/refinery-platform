@@ -26,7 +26,7 @@ supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 [program:solr]
 command = /opt/solr/bin/solr start -f
 environment = SOLR_INCLUDE="/var/solr/solr.in.sh"
-autostart = false
+autostart = true
 autorestart = true
 startsecs = 10
 stopasgroup = true
