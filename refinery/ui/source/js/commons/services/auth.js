@@ -71,12 +71,9 @@ angular
           session = $q.when();
         }
 
-        return session.then(
-          // Success
-          function () {
-            return sessionService.get('isAdmin');
-          }
-        );
+        return session.then(function () {
+          return sessionService.get('isAdmin');
+        });
       };
 
       /**
@@ -98,12 +95,9 @@ angular
           session = $q.when();
         }
 
-        return session.then(
-          // Success
-          function () {
-            return sessionService.get('userId') >= 0;
-          }
-        );
+        return session.then(function () {
+          return sessionService.get('userId') >= 0;
+        });
       };
 
       return auth;
