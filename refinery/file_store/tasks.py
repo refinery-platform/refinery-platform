@@ -104,7 +104,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
     else:
         # check if source file can be downloaded
         try:
-            response = requests.get(item.source, stream = True)
+            response = requests.get(item.source, stream=True)
         except requests.exceptions.HTTPError as e:
             logger.error("Could not open URL '%s'", item.source)
             return None
@@ -121,7 +121,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
 
         # provide a default value in case Content-Length is missing
         remotefilesize = int(
-            response.headers['Content-Length', file_size] )
+            response.headers['Content-Length', file_size])
 
         logger.debug("Downloading from '%s'", item.source)
         # download and save the file
@@ -286,7 +286,7 @@ def download_file(url, target_path, file_size=1):
     # check if source file can be downloaded
     # TODO: refactor to use requests
     try:
-        response = requests.get(url, stream = True)
+        response = requests.get(url, stream=True)
     except requests.exceptions.ConnectionError as e:
         raise DownloadError(
             "Could not open URL '{}'. Reason: '{}'".format(url, e.reason))
@@ -297,9 +297,6 @@ def download_file(url, target_path, file_size=1):
     # missing
     remotefilesize = int(
         response.headers.get("Content-Length", file_size))
-
-    #remotefilesize = int(
-    #    response.info().getheader("Content-Length", file_size))
 
     # TODO: handle IOError
     with open(target_path, 'wb+') as destination:

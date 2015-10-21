@@ -86,7 +86,7 @@ class Command(BaseCommand):
             last_date_run = date.today()
 
         logger.info("getting %s", ae_query)
-        u = requests.get(ae_query, stream = True)
+        u = requests.get(ae_query, stream=True)
         logger.info("writing to file %s", ae_file)
         # TODO: use context manager for file operations
         f = open(ae_file, 'w')

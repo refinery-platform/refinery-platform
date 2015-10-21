@@ -83,7 +83,7 @@ def download_http_file(url, out_dir, accession, new_name=None,
     logger.info("url: %s\n" % url)
 
     if not os.path.exists(file_path):
-        u = requests.get(url, stream = True)
+        u = requests.get(url, stream=True)
         # FIXME: use context manager to open the file
         f = open(file_path, 'wb')
         if galaxy_file_size is None:
@@ -197,7 +197,7 @@ def zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc):
     # make url to fetch the experiment
     url = "%s/%s" % (settings.AE_BASE_URL, accession)
     # get ArrayExpress information to get URLs to download
-    u = requests.get(url, stream = True)
+    u = requests.get(url, stream=True)
     f = open(ae_name, 'wb')
     f.write(u.raw.read())  # small file, so just grab whole thing in one go
     f.close()
@@ -217,7 +217,7 @@ def zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc):
             file_name = link.split('/')[-1]  # get the file name
             if not re.search(r'^http://', link):
                 link = "http://www.ebi.ac.uk%s" % link
-            u = requests.get(link, stream = True)
+            u = requests.get(link, stream=True)
             file = os.path.join(dir_to_zip, file_name)
             f = open(file, 'wb')
             f.write(u.raw.read())  # again, shouldn't be a large file

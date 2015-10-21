@@ -542,7 +542,7 @@ def solr_core_search(request):
         data['fq'] = data['fq'] + ' AND access:({})'.format(
             ' OR '.join(access))
 
-    fullResponse = requests.get(url, params = urllib.urlencode(data))
+    fullResponse = requests.get(url, params=urllib.urlencode(data))
     response = fullResponse.content
 
     return HttpResponse(response, mimetype='application/json')
@@ -555,7 +555,7 @@ def solr_select(request, core):
 
     url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
     data = request.GET.urlencode()
-    fullResponse = requests.get(url, params = data)
+    fullResponse = requests.get(url, params=data)
     response = fullResponse.content
     return HttpResponse(response, mimetype='application/json')
 
@@ -644,7 +644,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
         query = query.replace(m_obj.group(), replace_rows_str)
 
     # opening solr query results
-    results = requests.get(query, stream = True).raw.read()
+    results = requests.get(query, stream=True).raw.read()
 
     # converting results into json for python
     results = simplejson.loads(results)

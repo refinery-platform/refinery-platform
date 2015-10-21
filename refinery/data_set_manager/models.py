@@ -621,7 +621,7 @@ def _is_facet_attribute(attribute, study, assay):
         "&facet.sort=count&facet.limit=-1")
 
     # opening solr query results
-    results = requests.get(query, stream = True).raw.read()
+    results = requests.get(query, stream=True).raw.read()
     logger.debug(
         "Query results for initialize_attribute_order: %s" % (results, )
     )
@@ -661,7 +661,7 @@ def initialize_attribute_order(study, assay):
     )
 
     # opening solr query results
-    results = requests.get(query, stream = True).raw.read()
+    results = requests.get(query, stream=True).raw.read()
     logger.debug(
         "Query results for initialize_attribute_order: %s" % (results, )
     )
