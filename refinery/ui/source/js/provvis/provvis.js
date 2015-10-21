@@ -169,7 +169,7 @@ var provvis = (function () {
    * visualization is loading.
    */
   var showProvvisLoaderIcon = function () {
-    $('#provvis-loader').css("display","inline-block");
+    $('#provvis-loader').css("display", "inline-block");
   };
 
   /**+
@@ -229,10 +229,13 @@ var provvis = (function () {
         var cell = {width: r * 5, height: r * 3};
 
         /* Initialize canvas dimensions. */
-        var width = $("div#provenance-graph").width() - margin.left -
-                margin.right,
-            height = $("div#provenance-graph").height() - margin.top -
-                margin.bottom;
+        var width = $("div#provenance-graph").width(),
+            height = $("div#provenance-graph").height() - 35;
+
+        /* TODO: Temp fix for sidebar height. */
+        $("#provenance-sidebar").css("height", height);
+        /* TODO: Temp fix for sidebar max height. */
+        $('#provvis-sidebar-content').css("max-height", height - 31);
 
         var scaleFactor = 0.75;
 
@@ -347,12 +350,12 @@ var provvis = (function () {
         /* Main canvas drawing area. */
         vis.canvas = d3.select("#provenance-canvas")
             .append("svg")
-            .attr("transform", "translate(" +
-            vis.margin.left + "," + vis.margin.top + ")")
+          /*.attr("transform", "translate(" +
+           vis.margin.left + "," + vis.margin.top + ")")*/
             .attr("width", width)
             .attr("height", height)
-            /*.attr("viewBox", "0 0 " + (width) + " " + (height))*/
-            /*.attr("preserveAspectRatio", "xMinYMin meet")*/
+          /*.attr("viewBox", "0 0 " + (width) + " " + (height))*/
+          /*.attr("preserveAspectRatio", "xMinYMin meet")*/
             .attr("pointer-events", "all")
             .classed("canvas", true)
             .append("g")
@@ -367,56 +370,94 @@ var provvis = (function () {
             .attr("height", height)
             .classed("brect", true);
 
-        /* Extract graph data. */
-        vis.graph = provvisInit.run(data, analysesData, solrResponse);
 
-        /* Compute layout. */
-        vis.graph.bclgNodes = provvisLayout.run(vis.graph, vis.cell);
+        /* TODO: Refine error handling. */
+        /* Exception handling. */
+        try {
 
-        /* Discover and and inject motifs. */
-        provvisMotifs.run(vis.graph, layerMethod);
+          /* Extract graph data. */
+          vis.graph = provvisInit.run(data, analysesData, solrResponse);
+          try {
 
-        /* Render graph. */
-        provvisRender.run(vis);
+            /* Compute layout. */
+            vis.graph.bclgNodes = provvisLayout.run(vis.graph, vis.cell);
+            try {
 
-        hideProvvisLoaderIcon();
+              /* Discover and and inject motifs. */
+              provvisMotifs.run(vis.graph, layerMethod);
+              try {
 
-
-        /* TODO: Refine to only redraw affected canvas components. */
-        /* Switch filter action. */
-        $("#prov-layering-method > button").click(function () {
-          layerMethod = $(this).prop('value');
-
-          showProvvisLoaderIcon();
-
-          $(".aHLinks").remove();
-          $(".aLinks").remove();
-          $(".lLinks").remove();
-          $(".lLink").remove();
-          $(".layers").remove();
-          $(".analyses").remove();
-
-          $('#provenance-timeline-view').children().remove();
-          $('#provenance-doi-view').children().remove();
-
-          createTimelineView("provenance-timeline-view");
-
-          provvisDecl.DoiFactors.set("filtered", 0.2, true);
-          provvisDecl.DoiFactors.set("selected", 0.2, true);
-          provvisDecl.DoiFactors.set("highlighted", 0.2, true);
-          provvisDecl.DoiFactors.set("time", 0.2, true);
-          provvisDecl.DoiFactors.set("diff", 0.2, true);
-
-          createDOIView("provenance-doi-view");
-
-          /* Discover and and inject motifs. */
-          provvisMotifs.run(vis.graph, layerMethod);
-
-          /* Render graph. */
-          provvisRender.run(vis);
-
+                /* Render graph. */
+                provvisRender.run(vis);
+              }
+              catch (err) {
+                $("#provenance-canvas > svg").remove();
+                document.getElementById("provenance-canvas").innerHTML +=
+                    'Render Module Error: ' + err.message + '<br>';
+              }
+            }
+            catch (err) {
+              $("#provenance-canvas > svg").remove();
+              document.getElementById("provenance-canvas").innerHTML +=
+                  'Motif Module Error: ' + err.message + '<br>';
+            }
+          }
+          catch (err) {
+            $("#provenance-canvas > svg").remove();
+            document.getElementById("provenance-canvas").innerHTML +=
+                'Layout Module Error: ' + err.message + '<br>';
+          }
+        }
+        catch (err) {
+          $("#provenance-canvas > svg").remove();
+          document.getElementById("provenance-canvas").innerHTML =
+              'Init Module Error: ' + err.message + '<br>';
+        } finally {
           hideProvvisLoaderIcon();
-        });
+        }
+
+
+        try {
+          /* TODO: Refine to only redraw affected canvas components. */
+          /* Switch filter action. */
+          $("#prov-layering-method > button").click(function () {
+            layerMethod = $(this).prop('value');
+
+            showProvvisLoaderIcon();
+
+            $(".aHLinks").remove();
+            $(".aLinks").remove();
+            $(".lLinks").remove();
+            $(".lLink").remove();
+            $(".layers").remove();
+            $(".analyses").remove();
+
+            $('#provenance-timeline-view').children().remove();
+            $('#provenance-doi-view').children().remove();
+
+            createTimelineView("provenance-timeline-view");
+
+            provvisDecl.DoiFactors.set("filtered", 0.2, true);
+            provvisDecl.DoiFactors.set("selected", 0.2, true);
+            provvisDecl.DoiFactors.set("highlighted", 0.2, true);
+            provvisDecl.DoiFactors.set("time", 0.2, true);
+            provvisDecl.DoiFactors.set("diff", 0.2, true);
+
+            createDOIView("provenance-doi-view");
+
+            /* Discover and and inject motifs. */
+            provvisMotifs.run(vis.graph, layerMethod);
+
+            /* Render graph. */
+            provvisRender.run(vis);
+
+            hideProvvisLoaderIcon();
+          });
+        }
+        catch (err) {
+          document.getElementById("provenance-canvas").innerHTML +=
+              'Layering Error: ' + err.message + '<br>';
+        }
       });
     }
   };
