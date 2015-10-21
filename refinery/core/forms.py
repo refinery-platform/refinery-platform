@@ -48,7 +48,7 @@ class UserForm(ModelForm):
 class UserProfileForm(ModelForm):
     class Meta:
         model = UserProfile
-        fields = ["affiliation", "is_public"]
+        fields = ["affiliation"]
 
 
 class WorkflowForm(ModelForm):
