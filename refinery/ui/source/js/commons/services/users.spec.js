@@ -3,7 +3,6 @@ describe('Common.service.userService: unit tests', function () {
 
   var $httpBackend,
       $rootScope,
-      deferred,
       fakeUuid = 123,
       fakeResolve = {
         affiliation: 'test',
@@ -40,7 +39,6 @@ describe('Common.service.userService: unit tests', function () {
 
       $httpBackend = $injector.get('$httpBackend');
       $rootScope = $injector.get('$rootScope');
-      deferred = $injector.get('$q').defer();
       service = $injector.get('userService');
 
       $httpBackend
