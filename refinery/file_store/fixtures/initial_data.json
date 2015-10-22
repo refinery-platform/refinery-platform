@@ -1,0 +1,290 @@
+[
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "bam",
+      "description": "Binary compressed SAM",
+      "name": "BAM"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "bed",
+      "description": "BED file",
+      "name": "BED"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "bigbed",
+      "description": "Big BED",
+      "name": "BIGBED"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "bigwig",
+      "description": "Big WIG",
+      "name": "BIGWIG"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "cbs",
+      "description": "Circular Binary Segmentation File",
+      "name": "CBS"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "cel",
+      "description": "Affymetrix Probe Results File",
+      "name": "CEL"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "csv",
+      "description": "Comma Separated Values",
+      "name": "CSV"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "eland",
+      "description": "Eland file",
+      "name": "ELAND"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "gff",
+      "description": "GFF file",
+      "name": "GFF"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "gtf",
+      "description": "GTF file",
+      "name": "GTF"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "gz",
+      "description": "Gzip compressed archive",
+      "name": "GZ"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "html",
+      "description": "Hypertext Markup Language",
+      "name": "HTML"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "idf",
+      "description": "IDF file",
+      "name": "IDF"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "fasta",
+      "description": "FASTA file",
+      "name": "FASTA"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "fastq",
+      "description": "FASTQ file",
+      "name": "FASTQ"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "fastqcsanger",
+      "description": "FASTQC Sanger",
+      "name": "FASTQSANGER"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "fastqillumina",
+      "description": "FASTQ Illumina",
+      "name": "FASTQILLUMINA"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "fastqsanger",
+      "description": "FASTQ Sanger",
+      "name": "FASTQSANGER"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "fastqsolexa",
+      "description": "FASTQ Solexa",
+      "name": "FASTQSOLEXA"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "pdf",
+      "description": "Portable Document Format",
+      "name": "PDF"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "sam",
+      "description": "Sequence Alignment/Map",
+      "name": "SAM"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "seg",
+      "description": "Segmented Data File",
+      "name": "SEG"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "tabular",
+      "description": "Tabular file",
+      "name": "TABULAR"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "tdf",
+      "description": "TDF file",
+      "name": "TDF"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "tgz",
+      "description": "Gzip compressed tar archive",
+      "name": "TGZ"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "txt",
+      "description": "Text file",
+      "name": "TXT"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "vcf",
+      "description": "Variant Call Format",
+      "name": "VCF"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "wig",
+      "description": "Wiggle Track Format",
+      "name": "WIG"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "xml",
+      "description": "XML file",
+      "name": "XML"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "bb",
+      "description": "Big BED",
+      "name": "BIGBED"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "igv.tdf",
+      "description": "TDF file",
+      "name": "TDF"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": null,
+    "fields": {
+      "extension": "zip",
+      "description": "Zip compressed archive",
+      "name": "ZIP"
+    }
+  }
+]

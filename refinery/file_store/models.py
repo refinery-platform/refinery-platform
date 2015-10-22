@@ -250,12 +250,26 @@ def generate_file_source_translator(username='', base_path=''):
             raise ValueError("Failed to translate relative source path: "
                              "must provide either username or base_path")
         return source
+
     return translate
+
+
+class FileType(models.Model):
+    #: name of file extension
+    name = models.CharField(max_length=50)
+    #: short description of file extension
+    description = models.CharField(max_length=250)
+    #: file extension associated with the filename
+    extension = models.CharField(unique=True, max_length=50)
+
+    def __unicode__(self):
+        return self.name + ' - ' + self.description + ' - ' + self.extension
 
 
 class _FileStoreItemManager(models.Manager):
     """Custom model manager to handle creation and retrieval of FileStoreItems
     """
+
     def create_item(self, source, sharename='', filetype=''):
         """A "constructor" for FileStoreItem.
 
@@ -331,6 +345,14 @@ class FileStoreItem(models.Model):
     sharename = models.CharField(max_length=20, blank=True)
     #: type of the file
     filetype = models.CharField(max_length=15, choices=FILE_TYPES, blank=True)
+    '''
+    filetype = models.CharField(max_length=50, choices=tuple(zip([
+                                d['extension'] for d in FileType.objects.
+                                order_by('id').all().values('extension')],
+                                [d['description'] for d in FileType.objects.
+                                 order_by('id').all().values('description')])),
+                                blank=True)
+    '''
     #: file import task ID
     import_task_id = UUIDField(blank=True)
 
@@ -422,6 +444,14 @@ class FileStoreItem(models.Model):
         # make sure the file type is valid before assigning it to model field
         try:
             self.filetype = FILE_EXTENSIONS[filetype]
+            '''
+            self.filetype = dict(zip([d['extension'] for d in
+                                      FileType.objects.order_by(
+                         'id').all().values('extension')],
+                    [d['extension'] for d in
+                     FileType.objects.order_by(
+                         'id').all().values('extension')]))[filetype]
+            '''
         except KeyError:
             logger.info("'%s' is an unknown file type", filetype)
             self.filetype = UNKNOWN
