@@ -384,7 +384,8 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
           initializedWithData: this.initializedWithData,
           items: this.cache.items,
           total: this.total,
-          totalReadable: this.totalReadable
+          totalReadable: this.totalReadable,
+          totalUpperBound: this.totalUpperBound
         });
 
         // Reset cached instance
@@ -398,7 +399,8 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
           initializedWithData: false,
           items: {},
           total: Number.POSITIVE_INFINITY,
-          totalReadable: 0
+          totalReadable: 0,
+          totalUpperBound: undefined
         };
 
         // Restore former cache or reset cache.
@@ -435,6 +437,7 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
               this.initializedWithData = true;
               this.total = response.meta[this.totalProperty];
               this.totalReadable = response.meta[this.totalProperty];
+              this.totalUpperBound = response.meta.totalUpperBound;
             }
             return response[this.dataProperty];
           }.bind(this))

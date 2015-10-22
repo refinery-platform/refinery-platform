@@ -131,6 +131,9 @@ function DataSetFactory (
    */
   var _totalSource = Infinity;
 
+  var _approximateTotal = false;
+  var _totalUpperBound = Infinity;
+
   /* ------------------------------- Methods -------------------------------- */
 
   /**
@@ -144,8 +147,7 @@ function DataSetFactory (
    * @param   {Object}  step  Object with a type and query description.
    */
   function _addBrowsePath (step) {
-    if (_browsePath.length &&
-        _browsePath[_browsePath.length - 1].type === step.type) {
+    if (!!_getLastBrowseStep(step.type)) {
       _browsePath[_browsePath.length - 1].query = step.query;
     } else {
       _browsePath.push(step);
@@ -183,6 +185,13 @@ function DataSetFactory (
           }
           _selectionCacheLastIndex++;
         }
+        if (_approximateTotal) {
+          _total = selection.length;
+          _totalUpperBound = _total + Math.max(0, Math.min(
+            _totalSource - (_selectionCacheLastIndex + realLimit),
+            _totalSelection - _total
+          ));
+        }
         // Stop looping when no more data is available.
         if (dataLen === 0) {
           return selection;
@@ -218,8 +227,16 @@ function DataSetFactory (
    * @method  _clearOrderCache
    * @author  Fritz Lekschas
    * @date    2015-10-08
+   *
+   * @param   {Boolean}  search  Indicates that this function was triggered by
+   *   `search()`.
    */
-  function _clearOrderCache () {
+  function _clearOrderCache (search) {
+    if (_totalSelection < Infinity && search) {
+      _approximateTotal = true;
+    } else {
+      _approximateTotal = false;
+    }
     _totalSource = Infinity;
     _orderCache = [];
     _clearSelectionCache();
@@ -236,6 +253,8 @@ function DataSetFactory (
    */
   function _clearSelectionCache (deselection) {
     if (deselection) {
+      _approximateTotal = false;
+      _total = _totalSource;
       _totalSelection = Infinity;
     }
     _selectionCache = [];
@@ -327,9 +346,33 @@ function DataSetFactory (
       if (_totalSource === Infinity) {
         _totalSource = response.meta.total;
       }
+      if (_total === Infinity) {
+        _total = _totalSource;
+      }
 
       return _orderCache.slice(offset, limit + offset);
     });
+  }
+
+  /**
+   * Return the last step of browsing depending on the type if specified.
+   *
+   * @method  _getLastBrowseStep
+   * @author  Fritz Lekschas
+   * @date    2015-10-22
+   *
+   * @param   {String|Undefined}  type  Name of the type to filter for.
+   * @return  {Object}                  Returns the last browse step.
+   */
+  function _getLastBrowseStep (type) {
+    var last = _browsePath.length - 1;
+
+    if (type) {
+      return (last >= 0 && _browsePath[last].type === type) ?
+        _browsePath[last] : undefined;
+    } else {
+      return _browsePath[last];
+    }
   }
 
   /**
@@ -345,6 +388,11 @@ function DataSetFactory (
    */
   function _getSelection (limit, offset) {
     var deferred = $q.defer();
+
+    if (_approximateTotal) {
+      _total = 0;
+      _totalUpperBound = Math.min(_totalSource, _totalSelection);
+    }
 
     return _buildSelection(limit, offset, []).then(function (selection) {
       // Need to slice off items that are out of the range due to looping
@@ -368,7 +416,7 @@ function DataSetFactory (
   }
 
   /**
-   * [_select description]
+   * Store selection
    *
    * @method  _setSelection
    * @author  Fritz Lekschas
@@ -393,6 +441,7 @@ function DataSetFactory (
 
     _selection = selection;
     _totalSelection = _selectionLen();
+    _total = _totalSelection;
   }
 
   /*
@@ -598,7 +647,9 @@ function DataSetFactory (
     return _get(limit, offset).then(function (data) {
       return {
         meta: {
-          total: Math.min(_totalSelection, _totalSource)
+          total: _total,
+          totalUpperBound: (_approximateTotal && _total < _totalUpperBound) ?
+            _totalUpperBound : undefined
         },
         data: data
       };
@@ -637,12 +688,17 @@ function DataSetFactory (
    */
   DataSet.prototype.search = function (query) {
     _source = new DataSetSearchApi(query);
+
+    if (!!_getLastBrowseStep('select')) {
+      _clearOrderCache(true);
+    } else {
+      _clearOrderCache();
+    }
+
     _addBrowsePath({
       type: 'search',
       query: query
     });
-
-    _clearOrderCache();
 
     return DataSet;
   };

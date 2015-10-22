@@ -86,7 +86,14 @@
           </div>
           <div class="floatbox-max-left">
             <h4>
-              {{ dashboard.dataSets.totalReadable }}
+              <span ng-if="dashboard.dataSets.totalUpperBound">
+                {{ dashboard.dataSets.totalReadable }} of
+                <abbr title="approximately">~</abbr>
+                {{ dashboard.dataSets.totalUpperBound }}
+              </span>
+              <span ng-if="!dashboard.dataSets.totalUpperBound">
+                {{ dashboard.dataSets.totalReadable }}
+              </span>
               {{ dashboard.searchQueryDataSets.length > 1 ? 'results' : 'data sets' }}
             </h4>
           </div>
