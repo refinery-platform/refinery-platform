@@ -92,7 +92,17 @@ function DataSetFactory (
   var _source;
 
   /**
-   * Total number of currently available data objects.
+   * Total number of currently returned data objects.
+   *
+   * @description
+   * The total number of returned data objects depends on the intersection of
+   * source items and selected items. These can be different and one can be
+   * bigger than the other, plus the intersection size is NOT the same as the
+   * minimum of both. Imaging the user selects a certain ontology term, e.g.
+   * liver, and afterwards performs a search, e.g. `Chip-Seq`. There are most
+   * likely some datasets related to Chip-Seq, which have nothing to do with
+   * liver. In this case we actually don't know the total number of returned
+   * objects until we processed them all.
    *
    * @author  Fritz Lekschas
    * @date    2015-10-08
@@ -110,6 +120,16 @@ function DataSetFactory (
    * @type  {Number}
    */
   var _totalSelection = Infinity;
+
+  /**
+   * Total number of currently available data objects.
+   *
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
+   * @type  {Number}
+   */
+  var _totalSource = Infinity;
 
   /* ------------------------------- Methods -------------------------------- */
 
@@ -200,7 +220,7 @@ function DataSetFactory (
    * @date    2015-10-08
    */
   function _clearOrderCache () {
-    _total = Infinity;
+    _totalSource = Infinity;
     _orderCache = [];
     _clearSelectionCache();
   }
@@ -239,8 +259,8 @@ function DataSetFactory (
     if (_selectionLen()) {
       data = _selectionCache.slice(offset, limit + offset);
       if (
-        data.length !== Math.min(limit, Math.min(_totalSelection, _total)) &&
-        _selectionCacheLastIndex !== _total
+        data.length !== Math.min(limit, Math.min(_totalSelection, _totalSource)) &&
+        _selectionCacheLastIndex !== _totalSource
       ) {
         data = _getSelection(limit, offset);
       }
@@ -264,7 +284,7 @@ function DataSetFactory (
    */
   function _getDataFromOrderCache (limit, offset) {
     var data = _orderCache.slice(offset, limit + offset);
-    if (data.length < limit && data.length < (_totalSelection || _total)) {
+    if (data.length < limit && data.length < (_totalSelection || _totalSource)) {
       data = _getDataFromSource(limit, offset);
     }
 
@@ -304,8 +324,8 @@ function DataSetFactory (
         _dataStore.add(response.data[i].id, response.data[i]);
         _cacheOrder(offset + i, _dataStore.get(response.data[i].id));
       }
-      if (_total === Infinity) {
-        _total = response.meta.total;
+      if (_totalSource === Infinity) {
+        _totalSource = response.meta.total;
       }
 
       return _orderCache.slice(offset, limit + offset);
@@ -578,7 +598,7 @@ function DataSetFactory (
     return _get(limit, offset).then(function (data) {
       return {
         meta: {
-          total: Math.min(_totalSelection, _total)
+          total: Math.min(_totalSelection, _totalSource)
         },
         data: data
       };
