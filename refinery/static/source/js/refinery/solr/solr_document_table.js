@@ -542,13 +542,20 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function (parentElem
   SolrDocumentTable.prototype._generatePagerControl = function (parentElementId, visiblePages, padLower, padUpper) {
 
     var self = this;
-    //Hide paginator if getCurrentDocumentCount() >= _documentsPerPage
-    if (self._query.getTotalDocumentCount() >= self._documentsPerPage) {
+    //Hide paginator if getTotalDocumentCount() >= _documentsPerPage
+    if (self._query.getTotalDocumentCount() >= self._documentsPerPage && (self._query.getCurrentDocumentCount() >= self._documentsPerPage || self._query.getCurrentDocumentCount() >= 0)){
 
       $("#" + parentElementId).html("");
 
-      var availablePages = Math.max(0, Math.floor((self._query.getTotalDocumentCount(false) - 1) / self._documentsPerPage));
+      var availablePages;
+        if(self._query.getCurrentDocumentCount() != 0){
+            availablePages = Math.max(0, Math.floor((self._query.getCurrentDocumentCount(false) - 1) / self._documentsPerPage));
+        }
+        else{
+            availablePages = Math.max(0, Math.floor((self._query.getTotalDocumentCount(false) - 1) / self._documentsPerPage));
+        }
       var currentPage = Math.floor(self._query.getDocumentIndex() / self._documentsPerPage);
+
       if (currentPage > availablePages) {
         currentPage = availablePages;
       }
@@ -622,6 +629,9 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function (parentElem
         self._commands.execute(
             SOLR_DOCUMENT_TABLE_PAGE_CHANGED_COMMAND, {'page': currentPage});
       });
+        if (availablePages == 0)  {
+      $( ".pagination" ).css('display', 'none');
+      }
     }
     else {
       $( ".pagination" ).css('display', 'none');
