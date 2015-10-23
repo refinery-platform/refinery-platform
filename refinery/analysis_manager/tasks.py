@@ -441,8 +441,9 @@ def run_analysis_execution(analysis):
         ret_list = import_analysis_in_galaxy(
             ret_list, analysis.library_id, connection)
     except (RuntimeError, galaxy.client.ConnectionError) as exc:
-        error_msg += "error importing analysis '%s' into Galaxy: %s"
-        logger.error(error_msg, analysis.name, exc.message)
+        error_msg += "error importing analysis '%s' into Galaxy: %s" % (
+            analysis.name, exc.message)
+        logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.cleanup()
         run_analysis_execution.update_state(state=celery.states.FAILURE)
