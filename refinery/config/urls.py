@@ -15,7 +15,8 @@ from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     NodeRelationshipResource, WorkflowResource, ExtendedGroupResource, \
     WorkflowInputRelationshipsResource, DataSetResource,\
     StatisticsResource, GroupManagementResource, \
-    UserAuthenticationResource, InvitationResource, FastQCResource
+    UserAuthenticationResource, InvitationResource, FastQCResource,  \
+    UserProfileResource
 from core.models import DataSet
 from data_set_manager.api import AttributeOrderResource, StudyResource,\
     AssayResource, InvestigationResource, ProtocolResource, \
@@ -38,6 +39,7 @@ admin.autodiscover()
 
 # NG: added for tastypie URL
 v1_api = Api(api_name='v1')
+
 v1_api.register(AnalysisResource())
 v1_api.register(ProjectResource())
 v1_api.register(StudyResource())
@@ -63,6 +65,7 @@ v1_api.register(PublicationResource())
 v1_api.register(AttributeResource())
 v1_api.register(ExtendedGroupResource())
 v1_api.register(FastQCResource())
+v1_api.register(UserProfileResource())
 # v1_api.register(TaxonResource())
 # v1_api.register(GenomeBuildResource())
 # v1_api.register(CytoBandResource())
@@ -84,14 +87,12 @@ urlpatterns = patterns(
     '',
     # links in core urls
     url(r'^', include('core.urls')),
-
     url(r'^annotation_server/', include('annotation_server.urls')),
     url(r'^workflow_manager/', include('workflow_manager.urls')),
     url(r'^analysis_manager/', include('analysis_manager.urls')),
     url(r'^data_set_manager/', include('data_set_manager.urls')),
     url(r'^visualization_manager/', include('visualization_manager.urls')),
     url(r'^file_server/', include('file_server.urls')),
-
     url(r'^tasks/', include('djcelery.urls')),
 
     # NG: added to include additional views for admin
