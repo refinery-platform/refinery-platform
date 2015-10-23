@@ -541,7 +541,8 @@ def solr_core_search(request):
         data['fq'] = data['fq'] + ' AND access:({})'.format(
             ' OR '.join(access))
 
-    fullResponse = requests.get(url, params=urllib.urlencode(data))
+    data = urllib.urlencode(data)
+    fullResponse = requests.get(url, params=data)
     response = fullResponse.content
 
     return HttpResponse(response, mimetype='application/json')
