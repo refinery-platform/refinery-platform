@@ -6,6 +6,7 @@ function refineryDataSetPreview () {
     _,
     $modal,
     settings,
+    userService,
     authService,
     studyService,
     sharingService,
@@ -21,6 +22,7 @@ function refineryDataSetPreview () {
     this.$modal = $modal;
     this.settings = settings;
     this.user = authService;
+    this.userService = userService;
     this.studyService = studyService;
     this.sharingService = sharingService;
     this.citationService = citationService;
@@ -86,7 +88,7 @@ function refineryDataSetPreview () {
         var ds = this.dashboardDataSetPreviewService.dataSet;
         if (ds && ds.uuid && this._currentDataset !== ds.id) {
           this._currentDataset = ds.id;
-          this.loadData(ds.uuid);
+          this.loadData(ds);
         }
         return ds;
       }
@@ -154,6 +156,22 @@ function refineryDataSetPreview () {
     }
   };
 
+  /**
+   * Load user data
+   *
+   * @method  getUser
+   * @author  Fritz Lekschas
+   * @date    2015-10-21
+   *
+   * @param   {String}  uuid  User uuid.
+   * @return  {Object}        Angular object returning `true` or an error.
+   */
+  DataSetPreviewCtrl.prototype.getUser = function (uuid) {
+    return this.userService.get(uuid).then(function (user) {
+      this.userName = user.fullName ? user.fullName : user.userName;
+    }.bind(this));
+  };
+
   DataSetPreviewCtrl.prototype.getStudies = function (uuid) {
     return this.studyService
       .get({
@@ -178,8 +196,8 @@ function refineryDataSetPreview () {
    * @author  Fritz Lekschas
    * @date    2015-08-21
    *
-   * @param   {string}  uuid   UUID of the exact model entity.
-   * @return  {object}         Angular promise.
+   * @param   {String}  uuid   UUID of the exact model entity.
+   * @return  {Object}         Angular promise.
    */
   DataSetPreviewCtrl.prototype.getPermissions = function (uuid) {
     return promise = this.sharingService.get({
@@ -249,15 +267,19 @@ function refineryDataSetPreview () {
    *
    * @method  loadData
    * @author  Fritz Lekschas
-   * @date    2015-08-25
+   * @date    2015-10-21
+   *
+   * @param   {Object}  Dataset to be previewed.
    */
-  DataSetPreviewCtrl.prototype.loadData = function (uuid) {
+  DataSetPreviewCtrl.prototype.loadData = function (dataset) {
     this.loading = true;
     this.permissionsLoading = true;
+    this.userName = undefined;
 
-    var studies = this.getStudies(uuid),
-        analyses = this.getAnalysis(uuid),
-        permissions = this.getPermissions(uuid);
+    var studies = this.getStudies(dataset.uuid),
+        analyses = this.getAnalysis(dataset.uuid),
+        user = this.getUser(dataset.owner),
+        permissions = this.getPermissions(dataset.uuid);
 
     this
       .$q
@@ -346,6 +368,7 @@ function refineryDataSetPreview () {
       '_',
       '$modal',
       'settings',
+      'userService',
       'authService',
       'studyService',
       'sharingService',

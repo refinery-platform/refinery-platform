@@ -2,7 +2,6 @@ import json
 import os
 import re
 import urllib
-import urllib2
 import xmltodict
 
 from django.conf import settings

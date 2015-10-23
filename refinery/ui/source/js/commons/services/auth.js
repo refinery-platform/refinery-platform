@@ -6,8 +6,13 @@ angular
           authLastCheck = 0;
 
       /**
-       * [checkUserStatus description]
-       * @return {[type]} [description]
+       * Check whether a user is authenticated or not.
+       *
+       * @method  checkUserStatus
+       * @author  Fritz Lekschas
+       * @date    2015-10-21
+       *
+       * @return  {Object}  Angular promise
        */
       function checkUserStatus () {
         var query = $resource(
@@ -26,39 +31,36 @@ angular
         return query.$promise;
       }
 
+      /**
+       * Creates a new user session
+       *
+       * @method  createSession
+       * @author  Fritz Lekschas
+       * @date    2015-10-21
+       *
+       * @return  {Object}  Angular promise resolving the session.
+       */
       function createSession () {
         var userStatus = checkUserStatus();
 
         return userStatus
-          .then(
-            // Success
-            function (response) {
-              sessionService.create({
-                userId: response.id,
-                isAdmin: response.is_admin,
-              });
-            }
-          );
+          .then(function (response) {
+            sessionService.create({
+              userId: response.id,
+              isAdmin: response.is_admin,
+            });
+          });
       }
 
-      auth.isAuthenticated = function () {
-        var now = new Date().getTime(),
-            session;
-
-        if (now - sessionService.get('date') > settings.authThrottling) {
-          session = createSession();
-        } else {
-          session = $q.when();
-        }
-
-        return session.then(
-          // Success
-          function () {
-            return sessionService.get('userId') >= 0;
-          }
-        );
-      };
-
+      /**
+       * Checks whether the current user is an adminitrator.
+       *
+       * @method  isAdmin
+       * @author  Fritz Lekschas
+       * @date    2015-10-21
+       *
+       * @return  {Boolean}  `true` if the current user is an adminitrator.
+       */
       auth.isAdmin = function () {
         var now = new Date().getTime(),
             session;
@@ -69,12 +71,33 @@ angular
           session = $q.when();
         }
 
-        return session.then(
-          // Success
-          function () {
-            return sessionService.get('isAdmin');
-          }
-        );
+        return session.then(function () {
+          return sessionService.get('isAdmin');
+        });
+      };
+
+      /**
+       * Check whether the current user is authenticated.
+       *
+       * @method  isAuthenticated
+       * @author  Fritz Lekschas
+       * @date    2015-10-21
+       *
+       * @return  {Boolean}  `true` if the current user is authenticaed.
+       */
+      auth.isAuthenticated = function () {
+        var now = new Date().getTime(),
+            session;
+
+        if (now - sessionService.get('date') > settings.authThrottling) {
+          session = createSession();
+        } else {
+          session = $q.when();
+        }
+
+        return session.then(function () {
+          return sessionService.get('userId') >= 0;
+        });
       };
 
       return auth;
