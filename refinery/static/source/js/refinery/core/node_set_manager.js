@@ -164,32 +164,41 @@ NodeSetManager.prototype.updateState = function (state, callbackSuccess) {
 
 
   var data = state;
-
-  $.ajax({
-    url: self.createUpdateUrl(state),
-    type: "PUT",
-    data: JSON.stringify(data),
-    contentType: "application/json",
-    dataType: "json",
-    processData: false,
-    success: function (result) {
-       callbackSuccess(result);
-      if ($.isEmptyObject(result)) {
-        return;
-      }
-    },
-    error: function(result) {
-      // save to sessionStorage
-      self.saveCurrentSelectionToSession(
+  //require uuid for api call, also catch if user is not logged in
+  if(typeof data.uuid !== "undefined") {
+    $.ajax({
+      url: self.createUpdateUrl(state),
+      type: "PUT",
+      data: JSON.stringify(data),
+      contentType: "application/json",
+      dataType: "json",
+      processData: false,
+      success: function (result) {
+        callbackSuccess(result);
+        if ($.isEmptyObject(result)) {
+          return;
+        }
+      },
+      error: function (result) {
+        // save to sessionStorage
+        self.saveCurrentSelectionToSession(
           data.name,
           data.summary,
           data.solr_query,
           data.solr_query_components,
-          data.node_count );
-    }
-  });
+          data.node_count);
+      }
+    });
+  }else{
+    self.saveCurrentSelectionToSession(
+      data.name,
+      data.summary,
+      data.solr_query,
+      data.solr_query_components,
+      data.node_count
+    );
+  }
 };
-
 
 NodeSetManager.prototype.createGetListUrl = function () {
   var self = this;
