@@ -1,7 +1,8 @@
 describe('DataSet.search-api: unit tests', function () {
   'use strict';
 
-  var $rootScope,
+  var $httpBackend,
+      $rootScope,
       Factory,
       factoryInstance,
       limit = 1,
@@ -40,25 +41,25 @@ describe('DataSet.search-api: unit tests', function () {
       '          "u_3"' +
       '        ],' +
       '        "uuid": "3f27bef3-028b-4c6a-b483-d55935ee908a",' +
-      '        "id": "core.dataset.205"' +
+      '        "dbid": "205"' +
       '      }' +
       '    ]' +
       '  },' +
       '  "highlighting": {' +
       '    "core.dataset.205": {' +
-      '      "content_auto": [' +
+      '      "title": [' +
       '        "lmo2 <em>zebra</em>fish"' +
       '      ]' +
       '    }' +
       '  }' +
       '}';
 
-  var params = '?defType=edismax&f.content_auto.hl.alternateField=title&' +
-    'f.description.hl.alternateField=description&fl=id,uuid,access&' +
-    'fq=django_ct:core.dataset&hl=true&hl.fl=content_auto,description&' +
+  var params = '?defType=edismax&f.description.hl.alternateField=text&' +
+    'f.title.hl.alternateField=title&fl=dbid,uuid,access&' +
+    'fq=django_ct:core.dataset&hl=true&hl.fl=title,description&' +
     'hl.maxAlternateFieldLength=128&hl.simple.post=%3C%2Fem%3E&' +
     'hl.simple.pre=%3Cem%3E&q=' + query + '&' +
-    'qf=content_auto%5E0.5+submitter+text&rows=' + limit +
+    'qf=title%5E0.5+accession+submitter+text&rows=' + limit +
     '&start=' + offset +'&wt=json';
 
   beforeEach(function () {
@@ -66,8 +67,7 @@ describe('DataSet.search-api: unit tests', function () {
     module('dataSet');
 
     inject(function ($injector) {
-      var $httpBackend = $injector.get('$httpBackend');
-
+      $httpBackend = $injector.get('$httpBackend');
       $rootScope = $injector.get('$rootScope');
       settings = $injector.get('settings');
       Factory = $injector.get('DataSetSearchApi');
@@ -102,20 +102,23 @@ describe('DataSet.search-api: unit tests', function () {
 
     // Not working right now. `factoryInstance` doesn't return any data, not
     // even an empty skeleton object, which is weird.
-    // it('should resolve a promise',
-    //   function () {
-    //     var data = 'test',
-    //         results;
+    it('should resolve a promise',
+      function () {
+        var data = 'test',
+            results,
+            promise = factoryInstance(limit, offset);
 
-    //     factoryInstance(limit, offset).then(function (data) {
-    //       results = data;
-    //     });
+        $httpBackend.flush();
 
-    //     $rootScope.$digest();
+        promise.then(function (data) {
+          results = data;
+        });
 
-    //     expect(results).toEqual(data);
-    //   }
-    // );
+        $rootScope.$digest();
+
+        expect(results.meta.total).toEqual(1);
+      }
+    );
 
   });
 });
