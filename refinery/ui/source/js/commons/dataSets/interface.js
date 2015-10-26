@@ -257,6 +257,9 @@ function DataSetFactory (
       _total = _totalSource;
       _totalSelection = Infinity;
     }
+    if (!_selectionLen()) {
+      _total = _totalSource;
+    }
     _selectionCache = [];
     _selectionCacheLastIndex = 0;
   }
@@ -343,9 +346,11 @@ function DataSetFactory (
         _dataStore.add(response.data[i].id, response.data[i]);
         _cacheOrder(offset + i, _dataStore.get(response.data[i].id));
       }
+
       if (_totalSource === Infinity) {
         _totalSource = response.meta.total;
       }
+
       if (_total === Infinity) {
         _total = _totalSource;
       }
