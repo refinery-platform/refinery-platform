@@ -38,6 +38,7 @@ function DashboardCtrl (
   this._ = _;
 
   // Construct Refinery modules
+  this.pubSub = pubSub;
   this.dataSet = dataSet;
   this.authService = authService;
   this.projectService = projectService;
@@ -557,6 +558,7 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery,
 
 DashboardCtrl.prototype.expandDataSetPreview = function (dataSet, fromStateEvent) {
   this.dataSetExploration = false;
+  this.pubSub.trigger('treemap.hide');
 
   if (!fromStateEvent) {
     this.$state.transitionTo(
@@ -607,7 +609,9 @@ DashboardCtrl.prototype.collapseDataSetPreview = function (dataSet) {
 
 DashboardCtrl.prototype.toggleDataSetsExploration = function () {
   this.dataSetPreview = false;
-  if (this.expandDataSetPanel) {
+  this.dashboardDataSetPreviewService.close();
+
+  if (this.dataSetExploration && this.expandDataSetPanel) {
     this.collapseDatasetExploration();
   } else {
     this.expandDatasetExploration();
@@ -627,10 +631,17 @@ DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
   }
 
   this.dataSetExploration = true;
-  this.expandDataSetPanel = true;
-  this.expandedDataSetPanelBorder = true;
-  this.dashboardWidthFixerService.trigger('fixer');
-  this.dashboardExpandablePanelService.trigger('expander');
+
+  if (!this.expandDataSetPanel) {
+    this.expandDataSetPanel = true;
+    this.expandedDataSetPanelBorder = true;
+    this.dashboardWidthFixerService.trigger('fixer');
+    this.dashboardExpandablePanelService.trigger('expander');
+  } else {
+    this.$timeout(function () {
+      this.pubSub.trigger('treemap.show');
+    }.bind(this), 0);
+  }
 };
 
 DashboardCtrl.prototype.collapseDatasetExploration = function () {

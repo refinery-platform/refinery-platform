@@ -15,7 +15,15 @@ function refineryDashboardVisWrapper () {
       this.ready = true;
     }.bind(this));
 
+    this.pubSub.on('treemap.show', function () {
+      this.ready = true;
+    }.bind(this));
+
     this.pubSub.on('collapsing', function () {
+      this.ready = false;
+    }.bind(this));
+
+    this.pubSub.on('treemap.hide', function () {
       this.ready = false;
     }.bind(this));
 
