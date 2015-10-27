@@ -28,7 +28,7 @@
         </a>
       </div>
 
-      <div class="span2">
+      <div class="span1">
        <a class="analysis-header" ng-click="order('time_start')">
          <strong>Start Time</strong>
          <span class="sortorder" ng-show="predicate === 'time_start'"
@@ -38,7 +38,7 @@
        </a>
       </div>
 
-      <div class="span2">
+      <div class="span1">
         <a class="analysis-header" ng-click="order('elapseTime')">
           <strong>Elapsed Time</strong>
           <span class="sortorder" ng-show="predicate === 'elapseTime'"
@@ -48,7 +48,7 @@
         </a>
       </div>
 
-      <div class="span2">
+      <div class="span1">
         <a class="analysis-header" ng-click="order('time_end')">
           <strong>End Time</strong>
           <span class="sortorder" ng-show="predicate === 'time_end'"
@@ -57,6 +57,11 @@
           </span>
         </a>
       </div>
+
+      <div class="span2">
+        <strong>Owner</strong>
+      </div>
+
     </div>
 
     <ul class="analysesList">
@@ -109,20 +114,23 @@
             </span>
            </div>
 
-          <div class="span2">
+          <div class="span1">
             <span  rp-analysis-monitor-start-time-tooltip>
               {{analysis.humanizeStartTime }}
             </span>
           </div>
 
-          <div class="span2">
+          <div class="span1">
             {{analysis.elapseTime | analysisMonitorFormatMilliTime}}
           </div>
 
-          <div class="span2">
+          <div class="span1">
             <span  rp-analysis-monitor-end-time-tooltip>
                {{analysis.humanizeEndTime }}
             </span>
+          </div>
+           <div class="span2">
+             {{analysis.owner }}
           </div>
 
         </div>
