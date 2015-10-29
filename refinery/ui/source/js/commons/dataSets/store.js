@@ -24,16 +24,21 @@ function DataSetStoreFactory (_) {
    *
    * @method  add
    * @author  Fritz Lekschas
-   * @date    2015-10-08
+   * @date    2015-10-29
    *
-   * @param   {Number|String}  key   Key for identifing the object.
-   * @param   {Object}         data  Actual data object.
-   * @return  {Object}               Self for chaining.
+   * @param   {Number|String}  key     Key for identifing the object.
+   * @param   {Object}         data    Actual data object.
+   * @param   {Boolean}        update  If `true` will update existing objects.
+   * @return  {Object}                 Self for chaining.
    */
-  DataSetStore.prototype.add = function(key, data) {
+  DataSetStore.prototype.add = function(key, data, update) {
     // Triple `!!!` is the negated boolean representation of the expression
     if (!!!_store[key]) {
       _store[key] = data;
+    } else {
+      if (update) {
+        this.update(key, data);
+      }
     }
 
     return DataSetStore;
@@ -67,6 +72,13 @@ function DataSetStoreFactory (_) {
   DataSetStore.prototype.update = function(key, data) {
     // Todo: Implement a deep cloning update function that doesn't destroy
     // references by accidentally replacing whole objects.
+    if (!!_store[key]) {
+      var attrs = Object.keys(_store[key]);
+      for (var i = attrs.length; i--;) {
+        _store[key][attrs[i]] = data[attrs[i]] ?
+          data[attrs[i]] : _store[key][attrs[i]];
+      }
+    }
 
     return DataSetStore;
   };

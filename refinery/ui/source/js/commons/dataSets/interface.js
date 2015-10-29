@@ -7,7 +7,6 @@ function DataSetFactory (
 
   /* ------------------------------ Variables ------------------------------- */
 
-
   /**
    * Indicates whether the total number of data objects is just an
    * approximation.
@@ -368,7 +367,7 @@ function DataSetFactory (
   function _getDataFromSource (limit, offset) {
     return _source(limit, offset).then(function (response) {
       for (var i = 0, len = response.data.length; i < len; i++) {
-        _dataStore.add(response.data[i].id, response.data[i]);
+        _dataStore.add(response.data[i].id, response.data[i], true);
         _cacheOrder(offset + i, _dataStore.get(response.data[i].id));
       }
 
