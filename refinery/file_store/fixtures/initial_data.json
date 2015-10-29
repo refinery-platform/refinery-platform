@@ -286,5 +286,41 @@
       "description": "Zip compressed archive",
       "name": "ZIP"
     }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": 33,
+    "fields": {
+      "extension": "unknown",
+      "description": "Unknown filetype",
+      "name": "UNKNOWN"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": 34,
+    "fields": {
+      "extension": "fastq.gz",
+      "description": "FASTQ.GZ file",
+      "name": "FASTQ.GZ"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": 35,
+    "fields": {
+      "extension": "gct",
+      "description": "GCT file",
+      "name": "GCT"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": 36,
+    "fields": {
+      "extension": "CEL",
+      "description": "Affymetrix Probe Results File",
+      "name": "CEL"
+    }
   }
 ]
