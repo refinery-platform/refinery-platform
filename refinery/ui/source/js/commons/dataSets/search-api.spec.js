@@ -54,7 +54,7 @@ describe('DataSet.search-api: unit tests', function () {
       '  }' +
       '}';
 
-  var params = '?defType=edismax&f.description.hl.alternateField=text&' +
+  var params = '?defType=edismax&f.description.hl.alternateField=description&' +
     'f.title.hl.alternateField=title&fl=dbid,uuid,access&' +
     'fq=django_ct:core.dataset&hl=true&hl.fl=title,description&' +
     'hl.maxAlternateFieldLength=128&hl.simple.post=%3C%2Fem%3E&' +

@@ -10,7 +10,7 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
           'f.title.hl.alternateField': 'title',
           // Alternative field for `description` when no highlights were
           // found
-          'f.description.hl.alternateField': 'text',
+          'f.description.hl.alternateField': 'description',
           // Fields that are returned
           'fl': 'dbid,uuid,access',
           // Limit search space to data sets only
