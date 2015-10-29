@@ -7,6 +7,18 @@ function DataSetFactory (
 
   /* ------------------------------ Variables ------------------------------- */
 
+
+  /**
+   * Indicates whether the total number of data objects is just an
+   * approximation.
+   *
+   * @author  Fritz Lekschas
+   * @date    2015-10-29
+   *
+   * @type  {Boolean}
+   */
+  var _approximateTotal = false;
+
   /**
    * Stores the individual browse steps to be able to reconstruct previous
    * selections.
@@ -131,7 +143,20 @@ function DataSetFactory (
    */
   var _totalSource = Infinity;
 
-  var _approximateTotal = false;
+  /**
+   * Upper bound of total number of available data objects.
+   *
+   * @description
+   * The upper bound is used to give the user a idea of how many data objects
+   * might be available. Right now Solr doesn't know of any selection which is
+   * why the total number of found docs does not necessarily reflect the actual
+   * number of available docs.
+   *
+   * @author  Fritz Lekschas
+   * @date    2015-10-29
+   *
+   * @type  {Number}
+   */
   var _totalUpperBound = Infinity;
 
   /* ------------------------------- Methods -------------------------------- */
