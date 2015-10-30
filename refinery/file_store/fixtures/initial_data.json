@@ -322,14 +322,5 @@
       "description": "Affymetrix Probe Results File",
       "name": "CEL"
     }
-  },
-  {
-    "model": "file_store.FileType",
-    "pk": 37,
-    "fields": {
-      "extension": "dat",
-      "description": "DAT file",
-      "name": "DAT"
-    }
   }
 ]
