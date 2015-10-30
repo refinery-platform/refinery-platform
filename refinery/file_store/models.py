@@ -114,77 +114,6 @@ XML = 'xml'
 ZIP = 'zip'
 UNKNOWN = ''    # special catch-all type with no corresponding extension
 
-# file types with descriptions used by FileStoreItem.filetype choice field
-FILE_TYPES = (
-    # (type, description) in alphabetical order for convenience
-    (BAM, 'Binary compressed SAM'),
-    (BED, 'BED file'),
-    (BIGBED, 'Big BED'),
-    (BIGWIG, 'Big WIG'),
-    (CBS, 'Circular Binary Segmentation File'),  # see SEG below
-    (CEL, 'Affymetrix Probe Results file'),
-    (CSV, 'Comma Separated Values'),
-    (ELAND, 'Eland file'),
-    (GFF, 'GFF file'),
-    (GTF, 'GTF file'),
-    (GZ, 'Gzip compressed archive'),
-    (HTML, 'Hypertext Markup Language'),
-    (IDF, 'IDF file'),
-    (FASTA, 'FASTA file'),
-    (FASTQ, 'FASTQ file'),
-    (FASTQCSANGER, 'FASTQC Sanger'),
-    (FASTQILLUMINA, 'FASTQ Illumina'),
-    (FASTQSANGER, 'FASTQ Sanger'),
-    (FASTQSOLEXA, 'FASTQ Solexa'),
-    (PDF, 'Portable Document Format'),
-    (SAM, 'Sequence Alignment/Map'),
-    (SEG, 'Segmented Data File'),  # http://broadinstitute.org/software/igv/SEG
-    (TABULAR, 'Tabular file'),
-    (TDF, 'TDF file'),
-    (TGZ, 'Gzip compressed tar archive'),
-    (TXT, 'Text file'),
-    (VCF, 'Variant Call Format'),
-    (WIG, 'Wiggle Track Format'),
-    (XML, 'XML file'),
-    (ZIP, 'Zip compressed archive'),
-    (UNKNOWN, 'Unknown file type'),
-)
-
-# mapping of file extensions to file types
-# in alphabetical order by type with extensions of the same type
-# located on the same line for convenience
-FILE_EXTENSIONS = {
-    'bam': BAM,
-    'bed': BED,
-    'bigbed': BIGBED, 'bb': BIGBED,
-    'bigwig': BIGWIG,
-    'cel': CEL,
-    'csv': CSV,
-    'eland': ELAND,
-    'gff': GFF,
-    'gtf': GTF,
-    'gz': GZ,
-    'idf': IDF,
-    'fasta': FASTA,
-    'fastq': FASTQ,
-    'fastqcsanger': FASTQCSANGER,
-    'fastqillumina': FASTQILLUMINA,
-    'fastqsanger': FASTQSANGER,
-    'fastqsolexa': FASTQSOLEXA,
-    'html': HTML,
-    'pdf': PDF,
-    'sam': SAM,
-    'tabular': TABULAR,
-    'tdf': TDF, 'igv.tdf': TDF,
-    'tgz': TGZ,
-    'txt': TXT,
-    'vcf': VCF,
-    'wig': WIG,
-    'xml': XML,
-    'zip': ZIP,
-}
-
-
 def file_path(instance, filename):
     """Construct relative file system path for new file store files relative to
     FILE_STORE_BASE_DIR.
@@ -263,7 +192,7 @@ class FileType(models.Model):
     extension = models.CharField(unique=True, max_length=50)
 
     def __unicode__(self):
-        return self.name + ' - ' + self.description + ' - ' + self.extension
+        return self.description
 
 
 class _FileStoreItemManager(models.Manager):
@@ -344,15 +273,7 @@ class FileStoreItem(models.Model):
     # particular group
     sharename = models.CharField(max_length=20, blank=True)
     #: type of the file
-    filetype = models.CharField(max_length=15, choices=FILE_TYPES, blank=True)
-    '''
-    filetype = models.CharField(max_length=50, choices=tuple(zip([
-                                d['extension'] for d in FileType.objects.
-                                order_by('id').all().values('extension')],
-                                [d['description'] for d in FileType.objects.
-                                 order_by('id').all().values('description')])),
-                                blank=True)
-    '''
+    filetype = models.ForeignKey(FileType, default=33)
     #: file import task ID
     import_task_id = UUIDField(blank=True)
 
@@ -436,30 +357,32 @@ class FileStoreItem(models.Model):
         :returns: True if success, False if failure.
 
         '''
-        # if type wasn't provided guess it from extension
-        if not filetype:
-            filetype = self.get_file_extension().lstrip('.')
-
-        filetype = filetype.lower()
         # make sure the file type is valid before assigning it to model field
+
+        all_known_extensions = [e.extension for e in FileType.objects.all()]
+
+        f = str(self.source.rpartition("/")[-1]).split('.',1)[-1]
         try:
-            self.filetype = FILE_EXTENSIONS[filetype]
-            '''
-            self.filetype = dict(zip([d['extension'] for d in
-                                      FileType.objects.order_by(
-                         'id').all().values('extension')],
-                    [d['extension'] for d in
-                     FileType.objects.order_by(
-                         'id').all().values('extension')]))[filetype]
-            '''
-        except KeyError:
-            logger.info("'%s' is an unknown file type", filetype)
-            self.filetype = UNKNOWN
+            if f in all_known_extensions:
+                self.filetype = FileType.objects.get(extension=f)
+            else:
+                f = f.split('.',2)[-1]
+                if f in all_known_extensions:
+                    self.filetype = FileType.objects.get(extension=f)
+                else:
+                    f = f.rpartition(".")[-1]
+                    if f in all_known_extensions:
+                        self.filetype = FileType.objects.get(extension=f)
+                    else:
+                        self.filetype = FileType.objects.get(extension="unknown")
+            self.save()
+            logger.info("File type is set to '%s'", f)
+            return True
+            
+        except Exception, e:
+            logger.error("Couldn't save:%s with extension: %s, %s" % (self, f, e))
             return False
 
-        self.save()
-        logger.info("File type is set to '%s'", filetype)
-        return True
 
     def is_symlinked(self):
         '''Check if the data file is a symlink.
