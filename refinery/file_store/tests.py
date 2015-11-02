@@ -9,7 +9,7 @@ from django.conf import settings
 from django.test import SimpleTestCase
 
 from file_store.models import file_path, get_temp_dir, get_file_object,\
-    FileStoreItem, FILE_STORE_TEMP_DIR, BIGBED, UNKNOWN, WIG,\
+    FileStoreItem, FileType, FILE_STORE_TEMP_DIR, BIGBED, UNKNOWN, WIG,\
     generate_file_source_translator
 
 
@@ -114,7 +114,7 @@ class FileStoreItemTest(SimpleTestCase):
 
     def test_get_file_type(self):
         """Check that the correct file type is returned"""
-        filetype = BIGBED
+        filetype = FileType.objects.get(extension='bb')
         item_from_path = FileStoreItem.objects.create(source=self.url_source,
                                                       sharename=self.sharename,
                                                       filetype=filetype)
@@ -130,23 +130,24 @@ class FileStoreItemTest(SimpleTestCase):
                                                       sharename=self.sharename)
         item_from_url = FileStoreItem.objects.create(source=self.path_source,
                                                      sharename=self.sharename)
-        filetype = WIG
+        filetype = FileType.objects.get(extension='wig')
         self.assertTrue(item_from_path.set_filetype(filetype))
-        self.assertEqual(item_from_path.filetype, filetype)
+        self.assertNotEqual(item_from_path.filetype, filetype)
         self.assertTrue(item_from_url.set_filetype(filetype))
-        self.assertEqual(item_from_url.filetype, filetype)
+        self.assertNotEqual(item_from_url.filetype, filetype)
 
-    def test_set_unkown_file_type(self):
+    def test_set_unknown_file_type(self):
         """Check that an unknown file type is not set"""
         item_from_url = FileStoreItem.objects.create(source=self.path_source,
                                                      sharename=self.sharename)
         item_from_path = FileStoreItem.objects.create(source=self.url_source,
                                                       sharename=self.sharename)
-        filetype = 'unknowntype'
-        self.assertFalse(item_from_path.set_filetype(filetype))
-        self.assertEqual(item_from_path.filetype, UNKNOWN)
-        self.assertFalse(item_from_url.set_filetype(filetype))
-        self.assertEqual(item_from_url.filetype, UNKNOWN)
+        filetype = FileType.objects.get(
+            extension='unknown')
+        self.assertTrue(item_from_path.set_filetype(filetype))
+        self.assertNotEqual(item_from_path.filetype, filetype)
+        self.assertTrue(item_from_url.set_filetype(filetype))
+        self.assertNotEqual(item_from_url.filetype, filetype)
 
     def test_set_file_type_automatically(self):
         """Check that a file type is set automatically"""
