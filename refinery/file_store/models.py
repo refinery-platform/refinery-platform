@@ -114,6 +114,7 @@ XML = 'xml'
 ZIP = 'zip'
 UNKNOWN = ''    # special catch-all type with no corresponding extension
 
+
 def file_path(instance, filename):
     """Construct relative file system path for new file store files relative to
     FILE_STORE_BASE_DIR.
@@ -361,12 +362,12 @@ class FileStoreItem(models.Model):
 
         all_known_extensions = [e.extension for e in FileType.objects.all()]
 
-        f = str(self.source.rpartition("/")[-1]).split('.',1)[-1]
+        f = str(self.source.rpartition("/")[-1]).split('.', 1)[-1]
         try:
             if f in all_known_extensions:
                 self.filetype = FileType.objects.get(extension=f)
             else:
-                f = f.split('.',2)[-1]
+                f = f.split('.', 2)[-1]
                 if f in all_known_extensions:
                     self.filetype = FileType.objects.get(extension=f)
                 else:
@@ -374,15 +375,16 @@ class FileStoreItem(models.Model):
                     if f in all_known_extensions:
                         self.filetype = FileType.objects.get(extension=f)
                     else:
-                        self.filetype = FileType.objects.get(extension="unknown")
+                        self.filetype = FileType.objects.get(extension=
+                                                             "unknown")
             self.save()
             logger.info("File type is set to '%s'", f)
             return True
             
         except Exception, e:
-            logger.error("Couldn't save:%s with extension: %s, %s" % (self, f, e))
+            logger.error("Couldn't save:%s with extension: %s, %s" % (self,
+                                                                      f,  e))
             return False
-
 
     def is_symlinked(self):
         '''Check if the data file is a symlink.

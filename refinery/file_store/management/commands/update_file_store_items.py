@@ -6,13 +6,12 @@ Created on Oct 30, 2015
 
 import logging
 import time
-from file_store.models import FileType, FileStoreItem, check_extension
+from file_store.models import FileType, FileStoreItem
 from django.core.management.base import BaseCommand
 from django.core import management
 
 
 logger = logging.getLogger(__name__)
-
 
 
 class Command(BaseCommand):
@@ -36,18 +35,20 @@ class Command(BaseCommand):
                 item.save()
                 pass
             except Exception, e:
-                logger.error("Couldn't update %s with extension: %s, %s" % (item, extension, e))
+                logger.error("Couldn't update %s with extension: %s, %s" %
+                             (item, extension, e))
 
         num_updated, unknown_ext = 0, 0
         all_known_extensions = [e.extension for e in FileType.objects.all()]
 
         for file_store_item in FileStoreItem.objects.all():
-            f = str(file_store_item.source.rpartition("/")[-1]).split('.',1)[-1]
+            f = str(file_store_item.source.rpartition("/")[-1]).split('.',
+                                                                      1)[-1]
             if f in all_known_extensions:
-                update_file_store_item(file_store_item,f)
+                update_file_store_item(file_store_item, f)
                 num_updated += 1
             else:
-                f = f.split('.',2)[-1]
+                f = f.split('.', 2)[-1]
                 if f in all_known_extensions:
                     update_file_store_item(file_store_item, f) 
                     num_updated += 1
@@ -66,9 +67,3 @@ class Command(BaseCommand):
         print "Updating index... This may take awhile!"
         time.sleep(1)
         management.call_command('update_index', 'data_set_manager', b=25)
-
-
-
-
-    
-
