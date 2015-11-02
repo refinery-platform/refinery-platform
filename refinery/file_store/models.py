@@ -28,7 +28,6 @@ from django_extensions.db.fields import UUIDField
 from django.contrib.sites.models import Site
 from django.core.files.storage import FileSystemStorage
 
-
 logger = logging.getLogger('file_store')
 
 
@@ -52,7 +51,7 @@ def _mkdir(path):
 
 # configure and create file store directories
 if not settings.FILE_STORE_DIR:
-    settings.FILE_STORE_DIR = 'file_store'   # relative to MEDIA_ROOT
+    settings.FILE_STORE_DIR = 'file_store'  # relative to MEDIA_ROOT
 
 # absolute path to the file store root dir
 FILE_STORE_BASE_DIR = os.path.join(settings.MEDIA_ROOT,
@@ -113,7 +112,7 @@ VCF = 'vcf'
 WIG = 'wig'
 XML = 'xml'
 ZIP = 'zip'
-UNKNOWN = ''    # special catch-all type with no corresponding extension
+UNKNOWN = ''  # special catch-all type with no corresponding extension
 
 
 def file_path(instance, filename):
@@ -163,6 +162,7 @@ def generate_file_source_translator(username='', base_path=''):
     username: user's subdirectory in settings.REFINERY_DATA_IMPORT_DIR
     base_path: absolute path to prepend to source if source is relative
     """
+
     def translate(source):
         """Convert file source to absolute path
         source: URL, absolute or relative file system path
@@ -218,8 +218,8 @@ class _FileStoreItemManager(models.Manager):
         item.set_filetype(filetype)
 
         # symlink if source is a file system path outside of the import dir
-        if (os.path.isabs(item.source) and
-                settings.REFINERY_DATA_IMPORT_DIR not in item.source):
+        if (os.path.isabs(item.source) and settings.
+                REFINERY_DATA_IMPORT_DIR not in item.source):
             item.symlink_datafile()
 
         return item
@@ -247,6 +247,7 @@ class SymlinkedFileSystemStorage(FileSystemStorage):
     '''Custom file system storage class with support for symlinked files.
 
     '''
+
     def exists(self, name):
         # takes broken symlinks into account
         return os.path.lexists(self.path(name))
@@ -325,7 +326,7 @@ class FileStoreItem(models.Model):
         # try to get extension from file on disk if exists
         if self.datafile.name:
             return get_extension_from_path(self.datafile.name)
-        else:   # otherwise get it from file source
+        else:  # otherwise get it from file source
             if os.path.isabs(self.source):
                 return get_extension_from_path(self.source)
             else:
@@ -382,15 +383,15 @@ class FileStoreItem(models.Model):
                     if f in all_known_extensions:
                         self.filetype = FileType.objects.get(extension=f)
                     else:
-                        self.filetype = FileType.objects.get(extension=
-                                                             "unknown")
+                        self.filetype = FileType.objects.get(
+                            extension="unknown")
             self.save()
             logger.info("File type is set to '%s'", f)
             return True
-            
+
         except Exception, e:
             logger.error("Couldn't save:%s with extension: %s, %s" % (self,
-                                                                      f,  e))
+                                                                      f, e))
             return False
 
     def is_symlinked(self):
@@ -439,7 +440,7 @@ class FileStoreItem(models.Model):
                 return False
             logger.info("Datafile deleted")
             return True
-        else:   # datafile doesn't exist
+        else:  # datafile doesn't exist
             return False
 
     def rename_datafile(self, name):
