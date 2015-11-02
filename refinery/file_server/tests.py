@@ -68,7 +68,8 @@ class InvalidItemTest(unittest.TestCase):
     """Test operations on invalid instances"""
     def test_add_unknown_file_type(self):
         # create a FileStoreItem without a file type
-        undefined_file = fs_models.FileStoreItem.objects.create_item("testfile")
+        undefined_file = fs_models.FileStoreItem.objects.create_item(
+            "testfile")
         self.assertIsNone(models.add(undefined_file.uuid))
 
 
