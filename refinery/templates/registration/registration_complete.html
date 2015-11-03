@@ -24,13 +24,13 @@
 		</p>
 			
 		{% if EMAIL_BACKEND == "django.core.mail.backends.filebased.EmailBackend" %}
-				<div class="alert">
+				<div class="alert alert-warning">
 				Since no mail server has been configured yet, a copy of the email was saved to <i>{{ EMAIL_FILE_PATH }}.</i>
 				</div>
 		{% endif %} 
 
 		{% if EMAIL_BACKEND == "django.core.mail.backends.console.EmailBackend" %}
-				<div class="alert">
+				<div class="alert alert-warning">
 				Since no mail server has been configured yet, a copy of the email was written to the console.</i>
 				</div>
 		{% endif %} 
