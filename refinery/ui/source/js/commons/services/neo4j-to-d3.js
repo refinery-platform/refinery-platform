@@ -98,15 +98,8 @@ function buildTree (results) {
     }
   }
 
-  var root = nodes['OWL:Thing'];
-
-  // Avoid a root with a single parent
-  if (root.children.length == 1) {
-    root = root.children[0];
-  }
-
   // Deep clone object to be usable by D3
-  return JSON.parse(JSON.stringify(root));
+  return JSON.parse(JSON.stringify(nodes['OWL:Thing']));
 }
 
 function Neo4jToD3 ($q, neo4j, Webworker) {
