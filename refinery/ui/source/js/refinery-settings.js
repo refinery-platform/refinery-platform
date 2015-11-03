@@ -46,10 +46,10 @@ angular
         }
       ]
     },
+    djangoApp: window.djangoApp,
     debounceSearch: 250,
     debounceWindowResize: 250,
     neo4jApi: '/neo4j',
-    publicGroupId: window.publicGroupId,
     refineryApi: '/api/v1',
     solrApi: '/solr',
     treemap: {

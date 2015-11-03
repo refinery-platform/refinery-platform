@@ -11,7 +11,10 @@
 <link href="{% static 'styles/css/treemap.css' %}" rel="stylesheet">
 <script type="text/javascript">
   // Global variables for the JavaScript world
-  window.publicGroupId = {{ public_group_id }};
+  window.djangoApp = {
+    numOntologiesImported: {{ num_ontologies_imported }},
+    publicGroupId: {{ public_group_id }}
+  };
 </script>
 {% endblock %}
 

@@ -74,7 +74,7 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
               if (userId && doc.access.indexOf('u_' + userId) >= 0) {
                 doc.is_owner = true;
               }
-              if (doc.access.indexOf('g_' + settings.publicGroupId) >= 0) {
+              if (doc.access.indexOf('g_' + settings.djangoApp.publicGroupId) >= 0) {
                 doc.public = true;
               }
             }
