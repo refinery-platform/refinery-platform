@@ -105,7 +105,8 @@
 			</tbody>
 		</table>
 		{% endif %}
-		<a class="btn" href="{% url 'project_edit' project.uuid %}">Edit</a>
+		<a class="btn btn-default" href=
+      "{% url 'project_edit' project.uuid %}">Edit</a>
 	{% else %}
 	    <p>No valid project.</p>
 	{% endif %}

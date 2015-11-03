@@ -55,11 +55,11 @@
         <option ng-repeat="nodeRelationship in nodeRelationshipList" value="{{$index}}">{{nodeRelationship.name}}</option>
       </select>
 
-      <a class="btn btn-mini" ng-click="openNewMappingDialog()">New ...</a>
-      <button class="btn btn-mini" ng-disabled="!(currentNodeRelationship &&
+      <a class="btn btn-xs" ng-click="openNewMappingDialog()">New ...</a>
+      <button class="btn btn-xs" ng-disabled="!(currentNodeRelationship &&
       !currentNodeRelationship.is_current)" ng-click="openRenameMappingDialog
       (currentNodeRelationship)">Rename</button>
-      <button class="btn btn-mini" ng-disabled="!(currentNodeRelationship &&
+      <button class="btn btn-xs" ng-disabled="!(currentNodeRelationship &&
       !currentNodeRelationship.is_current)" ng-click='openDeleteMappingDialog
       (currentNodeRelationship)'>Delete</button>
       <div>
