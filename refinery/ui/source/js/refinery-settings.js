@@ -46,7 +46,7 @@ angular
         }
       ]
     },
-    djangoApp: window.djangoApp,
+    djangoApp: window.djangoApp || {},
     debounceSearch: 250,
     debounceWindowResize: 250,
     neo4jApi: '/neo4j',
