@@ -27,7 +27,6 @@
         "USER": "vagrant"
     }
   },
-  "DATASET_EXPLORATION": false,
   "DEFAULT_FROM_EMAIL": "webmaster@localhost",
   "EMAIL_HOST": "localhost",
   "EMAIL_PORT": 25,
