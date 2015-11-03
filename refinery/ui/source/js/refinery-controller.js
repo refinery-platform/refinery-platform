@@ -28,7 +28,6 @@ function AppCtrl ($, $rootScope, $timeout, $window, _, pubSub, settings) {
   });
 
   $rootScope.$on('$reloadlessStateChangeSuccess', function (e, a) {
-  console.log('hard aber ranzig', e, a);
     $timeout(function () {
       if ($window.ga) {
         var hash = $window.location.hash,

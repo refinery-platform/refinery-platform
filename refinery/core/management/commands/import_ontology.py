@@ -1,0 +1,170 @@
+import logging
+import sys
+import subprocess
+import py2neo
+from optparse import make_option
+from django.conf import settings
+from django.core.management.base import BaseCommand
+from core.utils import create_update_ontology
+
+logger = logging.getLogger(__name__)
+root_logger = logging.getLogger()
+
+
+class Command(BaseCommand):
+    help = """Imports an OWL ontology into Neo4J using the Owl2Neo4J converter
+    from https://github.com/flekschas/owl2neo4j.
+    """
+
+    option_list = BaseCommand.option_list + (
+        make_option(
+            '-o',
+            '--ontology',
+            action='store',
+            dest='ontology_file',
+            type='string',
+            help='OWL ontology file, e.g. /vagrant/transfer/GO.owl'
+        ),
+        make_option(
+            '-n',
+            '--name',
+            action='store',
+            dest='ontology_name',
+            type='string',
+            help='Ontology full name, e.g. Gene Ontology'
+        ),
+        make_option(
+            '-a',
+            '--abbreviation',
+            action='store',
+            dest='ontology_abbr',
+            type='string',
+            help='Ontology abbreviation or prefix, e.g. GO'
+        ),
+        make_option(
+            '--eqp',
+            action='store',
+            dest='eqp',
+            type='string',
+            help=('Existencial quantification property, e.g. ' +
+                  'http://purl.obolibrary.org/obo/RO_0002202')
+        ),
+    )
+
+    def handle(self, *args, **options):
+        verbosity = int(options['verbosity'])
+
+        if verbosity == 0:
+            logger.setLevel(logging.ERROR)
+            root_logger.setLevel(logging.ERROR)
+        elif verbosity == 1:  # default
+            logger.setLevel(logging.WARNING)
+            root_logger.setLevel(logging.WARNING)
+        elif verbosity > 1:
+            logger.setLevel(logging.INFO)
+            root_logger.setLevel(logging.INFO)
+        if verbosity > 2:
+            logger.setLevel(logging.DEBUG)
+            root_logger.setLevel(logging.DEBUG)
+
+        # Wrap strings in double quotes in case they contain white spaces.
+        if not options['ontology_file']:
+            options['ontology_file'] = ''
+
+        if options['ontology_abbr']:
+            options['ontology_abbr'] = options['ontology_abbr'].upper()
+            ontology_abbr = '"' + options['ontology_abbr'] + '"'
+        else:
+            ontology_abbr = ''
+
+        if options['ontology_name']:
+            ontology_name = '"' + options['ontology_name'] + '"'
+        else:
+            ontology_name = ''
+
+        if options['eqp']:
+            options['eqp'] = '-eqp ' + options['eqp']
+        else:
+            options['eqp'] = ''
+
+        # Check if constraints have already been added or add them
+        try:
+            graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+
+            for constraint in settings.NEO4J_CONSTRAINTS:
+                existing_prop_const = graph.schema.get_uniqueness_constraints(
+                    constraint['label']
+                )
+                for prop in constraint['properties']:
+                    if prop['name'] not in existing_prop_const:
+                        if prop['unique']:
+                            graph.schema.create_uniqueness_constraint(
+                                constraint['label'],
+                                prop['name']
+                            )
+                        else:
+                            graph.schema.create_index(
+                                constraint['label'],
+                                prop['name']
+                            )
+        except Exception, e:
+            logger.error(e)
+            sys.exit(1)
+
+        # Import or re-import ontology
+        try:
+            cmd = 'java -jar -DentityExpansionLimit={eel} '\
+                '{lib}/owl2neo4j.jar -o {ontology} -n {name} -a {abbr} ' \
+                '{eqp} -s {server} {verbosity}'.format(
+                    eel=settings.JAVA_ENTITY_EXPANSION_LIMIT,
+                    lib=settings.LIBS_DIR,
+                    ontology=options['ontology_file'],
+                    name=ontology_name,
+                    abbr=ontology_abbr,
+                    eqp=options['eqp'],
+                    server=settings.NEO4J_BASE_URL,
+                    verbosity=('-v' if verbosity == 2 else '')
+                )
+
+            # Note that `owl2neo4j.jar` handles all other possible errors.
+            if int(options['verbosity']) > 0:
+                subprocess.check_call(cmd, shell=True)
+            else:
+                subprocess.check_output(cmd, shell=True)
+        except Exception, e:
+            logger.error(e)
+            sys.exit(1)
+
+        try:
+            # Connects to `http://localhost:7474/db/data/` by default.
+            graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+
+            uri = graph.cypher.execute_one(
+                'MATCH (o:Ontology {acronym:{acronym}}) RETURN o.uri',
+                parameters={
+                    'acronym': options['ontology_abbr']
+                }
+            )
+
+            version = graph.cypher.execute_one(
+                'MATCH (o:Ontology {acronym:{acronym}}) RETURN o.version',
+                parameters={
+                    'acronym': options['ontology_abbr']
+                }
+            )
+
+            if not uri:
+                raise Exception(
+                    'No ontology with the given name was found. It is most ' +
+                    'likely that the actual import into Neo4J failed.'
+                )
+
+            create_update_ontology(
+                options['ontology_name'],
+                options['ontology_abbr'],
+                uri,
+                version
+            )
+        except Exception, e:
+            logger.error(e)
+            sys.exit(1)

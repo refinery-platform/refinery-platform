@@ -9,6 +9,7 @@ angular
    * Third party modules
    */
   'ui.router',
+  'ngWebworker',
 
   /*
    * Angular App globals
@@ -16,6 +17,7 @@ angular
   'errors',
   'pubSub',
   'closeOnOuterClick',
+  'colors',
 
   /*
    * Refinery modules

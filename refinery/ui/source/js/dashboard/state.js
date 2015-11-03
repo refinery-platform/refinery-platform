@@ -16,12 +16,20 @@ angular
           '/'
         )
         .state(
-          'dataSetsExploration',
+          'launchPad.exploration',
           {
-            url: '/explore/',
+            // `branchId` is an artifact of the treemap as some terms appear
+            // multiple times. Instead of storing the whole path back to the
+            // root, we store the branch ID to specify which path the user took.
+            url: 'exploration?context&branchId',
             reloadOnSearch: false,
-            templateUrl: '/static/partials/dashboard/views/data-sets-exploration.html',
-            controller: 'DataSetsExplorationCtrl as dse'
+          },
+          '/'
+        )
+        .state(
+          'launchPad.preview',
+          {
+            url: 'preview/{uuid}',
           },
           '/'
         );

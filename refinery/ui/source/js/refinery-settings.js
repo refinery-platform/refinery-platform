@@ -3,11 +3,6 @@ angular
   .constant('settings', {
     appRoot: document.location.protocol + '//' + document.location.host,
     authThrottling: 60000,
-    debounceSearch: 250,
-    debounceWindowResize: 250,
-    publicGroupId: window.publicGroupId,
-    refineryApi: '/api/v1',
-    solrApi: '/solr',
     dashboard: {
       preview: {
         maxBadges: 20
@@ -50,5 +45,14 @@ angular
           label: 'Name'
         }
       ]
+    },
+    djangoApp: window.djangoApp || {},
+    debounceSearch: 250,
+    debounceWindowResize: 250,
+    neo4jApi: '/neo4j',
+    refineryApi: '/api/v1',
+    solrApi: '/solr',
+    treemap: {
+      singleRequestLimit: 200
     }
   });

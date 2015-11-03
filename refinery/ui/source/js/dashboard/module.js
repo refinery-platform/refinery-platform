@@ -4,5 +4,7 @@ angular
     'ngSanitize',
     'ui.scroll',
     'cut',
-    'toolTip'
+    'toolTip',
+    'treemap',
+    'dataSet'
   ]);

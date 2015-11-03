@@ -5,6 +5,7 @@ function refineryDataSetPreview () {
     $q,
     _,
     $modal,
+    pubSub,
     settings,
     userService,
     authService,
@@ -12,7 +13,6 @@ function refineryDataSetPreview () {
     sharingService,
     citationService,
     analysisService,
-    dashboardWidthFixerService,
     dashboardDataSetPreviewService,
     dashboardExpandablePanelService) {
     var that = this;
@@ -20,6 +20,7 @@ function refineryDataSetPreview () {
     this.$q = $q;
     this._ = _;
     this.$modal = $modal;
+    this.pubSub = pubSub;
     this.settings = settings;
     this.user = authService;
     this.userService = userService;
@@ -27,25 +28,15 @@ function refineryDataSetPreview () {
     this.sharingService = sharingService;
     this.citationService = citationService;
     this.analysisService = analysisService;
-    this.dashboardWidthFixerService = dashboardWidthFixerService;
     this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
     this.dashboardExpandablePanelService = dashboardExpandablePanelService;
 
     this.maxBadges = this.settings.dashboard.preview.maxBadges;
     this.infinity = Number.POSITIVE_INFINITY;
 
-    this.dashboardWidthFixerService.fixer.push(function () {
-      that.style = {
-        left: this.fixedWidth + 1
-      };
-    });
-
-    this.dashboardDataSetPreviewService.addListener(
-      'expandFinished',
-      function () {
-        this.animationFinished = true;
-      }.bind(this)
-    );
+    this.pubSub.on('expandFinished', function () {
+      this.animationFinished = true;
+    }.bind(this));
 
     this.dashboardExpandablePanelService.collapser.push(function () {
       this.animationFinished = false;
@@ -67,15 +58,6 @@ function refineryDataSetPreview () {
       configurable: false,
       enumerable: true,
       value: {},
-      writable: true
-  });
-
-  Object.defineProperty(
-    DataSetPreviewCtrl.prototype,
-    'animationFinished', {
-      configurable: false,
-      enumerable: true,
-      value: false,
       writable: true
   });
 
@@ -361,12 +343,14 @@ function refineryDataSetPreview () {
 
   return {
     bindToController: {
-      close: '&'
+      close: '&',
+      active: '='
     },
     controller: [
       '$q',
       '_',
       '$modal',
+      'pubSub',
       'settings',
       'userService',
       'authService',
@@ -374,7 +358,6 @@ function refineryDataSetPreview () {
       'sharingService',
       'citationService',
       'analysisService',
-      'dashboardWidthFixerService',
       'dashboardDataSetPreviewService',
       'dashboardExpandablePanelService',
       DataSetPreviewCtrl],
@@ -382,7 +365,8 @@ function refineryDataSetPreview () {
     restrict: 'E',
     replace: true,
     scope: {
-      close: '&'
+      close: '&',
+      active: '='
     },
     templateUrl: '/static/partials/dashboard/directives/data-set-preview.html',
     transclude: true

@@ -1,27 +1,15 @@
-from datetime import datetime, timedelta
 import logging
-import requests
-import socket
-import urlparse
 
-from django.conf import settings
 from django.db.models.deletion import Collector
 from django.db.models.fields.related import ForeignKey
 
-from amqplib.client_0_8.exceptions import (
-    AMQPChannelException, AMQPConnectionException
-)
-from celery.exceptions import TimeLimitExceeded, TaskRevokedError
-from celery.task import task, periodic_task
-from celery.task.control import ping
-
-from core.models import (
-    DataSet, InvestigationLink, WorkflowEngine
-)
+from core.models import DataSet, InvestigationLink
 from data_set_manager.models import Investigation, Study
 from data_set_manager.tasks import annotate_nodes
 from file_store.models import is_permanent
 from file_store.tasks import create, read, import_file
+
+from celery.task import task
 
 
 logger = logging.getLogger(__name__)
