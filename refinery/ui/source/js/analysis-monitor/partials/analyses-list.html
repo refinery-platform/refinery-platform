@@ -9,7 +9,7 @@
   </span>
   <span ng-switch-default>
     <div class="row analysis-header">
-      <div class="span1 analysis-icon" id="header">
+      <div class="col-md-1 analysis-icon" id="header">
         <a class="analysis-header" ng-click="order('status')">
           <strong>Status</strong>
           <span class="sortorder" ng-show="predicate === 'status'"
@@ -19,7 +19,7 @@
         </a>
       </div>
 
-      <div class="span5 analysis-name">
+      <div class="col-md-5 analysis-name">
         <a class="analysis-header" ng-click="order('name')">
           <strong>Name</strong>
           <span class="sortorder" ng-show="predicate === 'name'" ng-class="{reverse:reverse}">
@@ -28,7 +28,7 @@
         </a>
       </div>
 
-      <div class="span1">
+      <div class="col-md-1">
        <a class="analysis-header" ng-click="order('time_start')">
          <strong>Start Time</strong>
          <span class="sortorder" ng-show="predicate === 'time_start'"
@@ -38,7 +38,7 @@
        </a>
       </div>
 
-      <div class="span1">
+      <div class="col-md-1">
         <a class="analysis-header" ng-click="order('elapseTime')">
           <strong>Elapsed Time</strong>
           <span class="sortorder" ng-show="predicate === 'elapseTime'"
@@ -48,7 +48,7 @@
         </a>
       </div>
 
-      <div class="span1">
+      <div class="col-md-1">
         <a class="analysis-header" ng-click="order('time_end')">
           <strong>End Time</strong>
           <span class="sortorder" ng-show="predicate === 'time_end'"
@@ -58,7 +58,7 @@
         </a>
       </div>
 
-      <div class="span2">
+      <div class="col-md-2">
         <strong>Owner Name</strong>
       </div>
 
@@ -72,7 +72,7 @@
       analysis.uuid">
 
         <div class="row">
-          <div class="span1 analysis-icon">
+          <div class="col-md-1 analysis-icon">
             <a id="collapse-analysis-run"
               ng-click="isCollapsed = !isCollapsed"
               data-target=" #{{analysis.uuid}}"
@@ -91,7 +91,7 @@
               </i>
             </span>
           </div>
-          <div class="span5 analysis-name">
+          <div class="col-md-5 analysis-name">
             <span ng-switch on="analysis.status">
               <span ng-switch-when="UNKNOWN">
                 {{ analysis.name }}
@@ -114,22 +114,22 @@
             </span>
            </div>
 
-          <div class="span1">
+          <div class="col-md-1">
             <span  rp-analysis-monitor-start-time-tooltip>
               {{analysis.humanizeStartTime }}
             </span>
           </div>
 
-          <div class="span1">
+          <div class="col-md-1">
             {{analysis.elapseTime | analysisMonitorFormatMilliTime}}
           </div>
 
-          <div class="span1">
+          <div class="col-md-1">
             <span  rp-analysis-monitor-end-time-tooltip>
                {{analysis.humanizeEndTime }}
             </span>
           </div>
-           <div class="span2">
+           <div class="col-md-2">
              <span rp-analysis-owner-name>
               <a ng-href="/users/{{ analysis.owner }}">
                 {{ ownerName }}
@@ -141,10 +141,10 @@
 
         <span ng-if="analysis.status=='RUNNING' || analysis.status=='INITIALIZED'">
           <div class="row" id="{{analysis.uuid}}" collapse="isCollapsed">
-            <div class="span1">
+            <div class="col-md-1">
               &nbsp;
             </div>
-            <div class="span11 analysis-running">
+            <div class="col-md-1 analysis-running">
 
               <div ng-hide="AMCtrl.isAnalysisDetailLoaded(analysis.uuid)"
                   class="ng-hide">

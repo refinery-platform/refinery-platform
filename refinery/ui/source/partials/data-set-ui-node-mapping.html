@@ -1,7 +1,7 @@
 <div ng-controller="FileMappingCtrl"> 
-  <div class="span12" ng-if="currentNodeRelationship">
+  <div class="col-md-12" ng-if="currentNodeRelationship">
     <div class="row">
-      <div class="span4">
+      <div class="col-md-4">
         <span class="control-label" style="float: left; margin-top: 3px;">
           {{currentNodeRelationship.name}} |
           <b>{{ currentNodePairIndex + 1 }}</b> of
@@ -15,7 +15,7 @@
 
       </div>            
 
-      <div class="span8">
+      <div class="col-md-8">
         <!-- Prepared for future use! Do not remove. -->
         <!--
         <div style="float: right; display: block;">
@@ -44,7 +44,7 @@
     </div>
 
     <div class="row">
-      <div class="span6">
+      <div class="col-md-6">
         <div>
           <button class="btn btn-mini" ng-disabled="!hasNextMapping()" ng-click="loadPreviousMapping()"><i class="icon-backward"></i></button>
           <button class="btn btn-mini" ng-disabled="currentNodePair == null" ng-click="createMapping()">New</button>

@@ -140,7 +140,7 @@
 
       <div class="row">
 
-        <div class="span2">
+        <div class="col-md-2">
           <div class="btn-group">
           <!-- ng-hide if the file tab is not selected -->
             <a type="button" class="btn btn-warning data-set-view-tabs"
@@ -163,7 +163,7 @@
           </div>
         </div>
 
-        <div class="span10">
+        <div class="col-md-10">
           <ul class="nav nav-tabs" id="tabs" style="float: right;">
             <li ui-sref-active="active" id="filesTab">
               <a ui-sref="files" class="dataSetTabs">
@@ -215,7 +215,7 @@
 
               {% verbatim %}
               <div class="{{ $root.ctrlTabSpanSize }}"
-                   ng-init="$root.ctrlTabSpanSize='span2'"
+                   ng-init="$root.ctrlTabSpanSize='col-md-2'"
                    ng-show="showCtrlTab" ng-cloak
                    style="background-color: #eaeaea; padding: 10px;">
                 <!-- <div ui-view="data-set-ui-mode-controls"></div> -->
@@ -225,7 +225,7 @@
 
               {% verbatim %}
                 <div class="{{ $root.mainTabSpanSize }}"
-                     ng-init="$root.mainTabSpanSize='span12'" ng-cloak>
+                     ng-init="$root.mainTabSpanSize='col-md-12'" ng-cloak>
               {% endverbatim %}
 
                   <div class="row" ng-if="$root.mode==='analyze'">
@@ -235,10 +235,10 @@
                   </div>
 
                   <div class="row">
-                    <div class="span2">
+                    <div class="col-md-2">
                       {% if not REFINERY_REPOSITORY_MODE %}
                         <div class="row" style="margin-bottom: 5px;">
-                          <div class="span12">
+                          <div class="col-md-12">
                               <span id="node-set-manager-panel">
                                 <!-- <label class="control-label"
                                 style="font-size: large; margin-left: 15px;
@@ -250,7 +250,7 @@
                           </div>
                         </div>
                         <div class="row" style="margin-bottom: 5px;">
-                          <div class="span12">
+                          <div class="col-md-12">
                             <div style="width: 100%;">
                               <div id="node-set-save-button" class="btn btn-mini">
                                 Save
@@ -270,13 +270,13 @@
                     </ul>
                     -->
                       <div class="row y-scrollable">
-                        <div class="span12">
+                        <div class="col-md-12">
                           <span style="font-style: italic; color: darkgray;">
                             Attribute Filter
                           </span>
                           <div id="solr-facet-view" class="accordion"></div>
                         </div>
-                        <div class="span12">
+                        <div class="col-md-12">
                           <span style="font-style: italic; color: darkgray;">
                             Analysis Filter
                           </span>
@@ -286,18 +286,18 @@
                     </div>
 
                   {% verbatim %}
-                    <div class="span10" id="main-area">
+                    <div class="col-md-10" id="main-area">
                   {% endverbatim %}
 
                     <div class="row" style="margin-bottom: 5px;">
-                      <div class="span3">
+                      <div class="col-md-3">
                         <span class="control-label"
                           id="solr-document-count-view" style="float: left;
                           margin-top: 3px;"></span>
                         <a href="#" id="help-selection-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
                       </div>
 
-                      <div class="span9">
+                      <div class="col-md-9">
                         <!--
                         <a id="igv-multi-species" href="#" role="button" style="margin-left: 5px" class="btn btn-warning" data-toggle="modal" rel="tooltip" data-placement="bottom" data-html="true" title="Launch IGV with<br>current selection."><i class="icon-bar-chart"></i>&nbsp;&nbsp;View in IGV</a>
                         <a href="#" id="help-igv-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>

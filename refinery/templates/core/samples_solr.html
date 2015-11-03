@@ -28,7 +28,7 @@
     {% csrf_token %}
     
     	<div class="row">
-    		<div class="span6">
+    		<div class="col-md-6">
     		<div class="btn-group">
 			<div class="btn">
 				Choose Workflow
@@ -43,7 +43,7 @@
 		</div>
 		</div>
 		
-		<div class="span6">
+		<div class="col-md-6">
 
 	   <button class="btn btn-primary pull-right" id="submitSamplesBtn">
     	<i class="icon-road"></i>
@@ -93,7 +93,7 @@
 
 <div class="row">
 	<!-- FACETED SIDE BAR -->
-	<div class="span3">
+	<div class="col-md-3">
 		<div class="well sidebar">
 			<ul class = "nav nav-list">
 				<div id="facets">
@@ -103,7 +103,7 @@
 		</div>
 	</div>
 	
-	<div class="span9">
+	<div class="col-md-9">
 		<!-- SEARCH BAR -->
 		<div class="row">
 		<form class="well form-search" id="search_form">
@@ -301,7 +301,9 @@
 	function initTable() {
 			
 		$('#samples1').dataTable({
-			"sDom" : "<'row'<'span6'l><'span6'f>r>t<'row'<'span6'i><'span6'p>>",
+			"sDom" : "<'row'<'col-md-6'l><'col-md-6'f>r>t<'row'<'col-md-6'i><'col" +
+      "-md-6" +
+      "'p>>",
 			"bFilter":false,
 			"sPaginationType" : "bootstrap",
 			"oLanguage" : {
