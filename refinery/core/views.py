@@ -3,14 +3,12 @@ import os
 import re
 import urllib
 import xmltodict
-import py2neo
 
 from django.utils import simplejson
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.sites.models import get_current_site
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.urlresolvers import reverse
 from django.http import (
     HttpResponse, HttpResponseForbidden, HttpResponseRedirect
@@ -18,20 +16,17 @@ from django.http import (
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext, loader
 
-from guardian.shortcuts import (
-    get_objects_for_group, get_objects_for_user, get_perms
-)
+from guardian.shortcuts import get_perms
 import requests
 
+from data_set_manager.models import *
 from core.forms import (
     ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 )
 from core.models import (
     ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
-    Analysis, get_shared_groups, Invitation
+    Analysis, get_shared_groups, Invitation, Ontology
 )
-from data_set_manager.models import *
-from galaxy_connector.models import Instance
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
@@ -45,7 +40,8 @@ def home(request):
         'core/home.html',
         {
             'public_group_id': settings.REFINERY_PUBLIC_GROUP_ID,
-            'main_container_no_padding': True
+            'main_container_no_padding': True,
+            'num_ontologies_imported': Ontology.objects.count()
         },
         context_instance=RequestContext(request)
     )
