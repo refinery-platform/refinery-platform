@@ -1019,6 +1019,25 @@ a.analysis-header{
           border-top: none;
         }
 
+        &.highlighting {
+          z-index: 2;
+          color: @black;
+          border-top-color: @white;
+          background: lighten(@orange, 50%, relative);
+          box-shadow: 0 1px 0 0 @white, inset 0 1px 0 0 fade(@orange, 10%), inset 0 -1px 0 0 fade(@orange, 10%);
+
+          a {
+            color: @black;
+          }
+
+          .preview,
+          .preview:active,
+          .preview:hover,
+          .preview:focus {
+            color: @black !important;
+          }
+        }
+
         &.previewing {
           z-index: 2;
           background: #f2f7f8;
@@ -1115,6 +1134,36 @@ a.analysis-header{
         h4 em {
           font-weight: bold;
           font-style: normal;
+        }
+
+        ul.help {
+          opacity: 0.5;
+          transition: opacity @fastTransitionSpeed @easeInOutCubic;
+
+          li {
+            line-height: 25px;
+            margin-left: 0.5em;
+
+            &:first-child {
+              margin-left: 0;
+            }
+          }
+
+          kbd {
+            display: inline-block;
+          }
+
+          .icon-cursor-default {
+            position: relative;
+            top: 0.125em;
+            width: 0.85em;
+            height: 1em;
+            color: @black;
+          }
+        }
+
+        &:hover ul.help {
+          opacity: 1;
         }
       }
 
