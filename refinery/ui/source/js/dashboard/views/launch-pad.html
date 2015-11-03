@@ -18,7 +18,8 @@
         <button
           class="no-underline btn"
           ng-class="{'active': dashboard.dataSetExploration}"
-          ng-click="dashboard.toggleDataSetsExploration()">
+          ng-click="dashboard.toggleDataSetsExploration()"
+          ng-if="dashboard.explorationEnabled">
           <i class="icon-compass" title="Explore data sets"></i> Explore
         </button>
       </span>

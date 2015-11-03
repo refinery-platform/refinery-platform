@@ -39,6 +39,7 @@ function DashboardCtrl (
 
   // Construct Refinery modules
   this.pubSub = pubSub;
+  this.settings = settings;
   this.dataSet = dataSet;
   this.authService = authService;
   this.projectService = projectService;
@@ -376,6 +377,16 @@ Object.defineProperty(
 
       this.triggerSorting('analyses');
       this.checkAnalysesFilterSort();
+    }
+});
+
+Object.defineProperty(
+  DashboardCtrl.prototype,
+  'explorationEnabled', {
+    enumerable: true,
+    configurable: false,
+    get: function () {
+      return this.settings.djangoApp.numOntologiesImported > 0;
     }
 });
 
