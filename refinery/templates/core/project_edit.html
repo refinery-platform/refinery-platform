@@ -12,7 +12,7 @@
 
 {% block content %}
 <div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
-	<div class="row-fluid">
+	<div class="row">
 		<form method="post" action="{% url 'project_edit' project.uuid %}" class="wide" id="project-edit-form">
 		{% csrf_token %}
 			{% if form.errors %}

@@ -8,7 +8,7 @@
       &nbsp;<em>Retrieving analyses list.</em>
   </span>
   <span ng-switch-default>
-    <div class="row-fluid analysis-header">
+    <div class="row analysis-header">
       <div class="span1 analysis-icon" id="header">
         <a class="analysis-header" ng-click="order('status')">
           <strong>Status</strong>
@@ -71,7 +71,7 @@
        limitTo: itemsPerPage track by
       analysis.uuid">
 
-        <div class="row-fluid">
+        <div class="row">
           <div class="span1 analysis-icon">
             <a id="collapse-analysis-run"
               ng-click="isCollapsed = !isCollapsed"
@@ -140,7 +140,7 @@
         </div>
 
         <span ng-if="analysis.status=='RUNNING' || analysis.status=='INITIALIZED'">
-          <div class="row-fluid" id="{{analysis.uuid}}" collapse="isCollapsed">
+          <div class="row" id="{{analysis.uuid}}" collapse="isCollapsed">
             <div class="span1">
               &nbsp;
             </div>

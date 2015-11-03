@@ -98,7 +98,7 @@ rect.active {
 
 {% block content %}
 <div class="refinery-panel refinery-panel-content scrollable">
-	<div class="row-fluid">		
+	<div class="row">
 
 				<form id="sampleForm" method="post" class="form-inline">
     			{% csrf_token %}
@@ -106,10 +106,10 @@ rect.active {
     			<!-- pass study information into the receiving view when posting -->
     			<input type="hidden" name="study_uuid" value="{{ study_uuid }}"/>
  
-<div class="row-fluid">
+<div class="row">
  	<div class="span10">
  	
- 			<div class="row-fluid">
+ 			<div class="row">
 			<div> 				
 				<select class="combobox" name="workflow_choice" id="workflow_choice">
 					<option></option>
@@ -143,7 +143,7 @@ rect.active {
  	</div>	
 </div>
 
-<div class="row-fluid">
+<div class="row">
  	
  	<div class="span2">
 			<ul class="nav nav-pills" id="navigation-tabs">
@@ -154,7 +154,7 @@ rect.active {
  	
  	<div class="span10"> 			
 		
-		<div class="row-fluid">
+		<div class="row">
 		<div class="tabbable">
 			<ul class="nav nav-pills" id="navigation-tabs">
 			  <li class="active"><a href="#table-view-tab" data-toggle="pill">List</a></li>
@@ -182,7 +182,7 @@ rect.active {
 	
 </div>
 
-<div class="row-fluid">
+<div class="row">
  	<div class="span12">
 	 	<div id="url-view"></div>
  	</div>		 

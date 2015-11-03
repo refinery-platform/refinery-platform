@@ -138,7 +138,7 @@
 
     <div class="refinery-panel-tabs">
 
-      <div class="row-fluid">
+      <div class="row">
 
         <div class="span2">
           <div class="btn-group">
@@ -211,7 +211,7 @@
 
           <div class="dataSetTabContent ng-cloak" id="files">
             <!-- <div ng-controller="FileMappingCtrl"> -->
-            <div class="row-fluid">
+            <div class="row">
 
               {% verbatim %}
               <div class="{{ $root.ctrlTabSpanSize }}"
@@ -228,16 +228,16 @@
                      ng-init="$root.mainTabSpanSize='span12'" ng-cloak>
               {% endverbatim %}
 
-                  <div class="row-fluid" ng-if="$root.mode==='analyze'">
+                  <div class="row" ng-if="$root.mode==='analyze'">
                     <div ng-include="'/static/partials/data-set-ui-node-mapping.html'"></div>
                     <div ui-view="data-set-ui-mapping-controls"></div>
                     <!-- <div ui-view></div> -->
                   </div>
 
-                  <div class="row-fluid">
+                  <div class="row">
                     <div class="span2">
                       {% if not REFINERY_REPOSITORY_MODE %}
-                        <div class="row-fluid" style="margin-bottom: 5px;">
+                        <div class="row" style="margin-bottom: 5px;">
                           <div class="span12">
                               <span id="node-set-manager-panel">
                                 <!-- <label class="control-label"
@@ -249,7 +249,7 @@
                               </span>
                           </div>
                         </div>
-                        <div class="row-fluid" style="margin-bottom: 5px;">
+                        <div class="row" style="margin-bottom: 5px;">
                           <div class="span12">
                             <div style="width: 100%;">
                               <div id="node-set-save-button" class="btn btn-mini">
@@ -269,7 +269,7 @@
                         <li class="active"><a href="#solr-facet-view" data-toggle="pill">Facets</a></li>
                     </ul>
                     -->
-                      <div class="row-fluid y-scrollable">
+                      <div class="row y-scrollable">
                         <div class="span12">
                           <span style="font-style: italic; color: darkgray;">
                             Attribute Filter
@@ -289,7 +289,7 @@
                     <div class="span10" id="main-area">
                   {% endverbatim %}
 
-                    <div class="row-fluid" style="margin-bottom: 5px;">
+                    <div class="row" style="margin-bottom: 5px;">
                       <div class="span3">
                         <span class="control-label"
                           id="solr-document-count-view" style="float: left;
@@ -364,7 +364,7 @@
                       </div>
                     </div>
 
-                    <div class="row-fluid">
+                    <div class="row">
                       <div class="tabbable">
                         <div class="tab-content">
                           <div class="tab-pane active fade in" id="table-view-tab">
@@ -475,7 +475,7 @@
               </span>
             </div>
             <p>
-              <div class="row-fluid">
+              <div class="row">
                 <analysis-monitor-analyses-list></analysis-monitor-analyses-list>
               </div>
             </p>
