@@ -4,4 +4,9 @@
       d="M17 5.856L14.11 3 5 12l9.11 9L17 18.145 10.78 12 17 5.856z"
       fill="currentColor"/>
   </symbol>
+  <symbol id="cursor-default" viewBox="2 0 20 24">
+    <path
+      d="M12 13l4.5 8-3.4 2-4.6-8.1L4 21V1l16 12h-8z"
+      fill="currentColor"/>
+  </symbol>
 </svg>
