@@ -31,6 +31,7 @@ def extra_context(context):
     globally_available_settings = [
         "ADMINS",
         "CURRENT_COMMIT",
+        "DATASET_EXPLORATION",
         "REFINERY_CSS",
         "REFINERY_MAIN_LOGO",
         "REFINERY_INNER_NAVBAR_HEIGHT",
