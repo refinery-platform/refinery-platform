@@ -232,6 +232,14 @@ function DashboardCtrl (
       this.selectDataSets(dataSets);
     }.bind(this));
   }.bind(this));
+
+  this.treemapContext.on('highlightedDataSets', function (dataSets) {
+    this.dataSet.highlight(dataSets);
+  }.bind(this));
+
+  this.treemapContext.on('prevHighlightedDataSets', function (dataSets) {
+    this.dataSet.highlight(dataSets, true);
+  }.bind(this));
 }
 
 /*

@@ -66,12 +66,14 @@ function getAssociatedDataSets (node) {
  * @param   {Object}  D3Colors   Service for creating D3 color scalings.
  * @param   {Object}  settings   Treemap settings.
  */
-function TreemapCtrl ($element, $q, $, d3, HEX, D3Colors, treemapSettings,
-  pubSub, dashboardTreemapData, treemapContext, Webworker) {
+function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
+  treemapSettings, pubSub, dashboardTreemapData, treemapContext, Webworker) {
   this.$ = $;
+  this._ = _;
   this.$q = $q;
   this.d3 = d3;
   this.HEX = HEX;
+  this.$window = $window;
   this.$element = this.$($element);
   this.$d3Element = this.$element.find('.treemap svg');
   this.settings = treemapSettings;
@@ -178,6 +180,7 @@ TreemapCtrl.prototype.accumulateAndPrune = function (data, valueProp) {
     node._children = node.children;
     node.meta.originalDepth = depth;
     var i = numChildren;
+
     // We move in reverse order so that deleting nodes doesn't affect future
     // indices.
     while (i--) {
@@ -256,6 +259,12 @@ TreemapCtrl.prototype.accumulateAndPrune = function (data, valueProp) {
         node.value = child.value;
       }
     }
+  }
+
+  // Make sure that the root node has at least 2 children
+  if (data.children.length === 1) {
+    this.data = data.children[0];
+    this.initialize(this.data);
   }
 };
 
@@ -368,7 +377,7 @@ TreemapCtrl.prototype.addEventListeners = function () {
   });
 
   this.treemap.$element.on(
-    'click',
+    'dblclick',
     '.label-wrapper, .outer-border',
     function () {
       /*
@@ -383,6 +392,19 @@ TreemapCtrl.prototype.addEventListeners = function () {
       }
 
       that.transition(this.__data__);
+    }
+  );
+
+  this.treemap.$element.on(
+    'click',
+    '.label-wrapper, .outer-border',
+    function (e) {
+      // Mac OS X's command key is down
+      if (e.metaKey) {
+        that.transition(this.__data__);
+      } else {
+        that.highlightByTerm(this, this.__data__, e.shiftKey);
+      }
     }
   );
 
@@ -527,6 +549,7 @@ TreemapCtrl.prototype.adjustLevelDepth = function (oldVisibleDepth) {
  * @method  color
  * @author  Fritz Lekschas
  * @date    2015-07-31
+ *
  * @param   {Object}  node  D3 node data object.
  * @return  {String}        HEX color string.
  */
@@ -566,13 +589,15 @@ TreemapCtrl.prototype.color = function (node) {
  *
  * @method  colorEl
  * @author  Fritz Lekschas
- * @date    2015-07-31
- * @param   {Object}    element    DOM element created by D3.
- * @param   {String}    attribute  Name of attribute that should be colored.
+ * @date    2015-11-02
+ *
+ * @param   {Object}  element    DOM element created by D3.
+ * @param   {String}  attribute  Name of attribute that should be colored.
+ * @param   {String}  color      HEX string.
  */
-TreemapCtrl.prototype.colorEl = function (element, attribute) {
+TreemapCtrl.prototype.colorEl = function (element, attribute, color) {
   element
-    .attr(attribute, this.color.bind(this));
+    .attr(attribute, color || this.color.bind(this));
 };
 
 /**
@@ -716,6 +741,76 @@ TreemapCtrl.prototype.initialize = function (data) {
   data.meta = {
     branchNo: []
   };
+};
+
+/**
+ * Highlight datasets associated to a term.
+ *
+ * @method  highlightByTerm
+ * @author  Fritz Lekschas
+ * @date    2015-11-02
+ *
+ * @param   {Object}   data      Data object associated to the rectangle being
+ *   clicked.
+ * @param   {Boolean}  multiple  If `true` currently highlighted datasets will
+ *   not be _de-highlighted_.
+ */
+TreemapCtrl.prototype.highlightByTerm = function (el, data, multiple) {
+  var dataSets = this.Webworker.create(getAssociatedDataSets).run(data),
+      i,
+      prevDataSetIds = this.treemapContext.get('highlightedDataSets') || {};
+
+  dataSets.then(function (dataSetIds) {
+    if (multiple) {
+      dataSetIds = this._.merge(dataSetIds, prevDataSetIds);
+      // this.highlightEls.push(el);
+    } else {
+      // Difference between previously highlighted datasets and datasets
+      // highlighted next.
+      var keys = Object.keys(prevDataSetIds);
+      for (i = keys.length; i--;) {
+        if (dataSets[keys[i]]) {
+          delete prevDataSetIds[keys[i]];
+        }
+      }
+
+      // Store previously highlighted datasets.
+      this.treemapContext.set(
+        'prevHighlightedDataSets',
+        prevDataSetIds,
+        true
+      );
+    }
+
+    // for (i = dehighlightKeys.length; i--;) {
+    //   this.cacheTerms[data.ontId][data.branchId].meta.highlight = false;
+    // }
+
+    // for (i = keys.length; i--;) {
+    //   this.cacheTerms[data.ontId][data.branchId].meta.highlight = true;
+    // }
+
+    // Store highlighted datasets.
+    this.treemapContext.set(
+      'highlightedDataSets',
+      dataSetIds,
+      true
+    );
+  }.bind(this));
+};
+
+/**
+ * Highlight a rectangle visually.
+ *
+ * @method  highlightEl
+ * @author  Fritz Lekschas
+ * @date    2015-11-02
+ *
+ * @param   {Object}  element  DOM element.
+ */
+TreemapCtrl.prototype.highlightEl = function (element) {
+  this.colorEl(element, 'fill', this.settings.highlightBGColor);
+  this.colorEl(element, 'color', this.settings.highlightTextColor);
 };
 
 /**
@@ -1101,6 +1196,23 @@ Object.defineProperty(
 });
 
 /**
+ * Array of highlighted DOM elements.
+ *
+ * @author  Fritz Lekschas
+ * @date    2015-11-02
+ * @type    {Array}
+ */
+Object.defineProperty(
+  TreemapCtrl.prototype,
+  'highlightedEls',
+  {
+    configurable: false,
+    enumerable: true,
+    value: [],
+    writable: true
+});
+
+/**
  * Current root node.
  *
  * This variable is needed to distinguish context changes initiated by the
@@ -1142,7 +1254,7 @@ Object.defineProperty(
  *
  * @author  Fritz Lekschas
  * @date    2015-10-02
- * @type  {Object}
+ * @type    {Object}
  */
 Object.defineProperty(
   TreemapCtrl.prototype,
@@ -1183,6 +1295,8 @@ angular
     '$element',
     '$q',
     '$',
+    '$window',
+    '_',
     'd3',
     'HEX',
     'D3Colors',

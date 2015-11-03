@@ -61,9 +61,13 @@ function DataSetStoreFactory (_) {
   /**
    * Update a data object without destroying its original reference.
    *
+   * @description
+   * Batch update of a dataset according with data. This method does _not_ add
+   * new attribute. In order to add a new attribute use the `set` method.
+   *
    * @method  update
    * @author  Fritz Lekschas
-   * @date    2015-10-08
+   * @date    2015-11-02
    *
    * @param   {Number|String}  key   Key to identify the data object.
    * @param   {Object}         data  Actual data object.
@@ -98,6 +102,38 @@ function DataSetStoreFactory (_) {
     // `undefined` could potentially be corrupted, e.g. `undefined = true`.
     if (!!_store[key]) {
       _store[key] = void 0;
+    }
+
+    return DataSetStore;
+  };
+
+  /**
+   * Set a new attribute.
+   *
+   * @description
+   * This method allows to set a single or multiple attributes. Existing
+   * attribute values will be overwritten.
+   *
+   * @example
+   * ```
+   * DataSetStore.set('myId', {highlight: true, color: '#000'});
+   * ```
+   *
+   * @method  set
+   * @author  Fritz Lekschas
+   * @date    2015-11-02
+   *
+   * @param   {Number|String}  key    Key to identify the data object.
+   * @param   {Object}         attrs  Object containing the key value pairs.
+   * @return  {Object}                Self for chaining.
+   */
+  DataSetStore.prototype.set = function (key, attrs) {
+    if (!!_store[key]) {
+      var keys = Object.keys(attrs);
+
+      for (var i = keys.length; i--;) {
+        _store[key][keys[i]] = attrs[keys[i]];
+      }
     }
 
     return DataSetStore;

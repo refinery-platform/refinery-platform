@@ -151,7 +151,7 @@
             ui-scroll="dataSet in dashboard.dataSets"
             buffer-size="50"
             adapter="dashboard.dataSetsAdapter"
-            ng-class="{'previewing': dataSet.preview}">
+            ng-class="{'highlighting': dataSet.highlight, 'previewing': dataSet.preview}">
             <button
               class="preview"
               ng-click="dashboard.expandDataSetPreview(dataSet, $index)">

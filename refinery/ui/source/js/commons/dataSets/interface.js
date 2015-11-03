@@ -686,6 +686,34 @@ function DataSetFactory (
   };
 
   /**
+   * Mark a set of data objects as highlighted.
+   *
+   * @method  highlight
+   * @author  Fritz Lekschas
+   * @date    2015-11-02
+   *
+   * @param   {Object}   dataSetIds  Object of with dataset IDs as attributes.
+   * @param   {Boolean}  reset       If `true` then highlight will be `false`.
+   * @return  {Object}               Return the class itself for chaining.
+   */
+  DataSet.prototype.highlight = function (dataSetIds, reset) {
+    var dataSet,
+        keys = Object.keys(dataSetIds);
+
+    // Invert boolean representation so that the default behavior is
+    // highlighting.
+    reset = !!!reset;
+
+    for (var i = keys.length; i--;) {
+      _dataStore.set(keys[i], {
+        highlight: reset
+      });
+    }
+
+    return DataSet;
+  };
+
+  /**
    * Set the data source to the general data API and add a order option.
    *
    * @method  order
