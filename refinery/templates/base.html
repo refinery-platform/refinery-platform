@@ -49,7 +49,6 @@
 <body ng-app="{% block ng_app %}refineryApp{% endblock %}" ng-controller="AppCtrl as app" ng-click="app.globalClick($event)">
   <!-- header navigation bar -->
   <div class="navbar navbar-fixed-top">
-    <div class="navbar-inner">
       <!-- <div class="container-fluid" style="box-shadow: 0 0 5px black;"> -->
       <div class="container-fluid">
         <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
@@ -150,14 +149,12 @@
           </div>
         </div>
       </div>
-    </div>
+
   </div>
 
   {% if REFINERY_BANNER %}
       {% if not REFINERY_BANNER_ANONYMOUS_ONLY or not user.is_authenticated %}
-          <div class="alert alert-warning text-center">
-            {{ REFINERY_BANNER|safe }}
-          </div>
+          <div class="alert alert-warning text-center">{{ REFINERY_BANNER|safe }}</div>
       {% endif %}
   {% endif %}
 
