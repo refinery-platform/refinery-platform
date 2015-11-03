@@ -623,15 +623,14 @@ function DataSetFactory (
    * @author  Fritz Lekschas
    * @date    2015-10-08
    *
-   * @param   {String}  filter  String that determines the filter.
+   * @param   {Object}  filter  Key value pairs of filters.
+   *   E.g. `{'is_owner': true}`
    * @return  {Object}          Return the class itself for chaining.
    */
   DataSet.prototype.filter = function (filter) {
     _browsePath = [];
     _clearOrderCache();
-    _source = new DataSetDataApi({
-      'filter_by': filter
-    });
+    _source = new DataSetDataApi(filter);
 
     return DataSet;
   };

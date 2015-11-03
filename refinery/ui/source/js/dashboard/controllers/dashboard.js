@@ -291,9 +291,11 @@ Object.defineProperty(
     set: function (value) {
       this._dataSetsFilterOwner = value;
       if (value) {
-        this.dataSets.extraParameters['is_owner'] = 'True';
+        this.dataSet.filter({
+          'is_owner': 'True'
+        });
       } else {
-        delete this.dataSets.extraParameters['is_owner'];
+        this.dataSet.all();
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
@@ -312,9 +314,11 @@ Object.defineProperty(
     set: function (value) {
       this._dataSetsFilterPublic = value;
       if (value) {
-        this.dataSets.extraParameters['public'] = 'True';
+        this.dataSet.filter({
+          'public': 'True'
+        });
       } else {
-        delete this.dataSets.extraParameters['public'];
+        this.dataSet.all();
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
