@@ -9,25 +9,25 @@
         </h3>
       </span>
       <span class="refinery-header-right">
-        <!--
-        <button
-          class="no-underline"
-          ng-click="dashboard.toggleDataSetsExploration()">
-          <i class="icon-compass" title="Explore data sets"></i>
-        </button>
-        -->
         <a
           href="./data_set_manager/import/"
-          class="no-underline"
+          class="no-underline btn"
           ng-if="dashboard.userIsAuthenticated">
-          <i class="icon-plus-sign"></i>
+          <i class="icon-plus-sign"></i> Upload
         </a>
+        <button
+          class="no-underline btn"
+          ng-class="{'active': dashboard.dataSetExploration}"
+          ng-click="dashboard.toggleDataSetsExploration()"
+          ng-if="dashboard.explorationEnabled">
+          <i class="icon-compass" title="Explore data sets"></i> Explore
+        </button>
       </span>
     </div>
 
     <div
       class="refinery-sub-panel"
-      ng-class="{'border': dashboard.dataSetPreviewBorder}"
+      ng-class="{'border': dashboard.expandedDataSetPanelBorder}"
       refinery-width-fixer>
       <form class="navbar-search">
         <i class="icon-search"></i>
@@ -87,7 +87,14 @@
           </div>
           <div class="floatbox-max-left">
             <h4>
-              {{ dashboard.dataSets.totalReadable }}
+              <span ng-if="dashboard.dataSets.totalUpperBound">
+                {{ dashboard.dataSets.totalReadable }} of
+                <abbr title="approximately">~</abbr>
+                {{ dashboard.dataSets.totalUpperBound }}
+              </span>
+              <span ng-if="!dashboard.dataSets.totalUpperBound">
+                {{ dashboard.dataSets.totalReadable }}
+              </span>
               {{ dashboard.searchQueryDataSets.length > 1 ? 'results' : 'data sets' }}
             </h4>
           </div>
@@ -143,11 +150,12 @@
           ng-class="{'search': dashboard.searchDataSet}">
           <li
             ui-scroll="dataSet in dashboard.dataSets"
+            buffer-size="50"
             adapter="dashboard.dataSetsAdapter"
-            ng-class="{'previewing': dataSet.preview}">
+            ng-class="{'highlighting': dataSet.highlight, 'previewing': dataSet.preview}">
             <button
               class="preview"
-              ng-click="dashboard.showDataSetPreview(dataSet, $index)">
+              ng-click="dashboard.expandDataSetPreview(dataSet, $index)">
               <i
                 class="icon-double-angle-right is-mirrorable"
                 ng-class="{'is-mirrored': dataSet.preview}"></i>
@@ -197,21 +205,26 @@
         </ul>
       </div>
     </div>
-    <refinery-data-set-preview
-      class="preview-container"
-      close="dashboard.hideDataSetPreview()">
-    </refinery-data-set-preview>
+    <refinery-expansion-panel>
+      <refinery-data-set-preview
+        close="dashboard.collapseDataSetPreview()"
+        active="dashboard.dataSetPreview">
+      </refinery-data-set-preview>
+      <refinery-dashboard-vis-wrapper
+        active="dashboard.dataSetExploration">
+      </refinery-dashboard-vis-wrapper>
+    </refinery-expansion-panel>
   </div>
 </div>
 
 <div
   class="span4 shadowPanel"
-  ng-if="dashboard.dataSetPreviewBorder">
+  ng-if="dashboard.expandedDataSetPanelBorder">
 </div>
 
 <div
   class="span4 pushable"
-  ng-class="{'pushed': dashboard.dataSetPreview}">
+  ng-class="{'pushed': dashboard.expandDataSetPanel}">
   <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
@@ -364,6 +377,7 @@
           class="results no-list-style">
           <li
             ui-scroll="analysis in dashboard.analyses"
+            buffer-size="50"
             adapter="dashboard.analysesAdapter">
             <span class="spinner">
               <i
@@ -414,7 +428,7 @@
 
 <div
   class="span4 pushable"
-  ng-class="{'pushed': dashboard.dataSetPreview}">
+  ng-class="{'pushed': dashboard.expandDataSetPanel}">
   <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
@@ -489,6 +503,7 @@
           class="results no-list-style">
           <li
             ui-scroll="workflow in dashboard.workflows"
+            buffer-size="50"
             adapter="dashboard.workflowsAdapter">
             <a ng-href="workflows/{{ workflow.uuid }}">{{ workflow.name }}</a>
           </li>

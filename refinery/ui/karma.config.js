@@ -5,8 +5,12 @@ module.exports = function(config) {
   config.set({
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
-    basePath: '',
+    basePath: './',
 
+    client: {
+      // Set to `true` if `console.log()` should be captured.
+      captureConsole: false
+    },
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
@@ -25,12 +29,20 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
+      'source/**/!(*spec).js': 'coverage'
     },
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress'],
+    reporters: ['progress', 'coverage'],
+
+
+    // Coverage repoter
+    coverageReporter: {
+      type : 'html',
+      dir : 'coverage/'
+    },
 
 
     // web server port
@@ -51,6 +63,7 @@ module.exports = function(config) {
 
     // Which plugins to enable
     plugins: [
+      'karma-coverage',
       'karma-phantomjs-launcher',
       'karma-jasmine',
       'karma-chrome-launcher',

@@ -2,6 +2,7 @@ function refineryExpandablePanel (
   $animate,
   $animateCss,
   $,
+  pubSub,
   dashboardExpandablePanelService,
   dashboardDataSetPreviewService,
   dashboardWidthFixerService) {
@@ -39,12 +40,13 @@ function refineryExpandablePanel (
               }
             });
 
+        pubSub.trigger('expanding');
         animator
           .start()
           .then(function () {
             el.addClass('full-width');
             element.removeAttr('style');
-            dashboardDataSetPreviewService.trigger('expandFinished');
+            pubSub.trigger('expandFinished');
           })
           .catch(function (e) {
             console.error(e);
@@ -69,12 +71,13 @@ function refineryExpandablePanel (
               }
             });
 
+        pubSub.trigger('collapsing');
         animator
           .start()
           .then(function () {
             el.removeClass('full-width');
             element.removeAttr('style');
-            dashboardDataSetPreviewService.trigger('collapsFinished');
+            pubSub.trigger('collapsFinished');
             dashboardWidthFixerService.trigger('resetter');
           })
           .catch(function (e) {
@@ -91,6 +94,7 @@ angular
     '$animate',
     '$animateCss',
     '$',
+    'pubSub',
     'dashboardExpandablePanelService',
     'dashboardDataSetPreviewService',
     'dashboardWidthFixerService',

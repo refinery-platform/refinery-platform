@@ -1,17 +1,35 @@
-describe('Module: RefineryRouter', function(){
+describe('RefineryRouter.module: unit tests', function () {
+  'use strict';
 
   var module;
 
-  beforeEach(function(){
+  beforeEach(function () {
     module = angular.module('refineryRouter');
   });
 
-  it('module should exist', function(){
-    expect(module).toBeDefined();
+  describe('Module', function () {
+
+    it('should be registered', function () {
+      expect(!!module).toEqual(true);
+    });
+
   });
 
-  it('module should be registered', function(){
-    expect(module).not.toEqual(null);
-  });
+  describe('Dependencies:', function () {
 
+    var deps,
+        hasModule = function (m) {
+          return deps.indexOf(m) >= 0;
+        };
+
+    beforeEach(function () {
+      deps = module.value('refineryRouter').requires;
+    });
+
+    // Example
+    // it('should have templates-app as a dependency', function () {
+    //   expect(hasModule('templates-app')).toEqual(true);
+    // });
+
+  });
 });

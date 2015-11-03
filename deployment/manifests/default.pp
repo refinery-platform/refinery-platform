@@ -148,29 +148,14 @@ exec { "create_user":
   user => $appuser,
   group => $appgroup,
 }
-->
-exec {
-  "build_core_schema":
-    command => "${virtualenv}/bin/python ${project_root}/manage.py build_solr_schema --using=core > solr/core/conf/schema.xml",
-    environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-    cwd => $project_root,
-    user => $appuser,
-    group => $appgroup;
-  "build_data_set_manager_schema":
-    command => "${virtualenv}/bin/python ${project_root}/manage.py build_solr_schema --using=data_set_manager > solr/data_set_manager/conf/schema.xml",
-    environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-    cwd => $project_root,
-    user => $appuser,
-    group => $appgroup;
-}
 
 class solr {
-  $solr_version = "4.4.0"
+  $solr_version = "5.3.1"
   $solr_archive = "solr-${solr_version}.tgz"
   $solr_url = "http://archive.apache.org/dist/lucene/solr/${solr_version}/${solr_archive}"
 
   package { 'java':
-    name => 'openjdk-7-jre-headless',
+    name => 'openjdk-7-jdk',
   }
 
   exec { "solr_wget":
@@ -180,15 +165,21 @@ class solr {
     timeout => 600,  # downloading can take a long time
   }
   ->
-  exec { "solr_unpack":
-    command => "mkdir -p /opt && tar -xzf /usr/src/${solr_archive} -C /opt && chown -R ${appuser}:${appuser} /opt/solr-${solr_version}",
+  exec { "solr_unpack_installer":
+    command => "mkdir -p /opt && tar -xzf /usr/src/${solr_archive} -C /usr/src solr-${solr_version}/bin/install_solr_service.sh --strip-components=2",
     creates => "/opt/solr-${solr_version}",
     path => "/usr/bin:/bin",
   }
   ->
-  file { "/opt/solr":
-    ensure => link,
-    target => "solr-${solr_version}",
+  exec { "solr_install_as_service":
+    command => "sudo bash /usr/src/install_solr_service.sh /usr/src/${solr_archive} -d /vagrant/refinery/solr -u vagrant && chown -R ${appuser}:${appuser} /opt/solr-${solr_version}",
+    creates => "/opt/solr-${solr_version}",
+    path => "/usr/bin:/bin",
+  }
+  ->
+  exec { "start_solr_on_boot":
+    command => "sudo update-rc.d solr defaults",
+    path => "/usr/bin:/bin",
   }
 }
 include solr
@@ -222,6 +213,12 @@ class neo4j {
     line => "dbms.security.auth_enabled=false",
     match => "^dbms.security.auth_enabled=",
   }
+  ->
+  file_line { "neo4j_all_ips":
+    path => "/opt/${neo4j_name}/conf/neo4j-server.properties",
+    line => "org.neo4j.server.webserver.address=0.0.0.0",
+    match => "^#org.neo4j.server.webserver.address=",
+  }
   limits::fragment {
     "vagrant/soft/nofile":
       value => "40000";
@@ -230,6 +227,23 @@ class neo4j {
   }
 }
 include neo4j
+
+class owl2neo4j {
+  $owl2neo4j_version = "0.3.3"
+  $owl2neo4j_url = "https://github.com/flekschas/owl2neo4j/releases/download/v${owl2neo4j_version}/owl2neo4j.jar"
+
+  # Need to remove the old file manually as wget throws a weird
+  # `HTTP request sent, awaiting response... 403 Forbidden` error when the file
+  # already exists.
+
+  exec { "owl2neo4j_wget":
+    command => "rm /opt/owl2neo4j.jar && wget -P /opt/ ${owl2neo4j_url}",
+    creates => "/opt/owl2neo4j",
+    path => "/usr/bin:/bin",
+    timeout => 120,  # downloading can take some time
+  }
+}
+include owl2neo4j
 
 class rabbit {
   package { 'curl': }
@@ -269,7 +283,7 @@ class ui {
   }
   ->
   package {
-    'bower': ensure => '1.5.3', provider => 'npm';
+    'bower': ensure => '1.6.5', provider => 'npm';
     'grunt-cli': ensure => '0.1.13', provider => 'npm';
   }
   ->
@@ -291,7 +305,7 @@ class ui {
   }
   ->
   exec { "grunt":
-    command => "/usr/bin/grunt",
+    command => "/usr/bin/grunt build && /usr/bin/grunt compile",
     cwd => $ui_app_root,
     logoutput => on_failure,
     user => $appuser,
