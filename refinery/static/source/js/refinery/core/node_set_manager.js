@@ -165,31 +165,31 @@ NodeSetManager.prototype.updateState = function (state, callbackSuccess) {
 
   var data = state;
 
-  $.ajax({
-    url: self.createUpdateUrl(state),
-    type: "PUT",
-    data: JSON.stringify(data),
-    contentType: "application/json",
-    dataType: "json",
-    processData: false,
-    success: function (result) {
-       callbackSuccess(result);
-      if ($.isEmptyObject(result)) {
-        return;
-      }
-    },
-    error: function(result) {
-      // save to sessionStorage
-      self.saveCurrentSelectionToSession(
+//Need to figure out if user has dataset permission before making request
+    $.ajax({
+      url: self.createUpdateUrl(state),
+      type: "PUT",
+      data: JSON.stringify(data),
+      contentType: "application/json",
+      dataType: "json",
+      processData: false,
+      success: function (result) {
+        callbackSuccess(result);
+        if ($.isEmptyObject(result)) {
+          return;
+        }
+      },
+      error: function (result) {
+        // save to sessionStorage
+        self.saveCurrentSelectionToSession(
           data.name,
           data.summary,
           data.solr_query,
           data.solr_query_components,
-          data.node_count );
-    }
-  });
+          data.node_count);
+      }
+    });
 };
-
 
 NodeSetManager.prototype.createGetListUrl = function () {
   var self = this;
@@ -209,50 +209,60 @@ NodeSetManager.prototype.createGetListUrl = function () {
 NodeSetManager.prototype.getList = function (callback, errorCallback) {
   var self = this;
 
-  $.ajax({
-    url: self.createGetListUrl(),
-    type: "GET",
-    dataType: "json",
-    data: {csrfmiddlewaretoken: self.crsfMiddlewareToken},
-    success: function (result) {
-      if ($.isEmptyObject(result)) {
-        // do nothing
-        return;
-      }
+  if(self.currentSelectionNodeSet !== null &&
+    typeof self.currentSelectionNodeSet.uuid !== "undefined") {
+    $.ajax({
+      url: self.createGetListUrl(),
+      type: "GET",
+      dataType: "json",
+      data: {csrfmiddlewaretoken: self.crsfMiddlewareToken},
+      success: function (result) {
+        if ($.isEmptyObject(result)) {
+          // do nothing
+          return;
+        }
 
-      self.list = result;
+        self.list = result;
 
-      if (self.list.objects.length > 0 && self.list.objects[0].is_current) {
+        if (self.list.objects.length > 0 && self.list.objects[0].is_current) {
+          self.currentSelectionNodeSet = self.list.objects[0];
+          // console.log('"' + self.currentSelectionNodeSetName + '" found.');
+
+          callback(result);
+        }
+        else {
+          // console.log('"' + self.currentSelectionNodeSetName + '" not found. Creating "' + self.currentSelectionNodeSetName + '"');
+
+          // create empty selection and reload list
+          self.createCurrentSelection(function () {
+            self.getList(callback, errorCallback);
+          }, function () {
+            console.error("Failed to create current selection!");
+          });
+        }
+      },
+      error: function (result) {
+
+        // initialize to sessionStorage
+        self.saveCurrentSelectionToSession(self.currentSelectionNodeSetName, "", "", {}, 0);
+
+        self.list = {objects: [self.loadCurrentSelectionFromSession()]};
+
         self.currentSelectionNodeSet = self.list.objects[0];
-        // console.log('"' + self.currentSelectionNodeSetName + '" found.');
 
-        callback(result);
+        if (errorCallback) {
+          errorCallback(result);
+        }
       }
-      else {
-        // console.log('"' + self.currentSelectionNodeSetName + '" not found. Creating "' + self.currentSelectionNodeSetName + '"');
+    });
+  }else{
+    // initialize to sessionStorage
+      self.saveCurrentSelectionToSession(self.currentSelectionNodeSetName, "", "", {}, 0);
 
-        // create empty selection and reload list
-        self.createCurrentSelection(function () {
-          self.getList(callback, errorCallback);
-        }, function () {
-          console.error("Failed to create current selection!");
-        });
-      }
-    },
-    error: function (result) {
-
-      // initialize to sessionStorage
-      self.saveCurrentSelectionToSession( self.currentSelectionNodeSetName, "", "", {}, 0 );
-
-      self.list = { objects: [ self.loadCurrentSelectionFromSession() ]};
+      self.list = {objects: [self.loadCurrentSelectionFromSession()]};
 
       self.currentSelectionNodeSet = self.list.objects[0];
-
-      if (errorCallback) {
-        errorCallback(result);
-      }
-    }
-  });
+  }
 };
 
 NodeSetManager.prototype.createCurrentSelection = function(callback, errorCallback) {
