@@ -587,9 +587,9 @@ function DataSetFactory (
     if (_browsePath.length &&
         _browsePath[_browsePath.length - 1].type === 'search') {
       _browsePath.pop();
-      _clearOrderCache();
     }
 
+    _clearOrderCache();
     _source = new DataSetDataApi();
 
     return DataSet;
@@ -628,7 +628,7 @@ function DataSetFactory (
    * @return  {Object}          Return the class itself for chaining.
    */
   DataSet.prototype.filter = function (filter) {
-    _browsePath = [];
+    // _browsePath = [];
     _clearOrderCache();
     _source = new DataSetDataApi(filter);
 
