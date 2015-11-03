@@ -30,7 +30,10 @@
 			</span>
 		</div>
 		{% if uform.errors %}
-  		<div class="alert alert-error">Please correct the errors below.{{ uform.non_field_errors }}</div>
+  		<div class="alert alert-danger">
+        Please correct the errors below.
+        {{ uform.non_field_errors }}
+      </div>
   		{% endif %}
 		<div class="refinery-subheader">
 			<h4>First Name</h4>
