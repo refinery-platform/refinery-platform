@@ -237,7 +237,7 @@ class owl2neo4j {
   # already exists.
 
   exec { "owl2neo4j_wget":
-    command => "rm /opt/owl2neo4j.jar && wget -P /opt/ ${owl2neo4j_url}",
+    command => "rm -f /opt/owl2neo4j.jar && wget -P /opt/ ${owl2neo4j_url}",
     creates => "/opt/owl2neo4j",
     path => "/usr/bin:/bin",
     timeout => 120,  # downloading can take some time
