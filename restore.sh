@@ -18,6 +18,8 @@ CONFIG_DIR="config"
 CONFIG_FILE="config.json"
 LOG_FILE="restore.log"
 
+# Check if the backup directory exist and if it doesn't create it
+mkdir -p "$BACKUP_TEMP/$NOW"
 
 # Do not edit the code below that line!
 # ------------------------------------------------------------------------------
