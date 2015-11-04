@@ -5,6 +5,7 @@
  * @author  Fritz Lekschas
  * @date    2015-09-30
  *
+ * @class
  * @param   {Object}  $cacheFactory  Angular's cache factory.
  * @param   {Object}  $q             Angular's promise library.
  */
@@ -37,8 +38,7 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
    * user reformulate their search query often as every list of results is
    * a new data source.
    *
-   * @example <caption>Invoke the service</caption>
-   * ```
+   * @example
    * function Dashboard (News, _) {
    *   this.News = News;
    *   this._ = _;
@@ -55,7 +55,6 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
    *      }.bind(this)
    *    );
    *  }
-   * ```
    *
    * @method  UiScrollSource
    * @author  Fritz Lekschas
@@ -69,6 +68,7 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
    *   data.
    * @param   {Number|String}  dataProperty   Name of the property holding an
    *   array of the actual data objects.
+   * @param   {Number}         totalProperty  Number of UI caches.
    */
   function UiScrollSource (
     id,
@@ -94,11 +94,18 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
      * @date    2015-08-11
      *
      * @type    {Object}
+     * @private
      */
     var cacheStore = $cacheFactory('uiScrollSource/' + id, {
       capacity: cacheCapacity
     });
 
+    /**
+     * Source object
+     *
+     * @type  {Object}
+     * @public
+     */
     var source = {
       /**
        * Data set cache.
@@ -451,11 +458,12 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
       /**
        * Remove all cached caches and initialize a new clean cache or re-
        * initialize `id` cache.
-       *
-       * @method  resetCache
        * @author  Fritz Lekschas
        * @date    2015-08-12
        *
+       *
+       * @method  resetCache
+       * @public
        * @return  {String}  Cache identifier
        */
       resetCache: function (id) {
@@ -478,10 +486,11 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
        * result list if the original data source will turn into a new data
        * source that we can scroll through.
        *
-       * @method  set
        * @author  Fritz Lekschas
        * @date    2015-08-11
        *
+       * @method  set
+       * @public
        * @param   {Object}  dataSource  Object with a `get` function, which
        *   accepts at least two parameters, offset and limit, and returns a
        *   promise.
@@ -518,6 +527,7 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
        * @date    2015-08-11
        *
        * @type  {Number}
+       * @public
        */
       total: Number.POSITIVE_INFINITY,
 
@@ -525,6 +535,7 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
        * Property holding the total number of available data objects.
        *
        * @type  {Integer|String}
+       * @public
        */
       totalProperty: totalProperty || 'total',
 
@@ -540,6 +551,7 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
        * @date    2015-08-11
        *
        * @type  {Number}
+       * @public
        */
       totalReadable: 0
     };
