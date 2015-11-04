@@ -36,6 +36,10 @@ YELLOW="\e[93m"
 
 TIME_START=$(date +"%s")
 
+
+# Check if the backup directory exist and if it doesn't create it
+mkdir -p "$BACKUP_TEMP/$NOW"
+
 if [ ! -f "$BACKUP_FILE_PATH" ]; then
   echo -e "$RED\xE2\x9A\xA0 Backup file not found!$DEFAULT"
   exit 1
