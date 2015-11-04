@@ -267,8 +267,8 @@ class ui {
 
   apt::source { 'nodejs':
     ensure      => 'present',
-    comment     => 'Nodesource nodejs repo.',
-    location    => 'https://deb.nodesource.com/node_0.12',
+    comment     => 'Nodesource NodeJS repo.',
+    location    => 'https://deb.nodesource.com/node_4.x',
     release     => 'trusty',
     repos       => 'main',
     key         => '9FD3B784BC1C6FC31A8A0A1C1655A0AB68576280',
@@ -277,8 +277,14 @@ class ui {
     include_deb => true
   }
 
+  exec { "apt-update":
+    command => "/usr/bin/apt-get update"
+  }
+  Exec["apt-update"] -> Package <| |>
+
   package { 'nodejs':
     name => 'nodejs',
+    ensure  => latest,
     require => Apt::Source['nodejs']
   }
   ->
