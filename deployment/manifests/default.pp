@@ -172,14 +172,33 @@ class solr {
   }
   ->
   exec { "solr_install_as_service":
-    command => "sudo bash /usr/src/install_solr_service.sh /usr/src/${solr_archive} -d /vagrant/refinery/solr -u vagrant && chown -R ${appuser}:${appuser} /opt/solr-${solr_version}",
+    command => "sudo bash /usr/src/install_solr_service.sh /usr/src/${solr_archive} -d /vagrant/refinery/solr_app_data -u vagrant && chown -R ${appuser}:${appuser} /opt/solr-${solr_version}",
     creates => "/opt/solr-${solr_version}",
     path => "/usr/bin:/bin",
   }
   ->
-  exec { "start_solr_on_boot":
-    command => "sudo update-rc.d solr defaults",
-    path => "/usr/bin:/bin",
+  file_line { "solr_config_pid":
+    path => "/vagrant/refinery/solr_app_data/solr.in.sh",
+    line => "SOLR_PID_DIR=/vagrant/refinery/solr_app_data",
+    match => "^SOLR_PID_DIR"
+  }
+  ->
+  file_line { "solr_config_home":
+    path => "/vagrant/refinery/solr_app_data/solr.in.sh",
+    line => "SOLR_HOME=/vagrant/refinery/solr/",
+    match => "^SOLR_HOME"
+  }
+  ->
+  file_line { "solr_config_log4j":
+    path => "/vagrant/refinery/solr_app_data/solr.in.sh",
+    line => "LOG4J_PROPS=/vagrant/refinery/solr/log4j.properties",
+    match => "^LOG4J_PROPS"
+  }
+  ->
+  file_line { "solr_config_log_dir":
+    path => "/vagrant/refinery/solr_app_data/solr.in.sh",
+    line => "SOLR_LOGS_DIR=/vagrant/refinery/log",
+    match => "^SOLR_LOGS_DIR"
   }
 }
 include solr
@@ -267,8 +286,8 @@ class ui {
 
   apt::source { 'nodejs':
     ensure      => 'present',
-    comment     => 'Nodesource nodejs repo.',
-    location    => 'https://deb.nodesource.com/node_0.12',
+    comment     => 'Nodesource NodeJS repo.',
+    location    => 'https://deb.nodesource.com/node_4.x',
     release     => 'trusty',
     repos       => 'main',
     key         => '9FD3B784BC1C6FC31A8A0A1C1655A0AB68576280',
@@ -277,8 +296,14 @@ class ui {
     include_deb => true
   }
 
+  exec { "apt-update":
+    command => "/usr/bin/apt-get update"
+  }
+  Exec["apt-update"] -> Package <| |>
+
   package { 'nodejs':
     name => 'nodejs',
+    ensure  => latest,
     require => Apt::Source['nodejs']
   }
   ->

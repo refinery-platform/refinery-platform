@@ -63,6 +63,7 @@ codekit-config.json
 /refinery/ui/.tmp/
 /refinery/ui/coverage/
 /refinery/ui/docs/
+/refinery/solr_app_data/
 /isa-tab/
 /import/
 /static/
