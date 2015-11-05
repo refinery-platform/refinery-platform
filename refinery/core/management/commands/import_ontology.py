@@ -110,7 +110,7 @@ class Command(BaseCommand):
                                 constraint['label'],
                                 prop['name']
                             )
-        except Exception, e:
+        except Exception as e:
             logger.error(e)
             sys.exit(1)
 
@@ -134,7 +134,7 @@ class Command(BaseCommand):
                 subprocess.check_call(cmd, shell=True)
             else:
                 subprocess.check_output(cmd, shell=True)
-        except Exception, e:
+        except Exception as e:
             logger.error(e)
             sys.exit(1)
 
@@ -170,6 +170,6 @@ class Command(BaseCommand):
                 uri,
                 version
             )
-        except Exception, e:
+        except Exception as e:
             logger.error(e)
             sys.exit(1)
