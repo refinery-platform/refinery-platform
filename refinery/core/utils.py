@@ -99,7 +99,7 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
         )
 
         tx.commit()
-    except Exception, e:
+    except Exception as e:
         logger.error(
             'Failed to add read access to data set (uuid: %s) in Neo4J. '
             'Exception: %s', e
@@ -137,7 +137,7 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
                 )
 
         tx.commit()
-    except Exception, e:
+    except Exception as e:
         logger.error(
             'Failed to add read access to data set (uuid: %s) in Neo4J. '
             'Exception: %s', e
@@ -175,7 +175,7 @@ def remove_read_access_in_neo4j(dataset_uuids, user_ids):
                 )
 
         tx.commit()
-    except Exception, e:
+    except Exception as e:
         logger.error(
             'Failed to remove read access from dataset (uuid: %s) in Neo4J. '
             'Exception: %s', e
@@ -211,7 +211,7 @@ def delete_data_set_neo4j(dataset_uuid):
                 'dataset_uuid': dataset_uuid
             }
         )
-    except Exception, e:
+    except Exception as e:
         logger.error(
             'Failed to remove dataset (uuid: %s) in Neo4J. '
             'Exception: %s', dataset_uuid, e
@@ -258,7 +258,7 @@ def delete_ontology_from_neo4j(acronym):
                 'acronym': acronym
             }
         )
-    except Exception, e:
+    except Exception as e:
         logger.error(
             'Failed to remove ontology (acronym: %s) from Neo4J. '
             'Exception: %s', acronym, e

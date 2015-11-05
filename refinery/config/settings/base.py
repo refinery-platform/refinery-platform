@@ -462,6 +462,6 @@ if REFINERY_EXTERNAL_AUTH:
 
 try:
     CURRENT_COMMIT = check_output(['/usr/bin/git', 'rev-parse', "HEAD"])
-except Exception, e:
+except Exception as e:
     logger.debug("Error Retrieving Most Recent Commit: ", e)
     CURRENT_COMMIT = "Error Retrieving Most Recent Commit: " + str(e)
