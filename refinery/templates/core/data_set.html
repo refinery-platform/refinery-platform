@@ -140,30 +140,31 @@
 
       <div class="row">
 
-        <div class="col-md-2">
-          <div class="btn-group">
+        <div class="col-md-3">
+          <div class="btn-group" role="group" aria-label="...">
           <!-- ng-hide if the file tab is not selected -->
-            <a type="button" class="btn btn-warning data-set-view-tabs"
+            <button type="button" class="btn btn-warning data-set-view-tabs"
               ng-class="{active: $root.mode==='browse'}" ui-sref="browse"
               ui-sref-active="active">
               Browse
-            </a>
+            </button>
             {% if has_change_dataset_permission %}
-              <a type="button" class="btn btn-warning data-set-view-tabs"
+              <button type="button" class="btn btn-warning data-set-view-tabs"
                 ng-class="{active:$root.mode==='analyze'}"
                 ui-sref="analyze" ui-sref-active="active">
                 Analyze
-              </a>
+              </button>
             {% endif %}
-            <a type="button" id="visualizeTab" class="btn btn-warning data-set-view-tabs"
+            <button type="button" id="visualizeTab" class="btn btn-warning
+            data-set-view-tabs"
               ng-class="{active:$root.mode==='visualize'}" ui-sref="visualize"
               ui-sref-active="active">
               Visualize
-            </a>
+            </button>
           </div>
         </div>
 
-        <div class="col-md-10">
+        <div class="col-md-9">
           <ul class="nav nav-tabs" id="tabs" style="float: right;">
             <li ui-sref-active="active" id="filesTab">
               <a ui-sref="files" class="dataSetTabs">
