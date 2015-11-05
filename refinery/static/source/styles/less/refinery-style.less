@@ -1,5 +1,5 @@
 /*!
- * For Bootstrap v2.2.1
+ * For Bootstrap v3.3.5
  *
  * Based on https://github.com/twitter/bootstrap/issues/1451#issuecomment-3737384
  */
@@ -21,7 +21,7 @@
 
 p {
   //font-family: @serifFontFamily;
-  //font-size: @baseFontSize * 1.1;
+  //font-size: @base-font-size * 1.1;
 }
 
 .attribute-header{
@@ -52,13 +52,13 @@ a.spinnable {
 }
 
 
-@backgroundImageUrl: "../img/bgnoise.png"; //'../img/debut_light.png';
-@backgroundGradient: rgba( 255, 0, 0, 0.5 );
-@backgroundGradientHighlight: lighter(red, 10%);
+@background-image-url: "../img/bgnoise.png"; //'../img/debut_light.png';
+@background-gradient: rgba( 255, 0, 0, 0.5 );
+@background-gradient-highlight: lighter(red, 10%);
 
 body {
-  background-image:url(@backgroundImageUrl);
-  margin-top: @navbarHeight * 2.2;
+  background-image:url(@background-image-url);
+  margin-top: @navbar-height * 2.2;
 }
 
 .page-header {
@@ -68,8 +68,8 @@ body {
 }
 
 .page-header h1 {
-  font-size: @fontSizeLarge;
-  line-height: @baseLineHeight;
+  font-size: @font-size-large;
+  line-height: @base-line-height;
   padding: 0px;
   margin: 5px 0px;
   color: @white;
@@ -77,7 +77,7 @@ body {
 
 .page-header small {
   font-size: 85%;
-  color: darken( @grayLighter, 5% );
+  color: darken( @gray-lighter, 5% );
 }
 
 .popover{
@@ -404,7 +404,7 @@ a.analysis-header{
   }
 }
 
-.navbar {
+.navbar .navbar-default {
   border-bottom-width: 0px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
@@ -412,7 +412,7 @@ a.analysis-header{
 .navbar {
 }
 
-.navbar .brand {
+.navbar .navbar-brand {
   font-family: "Arvo";
   font-weight: 700;
   font-style: italic;
@@ -423,67 +423,67 @@ a.analysis-header{
   color: @white;
 }
 
-.navbar .brand .svg-container {
+.navbar .navbar-brand .svg-container {
   position: relative;
   display: inline-block;
-  width: @baseLineHeight;
-  height: @baseLineHeight;
+  width: @base-line-height;
+  height: @base-line-height;
   background-color: #fff;
 }
 
-.navbar .brand .svg-container .bg {
+.navbar .navbar-brand .svg-container .bg {
   position: absolute;
   z-index: 1;
   top: 0;
   left: 0;
-  width: @baseLineHeight;
-  height: @baseLineHeight;
+  width: @base-line-height;
+  height: @base-line-height;
 }
 
-.navbar .brand .svg-container .bg-1,
-.navbar .brand .svg-container .bg-2 {
+.navbar .navbar-brand .svg-container .bg-1,
+.navbar .navbar-brand .svg-container .bg-2 {
   opacity: 0;
 }
 
-.navbar .brand .svg-container .bg-1 {
+.navbar .navbar-brand .svg-container .bg-1 {
   background-color: #ffcf40;
-  transition: opacity @slowTransitionSpeed @easeInOutCubic;
+  transition: opacity @slow-transition-speed @ease-in-out-cubic;
 }
 
-.navbar .brand .svg-container .bg-2 {
+.navbar .navbar-brand .svg-container .bg-2 {
   background: linear-gradient(rgba(255, 115, 87, 0.66), rgba(255, 115, 87, 1));
-  transition: opacity @normalTransitionSpeed @easeInOutCubic;
+  transition: opacity @normal-transition-speed @ease-in-out-cubic;
 }
 
-.navbar .brand:hover .svg-container .bg-1,
-.navbar .brand:hover .svg-container .bg-2 {
+.navbar .navbar-brand:hover .svg-container .bg-1,
+.navbar .navbar-brand:hover .svg-container .bg-2 {
   opacity: 1;
 }
 
-.navbar .brand:hover .svg-container .bg-1 {
-  transition: opacity @fastTransitionSpeed @easeInOutCubic;
+.navbar .navbar-brand:hover .svg-container .bg-1 {
+  transition: opacity @fast-transition-speed @ease-in-out-cubic;
 }
 
-.navbar .brand:hover .svg-container .bg-2 {
-  transition: opacity @normalTransitionSpeed @easeInOutCubic;
+.navbar .navbar-brand:hover .svg-container .bg-2 {
+  transition: opacity @normal-transition-speed @ease-in-out-cubic;
 }
 
-.navbar .brand svg {
+.navbar .navbar-brand svg {
   position: relative;
   z-index: 2;
 }
 
-.navbar .brand path {
-  fill: @navbarBackground;
+.navbar .navbar-brand path {
+  fill: @navbar-background;
 }
 
-.navbar .brand .name {
+.navbar .navbar-brand .name {
   position: relative;
   display: inline-block;
   vertical-align: top;
 }
 
-.navbar .brand .name:before {
+.navbar .navbar-brand .name:before {
   content: '';
   position: absolute;
   display: block;
@@ -492,10 +492,10 @@ a.analysis-header{
   height: 1px;
   background-color: #fff;
   opacity: 0;
-  transition: opacity @fastTransitionSpeed @easeInOutCubic;
+  transition: opacity @fast-transition-speed @ease-in-out-cubic;
 }
 
-.navbar .brand:hover .name:before {
+.navbar .navbar-brand:hover .name:before {
   opacity: 0.33;
 }
 
@@ -504,22 +504,22 @@ a.analysis-header{
 }
 
 .navbar a {
-  color: @grayLighter;
+  color: @gray-lighter;
 }
 
 
 // new class for fixed header as part of the navigation bar
-@navbarHeaderBackground:          fade( lighten( @navbarBackgroundHighlight, 30% ), 25% );
-@navbarHeaderBorder:              fade( @grayLight, 70% );
+@navbar-header-background:          fade( lighten( @navbar-background-highlight, 30% ), 25% );
+@navbar-header-border:              fade( @gray-light, 70% );
 
 .navbar-header {
-  background-color: @navbarHeaderBackground;
-  border-top: 1px dotted @navbarHeaderBorder;
-  border-bottom: 1px solid @navbarHeaderBorder;
+  background-color: @navbar-header-background;
+  border-top: 1px dotted @navbar-header-border;
+  border-bottom: 1px solid @navbar-header-border;
 }
 
 
-@media (max-width: @navbarCollapseWidth) {
+@media (max-width: @navbar-collapse-width) {
   .navbar-fixed-top,
   .navbar-fixed-bottom {
     padding: 0px;
@@ -598,19 +598,19 @@ a.analysis-header{
     padding-top: 5px;
     padding-bottom: 1px;
     margin-bottom: 5px;
-    background-color: @grayLighter;
+    background-color: @gray-lighter;
   }
 
   &-content {
   }
 
   &-error {
-    background-color: @btnDangerBackground;
-    border-top-color: @btnDangerBackgroundHighlight;
+    background-color: @btn-danger-background;
+    border-top-color: @btn-danger-background-highlight;
   }
 
   &-header h2 {
-  text-shadow: 0 2px 0 @navbarBackgroundHighlight;
+  text-shadow: 0 2px 0 @navbar-background-highlight;
   }
 
   &-tabs {
@@ -629,10 +629,10 @@ a.analysis-header{
   }
 
   &-tabs .nav-tabs li {
-    background-color: @grayLighter;
+    background-color: @gray-lighter;
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
-    border-top: 5px solid @grayLighter;
+    border-top: 5px solid @gray-lighter;
     padding-bottom: 0px;
     padding-left: 0px;
     margin: 0px;
@@ -651,7 +651,7 @@ a.analysis-header{
     padding-bottom: 4px;
     margin-left: 10px;
     margin-right: 10px;
-    font-size: @baseFontSize * 1.15;
+    font-size: @base-font-size * 1.15;
   }
 
   &-tabs .nav-tabs li.active {
@@ -682,8 +682,8 @@ a.analysis-header{
     float: none;
     margin: 0;
     padding: 5px;
-    border-bottom: 1px solid darken(@grayLighter, 10%);
-    background-color: @grayLighter;
+    border-bottom: 1px solid darken(@gray-lighter, 10%);
+    background-color: @gray-lighter;
 
     .search-query {
       box-sizing: border-box;
@@ -710,7 +710,7 @@ a.analysis-header{
       top: 11px;
       right: 12px;
       opacity: 0.5;
-      transition: opacity @fastTransitionSpeed @easeInOutCubic;
+      transition: opacity @fast-transition-speed @ease-in-out-cubic;
     }
 
     .icon-remove-sign.ng-enter,
@@ -740,8 +740,8 @@ a.analysis-header{
     position: relative;
     margin: 0;
     padding: 5px 15px;
-    border-bottom: 1px solid darken(@grayLighter, 10%);
-    background-color: @grayLighter;
+    border-bottom: 1px solid darken(@gray-lighter, 10%);
+    background-color: @gray-lighter;
 
     h3 a {
       color: inherit;
@@ -755,7 +755,7 @@ a.analysis-header{
     .link-hint {
       font-weight: normal;
       font-size: 0.8em;
-      color: @grayLight;
+      color: @gray-light;
     }
   }
 
@@ -768,8 +768,8 @@ a.analysis-header{
       z-index: 2;
       margin: 0;
       padding: 5px;
-      border-bottom: 1px solid darken(@grayLighter, 10%);
-      background-color: @grayLighter;
+      border-bottom: 1px solid darken(@gray-lighter, 10%);
+      background-color: @gray-lighter;
       height: 25px;
 
       h4 {
@@ -788,14 +788,14 @@ a.analysis-header{
       border-top: none;
       margin: 0 10px;
       padding: 0;
-      border-bottom: 1px solid lighten(@grayLight, 25%);
+      border-bottom: 1px solid lighten(@gray-light, 25%);
       border-radius: 0;
       background-color: @white;
 
       h4 {
         margin: 0;
         padding: 5px 0;
-        color: @grayLight;
+        color: @gray-light;
         font-size: 14px;
         line-height: 1em;
       }
@@ -805,20 +805,20 @@ a.analysis-header{
         margin: 0;
         padding: 5px 2px;
         // background: radial-gradient(at bottom, red, white, white);
-        transition: background @fastTransitionSpeed @easeInOutCubic;
+        transition: background @fast-transition-speed @ease-in-out-cubic;
 
         &.showing {
-          color: @blueActive;
-          text-shadow: 0 0 3px fade(@blueActive, 33%), 0 0 6px fade(@blueActive, 10%);
+          color: @blue-active;
+          text-shadow: 0 0 3px fade(@blue-active, 33%), 0 0 6px fade(@blue-active, 10%);
 
           &:after {
-            background: radial-gradient(at bottom, fade(@blueActive, 66%), transparent, transparent);
+            background: radial-gradient(at bottom, fade(@blue-active, 66%), transparent, transparent);
           }
         }
 
         &.active {
           color: @yellow;
-          text-shadow: 0 0 3px fade(@yellowShadow, 50%);
+          text-shadow: 0 0 3px fade(@yellow-shadow, 50%);
         }
 
         &:before {
@@ -846,7 +846,7 @@ a.analysis-header{
         left: -10px;
         overflow: hidden;
         font-size: 14px;
-        transition: bottom 0s @easeInOutCubic @slowTransitionSpeed;
+        transition: bottom 0s @ease-in-out-cubic @slow-transition-speed;
 
         &.active {
           bottom: -1px;
@@ -868,7 +868,7 @@ a.analysis-header{
 
         [class^='refinery-notification'].ng-hide-add.ng-hide-add-active,
         [class^='refinery-notification'].ng-hide-remove.ng-hide-remove-active {
-          transition: transform @fastTransitionSpeed @easeInOutCubic @normalTransitionSpeed;
+          transition: transform @fast-transition-speed @ease-in-out-cubic @normal-transition-speed;
         }
 
         [class^='refinery-notification'].ng-hide {
@@ -883,25 +883,25 @@ a.analysis-header{
       right: 10px;
       left: 10px;
       padding: 5px;
-      background: fade(@grayLighter, 96%);
+      background: fade(@gray-lighter, 96%);
       overflow: hidden;
       opacity: 1;
-      border-right: 1px solid lighten(@grayLight, 25%);
-      border-bottom: 1px solid lighten(@grayLight, 25%);
-      border-left: 1px solid lighten(@grayLight, 25%);
+      border-right: 1px solid lighten(@gray-light, 25%);
+      border-bottom: 1px solid lighten(@gray-light, 25%);
+      border-left: 1px solid lighten(@gray-light, 25%);
       border-radius: 0 0 0.25em 0.25em;
       box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 
       &.ng-hide-add.ng-hide-add-active,
       &.ng-hide-remove.ng-hide-remove-active {
         height: auto;
-        transition: opacity @fastTransitionSpeed @easeInOutCubic;
+        transition: opacity @fast-transition-speed @ease-in-out-cubic;
       }
 
       &.ng-hide {
         height: 0;
         opacity: 0;
-        transition: opacity @fastTransitionSpeed @easeInOutCubic;
+        transition: opacity @fast-transition-speed @ease-in-out-cubic;
       }
 
       h5 {
@@ -919,7 +919,7 @@ a.analysis-header{
         padding: 3px 5px;
 
         &:hover {
-          background: darken(@grayLighter, 5%);
+          background: darken(@gray-lighter, 5%);
         }
 
         label {
@@ -938,7 +938,7 @@ a.analysis-header{
           width: 1em;
           opacity: 0.33;
           text-align: center;
-          transition: opacity @fastTransitionSpeed @easeInOutCubic;
+          transition: opacity @fast-transition-speed @ease-in-out-cubic;
 
           &.sort-active {
             opacity: 1;
@@ -977,7 +977,7 @@ a.analysis-header{
         position: relative;
         z-index: 1;
         padding: 5px 1.5em 5px 0;
-        border-top: 1px solid @grayLighter;
+        border-top: 1px solid @gray-lighter;
 
         // Hack because uiScroll adds another invisible first child to the list.
         &:first-child {
@@ -1016,10 +1016,10 @@ a.analysis-header{
           right: 0;
           bottom: 0;
           display: block;
-          color: @grayLighter;
+          color: @gray-lighter;
           border: none;
           background: rgba(0, 0, 0, 0);
-          transition: all @fastTransitionSpeed @easeInOutCubic;
+          transition: all @fast-transition-speed @ease-in-out-cubic;
 
           &:focus {
             color: @black;
@@ -1035,7 +1035,7 @@ a.analysis-header{
         &:hover {
 
           .preview {
-            color: @grayLight;
+            color: @gray-light;
             background: rgba(0, 0, 0, 0.07);
 
             &:hover {
@@ -1098,7 +1098,7 @@ a.analysis-header{
         opacity: 1;
 
         &.ng-enter, &.ng-leave {
-          transition: opacity @fastTransitionSpeed @easeInOutCubic;
+          transition: opacity @fast-transition-speed @ease-in-out-cubic;
         }
 
         &.ng-enter,
@@ -1132,9 +1132,9 @@ a.analysis-header{
         .refinery-subheader {
           margin: 10px 0 0 0;
           padding: 5px 0;
-          color: @grayLight;
+          color: @gray-light;
           line-height: 1em;
-          border-bottom: 1px solid lighten(@grayLight, 25%);
+          border-bottom: 1px solid lighten(@gray-light, 25%);
 
           &:first-child {
             margin-top: 0;
@@ -1159,7 +1159,7 @@ a.analysis-header{
 
         h6 {
           margin: 6px 0 0 0;
-          font-size: @baseFontSize;
+          font-size: @base-font-size;
           text-transform: capitalize;
           border-bottom: 1px solid rgba(0, 0, 0, 0);
 
@@ -1174,13 +1174,13 @@ a.analysis-header{
 
         .description {
           margin: 0;
-          color: lighten(@textColor, 25%);
-          transition: color @normalTransitionSpeed @easeInOutCubic;
+          color: lighten(@text-color, 25%);
+          transition: color @normal-transition-speed @ease-in-out-cubic;
         }
 
         li:hover .description {
-          color: @textColor;
-          transition: color @fastTransitionSpeed @easeInOutCubic;
+          color: @text-color;
+          transition: color @fast-transition-speed @ease-in-out-cubic;
         }
       }
 
@@ -1199,7 +1199,7 @@ a.analysis-header{
 
         .authors, .journal, .links, .abstract {
           color: @gray;
-          font-size: @fontSizeSmall;
+          font-size: @font-size-small;
         }
 
         .links {
@@ -1215,13 +1215,13 @@ a.analysis-header{
 
       .inline-container h6 {
         margin-right: 0.25em;
-        color: @grayLight;
+        color: @gray-light;
         font-weight: bold;
       }
 
       .badge {
         padding: 0 5px;
-        font-size: @fontSizeMini;
+        font-size: @font-size-mini;
         font-weight: normal;
         vertical-align: top;
       }
@@ -1229,14 +1229,14 @@ a.analysis-header{
 
     ul.results.search {
       a.title {
-        font-size: @baseFontSize + 1;
+        font-size: @base-font-size + 1;
         color: #006f99;
       }
 
       a.title > em {
         font-weight: bold;
         font-style: normal;
-        background: fade(lighten(@blueLight, 25%), 15%);
+        background: fade(lighten(@blue-light, 25%), 15%);
       }
 
       a.title:hover {
@@ -1262,7 +1262,7 @@ a.analysis-header{
     ul.controls {
       float: right;
       opacity: 0.33;
-      transition: opacity @normalTransitionSpeed @easeInOutCubic;
+      transition: opacity @normal-transition-speed @ease-in-out-cubic;
 
       button {
         padding: 0;
@@ -1271,18 +1271,18 @@ a.analysis-header{
         border: 0;
         background: none;
         opacity: 0.5;
-        transition: opacity @normalTransitionSpeed @easeInOutCubic;
+        transition: opacity @normal-transition-speed @ease-in-out-cubic;
       }
 
       button:hover {
         opacity: 1;
-        transition: opacity @fastTransitionSpeed @easeInOutCubic;
+        transition: opacity @fast-transition-speed @ease-in-out-cubic;
       }
     }
 
     ul.results > li:hover ul.controls {
       opacity: 1;
-      transition: opacity @fastTransitionSpeed @easeInOutCubic;
+      transition: opacity @fast-transition-speed @ease-in-out-cubic;
     }
   }
 
@@ -1296,7 +1296,7 @@ a.analysis-header{
   }
 
   .shrinkable {
-    transition: all @fastTransitionSpeed @easeInOutCubic !important;
+    transition: all @fast-transition-speed @ease-in-out-cubic !important;
   }
 
   .refinery-request-loading {
@@ -1305,7 +1305,7 @@ a.analysis-header{
 
   .pushable {
     transform: translate3d(0, 0, 0);
-    transition: transform @semifastTransitionSpeed @easeInOutCubic;
+    transition: transform @semifast-transition-speed @ease-in-out-cubic;
 
     &.pushed {
       transform: translate3d(213.334%, 0, 0);
@@ -1342,7 +1342,7 @@ a.analysis-header{
 
 .refinery-header {
   display: block;
-  border-bottom: 1px solid @grayLighter;
+  border-bottom: 1px solid @gray-lighter;
   padding-bottom: -10px;
   margin-bottom: 10px;
 }
@@ -1382,7 +1382,7 @@ a.analysis-header{
 
 .refinery-subheader {
   display: block;
-  border-bottom: 1px dotted @grayLight;
+  border-bottom: 1px dotted @gray-light;
   padding-bottom: -10px;
   margin-bottom: 5px;
   text-transform: uppercase;
@@ -1390,16 +1390,16 @@ a.analysis-header{
 
 .refinery-subheader h2 {
   display: inline;
-  font-size: @baseFontSize * 1.15;
-  color: @grayLight;
+  font-size: @base-font-size * 1.15;
+  color: @gray-light;
   font-weight: 700;
   line-height: 1;
 }
 
 .refinery-subheader h3 {
   display: inline;
-  font-size: @baseFontSize * 1;
-  color: @grayLight;
+  font-size: @base-font-size * 1;
+  color: @gray-light;
   font-weight: 700;
   display: inline;
   line-height: 1;
@@ -1407,8 +1407,8 @@ a.analysis-header{
 
 .refinery-subheader h4 {
   display: inline;
-  font-size: @baseFontSize * 0.85;
-  color: @grayLight;
+  font-size: @base-font-size * 0.85;
+  color: @gray-light;
   font-weight: 700;
   display: inline;
   line-height: 1;
@@ -1421,7 +1421,7 @@ a.analysis-header{
 }
 
 .refinery-dnd-handle:hover {
-  text-shadow: 0 0px 10px @blueLight;
+  text-shadow: 0 0px 10px @blue-light;
 }
 
 .refinery-dnd-dropzone {
@@ -1469,7 +1469,7 @@ a.analysis-header{
   background-color: fade( @black, 80% );
   color: @white;
   font-weight: normal;
-  font-size: @fontSizeSmall;
+  font-size: @font-size-small;
   border-radius: 3px;
   padding: 1px 4px 1px 4px;
 }
@@ -1477,7 +1477,7 @@ a.analysis-header{
 .refinery-facet-label {
   font-weight: normal;
   margin-right: 5px;
-  font-size: @baseFontSize * 1.15;
+  font-size: @base-font-size * 1.15;
   cursor: pointer;
 }
 
@@ -1494,8 +1494,8 @@ a.analysis-header{
   margin: 0 auto;
   background-color: @gray;
   border-radius: 100%;
-  -webkit-animation: refinery-pulseScaleOut @slowTransitionSpeed infinite @easeInOutCubic;
-          animation: refinery-pulseScaleOut @slowTransitionSpeed infinite @easeInOutCubic;
+  -webkit-animation: refinery-pulseScaleOut @slow-transition-speed infinite @ease-in-out-cubic;
+          animation: refinery-pulseScaleOut @slow-transition-speed infinite @ease-in-out-cubic;
 }
 
 .no-animation .refinery-spinner {
@@ -1628,24 +1628,24 @@ button.icon-only {
       /* Some space between the number and the content in browsers that support
          generated content but not positioning it (Camino 2 is one example) */
       margin-right: 8px;
-      color: @grayLight;
-      font-size: @fontSizeSmall;
+      color: @gray-light;
+      font-size: @font-size-small;
       text-align: center;
       background: rgba(0, 0, 0, 0);
-      trasition: background @normalTransitionSpeed @easeInOutCubic;
+      trasition: background @normal-transition-speed @ease-in-out-cubic;
       border-radius: 1em;
     }
 
     &:hover:before {
       background: rgba(0, 0, 0, 0.1);
-      trasition: background @fastTransitionSpeed @easeInOutCubic;
+      trasition: background @fast-transition-speed @ease-in-out-cubic;
     }
   }
 }
 
 .is-mirrorable {
   display: block !important;
-  transition: transform @fastTransitionSpeed @easeInOutCubic;
+  transition: transform @fast-transition-speed @ease-in-out-cubic;
 }
 
 .is-mirrored {
@@ -1671,7 +1671,7 @@ ul.badge-list {
   >li {
     margin-left: 0.25em;
     padding: 0 0.25em;
-    border: 1px solid @grayLighter;
+    border: 1px solid @gray-lighter;
     border-radius: 0.25em;
 
     &:first-child {
@@ -1683,7 +1683,7 @@ ul.badge-list {
       margin: 1px 1px 1px 3px;
       padding: 0;
       list-style: none;
-      font-size: @fontSizeSmall;
+      font-size: @font-size-small;
       border: 1px solid green;
       background: @white;
     }
@@ -1691,7 +1691,7 @@ ul.badge-list {
     .badge-characteristic {
       padding-left: 0.2em;
       color: lighten(@gray, 25%);
-      font-size: @fontSizeSmall;
+      font-size: @font-size-small;
       font-style: italic;
     }
   }
@@ -1891,7 +1891,7 @@ ul.badge-list {
 }
 
 .active-group {
-  background-color: darken(@grayLighter, 5%);
+  background-color: darken(@gray-lighter, 5%);
 }
 
 .fastqc-box {
