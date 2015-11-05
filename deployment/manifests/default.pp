@@ -177,6 +177,11 @@ class solr {
     path => "/usr/bin:/bin",
   }
   ->
+  exec { "solr_stop":
+    command => "sudo service solr stop",
+    path => "/usr/bin:/bin",
+  }
+  ->
   file_line { "solr_config_pid":
     path => "/vagrant/refinery/solr_app_data/solr.in.sh",
     line => "SOLR_PID_DIR=/vagrant/refinery/solr_app_data",
@@ -280,10 +285,6 @@ class ui {
   # apt::ppa { 'ppa:chris-lea/node.js': }
   include apt
 
-  apt::ppa { 'ppa:chris-lea/node.js':
-    ensure => 'absent'
-  }
-
   apt::source { 'nodejs':
     ensure      => 'present',
     comment     => 'Nodesource NodeJS repo.',
@@ -295,11 +296,6 @@ class ui {
     include_src => true,
     include_deb => true
   }
-
-  exec { "apt-update":
-    command => "/usr/bin/apt-get update"
-  }
-  Exec["apt-update"] -> Package <| |>
 
   package { 'nodejs':
     name => 'nodejs',
