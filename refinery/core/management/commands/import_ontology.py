@@ -2,6 +2,7 @@ import logging
 import sys
 import subprocess
 import py2neo
+import urlparse
 from optparse import make_option
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -89,7 +90,9 @@ class Command(BaseCommand):
 
         # Check if constraints have already been added or add them
         try:
-            graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+            graph = py2neo.Graph(
+                urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data')
+            )
 
             for constraint in settings.NEO4J_CONSTRAINTS:
                 existing_prop_const = graph.schema.get_uniqueness_constraints(
@@ -137,7 +140,9 @@ class Command(BaseCommand):
 
         try:
             # Connects to `http://localhost:7474/db/data/` by default.
-            graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+            graph = py2neo.Graph(
+                urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data')
+            )
 
             uri = graph.cypher.execute_one(
                 'MATCH (o:Ontology {acronym:{acronym}}) RETURN o.uri',

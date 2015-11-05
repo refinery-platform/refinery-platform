@@ -1,6 +1,7 @@
 import logging
 import py2neo
 import time
+import urlparse
 from optparse import make_option
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -31,7 +32,9 @@ class Command(BaseCommand):
         # py2neo.authenticate(settings.NEO4J_BASE_URL)
 
         # Connects to `http://localhost:7474/db/data/` by default.
-        graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+        graph = py2neo.Graph(
+            urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data')
+        )
 
         # Begin transaction
         tx = graph.cypher.begin()
@@ -86,7 +89,9 @@ class Command(BaseCommand):
     def push_users(self):
         datasets = DataSet.objects.all()
 
-        graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+        graph = py2neo.Graph(
+            urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data')
+        )
 
         tx = graph.cypher.begin()
 
@@ -152,7 +157,9 @@ class Command(BaseCommand):
             print('Clear existing annotations and users...')
             start = time.time()
 
-            graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+            graph = py2neo.Graph(
+                urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data')
+            )
 
             graph.cypher.execute(
                 'MATCH (ds:DataSet) OPTIONAL MATCH (ds)-[r]-() DELETE ds, r',

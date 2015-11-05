@@ -1,5 +1,6 @@
 import logging
 import py2neo
+import urlparse
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
@@ -12,7 +13,9 @@ class Command(BaseCommand):
     """
 
     def handle(self, *args, **options):
-        graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+        graph = py2neo.Graph(
+            urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data')
+        )
 
         tx = graph.cypher.begin()
 
