@@ -1,4 +1,5 @@
-<div ng-style="preview.style">
+<div class="content-container" ng-class="{'hidden': !preview.active}">
+  <div ng-if="preview.active">
   <div
     class="refinery-panel-topbar"
     ng-class="{'allow-overflow': preview.animationFinished}">
@@ -181,5 +182,6 @@
       ng-if="preview.numStudies > 1">
       <p>Multiple studies per data set are not supported yet.</p>
     </div>
+  </div>
   </div>
 </div>

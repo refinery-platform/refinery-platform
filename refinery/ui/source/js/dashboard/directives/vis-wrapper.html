@@ -1,0 +1,60 @@
+<div class="content-container" ng-class="{'hidden': !visWrapper.active}">
+  <div ng-if="visWrapper.active">
+    <div
+      class="refinery-panel-topbar"
+      ng-class="{'allow-overflow': visWrapper.ready}">
+      <div
+        class="floatbox"
+        ng-class="{'allow-overflow': visWrapper.ready}">
+        <div class="floatbox-min-right">
+          <ul class="help no-list-style horizontal-list">
+            <li>
+              <span class="inputs">
+                <kbd>
+                  <svg class="icon-cursor-default">
+                    <use
+                      xmlns:xlink="http://www.w3.org/1999/xlink"
+                      xlink:href="/static/images/icons.svg#cursor-default"></use>
+                  </svg>
+                </kbd>
+              </span> Highlight
+            </li>
+            <li>
+              <span class="inputs">
+                <kbd>&#8679;</kbd> +
+                <kbd>
+                  <svg class="icon-cursor-default">
+                    <use
+                      xmlns:xlink="http://www.w3.org/1999/xlink"
+                      xlink:href="/static/images/icons.svg#cursor-default"></use>
+                  </svg>
+                </kbd>
+              </span> Multi Highlight
+            </li>
+            <li>
+              <span class="inputs">
+                <kbd>&#8984;</kbd> +
+                <kbd>
+                  <svg class="icon-cursor-default">
+                    <use
+                      xmlns:xlink="http://www.w3.org/1999/xlink"
+                      xlink:href="/static/images/icons.svg#cursor-default"></use>
+                  </svg>
+                </kbd>
+              </span> Drill down
+            </li>
+          </ul>
+        </div>
+        <div class="floatbox-max-left">
+          <h4>Repository exploration</h4>
+        </div>
+      </div>
+    </div>
+    <div class="refinery-global-spinner" ng-if="visWrapper.loading !== false">
+      <div class="refinery-spinner"></div>
+    </div>
+    <div class="content">
+      <treemap ng-if="visWrapper.ready"></treemap>
+    </div>
+  </div>
+</div>
