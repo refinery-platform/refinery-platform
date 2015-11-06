@@ -57,8 +57,16 @@ a.spinnable {
 @background-gradient-highlight: lighter(red, 10%);
 
 body {
+  font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
   background-image:url(@background-image-url);
   margin-top: @navbar-height * 2.2;
+  line-height: 20px;
+}
+
+.navbar-fixed-top, .navbar-fixed-bottom {
+  padding-left: 0;
+  padding-right: 0;
+  border-radius: 0;
 }
 
 .page-header {
@@ -407,9 +415,19 @@ a.analysis-header{
 .navbar {
   border-bottom-width: 0px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  background-color: #525252;
+  min-height: 40px;
+  border: 1px solid #393939;
+  overflow: visible;
 }
 
-.navbar {
+.navbar-nav {
+  position: relative;
+  float: left;
+  left: 0;
+  display: block;
+  margin: 0 10px 0 0;
+  list-style: none;
 }
 
 .navbar .navbar-brand {
@@ -421,6 +439,11 @@ a.analysis-header{
   line-height: 22px;
   vertical-align: top;
   color: @white;
+  float: left;
+  display: block;
+  padding: 10px 20px 10px;
+  font-size: 20px;
+  text-shadow: 0 1px 0 #555;
 }
 
 .navbar .navbar-brand .svg-container {
@@ -516,6 +539,7 @@ a.analysis-header{
   background-color: @navbar-header-background;
   border-top: 1px dotted @navbar-header-border;
   border-bottom: 1px solid @navbar-header-border;
+  width: 100%;
 }
 
 
