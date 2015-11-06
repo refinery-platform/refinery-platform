@@ -1,16 +1,30 @@
 import logging
 import py2neo
+import time
+import urlparse
+from optparse import make_option
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from core.models import DataSet, ExtendedGroup
 from core.utils import normalize_annotation_ont_ids, get_data_set_annotations
 
 logger = logging.getLogger(__name__)
+root_logger = logging.getLogger()
 
 
 class Command(BaseCommand):
     help = """Annotate available ontology terms with datasets.
     """
+
+    option_list = BaseCommand.option_list + (
+        make_option(
+            '-c',
+            '--clear',
+            action='store_true',
+            dest='clear',
+            help='Clear annotations before import'
+        ),
+    )
 
     def push_annotations_to_neo4j(self, annotations):
         # We currently disabled authentication as Neo4J is only accessible
@@ -18,7 +32,9 @@ class Command(BaseCommand):
         # py2neo.authenticate(settings.NEO4J_BASE_URL)
 
         # Connects to `http://localhost:7474/db/data/` by default.
-        graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+        graph = py2neo.Graph(
+            urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data')
+        )
 
         # Begin transaction
         tx = graph.cypher.begin()
@@ -27,12 +43,12 @@ class Command(BaseCommand):
 
         statement_name = (
             "MATCH (term:Class {name:{ont_id}}) "
-            "MERGE (ds:DataSet {uuid:{ds_uuid}}) "
+            "MERGE (ds:DataSet {id:{ds_id},uuid:{ds_uuid}}) "
             "MERGE ds-[:`annotated_with`]->term"
         )
         statement_uri = (
             "MATCH (term:Class {uri:{uri}}) "
-            "MERGE (ds:DataSet {uuid:{ds_uuid}}) "
+            "MERGE (ds:DataSet {id:{ds_id},uuid:{ds_uuid}}) "
             "MERGE ds-[:`annotated_with`]->term"
         )
 
@@ -42,6 +58,7 @@ class Command(BaseCommand):
                     statement_uri,
                     {
                         'uri': annotation['value_uri'],
+                        'ds_id': annotation['data_set_id'],
                         'ds_uuid': annotation['data_set_uuid']
                     }
                 )
@@ -54,6 +71,7 @@ class Command(BaseCommand):
                             ':' +
                             annotation['value_accession']
                         ),
+                        'ds_id': annotation['data_set_id'],
                         'ds_uuid': annotation['data_set_uuid']
                     }
                 )
@@ -71,7 +89,9 @@ class Command(BaseCommand):
     def push_users(self):
         datasets = DataSet.objects.all()
 
-        graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+        graph = py2neo.Graph(
+            urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data')
+        )
 
         tx = graph.cypher.begin()
 
@@ -122,7 +142,62 @@ class Command(BaseCommand):
         tx.commit()
 
     def handle(self, *args, **options):
+        verbosity = int(options['verbosity'])
+
+        if verbosity == 0:
+            root_logger.setLevel(logging.ERROR)
+        elif verbosity == 1:  # default
+            root_logger.setLevel(logging.WARNING)
+        elif verbosity > 1:
+            root_logger.setLevel(logging.INFO)
+        if verbosity > 2:
+            root_logger.setLevel(logging.DEBUG)
+
+        if options['clear']:
+            print('Clear existing annotations and users...')
+            start = time.time()
+
+            graph = py2neo.Graph(
+                urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data')
+            )
+
+            graph.cypher.execute(
+                'MATCH (ds:DataSet) OPTIONAL MATCH (ds)-[r]-() DELETE ds, r',
+            )
+
+            graph.cypher.execute(
+                'MATCH (u:User) OPTIONAL MATCH (u)-[r]-() DELETE u, r',
+            )
+
+            end = time.time()
+            minutes = int(round((end - start) // 60))
+            seconds = int(round((end - start) % 60))
+            print(
+                u'Clear existing annotations and users... ' +
+                u'\033[32m\u2713\033[0m ' +
+                u'\033[2m({} min and {} sec)\033[22m'.format(
+                    minutes,
+                    seconds
+                )
+            )
+
+        print('Import annotations...')
+
+        start = time.time()
+
         annotations = get_data_set_annotations(None)
         annotations = normalize_annotation_ont_ids(annotations)
         self.push_annotations_to_neo4j(annotations)
         self.push_users()
+
+        end = time.time()
+        minutes = int(round((end - start) // 60))
+        seconds = int(round((end - start) % 60))
+
+        print(
+            u'Import annotations... \033[32m\u2713\033[0m ' +
+            u'\033[2m({} min and {} sec)\033[22m'.format(
+                minutes,
+                seconds
+            )
+        )

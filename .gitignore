@@ -61,6 +61,9 @@ codekit-config.json
 /refinery/ui/bower_components/
 /refinery/ui/node_modules/
 /refinery/ui/.tmp/
+/refinery/ui/coverage/
+/refinery/ui/docs/
+/refinery/solr_app_data/
 /isa-tab/
 /import/
 /static/

@@ -739,7 +739,7 @@ a.analysis-header{
   .refinery-header {
     position: relative;
     margin: 0;
-    padding: 5px 15px;
+    padding: 5px 5px 5px 10px;
     border-bottom: 1px solid darken(@grayLighter, 10%);
     background-color: @grayLighter;
 
@@ -756,6 +756,30 @@ a.analysis-header{
       font-weight: normal;
       font-size: 0.8em;
       color: @grayLight;
+    }
+
+    .btn {
+      padding: 2px 10px 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+
+      &:active,
+      &:focus {
+        outline: none;
+      }
+
+      &:focus {
+        background-position: 0 0;
+        box-shadow: 0 0 4px 0 @blueShadow;
+      }
+
+      &.active {
+        text-shadow: none;
+        box-shadow: inset 0 1px 4px 0 rgba(0, 0, 0, 0.25);
+        background: darken(@grayLighter, 5%);
+      }
     }
   }
 
@@ -995,6 +1019,25 @@ a.analysis-header{
           border-top: none;
         }
 
+        &.highlighting {
+          z-index: 2;
+          color: @black;
+          border-top-color: @white;
+          background: lighten(@orange, 50%, relative);
+          box-shadow: 0 1px 0 0 @white, inset 0 1px 0 0 fade(@orange, 10%), inset 0 -1px 0 0 fade(@orange, 10%);
+
+          a {
+            color: @black;
+          }
+
+          .preview,
+          .preview:active,
+          .preview:hover,
+          .preview:focus {
+            color: @black !important;
+          }
+        }
+
         &.previewing {
           z-index: 2;
           background: #f2f7f8;
@@ -1051,7 +1094,7 @@ a.analysis-header{
       }
     }
 
-    .preview-container {
+    .expansion-panel {
       position: absolute;
       z-index: 0;
       top: 42px;
@@ -1059,6 +1102,18 @@ a.analysis-header{
       right: 0;
       bottom: 20px;
       overflow: hidden;
+
+      .content-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+
+        &.hidden {
+          visibility: hidden;
+        }
+      }
 
       .btn {
         padding: 2px 10px 3px;
@@ -1079,6 +1134,36 @@ a.analysis-header{
         h4 em {
           font-weight: bold;
           font-style: normal;
+        }
+
+        ul.help {
+          opacity: 0.5;
+          transition: opacity @fastTransitionSpeed @easeInOutCubic;
+
+          li {
+            line-height: 25px;
+            margin-left: 0.5em;
+
+            &:first-child {
+              margin-left: 0;
+            }
+          }
+
+          kbd {
+            display: inline-block;
+          }
+
+          .icon-cursor-default {
+            position: relative;
+            top: 0.125em;
+            width: 0.85em;
+            height: 1em;
+            color: @black;
+          }
+        }
+
+        &:hover ul.help {
+          opacity: 1;
         }
       }
 
@@ -1347,7 +1432,6 @@ a.analysis-header{
   margin-bottom: 10px;
 }
 
-
 .refinery-header h2 {
   display: inline;
   line-height: 1;
@@ -1574,20 +1658,28 @@ button.icon-only {
   clear: both;
   overflow: hidden;
 
-  [class^='floatbox-'] {
+  [class^='floatbox-'],
+  [class*=' floatbox-'] {
     width: auto;
   }
 
-  [class^='floatbox-max-'] {
+  [class^='floatbox-max-'],
+  [class*=' floatbox-max-'] {
     overflow: hidden;
   }
 
-  [class$='min-left'] {
+  [class$='min-left'],
+  [class*='min-left '] {
     float: left;
   }
 
-  [class$='min-right'] {
+  [class$='min-right'],
+  [class*='min-right '] {
     float: right;
+  }
+
+  .floatbox-max-right {
+    width: auto;
   }
 }
 
@@ -1916,12 +2008,42 @@ ul.badge-list {
     height: 100%;
   }
 }
+
 div.refinery-panel.refinery-panel-content.jquery-full-height {
   padding-bottom:10px;
 }
 
-.handle-overflow{
+.horizontal-list li {
+  display: block;
+  float: left;
+}
+
+.handle-overflow {
   overflow: auto;
 }
 
+.icon-group.icon-shared-in,
+.icon-group.icon-shared-out {
+  position: relative;
+  display: inline-block;
+  margin-right: 0.5em;
+}
 
+.icon-group.icon-shared-in:after,
+.icon-group.icon-shared-out:after {
+  position: absolute;
+  display: inline-block;
+  top: 0.1em;
+  font-size: 0.8em;
+  opacity: 0.5;
+}
+
+.icon-group.icon-shared-in:after {
+  content: '\f149';
+  right: -0.6em;
+}
+
+.icon-group.icon-shared-out:after {
+  content: '\f148';
+  right: -0.5em;
+}

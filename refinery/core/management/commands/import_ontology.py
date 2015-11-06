@@ -2,12 +2,14 @@ import logging
 import sys
 import subprocess
 import py2neo
+import urlparse
 from optparse import make_option
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from core.tasks import create_update_ontology
+from core.utils import create_update_ontology
 
 logger = logging.getLogger(__name__)
+root_logger = logging.getLogger()
 
 
 class Command(BaseCommand):
@@ -51,6 +53,21 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
+        verbosity = int(options['verbosity'])
+
+        if verbosity == 0:
+            logger.setLevel(logging.ERROR)
+            root_logger.setLevel(logging.ERROR)
+        elif verbosity == 1:  # default
+            logger.setLevel(logging.WARNING)
+            root_logger.setLevel(logging.WARNING)
+        elif verbosity > 1:
+            logger.setLevel(logging.INFO)
+            root_logger.setLevel(logging.INFO)
+        if verbosity > 2:
+            logger.setLevel(logging.DEBUG)
+            root_logger.setLevel(logging.DEBUG)
+
         # Wrap strings in double quotes in case they contain white spaces.
         if not options['ontology_file']:
             options['ontology_file'] = ''
@@ -71,6 +88,33 @@ class Command(BaseCommand):
         else:
             options['eqp'] = ''
 
+        # Check if constraints have already been added or add them
+        try:
+            graph = py2neo.Graph(
+                urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data')
+            )
+
+            for constraint in settings.NEO4J_CONSTRAINTS:
+                existing_prop_const = graph.schema.get_uniqueness_constraints(
+                    constraint['label']
+                )
+                for prop in constraint['properties']:
+                    if prop['name'] not in existing_prop_const:
+                        if prop['unique']:
+                            graph.schema.create_uniqueness_constraint(
+                                constraint['label'],
+                                prop['name']
+                            )
+                        else:
+                            graph.schema.create_index(
+                                constraint['label'],
+                                prop['name']
+                            )
+        except Exception as e:
+            logger.error(e)
+            sys.exit(1)
+
+        # Import or re-import ontology
         try:
             cmd = 'java -jar -DentityExpansionLimit={eel} '\
                 '{lib}/owl2neo4j.jar -o {ontology} -n {name} -a {abbr} ' \
@@ -82,7 +126,7 @@ class Command(BaseCommand):
                     abbr=ontology_abbr,
                     eqp=options['eqp'],
                     server=settings.NEO4J_BASE_URL,
-                    verbosity=('-v' if int(options['verbosity']) == 2 else '')
+                    verbosity=('-v' if verbosity == 2 else '')
                 )
 
             # Note that `owl2neo4j.jar` handles all other possible errors.
@@ -90,13 +134,15 @@ class Command(BaseCommand):
                 subprocess.check_call(cmd, shell=True)
             else:
                 subprocess.check_output(cmd, shell=True)
-        except Exception, e:
-            logger.error(e.output)
+        except Exception as e:
+            logger.error(e)
             sys.exit(1)
 
         try:
             # Connects to `http://localhost:7474/db/data/` by default.
-            graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+            graph = py2neo.Graph(
+                urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data')
+            )
 
             uri = graph.cypher.execute_one(
                 'MATCH (o:Ontology {acronym:{acronym}}) RETURN o.uri',
@@ -124,6 +170,6 @@ class Command(BaseCommand):
                 uri,
                 version
             )
-        except Exception, e:
+        except Exception as e:
             logger.error(e)
             sys.exit(1)

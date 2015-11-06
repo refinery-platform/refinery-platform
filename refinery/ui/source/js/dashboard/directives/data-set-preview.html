@@ -1,4 +1,5 @@
-<div ng-style="preview.style">
+<div class="content-container" ng-class="{'hidden': !preview.active}">
+  <div ng-if="preview.active">
   <div
     class="refinery-panel-topbar"
     ng-class="{'allow-overflow': preview.animationFinished}">
@@ -69,6 +70,22 @@
       <div class="inline-container">
         <h6>Number of files</h6>
         <p>{{ preview.dataSet.file_count }}</p>
+      </div>
+      <div class="inline-container">
+        <h6>Owner</h6>
+        <p ng-if="preview.dataSet.is_owner">You!</p>
+        <p ng-if="!preview.dataSet.is_owner">
+          <a
+            ng-if="preview.userName"
+            ng-href="/users/{{ preview.dataSet.owner }}/">
+            {{ preview.userName }}
+          </a>
+          <a
+            ng-if="!preview.userName"
+            ng-href="/users/{{ preview.dataSet.owner }}/">
+            {{ preview.dataSet.owner }}
+          </a>
+        </p>
       </div>
       <h5 class="refinery-subheader">
         Analyses
@@ -165,5 +182,6 @@
       ng-if="preview.numStudies > 1">
       <p>Multiple studies per data set are not supported yet.</p>
     </div>
+  </div>
   </div>
 </div>

@@ -64,7 +64,6 @@ class UserProfile (models.Model):
     user = models.OneToOneField(User)
     affiliation = models.CharField(max_length=100, blank=True)
     catch_all_project = models.ForeignKey('Project', blank=True, null=True)
-    is_public = models.BooleanField(default=False, blank=False, null=False)
 
     def __unicode__(self):
         return (

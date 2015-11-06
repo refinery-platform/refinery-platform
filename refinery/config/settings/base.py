@@ -53,9 +53,6 @@ LANGUAGE_CODE = get_setting("LANGUAGE_CODE")
 
 SITE_ID = 1
 
-# Settings to be accessible throughout all views
-UI_ACCESSIBLE_SETTINGS = get_setting("UI_ACCESSIBLE_SETTINGS")
-
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
 USE_I18N = get_setting("USE_I18N")
@@ -432,7 +429,10 @@ TIMEOUT = get_setting("TIMEOUT")
 LIBS_DIR = get_setting("LIBS_DIR")
 
 # Neo4J settings
-NEO4J_BASE_URL = get_setting("NEO4J_BASE_URL")
+neo4j_settings = get_setting("NEO4J")
+
+NEO4J_BASE_URL = get_setting("BASE_URL", neo4j_settings)
+NEO4J_CONSTRAINTS = get_setting("CONSTRAINTS", neo4j_settings)
 
 # Java settings
 JAVA_ENTITY_EXPANSION_LIMIT = get_setting("JAVA_ENTITY_EXPANSION_LIMIT")
@@ -461,6 +461,7 @@ if REFINERY_EXTERNAL_AUTH:
 # debugging of a Refinery instance
 
 try:
-    CURRENT_COMMIT = check_output(['git', 'rev-parse', "HEAD"])
-except:
-    CURRENT_COMMIT = "Error Retrieving Most Recent Commit"
+    CURRENT_COMMIT = check_output(['/usr/bin/git', 'rev-parse', "HEAD"])
+except Exception as e:
+    logger.debug("Error Retrieving Most Recent Commit: ", e)
+    CURRENT_COMMIT = "Error Retrieving Most Recent Commit: " + str(e)

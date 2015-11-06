@@ -5,47 +5,43 @@
 
 <html lang="en">
 <head>
-    <meta content="text/html">
-  	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="">
+  <meta content="text/html">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
 
-    <!-- http://www.jonathantneal.com/blog/understand-the-favicon/ -->
-    <link rel="apple-touch-icon" href="{% static "images/touchicon.png" %}">
-    <link rel="icon" href="{% static "images/favicon.png" %}">
-    <!--[if IE]><link rel="shortcut icon" href="{% static "images/favicon.ico" %}"><![endif]-->
-    <!-- IE10 Win 8 -->
-    <meta name="msapplication-TileColor" content="#FFFFFF">
-    <meta name="msapplication-TileImage" content="{% static "images/tileicon.png" %}">
+  <!-- http://www.jonathantneal.com/blog/understand-the-favicon/ -->
+  <link rel="apple-touch-icon" href="{% static "images/touchicon.png" %}">
+  <link rel="icon" href="{% static "images/favicon.png" %}">
+  <!--[if IE]><link rel="shortcut icon" href="{% static "images/favicon.ico" %}"><![endif]-->
+  <!-- IE10 Win 8 -->
+  <meta name="msapplication-TileColor" content="#FFFFFF">
+  <meta name="msapplication-TileImage" content="{% static "images/tileicon.png" %}">
 
-    <!-- Le styles -->
-    {% for css_file in REFINERY_CSS %}
-    <link href="{% static css_file %}" rel="stylesheet">
-   	{% endfor %}
+  <!-- Le styles -->
+  {% for css_file in REFINERY_CSS %}
+  <link href="{% static css_file %}" rel="stylesheet">
+  {% endfor %}
 
-    {% block head_html %}
-    {% endblock %}
+  {% block head_html %}
+  {% endblock %}
 
-    <title> {{ REFINERY_INSTANCE_NAME }}{% block title %}{% endblock %}</title>
+  <title>{{ REFINERY_INSTANCE_NAME }}{% block title %}{% endblock %}</title>
 
-    {% block tracking %}
+  {% block tracking %}
 
-	    {% if REFINERY_GOOGLE_ANALYTICS_ID != "" %}
-			<script type="text/javascript">
+  {% if REFINERY_GOOGLE_ANALYTICS_ID != "" %}
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', '{{ REFINERY_GOOGLE_ANALYTICS_ID }}', 'auto');
+    ga('send', 'pageview');
+  </script>
+  {% endif %}
 
-			  var _gaq = _gaq || [];
-			  _gaq.push(['_setAccount', '{{ REFINERY_GOOGLE_ANALYTICS_ID }}']);
-			  _gaq.push(['_trackPageview']);
-
-			  (function() {
-			    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-			    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-			    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-			  })();
-			</script>
-		{% endif %}
-
-    {% endblock %}
+  {% endblock %}
 </head>
 
 <body ng-app="{% block ng_app %}refineryApp{% endblock %}" ng-controller="AppCtrl as app" ng-click="app.globalClick($event)">
@@ -176,14 +172,14 @@
   </div>
 
   <!-- Script for popup content in the tool status and analyses icon-->
-     <script type="text/ng-template" id="analysesgloballist.html">
-        <rp-analysis-monitor-global-list-status-popover-details>
-        </rp-analysis-monitor-global-list-status-popover-details>
-    </script>
-     <script type="text/ng-template" id="analysislaunchmodal.html">
-        <rp-analysis-launch-modal-detail>
-        </rp-analysis-launch-modal-detail>
-    </script>
+  <script type="text/ng-template" id="analysesgloballist.html">
+    <rp-analysis-monitor-global-list-status-popover-details>
+    </rp-analysis-monitor-global-list-status-popover-details>
+  </script>
+  <script type="text/ng-template" id="analysislaunchmodal.html">
+    <rp-analysis-launch-modal-detail>
+    </rp-analysis-launch-modal-detail>
+  </script>
 
   <!-- 3rd party libraries -->
   <script src="{% static "vendor/jquery/dist/jquery.min.js" %}"></script>
@@ -198,15 +194,17 @@
   <script src="{% static "vendor/angular-ui-scroll/dist/ui-scroll.min.js" %}"></script>
   <script src="{% static "vendor/angular-bootstrap/ui-bootstrap.min.js" %}"></script>
   <script src="{% static "vendor/angular-bootstrap/ui-bootstrap-tpls.min.js" %}"></script>
+  <script src="{% static "vendor/ng-webworker/src/ng-webworker.min.js" %}"></script>
+  <script src="{% static "vendor/ng-webworker/src/worker_wrapper.min.js" %}"></script>
   <script src="{% static "js/bootstrap/bootstrap.min.js" %}"></script>
-  <script src="{% static "vendor/lodash-3/lodash.min.js" %}"></script>
-  <script src="{% static "vendor/humanize/humanize.js" %}"></script>
+  <script src="{% static "vendor/lodash/lodash.min.js" %}"></script>
   <script type="text/javascript">
     // Assign lodash v3.9.3 to a special variable so it doesn't conflict with
     // lodash v2 or other libraries like underscore.
     window.lodash3 = _.noConflict();
   </script>
   <script src="{% static "vendor/d3/d3.min.js" %}"></script>
+  <script src="{% static "vendor/humanize/humanize.js" %}"></script>
 
   <!-- Refinery Angular App -->
   <script src="{% static "js/refinery.js" %}"></script>
@@ -238,11 +236,11 @@
   <script src="{% static "js/data-set-import.js" %}"></script>
 
   {% block script %}
-	{% endblock %}
+  {% endblock %}
 
-	<script type="text/javascript">
-		// activate bootstrap tooltips
-	    $('a[rel=tooltip]').tooltip();
+  <script type="text/javascript">
+    // activate bootstrap tooltips
+      $('a[rel=tooltip]').tooltip();
 
     var username = '{{ user.username }}';
     var user_id = '{{ user.id }}';
@@ -253,76 +251,76 @@
 
     var refinerySettings = JSON.parse("{{refinerySettings|escapejs}}");
 
-		function sizing() {
-		    var windowWidth = $(window).width(),
+    function sizing() {
+        var windowWidth = $(window).width(),
             windowHeight = $(window).height();
 
-		    if(windowWidth <= 767) {
-		    	$('.jquery-full-height').css('height', 'inherit' );
-		    }
-		    else {
-			    $('.jquery-full-height').map( function() {
+        if(windowWidth <= 767) {
+          $('.jquery-full-height').css('height', 'inherit' );
+        }
+        else {
+          $('.jquery-full-height').map( function() {
             var $this = $(this),
                 targetHeight = (windowHeight - $this.offset().top - 40),
                 minHeight = parseInt($this.css("min-height")),
                 newHeight = Math.max(targetHeight, minHeight);
 
-			    	$this.css('height', newHeight + 'px');
-		    	});
-	    	}
-		}
+            $this.css('height', newHeight + 'px');
+          });
+        }
+    }
 
     $(window).on(
       'resize.jqfullheight orientationchange.jqfullheight',
       sizing
     );
 
-		$(document).ready( function(){
-			sizing();
+    $(document).ready( function(){
+      sizing();
 
-			// detect IE: https://gist.github.com/527683
-			// ----------------------------------------------------------
-			// A short snippet for detecting versions of IE in JavaScript
-			// without resorting to user-agent sniffing
-			// ----------------------------------------------------------
-			// If you're not in IE (or IE version is less than 5) then:
-			//     ie === undefined
-			// If you're in IE (>=5) then you can determine which version:
-			//     ie === 7; // IE7
-			// Thus, to detect IE:
-			//     if (ie) {}
-			// And to detect the version:
-			//     ie === 6 // IE6
-			//     ie > 7 // IE8, IE9 ...
-			//     ie < 9 // Anything less than IE9
-			// ----------------------------------------------------------
+      // detect IE: https://gist.github.com/527683
+      // ----------------------------------------------------------
+      // A short snippet for detecting versions of IE in JavaScript
+      // without resorting to user-agent sniffing
+      // ----------------------------------------------------------
+      // If you're not in IE (or IE version is less than 5) then:
+      //     ie === undefined
+      // If you're in IE (>=5) then you can determine which version:
+      //     ie === 7; // IE7
+      // Thus, to detect IE:
+      //     if (ie) {}
+      // And to detect the version:
+      //     ie === 6 // IE6
+      //     ie > 7 // IE8, IE9 ...
+      //     ie < 9 // Anything less than IE9
+      // ----------------------------------------------------------
 
-			// UPDATE: Now using Live NodeList idea from @jdalton
+      // UPDATE: Now using Live NodeList idea from @jdalton
 
-			var ie = (function(){
+      var ie = (function(){
 
-			    var undef,
-			        v = 3,
-			        div = document.createElement('div'),
-			        all = div.getElementsByTagName('i');
+          var undef,
+              v = 3,
+              div = document.createElement('div'),
+              all = div.getElementsByTagName('i');
 
-			    while (
-			        div.innerHTML = '<!--[if gt IE ' + (++v) + ']><i></i><![endif]-->',
-			        all[0]
-			    );
+          while (
+              div.innerHTML = '<!--[if gt IE ' + (++v) + ']><i></i><![endif]-->',
+              all[0]
+          );
 
-			    return v > 4 ? v : undef;
+          return v > 4 ? v : undef;
 
-			}());
+      }());
 
-	  // jQuery > 1.9.0 no longer supports UA sniffing
+    // jQuery > 1.9.0 no longer supports UA sniffing
       // if ( ie !== undefined || $.browser.msie ) {
       if ( ie !== undefined ) {
-				// detected IE
-				$( "#warning-ie-not-supported" ).show();
-				sizing();
-			}
-		});
-	</script>
+        // detected IE
+        $( "#warning-ie-not-supported" ).show();
+        sizing();
+      }
+    });
+  </script>
 </body>
 </html>

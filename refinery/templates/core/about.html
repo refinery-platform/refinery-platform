@@ -52,7 +52,7 @@
 						</span>
 					</div>
 					<p>
-                        {% if CURRENT_COMMIT != "Error Retrieving Most Recent Commit" %}
+                        {% if not "Error" in CURRENT_COMMIT %}
 						    <a href="https://github.com/parklab/refinery-platform/commit/{{ CURRENT_COMMIT }}">{{ CURRENT_COMMIT }}</a>
                         {% else %}
                             <span>{{ CURRENT_COMMIT }}</span>

@@ -1,10 +1,9 @@
 import logging
-import datetime
 
 from django.db.models.deletion import Collector
 from django.db.models.fields.related import ForeignKey
 
-from core.models import DataSet, InvestigationLink, Ontology
+from core.models import DataSet, InvestigationLink
 from data_set_manager.models import Investigation, Study
 from data_set_manager.tasks import annotate_nodes
 from file_store.models import is_permanent
@@ -221,24 +220,3 @@ def copy_dataset(dataset, owner, versions=None, copy_files=False):
     dataset_copy.save()
 
     return dataset_copy
-
-
-def create_update_ontology(name, acronym, uri, version):
-    """Creates or updates an ontology entry after importing.
-    """
-
-    ontology = Ontology.objects.filter(acronym=acronym)
-
-    if not ontology:
-        ontology = Ontology.objects.create(
-            acronym=acronym,
-            name=name,
-            uri=uri,
-            version=version
-        )
-        logger.info('Created %s', ontology)
-    else:
-        ontology = ontology[0]
-        ontology.import_date = datetime.datetime.now()
-        ontology.save()
-        logger.info('Updated %s', ontology)

@@ -510,6 +510,23 @@ module.exports = function(grunt) {
     },
 
     /*
+     * Generate documentation
+     */
+    jsdoc : {
+      dist : {
+        src: [
+          '<%= cfg.basePath.ui.src %>/**/!(*spec).js'
+        ],
+        options: {
+          // Doesn't seem to work right now, so we have to specify the right
+          // location manually
+          //destination: '<%= cfg.basePath.ui.docs %>'
+          destination: 'docs'
+        }
+      }
+    },
+
+    /*
      * Lint source JS files to find possible flaws that could lead to errors.
      * Custom code
      */
@@ -589,6 +606,7 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.static.build %>/styles/css/variables.css': '<%= cfg.basePath.static.src %>/styles/less/variables.less',
           '<%= cfg.basePath.static.build %>/styles/css/workflow_visualization.css': '<%= cfg.basePath.static.src %>/styles/less/workflow_visualization.less',
           '<%= cfg.basePath.static.build %>/styles/css/animate.css': '<%= cfg.basePath.static.src %>/styles/less/animate.less',
+          '<%= cfg.basePath.static.build %>/styles/css/treemap.css': '<%= cfg.basePath.static.src %>/styles/less/treemap.less',
         }
       },
       compile: {
@@ -622,6 +640,7 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.static.compile %>/styles/css/variables.css': '<%= cfg.basePath.static.src %>/styles/less/variables.less',
           '<%= cfg.basePath.static.compile %>/styles/css/workflow_visualization.css': '<%= cfg.basePath.static.src %>/styles/less/workflow_visualization.less',
           '<%= cfg.basePath.static.compile %>/styles/css/animate.css': '<%= cfg.basePath.static.src %>/styles/less/animate.less',
+          '<%= cfg.basePath.static.compile %>/styles/css/treemap.css': '<%= cfg.basePath.static.src %>/styles/less/treemap.less',
         }
       }
     },
@@ -760,7 +779,7 @@ module.exports = function(grunt) {
   }
 
   // Default task.
-  grunt.registerTask('default', ['build', 'compile']);
+  grunt.registerTask('default', ['build', 'compile', 'test']);
 
   // Task for running unit tests
   grunt.registerTask('test', ['env:compile', 'karma']);
@@ -801,7 +820,7 @@ module.exports = function(grunt) {
     'copy:uiCompileVendor',
     'copy:staticCompile',
     'clean:uiTmp',
-    'karma'
+    'jsdoc'
   ]);
 
   grunt.renameTask('watch', 'delta');

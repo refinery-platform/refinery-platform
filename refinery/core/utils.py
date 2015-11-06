@@ -1,6 +1,9 @@
 from __future__ import absolute_import
 import logging
 import py2neo
+import core
+import datetime
+import urlparse
 from django.conf import settings
 from django.db import connection
 
@@ -28,7 +31,7 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
         '(id: %s)', dataset_uuid, user_id
     )
 
-    graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+    graph = py2neo.Graph(urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data'))
 
     # Get annotations of the data_set
     annotations = get_data_set_annotations(dataset_uuid)
@@ -97,7 +100,7 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
         )
 
         tx.commit()
-    except Exception, e:
+    except Exception as e:
         logger.error(
             'Failed to add read access to data set (uuid: %s) in Neo4J. '
             'Exception: %s', e
@@ -113,7 +116,7 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
         user_ids, dataset_uuids
     )
 
-    graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+    graph = py2neo.Graph(urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data'))
 
     statement = (
         "MATCH (ds:DataSet {uuid:{dataset_uuid}}) "
@@ -135,7 +138,7 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
                 )
 
         tx.commit()
-    except Exception, e:
+    except Exception as e:
         logger.error(
             'Failed to add read access to data set (uuid: %s) in Neo4J. '
             'Exception: %s', e
@@ -151,7 +154,7 @@ def remove_read_access_in_neo4j(dataset_uuids, user_ids):
         user_ids, dataset_uuids
     )
 
-    graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+    graph = py2neo.Graph(urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data'))
 
     statement = (
         "MATCH (ds:DataSet {uuid:{dataset_uuid}}), (u:User {id:{user_id}}) "
@@ -173,7 +176,7 @@ def remove_read_access_in_neo4j(dataset_uuids, user_ids):
                 )
 
         tx.commit()
-    except Exception, e:
+    except Exception as e:
         logger.error(
             'Failed to remove read access from dataset (uuid: %s) in Neo4J. '
             'Exception: %s', e
@@ -194,7 +197,7 @@ def delete_data_set_neo4j(dataset_uuid):
 
     logger.debug('Deleted data set (uuid: %s) in Neo4J', dataset_uuid)
 
-    graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+    graph = py2neo.Graph(urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data'))
 
     statement = (
         "MATCH (ds:DataSet {uuid:{dataset_uuid}}) "
@@ -209,7 +212,7 @@ def delete_data_set_neo4j(dataset_uuid):
                 'dataset_uuid': dataset_uuid
             }
         )
-    except Exception, e:
+    except Exception as e:
         logger.error(
             'Failed to remove dataset (uuid: %s) in Neo4J. '
             'Exception: %s', dataset_uuid, e
@@ -225,7 +228,7 @@ def delete_ontology_from_neo4j(acronym):
 
     logger.debug('Deleting ontology (acronym: %s) from Neo4J', acronym)
 
-    graph = py2neo.Graph('{}/db/data/'.format(settings.NEO4J_BASE_URL))
+    graph = py2neo.Graph(urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data'))
 
     # Only matches class nodes that exclusively belong to an ontology.
     # Note: Using an ordinary string replacement in addition to a parameterized
@@ -256,7 +259,7 @@ def delete_ontology_from_neo4j(acronym):
                 'acronym': acronym
             }
         )
-    except Exception, e:
+    except Exception as e:
         logger.error(
             'Failed to remove ontology (acronym: %s) from Neo4J. '
             'Exception: %s', acronym, e
@@ -385,3 +388,24 @@ def get_data_set_annotations(dataset_uuid):
         dict(zip([col[0] for col in desc], row))
         for row in cursor.fetchall()
     ]
+
+
+def create_update_ontology(name, acronym, uri, version):
+    """Creates or updates an ontology entry after importing.
+    """
+
+    ontology = core.models.Ontology.objects.filter(acronym=acronym)
+
+    if not ontology:
+        ontology = core.models.Ontology.objects.create(
+            acronym=acronym,
+            name=name,
+            uri=uri,
+            version=version
+        )
+        logger.info('Created %s', ontology)
+    else:
+        ontology = ontology[0]
+        ontology.import_date = datetime.datetime.now()
+        ontology.save()
+        logger.info('Updated %s', ontology)

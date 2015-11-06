@@ -5,13 +5,14 @@ function refineryDataSetPreview () {
     $q,
     _,
     $modal,
+    pubSub,
     settings,
+    userService,
     authService,
     studyService,
     sharingService,
     citationService,
     analysisService,
-    dashboardWidthFixerService,
     dashboardDataSetPreviewService,
     dashboardExpandablePanelService) {
     var that = this;
@@ -19,31 +20,23 @@ function refineryDataSetPreview () {
     this.$q = $q;
     this._ = _;
     this.$modal = $modal;
+    this.pubSub = pubSub;
     this.settings = settings;
     this.user = authService;
+    this.userService = userService;
     this.studyService = studyService;
     this.sharingService = sharingService;
     this.citationService = citationService;
     this.analysisService = analysisService;
-    this.dashboardWidthFixerService = dashboardWidthFixerService;
     this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
     this.dashboardExpandablePanelService = dashboardExpandablePanelService;
 
     this.maxBadges = this.settings.dashboard.preview.maxBadges;
     this.infinity = Number.POSITIVE_INFINITY;
 
-    this.dashboardWidthFixerService.fixer.push(function () {
-      that.style = {
-        left: this.fixedWidth + 1
-      };
-    });
-
-    this.dashboardDataSetPreviewService.addListener(
-      'expandFinished',
-      function () {
-        this.animationFinished = true;
-      }.bind(this)
-    );
+    this.pubSub.on('expandFinished', function () {
+      this.animationFinished = true;
+    }.bind(this));
 
     this.dashboardExpandablePanelService.collapser.push(function () {
       this.animationFinished = false;
@@ -70,15 +63,6 @@ function refineryDataSetPreview () {
 
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
-    'animationFinished', {
-      configurable: false,
-      enumerable: true,
-      value: false,
-      writable: true
-  });
-
-  Object.defineProperty(
-    DataSetPreviewCtrl.prototype,
     'dataSet', {
       configurable: false,
       enumerable: true,
@@ -86,7 +70,7 @@ function refineryDataSetPreview () {
         var ds = this.dashboardDataSetPreviewService.dataSet;
         if (ds && ds.uuid && this._currentDataset !== ds.id) {
           this._currentDataset = ds.id;
-          this.loadData(ds.uuid);
+          this.loadData(ds);
         }
         return ds;
       }
@@ -154,6 +138,22 @@ function refineryDataSetPreview () {
     }
   };
 
+  /**
+   * Load user data
+   *
+   * @method  getUser
+   * @author  Fritz Lekschas
+   * @date    2015-10-21
+   *
+   * @param   {String}  uuid  User uuid.
+   * @return  {Object}        Angular object returning `true` or an error.
+   */
+  DataSetPreviewCtrl.prototype.getUser = function (uuid) {
+    return this.userService.get(uuid).then(function (user) {
+      this.userName = user.fullName ? user.fullName : user.userName;
+    }.bind(this));
+  };
+
   DataSetPreviewCtrl.prototype.getStudies = function (uuid) {
     return this.studyService
       .get({
@@ -178,8 +178,8 @@ function refineryDataSetPreview () {
    * @author  Fritz Lekschas
    * @date    2015-08-21
    *
-   * @param   {string}  uuid   UUID of the exact model entity.
-   * @return  {object}         Angular promise.
+   * @param   {String}  uuid   UUID of the exact model entity.
+   * @return  {Object}         Angular promise.
    */
   DataSetPreviewCtrl.prototype.getPermissions = function (uuid) {
     return promise = this.sharingService.get({
@@ -249,15 +249,19 @@ function refineryDataSetPreview () {
    *
    * @method  loadData
    * @author  Fritz Lekschas
-   * @date    2015-08-25
+   * @date    2015-10-21
+   *
+   * @param   {Object}  Dataset to be previewed.
    */
-  DataSetPreviewCtrl.prototype.loadData = function (uuid) {
+  DataSetPreviewCtrl.prototype.loadData = function (dataset) {
     this.loading = true;
     this.permissionsLoading = true;
+    this.userName = undefined;
 
-    var studies = this.getStudies(uuid),
-        analyses = this.getAnalysis(uuid),
-        permissions = this.getPermissions(uuid);
+    var studies = this.getStudies(dataset.uuid),
+        analyses = this.getAnalysis(dataset.uuid),
+        user = this.getUser(dataset.owner),
+        permissions = this.getPermissions(dataset.uuid);
 
     this
       .$q
@@ -339,19 +343,21 @@ function refineryDataSetPreview () {
 
   return {
     bindToController: {
-      close: '&'
+      close: '&',
+      active: '='
     },
     controller: [
       '$q',
       '_',
       '$modal',
+      'pubSub',
       'settings',
+      'userService',
       'authService',
       'studyService',
       'sharingService',
       'citationService',
       'analysisService',
-      'dashboardWidthFixerService',
       'dashboardDataSetPreviewService',
       'dashboardExpandablePanelService',
       DataSetPreviewCtrl],
@@ -359,7 +365,8 @@ function refineryDataSetPreview () {
     restrict: 'E',
     replace: true,
     scope: {
-      close: '&'
+      close: '&',
+      active: '='
     },
     templateUrl: '/static/partials/dashboard/directives/data-set-preview.html',
     transclude: true

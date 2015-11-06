@@ -1,0 +1,170 @@
+function DataSetStoreFactory (_) {
+  /**
+   * Stores the data objects.
+   *
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
+   * @type  {Object}
+   */
+  var _store = {};
+
+  /**
+   * DataSetStore constructor class
+   *
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
+   * @class
+   */
+  function DataSetStore () {}
+
+  /**
+   * Add a data object to the store.
+   *
+   * @method  add
+   * @author  Fritz Lekschas
+   * @date    2015-10-29
+   *
+   * @param   {Number|String}  key     Key for identifing the object.
+   * @param   {Object}         data    Actual data object.
+   * @param   {Boolean}        update  If `true` will update existing objects.
+   * @return  {Object}                 Self for chaining.
+   */
+  DataSetStore.prototype.add = function(key, data, update) {
+    // Triple `!!!` is the negated boolean representation of the expression
+    if (!!!_store[key]) {
+      _store[key] = data;
+    } else {
+      if (update) {
+        this.update(key, data);
+      }
+    }
+
+    return DataSetStore;
+  };
+
+  /**
+   * Get a data object to the store.
+   *
+   * @method  get
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
+   * @param   {Number|String}  key   Key for identifing the object..
+   * @return  {Object}               Self for chaining.
+   */
+  DataSetStore.prototype.get = function(key) {
+    return _store[key];
+  };
+
+  /**
+   * Update a data object without destroying its original reference.
+   *
+   * @description
+   * Batch update of a dataset according with data. This method does _not_ add
+   * new attribute. In order to add a new attribute use the `set` method.
+   *
+   * @method  update
+   * @author  Fritz Lekschas
+   * @date    2015-11-02
+   *
+   * @param   {Number|String}  key   Key to identify the data object.
+   * @param   {Object}         data  Actual data object.
+   * @return  {Object}               Self for chaining.
+   */
+  DataSetStore.prototype.update = function(key, data) {
+    // Todo: Implement a deep cloning update function that doesn't destroy
+    // references by accidentally replacing whole objects.
+    if (!!_store[key]) {
+      var attrs = Object.keys(_store[key]);
+      for (var i = attrs.length; i--;) {
+        _store[key][attrs[i]] = data[attrs[i]] ?
+          data[attrs[i]] : _store[key][attrs[i]];
+      }
+    }
+
+    return DataSetStore;
+  };
+
+  /**
+   * Remove a data object from the store.
+   *
+   * @method  remove
+   * @author  Fritz Lekschas
+   * @date    2015-10-08
+   *
+   * @param   {Number|String}  key  Key to identify the data object.
+   * @return  {Object}              Self for chaining.
+   */
+  DataSetStore.prototype.remove = function(key) {
+    // `void 0` always evaluates to `undefined`. This is a bit safer because
+    // `undefined` could potentially be corrupted, e.g. `undefined = true`.
+    if (!!_store[key]) {
+      _store[key] = void 0;
+    }
+
+    return DataSetStore;
+  };
+
+  /**
+   * Set a new attribute.
+   *
+   * @description
+   * This method allows to set a single or multiple attributes. Existing
+   * attribute values will be overwritten.
+   *
+   * @example
+   * ```
+   * DataSetStore.set('myId', {highlight: true, color: '#000'});
+   * ```
+   *
+   * @method  set
+   * @author  Fritz Lekschas
+   * @date    2015-11-02
+   *
+   * @param   {Number|String}  key    Key to identify the data object.
+   * @param   {Object}         attrs  Object containing the key value pairs.
+   * @return  {Object}                Self for chaining.
+   */
+  DataSetStore.prototype.set = function (key, attrs) {
+    if (!!_store[key]) {
+      var keys = Object.keys(attrs);
+
+      for (var i = keys.length; i--;) {
+        _store[key][keys[i]] = attrs[keys[i]];
+      }
+    }
+
+    return DataSetStore;
+  };
+
+  /**
+   * Number of files currently stored.
+   *
+   * @author  Fritz Lekschas
+   * @date    2015-10-09
+   *
+   * @type  {Number}
+   */
+  Object.defineProperty(
+    DataSetStore.prototype,
+    'length',
+    {
+      enumerable: true,
+      configurable: false,
+      get: function () {
+        return Object.keys(_store).length;
+      }
+    }
+  );
+
+  return DataSetStore;
+}
+
+angular
+  .module('dataSet')
+  .factory('DataSetStore', [
+    '_',
+    DataSetStoreFactory
+  ]);

@@ -4,7 +4,7 @@ import shutil
 import string
 import tarfile
 import tempfile
-import urllib2
+import requests
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -37,9 +37,9 @@ class Command(BaseCommand):
         taxonomy_archive = os.path.join(temp_dir, "taxdump.tar.gz")
         # grab the tarfile and extract its contents
         print "Downloading taxonomy information"
-        u = urllib2.urlopen(settings.TAXONOMY_URL)
+        u = requests.get(settings.TAXONOMY_URL)
         f = open(taxonomy_archive, 'wb')
-        f.write(u.read())
+        f.write(u.content)
         f.close()
         tar_file = tarfile.open(taxonomy_archive, 'r:gz')
         tar_file.extractall(temp_dir)

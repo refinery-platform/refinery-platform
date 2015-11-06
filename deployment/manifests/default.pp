@@ -148,29 +148,14 @@ exec { "create_user":
   user => $appuser,
   group => $appgroup,
 }
-->
-exec {
-  "build_core_schema":
-    command => "${virtualenv}/bin/python ${project_root}/manage.py build_solr_schema --using=core > solr/core/conf/schema.xml",
-    environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-    cwd => $project_root,
-    user => $appuser,
-    group => $appgroup;
-  "build_data_set_manager_schema":
-    command => "${virtualenv}/bin/python ${project_root}/manage.py build_solr_schema --using=data_set_manager > solr/data_set_manager/conf/schema.xml",
-    environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-    cwd => $project_root,
-    user => $appuser,
-    group => $appgroup;
-}
 
 class solr {
-  $solr_version = "4.4.0"
+  $solr_version = "5.3.1"
   $solr_archive = "solr-${solr_version}.tgz"
   $solr_url = "http://archive.apache.org/dist/lucene/solr/${solr_version}/${solr_archive}"
 
   package { 'java':
-    name => 'openjdk-7-jre-headless',
+    name => 'openjdk-7-jdk',
   }
 
   exec { "solr_wget":
@@ -180,15 +165,45 @@ class solr {
     timeout => 600,  # downloading can take a long time
   }
   ->
-  exec { "solr_unpack":
-    command => "mkdir -p /opt && tar -xzf /usr/src/${solr_archive} -C /opt && chown -R ${appuser}:${appuser} /opt/solr-${solr_version}",
+  exec { "solr_unpack_installer":
+    command => "mkdir -p /opt && tar -xzf /usr/src/${solr_archive} -C /usr/src solr-${solr_version}/bin/install_solr_service.sh --strip-components=2",
     creates => "/opt/solr-${solr_version}",
     path => "/usr/bin:/bin",
   }
   ->
-  file { "/opt/solr":
-    ensure => link,
-    target => "solr-${solr_version}",
+  exec { "solr_install_as_service":
+    command => "sudo bash /usr/src/install_solr_service.sh /usr/src/${solr_archive} -d /vagrant/refinery/solr_app_data -u vagrant && chown -R ${appuser}:${appuser} /opt/solr-${solr_version}",
+    creates => "/opt/solr-${solr_version}",
+    path => "/usr/bin:/bin",
+  }
+  ->
+  exec { "solr_stop":
+    command => "sudo service solr stop",
+    path => "/usr/bin:/bin",
+  }
+  ->
+  file_line { "solr_config_pid":
+    path => "/vagrant/refinery/solr_app_data/solr.in.sh",
+    line => "SOLR_PID_DIR=/vagrant/refinery/solr_app_data",
+    match => "^SOLR_PID_DIR"
+  }
+  ->
+  file_line { "solr_config_home":
+    path => "/vagrant/refinery/solr_app_data/solr.in.sh",
+    line => "SOLR_HOME=/vagrant/refinery/solr/",
+    match => "^SOLR_HOME"
+  }
+  ->
+  file_line { "solr_config_log4j":
+    path => "/vagrant/refinery/solr_app_data/solr.in.sh",
+    line => "LOG4J_PROPS=/vagrant/refinery/solr/log4j.properties",
+    match => "^LOG4J_PROPS"
+  }
+  ->
+  file_line { "solr_config_log_dir":
+    path => "/vagrant/refinery/solr_app_data/solr.in.sh",
+    line => "SOLR_LOGS_DIR=/vagrant/refinery/log",
+    match => "^SOLR_LOGS_DIR"
   }
 }
 include solr
@@ -246,7 +261,7 @@ class owl2neo4j {
   # already exists.
 
   exec { "owl2neo4j_wget":
-    command => "rm /opt/owl2neo4j.jar && wget -P /opt/ ${owl2neo4j_url}",
+    command => "rm -f /opt/owl2neo4j.jar && wget -P /opt/ ${owl2neo4j_url}",
     creates => "/opt/owl2neo4j",
     path => "/usr/bin:/bin",
     timeout => 120,  # downloading can take some time
@@ -270,14 +285,10 @@ class ui {
   # apt::ppa { 'ppa:chris-lea/node.js': }
   include apt
 
-  apt::ppa { 'ppa:chris-lea/node.js':
-    ensure => 'absent'
-  }
-
   apt::source { 'nodejs':
     ensure      => 'present',
-    comment     => 'Nodesource nodejs repo.',
-    location    => 'https://deb.nodesource.com/node_0.12',
+    comment     => 'Nodesource NodeJS repo.',
+    location    => 'https://deb.nodesource.com/node_4.x',
     release     => 'trusty',
     repos       => 'main',
     key         => '9FD3B784BC1C6FC31A8A0A1C1655A0AB68576280',
@@ -288,11 +299,12 @@ class ui {
 
   package { 'nodejs':
     name => 'nodejs',
+    ensure  => latest,
     require => Apt::Source['nodejs']
   }
   ->
   package {
-    'bower': ensure => '1.5.3', provider => 'npm';
+    'bower': ensure => '1.6.5', provider => 'npm';
     'grunt-cli': ensure => '0.1.13', provider => 'npm';
   }
   ->
@@ -314,7 +326,7 @@ class ui {
   }
   ->
   exec { "grunt":
-    command => "/usr/bin/grunt",
+    command => "/usr/bin/grunt build && /usr/bin/grunt compile",
     cwd => $ui_app_root,
     logoutput => on_failure,
     user => $appuser,
