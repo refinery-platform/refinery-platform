@@ -29,8 +29,6 @@
     "vendor": {
       "css": [
         "c3/c3.css",
-        "bootstrap/dist/css/bootstrap.min.css",
-        "bootstrap/less/*.less",
         "jquery-file-upload/css/jquery.fileupload-ui.css",
         "jquery-file-upload/css/jquery.fileupload.css",
         "ng-grid/ng-grid.css",

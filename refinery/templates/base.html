@@ -49,13 +49,8 @@
   <div class="navbar navbar-default navbar-fixed-top">
       <!-- <div class="container-fluid" style="box-shadow: 0 0 5px black;"> -->
       <div class="container-fluid">
-        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
-        <a class="navbar-btn" style="margin-left: 5px; margin-right: 5px;"
-          data-toggle="collapse" data-target=".navbar-collapse">
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </a>
+        <div class="row">
+        <div class="col-md-12">
 
         <a class="navbar-brand" href="{% url "home" %}" tabindex=1>
           {% if REFINERY_MAIN_LOGO != False %}
@@ -82,7 +77,15 @@
           <span class="name">{{ REFINERY_INSTANCE_NAME }}</span>
         </a>
 
-        <p class="navbar-text navbar-right">
+       <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <a class="btn navbar-btn" style="margin-left: 5px; margin-right:
+        5px;"
+          data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </a>
+        <span class="navbar-text navbar-right">
         {% if user.is_authenticated %}
           <i class="icon-user"></i>
           <a href="{% url "user" user.get_profile.uuid %}" tabindex=5>
@@ -117,6 +120,7 @@
              <span rp-analysis-monitor-global-list-status></span>
           </a>
         </span>
+        </span>
 
         <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
@@ -136,18 +140,22 @@
             </li>
           </ul>
         </div>
+
         </div>
+      </div>
+      </div>
 
       <div class="navbar-header">
-        <div class="row">
-          <div class="container-fluid">
+        <div class="container-fluid">
+          <div class="row">
+          <div col-md-12>
             <div style="clear: left; display:block;">
               {% block subheader %}{% endblock %}
             </div>
           </div>
+          </div>
         </div>
       </div>
-
   </div>
 
   {% if REFINERY_BANNER %}
