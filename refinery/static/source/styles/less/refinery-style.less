@@ -63,10 +63,27 @@ body {
   line-height: 20px;
 }
 
+.container-fluid{
+  padding-right: 20px;
+  padding-left: 20px;
+}
+
 .navbar-fixed-top, .navbar-fixed-bottom {
   padding-left: 0;
   padding-right: 0;
   border-radius: 0;
+}
+
+.collapse.navbar-collapse {
+  height: auto;
+  overflow: visible;
+}
+
+.collapse {
+  position: relative;
+  height: 0;
+  overflow: hidden;
+  transition: height .35s ease;
 }
 
 .btn.navbar-btn{
@@ -91,15 +108,15 @@ body {
   box-shadow: 0 1px 0 rgba(0,0,0,.25);
 }
 
+.navbar-default .navbar-text {
+  color: #eee;
+}
+
 .btn {
   border: none;
   margin-bottom: 0
 }
 
-.container-fluid{
-  padding-right: 20px;
-  padding-left: 20px;
-}
 .page-header {
   border-bottom: none;
   padding: 0px;
