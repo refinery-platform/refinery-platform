@@ -48,81 +48,80 @@
   <!-- header navigation bar -->
   <div class="navbar navbar-default navbar-fixed-top">
       <!-- <div class="container-fluid" style="box-shadow: 0 0 5px black;"> -->
-      <div class="container-fluid">
-        <div class="row">
+    <div class="container-fluid">
+      <div class="row">
         <div class="col-md-12">
 
-        <a class="navbar-brand" href="{% url "home" %}" tabindex=1>
-          {% if REFINERY_MAIN_LOGO != False %}
-            {% if REFINERY_MAIN_LOGO != '' %}
-          	<img
-              class="m-r-1-5"
-              style="height: {{ REFINERY_INNER_NAVBAR_HEIGHT }} px"
-              src="{% static REFINERY_MAIN_LOGO %}" />
-            {% else %}
-            <div class="svg-container" class="m-r-1">
-              <div class="bg bg-1"></div>
-              <div class="bg bg-2"></div>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="{{ REFINERY_INNER_NAVBAR_HEIGHT }}"
-                height="{{ REFINERY_INNER_NAVBAR_HEIGHT }}"
-                viewBox="0 0 100 100">
-                    <path d="M67.285 98.077c-.116.037-.25.08-.372.14-.525.178-1.074.373-1.624.55-.318.105-.63.202-.94.28-.397.123-.806.24-1.22.355-.33.104-.648.183-.978.262-.116.037-.22.055-.336.08 7.978-5.06 14.862-20.563 6.994-34.296-8.203-14.32-1.057-32.294 1.203-32.893-4.92 1.294-23.39 19.1-11.878 40.552l.037.062c6.23 11.62 5.133 17.73-1.41 23.46-.325.26-.592.215-.592.215 1.423-2.323 3.942-4.102 1.745-11.358-1.312-4.383-5.957-10.51-7.172-14.44-1.8-5.85-.098-11.757.55-12.214-1.293.914-6.255 10.906-8.464 17.314-2.216 6.402-1.985 13.58.096 18.896.642 1.64.793 2.034.793 2.034s-.173-.094-.403-.29C32.867 86.2 35.89 72.242 48.822 54.15l.08-.072c21.166-29.59-.922-48.487-3.095-50.61 3.662 3.588 4.603 21.936-9.253 41.283l-.06.086c-21.48 29.98-9.468 45.29 2.843 55.164H100V50.922c-.14 21.655-13.72 40.075-32.715 47.155z"></path>
-                    <path d="M28.205 96.13C11.603 87.983.115 70.813 0 50.923V100h39.337c-3.35-.757-6.567-1.825-9.625-3.174-.39-.177-1.392-.635-1.507-.695zM50 0H0v50.922C.213 22.766 22.503 0 50 0zM50 0c27.496 0 49.786 22.766 50 50.922V0H50z"></path>
-              </svg>
-            </div>
+          <a class="navbar-brand" href="{% url "home" %}" tabindex=1>
+            {% if REFINERY_MAIN_LOGO != False %}
+              {% if REFINERY_MAIN_LOGO != '' %}
+          	  <img
+                class="m-r-1-5"
+                style="height: {{ REFINERY_INNER_NAVBAR_HEIGHT }} px"
+                src="{% static REFINERY_MAIN_LOGO %}" />
+              {% else %}
+                <div class="svg-container" class="m-r-1">
+                  <div class="bg bg-1"></div>
+                  <div class="bg bg-2"></div>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="{{ REFINERY_INNER_NAVBAR_HEIGHT }}"
+                    height="{{ REFINERY_INNER_NAVBAR_HEIGHT }}"
+                    viewBox="0 0 100 100">
+                      <path d="M67.285 98.077c-.116.037-.25.08-.372.14-.525.178-1.074.373-1.624.55-.318.105-.63.202-.94.28-.397.123-.806.24-1.22.355-.33.104-.648.183-.978.262-.116.037-.22.055-.336.08 7.978-5.06 14.862-20.563 6.994-34.296-8.203-14.32-1.057-32.294 1.203-32.893-4.92 1.294-23.39 19.1-11.878 40.552l.037.062c6.23 11.62 5.133 17.73-1.41 23.46-.325.26-.592.215-.592.215 1.423-2.323 3.942-4.102 1.745-11.358-1.312-4.383-5.957-10.51-7.172-14.44-1.8-5.85-.098-11.757.55-12.214-1.293.914-6.255 10.906-8.464 17.314-2.216 6.402-1.985 13.58.096 18.896.642 1.64.793 2.034.793 2.034s-.173-.094-.403-.29C32.867 86.2 35.89 72.242 48.822 54.15l.08-.072c21.166-29.59-.922-48.487-3.095-50.61 3.662 3.588 4.603 21.936-9.253 41.283l-.06.086c-21.48 29.98-9.468 45.29 2.843 55.164H100V50.922c-.14 21.655-13.72 40.075-32.715 47.155z"></path>
+                      <path d="M28.205 96.13C11.603 87.983.115 70.813 0 50.923V100h39.337c-3.35-.757-6.567-1.825-9.625-3.174-.39-.177-1.392-.635-1.507-.695zM50 0H0v50.922C.213 22.766 22.503 0 50 0zM50 0c27.496 0 49.786 22.766 50 50.922V0H50z"></path>
+                  </svg>
+                </div>
+              {% endif %}
             {% endif %}
-          {% endif %}
-          <span class="name">{{ REFINERY_INSTANCE_NAME }}</span>
-        </a>
+            <span class="name">{{ REFINERY_INSTANCE_NAME }}</span>
+          </a>
 
        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
-        <a class="btn navbar-btn" style="margin-left: 5px; margin-right:
-        5px;"
-          data-toggle="collapse" data-target=".navbar-collapse">
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </a>
-        <span class="navbar-text navbar-right pull-right">
-        {% if user.is_authenticated %}
-          <i class="icon-user"></i>
-          <a href="{% url "user" user.get_profile.uuid %}" tabindex=5>
-          {% if user.first_name != "" or user.last_name != "" %}
-            {{ user.first_name }} {{ user.last_name }}
-          {% else %}
-            {{ user.username }}
-          {% endif %}
-          </a>&nbsp;&nbsp;|&nbsp;&nbsp;
-          <i class="icon-signout"></i>&nbsp;
-          <a href="
-          {% url "django.contrib.auth.views.logout" %}?next={% url "home" %}"
-          tabindex=6>
-            Logout
+          <a class="btn navbar-btn" style="margin-left: 5px; margin-right:5px;"
+            data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
           </a>
-        {% else %}
-          {% url 'registration.views.register' as registration_url %}
-          {% url 'django.contrib.auth.views.login' as login_url %}
-          {% if REGISTRATION_OPEN %}
-          <a rel="tooltip" data-placement="left" title="Sign Up"
-            href="{{registration_url}}" tabindex=7>
-            Register
-          </a>&nbsp;&nbsp;
+          <span class="navbar-text navbar-right pull-right">
+            {% if user.is_authenticated %}
+              <i class="icon-user"></i>
+              <a href="{% url "user" user.get_profile.uuid %}" tabindex=5>
+              {% if user.first_name != "" or user.last_name != "" %}
+                {{ user.first_name }} {{ user.last_name }}
+              {% else %}
+                {{ user.username }}
+              {% endif %}
+              </a>&nbsp;&nbsp;|&nbsp;&nbsp;
+              <i class="icon-signout"></i>&nbsp;
+              <a href="
+               {% url "django.contrib.auth.views.logout" %}?next={% url "home" %}"
+              tabindex=6>
+                Logout
+              </a>
+            {% else %}
+              {% url 'registration.views.register' as registration_url %}
+              {% url 'django.contrib.auth.views.login' as login_url %}
+              {% if REGISTRATION_OPEN %}
+                <a rel="tooltip" data-placement="left" title="Sign Up"
+                href="{{registration_url}}" tabindex=7>
+                  Register
+                </a>&nbsp;&nbsp;
+              &nbsp;&nbsp;|&nbsp;&nbsp;
+              {% endif %}
+              <i class="icon-signin"></i>&nbsp;<a rel="tooltip" data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
+            {% endif %}
             &nbsp;&nbsp;|&nbsp;&nbsp;
-        {% endif %}
-        <i class="icon-signin"></i>&nbsp;<a rel="tooltip" data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
-        {% endif %}
-        &nbsp;&nbsp;|&nbsp;&nbsp;
-        <span id="analyses-popover">
+            <span id="analyses-popover">
           <a tabindex=8 rp-analysis-monitor-global-list-status-popover
             title="Recent Analyses">
              <span rp-analysis-monitor-global-list-status></span>
           </a>
         </span>
-        </span>
+          </span>
 
-        <div class="collapse navbar-collapse">
+          <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
             <!--
             <li class="{{ navbar_class_home }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url "home" %}">Home</a></li>
@@ -143,7 +142,7 @@
 
         </div>
       </div>
-      </div>
+    </div>
 
       <div class="navbar-header">
         <div class="container-fluid">
