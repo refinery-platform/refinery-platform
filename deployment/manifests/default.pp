@@ -149,6 +149,10 @@ exec { "create_user":
   group => $appgroup,
 }
 
+file { "/opt":
+  ensure => directory,
+}
+
 class solr {
   $solr_version = "5.3.1"
   $solr_archive = "solr-${solr_version}.tgz"
@@ -157,53 +161,38 @@ class solr {
   package { 'java':
     name => 'openjdk-7-jdk',
   }
-
-  exec { "solr_wget":
-    command => "wget ${solr_url} -O /usr/src/${solr_archive}",
-    creates => "/usr/src/${solr_archive}",
-    path => "/usr/bin:/bin",
+  exec { "solr_download":
+    command => "wget ${solr_url} -O ${solr_archive}",
+    cwd     => "/usr/local/src",
+    creates => "/usr/local/src/${solr_archive}",
+    path    => "/usr/bin",
     timeout => 600,  # downloading can take a long time
   }
   ->
-  exec { "solr_unpack_installer":
-    command => "mkdir -p /opt && tar -xzf /usr/src/${solr_archive} -C /usr/src solr-${solr_version}/bin/install_solr_service.sh --strip-components=2",
+  exec { "solr_extract_installer":
+    command => "tar -xzf ${solr_archive} solr-${solr_version}/bin/install_solr_service.sh --strip-components=2",
+    cwd     => "/usr/local/src",
+    creates => "/usr/local/src/install_solr_service.sh",
+    path    => "/bin",
+  }
+  ->
+  exec { "solr_install":  # also starts the service
+    command => "sudo bash ./install_solr_service.sh ${solr_archive} -u ${appuser}",
+    cwd     => "/usr/local/src",
     creates => "/opt/solr-${solr_version}",
-    path => "/usr/bin:/bin",
-  }
-  ->
-  exec { "solr_install_as_service":
-    command => "sudo bash /usr/src/install_solr_service.sh /usr/src/${solr_archive} -d /vagrant/refinery/solr_app_data -u vagrant && chown -R ${appuser}:${appuser} /opt/solr-${solr_version}",
-    creates => "/opt/solr-${solr_version}",
-    path => "/usr/bin:/bin",
-  }
-  ->
-  exec { "solr_stop":
-    command => "sudo service solr stop",
-    path => "/usr/bin:/bin",
-  }
-  ->
-  file_line { "solr_config_pid":
-    path => "/vagrant/refinery/solr_app_data/solr.in.sh",
-    line => "SOLR_PID_DIR=/vagrant/refinery/solr_app_data",
-    match => "^SOLR_PID_DIR"
+    path    => "/usr/bin:/bin",
+    require => [ File["/opt"], Package['java'] ],
   }
   ->
   file_line { "solr_config_home":
-    path => "/vagrant/refinery/solr_app_data/solr.in.sh",
-    line => "SOLR_HOME=/vagrant/refinery/solr/",
+    path  => "/var/solr/solr.in.sh",
+    line  => "SOLR_HOME=${project_root}/solr",
     match => "^SOLR_HOME"
   }
-  ->
-  file_line { "solr_config_log4j":
-    path => "/vagrant/refinery/solr_app_data/solr.in.sh",
-    line => "LOG4J_PROPS=/vagrant/refinery/solr/log4j.properties",
-    match => "^LOG4J_PROPS"
-  }
-  ->
-  file_line { "solr_config_log_dir":
-    path => "/vagrant/refinery/solr_app_data/solr.in.sh",
-    line => "SOLR_LOGS_DIR=/vagrant/refinery/log",
-    match => "^SOLR_LOGS_DIR"
+  ~>
+  service { 'solr':
+    ensure     => running,
+    hasrestart => true,
   }
 }
 include solr

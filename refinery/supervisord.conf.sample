@@ -23,15 +23,6 @@ serverurl = http://localhost:9001 ; use an http:// url to specify an inet socket
 [rpcinterface:supervisor]
 supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 
-[program:solr]
-command = /opt/solr/bin/solr start -f
-environment = SOLR_INCLUDE="/vagrant/refinery/solr_app_data/solr.in.sh"
-autostart = true
-autorestart = true
-startsecs = 10
-stopasgroup = true
-killasgroup = true
-
 [program:neo4j]
 command = /opt/neo4j/bin/neo4j console
 autostart = true
