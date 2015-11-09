@@ -255,29 +255,6 @@ class neo4j {
     line => "org.neo4j.server.webserver.address=0.0.0.0",
     match => "^#org.neo4j.server.webserver.address=",
   }
-  ->
-  file_line { "neo4j_upgrade_enable":
-    path => "/opt/${neo4j_name}/conf/neo4j.properties",
-    line => "allow_store_upgrade=true",
-    match => "allow_store_upgrade=",
-  }
-  ->
-  exec { "neo4j_ensure_stopped":
-    command => "/home/vagrant/.virtualenvs/refinery-platform/bin/supervisorctl stop neo4j || :",
-    path => "/usr/bin:/bin",
-  }
-  ->
-  exec { "neo4j_upgrade_graph_db":
-    command => "/opt/${neo4j_name}/bin/neo4j start && /opt/${neo4j_name}/bin/neo4j stop",
-    user => "${appuser}",
-    path => "/usr/bin:/bin",
-  }
-  ->
-  file_line { "neo4j_upgrade_disable":
-    path => "/opt/${neo4j_name}/conf/neo4j.properties",
-    line => "allow_store_upgrade=false",
-    match => "allow_store_upgrade=",
-  }
   limits::fragment {
     "vagrant/soft/nofile":
       value => "40000";
