@@ -209,7 +209,7 @@ class solr {
 include solr
 
 class neo4j {
-  $neo4j_version = "2.2.4"
+  $neo4j_version = "2.3.0"
   $neo4j_name = "neo4j-community-${neo4j_version}"
   $neo4j_archive = "${neo4j_name}-unix.tar.gz"
   $neo4j_url = "http://neo4j.com/artifact.php?name=${neo4j_archive}"
@@ -232,6 +232,18 @@ class neo4j {
     target => "${neo4j_name}",
   }
   ->
+  file { "/opt/neo4j-data":
+    ensure => 'directory',
+    owner  => 'vagrant',
+    group  => 'vagrant',
+  }
+  ->
+  file_line { "neo4j_graph_db_location":
+    path => "/opt/${neo4j_name}/conf/neo4j-server.properties",
+    line => "org.neo4j.server.database.location=/opt/neo4j-data/graph.db",
+    match => "^org.neo4j.server.database.location=",
+  }
+  ->
   file_line { "neo4j_no_authentication":
     path => "/opt/${neo4j_name}/conf/neo4j-server.properties",
     line => "dbms.security.auth_enabled=false",
@@ -242,6 +254,29 @@ class neo4j {
     path => "/opt/${neo4j_name}/conf/neo4j-server.properties",
     line => "org.neo4j.server.webserver.address=0.0.0.0",
     match => "^#org.neo4j.server.webserver.address=",
+  }
+  ->
+  file_line { "neo4j_upgrade_enable":
+    path => "/opt/${neo4j_name}/conf/neo4j.properties",
+    line => "allow_store_upgrade=true",
+    match => "allow_store_upgrade=",
+  }
+  ->
+  exec { "neo4j_ensure_stopped":
+    command => "/home/vagrant/.virtualenvs/refinery-platform/bin/supervisorctl stop neo4j || :",
+    path => "/usr/bin:/bin",
+  }
+  ->
+  exec { "neo4j_upgrade_graph_db":
+    command => "/opt/${neo4j_name}/bin/neo4j start && /opt/${neo4j_name}/bin/neo4j stop",
+    user => "${appuser}",
+    path => "/usr/bin:/bin",
+  }
+  ->
+  file_line { "neo4j_upgrade_disable":
+    path => "/opt/${neo4j_name}/conf/neo4j.properties",
+    line => "allow_store_upgrade=false",
+    match => "allow_store_upgrade=",
   }
   limits::fragment {
     "vagrant/soft/nofile":
