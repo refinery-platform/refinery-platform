@@ -1,7 +1,7 @@
-$appuser = "vagrant"
+$app_user = "vagrant"
 $appgroup = "vagrant"
-$virtualenv = "/home/${appuser}/.virtualenvs/refinery-platform"
-$project_root = "/${appuser}"
+$virtualenv = "/home/${app_user}/.virtualenvs/refinery-platform"
+$project_root = "/${app_user}"
 $deployment_root = "${project_root}/deployment"
 $django_root = "${project_root}/refinery"
 $requirements = "${project_root}/requirements.txt"
@@ -17,12 +17,12 @@ class { 'timezone':
 sysctl { 'vm.swappiness': value => '10' }
 
 # to avoid empty ident name not allowed error when using git
-user { $appuser: comment => $appuser }
+user { $app_user: comment => $app_user }
 
-file { "/home/${appuser}/.ssh/config":
+file { "/home/${app_user}/.ssh/config":
   ensure => file,
   source => "${deployment_root}/ssh-config",
-  owner => $appuser,
+  owner => $app_user,
   group => $appgroup,
 }
 
@@ -35,14 +35,14 @@ class { 'postgresql::server':
 }
 class { 'postgresql::lib::devel':
 }
-postgresql::server::role { $appuser:
+postgresql::server::role { $app_user:
   createdb => true,
 }
 ->
 postgresql::server::db { 'refinery':
-  user => $appuser,
+  user => $app_user,
   password => '',
-  owner => $appuser,
+  owner => $app_user,
 }
 
 class { 'python':
@@ -63,30 +63,30 @@ class venvdeps {
 }
 include venvdeps
 
-file { "/home/${appuser}/.virtualenvs":
+file { "/home/${app_user}/.virtualenvs":
   # workaround for parent directory /home/vagrant/.virtualenvs does not exist error
   ensure => directory,
-  owner => $appuser,
+  owner => $app_user,
   group => $appgroup,
 }
 ->
 python::virtualenv { $virtualenv:
   ensure => present,
-  owner => $appuser,
+  owner => $app_user,
   group => $appgroup,
   require => [ Class['venvdeps'], Class['postgresql::lib::devel'] ],
 }
 ~>
 python::requirements { $requirements:
   virtualenv => $virtualenv,
-  owner => $appuser,
+  owner => $app_user,
   group => $appgroup,
 }
 
 package { 'virtualenvwrapper': }
 ->
 file_line { "virtualenvwrapper_config":
-  path => "/home/${appuser}/.profile",
+  path => "/home/${app_user}/.profile",
   line => "source /etc/bash_completion.d/virtualenvwrapper",
   require => Python::Virtualenv[$virtualenv],
 }
@@ -96,25 +96,25 @@ file { "virtualenvwrapper_project":
   ensure => file,
   path => "${virtualenv}/.project",
   content => "${django_root}",
-  owner => $appuser,
+  owner => $app_user,
   group => $appgroup,
 }
 
 file { ["${project_root}/isa-tab", "${project_root}/import", "${project_root}/static"]:
   ensure => directory,
-  owner => $appuser,
+  owner => $app_user,
   group => $appgroup,
 }
 
 file_line { "django_settings_module":
-  path => "/home/${appuser}/.profile",
+  path => "/home/${app_user}/.profile",
   line => "export DJANGO_SETTINGS_MODULE=${django_settings_module}",
 }
 ->
 file { "${django_root}/config/config.json":
   ensure => file,
   source => "${django_root}/config/config.json.sample",
-  owner => $appuser,
+  owner => $app_user,
   group => $appgroup,
   replace => false,
 }
@@ -122,7 +122,7 @@ file { "${django_root}/config/config.json":
 exec { "syncdb":
   command => "${virtualenv}/bin/python ${django_root}/manage.py syncdb --migrate --noinput",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user => $appuser,
+  user => $app_user,
   group => $appgroup,
   require => [
                Python::Requirements[$requirements],
@@ -133,21 +133,21 @@ exec { "syncdb":
 exec { "create_superuser":
   command => "${virtualenv}/bin/python ${django_root}/manage.py loaddata superuser.json",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user => $appuser,
+  user => $app_user,
   group => $appgroup,
 }
 ->
 exec { "init_refinery":
   command => "${virtualenv}/bin/python ${django_root}/manage.py init_refinery 'Refinery' '192.168.50.50:8000'",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user => $appuser,
+  user => $app_user,
   group => $appgroup,
 }
 ->
 exec { "create_user":
   command => "${virtualenv}/bin/python ${django_root}/manage.py create_user 'guest' 'guest' 'guest@example.com' 'Guest' '' ''",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user => $appuser,
+  user => $app_user,
   group => $appgroup,
 }
 
@@ -179,7 +179,7 @@ class solr {
   }
   ->
   exec { "solr_install":  # also starts the service
-    command => "sudo bash ./install_solr_service.sh ${solr_archive} -u ${appuser}",
+    command => "sudo bash ./install_solr_service.sh ${solr_archive} -u ${app_user}",
     cwd     => "/usr/local/src",
     creates => "/opt/solr-${solr_version}",
     path    => "/usr/bin:/bin",
@@ -213,7 +213,7 @@ class neo4j {
   }
   ->
   exec { "neo4j_unpack":
-    command => "mkdir -p /opt && tar -xzf /usr/src/${neo4j_archive} -C /opt && chown -R ${appuser}:${appuser} /opt/${neo4j_name}",
+    command => "mkdir -p /opt && tar -xzf /usr/src/${neo4j_archive} -C /opt && chown -R ${app_user}:${app_user} /opt/${neo4j_name}",
     creates => "/opt/${neo4j_name}",
     path => "/usr/bin:/bin",
   }
@@ -315,7 +315,7 @@ class ui {
     command => "/usr/bin/npm prune && /usr/bin/npm install",
     cwd => $ui_app_root,
     logoutput => on_failure,
-    user => $appuser,
+    user => $app_user,
     group => $appgroup,
   }
   ->
@@ -323,23 +323,23 @@ class ui {
     command => "/usr/bin/bower prune && /usr/bin/bower install --config.interactive=false",
     cwd => $ui_app_root,
     logoutput => on_failure,
-    user => $appuser,
+    user => $app_user,
     group => $appgroup,
-    environment => ["HOME=/home/${appuser}"],
+    environment => ["HOME=/home/${app_user}"],
   }
   ->
   exec { "grunt":
     command => "/usr/bin/grunt build && /usr/bin/grunt compile",
     cwd => $ui_app_root,
     logoutput => on_failure,
-    user => $appuser,
+    user => $app_user,
     group => $appgroup,
   }
   ->
   exec { "collectstatic":
     command => "${virtualenv}/bin/python ${django_root}/manage.py collectstatic --clear --noinput",
     environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-    user => $appuser,
+    user => $app_user,
     group => $appgroup,
     require => Python::Requirements[$requirements],
   }
@@ -349,7 +349,7 @@ include ui
 file { "${django_root}/supervisord.conf":
   ensure => file,
   source => "${django_root}/supervisord.conf.sample",
-  owner => $appuser,
+  owner => $app_user,
   group => $appgroup,
 }
 ->
@@ -358,7 +358,7 @@ exec { "supervisord":
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   cwd => $django_root,
   creates => "/tmp/supervisord.pid",
-  user => $appuser,
+  user => $app_user,
   group => $appgroup,
   require => [ Class["ui"], Class["solr"], Class["neo4j"], Class ["rabbit"] ],
 }
