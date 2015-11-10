@@ -20,6 +20,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMessage
 from django.template import loader, Context
 from django.core.cache import cache
+from django.core.signing import Signer
 from guardian.shortcuts import get_objects_for_user, get_objects_for_group, \
     get_perms, get_groups_with_perms
 from guardian.models import GroupObjectPermission
@@ -43,10 +44,10 @@ from data_set_manager.api import StudyResource, AssayResource, \
     InvestigationResource
 from data_set_manager.models import Node, Study, Attribute
 from file_store.models import FileStoreItem
-
 from fadapa import Fadapa
 
 logger = logging.getLogger(__name__)
+signer = Signer()
 
 
 # Specifically made for descendants of SharableResource.
@@ -132,7 +133,8 @@ class SharableResourceAPIInterface(object):
         except:
             user_uuid = None
 
-        cache_check = cache.get("res_list%s" % user_uuid)
+        res_list_unique = signer.sign(str(res_list)).rpartition(":")[-1]
+        cache_check = cache.get("res_list_%s" % res_list_unique)
 
         if cache_check is None:
             owned_res_set = Set(
@@ -178,7 +180,7 @@ class SharableResourceAPIInterface(object):
             res_list = self.query_filtering(res_list, request.GET)
 
             if user_uuid:
-                cache.add("res_list%s" % user_uuid, res_list)
+                cache.add("res_list_%s" % res_list_unique, res_list)
 
             return res_list
         else:
