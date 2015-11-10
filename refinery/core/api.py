@@ -15,12 +15,14 @@ from django.conf import settings
 from django.conf.urls.defaults import url
 from django.contrib.auth.models import User, Group
 from django.contrib.sites.models import get_current_site
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMessage
 from django.template import loader, Context
 
 from guardian.shortcuts import get_objects_for_user, get_objects_for_group, \
-    get_perms
+    get_perms, get_groups_with_perms
+from guardian.models import GroupObjectPermission
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication, Authentication
 from tastypie.authorization import Authorization
@@ -41,7 +43,6 @@ from data_set_manager.api import StudyResource, AssayResource, \
     InvestigationResource
 from data_set_manager.models import Node, Study, Attribute
 from file_store.models import FileStoreItem
-from guardian.shortcuts import get_groups_with_perms
 
 from fadapa import Fadapa
 
@@ -132,17 +133,34 @@ class SharableResourceAPIInterface(object):
                 user,
                 'core.share_%s' %
                 self.res_type._meta.verbose_name).values_list("id", flat=True))
+
         public_res_set = Set(
             get_objects_for_group(
                 ExtendedGroup.objects.public_group(),
                 'core.read_%s' %
                 self.res_type._meta.verbose_name).values_list("id", flat=True))
 
+        # Get content type, needed to map Guardian group permission.
+        content_type = ContentType.objects.get(model='dataset')
+
         # instantiate owner and public fields
         for res in res_list:
-            setattr(res, 'is_owner', res.id in owned_res_set)
+            is_owner = res.id in owned_res_set
+            setattr(res, 'is_owner', is_owner)
+            setattr(
+                res,
+                'owner',
+                user.userprofile.uuid if is_owner else None
+            )
             setattr(res, 'public', res.id in public_res_set)
-            setattr(res, 'is_shared', len(get_groups_with_perms(res)) > 0)
+            setattr(
+                res,
+                'is_shared',
+                GroupObjectPermission.objects.filter(
+                    content_type_id=content_type.id,
+                    object_pk=res.id
+                ).count()
+            )
 
             if 'sharing' in kwargs and kwargs['sharing']:
                 setattr(res, 'share_list', self.get_share_list(user, res))
@@ -362,6 +380,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
+    owner = fields.CharField(attribute='owner', null=True)
     is_shared = fields.BooleanField(attribute='is_shared', null=True)
 
     def __init__(self):
@@ -382,10 +401,10 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         }
 
     def dehydrate(self, bundle):
-        if bundle.obj.get_owner() is not None:
-            bundle.data['owner'] = bundle.obj.get_owner().userprofile.uuid
-        else:
-            bundle.data['owner'] = None
+        if not bundle.data['owner']:
+            owner = bundle.obj.get_owner()
+            if owner:
+                bundle.data['owner'] = owner.userprofile.uuid
         return bundle
 
     def apply_sorting(self, obj_list, options=None):
