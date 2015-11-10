@@ -1,10 +1,12 @@
 $appuser = "vagrant"
 $appgroup = "vagrant"
 $virtualenv = "/home/${appuser}/.virtualenvs/refinery-platform"
-$requirements = "/vagrant/requirements.txt"
-$project_root = "/vagrant/refinery"
+$project_root = "/${appuser}"
+$deployment_root = "${project_root}/deployment"
+$django_root = "${project_root}/refinery"
+$requirements = "${project_root}/requirements.txt"
 $django_settings_module = "config.settings.dev"
-$ui_app_root = "${project_root}/ui"
+$ui_app_root = "${django_root}/ui"
 
 # to make logs easier to read
 class { 'timezone':
@@ -19,7 +21,7 @@ user { $appuser: comment => $appuser }
 
 file { "/home/${appuser}/.ssh/config":
   ensure => file,
-  source => "/vagrant/deployment/ssh-config",
+  source => "${deployment_root}/ssh-config",
   owner => $appuser,
   group => $appgroup,
 }
@@ -93,12 +95,12 @@ file { "virtualenvwrapper_project":
   # workaround for setvirtualenvproject command not found
   ensure => file,
   path => "${virtualenv}/.project",
-  content => "${project_root}",
+  content => "${django_root}",
   owner => $appuser,
   group => $appgroup,
 }
 
-file { ["/vagrant/isa-tab", "/vagrant/import", "/vagrant/static"]:
+file { ["${project_root}/isa-tab", "${project_root}/import", "${project_root}/static"]:
   ensure => directory,
   owner => $appuser,
   group => $appgroup,
@@ -109,16 +111,16 @@ file_line { "django_settings_module":
   line => "export DJANGO_SETTINGS_MODULE=${django_settings_module}",
 }
 ->
-file { "${project_root}/config/config.json":
+file { "${django_root}/config/config.json":
   ensure => file,
-  source => "${project_root}/config/config.json.sample",
+  source => "${django_root}/config/config.json.sample",
   owner => $appuser,
   group => $appgroup,
   replace => false,
 }
 ->
 exec { "syncdb":
-  command => "${virtualenv}/bin/python ${project_root}/manage.py syncdb --migrate --noinput",
+  command => "${virtualenv}/bin/python ${django_root}/manage.py syncdb --migrate --noinput",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user => $appuser,
   group => $appgroup,
@@ -129,21 +131,21 @@ exec { "syncdb":
 }
 ->
 exec { "create_superuser":
-  command => "${virtualenv}/bin/python ${project_root}/manage.py loaddata superuser.json",
+  command => "${virtualenv}/bin/python ${django_root}/manage.py loaddata superuser.json",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user => $appuser,
   group => $appgroup,
 }
 ->
 exec { "init_refinery":
-  command => "${virtualenv}/bin/python ${project_root}/manage.py init_refinery 'Refinery' '192.168.50.50:8000'",
+  command => "${virtualenv}/bin/python ${django_root}/manage.py init_refinery 'Refinery' '192.168.50.50:8000'",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user => $appuser,
   group => $appgroup,
 }
 ->
 exec { "create_user":
-  command => "${virtualenv}/bin/python ${project_root}/manage.py create_user 'guest' 'guest' 'guest@example.com' 'Guest' '' ''",
+  command => "${virtualenv}/bin/python ${django_root}/manage.py create_user 'guest' 'guest' 'guest@example.com' 'Guest' '' ''",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user => $appuser,
   group => $appgroup,
@@ -186,7 +188,7 @@ class solr {
   ->
   file_line { "solr_config_home":
     path  => "/var/solr/solr.in.sh",
-    line  => "SOLR_HOME=${project_root}/solr",
+    line  => "SOLR_HOME=${django_root}/solr",
     match => "^SOLR_HOME"
   }
   ~>
@@ -335,7 +337,7 @@ class ui {
   }
   ->
   exec { "collectstatic":
-    command => "${virtualenv}/bin/python ${project_root}/manage.py collectstatic --clear --noinput",
+    command => "${virtualenv}/bin/python ${django_root}/manage.py collectstatic --clear --noinput",
     environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
     user => $appuser,
     group => $appgroup,
@@ -344,9 +346,9 @@ class ui {
 }
 include ui
 
-file { "${project_root}/supervisord.conf":
+file { "${django_root}/supervisord.conf":
   ensure => file,
-  source => "${project_root}/supervisord.conf.sample",
+  source => "${django_root}/supervisord.conf.sample",
   owner => $appuser,
   group => $appgroup,
 }
@@ -354,7 +356,7 @@ file { "${project_root}/supervisord.conf":
 exec { "supervisord":
   command => "${virtualenv}/bin/supervisord",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  cwd => $project_root,
+  cwd => $django_root,
   creates => "/tmp/supervisord.pid",
   user => $appuser,
   group => $appgroup,
@@ -370,7 +372,7 @@ exec { 'apache2-wsgi':
 ->
 file { "/etc/apache2/sites-available/001-refinery.conf":
   ensure => file,
-  content => template("/vagrant/deployment/apache.conf"),
+  content => template("${deployment_root}/apache.conf"),
 }
 ~>
 exec { 'refinery-apache2':
