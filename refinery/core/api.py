@@ -19,7 +19,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMessage
 from django.template import loader, Context
-
+from django.core.cache import cache
 from guardian.shortcuts import get_objects_for_user, get_objects_for_group, \
     get_perms, get_groups_with_perms
 from guardian.models import GroupObjectPermission
@@ -127,48 +127,55 @@ class SharableResourceAPIInterface(object):
 
     # Turns on certain things depending on flags
     def transform_res_list(self, user, res_list, request, **kwargs):
+        cache_check = cache.get("res_list%s" % user.userprofile.uuid)
+        if cache_check is None:
+            owned_res_set = Set(
+                get_objects_for_user(
+                    user,
+                    'core.share_%s' %
+                    self.res_type._meta.verbose_name).values_list("id",
+                                                                  flat=True))
 
-        owned_res_set = Set(
-            get_objects_for_user(
-                user,
-                'core.share_%s' %
-                self.res_type._meta.verbose_name).values_list("id", flat=True))
+            public_res_set = Set(
+                get_objects_for_group(
+                    ExtendedGroup.objects.public_group(),
+                    'core.read_%s' %
+                    self.res_type._meta.verbose_name).values_list("id",
+                                                                  flat=True))
 
-        public_res_set = Set(
-            get_objects_for_group(
-                ExtendedGroup.objects.public_group(),
-                'core.read_%s' %
-                self.res_type._meta.verbose_name).values_list("id", flat=True))
+            # Get content type, needed to map Guardian group permission.
+            content_type = ContentType.objects.get(model='dataset')
 
-        # Get content type, needed to map Guardian group permission.
-        content_type = ContentType.objects.get(model='dataset')
+            # instantiate owner and public fields
+            for res in res_list:
+                is_owner = res.id in owned_res_set
+                setattr(res, 'is_owner', is_owner)
+                setattr(
+                    res,
+                    'owner',
+                    user.userprofile.uuid if is_owner else None
+                )
+                setattr(res, 'public', res.id in public_res_set)
+                setattr(
+                    res,
+                    'is_shared',
+                    GroupObjectPermission.objects.filter(
+                        content_type_id=content_type.id,
+                        object_pk=res.id
+                    ).count()
+                )
 
-        # instantiate owner and public fields
-        for res in res_list:
-            is_owner = res.id in owned_res_set
-            setattr(res, 'is_owner', is_owner)
-            setattr(
-                res,
-                'owner',
-                user.userprofile.uuid if is_owner else None
-            )
-            setattr(res, 'public', res.id in public_res_set)
-            setattr(
-                res,
-                'is_shared',
-                GroupObjectPermission.objects.filter(
-                    content_type_id=content_type.id,
-                    object_pk=res.id
-                ).count()
-            )
+                if 'sharing' in kwargs and kwargs['sharing']:
+                    setattr(res, 'share_list', self.get_share_list(user, res))
 
-            if 'sharing' in kwargs and kwargs['sharing']:
-                setattr(res, 'share_list', self.get_share_list(user, res))
+            # Filter for query flags.
+            res_list = self.query_filtering(res_list, request.GET)
 
-        # Filter for query flags.
-        res_list = self.query_filtering(res_list, request.GET)
+            cache.add("res_list%s" % user.userprofile.uuid, res_list)
 
-        return res_list
+            return res_list
+        else:
+            return cache_check
 
     def build_bundle_list(self, request, res_list, **kwargs):
         bundle_list = []
