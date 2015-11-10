@@ -131,7 +131,7 @@ class SharableResourceAPIInterface(object):
         owned_res_set = Set(
             get_objects_for_user(
                 user,
-                'core.share_%s' %
+                'core.add_%s' %
                 self.res_type._meta.verbose_name).values_list("id", flat=True))
 
         public_res_set = Set(
@@ -403,8 +403,10 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     def dehydrate(self, bundle):
         if not bundle.data['owner']:
             owner = bundle.obj.get_owner()
-            if owner:
+            try:
                 bundle.data['owner'] = owner.userprofile.uuid
+            except:
+                pass
         return bundle
 
     def apply_sorting(self, obj_list, options=None):
@@ -683,10 +685,17 @@ class AnalysisResource(ModelResource):
 
     def dehydrate(self, bundle):
         bundle.data['is_owner'] = False
-        if bundle.obj.get_owner() is not None:
-            bundle.data['owner'] = bundle.obj.get_owner().userprofile.uuid
-            if bundle.request.user.userprofile.uuid == bundle.data['owner']:
-                bundle.data['is_owner'] = True
+        owner = bundle.obj.get_owner()
+        if owner:
+            try:
+                bundle.data['owner'] = owner.userprofile.uuid
+                user = bundle.request.user
+                if (hasattr(user, 'userprofile') and
+                        user.userprofile.uuid == bundle.data['owner']):
+                    bundle.data['is_owner'] = True
+            except:
+                bundle.data['owner'] = None
+
         else:
             bundle.data['owner'] = None
         return bundle
