@@ -127,7 +127,13 @@ class SharableResourceAPIInterface(object):
 
     # Turns on certain things depending on flags
     def transform_res_list(self, user, res_list, request, **kwargs):
-        cache_check = cache.get("res_list%s" % user.userprofile.uuid)
+        try:
+            user_uuid = user.userprofile.uuid
+        except:
+            user_uuid = None
+
+        cache_check = cache.get("res_list%s" % user_uuid)
+
         if cache_check is None:
             owned_res_set = Set(
                 get_objects_for_user(
@@ -153,7 +159,7 @@ class SharableResourceAPIInterface(object):
                 setattr(
                     res,
                     'owner',
-                    user.userprofile.uuid if is_owner else None
+                    user_uuid if is_owner else None
                 )
                 setattr(res, 'public', res.id in public_res_set)
                 setattr(
@@ -171,7 +177,8 @@ class SharableResourceAPIInterface(object):
             # Filter for query flags.
             res_list = self.query_filtering(res_list, request.GET)
 
-            cache.add("res_list%s" % user.userprofile.uuid, res_list)
+            if user_uuid:
+                cache.add("res_list%s" % user_uuid, res_list)
 
             return res_list
         else:
