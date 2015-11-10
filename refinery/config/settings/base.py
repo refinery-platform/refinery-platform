@@ -457,6 +457,13 @@ if REFINERY_EXTERNAL_AUTH:
             'core.models.RefineryLDAPBackend',
         )
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': '0.0.0.0:11211',
+    }
+}
+
 # CURRENT_COMMIT retrieves the most recent commit used allowing for easier
 # debugging of a Refinery instance
 
