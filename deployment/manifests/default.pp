@@ -1,5 +1,5 @@
 $app_user = "vagrant"
-$appgroup = "vagrant"
+$app_group = $app_user
 $virtualenv = "/home/${app_user}/.virtualenvs/refinery-platform"
 $project_root = "/${app_user}"
 $deployment_root = "${project_root}/deployment"
@@ -23,7 +23,7 @@ file { "/home/${app_user}/.ssh/config":
   ensure => file,
   source => "${deployment_root}/ssh-config",
   owner => $app_user,
-  group => $appgroup,
+  group => $app_group,
 }
 
 class { 'postgresql::globals':
@@ -67,20 +67,20 @@ file { "/home/${app_user}/.virtualenvs":
   # workaround for parent directory /home/vagrant/.virtualenvs does not exist error
   ensure => directory,
   owner => $app_user,
-  group => $appgroup,
+  group => $app_group,
 }
 ->
 python::virtualenv { $virtualenv:
   ensure => present,
   owner => $app_user,
-  group => $appgroup,
+  group => $app_group,
   require => [ Class['venvdeps'], Class['postgresql::lib::devel'] ],
 }
 ~>
 python::requirements { $requirements:
   virtualenv => $virtualenv,
   owner => $app_user,
-  group => $appgroup,
+  group => $app_group,
 }
 
 package { 'virtualenvwrapper': }
@@ -97,13 +97,13 @@ file { "virtualenvwrapper_project":
   path => "${virtualenv}/.project",
   content => "${django_root}",
   owner => $app_user,
-  group => $appgroup,
+  group => $app_group,
 }
 
 file { ["${project_root}/isa-tab", "${project_root}/import", "${project_root}/static"]:
   ensure => directory,
   owner => $app_user,
-  group => $appgroup,
+  group => $app_group,
 }
 
 file_line { "django_settings_module":
@@ -115,7 +115,7 @@ file { "${django_root}/config/config.json":
   ensure => file,
   source => "${django_root}/config/config.json.sample",
   owner => $app_user,
-  group => $appgroup,
+  group => $app_group,
   replace => false,
 }
 ->
@@ -123,7 +123,7 @@ exec { "syncdb":
   command => "${virtualenv}/bin/python ${django_root}/manage.py syncdb --migrate --noinput",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user => $app_user,
-  group => $appgroup,
+  group => $app_group,
   require => [
                Python::Requirements[$requirements],
                Postgresql::Server::Db["refinery"]
@@ -134,21 +134,21 @@ exec { "create_superuser":
   command => "${virtualenv}/bin/python ${django_root}/manage.py loaddata superuser.json",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user => $app_user,
-  group => $appgroup,
+  group => $app_group,
 }
 ->
 exec { "init_refinery":
   command => "${virtualenv}/bin/python ${django_root}/manage.py init_refinery 'Refinery' '192.168.50.50:8000'",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user => $app_user,
-  group => $appgroup,
+  group => $app_group,
 }
 ->
 exec { "create_user":
   command => "${virtualenv}/bin/python ${django_root}/manage.py create_user 'guest' 'guest' 'guest@example.com' 'Guest' '' ''",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user => $app_user,
-  group => $appgroup,
+  group => $app_group,
 }
 
 file { "/opt":
@@ -316,7 +316,7 @@ class ui {
     cwd => $ui_app_root,
     logoutput => on_failure,
     user => $app_user,
-    group => $appgroup,
+    group => $app_group,
   }
   ->
   exec { "bower_modules":
@@ -324,7 +324,7 @@ class ui {
     cwd => $ui_app_root,
     logoutput => on_failure,
     user => $app_user,
-    group => $appgroup,
+    group => $app_group,
     environment => ["HOME=/home/${app_user}"],
   }
   ->
@@ -333,14 +333,14 @@ class ui {
     cwd => $ui_app_root,
     logoutput => on_failure,
     user => $app_user,
-    group => $appgroup,
+    group => $app_group,
   }
   ->
   exec { "collectstatic":
     command => "${virtualenv}/bin/python ${django_root}/manage.py collectstatic --clear --noinput",
     environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
     user => $app_user,
-    group => $appgroup,
+    group => $app_group,
     require => Python::Requirements[$requirements],
   }
 }
@@ -350,7 +350,7 @@ file { "${django_root}/supervisord.conf":
   ensure => file,
   source => "${django_root}/supervisord.conf.sample",
   owner => $app_user,
-  group => $appgroup,
+  group => $app_group,
 }
 ->
 exec { "supervisord":
@@ -359,7 +359,7 @@ exec { "supervisord":
   cwd => $django_root,
   creates => "/tmp/supervisord.pid",
   user => $app_user,
-  group => $appgroup,
+  group => $app_group,
   require => [ Class["ui"], Class["solr"], Class["neo4j"], Class ["rabbit"] ],
 }
 
