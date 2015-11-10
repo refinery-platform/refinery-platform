@@ -492,6 +492,19 @@ a.analysis-header{
   body {
     margin-top: 0;
   }
+
+  .navbar .navbar-btn {
+    display: block;
+
+    .icon-bar {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background-color: #f5f5f5;
+      border-radius: 1px;
+      box-shadow: 0 1px 0 rgba(0,0,0,.25);
+    }
+  }
 }
 
 .navbar {
@@ -618,7 +631,7 @@ a.analysis-header{
 @navbar-header-background:          fade( lighten( @navbar-background-highlight, 30% ), 25% );
 @navbar-header-border:              fade( @gray-light, 70% );
 
-.navbar-header {
+.navbar-subheader {
   background-color: @navbar-header-background;
   border-top: 1px dotted @navbar-header-border;
   border-bottom: 1px solid @navbar-header-border;
@@ -634,6 +647,9 @@ a.analysis-header{
 
   .navbar .page-header {
     padding: 0px 5px;
+  }
+  .navbar-header{
+    float: left;
   }
 }
 
