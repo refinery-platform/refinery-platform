@@ -12,8 +12,9 @@ import socket
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User, Group, Permission
 from django.contrib.auth.signals import user_logged_in
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages
 from django.contrib.messages import info
 from django.core.exceptions import MultipleObjectsReturned
@@ -37,6 +38,7 @@ from galaxy_connector.models import Instance
 from .utils import update_data_set_index, delete_data_set_index, \
     add_read_access_in_neo4j, remove_read_access_in_neo4j, \
     delete_data_set_neo4j, delete_ontology_from_neo4j
+from guardian.models import UserObjectPermission
 
 
 logger = logging.getLogger(__name__)
@@ -387,6 +389,26 @@ class DataSet(SharableResource):
         return (self.name + " - " +
                 self.get_owner_username() + " - " +
                 self.summary)
+
+    def get_owner(self):
+        owner = None
+
+        content_type_id = ContentType.objects.get_for_model(self).id
+        permission_id = Permission.objects.filter(codename='add_dataset')[0].id
+
+        perms = UserObjectPermission.objects.filter(
+            content_type_id=content_type_id,
+            permission_id=permission_id,
+            object_pk=self.id
+        )
+
+        if perms.count() > 0:
+            try:
+                owner = User.objects.get(id=perms[0].user_id)
+            except User.DoesNotExist:
+                pass
+
+        return owner
 
     def set_investigation(self, investigation, message=""):
         """Associate this data set with an investigation. If this data set has
