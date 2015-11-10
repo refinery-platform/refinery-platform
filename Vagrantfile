@@ -47,7 +47,7 @@ GALAXY_WARNING_SCRIPT
   $librarian_puppet_install_script =
 <<SCRIPT
   export DEBIAN_FRONTEND=noninteractive
-  /usr/bin/apt-get -qq update && /usr/bin/apt-get -q -y install git ruby-dev
+  /usr/bin/apt-get clean && /usr/bin/apt-get -qq update && /usr/bin/apt-get -q -y install git ruby-dev
   /usr/bin/gem install librarian-puppet -v 2.2.1 --no-rdoc --no-ri && cd /vagrant/deployment && librarian-puppet install
 SCRIPT
   config.vm.provision :shell, :inline => $librarian_puppet_install_script
