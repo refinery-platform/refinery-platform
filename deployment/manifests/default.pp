@@ -177,9 +177,15 @@ class solr {
     path => "/usr/bin:/bin",
   }
   ->
+  file { "/opt/solr":
+    ensure => link,
+    target => "/opt/solr-${solr_version}",
+  }
+  ->
   exec { "solr_stop":
     command => "sudo service solr stop",
     path => "/usr/bin:/bin",
+    returns => [0, 1]
   }
   ->
   file_line { "solr_config_pid":
