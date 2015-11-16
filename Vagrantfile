@@ -43,14 +43,8 @@ GALAXY_WARNING_SCRIPT
 #   puts("WARNING: $REFINERY_VM_TRANSFER_DIR is not set: importing datasets from the command line will not work.")
   end
 
-  # Install Librarian-puppet and modules before puppet provisioning (requires git and ruby-dev)
-  $librarian_puppet_install_script =
-<<SCRIPT
-  export DEBIAN_FRONTEND=noninteractive
-  /usr/bin/apt-get clean && /usr/bin/apt-get -qq update && /usr/bin/apt-get -q -y install git ruby-dev
-  /usr/bin/gem install librarian-puppet -v 2.2.1 --no-rdoc --no-ri && cd /vagrant/deployment && librarian-puppet install
-SCRIPT
-  config.vm.provision :shell, :inline => $librarian_puppet_install_script
+  # Install Librarian-puppet and modules before puppet provisioning
+  config.vm.provision :shell, path: "deployment/bootstrap.sh"
 
   config.vm.provision :puppet do |puppet|
     puppet.manifests_path = "deployment/manifests"
