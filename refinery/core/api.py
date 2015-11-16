@@ -154,6 +154,11 @@ class SharableResourceAPIInterface(object):
             # Get content type, needed to map Guardian group permission.
             content_type = ContentType.objects.get(model='dataset')
 
+            shared_res_dict = {res.id: GroupObjectPermission.objects.filter(
+                content_type_id=content_type.id,
+                object_pk=res.id
+            ).count() for res in res_list}
+
             # instantiate owner and public fields
             for res in res_list:
                 is_owner = res.id in owned_res_set
@@ -167,10 +172,7 @@ class SharableResourceAPIInterface(object):
                 setattr(
                     res,
                     'is_shared',
-                    GroupObjectPermission.objects.filter(
-                        content_type_id=content_type.id,
-                        object_pk=res.id
-                    ).count()
+                    shared_res_dict[res.id] > 0
                 )
 
                 if 'sharing' in kwargs and kwargs['sharing']:
