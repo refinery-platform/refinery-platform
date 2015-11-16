@@ -25,6 +25,7 @@ from django.db.models.fields import IntegerField
 from django.db.models.signals import post_save, pre_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
+from django.core.cache import cache
 
 from bioblend import galaxy
 from django_extensions.db.fields import UUIDField
@@ -516,7 +517,7 @@ class DataSet(SharableResource):
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
         update_data_set_index(self)
-
+        cache.clear()
         user_ids = map(lambda user: user.id, group.user_set.all())
 
         # We need to give the anonymous user read access too.
