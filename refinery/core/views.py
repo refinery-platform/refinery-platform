@@ -129,13 +129,9 @@ def user(request, query):
 
     if (len(get_shared_groups(request.user, user)) == 0 and
             user != request.user):
-        return HttpResponseForbidden(
-            custom_error_page(
-                request, '403.html',
-                {'user': request.user,
-                 'msg': "view the profile of user %s" % user.username}
-            )
-        )
+        return render_to_response('core/user_profile.html', {'profile_user':
+                                                             user},
+                                  context_instance=RequestContext(request))
     return render_to_response('core/user.html', {'profile_user': user},
                               context_instance=RequestContext(request))
 
