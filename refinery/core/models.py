@@ -189,6 +189,26 @@ class BaseResource (models.Model):
     class Meta:
         abstract = True
 
+    # Overriding save() method to disallow saving objects with duplicate slugs
+    def save(self, *args, **kwargs):
+        if self.slug is not None:
+            try:
+                super(BaseResource, self.__class__.objects.get(slug=self.slug))
+                logger.error("%s with slug: %s already exists!" % (
+                    self.__class__.__name__, self.slug))
+            except self.DoesNotExist:
+                try:
+                    super(BaseResource, self).save(*args, **kwargs)
+                except Exception as e:
+                    logger.error("Could not save %s: %s" % (
+                        self.__class__.__name__, e))
+        else:
+            try:
+                super(BaseResource, self).save(*args, **kwargs)
+            except Exception as e:
+                logger.error("Could not save %s: %s" % (
+                    self.__class__.__name__, e))
+
 
 class OwnableResource (BaseResource):
     """Abstract base class for core resources that can be owned
@@ -387,6 +407,7 @@ class DataSet(SharableResource):
         )
 
     def __unicode__(self):
+
         return (self.name + " - " +
                 self.get_owner_username() + " - " +
                 self.summary)
