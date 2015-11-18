@@ -7,7 +7,7 @@ from django_extensions.db.fields import UUIDField
 from bioblend import galaxy
 from celery.result import AsyncResult, TaskSetResult
 
-from core.models import Analysis
+
 from file_store.models import FileStoreItem
 
 
@@ -33,7 +33,7 @@ xrange(10)).apply_async()
 
 
 class AnalysisStatus(models.Model):
-    analysis = models.ForeignKey(Analysis)
+    analysis = models.ForeignKey("core.Analysis")  # prevents circular import
     preprocessing_taskset_id = UUIDField(blank=True, null=True, auto=False)
     execution_taskset_id = UUIDField(blank=True, null=True, auto=False)
     postprocessing_taskset_id = UUIDField(blank=True, null=True, auto=False)
