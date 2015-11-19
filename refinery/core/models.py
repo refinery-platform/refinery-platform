@@ -577,6 +577,7 @@ class DataSet(SharableResource):
 def _dataset_delete(sender, instance, *args, **kwargs):
     delete_data_set_index(instance)
     delete_data_set_neo4j(instance.uuid)
+    cache.clear()
 
 
 class InvestigationLink(models.Model):
