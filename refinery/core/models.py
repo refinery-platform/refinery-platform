@@ -193,21 +193,22 @@ class BaseResource (models.Model):
     def save(self, *args, **kwargs):
         if self.slug is not None:
             try:
-                super(BaseResource, self.__class__.objects.get(slug=self.slug))
-                logger.error("%s with slug: %s already exists!" % (
-                    self.__class__.__name__, self.slug))
+                self.__class__.objects.get(slug=self.slug)
             except self.DoesNotExist:
                 try:
                     super(BaseResource, self).save(*args, **kwargs)
                 except Exception as e:
                     logger.error("Could not save %s: %s" % (
                         self.__class__.__name__, e))
+            logger.error("%s with slug: %s already exists!" % (
+                    self.__class__.__name__, self.slug))
         else:
             try:
                 super(BaseResource, self).save(*args, **kwargs)
             except Exception as e:
                 logger.error("Could not save %s: %s" % (
                     self.__class__.__name__, e))
+        cache.clear()
 
 
 class OwnableResource (BaseResource):
