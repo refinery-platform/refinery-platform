@@ -5,7 +5,6 @@ import urlparse
 from optparse import make_option
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from guardian.models import UserObjectPermission
 from core.models import DataSet, ExtendedGroup
 from core.utils import normalize_annotation_ont_ids, get_data_set_annotations
 

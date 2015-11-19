@@ -10,7 +10,6 @@ from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand, CommandError
 
 from galaxy_connector.models import Instance
-from guardian.models import UserObjectPermission
 from core.models import ExtendedGroup, WorkflowEngine
 
 

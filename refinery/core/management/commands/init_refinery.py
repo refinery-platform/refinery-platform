@@ -12,7 +12,6 @@ from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
 from django.db import connection, transaction
 
-from guardian.models import UserObjectPermission
 from core.models import ExtendedGroup
 
 
