@@ -231,8 +231,8 @@ class neo4j {
   ->
   file { "/opt/neo4j-data":
     ensure => 'directory',
-    owner  => 'vagrant',
-    group  => 'vagrant',
+    owner  => "${app_user}",
+    group  => "${app_group}",
   }
   ->
   file_line { "neo4j_graph_db_location":
@@ -253,9 +253,9 @@ class neo4j {
     match => "^#org.neo4j.server.webserver.address=",
   }
   limits::fragment {
-    "vagrant/soft/nofile":
+    "${app_user}/soft/nofile":
       value => "40000";
-    "vagrant/hard/nofile":
+    "${app_user}/hard/nofile":
       value => "40000";
   }
 }
