@@ -189,7 +189,13 @@ class solr {
   file_line { "solr_config_home":
     path  => "/var/solr/solr.in.sh",
     line  => "SOLR_HOME=${django_root}/solr",
-    match => "^SOLR_HOME"
+    match => "^SOLR_HOME",
+  }
+  ->
+  file_line { "solr_config_log":
+    path  => "/var/solr/log4j.properties",
+    line  => "solr.log=${django_root}/log",
+    match => "^solr.log",
   }
   ~>
   service { 'solr':
@@ -346,6 +352,12 @@ class ui {
 }
 include ui
 
+package { 'memcached': }
+->
+service { 'memcached':
+  ensure => running,
+}
+
 file { "${django_root}/supervisord.conf":
   ensure => file,
   source => "${django_root}/supervisord.conf.sample",
@@ -360,7 +372,13 @@ exec { "supervisord":
   creates => "/tmp/supervisord.pid",
   user => $app_user,
   group => $app_group,
-  require => [ Class["ui"], Class["solr"], Class["neo4j"], Class ["rabbit"] ],
+  require => [
+    Class["ui"],
+    Class["solr"],
+    Class["neo4j"],
+    Class["rabbit"],
+    Service["memcached"],
+  ],
 }
 
 package { 'libapache2-mod-wsgi': }
@@ -382,9 +400,4 @@ exec { 'refinery-apache2':
 service { 'apache2':
   ensure => running,
   hasrestart => true,
-}
-
-package { 'memcached': }
-service { 'memcached':
-  ensure => running,
 }

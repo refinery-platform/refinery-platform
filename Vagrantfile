@@ -52,4 +52,9 @@ GALAXY_WARNING_SCRIPT
     puppet.module_path = "deployment/modules"  # requires modules dir to exist when this file is parsed
     puppet.options = "--hiera_config /vagrant/deployment/hiera.yaml"  # to avoid missing file warning
   end
+
+  # workaround for services that start on boot before /vagrant is available
+  # http://stackoverflow.com/a/23986680
+  config.vm.provision :shell, inline: "service solr restart 1> /dev/null", run: "always"
+
 end
