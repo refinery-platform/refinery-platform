@@ -133,7 +133,10 @@ class SharableResourceAPIInterface(object):
         except:
             user_uuid = None
 
-        res_list_unique = signer.sign(str(res_list)).rpartition(":")[-1]
+        # provide uniqueness between cached resources
+        res_list_unique = res_list.model.__name__
+
+        # Try and retrieve a cached resource based on model name
         cache_check = cache.get("res_list_%s" % res_list_unique)
 
         if cache_check is None:

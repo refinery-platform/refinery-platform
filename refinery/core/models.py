@@ -22,7 +22,7 @@ from django.core.mail import mail_admins, send_mail
 from django.db import models, transaction
 from django.db.models import Max
 from django.db.models.fields import IntegerField
-from django.db.models.signals import post_save, pre_delete
+from django.db.models.signals import post_save, pre_delete, post_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
 from django.core.cache import cache
@@ -193,21 +193,22 @@ class BaseResource (models.Model):
     def save(self, *args, **kwargs):
         if self.slug is not None:
             try:
-                super(BaseResource, self.__class__.objects.get(slug=self.slug))
-                logger.error("%s with slug: %s already exists!" % (
-                    self.__class__.__name__, self.slug))
+                self.__class__.objects.get(slug=self.slug)
             except self.DoesNotExist:
                 try:
                     super(BaseResource, self).save(*args, **kwargs)
                 except Exception as e:
                     logger.error("Could not save %s: %s" % (
                         self.__class__.__name__, e))
+            logger.error("%s with slug: %s already exists!" % (
+                    self.__class__.__name__, self.slug))
         else:
             try:
                 super(BaseResource, self).save(*args, **kwargs)
             except Exception as e:
                 logger.error("Could not save %s: %s" % (
                     self.__class__.__name__, e))
+        cache.clear()
 
 
 class OwnableResource (BaseResource):
@@ -576,6 +577,7 @@ class DataSet(SharableResource):
 def _dataset_delete(sender, instance, *args, **kwargs):
     delete_data_set_index(instance)
     delete_data_set_neo4j(instance.uuid)
+    cache.clear()
 
 
 class InvestigationLink(models.Model):
@@ -696,6 +698,11 @@ class Workflow(SharableResource, ManageableResource):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
         )
+
+
+@receiver(post_delete, sender=Workflow)
+def _workflow_delete(sender, instance, **kwargs):
+    cache.clear()
 
 
 class Project(SharableResource):

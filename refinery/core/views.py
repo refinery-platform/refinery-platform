@@ -127,11 +127,6 @@ def user(request, query):
     except User.DoesNotExist:
         user = get_object_or_404(UserProfile, uuid=query).user
 
-    if (len(get_shared_groups(request.user, user)) == 0 and
-            user != request.user):
-        return render_to_response('core/user_profile.html', {'profile_user':
-                                                             user},
-                                  context_instance=RequestContext(request))
     return render_to_response('core/user.html', {'profile_user': user},
                               context_instance=RequestContext(request))
 

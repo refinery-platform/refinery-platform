@@ -383,3 +383,8 @@ service { 'apache2':
   ensure => running,
   hasrestart => true,
 }
+
+package { 'memcached': }
+service { 'memcached':
+  ensure => running,
+}
