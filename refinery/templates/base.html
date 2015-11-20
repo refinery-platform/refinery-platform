@@ -50,7 +50,9 @@
   <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container-fluid">
 
-      <a class="navbar-brand" href="{% url "home" %}" tabindex=1>
+      <div class="navbar-header pull-left">
+
+        <a class="navbar-brand" href="{% url "home" %}" tabindex=1>
         {% if REFINERY_MAIN_LOGO != False %}
           {% if REFINERY_MAIN_LOGO != '' %}
           <img
@@ -75,7 +77,15 @@
         <span class="name">{{ REFINERY_INSTANCE_NAME }}</span>
       </a>
 
-      <span class="navbar-text pull-right">
+        <button type="button" class="navbar-toggle collapsed"
+          data-toggle="collapse" data-target="#navbarMain" aria-expanded="false">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+      </div>
+
+      <div class="navbar-text pull-right">
         {% if user.is_authenticated %}
           <i class="icon-user"></i>
           <a href="{% url "user" user.get_profile.uuid %}" tabindex=5>
@@ -108,22 +118,11 @@
       <a tabindex=8 rp-analysis-monitor-global-list-status-popover
         title="Recent Analyses">
          <span rp-analysis-monitor-global-list-status></span>
-      </a>
-    </span>
+        </a>
       </span>
+      </div>
 
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed"
-          data-toggle="collapse" data-target="#navbar" aria-expanded="false">
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-     </div>
-
-
-
-      <div id="navbar" class="collapse navbar-collapse">
+      <div class="collapse navbar-collapse" id="navbarMain">
         <ul class="nav navbar-nav">
           <li class="{{ navbar_class_collaboration }}">
             <a href="{% url "collaboration" %}" tabindex=2>Collaboration</a>
@@ -138,7 +137,6 @@
       </div>
 
     </div>
-
     <div class="navbar-subheader">
       <div class="container-fluid">
         <div style="clear: left; display:block;">
