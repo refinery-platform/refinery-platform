@@ -293,9 +293,8 @@
     <br>
     <br>
 
-    <div ng-if="AMCtrl.analysesList.length > itemsPerPage"
-      class="pagination analyses">
-      <ul>
+    <div ng-if="AMCtrl.analysesList.length > itemsPerPage">
+      <ul class="pagination analyses">
         <li ng-class="prevPageDisabled()">
           <a ng-click="prevPage()">«</a>
         </li>
@@ -308,5 +307,6 @@
         </li>
       </ul>
     </div>
+
   </span>
 </div>

@@ -610,8 +610,7 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function (parentElem
       $("#" + parentElementId).html("");
 
       $('<div/>', {
-        'class': "pagination",
-        html: "<ul>" + items.join('') + "</ul>"
+        html: "<ul class=\" pagination\">" + items.join('') + "</ul>"
       }).appendTo("#" + parentElementId);
 
       $("[id^=page-]").on("click", function () {
