@@ -3,13 +3,11 @@ angular
   .directive(
     'rpAnalysisLaunchModalDetail',
     [
-      '$log',
-      '$modal',
       rpAnalysisLaunchModalDetail
     ]
   );
 
-function rpAnalysisLaunchModalDetail( $log, $modal) {
+function rpAnalysisLaunchModalDetail( ) {
   "use strict";
     return {
     restrict: 'AE',
