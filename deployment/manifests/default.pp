@@ -280,8 +280,6 @@ class rabbit {
 include rabbit
 
 class ui {
-  # need a version of Node that's more recent than one included with Ubuntu 12.04
-  # apt::ppa { 'ppa:chris-lea/node.js': }
   include apt
 
   apt::source { 'nodejs':
