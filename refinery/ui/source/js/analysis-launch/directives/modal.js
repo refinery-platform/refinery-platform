@@ -21,7 +21,6 @@ function rpAnalysisLaunchModal($compile, $templateCache, $uibModal) {
       element.bind("click", function(e) {
         var template = $templateCache.get("analysislaunchmodal.html");
         var modalContent = $compile(template)(scope);
-        console.log("modal should launch");
 
         $uibModal.open({
           template:modalContent,
