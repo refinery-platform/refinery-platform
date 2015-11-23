@@ -208,57 +208,45 @@ class solr {
 include solr
 
 class neo4j {
-  $neo4j_version = "2.3.0"
-  $neo4j_name = "neo4j-community-${neo4j_version}"
-  $neo4j_archive = "${neo4j_name}-unix.tar.gz"
-  $neo4j_url = "http://neo4j.com/artifact.php?name=${neo4j_archive}"
+  $neo4j_config_file = '/etc/neo4j/neo4j-server.properties'
+  include apt
 
-  exec { "neo4j_wget":
-    command => "wget ${neo4j_url} -O /usr/src/${neo4j_archive}",
-    creates => "/usr/src/${neo4j_archive}",
-    path    => "/usr/bin:/bin",
-    timeout => 600,  # downloading can take a long time
+  apt::source { 'neo4j':
+    ensure      => 'present',
+    comment     => 'Neo Technology Neo4j repo',
+    location    => 'http://debian.neo4j.org/repo',
+    release     => 'stable/',
+    repos       => '',
+    key         => '66D34E951A8C53D90242132B26C95CF201182252',
+    key_source  => 'https://debian.neo4j.org/neotechnology.gpg.key',
+    include_src => false,
   }
   ->
-  exec { "neo4j_unpack":
-    command => "mkdir -p /opt && tar -xzf /usr/src/${neo4j_archive} -C /opt && chown -R ${app_user}:${app_user} /opt/${neo4j_name}",
-    creates => "/opt/${neo4j_name}",
-    path    => "/usr/bin:/bin",
+  package { 'neo4j':
+    ensure => '2.3.1',
   }
   ->
-  file { "/opt/neo4j":
-    ensure => link,
-    target => "${neo4j_name}",
-  }
-  ->
-  file { "/opt/neo4j-data":
-    ensure => 'directory',
-    owner  => "${app_user}",
-    group  => "${app_group}",
-  }
-  ->
-  file_line { "neo4j_graph_db_location":
-    path  => "/opt/${neo4j_name}/conf/neo4j-server.properties",
-    line  => "org.neo4j.server.database.location=/opt/neo4j-data/graph.db",
-    match => "^org.neo4j.server.database.location=",
-  }
-  ->
-  file_line { "neo4j_no_authentication":
-    path  => "/opt/${neo4j_name}/conf/neo4j-server.properties",
-    line  => "dbms.security.auth_enabled=false",
-    match => "^dbms.security.auth_enabled=",
-  }
-  ->
-  file_line { "neo4j_all_ips":
-    path  => "/opt/${neo4j_name}/conf/neo4j-server.properties",
-    line  => "org.neo4j.server.webserver.address=0.0.0.0",
-    match => "^#org.neo4j.server.webserver.address=",
-  }
   limits::fragment {
-    "${app_user}/soft/nofile":
+    "neo4j/soft/nofile":
       value => "40000";
-    "${app_user}/hard/nofile":
+    "neo4j/hard/nofile":
       value => "40000";
+  }
+  ->
+  file_line {
+    'neo4j_no_authentication':
+      path  => $neo4j_config_file,
+      line  => 'dbms.security.auth_enabled=false',
+      match => 'dbms.security.auth_enabled=';
+    'neo4j_all_ips':
+      path  => $neo4j_config_file,
+      line  => 'org.neo4j.server.webserver.address=0.0.0.0',
+      match => 'org.neo4j.server.webserver.address=';
+  }
+  ~>
+  service { 'neo4j-service':
+    ensure     => running,
+    hasrestart => true,
   }
 }
 include neo4j
