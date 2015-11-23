@@ -1,6 +1,6 @@
-function EmailInviteCtrl($modalInstance, groupInviteService, groupDataService) {
+function EmailInviteCtrl($uibModalInstance, groupInviteService, groupDataService) {
   var that = this;
-  that.$modalInstance = $modalInstance;
+  that.$uibModalInstance = $uibModalInstance;
   that.groupInviteService = groupInviteService;
   that.groupDataService = groupDataService;
 }
@@ -15,7 +15,7 @@ EmailInviteCtrl.prototype.sendInvite = function (email) {
     function (data) {
       bootbox.alert("Invitation succesfully sent to " + email);
       that.groupDataService.update();
-      that.$modalInstance.dismiss();
+      that.$uibModalInstance.dismiss();
     }
   ).catch(function (error) {
     console.error(error);    
@@ -25,7 +25,7 @@ EmailInviteCtrl.prototype.sendInvite = function (email) {
 angular
   .module('refineryCollaboration')
   .controller('EmailInviteCtrl', [
-    '$modalInstance',
+    '$uibModalInstance',
     'groupInviteService',
     'groupDataService',
     EmailInviteCtrl

@@ -5,27 +5,29 @@ angular
     [
       '$compile',
       '$templateCache',
-      '$modal',
+      '$uibModal',
       rpAnalysisLaunchModal
     ]
   );
 
-function rpAnalysisLaunchModal($compile, $templateCache, $modal) {
+function rpAnalysisLaunchModal($compile, $templateCache, $uibModal) {
   "use strict";
   return {
     restrict: 'AE',
     controller: 'AnalysisLaunchCtrl',
     controllerAs: 'analysisLaunchCtrl',
-    link: function(scope, element, attrs) {
+    link: function(scope, element) {
 
       element.bind("click", function(e) {
         var template = $templateCache.get("analysislaunchmodal.html");
         var modalContent = $compile(template)(scope);
+        console.log("modal should launch");
 
-        $modal.open({
+        $uibModal.open({
           template:modalContent,
           controller: 'AnalysisLaunchModalCtrl'
         });
+
       });
     }
   };
