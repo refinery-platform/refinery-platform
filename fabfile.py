@@ -116,7 +116,8 @@ def update_refinery():
             run("git pull")
     with cd(env.refinery_ui_dir):
         run("npm prune && npm update")
-        run("bower prune && bower update --config.interactive=false")
+        run("rm -rf bower_components")
+        run("bower update --config.interactive=false")
         run("grunt")
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("pip install -r {refinery_project_dir}/requirements.txt"
