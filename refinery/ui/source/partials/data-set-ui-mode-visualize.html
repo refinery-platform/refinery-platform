@@ -18,6 +18,8 @@
 		<option ng-repeat="species in speciesList" value="{{$index}}">{{species.name}}</option>
 	</select>
     <p></p>
-    <button class="btn btn-warning" ng-click="launchIgv()" ng-disabled="speciesIndex < 0" style="width: 100%"><i class="icon-bar-chart"></i>&nbsp;&nbsp;Launch IGV</button>
+    <button class="btn btn-warning" ng-click="launchIgv()"
+      ng-disabled="speciesIndex < 0" style="width: 100%"><i
+      class="fa fa-bar-chart-o"></i>&nbsp;&nbsp;Launch IGV</button>
   </div>
 </div>

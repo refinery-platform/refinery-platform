@@ -66,7 +66,7 @@ SolrDocumentTable = function(
             if (result.file_url.indexOf("fastqc_results") >= 0) {
               // Should change .txt extension to FastQC specific later.
               link += '&nbsp;<a title="View FastQC Result" href="/fastqc_viewer/#/' +
-                result.analysis_uuid + '"><i class="icon-bar-chart"></i></a>';
+                result.analysis_uuid + '"><i class="fa fa-bar-chart-o"></i></a>';
             }
             $('#' + id).html(link)
           }
@@ -360,9 +360,9 @@ SolrDocumentTable.prototype._trimDocumentEntry = function(
     return string.substring(0, length) +
       "<span class=trimmedDocStr style='display:none'>" + trimmedChars +
       " </span>&nbsp;<a href='#' class='trimmedDocEntryArrow' id='right'>" +
-      indicator + "&nbsp;<i class='icon-chevron-sign-right'></i></a>" +
+      indicator + "&nbsp;<i class='fa fa-chevron-right'></i></a>" +
       "<a href='#' class='trimmedDocEntryArrow' id='left' style='display:none'>" +
-      "<i class='icon-chevron-sign-left'></i></a>";
+      "<i class='fa fa-chevron-left'></i></a>";
   }
   return string;
 };
@@ -376,11 +376,11 @@ SolrDocumentTable.prototype._trimFilePathEntry = function(
   if (string.length > length) {
     var trimFileName = self._getTrimFileName(string, length);
     return "<span class='trimmedFileName' id='right'>" +
-      "<a href='#' class='trimmedFilePathArrow'><i class='icon-chevron-sign-right'>" +
+      "<a href='#' class='trimmedFilePathArrow'><i class='fa fa-chevron-right'>" +
       "</i>&nbsp;"+ indicator + "</a>" + trimFileName +"</span>" +
       "<span class='entireFilePath' id='left' style='display:none;'>" +
       "<a href='#' class='trimmedFilePathArrow'>" +
-      "<i class='icon-chevron-sign-left'></i></a>&nbsp;" + string + " </span>";
+      "<i class='fa fa-chevron-left'></i></a>&nbsp;" + string + " </span>";
   }
   return string;
 };
