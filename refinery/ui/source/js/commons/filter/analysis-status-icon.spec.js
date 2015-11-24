@@ -19,7 +19,7 @@ describe('Filter: AnalysisStatusIcon', function () {
       expect(filter('FAILURE')).toBe('icon-warning-sign');
       expect(filter('RUNNING')).toBe('icon-cog');
       expect(filter('INITIALIZED')).toBe('icon-cog');
-      expect(filter('UNKNOWN')).toBe('icon-question-sign');
-      expect(filter('')).toBe('icon-question-sign');
+      expect(filter('UNKNOWN')).toBe('fa fa-question-circle');
+      expect(filter('')).toBe('fa fa-question-circle');
   });
 });

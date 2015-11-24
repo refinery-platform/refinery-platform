@@ -4428,7 +4428,7 @@ var provvisRender = (function () {
         };
 
         if (typeof data !== "undefined") {
-          title = '<i class="icon-reorder"></i>&nbsp; Layer';
+          title = '<i class="fa fa-bars"></i>&nbsp; Layer';
           titleLink = '<a href=/workflows/' + data.wfUuid +
               ' target="_blank">' + data.workflow + '</a>';
         }

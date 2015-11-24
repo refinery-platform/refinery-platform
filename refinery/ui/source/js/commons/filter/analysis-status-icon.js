@@ -12,7 +12,7 @@ angular
         case "INITIALIZED":
           return "icon-cog";
         default:
-          return "icon-question-sign";
+          return "fa fa-question-circle";
       }
     };
   });

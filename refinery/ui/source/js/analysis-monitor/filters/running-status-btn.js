@@ -12,7 +12,7 @@ function analysisMonitorRunningStatusBtn(){
       } else if (param.postprocessing !== "SUCCESS") {
         return "fa fa-arrow-circle-up";
       } else {
-        return "fa fa-question-sign";
+        return "fa fa-question-circle";
       }
     }else{
       return "refinery-spinner analyses-view";
