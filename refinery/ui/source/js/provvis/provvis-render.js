@@ -4330,7 +4330,7 @@ var provvisRender = (function () {
             titleLink = '<a title="Download linked file" href="' +
                 data.file_url + '" onclick=window.open("' + data.file_url +
                 '")>' +
-                '<i class="icon-download"></i>&nbsp;' + data.name + '</a>';
+                '<i class="fa fa-arrow-circle-o-down"></i>&nbsp;' + data.name + '</a>';
           } else {
             titleLink = " - ";
           }
@@ -4352,7 +4352,7 @@ var provvisRender = (function () {
             titleLink = '<a title="Download linked file" href="' +
                 data.file_url + '" onclick=window.open("' + data.file_url +
                 '")>' +
-                '<i class="icon-download"></i>&nbsp;' + data.name + '</a>';
+                '<i class="fa fa-arrow-circle-o-down"></i>&nbsp;' + data.name + '</a>';
           }
         }
         break;

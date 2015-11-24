@@ -309,7 +309,13 @@
                         {% if REFINERY_REPOSITORY_MODE %}
                           <!-- CHECK BOXES FOR SELECTING SAMPLES -->
                           {% for work in workflows %}
-                            <a id="submitReposBtn" data-workflow_id="{{work.uuid}}" role="button" style="margin-left: 5px" class="btn  btn-warning disabled" rel="tooltip" data-placement="bottom" data-html="true" title=""><i class="icon-download"></i>&nbsp;&nbsp;Download as Archive</a>
+                            <a id="submitReposBtn" data-workflow_id="
+                            {{work.uuid}}" role="button" style="margin-left:
+                            5px" class="btn  btn-warning disabled"
+                              rel="tooltip" data-placement="bottom"
+                              data-html="true" title="">
+                              <i class="fa fa-arrow-circle-o-down"></i>&nbsp;&nbsp;Download as
+                              Archive</a>
                             <a href="#" id="help-download-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
                           {% endfor %}
                         {% endif %}
@@ -760,7 +766,8 @@
 
       $("#help-download-button").click( function(event) {
         bootbox.alert(
-            "<h3><i class=\"icon-download\"></i>&nbsp;&nbsp;Download as Archive</h3>" +
+            "<h3><i class=\"fa fa-arrow-circle-o-down\"></i>&nbsp;&nbsp;Download as " +
+            "Archive</h3>" +
             "<p>" +
             "The selected files can be bulk downloaded as an archive file if you are logged in and if you have selected 20 or less files." +
             "</p>" +

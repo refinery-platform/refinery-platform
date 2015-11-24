@@ -6,13 +6,13 @@ function analysisMonitorRunningStatusBtn(){
   return function(param){
     if (typeof param !== "undefined") {
       if (param.preprocessing !== "SUCCESS") {
-        return "icon-circle-arrow-down";
+        return "fa fa-arrow-circle-down";
       } else if (param.execution !== "SUCCESS") {
-        return "icon-cog";
+        return "fa fa-icon-cog";
       } else if (param.postprocessing !== "SUCCESS") {
-        return "icon-circle-arrow-up";
+        return "fa fa-arrow-circle-up";
       } else {
-        return "icon-question-sign";
+        return "fa fa-question-sign";
       }
     }else{
       return "refinery-spinner analyses-view";
