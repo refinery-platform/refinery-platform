@@ -11,7 +11,8 @@
   		<div class="alert alert-{{ messageType }}">{{message}}</div>
   	</div>
   	<p ng-if="isLoadingSpecies">
-  		<i class="icon-refresh icon-spin" style="padding: 2px"></i> Detecting species ...
+  		<i class="fa fa-refresh fa-spin" style="padding: 2px"></i> Detecting
+      species ...
   	</p>
 	<select ui-select2 ng-show="speciesList.length > 1" ng-model="speciesIndex" style="width:100%" data-placeholder="Choose a species">
 		<option value=""></option>  <!-- required for showing placeholder text -->

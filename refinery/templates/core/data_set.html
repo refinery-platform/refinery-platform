@@ -591,7 +591,7 @@
               <h4>Owner</h4>
             </div>
             <p>
-              <span class="icon-user"></span>&nbsp;
+              <span class="fa fa-user"></span>&nbsp;
               {% if data_set.get_owner %}
                 <a href="{% url "user" data_set.get_owner.get_profile.uuid %}">
                   {{ data_set.get_owner_full_name }}
@@ -612,7 +612,7 @@
                     <i class="fa fa-eye"></i>
                   {% endif %}
                   {% if perm.change %}
-                    <i class="icon-pencil"></i>
+                    <i class="fa fa-pencil"></i>
                   {% endif %}
                 {% endfor %}
               </p>

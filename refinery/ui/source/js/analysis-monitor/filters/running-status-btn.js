@@ -8,7 +8,7 @@ function analysisMonitorRunningStatusBtn(){
       if (param.preprocessing !== "SUCCESS") {
         return "fa fa-arrow-circle-down";
       } else if (param.execution !== "SUCCESS") {
-        return "fa fa-icon-cog";
+        return "fa fa-cog";
       } else if (param.postprocessing !== "SUCCESS") {
         return "fa fa-arrow-circle-up";
       } else {

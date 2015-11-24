@@ -47,7 +47,7 @@ SolrDocumentTable = function(
       var s = '';
       var id = 'download-' + document["uuid"];
       s += '<span id=' + id + '>';
-      s += '<i class="icon-refresh icon-spin" style="padding: 2px"></i>';
+      s += '<i class="fa fa-refresh fa-spin" style="padding: 2px"></i>';
       s += '</span>';
       $.ajax({
         url: '/api/v1/node/' + document["uuid"] + '/?format=json',
@@ -72,7 +72,7 @@ SolrDocumentTable = function(
           }
           else if (result.file_import_status != null) {
             // file import is in progress
-            var status = '<i class="icon-bolt"></i>';
+            var status = '<i class="fa fa-bolt"></i>';
             $('#' + id).html(status);
           }
           else {
@@ -323,7 +323,7 @@ SolrDocumentTable.prototype._generateTableBody = function(solrResponse) {
             }
             else {
               s += "<td title=\"Analysis " + document[entry] + "\">";
-              s += '<i class="icon-refresh icon-spin" style="padding: 2px"></i>';
+              s += '<i class="fa fa-refresh fa-spin" style="padding: 2px"></i>';
               s += "</td>";
             }
           }else if(self._isFilePath(entry)){
@@ -432,9 +432,9 @@ SolrDocumentTable.prototype._generateTableHead = function(solrResponse) {
   for (entry in fields) {
     if (fields.hasOwnProperty(entry) && fields[entry].isVisible && !fields[entry].isInternal && !( self._hiddenFieldNames.indexOf(entry) >= 0 )) {
       if (fields[entry].direction === "asc") {
-        row.push('<th align=left class="field-header-sort" data-fieldname="' + entry + '"><i class="icon-arrow-down"></i>&nbsp;' + prettifySolrFieldName(entry, true) + '</th>');
+        row.push('<th align=left class="field-header-sort" data-fieldname="' + entry + '"><i class="fa fa-arrow-down"></i>&nbsp;' + prettifySolrFieldName(entry, true) + '</th>');
       } else if (fields[entry].direction === "desc") {
-        row.push('<th align=left class="field-header-sort" data-fieldname="' + entry + '"><i class="icon-arrow-up"></i>&nbsp;' + prettifySolrFieldName(entry, true) + '</th>');
+        row.push('<th align=left class="field-header-sort" data-fieldname="' + entry + '"><i class="fa fa-arrow-up"></i>&nbsp;' + prettifySolrFieldName(entry, true) + '</th>');
       } else {
         row.push('<th align=left class="field-header-sort" data-fieldname="' + entry + '">' + prettifySolrFieldName(entry, true) + '</th>');
       }
@@ -504,8 +504,8 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function (parentElem
   $("#" + parentElementId).html("");
   var listHeader = '<a href="#" class="dropdown-toggle btn btn-xs' +
     ' btn-default" ' +
-      'data-toggle="dropdown"><i class="icon-wrench"></i>&nbsp;Columns&nbsp;' +
-      '<i class="icon-caret-down"></i></a>';
+      'data-toggle="dropdown"><i class="fa fa-wrench"></i>&nbsp;Columns&nbsp;' +
+      '<i class="fa fa-caret-down"></i></a>';
   var listId = parentElementId + "-list";
 
   if (visibleItems.length > 0) {

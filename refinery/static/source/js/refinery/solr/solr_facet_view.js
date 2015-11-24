@@ -282,10 +282,10 @@ SolrFacetView.prototype._getFacetLabel = function( facet, facetObj ) {
   var facetValueCount = self._countFacetValues(facet,facetObj);
 
 	if ( self._isFacetExpanded( facet ) ) {
-		indicator = "icon-caret-down";
+		indicator = "fa fa-caret-down";
 	}
 	else {
-		indicator = "icon-caret-right";
+		indicator = "fa fa-caret-right";
 	}
 
 	return ( '<span style="width: 10px; text-align: center; display: inline-block;">' +

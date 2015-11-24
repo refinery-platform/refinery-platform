@@ -48,7 +48,8 @@
         {% if REFINERY_EXTERNAL_AUTH %}
             <p>{{ REFINERY_EXTERNAL_AUTH_MESSAGE|safe }}</p>
         {% else %}
-            <p><i class="icon-key"></i>&nbsp;<a href="{% url 'django.contrib.auth.views.password_change' %}">Change Password?</a></p>
+            <p><i class="fa fa-key"></i>&nbsp;<a href="{%
+            url 'django.contrib.auth.views.password_change' %}">Change Password?</a></p>
         {% endif %}
 
 		{% if profile_user.groups.count > 0 %}

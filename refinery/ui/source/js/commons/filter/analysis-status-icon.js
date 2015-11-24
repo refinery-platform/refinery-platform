@@ -8,9 +8,9 @@ angular
         case "FAILURE":
           return "fa fa-exclamation-triangle";
         case "RUNNING":
-          return "icon-cog";
+          return "fa fa-cog";
         case "INITIALIZED":
-          return "icon-cog";
+          return "fa fa-cog";
         default:
           return "fa fa-question-circle";
       }

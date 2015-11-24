@@ -82,7 +82,7 @@
             {% for result in page.object_list %}
         <tr>
         	<td>
-				<i class="icon-file"></i> <a href="{% url "data_set" result.object.uuid %}">{{ result.object.name }}</a><br>... {{ result.highlighted.text.0|safe }} ...        		
+				<i class="fa fa-file"></i> <a href="{% url "data_set" result.object.uuid %}">{{ result.object.name }}</a><br>... {{ result.highlighted.text.0|safe }} ...
         	</td>
         </tr>
     {% empty %}

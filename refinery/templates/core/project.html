@@ -51,7 +51,8 @@
 		<div class="refinery-subheader">
 			<h4>Owner</h4>
 		</div>
-		<p><i class="icon-user"></i>&nbsp;<a href="{% url 'user' project.get_owner.get_profile.uuid %}">{% if project.get_owner.get_full_name %}{{ project.get_owner.get_full_name }}{% else %}{{ project.get_owner }}{%endif%}</a></p>
+		<p><i class="fa fa-user"></i>&nbsp;<a href="{%
+		url 'user' project.get_owner.get_profile.uuid %}">{% if project.get_owner.get_full_name %}{{ project.get_owner.get_full_name }}{% else %}{{ project.get_owner }}{%endif%}</a></p>
 
 		{% if project.get_groups|length > 0 %}
 		<div class="refinery-subheader">
@@ -65,7 +66,7 @@
 						<i class="fa fa-eye"></i>
 					{% endif %}
 					{% if perm.change %}
-						<i class="icon-pencil"></i>
+						<i class="fa fa-pencil"></i>
 					{% endif %}
 				</br>
 				{% endif %}

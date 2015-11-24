@@ -1251,13 +1251,13 @@ var provvisRender = (function () {
       $('<button/>', {
         "id": "dc-carret-up-" + i,
         "class": "btn btn-default",
-        "html": "<i class=icon-caret-up></i>"
+        "html": "<i class=fa fa-caret-up></i>"
       }).appendTo("#" + "dc-btn-group-" + i);
 
       $('<button/>', {
         "id": "dc-carret-down-" + i,
         "class": "btn btn-default",
-        "html": "<i class=icon-caret-down></i>"
+        "html": "<i class=fa fa-caret-down></i>"
       }).appendTo("#" + "dc-btn-group-" + i);
 
       $('<span/>', {
@@ -4323,7 +4323,7 @@ var provvisRender = (function () {
       case "stored":
         data = vis.graph.nodeData.get(selNode.uuid);
         if (typeof data !== "undefined") {
-          title = '<i class="icon-sitemap rotate-icon-90"></i>&nbsp;' +
+          title = '<i class="fa fa-sitemap rotate-icon-90"></i>&nbsp;' +
               selNode.fileType;
           if (data.file_url !== null) {
             /* TODO: Trigger download without window.open. */
@@ -4345,7 +4345,7 @@ var provvisRender = (function () {
 
         data = vis.graph.nodeData.get(selNode.uuid);
         if (typeof data !== "undefined") {
-          title = '<i class="icon-sitemap rotate-icon-90"></i>&nbsp;' +
+          title = '<i class="fa fa-sitemap rotate-icon-90"></i>&nbsp;' +
               selNode.fileType;
           if (data.file_url !== null) {
             /* TODO: Trigger download without window.open. */
@@ -4360,12 +4360,12 @@ var provvisRender = (function () {
       case "subanalysis":
         data = vis.graph.workflowData.get(selNode.parent.wfUuid);
         if (typeof data !== "undefined") {
-          title = '<i class="icon-cog"></i>&nbsp; Analysis Group';
+          title = '<i class="fa fa-cog"></i>&nbsp; Analysis Group';
           titleLink = '<a href=/workflows/' + selNode.wfUuid +
               ' target="_blank">' +
               selNode.parent.wfName + '</a>';
         } else {
-          title = '<i class="icon-cog"></i>&nbsp; Dataset';
+          title = '<i class="fa fa-cog"></i>&nbsp; Dataset';
         }
 
         if (selNode.parent.motifDiff.numIns !== 0 ||
@@ -4392,12 +4392,12 @@ var provvisRender = (function () {
       case "analysis":
         data = vis.graph.analysisData.get(selNode.uuid);
         if (typeof data !== "undefined") {
-          title = '<i class="icon-cogs"></i>&nbsp; Analysis';
+          title = '<i class="fa fa-cogs"></i>&nbsp; Analysis';
           titleLink = '<a href=/workflows/' + selNode.wfUuid +
               ' target="_blank">' +
               selNode.wfName + "</a>";
         } else {
-          title = '<i class="icon-cogs"></i>&nbsp; Dataset';
+          title = '<i class="fa fa-cogs"></i>&nbsp; Dataset';
         }
         if (selNode.motifDiff.numIns !== 0 || selNode.motifDiff.numOuts !== 0 ||
             selNode.motifDiff.numSubanalyses !== 0) {

@@ -5,7 +5,7 @@
     <div class="refinery-header">
       <span class="refinery-header-left">
         <h3>
-          <i class="m-r-1-4 icon-file"></i>Data Sets
+          <i class="m-r-1-4 fa fa-file"></i>Data Sets
         </h3>
       </span>
       <span class="refinery-header-right">
@@ -20,7 +20,7 @@
           ng-class="{'active': dashboard.dataSetExploration}"
           ng-click="dashboard.toggleDataSetsExploration()"
           ng-if="dashboard.explorationEnabled">
-          <i class="icon-compass" title="Explore data sets"></i> Explore
+          <i class="fa fa-compass" title="Explore data sets"></i> Explore
         </button>
       </span>
     </div>
@@ -30,7 +30,7 @@
       ng-class="{'border': dashboard.expandedDataSetPanelBorder}"
       refinery-width-fixer>
       <form class="navbar-search">
-        <i class="icon-search"></i>
+        <i class="fa fa-search"></i>
         <i class="fa fa-times-circle"
           ng-if="dashboard.searchQueryDataSets"
           ng-click="dashboard.resetDataSetSearch()"></i>
@@ -133,9 +133,10 @@
               <i
                 class="sort-icon sort-active"
                 ng-if="sorting.djangoAttribute === dashboard.dataSetsSortBy"
-                ng-class="{'icon-sort-up': !dashboard.dataSetsSortDesc, 'icon-sort-down': dashboard.dataSetsSortDesc}"></i>
+                ng-class="{'fa fa-sort-asc': !dashboard.dataSetsSortDesc,
+                'fa fa-sort-desc': dashboard.dataSetsSortDesc}"></i>
               <i
-                class="sort-icon icon-sort"
+                class="sort-icon fa fa-sort"
                 ng-if="sorting.djangoAttribute !== dashboard.dataSetsSortBy"></i>
               {{ sorting.label }}
           </label>
@@ -161,7 +162,7 @@
                 ng-class="{'is-mirrored': dataSet.preview}"></i>
             </button>
             <i
-              class="icon-user"
+              class="fa fa-user"
               title="You own this data set"
               ng-if="dataSet.is_owner"
               tool-tip
@@ -182,7 +183,7 @@
               tool-tip-container="body"
               tool-tip-placement="top"></i>
             <i
-              class="icon-globe"
+              class="fa fa-globe"
               title="This file is publicly available"
               ng-if="dataSet.public && dashboard.userIsAuthenticated"
               tool-tip
@@ -279,7 +280,7 @@
         <div class="floatbox">
           <div class="floatbox-min-right">
             <button
-              class="icon-only icon-filter"
+              class="icon-only fa fa-filter"
               title="Filter &amp; Sort"
               ng-class="{'showing': dashboard.showAnalysesFilterSort, 'active': dashboard.analysesFilterSort}"
               ng-click="dashboard.showAnalysesFilterSort = !!!dashboard.showAnalysesFilterSort"
@@ -312,7 +313,7 @@
               ng-click="dashboard.toogleRadio()"
               ng-model="dashboard.analysesFilterStatus">
               Running
-              <i class="info-icon analyses-status icon-cog icon-spin"></i>
+              <i class="info-icon analyses-status fa fa-cog fa-spin"></i>
           </label>
         </div>
         <div class="entry">
@@ -362,9 +363,10 @@
               <i
                 class="sort-icon sort-active"
                 ng-if="sorting.djangoAttribute === dashboard.analysesSortBy"
-                ng-class="{'icon-sort-up': !dashboard.analysesSortDesc, 'icon-sort-down': dashboard.analysesSortDesc}"></i>
+                ng-class="{'fa fa-sort-asc': !dashboard.analysesSortDesc,
+                'fa fa-sort-desc': dashboard.analysesSortDesc}"></i>
               <i
-                class="sort-icon icon-sort"
+                class="sort-icon fa fa-sort"
                 ng-if="sorting.djangoAttribute !== dashboard.analysesSortBy"></i>
               {{ sorting.label }}
           </label>
@@ -390,7 +392,7 @@
               </i>
             </span>
             <i
-              class="icon-user"
+              class="fa fa-user"
               title="You ran this analysis"
               ng-if="analysis.is_owner"
               tool-tip
@@ -433,7 +435,7 @@
   <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
-        <h3><i class="m-r-1-4 icon-cog"></i>Workflows</h3>
+        <h3><i class="m-r-1-4 fa fa-cog"></i>Workflows</h3>
       </span>
     </div>
     <div class="refinery-sub-panel">
@@ -451,7 +453,7 @@
         <div class="floatbox">
           <div class="floatbox-min-right">
             <button
-              class="icon-only icon-filter"
+              class="icon-only fa fa-filter"
               title="Filter &amp; Sort"
               ng-class="{'showing': dashboard.showWorkflowsFilterSort, 'active': dashboard.workflowsFilterSort}"
               ng-click="dashboard.showWorkflowsFilterSort = !!!dashboard.showWorkflowsFilterSort"
@@ -488,9 +490,10 @@
               <i
                 class="sort-icon sort-active"
                 ng-if="sorting.djangoAttribute === dashboard.workflowsSortBy"
-                ng-class="{'icon-sort-up': !dashboard.workflowsSortDesc, 'icon-sort-down': dashboard.workflowsSortDesc}"></i>
+                ng-class="{'fa fa-sort-up': !dashboard.workflowsSortDesc,
+                'fa fa-sort-desc': dashboard.workflowsSortDesc}"></i>
               <i
-                class="sort-icon icon-sort"
+                class="sort-icon fa fa-sort"
                 ng-if="sorting.djangoAttribute !== dashboard.workflowsSortBy"></i>
               {{ sorting.label }}
           </label>

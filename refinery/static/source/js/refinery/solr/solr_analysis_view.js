@@ -72,7 +72,8 @@ SolrAnalysisView.prototype.render = function ( solrResponse ) {
 		self._renderTree( self._currentSolrResponse );  		
   	} 
   	else {
-		$( "#" + self._parentElementId ).html('<i class="icon-refresh icon-spin" style="padding: 2px"></i>');  		
+		$( "#" + self._parentElementId ).html('<i class="fa fa-refresh fa-spin"' +
+			' style="padding: 2px"></i>');
   	}
 };
 
@@ -218,10 +219,10 @@ SolrAnalysisView.prototype._getFacetLabel = function( facet ) {
 	var indicator = ""
 	
 	if ( self._isFacetExpanded( facet ) ) {
-		indicator = "icon-caret-down";
+		indicator = "fa fa-caret-down";
 	}
 	else {
-		indicator = "icon-caret-right";
+		indicator = "fa fa-caret-right";
 	}
 	
 	return ( '<span style="width: 10px; text-align: center; display: inline-block;"><i class="' + indicator + '"></i></span>&nbsp;' + prettifySolrFieldName( facet, true ) );	
