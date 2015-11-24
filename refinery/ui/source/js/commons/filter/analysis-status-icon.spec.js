@@ -15,7 +15,7 @@ describe('Filter: AnalysisStatusIcon', function () {
   });
 
   it('should return correct status depending on state', function () {
-      expect(filter('SUCCESS')).toBe('icon-ok-sign');
+      expect(filter('SUCCESS')).toBe('fa fa-check-circle');
       expect(filter('FAILURE')).toBe('icon-warning-sign');
       expect(filter('RUNNING')).toBe('icon-cog');
       expect(filter('INITIALIZED')).toBe('icon-cog');

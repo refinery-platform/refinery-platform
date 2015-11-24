@@ -4,7 +4,7 @@ angular
     return function(param){
       switch (param) {
         case "SUCCESS":
-          return "icon-ok-sign";
+          return "fa fa-check-circle";
         case "FAILURE":
           return "icon-warning-sign";
         case "RUNNING":

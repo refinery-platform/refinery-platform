@@ -13,7 +13,7 @@
           href="./data_set_manager/import/"
           class="no-underline btn"
           ng-if="dashboard.userIsAuthenticated">
-          <i class="icon-plus-sign"></i> Upload
+          <i class="fa fa-plus-circle"></i> Upload
         </a>
         <button
           class="no-underline btn"
@@ -168,14 +168,14 @@
               tool-tip-container="body"
               tool-tip-placement="top"></i>
             <i
-              class="icon-group icon-shared-out"
+              class="fa fa-users icon-shared-out"
               title="You privately share this data set"
               ng-if="dataSet.is_shared && dataSet.is_owner"
               tool-tip
               tool-tip-container="body"
               tool-tip-placement="top"></i>
             <i
-              class="icon-group icon-shared-in"
+              class="fa fa-users icon-shared-in"
               title="This data set is shared with you"
               ng-if="dataSet.is_shared && !dataSet.is_owner && dashboard.userIsAuthenticated"
               tool-tip
@@ -323,7 +323,7 @@
               ng-click="dashboard.toogleRadio()"
               ng-model="dashboard.analysesFilterStatus">
               Successful
-              <i class="info-icon analyses-status icon-ok-sign"></i>
+              <i class="info-icon analyses-status fa fa-check-circle"></i>
           </label>
         </div>
         <div class="entry">
@@ -396,7 +396,7 @@
               tool-tip-container="body"
               tool-tip-placement="top"></i>
             <i
-              class="icon-group icon-shared-in"
+              class="fa fa-users icon-shared-in"
               title="Some collaborator ran this analysis"
               ng-if="!analysis.is_owner"
               tool-tip

@@ -604,7 +604,7 @@
                 {% for perm in data_set.get_groups %}
                   <a href="{% url 'group' perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
                   {% if perm.read %}
-                    <i class="icon-eye-open"></i>
+                    <i class="fa fa-eye"></i>
                   {% endif %}
                   {% if perm.change %}
                     <i class="icon-pencil"></i>
