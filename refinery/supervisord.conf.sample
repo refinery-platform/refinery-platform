@@ -23,14 +23,6 @@ serverurl = http://localhost:9001 ; use an http:// url to specify an inet socket
 [rpcinterface:supervisor]
 supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 
-[program:neo4j]
-command = /opt/neo4j/bin/neo4j console
-autostart = true
-autorestart = true
-startsecs = 5
-stopasgroup = true
-killasgroup = true
-
 [group:celeryd]
 programs = worker1,worker2
 priority = 995
