@@ -15,7 +15,8 @@
         </button>
         <div class="btn-group dropdown" ng-if="preview.user.isAuthenticated">
           <button type="button" class="btn dropdown-toggle">
-            <i class="icon-edit"></i> Edit <span class="caret"></span>
+            <i class="fa fa-pencil-square-o"></i> Edit <span
+            class="caret"></span>
           </button>
           <ul class="dropdown-menu pull-right">
             <li>
@@ -152,14 +153,14 @@
                 target="_blank"
                 ng-if="publication.doi"
                 ng-href="http://dx.doi.org/{{ publication.doi }}">
-                <i class="icon-external-link-sign" aria-hidden="true"></i>
+                <i class="fa fa-external-link-square" aria-hidden="true"></i>
                 Source
               </a>
               <a
                 target="_blank"
                 ng-if="publication.pubmed_id"
                 ng-href="http://www.ncbi.nlm.nih.gov/pubmed/{{ publication.pubmed_id }}">
-                <i class="icon-external-link-sign" aria-hidden="true"></i>
+                <i class="fa fa-external-link-square" aria-hidden="true"></i>
                 PubMed
               </a>
             </span>
