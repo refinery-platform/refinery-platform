@@ -296,7 +296,7 @@ SolrDocumentTable.prototype._generateTableBody = function(solrResponse) {
     // drag marker (can't be wrapped in span - otherwise Safari won't show the
     // image of dragged content)
     s += '<td>' +
-         '<i class="icon-reorder refinery-dnd-handle" data-uuid="' +
+         '<i class="fa fa-bars refinery-dnd-handle" data-uuid="' +
          document["uuid"] + '" node-draggable draggable="true" node-uuid="' +
          document["uuid"] + '" style="-khtml-user-drag: element;"></i>' +
          '</td>';

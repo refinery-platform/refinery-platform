@@ -95,7 +95,7 @@
             {{ user.username }}
           {% endif %}
           </a>&nbsp;&nbsp;|&nbsp;&nbsp;
-          <i class="icon-signout"></i>&nbsp;
+          <i class="fa fa-sign-out"></i>&nbsp;
           <a href="
            {% url "django.contrib.auth.views.logout" %}?next={% url "home" %}"
           tabindex=6>
@@ -111,7 +111,8 @@
             </a>&nbsp;&nbsp;
           &nbsp;&nbsp;|&nbsp;&nbsp;
           {% endif %}
-          <i class="icon-signin"></i>&nbsp;<a rel="tooltip" data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
+          <i class="fa fa-sign-in"></i>&nbsp;<a rel="tooltip"
+          data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
         {% endif %}
         &nbsp;&nbsp;|&nbsp;&nbsp;
         <span id="analyses-popover">

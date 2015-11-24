@@ -6,7 +6,7 @@ angular
         case "SUCCESS":
           return "fa fa-check-circle";
         case "FAILURE":
-          return "icon-warning-sign";
+          return "fa fa-exclamation-triangle";
         case "RUNNING":
           return "icon-cog";
         case "INITIALIZED":
