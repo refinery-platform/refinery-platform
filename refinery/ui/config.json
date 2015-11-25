@@ -58,6 +58,7 @@
         "ng-webworker/src/ng-webworker.min.js",
         "ng-webworker/src/worker_wrapper.min.js",
         "d3/d3.min.js",
+        "d3-tip/index.js",
         "c3/c3.min.js",
         "graphlib/dist/graphlib.core.min.js",
         "dagre/dist/dagre.core.min.js",
