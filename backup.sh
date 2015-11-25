@@ -83,7 +83,7 @@ TIME_INTERMEDIATE_START=$(date +"%s")
 mkdir -p "$BACKUP_TEMP/$NOW/neo4j"
 sudo service neo4j-service stop
 rsync -az --partial "$NEO4J_DATA" "$BACKUP_TEMP/$NOW/neo4j"
-sudo service neo4j-service start
+sudo service neo4j-service start > /dev/null
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))

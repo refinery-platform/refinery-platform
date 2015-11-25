@@ -131,7 +131,7 @@ if [ ! -d "$BACKUP_TEMP/$BACKUP/neo4j/" ]; then
 fi
 sudo service neo4j-service stop
 rsync -az --partial "$BACKUP_TEMP/$BACKUP/neo4j/" "$NEO4J_DATA"
-sudo service neo4j-service start
+sudo service neo4j-service start > /dev/null
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
