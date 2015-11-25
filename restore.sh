@@ -27,6 +27,8 @@ mkdir -p "$BACKUP_TEMP/$NOW"
 BACKUP_FILE=$(basename $BACKUP_FILE_PATH)
 BACKUP="${BACKUP_FILE%%.*}"
 
+NEO4J_DATA="/var/lib/neo4j/data/graph.db/"
+
 DEFAULT="\e[39m"
 DIM="\e[2m"
 GREEN="\e[92m"
@@ -127,12 +129,9 @@ if [ ! -d "$BACKUP_TEMP/$BACKUP/neo4j/" ]; then
   echo -e "$RED\xE2\x9A\xA0 Neo4J graph db not found!$DEFAULT"
   exit 1
 fi
-if [ ! `pgrep supervisord` ] || [ "$(supervisorctl pid neo4j)" == "0" ]; then
-  # Neo4J is not running
-  rsync -az --partial "$BACKUP_TEMP/$BACKUP/neo4j/" "/opt/neo4j/data/graph.db"
-else
-  supervisorctl stop neo4j && rsync -az --partial "$BACKUP_TEMP/$BACKUP/neo4j/" "/opt/neo4j/data/graph.db" && supervisorctl start neo4j
-fi
+sudo service neo4j-service stop
+rsync -az --partial "$BACKUP_TEMP/$BACKUP/neo4j/" "$NEO4J_DATA"
+sudo service neo4j-service start
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))

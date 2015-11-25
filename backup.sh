@@ -24,6 +24,7 @@ BACKUP_TEMP="/tmp/backups"
 REFINERY_BASE_DIR="/vagrant/refinery"
 CONFIG_DIR="config"
 CONFIG_FILE="config.json"
+NEO4J_DATA="/var/lib/neo4j/data/graph.db/"
 
 DEFAULT="\e[39m"
 DIM="\e[2m"
@@ -80,12 +81,9 @@ echo -e "Neo4J graph db... \c"
 TIME_INTERMEDIATE_START=$(date +"%s")
 
 mkdir -p "$BACKUP_TEMP/$NOW/neo4j"
-if [ "$(supervisorctl pid neo4j)" == "0" ] ; then
-  # Neo4J is not running
-  rsync -az --partial "/opt/neo4j/data/graph.db/" "$BACKUP_TEMP/$NOW/neo4j"
-else
-  supervisorctl stop neo4j && rsync -az --partial "/opt/neo4j/data/graph.db/" "$BACKUP_TEMP/$NOW/neo4j" && supervisorctl start neo4j
-fi
+sudo service neo4j-service stop
+rsync -az --partial "$NEO4J_DATA" "$BACKUP_TEMP/$NOW/neo4j"
+sudo service neo4j-service start
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
