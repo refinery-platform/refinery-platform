@@ -301,7 +301,7 @@ class ui {
   }
   ->
   package {
-    'bower': ensure => '1.6.6', provider => 'npm';
+    'bower': ensure => '1.6.8', provider => 'npm';
     'grunt-cli': ensure => '0.1.13', provider => 'npm';
   }
   ->
