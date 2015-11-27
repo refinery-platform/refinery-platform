@@ -5081,8 +5081,8 @@ var provvisRender = (function () {
     });
 
     /* Switch filter action. */
-    $("#prov-ctrl-filter-action > button").click(function () {
-      filterAction = $(this).prop('value');
+    $("#prov-ctrl-filter-action > label").click(function () {
+      filterAction = $(this).find("input[type='radio']").prop("value");
       if (filterMethod === "timeline") {
         filterAnalysesByTime(d3.select(".startTimeline")
             .data()[0].time, d3.select(".endTimeline").data()[0].time, vis);
