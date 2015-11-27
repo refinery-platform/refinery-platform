@@ -118,7 +118,7 @@ def update_refinery():
         run("npm prune && npm update")
         run("rm -rf bower_components")
         run("bower update --config.interactive=false")
-        run("grunt")
+        run("grunt build && grunt compile")
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("pip install -r {refinery_project_dir}/requirements.txt"
             .format(**env))
