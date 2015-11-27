@@ -14,11 +14,16 @@
           Close
         </button>
         <div class="btn-group dropdown" ng-if="preview.user.isAuthenticated">
-          <button type="button" class="btn dropdown-toggle">
+          <button
+            type="button"
+            class="btn dropdown-toggle"
+            data-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="true">
             <i class="fa fa-pencil-square-o"></i> Edit <span
             class="caret"></span>
           </button>
-          <ul class="dropdown-menu pull-right">
+          <ul class="dropdown-menu dropdown-menu-right">
             <li>
               <a
                 class="clickable spinnable"
