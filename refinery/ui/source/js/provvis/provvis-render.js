@@ -1233,13 +1233,16 @@ var provvisRender = (function () {
         "type": "text",
         "class": "form-control dc-input",
         "value": dc.value,
-        "style": "width: 25px; margin-bottom: 0px; margin-right: 2px; " +
-        "text-align: right;"
+        "style": "display: inline; width: 27px; height: 30px; margin-bottom:" +
+        " 0px;" +
+        "margin-right: 2px; text-align: left; padding: 0; margin-left: 2px;" +
+        " border-radius: 0px;"
       }).appendTo("#" + "dc-form-" + i);
 
       $('<div/>', {
         "id": "btn-group-wrapper-" + i,
-        "class": "btn-group"
+        "class": "btn-group",
+        "style": "height: 32px"
       }).appendTo("#" + "dc-form-" + i);
 
       $('<div/>', {
@@ -1251,13 +1254,13 @@ var provvisRender = (function () {
       $('<button/>', {
         "id": "dc-carret-up-" + i,
         "class": "btn btn-default",
-        "html": "<i class=fa fa-caret-up></i>"
+        "html": "<i class='fa fa-caret-up'></i>"
       }).appendTo("#" + "dc-btn-group-" + i);
 
       $('<button/>', {
         "id": "dc-carret-down-" + i,
         "class": "btn btn-default",
-        "html": "<i class=fa fa-caret-down></i>"
+        "html": "<i class='fa fa-caret-down'></i>"
       }).appendTo("#" + "dc-btn-group-" + i);
 
       $('<span/>', {
@@ -5081,8 +5084,8 @@ var provvisRender = (function () {
     });
 
     /* Switch filter action. */
-    $("#prov-ctrl-filter-action > button").click(function () {
-      filterAction = $(this).prop('value');
+    $("#prov-ctrl-filter-action > label").click(function () {
+      filterAction = $(this).find("input[type='radio']").prop("value");
       if (filterMethod === "timeline") {
         filterAnalysesByTime(d3.select(".startTimeline")
             .data()[0].time, d3.select(".endTimeline").data()[0].time, vis);

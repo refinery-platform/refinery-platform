@@ -43,18 +43,18 @@
              id="provvis-colorcoding-tab">
           <div id="provenance-colorcoding-view">
 
-            <div class="accordion"
-                 id="provvis-color-accordion-edges">
-              <div class="accordion-group">
-                <div class="accordion-heading">
-                  <a class="accordion-toggle"
-                     data-toggle="collapse"
-                     data-parent="#provvis-color-accordion-edges"
-                     href="#pv-edges"> Edges and Highlighting </a>
+
+            <div class="panel-group" id="provvis-color-accordion-edges" role="tablist" aria-multiselectable="true">
+              <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingEdges">
+                  <h4 class="panel-title">
+                    <a role="button" data-toggle="collapse" data-parent="#provvis-color-accordion-edges" href="#pv-edges" aria-expanded="true" aria-controls="pv-edges">
+                      Edges and Highlighting
+                    </a>
+                  </h4>
                 </div>
-                <div id="pv-edges"
-                     class="accordion-body collapse">
-                  <div class="accordion-inner">
+                <div id="pv-edges" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingEdges">
+                  <div class="panel-body">
                     <table>
                       <tbody>
                       <tr>
@@ -82,51 +82,54 @@
                 </div>
               </div>
             </div>
-            <div class="accordion"
-                 id="provvis-color-accordion">
-              <div class="accordion-group">
-                <div class="accordion-heading">
-                  <a class="accordion-toggle"
-                     id="prov-ctrl-cc-none-acc"
-                     data-toggle="collapse"
-                     data-parent="#provvis-color-accordion"
-                     href="#pv-none"
-                     class="provvis-panel-href"> None </a>
+
+
+            <div class="panel-group" id="provvis-color-accordion" role="tablist" aria-multiselectable="true">
+              <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingNone">
+                  <h4 class="panel-title">
+                    <a id="prov-ctrl-cc-none-acc" role="button"
+                       data-toggle="collapse" data-parent="#provvis-color-accordion" href="#pv-none" aria-expanded="true" aria-controls="pv-none">
+                      None.
+                    </a>
+                  </h4>
                 </div>
-                <div id="pv-none"
-                     class="accordion-body collapse">
-                  <div class="accordion-inner">White nodes with black labels.
+                <div id="pv-none" class="panel-collapse collapse in"
+                     role="tabpanel" aria-labelledby="headingNone">
+                  <div class="panel-body">
+                    White nodes with black labels.
                   </div>
                 </div>
               </div>
-              <div class="accordion-group">
-                <div class="accordion-heading">
-                  <a class="accordion-toggle"
-                     id="prov-ctrl-cc-time-acc"
-                     data-toggle="collapse"
-                     data-parent="#provvis-color-accordion"
-                     href="#pv-time"
-                     class="provvis-panel-href"> Analysis Execution Time </a>
+
+              <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingTime">
+                  <h4 class="panel-title">
+                    <a id="prov-ctrl-cc-time-acc" class="collapsed"
+                       role="button" data-toggle="collapse" data-parent="#provvis-color-accordion" href="#pv-time" aria-expanded="false" aria-controls="pv-time">
+                      Analysis Execution Time
+                    </a>
+                  </h4>
                 </div>
-                <div id="pv-time"
-                     class="accordion-body collapse">
-                  <div class="accordion-inner">Nodes are colored based on their
-                    execution date and time.
+                <div id="pv-time" class="panel-collapse collapse"
+                     role="tabpanel" aria-labelledby="headingTime">
+                  <div class="panel-body">
+                    Nodes are colored based on their execution date and time.
                   </div>
                 </div>
               </div>
-              <div class="accordion-group">
-                <div class="accordion-heading">
-                  <a class="accordion-toggle"
-                     id="prov-ctrl-cc-workflow-acc"
-                     data-toggle="collapse"
-                     data-parent="#provvis-color-accordion"
-                     href="#pv-wf"
-                     class="provvis-panel-href"> Workflows </a>
+
+              <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingWorkflow">
+                  <h4 class="panel-title">
+                    <a id="prov-ctrl-cc-workflow-acc" class="collapsed"
+                       role="button" data-toggle="collapse" data-parent="#provvis-color-accordion" href="#pv-wf" aria-expanded="false" aria-controls="pv-wf">
+                      Workflows
+                    </a>
+                  </h4>
                 </div>
-                <div id="pv-wf"
-                     class="accordion-body collapse">
-                  <div class="accordion-inner">
+                <div id="pv-wf" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingWorkflow">
+                  <div class="panel-body">
                     <table>
                       <tbody id="prov-ctrl-cc-workflow-content">
 
@@ -135,18 +138,18 @@
                   </div>
                 </div>
               </div>
-              <div class="accordion-group">
-                <div class="accordion-heading">
-                  <a class="accordion-toggle"
-                     id="prov-ctrl-cc-nodetype-acc"
-                     data-toggle="collapse"
-                     data-parent="#provvis-color-accordion"
-                     href="#pv-nt"
-                     class="provvis-panel-href"> Node types </a>
+
+              <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingNodeTypes">
+                  <h4 class="panel-title">
+                    <a id="prov-ctrl-cc-nodetype-acc" class="collapsed"
+                       role="button" data-toggle="collapse" data-parent="#provvis-color-accordion" href="#pv-nt" aria-expanded="false" aria-controls="pv-nt">
+                      Node types
+                    </a>
+                  </h4>
                 </div>
-                <div id="pv-nt"
-                     class="accordion-body collapse">
-                  <div class="accordion-inner">
+                <div id="pv-nt" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingNodeTypes">
+                  <div class="panel-body">
                     <table>
                       <tbody>
                       <tr>
