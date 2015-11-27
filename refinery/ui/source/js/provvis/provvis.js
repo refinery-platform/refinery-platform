@@ -229,8 +229,8 @@ var provvis = (function () {
         var cell = {width: r * 5, height: r * 3};
 
         /* Initialize canvas dimensions. */
-        var width = $("div#provenance-graph").width(),
-            height = $("div#provenance-graph").height() - 35;
+        var width = $("div#provenance-visualization").width(),
+            height = $("div#provenance-visualization").height() - 35;
 
         /* TODO: Temp fix for sidebar height. */
         $("#provenance-sidebar").css("height", height);
@@ -243,7 +243,7 @@ var provvis = (function () {
         /* weak | strict */
 
         /* Create vis and add graph. */
-        vis = new provvisDecl.ProvVis("provenance-graph", zoom, data, url,
+        vis = new provvisDecl.ProvVis("provenance-visualization", zoom, data, url,
             canvas, rect, margin, width, height, r, color, graph, cell,
             layerMethod);
 
