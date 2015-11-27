@@ -29,14 +29,14 @@
       class="refinery-sub-panel"
       ng-class="{'border': dashboard.expandedDataSetPanelBorder}"
       refinery-width-fixer>
-      <form class="navbar-search">
+      <form class="navbar-search form-group">
         <i class="fa fa-search"></i>
         <i class="fa fa-times-circle"
           ng-if="dashboard.searchQueryDataSets"
           ng-click="dashboard.resetDataSetSearch()"></i>
         <input
           type="text"
-          class="search-query"
+          class="search-query form-control"
           placeholder="Search"
           ng-model="dashboard.searchQueryDataSets"
           ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)">
