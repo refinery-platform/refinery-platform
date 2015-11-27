@@ -1,10 +1,12 @@
-$appuser = "vagrant"
-$appgroup = "vagrant"
-$virtualenv = "/home/${appuser}/.virtualenvs/refinery-platform"
-$requirements = "/vagrant/requirements.txt"
-$project_root = "/vagrant/refinery"
+$app_user = "vagrant"
+$app_group = $app_user
+$virtualenv = "/home/${app_user}/.virtualenvs/refinery-platform"
+$project_root = "/${app_user}"
+$deployment_root = "${project_root}/deployment"
+$django_root = "${project_root}/refinery"
+$requirements = "${project_root}/requirements.txt"
 $django_settings_module = "config.settings.dev"
-$ui_app_root = "${project_root}/ui"
+$ui_app_root = "${django_root}/ui"
 
 # to make logs easier to read
 class { 'timezone':
@@ -15,44 +17,46 @@ class { 'timezone':
 sysctl { 'vm.swappiness': value => '10' }
 
 # to avoid empty ident name not allowed error when using git
-user { $appuser: comment => $appuser }
+user { $app_user: comment => $app_user }
 
-file { "/home/${appuser}/.ssh/config":
+file { "/home/${app_user}/.ssh/config":
   ensure => file,
-  source => "/vagrant/deployment/ssh-config",
-  owner => $appuser,
-  group => $appgroup,
+  source => "${deployment_root}/ssh-config",
+  owner  => $app_user,
+  group  => $app_group,
 }
 
 class { 'postgresql::globals':
-  version => '9.3',
+  version  => '9.3',
   encoding => 'UTF8',
-  locale => 'en_US.utf8',
+  locale   => 'en_US.utf8',
 }
+
 class { 'postgresql::server':
 }
+
 class { 'postgresql::lib::devel':
 }
-postgresql::server::role { $appuser:
+
+postgresql::server::role { $app_user:
   createdb => true,
 }
 ->
 postgresql::server::db { 'refinery':
-  user => $appuser,
+  user     => $app_user,
   password => '',
-  owner => $appuser,
+  owner    => $app_user,
 }
 
 class { 'python':
-  version => 'system',
-  pip => true,
-  dev => true,
+  version    => 'system',
+  pip        => true,
+  dev        => true,
   virtualenv => true,
-  gunicorn => false,
+  gunicorn   => false,
 }
 
 class venvdeps {
-  #TODO: peg packages to specific versions
   package { 'build-essential': }
   package { 'libncurses5-dev': }
   package { 'libldap2-dev': }
@@ -61,92 +65,96 @@ class venvdeps {
 }
 include venvdeps
 
-file { "/home/${appuser}/.virtualenvs":
+file { "/home/${app_user}/.virtualenvs":
   # workaround for parent directory /home/vagrant/.virtualenvs does not exist error
   ensure => directory,
-  owner => $appuser,
-  group => $appgroup,
+  owner  => $app_user,
+  group  => $app_group,
 }
 ->
 python::virtualenv { $virtualenv:
-  ensure => present,
-  owner => $appuser,
-  group => $appgroup,
+  ensure  => present,
+  owner   => $app_user,
+  group   => $app_group,
   require => [ Class['venvdeps'], Class['postgresql::lib::devel'] ],
 }
 ~>
 python::requirements { $requirements:
   virtualenv => $virtualenv,
-  owner => $appuser,
-  group => $appgroup,
+  owner      => $app_user,
+  group      => $app_group,
 }
 
 package { 'virtualenvwrapper': }
 ->
 file_line { "virtualenvwrapper_config":
-  path => "/home/${appuser}/.profile",
-  line => "source /etc/bash_completion.d/virtualenvwrapper",
+  path    => "/home/${app_user}/.profile",
+  line    => "source /etc/bash_completion.d/virtualenvwrapper",
   require => Python::Virtualenv[$virtualenv],
 }
 ->
 file { "virtualenvwrapper_project":
   # workaround for setvirtualenvproject command not found
-  ensure => file,
-  path => "${virtualenv}/.project",
-  content => "${project_root}",
-  owner => $appuser,
-  group => $appgroup,
+  ensure  => file,
+  path    => "${virtualenv}/.project",
+  content => "${django_root}",
+  owner   => $app_user,
+  group   => $app_group,
 }
 
-file { ["/vagrant/isa-tab", "/vagrant/import", "/vagrant/static"]:
+file { ["${project_root}/isa-tab", "${project_root}/import", "${project_root}/static"]:
   ensure => directory,
-  owner => $appuser,
-  group => $appgroup,
+  owner  => $app_user,
+  group  => $app_group,
 }
 
 file_line { "django_settings_module":
-  path => "/home/${appuser}/.profile",
+  path => "/home/${app_user}/.profile",
   line => "export DJANGO_SETTINGS_MODULE=${django_settings_module}",
 }
 ->
-file { "${project_root}/config/config.json":
-  ensure => file,
-  source => "${project_root}/config/config.json.sample",
-  owner => $appuser,
-  group => $appgroup,
+file { "${django_root}/config/config.json":
+  ensure  => file,
+  source  => "${django_root}/config/config.json.sample",
+  owner   => $app_user,
+  group   => $app_group,
   replace => false,
 }
 ->
 exec { "syncdb":
-  command => "${virtualenv}/bin/python ${project_root}/manage.py syncdb --migrate --noinput",
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py syncdb --migrate --noinput",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user => $appuser,
-  group => $appgroup,
-  require => [
-               Python::Requirements[$requirements],
-               Postgresql::Server::Db["refinery"]
-             ],
+  user        => $app_user,
+  group       => $app_group,
+  require     => [
+    Python::Requirements[$requirements],
+    Postgresql::Server::Db["refinery"]
+  ],
 }
 ->
 exec { "create_superuser":
-  command => "${virtualenv}/bin/python ${project_root}/manage.py loaddata superuser.json",
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata superuser.json",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user => $appuser,
-  group => $appgroup,
+  user        => $app_user,
+  group       => $app_group,
 }
 ->
 exec { "init_refinery":
-  command => "${virtualenv}/bin/python ${project_root}/manage.py init_refinery 'Refinery' '192.168.50.50:8000'",
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py init_refinery 'Refinery' '192.168.50.50:8000'",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user => $appuser,
-  group => $appgroup,
+  user        => $app_user,
+  group       => $app_group,
 }
 ->
 exec { "create_user":
-  command => "${virtualenv}/bin/python ${project_root}/manage.py create_user 'guest' 'guest' 'guest@example.com' 'Guest' '' ''",
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py create_user 'guest' 'guest' 'guest@example.com' 'Guest' '' ''",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user => $appuser,
-  group => $appgroup,
+  user        => $app_user,
+  group       => $app_group,
+}
+
+file { "/opt":
+  ensure => directory,
 }
 
 class solr {
@@ -157,98 +165,94 @@ class solr {
   package { 'java':
     name => 'openjdk-7-jdk',
   }
-
-  exec { "solr_wget":
-    command => "wget ${solr_url} -O /usr/src/${solr_archive}",
-    creates => "/usr/src/${solr_archive}",
-    path => "/usr/bin:/bin",
+  exec { "solr_download":
+    command => "wget ${solr_url} -O ${solr_archive}",
+    cwd     => "/usr/local/src",
+    creates => "/usr/local/src/${solr_archive}",
+    path    => "/usr/bin",
     timeout => 600,  # downloading can take a long time
   }
   ->
-  exec { "solr_unpack_installer":
-    command => "mkdir -p /opt && tar -xzf /usr/src/${solr_archive} -C /usr/src solr-${solr_version}/bin/install_solr_service.sh --strip-components=2",
-    creates => "/opt/solr-${solr_version}",
-    path => "/usr/bin:/bin",
+  exec { "solr_extract_installer":
+    command => "tar -xzf ${solr_archive} solr-${solr_version}/bin/install_solr_service.sh --strip-components=2",
+    cwd     => "/usr/local/src",
+    creates => "/usr/local/src/install_solr_service.sh",
+    path    => "/bin",
   }
   ->
-  exec { "solr_install_as_service":
-    command => "sudo bash /usr/src/install_solr_service.sh /usr/src/${solr_archive} -d /vagrant/refinery/solr_app_data -u vagrant && chown -R ${appuser}:${appuser} /opt/solr-${solr_version}",
+  exec { "solr_install":  # also starts the service
+    command => "sudo bash ./install_solr_service.sh ${solr_archive} -u ${app_user}",
+    cwd     => "/usr/local/src",
     creates => "/opt/solr-${solr_version}",
-    path => "/usr/bin:/bin",
-  }
-  ->
-  file_line { "solr_config_pid":
-    path => "/vagrant/refinery/solr_app_data/solr.in.sh",
-    line => "SOLR_PID_DIR=/vagrant/refinery/solr_app_data",
-    match => "^SOLR_PID_DIR"
+    path    => "/usr/bin:/bin",
+    require => [ File["/opt"], Package['java'] ],
   }
   ->
   file_line { "solr_config_home":
-    path => "/vagrant/refinery/solr_app_data/solr.in.sh",
-    line => "SOLR_HOME=/vagrant/refinery/solr/",
-    match => "^SOLR_HOME"
+    path  => "/var/solr/solr.in.sh",
+    line  => "SOLR_HOME=${django_root}/solr",
+    match => "^SOLR_HOME",
   }
   ->
-  file_line { "solr_config_log4j":
-    path => "/vagrant/refinery/solr_app_data/solr.in.sh",
-    line => "LOG4J_PROPS=/vagrant/refinery/solr/log4j.properties",
-    match => "^LOG4J_PROPS"
+  file_line { "solr_config_log":
+    path  => "/var/solr/log4j.properties",
+    line  => "solr.log=${django_root}/log",
+    match => "^solr.log",
   }
-  ->
-  file_line { "solr_config_log_dir":
-    path => "/vagrant/refinery/solr_app_data/solr.in.sh",
-    line => "SOLR_LOGS_DIR=/vagrant/refinery/log",
-    match => "^SOLR_LOGS_DIR"
+  ~>
+  service { 'solr':
+    ensure     => running,
+    hasrestart => true,
   }
 }
 include solr
 
 class neo4j {
-  $neo4j_version = "2.2.4"
-  $neo4j_name = "neo4j-community-${neo4j_version}"
-  $neo4j_archive = "${neo4j_name}-unix.tar.gz"
-  $neo4j_url = "http://neo4j.com/artifact.php?name=${neo4j_archive}"
+  $neo4j_config_file = '/etc/neo4j/neo4j-server.properties'
+  include apt
 
-  exec { "neo4j_wget":
-    command => "wget ${neo4j_url} -O /usr/src/${neo4j_archive}",
-    creates => "/usr/src/${neo4j_archive}",
-    path => "/usr/bin:/bin",
-    timeout => 600,  # downloading can take a long time
+  apt::source { 'neo4j':
+    ensure      => 'present',
+    comment     => 'Neo Technology Neo4j repo',
+    location    => 'http://debian.neo4j.org/repo',
+    release     => 'stable/',
+    repos       => '',
+    key         => '66D34E951A8C53D90242132B26C95CF201182252',
+    key_source  => 'https://debian.neo4j.org/neotechnology.gpg.key',
+    include_src => false,
   }
   ->
-  exec { "neo4j_unpack":
-    command => "mkdir -p /opt && tar -xzf /usr/src/${neo4j_archive} -C /opt && chown -R ${appuser}:${appuser} /opt/${neo4j_name}",
-    creates => "/opt/${neo4j_name}",
-    path => "/usr/bin:/bin",
+  package { 'neo4j':
+    ensure => '2.3.1',
   }
   ->
-  file { "/opt/neo4j":
-    ensure => link,
-    target => "${neo4j_name}",
-  }
-  ->
-  file_line { "neo4j_no_authentication":
-    path => "/opt/${neo4j_name}/conf/neo4j-server.properties",
-    line => "dbms.security.auth_enabled=false",
-    match => "^dbms.security.auth_enabled=",
-  }
-  ->
-  file_line { "neo4j_all_ips":
-    path => "/opt/${neo4j_name}/conf/neo4j-server.properties",
-    line => "org.neo4j.server.webserver.address=0.0.0.0",
-    match => "^#org.neo4j.server.webserver.address=",
-  }
   limits::fragment {
-    "vagrant/soft/nofile":
+    "neo4j/soft/nofile":
       value => "40000";
-    "vagrant/hard/nofile":
+    "neo4j/hard/nofile":
       value => "40000";
+  }
+  ->
+  file_line {
+    'neo4j_no_authentication':
+      path  => $neo4j_config_file,
+      line  => 'dbms.security.auth_enabled=false',
+      match => 'dbms.security.auth_enabled=';
+    'neo4j_all_ips':
+      path  => $neo4j_config_file,
+      line  => 'org.neo4j.server.webserver.address=0.0.0.0',
+      match => 'org.neo4j.server.webserver.address=';
+  }
+  ~>
+  service { 'neo4j-service':
+    ensure     => running,
+    hasrestart => true,
   }
 }
 include neo4j
 
 class owl2neo4j {
-  $owl2neo4j_version = "0.3.3"
+  $owl2neo4j_version = "0.3.4"
   $owl2neo4j_url = "https://github.com/flekschas/owl2neo4j/releases/download/v${owl2neo4j_version}/owl2neo4j.jar"
 
   # Need to remove the old file manually as wget throws a weird
@@ -258,7 +262,7 @@ class owl2neo4j {
   exec { "owl2neo4j_wget":
     command => "rm -f /opt/owl2neo4j.jar && wget -P /opt/ ${owl2neo4j_url}",
     creates => "/opt/owl2neo4j",
-    path => "/usr/bin:/bin",
+    path    => "/usr/bin:/bin",
     timeout => 120,  # downloading can take some time
   }
 }
@@ -270,19 +274,13 @@ class rabbit {
   class { '::rabbitmq':
     package_ensure => installed,
     service_ensure => running,
-    port => '5672',
+    port           => '5672',
   }
 }
 include rabbit
 
 class ui {
-  # need a version of Node that's more recent than one included with Ubuntu 12.04
-  # apt::ppa { 'ppa:chris-lea/node.js': }
   include apt
-
-  apt::ppa { 'ppa:chris-lea/node.js':
-    ensure => 'absent'
-  }
 
   apt::source { 'nodejs':
     ensure      => 'present',
@@ -296,84 +294,91 @@ class ui {
     include_deb => true
   }
 
-  exec { "apt-update":
-    command => "/usr/bin/apt-get update"
-  }
-  Exec["apt-update"] -> Package <| |>
-
   package { 'nodejs':
-    name => 'nodejs',
+    name    => 'nodejs',
     ensure  => latest,
     require => Apt::Source['nodejs']
   }
   ->
   package {
-    'bower': ensure => '1.6.5', provider => 'npm';
+    'bower': ensure => '1.6.6', provider => 'npm';
     'grunt-cli': ensure => '0.1.13', provider => 'npm';
   }
   ->
   exec { "npm_local_modules":
-    command => "/usr/bin/npm prune && /usr/bin/npm install",
-    cwd => $ui_app_root,
+    command   => "/usr/bin/npm prune && /usr/bin/npm install",
+    cwd       => $ui_app_root,
     logoutput => on_failure,
-    user => $appuser,
-    group => $appgroup,
+    user      => $app_user,
+    group     => $app_group,
   }
   ->
   exec { "bower_modules":
-    command => "/usr/bin/bower prune && /usr/bin/bower install --config.interactive=false",
-    cwd => $ui_app_root,
-    logoutput => on_failure,
-    user => $appuser,
-    group => $appgroup,
-    environment => ["HOME=/home/${appuser}"],
+    command     => "/bin/rm -rf ${ui_app_root}/bower_components && /usr/bin/bower install --config.interactive=false",
+    cwd         => $ui_app_root,
+    logoutput   => on_failure,
+    user        => $app_user,
+    group       => $app_group,
+    environment => ["HOME=/home/${app_user}"],
   }
   ->
   exec { "grunt":
-    command => "/usr/bin/grunt build && /usr/bin/grunt compile",
-    cwd => $ui_app_root,
+    command   => "/usr/bin/grunt build && /usr/bin/grunt compile",
+    cwd       => $ui_app_root,
     logoutput => on_failure,
-    user => $appuser,
-    group => $appgroup,
+    user      => $app_user,
+    group     => $app_group,
   }
   ->
   exec { "collectstatic":
-    command => "${virtualenv}/bin/python ${project_root}/manage.py collectstatic --clear --noinput",
+    command     => "${virtualenv}/bin/python ${django_root}/manage.py collectstatic --clear --noinput",
     environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-    user => $appuser,
-    group => $appgroup,
-    require => Python::Requirements[$requirements],
+    user        => $app_user,
+    group       => $app_group,
+    require     => Python::Requirements[$requirements],
   }
 }
 include ui
 
-file { "${project_root}/supervisord.conf":
+package { 'memcached': }
+->
+service { 'memcached':
+  ensure => running,
+}
+
+file { "${django_root}/supervisord.conf":
   ensure => file,
-  source => "${project_root}/supervisord.conf.sample",
-  owner => $appuser,
-  group => $appgroup,
+  source => "${django_root}/supervisord.conf.sample",
+  owner  => $app_user,
+  group  => $app_group,
 }
 ->
 exec { "supervisord":
-  command => "${virtualenv}/bin/supervisord",
+  command     => "${virtualenv}/bin/supervisord",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  cwd => $project_root,
-  creates => "/tmp/supervisord.pid",
-  user => $appuser,
-  group => $appgroup,
-  require => [ Class["ui"], Class["solr"], Class["neo4j"], Class ["rabbit"] ],
+  cwd         => $django_root,
+  creates     => "/tmp/supervisord.pid",
+  user        => $app_user,
+  group       => $app_group,
+  require     => [
+    Class["ui"],
+    Class["solr"],
+    Class["neo4j"],
+    Class["rabbit"],
+    Service["memcached"],
+  ],
 }
 
 package { 'libapache2-mod-wsgi': }
 package { 'apache2': }
 exec { 'apache2-wsgi':
-  command => '/usr/sbin/a2enmod wsgi',
+  command   => '/usr/sbin/a2enmod wsgi',
   subscribe => [ Package['apache2'], Package['libapache2-mod-wsgi'] ],
 }
 ->
 file { "/etc/apache2/sites-available/001-refinery.conf":
-  ensure => file,
-  content => template("/vagrant/deployment/apache.conf"),
+  ensure  => file,
+  content => template("${deployment_root}/apache.conf"),
 }
 ~>
 exec { 'refinery-apache2':
@@ -381,6 +386,6 @@ exec { 'refinery-apache2':
 }
 ~>
 service { 'apache2':
-  ensure => running,
+  ensure     => running,
   hasrestart => true,
 }

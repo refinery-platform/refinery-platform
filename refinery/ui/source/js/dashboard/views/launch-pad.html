@@ -65,12 +65,17 @@
             No data sets available.
           </div>
           <div
-            class="refinery-notification-error"
+            id="launchpad_warning" class="refinery-notification-error"
             ng-show="dashboard.searchQueryDataSets.length > 1 && dashboard.dataSets.error">
-            <strong>Error</strong>
-            Something went wrong! Please contact the <a ng-href="mailto:{{ dashboard.adminMail }}">admin</a>.
+            <strong>Error: </strong>Please contact your
+            <script>
+                document.getElementById("launchpad_warning").innerHTML +=
+                        "<a " +
+                        "ng-href='mailto:" + admins + "?Subject=Refinery%20Error' target='_top'>System " +
+                        "Administrator</a>."
+            </script>
           </div>
-        </div>
+            </div>
         <div class="floatbox">
           <div class="floatbox-min-right">
             <button

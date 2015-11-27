@@ -18,54 +18,32 @@ logger = logging.getLogger(__name__)
 
 
 def extra_context(context):
-    site_model = serializers.serialize("json", Site.objects.all())
-
-    ui_accessible_settings = {}
-
-    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    # WARNING: Be careful adding Django settings to this dictionary as
-    # `globally_available_settings` does exactly as it states and exposes each
-    #  of these settings to the template context/javascript console!
-    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-    globally_available_settings = [
-        "ADMINS",
-        "CURRENT_COMMIT",
-        "REFINERY_CSS",
-        "REFINERY_MAIN_LOGO",
-        "REFINERY_INNER_NAVBAR_HEIGHT",
-        "REFINERY_BASE_URL",
-        "REFINERY_SOLR_BASE_URL",
-        "REFINERY_GOOGLE_ANALYTICS_ID",
-        "REFINERY_INSTANCE_NAME",
-        "REFINERY_REPOSITORY_MODE",
-        "REFINERY_CONTACT_EMAIL",
-        "REGISTRATION_OPEN",
-        "REFINERY_REGISTRATION_CLOSED_MESSAGE",
-        "ACCOUNT_ACTIVATION_DAYS",
-        "REFINERY_BANNER",
-        "REFINERY_BANNER_ANONYMOUS_ONLY",
-        "REFINERY_EXTERNAL_AUTH",
-        "REFINERY_EXTERNAL_AUTH_MESSAGE",
-        "STATIC_URL"
-    ]
-
-    # Add settings from the Site model
-    ui_accessible_settings["REFINERY_BASE_URL"] = json.loads(site_model)[
-        0]["fields"]["domain"]
-    ui_accessible_settings["REFINERY_INSTANCE_NAME"] = json.loads(
-        site_model)[0]["fields"]["name"]
-
-    # populate ui_accessible_settings based on the settings specified within
-    # UI_ACCESSIBLE_SETTINGS in config.json
-    for setting in globally_available_settings:
-        try:
-            ui_accessible_settings[setting] = getattr(settings, setting)
-        except AttributeError:
-            logger.warn("%s not found in config.json" % setting)
-
-    # Allow for access within js i.e. refinerySettings.ADMINS[0][1]
-    ui_accessible_settings["refinerySettings"] = json.dumps(
-        ui_accessible_settings)
-
-    return ui_accessible_settings
+    """return values you want as a dictionary"""
+    """!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    WARNING: Be careful adding Django settings to this dictionary as
+    it exposes each of these settings to the template context/javascript
+    console!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    """
+    return {
+        "ADMINS": settings.ADMINS[0][1],
+        "REFINERY_CSS": settings.REFINERY_CSS,
+        "REFINERY_MAIN_LOGO": settings.REFINERY_MAIN_LOGO,
+        "REFINERY_INNER_NAVBAR_HEIGHT": settings.REFINERY_INNER_NAVBAR_HEIGHT,
+        "REFINERY_BASE_URL": Site.objects.get_current().domain,
+        "REFINERY_SOLR_BASE_URL": settings.REFINERY_SOLR_BASE_URL,
+        "REFINERY_GOOGLE_ANALYTICS_ID": settings.REFINERY_GOOGLE_ANALYTICS_ID,
+        "REFINERY_INSTANCE_NAME": Site.objects.get_current().name,
+        "REFINERY_REPOSITORY_MODE": settings.REFINERY_REPOSITORY_MODE,
+        "REFINERY_CONTACT_EMAIL": settings.DEFAULT_FROM_EMAIL,
+        "REGISTRATION_OPEN": settings.REGISTRATION_OPEN,
+        "REFINERY_REGISTRATION_CLOSED_MESSAGE":
+            settings.REFINERY_REGISTRATION_CLOSED_MESSAGE,
+        "ACCOUNT_ACTIVATION_DAYS": settings.ACCOUNT_ACTIVATION_DAYS,
+        "REFINERY_BANNER": settings.REFINERY_BANNER,
+        "REFINERY_BANNER_ANONYMOUS_ONLY":
+            settings.REFINERY_BANNER_ANONYMOUS_ONLY,
+        "REFINERY_EXTERNAL_AUTH": settings.REFINERY_EXTERNAL_AUTH,
+        "REFINERY_EXTERNAL_AUTH_MESSAGE":
+            settings.REFINERY_EXTERNAL_AUTH_MESSAGE,
+    }

@@ -49,6 +49,7 @@ pysolr==3.3.2
 python-dateutil==2.1
 python-ldap==2.4.19
 python-magic==0.4.6
+python-memcached==1.57
 python-ptrace==0.6.4
 PyYAML==3.10
 readline==6.2.2

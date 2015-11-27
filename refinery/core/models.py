@@ -12,8 +12,9 @@ import socket
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User, Group, Permission
 from django.contrib.auth.signals import user_logged_in
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages
 from django.contrib.messages import info
 from django.core.exceptions import MultipleObjectsReturned
@@ -21,9 +22,10 @@ from django.core.mail import mail_admins, send_mail
 from django.db import models, transaction
 from django.db.models import Max
 from django.db.models.fields import IntegerField
-from django.db.models.signals import post_save, pre_delete
+from django.db.models.signals import post_save, pre_delete, post_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
+from django.core.cache import cache
 
 from bioblend import galaxy
 from django_extensions.db.fields import UUIDField
@@ -37,6 +39,7 @@ from galaxy_connector.models import Instance
 from .utils import update_data_set_index, delete_data_set_index, \
     add_read_access_in_neo4j, remove_read_access_in_neo4j, \
     delete_data_set_neo4j, delete_ontology_from_neo4j
+from guardian.models import UserObjectPermission
 
 
 logger = logging.getLogger(__name__)
@@ -185,6 +188,27 @@ class BaseResource (models.Model):
 
     class Meta:
         abstract = True
+
+    # Overriding save() method to disallow saving objects with duplicate slugs
+    def save(self, *args, **kwargs):
+        if self.slug is not None:
+            try:
+                self.__class__.objects.get(slug=self.slug)
+            except self.DoesNotExist:
+                try:
+                    super(BaseResource, self).save(*args, **kwargs)
+                except Exception as e:
+                    logger.error("Could not save %s: %s" % (
+                        self.__class__.__name__, e))
+            logger.error("%s with slug: %s already exists!" % (
+                    self.__class__.__name__, self.slug))
+        else:
+            try:
+                super(BaseResource, self).save(*args, **kwargs)
+            except Exception as e:
+                logger.error("Could not save %s: %s" % (
+                    self.__class__.__name__, e))
+        cache.clear()
 
 
 class OwnableResource (BaseResource):
@@ -384,9 +408,30 @@ class DataSet(SharableResource):
         )
 
     def __unicode__(self):
+
         return (self.name + " - " +
                 self.get_owner_username() + " - " +
                 self.summary)
+
+    def get_owner(self):
+        owner = None
+
+        content_type_id = ContentType.objects.get_for_model(self).id
+        permission_id = Permission.objects.filter(codename='add_dataset')[0].id
+
+        perms = UserObjectPermission.objects.filter(
+            content_type_id=content_type_id,
+            permission_id=permission_id,
+            object_pk=self.id
+        )
+
+        if perms.count() > 0:
+            try:
+                owner = User.objects.get(id=perms[0].user_id)
+            except User.DoesNotExist:
+                pass
+
+        return owner
 
     def set_investigation(self, investigation, message=""):
         """Associate this data set with an investigation. If this data set has
@@ -494,7 +539,7 @@ class DataSet(SharableResource):
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
         update_data_set_index(self)
-
+        cache.clear()
         user_ids = map(lambda user: user.id, group.user_set.all())
 
         # We need to give the anonymous user read access too.
@@ -532,6 +577,7 @@ class DataSet(SharableResource):
 def _dataset_delete(sender, instance, *args, **kwargs):
     delete_data_set_index(instance)
     delete_data_set_neo4j(instance.uuid)
+    cache.clear()
 
 
 class InvestigationLink(models.Model):
@@ -652,6 +698,11 @@ class Workflow(SharableResource, ManageableResource):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
         )
+
+
+@receiver(post_delete, sender=Workflow)
+def _workflow_delete(sender, instance, **kwargs):
+    cache.clear()
 
 
 class Project(SharableResource):

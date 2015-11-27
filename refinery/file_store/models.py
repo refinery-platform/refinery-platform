@@ -389,7 +389,7 @@ class FileStoreItem(models.Model):
             logger.info("File type is set to '%s'", f)
             return True
 
-        except Exception, e:
+        except Exception as e:
             logger.error("Couldn't save:%s with extension: %s, %s" % (self,
                                                                       f, e))
             return False

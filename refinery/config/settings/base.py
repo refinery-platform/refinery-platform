@@ -457,11 +457,19 @@ if REFINERY_EXTERNAL_AUTH:
             'core.models.RefineryLDAPBackend',
         )
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': '0.0.0.0:11211',
+        'TIMEOUT': 600,
+    }
+}
+
 # CURRENT_COMMIT retrieves the most recent commit used allowing for easier
 # debugging of a Refinery instance
 
 try:
     CURRENT_COMMIT = check_output(['/usr/bin/git', 'rev-parse', "HEAD"])
-except Exception, e:
+except Exception as e:
     logger.debug("Error Retrieving Most Recent Commit: ", e)
     CURRENT_COMMIT = "Error Retrieving Most Recent Commit: " + str(e)

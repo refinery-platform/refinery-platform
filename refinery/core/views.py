@@ -127,15 +127,6 @@ def user(request, query):
     except User.DoesNotExist:
         user = get_object_or_404(UserProfile, uuid=query).user
 
-    if (len(get_shared_groups(request.user, user)) == 0 and
-            user != request.user):
-        return HttpResponseForbidden(
-            custom_error_page(
-                request, '403.html',
-                {'user': request.user,
-                 'msg': "view the profile of user %s" % user.username}
-            )
-        )
     return render_to_response('core/user.html', {'profile_user': user},
                               context_instance=RequestContext(request))
 

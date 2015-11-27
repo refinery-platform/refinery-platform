@@ -40,7 +40,7 @@ class Command(BaseCommand):
                 item.filetype = FileType.objects.get(extension=extension)
                 item.save()
                 pass
-            except Exception, e:
+            except Exception as e:
                 logger.error("Couldn't update %s with extension: %s, %s" %
                              (item, extension, e))
 
