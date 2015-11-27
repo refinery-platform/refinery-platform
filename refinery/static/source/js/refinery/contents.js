@@ -131,14 +131,14 @@
 
           // render pivot matrix upon activation of tab (otherwise the labels will be missing because their
           // width cannot be determined while the matrix is not visible (getBBox and getBoundingClientRect don't work)
-          $('a[data-toggle="pill"]').on('shown', function (event) {
-            if (event.target.href.split("#")[1] === "pivot-view-tab") {
+        $('#view-selector').on("change", function (e) {
+          if (e.val === "pivot-view-tab") {
                 pivotMatrixView.render();
             }
-          })
+          });
 
-          $('a[data-toggle="pill"]').on('shown', function (event) {
-            if (event.target.href.split("#")[1] === "provenance-view-tab") {
+        $('#view-selector').on("change", function (e) {
+          if (e.val === "provenance-view-tab") {
               if (provvis.get() instanceof provvisDecl.ProvVis === true) {
                 provvisRender.update(provvis.get(), lastProvVisSolrResponse);
               } else {
@@ -148,7 +148,7 @@
                 client.run(provVisQuery, SOLR_FULL_QUERY);
               }
             }
-          })
+          });
 
           query.setDocumentIndex(0);
           query.setDocumentCount(tableView.getDocumentsPerPage());
