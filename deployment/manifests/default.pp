@@ -252,7 +252,7 @@ class neo4j {
 include neo4j
 
 class owl2neo4j {
-  $owl2neo4j_version = "0.3.3"
+  $owl2neo4j_version = "0.3.4"
   $owl2neo4j_url = "https://github.com/flekschas/owl2neo4j/releases/download/v${owl2neo4j_version}/owl2neo4j.jar"
 
   # Need to remove the old file manually as wget throws a weird
@@ -301,7 +301,7 @@ class ui {
   }
   ->
   package {
-    'bower': ensure => '1.6.5', provider => 'npm';
+    'bower': ensure => '1.6.8', provider => 'npm';
     'grunt-cli': ensure => '0.1.13', provider => 'npm';
   }
   ->
