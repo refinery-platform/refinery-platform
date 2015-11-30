@@ -1,4 +1,4 @@
-angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ngGrid'])
+angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ui.grid', 'ui.grid.edit'])
 
 .config(['$httpProvider', function($httpProvider) {
   // use Django XSRF/CSRF lingo to enable communication with API

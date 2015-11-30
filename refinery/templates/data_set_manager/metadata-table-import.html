@@ -4,7 +4,7 @@
 
 {% block head_html %}
 <link rel="stylesheet" type="text/css"
-      href="{% static "vendor/ng-grid/ng-grid.css" %}"
+      href="{% static "vendor/ui-grid/ui-grid.min.css" %}"
       xmlns="http://www.w3.org/1999/html"/>
 {% endblock %}
 
@@ -45,7 +45,7 @@
         {% endif %}
 
         <div ng-show="selectedFile">
-          <div class="gridStyle" ng-grid="gridOptions"></div>
+          <div class="gridStyle" ui-grid="gridOptions" ui-grid-edit></div>
 
           <p>
             Please provide the following values (fields marked in
