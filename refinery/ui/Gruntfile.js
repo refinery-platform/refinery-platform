@@ -631,7 +631,6 @@ module.exports = function(grunt) {
           ]
         },
         files: {
-          '<%= cfg.basePath.static.compile %>/styles/css/font-awesome-ie7.css': '<%= cfg.basePath.static.src %>/styles/less/font-awesome-ie7.less',
           '<%= cfg.basePath.static.compile %>/styles/css/font-awesome.css': '<%= cfg.basePath.static.src %>/styles/less/font-awesome.less',
           '<%= cfg.basePath.static.compile %>/styles/css/galaxy_connector.css': '<%= cfg.basePath.static.src %>/styles/less/galaxy_connector.less',
           '<%= cfg.basePath.static.compile %>/styles/css/refinery-style-bootstrap-responsive.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style-bootstrap-responsive.less',
