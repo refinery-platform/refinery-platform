@@ -35,21 +35,12 @@ class Migration(SchemaMigration):
         # Removing unique constraint on 'Workflow', fields ['slug']
         db.delete_unique(u'core_workflow', ['slug'])
 
-        # Deleting field 'UserProfile.is_public'
-        db.delete_column(u'core_userprofile', 'is_public')
-
-
     def backwards(self, orm):
         # Adding unique constraint on 'Workflow', fields ['slug']
         db.create_unique(u'core_workflow', ['slug'])
 
         # Adding unique constraint on 'DiskQuota', fields ['slug']
         db.create_unique(u'core_diskquota', ['slug'])
-
-        # Adding field 'UserProfile.is_public'
-        db.add_column(u'core_userprofile', 'is_public',
-                      self.gf('django.db.models.fields.BooleanField')(default=False),
-                      keep_default=False)
 
         # Adding unique constraint on 'Download', fields ['slug']
         db.create_unique(u'core_download', ['slug'])
