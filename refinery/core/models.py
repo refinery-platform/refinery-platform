@@ -9,7 +9,7 @@ import logging
 import os
 import smtplib
 import socket
-
+from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import User, Group, Permission
@@ -181,7 +181,7 @@ class BaseResource (models.Model):
     creation_date = models.DateTimeField(auto_now_add=True)
     modification_date = models.DateTimeField(auto_now=True)
     description = models.TextField(max_length=5000, blank=True)
-    slug = models.CharField(unique=True, max_length=250, blank=True, null=True)
+    slug = models.CharField(max_length=250, blank=True, null=True)
 
     def __unicode__(self):
         return self.name + " (" + self.uuid + ")"
@@ -189,9 +189,17 @@ class BaseResource (models.Model):
     class Meta:
         abstract = True
 
+    def clean(self, *args, **kwargs):
+        if self.slug is not None and self.slug != "":
+            if self.__class__.objects.get(slug=self.slug) is not None:
+                raise forms.ValidationError("%s with slug: %s "
+                                            "already exists!"
+                                            % (self.__class__.__name__,
+                                               self.slug))
+
     # Overriding save() method to disallow saving objects with duplicate slugs
     def save(self, *args, **kwargs):
-        if self.slug is not None:
+        if self.slug is not None and self.slug != "":
             try:
                 self.__class__.objects.get(slug=self.slug)
             except self.DoesNotExist:
