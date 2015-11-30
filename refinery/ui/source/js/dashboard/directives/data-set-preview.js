@@ -4,7 +4,7 @@ function refineryDataSetPreview () {
   function DataSetPreviewCtrl (
     $q,
     _,
-    $modal,
+    $uibModal,
     pubSub,
     settings,
     userService,
@@ -19,7 +19,7 @@ function refineryDataSetPreview () {
 
     this.$q = $q;
     this._ = _;
-    this.$modal = $modal;
+    this.$uibModal = $uibModal;
     this.pubSub = pubSub;
     this.settings = settings;
     this.user = authService;
@@ -291,7 +291,7 @@ function refineryDataSetPreview () {
     var that = this;
 
     if (this.permissions) {
-      this.$modal.open({
+      this.$uibModal.open({
         templateUrl: '/static/partials/dashboard/partials/permission-dialog.html',
         controller: 'PermissionEditorCtrl as modal',
         resolve: {
@@ -349,7 +349,7 @@ function refineryDataSetPreview () {
     controller: [
       '$q',
       '_',
-      '$modal',
+      '$uibModal',
       'pubSub',
       'settings',
       'userService',

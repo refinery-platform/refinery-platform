@@ -1,15 +1,16 @@
 <div id="group-collab">
 
-  <div class="span4">
+  <div class="col-md-4">
     <div class="refinery-panel">
       <div class="refinery-header">
         <span class="refinery-header-left">
           <h3>
-            <i class="m-r-1-4 icon-group"></i>Groups
+            <i class="m-r-1-4 fa fa-users"></i>Groups
           </h3>
         </span>
         <span class="refinery-header-right">
-          <a ng-href="#/{{collab.activeGroup.uuid}}/" ng-click="collab.openAddGroup()"><i class="icon-plus"></i></a>
+          <a ng-href="#/{{collab.activeGroup.uuid}}/" ng-click="collab
+          .openAddGroup()"><i class="fa fa-plus"></i></a>
         </span>
       </div>
 
@@ -34,7 +35,7 @@
               </td>
               <td style="text-align:center">
                 <a ng-href="#/{{group.uuid}}/" ng-click="collab.openGroupEditor(group)">
-                  <i class="icon-cog"></i>
+                  <i class="fa fa-cog"></i>
                 </a>
               </td>
             </tr>
@@ -44,16 +45,17 @@
     </div>
   </div>
 
-  <div class="span4">
+  <div class="col-md-4">
     <div class="refinery-panel">
       <div class="refinery-header">
         <span class="refinery-header-left">
           <h3>
-            <i class="m-r-1-4 icon-user"></i>Members
+            <i class="m-r-1-4 fa fa-user"></i>Members
           </h3>
         </span>
         <span ng-if="collab.activeGroup.can_edit" class="refinery-header-right">
-          <a href="#/{{ collab.activeGroup.uuid }}/" ng-click="collab.openEmailInvite()"><i class="icon-plus"></i></a>
+          <a href="#/{{ collab.activeGroup.uuid }}/" ng-click="collab
+          .openEmailInvite()"><i class="fa fa-plus"></i></a>
         </span>
       </div>
 
@@ -80,7 +82,7 @@
               </td>
               <td style="text-align:center">
                 <a ng-if="collab.activeGroup.can_edit" ng-href="#/{{collab.activeGroup.uuid}}/" ng-click="collab.openMemberEditor(member)">
-                  <i class="icon-cog"></i>
+                  <i class="fa fa-cog"></i>
                 </a>
               </td>
             </tr>
@@ -90,12 +92,12 @@
     </div>
   </div>
 
-  <div class="span4">
+  <div class="col-md-4">
     <div class="refinery-panel">
       <div class="refinery-header">
         <span class="refinery-header-left">
           <h3>
-            <i class="m-r-1-4 icon-envelope"></i>Pending Invitations
+            <i class="m-r-1-4 envelope"></i>Pending Invitations
           </h3>
         </span>
         <span class="refinery-header-right">

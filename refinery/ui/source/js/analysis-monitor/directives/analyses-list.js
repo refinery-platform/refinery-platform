@@ -29,14 +29,14 @@ function analysisMonitorAnalysesList() {
       //Analyses view sorting
       scope.predicate = 'time_start';
       scope.reverse = true;
-      scope.analysisIcon = "icon-arrow-up";
+      scope.analysisIcon = "fa fa-arrow-up";
       scope.order = function(predicate) {
         scope.reverse = (scope.predicate === predicate) ? !scope.reverse : false;
         scope.predicate = predicate;
         if(scope.reverse === true) {
-          scope.analysisIcon = "icon-arrow-up";
+          scope.analysisIcon = "fa fa-arrow-up";
         }else{
-          scope.analysisIcon = "icon-arrow-down";
+          scope.analysisIcon = "fa fa-arrow-down";
         }
       };
 

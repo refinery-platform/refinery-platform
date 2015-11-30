@@ -15,11 +15,11 @@ describe('Filter: AnalysisStatusIcon', function () {
   });
 
   it('should return correct status depending on state', function () {
-      expect(filter('SUCCESS')).toBe('icon-ok-sign');
-      expect(filter('FAILURE')).toBe('icon-warning-sign');
-      expect(filter('RUNNING')).toBe('icon-cog');
-      expect(filter('INITIALIZED')).toBe('icon-cog');
-      expect(filter('UNKNOWN')).toBe('icon-question-sign');
-      expect(filter('')).toBe('icon-question-sign');
+      expect(filter('SUCCESS')).toBe('fa fa-check-circle');
+      expect(filter('FAILURE')).toBe('fa fa-exclamation-triangle');
+      expect(filter('RUNNING')).toBe('fa fa-cog');
+      expect(filter('INITIALIZED')).toBe('fa fa-cog');
+      expect(filter('UNKNOWN')).toBe('fa fa-question-circle');
+      expect(filter('')).toBe('fa fa-question-circle');
   });
 });

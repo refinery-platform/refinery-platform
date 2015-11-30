@@ -36,8 +36,8 @@
 {% block content %}
 <!-- Tab names -->
 <div class="refinery-panel-tabs">
-  <div class="row-fluid">
-    <div class="span10">
+  <div class="row">
+    <div class="col-md-10">
       <ul class="nav nav-tabs" id="tabs" ng-cloak>
         <li class="active">
           <a href="#metadata" data-toggle="tab">Step 1. Upload Metadata</a>
@@ -223,10 +223,11 @@
               </tr>
             </table>
 
-            <input style="float: left;" class="btn" type="button"
+            <input style="float: left;" class="btn btn-default" type="button"
                    ng-click="checkFiles()" value="Check Files"
                    ng-disabled="!(dataFileColumn)"/>
-            <input style="float: left;" class="btn" id="tabular-import-button"
+            <input style="float: left;" class="btn btn-default"
+              id="tabular-import-button"
                    type="submit" value="Import"
                    ng-disabled="importMetadataTableForm.$invalid"/>
             <div style="margin-left: 15px; padding: 15px; float: left;
@@ -266,7 +267,8 @@
           {{ form.isa_tab_url.errors }}
           {{ form.isa_tab_url }}
         </p>
-        <input style="float: left;" class="btn" id="isa-import-button"
+        <input style="float: left;" class="btn btn-default"
+          id="isa-import-button"
                type="submit" value="Import"/>
         <div style="margin-left: 15px; padding: 15px; float: left;
                     display: block; height: 22px; width: 22px;"
@@ -291,7 +293,7 @@
           <input type="hidden" name="redirect" value="/">
         </noscript>
         <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
-        <div class="row-fluid fileupload-buttonbar">
+        <div class="row fileupload-buttonbar">
           <div class="col-lg-7">
             <!-- The fileinput-button span is used to style the file input field as button -->
           <span class="btn btn-success fileinput-button"

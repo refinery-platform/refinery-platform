@@ -576,8 +576,10 @@ var provvisInit = (function () {
     nodeAttributeList.forEach(function (na) {
       $("<li/>", {
         "id": "prov-ctrl-visible-attribute-list-" + na,
+        "style": "padding-left: 5px",
         "html": '<a href="#" class="field-name"><label class="radio" ' +
-        'style="text-align: start"><input type="radio">' +
+        'style="text-align: start;margin-top: 0px;margin-bottom: 0px;">' +
+        '<input type="radio">' +
         na + '</label></a>'
       }).appendTo("#prov-ctrl-visible-attribute-list");
     });

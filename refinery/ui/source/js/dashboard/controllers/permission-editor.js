@@ -1,5 +1,5 @@
 function PermissionEditorCtrl (
-  $modalInstance,
+  $uibModalInstance,
   _,
   sharingService,
   dashboardDataSetsReloadService,
@@ -10,7 +10,7 @@ function PermissionEditorCtrl (
   this._ = _;
   this.config = config;
   this.permissions = permissions;
-  this.$modalInstance = $modalInstance;
+  this.$uibModalInstance = $uibModalInstance;
   this.sharingService = sharingService;
   this.dashboardDataSetsReloadService = dashboardDataSetsReloadService;
 
@@ -36,7 +36,7 @@ function PermissionEditorCtrl (
  * @type  {function}
  */
 PermissionEditorCtrl.prototype.cancel = function () {
-  this.$modalInstance.dismiss('cancel');
+  this.$uibModalInstance.dismiss('cancel');
 };
 
 /**
@@ -66,7 +66,7 @@ PermissionEditorCtrl.prototype.save = function () {
     .$promise
       .then(function () {
         that.dashboardDataSetsReloadService.reload(true);
-        that.$modalInstance.dismiss('saved');
+        that.$uibModalInstance.dismiss('saved');
       })
       .catch(function (error) {
         console.error(error);
@@ -79,7 +79,7 @@ PermissionEditorCtrl.prototype.save = function () {
 angular
   .module('refineryDashboard')
   .controller('PermissionEditorCtrl', [
-    '$modalInstance',
+    '$uibModalInstance',
     '_',
     'sharingService',
     'dashboardDataSetsReloadService',

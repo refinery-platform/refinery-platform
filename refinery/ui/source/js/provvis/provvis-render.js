@@ -1233,13 +1233,16 @@ var provvisRender = (function () {
         "type": "text",
         "class": "form-control dc-input",
         "value": dc.value,
-        "style": "width: 25px; margin-bottom: 0px; margin-right: 2px; " +
-        "text-align: right;"
+        "style": "display: inline; width: 27px; height: 30px; margin-bottom:" +
+        " 0px;" +
+        "margin-right: 2px; text-align: left; padding: 0; margin-left: 2px;" +
+        " border-radius: 0px;"
       }).appendTo("#" + "dc-form-" + i);
 
       $('<div/>', {
         "id": "btn-group-wrapper-" + i,
-        "class": "btn-group"
+        "class": "btn-group",
+        "style": "height: 32px"
       }).appendTo("#" + "dc-form-" + i);
 
       $('<div/>', {
@@ -1251,13 +1254,13 @@ var provvisRender = (function () {
       $('<button/>', {
         "id": "dc-carret-up-" + i,
         "class": "btn btn-default",
-        "html": "<i class=icon-caret-up></i>"
+        "html": "<i class='fa fa-caret-up'></i>"
       }).appendTo("#" + "dc-btn-group-" + i);
 
       $('<button/>', {
         "id": "dc-carret-down-" + i,
         "class": "btn btn-default",
-        "html": "<i class=icon-caret-down></i>"
+        "html": "<i class='fa fa-caret-down'></i>"
       }).appendTo("#" + "dc-btn-group-" + i);
 
       $('<span/>', {
@@ -4323,14 +4326,14 @@ var provvisRender = (function () {
       case "stored":
         data = vis.graph.nodeData.get(selNode.uuid);
         if (typeof data !== "undefined") {
-          title = '<i class="icon-sitemap rotate-icon-90"></i>&nbsp;' +
+          title = '<i class="fa fa-sitemap rotate-icon-90"></i>&nbsp;' +
               selNode.fileType;
           if (data.file_url !== null) {
             /* TODO: Trigger download without window.open. */
             titleLink = '<a title="Download linked file" href="' +
                 data.file_url + '" onclick=window.open("' + data.file_url +
                 '")>' +
-                '<i class="icon-download"></i>&nbsp;' + data.name + '</a>';
+                '<i class="fa fa-arrow-circle-o-down"></i>&nbsp;' + data.name + '</a>';
           } else {
             titleLink = " - ";
           }
@@ -4345,14 +4348,14 @@ var provvisRender = (function () {
 
         data = vis.graph.nodeData.get(selNode.uuid);
         if (typeof data !== "undefined") {
-          title = '<i class="icon-sitemap rotate-icon-90"></i>&nbsp;' +
+          title = '<i class="fa fa-sitemap rotate-icon-90"></i>&nbsp;' +
               selNode.fileType;
           if (data.file_url !== null) {
             /* TODO: Trigger download without window.open. */
             titleLink = '<a title="Download linked file" href="' +
                 data.file_url + '" onclick=window.open("' + data.file_url +
                 '")>' +
-                '<i class="icon-download"></i>&nbsp;' + data.name + '</a>';
+                '<i class="fa fa-arrow-circle-o-down"></i>&nbsp;' + data.name + '</a>';
           }
         }
         break;
@@ -4360,12 +4363,12 @@ var provvisRender = (function () {
       case "subanalysis":
         data = vis.graph.workflowData.get(selNode.parent.wfUuid);
         if (typeof data !== "undefined") {
-          title = '<i class="icon-cog"></i>&nbsp; Analysis Group';
+          title = '<i class="fa fa-cog"></i>&nbsp; Analysis Group';
           titleLink = '<a href=/workflows/' + selNode.wfUuid +
               ' target="_blank">' +
               selNode.parent.wfName + '</a>';
         } else {
-          title = '<i class="icon-cog"></i>&nbsp; Dataset';
+          title = '<i class="fa fa-cog"></i>&nbsp; Dataset';
         }
 
         if (selNode.parent.motifDiff.numIns !== 0 ||
@@ -4392,12 +4395,12 @@ var provvisRender = (function () {
       case "analysis":
         data = vis.graph.analysisData.get(selNode.uuid);
         if (typeof data !== "undefined") {
-          title = '<i class="icon-cogs"></i>&nbsp; Analysis';
+          title = '<i class="fa fa-cogs"></i>&nbsp; Analysis';
           titleLink = '<a href=/workflows/' + selNode.wfUuid +
               ' target="_blank">' +
               selNode.wfName + "</a>";
         } else {
-          title = '<i class="icon-cogs"></i>&nbsp; Dataset';
+          title = '<i class="fa fa-cogs"></i>&nbsp; Dataset';
         }
         if (selNode.motifDiff.numIns !== 0 || selNode.motifDiff.numOuts !== 0 ||
             selNode.motifDiff.numSubanalyses !== 0) {
@@ -4428,7 +4431,7 @@ var provvisRender = (function () {
         };
 
         if (typeof data !== "undefined") {
-          title = '<i class="icon-reorder"></i>&nbsp; Layer';
+          title = '<i class="fa fa-bars"></i>&nbsp; Layer';
           titleLink = '<a href=/workflows/' + data.wfUuid +
               ' target="_blank">' + data.workflow + '</a>';
         }
@@ -5081,8 +5084,8 @@ var provvisRender = (function () {
     });
 
     /* Switch filter action. */
-    $("#prov-ctrl-filter-action > button").click(function () {
-      filterAction = $(this).prop('value');
+    $("#prov-ctrl-filter-action > label").click(function () {
+      filterAction = $(this).find("input[type='radio']").prop("value");
       if (filterMethod === "timeline") {
         filterAnalysesByTime(d3.select(".startTimeline")
             .data()[0].time, d3.select(".endTimeline").data()[0].time, vis);

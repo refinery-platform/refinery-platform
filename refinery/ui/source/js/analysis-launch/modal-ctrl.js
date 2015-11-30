@@ -2,7 +2,7 @@ angular.module('refineryAnalysisLaunch')
     .controller('AnalysisLaunchModalCtrl',
     [
       '$scope',
-      '$modalInstance',
+      '$uibModalInstance',
       '$window',
       'timeStamp',
       'workflow',
@@ -15,7 +15,7 @@ angular.module('refineryAnalysisLaunch')
 
 function AnalysisLaunchModalCtrl(
   $scope,
-  $modalInstance,
+  $uibModalInstance,
   $window, timeStamp,
   workflow,
   analysisLaunchConfigService,
@@ -57,15 +57,15 @@ function AnalysisLaunchModalCtrl(
   };
 
   $scope.cancel = function () {
-    $modalInstance.dismiss('cancel');
+    $uibModalInstance.dismiss('cancel');
   };
 
   $scope.close = function () {
-    $modalInstance.close('close');
+    $uibModalInstance.close('close');
   };
 
   $scope.view = function () {
-    $modalInstance.close('view');
+    $uibModalInstance.close('view');
     $window.location.href = '/data_sets/' + dataSetUuid + '/#/analyses';
   };
 

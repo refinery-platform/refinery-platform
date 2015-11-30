@@ -1,9 +1,9 @@
-function CollaborationCtrl($timeout, $state, $stateParams, $location, $modal, groupInviteService, groupDataService) {
+function CollaborationCtrl($timeout, $state, $stateParams, $location, $uibModal, groupInviteService, groupDataService) {
   var that = this;
   that.$state = $state;
   that.$stateParams = $stateParams;
   that.$location = $location;
-  that.$modal = $modal;
+  that.$uibModal = $uibModal;
   that.groupInviteService = groupInviteService;
   that.groupDataService = groupDataService;
 
@@ -91,14 +91,14 @@ CollaborationCtrl.prototype.revokeInvitation = function (invite) {
 // Opening modals:
 
 CollaborationCtrl.prototype.openAddGroup = function () {
-  var modalInstance = this.$modal.open({
+  var modalInstance = this.$uibModal.open({
     templateUrl: '/static/partials/collaboration/partials/collaboration-addgroups-dialog.html',
     controller: 'AddGroupCtrl as modal',
   });
 };
 
 CollaborationCtrl.prototype.openGroupEditor = function (group) {
-  var modalInstance = this.$modal.open({
+  var modalInstance = this.$uibModal.open({
     templateUrl: '/static/partials/collaboration/partials/collaboration-groups-dialog.html',
     controller: 'GroupEditorCtrl as modal',
     resolve: {
@@ -110,7 +110,7 @@ CollaborationCtrl.prototype.openGroupEditor = function (group) {
 };
 
 CollaborationCtrl.prototype.openMemberEditor = function (member) {
-  var modalInstance = this.$modal.open({
+  var modalInstance = this.$uibModal.open({
     templateUrl: '/static/partials/collaboration/partials/collaboration-members-dialog.html',
     controller: 'MemberEditorCtrl as modal',
     resolve: {
@@ -122,7 +122,7 @@ CollaborationCtrl.prototype.openMemberEditor = function (member) {
 };
 
 CollaborationCtrl.prototype.openEmailInvite = function () {
-  var modalInstance = this.$modal.open({
+  var modalInstance = this.$uibModal.open({
     templateUrl: '/static/partials/collaboration/partials/collaboration-addmembers-dialog.html',
     controller: 'EmailInviteCtrl as modal',
   });
@@ -135,7 +135,7 @@ angular
     '$state',
     '$stateParams',
     '$location',
-    '$modal',
+    '$uibModal',
     'groupInviteService',
     'groupDataService',
     CollaborationCtrl

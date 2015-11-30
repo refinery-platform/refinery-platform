@@ -138,32 +138,33 @@
 
     <div class="refinery-panel-tabs">
 
-      <div class="row-fluid">
+      <div class="row">
 
-        <div class="span2">
-          <div class="btn-group">
+        <div class="col-md-3">
+          <div class="btn-group" role="group" aria-label="...">
           <!-- ng-hide if the file tab is not selected -->
-            <a type="button" class="btn btn-warning data-set-view-tabs"
+            <button type="button" class="btn btn-warning data-set-view-tabs"
               ng-class="{active: $root.mode==='browse'}" ui-sref="browse"
               ui-sref-active="active">
               Browse
-            </a>
+            </button>
             {% if has_change_dataset_permission %}
-              <a type="button" class="btn btn-warning data-set-view-tabs"
+              <button type="button" class="btn btn-warning data-set-view-tabs"
                 ng-class="{active:$root.mode==='analyze'}"
                 ui-sref="analyze" ui-sref-active="active">
                 Analyze
-              </a>
+              </button>
             {% endif %}
-            <a type="button" id="visualizeTab" class="btn btn-warning data-set-view-tabs"
+            <button type="button" id="visualizeTab" class="btn btn-warning
+            data-set-view-tabs"
               ng-class="{active:$root.mode==='visualize'}" ui-sref="visualize"
               ui-sref-active="active">
               Visualize
-            </a>
+            </button>
           </div>
         </div>
 
-        <div class="span10">
+        <div class="col-md-9">
           <ul class="nav nav-tabs" id="tabs" style="float: right;">
             <li ui-sref-active="active" id="filesTab">
               <a ui-sref="files" class="dataSetTabs">
@@ -211,11 +212,11 @@
 
           <div class="dataSetTabContent ng-cloak" id="files">
             <!-- <div ng-controller="FileMappingCtrl"> -->
-            <div class="row-fluid">
+            <div class="row">
 
               {% verbatim %}
               <div class="{{ $root.ctrlTabSpanSize }}"
-                   ng-init="$root.ctrlTabSpanSize='span2'"
+                   ng-init="$root.ctrlTabSpanSize='col-md-2'"
                    ng-show="showCtrlTab" ng-cloak
                    style="background-color: #eaeaea; padding: 10px;">
                 <!-- <div ui-view="data-set-ui-mode-controls"></div> -->
@@ -225,20 +226,20 @@
 
               {% verbatim %}
                 <div class="{{ $root.mainTabSpanSize }}"
-                     ng-init="$root.mainTabSpanSize='span12'" ng-cloak>
+                     ng-init="$root.mainTabSpanSize='col-md-12'" ng-cloak>
               {% endverbatim %}
 
-                  <div class="row-fluid" ng-if="$root.mode==='analyze'">
+                  <div class="row" ng-if="$root.mode==='analyze'">
                     <div ng-include="'/static/partials/data-set-ui-node-mapping.html'"></div>
                     <div ui-view="data-set-ui-mapping-controls"></div>
                     <!-- <div ui-view></div> -->
                   </div>
 
-                  <div class="row-fluid">
-                    <div class="span2">
+                  <div class="row">
+                    <div class="col-md-2">
                       {% if not REFINERY_REPOSITORY_MODE %}
-                        <div class="row-fluid" style="margin-bottom: 5px;">
-                          <div class="span12">
+                        <div class="row" style="margin-bottom: 5px;">
+                          <div class="col-md-12">
                               <span id="node-set-manager-panel">
                                 <!-- <label class="control-label"
                                 style="font-size: large; margin-left: 15px;
@@ -249,13 +250,15 @@
                               </span>
                           </div>
                         </div>
-                        <div class="row-fluid" style="margin-bottom: 5px;">
-                          <div class="span12">
+                        <div class="row" style="margin-bottom: 5px;">
+                          <div class="col-md-12">
                             <div style="width: 100%;">
-                              <div id="node-set-save-button" class="btn btn-mini">
+                              <div id="node-set-save-button" class="btn
+                              btn-default btn-xs">
                                 Save
                               </div>
-                              <div id="clear-facets" class="btn btn-mini">
+                              <div id="clear-facets" class="btn
+                              btn-default btn-xs">
                                 Reset
                               </div>
                               <!-- <div id="" class="btn btn-mini">Download</div> -->
@@ -269,35 +272,37 @@
                         <li class="active"><a href="#solr-facet-view" data-toggle="pill">Facets</a></li>
                     </ul>
                     -->
-                      <div class="row-fluid y-scrollable">
-                        <div class="span12">
+                      <div class="row y-scrollable">
+                        <div class="col-md-12">
                           <span style="font-style: italic; color: darkgray;">
                             Attribute Filter
                           </span>
-                          <div id="solr-facet-view" class="accordion"></div>
+                          <div id="solr-facet-view" class="panel-group"></div>
                         </div>
-                        <div class="span12">
+                        <div class="col-md-12">
                           <span style="font-style: italic; color: darkgray;">
                             Analysis Filter
                           </span>
-                          <div id="solr-analysis-view" class="accordion"></div>
+                          <div id="solr-analysis-view" class="panel-group"></div>
                         </div>
                       </div>
                     </div>
 
                   {% verbatim %}
-                    <div class="span10" id="main-area">
+                    <div class="col-md-10" id="main-area">
                   {% endverbatim %}
 
-                    <div class="row-fluid" style="margin-bottom: 5px;">
-                      <div class="span3">
+                    <div class="row" style="margin-bottom: 5px;">
+                      <div class="col-md-3">
                         <span class="control-label"
                           id="solr-document-count-view" style="float: left;
                           margin-top: 3px;"></span>
-                        <a href="#" id="help-selection-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
+                        <a href="#" id="help-selection-button" style="height:
+                         20px; width: 20px;"><i class="fa fa-question-circle"
+                          style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
                       </div>
 
-                      <div class="span9">
+                      <div class="col-md-9">
                         <!--
                         <a id="igv-multi-species" href="#" role="button" style="margin-left: 5px" class="btn btn-warning" data-toggle="modal" rel="tooltip" data-placement="bottom" data-html="true" title="Launch IGV with<br>current selection."><i class="icon-bar-chart"></i>&nbsp;&nbsp;View in IGV</a>
                         <a href="#" id="help-igv-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
@@ -306,8 +311,17 @@
                         {% if REFINERY_REPOSITORY_MODE %}
                           <!-- CHECK BOXES FOR SELECTING SAMPLES -->
                           {% for work in workflows %}
-                            <a id="submitReposBtn" data-workflow_id="{{work.uuid}}" role="button" style="margin-left: 5px" class="btn  btn-warning disabled" rel="tooltip" data-placement="bottom" data-html="true" title=""><i class="icon-download"></i>&nbsp;&nbsp;Download as Archive</a>
-                            <a href="#" id="help-download-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
+                            <a id="submitReposBtn" data-workflow_id="
+                            {{work.uuid}}" role="button" style="margin-left:
+                            5px" class="btn  btn-warning disabled"
+                              rel="tooltip" data-placement="bottom"
+                              data-html="true" title="">
+                              <i class="fa fa-arrow-circle-o-down"></i>&nbsp;&nbsp;Download as
+                              Archive</a>
+                            <a href="#" id="help-download-button"
+                              style="height: 20px; width: 20px;"><i
+                              class="fa fa-question-circle" style="font-size:
+                              20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
                           {% endfor %}
                         {% endif %}
 
@@ -319,7 +333,7 @@
                             <option value="provenance-view-tab">Provenance</option>
                           </select>
                           <a href="#" id="help-view-selector-button">
-                            <i class="icon-question-sign"></i>
+                            <i class="fa fa-question-circle"></i>
                           </a>
                         </div>
 
@@ -364,7 +378,7 @@
                       </div>
                     </div>
 
-                    <div class="row-fluid">
+                    <div class="row">
                       <div class="tabbable">
                         <div class="tab-content">
                           <div class="tab-pane active fade in" id="table-view-tab">
@@ -382,11 +396,14 @@
                           </div>
                           <div class="tab-pane fade in" id="provenance-view-tab">
                               <div class="refinery-panel-content">
-                                <div id="provenance-graph" class="jquery-full-height">
-                                  <div id="provvis-nav-bar" ng-controller="provvisNavbarController">
+                                <div id="provenance-visualization"
+                                     class="jquery-full-height">
+                                  <div id="provvis-nav-bar"
+                                       ng-controller="provvisNavbarController">
                                       <div provvis-nav-bar></div>
                                   </div>
-                                  <div id="provvis-canvas" ng-controller="provvisCanvasController">
+                                  <div id="provvis-canvas"
+                                       ng-controller="provvisCanvasController">
                                       <div provvis-canvas></div>
                                   </div>
                                   <!-- the provenance graph -->
@@ -475,7 +492,7 @@
               </span>
             </div>
             <p>
-              <div class="row-fluid">
+              <div class="row">
                 <analysis-monitor-analyses-list></analysis-monitor-analyses-list>
               </div>
             </p>
@@ -577,7 +594,7 @@
               <h4>Owner</h4>
             </div>
             <p>
-              <span class="icon-user"></span>&nbsp;
+              <span class="fa fa-user"></span>&nbsp;
               {% if data_set.get_owner %}
                 <a href="{% url "user" data_set.get_owner.get_profile.uuid %}">
                   {{ data_set.get_owner_full_name }}
@@ -595,10 +612,10 @@
                 {% for perm in data_set.get_groups %}
                   <a href="{% url 'group' perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
                   {% if perm.read %}
-                    <i class="icon-eye-open"></i>
+                    <i class="fa fa-eye"></i>
                   {% endif %}
                   {% if perm.change %}
-                    <i class="icon-pencil"></i>
+                    <i class="fa fa-pencil"></i>
                   {% endif %}
                 {% endfor %}
               </p>
@@ -619,7 +636,8 @@
       <div class="modal-body" id="myModalBody">
       </div>
       <div class="modal-footer">
-        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+        <button class="btn btn-default" data-dismiss="modal"
+          aria-hidden="true">Close</button>
       </div>
     </div>
 
@@ -739,7 +757,8 @@
 
       $("#help-igv-button").click( function(event) {
         bootbox.alert(
-            "<h3><i class=\"icon-bar-chart\"></i>&nbsp;&nbsp;View in IGV</h3>" +
+            "<h3><i class=\"fa fa-bar-chart-o\"></i>&nbsp;&nbsp;View in " +
+            "IGV</h3>" +
             "<p>" +
             "The selected files can be viewed in IGV (<a href=\"http://www.broadinstitute.org/igv\">Integrative Genomics Viewer</a>) along with the meta data shown in the table. " +
             "IGV is launched through <a href=\"http://www.java.com/en/download/faq/java_webstart.xml\">Java WebStart</a>. This means that the software will be launched even if IGV is not installed on your computer. <b>Java needs to be installed for Java WebStart to be available</b>." +
@@ -755,7 +774,8 @@
 
       $("#help-download-button").click( function(event) {
         bootbox.alert(
-            "<h3><i class=\"icon-download\"></i>&nbsp;&nbsp;Download as Archive</h3>" +
+            "<h3><i class=\"fa fa-arrow-circle-o-down\"></i>&nbsp;&nbsp;Download as " +
+            "Archive</h3>" +
             "<p>" +
             "The selected files can be bulk downloaded as an archive file if you are logged in and if you have selected 20 or less files." +
             "</p>" +

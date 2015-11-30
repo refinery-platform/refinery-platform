@@ -28,8 +28,8 @@
             </tr>
         </table>
 
-<div class="row-fluid">
- <div class="span2">
+<div class="row">
+ <div class="col-md-2">
 
     <!-- Begin faceting. -->
     <h4>By Measurement</h4>
@@ -60,7 +60,7 @@
         
 
 </div>
-<div class="span10">
+<div class="col-md-10">
         {% if query %}
         
             <h3>Results: {{ page.object_list|length }}</h3>
@@ -82,7 +82,7 @@
             {% for result in page.object_list %}
         <tr>
         	<td>
-				<i class="icon-file"></i> <a href="{% url "data_set" result.object.uuid %}">{{ result.object.name }}</a><br>... {{ result.highlighted.text.0|safe }} ...        		
+				<i class="fa fa-file"></i> <a href="{% url "data_set" result.object.uuid %}">{{ result.object.name }}</a><br>... {{ result.highlighted.text.0|safe }} ...
         	</td>
         </tr>
     {% empty %}

@@ -14,7 +14,7 @@
 
 {% block content %}
 <div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
-	<div class="row-fluid">
+	<div class="row">
 	{% if user %}
 		<div class="refinery-header">
 			<span class="refinery-header-left">
@@ -41,17 +41,16 @@
 			<h4>Affiliation</h4>
 		</div>
 		<p>{% if profile_user.get_profile.affiliation %} {{ profile_user.get_profile.affiliation }} {% else %} <i>None provided.</i>{% endif %}</p>
-
-        {% if user == profile_user %}
-            <div class="refinery-subheader">
-                <h4>Password</h4>
-            </div>
-            {% if REFINERY_EXTERNAL_AUTH %}
-                <p>{{ REFINERY_EXTERNAL_AUTH_MESSAGE|safe }}</p>
-            {% else %}
-                <p><i class="icon-key"></i>&nbsp;<a href="{% url 'django.contrib.auth.views.password_change' %}">Change Password?</a></p>
-            {% endif %}
-        {% endif %}
+    {% if user == profile_user %}
+      <div class="refinery-subheader">
+        <h4>Password</h4>
+      </div>
+      {% if REFINERY_EXTERNAL_AUTH %}
+        <p>{{ REFINERY_EXTERNAL_AUTH_MESSAGE|safe }}</p>
+      {% else %}
+        <p><i class="fa fa-key"></i>&nbsp;<a href="{% url 'django.contrib.auth.views.password_change' %}">Change Password?</a></p>
+      {% endif %}
+    {% endif %}
 		{% if profile_user.groups.count > 0 %}
 			<div class="refinery-header">
 				<span class="refinery-header-left">
@@ -71,9 +70,9 @@
 			</span>
 		</div>
 		<p>Joined on {{ profile_user.date_joined }} Last login on {{ profile_user.last_login }}</p>
-        {% if user == profile_user %}
-		    <a class="btn" href="{% url 'user_edit' profile_user.get_profile.uuid %}">Edit</a>
-        {% endif %}
+    {% if user == profile_user %}
+		  <a class="btn btn-default" href="{% url 'user_edit' profile_user.get_profile.uuid %}">Edit</a>
+    {% endif %}
 	{% else %}
 	    <p>No valid user.</p>
 	{% endif %}

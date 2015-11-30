@@ -1,11 +1,11 @@
 <div
-  class="span4"
+  class="col-md-4"
   refinery-expandable-panel>
   <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
         <h3>
-          <i class="m-r-1-4 icon-file"></i>Data Sets
+          <i class="m-r-1-4 fa fa-file"></i>Data Sets
         </h3>
       </span>
       <span class="refinery-header-right">
@@ -13,14 +13,14 @@
           href="./data_set_manager/import/"
           class="no-underline btn"
           ng-if="dashboard.userIsAuthenticated">
-          <i class="icon-plus-sign"></i> Upload
+          <i class="fa fa-plus-circle"></i> Upload
         </a>
         <button
           class="no-underline btn"
           ng-class="{'active': dashboard.dataSetExploration}"
           ng-click="dashboard.toggleDataSetsExploration()"
           ng-if="dashboard.explorationEnabled">
-          <i class="icon-compass" title="Explore data sets"></i> Explore
+          <i class="fa fa-compass" title="Explore data sets"></i> Explore
         </button>
       </span>
     </div>
@@ -29,14 +29,14 @@
       class="refinery-sub-panel"
       ng-class="{'border': dashboard.expandedDataSetPanelBorder}"
       refinery-width-fixer>
-      <form class="navbar-search">
-        <i class="icon-search"></i>
-        <i class="icon-remove-sign"
+      <form class="navbar-search form-group">
+        <i class="fa fa-search"></i>
+        <i class="fa fa-times-circle"
           ng-if="dashboard.searchQueryDataSets"
           ng-click="dashboard.resetDataSetSearch()"></i>
         <input
           type="text"
-          class="search-query"
+          class="search-query form-control"
           placeholder="Search"
           ng-model="dashboard.searchQueryDataSets"
           ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)">
@@ -79,7 +79,7 @@
         <div class="floatbox">
           <div class="floatbox-min-right">
             <button
-              class="icon-only icon-filter"
+              class="fa fa-filter icon-only"
               title="Filter &amp; Sort"
               ng-class="{'showing': dashboard.showDataSetsFilterSort, 'active': dashboard.dataSetsFilterSort}"
               ng-click="dashboard.showDataSetsFilterSort = !!!dashboard.showDataSetsFilterSort"
@@ -138,9 +138,10 @@
               <i
                 class="sort-icon sort-active"
                 ng-if="sorting.djangoAttribute === dashboard.dataSetsSortBy"
-                ng-class="{'icon-sort-up': !dashboard.dataSetsSortDesc, 'icon-sort-down': dashboard.dataSetsSortDesc}"></i>
+                ng-class="{'fa fa-sort-asc': !dashboard.dataSetsSortDesc,
+                'fa fa-sort-desc': dashboard.dataSetsSortDesc}"></i>
               <i
-                class="sort-icon icon-sort"
+                class="sort-icon fa fa-sort"
                 ng-if="sorting.djangoAttribute !== dashboard.dataSetsSortBy"></i>
               {{ sorting.label }}
           </label>
@@ -162,32 +163,32 @@
               class="preview"
               ng-click="dashboard.expandDataSetPreview(dataSet, $index)">
               <i
-                class="icon-double-angle-right is-mirrorable"
+                class="fa fa-angle-double-right is-mirrorable"
                 ng-class="{'is-mirrored': dataSet.preview}"></i>
             </button>
             <i
-              class="icon-user"
+              class="fa fa-user"
               title="You own this data set"
               ng-if="dataSet.is_owner"
               tool-tip
               tool-tip-container="body"
               tool-tip-placement="top"></i>
             <i
-              class="icon-group icon-shared-out"
+              class="fa fa-users icon-shared-out"
               title="You privately share this data set"
               ng-if="dataSet.is_shared && dataSet.is_owner"
               tool-tip
               tool-tip-container="body"
               tool-tip-placement="top"></i>
             <i
-              class="icon-group icon-shared-in"
+              class="fa fa-users icon-shared-in"
               title="This data set is shared with you"
               ng-if="dataSet.is_shared && !dataSet.is_owner && dashboard.userIsAuthenticated"
               tool-tip
               tool-tip-container="body"
               tool-tip-placement="top"></i>
             <i
-              class="icon-globe"
+              class="fa fa-globe"
               title="This file is publicly available"
               ng-if="dataSet.public && dashboard.userIsAuthenticated"
               tool-tip
@@ -223,19 +224,19 @@
 </div>
 
 <div
-  class="span4 shadowPanel"
+  class="col-md-4 shadowPanel"
   ng-if="dashboard.expandedDataSetPanelBorder">
 </div>
 
 <div
-  class="span4 pushable"
+  class="col-md-4 pushable"
   ng-class="{'pushed': dashboard.expandDataSetPanel}">
   <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
         <h3>
           <span>
-            <i class="m-r-1-4 icon-bar-chart"></i>Analyses
+            <i class="m-r-1-4 fa fa-bar-chart-o"></i>Analyses
           </span>
         </h3>
       </span>
@@ -284,7 +285,7 @@
         <div class="floatbox">
           <div class="floatbox-min-right">
             <button
-              class="icon-only icon-filter"
+              class="icon-only fa fa-filter"
               title="Filter &amp; Sort"
               ng-class="{'showing': dashboard.showAnalysesFilterSort, 'active': dashboard.analysesFilterSort}"
               ng-click="dashboard.showAnalysesFilterSort = !!!dashboard.showAnalysesFilterSort"
@@ -317,7 +318,7 @@
               ng-click="dashboard.toogleRadio()"
               ng-model="dashboard.analysesFilterStatus">
               Running
-              <i class="info-icon analyses-status icon-cog icon-spin"></i>
+              <i class="info-icon analyses-status fa fa-cog fa-spin"></i>
           </label>
         </div>
         <div class="entry">
@@ -328,7 +329,7 @@
               ng-click="dashboard.toogleRadio()"
               ng-model="dashboard.analysesFilterStatus">
               Successful
-              <i class="info-icon analyses-status icon-ok-sign"></i>
+              <i class="info-icon analyses-status fa fa-check-circle"></i>
           </label>
         </div>
         <div class="entry">
@@ -339,7 +340,8 @@
               ng-click="dashboard.toogleRadio()"
               ng-model="dashboard.analysesFilterStatus">
               Failed
-              <i class="info-icon analyses-status icon-warning-sign"></i>
+              <i class="info-icon analyses-status fa
+              fa-exclamation-triangle"></i>
           </label>
         </div>
         <div class="entry">
@@ -350,7 +352,7 @@
               ng-click="dashboard.toogleRadio()"
               ng-model="dashboard.analysesFilterStatus">
               Unknown
-              <i class="info-icon analyses-status icon-question-sign"></i>
+              <i class="info-icon analyses-status fa fa-question-circle"></i>
           </label>
         </div>
         <h5>Sort by</h5>
@@ -366,9 +368,10 @@
               <i
                 class="sort-icon sort-active"
                 ng-if="sorting.djangoAttribute === dashboard.analysesSortBy"
-                ng-class="{'icon-sort-up': !dashboard.analysesSortDesc, 'icon-sort-down': dashboard.analysesSortDesc}"></i>
+                ng-class="{'fa fa-sort-asc': !dashboard.analysesSortDesc,
+                'fa fa-sort-desc': dashboard.analysesSortDesc}"></i>
               <i
-                class="sort-icon icon-sort"
+                class="sort-icon fa fa-sort"
                 ng-if="sorting.djangoAttribute !== dashboard.analysesSortBy"></i>
               {{ sorting.label }}
           </label>
@@ -394,14 +397,14 @@
               </i>
             </span>
             <i
-              class="icon-user"
+              class="fa fa-user"
               title="You ran this analysis"
               ng-if="analysis.is_owner"
               tool-tip
               tool-tip-container="body"
               tool-tip-placement="top"></i>
             <i
-              class="icon-group icon-shared-in"
+              class="fa fa-users icon-shared-in"
               title="Some collaborator ran this analysis"
               ng-if="!analysis.is_owner"
               tool-tip
@@ -432,12 +435,12 @@
 </div>
 
 <div
-  class="span4 pushable"
+  class="col-md-4 pushable"
   ng-class="{'pushed': dashboard.expandDataSetPanel}">
   <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
-        <h3><i class="m-r-1-4 icon-cog"></i>Workflows</h3>
+        <h3><i class="m-r-1-4 fa fa-cog"></i>Workflows</h3>
       </span>
     </div>
     <div class="refinery-sub-panel">
@@ -455,7 +458,7 @@
         <div class="floatbox">
           <div class="floatbox-min-right">
             <button
-              class="icon-only icon-filter"
+              class="icon-only fa fa-filter"
               title="Filter &amp; Sort"
               ng-class="{'showing': dashboard.showWorkflowsFilterSort, 'active': dashboard.workflowsFilterSort}"
               ng-click="dashboard.showWorkflowsFilterSort = !!!dashboard.showWorkflowsFilterSort"
@@ -492,9 +495,10 @@
               <i
                 class="sort-icon sort-active"
                 ng-if="sorting.djangoAttribute === dashboard.workflowsSortBy"
-                ng-class="{'icon-sort-up': !dashboard.workflowsSortDesc, 'icon-sort-down': dashboard.workflowsSortDesc}"></i>
+                ng-class="{'fa fa-sort-up': !dashboard.workflowsSortDesc,
+                'fa fa-sort-desc': dashboard.workflowsSortDesc}"></i>
               <i
-                class="sort-icon icon-sort"
+                class="sort-icon fa fa-sort"
                 ng-if="sorting.djangoAttribute !== dashboard.workflowsSortBy"></i>
               {{ sorting.label }}
           </label>
@@ -522,55 +526,3 @@
     </div>
   </div>
 </div>
-
-<!-- <div
-  class="span4 pushable"
-  ng-class="{'pushed': dashboard.dataSetPreview}">
-  <div class="refinery-panel">
-    <div class="refinery-header">
-      <span class="refinery-header-left">
-        <h3><i class="m-r-1-4 icon-folder-open"></i>Projects</h3>
-      </span>
-    </div>
-    <div class="refinery-sub-panel">
-      <div class="refinery-panel-header">
-        <div class="refinery-notification">
-          <div
-            class="refinery-notification-info"
-            ng-show="dashboard.projects.total === 0">
-            <strong>Info</strong>
-            No projects available.
-          </div>
-        </div>
-        <div class="floatbox">
-          <div class="floatbox-min-right">
-          </div>
-          <div class="floatbox-max-left">
-            <h4>
-              {{ dashboard.projects.totalReadable }}
-              {{ dashboard.projects.totalReadable > 1 ? 'projects' : 'project' }}
-            </h4>
-          </div>
-        </div>
-      </div>
-      <div
-        class="refinery-panel-content scrollable jquery-full-height"
-        ui-scroll-viewport
-        refinery-dashboard-panel>
-        <ul
-          class="results no-list-style">
-          <li
-            ui-scroll="project in dashboard.projects"
-            adapter="dashboard.projectsAdapter">
-            <a ng-href="projects/{{ project.uuid }}">{{ project.name }}</a>
-          </li>
-          <li ng-if="dashboard.projectsAdapter.isLoading">
-            <div class="refinery-request-loading">
-              <span class="refinery-spinner"></span>
-            </div>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</div> -->

@@ -16,7 +16,7 @@
 
 {% block content %}
 <div class="refinery-panel refinery-panel-content scrollable">
-  <div class="row-fluid">
+  <div class="row">
 
     <div class="refinery-header">
       <span class="refinery-header-left"><h2>Metadata Table Import</h2></span>
@@ -187,10 +187,10 @@
             </tr>
           </table>
 
-          <input style="float: left;" class="btn" type="button"
+          <input style="float: left;" class="btn btn-default" type="button"
                  ng-click="checkFiles()" value="Check Files"
                  ng-disabled="!(dataFileColumn)"/>
-          <input style="float: left;" class="btn" id="import-button"
+          <input style="float: left;" class="btn btn-default" id="import-button"
                  type="submit" value="Import"
                  ng-disabled="importMetadataTableForm.$invalid"/>
           <div style="margin-left: 15px; padding: 15px; float: left;

@@ -10,7 +10,7 @@ angular
       function($rootScope, $timeout, $window, $) {
         $rootScope.mode = "browse";
         $rootScope.showCtrlTab = false;
-        $rootScope.mainTabSpanSize = "span12 no-margin";
+        $rootScope.mainTabSpanSize = "col-md-12 no-margin";
         $rootScope.ctrlTabSpanSize = "";
 
         // calls global resizing function implemented in base.html to rescale
@@ -38,7 +38,7 @@ angular
         $('#filesTab').addClass('active');
         $rootScope.mode = "browse";
         $rootScope.showCtrlTab = false;
-        $rootScope.mainTabSpanSize = "span12 no-margin";
+        $rootScope.mainTabSpanSize = "col-md-12 no-margin";
         $rootScope.ctrlTabSpanSize = "";
 
         // calls global resizing function implemented in base.html to rescale
@@ -66,8 +66,8 @@ angular
         $('#filesTab').addClass('active');
         $rootScope.mode = "analyze";
         $rootScope.showCtrlTab = true;
-        $rootScope.mainTabSpanSize = "span10";
-        $rootScope.ctrlTabSpanSize = "span2";
+        $rootScope.mainTabSpanSize = "col-md-10";
+        $rootScope.ctrlTabSpanSize = "col-md-2";
 
         // calls global resizing function implemented in base.html to rescale
         // height of scrollable elements timeout is needed to execute after DOM
@@ -94,8 +94,8 @@ angular
         $('#filesTab').addClass('active');
         $rootScope.mode = "visualize";
         $rootScope.showCtrlTab = true;
-        $rootScope.mainTabSpanSize = "span10";
-        $rootScope.ctrlTabSpanSize = "span2";
+        $rootScope.mainTabSpanSize = "col-md-10";
+        $rootScope.ctrlTabSpanSize = "col-md-2";
 
         // calls global resizing function implemented in base.html to rescale
         // height of scrollable elements timeout is needed to execute after DOM

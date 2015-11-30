@@ -12,11 +12,14 @@
 
 {% block content %}
 <div class="refinery-panel refinery-panel-content scrollable">
-	<div class="row-fluid">
+	<div class="row">
 		<form method="post" action="." class="wide" id="registration-form">
 			{% csrf_token %}
   			{% if form.errors %}
-  			<div class="alert alert-error">Please correct the errors below.{{ form.non_field_errors }}</div>
+  			<div class="alert alert-danger">
+          Please correct the errors below.
+          {{ form.non_field_errors }}
+        </div>
   			{% endif %}
   			<div class="refinery-subheader">
 				<h4>Username</h4>
@@ -63,7 +66,8 @@
 			</label>
 			{% endcomment %}
 
-			<p class="submit"><input class="btn" type="submit" value="Register"></p>
+			<p class="submit"><input class="btn btn-default" type="submit"
+        value="Register"></p>
 		</form>
 	</div>
 </div>  

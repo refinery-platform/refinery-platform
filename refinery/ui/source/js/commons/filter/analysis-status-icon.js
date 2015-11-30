@@ -4,15 +4,15 @@ angular
     return function(param){
       switch (param) {
         case "SUCCESS":
-          return "icon-ok-sign";
+          return "fa fa-check-circle";
         case "FAILURE":
-          return "icon-warning-sign";
+          return "fa fa-exclamation-triangle";
         case "RUNNING":
-          return "icon-cog";
+          return "fa fa-cog";
         case "INITIALIZED":
-          return "icon-cog";
+          return "fa fa-cog";
         default:
-          return "icon-question-sign";
+          return "fa fa-question-circle";
       }
     };
   });

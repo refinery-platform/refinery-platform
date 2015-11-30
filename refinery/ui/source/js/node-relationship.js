@@ -76,7 +76,7 @@ angular.module('refineryNodeRelationship', [
   });
 })
 
-.controller('NodeRelationshipListCtrl', function($scope, $rootScope, $element, $log, $modal, NodeRelationshipResource, nodeRelationshipService ) {
+.controller('NodeRelationshipListCtrl', function($scope, $rootScope, $element, $log, $uibModal, NodeRelationshipResource, nodeRelationshipService ) {
   'use strict';
 
   $scope.$onRootScope('workflowChangedEvent', function( event, currentWorkflow ) {
@@ -162,7 +162,7 @@ angular.module('refineryNodeRelationship', [
   $scope.openNewMappingDialog = function() {
     $scope.newMappingDialogConfig = { title: 'New File Mapping', text: 'Enter a name for the mapping.', val: 'New Mapping' };
 
-    var modalInstance = $modal.open({
+    var modalInstance = $uibModal.open({
       templateUrl: '/static/partials/input-dialog.html',
       controller: InputDialogInstanceController,
       resolve: {
@@ -183,7 +183,7 @@ angular.module('refineryNodeRelationship', [
   $scope.openRenameMappingDialog = function( nodeRelationship ) {
     $scope.renameMappingDialogConfig = { title: 'Rename File Mapping', text: 'Enter a new name for the mapping "' + nodeRelationship.name + '".', val:  nodeRelationship.name };
 
-    var modalInstance = $modal.open({
+    var modalInstance = $uibModal.open({
       templateUrl: '/static/partials/input-dialog.html',
       controller: InputDialogInstanceController,
       resolve: {
@@ -210,7 +210,7 @@ angular.module('refineryNodeRelationship', [
       text: 'Are you sure you want to delete the file mapping "' + nodeRelationship.name + '"?'
     };
 
-    var modalInstance = $modal.open({
+    var modalInstance = $uibModal.open({
       templateUrl: '/static/partials/confirmation-dialog.html',
       controller: ConfirmationDialogInstanceController,
       resolve: {
@@ -235,30 +235,30 @@ angular.module('refineryNodeRelationship', [
   var NodeRelationshipList =  $scope.loadNodeRelationshipList( externalStudyUuid, externalAssayUuid );
 });
 
-var InputDialogInstanceController = function ($scope, $modalInstance, config ) {
+var InputDialogInstanceController = function ($scope, $uibModalInstance, config ) {
   $scope.config = config;
   $scope.val = {
     val: $scope.config.val
   };
 
   $scope.ok = function () {
-    $modalInstance.close($scope.config.val);
+    $uibModalInstance.close($scope.config.val);
   };
 
   $scope.cancel = function () {
-    $modalInstance.dismiss('cancel');
+    $uibModalInstance.dismiss('cancel');
   };
 };
 
-var ConfirmationDialogInstanceController = function ($scope, $modalInstance, config ) {
+var ConfirmationDialogInstanceController = function ($scope, $uibModalInstance, config ) {
   $scope.config = config;
 
   $scope.ok = function () {
-    $modalInstance.close();
+    $uibModalInstance.close();
   };
 
   $scope.cancel = function () {
-    $modalInstance.dismiss('cancel');
+    $uibModalInstance.dismiss('cancel');
   };
 };
 

@@ -25,7 +25,7 @@
 {% block content %}
 {% if workflow %}
 <div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
-	<div class="row-fluid">
+	<div class="row">
 		<div class="refinery-header">
 			<span class="refinery-header-left">
 				<h3>{{ workflow.name }}</h3>
@@ -52,9 +52,9 @@
 		</div>
 		<p>
 			<div>
-				<div class="row-fluid">
-					<div id="vis_workflow" class="span12"></div>
-					<div class="span12">
+				<div class="row">
+					<div id="vis_workflow" class="col-md-12"></div>
+					<div class="col-md-12">
 					</div>
 				</div>
 			</div>
@@ -114,10 +114,10 @@
 				{% if perm.group.is_managed %}
 					<a href="{% url 'group' perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
 					{% if perm.read %}
-						<i class="icon-eye-open"></i>
+						<i class="fa fa-eye"></i>
 					{% endif %}
 					{% if perm.change %}
-						<i class="icon-pencil"></i>
+						<i class="fa fa-pencil"></i>
 					{% endif %}
 				</br>
 				{% endif %}
@@ -131,7 +131,7 @@
 			</span>
 		</div>
 		<p>Created: {{ workflow.creation_date }} | Last Modified: {{ workflow.modification_date }}</p>
-		<a class="btn" href="{% url 'workflow_edit' workflow.uuid %}">Edit</a>
+		<a class="btn btn-default" href="{% url 'workflow_edit' workflow.uuid %}">Edit</a>
 	{% else %}
 	    <p>No valid workflow.</p>
 	{% endif %}

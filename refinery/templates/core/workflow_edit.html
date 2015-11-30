@@ -12,11 +12,14 @@
 
 {% block content %}
 <div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
-	<div class="row-fluid">
+	<div class="row">
 		<form method="post" action="" class="wide" id="workflow-edit-form">
 		{% csrf_token %}
 			{% if form.errors %}
-  				<div class="alert alert-error">Please correct the errors below.{{ form.non_field_errors }}</div>
+  				<div class="alert alert-danger">
+            Please correct the errors below.
+            {{ form.non_field_errors }}
+          </div>
   			{% endif %}
   			<div class="refinery-subheader">
 				<h4>Name</h4>
@@ -80,10 +83,10 @@
 					{% if perm.group.is_managed %}
 						<a href="{% url 'group' perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
 						{% if perm.read %}
-							<i class="icon-eye-open"></i>
+							<i class="fa fa-eye"></i>
 						{% endif %}
 						{% if perm.change %}
-							<i class="icon-pencil"></i>
+							<i class="fa fa-pencil"></i>
 						{% endif %}
 						</br>
 					{% endif %}
@@ -98,7 +101,7 @@
 			</div>
 			<p>Created: {{ workflow.creation_date }} | Last Modified: {{ workflow.modification_date }}</p>
 			<a href="#" class="btn btn-primary" id="submit-link">Save</a>
-			<a href="{% url 'workflow' workflow.uuid %}" class="btn">Cancel</a>
+			<a href="{% url 'workflow' workflow.uuid %}" class="btn btn-default">Cancel</a>
 		</form>
 	</div>
 </div>

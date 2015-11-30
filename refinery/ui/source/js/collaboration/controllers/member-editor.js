@@ -1,6 +1,6 @@
-function MemberEditorCtrl($modalInstance, groupDataService, groupMemberService, member) {
+function MemberEditorCtrl($uibModalInstance, groupDataService, groupMemberService, member) {
   var that = this;
-  that.$modalInstance = $modalInstance;
+  that.$uibModalInstance = $uibModalInstance;
   that.groupDataService = groupDataService;
   that.groupMemberService = groupMemberService;
   that.member = member;
@@ -15,7 +15,7 @@ MemberEditorCtrl.prototype.promote = function () {
   }).$promise.then(
     function (data) {
       that.groupDataService.update();
-      that.$modalInstance.dismiss();
+      that.$uibModalInstance.dismiss();
     }
   ).catch(function (error) {
     console.error(error);
@@ -32,7 +32,7 @@ MemberEditorCtrl.prototype.demote = function () {
   }).$promise.then(
     function (data) {
       that.groupDataService.update();
-      that.$modalInstance.dismiss();
+      that.$uibModalInstance.dismiss();
     }
   ).catch(function (error) {
     console.error(error);
@@ -49,7 +49,7 @@ MemberEditorCtrl.prototype.remove = function () {
   }).$promise.then(
     function (data) {
       that.groupDataService.update();
-      that.$modalInstance.dismiss();
+      that.$uibModalInstance.dismiss();
     }
   ).catch(function (error) {
     console.error(error);
@@ -60,7 +60,7 @@ MemberEditorCtrl.prototype.remove = function () {
 angular
   .module('refineryCollaboration')
   .controller('MemberEditorCtrl',[
-    '$modalInstance',
+    '$uibModalInstance',
     'groupDataService',
     'groupMemberService',
     'member',

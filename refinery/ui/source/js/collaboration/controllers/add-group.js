@@ -1,6 +1,6 @@
-function AddGroupCtrl($modalInstance, groupService, groupDataService) {
+function AddGroupCtrl($uibModalInstance, groupService, groupDataService) {
   var that = this;
-  that.$modalInstance = $modalInstance;
+  that.$uibModalInstance = $uibModalInstance;
   that.groupService = groupService;
   that.groupDataService = groupDataService;
 }
@@ -22,7 +22,7 @@ AddGroupCtrl.prototype.createGroup = function (name) {
   this.groupService.create({name: name }).$promise.then(function (data) {
 
       that.groupDataService.update();
-      that.$modalInstance.dismiss();
+      that.$uibModalInstance.dismiss();
 
     }
   ).catch(function (error) {
@@ -41,7 +41,7 @@ AddGroupCtrl.prototype.createGroup = function (name) {
 angular
   .module('refineryCollaboration')
   .controller('AddGroupCtrl', [
-    '$modalInstance',
+    '$uibModalInstance',
     'groupService',
     'groupDataService',
     AddGroupCtrl

@@ -23,8 +23,8 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ngGrid'])
 }])
 
 .controller('MetadataTableImportCtrl',
-  ['$scope', '$log', '$http', '$modal', 'fileSources',
-    function($scope, $log, $http, $modal, fileSources) {
+  ['$scope', '$log', '$http', '$uibModal', 'fileSources',
+    function($scope, $log, $http, $uibModal, fileSources) {
 
   "use strict";
 
@@ -103,7 +103,7 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ngGrid'])
             items: response
           };
         }
-        var modalInstance = $modal.open({
+        var modalInstance = $uibModal.open({
           templateUrl: '/static/partials/list-confirmation-dialog.html',
           controller: ConfirmationDialogInstanceCtrl,
           size: 'lg',
@@ -123,10 +123,10 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ngGrid'])
   };
 }]);
 
-var ConfirmationDialogInstanceCtrl = function($scope, $modalInstance, config) {
+var ConfirmationDialogInstanceCtrl = function($scope, $uibModalInstance, config) {
   $scope.config = config;
 
   $scope.ok = function () {
-    $modalInstance.close();
+    $uibModalInstance.close();
   };
 };

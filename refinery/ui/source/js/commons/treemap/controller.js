@@ -988,7 +988,7 @@ TreemapCtrl.prototype.setBreadCrumb = function (node) {
   if (parent) {
     current
       .append('svg')
-        .attr('class', 'icon-arrow-left is-mirrored')
+        .attr('class', 'fa fa-arrow-left is-mirrored')
         .append('use')
           .attr('xlink:href', '/static/images/icons.svg#arrow-left');
   }
