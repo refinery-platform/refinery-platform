@@ -31,7 +31,7 @@
         "c3/c3.css",
         "jquery-file-upload/css/jquery.fileupload-ui.css",
         "jquery-file-upload/css/jquery.fileupload.css",
-        "ng-grid/ng-grid.css",
+        "angular-ui-grid/ui-grid.min.css",
         "select2/select2.css",
         "spectrum/spectrum.css",
         "tipsy/src/stylesheets/tipsy.css"
@@ -72,7 +72,7 @@
         "jquery-file-upload/js/jquery.fileupload.js",
         "jquery-file-upload/js/jquery.fileupload-process.js",
         "lodash/lodash.min.js",
-        "ng-grid/build/ng-grid.min.js",
+        "angular-ui-grid/ui-grid.min.js",
         "spark-md5/spark-md5.js",
         "spectrum/spectrum.js",
         "tipsy/src/javascripts/jquery.tipsy.js"
