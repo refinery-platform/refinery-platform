@@ -432,9 +432,9 @@ class DataSet(SharableResource):
 
     def __unicode__(self):
 
-        return (self.name + " - " +
-                self.get_owner_username() + " - " +
-                self.summary)
+        return (str(self.name) + " - " +
+                str(self.get_owner_username()) + " - " +
+                str(self.summary))
 
     def get_owner(self):
         owner = None
