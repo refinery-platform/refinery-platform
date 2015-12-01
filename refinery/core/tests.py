@@ -1004,3 +1004,15 @@ class AnalysisResourceTest(ResourceTestCase):
         response = self.api_client.delete(analysis_uri, format='json')
         self.assertHttpMethodNotAllowed(response)
         self.assertEqual(Analysis.objects.count(), 1)
+
+
+class BaseResourceSlugTest(unittest.TestCase):
+    def test_duplicate_slugs(self):
+        DataSet.objects.create(slug="TestSlug")
+        DataSet.objects.create(slug="TestSlug")
+
+        self.assertEqual(DataSet.objects.filter(slug="TestSlug")
+                         .count(), 1)
+
+    def test_empty_slug(self):
+        self.assertTrue(DataSet.objects.create(slug=""))
