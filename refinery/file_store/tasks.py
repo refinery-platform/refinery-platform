@@ -121,8 +121,8 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
 
         # provide a default value in case Content-Length is missing
         remotefilesize = int(
-            response.headers['Content-Length', file_size])
-
+            response.headers.get('Content-Length', file_size)
+        )
         logger.debug("Downloading from '%s'", item.source)
         # download and save the file
         localfilesize = 0
