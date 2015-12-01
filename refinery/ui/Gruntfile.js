@@ -232,7 +232,8 @@ module.exports = function(grunt) {
             '<%= cfg.files.vendor.css %>',
             '<%= cfg.files.vendor.images %>',
             '<%= cfg.files.vendor.js %>',
-            '<%= cfg.files.vendor.maps %>'
+            '<%= cfg.files.vendor.maps %>',
+            '<%= cfg.files.vendor.font %>'
           ],
           dest: '<%= cfg.basePath.ui.build %>/vendor/'
         }]
@@ -266,7 +267,8 @@ module.exports = function(grunt) {
             '<%= cfg.files.vendor.css %>',
             '<%= cfg.files.vendor.images %>',
             '<%= cfg.files.vendor.js %>',
-            '<%= cfg.files.vendor.maps %>'
+            '<%= cfg.files.vendor.maps %>',
+            '<%= cfg.files.vendor.font %>'
           ],
           dest: '<%= cfg.basePath.ui.compile %>/vendor/'
         }]
