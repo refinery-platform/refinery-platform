@@ -189,9 +189,15 @@ class BaseResource (models.Model):
     class Meta:
         abstract = True
 
-    def clean(self, *args, **kwargs):
-        if self.slug is not None and self.slug != "":
-            if self.__class__.objects.get(slug=self.slug) is not None:
+    def clean(self):
+        # Check if model being saved/altered in Django Admin has a slug
+        # duplicated elsewhere.
+        if self.slug:
+            try:
+                self.__class__.objects.get(slug=self.slug)
+            except self.DoesNotExist:
+                pass
+            else:
                 raise forms.ValidationError("%s with slug: %s "
                                             "already exists!"
                                             % (self.__class__.__name__,
@@ -199,7 +205,7 @@ class BaseResource (models.Model):
 
     # Overriding save() method to disallow saving objects with duplicate slugs
     def save(self, *args, **kwargs):
-        if self.slug is not None and self.slug != "":
+        if self.slug:
             try:
                 self.__class__.objects.get(slug=self.slug)
             except self.DoesNotExist:
@@ -208,7 +214,8 @@ class BaseResource (models.Model):
                 except Exception as e:
                     logger.error("Could not save %s: %s" % (
                         self.__class__.__name__, e))
-            logger.error("%s with slug: %s already exists!" % (
+            else:
+                logger.error("%s with slug: %s already exists!" % (
                     self.__class__.__name__, self.slug))
         else:
             try:
