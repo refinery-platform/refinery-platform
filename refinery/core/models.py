@@ -231,7 +231,7 @@ class BaseResource (models.Model):
             except Exception as e:
                 logger.error("Could not save %s: %s" % (
                     self.__class__.__name__, e))
-        cache.clear()
+        invalidate_cached_object(self)
 
 
 class OwnableResource (BaseResource):
@@ -562,7 +562,7 @@ class DataSet(SharableResource):
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
         update_data_set_index(self)
-        cache.clear()
+        invalidate_cached_object(self)
         user_ids = map(lambda user: user.id, group.user_set.all())
 
         # We need to give the anonymous user read access too.
@@ -600,7 +600,6 @@ class DataSet(SharableResource):
 def _dataset_delete(sender, instance, *args, **kwargs):
     delete_data_set_index(instance)
     delete_data_set_neo4j(instance.uuid)
-    cache.clear()
 
 
 class InvestigationLink(models.Model):
@@ -721,11 +720,6 @@ class Workflow(SharableResource, ManageableResource):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
         )
-
-
-@receiver(post_delete, sender=Workflow)
-def _workflow_delete(sender, instance, **kwargs):
-    cache.clear()
 
 
 class Project(SharableResource):
