@@ -58,6 +58,14 @@ NR_TYPES = (
 )
 
 
+def invalidate_cached_object(instance):
+    try:
+        cache.delete("%s" % instance.__class__.__name__)
+    except Exception as e:
+        logger.debug("Could not delete %s from cache" %
+                     instance.__class__.__name__, e)
+
+
 class UserProfile (models.Model):
     """Extends Django user model:
     https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional
@@ -189,9 +197,15 @@ class BaseResource (models.Model):
     class Meta:
         abstract = True
 
-    def clean(self, *args, **kwargs):
-        if self.slug is not None and self.slug != "":
-            if self.__class__.objects.get(slug=self.slug) is not None:
+    def clean(self):
+        # Check if model being saved/altered in Django Admin has a slug
+        # duplicated elsewhere.
+        if self.slug:
+            try:
+                self.__class__.objects.get(slug=self.slug)
+            except self.DoesNotExist:
+                pass
+            else:
                 raise forms.ValidationError("%s with slug: %s "
                                             "already exists!"
                                             % (self.__class__.__name__,
@@ -199,7 +213,7 @@ class BaseResource (models.Model):
 
     # Overriding save() method to disallow saving objects with duplicate slugs
     def save(self, *args, **kwargs):
-        if self.slug is not None and self.slug != "":
+        if self.slug:
             try:
                 self.__class__.objects.get(slug=self.slug)
             except self.DoesNotExist:
@@ -208,7 +222,8 @@ class BaseResource (models.Model):
                 except Exception as e:
                     logger.error("Could not save %s: %s" % (
                         self.__class__.__name__, e))
-            logger.error("%s with slug: %s already exists!" % (
+            else:
+                logger.error("%s with slug: %s already exists!" % (
                     self.__class__.__name__, self.slug))
         else:
             try:
@@ -216,7 +231,7 @@ class BaseResource (models.Model):
             except Exception as e:
                 logger.error("Could not save %s: %s" % (
                     self.__class__.__name__, e))
-        cache.clear()
+        invalidate_cached_object(self)
 
 
 class OwnableResource (BaseResource):
@@ -417,9 +432,9 @@ class DataSet(SharableResource):
 
     def __unicode__(self):
 
-        return (self.name + " - " +
-                self.get_owner_username() + " - " +
-                self.summary)
+        return (str(self.name) + " - " +
+                str(self.get_owner_username()) + " - " +
+                str(self.summary))
 
     def get_owner(self):
         owner = None
@@ -547,7 +562,7 @@ class DataSet(SharableResource):
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
         update_data_set_index(self)
-        cache.clear()
+        invalidate_cached_object(self)
         user_ids = map(lambda user: user.id, group.user_set.all())
 
         # We need to give the anonymous user read access too.
@@ -585,7 +600,6 @@ class DataSet(SharableResource):
 def _dataset_delete(sender, instance, *args, **kwargs):
     delete_data_set_index(instance)
     delete_data_set_neo4j(instance.uuid)
-    cache.clear()
 
 
 class InvestigationLink(models.Model):
@@ -706,11 +720,6 @@ class Workflow(SharableResource, ManageableResource):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
         )
-
-
-@receiver(post_delete, sender=Workflow)
-def _workflow_delete(sender, instance, **kwargs):
-    cache.clear()
 
 
 class Project(SharableResource):
@@ -1423,3 +1432,55 @@ class Ontology (models.Model):
 @receiver(pre_delete, sender=Ontology)
 def _ontology_delete(sender, instance, *args, **kwargs):
     delete_ontology_from_neo4j(instance.acronym)
+
+
+# http://web.archive.org/web/20140826013240/http://codeblogging.net/blogs/1/14/
+def get_subclasses(classes, level=0):
+    """
+        Return the list of all subclasses given class (or list of classes) has.
+        Inspired by this question:
+        http://stackoverflow.com/questions/3862310/how-can-i-find-all-
+        subclasses-of-a-given-class-in-python
+    """
+    # for convenience, only one class can can be accepted as argument
+    # converting to list if this is the case
+    if not isinstance(classes, list):
+        classes = [classes]
+
+    if level < len(classes):
+        classes += classes[level].__subclasses__()
+        return get_subclasses(classes, level+1)
+    else:
+        return classes
+
+
+def receiver_subclasses(signal, sender, dispatch_uid_prefix, **kwargs):
+    """
+    A decorator for connecting receivers and all receiver's subclasses to
+    signals. Used by passing in the signal and keyword arguments to connect::
+        @receiver_subclasses(post_save, sender=MyModel)
+        def signal_receiver(sender, **kwargs):
+            ...
+    """
+    def _decorator(func):
+        all_senders = get_subclasses(sender)
+        for snd in all_senders:
+            signal.connect(func, sender=snd,
+                           dispatch_uid=dispatch_uid_prefix+'_'+snd.__name__,
+                           **kwargs)
+        return func
+    return _decorator
+
+
+@receiver_subclasses(post_delete, BaseResource, "baseresource_post_delete")
+def _baseresource_delete(sender, instance, **kwargs):
+    # Handles the invalidation of cached objects
+    # that have BaseResource as a subclass after a delete
+    invalidate_cached_object(instance)
+
+
+@receiver_subclasses(post_save, BaseResource, "baseresource_post_save")
+def _baseresource_save(sender, instance, **kwargs):
+    # Handles the invalidation of cached objects
+    # that have BaseResource as a subclass after a save
+    invalidate_cached_object(instance)
