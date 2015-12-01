@@ -1464,7 +1464,6 @@ def receiver_subclasses(signal, sender, dispatch_uid_prefix, **kwargs):
     """
     def _decorator(func):
         all_senders = get_subclasses(sender)
-        logging.info(all_senders)
         for snd in all_senders:
             signal.connect(func, sender=snd,
                            dispatch_uid=dispatch_uid_prefix+'_'+snd.__name__,
