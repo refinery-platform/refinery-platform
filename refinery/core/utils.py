@@ -102,8 +102,8 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
         tx.commit()
     except Exception as e:
         logger.error(
-            'Failed to add read access to data set (uuid: %s) in Neo4J. '
-            'Exception: %s', e
+            'Failed to add read access to data set (uuid: %s) for user '
+            '(uuid: %s) to Neo4J. Exception: %s', dataset_uuid, user_id, e
         )
 
 
@@ -140,8 +140,8 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
         tx.commit()
     except Exception as e:
         logger.error(
-            'Failed to add read access to data set (uuid: %s) in Neo4J. '
-            'Exception: %s', e
+            'Failed to add read access for users (%s) to data sets '
+            '(uuids: %s) to Neo4J. Exception: %s', user_ids, dataset_uuids, e
         )
 
 
@@ -178,8 +178,8 @@ def remove_read_access_in_neo4j(dataset_uuids, user_ids):
         tx.commit()
     except Exception as e:
         logger.error(
-            'Failed to remove read access from dataset (uuid: %s) in Neo4J. '
-            'Exception: %s', e
+            'Failed to remove read access from users (%s) for datasets '
+            '(uuids: %s) from Neo4J. Exception: %s', user_ids, dataset_uuids, e
         )
 
 
@@ -214,7 +214,7 @@ def delete_data_set_neo4j(dataset_uuid):
         )
     except Exception as e:
         logger.error(
-            'Failed to remove dataset (uuid: %s) in Neo4J. '
+            'Failed to remove dataset (uuid: %s) from Neo4J. '
             'Exception: %s', dataset_uuid, e
         )
 
