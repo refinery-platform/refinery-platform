@@ -56,15 +56,9 @@
     <div class="tab-pane fade active in" id="metadata">
       <!-- tabular file -->
       <div class="refinery-header">
-        <span class="refinery-header-left"><h3>Option 1. Tabular file</h3></span>
+        <span class="refinery-header-left"><h3>Option 1. Tabular
+          file</h3></span>
       </div>
-      <style>
-        .gridStyle {
-            border: 1px solid rgb(212,212,212);
-            width: 100%;
-            height: 200px;
-        }
-      </style>
 
       <div ng-controller="MetadataTableImportCtrl">
         <form name="importMetadataTableForm" enctype="multipart/form-data"
@@ -72,15 +66,14 @@
           {% csrf_token %}
 
           <p>Please select a file containing a metadata table in tab-delimited format.</p>
-          <input type="file" ng-file-select="onFileSelect($files)" name="file"
-                 required/>
+          <input type="file" ng-file-select="onFileSelect($files)" name="file" required/>
 
           {% if error_message %}
             <p><strong>{{ error_message }}</strong></p>
           {% endif %}
 
           <div ng-show="selectedFile">
-            <div class="gridStyle" ui-grid="gridOptions" ui-grid-edit></div>
+            <div class="gridStyle" ui-grid="gridOptions" ui-grid-resize-columns></div>
 
             <p>
               Please provide the following values (fields marked in
@@ -93,7 +86,7 @@
               </colgroup>
 
               <tr>
-                <td><strong>Title</strong></td>
+                <td><strong>Title Just to Be sure</strong></td>
                 <td>
                   <input type="text" ng-model="title" name="title" required/>
                 </td>
@@ -239,8 +232,10 @@
       </div>
       <!-- end tabular file -->
       <!-- ISA archive form -->
-      <div class="refinery-header">
-        <span class="refinery-header-left"><h3>Option 2. ISA Archive</h3></span>
+      <div class="row refinery-header">
+        <span class="col-md-12 refinery-header-left">
+          <h3>Option 2. ISA Archive</h3>
+        </span>
       </div>
       <p>
           Please provide a ZIP archive containing an investigation, study, and assay files.
