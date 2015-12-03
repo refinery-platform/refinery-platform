@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
     name = indexes.CharField(model_attr='name', null=True)
-    accession = indexes.EdgeNgramField(model_attr='accession')
+    accession = indexes.EdgeNgramField(model_attr='accession', null=True)
     title = indexes.EdgeNgramField(model_attr='title')
     dbid = indexes.IntegerField(model_attr='id')
     uuid = indexes.CharField(model_attr='uuid')
