@@ -84,6 +84,12 @@
         "angular-sanitize/angular-sanitize.min.js.map",
         "angular-ui-select2/release/select2.min.js.map",
         "jquery/dist/jquery.min.map"
+      ],
+      "font": [
+        "angular-ui-grid/ui-grid.eot",
+        "angular-ui-grid/ui-grid.svg",
+        "angular-ui-grid/ui-grid.ttf",
+        "angular-ui-grid/ui-grid.woff"
       ]
     }
   },

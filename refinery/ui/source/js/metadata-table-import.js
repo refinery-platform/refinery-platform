@@ -1,4 +1,4 @@
-angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ui.grid', 'ui.grid.edit'])
+angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ui.grid', 'ui.grid.edit', 'ui.grid.resizeColumns'])
 
 .config(['$httpProvider', function($httpProvider) {
   // use Django XSRF/CSRF lingo to enable communication with API
@@ -30,8 +30,7 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ui.grid', '
 
   $scope.gridOptions = {
     data: 'metadataSample',
-    columnDefs: 'columnDefs',
-    enableColumnResize: true
+    resizeable: true
   };
 
   $scope.badFileList = [];

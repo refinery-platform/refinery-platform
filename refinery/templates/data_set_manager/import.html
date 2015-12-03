@@ -55,16 +55,10 @@
     <!-- metadata import -->
     <div class="tab-pane fade active in" id="metadata">
       <!-- tabular file -->
-      <div class="refinery-header">
-        <span class="refinery-header-left"><h3>Option 1. Tabular file</h3></span>
+      <div class="row refinery-header">
+        <span class="refinery-header-left">
+          <h3>Option 1. Tabular file</h3></span>
       </div>
-      <style>
-        .gridStyle {
-            border: 1px solid rgb(212,212,212);
-            width: 100%;
-            height: 200px;
-        }
-      </style>
 
       <div ng-controller="MetadataTableImportCtrl">
         <form name="importMetadataTableForm" enctype="multipart/form-data"
@@ -72,15 +66,14 @@
           {% csrf_token %}
 
           <p>Please select a file containing a metadata table in tab-delimited format.</p>
-          <input type="file" ng-file-select="onFileSelect($files)" name="file"
-                 required/>
+          <input type="file" ng-file-select="onFileSelect($files)" name="file" required/>
 
           {% if error_message %}
             <p><strong>{{ error_message }}</strong></p>
           {% endif %}
 
-          <div ng-show="selectedFile">
-            <div class="gridStyle" ui-grid="gridOptions" ui-grid-edit></div>
+          <div ng-if="selectedFile">
+            <div class="gridStyle" ui-grid="gridOptions" ui-grid-resize-columns></div>
 
             <p>
               Please provide the following values (fields marked in
@@ -239,42 +232,47 @@
       </div>
       <!-- end tabular file -->
       <!-- ISA archive form -->
-      <div class="refinery-header">
-        <span class="refinery-header-left"><h3>Option 2. ISA Archive</h3></span>
+      <div class="row">
+        <span class="refinery-header-left">
+          <h3 id="isa-header">Option 2. ISA Archive</h3>
+        </span>
       </div>
-      <p>
+
+      <div class="row">
+        <p class="col-md-12">
           Please provide a ZIP archive containing an investigation, study, and assay files.
-      </p>
-      <form id="isaTabImportForm" enctype="multipart/form-data"
-            action="{% url "process_isa_tab" %}" method="post">
-        {% csrf_token %}
-
-        <p>{{ form.non_field_errors }}</p>
-        <p>{{ error }}</p>
-
-        <div class="refinery-subheader">
-          <h4>Option A. Upload from local computer</h4>
-        </div>
-        <p>
-          {{ form.isa_tab_file.errors}}
-          {{ form.isa_tab_file }}
         </p>
+        <form id="isaTabImportForm" enctype="multipart/form-data"
+              action="{% url "process_isa_tab" %}" method="post">
+          {% csrf_token %}
 
-        <div class="refinery-subheader">
-          <h4>Option B. Provide a URL</h4>
-        </div>
-        <p>
-          {{ form.isa_tab_url.errors }}
-          {{ form.isa_tab_url }}
-        </p>
-        <input style="float: left;" class="btn btn-default"
-          id="isa-import-button"
-               type="submit" value="Import"/>
-        <div style="margin-left: 15px; padding: 15px; float: left;
-                    display: block; height: 22px; width: 22px;"
-             id="isa-spinner">
-        </div>
-      </form>
+          <p>{{ form.non_field_errors }}</p>
+          <p>{{ error }}</p>
+
+          <div class="refinery-subheader">
+            <h4>Option A. Upload from local computer</h4>
+          </div>
+          <p>
+            {{ form.isa_tab_file.errors}}
+            {{ form.isa_tab_file }}
+          </p>
+
+          <div class="refinery-subheader">
+            <h4>Option B. Provide a URL</h4>
+          </div>
+          <p>
+            {{ form.isa_tab_url.errors }}
+            {{ form.isa_tab_url }}
+          </p>
+          <input style="float: left;" class="btn btn-default"
+            id="isa-import-button"
+                 type="submit" value="Import"/>
+          <div style="margin-left: 15px; padding: 15px; float: left;
+                      display: block; height: 22px; width: 22px;"
+               id="isa-spinner">
+          </div>
+        </form>
+      </div>
       <!-- end ISA archive form -->
     </div>
     <!-- end metadata import -->
