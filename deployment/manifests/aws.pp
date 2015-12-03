@@ -111,7 +111,7 @@ file_line { "django_settings_module":
   line => "export DJANGO_SETTINGS_MODULE=${django_settings_module}",
 }
 ->
-exec { "sed 's/\"vagrant\"/\"ubuntu\"/' '${project_root}/config/config.json.sample' > '${project_root}/config/config.json'":
+exec { "/bin/sed 's/\"vagrant\"/\"ubuntu\"/' '${project_root}/config/config.json.sample' > '${project_root}/config/config.json'":
   creates => "${project_root}/config/config.json",
   user => $appuser,
   group => $appgroup,
