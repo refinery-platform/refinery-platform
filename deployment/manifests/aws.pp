@@ -111,12 +111,10 @@ file_line { "django_settings_module":
   line => "export DJANGO_SETTINGS_MODULE=${django_settings_module}",
 }
 ->
-file { "${project_root}/config/config.json":
-  ensure => file,
-  source => "${project_root}/config/config.json.sample",
-  owner => $appuser,
+exec { "sed 's/\"vagrant\"/\"ubuntu\"/' '${project_root}/config/config.json.sample' > '${project_root}/config/config.json'":
+  creates => "${project_root}/config/config.json",
+  user => $appuser,
   group => $appgroup,
-  replace => false,
 }
 ->
 exec { "syncdb":
@@ -389,7 +387,7 @@ exec { 'apache2-wsgi':
 ->
 file { "/etc/apache2/sites-available/001-refinery.conf":
   ensure => file,
-  content => template("${source_root}/deployment/apache.conf"),
+  content => template("${source_root}/deployment/apache.conf.erb"),
 }
 ~>
 exec { 'refinery-apache2':

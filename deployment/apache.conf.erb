@@ -1,0 +1,35 @@
+WSGIPythonHome <%= @virtualenv %>
+WSGIScriptAlias / <%= @project_root %>/config/wsgi.py
+
+ServerName refinery.example.org
+
+<Directory <%= @project_root %>/config>
+    <Files wsgi.py>
+        Order deny,allow
+        Require all granted
+    </Files>
+</Directory>
+
+SetEnv DJANGO_SETTINGS_MODULE config.settings.dev
+
+WSGIDaemonProcess refinery user=<%= @appuser %> group=<%= @appgroup %> \
+    python-path=<%= @project_root %>:<%= @virtualenv %>/lib/python2.7/site-packages
+WSGIProcessGroup refinery
+
+#Alias /robots.txt /vagrant/refinery/static/robots.txt
+#Alias /favicon.ico /vagrant/refinery/static/favicon.ico
+
+AliasMatch ^/([^/]*\.css) <%= @project_root %>/static/styles/$1
+
+Alias /static/ <%= @source_root %>/static/
+Alias /media/ <%= @source_root %>/media/
+
+<Directory <%= @source_root %>/static>
+    Order deny,allow
+    Require all granted
+</Directory>
+
+<Directory <%= @source_root %>/media>
+    Order deny,allow
+    Require all granted
+</Directory>
