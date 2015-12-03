@@ -132,7 +132,7 @@ SolrAnalysisView.prototype._generateTree = function( solrResponse ) {
 			$('<div/>', { 'class': 'facet-value-list collapse ' + ( self._isFacetExpanded( attribute.solr_field ) ? 'in' : '' ), "id": self._composeFacetId( attribute.solr_field + "___inactive" ), html: "" }).appendTo('#' + self._parentElementId);
 	
 			// user chooses to open collapsed facet
-		   	$("#" + self._composeFacetId( attribute.solr_field + "___inactive" ) ).on( "show", function() {
+		   	$("#" + self._composeFacetId( attribute.solr_field + "___inactive" ) ).on( "shown.bs.collapse.in", function() {
 		   		var facet = self._decomposeFacetId( this.id ).facet;
 				
 				// add facet to list of expanded facets for this view
@@ -146,7 +146,7 @@ SolrAnalysisView.prototype._generateTree = function( solrResponse ) {
 		   	});						
 	
 			// user chooses to close expanded facet
-		   	$("#" + self._composeFacetId( attribute.solr_field + "___inactive" ) ).on( "hide", function() {
+		   	$("#" + self._composeFacetId( attribute.solr_field + "___inactive" ) ).on( "hidden.bs.collapse.in", function() {
 		   		var facet = self._decomposeFacetId( this.id ).facet;
 		   		
 				// remove facet from list of expanded facets for this view
