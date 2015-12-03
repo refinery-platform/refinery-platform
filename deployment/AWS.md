@@ -17,7 +17,7 @@ so you should already have installed all of that.
 ## Generate JSON file and start stack:
 
 ```
-cfn_py_generate aws-cfn.py deploy.json &&
+cfn_py_generate aws_cfn.py deploy.json &&
 aws cloudformation create-stack --stack-name test-$(date +%Y%m%dT%H%M) --template-body file://deploy.json
 ```
 
