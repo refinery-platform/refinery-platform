@@ -56,7 +56,7 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
         )
 
         for annotation in annotations:
-            if ('value_uri' in annotation):
+            if 'value_uri' in annotation:
                 tx.append(
                     statement_uri,
                     {
@@ -78,11 +78,11 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
                 )
 
             # Send batches of 50 Cypher queries to Neo4J
-            if (counter % 50 == 0):
+            if counter % 50 == 0:
                 tx.process()
 
             # Increase counter
-            counter = counter + 1
+            counter += 1
 
         # Link owner with the added dataset
         statement = (
@@ -102,8 +102,8 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
         tx.commit()
     except Exception as e:
         logger.error(
-            'Failed to add read access to data set (uuid: %s) in Neo4J. '
-            'Exception: %s', e
+            'Failed to add read access to data set (uuid: %s) for user '
+            '(uuid: %s) to Neo4J. Exception: %s', dataset_uuid, user_id, e
         )
 
 
@@ -140,8 +140,8 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
         tx.commit()
     except Exception as e:
         logger.error(
-            'Failed to add read access to data set (uuid: %s) in Neo4J. '
-            'Exception: %s', e
+            'Failed to add read access for users (%s) to data sets '
+            '(uuids: %s) to Neo4J. Exception: %s', user_ids, dataset_uuids, e
         )
 
 
@@ -178,8 +178,8 @@ def remove_read_access_in_neo4j(dataset_uuids, user_ids):
         tx.commit()
     except Exception as e:
         logger.error(
-            'Failed to remove read access from dataset (uuid: %s) in Neo4J. '
-            'Exception: %s', e
+            'Failed to remove read access from users (%s) for datasets '
+            '(uuids: %s) from Neo4J. Exception: %s', user_ids, dataset_uuids, e
         )
 
 
@@ -214,7 +214,7 @@ def delete_data_set_neo4j(dataset_uuid):
         )
     except Exception as e:
         logger.error(
-            'Failed to remove dataset (uuid: %s) in Neo4J. '
+            'Failed to remove dataset (uuid: %s) from Neo4J. '
             'Exception: %s', dataset_uuid, e
         )
 
@@ -275,20 +275,20 @@ def normalize_annotation_ont_ids(annotations):
     new_annotations = []
     for annotation in annotations:
         underscore_pos = annotation['value_accession'].rfind('_')
-        if (underscore_pos >= 0):
+        if underscore_pos >= 0:
             annotation['value_accession'] = \
                 annotation['value_accession'][(underscore_pos + 1):]
             new_annotations.append(annotation)
             continue
 
         hash_pos = annotation['value_accession'].rfind('#')
-        if (hash_pos >= 0):
+        if hash_pos >= 0:
             annotation['value_accession'] = \
                 annotation['value_accession'][(hash_pos + 1):]
             new_annotations.append(annotation)
             continue
 
-        if (annotation['value_source'] == 'CL'):
+        if annotation['value_source'] == 'CL':
             annotation['value_accession'] = \
                 annotation['value_accession'].zfill(7)
             continue
