@@ -72,7 +72,7 @@
             <p><strong>{{ error_message }}</strong></p>
           {% endif %}
 
-          <div ng-show="selectedFile">
+          <div ng-if="selectedFile">
             <div class="gridStyle" ui-grid="gridOptions" ui-grid-resize-columns></div>
 
             <p>
