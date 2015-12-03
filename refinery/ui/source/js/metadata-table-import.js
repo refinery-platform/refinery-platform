@@ -47,7 +47,8 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ui.grid', '
       if (columnWidth < 10) {  // make sure columns are wide enough
         columnWidth = Math.round(columnWidth * 2);
       }
-      columnDefs.push({'field': columnName, 'width': columnWidth + "%"});
+      columnDefs.push({field: columnName, width: columnWidth + "%"});
+      console.log(columnWidth);
     });
     return columnDefs;
   }
@@ -73,7 +74,7 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ui.grid', '
         // get 5 lines to display on screen
         $scope.metadataSample = $scope.metadata.slice(0, 5);
         $scope.metadataHeader = Object.keys($scope.metadataSample[0]);
-        $scope.columnDefs = makeColumnDefs($scope.metadataHeader);
+        $scope.gridOptions.columnDefs = makeColumnDefs($scope.metadataHeader);
       });
     };
     reader.readAsText($scope.selectedFile);
