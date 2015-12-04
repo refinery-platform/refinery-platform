@@ -10,7 +10,7 @@ so you should already have installed all of that.
 
 ## AWS account requirements
 
-- The AWS must have a key pair with KeyName `id_rsa`.
+- The AWS account must have a key pair with KeyName `id_rsa`.
 - SSH access only works if the default security group allows
   inbound access on port 22 (the SSH port).
 - HTTP access only works in the default security group allows
