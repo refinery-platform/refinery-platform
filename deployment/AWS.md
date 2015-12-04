@@ -1,5 +1,7 @@
 # Deployment on Amazon AWS
 
+## Summary
+
 Generate AWS Cloud Formation template file using `cfn-pyplates`
 and create stack using AWS cli tools.
 `awscli` and `cfn-pyplates` should already be
