@@ -7,6 +7,9 @@ set -x
 # to both Vagrant and AWS. Both bootstrap.sh and aws.sh (this
 # script) are supplied via cloudinit userdata.
 
+# Normally supplied as input, but use a default if not.
+GIT_BRANCH=${GIT_BRANCH:-develop}
+
 /usr/bin/apt-get -q -y install htop
 
 mkdir /srv/refinery-platform
