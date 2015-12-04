@@ -5,8 +5,13 @@
 # to deply to Amazon AWS.
 
 cft = CloudFormationTemplate(description="refinery monolithic template.")
+import os
+branch = os.popen("""git branch | awk '$1=="*"{print $2}'""").read()
+assert branch
 
-user_data_script = open('bootstrap.sh').read() + open('aws.sh').read()
+user_data_script = (open('bootstrap.sh').read() +
+  "GIT_BRANCH={}\n".format(branch) +
+  open('aws.sh').read())
 
 cft.resources.ec2_instance = Resource(
     'MonolithicInstance', 'AWS::EC2::Instance',
