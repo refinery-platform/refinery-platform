@@ -173,7 +173,7 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 	
 			// user chooses to open collapsed facet
 		   	$("#" + self._composeFacetId( attribute.solr_field + "___inactive" ) )
-					.on( "show", function() {
+					.on( "shown.bs.collapse.in", function() {
 		   		var facet = self._decomposeFacetId( this.id ).facet;
 				
 				// add facet to list of expanded facets for this view
@@ -189,7 +189,7 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 	
 			// user chooses to close expanded facet
 		   	$("#" + self._composeFacetId( attribute.solr_field + "___inactive" ) )
-					.on( "hide", function() {
+					.on( "hidden.bs.collapse", function() {
 		   		var facet = self._decomposeFacetId( this.id ).facet;
 		   		
 				// remove facet from list of expanded facets for this view

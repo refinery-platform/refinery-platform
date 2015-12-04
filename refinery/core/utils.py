@@ -101,6 +101,10 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
 
         tx.commit()
     except Exception as e:
+        """ Cypher queries are expected to fail and raise an exception when
+        Neo4J is not running or when transactional queries are not available
+        (e.g. Travis CI doesn't support transactional queries yet)
+        """
         logger.error(
             'Failed to add read access to data set (uuid: %s) for user '
             '(uuid: %s) to Neo4J. Exception: %s', dataset_uuid, user_id, e
@@ -139,6 +143,10 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
 
         tx.commit()
     except Exception as e:
+        """ Cypher queries are expected to fail and raise an exception when
+        Neo4J is not running or when transactional queries are not available
+        (e.g. Travis CI doesn't support transactional queries yet)
+        """
         logger.error(
             'Failed to add read access for users (%s) to data sets '
             '(uuids: %s) to Neo4J. Exception: %s', user_ids, dataset_uuids, e
@@ -177,6 +185,10 @@ def remove_read_access_in_neo4j(dataset_uuids, user_ids):
 
         tx.commit()
     except Exception as e:
+        """ Cypher queries are expected to fail and raise an exception when
+        Neo4J is not running or when transactional queries are not available
+        (e.g. Travis CI doesn't support transactional queries yet)
+        """
         logger.error(
             'Failed to remove read access from users (%s) for datasets '
             '(uuids: %s) from Neo4J. Exception: %s', user_ids, dataset_uuids, e
@@ -213,6 +225,10 @@ def delete_data_set_neo4j(dataset_uuid):
             }
         )
     except Exception as e:
+        """ Cypher queries are expected to fail and raise an exception when
+        Neo4J is not running or when transactional queries are not available
+        (e.g. Travis CI doesn't support transactional queries yet)
+        """
         logger.error(
             'Failed to remove dataset (uuid: %s) from Neo4J. '
             'Exception: %s', dataset_uuid, e
@@ -260,6 +276,10 @@ def delete_ontology_from_neo4j(acronym):
             }
         )
     except Exception as e:
+        """ Cypher queries are expected to fail and raise an exception when
+        Neo4J is not running or when transactional queries are not available
+        (e.g. Travis CI doesn't support transactional queries yet)
+        """
         logger.error(
             'Failed to remove ontology (acronym: %s) from Neo4J. '
             'Exception: %s', acronym, e
