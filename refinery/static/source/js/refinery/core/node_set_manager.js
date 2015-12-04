@@ -81,7 +81,6 @@ NodeSetManager.prototype.renderList = function () {
   var nodeSetListElementStyle = "max-height: 300px; overflow: hidden; overflow-y: auto;"
   var nodeSetListElementId = "node-set-list";
   var nodeSetSaveSelectionButtonElementId = "node-set-save-button";
-
   $("#" + self.elementId).html("");
 
   var code = "";
@@ -209,14 +208,17 @@ NodeSetManager.prototype.createGetListUrl = function () {
 NodeSetManager.prototype.getList = function (callback, errorCallback) {
   var self = this;
 
+  //These conditionals were added due to race conditions throwing console
+  // errors. This should be refactored/removed after the angularjs convert.
   if(self.currentSelectionNodeSet !== null &&
-    typeof self.currentSelectionNodeSet.uuid !== "undefined") {
+    typeof self.currentSelectionNodeSet.uuid !== "undefined" || nodeSetManager !== null) {
     $.ajax({
       url: self.createGetListUrl(),
       type: "GET",
       dataType: "json",
       data: {csrfmiddlewaretoken: self.crsfMiddlewareToken},
       success: function (result) {
+
         if ($.isEmptyObject(result)) {
           // do nothing
           return;
@@ -242,7 +244,6 @@ NodeSetManager.prototype.getList = function (callback, errorCallback) {
         }
       },
       error: function (result) {
-
         // initialize to sessionStorage
         self.saveCurrentSelectionToSession(self.currentSelectionNodeSetName, "", "", {}, 0);
 
