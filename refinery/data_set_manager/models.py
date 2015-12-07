@@ -604,36 +604,52 @@ def _is_facet_attribute(attribute, study, assay):
     """
     ratio = 0.5
 
-    query = (
-        settings.REFINERY_SOLR_BASE_URL +
-        "data_set_manager" +
-        "/select?" +
-        "q=django_ct:data_set_manager.node&wt=json&start=0&rows=1&fq=" +
-        "(study_uuid:" +
-        study.uuid +
-        "%20AND%20assay_uuid:" +
-        assay.uuid +
-        "%20AND%20is_annotation:false%20AND%20(type:%22Array%20Data%20File%22"
-        "%20OR%20type:%22Derived%20Array%20Data%20File%22%20OR%20type:%22Raw%"
-        "20Data%20File%22%20OR%20type:%20%22Derived%20Data%20File%22))&facet="
-        "true&facet.field=" +
-        attribute +
-        "&facet.sort=count&facet.limit=-1")
-
-    # opening solr query results
-    results = requests.get(query, stream=True).raw.read()
-    logger.debug(
-        "Query results for initialize_attribute_order: %s" % (results, )
+    types = ' OR '.join(
+        '"{0}"'.format(type) for type in get_all_possible_assay_node_types()
     )
-    # converting results into json for python
-    results = simplejson.loads(results)
 
-    items = results["response"]["numFound"]
-    attributeValues = len(results["facet_counts"]["facet_fields"][attribute])/2
+    url = '{base_url}data_set_manager/select'.format(
+        base_url=settings.REFINERY_SOLR_BASE_URL
+    )
 
-    logger.debug(results["facet_counts"]["facet_fields"])
+    params = {
+        'facet': 'true',
+        'facet.field': attribute,
+        'facet.sort': 'count',
+        'facet.limit': '-1',
+        'fq': 'study_uuid:{study_uuid} AND '
+              'assay_uuid: {assay_uuid} AND '
+              'is_annotation:false AND '
+              'type:({types})'.format(
+                  study_uuid=study.uuid,
+                  assay_uuid=assay.uuid,
+                  types=types
+              ),
+        'q': 'django_ct:data_set_manager.node',
+        'rows': 1,
+        'start': 0,
+        'wt': 'json'
+    }
 
-    return (attributeValues/items) < ratio
+    logger.debug('Query parameters: %s', params)
+
+    headers = {'Accept': 'application/json'}
+
+    response = requests.get(url, params=params, headers=headers)
+
+    results = response.json()
+
+    logger.debug('Query results: %s', results)
+
+    if results['response']['numFound'] == 0:
+        raise ValueError('No facets found.')
+
+    items = results['response']['numFound']
+    attributeValues = len(
+        results['facet_counts']['facet_fields'][attribute]
+    ) / 2
+
+    return (attributeValues / items) < ratio
 
 
 def initialize_attribute_order(study, assay):
@@ -645,32 +661,49 @@ def initialize_attribute_order(study, assay):
     :type assay: Assay
     :returns: Number of attributes that were indexed.
     """
-    query = (
-        settings.REFINERY_SOLR_BASE_URL +
-        "data_set_manager" +
-        "/select?" +
-        "q=django_ct:data_set_manager.node&wt=json&start=0&rows=1&fq=" +
-        "(study_uuid:" +
-        study.uuid +
-        "%20AND%20assay_uuid:" +
-        assay.uuid +
-        "%20AND%20is_annotation:false%20AND%20(type:%22Array%20Data%20File%22"
-        "%20OR%20type:%22Derived%20Array%20Data%20File%22%20OR%20type:%22Raw%"
-        "20Data%20File%22%20OR%20type:%20%22Derived%20Data%20File%22)"")&face"
-        "t=true&facet.sort=count&facet.limit=-1"
+
+    types = ' OR '.join(
+        '"{0}"'.format(type) for type in get_all_possible_assay_node_types()
     )
 
-    # opening solr query results
-    results = requests.get(query, stream=True).raw.read()
-    logger.debug(
-        "Query results for initialize_attribute_order: %s" % (results, )
+    url = '{base_url}data_set_manager/select'.format(
+        base_url=settings.REFINERY_SOLR_BASE_URL
     )
-    # converting results into json for python
-    results = simplejson.loads(results)
+
+    params = {
+        'fq': 'study_uuid:{study_uuid} AND '
+              'assay_uuid: {assay_uuid} AND '
+              'is_annotation:false AND '
+              'type:({types})'.format(
+                  study_uuid=study.uuid,
+                  assay_uuid=assay.uuid,
+                  types=types
+              ),
+        'q': 'django_ct:data_set_manager.node',
+        'rows': 1,
+        'start': 0,
+        'wt': 'json'
+    }
+
+    logger.debug('Query parameters: %s', params)
+
+    headers = {'Accept': 'application/json'}
+
+    response = requests.get(url, params=params, headers=headers)
+
+    results = response.json()
+
+    logger.debug('Query results: %s', results)
+
+    if results['response']['numFound'] == 0:
+        raise ValueError(
+            'Assay node type is not supported. Please consult the official '
+            'release candidate.'
+        )
 
     attribute_order_objects = []
     rank = 0
-    for key in results["response"]["docs"][0]:
+    for key in results['response']['docs'][0]:
         is_facet = _is_facet_attribute(key, study, assay)
         is_exposed = _is_exposed_attribute(key)
         is_internal = _is_internal_attribute(key)
@@ -692,6 +725,53 @@ def initialize_attribute_order(study, assay):
     AttributeOrder.objects.bulk_create(attribute_order_objects)
 
     return len(attribute_order_objects)
+
+
+def get_all_possible_assay_node_types(type=None):
+    """Returns the offical assay node types specified in
+    http://isatab.sourceforge.net/docs/ISA-TAB_release-candidate-1_v1.0_24nov08.pdf
+    """
+    # 4.3.2 DNA microarray hybridization
+    dnamh = [
+        'Array Data File',
+        'Derived Array Data File',
+        'Array Data Matrix File',
+        'Derived Array Data Matrix File'
+    ]
+    # 4.3.3 Gel electrophoresis
+    ge = [
+        'Spot Picking File',
+        'Acquisition Parameter Data File',
+        'Derived Spectral Data File'
+    ]
+    # 4.2.4 Mass Spectrometry
+    ms = [
+        'Raw Spectral Data File',
+        'Derived Spectral Data File',
+        'Peptide Assignment File',
+        'Protein Assignment File',
+        'Post Translational Modification Assignment File'
+    ]
+    # 4.2.5 Nuclear Magnetic Resonance spectroscopy
+    nmr = [
+        'Free Induction Decay Data File',
+        'Acquisition Parameter Data File',
+        'Derived Spectral Data File'
+    ]
+
+    if type == dnamh:
+        return dnamh
+
+    if type == ge:
+        return ge
+
+    if type == ms:
+        return ms
+
+    if type == nmr:
+        return nmr
+
+    return dnamh + ge + ms + nmr
 
 
 class ProtocolReference(models.Model):
