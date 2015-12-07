@@ -2,11 +2,11 @@
 
 ## Summary
 
-Generate AWS Cloud Formation template file using `cfn-pyplates`
-and create stack using AWS cli tools.
-`awscli` and `cfn-pyplates` should already be
-in `requirements.txt`
-so you should already have installed all of that.
+Generate AWS Cloud Formation template file using `cfn-pyplates` and create stack using AWS cli tools. Clone the code and install the deployment tools:
+```shell
+git clone git@github.com:parklab/refinery-platform.git
+pip install -r refinery-platform/deployment/requirements.txt
+```
 
 ## AWS account requirements
 
@@ -18,8 +18,7 @@ so you should already have installed all of that.
 
 ## Generate JSON file and start stack:
 
-```
-git clone git@github.com:parklab/refinery-platform.git
+```shell
 cd refinery-platform/deployment
 cfn_py_generate aws_cfn.py deploy.json
 aws cloudformation create-stack --stack-name test-$(date +%Y%m%dT%H%M) --template-body file://deploy.json
