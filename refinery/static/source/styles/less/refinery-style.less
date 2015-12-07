@@ -670,10 +670,6 @@ a.analysis-header{
 
 @media (max-width: @navbar-collapse-width) {
 
-  body {
-    margin-top: 0;
-  }
-
   .navbar-default .navbar-toggle .icon-bar {
     background-color: #fff;
   }
@@ -1984,6 +1980,11 @@ ul.badge-list {
       font-size: @font-size-small;
       font-style: italic;
     }
+  }
+}
+@media (max-width: 400px) {
+  body {
+    margin-top: @navbar-height * 3.2;
   }
 }
 
