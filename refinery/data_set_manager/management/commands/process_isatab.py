@@ -22,20 +22,23 @@ class Command(BaseCommand):
     --public --file_base_path <base path if file locations are relative>]\n
     """
     option_list = BaseCommand.option_list + (
-        make_option('--base_pre_isa_dir',
-                    action='store',
-                    type='string'
-                    ),
-        make_option('--file_base_path',
-                    action='store',
-                    type='string',
-                    default=None
-                    ),
-        make_option('--public',
-                    action='store_true',
-                    default=False
-                    ),
+        make_option(
+            '--base_pre_isa_dir',
+            action='store',
+            type='string'
+        ),
+        make_option(
+            '--file_base_path',
+            action='store',
+            type='string',
+            default=None
+        ),
+        make_option(
+            '--public',
+            action='store_true',
+            default=False
         )
+    )
 
     """
     Name: handle
@@ -111,18 +114,18 @@ class Command(BaseCommand):
 
         task_num = 1
         total = len(isatab_dict)
-        for (i, filename, skipped) in result.iterate():
+        for (uuid, filename, skipped) in result.iterate():
             try:
                 if not skipped:
                     logger.info(
                         "%s / %s: Successfully parsed %s into "
                         "DataSet with UUID %s",
-                        task_num, total, filename, i)
+                        task_num, total, filename, uuid)
                 else:
                     logger.info(
                         "%s / %s: Skipped %s as it has been "
                         "successfully parsed already. UUID %s",
-                        task_num, total, filename, i)
+                        task_num, total, filename, uuid)
                 task_num += 1
                 sys.stdout.flush()
             except:
