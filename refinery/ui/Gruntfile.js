@@ -675,11 +675,11 @@ module.exports = function(grunt) {
      * Minify JS
      */
     uglify: {
-      options: {
-        banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
-        sourceMap: true
-      },
       ui: {
+        options: {
+          banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
+          sourceMap: true
+        },
         files: [
           {
             expand: true,
