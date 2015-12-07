@@ -19,13 +19,12 @@ so you should already have installed all of that.
 ## Generate JSON file and start stack:
 
 ```
-cfn_py_generate aws_cfn.py deploy.json &&
+git clone git@github.com:parklab/refinery-platform.git
+cd refinery-platform/deployment
+cfn_py_generate aws_cfn.py deploy.json
 aws cloudformation create-stack --stack-name test-$(date +%Y%m%dT%H%M) --template-body file://deploy.json
 ```
 
 This creates a stack with a new name every time, you might
 prefer to re-use the stack name and delete it when you want to
 create a new stack.
-
-
-
