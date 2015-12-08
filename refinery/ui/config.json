@@ -1,5 +1,6 @@
 {
   "basePath": {
+    "bower_components": "bower_components",
     "djangoTemplates": "../templates",
     "docs": "docs",
     "ui": {
@@ -28,10 +29,11 @@
     ],
     "vendor": {
       "css": [
+        "angular-ui-grid/ui-grid.min.css",
         "c3/c3.css",
+        "fontawesome/css/font-awesome.min.css",
         "jquery-file-upload/css/jquery.fileupload-ui.css",
         "jquery-file-upload/css/jquery.fileupload.css",
-        "angular-ui-grid/ui-grid.min.css",
         "select2/select2.css",
         "spectrum/spectrum.css",
         "tipsy/src/stylesheets/tipsy.css"
@@ -83,13 +85,19 @@
         "angular-resource/angular-resource.min.js.map",
         "angular-sanitize/angular-sanitize.min.js.map",
         "angular-ui-select2/release/select2.min.js.map",
+        "fontawesome/css/font-awesome.css.map",
         "jquery/dist/jquery.min.map"
       ],
       "font": [
         "angular-ui-grid/ui-grid.eot",
         "angular-ui-grid/ui-grid.svg",
         "angular-ui-grid/ui-grid.ttf",
-        "angular-ui-grid/ui-grid.woff"
+        "angular-ui-grid/ui-grid.woff",
+        "fontawesome/fonts/fontawesome-webfont.eot",
+        "fontawesome/fonts/fontawesome-webfont.svg",
+        "fontawesome/fonts/fontawesome-webfont.ttf",
+        "fontawesome/fonts/fontawesome-webfont.woff",
+        "fontawesome/fonts/fontawesome-webfont.woff2"
       ]
     }
   },

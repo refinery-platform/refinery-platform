@@ -605,7 +605,7 @@ def _is_facet_attribute(attribute, study, assay):
     ratio = 0.5
 
     types = ' OR '.join(
-        '"{0}"'.format(type) for type in get_all_possible_assay_node_types()
+        '"{0}"'.format(type) for type in Node.FILES
     )
 
     url = '{base_url}data_set_manager/select'.format(
@@ -663,7 +663,7 @@ def initialize_attribute_order(study, assay):
     """
 
     types = ' OR '.join(
-        '"{0}"'.format(type) for type in get_all_possible_assay_node_types()
+        '"{0}"'.format(type) for type in Node.FILES
     )
 
     url = '{base_url}data_set_manager/select'.format(
@@ -725,53 +725,6 @@ def initialize_attribute_order(study, assay):
     AttributeOrder.objects.bulk_create(attribute_order_objects)
 
     return len(attribute_order_objects)
-
-
-def get_all_possible_assay_node_types(type=None):
-    """Returns the offical assay node types specified in
-    http://isatab.sourceforge.net/docs/ISA-TAB_release-candidate-1_v1.0_24nov08.pdf
-    """
-    # 4.3.2 DNA microarray hybridization
-    dnamh = [
-        'Array Data File',
-        'Derived Array Data File',
-        'Array Data Matrix File',
-        'Derived Array Data Matrix File'
-    ]
-    # 4.3.3 Gel electrophoresis
-    ge = [
-        'Spot Picking File',
-        'Acquisition Parameter Data File',
-        'Derived Spectral Data File'
-    ]
-    # 4.2.4 Mass Spectrometry
-    ms = [
-        'Raw Spectral Data File',
-        'Derived Spectral Data File',
-        'Peptide Assignment File',
-        'Protein Assignment File',
-        'Post Translational Modification Assignment File'
-    ]
-    # 4.2.5 Nuclear Magnetic Resonance spectroscopy
-    nmr = [
-        'Free Induction Decay Data File',
-        'Acquisition Parameter Data File',
-        'Derived Spectral Data File'
-    ]
-
-    if type == dnamh:
-        return dnamh
-
-    if type == ge:
-        return ge
-
-    if type == ms:
-        return ms
-
-    if type == nmr:
-        return nmr
-
-    return dnamh + ge + ms + nmr
 
 
 class ProtocolReference(models.Model):

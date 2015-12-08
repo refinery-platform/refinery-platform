@@ -9,19 +9,14 @@
 // Refinery-specific styles
 // -------------------------------------------------------------
 
-@import "../../js/bootstrap/less/variables.less"; // Modify this for custom colors, font-sizes, etc
-@import "variables.less";
+@bootstrap-path: 'bower_components/bootstrap/less';
 
-@import "../../js/bootstrap/less/mixins.less";
+@import '@{bootstrap-path}/variables.less'; // Modify this for custom colors, font-sizes, etc
+@import 'variables.less';
 
 /* Allow angular.js to be loaded, hiding cloaked elements until templates compile. */
 [ng\:cloak], [ng-cloak], .ng-cloak {
   display: none !important;
-}
-
-p {
-  //font-family: @serifFontFamily;
-  //font-size: @base-font-size * 1.1;
 }
 
 .attribute-header{
@@ -51,12 +46,12 @@ a.spinnable {
   }
 }
 
-@background-image-url: "../img/bgnoise.png"; //'../img/debut_light.png';
+@background-image-url: '/static/images/bgnoise.png';
 @background-gradient: rgba( 255, 0, 0, 0.5 );
 @background-gradient-highlight: lighter(red, 10%);
 
 body {
-  font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   background-image:url(@background-image-url);
   margin-top: @navbar-height * 2.2;
   line-height: 20px;
@@ -152,11 +147,11 @@ ol, ul {
   background-image: -webkit-gradient(linear,0 0,0 100%,from(#fff),to(#e6e6e6));
 }
 
-input[type="file"]{
+input[type='file']{
   height: 30px;
 }
 
-input[type="text"], select{
+input[type='text'], select{
   display: inline-block;
   height: 20px;
   line-height: 20px;
@@ -555,7 +550,7 @@ a.analysis-header{
 }
 
 .navbar .navbar-brand {
-  font-family: "Arvo";
+  font-family: 'Arvo';
   font-weight: 700;
   font-style: italic;
   letter-spacing: 0.05em;
