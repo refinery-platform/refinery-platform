@@ -376,10 +376,10 @@ HAYSTACK_CONNECTIONS = {
 
 # list of paths to CSS files used to style Refinery pages
 # (relative to STATIC_URL)
-REFINERY_CSS = ["styles/css/refinery-style-bootstrap.css",
-                "styles/css/refinery-style-bootstrap-responsive.css",
-                "styles/css/refinery-style.css",
-                "styles/css/font-awesome.css"]
+REFINERY_CSS = ["styles/refinery-style-bootstrap.css",
+                "styles/refinery-style-bootstrap-responsive.css",
+                "styles/refinery-style.css",
+                "vendor/fontawesome/css/font-awesome.min.css"]
 
 # set height of navigation bar (e.g. to fit a logo)
 REFINERY_INNER_NAVBAR_HEIGHT = get_setting("REFINERY_INNER_NAVBAR_HEIGHT")

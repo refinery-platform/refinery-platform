@@ -14,26 +14,28 @@
 // -------------------------
 // Required since we compile the responsive stuff separately
 
-@import "../../js/bootstrap/less/variables.less"; // Modify this for custom colors, font-sizes, etc
-@import "variables.less";
+@bootstrap-path: 'bower_components/bootstrap/less';
 
-@import "../../js/bootstrap/less/mixins.less";
+@import '@{bootstrap-path}/variables.less'; // Modify this for custom colors, font-sizes, etc
+@import 'variables.less';
+
+@import '@{bootstrap-path}/mixins.less';
 
 
 // RESPONSIVE CLASSES
 // ------------------
 
-@import "../../js/bootstrap/less/responsive-utilities.less";
-@import "../../js/bootstrap/less/responsive-embed.less";
+@import '@{bootstrap-path}/responsive-utilities.less';
+@import '@{bootstrap-path}/responsive-embed.less';
 
 
 // MEDIA QUERIES
 // ------------------
-@import "../../js/bootstrap/less/media.less";
+@import '@{bootstrap-path}/media.less';
 
 
 // RESPONSIVE NAVBAR
 // ------------------
 
 // From 979px and below, show a button to toggle navbar contents
-//@import "../../js/bootstrap/less/responsive-navbar.less";
+//@import '@{bootstrap-path}/responsive-navbar.less';
