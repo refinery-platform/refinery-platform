@@ -4027,7 +4027,7 @@ var provvisRender = (function () {
         wfColorData = d3.map();
 
     wfColorData.set("dataset", 0);
-    d3.values(vis.graph.workflowData).forEach(function (wf, i) {
+    vis.graph.workflowData.values().forEach(function (wf, i) {
       wfColorData.set(wf.name, (i + 1));
     });
 
