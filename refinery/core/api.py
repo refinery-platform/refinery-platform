@@ -136,8 +136,12 @@ class SharableResourceAPIInterface(object):
         # Try and retrieve a cached resource based on model name
         # provide uniqueness between cached resources w/
         # res_list_unique
-        res_list_unique = res_list.model.__name__
-        cache_check = cache.get("%s" % res_list_unique)
+        try:
+            res_list_unique = res_list.model.__name__
+            cache_check = cache.get("%s" % res_list_unique)
+        except:
+            res_list_unique = None
+            cache_check = None
 
         if cache_check is None:
             owned_res_set = Set(
@@ -184,7 +188,7 @@ class SharableResourceAPIInterface(object):
             # Filter for query flags.
             res_list = self.query_filtering(res_list, request.GET)
 
-            if user_uuid:
+            if user_uuid and res_list_unique:
                 cache.add("%s" % res_list_unique, res_list)
             return res_list
         else:
