@@ -1216,7 +1216,7 @@ var provvisRender = (function () {
         "id": "dc-form-" + i,
         "class": "form dc-form",
         "style": "height: 30px; position: absolute; left: 75px; top: " +
-        parseInt((10 - doiFactors.length) / 2 * 30 + (i + 1) * 30, 10) +
+        parseInt((10 - doiFactors.length) / 2 * 30 + (i + 1) * 30 -1, 10) +
         "px;"
       }).appendTo("#" + "doiVis");
 
