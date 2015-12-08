@@ -362,10 +362,16 @@ def update_annotated_nodes(node_type, study_uuid, assay_uuid=None,
 def calculate_checksum(f, algorithm='md5', bufsize=8192):
     """Calculate the checksum of the datafile"""
     hasher = hashlib.new(algorithm)
-    block = f.read(bufsize)
-    while len(block) > 0:
-        hasher.update(block)
+    try:
         block = f.read(bufsize)
+        while len(block) > 0:
+            hasher.update(block)
+            block = f.read(bufsize)
+    except AttributeError:
+        logger.debug(
+            'Checksum couldn\'t be calculated because the file was not '
+            'available.'
+        )
     return hasher.hexdigest()
 
 
