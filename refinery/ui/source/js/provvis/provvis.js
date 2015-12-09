@@ -118,12 +118,21 @@ var provvis = (function () {
     }).appendTo(doiContainer);
 
     $("<label/>", {
-      "id": "prov-doi-view-show",
+      "id": "prov-doi-trigger",
       "class": "prov-doi-view-show-checkbox",
       "style": "display: flex; position: absolute; left: 75px; top: 340px; " +
       "margin-top: 5px;",
+      "html": '<input id="prov-doi-view-trigger-input" type="checkbox" ' +
+      'style="margin-right: 3px;">Auto Update'
+    }).appendTo(doiContainer);
+
+    $("<label/>", {
+      "id": "prov-doi-view-show",
+      "class": "prov-doi-view-show-checkbox",
+      "style": "display: flex; position: absolute; left: 180px; top: 340px; " +
+      "margin-top: 5px;",
       "html": '<input id="prov-doi-view-show-input" type="checkbox" ' +
-      'style="margin-right: 3px;">Show DOI values'
+      'style="margin-right: 3px;">Show DOI'
     }).appendTo(doiContainer);
   };
 

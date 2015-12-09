@@ -66,6 +66,8 @@ var provvisRender = (function () {
 
   var doiDiffScale = Object.create(null);
 
+  var doiAutoUpdate = false;
+
   /* Simple tooltips by NG. */
   var tooltip = d3.select("body")
       .append("div")
@@ -725,8 +727,8 @@ var provvisRender = (function () {
       updateLink(ln);
     });
 
-    /* TODO: Currently disabled. */
-    //updateNodeDoi();
+    /* TODO: Temporarily enabled. */
+    if (doiAutoUpdate) { recomputeDOI(); }
   };
 
   /**
@@ -1099,6 +1101,25 @@ var provvisRender = (function () {
     updateTimelineLabels(startTime);
   };
 
+  /**
+   * Recomputes the DOI for every node
+   */
+  var recomputeDOI = function () {
+    vis.graph.lNodes.values().forEach(function (l) {
+      l.doi.computeWeightedSum();
+      l.children.values().forEach(function (an) {
+        an.doi.computeWeightedSum();
+        an.children.values().forEach(function (san) {
+          san.doi.computeWeightedSum();
+          san.children.values().forEach(function (n) {
+            n.doi.computeWeightedSum();
+          });
+        });
+      });
+    });
+    updateNodeDoi();
+  };
+
   /* TODO: Code cleanup. */
   /**
    * Draws the DOI view.
@@ -1216,7 +1237,7 @@ var provvisRender = (function () {
         "id": "dc-form-" + i,
         "class": "form dc-form",
         "style": "height: 30px; position: absolute; left: 75px; top: " +
-        parseInt((10 - doiFactors.length) / 2 * 30 + (i + 1) * 30, 10) +
+        parseInt((10 - doiFactors.length) / 2 * 30 + (i + 1) * 30 -1, 10) +
         "px;"
       }).appendTo("#" + "doiVis");
 
@@ -1508,19 +1529,7 @@ var provvisRender = (function () {
     $("#prov-doi-view-apply").on('click', function () {
 
       /* Recompute doi. */
-      vis.graph.lNodes.values().forEach(function (l) {
-        l.doi.computeWeightedSum();
-        l.children.values().forEach(function (an) {
-          an.doi.computeWeightedSum();
-          an.children.values().forEach(function (san) {
-            san.doi.computeWeightedSum();
-            san.children.values().forEach(function (n) {
-              n.doi.computeWeightedSum();
-            });
-          });
-        });
-      });
-      updateNodeDoi();
+      recomputeDOI();
     });
 
     $("#prov-doi-view-reset").on('click', function () {
@@ -1542,6 +1551,15 @@ var provvisRender = (function () {
             }
           });
       updateDoiView(d3.values(provvisDecl.DoiFactors.factors));
+    });
+
+    /* Toggle DOI auto update. */
+    $("#prov-doi-trigger").click(function () {
+      if ($(this).find("input[type='checkbox']").prop("checked")) {
+        doiAutoUpdate = true;
+      } else {
+        doiAutoUpdate = false;
+      }
     });
 
     /* Show and hide doi labels. */
@@ -3810,8 +3828,8 @@ var provvisRender = (function () {
       }
     });
 
-    /* TODO: Temporarily disabled. */
-    //updateNodeDoi();
+    /* TODO: Temporarily enabled. */
+    if (doiAutoUpdate) { recomputeDOI(); }
   };
 
 
@@ -4013,6 +4031,7 @@ var provvisRender = (function () {
     });
 
     d.doi.selectedChanged();
+    if(doiAutoUpdate) { recomputeDOI();}
   };
 
 
@@ -4027,7 +4046,7 @@ var provvisRender = (function () {
         wfColorData = d3.map();
 
     wfColorData.set("dataset", 0);
-    d3.values(vis.graph.workflowData).forEach(function (wf, i) {
+    vis.graph.workflowData.values().forEach(function (wf, i) {
       wfColorData.set(wf.name, (i + 1));
     });
 
@@ -5223,8 +5242,8 @@ var provvisRender = (function () {
             clearHighlighting(graph.links);
             clearNodeSelection();
 
-            /* TODO: Currently disabled. */
-            //updateNodeDoi();
+            /* TODO: Temporarily enabled. */
+            if (doiAutoUpdate) { recomputeDOI(); }
           }, 200);
         });
 
@@ -5824,8 +5843,8 @@ var provvisRender = (function () {
         updateLink(ln);
       });
 
-      /* TODO: Currently disabled. */
-      //updateNodeDoi();
+      /* TODO: Currently enabled. */
+      if (doiAutoUpdate) { recomputeDOI();}
     }
     lastSolrResponse = solrResponse;
   };
