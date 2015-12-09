@@ -95,17 +95,21 @@ class Command(BaseCommand):
             )
 
             for constraint in settings.NEO4J_CONSTRAINTS:
-                existing_prop_const = graph.schema.get_uniqueness_constraints(
+                existing_constraints = graph.schema.get_uniqueness_constraints(
+                    constraint['label']
+                )
+                existing_indices = graph.schema.get_indexes(
                     constraint['label']
                 )
                 for prop in constraint['properties']:
-                    if prop['name'] not in existing_prop_const:
-                        if prop['unique']:
+                    if prop['unique']:
+                        if prop['name'] not in existing_constraints:
                             graph.schema.create_uniqueness_constraint(
                                 constraint['label'],
                                 prop['name']
                             )
-                        else:
+                    else:
+                        if prop['name'] not in existing_indices:
                             graph.schema.create_index(
                                 constraint['label'],
                                 prop['name']
@@ -134,6 +138,19 @@ class Command(BaseCommand):
                 subprocess.check_call(cmd, shell=True)
             else:
                 subprocess.check_output(cmd, shell=True)
+        except Exception as e:
+            logger.error(e)
+            sys.exit(1)
+
+        # Get Owl2Neo4J version
+        owl2neo4j_version = None
+        try:
+            cmd = 'java -jar {lib}/owl2neo4j.jar --version'.format(
+                    lib=settings.LIBS_DIR,
+                )
+            owl2neo4j_version = subprocess.check_output(
+                cmd, shell=True
+            ).rstrip()
         except Exception as e:
             logger.error(e)
             sys.exit(1)
@@ -168,7 +185,8 @@ class Command(BaseCommand):
                 options['ontology_name'],
                 options['ontology_abbr'],
                 uri,
-                version
+                version,
+                owl2neo4j_version
             )
         except Exception as e:
             logger.error(e)
