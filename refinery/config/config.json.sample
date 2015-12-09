@@ -51,7 +51,7 @@
         "property": [
           {
             "name": "name",
-            "unique": true
+            "unique": false
           },
           {
             "name": "uri",
