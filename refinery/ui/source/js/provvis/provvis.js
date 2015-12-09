@@ -347,8 +347,8 @@ var provvis = (function () {
             }
 
             /* Set label text. */
-            d3.select(this).text(attrText);
             if (typeof  attrText !== "undefined") {
+              d3.select(this).text(attrText);
               var trimRatio = parseInt(attrText.length *
                   (maxLabelPixelWidth / this.getComputedTextLength()), 10);
               if (trimRatio < attrText.length) {
