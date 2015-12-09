@@ -348,10 +348,12 @@ var provvis = (function () {
 
             /* Set label text. */
             d3.select(this).text(attrText);
-            var trimRatio = parseInt(attrText.length *
-                (maxLabelPixelWidth / this.getComputedTextLength()), 10);
-            if (trimRatio < attrText.length) {
-              d3.select(this).text(attrText.substr(0, trimRatio - 3) + "...");
+            if (typeof  attrText !== "undefined") {
+              var trimRatio = parseInt(attrText.length *
+                  (maxLabelPixelWidth / this.getComputedTextLength()), 10);
+              if (trimRatio < attrText.length) {
+                d3.select(this).text(attrText.substr(0, trimRatio - 3) + "...");
+              }
             }
           });
         };
