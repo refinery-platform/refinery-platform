@@ -261,7 +261,14 @@ function refineryDataSetPreview () {
     var studies = this.getStudies(dataset.uuid),
         analyses = this.getAnalysis(dataset.uuid),
         user = this.getUser(dataset.owner),
-        permissions = this.getPermissions(dataset.uuid);
+        permissions;
+
+    permissions = this.user.isAuthenticated()
+      .then(function (authenticated) {
+        if (authenticated) {
+          return this.getPermissions(dataset.uuid);
+        }
+      }.bind(this));
 
     this
       .$q
