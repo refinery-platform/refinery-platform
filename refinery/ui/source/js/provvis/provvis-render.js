@@ -4058,14 +4058,24 @@ var provvisRender = (function () {
 
     wfColorData.set("dataset", 0);
     vis.graph.workflowData.values().forEach(function (wf, i) {
-      wfColorData.set(wf.name, (i + 1));
+
+      var wfName = wf.name;
+      if(wf.name.substr(0, 15) === "Test workflow: ") {
+        wfName = wf.name.substr(15, wf.name.length - 15);
+      }
+      if (wfName.indexOf("(") > 0) {
+        wfName = wfName.substr(0, wfName.indexOf("("));
+      }
+      if (!wfColorData.has(wfName)) {
+        wfColorData.set(wfName, (i + 1));
+      } else {
+        i--;
+      }
+      wf.code = wfName;
     });
 
     wfColorData.entries().forEach(function (wf, i) {
-      var wfName = wf.key,
-          trimPos = wfName.indexOf("(imported");
-
-      wfName = wfName.substr(0, trimPos) || 'Dataset';
+      var wfName = wf.key;
 
       $('<tr/>', {
         "id": "provvis-cc-wf-tr-" + i
@@ -4304,7 +4314,7 @@ var provvisRender = (function () {
             }
             d3.select("#nodeId-" + d.autoId).select(".glyph")
                 .selectAll("rect, circle")
-                .style({"fill": wfc(wfColorData.get(cur.wfName))});
+                .style({"fill": wfc(wfColorData.get(cur.wfCode))});
           });
           domNodeset.selectAll(".anLabel, .sanLabel, .anwfLabel, " +
               ".sanwfLabel, .an-node-type-icon, .san-node-type-icon")

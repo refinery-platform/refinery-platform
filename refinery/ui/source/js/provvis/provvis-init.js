@@ -456,18 +456,21 @@ var provvisInit = (function () {
         san.wfUuid = an.wfUuid;
       });
 
+
+
       /* Set workflow name. */
       var wfObj = workflowData.get(an.wfUuid);
       an.wfName = (typeof wfObj === "undefined") ? "dataset" : wfObj.name;
 
       /*  TODO: Temporary workflow abbreviation. */
-      if (an.wfName.indexOf("5 steps") > -1) {
-        an.wfCode = "5STPS";
-      } else if (an.wfName.indexOf("analog") > -1) {
-        an.wfCode = "SPP";
-      } else {
+        if(an.wfName.substr(0, 15) === "Test workflow: ") {
+          an.wfName = an.wfName.substr(15, an.wfName.length - 15);
+        }
+        if (an.wfName.indexOf("(") > 0) {
+          an.wfName = an.wfName.substr(0, an.wfName.indexOf("("));
+        }
         an.wfCode = an.wfName;
-      }
+      /*}*/
     });
 
     aNodes.forEach(function (an) {
