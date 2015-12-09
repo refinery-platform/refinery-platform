@@ -67,7 +67,13 @@ var provvisInit = (function () {
         }),
         analysis = (n.analysis_uuid !== null) ? n.analysis_uuid : "dataset";
 
-    return new provvisDecl.Node(id, type, Object.create(null), true, n.name,
+    /* Fix for datasets which nodes might not contain a name attribute. */
+    var nodeName = "undefined";
+    if (typeof n.name !== "undefined") {
+      nodeName = n.name;
+    }
+
+    return new provvisDecl.Node(id, type, Object.create(null), true, nodeName,
         n.type, study, assay, parents, analysis, n.subanalysis, n.uuid,
         n.file_url);
   };

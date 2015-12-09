@@ -432,6 +432,7 @@ var provvis = (function () {
         vis.graph.bclgNodes = provvisLayout.run(vis.graph, vis.cell);
         provvisMotifs.run(vis.graph, layerMethod);
         provvisRender.run(vis);
+        hideProvvisLoaderIcon();
 
         try {
           /* TODO: Refine to only redraw affected canvas components. */
