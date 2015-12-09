@@ -1306,12 +1306,14 @@ class ResourceStatistics(object):
             user=0,
             group=0,
             files=0,
+            size_on_disk="",
             dataset=None,
             workflow=None,
             project=None):
         self.user = user
         self.group = group
         self.files = files
+        self.size_on_disk = size_on_disk
         self.dataset = dataset
         self.workflow = workflow
         self.project = project
