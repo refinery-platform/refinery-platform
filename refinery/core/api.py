@@ -1051,7 +1051,8 @@ class StatisticsResource(Resource):
 
         # Find the total size in bytes of the FileStore
         # This size represents the total size on disk of the file_store
-        # Items that are in the file store that have persisted from
+        # Items that are in the file store that have persisted from deleted
+        # items
         def get_filestore_size():
             size = 0
             for item in FileStoreItem.objects.all():
