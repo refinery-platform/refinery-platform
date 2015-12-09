@@ -382,21 +382,21 @@ var provvis = (function () {
 
         /* Production mode exception handling. */
         /* Exception handling. */
-        try {
+        /*try {
 
-          /* Extract graph data. */
+          /!* Extract graph data. *!/
           vis.graph = provvisInit.run(data, analysesData, solrResponse);
           try {
 
-            /* Compute layout. */
+            /!* Compute layout. *!/
             vis.graph.bclgNodes = provvisLayout.run(vis.graph, vis.cell);
             try {
 
-              /* Discover and and inject motifs. */
+              /!* Discover and and inject motifs. *!/
               provvisMotifs.run(vis.graph, layerMethod);
               try {
 
-                /* Render graph. */
+                /!* Render graph. *!/
                 provvisRender.run(vis);
               }
               catch (err) {
@@ -423,13 +423,13 @@ var provvis = (function () {
               'Init Module Error: ' + err.message + '<br>';
         } finally {
           hideProvvisLoaderIcon();
-        }
+        }*/
 
         /* Uncomment in development mode. */
-        /*vis.graph = provvisInit.run(data, analysesData, solrResponse);
+        vis.graph = provvisInit.run(data, analysesData, solrResponse);
         vis.graph.bclgNodes = provvisLayout.run(vis.graph, vis.cell);
         provvisMotifs.run(vis.graph, layerMethod);
-        provvisRender.run(vis);*/
+        provvisRender.run(vis);
 
         try {
           /* TODO: Refine to only redraw affected canvas components. */

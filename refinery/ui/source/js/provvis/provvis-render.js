@@ -4698,6 +4698,23 @@ var provvisRender = (function () {
         d3.select("#BBoxId-" + sibling.autoId).style("stroke-opacity", 0.3);
       });
       self.select(".labels").attr("clip-path", "");
+/*
+      d.children.values().forEach( function (n) {
+        /!* Get current node label pixel width. *!/
+        var attrText = (n.label === "") ? n.name : n.label;
+        if (n.nodeType === "stored") {
+          var selAttrName = "";
+          $("#prov-ctrl-visible-attribute-list > li").each(function () {
+            if ($(this).find("input[type='radio']").prop("checked")) {
+              selAttrName = $(this).find("label").text();
+            }
+          });
+          attrText = n.attributes.get(selAttrName);
+        }
+
+        /!* Set label text. *!/
+        d3.select("nodeId-" + n.autoId).select(".nodeAttrLabel").text(attrText);
+      });*/
     }).on("mouseout", function (d) {
       var self = d3.select(this);
       self.classed("mouseoverBBox", false);
@@ -4706,6 +4723,32 @@ var provvisRender = (function () {
       });
       self.select(".labels")
           .attr("clip-path", "url(#saBBClipId-" + d.autoId + ")");
+/*
+      d.children.values().forEach( function (n) {
+        /!* Get current node label pixel width. *!/
+        var maxLabelPixelWidth = (cell.width - 2 * scaleFactor * vis.radius) *
+            d3.transform(d3.select(".canvas").select("g").select("g")
+                .attr("transform")).scale[0];
+        var attrText = (n.label === "") ? n.name : n.label;
+        if (n.nodeType === "stored") {
+          var selAttrName = "";
+          $("#prov-ctrl-visible-attribute-list > li").each(function () {
+            if ($(this).find("input[type='radio']").prop("checked")) {
+              selAttrName = $(this).find("label").text();
+            }
+          });
+          attrText = n.attributes.get(selAttrName);
+        }
+
+        /!* Set label text. *!/
+        d3.select("nodeId-" + n.autoId).select(".nodeAttrLabel").text(attrText);
+        var trimRatio = parseInt(attrText.length * (maxLabelPixelWidth /
+            d3.select("nodeId-" + n.autoId).select(".nodeAttrLabel").node().getComputedTextLength()), 10);
+        if (trimRatio < attrText.length) {
+          d3.select("nodeId-" + n.autoId).select(".nodeAttrLabel").text(attrText.substr(0, trimRatio - 3) +
+              "...");
+        }
+      });*/
     });
 
     /* On mouseover analysis bounding box. */
