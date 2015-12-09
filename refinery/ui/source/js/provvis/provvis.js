@@ -335,7 +335,7 @@ var provvis = (function () {
 
           /* Get label text. */
           d3.selectAll(".node").select(".nodeAttrLabel").each(function (d) {
-            var attrText = d.name;
+            var attrText = (d.label === "") ? d.name : d.label;
             if (d.nodeType === "stored") {
               var selAttrName = "";
               $("#prov-ctrl-visible-attribute-list > li").each(function () {
@@ -380,7 +380,7 @@ var provvis = (function () {
             .classed("brect", true);
 
 
-        /* TODO: Refine error handling. */
+        /* Production mode exception handling. */
         /* Exception handling. */
         try {
 
@@ -425,6 +425,11 @@ var provvis = (function () {
           hideProvvisLoaderIcon();
         }
 
+        /* Uncomment in development mode. */
+        /*vis.graph = provvisInit.run(data, analysesData, solrResponse);
+        vis.graph.bclgNodes = provvisLayout.run(vis.graph, vis.cell);
+        provvisMotifs.run(vis.graph, layerMethod);
+        provvisRender.run(vis);*/
 
         try {
           /* TODO: Refine to only redraw affected canvas components. */

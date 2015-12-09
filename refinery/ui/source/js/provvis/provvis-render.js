@@ -2982,17 +2982,26 @@ var provvisRender = (function () {
                     (-1.5 * scaleFactor * vis.radius) + ")";
               })
               .text(function (d) {
-                return d.nodeType === "stored" ? d.attributes.get("name") :
-                    (
-                      /* Trim data transformation node names for
-                       testtoolshed repo.*/
-                        d.nodeType === "dt" &&
-                        d.name.substr(0, 13) === "testtoolshed." ?
-                            d.name.substr(
-                                d.name.indexOf(' '),
-                                d.name.length - d.name.indexOf(' ')
-                            ) : d.name
-                    );
+                var nodeAttrLabel = "";
+
+                if (d.nodeType === "stored") {
+                  nodeAttrLabel = d.attributes.get("name");
+                } else {
+                  /* Trim data transformation node names for
+                   testtoolshed repo.*/
+                  if (d.nodeType === "dt") {
+                    if (d.name.indexOf(": ") > 0) {
+                      var firstPart = d.name.substr(d.name.indexOf(': ')+2, d.name.length - d.name.indexOf(': ')-2);
+                      d.label = firstPart;
+                      var secondPart = d.name.substr(0, d.name.indexOf(': '));
+                      d.name = firstPart + " (" + secondPart + ")";
+                      nodeAttrLabel = d.label;
+                    }
+                  } else {
+                    nodeAttrLabel = d.name;
+                  }
+                }
+                return nodeAttrLabel;
               }).attr("class", "nodeAttrLabel");
         });
 
@@ -3964,7 +3973,7 @@ var provvisRender = (function () {
 
     /* Get label text. */
     d3.selectAll(".node").select(".nodeAttrLabel").each(function (d) {
-      var attrText = d.name;
+      var attrText = (d.label === "") ? d.name : d.label;
       if (d.nodeType === "stored") {
         var selAttrName = "";
         $("#prov-ctrl-visible-attribute-list > li").each(function () {
@@ -4568,7 +4577,7 @@ var provvisRender = (function () {
       self.select(".labels").attr("clip-path", "");
 
       /* Get current node label pixel width. */
-      var attrText = d.name;
+      var attrText = (d.label === "") ? d.name : d.label;
       if (d.nodeType === "stored") {
         var selAttrName = "";
         $("#prov-ctrl-visible-attribute-list > li").each(function () {
@@ -4612,7 +4621,7 @@ var provvisRender = (function () {
       var maxLabelPixelWidth = (cell.width - 2 * scaleFactor * vis.radius) *
           d3.transform(d3.select(".canvas").select("g").select("g")
               .attr("transform")).scale[0];
-      var attrText = d.name;
+      var attrText = (d.label === "") ? d.name : d.label;
       if (d.nodeType === "stored") {
         var selAttrName = "";
         $("#prov-ctrl-visible-attribute-list > li").each(function () {
