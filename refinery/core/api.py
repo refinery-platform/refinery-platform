@@ -8,6 +8,7 @@ import datetime
 import json
 import logging
 import re
+import os
 from sets import Set
 import uuid
 
@@ -128,6 +129,7 @@ class SharableResourceAPIInterface(object):
 
     # Turns on certain things depending on flags
     def transform_res_list(self, user, res_list, request, **kwargs):
+
         try:
             user_uuid = user.userprofile.uuid
         except:
@@ -1005,6 +1007,7 @@ class StatisticsResource(Resource):
     user = fields.IntegerField(attribute='user')
     group = fields.IntegerField(attribute='group')
     files = fields.IntegerField(attribute='files')
+    size_on_disk = fields.CharField(attribute='size_on_disk')
     dataset = fields.DictField(attribute='dataset')
     workflow = fields.DictField(attribute='workflow')
     project = fields.DictField(attribute='project')
@@ -1038,9 +1041,35 @@ class StatisticsResource(Resource):
         return self.get_object_list(bundle.request)
 
     def get_object_list(self, request):
+        # Format the FileStore size from bytes
+        def sizeof_fmt(num, suffix='B'):
+            for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
+                if abs(num) < 1024.0:
+                    return "%3.1f%s%s" % (num, unit, suffix)
+                num /= 1024.0
+            return "%.1f%s%s" % (num, 'Y', suffix)
+
+        # Find the total size in bytes of the FileStore
+        # This size represents the total size on disk of the file_store
+        # Items that are in the file store that have persisted from
+        def get_filestore_size():
+            size = 0
+            for item in FileStoreItem.objects.all():
+                if item.get_absolute_path():
+                    file_store_dir = item.get_absolute_path().split(
+                        "file_store")[0] + "file_store"
+                    for dirpath, dirnames, filenames in os.walk(
+                            file_store_dir):
+                        for f in filenames:
+                            fp = os.path.join(dirpath, f)
+                            size += os.path.getsize(fp)
+                    return sizeof_fmt(size)
+            return "Error Retrieving FileStore Size"
+
         user_count = User.objects.count()
         group_count = Group.objects.count()
         files_count = FileStoreItem.objects.count()
+        size_on_disk = get_filestore_size()
         dataset_summary = {}
         workflow_summary = {}
         project_summary = {}
@@ -1063,7 +1092,7 @@ class StatisticsResource(Resource):
                 project_summary = self.stat_summary(Project)
 
         return [ResourceStatistics(
-            user_count, group_count, files_count,
+            user_count, group_count, files_count, size_on_disk,
             dataset_summary, workflow_summary, project_summary)]
 
 
