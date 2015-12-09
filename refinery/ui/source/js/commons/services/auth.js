@@ -83,7 +83,8 @@ angular
        * @author  Fritz Lekschas
        * @date    2015-10-21
        *
-       * @return  {Boolean}  `true` if the current user is authenticaed.
+       * @return  {Object}  Promise which resolves to `true` if the current user
+       *   is authenticaed.
        */
       auth.isAuthenticated = function () {
         var now = new Date().getTime(),
