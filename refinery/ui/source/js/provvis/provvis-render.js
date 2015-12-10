@@ -5703,9 +5703,15 @@ var provvisRender = (function () {
               .classed("filteredNode", true)
               .classed("blendedNode", false);
           san.children.values().forEach(function (n) {
-            d3.select("#nodeId-" + n.autoId)
-                .classed("filteredNode", true)
-                .classed("blendedNode", false);
+            if (n.filtered) {
+              d3.select("#nodeId-" + n.autoId)
+                  .classed("filteredNode", true)
+                  .classed("blendedNode", false);
+            } else {
+              d3.select("#nodeId-" + n.autoId)
+                  .classed("filteredNode", false)
+                  .classed("blendedNode", false);
+            }
           });
 
           if (an.children.values().some(function (san) {
@@ -5796,9 +5802,19 @@ var provvisRender = (function () {
             l.filtered = false;
           });
         } else {
-          n.parent.children.values().forEach(function (cn) {
-            cn.filtered = true;
-          });
+
+          /* Filter pred path. */
+          var filterPredPath = function (curN) {
+            curN.filtered = true;
+            curN.predLinks.values().forEach(function (l) {
+              l.filtered = true;
+              if (l.source.parent === curN.parent) {
+                filterPredPath(l.source);
+              }
+            });
+          };
+          filterPredPath(n);
+
           n.parent.filtered = true;
           n.parent.links.values().forEach(function (l) {
             l.filtered = true;
