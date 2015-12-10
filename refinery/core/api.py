@@ -11,6 +11,8 @@ import re
 import os
 from sets import Set
 import uuid
+from celery.task import task
+from subprocess import check_output
 
 from django.conf import settings
 from django.conf.urls.defaults import url
@@ -1046,18 +1048,17 @@ class StatisticsResource(Resource):
         # This size represents the total size on disk of the file_store
         # Items that are in the file store that have persisted from deleted
         # items
+        @task()
         def get_filestore_size():
             size = 0
             for item in FileStoreItem.objects.all():
                 if item.get_absolute_path():
                     file_store_dir = item.get_absolute_path().split(
                         "file_store")[0] + "file_store"
-                    for dirpath, dirnames, filenames in os.walk(
-                            file_store_dir):
-                        for f in filenames:
-                            fp = os.path.join(dirpath, f)
-                            size += os.path.getsize(fp)
-                    return size
+                    size_in_bytes = check_output(["du", "-sb",
+                                                 file_store_dir]).split(
+                                                                  "\t")[0]
+                    return int(size_in_bytes)
             return "Error Retrieving FileStore Size"
 
         user_count = User.objects.count()

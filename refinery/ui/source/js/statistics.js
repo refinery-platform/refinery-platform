@@ -52,7 +52,7 @@ angular.module("refineryStatistics", [])
       if (!jQuery.isEmptyObject(dataset)) { plot(dataset, "dataSetChart"); }
 
       if (!jQuery.isEmptyObject(workflow)) { plot(workflow, "workflowChart"); }
-      
+
       if (!jQuery.isEmptyObject(project)) { plot(project, "projectChart"); }
     });
 
@@ -64,8 +64,8 @@ angular.module("refineryStatistics", [])
 })
 
 .filter('bytes', function() {
-	return function(bytes, precision) {
-		if (isNaN(parseFloat(bytes)) || !isFinite(bytes)) {return '-';}
+	return function(bytes) {
+		if (isNaN(parseFloat(bytes)) || !isFinite(bytes)) {return '';}
 		var units = ['bytes', 'kB', 'MB', 'GB', 'TB', 'PB'],
 			number = Math.floor(Math.log(bytes) / Math.log(1024));
 		return (bytes / Math.pow(1024, Math.floor(number))).toFixed(2) +  ' ' + units[number];
