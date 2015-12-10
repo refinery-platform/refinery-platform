@@ -3895,11 +3895,11 @@ var provvisRender = (function () {
     setTimeout(function () {
       if (newScale < 1) {
         d3.selectAll(".BBox").classed("hiddenNode", true);
-        d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
+        d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
 
       } else {
         d3.selectAll(".BBox").classed("hiddenNode", false);
-        d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
+        d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
       }
 
       if (newScale < 1.7) {
@@ -3918,13 +3918,6 @@ var provvisRender = (function () {
         d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", false);
       }
 
-      if (newScale < 2.5) {
-        d3.selectAll(".lDiffLabel, .aDiffLabel")
-            .classed("hiddenLabel", true);
-      } else {
-        d3.selectAll(".lDiffLabel, .aDiffLabel")
-            .classed("hiddenLabel", false);
-      }
     }, transitionTime);
 
 

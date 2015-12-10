@@ -265,10 +265,10 @@ var provvis = (function () {
           /* Semantic zoom. */
           if (d3.event.scale < 1) {
             d3.selectAll(".BBox").classed("hiddenNode", true);
-            d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
+            d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
           } else {
             d3.selectAll(".BBox").classed("hiddenNode", false);
-            d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
+            d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
           }
 
           if (d3.event.scale < 1.7) {
@@ -285,14 +285,6 @@ var provvis = (function () {
                 ".aBBoxLabel, .nodeDoiLabel")
                 .classed("hiddenLabel", false);
             d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", false);
-          }
-
-          if (d3.event.scale < 2.5) {
-            d3.selectAll(".lDiffLabel, .aDiffLabel")
-                .classed("hiddenLabel", true);
-          } else {
-            d3.selectAll(".lDiffLabel, .aDiffLabel")
-                .classed("hiddenLabel", false);
           }
 
           /* Fix for rectangle getting translated too - doesn't work after
