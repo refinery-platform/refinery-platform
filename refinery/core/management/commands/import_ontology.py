@@ -119,22 +119,21 @@ class Command(BaseCommand):
             sys.exit(1)
 
         # Import or re-import ontology
+        cmd = 'java -jar -DentityExpansionLimit={eel} '\
+            '{lib}/owl2neo4j.jar -o {ontology} -n {name} -a {abbr} ' \
+            '{eqp} -s {server} {verbosity}'.format(
+                eel=settings.JAVA_ENTITY_EXPANSION_LIMIT,
+                lib=settings.LIBS_DIR,
+                ontology=options['ontology_file'],
+                name=ontology_name,
+                abbr=ontology_abbr,
+                eqp=options['eqp'],
+                server=settings.NEO4J_BASE_URL,
+                verbosity=('-v' if verbosity == 2 else '')
+            )
+
+        logger.debug('Call Owl2Neo4J: %s', cmd)
         try:
-            cmd = 'java -jar -DentityExpansionLimit={eel} '\
-                '{lib}/owl2neo4j.jar -o {ontology} -n {name} -a {abbr} ' \
-                '{eqp} -s {server} {verbosity}'.format(
-                    eel=settings.JAVA_ENTITY_EXPANSION_LIMIT,
-                    lib=settings.LIBS_DIR,
-                    ontology=options['ontology_file'],
-                    name=ontology_name,
-                    abbr=ontology_abbr,
-                    eqp=options['eqp'],
-                    server=settings.NEO4J_BASE_URL,
-                    verbosity=('-v' if verbosity == 2 else '')
-                )
-
-            logger.debug('Call Owl2Neo4J: %s', cmd)
-
             # Note that `owl2neo4j.jar` handles all other possible errors.
             if int(options['verbosity']) > 0:
                 subprocess.check_call(cmd, shell=True)
