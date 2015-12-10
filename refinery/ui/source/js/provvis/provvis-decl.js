@@ -259,6 +259,7 @@ var provvisDecl = (function () {
     BaseNode.call(this, id, nodeType, parent, hidden);
 
     this.name = name;
+    this.label ="";
     this.fileType = fileType;
     this.study = study;
     this.assay = assay;

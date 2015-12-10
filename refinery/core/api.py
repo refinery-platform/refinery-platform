@@ -1064,13 +1064,6 @@ class StatisticsResource(Resource):
         return self.get_object_list(bundle.request)
 
     def get_object_list(self, request):
-        # Format the FileStore size from bytes
-        def sizeof_fmt(num, suffix='B'):
-            for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
-                if abs(num) < 1024.0:
-                    return "%3.1f%s%s" % (num, unit, suffix)
-                num /= 1024.0
-            return "%.1f%s%s" % (num, 'Y', suffix)
 
         # Find the total size in bytes of the FileStore
         # This size represents the total size on disk of the file_store
@@ -1087,7 +1080,7 @@ class StatisticsResource(Resource):
                         for f in filenames:
                             fp = os.path.join(dirpath, f)
                             size += os.path.getsize(fp)
-                    return sizeof_fmt(size)
+                    return size
             return "Error Retrieving FileStore Size"
 
         user_count = User.objects.count()

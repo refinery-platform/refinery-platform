@@ -1306,7 +1306,7 @@ class ResourceStatistics(object):
             user=0,
             group=0,
             files=0,
-            size_on_disk="",
+            size_on_disk=0,
             dataset=None,
             workflow=None,
             project=None):
