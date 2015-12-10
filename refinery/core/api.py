@@ -132,8 +132,8 @@ class SharableResourceAPIInterface(object):
 
         try:
             user_uuid = user.userprofile.uuid
-        except AttributeError as e:
-            logger.debug('User\'s UUID not available. Error: %s', e)
+        except AttributeError:
+            logger.error('User\'s UUID not available.')
             user_uuid = None
 
         # Try and retrieve a cached resource based on model name
@@ -142,7 +142,7 @@ class SharableResourceAPIInterface(object):
         try:
             res_list_unique = res_list.model.__name__
         except AttributeError as e:
-            logger.debug(
+            logger.error(
                 'Res_list doesn\'t seem to have a model name. Error: %s', e
             )
             res_list_unique = None
@@ -151,7 +151,7 @@ class SharableResourceAPIInterface(object):
             try:
                 cache_check = cache.get(user.id + res_list_unique)
             except Exception as e:
-                logger.debug(
+                logger.error(
                     'Something went wrong with retrieving the cached res_list.'
                     ' Error: %s', e
                 )
