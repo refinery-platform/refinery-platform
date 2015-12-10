@@ -164,7 +164,7 @@ NodeSetManager.prototype.updateState = function (state, callbackSuccess) {
 
   var data = state;
 
-//Need to figure out if user has dataset permission before making request
+  if( typeof state.uuid  !== "undefined" ) {
     $.ajax({
       url: self.createUpdateUrl(state),
       type: "PUT",
@@ -188,6 +188,15 @@ NodeSetManager.prototype.updateState = function (state, callbackSuccess) {
           data.node_count);
       }
     });
+  }else{
+     self.saveCurrentSelectionToSession(
+        data.name,
+        data.summary,
+        data.solr_query,
+        data.solr_query_components,
+        data.node_count
+     );
+  }
 };
 
 NodeSetManager.prototype.createGetListUrl = function () {
