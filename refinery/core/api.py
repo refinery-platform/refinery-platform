@@ -22,8 +22,7 @@ from django.core.mail import EmailMessage
 from django.template import loader, Context
 from django.core.cache import cache
 from django.core.signing import Signer
-from guardian.shortcuts import get_objects_for_user, get_objects_for_group, \
-    get_perms, get_groups_with_perms
+from guardian.shortcuts import get_objects_for_user, get_objects_for_group
 from guardian.models import GroupObjectPermission
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication, Authentication
@@ -46,6 +45,7 @@ from data_set_manager.api import StudyResource, AssayResource, \
 from data_set_manager.models import Node, Study, Attribute
 from file_store.models import FileStoreItem
 from fadapa import Fadapa
+from core.utils import get_data_sets_annotations
 
 logger = logging.getLogger(__name__)
 signer = Signer()
@@ -479,6 +479,14 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
     def prepend_urls(self):
         prepend_urls_list = SharableResourceAPIInterface.prepend_urls(self) + [
+            url(r'^(?P<resource_name>%s)/annotations%s$' % (
+                    self._meta.resource_name,
+                    trailing_slash()
+                ),
+                self.wrap_view('get_all_annotations'),
+                name='api_%s_get_all_annotations' % (
+                    self._meta.resource_name)
+                ),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/investigation%s$' % (
                     self._meta.resource_name,
                     self.uuid_regex,
@@ -533,6 +541,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
+
+    def get_all_annotations(self, request, **kwargs):
+        return self.create_response(request, get_data_sets_annotations())
 
     def get_investigation(self, request, **kwargs):
         try:
