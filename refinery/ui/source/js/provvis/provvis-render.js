@@ -2041,12 +2041,11 @@ var provvisRender = (function () {
 
     lLabels.append("text")
         .attr("transform", function () {
-          return "translate(" + (0.8 * scaleFactor * vis.radius) + "," +
-              (0 * scaleFactor * vis.radius) + ")";
+          return "translate(" + (0.8 * scaleFactor * vis.radius) + "," + "0.25)";
         })
         .text(function (d) {
           return d.children.size();
-        }).attr("class", "lnLabel")
+        }).attr("class", "lnLabel glyphNumeral")
         .style({
           "fill": function (l) {
             var latestDate = d3.min(l.children.values(), function (d) {
@@ -2525,11 +2524,11 @@ var provvisRender = (function () {
 
     aLabels.append("text")
         .attr("transform", function () {
-          return "translate(" + (1.0 * scaleFactor * vis.radius) + ",0)";
+          return "translate(" + (1.0 * scaleFactor * vis.radius) + ",0.25)";
         })
         .text(function (d) {
           return d.children.size();
-        }).attr("class", "anLabel")
+        }).attr("class", "anLabel glyphNumeral")
         .style({
           "fill": function (an) {
             return timeColorScale(parseISOTimeFormat(an.start)) < "#888888" ?
@@ -2830,13 +2829,13 @@ var provvisRender = (function () {
 
         saLabels.append("text")
             .attr("transform", function () {
-              return "translate(" + (1.0 * scaleFactor * vis.radius) + ",0)";
+              return "translate(" + (1.0 * scaleFactor * vis.radius) + ",0.25)";
             }).text(function (d) {
               return d.wfUuid !== "dataset" ?
                   d.children.values().filter(function (cn) {
                     return cn.nodeType === "dt";
                   }).length : d.children.size();
-            }).attr("class", "sanLabel")
+            }).attr("class", "sanLabel glyphNumeral")
             .style({
               "fill": function (san) {
                 return timeColorScale(parseISOTimeFormat(san.parent.start)) <
