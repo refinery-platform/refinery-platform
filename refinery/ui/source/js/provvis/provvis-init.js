@@ -67,7 +67,13 @@ var provvisInit = (function () {
         }),
         analysis = (n.analysis_uuid !== null) ? n.analysis_uuid : "dataset";
 
-    return new provvisDecl.Node(id, type, Object.create(null), true, n.name,
+    /* Fix for datasets which nodes might not contain a name attribute. */
+    var nodeName = "undefined";
+    if (typeof n.name !== "undefined") {
+      nodeName = n.name;
+    }
+
+    return new provvisDecl.Node(id, type, Object.create(null), true, nodeName,
         n.type, study, assay, parents, analysis, n.subanalysis, n.uuid,
         n.file_url);
   };
@@ -255,6 +261,7 @@ var provvisInit = (function () {
         var text = wfCpy.replace(/u'/g, "\"");
         text = text.replace(/\'/g, "\"");
         text = text.replace(/\sNone/g, " \"None\"");
+        text = text.replace(/\\n/g, "");
         text = text.replace(/\\/g, "");
         text = text.replace(/\"{\"/g, "{\"");
         text = text.replace(/}\"/g, "}");
@@ -263,6 +270,7 @@ var provvisInit = (function () {
         /* Eliminate __xxxx__ parameters. */
         text = text.replace(/\"__(\S*)__\":\s{1}\d*(,\s{1})?/g, "");
         text = text.replace(/,\s{1}null/g, "");
+        text = text.replace(/null,/g, "");  //TODO: temp fix
         text = text.replace(/,\s{1}}/g, "}");
 
         return text;
@@ -449,18 +457,24 @@ var provvisInit = (function () {
         san.wfUuid = an.wfUuid;
       });
 
+
+
       /* Set workflow name. */
       var wfObj = workflowData.get(an.wfUuid);
       an.wfName = (typeof wfObj === "undefined") ? "dataset" : wfObj.name;
 
       /*  TODO: Temporary workflow abbreviation. */
-      if (an.wfName.indexOf("5 steps") > -1) {
-        an.wfCode = "5STPS";
-      } else if (an.wfName.indexOf("analog") > -1) {
-        an.wfCode = "SPP";
-      } else {
+        if(an.wfName.substr(0, 15) === "Test workflow: ") {
+          an.wfName = an.wfName.substr(15, an.wfName.length - 15);
+        }
+        if (an.wfName.indexOf("(") > 0) {
+          an.wfName = an.wfName.substr(0, an.wfName.indexOf("("));
+        }
+        if (an.wfName.indexOf("-") > 0) {
+          an.wfName = an.wfName.substr(0, an.wfName.indexOf("-"));
+        }
         an.wfCode = an.wfName;
-      }
+      /*}*/
     });
 
     aNodes.forEach(function (an) {

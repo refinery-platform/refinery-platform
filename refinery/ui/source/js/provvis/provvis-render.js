@@ -2982,17 +2982,26 @@ var provvisRender = (function () {
                     (-1.5 * scaleFactor * vis.radius) + ")";
               })
               .text(function (d) {
-                return d.nodeType === "stored" ? d.attributes.get("name") :
-                    (
-                      /* Trim data transformation node names for
-                       testtoolshed repo.*/
-                        d.nodeType === "dt" &&
-                        d.name.substr(0, 13) === "testtoolshed." ?
-                            d.name.substr(
-                                d.name.indexOf(' '),
-                                d.name.length - d.name.indexOf(' ')
-                            ) : d.name
-                    );
+                var nodeAttrLabel = "";
+
+                if (d.nodeType === "stored") {
+                  nodeAttrLabel = d.attributes.get("name");
+                } else {
+                  /* Trim data transformation node names for
+                   testtoolshed repo.*/
+                  if (d.nodeType === "dt") {
+                    if (d.name.indexOf(": ") > 0) {
+                      var firstPart = d.name.substr(d.name.indexOf(': ')+2, d.name.length - d.name.indexOf(': ')-2);
+                      d.label = firstPart;
+                      var secondPart = d.name.substr(0, d.name.indexOf(': '));
+                      d.name = firstPart + " (" + secondPart + ")";
+                      nodeAttrLabel = d.label;
+                    }
+                  } else {
+                    nodeAttrLabel = d.name;
+                  }
+                }
+                return nodeAttrLabel;
               }).attr("class", "nodeAttrLabel");
         });
 
@@ -3886,18 +3895,20 @@ var provvisRender = (function () {
     setTimeout(function () {
       if (newScale < 1) {
         d3.selectAll(".BBox").classed("hiddenNode", true);
+        d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
+
       } else {
         d3.selectAll(".BBox").classed("hiddenNode", false);
+        d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
       }
 
-      if (newScale < 1.75) {
+      if (newScale < 1.7) {
         vis.canvas.selectAll(".anLabel, .sanLabel, .lnLabel, " +
             ".nodeAttrLabel, .stored-node-type-icon, .an-node-type-icon, " +
             ".san-node-type-icon, .l-node-type-icon, .lBBoxLabel, " +
             ".aBBoxLabel, .nodeDoiLabel")
             .classed("hiddenLabel", true);
         d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", true);
-        d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
       } else {
         vis.canvas.selectAll(".anLabel, .sanLabel, .lnLabel, " +
             ".nodeAttrLabel, .stored-node-type-icon, .an-node-type-icon, " +
@@ -3905,7 +3916,6 @@ var provvisRender = (function () {
             ".aBBoxLabel, .nodeDoiLabel")
             .classed("hiddenLabel", false);
         d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", false);
-        d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
       }
 
       if (newScale < 2.5) {
@@ -3964,7 +3974,7 @@ var provvisRender = (function () {
 
     /* Get label text. */
     d3.selectAll(".node").select(".nodeAttrLabel").each(function (d) {
-      var attrText = d.name;
+      var attrText = (d.label === "") ? d.name : d.label;
       if (d.nodeType === "stored") {
         var selAttrName = "";
         $("#prov-ctrl-visible-attribute-list > li").each(function () {
@@ -3976,11 +3986,13 @@ var provvisRender = (function () {
       }
 
       /* Set label text. */
-      d3.select(this).text(attrText);
-      var trimRatio = parseInt(attrText.length *
-          (maxLabelPixelWidth / this.getComputedTextLength()), 10);
-      if (trimRatio < attrText.length) {
-        d3.select(this).text(attrText.substr(0, trimRatio - 3) + "...");
+      if (typeof  attrText !== "undefined") {
+        d3.select(this).text(attrText);
+        var trimRatio = parseInt(attrText.length *
+            (maxLabelPixelWidth / this.getComputedTextLength()), 10);
+        if (trimRatio < attrText.length) {
+          d3.select(this).text(attrText.substr(0, trimRatio - 3) + "...");
+        }
       }
     });
   };
@@ -4046,15 +4058,28 @@ var provvisRender = (function () {
         wfColorData = d3.map();
 
     wfColorData.set("dataset", 0);
-    vis.graph.workflowData.values().forEach(function (wf, i) {
-      wfColorData.set(wf.name, (i + 1));
+    var wfIndex = 1;
+    vis.graph.workflowData.values().forEach(function (wf) {
+
+      var wfName = wf.name;
+      if(wf.name.substr(0, 15) === "Test workflow: ") {
+        wfName = wf.name.substr(15, wf.name.length - 15);
+      }
+      if (wfName.indexOf("(") > 0) {
+        wfName = wfName.substr(0, wfName.indexOf("("));
+      }
+      if (wfName.indexOf("-") > 0) {
+        wfName = wfName.substr(0, wfName.indexOf("-"));
+      }
+      if (!wfColorData.has(wfName)) {
+        wfColorData.set(wfName, (wfIndex));
+        wfIndex++;
+      }
+      wf.code = wfName;
     });
 
     wfColorData.entries().forEach(function (wf, i) {
-      var wfName = wf.key,
-          trimPos = wfName.indexOf("(imported");
-
-      wfName = wfName.substr(0, trimPos) || 'Dataset';
+      var wfName = wf.key;
 
       $('<tr/>', {
         "id": "provvis-cc-wf-tr-" + i
@@ -4293,7 +4318,7 @@ var provvisRender = (function () {
             }
             d3.select("#nodeId-" + d.autoId).select(".glyph")
                 .selectAll("rect, circle")
-                .style({"fill": wfc(wfColorData.get(cur.wfName))});
+                .style({"fill": wfc(wfColorData.get(cur.wfCode))});
           });
           domNodeset.selectAll(".anLabel, .sanLabel, .anwfLabel, " +
               ".sanwfLabel, .an-node-type-icon, .san-node-type-icon")
@@ -4568,7 +4593,7 @@ var provvisRender = (function () {
       self.select(".labels").attr("clip-path", "");
 
       /* Get current node label pixel width. */
-      var attrText = d.name;
+      var attrText = (d.label === "") ? d.name : d.label;
       if (d.nodeType === "stored") {
         var selAttrName = "";
         $("#prov-ctrl-visible-attribute-list > li").each(function () {
@@ -4612,7 +4637,7 @@ var provvisRender = (function () {
       var maxLabelPixelWidth = (cell.width - 2 * scaleFactor * vis.radius) *
           d3.transform(d3.select(".canvas").select("g").select("g")
               .attr("transform")).scale[0];
-      var attrText = d.name;
+      var attrText = (d.label === "") ? d.name : d.label;
       if (d.nodeType === "stored") {
         var selAttrName = "";
         $("#prov-ctrl-visible-attribute-list > li").each(function () {
@@ -4624,12 +4649,14 @@ var provvisRender = (function () {
       }
 
       /* Set label text. */
-      self.select(".nodeAttrLabel").text(attrText);
-      var trimRatio = parseInt(attrText.length * (maxLabelPixelWidth /
-          self.select(".nodeAttrLabel").node().getComputedTextLength()), 10);
-      if (trimRatio < attrText.length) {
-        self.select(".nodeAttrLabel").text(attrText.substr(0, trimRatio - 3) +
-            "...");
+      if (typeof  attrText !== "undefined") {
+        self.select(".nodeAttrLabel").text(attrText);
+        var trimRatio = parseInt(attrText.length * (maxLabelPixelWidth /
+            self.select(".nodeAttrLabel").node().getComputedTextLength()), 10);
+        if (trimRatio < attrText.length) {
+          self.select(".nodeAttrLabel").text(attrText.substr(0, trimRatio - 3) +
+              "...");
+        }
       }
 
       d3.selectAll(".nodeAttrLabel").transition()
@@ -4689,6 +4716,23 @@ var provvisRender = (function () {
         d3.select("#BBoxId-" + sibling.autoId).style("stroke-opacity", 0.3);
       });
       self.select(".labels").attr("clip-path", "");
+/*
+      d.children.values().forEach( function (n) {
+        /!* Get current node label pixel width. *!/
+        var attrText = (n.label === "") ? n.name : n.label;
+        if (n.nodeType === "stored") {
+          var selAttrName = "";
+          $("#prov-ctrl-visible-attribute-list > li").each(function () {
+            if ($(this).find("input[type='radio']").prop("checked")) {
+              selAttrName = $(this).find("label").text();
+            }
+          });
+          attrText = n.attributes.get(selAttrName);
+        }
+
+        /!* Set label text. *!/
+        d3.select("nodeId-" + n.autoId).select(".nodeAttrLabel").text(attrText);
+      });*/
     }).on("mouseout", function (d) {
       var self = d3.select(this);
       self.classed("mouseoverBBox", false);
@@ -4697,6 +4741,32 @@ var provvisRender = (function () {
       });
       self.select(".labels")
           .attr("clip-path", "url(#saBBClipId-" + d.autoId + ")");
+/*
+      d.children.values().forEach( function (n) {
+        /!* Get current node label pixel width. *!/
+        var maxLabelPixelWidth = (cell.width - 2 * scaleFactor * vis.radius) *
+            d3.transform(d3.select(".canvas").select("g").select("g")
+                .attr("transform")).scale[0];
+        var attrText = (n.label === "") ? n.name : n.label;
+        if (n.nodeType === "stored") {
+          var selAttrName = "";
+          $("#prov-ctrl-visible-attribute-list > li").each(function () {
+            if ($(this).find("input[type='radio']").prop("checked")) {
+              selAttrName = $(this).find("label").text();
+            }
+          });
+          attrText = n.attributes.get(selAttrName);
+        }
+
+        /!* Set label text. *!/
+        d3.select("nodeId-" + n.autoId).select(".nodeAttrLabel").text(attrText);
+        var trimRatio = parseInt(attrText.length * (maxLabelPixelWidth /
+            d3.select("nodeId-" + n.autoId).select(".nodeAttrLabel").node().getComputedTextLength()), 10);
+        if (trimRatio < attrText.length) {
+          d3.select("nodeId-" + n.autoId).select(".nodeAttrLabel").text(attrText.substr(0, trimRatio - 3) +
+              "...");
+        }
+      });*/
     });
 
     /* On mouseover analysis bounding box. */
@@ -5150,12 +5220,16 @@ var provvisRender = (function () {
         }
 
         /* Set label text. */
-        self.select(".nodeAttrLabel").text(attrText);
-        var trimRatio = parseInt(attrText.length * (maxLabelPixelWidth /
-            self.select(".nodeAttrLabel").node().getComputedTextLength()), 10);
-        if (trimRatio < attrText.length) {
-          self.select(".nodeAttrLabel").text(attrText.substr(0, trimRatio - 3) +
-              "...");
+        if (typeof  attrText !== "undefined") {
+          self.select(".nodeAttrLabel").text(attrText);
+          var trimRatio = parseInt(attrText.length * (maxLabelPixelWidth /
+              self.select(".nodeAttrLabel").node().getComputedTextLength()),
+              10);
+          if (trimRatio < attrText.length) {
+            self.select(".nodeAttrLabel").text(attrText.substr(0,
+                    trimRatio - 3) +
+                "...");
+          }
         }
       });
 
