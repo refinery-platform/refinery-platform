@@ -4067,6 +4067,9 @@ var provvisRender = (function () {
       if (wfName.indexOf("(") > 0) {
         wfName = wfName.substr(0, wfName.indexOf("("));
       }
+      if (wfName.indexOf("-") > 0) {
+        wfName = wfName.substr(0, wfName.indexOf("-"));
+      }
       if (!wfColorData.has(wfName)) {
         wfColorData.set(wfName, (i + 1));
       } else {

@@ -470,6 +470,9 @@ var provvisInit = (function () {
         if (an.wfName.indexOf("(") > 0) {
           an.wfName = an.wfName.substr(0, an.wfName.indexOf("("));
         }
+        if (an.wfName.indexOf("-") > 0) {
+          an.wfName = an.wfName.substr(0, an.wfName.indexOf("-"));
+        }
         an.wfCode = an.wfName;
       /*}*/
     });
