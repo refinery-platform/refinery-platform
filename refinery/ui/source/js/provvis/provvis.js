@@ -240,12 +240,11 @@ var provvis = (function () {
         /* Initialize canvas dimensions. */
         var width = $("div#provenance-visualization").width()-10,
             height = $("div#solr-table-view").height() - 25;
-        console.log(height);
 
         /* TODO: Temp fix for sidebar height. */
         $("#provenance-sidebar").css("height", height);
         /* TODO: Temp fix for sidebar max height. */
-        $('#provvis-sidebar-content').css("max-height", height - 31);
+        $('#provvis-sidebar-content').css("max-height", height - 13);
 
         var scaleFactor = 0.75;
 
