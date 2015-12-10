@@ -1,5 +1,6 @@
 function DataSetFactory (
-  $q, _, settings, DataSetDataApi, DataSetSearchApi, DataSetStore) {
+  $q, _, settings, DataSetDataApi, DataSetSearchApi, DataSetStore,
+  dataSetAnnotationService) {
 
   /*
    * ------------------------------- Private -----------------------------------
@@ -48,6 +49,16 @@ function DataSetFactory (
    * @type  {Array}
    */
   var _orderCache = [];
+
+  /**
+   * Stores all dataset IDs corresponding to a search.
+   *
+   * @author  Fritz Lekschas
+   * @date    2015-12-10
+   *
+   * @type  {Array}
+   */
+  var _searchResultDsIds = [];
 
   /**
    * Stores IDs of the selected data objects.
@@ -175,6 +186,28 @@ function DataSetFactory (
       _browsePath[_browsePath.length - 1].query = step.query;
     } else {
       _browsePath.push(step);
+    }
+  }
+
+  /**
+   * Add annotations to the data store.
+   *
+   * @method  _addAnnotations
+   * @author  Fritz Lekschas
+   * @date    2015-12-09
+   *
+   * @param   {Object}  data  Object holding the annotations per dataset.
+   */
+  function _addAnnotations (data) {
+    var keys = Object.keys(data);
+    for (var i = keys.length; i--;) {
+      _dataStore.add(
+        keys[i],
+        {
+          annotations: data[keys[i]]
+        },
+        true
+      );
     }
   }
 
@@ -337,7 +370,7 @@ function DataSetFactory (
     return $q.when(data);
   }
 
-  /**
+  /*
    * Get data from the source and trigger caching.
    *
    * @description
@@ -366,9 +399,14 @@ function DataSetFactory (
    */
   function _getDataFromSource (limit, offset) {
     return _source(limit, offset).then(function (response) {
-      for (var i = 0, len = response.data.length; i < len; i++) {
+      for (var i = response.data.length; i--;) {
         _dataStore.add(response.data[i].id, response.data[i], true);
         _cacheOrder(offset + i, _dataStore.get(response.data[i].id));
+      }
+
+      // The first time a search is issued all dataset IDs will be returned
+      if (response.allIds && response.allIds.length) {
+        _searchResultDsIds = response.allIds;
       }
 
       if (_totalSource === Infinity) {
@@ -581,7 +619,7 @@ function DataSetFactory (
    * @author  Fritz Lekschas
    * @date    2015-10-08
    *
-   * @return  {Object}  Return the class itself for chaining.
+   * @return  {Object}  Instance itself to enable chaining.
    */
   DataSet.prototype.all = function () {
     if (_browsePath.length &&
@@ -592,7 +630,7 @@ function DataSetFactory (
     _clearOrderCache();
     _source = new DataSetDataApi();
 
-    return DataSet;
+    return this;
   };
 
   /**
@@ -602,7 +640,7 @@ function DataSetFactory (
    * @author  Fritz Lekschas
    * @date    2015-10-08
    *
-   * @return  {Object}  Return the class itself for chaining.
+   * @return  {Object}  Instance itself to enable chaining.
    */
   DataSet.prototype.deselect = function () {
     if (_browsePath.length &&
@@ -613,7 +651,7 @@ function DataSetFactory (
     _selection = [];
     _clearSelectionCache(true);
 
-    return DataSet;
+    return this;
   };
 
   /**
@@ -625,14 +663,14 @@ function DataSetFactory (
    *
    * @param   {Object}  filter  Key value pairs of filters.
    *   E.g. `{'is_owner': true}`
-   * @return  {Object}          Return the class itself for chaining.
+   * @return  {Object}          Instance itself to enable chaining.
    */
   DataSet.prototype.filter = function (filter) {
     // _browsePath = [];
     _clearOrderCache();
     _source = new DataSetDataApi(filter);
 
-    return DataSet;
+    return this;
   };
 
   /**
@@ -693,7 +731,7 @@ function DataSetFactory (
    *
    * @param   {Object}   dataSetIds  Object of with dataset IDs as attributes.
    * @param   {Boolean}  reset       If `true` then highlight will be `false`.
-   * @return  {Object}               Return the class itself for chaining.
+   * @return  {Object}               Instance itself to enable chaining.
    */
   DataSet.prototype.highlight = function (dataSetIds, reset) {
     var dataSet,
@@ -709,7 +747,22 @@ function DataSetFactory (
       });
     }
 
-    return DataSet;
+    return this;
+  };
+
+  /**
+   * Load all dataset annotations.
+   *
+   * @method  loadAnnotations
+   * @author  Fritz Lekschas
+   * @date    2015-12-09
+   *
+   * @return  {Object}  Promise resolving to an object holding all annotations.
+   */
+  DataSet.prototype.loadAnnotations = function () {
+    var annotations = dataSetAnnotationService.query().$promise;
+    annotations.then(_addAnnotations);
+    return annotations;
   };
 
   /**
@@ -720,7 +773,7 @@ function DataSetFactory (
    * @date    2015-10-08
    *
    * @param   {String}  order  String that determines the order.
-   * @return  {Object}         Return the class itself for chaining.
+   * @return  {Object}         Instance itself to enable chaining.
    */
   DataSet.prototype.order = function (order) {
     _browsePath = [];
@@ -729,7 +782,7 @@ function DataSetFactory (
       'order_by': order
     });
 
-    return DataSet;
+    return this;
   };
 
   /**
@@ -740,10 +793,10 @@ function DataSetFactory (
    * @date    2015-10-08
    *
    * @param   {String}  query  Keywords for searching.
-   * @return  {Object}         Return the class itself for chaining.
+   * @return  {Object}         Instance itself to enable chaining.
    */
   DataSet.prototype.search = function (query) {
-    _source = new DataSetSearchApi(query);
+    _source = new DataSetSearchApi(query, true);
 
     if (!!_getLastBrowseStep('select')) {
       _clearOrderCache(true);
@@ -756,7 +809,7 @@ function DataSetFactory (
       query: query
     });
 
-    return DataSet;
+    return this;
   };
 
   /**
@@ -769,7 +822,7 @@ function DataSetFactory (
    * @param   {Object|Array}  set    Selected data objects.
    * @param   {String}        query  Unique identifier of the selection. E.g.
    *   an ontology term.
-   * @return  {Object}               Return the class itself for chaining.
+   * @return  {Object}               Instance itself to enable chaining.
    */
   DataSet.prototype.select = function (set, query) {
     _setSelection(set);
@@ -778,7 +831,7 @@ function DataSetFactory (
       query: query || set
     });
 
-    return DataSet;
+    return this;
   };
 
   return new DataSet();
@@ -793,5 +846,6 @@ angular
     'DataSetDataApi',
     'DataSetSearchApi',
     'DataSetStore',
+    'dataSetAnnotationService',
     DataSetFactory
   ]);
