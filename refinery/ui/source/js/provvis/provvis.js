@@ -238,8 +238,9 @@ var provvis = (function () {
         var cell = {width: r * 5, height: r * 3};
 
         /* Initialize canvas dimensions. */
-        var width = $("div#provenance-visualization").width(),
-            height = $("div#provenance-visualization").height() - 35;
+        var width = $("div#provenance-visualization").width()-10,
+            height = $("div#solr-table-view").height() - 25;
+        console.log(height);
 
         /* TODO: Temp fix for sidebar height. */
         $("#provenance-sidebar").css("height", height);
@@ -265,10 +266,10 @@ var provvis = (function () {
           /* Semantic zoom. */
           if (d3.event.scale < 1) {
             d3.selectAll(".BBox").classed("hiddenNode", true);
-            d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
+            d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
           } else {
             d3.selectAll(".BBox").classed("hiddenNode", false);
-            d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
+            d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
           }
 
           if (d3.event.scale < 1.7) {
@@ -285,14 +286,6 @@ var provvis = (function () {
                 ".aBBoxLabel, .nodeDoiLabel")
                 .classed("hiddenLabel", false);
             d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", false);
-          }
-
-          if (d3.event.scale < 2.5) {
-            d3.selectAll(".lDiffLabel, .aDiffLabel")
-                .classed("hiddenLabel", true);
-          } else {
-            d3.selectAll(".lDiffLabel, .aDiffLabel")
-                .classed("hiddenLabel", false);
           }
 
           /* Fix for rectangle getting translated too - doesn't work after
