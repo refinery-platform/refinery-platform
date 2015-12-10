@@ -261,6 +261,7 @@ var provvisInit = (function () {
         var text = wfCpy.replace(/u'/g, "\"");
         text = text.replace(/\'/g, "\"");
         text = text.replace(/\sNone/g, " \"None\"");
+        text = text.replace(/\\n/g, "");
         text = text.replace(/\\/g, "");
         text = text.replace(/\"{\"/g, "{\"");
         text = text.replace(/}\"/g, "}");

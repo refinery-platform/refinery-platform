@@ -265,12 +265,13 @@ var provvis = (function () {
           /* Semantic zoom. */
           if (d3.event.scale < 1) {
             d3.selectAll(".BBox").classed("hiddenNode", true);
+            d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
           } else {
             d3.selectAll(".BBox").classed("hiddenNode", false);
             d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
           }
 
-          if (d3.event.scale < 1.75) {
+          if (d3.event.scale < 1.7) {
             vis.canvas.selectAll(".anLabel, .sanLabel, .lnLabel, " +
                 ".nodeAttrLabel, .stored-node-type-icon, .an-node-type-icon, " +
                 ".san-node-type-icon, .l-node-type-icon, .lBBoxLabel, " +
@@ -284,7 +285,6 @@ var provvis = (function () {
                 ".aBBoxLabel, .nodeDoiLabel")
                 .classed("hiddenLabel", false);
             d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", false);
-            d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
           }
 
           if (d3.event.scale < 2.5) {

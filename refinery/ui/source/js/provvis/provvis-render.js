@@ -3895,18 +3895,20 @@ var provvisRender = (function () {
     setTimeout(function () {
       if (newScale < 1) {
         d3.selectAll(".BBox").classed("hiddenNode", true);
+        d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
+
       } else {
         d3.selectAll(".BBox").classed("hiddenNode", false);
+        d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
       }
 
-      if (newScale < 1.75) {
+      if (newScale < 1.7) {
         vis.canvas.selectAll(".anLabel, .sanLabel, .lnLabel, " +
             ".nodeAttrLabel, .stored-node-type-icon, .an-node-type-icon, " +
             ".san-node-type-icon, .l-node-type-icon, .lBBoxLabel, " +
             ".aBBoxLabel, .nodeDoiLabel")
             .classed("hiddenLabel", true);
         d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", true);
-        d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
       } else {
         vis.canvas.selectAll(".anLabel, .sanLabel, .lnLabel, " +
             ".nodeAttrLabel, .stored-node-type-icon, .an-node-type-icon, " +
@@ -3914,7 +3916,6 @@ var provvisRender = (function () {
             ".aBBoxLabel, .nodeDoiLabel")
             .classed("hiddenLabel", false);
         d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", false);
-        d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
       }
 
       if (newScale < 2.5) {
