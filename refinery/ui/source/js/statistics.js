@@ -40,7 +40,6 @@ angular.module("refineryStatistics", [])
       $scope.users = response.objects[0].user;
       $scope.groups = response.objects[0].group;
       $scope.files = response.objects[0].files;
-      $scope.size_on_disk = response.objects[0].size_on_disk;
       $scope.data_sets = response.objects[0].dataset.total;
       $scope.workflows = response.objects[0].workflow.total;
       $scope.projects = response.objects[0].project.total;
@@ -61,15 +60,6 @@ angular.module("refineryStatistics", [])
         plot(chartMap[k].data, k);
       }
     };
-})
-
-.filter('bytes', function() {
-	return function(bytes) {
-		if (isNaN(parseFloat(bytes)) || !isFinite(bytes)) {return '';}
-		var units = ['bytes', 'kB', 'MB', 'GB', 'TB', 'PB'],
-			number = Math.floor(Math.log(bytes) / Math.log(1024));
-		return (bytes / Math.pow(1024, Math.floor(number))).toFixed(2) +  ' ' + units[number];
-	};
 })
 
 .directive("statisticsData", function () {
