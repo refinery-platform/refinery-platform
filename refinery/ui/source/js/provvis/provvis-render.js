@@ -4058,7 +4058,8 @@ var provvisRender = (function () {
         wfColorData = d3.map();
 
     wfColorData.set("dataset", 0);
-    vis.graph.workflowData.values().forEach(function (wf, i) {
+    var wfIndex = 1;
+    vis.graph.workflowData.values().forEach(function (wf) {
 
       var wfName = wf.name;
       if(wf.name.substr(0, 15) === "Test workflow: ") {
@@ -4071,9 +4072,8 @@ var provvisRender = (function () {
         wfName = wfName.substr(0, wfName.indexOf("-"));
       }
       if (!wfColorData.has(wfName)) {
-        wfColorData.set(wfName, (i + 1));
-      } else {
-        i--;
+        wfColorData.set(wfName, (wfIndex));
+        wfIndex++;
       }
       wf.code = wfName;
     });
