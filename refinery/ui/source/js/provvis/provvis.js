@@ -238,8 +238,9 @@ var provvis = (function () {
         var cell = {width: r * 5, height: r * 3};
 
         /* Initialize canvas dimensions. */
-        var width = $("div#provenance-visualization").width(),
-            height = $("div#provenance-visualization").height() - 35;
+        var width = $("div#provenance-visualization").width()-10,
+            height = $("div#solr-table-view").height() - 25;
+        console.log(height);
 
         /* TODO: Temp fix for sidebar height. */
         $("#provenance-sidebar").css("height", height);
