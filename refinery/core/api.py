@@ -11,6 +11,8 @@ import re
 import os
 from sets import Set
 import uuid
+from celery.task import task
+from subprocess import check_output
 
 from django.conf import settings
 from django.conf.urls.defaults import url
@@ -1066,28 +1068,9 @@ class StatisticsResource(Resource):
 
     def get_object_list(self, request):
 
-        # Find the total size in bytes of the FileStore
-        # This size represents the total size on disk of the file_store
-        # Items that are in the file store that have persisted from deleted
-        # items
-        def get_filestore_size():
-            size = 0
-            for item in FileStoreItem.objects.all():
-                if item.get_absolute_path():
-                    file_store_dir = item.get_absolute_path().split(
-                        "file_store")[0] + "file_store"
-                    for dirpath, dirnames, filenames in os.walk(
-                            file_store_dir):
-                        for f in filenames:
-                            fp = os.path.join(dirpath, f)
-                            size += os.path.getsize(fp)
-                    return size
-            return "Error Retrieving FileStore Size"
-
         user_count = User.objects.count()
         group_count = Group.objects.count()
         files_count = FileStoreItem.objects.count()
-        size_on_disk = get_filestore_size()
         dataset_summary = {}
         workflow_summary = {}
         project_summary = {}
@@ -1110,7 +1093,7 @@ class StatisticsResource(Resource):
                 project_summary = self.stat_summary(Project)
 
         return [ResourceStatistics(
-            user_count, group_count, files_count, size_on_disk,
+            user_count, group_count, files_count,
             dataset_summary, workflow_summary, project_summary)]
 
 
