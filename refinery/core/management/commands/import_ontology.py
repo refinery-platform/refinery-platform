@@ -133,6 +133,8 @@ class Command(BaseCommand):
                     verbosity=('-v' if verbosity == 2 else '')
                 )
 
+            logger.debug('Call Owl2Neo4J: %s', cmd)
+
             # Note that `owl2neo4j.jar` handles all other possible errors.
             if int(options['verbosity']) > 0:
                 subprocess.check_call(cmd, shell=True)
