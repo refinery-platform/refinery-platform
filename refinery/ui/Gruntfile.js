@@ -203,14 +203,6 @@ module.exports = function(grunt) {
           dest: '<%= cfg.basePath.ui.build %>/js/'
         }]
       },
-      uiBuildStyles: {
-        files: [{
-          expand: true,
-          cwd: '<%= cfg.basePath.ui.src %>/styles/',
-          src: ['**/*.css'],
-          dest: '<%= cfg.basePath.ui.build %>/styles/'
-        }]
-      },
       uiBuildTemplates: {
         files: [{
           expand: true,
@@ -413,10 +405,10 @@ module.exports = function(grunt) {
        */
       uiStyles: {
         files: [
-          '<%= cfg.basePath.ui.src %>/styles/**/*.css'
+          '<%= cfg.basePath.ui.src %>/styles/**/*.less'
         ],
         tasks: [
-          'copy:uiBuildStyles'
+          'less:build'
         ]
       },
 
@@ -458,18 +450,6 @@ module.exports = function(grunt) {
         ],
         tasks: [
           'copy:staticBuild'
-        ]
-      },
-
-      /*
-       * When static LESS files change we translate them.
-       */
-      staticStyles: {
-        files: [
-          '<%= cfg.basePath.static.src %>/styles/less/*.less'
-        ],
-        tasks: [
-          'less:build'
         ]
       },
 
@@ -793,7 +773,6 @@ module.exports = function(grunt) {
     'less:build',
     'copy:uiBuildImages',
     'copy:uiBuildScripts',
-    'copy:uiBuildStyles',
     'copy:uiBuildTemplates',
     'copy:uiBuildVendor',
     'copy:staticBuild',

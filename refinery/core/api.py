@@ -11,6 +11,8 @@ import re
 import os
 from sets import Set
 import uuid
+from celery.task import task
+from subprocess import check_output
 
 from django.conf import settings
 from django.conf.urls.defaults import url
@@ -22,8 +24,7 @@ from django.core.mail import EmailMessage
 from django.template import loader, Context
 from django.core.cache import cache
 from django.core.signing import Signer
-from guardian.shortcuts import get_objects_for_user, get_objects_for_group, \
-    get_perms, get_groups_with_perms
+from guardian.shortcuts import get_objects_for_user, get_objects_for_group
 from guardian.models import GroupObjectPermission
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication, Authentication
@@ -46,6 +47,7 @@ from data_set_manager.api import StudyResource, AssayResource, \
 from data_set_manager.models import Node, Study, Attribute
 from file_store.models import FileStoreItem
 from fadapa import Fadapa
+from core.utils import get_data_sets_annotations
 
 logger = logging.getLogger(__name__)
 signer = Signer()
@@ -132,7 +134,8 @@ class SharableResourceAPIInterface(object):
 
         try:
             user_uuid = user.userprofile.uuid
-        except:
+        except AttributeError:
+            logger.error('User\'s UUID not available.')
             user_uuid = None
 
         # Try and retrieve a cached resource based on model name
@@ -140,10 +143,22 @@ class SharableResourceAPIInterface(object):
         # res_list_unique
         try:
             res_list_unique = res_list.model.__name__
-            cache_check = cache.get(user.id + res_list_unique)
-        except:
+        except AttributeError as e:
+            logger.error(
+                'Res_list doesn\'t seem to have a model name. Error: %s', e
+            )
             res_list_unique = None
-            cache_check = None
+
+        if res_list_unique is not None:
+            try:
+                cache_check = cache.get('{}-{}'.format(
+                    user.id, res_list_unique))
+            except Exception as e:
+                logger.error(
+                    'Something went wrong with retrieving the cached res_list.'
+                    ' Error: %s', e
+                )
+                cache_check = None
 
         if cache_check is None:
             owned_res_set = Set(
@@ -191,7 +206,7 @@ class SharableResourceAPIInterface(object):
             res_list = self.query_filtering(res_list, request.GET)
 
             if user_uuid and res_list_unique:
-                cache.add(user.id + res_list_unique, res_list)
+                cache.add('{}-{}'.format(user.id, res_list_unique), res_list)
             return res_list
         else:
             return cache_check
@@ -467,6 +482,14 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
     def prepend_urls(self):
         prepend_urls_list = SharableResourceAPIInterface.prepend_urls(self) + [
+            url(r'^(?P<resource_name>%s)/annotations%s$' % (
+                    self._meta.resource_name,
+                    trailing_slash()
+                ),
+                self.wrap_view('get_all_annotations'),
+                name='api_%s_get_all_annotations' % (
+                    self._meta.resource_name)
+                ),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/investigation%s$' % (
                     self._meta.resource_name,
                     self.uuid_regex,
@@ -521,6 +544,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
+
+    def get_all_annotations(self, request, **kwargs):
+        return self.create_response(request, get_data_sets_annotations())
 
     def get_investigation(self, request, **kwargs):
         try:
@@ -1042,28 +1068,9 @@ class StatisticsResource(Resource):
 
     def get_object_list(self, request):
 
-        # Find the total size in bytes of the FileStore
-        # This size represents the total size on disk of the file_store
-        # Items that are in the file store that have persisted from deleted
-        # items
-        def get_filestore_size():
-            size = 0
-            for item in FileStoreItem.objects.all():
-                if item.get_absolute_path():
-                    file_store_dir = item.get_absolute_path().split(
-                        "file_store")[0] + "file_store"
-                    for dirpath, dirnames, filenames in os.walk(
-                            file_store_dir):
-                        for f in filenames:
-                            fp = os.path.join(dirpath, f)
-                            size += os.path.getsize(fp)
-                    return size
-            return "Error Retrieving FileStore Size"
-
         user_count = User.objects.count()
         group_count = Group.objects.count()
         files_count = FileStoreItem.objects.count()
-        size_on_disk = get_filestore_size()
         dataset_summary = {}
         workflow_summary = {}
         project_summary = {}
@@ -1086,7 +1093,7 @@ class StatisticsResource(Resource):
                 project_summary = self.stat_summary(Project)
 
         return [ResourceStatistics(
-            user_count, group_count, files_count, size_on_disk,
+            user_count, group_count, files_count,
             dataset_summary, workflow_summary, project_summary)]
 
 
