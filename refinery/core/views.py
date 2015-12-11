@@ -25,11 +25,12 @@ from core.forms import (
 )
 from core.models import (
     ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
-    Analysis, get_shared_groups, Invitation, Ontology
+    Analysis, Invitation, Ontology
 )
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
+from core.utils import get_data_sets_annotations
 
 
 logger = logging.getLogger(__name__)
@@ -542,21 +543,25 @@ def solr_core_search(request):
         params['fq'] = params['fq'] + ' AND access:({})'.format(
             ' OR '.join(access))
 
-    all_uuids = False
-    if 'allUuids' in params:
-        all_uuids = True
-        # Remove the special parameter to avoid conflicts with Solr
-        del params['allUuids']
+    try:
+        allIds = params['allIds'] in ['1', 'true', 'True']
+    except KeyError:
+        allIds = False
+
+    try:
+        annotations = params['annotations'] in ['1', 'true', 'True']
+    except KeyError:
+        annotations = False
 
     response = requests.get(url, params=params, headers=headers)
 
-    if all_uuids:
+    if allIds or annotations:
         # Query for all uuids given the same query. Solr shold be very fast
         # because we just queried for almost the same information, only limited
         # in size.
-        uuid_params = {
+        all_ids_params = {
             'defType': params['defType'],
-            'fl': 'uuid',
+            'fl': 'dbid',
             'fq': params['fq'],
             'q': params['q'],
             'qf': params['qf'],
@@ -564,16 +569,28 @@ def solr_core_search(request):
             'start': 0,
             'wt': 'json'
         }
-        response_uuids = requests.get(url, params=uuid_params, headers=headers)
+        response_ids = requests.get(
+            url,
+            params=all_ids_params,
+            headers=headers
+        )
 
-        if response_uuids.status_code == 200:
-            response_uuids = response_uuids.json()
-            uuids = []
-            for uuid in response_uuids['response']['docs']:
-                uuids.append(uuid['uuid'])
+        if response_ids.status_code == 200:
+            response_ids = response_ids.json()
+            ids = []
+
+            for ds in response_ids['response']['docs']:
+                ids.append(ds['dbid'])
+
+            annotation_data = get_data_sets_annotations(ids)
 
             response = response.json()
-            response['response']['uuid'] = uuids
+
+            if allIds:
+                response['response']['allIds'] = ids
+
+            if annotations:
+                response['response']['annotations'] = annotation_data
 
             # response = json.dumps(response)
             response = simplejson.dumps(response)

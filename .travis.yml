@@ -18,7 +18,8 @@ before_script:
   - cd ui && npm install && bower install && cd ../
 script:
   - pep8 --exclude=migrations,ui ..
-  - python manage.py test
+  - python manage.py test --with-coverage
+  - coverage
   - cd ui && grunt
 notifications:
   slack:

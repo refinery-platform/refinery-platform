@@ -241,10 +241,30 @@ var provvisInit = (function () {
    * @returns {provvisDecl.Analysis} New Analysis object.
    */
   var createAnalysisNode = function (a, i) {
+    var initTime = {
+      start : a.time_start,
+      end : a.time_end,
+      created : a.creation_date
+    };
+
+    if (initTime.start.length === 19) {
+      initTime.start = initTime.start.concat(".000");
+    } else if (initTime.start.length === 26) {
+      initTime.start = initTime.start.substr(0, initTime.start.length - 3);
+    }
+    if (initTime.end.length === 19) {
+      initTime.end = initTime.end.concat(".000");
+    } else if (initTime.end.length === 26) {
+      initTime.end = initTime.end.substr(0, initTime.end.length - 3);
+    }
+    if (initTime.created.length === 19) {
+      initTime.created = initTime.created = initTime.created.concat(".000");
+    } else if (initTime.created.length === 26) {
+      initTime.created = initTime.created.substr(0, initTime.created.length - 3);
+    }
+
     return new provvisDecl.Analysis(i, Object.create(null), true, a.uuid,
-        a.workflow__uuid, i, a.time_start.substr(0, a.time_start.length - 3),
-        a.time_end.substr(0, a.time_end.length - 3),
-        a.creation_date.substr(0, a.creation_date.length - 3));
+        a.workflow__uuid, i, initTime.start, initTime.end, initTime.created);
   };
 
   /**
