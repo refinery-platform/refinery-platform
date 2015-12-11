@@ -257,7 +257,14 @@
         else {
           $('.jquery-full-height').map( function() {
             var $this = $(this),
-                targetHeight = (windowHeight - $this.offset().top - 40),
+                parent = $this.parent().closest('.jquery-full-height'),
+                targetHeight = (
+                  (
+                    parent.length ?
+                      parent.first().offset().top + parent.first().height() :
+                      windowHeight
+                  ) - $this.offset().top - 10
+                ),
                 minHeight = parseInt($this.css("min-height")),
                 newHeight = Math.max(targetHeight, minHeight);
 

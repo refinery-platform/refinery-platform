@@ -24,8 +24,7 @@ from django.core.mail import EmailMessage
 from django.template import loader, Context
 from django.core.cache import cache
 from django.core.signing import Signer
-from guardian.shortcuts import get_objects_for_user, get_objects_for_group, \
-    get_perms, get_groups_with_perms
+from guardian.shortcuts import get_objects_for_user, get_objects_for_group
 from guardian.models import GroupObjectPermission
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication, Authentication
@@ -48,6 +47,7 @@ from data_set_manager.api import StudyResource, AssayResource, \
 from data_set_manager.models import Node, Study, Attribute
 from file_store.models import FileStoreItem
 from fadapa import Fadapa
+from core.utils import get_data_sets_annotations
 
 logger = logging.getLogger(__name__)
 signer = Signer()
@@ -134,7 +134,8 @@ class SharableResourceAPIInterface(object):
 
         try:
             user_uuid = user.userprofile.uuid
-        except:
+        except AttributeError:
+            logger.error('User\'s UUID not available.')
             user_uuid = None
 
         # Try and retrieve a cached resource based on model name
@@ -142,10 +143,22 @@ class SharableResourceAPIInterface(object):
         # res_list_unique
         try:
             res_list_unique = res_list.model.__name__
-            cache_check = cache.get(user.id + res_list_unique)
-        except:
+        except AttributeError as e:
+            logger.error(
+                'Res_list doesn\'t seem to have a model name. Error: %s', e
+            )
             res_list_unique = None
-            cache_check = None
+
+        if res_list_unique is not None:
+            try:
+                cache_check = cache.get('{}-{}'.format(
+                    user.id, res_list_unique))
+            except Exception as e:
+                logger.error(
+                    'Something went wrong with retrieving the cached res_list.'
+                    ' Error: %s', e
+                )
+                cache_check = None
 
         if cache_check is None:
             owned_res_set = Set(
@@ -193,7 +206,7 @@ class SharableResourceAPIInterface(object):
             res_list = self.query_filtering(res_list, request.GET)
 
             if user_uuid and res_list_unique:
-                cache.add(user.id + res_list_unique, res_list)
+                cache.add('{}-{}'.format(user.id, res_list_unique), res_list)
             return res_list
         else:
             return cache_check
@@ -469,6 +482,14 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
     def prepend_urls(self):
         prepend_urls_list = SharableResourceAPIInterface.prepend_urls(self) + [
+            url(r'^(?P<resource_name>%s)/annotations%s$' % (
+                    self._meta.resource_name,
+                    trailing_slash()
+                ),
+                self.wrap_view('get_all_annotations'),
+                name='api_%s_get_all_annotations' % (
+                    self._meta.resource_name)
+                ),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/investigation%s$' % (
                     self._meta.resource_name,
                     self.uuid_regex,
@@ -523,6 +544,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
+
+    def get_all_annotations(self, request, **kwargs):
+        return self.create_response(request, get_data_sets_annotations())
 
     def get_investigation(self, request, **kwargs):
         try:

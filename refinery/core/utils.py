@@ -316,7 +316,7 @@ def normalize_annotation_ont_ids(annotations):
 
 
 def get_data_set_annotations(dataset_uuid):
-    """Extract ontology annotaions from the database for all or a specific
+    """Extract ontology annotations from the database for all or a specific
     datasets.
     """
 
@@ -410,7 +410,104 @@ def get_data_set_annotations(dataset_uuid):
     ]
 
 
-def create_update_ontology(name, acronym, uri, version):
+def get_data_sets_annotations(dataset_ids=[]):
+    """Extract ontology annotations from the database for all or a specific
+    datasets.
+    """
+
+    cursor = connection.cursor()
+
+    sql = """SELECT
+        data_set.id AS id,
+        annotated_study.value_accession AS term_uri,
+        COUNT(data_set.id) AS term_count
+      FROM
+        (
+          SELECT
+            core_dataset.uuid,
+            core_dataset.id,
+            investigation.investigation_id
+          FROM
+            core_dataset
+            JOIN
+            core_investigationlink AS investigation
+            ON
+            core_dataset.id = investigation.data_set_id
+          {}
+        ) AS data_set
+        JOIN
+        (
+          SELECT
+            study.investigation_id AS investigation_id,
+            annotated_node.*
+          FROM
+            data_set_manager_study AS study
+            JOIN
+            (
+              SELECT
+                node.id,
+                node.study_id,
+                node.type,
+                node.file_uuid,
+                node.assay_id,
+                attr.subtype,
+                attr.value,
+                attr.value_source,
+                attr.value_accession
+              FROM
+                data_set_manager_node AS node
+                JOIN
+                data_set_manager_attribute AS attr
+                ON
+                node.id = attr.node_id
+              WHERE
+                attr.value_source IS NOT NULL AND
+                attr.value_source NOT LIKE ''
+            ) AS annotated_node
+            ON
+            annotated_node.study_id = study.nodecollection_ptr_id
+        ) AS annotated_study
+        ON
+        data_set.investigation_id = annotated_study.investigation_id
+        GROUP BY data_set.id, annotated_study.value_accession
+        """
+
+    # Double string replacement, i.e. `sql` will be replace with a replacement
+    # string for a data set id in case `data_set` has been passed. This is
+    # needed as `cursor.execute()` only inserts escaped strings.
+    ds = ''
+    if len(dataset_ids):
+        ds = (
+            'WHERE core_dataset.id IN (' +
+            ('%s, ' * len(dataset_ids))[:-2] +
+            ')'
+        )
+
+    sql = sql.format(ds)
+
+    # According to the docs, `cursor.execute()` automatically escapes all
+    # instances of `%s`.
+    # https://docs.djangoproject.com/en/1.8/topics/db/sql/#connections-and-cursors
+    if len(dataset_ids):
+        cursor.execute(sql, dataset_ids)
+    else:
+        cursor.execute(sql)
+
+    response = {}
+
+    for row in cursor.fetchall():
+        if row[0] not in response:
+            response[row[0]] = []
+
+        response[row[0]].append({
+            'term': row[1],
+            'count': row[2]
+        })
+
+    return response
+
+
+def create_update_ontology(name, acronym, uri, version, owl2neo4j_version):
     """Creates or updates an ontology entry after importing.
     """
 
@@ -421,7 +518,8 @@ def create_update_ontology(name, acronym, uri, version):
             acronym=acronym,
             name=name,
             uri=uri,
-            version=version
+            version=version,
+            owl2neo4j_version=owl2neo4j_version
         )
         logger.info('Created %s', ontology)
     else:

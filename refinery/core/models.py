@@ -1422,6 +1422,13 @@ class Ontology (models.Model):
         blank=True
     )
 
+    # Stores the version of Owl2Neo4J. This can be helpful to figure out which
+    # ontology needs a re-import when the parser changed dramatically
+    owl2neo4j_version = models.CharField(
+        max_length=16,
+        null=True
+    )
+
     def __unicode__(self):
         return '{name} ({acronym})'.format(
             name=self.name,
