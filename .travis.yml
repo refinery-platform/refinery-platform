@@ -18,7 +18,7 @@ before_script:
   - cd ui && npm install && bower install && cd ../
 script:
   - pep8 --exclude=migrations,ui ..
-  - python manage.py test --with-coverage
+  - coverage run --source . manage.py test
   - cd ui && grunt && cd ../
 after_success:
   - codecov
