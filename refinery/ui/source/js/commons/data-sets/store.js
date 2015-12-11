@@ -29,6 +29,7 @@ function DataSetStoreFactory (_) {
    * @param   {Number|String}  key     Key for identifing the object.
    * @param   {Object}         data    Actual data object.
    * @param   {Boolean}        update  If `true` will update existing objects.
+   * @param   {Boolean}        set     If `true` will add non-existent data.
    * @return  {Object}                 Self for chaining.
    */
   DataSetStore.prototype.add = function(key, data, update) {
@@ -62,8 +63,7 @@ function DataSetStoreFactory (_) {
    * Update a data object without destroying its original reference.
    *
    * @description
-   * Batch update of a dataset according with data. This method does _not_ add
-   * new attribute. In order to add a new attribute use the `set` method.
+   * Batch update of a dataset according with data.
    *
    * @method  update
    * @author  Fritz Lekschas
@@ -77,10 +77,9 @@ function DataSetStoreFactory (_) {
     // Todo: Implement a deep cloning update function that doesn't destroy
     // references by accidentally replacing whole objects.
     if (!!_store[key]) {
-      var attrs = Object.keys(_store[key]);
-      for (var i = attrs.length; i--;) {
-        _store[key][attrs[i]] = data[attrs[i]] ?
-          data[attrs[i]] : _store[key][attrs[i]];
+      var keys = Object.keys(data);
+      for (var i = keys.length; i--;) {
+        _store[key][keys[i]] = data[keys[i]];
       }
     }
 

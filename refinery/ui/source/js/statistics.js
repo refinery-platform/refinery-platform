@@ -40,7 +40,6 @@ angular.module("refineryStatistics", [])
       $scope.users = response.objects[0].user;
       $scope.groups = response.objects[0].group;
       $scope.files = response.objects[0].files;
-      $scope.size_on_disk = response.objects[0].size_on_disk;
       $scope.data_sets = response.objects[0].dataset.total;
       $scope.workflows = response.objects[0].workflow.total;
       $scope.projects = response.objects[0].project.total;
@@ -52,7 +51,7 @@ angular.module("refineryStatistics", [])
       if (!jQuery.isEmptyObject(dataset)) { plot(dataset, "dataSetChart"); }
 
       if (!jQuery.isEmptyObject(workflow)) { plot(workflow, "workflowChart"); }
-      
+
       if (!jQuery.isEmptyObject(project)) { plot(project, "projectChart"); }
     });
 
@@ -68,6 +67,5 @@ angular.module("refineryStatistics", [])
     templateUrl: "/static/partials/statistics.html",
     restrict: "A"
   };
+
 });
-
-

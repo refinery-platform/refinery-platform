@@ -238,13 +238,13 @@ var provvis = (function () {
         var cell = {width: r * 5, height: r * 3};
 
         /* Initialize canvas dimensions. */
-        var width = $("div#provenance-visualization").width(),
-            height = $("div#provenance-visualization").height() - 35;
+        var width = $("div#provenance-visualization").width()-10,
+            height = $("div#solr-table-view").height() - 25;
 
         /* TODO: Temp fix for sidebar height. */
         $("#provenance-sidebar").css("height", height);
         /* TODO: Temp fix for sidebar max height. */
-        $('#provvis-sidebar-content').css("max-height", height - 31);
+        $('#provvis-sidebar-content').css("max-height", height - 13);
 
         var scaleFactor = 0.75;
 
@@ -265,18 +265,19 @@ var provvis = (function () {
           /* Semantic zoom. */
           if (d3.event.scale < 1) {
             d3.selectAll(".BBox").classed("hiddenNode", true);
+            d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
           } else {
             d3.selectAll(".BBox").classed("hiddenNode", false);
+            d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
           }
 
-          if (d3.event.scale < 1.75) {
+          if (d3.event.scale < 1.7) {
             vis.canvas.selectAll(".anLabel, .sanLabel, .lnLabel, " +
                 ".nodeAttrLabel, .stored-node-type-icon, .an-node-type-icon, " +
                 ".san-node-type-icon, .l-node-type-icon, .lBBoxLabel, " +
                 ".aBBoxLabel, .nodeDoiLabel")
                 .classed("hiddenLabel", true);
             d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", true);
-            d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
           } else {
             vis.canvas.selectAll(".anLabel, .sanLabel, .lnLabel, " +
                 ".nodeAttrLabel, .stored-node-type-icon, .an-node-type-icon, " +
@@ -284,15 +285,6 @@ var provvis = (function () {
                 ".aBBoxLabel, .nodeDoiLabel")
                 .classed("hiddenLabel", false);
             d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", false);
-            d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
-          }
-
-          if (d3.event.scale < 2.5) {
-            d3.selectAll(".lDiffLabel, .aDiffLabel")
-                .classed("hiddenLabel", true);
-          } else {
-            d3.selectAll(".lDiffLabel, .aDiffLabel")
-                .classed("hiddenLabel", false);
           }
 
           /* Fix for rectangle getting translated too - doesn't work after
@@ -335,7 +327,7 @@ var provvis = (function () {
 
           /* Get label text. */
           d3.selectAll(".node").select(".nodeAttrLabel").each(function (d) {
-            var attrText = d.name;
+            var attrText = (d.label === "") ? d.name : d.label;
             if (d.nodeType === "stored") {
               var selAttrName = "";
               $("#prov-ctrl-visible-attribute-list > li").each(function () {
@@ -347,11 +339,13 @@ var provvis = (function () {
             }
 
             /* Set label text. */
-            d3.select(this).text(attrText);
-            var trimRatio = parseInt(attrText.length *
-                (maxLabelPixelWidth / this.getComputedTextLength()), 10);
-            if (trimRatio < attrText.length) {
-              d3.select(this).text(attrText.substr(0, trimRatio - 3) + "...");
+            if (typeof  attrText !== "undefined") {
+              d3.select(this).text(attrText);
+              var trimRatio = parseInt(attrText.length *
+                  (maxLabelPixelWidth / this.getComputedTextLength()), 10);
+              if (trimRatio < attrText.length) {
+                d3.select(this).text(attrText.substr(0, trimRatio - 3) + "...");
+              }
             }
           });
         };
@@ -380,23 +374,23 @@ var provvis = (function () {
             .classed("brect", true);
 
 
-        /* TODO: Refine error handling. */
+        /* Production mode exception handling. */
         /* Exception handling. */
-        try {
+        /*try {
 
-          /* Extract graph data. */
+          /!* Extract graph data. *!/
           vis.graph = provvisInit.run(data, analysesData, solrResponse);
           try {
 
-            /* Compute layout. */
+            /!* Compute layout. *!/
             vis.graph.bclgNodes = provvisLayout.run(vis.graph, vis.cell);
             try {
 
-              /* Discover and and inject motifs. */
+              /!* Discover and and inject motifs. *!/
               provvisMotifs.run(vis.graph, layerMethod);
               try {
 
-                /* Render graph. */
+                /!* Render graph. *!/
                 provvisRender.run(vis);
               }
               catch (err) {
@@ -423,8 +417,14 @@ var provvis = (function () {
               'Init Module Error: ' + err.message + '<br>';
         } finally {
           hideProvvisLoaderIcon();
-        }
+        }*/
 
+        /* Uncomment in development mode. */
+        vis.graph = provvisInit.run(data, analysesData, solrResponse);
+        vis.graph.bclgNodes = provvisLayout.run(vis.graph, vis.cell);
+        provvisMotifs.run(vis.graph, layerMethod);
+        provvisRender.run(vis);
+        hideProvvisLoaderIcon();
 
         try {
           /* TODO: Refine to only redraw affected canvas components. */
