@@ -5637,6 +5637,8 @@ var provvisRender = (function () {
 
     /* Set initial graph position. */
     fitGraphToWindow(0);
+    /*console.log(vis.graph);*/
+    console.log("Graph has " + vis.graph.nodes.length + " files and tools, " + vis.graph.links.length + " Links, " + vis.graph.saNodes.length + " Analysis Groups, " + vis.graph.aNodes.length + " analyses, and " + vis.graph.lNodes.size() + " layers.");
   };
 
 

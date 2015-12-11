@@ -241,9 +241,6 @@ var provvisInit = (function () {
    * @returns {provvisDecl.Analysis} New Analysis object.
    */
   var createAnalysisNode = function (a, i) {
-
-    console.log(a.time_start);
-
     var initTime = {
       start : a.time_start,
       end : a.time_end,
