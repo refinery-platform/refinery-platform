@@ -1009,7 +1009,6 @@ class StatisticsResource(Resource):
     user = fields.IntegerField(attribute='user')
     group = fields.IntegerField(attribute='group')
     files = fields.IntegerField(attribute='files')
-    size_on_disk = fields.CharField(attribute='size_on_disk')
     dataset = fields.DictField(attribute='dataset')
     workflow = fields.DictField(attribute='workflow')
     project = fields.DictField(attribute='project')
