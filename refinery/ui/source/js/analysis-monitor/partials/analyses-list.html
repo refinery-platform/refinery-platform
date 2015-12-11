@@ -180,9 +180,10 @@
                           </div>
                         </div>
                         <div ng-switch-when="PROGRESS">
-                          <div class="progress">
+                          <div class="progress am-modified">
                             <div
-                              class="progress-bar progress-striped active"
+                              class="progress-bar progress-striped
+                              active"
                               role="progressbar"
                               id="preprocessing-{{ analysis.uuid }}"
                               style="width:{{AMCtrl.analysesDetail[analysis.uuid]
@@ -222,9 +223,10 @@
                           </div>
                         </div>
                         <div ng-switch-when="RETRY">
-                          <div class="progress">
+                          <div class="progress am-modified">
                             <div
-                              class="progress-bar progress-striped active"
+                              class="progress-bar progress-striped
+                              active"
                               role="progressbar"
                               id="execution-{{ analysis.uuid }}" style="width:
                             {{AMCtrl.analysesDetail[analysis.uuid].executionPercentDone}}">
@@ -268,7 +270,7 @@
                           </div>
                         </div>
                         <div ng-switch-when="PROGRESS">
-                          <div class="progress">
+                          <div class="progress am-modified">
                             <div
                               class="progress-bar progress-striped active"
                               role="progressbar"
