@@ -453,11 +453,11 @@ SolrDocumentTable.prototype._generateDocumentsPerPageControl = function (parentE
   for (var i = 0; i < options.length; ++i) {
     if (options[i] == self._documentsPerPage) {
       $("#" + parentElementId).append(
-        '<button type="button" data-documents="' + options[i] + '" data-toggle="button" class="btn btn-default btn-xs active" rel="tooltip" data-placement="bottom" data-html="true" title="View ' + options[i] + ' rows per page">' + options[i] + '</button>');
+        '<button type="button" data-documents="' + options[i] + '" data-toggle="button" class="refinery-base btn btn-default btn-xs active" rel="tooltip" data-placement="bottom" data-html="true" title="View ' + options[i] + ' rows per page">' + options[i] + '</button>');
     }
     else {
       $("#" + parentElementId).append(
-        '<button type="button" data-documents="' + options[i] + '" data-toggle="button" class="btn btn-default btn-xs" rel="tooltip" data-placement="bottom" data-html="true" title="View ' + options[i] + ' rows per page">' + options[i] + '</button>');
+        '<button type="button" data-documents="' + options[i] + '" data-toggle="button" class="refinery-base btn btn-default btn-xs" rel="tooltip" data-placement="bottom" data-html="true" title="View ' + options[i] + ' rows per page">' + options[i] + '</button>');
     }
   }
 
@@ -502,8 +502,8 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function (parentElem
   }
 
   $("#" + parentElementId).html("");
-  var listHeader = '<a href="#" class="dropdown-toggle btn btn-xs' +
-    ' btn-default" ' +
+  var listHeader = '<a href="#" class="dropdown-toggle refinery-base' +
+    'btn btn-xs btn-default" ' +
       'data-toggle="dropdown"><i class="fa fa-wrench"></i>&nbsp;Columns&nbsp;' +
       '<i class="fa fa-caret-down"></i></a>';
   var listId = parentElementId + "-list";

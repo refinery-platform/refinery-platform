@@ -131,7 +131,8 @@
 			</span>
 		</div>
 		<p>Created: {{ workflow.creation_date }} | Last Modified: {{ workflow.modification_date }}</p>
-		<a class="btn btn-default" href="{% url 'workflow_edit' workflow.uuid %}">Edit</a>
+		<a class="refinery-base btn btn-default"
+      href="{% url 'workflow_edit' workflow.uuid %}">Edit</a>
 	{% else %}
 	    <p>No valid workflow.</p>
 	{% endif %}

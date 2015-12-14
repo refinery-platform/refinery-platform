@@ -17,10 +17,12 @@
         {{modal.group.name}}
       </td>
       <td>
-        <button type="button" class="btn btn-default" style="float:right" ng-click="modal.leaveGroup()" ng-class="{disabled: modal.group.member_list.length===1}"}>Leave</button>
+        <button type="button" class="refinery-base btn btn-default"
+          style="float:right" ng-click="modal.leaveGroup()" ng-class="{disabled: modal.group.member_list.length===1}"}>Leave</button>
       </td>
       <td>
-        <button type="button" class="btn btn-default" style="float:right" ng-click="modal.deleteGroup()" ng-disabled="!modal.group.can_edit">Delete</button>
+        <button type="button" class="refinery-base btn btn-default"
+          style="float:right" ng-click="modal.deleteGroup()" ng-disabled="!modal.group.can_edit">Delete</button>
       </td>
     </tr>
     </tbody>
