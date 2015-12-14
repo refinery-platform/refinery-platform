@@ -1274,13 +1274,13 @@ var provvisRender = (function () {
 
       $('<button/>', {
         "id": "dc-carret-up-" + i,
-        "class": "btn btn-default",
+        "class": "refinery-base btn btn-default",
         "html": "<i class='fa fa-caret-up'></i>"
       }).appendTo("#" + "dc-btn-group-" + i);
 
       $('<button/>', {
         "id": "dc-carret-down-" + i,
-        "class": "btn btn-default",
+        "class": "refinery-base btn btn-default",
         "html": "<i class='fa fa-caret-down'></i>"
       }).appendTo("#" + "dc-btn-group-" + i);
 

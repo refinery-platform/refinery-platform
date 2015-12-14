@@ -71,7 +71,8 @@
 		</div>
 		<p>Joined on {{ profile_user.date_joined }} Last login on {{ profile_user.last_login }}</p>
     {% if user == profile_user %}
-		  <a class="btn btn-default" href="{% url 'user_edit' profile_user.get_profile.uuid %}">Edit</a>
+		  <a class="refinery-base btn btn-default"
+        href="{% url 'user_edit' profile_user.get_profile.uuid %}">Edit</a>
     {% endif %}
 	{% else %}
 	    <p>No valid user.</p>
