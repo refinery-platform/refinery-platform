@@ -149,6 +149,7 @@ class SharableResourceAPIInterface(object):
             )
             res_list_unique = None
 
+        cache_check = None
         if res_list_unique is not None:
             try:
                 cache_check = cache.get('{}-{}'.format(
@@ -158,7 +159,6 @@ class SharableResourceAPIInterface(object):
                     'Something went wrong with retrieving the cached res_list.'
                     ' Error: %s', e
                 )
-                cache_check = None
 
         if cache_check is None:
             owned_res_set = Set(
