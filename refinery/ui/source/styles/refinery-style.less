@@ -52,7 +52,7 @@ a.spinnable {
 
 body {
   font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  background-image:url(@background-image-url);
+  background-image: url(@background-image-url);
   margin-top: @navbar-height * 2.2;
   line-height: 20px;
 }
@@ -130,17 +130,18 @@ select.select-height {
   height: 100px;
 }
 
-.navbar-collapse.collapse {
+.navbar-collapse.collapse#navbarMain {
   height: auto;
   overflow: visible;
   width: 390px;
   float: left;
   border: none;
+
 }
 
 .collapsing {
-  overflow: visible;
-  border: none;
+overflow: visible;
+border: none;
 }
 
 .tab-content {
@@ -424,7 +425,7 @@ a.analysis-header {
   white-space:nowrap;
 }
 
-.navbar {
+.refinery-base.navbar {
   border-bottom-width: 0px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   background-color: #525252;
