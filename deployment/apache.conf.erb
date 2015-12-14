@@ -12,7 +12,7 @@ ServerName refinery.example.org
 
 SetEnv DJANGO_SETTINGS_MODULE config.settings.dev
 
-WSGIDaemonProcess refinery user=<%= @appuser %> group=<%= @appgroup %> \
+WSGIDaemonProcess refinery user=<%= @app_user %> group=<%= @app_group %> \
     python-path=<%= @project_root %>:<%= @virtualenv %>/lib/python2.7/site-packages
 WSGIProcessGroup refinery
 
