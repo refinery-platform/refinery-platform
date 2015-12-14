@@ -70,6 +70,8 @@ codekit-config.json
 *.conflict
 *.sublime-*
 .editorconfig
+/refinery/.coverage
+/refinery/coverage.xml
 
 # to be moved into refinery/ui
 refinery/static/styles/css/font-awesome*.css
