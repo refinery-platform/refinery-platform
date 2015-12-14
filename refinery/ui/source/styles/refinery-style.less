@@ -64,6 +64,15 @@ body {
   background-image: -webkit-gradient(linear,0 0,0 100%,from(#fff),to(#e6e6e6));
 }
 
+.refinery-base.btn.btn-default[disabled] {
+  cursor: default;
+  background-image: none;
+  opacity: .65;
+  filter: alpha(opacity=65);
+  box-shadow: none;
+  background-color: #e6e6e6;
+}
+
 .refinery-base.navbar {
   border-bottom-width: 0px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -195,23 +204,14 @@ border: none;
   width: 100%;
 }
 
-.btn.disabled, .btn-default[disabled] {
-  cursor: default;
-  background-image: none;
-  opacity: .65;
-  filter: alpha(opacity=65);
-  box-shadow: none;
-  background-color: #e6e6e6;
-}
-
 #isa-header {
   display: block;
   width: 100%;
   float: left;
   border-bottom: 1px solid #eeeeee;
 }
-//Global analyses status icon/popover
 
+//Global analyses status icon/popover
 #analyses-popover {
   .popover {
     position: absolute;
@@ -429,7 +429,7 @@ a.analysis-header {
   white-space:nowrap;
 }
 
-.navbar-nav {
+#navbarMain .navbar-nav {
   position: relative;
   float: left;
   left: 0;
