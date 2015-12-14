@@ -187,52 +187,6 @@ select.select-height {
   font-size: 0.9em;
 }
 
-#external-tool-status-popover {
-  cursor:pointer;
-
-  .popover {
-    position: absolute;
-    top: 20px !important;
-    right: 0 !important;
-    max-width: 200px;
-    z-index: 1010;
-    display: none;
-    padding: 1px;
-    text-align: left;
-  }
-  .popover.left .arrow:after, .arrow {
-      display: none;
-    }
-}
-
-ul.externalToolList {
-  list-style-type: none;
-  float: left;
-}
-
-ul.externalToolList li {
-  display: inline-block;
-  min-width: 100px;
-  max-width: 240px;
-  padding-left: 10px;
-}
-
-ul.externalToolList li#lastTimeCheck {
-  width: 240px;
-}
-
-ul#externalToolListPopover {
-  font-size: 0.8em;
-  list-style-type: none;
-  margin: 0 0 10px 0;
-  padding: 0px;
-}
-
-ul#externalToolListPopover li {
-  padding: 0;
-  margin: 0;
-}
-
 .bootboxAnalysisWidth input {
   width: 96%;
 }
@@ -423,26 +377,8 @@ a.close.analysis-alert {
   color: black;
 }
 
-.span4.analysis-name {
-  text-align: left;
-  a {
-    width:100%;
-    text-align: left;
-  }
-}
-
-.span1.analysis-icon {
-  text-align: right;
-  padding-right: 12px;
-}
-
 #collapse-analysis-run {
   cursor: pointer;
-}
-
-.span1.analysis-icon#header {
-  text-align: right;
-  padding-right: 0;
 }
 
 .analysis-cancel-col {
@@ -489,31 +425,6 @@ a.analysis-header {
       position: relative;
       top: 5px;
     }
-  }
-}
-
-@media (max-width: 760px) {
-   #textToolStatus {
-    width: 100%;
-
-    heigth: 200px;
-  }
-
-  ul.externalToolList {
-    float: none;
-    padding-left: 0px;
-    margin-left: 0px;
-  }
-
-  ul.externalToolList li {
-    display: block;
-  }
-
-  ul.externalToolList li#lastTimeCheck {
-  width: auto;
-  }
-  li.analysisRunningListItem {
-    width: 80%;
   }
 }
 
