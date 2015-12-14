@@ -314,20 +314,6 @@ module.exports = function(grunt) {
     },
 
     /*
-     * Minify CSS.
-     */
-    cssmin: {
-      ui: {
-        files: [{
-          expand: true,
-          cwd: '<%= cfg.basePath.ui.tmp %>/styles',
-          src: ['**/*.css'],
-          dest: '<%= cfg.basePath.ui.compile %>/styles'
-        }]
-      }
-    },
-
-    /*
      * And for rapid development, we have a watch set up that checks to see if
      * any of the files listed below change, and then to execute the listed
      * tasks when they do. This just saves us from having to type "grunt" into
@@ -787,7 +773,6 @@ module.exports = function(grunt) {
     'clean:staticCompile',
     'less:compile',
     'autoprefixer',
-    'cssmin',
     // IMPORTANT:
     // `concat-by-feature:compile` has to be called before `ngAnnotate` because
     // it adds features to the `ngAnnotate` task.
