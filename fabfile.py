@@ -123,7 +123,8 @@ def update_refinery():
         run("pip install -r {refinery_project_dir}/requirements.txt"
             .format(**env))
         run("find . -name '*.pyc' -delete")
-        run("{refinery_app_dir}/manage.py syncdb --migrate --noinput".format(**env))
+        run("{refinery_app_dir}/manage.py syncdb --migrate --noinput"
+            .format(**env))
         run("{refinery_app_dir}/manage.py collectstatic --clear --noinput"
             .format(**env))
         run("supervisorctl reload")
