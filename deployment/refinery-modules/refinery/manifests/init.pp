@@ -229,6 +229,9 @@ class neo4j {
       path  => $neo4j_config_file,
       line  => 'org.neo4j.server.webserver.address=0.0.0.0',
       match => 'org.neo4j.server.webserver.address=';
+    'neo4j_increase_transaction_timeout':
+      path  => $neo4j_config_file,
+      line  => 'org.neo4j.server.transaction.timeout=300';
   }
   ~>
   service { 'neo4j-service':
@@ -239,7 +242,7 @@ class neo4j {
 include neo4j
 
 class owl2neo4j {
-  $owl2neo4j_version = "0.3.4"
+  $owl2neo4j_version = "0.4.0"
   $owl2neo4j_url = "https://github.com/flekschas/owl2neo4j/releases/download/v${owl2neo4j_version}/owl2neo4j.jar"
 
   # Need to remove the old file manually as wget throws a weird
