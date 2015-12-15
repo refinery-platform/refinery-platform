@@ -8,4 +8,5 @@ $requirements = "${project_root}/requirements.txt"
 $django_settings_module = "config.settings.dev"
 $ui_app_root = "${django_root}/ui"
 
+# See code in refinery-modules/refinery/...
 include refinery

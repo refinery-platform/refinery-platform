@@ -13,4 +13,5 @@ class { 'timezone':
   timezone => 'America/New_York',
 }
 
+# See code in refinery-modules/refinery/...
 include refinery
