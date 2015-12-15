@@ -3,6 +3,8 @@ import os
 import re
 import urllib
 import xmltodict
+import py2neo
+import urlparse
 
 from django.utils import simplejson
 from django.conf import settings
@@ -834,50 +836,35 @@ def neo4j_dataset_annotations(request):
     """Query Neo4J for dataset annotations per user
     """
 
-    user_id = -1 if request.user.id is None else request.user.id
-
-    url = '{}/db/data/transaction/commit'.format(settings.NEO4J_BASE_URL)
-
-    headers = {
-        'Accept': 'application/json; charset=UTF-8',
-        'Content-type': 'application/json'
-    }
+    graph = py2neo.Graph(urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data'))
 
     # sub = sub class
     # sup = super class
     # ds = dataset
     #
-    # Note: this returns the while subclass hierarchy tree but only adds
-    # associates dataset annotations the user has read access to.
+    # Note: this returns the whole subclass graph and only adds
+    # associated dataset annotations for which the user has read access.
     cql = (
-        'MATCH (sup:CL:Class)<-[:`RDFS:subClassOf`]-(sub) ' +
+        'MATCH (sup:Class)<-[:`RDFS:subClassOf`]-(sub) ' +
         'OPTIONAL MATCH (ds:DataSet), ' +
-        '               (u:User {id:%s}), ' +
+        '               (u:User {id:{user_id}}), ' +
         '               (ds)-[:`annotated_with`]->(sub), ' +
         '               (u)-[:`read_access`]->(ds) ' +
         'RETURN sup, sub, ds'
-    ) % user_id
+    )
 
-    stmt = {
-        'statements': [{
-            'statement': cql
-        }]
-    }
+    response = None
 
     try:
-        response = requests.post(url, json=stmt, headers=headers)
-    except requests.exceptions.ConnectionError as e:
-        logger.error('Neo4J seems to be offline.')
-        logger.error(e)
-        return HttpResponse(
-            'Neo4J seems to be offline.',
-            mimetype='application/json',
-            status=503
+        response = graph.cypher.execute(
+            cql,
+            user_id=(-1 if request.user.id is None else request.user.id)
         )
-    except requests.exceptions.RequestException as e:
-        logger.error(e)
+    except BaseException as e:
+        logger.error('Cypher query failed.')
+        logger.error('Error: %s', e)
         return HttpResponse(
-            response,
+            'Cypher query failed.',
             mimetype='application/json',
             status=500
         )
