@@ -524,6 +524,10 @@ def create_update_ontology(name, acronym, uri, version, owl2neo4j_version):
         logger.info('Created %s', ontology)
     else:
         ontology = ontology[0]
+        ontology.name = name
+        ontology.uri = uri
+        ontology.version = version
         ontology.import_date = datetime.datetime.now()
+        ontology.owl2neo4j_version = owl2neo4j_version
         ontology.save()
         logger.info('Updated %s', ontology)
