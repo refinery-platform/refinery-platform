@@ -104,18 +104,18 @@ class SharableResourceAPIInterface(object):
     # options may require going to the SharableResource class and adding them.
 
     # Apply filters.
-    def query_filtering(self, res_list, get_req_dict):
-        mod_list = res_list
-
-        for k in get_req_dict:
+    def query_filtering(self, res_list, get_params):
+        for param in get_params:
             # Skip if res does not have the attribute. Done to help avoid
             # whatever internal filtering can be performed on other things,
             # like limiting the return amount.
-            mod_list = [x for x in mod_list
-                        if not hasattr(x, k) or
-                        str(getattr(x, k)) == get_req_dict[k]]
+            res_list = [
+                dataset for dataset in res_list
+                if not hasattr(dataset, param) or
+                str(getattr(dataset, param)) == get_params[param]
+            ]
 
-        return mod_list
+        return res_list
 
     def build_res_list(self, user):
         if user.is_authenticated():
@@ -149,6 +149,7 @@ class SharableResourceAPIInterface(object):
             )
             res_list_unique = None
 
+        cache_check = None
         if res_list_unique is not None:
             try:
                 cache_check = cache.get('{}-{}'.format(
@@ -158,7 +159,6 @@ class SharableResourceAPIInterface(object):
                     'Something went wrong with retrieving the cached res_list.'
                     ' Error: %s', e
                 )
-                cache_check = None
 
         if cache_check is None:
             owned_res_set = Set(
@@ -192,7 +192,11 @@ class SharableResourceAPIInterface(object):
                     'owner',
                     user_uuid if is_owner else None
                 )
-                setattr(res, 'public', res.id in public_res_set)
+                setattr(
+                    res,
+                    'public',
+                    True if res.id in public_res_set else False
+                )
                 setattr(
                     res,
                     'is_shared',
@@ -202,14 +206,15 @@ class SharableResourceAPIInterface(object):
                 if 'sharing' in kwargs and kwargs['sharing']:
                     setattr(res, 'share_list', self.get_share_list(user, res))
 
-            # Filter for query flags.
-            res_list = self.query_filtering(res_list, request.GET)
-
             if user_uuid and res_list_unique:
                 cache.add('{}-{}'.format(user.id, res_list_unique), res_list)
-            return res_list
         else:
-            return cache_check
+            res_list = cache_check
+
+        # Filter for query flags.
+        res_list = self.query_filtering(res_list, request.GET)
+
+        return res_list
 
     def build_bundle_list(self, request, res_list, **kwargs):
         bundle_list = []
