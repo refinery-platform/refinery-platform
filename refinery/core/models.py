@@ -889,6 +889,19 @@ WORKFLOW_NODE_CONNECTION_TYPES = (
 )
 
 
+# Deletes Analyses' related NodeIndexes from Solr upon deletion
+@receiver(pre_delete, sender=Analysis)
+def _analysis_delete(sender, instance, *args, **kwargs):
+    node_conections = AnalysisNodeConnection.objects.filter(analysis=instance)
+    for item in node_conections:
+        if item.node and "Derived" in item.node.type:
+            try:
+                delete_analysis_index(item.node)
+            except Exception as e:
+                logger.debug("No NodeIndex exists in Solr with id %s: %s",
+                             item.id, e)
+
+
 class AnalysisNodeConnection(models.Model):
     analysis = models.ForeignKey(Analysis,
                                  related_name="workflow_node_connections")
