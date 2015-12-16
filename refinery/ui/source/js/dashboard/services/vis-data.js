@@ -1,5 +1,5 @@
-function DashboardTreemapData ($q, neo4jToD3, dataSet) {
-  var basicData = $q.defer(),
+function DashboardVisData ($q, neo4jToGraph, dataSet) {
+  var graph = $q.defer(),
       annotations = $q.defer();
 
   function updateAnnotationData (data, annotations) {
@@ -9,12 +9,13 @@ function DashboardTreemapData ($q, neo4jToD3, dataSet) {
   function Data () {}
 
   Data.prototype.load = function () {
-    neo4jToD3.get()
+    neo4jToGraph.get()
       .then(function (data) {
-        basicData.resolve(data);
+        console.log(data);
+        graph.resolve(data);
       })
       .catch(function (e) {
-        basicData.reject(e);
+        graph.reject(e);
       });
 
     dataSet.loadAnnotations()
@@ -37,7 +38,7 @@ function DashboardTreemapData ($q, neo4jToD3, dataSet) {
     'data',
     {
       get: function() {
-        return $q.all([basicData.promise, annotations.promise]);
+        return $q.all([graph.promise, annotations.promise]);
       }
     }
   );
@@ -47,9 +48,9 @@ function DashboardTreemapData ($q, neo4jToD3, dataSet) {
 
 angular
   .module('refineryDashboard')
-  .factory('dashboardTreemapData', [
+  .factory('dashboardVisData', [
     '$q',
-    'neo4jToD3',
+    'neo4jToGraph',
     'dataSet',
-    DashboardTreemapData
+    DashboardVisData
   ]);

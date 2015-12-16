@@ -1,12 +1,12 @@
 function refineryDashboardVisWrapper () {
   'use strict';
 
-  function VisWrapperCtrl ($q, pubSub, dashboardTreemapData, treemapContext) {
+  function VisWrapperCtrl ($q, pubSub, dashboardVisData, treemapContext) {
     this.$q = $q;
     this.pubSub = pubSub;
 
     // Trigger preloading / precomputing of D3 data for exploration.
-    dashboardTreemapData.load();
+    dashboardVisData.load();
 
     this.loading = true;
     this.treemapLoading = $q.defer();
@@ -44,7 +44,7 @@ function refineryDashboardVisWrapper () {
     controller: [
       '$q',
       'pubSub',
-      'dashboardTreemapData',
+      'dashboardVisData',
       'treemapContext',
       VisWrapperCtrl
     ],
