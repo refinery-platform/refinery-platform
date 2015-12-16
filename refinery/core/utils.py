@@ -534,3 +534,11 @@ def create_update_ontology(name, acronym, uri, version, owl2neo4j_version):
         ontology.owl2neo4j_version = owl2neo4j_version
         ontology.save()
         logger.info('Updated %s', ontology)
+def invalidate_cached_object(instance):
+    try:
+        cache.delete_many(['{}-{}'.format(user.id, instance.__class__.__name__)
+                           for user in User.objects.all()])
+
+    except Exception as e:
+        logger.debug("Could not delete %s from cache" %
+                     instance.__class__.__name__, e)
