@@ -3,6 +3,7 @@ import sys
 import subprocess
 import py2neo
 import urlparse
+import simplejson
 from optparse import make_option
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -18,6 +19,15 @@ class Command(BaseCommand):
     """
 
     option_list = BaseCommand.option_list + (
+        make_option(
+            '-b',
+            '--batch',
+            action='store',
+            dest='batch_import_file',
+            type='string',
+            help='Batch import definition file, '
+                 'e.g. /vagrant/transfer/import.json'
+        ),
         make_option(
             '-o',
             '--ontology',
@@ -68,10 +78,10 @@ class Command(BaseCommand):
             logger.setLevel(logging.DEBUG)
             root_logger.setLevel(logging.DEBUG)
 
-        # Wrap strings in double quotes in case they contain white spaces.
         if not options['ontology_file']:
             options['ontology_file'] = ''
 
+        # Wrap strings in double quotes in case they contain white spaces.
         if options['ontology_abbr']:
             options['ontology_abbr'] = options['ontology_abbr'].upper()
             ontology_abbr = '"' + options['ontology_abbr'] + '"'
@@ -118,19 +128,27 @@ class Command(BaseCommand):
             logger.error(e)
             sys.exit(1)
 
-        # Import or re-import ontology
-        cmd = 'java -jar -DentityExpansionLimit={eel} '\
-            '{lib}/owl2neo4j.jar -o {ontology} -n {name} -a {abbr} ' \
-            '{eqp} -s {server} {verbosity}'.format(
-                eel=settings.JAVA_ENTITY_EXPANSION_LIMIT,
-                lib=settings.LIBS_DIR,
-                ontology=options['ontology_file'],
-                name=ontology_name,
-                abbr=ontology_abbr,
-                eqp=options['eqp'],
-                server=settings.NEO4J_BASE_URL,
-                verbosity=('-v' if verbosity == 2 else '')
-            )
+        if options['batch_import_file']:
+            cmd = 'java -jar -DentityExpansionLimit={eel} '\
+                '{lib}/owl2neo4j.jar -b {batch} {verbosity}'.format(
+                    eel=settings.JAVA_ENTITY_EXPANSION_LIMIT,
+                    lib=settings.LIBS_DIR,
+                    batch=options['batch_import_file'],
+                    verbosity=('-v' if verbosity == 2 else '')
+                )
+        else:
+            cmd = 'java -jar -DentityExpansionLimit={eel} '\
+                '{lib}/owl2neo4j.jar -o {ontology} -n {name} -a {abbr} ' \
+                '{eqp} -s {server} {verbosity}'.format(
+                    eel=settings.JAVA_ENTITY_EXPANSION_LIMIT,
+                    lib=settings.LIBS_DIR,
+                    ontology=options['ontology_file'],
+                    name=ontology_name,
+                    abbr=ontology_abbr,
+                    eqp=options['eqp'],
+                    server=settings.NEO4J_BASE_URL,
+                    verbosity=('-v' if verbosity == 2 else '')
+                )
 
         logger.debug('Call Owl2Neo4J: %s', cmd)
         try:
@@ -156,39 +174,50 @@ class Command(BaseCommand):
             logger.error(e)
             sys.exit(1)
 
+        if options['batch_import_file']:
+            with open(options['batch_import_file']) as json_file:
+                ontologies = simplejson.load(json_file)['ontologies']
+        else:
+            ontologies = [{
+                "o": options['ontology_file'],
+                "n": options['ontology_name'],
+                "a": options['ontology_abbr']
+            }]
+
         try:
             # Connects to `http://localhost:7474/db/data/` by default.
             graph = py2neo.Graph(
                 urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data')
             )
 
-            uri = graph.cypher.execute_one(
-                'MATCH (o:Ontology {acronym:{acronym}}) RETURN o.uri',
-                parameters={
-                    'acronym': options['ontology_abbr']
-                }
-            )
-
-            version = graph.cypher.execute_one(
-                'MATCH (o:Ontology {acronym:{acronym}}) RETURN o.version',
-                parameters={
-                    'acronym': options['ontology_abbr']
-                }
-            )
-
-            if not uri:
-                raise Exception(
-                    'No ontology with the given name was found. It is most ' +
-                    'likely that the actual import into Neo4J failed.'
+            for ontology in ontologies:
+                uri = graph.cypher.execute_one(
+                    'MATCH (o:Ontology {acronym:{acronym}}) RETURN o.uri',
+                    parameters={
+                        'acronym': ontology['a']
+                    }
                 )
 
-            create_update_ontology(
-                options['ontology_name'],
-                options['ontology_abbr'],
-                uri,
-                version,
-                owl2neo4j_version
-            )
+                version = graph.cypher.execute_one(
+                    'MATCH (o:Ontology {acronym:{acronym}}) RETURN o.version',
+                    parameters={
+                        'acronym': ontology['a']
+                    }
+                )
+
+                if not uri:
+                    raise Exception(
+                        'No ontology with the given name was found. It is ' +
+                        'most likely that the actual import into Neo4J failed.'
+                    )
+
+                create_update_ontology(
+                    ontology['n'],
+                    ontology['a'],
+                    uri,
+                    version,
+                    owl2neo4j_version
+                )
         except Exception as e:
             logger.error(e)
             sys.exit(1)
