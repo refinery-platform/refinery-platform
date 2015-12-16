@@ -173,6 +173,7 @@ INSTALLED_APPS = (
     # RP: added for database migration between builds
     'south',
     'chunked_upload',
+    'rest_framework',
 )
 
 # NG: added for django-guardian
