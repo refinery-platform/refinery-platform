@@ -42,7 +42,7 @@ function DataSetStoreFactory (_) {
       }
     }
 
-    return DataSetStore;
+    return this;
   };
 
   /**
@@ -83,7 +83,7 @@ function DataSetStoreFactory (_) {
       }
     }
 
-    return DataSetStore;
+    return this;
   };
 
   /**
@@ -103,7 +103,7 @@ function DataSetStoreFactory (_) {
       _store[key] = void 0;
     }
 
-    return DataSetStore;
+    return this;
   };
 
   /**
@@ -135,7 +135,7 @@ function DataSetStoreFactory (_) {
       }
     }
 
-    return DataSetStore;
+    return this;
   };
 
   /**
@@ -158,7 +158,7 @@ function DataSetStoreFactory (_) {
     }
   );
 
-  return DataSetStore;
+  return this;
 }
 
 angular
