@@ -242,6 +242,9 @@ class neo4j {
       path  => $neo4j_config_file,
       line  => 'org.neo4j.server.webserver.address=0.0.0.0',
       match => 'org.neo4j.server.webserver.address=';
+    'neo4j_increase_transaction_timeout':
+      path  => $neo4j_config_file,
+      line  => 'org.neo4j.server.transaction.timeout=300';
   }
   ~>
   service { 'neo4j-service':
