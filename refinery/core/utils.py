@@ -5,7 +5,10 @@ import core
 import datetime
 import urlparse
 from django.conf import settings
+from django.core.cache import cache
+from django.contrib.auth.models import User
 from django.db import connection
+
 
 from .search_indexes import DataSetIndex
 
@@ -561,3 +564,21 @@ def create_update_ontology(name, acronym, uri, version, owl2neo4j_version):
         ontology.owl2neo4j_version = owl2neo4j_version
         ontology.save()
         logger.info('Updated %s', ontology)
+
+
+def delete_analysis_index(node_instance):
+    """Remove a Analysis' related document from Solr's index.
+    """
+    DataSetIndex().remove_object(node_instance, using='data_set_manager')
+    logger.debug('Deleted Analysis\' NodeIndex with (uuid: %s)',
+                 node_instance.uuid)
+
+
+def invalidate_cached_object(instance):
+    try:
+        cache.delete_many(['{}-{}'.format(user.id, instance.__class__.__name__)
+                           for user in User.objects.all()])
+
+    except Exception as e:
+        logger.debug("Could not delete %s from cache" %
+                     instance.__class__.__name__, e)

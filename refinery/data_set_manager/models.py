@@ -565,6 +565,9 @@ class AnnotatedNode(models.Model):
     # other information
     is_annotation = models.BooleanField(default=False)
 
+    def __unicode__(self):
+        return unicode(self.node_uuid)
+
 
 def _is_internal_attribute(attribute):
     return attribute in ["uuid",

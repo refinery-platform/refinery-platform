@@ -25,7 +25,6 @@ from django.db.models.fields import IntegerField
 from django.db.models.signals import post_save, pre_delete, post_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
-from django.core.cache import cache
 
 from bioblend import galaxy
 from django_extensions.db.fields import UUIDField
@@ -38,7 +37,8 @@ from file_store.models import get_file_size, FileStoreItem
 from galaxy_connector.models import Instance
 from .utils import update_data_set_index, delete_data_set_index, \
     add_read_access_in_neo4j, remove_read_access_in_neo4j, \
-    delete_data_set_neo4j, delete_ontology_from_neo4j
+    delete_data_set_neo4j, delete_ontology_from_neo4j, \
+    delete_analysis_index, invalidate_cached_object
 from guardian.models import UserObjectPermission
 
 
@@ -56,14 +56,6 @@ NR_TYPES = (
     (TYPE_N_1, 'N-1'),
     (TYPE_REPLICATE, 'replicate')
 )
-
-
-def invalidate_cached_object(instance):
-    try:
-        cache.delete("%s" % instance.__class__.__name__)
-    except Exception as e:
-        logger.debug("Could not delete %s from cache" %
-                     instance.__class__.__name__, e)
 
 
 class UserProfile (models.Model):
@@ -895,6 +887,19 @@ WORKFLOW_NODE_CONNECTION_TYPES = (
     (INPUT_CONNECTION, 'in'),
     (OUTPUT_CONNECTION, 'out'),
 )
+
+
+# Deletes Analyses' related NodeIndexes from Solr upon deletion
+@receiver(pre_delete, sender=Analysis)
+def _analysis_delete(sender, instance, *args, **kwargs):
+    node_conections = AnalysisNodeConnection.objects.filter(analysis=instance)
+    for item in node_conections:
+        if item.node and "Derived" in item.node.type:
+            try:
+                delete_analysis_index(item.node)
+            except Exception as e:
+                logger.debug("No NodeIndex exists in Solr with id %s: %s",
+                             item.id, e)
 
 
 class AnalysisNodeConnection(models.Model):
