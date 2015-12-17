@@ -594,7 +594,6 @@ def solr_core_search(request):
             if annotations:
                 response['response']['annotations'] = annotation_data
 
-            # response = json.dumps(response)
             response = simplejson.dumps(response)
 
     return HttpResponse(response, mimetype='application/json')
@@ -780,7 +779,7 @@ def pubmed_abstract(request, id):
 
     response = requests.get(url, params=params, headers=headers)
     return HttpResponse(
-        json.dumps(xmltodict.parse(response.text)),
+        simplejson.dumps(xmltodict.parse(response.text)),
         mimetype='application/json'
     )
 
@@ -836,35 +835,50 @@ def neo4j_dataset_annotations(request):
     """Query Neo4J for dataset annotations per user
     """
 
-    graph = py2neo.Graph(urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data'))
+    user_id = -1 if request.user.id is None else request.user.id
+
+    url = '{}/db/data/transaction/commit'.format(settings.NEO4J_BASE_URL)
+
+    headers = {
+        'Accept': 'application/json; charset=UTF-8',
+        'Content-type': 'application/json'
+    }
 
     # sub = sub class
     # sup = super class
     # ds = dataset
     #
-    # Note: this returns the whole subclass graph and only adds
-    # associated dataset annotations for which the user has read access.
+    # Note: this returns the while subclass hierarchy tree but only adds
+    # associates dataset annotations the user has read access to.
     cql = (
-        'MATCH (sup:Class)<-[:`RDFS:subClassOf`]-(sub) ' +
+        'MATCH (sup:CL:Class)<-[:`RDFS:subClassOf`]-(sub) ' +
         'OPTIONAL MATCH (ds:DataSet), ' +
-        '               (u:User {id:{user_id}}), ' +
+        '               (u:User {id:%s}), ' +
         '               (ds)-[:`annotated_with`]->(sub), ' +
         '               (u)-[:`read_access`]->(ds) ' +
         'RETURN sup, sub, ds'
-    )
+    ) % user_id
 
-    response = None
+    stmt = {
+        'statements': [{
+            'statement': cql
+        }]
+    }
 
     try:
-        response = graph.cypher.execute(
-            cql,
-            user_id=(-1 if request.user.id is None else request.user.id)
-        )
-    except BaseException as e:
-        logger.error('Cypher query failed.')
-        logger.error('Error: %s', e)
+        response = requests.post(url, json=stmt, headers=headers)
+    except requests.exceptions.ConnectionError as e:
+        logger.error('Neo4J seems to be offline.')
+        logger.error(e)
         return HttpResponse(
-            'Cypher query failed.',
+            'Neo4J seems to be offline.',
+            mimetype='application/json',
+            status=503
+        )
+    except requests.exceptions.RequestException as e:
+        logger.error(e)
+        return HttpResponse(
+            'Request failed.',
             mimetype='application/json',
             status=500
         )
