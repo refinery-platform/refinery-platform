@@ -540,6 +540,10 @@ def get_data_sets_annotations(dataset_ids=[]):
     return response
 
 
+def get_all_data_sets_ids():
+    return core.models.DataSet.objects.all().values('id')
+
+
 def create_update_ontology(name, acronym, uri, version, owl2neo4j_version):
     """Creates or updates an ontology entry after importing.
     """

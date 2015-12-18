@@ -47,7 +47,7 @@ from data_set_manager.api import StudyResource, AssayResource, \
 from data_set_manager.models import Node, Study, Attribute
 from file_store.models import FileStoreItem
 from fadapa import Fadapa
-from core.utils import get_data_sets_annotations
+from core.utils import get_all_data_sets_ids, get_data_sets_annotations
 
 logger = logging.getLogger(__name__)
 signer = Signer()
@@ -487,6 +487,14 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
     def prepend_urls(self):
         prepend_urls_list = SharableResourceAPIInterface.prepend_urls(self) + [
+            url(r'^(?P<resource_name>%s)/ids%s$' % (
+                    self._meta.resource_name,
+                    trailing_slash()
+                ),
+                self.wrap_view('get_all_ids'),
+                name='api_%s_get_all_ids' % (
+                    self._meta.resource_name)
+                ),
             url(r'^(?P<resource_name>%s)/annotations%s$' % (
                     self._meta.resource_name,
                     trailing_slash()
@@ -549,6 +557,14 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
+
+    def get_all_ids(self, request, **kwargs):
+        # See here why `get_all_data_sets_ids()` has to be wrapped in `list()`
+        # http://stackoverflow.com/q/12609604/981933
+        return self.create_response(
+            request,
+            [data_set['id'] for data_set in get_all_data_sets_ids()]
+        )
 
     def get_all_annotations(self, request, **kwargs):
         return self.create_response(request, get_data_sets_annotations())
