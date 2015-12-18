@@ -563,7 +563,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         # http://stackoverflow.com/q/12609604/981933
         return self.create_response(
             request,
-            [data_set['id'] for data_set in get_all_data_sets_ids()]
+            {
+                'ids': [data_set['id'] for data_set in get_all_data_sets_ids()]
+            }
         )
 
     def get_all_annotations(self, request, **kwargs):
