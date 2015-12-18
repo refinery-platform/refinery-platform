@@ -901,7 +901,7 @@ def _analysis_delete(sender, instance, *args, **kwargs):
             except Exception as e:
                 logger.debug("No NodeIndex exists in Solr with id %s: %s",
                              item.id, e)
-    
+
     solr = pysolr.Solr(settings.REFINERY_SOLR_BASE_URL + "data_set_manager",
                        timeout=10)
     """
