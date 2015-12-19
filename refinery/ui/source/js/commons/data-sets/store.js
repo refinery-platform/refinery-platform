@@ -166,7 +166,7 @@ function DataSetStoreFactory (_) {
     }
   );
 
-  return this;
+  return DataSetStore;
 }
 
 angular
