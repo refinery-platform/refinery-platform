@@ -8,6 +8,17 @@ function refineryDashboardVisWrapper () {
     // Trigger preloading / precomputing of D3 data for exploration.
     dashboardVisData.load();
 
+    var graph = this.$q.defer();
+    this.graph = graph.promise;
+
+    var annotations = this.$q.defer();
+    this.annotations = annotations.promise;
+
+    dashboardVisData.data.then(function (results) {
+      graph.resolve(results.graph);
+      annotations.resolve(results.annotations);
+    });
+
     this.loading = true;
     this.treemapLoading = $q.defer();
 

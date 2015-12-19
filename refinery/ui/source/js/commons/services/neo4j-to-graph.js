@@ -4,7 +4,7 @@ function buildGraph (results) {
       // The only difference to `nodes` is that the `children` is an object
       // holding the name of the child node.
       childIndex = {
-        'OWL:Thing': {}
+        'http://www.w3.org/2002/07/owl#Thing': {}
       },
       currentChild,
       currentDataSet,
@@ -16,7 +16,7 @@ function buildGraph (results) {
       len,
       nodes = {
         // Fortunately `owl:Thing` is the mandatory root for any ontology.
-        'OWL:Thing': {
+        'http://www.w3.org/2002/07/owl#Thing': {
           children: [],
           dataSets: {},
           name: 'Root',
@@ -62,6 +62,7 @@ function buildGraph (results) {
         ontId: currentParent.name,
         uri: currentParent.uri
       };
+      childIndex[currentParent.uri] = {};
     }
 
     // Add child to nodes if not available
@@ -74,10 +75,11 @@ function buildGraph (results) {
         ontId: currentChild.name,
         uri: currentChild.uri
       };
+      childIndex[currentChild.uri] = {};
     }
 
     // Store parent-child relationship
-    if (childIndex[currentParent.uri][currentChild.uri] === void 0) {
+    if (!childIndex[currentParent.uri][currentChild.uri]) {
       nodes[currentParent.uri].children.push(currentChild.uri);
       childIndex[currentParent.uri][currentChild.uri] = true;
     }
@@ -123,7 +125,6 @@ Neo4jToGraph.prototype.get = function () {
     });
 
   return neo4jData.promise.then(function (data) {
-    console.log('Neo4J raw data', data);
     return this.Webworker.create(buildGraph).run(data);
   }.bind(this));
 };
