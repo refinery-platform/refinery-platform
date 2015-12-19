@@ -45,6 +45,14 @@ function DataSetStoreFactory (_) {
     return this;
   };
 
+  DataSetStore.prototype.each = function (callback) {
+    var keys = Object.keys(_store);
+
+    for (var i = keys.length; i--;) {
+      callback(_store);
+    }
+  };
+
   /**
    * Get a data object to the store.
    *
