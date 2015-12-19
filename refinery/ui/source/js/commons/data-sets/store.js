@@ -32,7 +32,7 @@ function DataSetStoreFactory (_) {
    * @param   {Boolean}        set     If `true` will add non-existent data.
    * @return  {Object}                 Self for chaining.
    */
-  DataSetStore.prototype.add = function(key, data, update) {
+  DataSetStore.prototype.add = function (key, data, update) {
     // Triple `!!!` is the negated boolean representation of the expression
     if (!!!_store[key]) {
       _store[key] = data;
@@ -63,7 +63,7 @@ function DataSetStoreFactory (_) {
    * @param   {Number|String}  key   Key for identifing the object..
    * @return  {Object}               Self for chaining.
    */
-  DataSetStore.prototype.get = function(key) {
+  DataSetStore.prototype.get = function (key) {
     return _store[key];
   };
 
@@ -81,7 +81,7 @@ function DataSetStoreFactory (_) {
    * @param   {Object}         data  Actual data object.
    * @return  {Object}               Self for chaining.
    */
-  DataSetStore.prototype.update = function(key, data) {
+  DataSetStore.prototype.update = function (key, data) {
     // Todo: Implement a deep cloning update function that doesn't destroy
     // references by accidentally replacing whole objects.
     if (!!_store[key]) {
@@ -104,7 +104,7 @@ function DataSetStoreFactory (_) {
    * @param   {Number|String}  key  Key to identify the data object.
    * @return  {Object}              Self for chaining.
    */
-  DataSetStore.prototype.remove = function(key) {
+  DataSetStore.prototype.remove = function (key) {
     // `void 0` always evaluates to `undefined`. This is a bit safer because
     // `undefined` could potentially be corrupted, e.g. `undefined = true`.
     if (!!_store[key]) {
