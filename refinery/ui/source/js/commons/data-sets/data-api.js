@@ -1,4 +1,4 @@
-function DataSetDataApiFactory (_, dataSetService) {
+function DataSetDataApiFactory ($q, _, dataSetService) {
   /**
    * Class constructor for querying the dataset data API.
    *
@@ -8,7 +8,7 @@ function DataSetDataApiFactory (_, dataSetService) {
    *
    * @param   {Object}  extra  Parameters other than `limit` and `offset`.
    */
-  function DataSetDataApi (extra) {
+  function DataSetDataApi (extra, firstTimeAllIds) {
     var params = {};
 
     if (_.isObject(extra)) {
@@ -30,24 +30,37 @@ function DataSetDataApiFactory (_, dataSetService) {
       params.limit = limit;
       params.offset = offset;
 
-      return dataSetService.query(params).$promise.then(function (data) {
-        // Rename `meta.total_count` into `meta.total`.
-        Object.defineProperty(
-          data.meta,
-          'total',
-          Object.getOwnPropertyDescriptor(data.meta, 'total_count')
-        );
-        delete data.meta['total_count'];
+      var data = dataSetService
+        .query(params).$promise.then(function (data) {
+          // Rename `meta.total_count` into `meta.total`.
+          Object.defineProperty(
+            data.meta,
+            'total',
+            Object.getOwnPropertyDescriptor(data.meta, 'total_count')
+          );
+          delete data.meta['total_count'];
 
-        // Rename `objects` into `data`.
-        Object.defineProperty(
-          data,
-          'data',
-          Object.getOwnPropertyDescriptor(data, 'objects')
-        );
-        delete data['objects'];
+          // Rename `objects` into `data`.
+          Object.defineProperty(
+            data,
+            'data',
+            Object.getOwnPropertyDescriptor(data, 'objects')
+          );
+          delete data['objects'];
 
-        return data;
+          return data;
+        });
+
+      var allIds = $q.when(false);
+
+      if (firstTimeAllIds) {
+        allIds = dataSetService.query({extra:'ids'}).$promise;
+        firstTimeAllIds = false;
+      }
+
+      return $q.all([data, allIds]).then(function (results) {
+        results[0].addIds = results[1];
+        return results[0];
       });
     };
   }
@@ -58,6 +71,7 @@ function DataSetDataApiFactory (_, dataSetService) {
 angular
   .module('dataSet')
   .factory('DataSetDataApi', [
+    '$q',
     '_',
     'dataSetService',
     DataSetDataApiFactory

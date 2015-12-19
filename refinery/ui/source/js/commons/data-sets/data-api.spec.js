@@ -63,7 +63,7 @@ describe('Common.dataSet.DataSetDataApi: unit tests', function () {
         .expectGET(
           settings.appRoot +
           settings.refineryApi +
-          '/data_sets/' +
+          '/data_sets' +
           params
         )
         .respond(200, fakeResponse);
