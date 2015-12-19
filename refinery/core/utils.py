@@ -11,6 +11,7 @@ from django.db import connection
 
 
 from .search_indexes import DataSetIndex
+from data_set_manager.search_indexes import NodeIndex
 
 
 logger = logging.getLogger(__name__)
@@ -573,7 +574,7 @@ def create_update_ontology(name, acronym, uri, version, owl2neo4j_version):
 def delete_analysis_index(node_instance):
     """Remove a Analysis' related document from Solr's index.
     """
-    DataSetIndex().remove_object(node_instance, using='data_set_manager')
+    NodeIndex().remove_object(node_instance, using='data_set_manager')
     logger.debug('Deleted Analysis\' NodeIndex with (uuid: %s)',
                  node_instance.uuid)
 

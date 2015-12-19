@@ -4,11 +4,15 @@ Created on Feb 20, 2012
 @author: nils
 '''
 from __future__ import absolute_import
+
+from urlparse import urljoin
+
 from datetime import datetime
 import logging
 import os
 import smtplib
 import socket
+import pysolr
 from django import forms
 from django.conf import settings
 from django.contrib import messages
@@ -900,6 +904,15 @@ def _analysis_delete(sender, instance, *args, **kwargs):
             except Exception as e:
                 logger.debug("No NodeIndex exists in Solr with id %s: %s",
                              item.id, e)
+
+    solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
+                               "data_set_manager"),
+                       timeout=10)
+    """
+        solr.optimize() Tells Solr to streamline the number of segments used,
+        essentially a defragmentation/ garbage collection operation.
+    """
+    solr.optimize()
 
 
 class AnalysisNodeConnection(models.Model):
