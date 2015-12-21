@@ -683,6 +683,8 @@ DashboardCtrl.prototype.collapseDatasetExploration = function () {
   this.expandDataSetPanel = false;
   this.deselectDataSets();
   this.dashboardExpandablePanelService.trigger('collapser');
+
+  this.dataSet.highlight(this.treemapContext.get('highlightedDataSets'), true);
 };
 
 DashboardCtrl.prototype.findDataSet = function (uuid) {
