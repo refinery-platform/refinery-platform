@@ -1078,12 +1078,21 @@ a.analysis-header {
           border-top: none;
         }
 
+        &.soft-highlighting {
+          background: rgba(0, 0, 0, 0.05);
+
+          a {
+            color: @black;
+          }
+        }
+
         &.highlighting {
           z-index: 2;
           color: @black;
           border-top-color: @white;
-          background: lighten(@orange, 50%, relative);
-          box-shadow: 0 1px 0 0 @white, inset 0 1px 0 0 fade(@orange, 10%), inset 0 -1px 0 0 fade(@orange, 10%);
+          background: lighten(@orange, 85%, relative);
+          // box-shadow: 0 1px 0 0 @white, inset 0 1px 0 0 fade(@orange, 10%), inset 0 -1px 0 0 fade(@orange, 10%);
+          box-shadow: 0 0 0 1px fade(@orange, 15%);
 
           a {
             color: @black;
@@ -1159,7 +1168,7 @@ a.analysis-header {
       top: 36px;
       left: 100%;
       right: 0;
-      bottom: 20px;
+      bottom: 0;
       overflow: hidden;
 
       .content-container {
@@ -1274,11 +1283,14 @@ a.analysis-header {
         }
       }
 
+      .bottom-half {
+        border-top: 1px solid lighten(@gray-light, 25%);
+      }
 
       .content {
         position: absolute;
         z-index: 1;
-        top: 36px;
+        top: 0;
         right: 0;
         bottom: 0;
         left: 0;
@@ -2114,4 +2126,29 @@ ul.badge-list {
 .fa-users.icon-shared-out:after {
   content: '\f148';
   right: -0.5em;
+}
+
+.full-without-topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin-top: 36px;
+}
+
+.top-half,
+.bottom-half {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+}
+
+.top-half {
+  top: 0;
+}
+
+.bottom-half {
+  top: 50%;
 }

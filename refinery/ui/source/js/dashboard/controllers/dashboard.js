@@ -234,12 +234,14 @@ function DashboardCtrl (
     }.bind(this));
   }.bind(this));
 
-  this.treemapContext.on('highlightedDataSets', function (dataSets) {
-    this.dataSet.highlight(dataSets);
+  this.treemapContext.on('highlightedDataSets', function (data) {
+    this.dataSet.highlight(data.ids, false, data.soft);
+    this.$rootScope.$digest();
   }.bind(this));
 
-  this.treemapContext.on('prevHighlightedDataSets', function (dataSets) {
-    this.dataSet.highlight(dataSets, true);
+  this.treemapContext.on('prevHighlightedDataSets', function (data) {
+    this.dataSet.highlight(data.ids, true, data.soft);
+    this.$rootScope.$digest();
   }.bind(this));
 }
 

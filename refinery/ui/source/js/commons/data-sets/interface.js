@@ -805,7 +805,7 @@ function DataSetFactory (
    * @param   {Boolean}  reset       If `true` then highlight will be `false`.
    * @return  {Object}               Instance itself to enable chaining.
    */
-  DataSet.prototype.highlight = function (dataSetIds, reset) {
+  DataSet.prototype.highlight = function (dataSetIds, reset, soft) {
     var dataSet,
         keys = Object.keys(dataSetIds);
 
@@ -815,7 +815,8 @@ function DataSetFactory (
 
     for (var i = keys.length; i--;) {
       _dataStore.set(keys[i], {
-        highlight: reset
+        highlight: soft ? false : reset,
+        softHighlight: soft ? reset : false,
       });
     }
 

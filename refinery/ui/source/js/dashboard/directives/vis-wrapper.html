@@ -50,11 +50,16 @@
         </div>
       </div>
     </div>
-    <div class="refinery-global-spinner" ng-if="visWrapper.loading !== false">
-      <div class="refinery-spinner"></div>
-    </div>
-    <div class="content">
-      <treemap ng-if="visWrapper.ready" graph="visWrapper.graph"></treemap>
+    <div class="full-without-topbar">
+      <div class="top-half"></div>
+      <div class="bottom-half">
+        <div class="refinery-global-spinner" ng-if="visWrapper.loading !== false">
+          <div class="refinery-spinner"></div>
+        </div>
+        <div class="content">
+          <treemap ng-if="visWrapper.ready" graph="visWrapper.graph"></treemap>
+        </div>
+      </div>
     </div>
   </div>
 </div>

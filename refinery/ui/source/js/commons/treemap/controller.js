@@ -400,6 +400,22 @@ TreemapCtrl.prototype.addEventListeners = function () {
   );
 
   this.treemap.$element.on(
+    'mouseenter',
+    '.group-of-nodes',
+    function (e) {
+      that.highlightByTerm(this.__data__, false, true, false);
+    }
+  );
+
+  this.treemap.$element.on(
+    'mouseleave',
+    '.group-of-nodes',
+    function (e) {
+      that.highlightByTerm(this.__data__, false, true, true);
+    }
+  );
+
+  this.treemap.$element.on(
     'click',
     '.label-wrapper, .outer-border',
     function (e) {
@@ -407,7 +423,7 @@ TreemapCtrl.prototype.addEventListeners = function () {
       if (e.metaKey) {
         that.transition(this.__data__);
       } else {
-        that.highlightByTerm(this, this.__data__, e.shiftKey);
+        that.highlightByTerm(this.__data__, e.shiftKey);
       }
     }
   );
@@ -752,55 +768,59 @@ TreemapCtrl.prototype.initialize = function (data) {
  *
  * @method  highlightByTerm
  * @author  Fritz Lekschas
- * @date    2015-11-02
+ * @date    2015-12-21
  *
  * @param   {Object}   data      Data object associated to the rectangle being
  *   clicked.
  * @param   {Boolean}  multiple  If `true` currently highlighted datasets will
  *   not be _de-highlighted_.
+ * @param   {Boolean}  soft      If `true` reports only soft highlighting. This
+ *   is used for hovering instead of clicking.
+ * @param   {Boolean}  reset     If `true` resets highlighting.
  */
-TreemapCtrl.prototype.highlightByTerm = function (el, data, multiple) {
-  var dataSets = this.Webworker.create(getAssociatedDataSets).run(data),
+TreemapCtrl.prototype.highlightByTerm = function (data, multiple, soft, reset) {
+  var dataSetIds = getAssociatedDataSets(data),
       i,
-      prevDataSetIds = this.treemapContext.get('highlightedDataSets') || {};
+      prevData = this.treemapContext.get('highlightedDataSets');
 
-  dataSets.then(function (dataSetIds) {
+  if (prevData && reset === undefined) {
     if (multiple) {
-      dataSetIds = this._.merge(dataSetIds, prevDataSetIds);
-      // this.highlightEls.push(el);
+      dataSetIds = this._.merge(dataSetIds, prevData.ids);
     } else {
       // Difference between previously highlighted datasets and datasets
       // highlighted next.
-      var keys = Object.keys(prevDataSetIds);
+      var keys = Object.keys(prevData.ids);
       for (i = keys.length; i--;) {
-        if (dataSets[keys[i]]) {
-          delete prevDataSetIds[keys[i]];
+        if (dataSetIds[keys[i]]) {
+          delete prevData.ids[keys[i]];
         }
       }
-
-      // Store previously highlighted datasets.
-      this.treemapContext.set(
-        'prevHighlightedDataSets',
-        prevDataSetIds,
-        true
-      );
     }
+  }
 
-    // for (i = dehighlightKeys.length; i--;) {
-    //   this.cacheTerms[data.ontId][data.branchId].meta.highlight = false;
-    // }
+  if (reset === undefined || reset === true) {
+    // Store previously highlighted datasets.
+    this.treemapContext.set(
+      'prevHighlightedDataSets',
+      {
+        ids: prevData.ids,
+        soft: soft
+      },
+      true
+    );
+  }
 
-    // for (i = keys.length; i--;) {
-    //   this.cacheTerms[data.ontId][data.branchId].meta.highlight = true;
-    // }
-
+  if (reset === undefined || reset === false) {
     // Store highlighted datasets.
     this.treemapContext.set(
       'highlightedDataSets',
-      dataSetIds,
+      {
+        ids: dataSetIds,
+        soft: soft
+      },
       true
     );
-  }.bind(this));
+  }
 };
 
 /**
