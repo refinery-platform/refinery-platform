@@ -51,6 +51,9 @@ urlpatterns = patterns(
     url(r'^data_sets/(?P<uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/edit/'
         r'$', 'data_set_edit', name="data_set_edit"),
+    url(r'^api/v1/data_sets/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'r'12})/attributes/'
+        r'$', 'data_set_attributes', name="data_set_attributes"),
     url(r'^data_sets/(?P<slug>[a-zA-Z0-9\_]+)/$', 'data_set_slug',
         name="data_set_slug"),
     url(r'^workflows/(?P<uuid>'

@@ -15,6 +15,11 @@ from django.core.urlresolvers import reverse
 from django.http import (
     HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 )
+
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext, loader
 
@@ -321,6 +326,12 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
             "pre_isatab_archive": pre_isatab_archive,
         },
         context_instance=RequestContext(request))
+
+@api_view(['GET'])
+def data_set_attributes(request, uuid, format=None):
+    if request.method == 'GET':
+        solr_response = solr_select(request, 'data_set_manager')
+        return solr_response
 
 
 def data_set_edit(request, uuid):
