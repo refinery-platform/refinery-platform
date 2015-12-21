@@ -1,5 +1,5 @@
-function DashboardVisData ($q, neo4jToGraph, dataSet) {
-  var graph = $q.defer(),
+function DashboardVisData ($q, neo4jToGraph, dataSet, graph) {
+  var neo4JGraph = $q.defer(),
       annotations = $q.defer();
 
   function Data () {}
@@ -7,10 +7,10 @@ function DashboardVisData ($q, neo4jToGraph, dataSet) {
   Data.prototype.load = function () {
     neo4jToGraph.get()
       .then(function (data) {
-        graph.resolve(data);
+        neo4JGraph.resolve(data);
       })
       .catch(function (e) {
-        graph.reject(e);
+        neo4JGraph.reject(e);
       });
 
     dataSet.loadAnnotations()
@@ -22,9 +22,9 @@ function DashboardVisData ($q, neo4jToGraph, dataSet) {
       });
   };
 
-  Data.prototype.updateAnnotations = function () {
-    this.data.then(function (data) {
-
+  Data.prototype.updateGraph = function (annotations) {
+    $q.all([neo4JGraph.promise, annotations]).then(function (results) {
+      graph.updateAnnotations(results[0], results[1]);
     });
   };
 
@@ -33,7 +33,7 @@ function DashboardVisData ($q, neo4jToGraph, dataSet) {
     'data',
     {
       get: function() {
-        return $q.all([graph.promise, annotations.promise]).then(
+        return $q.all([neo4JGraph.promise, annotations.promise]).then(
           function (results) {
             return {
               graph: results[0],
@@ -54,5 +54,6 @@ angular
     '$q',
     'neo4jToGraph',
     'dataSet',
+    'graph',
     DashboardVisData
   ]);
