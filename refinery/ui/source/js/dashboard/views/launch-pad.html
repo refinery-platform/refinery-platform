@@ -67,13 +67,8 @@
           <div
             id="launchpad_warning" class="refinery-notification-error"
             ng-show="dashboard.searchQueryDataSets.length > 1 && dashboard.dataSets.error">
-            <strong>Error: </strong>Please contact your
-            <script>
-                document.getElementById("launchpad_warning").innerHTML +=
-                        "<a " +
-                        "ng-href='mailto:" + admins + "?Subject=Refinery%20Error' target='_top'>System " +
-                        "Administrator</a>."
-            </script>
+            <strong>Error: </strong>
+            Please contact your <a ng-href="mailto:{{ app.settings.djangoApp.admins }}?Subject=Refinery%20Error">System Administrator</a>.
           </div>
             </div>
         <div class="floatbox">
