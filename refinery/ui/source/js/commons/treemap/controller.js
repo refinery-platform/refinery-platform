@@ -55,16 +55,21 @@ function getAssociatedDataSets (node) {
  *
  * @method  TreemapCtrl
  * @author  Fritz Lekschas
- * @date    2015-08-04
+ * @date    2015-12-21
  *
- * @param   {Object}  $element   Directive's root element.
- * @param   {Object}  $q         Angular's promise service.
- * @param   {Object}  $          jQuery.
- * @param   {Object}  d3         D3.
- * @param   {Object}  neo4jToD3  Neo4J to D3 converter.
- * @param   {Object}  HEX        HEX class.
- * @param   {Object}  D3Colors   Service for creating D3 color scalings.
- * @param   {Object}  settings   Treemap settings.
+ * @param   {[type]}     $element               Directive's root element.
+ * @param   {[type]}     $q                     Angular's promise service.
+ * @param   {[type]}     $                      jQuery.
+ * @param   {[type]}     $window                `document.window`.
+ * @param   {[type]}     _                      Lodash.
+ * @param   {[type]}     d3                     D3.
+ * @param   {[type]}     HEX                    HEX class.
+ * @param   {[type]}     D3Colors               Service for creating D3 color scalings.
+ * @param   {[type]}     treemapSettings        Treemap settings.
+ * @param   {[type]}     pubSub                 PubSub service.
+ * @param   {[type]}     treemapContext         Context helper.
+ * @param   {[type]}     treemapGraphToTreemap  Converter.
+ * @param   {[type]}     Webworker              Web Worker service.
  */
 function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
   treemapSettings, pubSub, treemapContext, treemapGraphToTreemap, Webworker) {
