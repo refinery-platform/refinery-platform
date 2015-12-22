@@ -329,7 +329,7 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
         context_instance=RequestContext(request))
 
 @api_view(['GET'])
-def data_set_attributes(request, uuid, format=None):
+def data_set_files(request, uuid, format=None):
     study = 'ff657398-30db-4481-bfb9-8b86f46e9000'
     assay = '5eff885e-49cb-477a-ad76-f65d74d78f8a'
 
