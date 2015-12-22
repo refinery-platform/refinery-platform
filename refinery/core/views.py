@@ -330,11 +330,13 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
 
 @api_view(['GET'])
 def data_set_files(request, uuid, format=None):
-    study = 'ff657398-30db-4481-bfb9-8b86f46e9000'
-    assay = '5eff885e-49cb-477a-ad76-f65d74d78f8a'
+    #http://192.168.50.50:8000/api/v1/data_sets/c508e83e-f9ee-4740-b9c7-a7b0e631280f/files/?study_uuid=ff657398-30db-4481-bfb9-8b86f46e9000&assay_uuid=5eff885e-49cb-477a-ad76-f65d74d78f8a
+    study_uuid = request.query_params.get('study_uuid')
+    assay_uuid = request.query_params.get('assay_uuid')
 
     if request.method == 'GET':
-        solr_response = generate_solr_query('data_set_manager', study, assay)
+        solr_response = generate_solr_query('data_set_manager', study_uuid,
+                                            assay_uuid)
       #  solr_response = solr_select(request, 'data_set_manager')
         return solr_response
 
@@ -626,11 +628,12 @@ def generate_solr_query(core, study_uuid, assay_uuid):
 
     data = 'fq=(study_uuid:'+study_uuid+'+AND+assay_uuid:'+assay_uuid+')'
 
-    temp_data = urlquote( data + '&' + file_types + ')&' + other, safe='=&+')
+    temp_data = urlquote(data + '&' + file_types + ')&' + other, safe='=&+')
 
     url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
     fullResponse = requests.get(url, params=temp_data)
     response = fullResponse.content
+
     return HttpResponse(response, mimetype='application/json')
 
 
