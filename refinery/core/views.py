@@ -7,6 +7,7 @@ import py2neo
 import urlparse
 
 from django.utils import simplejson
+from django.utils.http import urlquote
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -329,8 +330,12 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
 
 @api_view(['GET'])
 def data_set_attributes(request, uuid, format=None):
+    study = 'ff657398-30db-4481-bfb9-8b86f46e9000'
+    assay = '5eff885e-49cb-477a-ad76-f65d74d78f8a'
+
     if request.method == 'GET':
-        solr_response = solr_select(request, 'data_set_manager')
+        solr_response = generate_solr_query('data_set_manager', study, assay)
+      #  solr_response = solr_select(request, 'data_set_manager')
         return solr_response
 
 
@@ -607,6 +612,25 @@ def solr_core_search(request):
 
             response = simplejson.dumps(response)
 
+    return HttpResponse(response, mimetype='application/json')
+
+
+def generate_solr_query(core, study_uuid, assay_uuid):
+
+    file_types = 'fq=type:("Raw+Data+File"+OR+"Derived+Data+File"+OR+' \
+                 '"Array+Data+File"+OR+"Derived+Array+Data+File"+OR+' \
+                 '"Array+Data+Matrix+File"+OR+"Derived+Array+Data+Matrix+File"'
+
+    other = 'fq=is_annotation:false&rows=1&q=django_ct:data_set_manager.node' \
+            '&start=0&wt=json'
+
+    data = 'fq=(study_uuid:'+study_uuid+'+AND+assay_uuid:'+assay_uuid+')'
+
+    temp_data = urlquote( data + '&' + file_types + ')&' + other, safe='=&+')
+
+    url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
+    fullResponse = requests.get(url, params=temp_data)
+    response = fullResponse.content
     return HttpResponse(response, mimetype='application/json')
 
 
