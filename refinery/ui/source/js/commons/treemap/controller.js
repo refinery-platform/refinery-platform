@@ -85,6 +85,7 @@ function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
   this.settings = treemapSettings;
   this.pubSub = pubSub;
   this.treemapContext = treemapContext;
+  this.$visWrapper = this.$element.closest('.visWrapper');
 
   this.Webworker = Webworker;
 
@@ -122,7 +123,8 @@ function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
       .style('shape-rendering', 'crispEdges');
   this.treemap.$element = this.$(this.treemap.element.node());
 
-  this.treemap.grandParent = this.d3.select('#back');
+  this.treemap.grandParent = this.d3.select(this.$visWrapper[0])
+    .select('.root-path');
   this.treemap.$grandParent = this.$(this.treemap.grandParent.node());
   this.treemap.$grandParentContainer = this.treemap.$grandParent.parent();
 
