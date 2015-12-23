@@ -69,11 +69,10 @@ function getAssociatedDataSets (node) {
  * @param  {Object}  treemapSettings        Treemap settings.
  * @param  {Object}  pubSub                 PubSub service.
  * @param  {Object}  treemapContext         Context helper.
- * @param  {Object}  treemapGraphToTreemap  Converter.
  * @param  {Object}  Webworker              Web Worker service.
  */
 function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
-  treemapSettings, pubSub, treemapContext, treemapGraphToTreemap, Webworker) {
+  treemapSettings, pubSub, treemapContext, Webworker) {
   this.$ = $;
   this._ = _;
   this.$q = $q;
@@ -129,13 +128,11 @@ function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
   this.treemap.$grandParentContainer = this.treemap.$grandParent.parent();
 
   if (this.graph) {
-    treemapGraphToTreemap.convert(this.graph).then(
-      function (data) {
-        this.data = data;
-        this.pubSub.trigger('treemap.loaded');
-        this.draw();
-      }.bind(this)
-    );
+    this.graph.then(function (data) {
+      this.data = data;
+      this.pubSub.trigger('treemap.loaded');
+      this.draw();
+    }.bind(this));
   } else {
     this.pubSub.trigger('treemap.noData');
   }
@@ -661,6 +658,25 @@ TreemapCtrl.prototype.display = function (node, firstTime) {
 };
 
 /**
+ * Copy `children` to `_children`.
+ *
+ * @method  copyChildren
+ * @author  Fritz Lekschas
+ * @date    2015-12-22
+ * @param   {[type]}      node  [description]
+ * @return  {[type]}            [description]
+ */
+TreemapCtrl.prototype.copyChildren = function (node) {
+  node._children = node.children;
+
+  var i = node.children.length;
+
+  while (i--) {
+    this.copyChildren(node.children[i]);
+  }
+};
+
+/**
  * Draws the treemap.
  *
  * This is kind of a constructor for the actual visualization. It executes all
@@ -680,7 +696,7 @@ TreemapCtrl.prototype.draw = function () {
   // the data we can skip this step the second time the treemap is initialized.
   if (!this.data.ready) {
     this.initialize(this.data);
-    this.accumulateAndPrune(this.data, 'numDataSets');
+    this.copyChildren(this.data);
     this.layout(this.data, 0);
 
     // Mark data as ready so that we can skip the former steps next time.
@@ -1271,9 +1287,7 @@ Object.defineProperty(
 
       this.treemapContext.set(
         'dataSets',
-        this.Webworker.create(getAssociatedDataSets).run(
-          this.cacheTerms[root.ontId][root.branchId]
-        ),
+        getAssociatedDataSets(this.cacheTerms[root.ontId][root.branchId]),
         true
       );
 
@@ -1335,7 +1349,6 @@ angular
     'treemapSettings',
     'pubSub',
     'treemapContext',
-    'treemapGraphToTreemap',
     'Webworker',
     TreemapCtrl
   ]);

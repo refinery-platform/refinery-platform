@@ -1,5 +1,6 @@
 function DashboardVisData ($q, neo4jToGraph, dataSet, graph) {
-  var neo4JGraph = $q.defer(),
+  var graphData = $q.defer(),
+      treemapData = $q.defer(),
       annotations = $q.defer();
 
   function Data () {}
@@ -7,10 +8,27 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph) {
   Data.prototype.load = function () {
     neo4jToGraph.get()
       .then(function (data) {
-        neo4JGraph.resolve(data);
+        // Trim graph
+        var prunedData = graph.accumulateAndPrune(
+          data, 'http://www.w3.org/2002/07/owl#Thing', 'numDataSets'
+        );
+
+        // Init precision and recall
+        graph.initPrecisionRecall(data, dataSet.total);
+
+        // Make precision and recall available as bars
+        graph.propertyToBar(data, ['precision', 'recall']);
+
+        // Make precision and recall available as bars
+        graph.propertyToData(data, ['name']);
+
+        // Convert graph into hierarchy for D3
+        treemapData.resolve(graph.toTreemap(data, prunedData.root));
+
+        graphData.resolve(data);
       })
       .catch(function (e) {
-        neo4JGraph.reject(e);
+        graphData.reject(e);
       });
 
     dataSet.loadAnnotations()
@@ -23,7 +41,7 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph) {
   };
 
   Data.prototype.updateGraph = function (annotations) {
-    $q.all([neo4JGraph.promise, annotations]).then(function (results) {
+    $q.all([graphData.promise, annotations]).then(function (results) {
       graph.updateAnnotations(results[0], results[1]);
     });
   };
@@ -33,14 +51,21 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph) {
     'data',
     {
       get: function() {
-        return $q.all([neo4JGraph.promise, annotations.promise]).then(
+        return $q.all([graphData.promise, treemapData.promise]).then(
           function (results) {
             return {
               graph: results[0],
-              annotations: results[1]
+              treemap: results[1]
             };
           }
         );
+
+
+        // return graphData.promise.then(function (graph) {
+        //   return {
+        //     graph: graphData.promise
+        //   };
+        // });
       }
     }
   );

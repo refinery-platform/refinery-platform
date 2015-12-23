@@ -229,7 +229,7 @@ function DashboardCtrl (
   }.bind(this));
 
   this.treemapContext.on('dataSets', function (response) {
-    response.then(function (dataSets) {
+    this.$q.when(response).then(function (dataSets) {
       this.selectDataSets(dataSets);
     }.bind(this));
   }.bind(this));

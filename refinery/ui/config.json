@@ -36,14 +36,17 @@
         "jquery-file-upload/css/jquery.fileupload.css",
         "select2/select2.css",
         "spectrum/spectrum.css",
-        "tipsy/src/stylesheets/tipsy.css"
+        "tipsy/src/stylesheets/tipsy.css",
+        "d3-list-graph/dist/listGraph.min.css"
       ],
       "images": [
         "jquery-file-upload/img/loading.gif",
         "select2/select2-spinner.gif",
         "select2/select2.png",
         "select2/select2x2.png",
-        "tipsy/src/images/tipsy.gif"
+        "tipsy/src/images/tipsy.gif",
+        "tipsy/src/images/tipsy.gif",
+        "d3-list-graph/dist/icons.svg"
       ],
       "js": [
         "jquery/dist/jquery.min.js",
@@ -61,6 +64,10 @@
         "ng-webworker/src/ng-webworker.min.js",
         "ng-webworker/src/worker_wrapper.min.js",
         "d3/d3.min.js",
+        "d3-list-graph/dist/d3.layout.listGraph.js",
+        "d3-list-graph/dist/d3.layout.listGraph.min.js",
+        "d3-list-graph/dist/listGraph.js",
+        "d3-list-graph/dist/listGraph.min.js",
         "d3-tip/index.js",
         "c3/c3.min.js",
         "graphlib/dist/graphlib.core.min.js",
@@ -73,6 +80,7 @@
         "jquery-file-upload/js/vendor/jquery.ui.widget.js",
         "jquery-file-upload/js/jquery.fileupload.js",
         "jquery-file-upload/js/jquery.fileupload-process.js",
+        "jquery-mousewheel/jquery.mousewheel.min.js",
         "lodash/lodash.min.js",
         "angular-ui-grid/ui-grid.min.js",
         "spark-md5/spark-md5.js",
@@ -86,7 +94,10 @@
         "angular-sanitize/angular-sanitize.min.js.map",
         "angular-ui-select2/release/select2.min.js.map",
         "fontawesome/css/font-awesome.css.map",
-        "jquery/dist/jquery.min.map"
+        "jquery/dist/jquery.min.map",
+        "d3-list-graph/dist/d3.layout.listGraph.min.js.map",
+        "d3-list-graph/dist/listGraph.min.js.map",
+        "d3-list-graph/dist/listGraph.min.css.map"
       ],
       "font": [
         "angular-ui-grid/ui-grid.eot",

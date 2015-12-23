@@ -7,8 +7,11 @@
 {% endblock %}
 
 {% block head_html %}
+<link href="{% static 'vendor/d3-list-graph/dist/listGraph.min.css' %}" rel="stylesheet">
 <link href="{% static 'styles/animate.css' %}" rel="stylesheet">
+<link href="{% static 'styles/dashboard.css' %}" rel="stylesheet">
 <link href="{% static 'styles/treemap.css' %}" rel="stylesheet">
+<link href="{% static 'styles/list-graph.css' %}" rel="stylesheet">
 <script type="text/javascript">
   // Global variables for the JavaScript world
   window.djangoApp.numOntologiesImported = {{ num_ontologies_imported }};
@@ -53,4 +56,10 @@
   ui-view>
 </div>
 
+{% endblock %}
+
+{% block script %}
+  <script type="text/javascript" src="{% static "vendor/jquery-mousewheel/jquery.mousewheel.min.js" %}"></script>
+  <script type="text/javascript" src="{% static "vendor/d3-list-graph/dist/d3.layout.listGraph.min.js" %}"></script>
+  <script type="text/javascript" src="{% static "vendor/d3-list-graph/dist/listGraph.min.js" %}"></script>
 {% endblock %}

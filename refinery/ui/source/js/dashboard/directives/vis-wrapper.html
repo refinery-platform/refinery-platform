@@ -51,13 +51,24 @@
       </div>
     </div>
     <div class="full-without-topbar">
-      <div class="top-half"></div>
+      <div class="top-half">
+        <div class="refinery-global-spinner" ng-if="visWrapper.loading !== false">
+          <div class="refinery-spinner"></div>
+        </div>
+        <div class="content">
+          <list-graph
+            ng-if="visWrapper.ready"
+            graph="visWrapper.graph"></list-graph>
+        </div>
+      </div>
       <div class="bottom-half">
         <div class="refinery-global-spinner" ng-if="visWrapper.loading !== false">
           <div class="refinery-spinner"></div>
         </div>
         <div class="content">
-          <treemap ng-if="visWrapper.ready" graph="visWrapper.graph"></treemap>
+          <treemap
+            ng-if="visWrapper.ready"
+            graph="visWrapper.treemap"></treemap>
         </div>
       </div>
     </div>
