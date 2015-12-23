@@ -20,6 +20,30 @@
       float: left !important;
       opacity: 1 !important;
     }
+
+    .controls li {
+      font-size: 12px;
+      line-height: 25px;
+
+      [class*=' icon-'],
+      [class^=icon-] {
+        top: 4px;
+        right: 4px;
+        width: 16px;
+        height: 16px;
+      }
+
+      .icon-gear {
+        top: 6px;
+        right: 6px;
+        width: 14px;
+        height: 14px;
+      }
+
+      .expandable-label {
+        line-height: 25px;
+      }
+    }
   }
 
   .wrapper {
@@ -36,6 +60,15 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: yellow;
+  }
+
+  .label {
+    display: block;
+    font-weight: normal;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25em;
   }
 }

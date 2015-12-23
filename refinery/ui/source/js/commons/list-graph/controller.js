@@ -17,20 +17,17 @@ function ListGraphCtrl ($element, $, graph, listGraphSettings, dataSet) {
   this.settings = listGraphSettings;
   this.$visElement = this.$element.find('.list-graph');
 
-  this.width = this.$visElement.width();
-  this.height = this.$visElement.height();
+  this.width = this.$visElement.find('svg.base').width();
+  this.height = this.$visElement.find('svg.base').height();
 
   if (this.graphData) {
     this.graphData.then(function (graphData) {
-      console.log(graphData);
       this.data = graphData;
       this.listGraph = new ListGraph(
         this.$visElement[0],
         this.data,
         ['http://www.w3.org/2002/07/owl#Thing'],
         {
-          width: this.width,
-          height: this.height,
           columns: Math.round(this.width / 175),
           rows: Math.round(this.height / 36),
           iconPath: this.settings.iconPath
