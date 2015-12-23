@@ -1,10 +1,10 @@
-function buildTree (results) {
+function buildGraph (results) {
   var child,
       // Stores the children of each node..
       // The only difference to `nodes` is that the `children` is an object
       // holding the name of the child node.
       childIndex = {
-        'OWL:Thing': {}
+        'http://www.w3.org/2002/07/owl#Thing': {}
       },
       currentChild,
       currentDataSet,
@@ -16,7 +16,7 @@ function buildTree (results) {
       len,
       nodes = {
         // Fortunately `owl:Thing` is the mandatory root for any ontology.
-        'OWL:Thing': {
+        'http://www.w3.org/2002/07/owl#Thing': {
           children: [],
           dataSets: {},
           name: 'Root',
@@ -52,64 +52,57 @@ function buildTree (results) {
     currentDataSet = data[i].row[dataSet];
     currentParent = data[i].row[parent];
 
-    if (!(currentParent.name in nodes)) {
-      nodes[currentParent.name] = {
+    // Add parent to nodes if not available
+    if (!(currentParent.uri in nodes)) {
+      nodes[currentParent.uri] = {
         children: [],
         dataSets: {},
-        name: currentParent.name,
+        name: currentParent['rdfs:label'] || currentParent.name,
         numDataSets: 0,
-        ontId: currentParent.name
+        ontId: currentParent.name,
+        uri: currentParent.uri
       };
+      childIndex[currentParent.uri] = {};
     }
 
-    if (!(currentChild.name in nodes)) {
-      nodes[currentChild.name] = {
+    // Add child to nodes if not available
+    if (!(currentChild.uri in nodes)) {
+      nodes[currentChild.uri] = {
         children: [],
         dataSets: {},
-        name: currentChild.name,
+        name: currentChild['rdfs:label'] || currentChild.name,
         numDataSets: 0,
-        ontId: currentChild.name
+        ontId: currentChild.name,
+        uri: currentChild.uri
       };
+      childIndex[currentChild.uri] = {};
     }
 
-    if ('rdfs:label' in currentChild) {
-      nodes[currentChild.name].name = currentChild['rdfs:label'];
+    // Store parent-child relationship
+    if (!childIndex[currentParent.uri][currentChild.uri]) {
+      nodes[currentParent.uri].children.push(currentChild.uri);
+      childIndex[currentParent.uri][currentChild.uri] = true;
     }
 
-    if ('uri' in currentChild) {
-      nodes[currentChild.name].uri = currentChild.uri;
-    }
-
+    // Store annotation if available
     if (currentDataSet !== null &&
-        !nodes[currentChild.name].dataSets[currentDataSet.id]) {
-      nodes[currentChild.name].numDataSets++;
-      nodes[currentChild.name].dataSets[currentDataSet.id] = true;
-    }
-
-    if (!(currentParent.name in childIndex)) {
-      childIndex[currentParent.name] = {};
-    }
-
-    // According to https://jsperf.com/key-or-array-search/9
-    // void 0 (which is _undefined_) scales best.
-    if (childIndex[currentParent.name][currentChild.name] === void 0) {
-      nodes[currentParent.name].children.push(nodes[currentChild.name]);
-      childIndex[currentParent.name][currentChild.name] = true;
+        !nodes[currentChild.uri].dataSets[currentDataSet.id]) {
+      nodes[currentChild.uri].numDataSets++;
+      nodes[currentChild.uri].dataSets[currentDataSet.id] = true;
     }
   }
 
-  // Deep clone object to be usable by D3
-  return JSON.parse(JSON.stringify(nodes['OWL:Thing']));
+  return nodes;
 }
 
-function Neo4jToD3 ($q, neo4j, Webworker) {
+function Neo4jToGraph ($q, neo4j, Webworker) {
   this.$q = $q;
   this.neo4j = neo4j;
 
   this.Webworker = Webworker;
 }
 
-Neo4jToD3.prototype.get = function () {
+Neo4jToGraph.prototype.get = function () {
   // Intermediate promise. We can't use the promise returned by ngResource
   // because Neo4J doesn't report errors via HTTP codes but as part of the
   // returned body.
@@ -132,15 +125,15 @@ Neo4jToD3.prototype.get = function () {
     });
 
   return neo4jData.promise.then(function (data) {
-    return this.Webworker.create(buildTree).run(data);
+    return this.Webworker.create(buildGraph).run(data);
   }.bind(this));
 };
 
 angular
   .module('refineryApp')
-  .service('neo4jToD3', [
+  .service('neo4jToGraph', [
     '$q',
     'neo4j',
     'Webworker',
-    Neo4jToD3
+    Neo4jToGraph
   ]);

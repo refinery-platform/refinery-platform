@@ -3,6 +3,8 @@ import os
 import re
 import urllib
 import xmltodict
+import py2neo
+import urlparse
 
 from django.utils import simplejson
 from django.conf import settings
@@ -592,7 +594,6 @@ def solr_core_search(request):
             if annotations:
                 response['response']['annotations'] = annotation_data
 
-            # response = json.dumps(response)
             response = simplejson.dumps(response)
 
     return HttpResponse(response, mimetype='application/json')
@@ -778,7 +779,7 @@ def pubmed_abstract(request, id):
 
     response = requests.get(url, params=params, headers=headers)
     return HttpResponse(
-        json.dumps(xmltodict.parse(response.text)),
+        simplejson.dumps(xmltodict.parse(response.text)),
         mimetype='application/json'
     )
 
@@ -877,7 +878,7 @@ def neo4j_dataset_annotations(request):
     except requests.exceptions.RequestException as e:
         logger.error(e)
         return HttpResponse(
-            response,
+            'Request failed.',
             mimetype='application/json',
             status=500
         )

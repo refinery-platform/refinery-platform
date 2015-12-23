@@ -67,7 +67,7 @@ function getAssociatedDataSets (node) {
  * @param   {Object}  settings   Treemap settings.
  */
 function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
-  treemapSettings, pubSub, dashboardTreemapData, treemapContext, Webworker) {
+  treemapSettings, pubSub, treemapContext, treemapGraphToTreemap, Webworker) {
   this.$ = $;
   this._ = _;
   this.$q = $q;
@@ -120,13 +120,17 @@ function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
   this.treemap.$grandParent = this.$(this.treemap.grandParent.node());
   this.treemap.$grandParentContainer = this.treemap.$grandParent.parent();
 
-  dashboardTreemapData
-    .data
-    .then(function (data) {
-      this.data = data;
-      this.pubSub.trigger('treemap.loaded');
-      this.draw();
-    }.bind(this));
+  if (this.graph) {
+    treemapGraphToTreemap.convert(this.graph).then(
+      function (data) {
+        this.data = data;
+        this.pubSub.trigger('treemap.loaded');
+        this.draw();
+      }.bind(this)
+    );
+  } else {
+    this.pubSub.trigger('treemap.noData');
+  }
 }
 
 /*
@@ -1302,8 +1306,8 @@ angular
     'D3Colors',
     'treemapSettings',
     'pubSub',
-    'dashboardTreemapData',
     'treemapContext',
+    'treemapGraphToTreemap',
     'Webworker',
     TreemapCtrl
   ]);

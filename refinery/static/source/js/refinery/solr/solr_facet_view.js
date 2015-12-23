@@ -173,7 +173,7 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 	
 			// user chooses to open collapsed facet
 		   	$("#" + self._composeFacetId( attribute.solr_field + "___inactive" ) )
-					.on( "shown.bs.collapse.in", function() {
+					.on( "show.bs.collapse", function() {
 		   		var facet = self._decomposeFacetId( this.id ).facet;
 				
 				// add facet to list of expanded facets for this view
@@ -184,12 +184,13 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 					.html( self._getFacetLabel( facet, facetCounts ) );
 				
 				// hide active facet section (to avoid showing duplicate facet values)
-		   		$( "#" + self._composeFacetId( facet + "___active" ) ).hide(); //slideUp( "slow" );		   			
+		   		$( "#" + self._composeFacetId( facet + "___active" )).addClass("hidden");
 		   	});						
 	
 			// user chooses to close expanded facet
 		   	$("#" + self._composeFacetId( attribute.solr_field + "___inactive" ) )
 					.on( "hidden.bs.collapse", function() {
+
 		   		var facet = self._decomposeFacetId( this.id ).facet;
 		   		
 				// remove facet from list of expanded facets for this view
@@ -200,8 +201,7 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
           .html( self._getFacetLabel( facet, facetCounts ) );
 		   		
 				// show active facet section
-	   			$( "#" + self._composeFacetId( facet + "___active" ) ).removeClass( "hidden" );
-	   			$( "#" + self._composeFacetId( facet + "___active" ) ).fadeIn( "slow" ); //slideDown( "slow");
+	   			$( "#" + self._composeFacetId( facet + "___active" )).fadeIn("slow").removeClass( "hidden" );
 		   	});
 		}											
 	}	

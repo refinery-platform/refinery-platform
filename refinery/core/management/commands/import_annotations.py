@@ -44,12 +44,14 @@ class Command(BaseCommand):
         statement_name = (
             "MATCH (term:Class {name:{ont_id}}) "
             "MERGE (ds:DataSet {id:{ds_id},uuid:{ds_uuid}}) "
-            "MERGE ds-[:`annotated_with`]->term"
+            "MERGE ds-[r:`annotated_with`]->term "
+            "SET r.count = {count}"
         )
         statement_uri = (
             "MATCH (term:Class {uri:{uri}}) "
             "MERGE (ds:DataSet {id:{ds_id},uuid:{ds_uuid}}) "
-            "MERGE ds-[:`annotated_with`]->term"
+            "MERGE ds-[r:`annotated_with`]->term "
+            "SET r.count = {count}"
         )
 
         for annotation in annotations:
@@ -59,7 +61,8 @@ class Command(BaseCommand):
                     {
                         'uri': annotation['value_uri'],
                         'ds_id': annotation['data_set_id'],
-                        'ds_uuid': annotation['data_set_uuid']
+                        'ds_uuid': annotation['data_set_uuid'],
+                        'count': annotation['value_count']
                     }
                 )
             else:
@@ -72,7 +75,8 @@ class Command(BaseCommand):
                             annotation['value_accession']
                         ),
                         'ds_id': annotation['data_set_id'],
-                        'ds_uuid': annotation['data_set_uuid']
+                        'ds_uuid': annotation['data_set_uuid'],
+                        'count': annotation['value_count']
                     }
                 )
 

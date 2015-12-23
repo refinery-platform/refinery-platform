@@ -2,10 +2,16 @@ function treemapDirective () {
   'use strict';
 
   return {
+    bindToController: {
+      graph: '='
+    },
     controller: 'TreemapCtrl',
     controllerAs: 'treemap',
     restrict: 'E',
     replace: true,
+    scope: {
+      graph: '='
+    },
     templateUrl: '/static/partials/commons/treemap/template.html'
   };
 }

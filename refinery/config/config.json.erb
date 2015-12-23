@@ -24,7 +24,7 @@
         "NAME": "refinery",
         "PASSWORD": "",
         "PORT": "",
-        "USER": "vagrant"
+        "USER": "<%= @app_user %>"
     }
   },
   "DEFAULT_FROM_EMAIL": "webmaster@localhost",
@@ -37,12 +37,61 @@
     "SOLR": 10.0
   },
   "ISA_TAB_DIR": "/vagrant/isa-tab",
-  "JAVA_ENTITY_EXPANSION_LIMIT": 1000000,
+  "JAVA_ENTITY_EXPANSION_LIMIT": 100000,
   "LANGUAGE_CODE": "en-us",
   "LIBS_DIR": "/opt",
   "LOG_LEVEL": "DEBUG",
   "MEDIA_ROOT": "",
   "MEDIA_URL": "/media/",
+  "NEO4J": {
+    "BASE_URL": "http://localhost:7474",
+    "CONSTRAINTS": [
+      {
+        "label": "Class",
+        "property": [
+          {
+            "name": "name",
+            "unique": true
+          },
+          {
+            "name": "uri",
+            "unique": true
+          }
+        ]
+      },
+      {
+        "label": "Ontology",
+        "property": [
+          {
+            "name": "acronym",
+            "unique": true
+          },
+          {
+            "name": "uri",
+            "unique": true
+          }
+        ]
+      },
+      {
+        "label": "User",
+        "property": [
+          {
+            "name": "id",
+            "unique": true
+          }
+        ]
+      },
+      {
+        "label": "DataSet",
+        "property": [
+          {
+            "name": "id",
+            "unique": true
+          }
+        ]
+      }
+    ]
+  },
   "REFINERY_BANNER": "",
   "REFINERY_BANNER_ANONYMOUS_ONLY": false,
   "REFINERY_DATA_IMPORT_DIR": "/vagrant/import",

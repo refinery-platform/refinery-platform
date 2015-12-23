@@ -173,6 +173,7 @@ INSTALLED_APPS = (
     # RP: added for database migration between builds
     'south',
     'chunked_upload',
+    'rest_framework',
 )
 
 # NG: added for django-guardian
@@ -428,12 +429,6 @@ TIMEOUT = get_setting("TIMEOUT")
 # Directory for custom libraries
 LIBS_DIR = get_setting("LIBS_DIR")
 
-# Neo4J settings
-neo4j_settings = get_setting("NEO4J")
-
-NEO4J_BASE_URL = get_setting("BASE_URL", neo4j_settings)
-NEO4J_CONSTRAINTS = get_setting("CONSTRAINTS", neo4j_settings)
-
 # Java settings
 JAVA_ENTITY_EXPANSION_LIMIT = get_setting("JAVA_ENTITY_EXPANSION_LIMIT")
 
@@ -473,3 +468,52 @@ try:
 except Exception as e:
     logger.debug("Error Retrieving Most Recent Commit: ", e)
     CURRENT_COMMIT = "Error Retrieving Most Recent Commit: " + str(e)
+
+# Neo4J Settings
+NEO4J_BASE_URL = "http://localhost:7474"
+NEO4J_CONSTRAINTS = [
+    {
+        "label": "Class",
+        "properties": [
+            {
+                "name": "name",
+                "unique": False
+            },
+            {
+                "name": "uri",
+                "unique": True
+            }
+        ]
+    },
+    {
+        "label": "Ontology",
+        "properties": [
+            {
+                "name": "acronym",
+                "unique": True
+            },
+            {
+                "name": "uri",
+                "unique": True
+            }
+        ]
+    },
+    {
+        "label": "User",
+        "properties": [
+            {
+                "name": "id",
+                "unique": True
+            }
+        ]
+    },
+    {
+        "label": "DataSet",
+        "properties": [
+            {
+                "name": "id",
+                "unique": True
+            }
+        ]
+    }
+]

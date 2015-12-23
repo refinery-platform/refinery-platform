@@ -5,9 +5,13 @@ import core
 import datetime
 import urlparse
 from django.conf import settings
+from django.core.cache import cache
+from django.contrib.auth.models import User
 from django.db import connection
 
+
 from .search_indexes import DataSetIndex
+from data_set_manager.search_indexes import NodeIndex
 
 
 logger = logging.getLogger(__name__)
@@ -323,18 +327,11 @@ def get_data_set_annotations(dataset_uuid):
     cursor = connection.cursor()
 
     sql = """SELECT
-        data_set.uuid AS data_set_uuid,
         data_set.id AS data_set_id,
-        annotated_study.investigation_id,
-        annotated_study.study_id,
-        annotated_study.assay_id,
-        annotated_study.id AS node_id,
-        annotated_study.file_uuid,
-        annotated_study.type,
-        annotated_study.subtype,
-        annotated_study.value,
+        data_set.uuid AS data_set_uuid,
         annotated_study.value_source,
-        annotated_study.value_accession
+        annotated_study.value_accession,
+        COUNT(data_set.id) AS value_count
       FROM
         (
           SELECT
@@ -359,13 +356,7 @@ def get_data_set_annotations(dataset_uuid):
             JOIN
             (
               SELECT
-                node.id,
                 node.study_id,
-                node.type,
-                node.file_uuid,
-                node.assay_id,
-                attr.subtype,
-                attr.value,
                 attr.value_source,
                 attr.value_accession
               FROM
@@ -377,12 +368,40 @@ def get_data_set_annotations(dataset_uuid):
               WHERE
                 attr.value_source IS NOT NULL AND
                 attr.value_source NOT LIKE ''
+
+              UNION ALL
+
+              SELECT
+                study_id,
+                measurement_source AS value_source,
+                measurement_accession AS value_accession
+              FROM
+                data_set_manager_assay
+              WHERE
+                measurement_accession IS NOT NULL AND
+                measurement_accession NOT LIKE ''
+
+              UNION ALL
+
+              SELECT
+                study_id,
+                technology_source AS value_source,
+                technology_accession AS value_accession
+              FROM
+                data_set_manager_assay
+              WHERE
+                technology_accession IS NOT NULL AND
+                technology_accession NOT LIKE ''
             ) AS annotated_node
             ON
             annotated_node.study_id = study.nodecollection_ptr_id
         ) AS annotated_study
         ON
         data_set.investigation_id = annotated_study.investigation_id
+        GROUP BY
+        data_set.id, data_set.uuid,
+        annotated_study.value_source,
+        annotated_study.value_accession
         """
 
     # Double string replacement, i.e. `sql` will be replace with a replacement
@@ -445,14 +464,7 @@ def get_data_sets_annotations(dataset_ids=[]):
             JOIN
             (
               SELECT
-                node.id,
                 node.study_id,
-                node.type,
-                node.file_uuid,
-                node.assay_id,
-                attr.subtype,
-                attr.value,
-                attr.value_source,
                 attr.value_accession
               FROM
                 data_set_manager_node AS node
@@ -463,6 +475,28 @@ def get_data_sets_annotations(dataset_ids=[]):
               WHERE
                 attr.value_source IS NOT NULL AND
                 attr.value_source NOT LIKE ''
+
+              UNION ALL
+
+              SELECT
+                study_id,
+                measurement_accession AS value_accession
+              FROM
+                data_set_manager_assay
+              WHERE
+                measurement_accession IS NOT NULL AND
+                measurement_accession NOT LIKE ''
+
+              UNION ALL
+
+              SELECT
+                study_id,
+                technology_accession AS value_accession
+              FROM
+                data_set_manager_assay
+              WHERE
+                technology_accession IS NOT NULL AND
+                technology_accession NOT LIKE ''
             ) AS annotated_node
             ON
             annotated_node.study_id = study.nodecollection_ptr_id
@@ -507,6 +541,10 @@ def get_data_sets_annotations(dataset_ids=[]):
     return response
 
 
+def get_all_data_sets_ids():
+    return core.models.DataSet.objects.all().values('id')
+
+
 def create_update_ontology(name, acronym, uri, version, owl2neo4j_version):
     """Creates or updates an ontology entry after importing.
     """
@@ -524,6 +562,28 @@ def create_update_ontology(name, acronym, uri, version, owl2neo4j_version):
         logger.info('Created %s', ontology)
     else:
         ontology = ontology[0]
+        ontology.name = name
+        ontology.uri = uri
+        ontology.version = version
         ontology.import_date = datetime.datetime.now()
+        ontology.owl2neo4j_version = owl2neo4j_version
         ontology.save()
         logger.info('Updated %s', ontology)
+
+
+def delete_analysis_index(node_instance):
+    """Remove a Analysis' related document from Solr's index.
+    """
+    NodeIndex().remove_object(node_instance, using='data_set_manager')
+    logger.debug('Deleted Analysis\' NodeIndex with (uuid: %s)',
+                 node_instance.uuid)
+
+
+def invalidate_cached_object(instance):
+    try:
+        cache.delete_many(['{}-{}'.format(user.id, instance.__class__.__name__)
+                           for user in User.objects.all()])
+
+    except Exception as e:
+        logger.debug("Could not delete %s from cache" %
+                     instance.__class__.__name__, e)

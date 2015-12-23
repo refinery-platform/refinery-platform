@@ -1,12 +1,14 @@
 function DataSetFactory (
   $q, _, settings, DataSetDataApi, DataSetSearchApi, DataSetStore,
-  dataSetAnnotationService) {
+  DataSetAnnotations) {
 
   /*
    * ------------------------------- Private -----------------------------------
    */
 
   /* ------------------------------ Variables ------------------------------- */
+
+  var _allDsIds;
 
   /**
    * Indicates whether the total number of data objects is just an
@@ -41,6 +43,13 @@ function DataSetFactory (
   var _dataStore = new DataSetStore();
 
   /**
+   * Store data set annotations.
+   *
+   * @type  {Object}
+   */
+  var _annotations = new DataSetAnnotations(_dataStore);
+
+  /**
    * Caches the current order of returned data objects.
    *
    * @author  Fritz Lekschas
@@ -59,6 +68,21 @@ function DataSetFactory (
    * @type  {Array}
    */
   var _searchResultDsIds = [];
+
+  /**
+   * Stores distinct search result annotations and their abundance
+   *
+   * @description
+   * The object will look like so:
+   * ```
+   * {
+   *   'http://www.w3.org/2002/07/owl#Thing': 10
+   * }
+   * ```
+   *
+   * @type  {Object}
+   */
+  var _searchResultAnnotations = {};
 
   /**
    * Stores IDs of the selected data objects.
@@ -186,28 +210,6 @@ function DataSetFactory (
       _browsePath[_browsePath.length - 1].query = step.query;
     } else {
       _browsePath.push(step);
-    }
-  }
-
-  /**
-   * Add annotations to the data store.
-   *
-   * @method  _addAnnotations
-   * @author  Fritz Lekschas
-   * @date    2015-12-09
-   *
-   * @param   {Object}  data  Object holding the annotations per dataset.
-   */
-  function _addAnnotations (data) {
-    var keys = Object.keys(data);
-    for (var i = keys.length; i--;) {
-      _dataStore.add(
-        keys[i],
-        {
-          annotations: data[keys[i]]
-        },
-        true
-      );
     }
   }
 
@@ -406,7 +408,11 @@ function DataSetFactory (
 
       // The first time a search is issued all dataset IDs will be returned
       if (response.allIds && response.allIds.length) {
-        _searchResultDsIds = response.allIds;
+        if (_search) {
+          _searchResultDsIds = response.allIds;
+        } else {
+          _allDsIds = response.allIds;
+        }
       }
 
       if (_totalSource === Infinity) {
@@ -467,6 +473,31 @@ function DataSetFactory (
     }).catch(function (e) {
       deferred.reject(e);
     });
+  }
+
+  function _calculatePrecisionRecall () {
+    var annotationsUris,
+        totalSearchResults = _searchResultDsIds.length;
+
+    _searchResultAnnotations = [];
+
+    // Get annotations used and the total number of their usage in relation to
+    // the current search results.
+    for (var i = totalSearchResults; i--;) {
+      annotationsUris = Object.keys(annotationsUris);
+      for (var j = annotationsUris.length; j--;) {
+        if (!!!_searchResultAnnotations[annotationsUris[i]]) {
+          _searchResultAnnotations[annotationsUris[i]] = 1;
+        } else {
+          _searchResultAnnotations[annotationsUris[i]]++;
+        }
+      }
+    }
+
+    _annotations.calcPR(
+      _searchResultAnnotations,
+      _searchResultDsIds.length
+    );
   }
 
   /**
@@ -622,13 +653,15 @@ function DataSetFactory (
    * @return  {Object}  Instance itself to enable chaining.
    */
   DataSet.prototype.all = function () {
+    _search = false;
+
     if (_browsePath.length &&
         _browsePath[_browsePath.length - 1].type === 'search') {
       _browsePath.pop();
     }
 
     _clearOrderCache();
-    _source = new DataSetDataApi();
+    _source = new DataSetDataApi(undefined, true);
 
     return this;
   };
@@ -666,6 +699,8 @@ function DataSetFactory (
    * @return  {Object}          Instance itself to enable chaining.
    */
   DataSet.prototype.filter = function (filter) {
+    _search = false;
+
     // _browsePath = [];
     _clearOrderCache();
     _source = new DataSetDataApi(filter);
@@ -760,9 +795,7 @@ function DataSetFactory (
    * @return  {Object}  Promise resolving to an object holding all annotations.
    */
   DataSet.prototype.loadAnnotations = function () {
-    var annotations = dataSetAnnotationService.query().$promise;
-    annotations.then(_addAnnotations);
-    return annotations;
+    return _annotations.load();
   };
 
   /**
@@ -776,6 +809,7 @@ function DataSetFactory (
    * @return  {Object}         Instance itself to enable chaining.
    */
   DataSet.prototype.order = function (order) {
+    _search = false;
     _browsePath = [];
     _clearOrderCache();
     _source = new DataSetDataApi({
@@ -796,6 +830,8 @@ function DataSetFactory (
    * @return  {Object}         Instance itself to enable chaining.
    */
   DataSet.prototype.search = function (query) {
+    _search = true;
+
     _source = new DataSetSearchApi(query, true);
 
     if (!!_getLastBrowseStep('select')) {
@@ -846,6 +882,6 @@ angular
     'DataSetDataApi',
     'DataSetSearchApi',
     'DataSetStore',
-    'dataSetAnnotationService',
+    'DataSetAnnotations',
     DataSetFactory
   ]);
