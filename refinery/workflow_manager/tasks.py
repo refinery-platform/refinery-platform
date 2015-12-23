@@ -176,7 +176,7 @@ def configure_workflow(workflow_dict, ret_list):
     Returns an expanded workflow from core.models.workflow and
     workflow_data_input_map
     """
-    logger.debug("workflow.manager configure_workflow called")
+    logger.debug("Configuring Galaxy workflow")
     # creating base workflow to replicate input workflow
     new_workflow = createBaseWorkflow(workflow_dict["name"])
     # checking to see what kind of workflow exists:
@@ -196,15 +196,11 @@ def configure_workflow(workflow_dict, ret_list):
                 return
     # if workflow is tagged w/ type=COMPACT tag,
     if COMPACT_WORKFLOW:
-        logger.debug(
-            "workflow_manager.tasks.configure_workflow workflow processing: "
-            "COMPACT")
+        logger.debug("Workflow processing: COMPACT")
         new_workflow["steps"], history_download, analysis_node_connections = \
             createStepsCompact(ret_list, workflow_dict)
     else:
-        logger.debug(
-            "workflow_manager.tasks.configure_workflow workflow processing: "
-            "EXPANSION")
+        logger.debug("Workflow processing: EXPANSION")
         # Updating steps in imported workflow X number of times
         new_workflow["steps"], history_download, analysis_node_connections = \
             createStepsAnnot(ret_list, workflow_dict)

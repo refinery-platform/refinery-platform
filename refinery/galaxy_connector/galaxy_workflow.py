@@ -91,7 +91,7 @@ def createStepsAnnot(file_list, workflow):
     """Replicates an input dictionary:
     "X" number of times depending on value of repeat_num
     """
-    logger.debug("galaxy_workflow.createStepsAnnot called")
+    logger.debug("Creating workflow steps annotation")
     updated_dict = {}
     temp_steps = workflow["steps"]
     repeat_num = len(file_list)
@@ -496,7 +496,7 @@ def countWorkflowSteps(workflow):
     workflow. Number of steps in workflow is not reflective of the actual
     number of workflows created by galaxy when run
     """
-    logger.debug("galaxy_connector.galaxy_workflow countWorkflowSteps called")
+    logger.debug("Counting workflow steps")
     workflow_steps = workflow["steps"]
     total_steps = 0
     for j in range(0, len(workflow["steps"])):

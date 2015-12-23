@@ -82,9 +82,8 @@ def analysis_status(request, uuid):
             ret_json['postprocessing'] = status.postprocessing_status()
             ret_json['cleanup'] = status.cleanup_status()
             ret_json['overall'] = analysis.get_status()
-        logger.debug("Analysis: '%s'", analysis.name)
-        logger.debug(simplejson.dumps(ret_json))
-        return HttpResponse(simplejson.dumps(ret_json),
+        logger.debug("Analysis status for '%s': %s", analysis.name, ret_json)
+        return HttpResponse(json.dumps(ret_json, indent=4),
                             mimetype='application/javascript')
     else:
         return render_to_response(
@@ -571,11 +570,9 @@ def run(request):
     analysis_status.save()
 
     # call function via analysis_manager
-    run_analysis.delay(analysis)
+    run_analysis.delay(analysis.uuid)
 
-    redirect_url = reverse('analysis_manager.views.analysis_status',
-                           args=(analysis.uuid,))
-    return HttpResponse(redirect_url)
+    return HttpResponse(reverse('analysis-status', args=(analysis.uuid,)))
 
 
 def create_noderelationship(request):

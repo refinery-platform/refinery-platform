@@ -849,13 +849,19 @@ class Analysis(OwnableResource):
             self.time_end = datetime.now()
         self.save()
 
+    def successful(self):
+        return self.get_status() == self.SUCCESS_STATUS
+
     def failed(self):
-        return True if self.status == self.FAILURE_STATUS else False
+        return self.get_status() == self.FAILURE_STATUS
+
+    def running(self):
+        return self.get_status() == self.RUNNING_STATUS
 
     def galaxy_connection(self):
         return self.workflow.workflow_engine.instance.galaxy_connection()
 
-    def cleanup(self):
+    def galaxy_cleanup(self):
         """Delete library, workflow and history from Galaxy if they exist"""
         connection = self.galaxy_connection()
         error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
@@ -884,7 +890,7 @@ class Analysis(OwnableResource):
         self.cancel = True
         self.save()
         # jobs in a running workflow are stopped by deleting its history
-        self.cleanup()
+        self.galaxy_cleanup()
         self.set_status(Analysis.FAILURE_STATUS, "Cancelled at user's request")
 
 
