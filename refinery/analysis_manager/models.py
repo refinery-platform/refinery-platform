@@ -58,8 +58,8 @@ def get_taskset_state(taskset_id):
         for task in taskset.results:
             if task.state == celery.states.SUCCESS:
                 percent_done = 100
-            elif (task.state == celery.states.FAILURE
-                  or task.status == celery.states.REVOKED):
+            elif (task.state == celery.states.FAILURE or
+                  task.status == celery.states.REVOKED):
                 percent_done = 0
             else:
                 if task.info:
