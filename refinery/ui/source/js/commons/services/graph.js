@@ -95,7 +95,10 @@ function GraphFactory (_) {
         var numChildChildren = child.children ? child.children.length : false;
 
         // Store a reference to the parent
-        child.parent = node;
+        if (!child.parent) {
+          child.parent = [];
+        }
+        child.parent.push(node);
 
         child.meta = child.meta || {};
 
@@ -136,10 +139,14 @@ function GraphFactory (_) {
               node.children.splice(i, 1);
 
               // Check if we've processed the parent of the child to be pruned
-              // already.
-              if (!nodeIndex[child.parent.uri]) {
-                // Only Mark node as being pruned
-                child.pruned = true;
+              // already and set `pruned` to false.
+              child.pruned = true;
+              for (var k = child.parent.length; k--;) {
+                if (nodeIndex[child.parent[k].uri]) {
+                  // Revert pruning
+                  child.pruned = false;
+                  break;
+                }
               }
             } else {
               // From this perspective the child doesn't need to be pruned. If
