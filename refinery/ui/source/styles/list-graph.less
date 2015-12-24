@@ -13,7 +13,7 @@
     position: relative;
     top: 0;
     height: @top-bar-height;
-    border-bottom: 1px solid #efefef;
+    border-bottom: 0;
     overflow: hidden;
 
     .controls {
@@ -21,9 +21,14 @@
       opacity: 1 !important;
     }
 
-    .controls li {
-      font-size: 12px;
-      line-height: 25px;
+    .controls {
+
+      li {
+        font-size: 12px;
+        line-height: 25px;
+        background: transparent;
+        max-width: none;
+      }
 
       [class*=' icon-'],
       [class^=icon-] {
