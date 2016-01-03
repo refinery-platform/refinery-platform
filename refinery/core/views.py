@@ -328,16 +328,34 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
         },
         context_instance=RequestContext(request))
 
+
+def process_solr(params):
+
+    study_uuid = params.__getitem__('study_uuid')
+    assay_uuid = params.__getitem__('assay_uuid')
+
+    if study_uuid is not None and assay_uuid is not None:
+        solr_response = generate_solr_query('data_set_manager', study_uuid,
+                                            assay_uuid)
+    elif study_uuid is not None:
+        solr_response = generate_solr_query('data_set_manager', study_uuid)
+
+    elif study_uuid is not None:
+         solr_response = generate_solr_query('data_set_manager', assay_uuid)
+
+    else:
+        solr_response = None
+
+    return solr_response
+
+
 @api_view(['GET'])
 def data_set_files(request, uuid, format=None):
     #http://192.168.50.50:8000/api/v1/data_sets/c508e83e-f9ee-4740-b9c7-a7b0e631280f/files/?study_uuid=ff657398-30db-4481-bfb9-8b86f46e9000&assay_uuid=5eff885e-49cb-477a-ad76-f65d74d78f8a
-    study_uuid = request.query_params.get('study_uuid')
-    assay_uuid = request.query_params.get('assay_uuid')
 
     if request.method == 'GET':
-        solr_response = generate_solr_query('data_set_manager', study_uuid,
-                                            assay_uuid)
-      #  solr_response = solr_select(request, 'data_set_manager')
+        solr_response = process_solr(request.query_params)
+
         return solr_response
 
 
