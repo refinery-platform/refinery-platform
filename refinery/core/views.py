@@ -374,10 +374,38 @@ def data_set_files(request, uuid, format=None):
     # REFINERY_SUBANALYSIS_6_3_s%20asc&facet.pivot=Month_Characteristics_6_3_s,
     # Year_Characteristics_6_3_s&_=1451854206149
 
+    #http://192.168.50.50:8000/solr/data_set_manager/select/?q=django_ct
+    # :data_set_manager.node&wt=json&json.wrf=jQuery2110293066986836493_
+    # 1451931256018&start=0&rows=20&fq=(study_uuid:220267ae-0aed-46ce-a5fc
+    # -eee8e14b8a83%20AND%20assay_uuid:95ddce36-4bda-45af-a192-33e8b487c2e4)
+    # &fq=type:(%22Raw%20Data%20File%22%20OR%20%22Derived%20Data%20File%22%20
+    # OR%20%22Array%20Data%20File%22%20OR%20%22Derived%20Array%20Data%20File%
+    # 22%20OR%20%22Array%20Data%20Matrix%20File%22%20OR%20%22Derived%20Array%
+    # 20Data%20Matrix%20File%22)&fq=is_annotation:false&facet.field=organism_
+    # Characteristics_4_2_s&facet.field=REFINERY_SUBANALYSIS_4_2_s&facet.field
+    # =organism_part_Characteristics_4_2_s&facet.field=REFINERY_ANALYSIS_UUID_4
+    # _2_s&facet.field=cell_type_Characteristics_4_2_s&facet.field=
+    # REFINERY_TYPE_4_2_s&facet.field=REFINERY_WORKFLOW_OUTPUT_4_2_s&
+    # facet.field=REFINERY_FILETYPE_4_2_s&facet.field=positive_markers_
+    # Characteristics_4_2_s&facet.field=notes_Characteristics_4_2_s&facet.field
+    # =Group_Name_Comment_4_2_s&facet.field=Replicate_Id_Comment_4_2_s&
+    # facet.field=REFINERY_NAME_4_2_s&facet.sort=count&facet.limit=-1&facet=
+    # true&fl=organism_Characteristics_4_2_s,REFINERY_SUBANALYSIS_4_2_s,
+    # organism_part_Characteristics_4_2_s,REFINERY_ANALYSIS_UUID_4_2_s,
+    # cell_type_Characteristics_4_2_s,REFINERY_TYPE_4_2_s,uuid,
+    # REFINERY_WORKFLOW_OUTPUT_4_2_s,assay_uuid,study_uuid,type,
+    # REFINERY_FILETYPE_4_2_s,positive_markers_Characteristics_4_2_s,
+    # name,notes_Characteristics_4_2_s,file_uuid,Group_Name_Comment_4_2_s,
+    # is_annotation,Replicate_Id_Comment_4_2_s,REFINERY_NAME_4_2_s&sort=
+    # organism_Characteristics_4_2_s%20asc&facet.pivot=
+    # organism_Characteristics_4_2_s,Replicate_Id_Comment_4_2_s&_=1451931256022
+
     if request.method == 'GET':
+        facet_pivots = request.query_params.get('facet.pivot', default = None)
         solr_response = process_solr(request.query_params)
         facet_fields = get_facet_fields(solr_response)
-        solr_response = process_solr(request.query_params, facet_fields)
+        solr_response = process_solr(request.query_params,
+                                     facet_pivots, facet_fields)
 
     return HttpResponse(solr_response, mimetype='application/json')
 
@@ -658,13 +686,13 @@ def solr_core_search(request):
     return HttpResponse(response, mimetype='application/json')
 
 
-def process_solr(params, facet_fields = None):
+def process_solr(params, facet_pivot = None, facet_fields = None):
 
     study_uuid = params.get('study_uuid', default = None)
     assay_uuid = params.get('assay_uuid', default = None)
 
     solr_response = generate_solr_query('data_set_manager', study_uuid,
-                                            assay_uuid, facet_fields)
+                                        assay_uuid, facet_pivot, facet_fields)
 
     return solr_response
 
@@ -686,7 +714,7 @@ def generate_facet_fields_query (facet_fields):
 
 
 def generate_solr_query(core, study_uuid = None, assay_uuid = None,
-                        facet_fields = None):
+                        facet_pivots = None, facet_fields = None):
 
     file_types = 'fq=type:("Raw+Data+File"+OR+"Derived+Data+File"+OR+' \
                  '"Array+Data+File"+OR+"Derived+Array+Data+File"+OR+' \
@@ -701,7 +729,8 @@ def generate_solr_query(core, study_uuid = None, assay_uuid = None,
         facets = generate_facet_fields_query(facet_fields)
 
         temp_data = urlquote(data + '&' + file_types + '&' + other +
-                             facets, safe='=&+')
+                             '&facet.pivot=' + facet_pivots + facets,
+                             safe='=&+')
 
         url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
         fullResponse = requests.get(url, params=temp_data)
