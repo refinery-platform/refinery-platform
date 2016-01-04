@@ -687,13 +687,11 @@ def solr_core_search(request):
 
 
 def process_solr(params, facet_pivot = None, facet_fields = None):
-
     study_uuid = params.get('study_uuid', default = None)
     assay_uuid = params.get('assay_uuid', default = None)
 
     solr_response = generate_solr_query('data_set_manager', study_uuid,
                                         assay_uuid, facet_pivot, facet_fields)
-
     return solr_response
 
 
@@ -701,12 +699,26 @@ def get_facet_fields(query):
     query_json = json.loads(query)
     docs_list = query_json.__getitem__('response').__getitem__('docs')
     facet_list = docs_list[0].keys()
+    facet_list_culled = filter_facet_fields(facet_list)
 
-    return facet_list
+    return facet_list_culled
+
+def filter_facet_fields(facet_list):
+    hidden_fields = ["uuid", "id", "django_id", "file_uuid", "study_uuid",
+                     "assay_uuid", "type", "is_annotation", "species",
+                     "genome_build", "name", "django_ct"]
+
+    facet_list_culled = []
+    for field in facet_list:
+        if field not in hidden_fields:
+            facet_list_culled.append(field)
+
+    return facet_list_culled
 
 
 def generate_facet_fields_query (facet_fields):
     query = ""
+
     for field in facet_fields:
         query = query + '&facet.field=' + field
 
