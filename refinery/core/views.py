@@ -329,26 +329,6 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
         context_instance=RequestContext(request))
 
 
-def process_solr(params):
-
-    study_uuid = params.__getitem__('study_uuid')
-    assay_uuid = params.__getitem__('assay_uuid')
-
-    if study_uuid is not None and assay_uuid is not None:
-        solr_response = generate_solr_query('data_set_manager', study_uuid,
-                                            assay_uuid)
-    elif study_uuid is not None:
-        solr_response = generate_solr_query('data_set_manager', study_uuid)
-
-    elif study_uuid is not None:
-         solr_response = generate_solr_query('data_set_manager', assay_uuid)
-
-    else:
-        solr_response = None
-
-    return solr_response
-
-
 @api_view(['GET'])
 def data_set_files(request, uuid, format=None):
     #http://192.168.50.50:8000/api/v1/data_sets/c508e83e-f9ee-4740-b9c7-a7b0e631280f/files/?study_uuid=ff657398-30db-4481-bfb9-8b86f46e9000&assay_uuid=5eff885e-49cb-477a-ad76-f65d74d78f8a
@@ -361,16 +341,10 @@ def data_set_files(request, uuid, format=None):
 
     if request.method == 'GET':
         solr_response = process_solr(request.query_params)
-        solr_response_counts = process_solr_counts(solr_response)
+        facet_fields = get_facet_fields(solr_response)
+        solr_response = process_solr(request.query_params, facet_fields)
 
-        return solr_response_counts
-
-def get_facet_fields(query):
-    query_json = json.loads(query)
-    docs_list = query_json.__getitem__('response').__getitem__('docs')
-    facet_list = docs_list[0].keys()
-
-    return facet_list
+    return HttpResponse(solr_response, mimetype='application/json')
 
 
 def data_set_edit(request, uuid):
@@ -648,23 +622,61 @@ def solr_core_search(request):
 
     return HttpResponse(response, mimetype='application/json')
 
+def process_solr(params, facet_fields = None):
 
-def generate_solr_query(core, study_uuid, assay_uuid):
+    study_uuid = params.get('study_uuid', default = None)
+    assay_uuid = params.get('assay_uuid', default = None)
+
+    solr_response = generate_solr_query('data_set_manager', study_uuid,
+                                            assay_uuid, facet_fields)
+
+    return solr_response
+
+def get_facet_fields(query):
+    query_json = json.loads(query)
+    docs_list = query_json.__getitem__('response').__getitem__('docs')
+    facet_list = docs_list[0].keys()
+
+    return facet_list
+
+def facet_fields_query (facet_fields):
+    query = ""
+    for field in facet_fields:
+        query = query + '&facet.field=' + field
+
+    return query
+
+
+def generate_solr_query(core, study_uuid = None, assay_uuid = None,
+                        facet_fields = None):
 
     file_types = 'fq=type:("Raw+Data+File"+OR+"Derived+Data+File"+OR+' \
                  '"Array+Data+File"+OR+"Derived+Array+Data+File"+OR+' \
-                 '"Array+Data+Matrix+File"+OR+"Derived+Array+Data+Matrix+File"'
+                 '"Array+Data+Matrix+File"+OR+"Derived+Array+Data+Matrix+File")'
 
-    other = 'fq=is_annotation:false&rows=1&q=django_ct:data_set_manager.node' \
-            '&start=0&wt=json'
+    other = 'fq=is_annotation:false&rows=20&q=django_ct:data_set_manager.node' \
+            '&start=0&wt=json&facet=true&facet.limit=-1&facet.sort=count'
 
-    data = 'fq=(study_uuid:'+study_uuid+'+AND+assay_uuid:'+assay_uuid+')'
+    if facet_fields is not None:
 
-    temp_data = urlquote(data + '&' + file_types + ')&' + other, safe='=&+')
+        data = 'fq=(study_uuid:'+study_uuid+'+AND+assay_uuid:'+assay_uuid+')'
+        facets = facet_fields_query(facet_fields)
 
-    url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
-    fullResponse = requests.get(url, params=temp_data)
-    response = fullResponse.content
+        temp_data = urlquote(data + '&' + file_types + '&' + other +
+                             facets, safe='=&+')
+
+        url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
+        fullResponse = requests.get(url, params=temp_data)
+        response = fullResponse.content
+
+    else:
+        data = 'fq=(study_uuid:'+study_uuid+'+AND+assay_uuid:'+assay_uuid+')'
+
+        temp_data = urlquote(data + '&' + file_types + '&' + other, safe='=&+')
+
+        url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
+        fullResponse = requests.get(url, params=temp_data)
+        response = fullResponse.content
 
     #return HttpResponse(response, mimetype='application/json')
     return response
