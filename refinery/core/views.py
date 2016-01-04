@@ -727,21 +727,27 @@ def generate_facet_fields_query (facet_fields):
 
 
 def generate_solr_query(core, study_uuid = None, assay_uuid = None,
-                        facet_pivots = None, facet_fields = None):
+                        facet_pivot = None, facet_fields = None):
     file_types = 'fq=type:("Raw+Data+File"+OR+"Derived+Data+File"+OR+' \
                  '"Array+Data+File"+OR+"Derived+Array+Data+File"+OR+' \
                  '"Array+Data+Matrix+File"+OR+"Derived+Array+Data+Matrix+File")'
 
-    if facet_fields is not None:
+    if facet_fields is not None and facet_pivot is not None:
         other = 'fq=is_annotation:false&rows=20&' \
                 'q=django_ct:data_set_manager.node&start=0&' \
                 'wt=json&facet=true&facet.limit=-1&facet.sort=count'
         data = 'fq=(study_uuid:'+study_uuid+'+AND+assay_uuid:'+assay_uuid+')'
         facets = generate_facet_fields_query(facet_fields)
-
         temp_data = urlquote(data + '&' + file_types + '&' + other +
-                             '&facet.pivot=' + facet_pivots + facets,
-                             safe='=&+')
+                             '&facet.pivot=' + facet_pivot + facets, safe='=&+')
+    elif facet_fields is not None:
+        other = 'fq=is_annotation:false&rows=20&' \
+                'q=django_ct:data_set_manager.node&start=0&' \
+                'wt=json&facet=true&facet.limit=-1&facet.sort=count'
+        data = 'fq=(study_uuid:'+study_uuid+'+AND+assay_uuid:'+assay_uuid+')'
+        facets = generate_facet_fields_query(facet_fields)
+        temp_data = urlquote(data + '&' + file_types + '&' + other
+                              + facets, safe='=&+')
     else:
         other = 'fq=is_annotation:false&rows=1&q=django_ct:data_set_manager' \
                 '.node&start=0&wt=json'
