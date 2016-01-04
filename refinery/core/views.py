@@ -692,6 +692,7 @@ def process_solr(params, facet_pivot = None, facet_fields = None):
 
     solr_response = generate_solr_query('data_set_manager', study_uuid,
                                         assay_uuid, facet_pivot, facet_fields)
+
     return solr_response
 
 
@@ -707,8 +708,8 @@ def filter_facet_fields(facet_list):
     hidden_fields = ["uuid", "id", "django_id", "file_uuid", "study_uuid",
                      "assay_uuid", "type", "is_annotation", "species",
                      "genome_build", "name", "django_ct"]
-
     facet_list_culled = []
+
     for field in facet_list:
         if field not in hidden_fields:
             facet_list_culled.append(field)
@@ -727,13 +728,11 @@ def generate_facet_fields_query (facet_fields):
 
 def generate_solr_query(core, study_uuid = None, assay_uuid = None,
                         facet_pivots = None, facet_fields = None):
-
     file_types = 'fq=type:("Raw+Data+File"+OR+"Derived+Data+File"+OR+' \
                  '"Array+Data+File"+OR+"Derived+Array+Data+File"+OR+' \
                  '"Array+Data+Matrix+File"+OR+"Derived+Array+Data+Matrix+File")'
 
     if facet_fields is not None:
-
         other = 'fq=is_annotation:false&rows=20&' \
                 'q=django_ct:data_set_manager.node&start=0&' \
                 'wt=json&facet=true&facet.limit=-1&facet.sort=count'
@@ -743,11 +742,6 @@ def generate_solr_query(core, study_uuid = None, assay_uuid = None,
         temp_data = urlquote(data + '&' + file_types + '&' + other +
                              '&facet.pivot=' + facet_pivots + facets,
                              safe='=&+')
-
-        url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
-        fullResponse = requests.get(url, params=temp_data)
-        response = fullResponse.content
-
     else:
         other = 'fq=is_annotation:false&rows=1&q=django_ct:data_set_manager' \
                 '.node&start=0&wt=json'
@@ -755,9 +749,9 @@ def generate_solr_query(core, study_uuid = None, assay_uuid = None,
 
         temp_data = urlquote(data + '&' + file_types + '&' + other, safe='=&+')
 
-        url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
-        fullResponse = requests.get(url, params=temp_data)
-        response = fullResponse.content
+    url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
+    fullResponse = requests.get(url, params=temp_data)
+    response = fullResponse.content
 
     return response
 
