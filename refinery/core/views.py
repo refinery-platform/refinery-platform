@@ -692,11 +692,11 @@ def generate_solr_query(core, study_uuid = None, assay_uuid = None,
                  '"Array+Data+File"+OR+"Derived+Array+Data+File"+OR+' \
                  '"Array+Data+Matrix+File"+OR+"Derived+Array+Data+Matrix+File")'
 
-    other = 'fq=is_annotation:false&rows=20&q=django_ct:data_set_manager.node' \
-            '&start=0&wt=json&facet=true&facet.limit=-1&facet.sort=count'
-
     if facet_fields is not None:
 
+        other = 'fq=is_annotation:false&rows=20&' \
+                'q=django_ct:data_set_manager.node&start=0&' \
+                'wt=json&facet=true&facet.limit=-1&facet.sort=count'
         data = 'fq=(study_uuid:'+study_uuid+'+AND+assay_uuid:'+assay_uuid+')'
         facets = facet_fields_query(facet_fields)
 
@@ -708,6 +708,8 @@ def generate_solr_query(core, study_uuid = None, assay_uuid = None,
         response = fullResponse.content
 
     else:
+        other = 'fq=is_annotation:false&rows=1&q=django_ct:data_set_manager' \
+                '.node&start=0&wt=json'
         data = 'fq=(study_uuid:'+study_uuid+'+AND+assay_uuid:'+assay_uuid+')'
 
         temp_data = urlquote(data + '&' + file_types + '&' + other, safe='=&+')
@@ -716,7 +718,6 @@ def generate_solr_query(core, study_uuid = None, assay_uuid = None,
         fullResponse = requests.get(url, params=temp_data)
         response = fullResponse.content
 
-    #return HttpResponse(response, mimetype='application/json')
     return response
 
 
