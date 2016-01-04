@@ -677,7 +677,7 @@ def get_facet_fields(query):
     return facet_list
 
 
-def facet_fields_query (facet_fields):
+def generate_facet_fields_query (facet_fields):
     query = ""
     for field in facet_fields:
         query = query + '&facet.field=' + field
@@ -698,7 +698,7 @@ def generate_solr_query(core, study_uuid = None, assay_uuid = None,
                 'q=django_ct:data_set_manager.node&start=0&' \
                 'wt=json&facet=true&facet.limit=-1&facet.sort=count'
         data = 'fq=(study_uuid:'+study_uuid+'+AND+assay_uuid:'+assay_uuid+')'
-        facets = facet_fields_query(facet_fields)
+        facets = generate_facet_fields_query(facet_fields)
 
         temp_data = urlquote(data + '&' + file_types + '&' + other +
                              facets, safe='=&+')
