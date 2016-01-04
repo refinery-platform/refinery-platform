@@ -353,10 +353,24 @@ def process_solr(params):
 def data_set_files(request, uuid, format=None):
     #http://192.168.50.50:8000/api/v1/data_sets/c508e83e-f9ee-4740-b9c7-a7b0e631280f/files/?study_uuid=ff657398-30db-4481-bfb9-8b86f46e9000&assay_uuid=5eff885e-49cb-477a-ad76-f65d74d78f8a
 
+    #http://192.168.50.50:8000/solr/data_set_manager/select/?q=django_ct:data_set_manager.node&wt=json&json.wrf=jQuery21106078944015316665_1451854206145&start=0&rows=1&fq=(study_uuid:ff657398-30db-4481-bfb9-8b86f46e9000%20AND%20assay_uuid:5eff885e-49cb-477a-ad76-f65d74d78f8a)&fq=type:(%22Raw%20Data%20File%22%20OR%20%22Derived%20Data%20File%22%20OR%20%22Array%20Data%20File%22%20OR%20%22Derived%20Array%20Data%20File%22%20OR%20%22Array%20Data%20Matrix%20File%22%20OR%20%22Derived%20Array%20Data%20Matrix%20File%22)&fq=is_annotation:false&_=1451854206146
+
+    #http://192.168.50.50:8000/solr/data_set_manager/select/?q=django_ct:data_set_manager.node&wt=json&json.wrf=jQuery21106078944015316665_1451854206147&start=0&rows=1&fq=(study_uuid:ff657398-30db-4481-bfb9-8b86f46e9000%20AND%20assay_uuid:5eff885e-49cb-477a-ad76-f65d74d78f8a)&fq=type:(%22Raw%20Data%20File%22%20OR%20%22Derived%20Data%20File%22%20OR%20%22Array%20Data%20File%22%20OR%20%22Derived%20Array%20Data%20File%22%20OR%20%22Array%20Data%20Matrix%20File%22%20OR%20%22Derived%20Array%20Data%20Matrix%20File%22)&fq=is_annotation:true&_=1451854206148
+
+    #http://192.168.50.50:8000/solr/data_set_manager/select/?q=django_ct:data_set_manager.node&wt=json&json.wrf=jQuery21106078944015316665_1451854206145&start=0&rows=20&fq=(study_uuid:ff657398-30db-4481-bfb9-8b86f46e9000%20AND%20assay_uuid:5eff885e-49cb-477a-ad76-f65d74d78f8a)&fq=type:(%22Raw%20Data%20File%22%20OR%20%22Derived%20Data%20File%22%20OR%20%22Array%20Data%20File%22%20OR%20%22Derived%20Array%20Data%20File%22%20OR%20%22Array%20Data%20Matrix%20File%22%20OR%20%22Derived%20Array%20Data%20Matrix%20File%22)&fq=is_annotation:false&facet.field=REFINERY_SUBANALYSIS_6_3_s&facet.field=REFINERY_ANALYSIS_UUID_6_3_s&facet.field=Month_Characteristics_6_3_s&facet.field=Year_Characteristics_6_3_s&facet.field=REFINERY_TYPE_6_3_s&facet.field=REFINERY_FILETYPE_6_3_s&facet.field=REFINERY_WORKFLOW_OUTPUT_6_3_s&facet.field=Author_Characteristics_6_3_s&facet.sort=count&facet.limit=-1&facet=true&fl=REFINERY_SUBANALYSIS_6_3_s,REFINERY_ANALYSIS_UUID_6_3_s,uuid,Month_Characteristics_6_3_s,name,Year_Characteristics_6_3_s,file_uuid,REFINERY_TYPE_6_3_s,is_annotation,REFINERY_FILETYPE_6_3_s,study_uuid,REFINERY_NAME_6_3_s,assay_uuid,type,Title_Characteristics_6_3_s,REFINERY_WORKFLOW_OUTPUT_6_3_s,Author_Characteristics_6_3_s&sort=REFINERY_SUBANALYSIS_6_3_s%20asc&facet.pivot=Month_Characteristics_6_3_s,Year_Characteristics_6_3_s&_=1451854206149
+
     if request.method == 'GET':
         solr_response = process_solr(request.query_params)
+        solr_response_counts = process_solr_counts(solr_response)
 
-        return solr_response
+        return solr_response_counts
+
+def get_facet_fields(query):
+    query_json = json.loads(query)
+    docs_list = query_json.__getitem__('response').__getitem__('docs')
+    facet_list = docs_list[0].keys()
+
+    return facet_list
 
 
 def data_set_edit(request, uuid):
@@ -652,7 +666,8 @@ def generate_solr_query(core, study_uuid, assay_uuid):
     fullResponse = requests.get(url, params=temp_data)
     response = fullResponse.content
 
-    return HttpResponse(response, mimetype='application/json')
+    #return HttpResponse(response, mimetype='application/json')
+    return response
 
 
 def solr_select(request, core):
