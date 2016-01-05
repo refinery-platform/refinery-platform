@@ -331,12 +331,11 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
 
 @api_view(['GET'])
 def data_set_files(request, uuid, format=None):
-
-#http://192.168.50.50:8000/solr/data_set_manager/select/?q=django_ct:data_set_manager.node&wt=json&json.wrf=jQuery21105141251538880169_1452018221965&start=0&rows=20&fq=(study_uuid:e651a271-20be-49d8-9d2a-741985fce6ca%20AND%20assay_uuid:99ac8462-98d9-43ad-b3b3-a2698ddebaeb)&fq=type:(%22Raw%20Data%20File%22%20OR%20%22Derived%20Data%20File%22%20OR%20%22Array%20Data%20File%22%20OR%20%22Derived%20Array%20Data%20File%22%20OR%20%22Array%20Data%20Matrix%20File%22%20OR%20%22Derived%20Array%20Data%20Matrix%20File%22)&fq=is_annotation:false&facet.field=REFINERY_WORKFLOW_OUTPUT_12_6_s&facet.field=REFINERY_SUBANALYSIS_12_6_s&facet.field=REFINERY_ANALYSIS_UUID_12_6_s&facet.field=genotype_Characteristics_12_6_s&facet.field=age_Characteristics_12_6_s&facet.sort=count&facet.limit=-1&facet=true&fl=is_annotation,REFINERY_WORKFLOW_OUTPUT_12_6_s,uuid,assay_uuid,study_uuid,type,name,REFINERY_SUBANALYSIS_12_6_s,file_uuid,REFINERY_ANALYSIS_UUID_12_6_s,genotype_Characteristics_12_6_s,age_Characteristics_12_6_s&sort=REFINERY_WORKFLOW_OUTPUT_12_6_s%20asc&facet.pivot=genotype_Characteristics_12_6_s,age_Characteristics_12_6_s&_=1452018221970
+     #Params:
+            #study_uuid, assay_uuid, fields, start, limit, pivot, sort
 
     if request.method == 'GET':
-        #Params:
-            #study_uuid, assay_uuid, fields, start, limit, pivot, sort
+
         params = request.query_params
         solr_params = generate_solr_params(params)
      #   solr_response = process_solr(request.query_params)
@@ -675,6 +674,7 @@ def generate_solr_params(params):
     is_annotation = params.get('is_annotation', default = False)
     facet_limit = params.get('facet.limit', default = None)
     facet_field = params.get('facet.field', default = None)
+    facet_sort = params.get('facet.sort', default = 'count')
     start = params.get('start', default = None)
     row = params.get('limit', default = None)
     facet_pivot = params.getlist('facet.pivot', default = None)
@@ -682,7 +682,7 @@ def generate_solr_params(params):
 
     fixed_solr_params = file_types + '&q=is_annotation:'+ str(is_annotation) +\
                 '&q=django_ct:data_set_manager.node&' \
-                'wt=json&facet=true&facet.limit=-1&facet.sort=count'
+                'wt=json&facet=true&facet.limit=-1&facet.sort=' + facet_sort
     solr_params = ""
 
     if study_uuid is not None and assay_uuid is not None:
