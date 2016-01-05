@@ -331,83 +331,20 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
 
 @api_view(['GET'])
 def data_set_files(request, uuid, format=None):
-    #http://192.168.50.50:8000/api/v1/data_sets/c508e83e-f9ee-4740-b9c7-a7b0e63
-    # 1280f/files/?study_uuid=ff657398-30db-4481-bfb9-8b86f46e9000&assay_uuid=
-    # 5eff885e-49cb-477a-ad76-f65d74d78f8a
 
-    #http://192.168.50.50:8000/solr/data_set_manager/select/?q=django_ct:
-    # data_set_manager.node&wt=json&json.wrf=jQuery21106078944015316665_
-    # 1451854206145&start=0&rows=1&fq=(study_uuid:ff657398-30db-4481-bfb9-
-    # 8b86f46e9000%20AND%20assay_uuid:5eff885e-49cb-477a-ad76-f65d74d78f8a)
-    # &fq=type:(%22Raw%20Data%20File%22%20OR%20%22Derived%20Data%20File%22%20OR
-    # %20%22Array%20Data%20File%22%20OR%20%22Derived%20Array%20Data%20File%22%20
-    # OR%20%22Array%20Data%20Matrix%20File%22%20OR%20%22Derived%20Array%20Data%
-    # 20Matrix%20File%22)&fq=is_annotation:false&_=1451854206146
-
-    #http://192.168.50.50:8000/solr/data_set_manager/select/?q=django_ct:
-    # data_set_manager.node&wt=json&json.wrf=jQuery21106078944015316665_
-    # 1451854206147&start=0&rows=1&fq=(study_uuid:ff657398-30db-4481-bfb9-
-    # 8b86f46e9000%20AND%20assay_uuid:5eff885e-49cb-477a-ad76-f65d74d78f8a)&
-    # fq=type:(%22Raw%20Data%20File%22%20OR%20%22Derived%20Data%20File%22%20OR
-    # %20%22Array%20Data%20File%22%20OR%20%22Derived%20Array%20Data%20File%22%
-    # 20OR%20%22Array%20Data%20Matrix%20File%22%20OR%20%22Derived%20Array%20Data
-    # %20Matrix%20File%22)&fq=is_annotation:true&_=1451854206148
-
-    #http://192.168.50.50:8000/solr/data_set_manager/select/?q=django_ct:
-    # data_set_manager.node&wt=json&json.wrf=jQuery21106078944015316665_1451854
-    # 206145&start=0&rows=20&fq=(study_uuid:ff657398-30db-4481-bfb9-8b86f46e9000
-    # %20AND%20assay_uuid:5eff885e-49cb-477a-ad76-f65d74d78f8a)&fq=type:(%22Raw%
-    # 20Data%20File%22%20OR%20%22Derived%20Data%20File%22%20OR%20%22Array%20Data
-    # %20File%22%20OR%20%22Derived%20Array%20Data%20File%22%20OR%20%22Array%20
-    # Data%20Matrix%20File%22%20OR%20%22Derived%20Array%20Data%20Matrix%20File
-    # %22)&fq=is_annotation:false&facet.field=REFINERY_SUBANALYSIS_6_3_s&facet.
-    # field=REFINERY_ANALYSIS_UUID_6_3_s&facet.field=Month_Characteristics_6_3_s
-    # &facet.field=Year_Characteristics_6_3_s&facet.field=REFINERY_TYPE_6_3_s&
-    # facet.field=REFINERY_FILETYPE_6_3_s&facet.field=REFINERY_WORKFLOW_OUTPUT_
-    # 6_3_s&facet.field=Author_Characteristics_6_3_s&facet.sort=
-    # count&facet.limit=-1&facet=true&fl=REFINERY_SUBANALYSIS_6_3_s,
-    # REFINERY_ANALYSIS_UUID_6_3_s,uuid,Month_Characteristics_6_3_s,
-    # name,Year_Characteristics_6_3_s,file_uuid,REFINERY_TYPE_6_3_s,
-    # is_annotation,REFINERY_FILETYPE_6_3_s,study_uuid,REFINERY_NAME_6_3_s,
-    # assay_uuid,type,Title_Characteristics_6_3_s,
-    # REFINERY_WORKFLOW_OUTPUT_6_3_s,Author_Characteristics_6_3_s&sort=
-    # REFINERY_SUBANALYSIS_6_3_s%20asc&facet.pivot=Month_Characteristics_6_3_s,
-    # Year_Characteristics_6_3_s&_=1451854206149
-
-    #http://192.168.50.50:8000/solr/data_set_manager/select/?q=django_ct
-    # :data_set_manager.node&wt=json&json.wrf=jQuery2110293066986836493_
-    # 1451931256018&start=0&rows=20&fq=(study_uuid:220267ae-0aed-46ce-a5fc
-    # -eee8e14b8a83%20AND%20assay_uuid:95ddce36-4bda-45af-a192-33e8b487c2e4)
-    # &fq=type:(%22Raw%20Data%20File%22%20OR%20%22Derived%20Data%20File%22%20
-    # OR%20%22Array%20Data%20File%22%20OR%20%22Derived%20Array%20Data%20File%
-    # 22%20OR%20%22Array%20Data%20Matrix%20File%22%20OR%20%22Derived%20Array%
-    # 20Data%20Matrix%20File%22)&fq=is_annotation:false&facet.field=organism_
-    # Characteristics_4_2_s&facet.field=REFINERY_SUBANALYSIS_4_2_s&facet.field
-    # =organism_part_Characteristics_4_2_s&facet.field=REFINERY_ANALYSIS_UUID_4
-    # _2_s&facet.field=cell_type_Characteristics_4_2_s&facet.field=
-    # REFINERY_TYPE_4_2_s&facet.field=REFINERY_WORKFLOW_OUTPUT_4_2_s&
-    # facet.field=REFINERY_FILETYPE_4_2_s&facet.field=positive_markers_
-    # Characteristics_4_2_s&facet.field=notes_Characteristics_4_2_s&facet.field
-    # =Group_Name_Comment_4_2_s&facet.field=Replicate_Id_Comment_4_2_s&
-    # facet.field=REFINERY_NAME_4_2_s&facet.sort=count&facet.limit=-1&facet=
-    # true&fl=organism_Characteristics_4_2_s,REFINERY_SUBANALYSIS_4_2_s,
-    # organism_part_Characteristics_4_2_s,REFINERY_ANALYSIS_UUID_4_2_s,
-    # cell_type_Characteristics_4_2_s,REFINERY_TYPE_4_2_s,uuid,
-    # REFINERY_WORKFLOW_OUTPUT_4_2_s,assay_uuid,study_uuid,type,
-    # REFINERY_FILETYPE_4_2_s,positive_markers_Characteristics_4_2_s,
-    # name,notes_Characteristics_4_2_s,file_uuid,Group_Name_Comment_4_2_s,
-    # is_annotation,Replicate_Id_Comment_4_2_s,REFINERY_NAME_4_2_s&sort=
-    # organism_Characteristics_4_2_s%20asc&facet.pivot=
-    # organism_Characteristics_4_2_s,Replicate_Id_Comment_4_2_s&_=1451931256022
+#http://192.168.50.50:8000/solr/data_set_manager/select/?q=django_ct:data_set_manager.node&wt=json&json.wrf=jQuery21105141251538880169_1452018221965&start=0&rows=20&fq=(study_uuid:e651a271-20be-49d8-9d2a-741985fce6ca%20AND%20assay_uuid:99ac8462-98d9-43ad-b3b3-a2698ddebaeb)&fq=type:(%22Raw%20Data%20File%22%20OR%20%22Derived%20Data%20File%22%20OR%20%22Array%20Data%20File%22%20OR%20%22Derived%20Array%20Data%20File%22%20OR%20%22Array%20Data%20Matrix%20File%22%20OR%20%22Derived%20Array%20Data%20Matrix%20File%22)&fq=is_annotation:false&facet.field=REFINERY_WORKFLOW_OUTPUT_12_6_s&facet.field=REFINERY_SUBANALYSIS_12_6_s&facet.field=REFINERY_ANALYSIS_UUID_12_6_s&facet.field=genotype_Characteristics_12_6_s&facet.field=age_Characteristics_12_6_s&facet.sort=count&facet.limit=-1&facet=true&fl=is_annotation,REFINERY_WORKFLOW_OUTPUT_12_6_s,uuid,assay_uuid,study_uuid,type,name,REFINERY_SUBANALYSIS_12_6_s,file_uuid,REFINERY_ANALYSIS_UUID_12_6_s,genotype_Characteristics_12_6_s,age_Characteristics_12_6_s&sort=REFINERY_WORKFLOW_OUTPUT_12_6_s%20asc&facet.pivot=genotype_Characteristics_12_6_s,age_Characteristics_12_6_s&_=1452018221970
 
     if request.method == 'GET':
-        facet_pivots = request.query_params.get('facet.pivot', default = None)
-        solr_response = process_solr(request.query_params)
-        facet_fields = get_facet_fields(solr_response)
-        solr_response = process_solr(request.query_params,
-                                     facet_pivots, facet_fields)
+        #Params:
+            #study_uuid, assay_uuid, fields, start, limit, pivot, sort
+        params = request.query_params
+        solr_params = generate_solr_params(params)
+     #   solr_response = process_solr(request.query_params)
+     #   facet_fields = get_facet_fields(solr_response)
+    #    solr_response = process_solr(request.query_params,
+      #                               facet_pivots, facet_sort, facet_fields)
 
-    return HttpResponse(solr_response, mimetype='application/json')
+    return HttpResponse(solr_params, mimetype='application/json')
 
 
 def data_set_edit(request, uuid):
@@ -685,13 +622,13 @@ def solr_core_search(request):
 
     return HttpResponse(response, mimetype='application/json')
 
-
-def process_solr(params, facet_pivot = None, facet_fields = None):
+def process_solr_params(params):
     study_uuid = params.get('study_uuid', default = None)
     assay_uuid = params.get('assay_uuid', default = None)
 
     solr_response = generate_solr_query('data_set_manager', study_uuid,
-                                        assay_uuid, facet_pivot, facet_fields)
+                                        assay_uuid, is_annotation, facet_pivot,
+                                        facet_sort,  facet_fields)
 
     return solr_response
 
@@ -725,31 +662,97 @@ def generate_facet_fields_query (facet_fields):
 
     return query
 
+def generate_solr_params(params):
+    file_types = 'fq=type:Raw Data File OR ' \
+                 'Derived Data File OR ' \
+                 'Array Data File OR ' \
+                 'Derived Array Data File OR ' \
+                 'Array Data Matrix File OR' \
+                 'Derived Array Data Matrix File'
+
+    study_uuid = params.get('study_uuid', default = None)
+    assay_uuid = params.get('assay_uuid', default = None)
+    is_annotation = params.get('is_annotation', default = False)
+    facet_limit = params.get('facet.limit', default = None)
+    facet_field = params.get('facet.field', default = None)
+    start = params.get('start', default = None)
+    row = params.get('limit', default = None)
+    facet_pivot = params.getlist('facet.pivot', default = None)
+    sort = params.get('sort', default = None)
+
+    fixed_solr_params = file_types + '&q=is_annotation:'+ str(is_annotation) +\
+                '&q=django_ct:data_set_manager.node&' \
+                'wt=json&facet=true&facet.limit=-1&facet.sort=count'
+    solr_params = ""
+
+    if study_uuid is not None and assay_uuid is not None:
+        solr_params = solr_params + 'fq=study_uuid:' + study_uuid + \
+                 ' AND ' + 'assay_uuid:' + assay_uuid
+    elif study_uuid is not  None and assay_uuid is None:
+        solr_params = solr_params + 'fq=study_uuid:' + study_uuid
+    else:
+        solr_params = solr_params + 'fq=assay_uuid:' + assay_uuid
+
+    if facet_limit is not None:
+        solr_params = solr_params + '&fl=' + facet_limit
+
+    if facet_field is not None:
+        solr_params = solr_params + '&facet.field' + facet_field
+
+    if start is not None:
+        solr_params = solr_params + '&start:' + start
+
+    if row is not None:
+        solr_params = solr_params + '&row:' + row
+
+    if facet_pivot is not None:
+        solr_params = solr_params + '&facet.pivot:' + ', '.join(facet_pivot)
+
+    if sort is not None:
+        solr_params = solr_params + '&sort:' + sort
+
+
+    encoded_solr_params = urlquote(solr_params + '&' + fixed_solr_params,
+                                   safe='=& ')
+
+    url = settings.REFINERY_SOLR_BASE_URL + 'data_set_manager' + "/select"
+    fullResponse = requests.get(url, params=encoded_solr_params)
+    response = fullResponse.content
+
+    return response
+
 
 def generate_solr_query(core, study_uuid = None, assay_uuid = None,
-                        facet_pivot = None, facet_fields = None):
-    file_types = 'fq=type:("Raw+Data+File"+OR+"Derived+Data+File"+OR+' \
-                 '"Array+Data+File"+OR+"Derived+Array+Data+File"+OR+' \
-                 '"Array+Data+Matrix+File"+OR+"Derived+Array+Data+Matrix+File")'
-    data = 'fq=(study_uuid:'+study_uuid+'+AND+assay_uuid:'+assay_uuid+')'
+                        is_annotation = False, facet_pivot = None,
+                        facet_sort = None, facet_fields =  None):
 
-    if facet_fields is not None and facet_pivot is not None:
-        other = 'fq=is_annotation:false&rows=20&' \
+
+    if facet_fields is not None and facet_pivot is not None and\
+                    facet_sort is not None:
+        other = 'fq=is_annotation:' + str(is_annotation) + '&rows=20&' \
+                'q=django_ct:data_set_manager.node&start=0&' \
+                'wt=json&facet=true&facet.limit=-1&facet.sort=count'
+        facets = generate_facet_fields_query(facet_fields)
+        temp_data = urlquote(data + '&' + file_types + '&' + other +
+                             '&facet.pivot=' + facet_pivot + '&sort=' +
+                             facet_sort + facets, safe='=&+')
+    elif facet_fields is not None and facet_pivot is not None:
+        other = 'annotation:' + str(is_annotation) + '&rows=20&' \
                 'q=django_ct:data_set_manager.node&start=0&' \
                 'wt=json&facet=true&facet.limit=-1&facet.sort=count'
         facets = generate_facet_fields_query(facet_fields)
         temp_data = urlquote(data + '&' + file_types + '&' + other +
                              '&facet.pivot=' + facet_pivot + facets, safe='=&+')
     elif facet_fields is not None:
-        other = 'fq=is_annotation:false&rows=20&' \
+        other = 'annotation:' + str(is_annotation) + '&rows=20&' \
                 'q=django_ct:data_set_manager.node&start=0&' \
                 'wt=json&facet=true&facet.limit=-1&facet.sort=count'
         facets = generate_facet_fields_query(facet_fields)
         temp_data = urlquote(data + '&' + file_types + '&' + other
                               + facets, safe='=&+')
     else:
-        other = 'fq=is_annotation:false&rows=1&q=django_ct:data_set_manager' \
-                '.node&start=0&wt=json'
+        other = 'annotation:' + str(is_annotation) + \
+                '&rows=1&q=django_ct:data_set_manager.node&start=0&wt=json'
         temp_data = urlquote(data + '&' + file_types + '&' + other, safe='=&+')
 
     url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
