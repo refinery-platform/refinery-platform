@@ -338,12 +338,16 @@ def data_set_files(request, uuid, format=None):
 
         params = request.query_params
         solr_params = generate_solr_params(params)
-     #   solr_response = process_solr(request.query_params)
-     #   facet_fields = get_facet_fields(solr_response)
-    #    solr_response = process_solr(request.query_params,
-      #                               facet_pivots, facet_sort, facet_fields)
+        solr_response = get_solr_data_set_manager(solr_params)
 
-    return HttpResponse(solr_params, mimetype='application/json')
+    return HttpResponse(solr_response, mimetype='application/json')
+
+def get_solr_data_set_manager(params):
+
+    url = settings.REFINERY_SOLR_BASE_URL + 'data_set_manager' + "/select"
+    fullResponse = requests.get(url, params=params)
+    response = fullResponse.content
+    return response
 
 
 def data_set_edit(request, uuid):
@@ -632,7 +636,7 @@ def process_solr_params(params):
     return solr_response
 
 
-def get_facet_fields(query):
+def parse_facet_fields(query):
     query_json = json.loads(query)
     docs_list = query_json.__getitem__('response').__getitem__('docs')
     facet_list = docs_list[0].keys()
@@ -653,7 +657,7 @@ def filter_facet_fields(facet_list):
     return facet_list_culled
 
 
-def generate_facet_fields_query (facet_fields):
+def generate_facet_fields_query(facet_fields):
     query = ""
 
     for field in facet_fields:
@@ -662,12 +666,12 @@ def generate_facet_fields_query (facet_fields):
     return query
 
 def generate_solr_params(params):
-    file_types = 'fq=type:Raw Data File OR ' \
-                 'Derived Data File OR ' \
-                 'Array Data File OR ' \
-                 'Derived Array Data File OR ' \
-                 'Array Data Matrix File OR' \
-                 'Derived Array Data Matrix File'
+    file_types = 'fq=type:("Raw Data File" OR ' \
+                 '"Derived Data File" OR ' \
+                 '"Array Data File" OR ' \
+                 '"Derived Array Data File" OR ' \
+                 '"Array Data Matrix File" OR' \
+                 '"Derived Array Data Matrix File")'
 
     study_uuid = params.get('study_uuid', default = None)
     assay_uuid = params.get('assay_uuid', default = None)
@@ -676,18 +680,18 @@ def generate_solr_params(params):
     facet_field = params.get('facet.field', default = None)
     facet_sort = params.get('facet.sort', default = 'count')
     start = params.get('start', default = None)
-    row = params.get('limit', default = 20)
+    row = params.get('limit', default = '20')
     facet_pivot = params.getlist('facet.pivot', default = None)
     sort = params.get('sort', default = None)
 
-    fixed_solr_params = file_types + '&q=is_annotation:'+ str(is_annotation) +\
+    fixed_solr_params = file_types + '&fq=is_annotation:'+ str(is_annotation) +\
                 '&q=django_ct:data_set_manager.node&' \
                 'wt=json&facet=true&facet.limit=-1&facet.sort=' + facet_sort
     solr_params = ""
 
     if study_uuid is not None and assay_uuid is not None:
-        solr_params = solr_params + 'fq=study_uuid:' + study_uuid + \
-                 ' AND ' + 'assay_uuid:' + assay_uuid
+        solr_params = solr_params + 'fq=(study_uuid:' + study_uuid + \
+                 ' AND ' + 'assay_uuid:' + assay_uuid + ')'
     elif study_uuid is not  None and assay_uuid is None:
         solr_params = solr_params + 'fq=study_uuid:' + study_uuid
     else:
@@ -697,29 +701,33 @@ def generate_solr_params(params):
         solr_params = solr_params + '&fl=' + facet_limit
 
     if facet_field is not None:
-        solr_params = solr_params + '&facet.field' + facet_field
+        solr_params = solr_params + generate_facet_fields_query(
+                facet_field.split(','))
+    else:
+        temp_params = urlquote(solr_params + '&' + fixed_solr_params,
+                               safe='=& ')
+        full_response = get_solr_data_set_manager(temp_params)
+        facet_field = parse_facet_fields(full_response)
+        facet_field_query = generate_facet_fields_query(facet_field)
+        solr_params = solr_params + '&facet.field=' + facet_field_query
 
     if start is not None:
-        solr_params = solr_params + '&start:' + start
+        solr_params = solr_params + '&start=' + start
 
     if row is not None:
-        solr_params = solr_params + '&row:' + row
+        solr_params = solr_params + '&row=' + row
 
     if facet_pivot is not None:
-        solr_params = solr_params + '&facet.pivot:' + ', '.join(facet_pivot)
+        solr_params = solr_params + '&facet.pivot=' + ', '.join(facet_pivot)
 
     if sort is not None:
-        solr_params = solr_params + '&sort:' + sort
+        solr_params = solr_params + '&sort=' + sort
 
 
     encoded_solr_params = urlquote(solr_params + '&' + fixed_solr_params,
                                    safe='=& ')
 
-    url = settings.REFINERY_SOLR_BASE_URL + 'data_set_manager' + "/select"
-    fullResponse = requests.get(url, params=encoded_solr_params)
-    response = fullResponse.content
-
-    return response
+    return encoded_solr_params
 
 
 def generate_solr_query(core, study_uuid = None, assay_uuid = None,
