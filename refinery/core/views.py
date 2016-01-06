@@ -1,14 +1,8 @@
-import json
 import os
 import re
 import urllib
 import xmltodict
-import py2neo
-import urlparse
 
-from django.utils import simplejson
-from django.utils.http import urlquote
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.sites.models import get_current_site
@@ -17,15 +11,12 @@ from django.http import (
     HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 )
 
-from rest_framework import status
 from rest_framework.decorators import api_view
-from rest_framework.response import Response
 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext, loader
 
 from guardian.shortcuts import get_perms
-import requests
 
 from data_set_manager.models import *
 from core.forms import (
