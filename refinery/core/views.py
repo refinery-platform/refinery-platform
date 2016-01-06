@@ -331,7 +331,7 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
 
 @api_view(['GET'])
 def data_set_files(request, uuid, format=None):
-     # Params: study_uuid, assay_uuid, fields, start, limit, pivot, sort
+    # Params: study_uuid, assay_uuid, fields, start, limit, pivot, sort
 
     if request.method == 'GET':
         params = request.query_params
