@@ -617,12 +617,14 @@ def solr_core_search(request):
 
     return HttpResponse(response, mimetype='application/json')
 
+
 def search_solr(encoded_params, core):
 
     url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
     fullResponse = requests.get(url, params=encoded_params)
     response = fullResponse.content
     return response
+
 
 def parse_facet_fields(query):
     query_json = json.loads(query)
@@ -631,6 +633,7 @@ def parse_facet_fields(query):
     facet_list_culled = filter_facet_fields(facet_list)
 
     return facet_list_culled
+
 
 def filter_facet_fields(facet_list):
     hidden_fields = ["uuid", "id", "django_id", "file_uuid", "study_uuid",
@@ -653,6 +656,7 @@ def generate_facet_fields_query(facet_fields):
         query = query + '&facet.field=' + field
 
     return query
+
 
 def generate_solr_params(params):
     file_types = 'fq=type:("Raw Data File" OR ' \
@@ -683,7 +687,7 @@ def generate_solr_params(params):
     if study_uuid is not None and assay_uuid is not None:
         solr_params = solr_params + 'fq=(study_uuid:' + study_uuid + \
                  ' AND ' + 'assay_uuid:' + assay_uuid + ')'
-    elif study_uuid is not  None and assay_uuid is None:
+    elif study_uuid is not None and assay_uuid is None:
         solr_params = solr_params + 'fq=study_uuid:' + study_uuid
     else:
         solr_params = solr_params + 'fq=assay_uuid:' + assay_uuid
@@ -692,8 +696,8 @@ def generate_solr_params(params):
         solr_params = solr_params + '&fl=' + facet_limit
 
     if facet_field is not None:
-        solr_params = solr_params + generate_facet_fields_query(
-                facet_field.split(','))
+        solr_params = solr_params + \
+                      generate_facet_fields_query(facet_field.split(','))
     else:
         temp_params = urlquote(solr_params + '&' + fixed_solr_params,
                                safe='=& ')
