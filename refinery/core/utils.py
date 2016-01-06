@@ -634,7 +634,7 @@ def generate_solr_params(params):
     facet_field = params.get('facet.field', default=None)
     facet_sort = params.get('facet.sort', default='count')
     facet_count = params.get('facet.count', default='true')
-    start = params.get('start', default=None)
+    start = params.get('start', default='0')
     row = params.get('limit', default='20')
     facet_pivot = params.get('facet.pivot', default=None)
     sort = params.get('sort', default=None)
