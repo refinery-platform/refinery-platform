@@ -325,7 +325,7 @@ TreemapCtrl.prototype.addChildren = function (parent, data, level, firstTime) {
      * On the final level we add "inner nodes"
      */
 
-    childChildNode = this.addInnerNodes(children);
+    childChildNode = this.addInnerNodes(children, level);
   }
 
   // D3 selection of all children without any children, i.e. leafs.
@@ -347,7 +347,7 @@ TreemapCtrl.prototype.addChildren = function (parent, data, level, firstTime) {
     .append('rect')
       .attr('class', 'leaf')
       .attr('fill', this.color.bind(this))
-      .call(this.rect.bind(this));
+      .call(this.rect.bind(this), (0.25 * (depth - 1)));
 
   leafs
     .call(this.addLabel.bind(this), 'name');
@@ -448,11 +448,14 @@ TreemapCtrl.prototype.addEventListeners = function () {
  *
  * @param   {Object}  parents  Selection of parent nodes.
  */
-TreemapCtrl.prototype.addInnerNodes = function (parents) {
+TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
   // D3 selection of all children with children
   var parentsWithChildren = parents.filter(function(parent) {
     return parent._children && parent._children.length;
   });
+
+  // Level needs to be decreased by 1.
+  level = Math.max(level ? level - 1 : 0, 0);
 
   innerNodes = parentsWithChildren
     .append('g')
@@ -463,12 +466,12 @@ TreemapCtrl.prototype.addInnerNodes = function (parents) {
     .append('rect')
       .attr('class', 'inner-border')
       .attr('fill', this.color.bind(this))
-      .call(this.rect.bind(this), 1);
+      .call(this.rect.bind(this), 1 + (0.25 * level));
 
   innerNodes
     .append('rect')
     .attr('class', 'outer-border')
-    .call(this.rect.bind(this));
+    .call(this.rect.bind(this) + (0.25 * level));
 
   innerNodes
     .call(this.addLabel.bind(this), 'name');

@@ -9,3 +9,5 @@ mod 'puppetlabs/stdlib', '4.5.1'
 mod 'saz/timezone', '3.2.0'
 mod 'stankevich/python', '1.9.1'
 mod 'thias/sysctl', '1.0.2'
+
+mod 'refinery/refinery', :path => "refinery-modules/refinery"
