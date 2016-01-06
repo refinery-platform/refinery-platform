@@ -646,6 +646,7 @@ def filter_facet_fields(facet_list):
 
 
 def generate_facet_fields_query(facet_fields):
+    #Solr required facet fields to be seperated
     query = ""
 
     for field in facet_fields:
@@ -663,10 +664,11 @@ def generate_solr_params(params, core = 'data_set_manager'):
 
     study_uuid = params.get('study_uuid', default = None)
     assay_uuid = params.get('assay_uuid', default = None)
-    is_annotation = params.get('is_annotation', default = False)
+    is_annotation = params.get('is_annotation', default = 'false')
     facet_limit = params.get('facet.limit', default = None)
     facet_field = params.get('facet.field', default = None)
     facet_sort = params.get('facet.sort', default = 'count')
+    facet_count = params.get('facet.count', default = 'true')
     start = params.get('start', default = None)
     row = params.get('limit', default = '20')
     facet_pivot = params.getlist('facet.pivot', default = None)
@@ -674,7 +676,8 @@ def generate_solr_params(params, core = 'data_set_manager'):
 
     fixed_solr_params = file_types + '&fq=is_annotation:'+ str(is_annotation) +\
                 '&q=django_ct:data_set_manager.node&' \
-                'wt=json&facet=true&facet.limit=-1&facet.sort=' + facet_sort
+                'wt=json&facet='+ facet_count + '&facet.limit=-1&' \
+                'facet.sort='+ facet_sort
     solr_params = ""
 
     if study_uuid is not None and assay_uuid is not None:
@@ -714,7 +717,6 @@ def generate_solr_params(params, core = 'data_set_manager'):
 
     encoded_solr_params = urlquote(solr_params + '&' + fixed_solr_params,
                                    safe='=& ')
-
     return encoded_solr_params
 
 
