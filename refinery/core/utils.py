@@ -5,6 +5,7 @@ import core
 import datetime
 import urlparse
 import requests
+import json
 from django.conf import settings
 from django.core.cache import cache
 from django.contrib.auth.models import User
