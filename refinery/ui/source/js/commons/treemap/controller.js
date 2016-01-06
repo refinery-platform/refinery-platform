@@ -666,8 +666,7 @@ TreemapCtrl.prototype.display = function (node, firstTime) {
  * @method  copyChildren
  * @author  Fritz Lekschas
  * @date    2015-12-22
- * @param   {[type]}      node  [description]
- * @return  {[type]}            [description]
+ * @param   {Object}  node  Node object.
  */
 TreemapCtrl.prototype.copyChildren = function (node) {
   node._children = node.children;
