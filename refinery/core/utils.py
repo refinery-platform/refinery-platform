@@ -4,10 +4,12 @@ import py2neo
 import core
 import datetime
 import urlparse
+import requests
 from django.conf import settings
 from django.core.cache import cache
 from django.contrib.auth.models import User
 from django.db import connection
+from django.utils.http import urlquote
 
 
 from .search_indexes import DataSetIndex
@@ -583,3 +585,114 @@ def invalidate_cached_object(instance):
     except Exception as e:
         logger.debug("Could not delete %s from cache" %
                      instance.__class__.__name__, e)
+
+
+def parse_facet_fields(query):
+    query_json = json.loads(query)
+    docs_list = query_json.__getitem__('response').__getitem__('docs')
+    facet_list = docs_list[0].keys()
+    facet_list_culled = filter_facet_fields(facet_list)
+
+    return facet_list_culled
+
+
+def filter_facet_fields(facet_list):
+    hidden_fields = ["uuid", "id", "django_id", "file_uuid", "study_uuid",
+                     "assay_uuid", "type", "is_annotation", "species",
+                     "genome_build", "name", "django_ct"]
+    facet_list_culled = []
+
+    for field in facet_list:
+        if field not in hidden_fields:
+            facet_list_culled.append(field)
+
+    return facet_list_culled
+
+
+def generate_facet_fields_query(facet_fields):
+    # Solr required facet fields to be seperated
+    query = ""
+
+    for field in facet_fields:
+        query = query + '&facet.field=' + field
+
+    return query
+
+
+def generate_solr_params(params):
+    file_types = 'fq=type:("Raw Data File" OR ' \
+                 '"Derived Data File" OR ' \
+                 '"Array Data File" OR ' \
+                 '"Derived Array Data File" OR ' \
+                 '"Array Data Matrix File" OR' \
+                 '"Derived Array Data Matrix File")'
+
+    study_uuid = params.get('study_uuid', default=None)
+    assay_uuid = params.get('assay_uuid', default=None)
+    is_annotation = params.get('is_annotation', default='false')
+    facet_limit = params.get('facet.limit', default=None)
+    facet_field = params.get('facet.field', default=None)
+    facet_sort = params.get('facet.sort', default='count')
+    facet_count = params.get('facet.count', default='true')
+    start = params.get('start', default=None)
+    row = params.get('limit', default='20')
+    facet_pivot = params.get('facet.pivot', default=None)
+    sort = params.get('sort', default=None)
+
+    fixed_solr_params = \
+        file_types + \
+        '&fq=is_annotation:' + is_annotation + \
+        '&q=django_ct:data_set_manager.node' \
+        '&wt=json' \
+        '&facet=' + facet_count + \
+        '&facet.limit=-1' \
+        '&facet.sort=' + facet_sort
+
+    solr_params = ""
+
+    if study_uuid is not None and assay_uuid is not None:
+        solr_params = solr_params + 'fq=(study_uuid:' + study_uuid + \
+                 ' AND ' + 'assay_uuid:' + assay_uuid + ')'
+    elif study_uuid is not None and assay_uuid is None:
+        solr_params = solr_params + 'fq=study_uuid:' + study_uuid
+    else:
+        solr_params = solr_params + 'fq=assay_uuid:' + assay_uuid
+
+    if facet_limit is not None:
+        solr_params = solr_params + '&fl=' + facet_limit
+
+    if facet_field is not None:
+        solr_params = solr_params + \
+                      generate_facet_fields_query(facet_field.split(','))
+    else:
+        temp_params = urlquote(solr_params + '&' + fixed_solr_params,
+                               safe='=& ')
+        full_response = search_solr(temp_params, 'data_set_manager')
+        facet_field = parse_facet_fields(full_response)
+        facet_field_query = generate_facet_fields_query(facet_field)
+        solr_params = solr_params + facet_field_query
+
+    if start is not None:
+        solr_params = solr_params + '&start=' + start
+
+    if row is not None:
+        solr_params = solr_params + '&row=' + row
+
+    if facet_pivot is not None:
+        solr_params = solr_params + '&facet.pivot=' + facet_pivot
+
+    if sort is not None:
+        solr_params = solr_params + '&sort=' + sort
+
+    encoded_solr_params = urlquote(solr_params + '&' + fixed_solr_params,
+                                   safe='=& ')
+    return encoded_solr_params
+
+
+def search_solr(encoded_params, core):
+
+    url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
+    fullResponse = requests.get(url, params=encoded_params)
+    response = fullResponse.content
+
+    return response
