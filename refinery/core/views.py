@@ -8,7 +8,8 @@ from django.contrib.auth.models import User
 from django.contrib.sites.models import get_current_site
 from django.core.urlresolvers import reverse
 from django.http import (
-    HttpResponse, HttpResponseForbidden, HttpResponseRedirect
+    HttpResponse, HttpResponseForbidden, HttpResponseRedirect,
+    HttpResponseBadRequest
 )
 
 from rest_framework.decorators import api_view
@@ -326,12 +327,18 @@ def data_set_files(request, uuid, format=None):
     # Params: study_uuid, assay_uuid, fields, start, limit, pivot, sort
 
     if request.method == 'GET':
-        # Requires a study uuid or a assay uuid
+        # Solr index requires a study uuid or a assay uuid
         params = request.query_params
-        solr_params = generate_solr_params(params)
-        solr_response = search_solr(solr_params, 'data_set_manager')
+        study_uuid = params.get('study_uuid', default=None)
+        assay_uuid = params.get('assay_uuid', default=None)
 
-    return HttpResponse(solr_response, mimetype='application/json')
+        if study_uuid is not None or assay_uuid is not None:
+            solr_params = generate_solr_params(params)
+            solr_response = search_solr(solr_params, 'data_set_manager')
+
+            return HttpResponse(solr_response, mimetype='application/json')
+        else:
+            return HttpResponseBadRequest("Study or assay uuid required")
 
 
 def data_set_edit(request, uuid):
