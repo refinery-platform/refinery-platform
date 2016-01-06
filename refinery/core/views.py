@@ -335,19 +335,11 @@ def data_set_files(request, uuid, format=None):
             #study_uuid, assay_uuid, fields, start, limit, pivot, sort
 
     if request.method == 'GET':
-
         params = request.query_params
         solr_params = generate_solr_params(params)
-        solr_response = get_solr_data_set_manager(solr_params)
+        solr_response = search_solr(solr_params,'data_set_manager')
 
     return HttpResponse(solr_response, mimetype='application/json')
-
-def get_solr_data_set_manager(params):
-
-    url = settings.REFINERY_SOLR_BASE_URL + 'data_set_manager' + "/select"
-    fullResponse = requests.get(url, params=params)
-    response = fullResponse.content
-    return response
 
 
 def data_set_edit(request, uuid):
@@ -625,16 +617,12 @@ def solr_core_search(request):
 
     return HttpResponse(response, mimetype='application/json')
 
-def process_solr_params(params):
-    study_uuid = params.get('study_uuid', default = None)
-    assay_uuid = params.get('assay_uuid', default = None)
+def search_solr(params, core):
 
-    solr_response = generate_solr_query('data_set_manager', study_uuid,
-                                        assay_uuid, is_annotation, facet_pivot,
-                                        facet_sort,  facet_fields)
-
-    return solr_response
-
+    url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
+    fullResponse = requests.get(url, params=params)
+    response = fullResponse.content
+    return response
 
 def parse_facet_fields(query):
     query_json = json.loads(query)
@@ -665,7 +653,7 @@ def generate_facet_fields_query(facet_fields):
 
     return query
 
-def generate_solr_params(params):
+def generate_solr_params(params, core = 'data_set_manager'):
     file_types = 'fq=type:("Raw Data File" OR ' \
                  '"Derived Data File" OR ' \
                  '"Array Data File" OR ' \
@@ -706,7 +694,7 @@ def generate_solr_params(params):
     else:
         temp_params = urlquote(solr_params + '&' + fixed_solr_params,
                                safe='=& ')
-        full_response = get_solr_data_set_manager(temp_params)
+        full_response = search_solr(temp_params, core)
         facet_field = parse_facet_fields(full_response)
         facet_field_query = generate_facet_fields_query(facet_field)
         solr_params = solr_params + '&facet.field=' + facet_field_query
@@ -728,46 +716,6 @@ def generate_solr_params(params):
                                    safe='=& ')
 
     return encoded_solr_params
-
-
-def generate_solr_query(core, study_uuid = None, assay_uuid = None,
-                        is_annotation = False, facet_pivot = None,
-                        facet_sort = None, facet_fields =  None):
-
-
-    if facet_fields is not None and facet_pivot is not None and\
-                    facet_sort is not None:
-        other = 'fq=is_annotation:' + str(is_annotation) + '&rows=20&' \
-                'q=django_ct:data_set_manager.node&start=0&' \
-                'wt=json&facet=true&facet.limit=-1&facet.sort=count'
-        facets = generate_facet_fields_query(facet_fields)
-        temp_data = urlquote(data + '&' + file_types + '&' + other +
-                             '&facet.pivot=' + facet_pivot + '&sort=' +
-                             facet_sort + facets, safe='=&+')
-    elif facet_fields is not None and facet_pivot is not None:
-        other = 'annotation:' + str(is_annotation) + '&rows=20&' \
-                'q=django_ct:data_set_manager.node&start=0&' \
-                'wt=json&facet=true&facet.limit=-1&facet.sort=count'
-        facets = generate_facet_fields_query(facet_fields)
-        temp_data = urlquote(data + '&' + file_types + '&' + other +
-                             '&facet.pivot=' + facet_pivot + facets, safe='=&+')
-    elif facet_fields is not None:
-        other = 'annotation:' + str(is_annotation) + '&rows=20&' \
-                'q=django_ct:data_set_manager.node&start=0&' \
-                'wt=json&facet=true&facet.limit=-1&facet.sort=count'
-        facets = generate_facet_fields_query(facet_fields)
-        temp_data = urlquote(data + '&' + file_types + '&' + other
-                              + facets, safe='=&+')
-    else:
-        other = 'annotation:' + str(is_annotation) + \
-                '&rows=1&q=django_ct:data_set_manager.node&start=0&wt=json'
-        temp_data = urlquote(data + '&' + file_types + '&' + other, safe='=&+')
-
-    url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
-    fullResponse = requests.get(url, params=temp_data)
-    response = fullResponse.content
-
-    return response
 
 
 def solr_select(request, core):
