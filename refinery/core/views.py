@@ -331,8 +331,7 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
 
 @api_view(['GET'])
 def data_set_files(request, uuid, format=None):
-     #Params:
-    #study_uuid, assay_uuid, fields, start, limit, pivot, sort
+     # Params: study_uuid, assay_uuid, fields, start, limit, pivot, sort
 
     if request.method == 'GET':
         params = request.query_params
@@ -678,12 +677,15 @@ def generate_solr_params(params):
     facet_pivot = params.get('facet.pivot', default=None)
     sort = params.get('sort', default=None)
 
-    fixed_solr_params = file_types + '&fq=is_annotation:' + is_annotation + \
-                        '&q=django_ct:data_set_manager.node&' \
-                        'wt=json' \
-                        '&facet=' + facet_count + \
-                        '&facet.limit=-1&' \
-                        'facet.sort=' + facet_sort
+    fixed_solr_params = \
+        file_types + \
+        '&fq=is_annotation:' + is_annotation + \
+        '&q=django_ct:data_set_manager.node' \
+        '&wt=json' \
+        '&facet=' + facet_count + \
+        '&facet.limit=-1' \
+        '&facet.sort=' + facet_sort
+
     solr_params = ""
 
     if study_uuid is not None and assay_uuid is not None:
