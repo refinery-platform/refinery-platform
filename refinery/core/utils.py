@@ -590,7 +590,7 @@ def invalidate_cached_object(instance):
 
 def parse_facet_fields(query):
     query_json = json.loads(query)
-    docs_list = query_json.__getitem__('response').__getitem__('docs')
+    docs_list = query_json['response']['docs']
     facet_list = docs_list[0].keys()
     facet_list_culled = filter_facet_fields(facet_list)
 
