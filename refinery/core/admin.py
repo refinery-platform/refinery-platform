@@ -51,6 +51,18 @@ class WorkflowAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
     list_display = ['__unicode__', 'id', 'internal_id', 'workflow_engine',
                     'show_in_repository_mode', 'is_active', 'type']
 
+    def hide_selected_workflows(modeladmin, request, queryset):
+        for obj in queryset:
+            obj.is_active = False
+            obj.save()
+
+    def show_selected_workflows(modeladmin, request, queryset):
+        for obj in queryset:
+            obj.is_active = True
+            obj.save()
+
+    actions = [hide_selected_workflows, show_selected_workflows]
+
 
 class WorkflowInputRelationshipsAdmin(GuardedModelAdmin):
     list_display = ['__unicode__', 'id', 'category', 'set1', 'set2']
