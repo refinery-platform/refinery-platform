@@ -25,9 +25,22 @@ class AnnotatedNodeAdmin(ForeignKeyAutocompleteAdmin):
                     "node_workflow_output", "is_annotation"]
 
 
-admin.site.register(NodeCollection)
-admin.site.register(Investigation)
-admin.site.register(Study)
+class NodeCollectionAdmin(ForeignKeyAutocompleteAdmin):
+    list_display = ["__unicode__", "title", "uuid", "identifier",
+                    "description", "release_date", "submission_date"]
+
+
+class InvestigationAdmin(ForeignKeyAutocompleteAdmin):
+    list_display = ["__unicode__", "uuid"]
+
+
+class StudyAdmin(ForeignKeyAutocompleteAdmin):
+    list_display = ["__unicode__", "uuid"]
+
+
+admin.site.register(NodeCollection, NodeCollectionAdmin)
+admin.site.register(Investigation, InvestigationAdmin)
+admin.site.register(Study, StudyAdmin)
 admin.site.register(Publication)
 admin.site.register(Contact)
 admin.site.register(Ontology)
