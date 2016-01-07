@@ -631,7 +631,7 @@ def generate_solr_params(params):
     study_uuid = params.get('study_uuid', default=None)
     assay_uuid = params.get('assay_uuid', default=None)
     is_annotation = params.get('is_annotation', default='false')
-    facet_limit = params.get('facet.limit', default=None)
+    field_limit = params.get('field.limit', default=None)
     facet_field = params.get('facet.field', default=None)
     facet_sort = params.get('facet.sort', default='count')
     facet_count = params.get('facet.count', default='true')
@@ -659,8 +659,8 @@ def generate_solr_params(params):
     else:
         solr_params = solr_params + 'fq=assay_uuid:' + assay_uuid
 
-    if facet_limit is not None:
-        solr_params = solr_params + '&fl=' + facet_limit
+    if field_limit is not None:
+        solr_params = solr_params + '&fl=' + field_limit
 
     if facet_field is not None:
         solr_params = solr_params + \
