@@ -592,22 +592,22 @@ def parse_facet_fields(query):
     query_json = json.loads(query)
     docs_list = query_json['response']['docs']
     facet_list = docs_list[0].keys()
-    facet_list_culled = filter_facet_fields(facet_list)
+    filtered_facet_list = filter_facet_fields(facet_list)
 
-    return facet_list_culled
+    return filtered_facet_list
 
 
 def filter_facet_fields(facet_list):
     hidden_fields = ["uuid", "id", "django_id", "file_uuid", "study_uuid",
                      "assay_uuid", "type", "is_annotation", "species",
                      "genome_build", "name", "django_ct"]
-    facet_list_culled = []
+    filtered_facet_list = []
 
     for field in facet_list:
         if field not in hidden_fields:
-            facet_list_culled.append(field)
+            filtered_facet_list.append(field)
 
-    return facet_list_culled
+    return filtered_facet_list
 
 
 def generate_facet_fields_query(facet_fields):
