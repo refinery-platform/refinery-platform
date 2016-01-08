@@ -4,11 +4,11 @@ import py2neo
 import core
 import datetime
 import urlparse
+
 from django.conf import settings
 from django.core.cache import cache
 from django.contrib.auth.models import User
 from django.db import connection
-
 
 from .search_indexes import DataSetIndex
 from data_set_manager.search_indexes import NodeIndex

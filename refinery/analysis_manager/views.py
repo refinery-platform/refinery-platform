@@ -38,7 +38,7 @@ def index(request):
 
 
 def analysis_status(request, uuid):
-    logger.debug("analysis_manager.views.analysis_status called")
+    """Returns analysis status in HTML or JSON formats (for AJAX requests)"""
     # TODO: handle MultipleObjectsReturned exception
     try:
         analysis = Analysis.objects.get(uuid=uuid)
@@ -64,23 +64,20 @@ def analysis_status(request, uuid):
         storage.used = True
         # add analysis status message
         if analysis.get_status() == Analysis.FAILURE_STATUS:
-            msg = "Analysis '{}' failed. " \
-                  "No results were added to your data set."\
-                  .format(analysis.name)
+            msg = "Analysis '{}' failed. No results were added to your data " \
+                  "set.".format(analysis.name)
             messages.error(request, msg)
         elif analysis.get_status() == Analysis.SUCCESS_STATUS:
-            msg = "Analysis '{}' finished successfully. " \
-                  "View the results in the file browser."\
-                  .format(analysis.name)
+            msg = "Analysis '{}' finished successfully. View the results in " \
+                  "the file browser.".format(analysis.name)
             messages.success(request, msg)
 
     if request.is_ajax():
         ret_json = {}
         if status:
-            ret_json['preprocessing'] = status.preprocessing_status()
-            ret_json['execution'] = status.execution_status()
-            ret_json['postprocessing'] = status.postprocessing_status()
-            ret_json['cleanup'] = status.cleanup_status()
+            ret_json['preprocessing'] = status.refinery_import_state()
+            ret_json['execution'] = status.galaxy_import_state()
+            ret_json['postprocessing'] = status.galaxy_export_state()
             ret_json['overall'] = analysis.get_status()
         logger.debug("Analysis status for '%s': %s", analysis.name, ret_json)
         return HttpResponse(json.dumps(ret_json, indent=4),
