@@ -15,6 +15,10 @@ pip install -r refinery-platform/deployment/requirements.txt
   inbound access on port 22 (the SSH port).
 - HTTP access only works in the default security group allows
   inbound access on port 80.
+- A role called "refinery-web" must already exist and it must
+  grant readonly access to the RDS API. (technically it is an
+  instance-profile that is used, but creating a role also creates
+  an instance-profile).
 
 ## Generate JSON file and start stack:
 
