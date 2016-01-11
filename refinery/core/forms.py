@@ -54,7 +54,7 @@ class UserProfileForm(ModelForm):
 class WorkflowForm(ModelForm):
     class Meta:
         model = Workflow
-        fields = ["name", "slug", "summary", "description"]
+        fields = ["name", "slug", "summary", "description", "is_active"]
 
 
 class DataSetForm(ModelForm):
