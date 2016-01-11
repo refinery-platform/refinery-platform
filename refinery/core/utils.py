@@ -625,7 +625,7 @@ def generate_facet_fields_query(facet_fields):
 def get_facet_fields_query(params):
     """Returns a facet_field_query by making a solr request and parsing fields
     params"""
-    temp_params = urlquote(params,safe='=& ')
+    temp_params = urlquote(params, safe='=& ')
     full_response = search_solr(temp_params, 'data_set_manager')
     facet_field = parse_facet_fields(full_response)
     facet_field_query = generate_facet_fields_query(facet_field)
@@ -638,8 +638,8 @@ def generate_solr_params(params):
         params -- python dict or QueryDict
     Params/Solr Params
         is_annotation - metadata
-        facet_sort - ordering of the facet field constraints, 'count' or 'index'
-        facet_count/facet -  enables facet counts in query response, true/false
+        facet_sort - ordering of the facet field constraints, (count or index)
+        facet_count/facet - enables facet counts in query response, true/false
         start - paginate, offset response
         limit/row - maximum number of documents
         study_uuid/assay_uuid - unique ids

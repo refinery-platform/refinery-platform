@@ -327,7 +327,7 @@ def data_set_files(request, uuid, format=None):
     """Return solr response. Query requires study_uuid or assay_uuid.
     Params/Solr Params
         is_annotation - metadata
-        facet_sort - ordering of the facet field constraints, 'count' or 'index'
+        facet_sort - ordering of the facet field constraints, (count or index)
         facet_count/facet -  enables facet counts in query response, true/false
         start - paginate, offset response
         limit/row - maximum number of documents
