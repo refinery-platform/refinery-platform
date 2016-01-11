@@ -6,7 +6,7 @@ Additional information about how to administrate and develop Refinery can be fou
 
 ### Prerequisites
 
-Install [Git][gi], [Vagrant][va] (1.7.2) and [Virtualbox][vb] (4.3.26).
+Install [Git][gi], [Vagrant][va] (1.8.1+) and [Virtualbox][vb] (5.0.12+).
 
 ### Configure and Load Virtual Machine
 
