@@ -343,14 +343,16 @@ TreemapCtrl.prototype.addChildren = function (parent, data, level, firstTime) {
       .attr('class', 'leaf-node')
       .attr('opacity', 0);
 
+  var extraPadding = (0.25 * (level - 1));
+
   leafs
     .append('rect')
       .attr('class', 'leaf')
       .attr('fill', this.color.bind(this))
-      .call(this.rect.bind(this), (0.25 * (depth - 1)));
+      .call(this.rect.bind(this), extraPadding);
 
   leafs
-    .call(this.addLabel.bind(this), 'name');
+    .call(this.addLabel.bind(this), 'name', extraPadding);
 
   // Merge `leaf` and `childChildNode` selections. This turns out to be
   var animateEls = leafs;
@@ -455,7 +457,7 @@ TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
   });
 
   // Level needs to be decreased by 1.
-  level = Math.max(level ? level - 1 : 0, 0);
+  level = Math.max(level ? level - 1 : 0, 0) * 0.25;
 
   innerNodes = parentsWithChildren
     .append('g')
@@ -466,12 +468,12 @@ TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
     .append('rect')
       .attr('class', 'inner-border')
       .attr('fill', this.color.bind(this))
-      .call(this.rect.bind(this), 1 + (0.25 * level));
+      .call(this.rect.bind(this), 1 + level);
 
   innerNodes
     .append('rect')
     .attr('class', 'outer-border')
-    .call(this.rect.bind(this) + (0.25 * level));
+    .call(this.rect.bind(this), level);
 
   innerNodes
     .call(this.addLabel.bind(this), 'name');
@@ -485,15 +487,18 @@ TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
  * @method  addLabel
  * @author  Fritz Lekschas
  * @date    2015-08-04
- * @param   {Object}    el    D3 selection.
- * @param   {String}    attr  Attribute name which holds the label's text.
+ * @param   {Object}  el     D3 selection.
+ * @param   {String}  attr   Attribute name which holds the label's text.
+ * @param   {Number}  level  Add padding to the label according to the depth.
  */
-TreemapCtrl.prototype.addLabel = function (el, attr) {
+TreemapCtrl.prototype.addLabel = function (el, attr, level) {
   var that = this;
+
+  level = Math.max(level ? level : 0, 0) * 0.25;
 
   el.append('foreignObject')
     .attr('class', 'label-wrapper')
-    .call(this.rect.bind(this), 2)
+    .call(this.rect.bind(this), 2, level)
     .append('xhtml:div')
       .attr('class', 'label')
       .attr('title', function(data) {
