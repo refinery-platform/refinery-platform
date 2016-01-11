@@ -205,7 +205,7 @@
     &:hover {
       .label {
         span {
-          background: rgba(0, 0, 0, 1) !important;
+          background: rgba(0, 0, 0, 1);
         }
       }
 
@@ -220,5 +220,45 @@
     span {
       padding: 0.15em 0.25em 0.15em 0.15em;
     }
+  }
+}
+
+.list-graph {
+  .top-bar {
+    top: 0 !important;
+  }
+
+  .top-bar .global-controls .control-btn,
+  .top-bar .controls {
+    box-shadow: 1px 0 0 0 #d9d9d9;
+  }
+
+  .list-graph .top-bar .control-switch {
+    box-shadow: inset 1px 0 0 0 #d9d9d9, inset -1px 0 0 0 #d9d9d9, inset 0 -1px 0 0 #d9d9d9;
+  }
+
+  .top-bar .control-btn {
+    font-size: 12px;
+    line-height: 24px;
+  }
+
+  .control-btn .wrapper {
+    top: 0;
+  }
+
+  .top-bar .control-btn [class*=' icon-'],
+  .top-bar .control-btn [class^=icon-] {
+    top: 4px;
+    right: 4px;
+    width: 16px;
+    height: 16px;
+}
+
+  .top-bar.details .global-controls,
+  .top-bar.details .local-controls {
+    -webkit-transform: translate(0, -26px);
+    -moz-transform: translate(0, -26px);
+    -ms-transform: translate(0, -26px);
+    transform: translate(0, -26px);
   }
 }
