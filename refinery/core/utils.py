@@ -589,6 +589,7 @@ def invalidate_cached_object(instance):
 
 
 def parse_facet_fields(query):
+    """Returns a list of facet fields."""
     query_json = json.loads(query)
     docs_list = query_json['response']['docs']
     facet_list = docs_list[0].keys()
@@ -598,6 +599,7 @@ def parse_facet_fields(query):
 
 
 def filter_facet_fields(facet_list):
+    """Returns a filtered facet field list."""
     hidden_fields = ["uuid", "id", "django_id", "file_uuid", "study_uuid",
                      "assay_uuid", "type", "is_annotation", "species",
                      "genome_build", "name", "django_ct"]
@@ -611,7 +613,8 @@ def filter_facet_fields(facet_list):
 
 
 def generate_facet_fields_query(facet_fields):
-    # Solr required facet fields to be seperated
+    """Return facet_field query (str).
+        Solr requirs facet fields to be separated"""
     query = ""
     for field in facet_fields:
         query = ''.join([query, '&facet.field=', field])
@@ -620,6 +623,8 @@ def generate_facet_fields_query(facet_fields):
 
 
 def get_facet_fields_query(params):
+    """Returns a facet_field_query by making a solr request and parsing fields
+    params"""
     temp_params = urlquote(params,safe='=& ')
     full_response = search_solr(temp_params, 'data_set_manager')
     facet_field = parse_facet_fields(full_response)
@@ -628,8 +633,22 @@ def get_facet_fields_query(params):
 
 
 def generate_solr_params(params):
-    '''Creates the encoded solr params requiring only an assay and/or study uuid.
-    Params:'''
+    """Creates the encoded solr params requiring only an assay or study uuid.
+    Keyword Argument
+        params -- python dict or QueryDict
+    Params/Solr Params
+        is_annotation - metadata
+        facet_sort - ordering of the facet field constraints, 'count' or 'index'
+        facet_count/facet -  enables facet counts in query response, true/false
+        start - paginate, offset response
+        limit/row - maximum number of documents
+        study_uuid/assay_uuid - unique ids
+        field_limit - set of fields to return
+        facet_field - specify a field which should be treated as a facet
+        facet_pivot - list of fields to pivot
+        sort - Ordering include field name, whitespace, & asc or desc.
+        fq - filter query
+     """
 
     file_types = 'fq=type:("Raw Data File" OR ' \
                  '"Derived Data File" OR ' \
@@ -696,7 +715,11 @@ def generate_solr_params(params):
 
 
 def search_solr(encoded_params, core):
-
+    """Returns solr full_response content by making a solr request
+    Keyword Argument:
+        encoded_params -  Expect the params to be url-ready (using urlquote)
+        core - Specify which node
+    """
     url_portion = '/'.join([core, "select"])
     url = urlparse.urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
     full_response = requests.get(url, params=encoded_params)

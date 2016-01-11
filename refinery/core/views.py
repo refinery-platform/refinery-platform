@@ -324,7 +324,20 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
 
 @api_view(['GET'])
 def data_set_files(request, uuid, format=None):
-    # Params: study_uuid, assay_uuid, fields, start, limit, pivot, sort
+    """Return solr response. Query requires study_uuid or assay_uuid.
+    Params/Solr Params
+        is_annotation - metadata
+        facet_sort - ordering of the facet field constraints, 'count' or 'index'
+        facet_count/facet -  enables facet counts in query response, true/false
+        start - paginate, offset response
+        limit/row - maximum number of documents
+        study_uuid/assay_uuid - unique ids
+        field_limit - set of fields to return
+        facet_field - specify a field which should be treated as a facet
+        facet_pivot - list of fields to pivot
+        sort - Ordering include field name, whitespace, & asc or desc.
+        fq - filter query
+     """
 
     if request.method == 'GET':
         # Solr index requires a study uuid or a assay uuid
