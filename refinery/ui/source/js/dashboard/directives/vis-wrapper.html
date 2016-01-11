@@ -21,7 +21,7 @@
             </li>
             <li>
               <span class="inputs">
-                <kbd class="bigger">&#8679;</kbd> +
+                <kbd>&#8679;</kbd> +
                 <kbd>
                   <svg class="icon-cursor-default">
                     <use
@@ -33,7 +33,7 @@
             </li>
             <li>
               <span class="inputs">
-                <kbd class="bigger">&#8984;</kbd> +
+                <kbd>&#8984;</kbd> +
                 <kbd>
                   <svg class="icon-cursor-default">
                     <use
@@ -50,11 +50,28 @@
         </div>
       </div>
     </div>
-    <div class="refinery-global-spinner" ng-if="visWrapper.loading !== false">
-      <div class="refinery-spinner"></div>
-    </div>
-    <div class="content">
-      <treemap ng-if="visWrapper.ready" graph="visWrapper.graph"></treemap>
+    <div class="full-without-topbar">
+      <div class="top-half">
+        <div class="refinery-global-spinner" ng-if="visWrapper.loading !== false">
+          <div class="refinery-spinner"></div>
+        </div>
+        <div class="content">
+          <list-graph
+            ng-if="visWrapper.ready"
+            graph="visWrapper.graph"
+            root="visWrapper.rootUris"></list-graph>
+        </div>
+      </div>
+      <div class="bottom-half">
+        <div class="refinery-global-spinner" ng-if="visWrapper.loading !== false">
+          <div class="refinery-spinner"></div>
+        </div>
+        <div class="content">
+          <treemap
+            ng-if="visWrapper.ready"
+            graph="visWrapper.treemap"></treemap>
+        </div>
+      </div>
     </div>
   </div>
 </div>

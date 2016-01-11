@@ -6,5 +6,6 @@ angular
     'cut',
     'toolTip',
     'treemap',
-    'dataSet'
+    'dataSet',
+    'listGraph'
   ]);

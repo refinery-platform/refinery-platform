@@ -23,6 +23,20 @@
   <link href="{% static css_file %}" rel="stylesheet">
   {% endfor %}
 
+  <script type="text/javascript">
+    // Global variables for the JavaScript world
+    window.djangoApp = {
+      userId: '{{ user.id }}',
+      userName: '{{ user.username }}',
+      admins: '{{ ADMINS|safe }}'
+    };
+
+    if (window.djangoApp.userId === 'None' || window.djangoApp.userName === 'None') {
+      window.djangoApp.userId = undefined;
+      window.djangoApp.userName = undefined;
+    }
+  </script>
+
   {% block head_html %}
   {% endblock %}
 

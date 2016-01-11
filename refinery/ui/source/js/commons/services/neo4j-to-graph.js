@@ -14,6 +14,7 @@ function buildGraph (results) {
       i,
       lastNode,
       len,
+      // To do: great a graph instead of just a simple object.
       nodes = {
         // Fortunately `owl:Thing` is the mandatory root for any ontology.
         'http://www.w3.org/2002/07/owl#Thing': {

@@ -164,7 +164,7 @@ class SharableResourceAPIInterface(object):
             owned_res_set = Set(
                 get_objects_for_user(
                     user,
-                    'core.add_%s' %
+                    'core.share_%s' %
                     self.res_type._meta.verbose_name).values_list("id",
                                                                   flat=True))
 

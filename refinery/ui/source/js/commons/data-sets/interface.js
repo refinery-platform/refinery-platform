@@ -70,7 +70,8 @@ function DataSetFactory (
   var _searchResultDsIds = [];
 
   /**
-   * Stores distinct search result annotations and their abundance
+   * Promise that resolves to the distinct search result annotations and their
+   * abundance.
    *
    * @description
    * The object will look like so:
@@ -82,7 +83,7 @@ function DataSetFactory (
    *
    * @type  {Object}
    */
-  var _searchResultAnnotations = {};
+  var _searchResultAnnotations;
 
   /**
    * Stores IDs of the selected data objects.
@@ -410,6 +411,7 @@ function DataSetFactory (
       if (response.allIds && response.allIds.length) {
         if (_search) {
           _searchResultDsIds = response.allIds;
+          _calculatePrecisionRecall();
         } else {
           _allDsIds = response.allIds;
         }
@@ -475,29 +477,42 @@ function DataSetFactory (
     });
   }
 
+  /**
+   * Hepler method which will trigger the calculation of precision and recall.
+   *
+   * @method  _calculatePrecisionRecall
+   * @author  Fritz Lekschas
+   * @date    2015-12-18
+   */
   function _calculatePrecisionRecall () {
-    var annotationsUris,
-        totalSearchResults = _searchResultDsIds.length;
+    var annotations,
+        uniqueSearchResAnno = {};
 
-    _searchResultAnnotations = [];
+    _annotations.load().then(function (data) {
+      // Get annotations used and the total number of their usage in relation to
+      // the current search results.
+      for (var i = _searchResultDsIds.length; i--;) {
+        annotations = _dataStore.get(_searchResultDsIds[i]).annotations;
 
-    // Get annotations used and the total number of their usage in relation to
-    // the current search results.
-    for (var i = totalSearchResults; i--;) {
-      annotationsUris = Object.keys(annotationsUris);
-      for (var j = annotationsUris.length; j--;) {
-        if (!!!_searchResultAnnotations[annotationsUris[i]]) {
-          _searchResultAnnotations[annotationsUris[i]] = 1;
-        } else {
-          _searchResultAnnotations[annotationsUris[i]]++;
+        for (var j = annotations.length; j--;) {
+          if (!!!uniqueSearchResAnno[annotations[j].term]) {
+            uniqueSearchResAnno[annotations[j].term] = 1;
+          } else {
+            uniqueSearchResAnno[annotations[j].term]++;
+          }
         }
       }
-    }
 
-    _annotations.calcPR(
-      _searchResultAnnotations,
-      _searchResultDsIds.length
-    );
+      // Trigger the actual calculation of precision and recall
+      _annotations.calcPR(
+        uniqueSearchResAnno,
+        _searchResultDsIds.length
+      );
+
+      _searchResultAnnotations.resolve(uniqueSearchResAnno);
+    }).catch(function (e) {
+      _searchResultAnnotations.reject(e);
+    });
   }
 
   /**
@@ -718,6 +733,28 @@ function DataSetFactory (
   DataSet.prototype.get = _get;
 
   /**
+   * Get the currently relevant annotations depending on the selected dataset.
+   *
+   * @description
+   * Either all datasets are selected or a subset depending on searching
+   * and filter.
+   *
+   * @method  getCurrentAnnotations
+   * @author  Fritz Lekschas
+   * @date    2015-12-18
+   * @return  {Array}  Set of annotation terms.
+   */
+  DataSet.prototype.getCurrentAnnotations = function () {
+    if (_search) {
+      return _searchResultAnnotations.promise.then(function (annotations) {
+        return _annotations.get(annotations);
+      });
+    } else {
+      return _annotations.get();
+    }
+  };
+
+  /**
    * Get the current browse state
    *
    * @method  getCurrentBrowseState
@@ -768,7 +805,7 @@ function DataSetFactory (
    * @param   {Boolean}  reset       If `true` then highlight will be `false`.
    * @return  {Object}               Instance itself to enable chaining.
    */
-  DataSet.prototype.highlight = function (dataSetIds, reset) {
+  DataSet.prototype.highlight = function (dataSetIds, reset, soft) {
     var dataSet,
         keys = Object.keys(dataSetIds);
 
@@ -778,7 +815,8 @@ function DataSetFactory (
 
     for (var i = keys.length; i--;) {
       _dataStore.set(keys[i], {
-        highlight: reset
+        highlight: soft ? false : reset,
+        softHighlight: soft ? reset : false,
       });
     }
 
@@ -833,6 +871,9 @@ function DataSetFactory (
     _search = true;
 
     _source = new DataSetSearchApi(query, true);
+
+    // Reset search result annotation promise.
+    _searchResultAnnotations = $q.defer();
 
     if (!!_getLastBrowseStep('select')) {
       _clearOrderCache(true);

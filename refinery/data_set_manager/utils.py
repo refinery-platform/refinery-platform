@@ -118,16 +118,20 @@ def _get_node_types_recursion(node):
     return sequence
 
 
-def _get_parent_attributes(result, node):
+def _get_parent_attributes(nodes, node_id):
+    """Recursively collects attributes from the current node and each parent
+    node until no more parents are available.
+    """
     attributes = []
 
-    if len(result[node]["parents"]) == 0:
-        return result[node]["attributes"]
+    if len(nodes[node_id]["parents"]) == 0:
+        # End of recursion
+        return nodes[node_id]["attributes"]
 
-    for parent in result[node]["parents"]:
-        attributes.extend(_get_parent_attributes(result, parent))
+    for parent_id in nodes[node_id]["parents"]:
+        attributes.extend(_get_parent_attributes(nodes, parent_id))
 
-    attributes.extend(result[node]["attributes"])
+    attributes.extend(nodes[node_id]["attributes"])
     return attributes
 
 
@@ -321,8 +325,11 @@ def update_annotated_nodes(node_type, study_uuid, assay_uuid=None,
     logger.info(str(counter) + " annotated nodes deleted.")
     # retrieve annotated nodes
     nodes = _retrieve_nodes(study_uuid, assay_uuid, True)
-    a = [node["attributes"] for node_id, node in nodes.iteritems()]
-    logger.info(a)
+
+    # Disabled because it creates super large log message.
+    # a = [node["attributes"] for node_id, node in nodes.iteritems()]
+    # logger.info(a)
+
     # insert node and attribute information
     start = time.time()
     counter = 0

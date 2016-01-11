@@ -54,5 +54,9 @@ describe('Dashboard.module: unit tests', function () {
       expect(hasModule('dataSet')).toEqual(true);
     });
 
+    it('should have "listGraph" as a dependency', function () {
+      expect(hasModule('listGraph')).toEqual(true);
+    });
+
   });
 });

@@ -55,19 +55,24 @@ function getAssociatedDataSets (node) {
  *
  * @method  TreemapCtrl
  * @author  Fritz Lekschas
- * @date    2015-08-04
+ * @date    2015-12-21
  *
- * @param   {Object}  $element   Directive's root element.
- * @param   {Object}  $q         Angular's promise service.
- * @param   {Object}  $          jQuery.
- * @param   {Object}  d3         D3.
- * @param   {Object}  neo4jToD3  Neo4J to D3 converter.
- * @param   {Object}  HEX        HEX class.
- * @param   {Object}  D3Colors   Service for creating D3 color scalings.
- * @param   {Object}  settings   Treemap settings.
+ * @param  {Object}  $element               Directive's root element.
+ * @param  {Object}  $q                     Angular's promise service.
+ * @param  {Object}  $                      jQuery.
+ * @param  {Object}  $window                `document.window`.
+ * @param  {Object}  _                      Lodash.
+ * @param  {Object}  d3                     D3.
+ * @param  {Object}  HEX                    HEX class.
+ * @param  {Object}  D3Colors               Service for creating D3 color
+ *                                          scalings.
+ * @param  {Object}  treemapSettings        Treemap settings.
+ * @param  {Object}  pubSub                 PubSub service.
+ * @param  {Object}  treemapContext         Context helper.
+ * @param  {Object}  Webworker              Web Worker service.
  */
 function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
-  treemapSettings, pubSub, treemapContext, treemapGraphToTreemap, Webworker) {
+  treemapSettings, pubSub, treemapContext, Webworker) {
   this.$ = $;
   this._ = _;
   this.$q = $q;
@@ -79,6 +84,7 @@ function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
   this.settings = treemapSettings;
   this.pubSub = pubSub;
   this.treemapContext = treemapContext;
+  this.$visWrapper = this.$element.closest('.visWrapper');
 
   this.Webworker = Webworker;
 
@@ -91,8 +97,13 @@ function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
   this.numColors = 10;
   this.steps = 6;
 
+  // this.treemap.colors = new D3Colors(
+  //   this.d3.scale.category10().domain(d3.range(this.numColors)).range()
+  // ).getScaledFadedColors(this.steps);
+
+  // Mono color scale
   this.treemap.colors = new D3Colors(
-    this.d3.scale.category10().domain(d3.range(this.numColors)).range()
+    ['#26424d']
   ).getScaledFadedColors(this.steps);
 
   this.treemap.x = this.d3.scale.linear()
@@ -116,18 +127,17 @@ function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
       .style('shape-rendering', 'crispEdges');
   this.treemap.$element = this.$(this.treemap.element.node());
 
-  this.treemap.grandParent = this.d3.select('#back');
+  this.treemap.grandParent = this.d3.select(this.$visWrapper[0])
+    .select('.root-path');
   this.treemap.$grandParent = this.$(this.treemap.grandParent.node());
   this.treemap.$grandParentContainer = this.treemap.$grandParent.parent();
 
   if (this.graph) {
-    treemapGraphToTreemap.convert(this.graph).then(
-      function (data) {
-        this.data = data;
-        this.pubSub.trigger('treemap.loaded');
-        this.draw();
-      }.bind(this)
-    );
+    this.graph.then(function (data) {
+      this.data = data;
+      this.pubSub.trigger('treemap.loaded');
+      this.draw();
+    }.bind(this));
   } else {
     this.pubSub.trigger('treemap.noData');
   }
@@ -320,7 +330,7 @@ TreemapCtrl.prototype.addChildren = function (parent, data, level, firstTime) {
      * On the final level we add "inner nodes"
      */
 
-    childChildNode = this.addInnerNodes(children);
+    childChildNode = this.addInnerNodes(children, level);
   }
 
   // D3 selection of all children without any children, i.e. leafs.
@@ -338,14 +348,16 @@ TreemapCtrl.prototype.addChildren = function (parent, data, level, firstTime) {
       .attr('class', 'leaf-node')
       .attr('opacity', 0);
 
+  var extraPadding = (0.25 * (level - 1));
+
   leafs
     .append('rect')
       .attr('class', 'leaf')
       .attr('fill', this.color.bind(this))
-      .call(this.rect.bind(this));
+      .call(this.rect.bind(this), extraPadding);
 
   leafs
-    .call(this.addLabel.bind(this), 'name');
+    .call(this.addLabel.bind(this), 'name', extraPadding);
 
   // Merge `leaf` and `childChildNode` selections. This turns out to be
   var animateEls = leafs;
@@ -400,6 +412,22 @@ TreemapCtrl.prototype.addEventListeners = function () {
   );
 
   this.treemap.$element.on(
+    'mouseenter',
+    '.group-of-nodes',
+    function (e) {
+      that.highlightByTerm(this.__data__, false, true, false);
+    }
+  );
+
+  this.treemap.$element.on(
+    'mouseleave',
+    '.group-of-nodes',
+    function (e) {
+      that.highlightByTerm(this.__data__, false, true, true);
+    }
+  );
+
+  this.treemap.$element.on(
     'click',
     '.label-wrapper, .outer-border',
     function (e) {
@@ -407,7 +435,7 @@ TreemapCtrl.prototype.addEventListeners = function () {
       if (e.metaKey) {
         that.transition(this.__data__);
       } else {
-        that.highlightByTerm(this, this.__data__, e.shiftKey);
+        that.highlightByTerm(this.__data__, e.shiftKey);
       }
     }
   );
@@ -427,11 +455,14 @@ TreemapCtrl.prototype.addEventListeners = function () {
  *
  * @param   {Object}  parents  Selection of parent nodes.
  */
-TreemapCtrl.prototype.addInnerNodes = function (parents) {
+TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
   // D3 selection of all children with children
   var parentsWithChildren = parents.filter(function(parent) {
     return parent._children && parent._children.length;
   });
+
+  // Level needs to be decreased by 1.
+  level = Math.max(level ? level - 1 : 0, 0) * 0.25;
 
   innerNodes = parentsWithChildren
     .append('g')
@@ -442,12 +473,12 @@ TreemapCtrl.prototype.addInnerNodes = function (parents) {
     .append('rect')
       .attr('class', 'inner-border')
       .attr('fill', this.color.bind(this))
-      .call(this.rect.bind(this), 1);
+      .call(this.rect.bind(this), 1 + level);
 
   innerNodes
     .append('rect')
     .attr('class', 'outer-border')
-    .call(this.rect.bind(this));
+    .call(this.rect.bind(this), level);
 
   innerNodes
     .call(this.addLabel.bind(this), 'name');
@@ -461,15 +492,18 @@ TreemapCtrl.prototype.addInnerNodes = function (parents) {
  * @method  addLabel
  * @author  Fritz Lekschas
  * @date    2015-08-04
- * @param   {Object}    el    D3 selection.
- * @param   {String}    attr  Attribute name which holds the label's text.
+ * @param   {Object}  el     D3 selection.
+ * @param   {String}  attr   Attribute name which holds the label's text.
+ * @param   {Number}  level  Add padding to the label according to the depth.
  */
-TreemapCtrl.prototype.addLabel = function (el, attr) {
+TreemapCtrl.prototype.addLabel = function (el, attr, level) {
   var that = this;
+
+  level = Math.max(level ? level : 0, 0) * 0.25;
 
   el.append('foreignObject')
     .attr('class', 'label-wrapper')
-    .call(this.rect.bind(this), 2)
+    .call(this.rect.bind(this), 2, level)
     .append('xhtml:div')
       .attr('class', 'label')
       .attr('title', function(data) {
@@ -637,6 +671,24 @@ TreemapCtrl.prototype.display = function (node, firstTime) {
 };
 
 /**
+ * Copy `children` to `_children`.
+ *
+ * @method  copyChildren
+ * @author  Fritz Lekschas
+ * @date    2015-12-22
+ * @param   {Object}  node  Node object.
+ */
+TreemapCtrl.prototype.copyChildren = function (node) {
+  node._children = node.children;
+
+  var i = node.children.length;
+
+  while (i--) {
+    this.copyChildren(node.children[i]);
+  }
+};
+
+/**
  * Draws the treemap.
  *
  * This is kind of a constructor for the actual visualization. It executes all
@@ -656,7 +708,7 @@ TreemapCtrl.prototype.draw = function () {
   // the data we can skip this step the second time the treemap is initialized.
   if (!this.data.ready) {
     this.initialize(this.data);
-    this.accumulateAndPrune(this.data, 'numDataSets');
+    this.copyChildren(this.data);
     this.layout(this.data, 0);
 
     // Mark data as ready so that we can skip the former steps next time.
@@ -752,55 +804,59 @@ TreemapCtrl.prototype.initialize = function (data) {
  *
  * @method  highlightByTerm
  * @author  Fritz Lekschas
- * @date    2015-11-02
+ * @date    2015-12-21
  *
  * @param   {Object}   data      Data object associated to the rectangle being
  *   clicked.
  * @param   {Boolean}  multiple  If `true` currently highlighted datasets will
  *   not be _de-highlighted_.
+ * @param   {Boolean}  soft      If `true` reports only soft highlighting. This
+ *   is used for hovering instead of clicking.
+ * @param   {Boolean}  reset     If `true` resets highlighting.
  */
-TreemapCtrl.prototype.highlightByTerm = function (el, data, multiple) {
-  var dataSets = this.Webworker.create(getAssociatedDataSets).run(data),
+TreemapCtrl.prototype.highlightByTerm = function (data, multiple, soft, reset) {
+  var dataSetIds = getAssociatedDataSets(data),
       i,
-      prevDataSetIds = this.treemapContext.get('highlightedDataSets') || {};
+      prevData = this.treemapContext.get('highlightedDataSets');
 
-  dataSets.then(function (dataSetIds) {
+  if (prevData && reset === undefined) {
     if (multiple) {
-      dataSetIds = this._.merge(dataSetIds, prevDataSetIds);
-      // this.highlightEls.push(el);
+      dataSetIds = this._.merge(dataSetIds, prevData.ids);
     } else {
       // Difference between previously highlighted datasets and datasets
       // highlighted next.
-      var keys = Object.keys(prevDataSetIds);
+      var keys = Object.keys(prevData.ids);
       for (i = keys.length; i--;) {
-        if (dataSets[keys[i]]) {
-          delete prevDataSetIds[keys[i]];
+        if (dataSetIds[keys[i]]) {
+          delete prevData.ids[keys[i]];
         }
       }
-
-      // Store previously highlighted datasets.
-      this.treemapContext.set(
-        'prevHighlightedDataSets',
-        prevDataSetIds,
-        true
-      );
     }
+  }
 
-    // for (i = dehighlightKeys.length; i--;) {
-    //   this.cacheTerms[data.ontId][data.branchId].meta.highlight = false;
-    // }
+  if (reset === undefined || reset === true) {
+    // Store previously highlighted datasets.
+    this.treemapContext.set(
+      'prevHighlightedDataSets',
+      {
+        ids: prevData.ids,
+        soft: soft
+      },
+      true
+    );
+  }
 
-    // for (i = keys.length; i--;) {
-    //   this.cacheTerms[data.ontId][data.branchId].meta.highlight = true;
-    // }
-
+  if (reset === undefined || reset === false) {
     // Store highlighted datasets.
     this.treemapContext.set(
       'highlightedDataSets',
-      dataSetIds,
+      {
+        ids: dataSetIds,
+        soft: soft
+      },
       true
     );
-  }.bind(this));
+  }
 };
 
 /**
@@ -1243,9 +1299,7 @@ Object.defineProperty(
 
       this.treemapContext.set(
         'dataSets',
-        this.Webworker.create(getAssociatedDataSets).run(
-          this.cacheTerms[root.ontId][root.branchId]
-        ),
+        getAssociatedDataSets(this.cacheTerms[root.ontId][root.branchId]),
         true
       );
 
@@ -1307,7 +1361,6 @@ angular
     'treemapSettings',
     'pubSub',
     'treemapContext',
-    'treemapGraphToTreemap',
     'Webworker',
     TreemapCtrl
   ]);

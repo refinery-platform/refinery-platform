@@ -1,4 +1,4 @@
-function DataSetAnnotationsFactory (_, dataSetAnnotationService) {
+function DataSetAnnotationsFactory ($q, _, dataSetAnnotationService) {
   /**
    * Stores the dataset annotations.
    *
@@ -18,6 +18,16 @@ function DataSetAnnotationsFactory (_, dataSetAnnotationService) {
    * @type  {Object}
    */
   var _dataSets;
+
+  /**
+   * Determines whether annotations have been loaded or not.
+   *
+   * @description
+   * This is used to ensure that annotations are loaded **only** once.
+   *
+   * @type  {Boolean}
+   */
+  var _loading = false;
 
   /**
    * Add annotations to the data store.
@@ -41,6 +51,12 @@ function DataSetAnnotationsFactory (_, dataSetAnnotationService) {
   /**
    * Initialize precision and recall.
    *
+   * @description
+   * Precision: Number of data sets annotation with a term / total number of
+   * data sets.
+   * PrecisionTotal: Precision for a term in relation to the overall set of
+   * data sets.
+   *
    * @method  _initPR
    * @author  Fritz Lekschas
    * @date    2015-12-18
@@ -53,7 +69,6 @@ function DataSetAnnotationsFactory (_, dataSetAnnotationService) {
         _dataSets.length;
       _annotations[uris[i]].precisionTotal = _annotations[uris[i]].precision;
       _annotations[uris[i]].recall = 1;
-      _annotations[uris[i]].recallTotal = _annotations[uris[i]].recallTotal;
     }
   }
 
@@ -133,11 +148,36 @@ function DataSetAnnotationsFactory (_, dataSetAnnotationService) {
    * @method  get
    * @author  Fritz Lekschas
    * @date    2015-12-18
-   * @param   {String}  uri  URI of annoation term.
-   * @return  {Object}       Annotation term.
+   * @param   {String|Array|Undefined}  uri  URI of annoation term, an array of
+   *   URIs or `undefined` to return all annotations.
+   * @return  {Object|Array}                 A single annotation term or an
+   *   array of annotation terms.
    */
   DataSetAnnotations.prototype.get = function (uri) {
-    return _annotations[uri];
+    var deferred = $q.defer();
+
+    if (!_loading) {
+      deferred.reject('No annotations loaded');
+    }
+
+    _loading.promise.then(function () {
+      var response = {};
+
+      if (!uri || _.isObject(uri)) {
+        var uris = uri ? Object.keys(uri) : Object.keys(_annotations);
+        for (var i = uris.length; i--;) {
+          response[uris[i]] = _annotations[uris[i]];
+        }
+      }
+
+      if (_.isString(uri)) {
+        response = _annotations[uri];
+      }
+
+      deferred.resolve(response);
+    });
+
+    return deferred.promise;
   };
 
   /**
@@ -149,20 +189,29 @@ function DataSetAnnotationsFactory (_, dataSetAnnotationService) {
    * @return  {Object}  Promise that resolves to the loaded annotations.
    */
   DataSetAnnotations.prototype.load = function () {
-    return dataSetAnnotationService
+    // Make sure to only load all annotations once.
+    if (!_loading) {
+      _loading = $q.defer();
+
+      dataSetAnnotationService
         .query().$promise.then(function (annotations) {
-        var keys = Object.keys(annotations);
+        var dataSetIds = Object.keys(annotations);
 
-        for (var i = keys.length; i--;) {
-          _addAnnotationsToDataSet(keys[i], annotations[keys[i]]);
+        for (var i = dataSetIds.length; i--;) {
+          _addAnnotationsToDataSet(dataSetIds[i], annotations[dataSetIds[i]]);
 
-          for (var j = annotations[keys[i]].length; j--;) {
-            this.add(annotations[keys[i]].term, keys[i]);
+          for (var j = annotations[dataSetIds[i]].length; j--;) {
+            this.add(annotations[dataSetIds[i]][j].term, dataSetIds[i]);
           }
         }
 
         _initPR();
+
+        _loading.resolve(true);
       }.bind(this));
+    }
+
+    return _loading.promise;
   };
 
   /**
@@ -178,12 +227,12 @@ function DataSetAnnotationsFactory (_, dataSetAnnotationService) {
    * @return  {Object}               Self.
    */
   DataSetAnnotations.prototype.calcPR = function (annotations, numDataSets) {
-    var i,
-        uris = Object.keys(annotations);
+    var uris = Object.keys(annotations);
 
-    for (i = terms.length; i--;) {
-      _annotations[terms[i]].precision = annotations[uris[i]] / numDataSets;
-      _annotations[terms[i]].recall = annotations[uris[i]] / _annotations[terms[i]].total;
+    for (var i = uris.length; i--;) {
+      _annotations[uris[i]].precision = annotations[uris[i]] / numDataSets;
+      _annotations[uris[i]].recall =
+        annotations[uris[i]] / _annotations[uris[i]].total;
     }
   };
 
@@ -193,6 +242,7 @@ function DataSetAnnotationsFactory (_, dataSetAnnotationService) {
 angular
   .module('dataSet')
   .factory('DataSetAnnotations', [
+    '$q',
     '_',
     'dataSetAnnotationService',
     DataSetAnnotationsFactory

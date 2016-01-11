@@ -23,7 +23,8 @@ function DashboardCtrl (
   dashboardWidthFixerService,
   dashboardExpandablePanelService,
   dashboardDataSetPreviewService,
-  treemapContext) {
+  treemapContext,
+  dashboardVisData) {
   var that = this;
 
   // Construct Angular modules
@@ -52,6 +53,7 @@ function DashboardCtrl (
   this.dashboardExpandablePanelService = dashboardExpandablePanelService;
   this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
   this.treemapContext = treemapContext;
+  this.dashboardVisData = dashboardVisData;
 
   // Construct class variables
   this.dataSetServiceLoading = false;
@@ -227,17 +229,19 @@ function DashboardCtrl (
   }.bind(this));
 
   this.treemapContext.on('dataSets', function (response) {
-    response.then(function (dataSets) {
+    this.$q.when(response).then(function (dataSets) {
       this.selectDataSets(dataSets);
     }.bind(this));
   }.bind(this));
 
-  this.treemapContext.on('highlightedDataSets', function (dataSets) {
-    this.dataSet.highlight(dataSets);
+  this.treemapContext.on('highlightedDataSets', function (data) {
+    this.dataSet.highlight(data.ids, false, data.soft);
+    this.$rootScope.$digest();
   }.bind(this));
 
-  this.treemapContext.on('prevHighlightedDataSets', function (dataSets) {
-    this.dataSet.highlight(dataSets, true);
+  this.treemapContext.on('prevHighlightedDataSets', function (data) {
+    this.dataSet.highlight(data.ids, true, data.soft);
+    this.$rootScope.$digest();
   }.bind(this));
 }
 
@@ -533,13 +537,13 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery,
       }
     );
 
-    stateChange.then(function (a, b, c) {
+    stateChange.then(function () {
       // ! HACK !
       // Currently state changes do not trigger a controller reload, hence no
       // `$stateChangeSuccess` is triggered. Without triggering this event the
       // root controller doesn't recognize any changes of the query parameter.
       // If we inform the root controller and trigger the event the template
-      // will be refreshed which causes an ugly usability bug in which the
+      // will be refreshed, which causes an ugly usability bug in which the
       // search input is deselected for a short moment and preventing from
       // typing further...
       this.$rootScope.$emit('$reloadlessStateChangeSuccess', this.$state.current);
@@ -549,7 +553,7 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery,
   if (searchQuery) {
     if (searchQuery.length > 1) {
       this.searchDataSet = true;
-      this.dataSet.search(searchQuery);
+      var annotations = this.dataSet.search(searchQuery).getCurrentAnnotations();
       this.dataSets.newOrCachedCache(searchQuery);
       // Sometimes the `ui-scroll` didn't stop showing the loading spinner. It
       // seems like we need to wait for one digestion cycle before reloading the
@@ -557,6 +561,8 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery,
       this.$timeout(function() {
         this.dashboardDataSetsReloadService.reload();
       }.bind(this), 0);
+
+      this.dashboardVisData.updateGraph(annotations);
     }
   } else {
     this.dataSet.all();
@@ -679,6 +685,8 @@ DashboardCtrl.prototype.collapseDatasetExploration = function () {
   this.expandDataSetPanel = false;
   this.deselectDataSets();
   this.dashboardExpandablePanelService.trigger('collapser');
+
+  this.dataSet.highlight(this.treemapContext.get('highlightedDataSets'), true);
 };
 
 DashboardCtrl.prototype.findDataSet = function (uuid) {
@@ -728,5 +736,6 @@ angular
     'dashboardExpandablePanelService',
     'dashboardDataSetPreviewService',
     'treemapContext',
+    'dashboardVisData',
     DashboardCtrl
   ]);
