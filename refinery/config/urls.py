@@ -22,6 +22,8 @@ from data_set_manager.api import AttributeOrderResource, StudyResource,\
     AssayResource, InvestigationResource, ProtocolResource, \
     ProtocolReferenceResource, ProtocolReferenceParameterResource, \
     PublicationResource, AttributeResource
+from rest_framework import routers
+from file_store import views
 
 
 logger = logging.getLogger(__name__)
@@ -36,6 +38,10 @@ sqs = (SearchQuerySet().using("core")
 
 # Uncomment the next two lines to enable the admin:
 admin.autodiscover()
+
+router = routers.DefaultRouter()
+router.register(r'api/v2/filestoreitems', views.FileStoreItemViewSet)
+
 
 # NG: added for tastypie URL
 v1_api = Api(api_name='v1')
@@ -148,6 +154,9 @@ urlpatterns = patterns(
         ),
         name='search'
     ),
+    # Wire up our API using automatic URL routing.
+    url(r'^', include(router.urls)),
+
 
     # (r'^favicon\.ico$',
     # 'django.views.generic.simple.redirect_to',
