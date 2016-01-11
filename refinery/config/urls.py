@@ -41,7 +41,7 @@ admin.autodiscover()
 
 router = routers.DefaultRouter()
 router.register(r'api/v2/filestoreitems', views.FileStoreItemViewSet)
-
+router.register(r'api/v2/workflows', views.FileStoreItemViewSet)
 
 # NG: added for tastypie URL
 v1_api = Api(api_name='v1')

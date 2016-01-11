@@ -33,7 +33,8 @@ from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
 from core.utils import get_data_sets_annotations
-
+from rest_framework import viewsets
+from core.serializers import WorkflowSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -884,3 +885,11 @@ def neo4j_dataset_annotations(request):
         )
 
     return HttpResponse(response, mimetype='application/json')
+
+
+class WorkflowViewset(viewsets.ModelViewSet):
+    """
+    API endpoint that allows Workflows to be viewed
+    """
+    queryset = Workflow.objects.all()
+    serializer_class = WorkflowSerializer
