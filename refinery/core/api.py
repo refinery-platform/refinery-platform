@@ -625,6 +625,7 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
+    is_active = fields.BooleanField(attribute='is_active', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, Workflow)
@@ -635,8 +636,8 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
         detail_resource_name = 'workflow'
         resource_name = 'workflow'
         detail_uri_name = 'uuid'
-        # allowed_methods = ['get']
-        fields = ['name', 'uuid', 'summary']
+        allowed_methods = ['get', 'patch']
+        fields = ['name', 'uuid', 'summary', 'is_active']
         # authentication = SessionAuthentication()
         # authorization = GuardianAuthorization()
 
