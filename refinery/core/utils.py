@@ -619,7 +619,18 @@ def generate_facet_fields_query(facet_fields):
     return query
 
 
+def get_facet_fields_query(params):
+    temp_params = urlquote(params,safe='=& ')
+    full_response = search_solr(temp_params, 'data_set_manager')
+    facet_field = parse_facet_fields(full_response)
+    facet_field_query = generate_facet_fields_query(facet_field)
+    return facet_field_query
+
+
 def generate_solr_params(params):
+    '''Creates the encoded solr params requiring only an assay and/or study uuid.
+    Params:'''
+
     file_types = 'fq=type:("Raw Data File" OR ' \
                  '"Derived Data File" OR ' \
                  '"Array Data File" OR ' \
@@ -640,14 +651,14 @@ def generate_solr_params(params):
     sort = params.get('sort', default=None)
 
     fixed_solr_params = \
-        ''.join([file_types,
-                '&fq=is_annotation:', is_annotation,
-                 '&start=', start,
-                 '&rows=', row,
-                 '&q=django_ct:data_set_manager.node&wt=json&',
-                 'facet=', facet_count,
-                 '&facet.limit=-1&',
-                 'facet.sort=', facet_sort])
+        '&'.join([file_types,
+                  'fq=is_annotation:%s' % is_annotation,
+                  'start=%s' % start,
+                  'rows=%s' % row,
+                  'q=django_ct:data_set_manager.node&wt=json',
+                  'facet=%s' % facet_count,
+                  'facet.limit=-1',
+                  'facet.sort= %s' % facet_sort])
 
     solr_params = ""
 
@@ -665,11 +676,8 @@ def generate_solr_params(params):
                 facet_field.split(','))
         solr_params = ''.join([solr_params, split_facet_fields])
     else:
-        temp_params = urlquote(solr_params + '&' + fixed_solr_params,
-                               safe='=& ')
-        full_response = search_solr(temp_params, 'data_set_manager')
-        facet_field = parse_facet_fields(full_response)
-        facet_field_query = generate_facet_fields_query(facet_field)
+        url_params = '&'.join([solr_params, fixed_solr_params])
+        facet_field_query = get_facet_fields_query(url_params)
         solr_params = ''.join([solr_params, facet_field_query])
 
     if field_limit is not None:
@@ -681,7 +689,7 @@ def generate_solr_params(params):
     if sort is not None:
         solr_params = ''.join([solr_params, '&sort=', sort])
 
-    url = ''.join([solr_params, '&', fixed_solr_params])
+    url = '&'.join([solr_params, fixed_solr_params])
     encoded_solr_params = urlquote(url, safe='=& ')
 
     return encoded_solr_params
@@ -689,7 +697,7 @@ def generate_solr_params(params):
 
 def search_solr(encoded_params, core):
 
-    url_portion = ''.join([core, "/select"])
+    url_portion = '/'.join([core, "select"])
     url = urlparse.urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
     full_response = requests.get(url, params=encoded_params)
     response = full_response.content
