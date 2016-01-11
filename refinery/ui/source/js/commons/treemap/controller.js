@@ -97,8 +97,13 @@ function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
   this.numColors = 10;
   this.steps = 6;
 
+  // this.treemap.colors = new D3Colors(
+  //   this.d3.scale.category10().domain(d3.range(this.numColors)).range()
+  // ).getScaledFadedColors(this.steps);
+
+  // Mono color scale
   this.treemap.colors = new D3Colors(
-    this.d3.scale.category10().domain(d3.range(this.numColors)).range()
+    ['#26424d']
   ).getScaledFadedColors(this.steps);
 
   this.treemap.x = this.d3.scale.linear()
