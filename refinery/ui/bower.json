@@ -41,7 +41,7 @@
     "spark-md5": "0.0.5",
     "spectrum": "1.7.0",
     "tipsy": "0.1.7",
-    "d3-list-graph": "https://github.com/flekschas/d3-list-graph.git#81d0a0785951af98c34e24ca5de8e3f59e312551"
+    "d3-list-graph": "https://github.com/flekschas/d3-list-graph.git#b82bbe7e6b4a1df5133970bbd00e216696d95f58"
   },
   "resolutions": {
     "d3": "~3.5.6"
