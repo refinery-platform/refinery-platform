@@ -11,7 +11,9 @@
  * @param   {Object}  listGraphSettings  Settings.
  * @param   {Object}  pubSub             PubSub service.
  */
-function ListGraphCtrl ($element, $, graph, listGraphSettings, dataSet) {
+function ListGraphCtrl (
+  $element, $, graph, listGraphSettings, dataSet, pubSub
+) {
   this.$ = $;
   this.$element = this.$($element);
   this.settings = listGraphSettings;
@@ -30,7 +32,9 @@ function ListGraphCtrl ($element, $, graph, listGraphSettings, dataSet) {
         {
           columns: Math.round(this.width / 175),
           rows: Math.round(this.height / 36),
-          iconPath: this.settings.iconPath
+          iconPath: this.settings.iconPath,
+          sortBy: 'precision',
+          dispatcher: pubSub.trigger
         }
       );
     }.bind(this));
@@ -52,5 +56,6 @@ angular
     'graph',
     'listGraphSettings',
     'dataSet',
+    'pubSub',
     ListGraphCtrl
   ]);
