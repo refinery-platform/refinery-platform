@@ -653,18 +653,12 @@ def generate_solr_params(params):
 
     if study_uuid is not None and assay_uuid is not None:
         solr_params = ''.join([solr_params,
-                               'fq=(study_uuid:',
-                               study_uuid,
-                                ' AND assay_uuid:',
-                               assay_uuid,
-                               ')'])
+                               'fq=(study_uuid:', study_uuid,
+                               ' AND assay_uuid:', assay_uuid, ')'])
     elif study_uuid is not None and assay_uuid is None:
         solr_params = ''.join([solr_params, 'fq=study_uuid:', study_uuid])
     else:
         solr_params = ''.join([solr_params, 'fq=assay_uuid:', assay_uuid])
-
-    if field_limit is not None:
-        solr_params = ''.join([solr_params, '&fl=', field_limit])
 
     if facet_field is not None:
         split_facet_fields = generate_facet_fields_query(
@@ -677,6 +671,9 @@ def generate_solr_params(params):
         facet_field = parse_facet_fields(full_response)
         facet_field_query = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, facet_field_query])
+
+    if field_limit is not None:
+        solr_params = ''.join([solr_params, '&fl=', field_limit])
 
     if facet_pivot is not None:
         solr_params = ''.join([solr_params, '&facet.pivot=', facet_pivot])
