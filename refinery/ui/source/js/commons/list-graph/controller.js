@@ -26,7 +26,7 @@ function ListGraphCtrl ($element, $, graph, listGraphSettings, dataSet) {
       this.listGraph = new ListGraph(
         this.$visElement[0],
         this.data,
-        ['http://www.w3.org/2002/07/owl#Thing'],
+        this.rootIds,
         {
           columns: Math.round(this.width / 175),
           rows: Math.round(this.height / 36),

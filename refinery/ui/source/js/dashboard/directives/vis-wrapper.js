@@ -5,8 +5,13 @@ function refineryDashboardVisWrapper () {
     this.$q = $q;
     this.pubSub = pubSub;
 
+    // Absolute root node.
+    // this.rootUris = ['http://www.w3.org/2002/07/owl#Thing'];
+    this.rootUris = ['http://purl.obolibrary.org/obo/CL_0000003'];
+    this.propertyValue = 'numDataSets';
+
     // Trigger preloading / precomputing of D3 data for exploration.
-    dashboardVisData.load();
+    dashboardVisData.load(this.rootUris[0], this.propertyValue);
 
     var graph = this.$q.defer();
     this.graph = graph.promise;

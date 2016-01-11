@@ -1,16 +1,16 @@
-function DashboardVisData ($q, neo4jToGraph, dataSet, graph) {
+function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
   var graphData = $q.defer(),
       treemapData = $q.defer(),
       annotations = $q.defer();
 
   function Data () {}
 
-  Data.prototype.load = function () {
+  Data.prototype.load = function (root, valueProperty) {
     neo4jToGraph.get()
       .then(function (data) {
         // Trim graph
         var prunedData = graph.accumulateAndPrune(
-          data, 'http://www.w3.org/2002/07/owl#Thing', 'numDataSets'
+          data, root ? root : settings.ontRoot, valueProperty
         );
 
         // Init precision and recall
@@ -80,5 +80,6 @@ angular
     'neo4jToGraph',
     'dataSet',
     'graph',
+    'settings',
     DashboardVisData
   ]);

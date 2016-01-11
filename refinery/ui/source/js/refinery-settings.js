@@ -54,5 +54,6 @@ angular
     solrApi: '/solr',
     treemap: {
       singleRequestLimit: 200
-    }
+    },
+    ontRoot: 'http://www.w3.org/2002/07/owl#Thing'
   });
