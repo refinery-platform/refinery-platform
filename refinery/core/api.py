@@ -110,9 +110,9 @@ class SharableResourceAPIInterface(object):
             # whatever internal filtering can be performed on other things,
             # like limiting the return amount.
             res_list = [
-                dataset for dataset in res_list
-                if not hasattr(dataset, param) or
-                str(getattr(dataset, param)) == get_params[param]
+                item for item in res_list
+                if not hasattr(item, param) or
+                str(getattr(item, param)) == get_params[param]
             ]
 
         return res_list
