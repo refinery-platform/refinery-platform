@@ -13,8 +13,7 @@ from celery.task import task
 
 from core.models import Workflow, WorkflowDataInput, \
     WorkflowInputRelationships, TYPE_1_1, TYPE_REPLICATE, NR_TYPES
-from galaxy_connector.galaxy_workflow import createBaseWorkflow, \
-    createStepsAnnot, createStepsCompact, getStepOptions
+
 
 logger = logging.getLogger(__name__)
 
@@ -169,42 +168,6 @@ def import_workflow(workflow, workflow_engine, workflow_dictionary):
                         issues.append(
                             "Input relationship option error: %s" % e)
     return issues
-
-
-def configure_workflow(workflow_dict, ret_list):
-    """Takes a workflow and associated data input map
-    Returns an expanded workflow from core.models.workflow and
-    workflow_data_input_map
-    """
-    logger.debug("Configuring Galaxy workflow")
-    # creating base workflow to replicate input workflow
-    new_workflow = createBaseWorkflow(workflow_dict["name"])
-    # checking to see what kind of workflow exists:
-    # does it have  "annotation": "type=COMPACT", in the workflow annotation
-    # field
-    work_type = getStepOptions(workflow_dict["annotation"])
-    COMPACT_WORKFLOW = False
-
-    for k, v in work_type.iteritems():
-        if k.upper() == 'TYPE':
-            try:
-                if v[0].upper() == 'COMPACT':
-                    COMPACT_WORKFLOW = True
-            except:
-                logger.exception("Malformed workflow tag, cannot parse: %s",
-                                 work_type)
-                return
-    # if workflow is tagged w/ type=COMPACT tag,
-    if COMPACT_WORKFLOW:
-        logger.debug("Workflow processing: COMPACT")
-        new_workflow["steps"], history_download, analysis_node_connections = \
-            createStepsCompact(ret_list, workflow_dict)
-    else:
-        logger.debug("Workflow processing: EXPANSION")
-        # Updating steps in imported workflow X number of times
-        new_workflow["steps"], history_download, analysis_node_connections = \
-            createStepsAnnot(ret_list, workflow_dict)
-    return new_workflow, history_download, analysis_node_connections
 
 
 @task()

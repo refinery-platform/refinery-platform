@@ -17,9 +17,7 @@ urlpatterns = patterns(
     url(r'^workflow_inputs/(?P<workflow_uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
         'getWorkflowDataInputMap'),
-    url(r'^analysis_run/$', 'analysis_run'),
     url(r'^analysis_cancel/$', 'analysis_cancel'),
-    url(r'^repository_run/$', 'repository_run'),
     url(r'^run/$', 'run'),
     url(r'^create_noderelationship/$', 'create_noderelationship'),
 )

@@ -4,32 +4,47 @@ Created on Apr 5, 2012
 @author: nils
 '''
 
-from datetime import datetime
 import logging
 import urlparse
 
 from bioblend import galaxy
 import celery
 from celery.result import TaskSetResult
-from celery.task import task
+from celery.task import task, Task
 from celery.task.sets import TaskSet
-
-from django.contrib.sites.models import Site
+import requests
 
 from analysis_manager.models import AnalysisStatus
-from core.models import (Analysis, AnalysisResult, WorkflowFilesDL,
-                         AnalysisNodeConnection, Workflow)
+from core.models import Analysis, AnalysisResult, Workflow
 from data_set_manager.models import Node
 from file_store.models import FileStoreItem, HTML, ZIP
 from file_store.tasks import import_file, create
-from galaxy_connector.galaxy_workflow import countWorkflowSteps
-from workflow_manager.tasks import configure_workflow
 
 
 logger = logging.getLogger(__name__)
 
 
-@task(max_retries=None)
+class AnalysisHandlerTask(Task):
+    abstract = True
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        """Set analysis status to failure in case of errors not handled in the
+        monitoring task
+        """
+        logger.error("Monitoring task for analysis with UUID '%s' failed due "
+                     "to unexpected error: '%s: %s'",
+                     args[0], einfo.type, einfo.exception)
+        try:
+            analysis = Analysis.objects.get(uuid=args[0])
+        except (Analysis.DoesNotExist, Analysis.MultipleObjectsReturned) as e:
+            logger.error("Can not retrieve analysis with UUID '%s': '%s'",
+                         args[0], e)
+            return
+        logger.error("Setting status of analysis '%s' to failure", analysis)
+        analysis.set_status(Analysis.FAILURE_STATUS)
+
+
+@task(base=AnalysisHandlerTask, max_retries=None)
 def run_analysis(analysis_uuid):
     """Manage analysis execution"""
     RETRY_INTERVAL = 5  # seconds
@@ -44,7 +59,6 @@ def run_analysis(analysis_uuid):
 
     # if cancelled by user
     if analysis.failed():
-        run_analysis.update_state(state=celery.states.FAILURE)
         return
 
     try:
@@ -88,7 +102,15 @@ def run_analysis(analysis_uuid):
     # import files into Galaxy and start analysis
     if not analysis_status.galaxy_import_task_group_id:
         logger.debug("Starting analysis execution in Galaxy")
-        prepare_galaxy_analysis(analysis)
+        try:
+            analysis.prepare_galaxy()
+        except (requests.exceptions.ConnectionError,
+                galaxy.client.ConnectionError):
+            logger.error("Analysis '%s' failed during preparation in Galaxy",
+                         analysis)
+            analysis.set_status(Analysis.FAILURE_STATUS)
+            refinery_import.delete()
+            return
         galaxy_import_tasks = [
             start_galaxy_analysis.subtask((analysis_uuid, )),
         ]
@@ -173,102 +195,14 @@ def run_analysis(analysis_uuid):
         logger.warning("Unknown workflow type '%s' in analysis '%s'",
                        analysis.workflow.type, analysis.name)
 
-    logger.info("Analysis '%s' finished successfully", analysis)
     analysis.set_status(Analysis.SUCCESS_STATUS)
     analysis.rename_results()
     analysis.send_email()
+    logger.info("Analysis '%s' finished successfully", analysis)
     analysis.galaxy_cleanup()
     refinery_import.delete()
     galaxy_import.delete()
     galaxy_export.delete()
-
-
-def prepare_galaxy_analysis(analysis):
-    """Prepare analysis for execution in Galaxy"""
-    error_msg = "Preparing Galaxy analysis failed: "
-    connection = analysis.galaxy_connection()
-
-    # creates new library in galaxy
-    library_name = "{} Analysis - {} ({})".format(
-        Site.objects.get_current().name, analysis.uuid, datetime.now())
-    try:
-        library_id = connection.libraries.create_library(library_name)['id']
-    except galaxy.client.ConnectionError as exc:
-        error_msg += "can not create Galaxy library for analysis '%s': %s"
-        logger.error(error_msg, analysis.name, exc.message)
-        raise
-
-    # generates same ret_list purely based on analysis object
-    ret_list = analysis.get_config()
-    try:
-        workflow_dict = connection.workflows.export_workflow_json(
-            analysis.workflow.internal_id)
-    except galaxy.client.ConnectionError as exc:
-        error_msg += "can not download Galaxy workflow for analysis '%s': %s"
-        logger.error(error_msg, analysis.name, exc.message)
-        raise
-
-    # getting expanded workflow configured based on input: ret_list
-    new_workflow, history_download, analysis_node_connections = \
-        configure_workflow(workflow_dict, ret_list)
-
-    # import connections into database
-    for analysis_node_connection in analysis_node_connections:
-        # lookup node object
-        if analysis_node_connection["node_uuid"]:
-            node = Node.objects.get(uuid=analysis_node_connection["node_uuid"])
-        else:
-            node = None
-        AnalysisNodeConnection.objects.create(
-            analysis=analysis,
-            subanalysis=analysis_node_connection['subanalysis'],
-            node=node,
-            step=int(analysis_node_connection['step']),
-            name=analysis_node_connection['name'],
-            filename=analysis_node_connection['filename'],
-            filetype=analysis_node_connection['filetype'],
-            direction=analysis_node_connection['direction'],
-            is_refinery_file=analysis_node_connection['is_refinery_file']
-            )
-    # saving outputs of workflow to download
-    for file_dl in history_download:
-        temp_dl = WorkflowFilesDL(step_id=file_dl['step_id'],
-                                  pair_id=file_dl['pair_id'],
-                                  filename=file_dl['name'])
-        temp_dl.save()
-        analysis.workflow_dl_files.add(temp_dl)
-        analysis.save()
-
-    # import newly generated workflow
-    try:
-        new_workflow_info = connection.workflows.import_workflow_json(
-            new_workflow)
-    except galaxy.client.ConnectionError as exc:
-        error_msg += "error importing workflow into Galaxy for analysis " \
-                     "'%s': %s"
-        logger.error(error_msg, analysis.name, exc.message)
-        raise
-
-    # getting number of steps for current workflow
-    new_workflow_steps = countWorkflowSteps(new_workflow)
-
-    # creates new history in galaxy
-    history_name = "{} Analysis - {} ({})".format(
-        Site.objects.get_current().name, analysis.uuid, datetime.now())
-    try:
-        history_id = connection.histories.create_history(history_name)['id']
-    except galaxy.client.ConnectionError as e:
-        error_msg += "error creating Galaxy history for analysis '%s': %s"
-        logger.error(error_msg, analysis.name, e.message)
-        raise
-
-    # updating analysis object
-    analysis.workflow_copy = new_workflow
-    analysis.workflow_steps_num = new_workflow_steps
-    analysis.workflow_galaxy_id = new_workflow_info['id']
-    analysis.library_id = library_id
-    analysis.history_id = history_id
-    analysis.save()
 
 
 def import_analysis_in_galaxy(ret_list, library_id, connection):

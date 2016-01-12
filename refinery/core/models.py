@@ -49,7 +49,9 @@ from data_set_manager.utils import (add_annotated_nodes_selection,
                                     index_annotated_nodes_selection)
 from file_store.models import get_file_size, FileStoreItem, ZIP
 from file_store.tasks import rename
-from galaxy_connector.galaxy_workflow import create_expanded_workflow_graph
+from galaxy_connector.galaxy_workflow import (create_expanded_workflow_graph,
+                                              countWorkflowSteps,
+                                              configure_workflow)
 from galaxy_connector.models import Instance
 from .utils import (update_data_set_index, delete_data_set_index,
                     add_read_access_in_neo4j, remove_read_access_in_neo4j,
@@ -865,6 +867,96 @@ class Analysis(OwnableResource):
 
     def galaxy_connection(self):
         return self.workflow.workflow_engine.instance.galaxy_connection()
+
+    def prepare_galaxy(self):
+        """Prepare for analysis execution in Galaxy"""
+        error_msg = "Preparing Galaxy analysis failed: "
+        connection = self.galaxy_connection()
+
+        # creates new library in galaxy
+        library_name = "{} Analysis - {} ({})".format(
+            Site.objects.get_current().name, self.uuid, datetime.now())
+        try:
+            library = connection.libraries.create_library(library_name)
+        except galaxy.client.ConnectionError as exc:
+            logger.error(error_msg +
+                         "can not create Galaxy library for analysis '%s': %s",
+                         self.name, exc.message)
+            raise
+
+        # generates same ret_list purely based on analysis object
+        ret_list = self.get_config()
+        try:
+            workflow_dict = connection.workflows.export_workflow_json(
+                self.workflow.internal_id)
+        except galaxy.client.ConnectionError as exc:
+            logger.error(error_msg +
+                         "can not download Galaxy workflow for analysis '%s': "
+                         "%s", self.name, exc.message)
+            raise
+
+        # getting expanded workflow configured based on input: ret_list
+        new_workflow, history_download, analysis_node_connections = \
+            configure_workflow(workflow_dict, ret_list)
+
+        # import connections into database
+        for analysis_node_connection in analysis_node_connections:
+            # lookup node object
+            if analysis_node_connection["node_uuid"]:
+                node = Node.objects.get(
+                        uuid=analysis_node_connection["node_uuid"])
+            else:
+                node = None
+            AnalysisNodeConnection.objects.create(
+                analysis=self,
+                subanalysis=analysis_node_connection['subanalysis'],
+                node=node,
+                step=int(analysis_node_connection['step']),
+                name=analysis_node_connection['name'],
+                filename=analysis_node_connection['filename'],
+                filetype=analysis_node_connection['filetype'],
+                direction=analysis_node_connection['direction'],
+                is_refinery_file=analysis_node_connection['is_refinery_file']
+                )
+        # saving outputs of workflow to download
+        for file_dl in history_download:
+            temp_dl = WorkflowFilesDL(step_id=file_dl['step_id'],
+                                      pair_id=file_dl['pair_id'],
+                                      filename=file_dl['name'])
+            temp_dl.save()
+            self.workflow_dl_files.add(temp_dl)
+            self.save()
+
+        # import newly generated workflow
+        try:
+            new_workflow_info = connection.workflows.import_workflow_json(
+                new_workflow)
+        except galaxy.client.ConnectionError as exc:
+            logger.error(error_msg +
+                         "error importing workflow into Galaxy for analysis "
+                         "'%s': %s", self.name, exc.message)
+            raise
+
+        # getting number of steps for current workflow
+        new_workflow_steps = countWorkflowSteps(new_workflow)
+
+        # creates new history in galaxy
+        history_name = "{} Analysis - {} ({})".format(
+            Site.objects.get_current().name, self.uuid, datetime.now())
+        try:
+            history = connection.histories.create_history(history_name)
+        except galaxy.client.ConnectionError as e:
+            error_msg += "error creating Galaxy history for analysis '%s': %s"
+            logger.error(error_msg, self.name, e.message)
+            raise
+
+        # updating analysis object
+        self.workflow_copy = new_workflow
+        self.workflow_steps_num = new_workflow_steps
+        self.workflow_galaxy_id = new_workflow_info['id']
+        self.library_id = library['id']
+        self.history_id = history['id']
+        self.save()
 
     def galaxy_progress(self):
         """Return analysis progress in Galaxy"""

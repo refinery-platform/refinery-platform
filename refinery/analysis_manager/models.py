@@ -79,13 +79,14 @@ def get_task_group_state(task_group_id):
     """return a list containing states of all tasks given a task set ID"""
     task_group_state = []
     percent_done = 0
-    taskset = TaskSetResult.restore(task_group_id)
 
+    taskset = TaskSetResult.restore(task_group_id)
     if not taskset:
         logger.error("TaskSet with UUID '%s' doesn't exist", task_group_id)
         return task_group_state
 
     for task in taskset.results:
+        # AsyncResult.info does not contain task state after task has finished
         if task.state == celery.states.SUCCESS:
             percent_done = 100
         elif task.info:
@@ -93,7 +94,6 @@ def get_task_group_state(task_group_id):
         task_group_state.append({
             'state': task.state,
             'percent_done': percent_done,
-            # 'task_id': task.task_id
         })
         logger.debug("'%s' - '%s' - '%s' - '%s'",
                      task.task_name, task.state, task.info, percent_done)
