@@ -13,7 +13,7 @@ pip install -r refinery-platform/deployment/requirements.txt
 - The AWS account must have a key pair with KeyName `id_rsa`.
 - SSH access only works if the default security group allows
   inbound access on port 22 (the SSH port).
-- HTTP access only works in the default security group allows
+- HTTP access only works if the default security group allows
   inbound access on port 80.
 - A role called "refinery-web" must already exist and it must
   grant readonly access to the RDS API. (technically it is an
@@ -28,6 +28,18 @@ cfn_py_generate aws_cfn.py deploy.json
 aws cloudformation create-stack --stack-name test-$(date +%Y%m%dT%H%M) --template-body file://deploy.json
 ```
 
-This creates a stack with a new name every time, you might
-prefer to re-use the stack name and delete it when you want to
-create a new stack.
+This creates a stack with a new name every time. The name of the
+stack is _test-YYYYMMDDTHHMM_.
+
+Change the value after the `--stack-name` option if you want to
+use a different name.
+
+## Stopping or Deleting a stack
+
+Stacks aren't really stopped, they're deleted. You can either use
+the AWS Web Console (click the cube in top left, then "Cloud
+Formation"), or the command line tools:
+
+```
+aws cloudformation delete-stack --stack-name StackNameHere
+```
