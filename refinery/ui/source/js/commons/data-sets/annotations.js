@@ -195,20 +195,20 @@ function DataSetAnnotationsFactory ($q, _, dataSetAnnotationService) {
 
       dataSetAnnotationService
         .query().$promise.then(function (annotations) {
-        var dataSetIds = Object.keys(annotations);
+          var dataSetIds = Object.keys(annotations);
 
-        for (var i = dataSetIds.length; i--;) {
-          _addAnnotationsToDataSet(dataSetIds[i], annotations[dataSetIds[i]]);
+          for (var i = dataSetIds.length; i--;) {
+            _addAnnotationsToDataSet(dataSetIds[i], annotations[dataSetIds[i]]);
 
-          for (var j = annotations[dataSetIds[i]].length; j--;) {
-            this.add(annotations[dataSetIds[i]][j].term, dataSetIds[i]);
+            for (var j = annotations[dataSetIds[i]].length; j--;) {
+              this.add(annotations[dataSetIds[i]][j].term, dataSetIds[i]);
+            }
           }
-        }
 
-        _initPR();
+          _initPR();
 
-        _loading.resolve(true);
-      }.bind(this));
+          _loading.resolve(true);
+        }.bind(this));
     }
 
     return _loading.promise;
