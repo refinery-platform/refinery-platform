@@ -18,6 +18,7 @@ chown ubuntu:ubuntu /srv/refinery-platform
 sudo su -c 'git clone -b '"$GIT_BRANCH"' https://github.com/parklab/refinery-platform.git /srv/refinery-platform' ubuntu
 
 cd /srv/refinery-platform/deployment
+bin/aws-rds-endpoint db20160111 > /home/ubuntu/rds
 sudo su -c '/usr/local/bin/librarian-puppet install' ubuntu
 
 /usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/modules /srv/refinery-platform/deployment/manifests/aws.pp
