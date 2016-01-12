@@ -333,13 +333,23 @@ def update_annotated_nodes(node_type, study_uuid, assay_uuid=None,
     # insert node and attribute information
     start = time.time()
     counter = 0
+    skipped_attributes = 0
     bulk_list = []
     for node_id, node in nodes.iteritems():
         if node["type"] == node_type:
             # save attributes (attribute[1], etc. are based on
             # Attribute.ALL_FIELDS)
             attributes = _get_parent_attributes(nodes, node_id)
+
+            # List to keep track which attributes have already been added
+            check_list = {}
+
             for attribute in attributes:
+                # Skip if we've seen the attribute already
+                if attribute[0] in check_list:
+                    skipped_attributes += 1
+                    continue
+
                 counter += 1
                 bulk_list.append(
                     AnnotatedNode(
@@ -355,6 +365,10 @@ def update_annotated_nodes(node_type, study_uuid, assay_uuid=None,
                         attribute_subtype=attribute[2],
                         attribute_value=attribute[3],
                         attribute_value_unit=attribute[4]))
+
+                # Position zero represents the attribute ID.
+                check_list[attribute[0]] = True
+
                 if len(bulk_list) == MAX_BULK_LIST_SIZE:
                     AnnotatedNode.objects.bulk_create(bulk_list)
                     bulk_list = []
@@ -362,8 +376,13 @@ def update_annotated_nodes(node_type, study_uuid, assay_uuid=None,
         AnnotatedNode.objects.bulk_create(bulk_list)
         bulk_list = []
     end = time.time()
-    logger.info("%s annotated nodes generated in %s",
-                str(counter), str(end - start))
+    logger.info(
+        "Skipped creating %s duplicated annotated nodes",
+        str(skipped_attributes)
+    )
+    logger.info(
+        "%s annotated nodes generated in %s", str(counter), str(end - start)
+    )
 
 
 def calculate_checksum(f, algorithm='md5', bufsize=8192):
