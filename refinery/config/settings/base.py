@@ -174,6 +174,7 @@ INSTALLED_APPS = (
     'south',
     'chunked_upload',
     'rest_framework',
+    'rest_framework_swagger',
 )
 
 # NG: added for django-guardian
