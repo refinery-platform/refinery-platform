@@ -494,11 +494,13 @@ function DataSetFactory (
       for (var i = _searchResultDsIds.length; i--;) {
         annotations = _dataStore.get(_searchResultDsIds[i]).annotations;
 
-        for (var j = annotations.length; j--;) {
-          if (!!!uniqueSearchResAnno[annotations[j].term]) {
-            uniqueSearchResAnno[annotations[j].term] = 1;
-          } else {
-            uniqueSearchResAnno[annotations[j].term]++;
+        if (annotations) {
+          for (var j = annotations.length; j--;) {
+            if (!!!uniqueSearchResAnno[annotations[j].term]) {
+              uniqueSearchResAnno[annotations[j].term] = 1;
+            } else {
+              uniqueSearchResAnno[annotations[j].term]++;
+            }
           }
         }
       }
