@@ -45,7 +45,7 @@ urlpatterns = patterns(
         r''r'12})/files/'r'$', 'assays_files', name="assays_files"),
     url(r'^api/v2/assays/(?P<uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
-        r''r'12})/attribute/'r'$', 'assays_attributes',
+        r''r'12})/attributes/'r'$', 'assays_attributes',
         name="assays_attributes"),
     url(r'^data_sets/(?P<data_set_uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
