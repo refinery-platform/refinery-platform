@@ -1008,6 +1008,33 @@ class AnalysisResourceTest(ResourceTestCase):
 
 
 class BaseResourceSlugTest(unittest.TestCase):
+    def setUp(self):
+        self.investigation = \
+            data_set_manager.models.Investigation.objects.create()
+        self.study = data_set_manager.models.Study.objects.create(
+            investigation=self.investigation)
+        self.assay = data_set_manager.models.Assay.objects.create(
+            study=self.study)
+        self.query = simplejson.dumps({
+            "facets": {
+                "platform_Characteristics_10_5_s": [],
+                "cell_or_tissue_Characteristics_10_5_s": [],
+                "REFINERY_TYPE_10_5_s": [],
+                "species_Characteristics_10_5_s": [],
+                "treatment_Characteristics_10_5_s": [],
+                "factor_Characteristics_10_5_s": [],
+                "factor_function_Characteristics_10_5_s": [],
+                "data_source_Characteristics_10_5_s": [],
+                "genome_build_Characteristics_10_5_s": [],
+                "REFINERY_FILETYPE_10_5_s": [],
+                "antibody_Characteristics_10_5_s": [],
+                "data_type_Characteristics_10_5_s": [],
+                "lab_Characteristics_10_5_s": []
+                },
+            "nodeSelection": [],
+            "nodeSelectionBlacklistMode": True
+        })
+
     """Tests for BaseResource Slugs"""
     def test_duplicate_slugs(self):
         DataSet.objects.create(slug="TestSlug")
@@ -1027,6 +1054,29 @@ class BaseResourceSlugTest(unittest.TestCase):
         instance.summary = "Different summary"
         instance.save()
         self.assertTrue(DataSet.objects.get(summary="Different summary"))
+
+    def test_save_slug_no_change(self):
+        DataSet.objects.create(slug="TestSlug2")
+        instance = DataSet.objects.get(slug="TestSlug2")
+        instance.save()
+        instance_again = DataSet.objects.get(slug="TestSlug2")
+        self.assertEqual(instance, instance_again)
+
+    def test_save_slug_with_change(self):
+        DataSet.objects.create(slug="TestSlug3")
+        instance = DataSet.objects.get(slug="TestSlug3")
+        instance_again = DataSet.objects.get(slug="TestSlug3")
+        instance_again.slug = "CHANGED"
+        instance_again.save()
+        self.assertNotEqual(instance.slug, instance_again.slug)
+
+    def test_save_slug_when_another_model_with_same_slug_exists(self):
+        name = 'nodeset'
+        create_nodeset(name=name, study=self.study, assay=self.assay)
+        nodeset_instance = NodeSet.objects.get(name="nodeset")
+        nodeset_instance.slug = "TestSlug4"
+        nodeset_instance.save()
+        self.assertTrue(DataSet.objects.create(slug="TestSlug4"))
 
 
 class CachingTest(unittest.TestCase):
