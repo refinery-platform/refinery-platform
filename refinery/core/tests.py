@@ -1019,6 +1019,15 @@ class BaseResourceSlugTest(unittest.TestCase):
     def test_empty_slug(self):
         self.assertTrue(DataSet.objects.create(slug=""))
 
+    def test_edit_existing_slug(self):
+        DataSet.objects.create(slug="TestSlug1")
+        instance = DataSet.objects.get(slug="TestSlug1")
+        instance.summary = "This is a summmary"
+        instance.save()
+        instance.summary = "Different summary"
+        instance.save()
+        self.assertTrue(DataSet.objects.get(summary="Different summary"))
+
 
 class CachingTest(unittest.TestCase):
     """Testing the addition and deletion of cached objects"""
