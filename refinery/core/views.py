@@ -322,38 +322,6 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
         context_instance=RequestContext(request))
 
 
-@api_view(['GET'])
-def data_set_files(request, uuid, format=None):
-    """Return solr response. Query requires study_uuid or assay_uuid.
-    Params/Solr Params
-        is_annotation - metadata
-        facet_sort - ordering of the facet field constraints, (count or index)
-        facet_count/facet -  enables facet counts in query response, true/false
-        start - paginate, offset response
-        limit/row - maximum number of documents
-        study_uuid/assay_uuid - unique ids
-        field_limit - set of fields to return
-        facet_field - specify a field which should be treated as a facet
-        facet_pivot - list of fields to pivot
-        sort - Ordering include field name, whitespace, & asc or desc.
-        fq - filter query
-     """
-
-    if request.method == 'GET':
-        # Solr index requires a study uuid or a assay uuid
-        params = request.query_params
-        study_uuid = params.get('study_uuid', default=None)
-        assay_uuid = params.get('assay_uuid', default=None)
-
-        if study_uuid is not None or assay_uuid is not None:
-            solr_params = generate_solr_params(params)
-            solr_response = search_solr(solr_params, 'data_set_manager')
-
-            return HttpResponse(solr_response, mimetype='application/json')
-        else:
-            return HttpResponseBadRequest("Study or assay uuid required")
-
-
 def data_set_edit(request, uuid):
     data_set = get_object_or_404(DataSet, uuid=uuid)
     public_group = ExtendedGroup.objects.public_group()
@@ -545,6 +513,38 @@ def analysis(request, analysis_uuid):
                                   "fs_files": file_all
                               },
                               context_instance=RequestContext(request))
+
+
+@api_view(['GET'])
+def assay_files(request, uuid, format=None):
+    """Return solr response. Query requires study_uuid or assay_uuid.
+    Params/Solr Params
+        is_annotation - metadata
+        facet_sort - ordering of the facet field constraints, (count or index)
+        facet_count/facet -  enables facet counts in query response, true/false
+        start - paginate, offset response
+        limit/row - maximum number of documents
+        study_uuid/assay_uuid - unique ids
+        field_limit - set of fields to return
+        facet_field - specify a field which should be treated as a facet
+        facet_pivot - list of fields to pivot
+        sort - Ordering include field name, whitespace, & asc or desc.
+        fq - filter query
+     """
+
+    if request.method == 'GET':
+        # Solr index requires a study uuid or a assay uuid
+        params = request.query_params
+        study_uuid = params.get('study_uuid', default=None)
+        assay_uuid = params.get('assay_uuid', default=None)
+
+        if study_uuid is not None or assay_uuid is not None:
+            solr_params = generate_solr_params(params)
+            solr_response = search_solr(solr_params, 'data_set_manager')
+
+            return HttpResponse(solr_response, mimetype='application/json')
+        else:
+            return HttpResponseBadRequest("Study or assay uuid required")
 
 
 def solr_core_search(request):
