@@ -19,13 +19,23 @@ pip install -r refinery-platform/deployment/requirements.txt
   grant readonly access to the RDS API. (technically it is an
   instance-profile that is used, but creating a role also creates
   an instance-profile).
+- A named RDS (PostgreSQL) must exist in the account.
 
 ## Generate JSON file and start stack:
+
+A CloudFormation stack is
+described by a JSON file
+(`deploy.json` below) and
+created with the AWS CLI command
+`aws cloudformation create-stack`.
+
+You should have the name of your RDS in hand. I use
+`rds-refinery` below.
 
 ```shell
 cd refinery-platform/deployment
 cfn_py_generate aws_cfn.py deploy.json
-aws cloudformation create-stack --stack-name test-$(date +%Y%m%dT%H%M) --template-body file://deploy.json
+aws cloudformation create-stack --stack-name test-$(date +%Y%m%dT%H%M) --template-body file://deploy.json --parameters 'ParameterKey=RDSName,ParameterValue=rds-refinery'
 ```
 
 This creates a stack with a new name every time. The name of the
