@@ -632,7 +632,7 @@ def get_facet_fields_query(params):
     return facet_field_query
 
 
-def generate_solr_params(params):
+def generate_solr_params(params, assay_uuid):
     """Creates the encoded solr params requiring only an assay or study uuid.
     Keyword Argument
         params -- python dict or QueryDict
@@ -662,8 +662,6 @@ def generate_solr_params(params):
     facet_count = params.get('facet.count', default='true')
     start = params.get('start', default='0')
     row = params.get('limit', default='20')
-    study_uuid = params.get('study_uuid', default=None)
-    assay_uuid = params.get('assay_uuid', default=None)
     field_limit = params.get('field.limit', default=None)
     facet_field = params.get('facet.field', default=None)
     facet_pivot = params.get('facet.pivot', default=None)
@@ -679,16 +677,7 @@ def generate_solr_params(params):
                   'facet.limit=-1',
                   'facet.sort= %s' % facet_sort])
 
-    solr_params = ""
-
-    if study_uuid is not None and assay_uuid is not None:
-        solr_params = ''.join([solr_params,
-                               'fq=(study_uuid:', study_uuid,
-                               ' AND assay_uuid:', assay_uuid, ')'])
-    elif study_uuid is not None and assay_uuid is None:
-        solr_params = ''.join([solr_params, 'fq=study_uuid:', study_uuid])
-    else:
-        solr_params = ''.join([solr_params, 'fq=assay_uuid:', assay_uuid])
+    solr_params = ''.join(['fq=assay_uuid:', assay_uuid])
 
     if facet_field is not None:
         split_facet_fields = generate_facet_fields_query(

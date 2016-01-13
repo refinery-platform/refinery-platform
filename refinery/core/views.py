@@ -516,8 +516,8 @@ def analysis(request, analysis_uuid):
 
 
 @api_view(['GET'])
-def assay_files(request, uuid, format=None):
-    """Return solr response. Query requires study_uuid or assay_uuid.
+def assays_files(request, uuid, format=None):
+    """Return solr response. Query requires assay_uuid.
     Params/Solr Params
         is_annotation - metadata
         facet_sort - ordering of the facet field constraints, (count or index)
@@ -533,18 +533,22 @@ def assay_files(request, uuid, format=None):
      """
 
     if request.method == 'GET':
-        # Solr index requires a study uuid or a assay uuid
+        # Solr index requires assay uuid
         params = request.query_params
-        study_uuid = params.get('study_uuid', default=None)
-        assay_uuid = params.get('assay_uuid', default=None)
 
-        if study_uuid is not None or assay_uuid is not None:
-            solr_params = generate_solr_params(params)
-            solr_response = search_solr(solr_params, 'data_set_manager')
+        solr_params = generate_solr_params(params, uuid)
+        solr_response = search_solr(solr_params, 'data_set_manager')
 
-            return HttpResponse(solr_response, mimetype='application/json')
-        else:
-            return HttpResponseBadRequest("Study or assay uuid required")
+        return HttpResponse(solr_response, mimetype='application/json')
+
+
+@api_view(['GET'])
+def assays_attributes(request, uuid, format=None):
+    """Return solr response. Query requires assay_uuid.
+    Params
+     """
+    if request.method == 'GET':
+        return HttpResponse('Place holder', mimetype='application/json')
 
 
 def solr_core_search(request):
