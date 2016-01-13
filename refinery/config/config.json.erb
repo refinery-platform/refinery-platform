@@ -20,10 +20,10 @@
   "DATABASES": {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "HOST": "",
+        "HOST": "<%= @rds_host %>",
         "NAME": "refinery",
         "PASSWORD": "",
-        "PORT": "",
+        "PORT": "<%= @rds_port %>",
         "USER": "<%= @app_user %>"
     }
   },
