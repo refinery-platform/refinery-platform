@@ -1021,19 +1021,18 @@ class BaseResourceSlugTest(unittest.TestCase):
         self.assertTrue(DataSet.objects.create(slug=""))
 
     def test_edit_existing_slug(self):
-        DataSet.objects.create(slug="TestSlug1")
-        instance = DataSet.objects.get(slug="TestSlug1")
-        instance.summary = "This is a summmary"
+        instance = DataSet.objects.create(slug="TestSlug1")
+        instance.summary = "Edited Summary"
         instance.save()
-        instance.summary = "Different summary"
-        instance.save()
-        self.assertTrue(DataSet.objects.get(summary="Different summary"))
+
+        self.assertTrue(DataSet.objects.get(summary="Edited Summary"))
 
     def test_save_slug_no_change(self):
-        DataSet.objects.create(slug="TestSlug2")
-        instance = DataSet.objects.get(slug="TestSlug2")
+        instance = DataSet.objects.create(slug="TestSlug2")
         instance.save()
         instance_again = DataSet.objects.get(slug="TestSlug2")
+        instance_again.save()
+
         self.assertEqual(instance, instance_again)
 
     def test_save_slug_with_change(self):
