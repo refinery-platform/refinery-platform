@@ -18,16 +18,16 @@ from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     UserAuthenticationResource, InvitationResource, FastQCResource,  \
     UserProfileResource
 from core.models import DataSet
+from core.views import WorkflowViewset
+from file_store.views import FileStoreItemViewSet
 from data_set_manager.api import AttributeOrderResource, StudyResource,\
     AssayResource, InvestigationResource, ProtocolResource, \
     ProtocolReferenceResource, ProtocolReferenceParameterResource, \
     PublicationResource, AttributeResource
 from rest_framework import routers
-from file_store import views
 
 
 logger = logging.getLogger(__name__)
-
 
 # NG: facets for Haystack
 sqs = (SearchQuerySet().using("core")
@@ -39,9 +39,10 @@ sqs = (SearchQuerySet().using("core")
 # Uncomment the next two lines to enable the admin:
 admin.autodiscover()
 
+# Django REST Framework urls
 router = routers.DefaultRouter()
-router.register(r'api/v2/filestoreitems', views.FileStoreItemViewSet)
-router.register(r'api/v2/workflows', views.FileStoreItemViewSet)
+router.register(r'filestoreitems', FileStoreItemViewSet)
+router.register(r'workflows', WorkflowViewset)
 
 # NG: added for tastypie URL
 v1_api = Api(api_name='v1')
@@ -155,7 +156,7 @@ urlpatterns = patterns(
         name='search'
     ),
     # Wire up our API using automatic URL routing.
-    url(r'^', include(router.urls)),
+    url(r"^api/v2/", include(router.urls)),
 
 
     # (r'^favicon\.ico$',
