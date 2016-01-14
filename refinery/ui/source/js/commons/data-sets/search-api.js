@@ -64,7 +64,7 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
                 data.highlighting[id].title[0]
               );
             } else {
-              doc.title = sce.trustAsHtml(
+              doc.title = $sce.trustAsHtml(
                 '<span class="is-unknown">Unknown</span>'
               );
             }
