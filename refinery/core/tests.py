@@ -1109,7 +1109,7 @@ class CachingTest(unittest.TestCase):
         ds.share(group="Public")
         # Check if cache can be invalidated
         invalidate_cached_object(DataSet.objects.get(slug="TestSlug1"))
-        
+
         self.assertFalse(cache.get("DataSet"))
         # Adding to cache again
         cache.add("DataSet", DataSet.objects.all())
