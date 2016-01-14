@@ -734,8 +734,8 @@ class Project(SharableResource):
 
     def __unicode__(self):
         return (
-            self.name + " - " + self.get_owner_username() + " - " +
-            self.summary
+            str(self.name) + " - " + str(self.get_owner_username()) + " - " +
+            str(self.summary)
         )
 
     class Meta:
