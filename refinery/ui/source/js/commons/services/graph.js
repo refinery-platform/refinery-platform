@@ -1,4 +1,4 @@
-function GraphFactory (_) {
+function GraphFactory (_, Webworker) {
 
   function Graph () {}
 
@@ -79,8 +79,6 @@ function GraphFactory (_) {
       if (nodeIndex[node.uri]) {
         // Skip node
         return;
-      } else {
-        nodeIndex[node.uri] = true;
       }
 
       // A reference for later
@@ -95,10 +93,10 @@ function GraphFactory (_) {
         var numChildChildren = child.children ? child.children.length : false;
 
         // Store a reference to the parent
-        if (!child.parent) {
-          child.parent = [];
+        if (!child.parents) {
+          child.parents = [];
         }
-        child.parent.push(node);
+        child.parents.push(node);
 
         child.meta = child.meta || {};
 
@@ -133,16 +131,29 @@ function GraphFactory (_) {
                 } else {
                   graph[child.children[j]].meta.pruned = [child.name];
                 }
+
+                if (graph[child.children[j]].parents) {
+                  for (var o = graph[child.children[j]].parents.length; o--;) {
+                    // Remove child as parent from child's children and add node
+                    // as a parent.
+                    if (graph[child.children[j]].parents[o] === child) {
+                      graph[child.children[j]].parents.splice(o, 1);
+                      graph[child.children[j]].parents.push(node);
+                    }
+                  }
+                }
+
                 node.children.push(child.children[j]);
               }
               // Remove the child with the empty valueProp
               node.children.splice(i, 1);
 
+              child.pruned = true;
+
               // Check if we've processed the parent of the child to be pruned
               // already and set `pruned` to false.
-              child.pruned = true;
-              for (var k = child.parent.length; k--;) {
-                if (nodeIndex[child.parent[k].uri]) {
+              for (var k = child.parents.length; k--;) {
+                if (nodeIndex[child.parents[k].uri]) {
                   // Revert pruning
                   child.pruned = false;
                   break;
@@ -166,6 +177,7 @@ function GraphFactory (_) {
             child.value = child[valueProp];
             child.meta.leaf = true;
             child.meta.originalDepth = depth + 1;
+            child.parents = [node];
           }
         }
 
@@ -176,6 +188,9 @@ function GraphFactory (_) {
           node.value = child.value;
         }
       }
+
+      // Mark node as being parsed
+      nodeIndex[node.uri] = true;
     }
 
     // Make sure that the root node has at least 2 children
@@ -303,8 +318,8 @@ function GraphFactory (_) {
     for (var i = nodes.length; i--;) {
       node = newGraph[nodes[i]];
       // Remove parent reference
-      node.parent = undefined;
-      delete node.parent;
+      node.parents = undefined;
+      delete node.parents;
       // Copy URIs temporarly
       uris = node.children.slice();
       // Initialize new array
@@ -326,5 +341,6 @@ angular
   .module('refineryApp')
   .service('graph', [
     '_',
+    'Webworker',
     GraphFactory
   ]);

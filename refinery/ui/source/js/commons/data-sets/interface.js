@@ -486,19 +486,26 @@ function DataSetFactory (
    */
   function _calculatePrecisionRecall () {
     var annotations,
+        dataSet,
         uniqueSearchResAnno = {};
 
     _annotations.load().then(function (data) {
       // Get annotations used and the total number of their usage in relation to
       // the current search results.
       for (var i = _searchResultDsIds.length; i--;) {
-        annotations = _dataStore.get(_searchResultDsIds[i]).annotations;
+        dataSet = _dataStore.get(_searchResultDsIds[i]);
 
-        for (var j = annotations.length; j--;) {
-          if (!!!uniqueSearchResAnno[annotations[j].term]) {
-            uniqueSearchResAnno[annotations[j].term] = 1;
-          } else {
-            uniqueSearchResAnno[annotations[j].term]++;
+        if (dataSet) {
+          annotations = dataSet.annotations;
+
+          if (annotations) {
+            for (var j = annotations.length; j--;) {
+              if (!!!uniqueSearchResAnno[annotations[j].term]) {
+                uniqueSearchResAnno[annotations[j].term] = 1;
+              } else {
+                uniqueSearchResAnno[annotations[j].term]++;
+              }
+            }
           }
         }
       }

@@ -198,7 +198,8 @@ class BaseResource (models.Model):
         # duplicated elsewhere.
         if self.slug:
             try:
-                self.__class__.objects.get(slug=self.slug)
+                self.__class__.objects.filter(slug=self.slug).exclude(
+                    pk=self.pk).get(slug=self.slug)
             except self.DoesNotExist:
                 pass
             else:
@@ -211,7 +212,8 @@ class BaseResource (models.Model):
     def save(self, *args, **kwargs):
         if self.slug:
             try:
-                self.__class__.objects.get(slug=self.slug)
+                self.__class__.objects.filter(slug=self.slug).exclude(
+                    pk=self.pk).get(slug=self.slug)
             except self.DoesNotExist:
                 try:
                     super(BaseResource, self).save(*args, **kwargs)
