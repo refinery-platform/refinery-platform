@@ -1,8 +1,7 @@
 # Change Log
 
-## [Unreleased](https://github.com/parklab/refinery-platform/tree/HEAD)
-
-[Full Changelog](https://github.com/parklab/refinery-platform/compare/v1.0.0...HEAD)
+## [v1.1.0](https://github.com/parklab/refinery-platform/tree/v1.1.0) (2016-01-14)
+[Full Changelog](https://github.com/parklab/refinery-platform/compare/v1.0.0...v1.1.0)
 
 **Implemented enhancements:**
 
@@ -44,6 +43,7 @@
 
 **Fixed bugs:**
 
+- Admin interface doesn't support unicode characters [\#845](https://github.com/parklab/refinery-platform/issues/845)
 - Custom sharing icons broken. [\#824](https://github.com/parklab/refinery-platform/issues/824)
 - Statistics API is broken [\#820](https://github.com/parklab/refinery-platform/issues/820)
 - analysis monitoring states not displayed correctly [\#815](https://github.com/parklab/refinery-platform/issues/815)
@@ -146,6 +146,7 @@
 
 **Merged pull requests:**
 
+- Document how to delete a stack [\#846](https://github.com/parklab/refinery-platform/pull/846) ([drj11](https://github.com/drj11))
 - All the puppet code in one place [\#828](https://github.com/parklab/refinery-platform/pull/828) ([drj11](https://github.com/drj11))
 - Deploy on Amazon AWS [\#798](https://github.com/parklab/refinery-platform/pull/798) ([drj11](https://github.com/drj11))
 
