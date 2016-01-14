@@ -526,7 +526,7 @@ def analysis(request, analysis_uuid):
 @api_view(['GET'])
 def assays_files(request, uuid, format=None):
     """Return solr response. Query requires assay_uuid.
-    Params/Solr Params
+    Request & Response Params/Solr Params
        @is_annotation - metadata
        @facet_sort - ordering of the facet field constraints, (count or index)
        @facet_count/facet -  enables facet counts in query response, true/false
@@ -550,10 +550,10 @@ def assays_files(request, uuid, format=None):
         return Response(solr_response_json)
 
 
-@api_view(['GET'])
+@api_view(['GET', 'POST', 'PUT'])
 def assays_attributes(request, uuid, format=None):
     """Returns/Updates AttributeOrder model queries. Requires assay_uuid.
-    Params for each attribute:
+    Response Params for each attribute:
         @study - Title of study
         @assay - Title of assay
         @solr_field - field name
