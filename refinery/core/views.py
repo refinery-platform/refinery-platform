@@ -15,6 +15,8 @@ from django.http import (
 from rest_framework.decorators import api_view
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
+from rest_framework.response import Response
+from rest_framework import status
 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext, loader
@@ -546,27 +548,37 @@ def assays_files(request, uuid, format=None):
         return HttpResponse(solr_response, mimetype='application/json')
 
 
+class JSONResponse(HttpResponse):
+    """
+    An HttpResponse that renders its content into JSON.
+    """
+    def __init__(self, data, **kwargs):
+        content = JSONRenderer().render(data)
+        kwargs['content_type'] = 'application/json'
+        super(JSONResponse, self).__init__(content, **kwargs)
+
+
 @api_view(['GET'])
 def assays_attributes(request, uuid, format=None):
-    """Return solr response. Query requires assay_uuid.
+    """Returns/Updates AttributeOrder model queries. Requires assay_uuid.
     Params
      """
     try:
         attribute_order = AttributeOrder.objects.filter(assay__uuid=uuid)
     except AttributeOrder.DoesNotExist:
-        return HttpResponse(status=404)
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         serializer = AttributeOrderSerializer(attribute_order, many=True)
-        return HttpResponse(serializer.data)
+        return Response(serializer.data)
 
     elif request.method == 'POST':
         data = JSONParser().parse(request)
         serializer = AttributeOrderSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
-            return HttpResponse(serializer.data, status=201)
-        return HttpResponse(serializer.errors, status=400)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 def solr_core_search(request):
