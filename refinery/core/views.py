@@ -20,7 +20,7 @@ from django.template import RequestContext, loader
 
 from guardian.shortcuts import get_perms
 import requests
-
+from rest_framework import viewsets
 from data_set_manager.models import *
 from core.forms import (
     ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
@@ -33,7 +33,6 @@ from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
 from core.utils import get_data_sets_annotations
-from rest_framework import viewsets
 from core.serializers import WorkflowSerializer
 
 logger = logging.getLogger(__name__)
