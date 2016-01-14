@@ -1041,14 +1041,14 @@ class BaseResourceSlugTest(unittest.TestCase):
         instance_again = DataSet.objects.get(slug="TestSlug3")
         instance_again.slug = "CHANGED"
         instance_again.save()
+
         self.assertNotEqual(instance.slug, instance_again.slug)
 
     def test_save_slug_when_another_model_with_same_slug_exists(self):
-        name = 'nodeset'
-        create_nodeset(name=name, study=self.study, assay=self.assay)
-        nodeset_instance = NodeSet.objects.get(name="nodeset")
-        nodeset_instance.slug = "TestSlug4"
-        nodeset_instance.save()
+        project_instance = Project.objects.create(name="project")
+        project_instance.slug = "TestSlug4"
+        project_instance.save()
+
         self.assertTrue(DataSet.objects.create(slug="TestSlug4"))
 
 
