@@ -545,17 +545,7 @@ def assays_files(request, uuid, format=None):
         solr_params = generate_solr_params(params, uuid)
         solr_response = search_solr(solr_params, 'data_set_manager')
 
-        return HttpResponse(solr_response, mimetype='application/json')
-
-
-class JSONResponse(HttpResponse):
-    """
-    An HttpResponse that renders its content into JSON.
-    """
-    def __init__(self, data, **kwargs):
-        content = JSONRenderer().render(data)
-        kwargs['content_type'] = 'application/json'
-        super(JSONResponse, self).__init__(content, **kwargs)
+        return Response(solr_response)
 
 
 @api_view(['GET'])
