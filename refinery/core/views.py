@@ -2,6 +2,7 @@ import os
 import re
 import urllib
 import xmltodict
+import json
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -13,6 +14,7 @@ from django.http import (
 )
 
 from rest_framework.decorators import api_view
+from rest_framework.decorators import renderer_classes
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
@@ -525,17 +527,17 @@ def analysis(request, analysis_uuid):
 def assays_files(request, uuid, format=None):
     """Return solr response. Query requires assay_uuid.
     Params/Solr Params
-        is_annotation - metadata
-        facet_sort - ordering of the facet field constraints, (count or index)
-        facet_count/facet -  enables facet counts in query response, true/false
-        start - paginate, offset response
-        limit/row - maximum number of documents
-        study_uuid/assay_uuid - unique ids
-        field_limit - set of fields to return
-        facet_field - specify a field which should be treated as a facet
-        facet_pivot - list of fields to pivot
-        sort - Ordering include field name, whitespace, & asc or desc.
-        fq - filter query
+       @ is_annotation - metadata
+       @ facet_sort - ordering of the facet field constraints, (count or index)
+       @ facet_count/facet -  enables facet counts in query response, true/false
+       @ start - paginate, offset response
+       @ limit/row - maximum number of documents
+       @ study_uuid/assay_uuid - unique ids
+       @ field_limit - set of fields to return
+       @ facet_field - specify a field which should be treated as a facet
+       @ facet_pivot - list of fields to pivot
+       @ sort - Ordering include field name, whitespace, & asc or desc.
+       @ fq - filter query
      """
 
     if request.method == 'GET':
@@ -544,8 +546,8 @@ def assays_files(request, uuid, format=None):
 
         solr_params = generate_solr_params(params, uuid)
         solr_response = search_solr(solr_params, 'data_set_manager')
-
-        return Response(solr_response)
+        solr_response_json = json.loads(solr_response)
+        return Response(solr_response_json)
 
 
 @api_view(['GET'])
