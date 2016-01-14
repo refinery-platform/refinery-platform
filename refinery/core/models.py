@@ -417,7 +417,7 @@ class DataSet(SharableResource):
     # name of source database for the accession number (e.g. "ArrayExpress")
     accession_source = models.CharField(max_length=128, blank=True,  null=True)
     # actual title of the dataset
-    title = models.CharField(max_length=250, blank=True,  null=True)
+    title = models.CharField(max_length=250, default='Untitled data set')
 
     class Meta:
         verbose_name = "dataset"
@@ -432,6 +432,16 @@ class DataSet(SharableResource):
             unicode(self.get_owner_username()) + u' - ' +
             unicode(self.summary)
         )
+
+    def save(self, *args, **kwargs):
+        # We need to manually check if the title to be saved is blank because
+        # `blank=False` will only affect the admin interface
+        try:
+            if not self.title.strip():
+                self.title = settings.UNTITLED_DATA_SET_TITLE
+        except AttributeError:
+            self.title = settings.UNTITLED_DATA_SET_TITLE
+        super(DataSet, self).save(*args, **kwargs)
 
     def get_owner(self):
         owner = None

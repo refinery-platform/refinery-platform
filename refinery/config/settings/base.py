@@ -517,3 +517,5 @@ NEO4J_CONSTRAINTS = [
         ]
     }
 ]
+
+UNTITLED_DATA_SET_TITLE = "Untitled data set"
