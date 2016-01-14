@@ -13,6 +13,8 @@ from django.http import (
 )
 
 from rest_framework.decorators import api_view
+from rest_framework.renderers import JSONRenderer
+from rest_framework.parsers import JSONParser
 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext, loader
@@ -33,6 +35,8 @@ from file_store.models import FileStoreItem
 from core.utils import get_data_sets_annotations
 from core.utils import generate_solr_params
 from core.utils import search_solr
+from core.serializers import AttributeOrderSerializer
+from data_set_manager.models import AttributeOrder
 
 logger = logging.getLogger(__name__)
 
@@ -547,8 +551,22 @@ def assays_attributes(request, uuid, format=None):
     """Return solr response. Query requires assay_uuid.
     Params
      """
+    try:
+        attribute_order = AttributeOrder.objects.filter(assay__uuid=uuid)
+    except AttributeOrder.DoesNotExist:
+        return HttpResponse(status=404)
+
     if request.method == 'GET':
-        return HttpResponse('Place holder', mimetype='application/json')
+        serializer = AttributeOrderSerializer(attribute_order, many=True)
+        return HttpResponse(serializer.data)
+
+    elif request.method == 'POST':
+        data = JSONParser().parse(request)
+        serializer = AttributeOrderSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return HttpResponse(serializer.data, status=201)
+        return HttpResponse(serializer.errors, status=400)
 
 
 def solr_core_search(request):
