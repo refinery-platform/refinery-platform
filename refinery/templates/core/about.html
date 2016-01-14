@@ -14,9 +14,9 @@
 {% endblock %}
 
 {% block content %}
-<div class="row-fluid">
-		<div class="span8">
-			<div class="row-fluid">
+<div class="row">
+		<div class="col-md-8">
+			<div class="row">
 				<div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
 					<div class="refinery-header">
 						<span class="refinery-header-left">
@@ -46,12 +46,22 @@
 					<p>
 						{% flatblock "about.website.funding" evaluated %}
 					</p>
+                    {% if not "Error" in CURRENT_COMMIT %}
+                        <div class="refinery-header">
+                            <span class="refinery-header-left">
+                                <h3>Most Recent Code for this Instance</h3>
+                            </span>
+                        </div>
+                        <p>
+                            <a href="https://github.com/parklab/refinery-platform/commit/{{ CURRENT_COMMIT }}">{{ CURRENT_COMMIT }}</a>
+                        </p>
+                    {% endif %}
 
-				</div>
 			</div>
-		</div>
-		<div class="span4">
-			<div class="row-fluid">
+            </div>
+        </div>
+		<div class="col-md-4">
+			<div class="row">
 				<div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
 
 					<div class="refinery-header">

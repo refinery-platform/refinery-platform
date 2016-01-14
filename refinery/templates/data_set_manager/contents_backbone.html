@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-
+{% load static %}
 {% block head_html %}
 	<!-- 3rd party libraries -->
-    <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v3.min.js"></script>
-	<script type="text/javascript" src="{{ STATIC_URL }}js/json2/json2.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery/jquery-1.7.2.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/underscore/underscore.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/backbone/backbone.js"></script>
+    <script type="text/javascript" src="{% static "js/d3/d3.v3.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/json2/json2.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/jquery/jquery-1.7.2.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/underscore/underscore.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/backbone/backbone.js" %}"></script>
 
 	<!-- Refinery libraries -->
-    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js"></script>
+    <script type="text/javascript" src="{% static "js/refinery/contents.js" %}"></script>
 
     <style type="text/css">
  

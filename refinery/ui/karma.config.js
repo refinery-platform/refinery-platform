@@ -5,8 +5,12 @@ module.exports = function(config) {
   config.set({
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
-    basePath: '',
+    basePath: './',
 
+    client: {
+      // Set to `true` if `console.log()` should be captured.
+      captureConsole: false
+    },
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
@@ -14,21 +18,7 @@ module.exports = function(config) {
 
 
     // list of files / patterns to load in the browser
-    files: [
-      'bower_components/jquery/dist/jquery.min.js',
-      'bower_components/angular/angular.js',
-      'bower_components/angular-ui-router/release/angular-ui-router.min.js',
-      'bower_components/select2/select2.js',
-      'bower_components/angular-resource/angular-resource.js',
-      'bower_components/angular-mocks/angular-mocks.js',
-      'bower_components/d3/d3.js',
-      'src/js/refinery.js',
-      'src/js/**/*module.js',
-      'src/js/**/*controller.js',
-      'src/js/**/*factory.js',
-      'src/js/**/*.js',
-      'src/js/**/*spec.js',
-    ],
+    files: [],
 
 
     // list of files to exclude
@@ -39,12 +29,28 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
+      'source/**/!(*spec).js': 'coverage'
     },
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress'],
+    reporters: ['progress', 'coverage'],
+
+
+    // Coverage repoter
+    coverageReporter: {
+      // common output directory
+      dir : 'coverage/',
+      reporters: [
+        // reporters not supporting the `file` property
+        { type: 'html', subdir: 'html' },
+        { type: 'lcov', subdir: 'lcov' },
+        // reporters supporting the `file` property, use `subdir` to directly
+        // output them in the `dir` directory
+        { type: 'cobertura', subdir: '.', file: 'cobertura.xml' },
+      ]
+    },
 
 
     // web server port
@@ -65,6 +71,7 @@ module.exports = function(config) {
 
     // Which plugins to enable
     plugins: [
+      'karma-coverage',
       'karma-phantomjs-launcher',
       'karma-jasmine',
       'karma-chrome-launcher',

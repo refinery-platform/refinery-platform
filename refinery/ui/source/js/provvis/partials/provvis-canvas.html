@@ -1,0 +1,233 @@
+<div ng-controller="provvisCanvasController">
+  <div id="provenance-canvas">
+    <div id="provenance-sidebar">
+      <div class="refinery-panel-tabs tabbable">
+        <div class="row">
+          <div class="col-md-12">
+            <ul id="provvis-sidebar-tabs"
+                class="nav nav-tabs">
+              <li class="active">
+                <a href="#provvis-filter-doi-tab"
+                   data-toggle="tab">Tools</a>
+              </li>
+              <li><a href="#provvis-nodeinfo-tab"
+                     data-toggle="tab">Node Info</a>
+              </li>
+              <li><a href="#provvis-colorcoding-tab"
+                     data-toggle="tab">Colors</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div id="provvis-sidebar-content"
+           class="refinery-panel refinery-panel-content scrollable tab-content">
+        <div class="tab-pane active"
+             id="provvis-filter-doi-tab">
+          <div id="provenance-timeline-view"></div>
+          <div id="provenance-doi-view"
+               style="margin-top: 30px; width: 100%;"></div>
+          <div id="provenance-layer-change-view"
+               style="margin-top: 30px; width: 100%;"></div>
+        </div>
+        <div class="tab-pane"
+             id="provvis-nodeinfo-tab">
+          <div class="nodeInfoHeader">
+            <h3 id="nodeInfoTitle">
+              Select a node: - </h3>
+            <a id="nodeInfoTitleLink"></a>
+          </div>
+          <div id="provenance-nodeInfo-content"></div>
+        </div>
+        <div class="tab-pane"
+             id="provvis-colorcoding-tab">
+          <div id="provenance-colorcoding-view">
+
+
+            <div class="panel-group" id="provvis-color-accordion-edges" role="tablist" aria-multiselectable="true">
+              <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingEdges">
+                  <h4 class="panel-title">
+                    <a role="button" data-toggle="collapse" data-parent="#provvis-color-accordion-edges" href="#pv-edges" aria-expanded="true" aria-controls="pv-edges">
+                      Edges and Highlighting
+                    </a>
+                  </h4>
+                </div>
+                <div id="pv-edges" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingEdges">
+                  <div class="panel-body">
+                    <table>
+                      <tbody>
+                      <tr>
+                        <td id="prov-ctrl-cc-strokes">
+                          <label class="provvis-cc-label">
+                            <input type='text' id="provvis-cc-strokes"/>Edges
+                            <em id='provvis-cc-strokes-hex'
+                                class="provvis-cc-hide-hex">#136382</em>
+                          </label>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td id="prov-ctrl-cc-highlight">
+                          <label class="provvis-cc-label">
+                            <input type='text'
+                                   id="provvis-cc-highlight"/>Highlighting
+                            <em id='provvis-cc-highlight-hex'
+                                class="provvis-cc-hide-hex">#ed7407</em>
+                          </label>
+                        </td>
+                      </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
+            <div class="panel-group" id="provvis-color-accordion" role="tablist" aria-multiselectable="true">
+              <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingNone">
+                  <h4 class="panel-title">
+                    <a id="prov-ctrl-cc-none-acc" role="button"
+                       data-toggle="collapse" data-parent="#provvis-color-accordion" href="#pv-none" aria-expanded="true" aria-controls="pv-none">
+                      None.
+                    </a>
+                  </h4>
+                </div>
+                <div id="pv-none" class="panel-collapse collapse in"
+                     role="tabpanel" aria-labelledby="headingNone">
+                  <div class="panel-body">
+                    White nodes with black labels.
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingTime">
+                  <h4 class="panel-title">
+                    <a id="prov-ctrl-cc-time-acc" class="collapsed"
+                       role="button" data-toggle="collapse" data-parent="#provvis-color-accordion" href="#pv-time" aria-expanded="false" aria-controls="pv-time">
+                      Analysis Execution Time
+                    </a>
+                  </h4>
+                </div>
+                <div id="pv-time" class="panel-collapse collapse"
+                     role="tabpanel" aria-labelledby="headingTime">
+                  <div class="panel-body">
+                    Nodes are colored based on their execution date and time.
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingWorkflow">
+                  <h4 class="panel-title">
+                    <a id="prov-ctrl-cc-workflow-acc" class="collapsed"
+                       role="button" data-toggle="collapse" data-parent="#provvis-color-accordion" href="#pv-wf" aria-expanded="false" aria-controls="pv-wf">
+                      Workflows
+                    </a>
+                  </h4>
+                </div>
+                <div id="pv-wf" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingWorkflow">
+                  <div class="panel-body">
+                    <table>
+                      <tbody id="prov-ctrl-cc-workflow-content">
+
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingNodeTypes">
+                  <h4 class="panel-title">
+                    <a id="prov-ctrl-cc-nodetype-acc" class="collapsed"
+                       role="button" data-toggle="collapse" data-parent="#provvis-color-accordion" href="#pv-nt" aria-expanded="false" aria-controls="pv-nt">
+                      Node types
+                    </a>
+                  </h4>
+                </div>
+                <div id="pv-nt" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingNodeTypes">
+                  <div class="panel-body">
+                    <table>
+                      <tbody>
+                      <tr>
+                        <td>
+                          <label class="provvis-cc-label">
+                            <input type='text' id="provvis-cc-layer"/>Layer
+                            <em id='provvis-cc-layer-hex'
+                                class="provvis-cc-hide-hex">#1f77b4</em>
+                          </label>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label class="provvis-cc-label">
+                            <input type='text'
+                                   id="provvis-cc-analysis"/>Analysis
+                            <em id='provvis-cc-analysis-hex'
+                                class="provvis-cc-hide-hex">#2ca02c</em>
+                          </label>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label class="provvis-cc-label">
+                            <input type='text'
+                                   id="provvis-cc-subanalysis"/>Analysis Group
+                            <em id='provvis-cc-subanalysis-hex'
+                                class="provvis-cc-hide-hex">#d62728</em>
+                          </label>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label class="provvis-cc-label">
+                            <input type='text' id="provvis-cc-dt"/>Data
+                            Transformation
+                            <em id='provvis-cc-dt-hex'
+                                class="provvis-cc-hide-hex">#7f7f7f</em>
+                          </label>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label class="provvis-cc-label">
+                            <input type='text'
+                                   id="provvis-cc-intermediate"/>Intermediate
+                            <em id='provvis-cc-intermediate-hex'
+                                class="provvis-cc-hide-hex">#bcbd22</em>
+                          </label>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label class="provvis-cc-label">
+                            <input type='text' id="provvis-cc-stored"/>Stored
+                            <em id='provvis-cc-stored-hex'
+                                class="provvis-cc-hide-hex">#8c564b</em>
+                          </label>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <label class="provvis-cc-label">
+                            <input type='text' id="provvis-cc-special"/>Special
+                            <em id='provvis-cc-special-hex'
+                                class="provvis-cc-hide-hex">#17becf</em>
+                          </label>
+                        </td>
+                      </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

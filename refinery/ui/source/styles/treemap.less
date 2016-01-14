@@ -1,0 +1,81 @@
+@import "variables.less";
+
+@top-bar-height: 24px;
+
+.treemap {
+  position: absolute;
+  top: @top-bar-height + 5px;
+  right: 5px;
+  bottom: 5px;
+  left: 5px;
+}
+
+.treemap svg {
+  width: 100%;
+  height: 100%;
+
+  text {
+    pointer-events: none;
+  }
+
+  .inner-border {
+    stroke: #000;
+    stroke-width: 2;
+  }
+
+  .outer-border {
+    fill: transparent;
+    stroke: #fff;
+    stroke-width: 2;
+  }
+
+  .inner-node {
+    &:hover {
+      cursor: pointer;
+
+      .label {
+        color: #fff;
+
+        span {
+          background: rgba(0, 0, 0, 0.66);
+        }
+      }
+
+      .inner-border {
+        stroke-width: 4;
+      }
+    }
+  }
+
+  .leaf {
+    stroke: #fff;
+    stroke-width: 2;
+  }
+
+  .label {
+    display: block;
+    text-align: left;
+    font-size: 0.875em;
+    line-height: 1.15em;
+    color: #000;
+    width: 100%;
+    height: 2.3em;
+    max-height: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    // Needed as bootstrap applies a bg to `.badge` and `.label`.
+    background: none;
+    padding: 0;
+    font-weight: normal;
+
+    &.label-bright {
+      color: #fff;
+    }
+
+    span {
+      display: inline-block;
+      padding: 0.1em 0.25em 0.1em 0.1em;
+      border-radius: 0 0 0.25em 0;
+    }
+  }
+}

@@ -1,0 +1,37 @@
+<div class="refinery-panel">
+  <div class="refinery-header">
+    <span class="refinery-header-left">
+      <h3>
+      <i class="m-r-1-4 fa fa-bar-chart-o"></i>FastQC Visualization
+      </h3>
+    </span>
+  </div>
+
+  <!-- <p ng-if="!chart.errorMessage">Select view</p> -->
+  <span ng-if="!chart.errorMessage" class="btn-group">
+    <button class="refinery-base btn btn-default dropdown-toggle"
+      id="modeMenu" data-toggle="dropdown" aria-has-popup="true" aria-expanded="true">
+      {{chart.data.summary[chart.mode].title}}
+      <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="modeMenu">
+      <li ng-repeat="item in chart.dataKeys">
+        <a ng-href="#/{{chart.uuid}}/{{item}}/">
+          [{{chart.data.summary[item].result}}] {{chart.data.summary[item].title}}
+        </a>
+      </li>
+    </ul>
+  </span>
+
+  <div align="center">
+    <h4 ng-if="!chart.errorMessage">
+      {{chart.data.summary[chart.mode].title}} - {{chart.data.summary[chart.mode].result}}
+    </h4>
+  </div>
+
+  <div ng-if="chart.errorMessage" class="alert alert-danger">
+    {{chart.errorMessage}}
+  </div>
+
+  <div class="fastqc-chart-drawspace jquery-full-height"></div>
+</div>

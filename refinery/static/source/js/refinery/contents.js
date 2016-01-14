@@ -131,14 +131,14 @@
 
           // render pivot matrix upon activation of tab (otherwise the labels will be missing because their
           // width cannot be determined while the matrix is not visible (getBBox and getBoundingClientRect don't work)
-          $('a[data-toggle="pill"]').on('shown', function (event) {
-            if (event.target.href.split("#")[1] === "pivot-view-tab") {
+        $('#view-selector').on("change", function (e) {
+          if (e.val === "pivot-view-tab") {
                 pivotMatrixView.render();
             }
-          })
+          });
 
-          $('a[data-toggle="pill"]').on('shown', function (event) {
-            if (event.target.href.split("#")[1] === "provenance-view-tab") {
+        $('#view-selector').on("change", function (e) {
+          if (e.val === "provenance-view-tab") {
               if (provvis.get() instanceof provvisDecl.ProvVis === true) {
                 provvisRender.update(provvis.get(), lastProvVisSolrResponse);
               } else {
@@ -148,7 +148,7 @@
                 client.run(provVisQuery, SOLR_FULL_QUERY);
               }
             }
-          })
+          });
 
           query.setDocumentIndex(0);
           query.setDocumentCount(tableView.getDocumentsPerPage());
@@ -163,31 +163,35 @@
               }
             }
 
-            var evenInd = 0;
-            var oddInd = 1;
+            var facetOneInd = 0;
             //conditional is required because visibleFacets has incorrect
             // isExposed attributes
-            while(evenInd <= visibleFacets.length - 1) {
-              if(!(visibleFacets[evenInd].indexOf("ANALYSIS") > -1 ||
-                visibleFacets[evenInd].indexOf("WORKFLOW_OUTPUT") > -1))
+            while(facetOneInd <= visibleFacets.length - 1) {
+              if(!(visibleFacets[facetOneInd].indexOf("ANALYSIS") > -1 ||
+                visibleFacets[facetOneInd].indexOf("WORKFLOW_OUTPUT") > -1))
               {
-                pivotMatrixView.setFacet1(visibleFacets[evenInd]);
+                pivotMatrixView.setFacet1(visibleFacets[facetOneInd]);
                 break;
               } else {
-                evenInd = evenInd + 2;
+                facetOneInd = facetOneInd + 1;
               }
             };
-            while(oddInd <= visibleFacets.length - 1){
-              if(!(visibleFacets[oddInd].indexOf("ANALYSIS") > -1 ||
-                visibleFacets[oddInd].indexOf("WORKFLOW_OUTPUT") > -1))
+
+            var facetTwoInd = facetOneInd + 1;
+            while(facetTwoInd <= visibleFacets.length - 1){
+              if(!(visibleFacets[facetTwoInd].indexOf("ANALYSIS") > -1 ||
+                visibleFacets[facetTwoInd].indexOf("WORKFLOW_OUTPUT") > -1))
               {
-                pivotMatrixView.setFacet2(visibleFacets[oddInd]);
+                pivotMatrixView.setFacet2(visibleFacets[facetTwoInd]);
                 break;
               } else {
-                oddInd = oddInd + 2;
+                facetTwoInd = facetTwoInd + 1;
               }
             };
-         query.setPivots(visibleFacets[evenInd], visibleFacets[oddInd]);
+
+            if(pivotMatrixView.getFacet1 !== undefined && pivotMatrixView.getFacet2 !== undefined ) {
+              query.setPivots(visibleFacets[facetOneInd], visibleFacets[facetTwoInd]);
+            }
           }
 
           client.run(query, SOLR_FULL_QUERY);

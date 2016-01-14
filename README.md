@@ -1,4 +1,4 @@
-# Refinery Platform [![Build Status](https://travis-ci.org/parklab/refinery-platform.svg?branch=develop)](https://travis-ci.org/parklab/refinery-platform)
+# Refinery Platform [![Build Status](https://travis-ci.org/parklab/refinery-platform.svg?branch=develop)](https://travis-ci.org/parklab/refinery-platform) [![Coverage Status](https://img.shields.io/codecov/c/github/parklab/refinery-platform/develop.svg)](https://codecov.io/github/parklab/refinery-platform?branch=develop)
 
 Additional information about how to administrate and develop Refinery can be found in the [wiki](http://github.com/parklab/refinery-platform/wiki).
 

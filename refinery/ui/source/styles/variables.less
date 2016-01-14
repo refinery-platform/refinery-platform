@@ -1,0 +1,355 @@
+//
+// Variables
+// --------------------------------------------------
+@ease-in-out-cubic:          cubic-bezier(0.3, 0.1, 0.6, 1);
+@ease-in-out-quadric:        cubic-bezier(0.2, 0.1, 0.2, 1);
+@fast-transition-speed:     0.2s;
+@semifast-transition-speed: 0.25s;
+@normal-transition-speed:   0.33s;
+@slow-transition-speed:     0.66s;
+@very-slow-transition-speed: 1s;
+
+// Global values
+// --------------------------------------------------
+
+
+// Grays
+// -------------------------
+@black:                 #000;
+@gray-darker:            #222;
+@gray-dark:              #333;
+@gray:                  #555;
+@gray-light:             #999;
+@gray-lighter:           #eee;
+@white:                 #fff;
+
+
+// Accent colors
+// -------------------------
+@blue:                  #136382;
+@blue-dark:              #0D3E55;
+@blue-light:             #3FA0C7;
+@blue-active:            #008abf;
+@blue-shadow:            #00b8ff;
+
+@green:                 #11A62E;
+@green-light:            #45DB51;
+
+@red:                   #F62400;
+@red-light:              #F8553C;
+
+@yellow:                #ED7407;
+@yellow-light:           #FA9B30;
+@yellow-shadow:          #ffcc00;
+
+@orange:                #ED7407;
+@pink:                  #c3325f;
+@purple:                #7a43b6;
+
+
+// Scaffolding
+// -------------------------
+@body-background:        @white;
+@text-color:             @gray-dark;
+
+
+// Links
+// -------------------------
+@link-color:             @blue; //#08c;
+@link-color-hover:        darken(@link-color, 15%);
+
+
+// Typography
+// -------------------------
+
+// @import url(http://fonts.googleapis.com/css?family=Crimson+Text:400,600,700,400italic,600italic,700italic);
+// @import url(http://fonts.googleapis.com/css?family=Oswald:400,700,300);
+// @import url(http://fonts.googleapis.com/css?family=Arvo:700,400italic,700italic,400);
+// @import url(http://fonts.googleapis.com/css?family=PT+Sans:400,700,400italic,700italic);
+// @import url(http://fonts.googleapis.com/css?family=PT+Serif:400,700,400italic,700italic);
+// @import url(http://fonts.googleapis.com/css?family=Source+Sans+Pro:200,300,400,600,700,900,200italic,300italic,400italic,600italic,700italic,900italic&subset=latin,latin-ext);
+
+@import url(//fonts.googleapis.com/css?family=Arvo:700italic);
+@import url(//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic,&subset=latin);
+
+@sans-font-family:        "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+@serif-font-family:       Georgia, "Times New Roman", Times, serif;
+@mono-font-family:        Monaco, Menlo, Consolas, "Courier New", monospace;
+
+@base-font-size:          14px;
+@base-font-family:        @sans-font-family;
+@base-line-height:        20px;
+@alt-font-family:         @serif-font-family;
+
+@headings-font-family:    "Source Sans Pro", Helvetica, Arial, sans-serif; //inherit; // empty to use BS default, @baseFontFamily
+@headings-font-weight:    400;    // instead of browser default, bold
+@headings-color:         inherit; // empty to use BS default, @textColor
+
+
+// Component sizing
+// -------------------------
+// Based on 14px font-size and 20px line-height
+
+@font-size-large:         @base-font-size * 1.25; // ~18px
+@font-size-small:         @base-font-size * 0.85; // ~12px
+@font-size-mini:          @base-font-size * 0.75; // ~11px
+
+@padding-large:          11px 19px; // 44px
+@padding-small:          2px 10px;  // 26px
+@padding-mini:           1px 6px;   // 24px
+
+@base-border-radius:      4px;  //2px; //4px;
+@border-radius-large:     6px; //3px; //6px;
+@border-radius-small:     3px;  //1px; //3px;
+
+
+// Tables
+// -------------------------
+@table-background:                   transparent; // overall background-color
+@table-background-accent:             rgba( 0, 0, 0, 0.025 ); //#f9f9f9; // for striping
+@table-background-hover:              #fefefe; // for hover
+@table-border:                       #ddd; // table and cell border
+
+// Buttons
+// -------------------------
+@btn-background:                     @white;
+@btn-background-highlight:            darken(@white, 10%);
+@btn-border:                         #fff;
+
+@btn-primary-background:              @blue;
+@btn-primary-background-highlight:     @blue-dark;
+
+@btn-info-background:                 @blue-light;
+@btn-info-background-highlight:        @blue;
+
+@btn-success-background:              @green-light;
+@btn-success-background-highlight:     @green;
+
+@btn-warning-background:              @yellow-light;
+@btn-warning-background-highlight:     @yellow;
+
+@btn-danger-background:               @red-light;
+@btn-danger-background-highlight:      @red;
+
+@btn-inverse-background:              #444;
+@btn-inverse-background-highlight:     @gray-darker;
+
+
+.btn {
+  box-shadow: 1px 1px 2px rgba( 0, 0, 0, 0.25 );
+  //-moz-box-shadow: inset 0 0 5px #888;
+  //-webkit-box-shadow: inset 0 0 3px rgba( 0, 0, 0, 0.5 );
+  border: none;
+  //border-radius: 4px;
+}
+
+
+// Forms
+// -------------------------
+@input-background:               @white;
+@input-border:                   #ccc;
+@input-border-radius:             @base-border-radius;
+@input-disabled-background:       @gray-lighter;
+@form-actions-background:         #f5f5f5;
+@input-height:                   @base-line-height + 10px; // base line-height + 8px vertical padding + 2px top/bottom border
+
+
+// Dropdowns
+// -------------------------
+@dropdown-background:            @white;
+@dropdown-border:                rgba(0,0,0,.2);
+@dropdown-divider-top:            #e5e5e5;
+@dropdown-divider-bottom:         @white;
+
+@dropdown-link-color:             @gray-dark;
+@dropdown-link-color-hover:        @white;
+@dropdown-link-color-active:       @dropdown-link-color;
+
+@dropdown-link-background-active:  @link-color;
+@dropdown-link-background-hover:   @dropdown-link-background-active;
+
+
+
+// COMPONENT VARIABLES
+// --------------------------------------------------
+
+
+// Z-index master list
+// -------------------------
+// Used for a bird's eye view of components dependent on the z-axis
+// Try to avoid customizing these :)
+@zindex-dropdown:          1000;
+@zindex-popover:           1010;
+@zindex-tooltip:           1030;
+@zindex-fixed-navbar:       1030;
+@zindex-modal-backdrop:     1040;
+@zindex-modal:             1050;
+
+
+// Sprite icons path
+// -------------------------
+@icon-sprite-path:          "../img/glyphicons-halflings.png";
+@icon-white-sprite-path:     "../img/glyphicons-halflings-white.png";
+
+
+// Input placeholder text color
+// -------------------------
+@placeholder-text:         @gray-light;
+
+
+// Hr border color
+// -------------------------
+@hr-border:                rgba( 0, 0, 0, 0.25 );
+
+
+// Horizontal forms & lists
+// -------------------------
+@horizontal-component-offset:       180px;
+
+
+// Wells
+// -------------------------
+@well-background:                  #f5f5f5;
+
+
+// Navbar
+// -------------------------
+@navbar-collapse-width:             768px;
+@navbar-collapse-desktop-width:      @navbar-collapse-width + 1;
+
+@navbar-height:                    40px;
+
+/*
+@navbarBackgroundHighlight:       #f00;
+@navbarBackground:                darken(@navbarBackgroundHighlight, 5%);
+@navbarBorder:                    darken(@navbarBackground, 12%);
+*/
+
+@navbar-background-highlight:       @gray;
+@navbar-background:                darken(@navbar-background-highlight, 1%);
+@navbar-border:                    darken(@navbar-background, 10%);
+
+
+
+@navbar-text:                      @gray-lighter;
+@navbar-link-color:                 @gray-lighter;
+@navbar-link-color-hover:            @white;
+@navbar-link-color-active:           @gray;
+@navbar-link-background-hover:       transparent;
+@navbar-link-background-active:      darken(@navbar-background, 5%);
+
+@navbar-brand-color:                @navbar-link-color;
+
+// Inverted navbar
+@navbar-inverse-background:                #111111;
+@navbar-inverse-background-highlight:       #222222;
+@navbar-inverse-border:                    #252525;
+
+@navbar-inverse-text:                      @gray-light;
+@navbar-inverse-link-color:                 @gray-light;
+@navbar-inverse-link-color-hover:            @white;
+@navbar-inverse-link-color-active:           @navbar-inverse-link-color-hover;
+@navbar-inverse-link-background-hover:       transparent;
+@navbar-inverse-link-background-active:      @navbar-inverse-background;
+
+@navbar-inverse-search-background:          lighten(@navbar-inverse-background, 25%);
+@navbar-inverse-search-background-focus:     @white;
+@navbar-inverse-search-border:              @navbar-inverse-background;
+@navbar-inverse-search-placeholder-color:    #ccc;
+
+@navbar-inverse-brand-color:                @navbar-inverse-link-color;
+
+
+
+// Refinery stuff
+// --------------
+@footer-height: 60px;
+
+// Pagination
+// -------------------------
+@pagination-background:                #fff;
+@pagination-border:                    #ddd;
+@pagination-active-background:          #f5f5f5;
+
+
+// Form states and alerts
+// -------------------------
+@warning-text:             @yellow;
+@warning-background:       fade( @yellow, 5% );
+@warning-border:           @yellow;
+
+@error-text:               @red;
+@error-background:         fade( @red, 5% );
+@error-border:             @red;
+
+@success-text:             @green;
+@success-background:       fade( @green, 5% );
+@success-border:           @green;
+
+@info-text:                @blue;
+@info-background:          fade( @blue, 5% );
+@info-border:              @blue;
+
+.alert {
+  border-width: 2px;
+  font-weight: 400;
+  padding: 2px 4px;
+}
+
+.alert.alert-danger a {
+  color: @error-text;
+  text-decoration: underline;
+}
+
+// Tooltips and popovers
+// -------------------------
+@tooltip-color:            #fff;
+@tooltip-background:       #000;
+@tooltip-arrow-width:       5px;
+@tooltip-arrow-color:       @tooltip-background;
+
+@popover-background:       #fff;
+@popover-arrow-width:       10px;
+@popover-arrow-color:       #fff;
+@popover-title-background:  darken(@popover-background, 3%);
+
+// Special enhancement for popovers
+@popover-arrow-outer-width:  @popover-arrow-width + 1;
+@popover-arrow-outer-color:  rgba(0,0,0,.25);
+
+
+
+// GRID
+// --------------------------------------------------
+
+
+// Default 940px grid
+// -------------------------
+@grid-columns:             12;
+@grid-column-width:         60px;
+@grid-gutter-width:         20px;
+@grid-row-width:            (@grid-columns * @grid-column-width) + (@grid-gutter-width * (@grid-columns - 1));
+
+// 1200px min
+@grid-column-width1200:     70px;
+@grid-gutter-width1200:     30px;
+@grid-row-width1200:        (@grid-columns * @grid-column-width1200) + (@grid-gutter-width1200 * (@grid-columns - 1));
+
+// 768px-979px
+@grid-column-width768:      42px;
+@grid-gutter-width768:      20px;
+@grid-row-width768:         (@grid-columns * @grid-column-width768) + (@grid-gutter-width768 * (@grid-columns - 1));
+
+
+// Fluid grid
+// -------------------------
+@fluid-grid-column-width:    percentage(@grid-column-width/@grid-row-width);
+@fluid-grid-gutter-width:    percentage(@grid-gutter-width/@grid-row-width);
+
+// 1200px min
+@fluid-grid-column-width1200:     percentage(@grid-column-width1200/@grid-row-width1200);
+@fluid-grid-gutter-width1200:     percentage(@grid-gutter-width1200/@grid-row-width1200);
+
+// 768px-979px
+@fluid-grid-column-width768:      percentage(@grid-column-width768/@grid-row-width768);
+@fluid-grid-gutter-width768:      percentage(@grid-gutter-width768/@grid-row-width768);

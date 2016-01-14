@@ -12,7 +12,7 @@
 
 {% block content %}
 <div class="refinery-panel refinery-panel-content scrollable">
-	<div class="row-fluid">
+	<div class="row">
 		<div class="refinery-header">
 			<span class="refinery-header-left">
 				<h3>Unauthorized User</h3>
@@ -20,7 +20,8 @@
 		</div>
 		<p>
 			We are re sorry, but you need to be logged in to perform this action.<br /><br />
-			If you believe you reached this page in error, please contact {{REFINERY_CONTACT_EMAIL}}.
+			If you believe you reached this page in error, please contact your
+            <a href='mailto:{{ADMINS.0.1}}?Subject=Refinery%20Error' target='_top'>System Administrator</a>.
 		</p>
 	</div>
 </div>

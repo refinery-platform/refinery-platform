@@ -2,7 +2,9 @@ import json
 import logging
 import os
 import djcelery
+from subprocess import check_output
 from django.core.exceptions import ImproperlyConfigured
+
 
 logger = logging.getLogger(__name__)
 
@@ -171,6 +173,7 @@ INSTALLED_APPS = (
     # RP: added for database migration between builds
     'south',
     'chunked_upload',
+    'rest_framework',
 )
 
 # NG: added for django-guardian
@@ -205,10 +208,10 @@ LOGGING = {
         },
     },
     'filters': {
-         'require_debug_false': {
-             '()': 'django.utils.log.RequireDebugFalse'
-         }
-     },
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse'
+        }
+    },
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
@@ -374,10 +377,10 @@ HAYSTACK_CONNECTIONS = {
 
 # list of paths to CSS files used to style Refinery pages
 # (relative to STATIC_URL)
-REFINERY_CSS = ["styles/css/refinery-style-bootstrap.css",
-                "styles/css/refinery-style-bootstrap-responsive.css",
-                "styles/css/refinery-style.css",
-                "styles/css/font-awesome.css"]
+REFINERY_CSS = ["styles/refinery-style-bootstrap.css",
+                "styles/refinery-style-bootstrap-responsive.css",
+                "styles/refinery-style.css",
+                "vendor/fontawesome/css/font-awesome.min.css"]
 
 # set height of navigation bar (e.g. to fit a logo)
 REFINERY_INNER_NAVBAR_HEIGHT = get_setting("REFINERY_INNER_NAVBAR_HEIGHT")
@@ -416,11 +419,19 @@ REFINERY_EXTERNAL_AUTH = get_setting("REFINERY_EXTERNAL_AUTH")
 # Message to display on password management pages when REFINERY_EXTERNAL_AUTH
 # is set to True
 REFINERY_EXTERNAL_AUTH_MESSAGE = get_setting("REFINERY_EXTERNAL_AUTH_MESSAGE")
-'''
+
+"""
 # external tool status settings
 INTERVAL_BETWEEN_CHECKS = get_setting("INTERVAL_BETWEEN_CHECKS")
 TIMEOUT = get_setting("TIMEOUT")
-'''
+"""
+
+# Directory for custom libraries
+LIBS_DIR = get_setting("LIBS_DIR")
+
+# Java settings
+JAVA_ENTITY_EXPANSION_LIMIT = get_setting("JAVA_ENTITY_EXPANSION_LIMIT")
+
 if REFINERY_EXTERNAL_AUTH:
     # enable LDAP authentication
     try:
@@ -440,3 +451,69 @@ if REFINERY_EXTERNAL_AUTH:
         AUTHENTICATION_BACKENDS += (
             'core.models.RefineryLDAPBackend',
         )
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': '0.0.0.0:11211',
+        'TIMEOUT': 600,
+    }
+}
+
+# CURRENT_COMMIT retrieves the most recent commit used allowing for easier
+# debugging of a Refinery instance
+
+try:
+    CURRENT_COMMIT = check_output(['/usr/bin/git', 'rev-parse', "HEAD"])
+except Exception as e:
+    logger.debug("Error Retrieving Most Recent Commit: ", e)
+    CURRENT_COMMIT = "Error Retrieving Most Recent Commit: " + str(e)
+
+# Neo4J Settings
+NEO4J_BASE_URL = "http://localhost:7474"
+NEO4J_CONSTRAINTS = [
+    {
+        "label": "Class",
+        "properties": [
+            {
+                "name": "name",
+                "unique": False
+            },
+            {
+                "name": "uri",
+                "unique": True
+            }
+        ]
+    },
+    {
+        "label": "Ontology",
+        "properties": [
+            {
+                "name": "acronym",
+                "unique": True
+            },
+            {
+                "name": "uri",
+                "unique": True
+            }
+        ]
+    },
+    {
+        "label": "User",
+        "properties": [
+            {
+                "name": "id",
+                "unique": True
+            }
+        ]
+    },
+    {
+        "label": "DataSet",
+        "properties": [
+            {
+                "name": "id",
+                "unique": True
+            }
+        ]
+    }
+]

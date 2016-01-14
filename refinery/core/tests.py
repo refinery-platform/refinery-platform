@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User, Group
 from django.utils import unittest, simplejson
+from django.core.cache import cache
 
 from guardian.shortcuts import assign_perm
 from tastypie.test import ResourceTestCase
@@ -10,7 +11,7 @@ from core.management.commands.create_user import init_user
 from core.models import (
     NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,
     ExtendedGroup, DataSet, InvestigationLink, Project, Analysis, Workflow,
-    WorkflowEngine, UserProfile
+    WorkflowEngine, UserProfile, invalidate_cached_object
 )
 import data_set_manager
 from galaxy_connector.models import Instance
@@ -1004,3 +1005,135 @@ class AnalysisResourceTest(ResourceTestCase):
         response = self.api_client.delete(analysis_uri, format='json')
         self.assertHttpMethodNotAllowed(response)
         self.assertEqual(Analysis.objects.count(), 1)
+
+
+class BaseResourceSlugTest(unittest.TestCase):
+    def setUp(self):
+        self.investigation = \
+            data_set_manager.models.Investigation.objects.create()
+        self.study = data_set_manager.models.Study.objects.create(
+            investigation=self.investigation)
+        self.assay = data_set_manager.models.Assay.objects.create(
+            study=self.study)
+        self.query = simplejson.dumps({
+            "facets": {
+                "platform_Characteristics_10_5_s": [],
+                "cell_or_tissue_Characteristics_10_5_s": [],
+                "REFINERY_TYPE_10_5_s": [],
+                "species_Characteristics_10_5_s": [],
+                "treatment_Characteristics_10_5_s": [],
+                "factor_Characteristics_10_5_s": [],
+                "factor_function_Characteristics_10_5_s": [],
+                "data_source_Characteristics_10_5_s": [],
+                "genome_build_Characteristics_10_5_s": [],
+                "REFINERY_FILETYPE_10_5_s": [],
+                "antibody_Characteristics_10_5_s": [],
+                "data_type_Characteristics_10_5_s": [],
+                "lab_Characteristics_10_5_s": []
+                },
+            "nodeSelection": [],
+            "nodeSelectionBlacklistMode": True
+        })
+
+    """Tests for BaseResource Slugs"""
+    def test_duplicate_slugs(self):
+        DataSet.objects.create(slug="TestSlug")
+        DataSet.objects.create(slug="TestSlug")
+
+        self.assertEqual(DataSet.objects.filter(slug="TestSlug")
+                         .count(), 1)
+
+    def test_empty_slug(self):
+        self.assertTrue(DataSet.objects.create(slug=""))
+
+    def test_edit_existing_slug(self):
+        DataSet.objects.create(slug="TestSlug1")
+        instance = DataSet.objects.get(slug="TestSlug1")
+        instance.summary = "This is a summmary"
+        instance.save()
+        instance.summary = "Different summary"
+        instance.save()
+        self.assertTrue(DataSet.objects.get(summary="Different summary"))
+
+    def test_save_slug_no_change(self):
+        DataSet.objects.create(slug="TestSlug2")
+        instance = DataSet.objects.get(slug="TestSlug2")
+        instance.save()
+        instance_again = DataSet.objects.get(slug="TestSlug2")
+        self.assertEqual(instance, instance_again)
+
+    def test_save_slug_with_change(self):
+        DataSet.objects.create(slug="TestSlug3")
+        instance = DataSet.objects.get(slug="TestSlug3")
+        instance_again = DataSet.objects.get(slug="TestSlug3")
+        instance_again.slug = "CHANGED"
+        instance_again.save()
+        self.assertNotEqual(instance.slug, instance_again.slug)
+
+    def test_save_slug_when_another_model_with_same_slug_exists(self):
+        name = 'nodeset'
+        create_nodeset(name=name, study=self.study, assay=self.assay)
+        nodeset_instance = NodeSet.objects.get(name="nodeset")
+        nodeset_instance.slug = "TestSlug4"
+        nodeset_instance.save()
+        self.assertTrue(DataSet.objects.create(slug="TestSlug4"))
+
+
+class CachingTest(unittest.TestCase):
+    """Testing the addition and deletion of cached objects"""
+
+    def setUp(self):
+        # make some data
+        for index, item in enumerate(range(0, 10)):
+            DataSet.objects.create(slug="TestSlug%d" % index)
+        # Adding to cache
+        cache.add("DataSet", DataSet.objects.all())
+        # Initial data that is cached, to test against later
+        self.initial_cache = cache.get("DataSet")
+
+    def tearDown(self):
+        cache.clear()
+
+    def verify_data_after_save(self):
+        # Grab, alter, and save an object being cached
+        ds = DataSet.objects.get(slug="TestSlug5")
+        ds.slug = "NewSlug"
+        ds.save()
+        # Check if cache can be invalidated
+        invalidate_cached_object(ds)
+        self.assertFalse(cache.get("DataSet"))
+        # Adding to cache again
+        cache.add("DataSet", DataSet.objects.all())
+        new_cache = cache.get("DataSet")
+        self.assertTrue(new_cache)
+        # Make sure new cache represents the altered data
+        self.assertNotEqual(self.initial_cache, new_cache)
+        self.assertTrue(DataSet.objects.get(slug="NewSlug"))
+
+    def verify_data_after_delete(self):
+        # Grab and delete an object being cached
+        ds = DataSet.objects.get(slug="TestSlug5")
+        ds.delete()
+        # Check if cache can be invalidated
+        invalidate_cached_object(DataSet.objects.get(slug="TestSlug1"))
+        self.assertFalse(cache.get("DataSet"))
+        # Adding to cache again
+        cache.add("DataSet", DataSet.objects.all())
+        new_cache = cache.get("DataSet")
+        self.assertTrue(new_cache)
+        # Make sure new cache represents the altered data
+        self.assertNotEqual(self.initial_cache, new_cache)
+
+    def verify_data_after_perms_change(self):
+        # Grab and change sharing an object being cached
+        ds = DataSet.objects.get(slug="TestSlug5")
+        ds.share(group="Public")
+        # Check if cache can be invalidated
+        invalidate_cached_object(DataSet.objects.get(slug="TestSlug1"))
+        self.assertFalse(cache.get("DataSet"))
+        # Adding to cache again
+        cache.add("DataSet", DataSet.objects.all())
+        new_cache = cache.get("DataSet")
+        self.assertTrue(new_cache)
+        # Make sure new cache represents the altered data
+        self.assertNotEqual(self.initial_cache, new_cache)

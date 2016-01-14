@@ -116,13 +116,15 @@ def update_refinery():
             run("git pull")
     with cd(env.refinery_ui_dir):
         run("npm prune && npm update")
-        run("bower prune && bower update --config.interactive=false")
-        run("grunt")
+        run("rm -rf bower_components")
+        run("bower update --config.interactive=false")
+        run("grunt build && grunt compile")
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("pip install -r {refinery_project_dir}/requirements.txt"
             .format(**env))
         run("find . -name '*.pyc' -delete")
-        run("{refinery_app_dir}/manage.py syncdb --migrate".format(**env))
+        run("{refinery_app_dir}/manage.py syncdb --migrate --noinput"
+            .format(**env))
         run("{refinery_app_dir}/manage.py collectstatic --clear --noinput"
             .format(**env))
         run("supervisorctl reload")

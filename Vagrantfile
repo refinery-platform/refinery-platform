@@ -15,7 +15,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.network "private_network", ip: "192.168.50.50"
 
   config.vm.provider "virtualbox" do |v|
-    v.memory = 1536
+    v.memory = 2048
     v.cpus = 1
   end
 
@@ -43,13 +43,8 @@ GALAXY_WARNING_SCRIPT
 #   puts("WARNING: $REFINERY_VM_TRANSFER_DIR is not set: importing datasets from the command line will not work.")
   end
 
-  # Install Librarian-puppet and modules before puppet provisioning (requires git and ruby-dev)
-  $librarian_puppet_install_script =
-<<SCRIPT
-  export DEBIAN_FRONTEND=noninteractive && /usr/bin/apt-get -qq update && /usr/bin/apt-get -q -y install git ruby-dev
-  gem install librarian-puppet -v 2.2.1 && cd /vagrant/deployment && librarian-puppet install
-SCRIPT
-  config.vm.provision :shell, :inline => $librarian_puppet_install_script
+  # Install Librarian-puppet and modules before puppet provisioning
+  config.vm.provision :shell, path: "deployment/bootstrap.sh"
 
   config.vm.provision :puppet do |puppet|
     puppet.manifests_path = "deployment/manifests"
@@ -57,4 +52,9 @@ SCRIPT
     puppet.module_path = "deployment/modules"  # requires modules dir to exist when this file is parsed
     puppet.options = "--hiera_config /vagrant/deployment/hiera.yaml"  # to avoid missing file warning
   end
+
+  # workaround for services that start on boot before /vagrant is available
+  # http://stackoverflow.com/a/23986680
+  config.vm.provision :shell, inline: "service solr restart 1> /dev/null", run: "always"
+
 end

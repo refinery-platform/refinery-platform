@@ -12,7 +12,7 @@
 
 {% block content %}
 <div class="refinery-panel refinery-panel-content scrollable">
-	<div class="row-fluid">
+	<div class="row">
 		<div class="refinery-header">
 			<span class="refinery-header-left">
 				<h3>Page Not Found</h3>
@@ -20,7 +20,8 @@
 		</div>
 		<p>
 			We're sorry, but we couldn't find this page.  You may have used an outdated link or typed in the URL incorrectly.<br /><br />
-			If you think you reached this page in error, then please let us know at {{REFINERY_CONTACT_EMAIL}}.
+			If you think you reached this page in error, then please contact
+            your <a href='mailto:{{ADMINS.0.1}}?Subject=Refinery%20Error' target='_top'>System Administrator</a>.
 		</p>
 	</div>
 </div>

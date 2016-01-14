@@ -18,8 +18,8 @@
     <p>{{message|safe}}</p>
     {% endfor %}
 {% endif %}
-	<div class="row-fluid">
-		<div class="span12">
+	<div class="row">
+		<div class="col-md-12">
 			<div class="refinery-panel refinery-panel-content">
 				<form method="post" action="{% url "django.contrib.auth.views.login" %}">
 					{% csrf_token %}
@@ -38,7 +38,8 @@
 					<p>{{ form.password }}</p>
 					
                     <p>
-                        <input class="btn" type="submit" value="Login" />
+                        <input class="refinery-base btn btn-default"
+                          type="submit" value="Login" />
                         <input type="hidden" name="next" value="{{ next }}" />
                         {% if not REFINERY_EXTERNAL_AUTH %}
                             &nbsp;<a href="/accounts/password/reset">Forgot password?</a>

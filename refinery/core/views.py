@@ -3,12 +3,14 @@ import os
 import re
 import urllib
 import xmltodict
+import py2neo
+import urlparse
 
+from django.utils import simplejson
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.sites.models import get_current_site
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.urlresolvers import reverse
 from django.http import (
     HttpResponse, HttpResponseForbidden, HttpResponseRedirect
@@ -16,23 +18,21 @@ from django.http import (
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext, loader
 
-from guardian.shortcuts import (
-    get_objects_for_group, get_objects_for_user, get_perms
-)
+from guardian.shortcuts import get_perms
 import requests
 
+from data_set_manager.models import *
 from core.forms import (
     ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 )
 from core.models import (
     ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
-    Analysis, get_shared_groups, Invitation
+    Analysis, Invitation, Ontology
 )
-from data_set_manager.models import *
-from galaxy_connector.models import Instance
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
+from core.utils import get_data_sets_annotations
 
 
 logger = logging.getLogger(__name__)
@@ -43,7 +43,8 @@ def home(request):
         'core/home.html',
         {
             'public_group_id': settings.REFINERY_PUBLIC_GROUP_ID,
-            'main_container_no_padding': True
+            'main_container_no_padding': True,
+            'num_ontologies_imported': Ontology.objects.count()
         },
         context_instance=RequestContext(request)
     )
@@ -129,15 +130,6 @@ def user(request, query):
     except User.DoesNotExist:
         user = get_object_or_404(UserProfile, uuid=query).user
 
-    if (len(get_shared_groups(request.user, user)) == 0 and
-            user != request.user):
-        return HttpResponseForbidden(
-            custom_error_page(
-                request, '403.html',
-                {'user': request.user,
-                 'msg': "view the profile of user %s" % user.username}
-            )
-        )
     return render_to_response('core/user.html', {'profile_user': user},
                               context_instance=RequestContext(request))
 
@@ -525,11 +517,23 @@ def analysis(request, analysis_uuid):
 
 
 def solr_core_search(request):
-    """Augmenting Solr queries to ensure only allowed access, is currently only
-    available for querying core indexes
+    """Query Solr's core index for search.
+
+    Queries are augmented with user and group information so that no datasets
+    is returned for which the user has no access.
+
+    For visualizing the repository it's important to know all datasets right
+    from the beginning. Because Django and Solr most likely run on the same
+    server, it's better to prefetch all dataset uuid and send them back
+    altogether rather than having to query from the client side twice.
     """
     url = settings.REFINERY_SOLR_BASE_URL + "core/select"
-    data = request.GET.dict()
+
+    headers = {
+        'Accept': 'application/json'
+    }
+
+    params = request.GET.dict()
     # Generate access list
     if not request.user.is_superuser:
         if request.user.id is None:
@@ -538,12 +542,60 @@ def solr_core_search(request):
             access = ['u_{}'.format(request.user.id)]
             for group in request.user.groups.all():
                 access.append('g_{}'.format(group.id))
-        data['fq'] = data['fq'] + ' AND access:({})'.format(
+        params['fq'] = params['fq'] + ' AND access:({})'.format(
             ' OR '.join(access))
-    req = urllib2.Request(url, urllib.urlencode(data))
-    f = urllib2.urlopen(req)
-    response = f.read()
-    f.close()
+
+    try:
+        allIds = params['allIds'] in ['1', 'true', 'True']
+    except KeyError:
+        allIds = False
+
+    try:
+        annotations = params['annotations'] in ['1', 'true', 'True']
+    except KeyError:
+        annotations = False
+
+    response = requests.get(url, params=params, headers=headers)
+
+    if allIds or annotations:
+        # Query for all uuids given the same query. Solr shold be very fast
+        # because we just queried for almost the same information, only limited
+        # in size.
+        all_ids_params = {
+            'defType': params['defType'],
+            'fl': 'dbid',
+            'fq': params['fq'],
+            'q': params['q'],
+            'qf': params['qf'],
+            'rows': 2147483647,
+            'start': 0,
+            'wt': 'json'
+        }
+        response_ids = requests.get(
+            url,
+            params=all_ids_params,
+            headers=headers
+        )
+
+        if response_ids.status_code == 200:
+            response_ids = response_ids.json()
+            ids = []
+
+            for ds in response_ids['response']['docs']:
+                ids.append(ds['dbid'])
+
+            annotation_data = get_data_sets_annotations(ids)
+
+            response = response.json()
+
+            if allIds:
+                response['response']['allIds'] = ids
+
+            if annotations:
+                response['response']['annotations'] = annotation_data
+
+            response = simplejson.dumps(response)
+
     return HttpResponse(response, mimetype='application/json')
 
 
@@ -551,12 +603,11 @@ def solr_select(request, core):
     # core format is <name_of_core>
     # query.GET is a querydict containing all parts of the query
     # TODO: handle runtime errors when making GET request
+
     url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
     data = request.GET.urlencode()
-    req = urllib2.Request(url, data)  # {'Content-Type': 'application/json'})
-    f = urllib2.urlopen(req)
-    response = f.read()
-    f.close()
+    fullResponse = requests.get(url, params=data)
+    response = fullResponse.content
     return HttpResponse(response, mimetype='application/json')
 
 
@@ -643,11 +694,8 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
         replace_rows_str = '&rows=' + str(10000)
         query = query.replace(m_obj.group(), replace_rows_str)
 
-    # proper url encoding
-    query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
-
     # opening solr query results
-    results = urllib2.urlopen(query).read()
+    results = requests.get(query, stream=True).raw.read()
 
     # converting results into json for python
     results = simplejson.loads(results)
@@ -731,7 +779,7 @@ def pubmed_abstract(request, id):
 
     response = requests.get(url, params=params, headers=headers)
     return HttpResponse(
-        json.dumps(xmltodict.parse(response.text)),
+        simplejson.dumps(xmltodict.parse(response.text)),
         mimetype='application/json'
     )
 
@@ -781,3 +829,58 @@ def pubmed_summary(request, id):
 def fastqc_viewer(request):
     return render_to_response('core/fastqc-viewer.html', {},
                               context_instance=RequestContext(request))
+
+
+def neo4j_dataset_annotations(request):
+    """Query Neo4J for dataset annotations per user
+    """
+
+    user_id = -1 if request.user.id is None else request.user.id
+
+    url = '{}/db/data/transaction/commit'.format(settings.NEO4J_BASE_URL)
+
+    headers = {
+        'Accept': 'application/json; charset=UTF-8',
+        'Content-type': 'application/json'
+    }
+
+    # sub = sub class
+    # sup = super class
+    # ds = dataset
+    #
+    # Note: this returns the while subclass hierarchy tree but only adds
+    # associates dataset annotations the user has read access to.
+    cql = (
+        'MATCH (sup:CL:Class)<-[:`RDFS:subClassOf`]-(sub) ' +
+        'OPTIONAL MATCH (ds:DataSet), ' +
+        '               (u:User {id:%s}), ' +
+        '               (ds)-[:`annotated_with`]->(sub), ' +
+        '               (u)-[:`read_access`]->(ds) ' +
+        'RETURN sup, sub, ds'
+    ) % user_id
+
+    stmt = {
+        'statements': [{
+            'statement': cql
+        }]
+    }
+
+    try:
+        response = requests.post(url, json=stmt, headers=headers)
+    except requests.exceptions.ConnectionError as e:
+        logger.error('Neo4J seems to be offline.')
+        logger.error(e)
+        return HttpResponse(
+            'Neo4J seems to be offline.',
+            mimetype='application/json',
+            status=503
+        )
+    except requests.exceptions.RequestException as e:
+        logger.error(e)
+        return HttpResponse(
+            'Request failed.',
+            mimetype='application/json',
+            status=500
+        )
+
+    return HttpResponse(response, mimetype='application/json')

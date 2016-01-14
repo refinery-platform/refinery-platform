@@ -5,78 +5,75 @@
 
 <html lang="en">
 <head>
-    <meta content="text/html">
-  	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="">
+  <meta content="text/html">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
 
-    <!-- http://www.jonathantneal.com/blog/understand-the-favicon/ -->
-    <link rel="apple-touch-icon" href="{% static "images/touchicon.png" %}">
-    <link rel="icon" href="{% static "images/favicon.png" %}">
-    <!--[if IE]><link rel="shortcut icon" href="{% static "images/favicon.ico" %}"><![endif]-->
-    <!-- IE10 Win 8 -->
-    <meta name="msapplication-TileColor" content="#FFFFFF">
-    <meta name="msapplication-TileImage" content="{% static "images/tileicon.png" %}">
+  <!-- http://www.jonathantneal.com/blog/understand-the-favicon/ -->
+  <link rel="apple-touch-icon" href="{% static "images/touchicon.png" %}">
+  <link rel="icon" href="{% static "images/favicon.png" %}">
+  <!--[if IE]><link rel="shortcut icon" href="{% static "images/favicon.ico" %}"><![endif]-->
+  <!-- IE10 Win 8 -->
+  <meta name="msapplication-TileColor" content="#FFFFFF">
+  <meta name="msapplication-TileImage" content="{% static "images/tileicon.png" %}">
 
-    <!-- Le styles -->
-    {% for css_file in REFINERY_CSS %}
-    <link href="{% static css_file %}" rel="stylesheet">
-   	{% endfor %}
+  <!-- Le styles -->
+  {% for css_file in REFINERY_CSS %}
+  <link href="{% static css_file %}" rel="stylesheet">
+  {% endfor %}
 
-    <style type="text/css">
-      body {
-        /*padding-top: {{ REFINERY_INNER_NAVBAR_HEIGHT|add:"20" }}px;*/
-        /*padding-bottom: 40px;*/
-         /*position: relative;*/
-      }
-    </style>
+  <script type="text/javascript">
+    // Global variables for the JavaScript world
+    window.djangoApp = {
+      userId: '{{ user.id }}',
+      userName: '{{ user.username }}',
+      admins: '{{ ADMINS|safe }}'
+    };
 
-    {% block head_html %}
-    {% endblock %}
+    if (window.djangoApp.userId === 'None' || window.djangoApp.userName === 'None') {
+      window.djangoApp.userId = undefined;
+      window.djangoApp.userName = undefined;
+    }
+  </script>
 
-    <title>{{REFINERY_INSTANCE_NAME}} {% block title %}{% endblock %}</title>
+  {% block head_html %}
+  {% endblock %}
 
-    {% block tracking %}
+  <title>{{ REFINERY_INSTANCE_NAME }}{% block title %}{% endblock %}</title>
 
-	    {% if REFINERY_GOOGLE_ANALYTICS_ID != "" %}
-			<script type="text/javascript">
+  {% block tracking %}
 
-			  var _gaq = _gaq || [];
-			  _gaq.push(['_setAccount', '{{ REFINERY_GOOGLE_ANALYTICS_ID }}']);
-			  _gaq.push(['_trackPageview']);
+  {% if REFINERY_GOOGLE_ANALYTICS_ID != "" %}
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', '{{ REFINERY_GOOGLE_ANALYTICS_ID }}', 'auto');
+    ga('send', 'pageview');
+  </script>
+  {% endif %}
 
-			  (function() {
-			    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-			    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-			    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-			  })();
-			</script>
-		{% endif %}
-
-    {% endblock %}
+  {% endblock %}
 </head>
 
 <body ng-app="{% block ng_app %}refineryApp{% endblock %}" ng-controller="AppCtrl as app" ng-click="app.globalClick($event)">
   <!-- header navigation bar -->
-  <div class="navbar navbar-fixed-top">
-    <div class="navbar-inner">
-      <!-- <div class="container-fluid" style="box-shadow: 0 0 5px black;"> -->
-      <div class="container-fluid">
-        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
-        <a class="btn btn-navbar" style="margin-left: 5px; margin-right: 5px;" data-toggle="collapse" data-target=".nav-collapse">
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </a>
 
-        <a class="brand" href="{% url "home" %}">
-          {% if REFINERY_MAIN_LOGO != False %}
-            {% if REFINERY_MAIN_LOGO != '' %}
-          	<img
-              class="m-r-1-5"
-              style="height: {{ REFINERY_INNER_NAVBAR_HEIGHT }} px"
-              src="{% static REFINERY_MAIN_LOGO %}" />
-            {% else %}
+  <nav class="refinery-base navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+
+      <div class="navbar-header pull-left">
+
+        <a class="navbar-brand" href="{% url "home" %}" tabindex=1>
+        {% if REFINERY_MAIN_LOGO != False %}
+          {% if REFINERY_MAIN_LOGO != '' %}
+          <img
+            class="m-r-1-5"
+            style="height: {{ REFINERY_INNER_NAVBAR_HEIGHT }} px"
+            src="{% static REFINERY_MAIN_LOGO %}" />
+          {% else %}
             <div class="svg-container" class="m-r-1">
               <div class="bg bg-1"></div>
               <div class="bg bg-2"></div>
@@ -85,77 +82,94 @@
                 width="{{ REFINERY_INNER_NAVBAR_HEIGHT }}"
                 height="{{ REFINERY_INNER_NAVBAR_HEIGHT }}"
                 viewBox="0 0 100 100">
-                    <path d="M67.285 98.077c-.116.037-.25.08-.372.14-.525.178-1.074.373-1.624.55-.318.105-.63.202-.94.28-.397.123-.806.24-1.22.355-.33.104-.648.183-.978.262-.116.037-.22.055-.336.08 7.978-5.06 14.862-20.563 6.994-34.296-8.203-14.32-1.057-32.294 1.203-32.893-4.92 1.294-23.39 19.1-11.878 40.552l.037.062c6.23 11.62 5.133 17.73-1.41 23.46-.325.26-.592.215-.592.215 1.423-2.323 3.942-4.102 1.745-11.358-1.312-4.383-5.957-10.51-7.172-14.44-1.8-5.85-.098-11.757.55-12.214-1.293.914-6.255 10.906-8.464 17.314-2.216 6.402-1.985 13.58.096 18.896.642 1.64.793 2.034.793 2.034s-.173-.094-.403-.29C32.867 86.2 35.89 72.242 48.822 54.15l.08-.072c21.166-29.59-.922-48.487-3.095-50.61 3.662 3.588 4.603 21.936-9.253 41.283l-.06.086c-21.48 29.98-9.468 45.29 2.843 55.164H100V50.922c-.14 21.655-13.72 40.075-32.715 47.155z"></path>
-                    <path d="M28.205 96.13C11.603 87.983.115 70.813 0 50.923V100h39.337c-3.35-.757-6.567-1.825-9.625-3.174-.39-.177-1.392-.635-1.507-.695zM50 0H0v50.922C.213 22.766 22.503 0 50 0zM50 0c27.496 0 49.786 22.766 50 50.922V0H50z"></path>
+                  <path d="M67.285 98.077c-.116.037-.25.08-.372.14-.525.178-1.074.373-1.624.55-.318.105-.63.202-.94.28-.397.123-.806.24-1.22.355-.33.104-.648.183-.978.262-.116.037-.22.055-.336.08 7.978-5.06 14.862-20.563 6.994-34.296-8.203-14.32-1.057-32.294 1.203-32.893-4.92 1.294-23.39 19.1-11.878 40.552l.037.062c6.23 11.62 5.133 17.73-1.41 23.46-.325.26-.592.215-.592.215 1.423-2.323 3.942-4.102 1.745-11.358-1.312-4.383-5.957-10.51-7.172-14.44-1.8-5.85-.098-11.757.55-12.214-1.293.914-6.255 10.906-8.464 17.314-2.216 6.402-1.985 13.58.096 18.896.642 1.64.793 2.034.793 2.034s-.173-.094-.403-.29C32.867 86.2 35.89 72.242 48.822 54.15l.08-.072c21.166-29.59-.922-48.487-3.095-50.61 3.662 3.588 4.603 21.936-9.253 41.283l-.06.086c-21.48 29.98-9.468 45.29 2.843 55.164H100V50.922c-.14 21.655-13.72 40.075-32.715 47.155z"></path>
+                  <path d="M28.205 96.13C11.603 87.983.115 70.813 0 50.923V100h39.337c-3.35-.757-6.567-1.825-9.625-3.174-.39-.177-1.392-.635-1.507-.695zM50 0H0v50.922C.213 22.766 22.503 0 50 0zM50 0c27.496 0 49.786 22.766 50 50.922V0H50z"></path>
               </svg>
             </div>
-            {% endif %}
           {% endif %}
-          <span class="name">{{ REFINERY_INSTANCE_NAME }}</span>
-        </a>
+        {% endif %}
+        <span class="name">{{ REFINERY_INSTANCE_NAME }}</span>
+      </a>
 
-        <p class="navbar-text pull-right">
+        <button type="button" class="navbar-toggle collapsed"
+          data-toggle="collapse" data-target="#navbarMain" aria-expanded="false">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+      </div>
+
+      <div class="navbar-text pull-right">
         {% if user.is_authenticated %}
-          <i class="icon-user"></i>
-          <a href="{% url "user" user.get_profile.uuid %}">
+          <i class="fa fa-user"></i>
+          <a href="{% url "user" user.get_profile.uuid %}" tabindex=5>
           {% if user.first_name != "" or user.last_name != "" %}
             {{ user.first_name }} {{ user.last_name }}
           {% else %}
             {{ user.username }}
           {% endif %}
           </a>&nbsp;&nbsp;|&nbsp;&nbsp;
-          <i class="icon-signout"></i>&nbsp;<a href="{% url "django.contrib.auth.views.logout" %}?next={% url "home" %}">Logout</a>
+          <i class="fa fa-sign-out"></i>&nbsp;
+          <a href="
+           {% url "django.contrib.auth.views.logout" %}?next={% url "home" %}"
+          tabindex=6>
+            Logout
+          </a>
         {% else %}
           {% url 'registration.views.register' as registration_url %}
           {% url 'django.contrib.auth.views.login' as login_url %}
           {% if REGISTRATION_OPEN %}
-          <a rel="tooltip" data-placement="left" title="Sign Up" href="{{registration_url}}">Register</a>&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-        {% endif %}
-        <i class="icon-signin"></i>&nbsp;<a rel="tooltip" data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
+            <a rel="tooltip" data-placement="left" title="Sign Up"
+            href="{{registration_url}}" tabindex=7>
+              Register
+            </a>&nbsp;&nbsp;
+          &nbsp;&nbsp;|&nbsp;&nbsp;
+          {% endif %}
+          <i class="fa fa-sign-in"></i>&nbsp;<a rel="tooltip"
+          data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
         {% endif %}
         &nbsp;&nbsp;|&nbsp;&nbsp;
-        <span ng-controller="AnalysesCtrl" id="analyses-popover">
-          <a tabindex="0" rf-analyses-global-list-status-popover
-            title="Recent Analyses">
-             <span rp-analyses-global-list-status></span>
-          </a>
-        </span>
-
-        <div class="nav-collapse collapse">
-          <ul class="nav">
-            <!--
-            <li class="{{ navbar_class_home }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url "home" %}">Home</a></li>
-            <li class="{{ navbar_class_search }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url "search" %}">Search</a></li>
-            <li class="{{ navbar_class_contact }}"><a href="{% url "contact" %}">Contact</a></li>
-            -->
-            <li class="{{ navbar_class_collaboration }}"><a href="{% url "collaboration" %}">Collaboration</a></li>
-            <li class="{{ navbar_class_statistics }}"><a href="{% url "statistics" %}">Statistics</a></li>
-            <li class="{{ navbar_class_about }}"><a href="{% url "about" %}">About</a></li>
-          </ul>
-        </div>
+        <span id="analyses-popover">
+      <a tabindex=8 rp-analysis-monitor-global-list-status-popover
+        title="Recent Analyses">
+         <span rp-analysis-monitor-global-list-status></span>
+        </a>
+      </span>
       </div>
 
-      <div class="navbar-header">
-        <div class="row-fluid">
-          <div class="container-fluid">
-            <div style="clear: left; display:block;">
-              {% block subheader %}{% endblock %}
-            </div>
-          </div>
+      <div class="collapse navbar-collapse" id="navbarMain">
+        <ul class="nav navbar-nav">
+          <li class="{{ navbar_class_collaboration }}">
+            <a href="{% url "collaboration" %}" tabindex=2>Collaboration</a>
+          </li>
+          <li class="{{ navbar_class_statistics }}">
+            <a href="{% url "statistics" %}" tabindex=3>Statistics</a>
+          </li>
+          <li class="{{ navbar_class_about }}">
+            <a href="{% url "about" %}" tabindex=4>About</a>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+    <div class="navbar-subheader">
+      <div class="container-fluid">
+        <div style="clear: left; display:block;">
+          {% block subheader %}{% endblock %}
         </div>
       </div>
     </div>
-  </div>
+  </nav>
 
   {% if REFINERY_BANNER %}
       {% if not REFINERY_BANNER_ANONYMOUS_ONLY or not user.is_authenticated %}
-          <div class="alert text-center">{{ REFINERY_BANNER|safe }}</div>
+          <div class="alert alert-warning text-center">{{ REFINERY_BANNER|safe }}</div>
       {% endif %}
   {% endif %}
 
   <div class="container-fluid {% if main_container_no_padding %}p-l-0 p-r-0{% endif %}">
-    <div class="row-fluid" hidden id="warning-ie-not-supported">
-      <div class="alert alert-error">
+    <div class="row" hidden id="warning-ie-not-supported">
+      <div class="alert alert-danger">
         <b>Notice</b>&nbsp;
         We currently do not support <i>Microsoft Internet Explorer</i> and
         strongly recommend that you continue browsing this site with
@@ -169,32 +183,39 @@
   </div>
 
   <!-- Script for popup content in the tool status and analyses icon-->
-     <script type="text/ng-template" id="analysesgloballist.html">
-        <rp-analyses-global-list-status-popover-details>
-        </rp-analyses-global-list-status-popover-details>
-    </script>
+  <script type="text/ng-template" id="analysesgloballist.html">
+    <rp-analysis-monitor-global-list-status-popover-details>
+    </rp-analysis-monitor-global-list-status-popover-details>
+  </script>
+  <script type="text/ng-template" id="analysislaunchmodal.html">
+    <rp-analysis-launch-modal-detail>
+    </rp-analysis-launch-modal-detail>
+  </script>
 
   <!-- 3rd party libraries -->
   <script src="{% static "vendor/jquery/dist/jquery.min.js" %}"></script>
   <script src="{% static "js/jquery-ui/jquery-ui-1.10.0.custom.min.js" %}"></script>
+  <script src="{% static "vendor/bootstrap/dist/js/bootstrap.min.js" %}"></script>
   <script src="{% static "vendor/angular/angular.min.js" %}"></script>
   <script src="{% static "vendor/angular-animate/angular-animate.min.js" %}"></script>
   <script src="{% static "vendor/select2/select2.min.js" %}"></script>
-  <script src="{% static "vendor/angular-ui-select2/release/select2.min.js" %}"></script>
+  <script src="{% static "vendor/angular-ui-select2/dist/select2.min.js" %}"></script>
   <script src="{% static "vendor/angular-resource/angular-resource.min.js" %}"></script>
   <script src="{% static "vendor/angular-sanitize/angular-sanitize.min.js" %}"></script>
   <script src="{% static "vendor/angular-ui-router/release/angular-ui-router.min.js" %}"></script>
-  <script src="{% static "vendor/angular-ui-utils/modules/scroll/scroll.js" %}"></script>
+  <script src="{% static "vendor/angular-ui-scroll/dist/ui-scroll.min.js" %}"></script>
   <script src="{% static "vendor/angular-bootstrap/ui-bootstrap.min.js" %}"></script>
   <script src="{% static "vendor/angular-bootstrap/ui-bootstrap-tpls.min.js" %}"></script>
-  <script src="{% static "js/bootstrap/bootstrap.min.js" %}"></script>
-  <script src="{% static "vendor/lodash-3/lodash.min.js" %}"></script>
-  <script src="{% static "vendor/humanize/humanize.js" %}"></script>
+  <script src="{% static "vendor/ng-webworker/src/ng-webworker.min.js" %}"></script>
+  <script src="{% static "vendor/ng-webworker/src/worker_wrapper.min.js" %}"></script>
+  <script src="{% static "vendor/lodash/lodash.min.js" %}"></script>
   <script type="text/javascript">
     // Assign lodash v3.9.3 to a special variable so it doesn't conflict with
     // lodash v2 or other libraries like underscore.
     window.lodash3 = _.noConflict();
   </script>
+  <script src="{% static "vendor/d3/d3.min.js" %}"></script>
+  <script src="{% static "vendor/humanize/humanize.js" %}"></script>
 
   <!-- Refinery Angular App -->
   <script src="{% static "js/refinery.js" %}"></script>
@@ -204,111 +225,119 @@
   <script src="{% static "js/refinery-controller.js" %}"></script>
   <script src="{% static "js/globals.js" %}"></script>
   <script src="{% static "js/commons.js" %}"></script>
-  <script src="{% static "js/analyses.js" %}"></script>
-  <script src="{% static "js/node_mapping.js" %}"></script>
+  <script src="{% static "js/analysis-launch.js" %}"></script>
+  <script src="{% static "js/analysis-monitor.js" %}"></script>
+  <script src="{% static "js/node-mapping.js" %}"></script>
   <script src="{% static "js/workflows.js" %}"></script>
-  <script src="{% static "js/analysis.js" %}"></script>
   <script src="{% static "js/solr.js" %}"></script>
   <script src="{% static "js/data-set-nav.js" %}"></script>
-  <script src="{% static "js/node_relationship.js" %}"></script>
+  <script src="{% static "js/node-relationship.js" %}"></script>
   <script src="{% static "js/igv.js" %}"></script>
   <script src="{% static "js/statistics.js" %}"></script>
-  <script src="{% static "js/provvis.js" %}"></script>
+  <script src="{% static "js/provvis/provvis.js" %}"></script>
   <script src="{% static "js/dashboard.js" %}"></script>
   <script src="{% static "js/collaboration.js" %}"></script>
   <script src="{% static "js/chart.js"%}"></script>
 
   <script src="{% static "vendor/ng-file-upload/angular-file-upload.min.js" %}"></script>
-  <script src="{% static "vendor/ng-grid/build/ng-grid.min.js" %}"></script>
-  <script src="{% static "js/metadata_table_import.js" %}"></script>
+  <script src="{% static "vendor/angular-ui-grid/ui-grid.min.js" %}"></script>
+  <script src="{% static "js/metadata-table-import.js" %}"></script>
   <!-- The File Upload Angular JS module -->
   <script src="{% static "vendor/jquery-file-upload/js/jquery.fileupload-angular.js" %}"></script>
   <script src="{% static "js/data-set-import.js" %}"></script>
 
   {% block script %}
-	{% endblock %}
+  {% endblock %}
 
-	<script type="text/javascript">
-		// activate bootstrap tooltips
-	    $('a[rel=tooltip]').tooltip();
+  <script type="text/javascript">
+    // activate bootstrap tooltips
+      $('a[rel=tooltip]').tooltip();
 
     var username = '{{ user.username }}';
     var user_id = '{{ user.id }}';
+    var admins = '{{ ADMINS|safe }}';
     if (username === 'None' || user_id === 'None') {
         username = undefined;
         user_id = undefined;
     }
 
-		function sizing() {
-		    var windowWidth = $(window).width(),
+    function sizing() {
+        var windowWidth = $(window).width(),
             windowHeight = $(window).height();
 
-		    if(windowWidth <= 767) {
-		    	$('.jquery-full-height').css('height', 'inherit' );
-		    }
-		    else {
-			    $('.jquery-full-height').map( function() {
+        if(windowWidth <= 767) {
+          $('.jquery-full-height').css('height', 'inherit' );
+        }
+        else {
+          $('.jquery-full-height').map( function() {
             var $this = $(this),
-                targetHeight = (windowHeight - $this.offset().top - 40),
+                parent = $this.parent().closest('.jquery-full-height'),
+                targetHeight = (
+                  (
+                    parent.length ?
+                      parent.first().offset().top + parent.first().height() :
+                      windowHeight
+                  ) - $this.offset().top - 10
+                ),
                 minHeight = parseInt($this.css("min-height")),
                 newHeight = Math.max(targetHeight, minHeight);
 
-			    	$this.css('height', newHeight + 'px');
-		    	});
-	    	}
-		}
+            $this.css('height', newHeight + 'px');
+          });
+        }
+    }
 
     $(window).on(
       'resize.jqfullheight orientationchange.jqfullheight',
       sizing
     );
 
-		$(document).ready( function(){
-			sizing();
+    $(document).ready( function(){
+      sizing();
 
-			// detect IE: https://gist.github.com/527683
-			// ----------------------------------------------------------
-			// A short snippet for detecting versions of IE in JavaScript
-			// without resorting to user-agent sniffing
-			// ----------------------------------------------------------
-			// If you're not in IE (or IE version is less than 5) then:
-			//     ie === undefined
-			// If you're in IE (>=5) then you can determine which version:
-			//     ie === 7; // IE7
-			// Thus, to detect IE:
-			//     if (ie) {}
-			// And to detect the version:
-			//     ie === 6 // IE6
-			//     ie > 7 // IE8, IE9 ...
-			//     ie < 9 // Anything less than IE9
-			// ----------------------------------------------------------
+      // detect IE: https://gist.github.com/527683
+      // ----------------------------------------------------------
+      // A short snippet for detecting versions of IE in JavaScript
+      // without resorting to user-agent sniffing
+      // ----------------------------------------------------------
+      // If you're not in IE (or IE version is less than 5) then:
+      //     ie === undefined
+      // If you're in IE (>=5) then you can determine which version:
+      //     ie === 7; // IE7
+      // Thus, to detect IE:
+      //     if (ie) {}
+      // And to detect the version:
+      //     ie === 6 // IE6
+      //     ie > 7 // IE8, IE9 ...
+      //     ie < 9 // Anything less than IE9
+      // ----------------------------------------------------------
 
-			// UPDATE: Now using Live NodeList idea from @jdalton
+      // UPDATE: Now using Live NodeList idea from @jdalton
 
-			var ie = (function(){
+      var ie = (function(){
 
-			    var undef,
-			        v = 3,
-			        div = document.createElement('div'),
-			        all = div.getElementsByTagName('i');
+          var undef,
+              v = 3,
+              div = document.createElement('div'),
+              all = div.getElementsByTagName('i');
 
-			    while (
-			        div.innerHTML = '<!--[if gt IE ' + (++v) + ']><i></i><![endif]-->',
-			        all[0]
-			    );
+          while (
+              div.innerHTML = '<!--[if gt IE ' + (++v) + ']><i></i><![endif]-->',
+              all[0]
+          );
 
-			    return v > 4 ? v : undef;
+          return v > 4 ? v : undef;
 
-			}());
+      }());
 
-	  // jQuery > 1.9.0 no longer supports UA sniffing
+    // jQuery > 1.9.0 no longer supports UA sniffing
       // if ( ie !== undefined || $.browser.msie ) {
       if ( ie !== undefined ) {
-				// detected IE
-				$( "#warning-ie-not-supported" ).show();
-				sizing();
-			}
-		});
-	</script>
+        // detected IE
+        $( "#warning-ie-not-supported" ).show();
+        sizing();
+      }
+    });
+  </script>
 </body>
 </html>

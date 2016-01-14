@@ -1,0 +1,59 @@
+<div class="modal-header">
+    <h3>Permission Editor</h3>
+    <h4 id="modal-description"></h4>
+</div>
+<div class="modal-body">
+    <div ng-if="modal.permissions.groups.length > 0" ng-cloak>
+        <table class="table table-hover" id="permission-table" >
+          <thead>
+            <tr>
+              <th>Group</th>
+              <th>None</th>
+              <th>Read-only</th>
+              <th>Edit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="group in modal.permissions.groups track by $index">
+              <td>
+                {{ group.name }}
+              </td>
+              <td>
+                <input
+                  type="radio"
+                  value="none"
+                  ng-model="group.permission">
+              </td>
+              <td>
+                <input
+                  type="radio"
+                  value="read"
+                  ng-model="group.permission">
+              </td>
+              <td ng-if="group.id !== 100">
+                <input
+                  type="radio"
+                  value="edit"
+                  ng-model="group.permission">
+              </td>
+              <td ng-if="group.id === 100">
+              </td>
+            </tr>
+          </tbody>
+        </table>
+    </div>
+</div>
+<div class="modal-footer">
+  <div class="float-left">
+    <div class="refinery-spinner" ng-if="modal.isSaving"></div>
+  </div>
+  <div class="float-right">
+    <button class="refinery-base btn btn-default" ng-click="modal.cancel()">
+        Cancel
+    </button>
+    <button class="btn btn-primary" ng-click="modal.save()"
+            ng-if="modal.permissions.groups.length > 0" ng-cloak>
+        Save
+    </button>
+  </div>
+</div>

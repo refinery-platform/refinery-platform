@@ -47,7 +47,7 @@ SolrDocumentTable = function(
       var s = '';
       var id = 'download-' + document["uuid"];
       s += '<span id=' + id + '>';
-      s += '<i class="icon-refresh icon-spin" style="padding: 2px"></i>';
+      s += '<i class="fa fa-refresh fa-spin" style="padding: 2px"></i>';
       s += '</span>';
       $.ajax({
         url: '/api/v1/node/' + document["uuid"] + '/?format=json',
@@ -62,17 +62,17 @@ SolrDocumentTable = function(
           }
           if (result.file_url != null) {
             var link = '<a title="Download linked file" href="' +
-              result.file_url + '"><i class="icon-download"></i></a>';
+              result.file_url + '"><i class="fa fa-arrow-circle-o-down"></i></a>';
             if (result.file_url.indexOf("fastqc_results") >= 0) {
               // Should change .txt extension to FastQC specific later.
               link += '&nbsp;<a title="View FastQC Result" href="/fastqc_viewer/#/' +
-                result.analysis_uuid + '"><i class="icon-bar-chart"></i></a>';
+                result.analysis_uuid + '"><i class="fa fa-bar-chart-o"></i></a>';
             }
             $('#' + id).html(link)
           }
           else if (result.file_import_status != null) {
             // file import is in progress
-            var status = '<i class="icon-bolt"></i>';
+            var status = '<i class="fa fa-bolt"></i>';
             $('#' + id).html(status);
           }
           else {
@@ -125,7 +125,7 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
     'class': '',
     'id': topControlsId,
     'html': ''
-  }).appendTo('#' + self._parentElementId);
+  }).insertBefore("#table-view-tab");
 
   $('<span/>', {
     'class': 'dropdown',
@@ -173,6 +173,7 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
   self._generatePagerControl(pagerControlId, 5, 2, 2);
 
   // attach events
+
   $(".field-header-sort").on("click", function(event) {
     var fieldName = $(event.target).data("fieldname");
     self._query.toggleFieldDirection(fieldName);
@@ -182,7 +183,7 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
 
   // attach event to node selection mode checkbox
   $("#" + "node-selection-mode").click(function(event) {
-    if (self._query.getDocumentSelectionBlacklistMode()) {
+    if (!($(this).prop("checked"))){
       self._query.setDocumentSelectionBlacklistMode(false);
       self._query.clearDocumentSelection();
       // update individual checkboxes in table
@@ -198,11 +199,11 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
       SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, {'event': event});
   });
 
+
   $(".document-checkbox-select").on("click", function(event) {
     var uuid = $(event.target).data("uuid");
     var uuidIndex = self._query._documentSelection.indexOf(uuid);
     var event = "";
-
     if (uuidIndex != -1) {
       // remove element
       self._query._documentSelection.splice(uuidIndex, 1);
@@ -214,6 +215,20 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
       event = 'add';
     }
 
+    var checkAllNodes = document.getElementById("node-selection-mode");
+    var totalCheckbox = $(".document-checkbox-select").length;
+    var totalCheckboxSelect = $('.document-checkbox-select:checked').length;
+
+    if(totalCheckboxSelect > 0 && totalCheckboxSelect < totalCheckbox) {
+      checkAllNodes.checked = true;
+      checkAllNodes.indeterminate = true;
+    }else if(totalCheckboxSelect > 0 && totalCheckboxSelect === totalCheckbox) {
+      checkAllNodes.indeterminate = false;
+      checkAllNodes.checked = true;
+    }else{
+      checkAllNodes.indeterminate = false;
+      checkAllNodes.checked = false;
+    }
     self._commands.execute(
       SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, {'uuid': uuid, 'event': event});
   });
@@ -281,7 +296,7 @@ SolrDocumentTable.prototype._generateTableBody = function(solrResponse) {
     // drag marker (can't be wrapped in span - otherwise Safari won't show the
     // image of dragged content)
     s += '<td>' +
-         '<i class="icon-reorder refinery-dnd-handle" data-uuid="' +
+         '<i class="fa fa-bars refinery-dnd-handle" data-uuid="' +
          document["uuid"] + '" node-draggable draggable="true" node-uuid="' +
          document["uuid"] + '" style="-khtml-user-drag: element;"></i>' +
          '</td>';
@@ -308,7 +323,7 @@ SolrDocumentTable.prototype._generateTableBody = function(solrResponse) {
             }
             else {
               s += "<td title=\"Analysis " + document[entry] + "\">";
-              s += '<i class="icon-refresh icon-spin" style="padding: 2px"></i>';
+              s += '<i class="fa fa-refresh fa-spin" style="padding: 2px"></i>';
               s += "</td>";
             }
           }else if(self._isFilePath(entry)){
@@ -345,9 +360,9 @@ SolrDocumentTable.prototype._trimDocumentEntry = function(
     return string.substring(0, length) +
       "<span class=trimmedDocStr style='display:none'>" + trimmedChars +
       " </span>&nbsp;<a href='#' class='trimmedDocEntryArrow' id='right'>" +
-      indicator + "&nbsp;<i class='icon-chevron-sign-right'></i></a>" +
+      indicator + "&nbsp;<i class='fa fa-chevron-right'></i></a>" +
       "<a href='#' class='trimmedDocEntryArrow' id='left' style='display:none'>" +
-      "<i class='icon-chevron-sign-left'></i></a>";
+      "<i class='fa fa-chevron-left'></i></a>";
   }
   return string;
 };
@@ -361,11 +376,11 @@ SolrDocumentTable.prototype._trimFilePathEntry = function(
   if (string.length > length) {
     var trimFileName = self._getTrimFileName(string, length);
     return "<span class='trimmedFileName' id='right'>" +
-      "<a href='#' class='trimmedFilePathArrow'><i class='icon-chevron-sign-right'>" +
+      "<a href='#' class='trimmedFilePathArrow'><i class='fa fa-chevron-right'>" +
       "</i>&nbsp;"+ indicator + "</a>" + trimFileName +"</span>" +
       "<span class='entireFilePath' id='left' style='display:none;'>" +
       "<a href='#' class='trimmedFilePathArrow'>" +
-      "<i class='icon-chevron-sign-left'></i></a>&nbsp;" + string + " </span>";
+      "<i class='fa fa-chevron-left'></i></a>&nbsp;" + string + " </span>";
   }
   return string;
 };
@@ -407,6 +422,7 @@ SolrDocumentTable.prototype._generateTableHead = function(solrResponse) {
   row.push('<th align="left" width="0">' + '</th>');
   row.push('<th align="left" width="0" id="node-selection-column-header">' + nodeSelectionModeCheckbox + '</th>');
 
+
   // headers for additional columns
   for (var i = 0; i < self._additionalColumns.length; ++i) {
     var column = self._additionalColumns[i];
@@ -416,9 +432,9 @@ SolrDocumentTable.prototype._generateTableHead = function(solrResponse) {
   for (entry in fields) {
     if (fields.hasOwnProperty(entry) && fields[entry].isVisible && !fields[entry].isInternal && !( self._hiddenFieldNames.indexOf(entry) >= 0 )) {
       if (fields[entry].direction === "asc") {
-        row.push('<th align=left class="field-header-sort" data-fieldname="' + entry + '"><i class="icon-arrow-down"></i>&nbsp;' + prettifySolrFieldName(entry, true) + '</th>');
+        row.push('<th align=left class="field-header-sort" data-fieldname="' + entry + '"><i class="fa fa-arrow-down"></i>&nbsp;' + prettifySolrFieldName(entry, true) + '</th>');
       } else if (fields[entry].direction === "desc") {
-        row.push('<th align=left class="field-header-sort" data-fieldname="' + entry + '"><i class="icon-arrow-up"></i>&nbsp;' + prettifySolrFieldName(entry, true) + '</th>');
+        row.push('<th align=left class="field-header-sort" data-fieldname="' + entry + '"><i class="fa fa-arrow-up"></i>&nbsp;' + prettifySolrFieldName(entry, true) + '</th>');
       } else {
         row.push('<th align=left class="field-header-sort" data-fieldname="' + entry + '">' + prettifySolrFieldName(entry, true) + '</th>');
       }
@@ -437,11 +453,11 @@ SolrDocumentTable.prototype._generateDocumentsPerPageControl = function (parentE
   for (var i = 0; i < options.length; ++i) {
     if (options[i] == self._documentsPerPage) {
       $("#" + parentElementId).append(
-        '<button type="button" data-documents="' + options[i] + '" data-toggle="button" class="btn btn-mini active" rel="tooltip" data-placement="bottom" data-html="true" title="View ' + options[i] + ' rows per page">' + options[i] + '</button>');
+        '<button type="button" data-documents="' + options[i] + '" data-toggle="button" class="refinery-base btn btn-default btn-xs active" rel="tooltip" data-placement="bottom" data-html="true" title="View ' + options[i] + ' rows per page">' + options[i] + '</button>');
     }
     else {
       $("#" + parentElementId).append(
-        '<button type="button" data-documents="' + options[i] + '" data-toggle="button" class="btn btn-mini" rel="tooltip" data-placement="bottom" data-html="true" title="View ' + options[i] + ' rows per page">' + options[i] + '</button>');
+        '<button type="button" data-documents="' + options[i] + '" data-toggle="button" class="refinery-base btn btn-default btn-xs" rel="tooltip" data-placement="bottom" data-html="true" title="View ' + options[i] + ' rows per page">' + options[i] + '</button>');
     }
   }
 
@@ -486,9 +502,10 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function (parentElem
   }
 
   $("#" + parentElementId).html("");
-  var listHeader = '<a href="#" class="dropdown-toggle btn btn-mini btn-default" ' +
-      'data-toggle="dropdown"><i class="icon-wrench"></i>&nbsp;Columns&nbsp;' +
-      '<i class="icon-caret-down"></i></a>';
+  var listHeader = '<a href="#" class="dropdown-toggle refinery-base' +
+    'btn btn-xs btn-default" ' +
+      'data-toggle="dropdown"><i class="fa fa-wrench"></i>&nbsp;Columns&nbsp;' +
+      '<i class="fa fa-caret-down"></i></a>';
   var listId = parentElementId + "-list";
 
   if (visibleItems.length > 0) {
@@ -521,89 +538,105 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function (parentElem
   });
 };
 
-SolrDocumentTable.prototype._generatePagerControl = function(
-    parentElementId, visiblePages, padLower, padUpper) {
-  var self = this;
 
-  $("#" + parentElementId).html("");
 
-  var availablePages = Math.max(0, Math.floor((self._query.getCurrentDocumentCount(false) - 1) / self._documentsPerPage));
-  var currentPage = Math.floor(self._query.getDocumentIndex() / self._documentsPerPage);
+  SolrDocumentTable.prototype._generatePagerControl = function (parentElementId, visiblePages, padLower, padUpper) {
 
-  if (currentPage > availablePages) {
-    currentPage = availablePages;
-  }
+    var self = this;
+    //Hide paginator if getTotalDocumentCount() >= _documentsPerPage
+    if (self._query.getTotalDocumentCount() >= self._documentsPerPage && (self._query.getCurrentDocumentCount() >= self._documentsPerPage || self._query.getCurrentDocumentCount() >= 0)){
 
-  if (availablePages < visiblePages) {
-    if (currentPage < padLower) {
-      padUpper = padUpper + padLower;
-      padLower = currentPage;
-      padUpper = padUpper - padLower;
-    }
-  }
-  else if (currentPage < padLower) {
-    padUpper = padUpper + padLower;
-    padLower = currentPage;
-    padUpper = padUpper - padLower;
-  }
-  else if (currentPage > availablePages - padLower) {
-    padLower = padLower + padUpper - ( availablePages - currentPage );
-    padUpper = availablePages - currentPage;
-  }
+      $("#" + parentElementId).html("");
 
-  var items = [];
-  if (currentPage == 0) {
-    items.push("<li class=\"disabled\"><a>&laquo;</a></li>");
-  }
-  else {
-    items.push("<li><a href=\"#\" id=\"page-first\">&laquo;</a></li>");
-  }
+      var availablePages;
+        if(self._query.getCurrentDocumentCount() != 0){
+            availablePages = Math.max(0, Math.floor((self._query.getCurrentDocumentCount(false) - 1) / self._documentsPerPage));
+        }
+        else{
+            availablePages = Math.max(0, Math.floor((self._query.getTotalDocumentCount(false) - 1) / self._documentsPerPage));
+        }
+      var currentPage = Math.floor(self._query.getDocumentIndex() / self._documentsPerPage);
 
-  for (var i = currentPage - padLower; i <= currentPage + padUpper; ++i) {
-    if (i == currentPage) {
-      items.push("<li class=\"active\"><a href=\"#\" id=\"page-" + (i + 1) + "\">" + (i + 1) + "</a></li>")
-    }
-    else {
-      if (i > availablePages) {
-        items.push("<li class=\"disabled\"><a>" + (i + 1) + "</a></li>")
+      if (currentPage > availablePages) {
+        currentPage = availablePages;
+      }
+
+      if (availablePages < visiblePages) {
+        if (currentPage < padLower) {
+          padUpper = padUpper + padLower;
+          padLower = currentPage;
+          padUpper = padUpper - padLower;
+        }
+      }
+      else if (currentPage < padLower) {
+        padUpper = padUpper + padLower;
+        padLower = currentPage;
+        padUpper = padUpper - padLower;
+      }
+      else if (currentPage > availablePages - padLower) {
+        padLower = padLower + padUpper - ( availablePages - currentPage );
+        padUpper = availablePages - currentPage;
+      }
+
+      var items = [];
+      if (currentPage == 0) {
+        items.push("<li class=\"disabled\"><a>&laquo;</a></li>");
       }
       else {
-        items.push("<li><a href=\"#\" id=\"page-" + (i + 1) + "\">" + (i + 1) + "</a></li>")
+        items.push("<li><a href=\"#\" id=\"page-first\">&laquo;</a></li>");
+      }
+
+      for (var i = currentPage - padLower; i <= currentPage + padUpper; ++i) {
+        if (i == currentPage) {
+          items.push("<li class=\"active\"><a href=\"#\" id=\"page-" + (i + 1) + "\">" + (i + 1) + "</a></li>")
+        }
+        else {
+          if (i > availablePages) {
+            items.push("<li class=\"disabled\"><a>" + (i + 1) + "</a></li>")
+          }
+          else {
+            items.push("<li><a href=\"#\" id=\"page-" + (i + 1) + "\">" + (i + 1) + "</a></li>")
+          }
+        }
+      }
+
+      if (currentPage == availablePages) {
+        items.push("<li class=\"disabled\"><a>&raquo;</a></li>");
+      }
+      else {
+        items.push("<li><a href=\"#\" id=\"page-last\">&raquo;</a></li>")
+      }
+
+      $("#" + parentElementId).html("");
+
+      $('<div/>', {
+        html: "<ul class=\" pagination\">" + items.join('') + "</ul>"
+      }).appendTo("#" + parentElementId);
+
+      $("[id^=page-]").on("click", function () {
+
+        page = this.id.split("-")[1];
+
+        if (page === "first") {
+          currentPage = 0;
+        } else if (page === "last") {
+          currentPage = availablePages;
+        } else {
+          currentPage = page - 1;
+        }
+
+        self._query.setDocumentIndex(currentPage * self._documentsPerPage);
+        self._commands.execute(
+            SOLR_DOCUMENT_TABLE_PAGE_CHANGED_COMMAND, {'page': currentPage});
+      });
+        if (availablePages == 0)  {
+      $( ".pagination" ).css('display', 'none');
       }
     }
-  }
-
-  if (currentPage == availablePages) {
-    items.push("<li class=\"disabled\"><a>&raquo;</a></li>");
-  }
-  else {
-    items.push("<li><a href=\"#\" id=\"page-last\">&raquo;</a></li>")
-  }
-
-  $("#" + parentElementId).html("");
-
-  $('<div/>', {
-    'class': "pagination",
-    html: "<ul>" + items.join('') + "</ul>"
-  }).appendTo("#" + parentElementId);
-
-  $("[id^=page-]").on("click", function () {
-
-    page = this.id.split("-")[1];
-
-    if (page === "first") {
-      currentPage = 0;
-    } else if (page === "last") {
-      currentPage = availablePages;
-    } else {
-      currentPage = page - 1;
+    else {
+      $( ".pagination" ).css('display', 'none');
     }
-
-    self._query.setDocumentIndex(currentPage * self._documentsPerPage);
-    self._commands.execute(
-      SOLR_DOCUMENT_TABLE_PAGE_CHANGED_COMMAND, {'page': currentPage});
-  });
-};
+  };
 
 SolrDocumentTable.prototype._composeFieldId = function(field) {
   var self = this;

@@ -1,0 +1,24 @@
+<span ng-if="AMCtrl.analysesMsg.status=='SUCCESS'">
+   <div class="alert alert-success" data-dismiss="alert">
+     <a href='#' class="close analysis-alert" data-dismiss="alert">
+       <i class="fa fa-remove"></i>
+     </a>
+     <p>
+       Analysis {{ AMCtrl.analysesMsg.name }} finished
+       successfully. View the results in the file browser.
+     </p>
+  </div>
+</span>
+ <span ng-if="AMCtrl.analysesMsg.status=='FAILURE'">
+ <div class="alert alert-danger">
+  <a href="#" class="close analysis-alert" data-dismiss="alert">
+    <i class="fa fa-remove"></i>
+  </a>
+   <p>
+    Analysis {{ AMCtrl.analysesMsg.name }} failed.  No results were
+    added to your data set.
+   </p>
+  </div>
+
+</span>
+

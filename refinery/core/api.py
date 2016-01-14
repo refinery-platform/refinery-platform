@@ -8,19 +8,24 @@ import datetime
 import json
 import logging
 import re
+import os
 from sets import Set
 import uuid
+from celery.task import task
+from subprocess import check_output
 
 from django.conf import settings
 from django.conf.urls.defaults import url
 from django.contrib.auth.models import User, Group
 from django.contrib.sites.models import get_current_site
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMessage
 from django.template import loader, Context
-
-from guardian.shortcuts import get_objects_for_user, get_objects_for_group, \
-    get_perms
+from django.core.cache import cache
+from django.core.signing import Signer
+from guardian.shortcuts import get_objects_for_user, get_objects_for_group
+from guardian.models import GroupObjectPermission
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication, Authentication
 from tastypie.authorization import Authorization
@@ -41,10 +46,11 @@ from data_set_manager.api import StudyResource, AssayResource, \
     InvestigationResource
 from data_set_manager.models import Node, Study, Attribute
 from file_store.models import FileStoreItem
-
 from fadapa import Fadapa
+from core.utils import get_all_data_sets_ids, get_data_sets_annotations
 
 logger = logging.getLogger(__name__)
+signer = Signer()
 
 
 # Specifically made for descendants of SharableResource.
@@ -98,18 +104,18 @@ class SharableResourceAPIInterface(object):
     # options may require going to the SharableResource class and adding them.
 
     # Apply filters.
-    def query_filtering(self, res_list, get_req_dict):
-        mod_list = res_list
-
-        for k in get_req_dict:
+    def query_filtering(self, res_list, get_params):
+        for param in get_params:
             # Skip if res does not have the attribute. Done to help avoid
             # whatever internal filtering can be performed on other things,
             # like limiting the return amount.
-            mod_list = [x for x in mod_list
-                        if not hasattr(x, k) or
-                        str(getattr(x, k)) == get_req_dict[k]]
+            res_list = [
+                dataset for dataset in res_list
+                if not hasattr(dataset, param) or
+                str(getattr(dataset, param)) == get_params[param]
+            ]
 
-        return mod_list
+        return res_list
 
     def build_res_list(self, user):
         if user.is_authenticated():
@@ -126,24 +132,84 @@ class SharableResourceAPIInterface(object):
     # Turns on certain things depending on flags
     def transform_res_list(self, user, res_list, request, **kwargs):
 
-        owned_res_set = Set(
-            get_objects_for_user(
-                user,
-                'core.share_%s' %
-                self.res_type._meta.verbose_name).values_list("id", flat=True))
-        public_res_set = Set(
-            get_objects_for_group(
-                ExtendedGroup.objects.public_group(),
-                'core.read_%s' %
-                self.res_type._meta.verbose_name).values_list("id", flat=True))
+        try:
+            user_uuid = user.userprofile.uuid
+        except AttributeError:
+            logger.error('User\'s UUID not available.')
+            user_uuid = None
 
-        # instantiate owner and public fields
-        for res in res_list:
-            setattr(res, 'is_owner', res.id in owned_res_set)
-            setattr(res, 'public', res.id in public_res_set)
+        # Try and retrieve a cached resource based on model name
+        # provide uniqueness between cached resources w/
+        # res_list_unique
+        try:
+            res_list_unique = res_list.model.__name__
+        except AttributeError as e:
+            logger.error(
+                'Res_list doesn\'t seem to have a model name. Error: %s', e
+            )
+            res_list_unique = None
 
-            if 'sharing' in kwargs and kwargs['sharing']:
-                setattr(res, 'share_list', self.get_share_list(user, res))
+        cache_check = None
+        if res_list_unique is not None:
+            try:
+                cache_check = cache.get('{}-{}'.format(
+                    user.id, res_list_unique))
+            except Exception as e:
+                logger.error(
+                    'Something went wrong with retrieving the cached res_list.'
+                    ' Error: %s', e
+                )
+
+        if cache_check is None:
+            owned_res_set = Set(
+                get_objects_for_user(
+                    user,
+                    'core.share_%s' %
+                    self.res_type._meta.verbose_name).values_list("id",
+                                                                  flat=True))
+
+            public_res_set = Set(
+                get_objects_for_group(
+                    ExtendedGroup.objects.public_group(),
+                    'core.read_%s' %
+                    self.res_type._meta.verbose_name).values_list("id",
+                                                                  flat=True))
+
+            # Get content type, needed to map Guardian group permission.
+            content_type = ContentType.objects.get(model='dataset')
+
+            shared_res_dict = {res.id: GroupObjectPermission.objects.filter(
+                content_type_id=content_type.id,
+                object_pk=res.id
+            ).count() for res in res_list}
+
+            # instantiate owner and public fields
+            for res in res_list:
+                is_owner = res.id in owned_res_set
+                setattr(res, 'is_owner', is_owner)
+                setattr(
+                    res,
+                    'owner',
+                    user_uuid if is_owner else None
+                )
+                setattr(
+                    res,
+                    'public',
+                    True if res.id in public_res_set else False
+                )
+                setattr(
+                    res,
+                    'is_shared',
+                    shared_res_dict[res.id] > 0
+                )
+
+                if 'sharing' in kwargs and kwargs['sharing']:
+                    setattr(res, 'share_list', self.get_share_list(user, res))
+
+            if user_uuid and res_list_unique:
+                cache.add('{}-{}'.format(user.id, res_list_unique), res_list)
+        else:
+            res_list = cache_check
 
         # Filter for query flags.
         res_list = self.query_filtering(res_list, request.GET)
@@ -336,11 +402,32 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
         return filter(lambda o: not o.is_catch_all, obj_list)
 
 
+class UserResource(ModelResource):
+    class Meta:
+        queryset = User.objects.all()
+        allowed_methods = ['get']
+        excludes = ('is_active', 'is_staff', 'is_superuser', 'last_login',
+                    'password', 'date_joined')
+
+
+class UserProfileResource(ModelResource):
+    user = fields.ForeignKey(UserResource, 'user', full=True)
+
+    class Meta:
+        queryset = UserProfile.objects.all()
+        detail_uri_name = 'uuid'
+        resource_name = 'users'
+        authentication = Authentication()
+        authorization = Authorization()
+
+
 class DataSetResource(ModelResource, SharableResourceAPIInterface):
     uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
+    owner = fields.CharField(attribute='owner', null=True)
+    is_shared = fields.BooleanField(attribute='is_shared', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, DataSet)
@@ -358,6 +445,15 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             'is_owner': ALL,
             'public': ALL
         }
+
+    def dehydrate(self, bundle):
+        if not bundle.data['owner']:
+            owner = bundle.obj.get_owner()
+            try:
+                bundle.data['owner'] = owner.userprofile.uuid
+            except:
+                pass
+        return bundle
 
     def apply_sorting(self, obj_list, options=None):
         """Manually sorting the list of objects returned by
@@ -391,29 +487,45 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
     def prepend_urls(self):
         prepend_urls_list = SharableResourceAPIInterface.prepend_urls(self) + [
+            url(r'^(?P<resource_name>%s)/ids%s$' % (
+                    self._meta.resource_name,
+                    trailing_slash()
+                ),
+                self.wrap_view('get_all_ids'),
+                name='api_%s_get_all_ids' % (
+                    self._meta.resource_name)
+                ),
+            url(r'^(?P<resource_name>%s)/annotations%s$' % (
+                    self._meta.resource_name,
+                    trailing_slash()
+                ),
+                self.wrap_view('get_all_annotations'),
+                name='api_%s_get_all_annotations' % (
+                    self._meta.resource_name)
+                ),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/investigation%s$' % (
-                self._meta.resource_name,
-                self.uuid_regex,
-                trailing_slash()
-            ),
+                    self._meta.resource_name,
+                    self.uuid_regex,
+                    trailing_slash()
+                ),
                 self.wrap_view('get_investigation'),
                 name='api_%s_get_investigation' % (
                     self._meta.resource_name)
                 ),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/studies%s$' % (
-                self._meta.resource_name,
-                self.uuid_regex,
-                trailing_slash()
-            ),
+                    self._meta.resource_name,
+                    self.uuid_regex,
+                    trailing_slash()
+                ),
                 self.wrap_view('get_studies'),
                 name='api_%s_get_studies' % (
                     self._meta.resource_name
                 )),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/analyses%s$' % (
-                self._meta.resource_name,
-                self.uuid_regex,
-                trailing_slash()
-            ),
+                    self._meta.resource_name,
+                    self.uuid_regex,
+                    trailing_slash()
+                ),
                 self.wrap_view('get_analyses'),
                 name='api_%s_get_analyses' % (
                     self._meta.resource_name
@@ -445,6 +557,19 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
+
+    def get_all_ids(self, request, **kwargs):
+        # See here why `get_all_data_sets_ids()` has to be wrapped in `list()`
+        # http://stackoverflow.com/q/12609604/981933
+        return self.create_response(
+            request,
+            {
+                'ids': [data_set['id'] for data_set in get_all_data_sets_ids()]
+            }
+        )
+
+    def get_all_annotations(self, request, **kwargs):
+        return self.create_response(request, get_data_sets_annotations())
 
     def get_investigation(self, request, **kwargs):
         try:
@@ -622,7 +747,7 @@ class AnalysisResource(ModelResource):
             'modification_date', 'history_id', 'library_id', 'name',
             'workflow__uuid', 'resource_uri', 'status', 'time_end',
             'time_start', 'uuid', 'workflow_galaxy_id', 'workflow_steps_num',
-            'workflow_copy'
+            'workflow_copy', 'owner', 'is_owner'
         ]
         filtering = {
             'data_set': ALL_WITH_RELATIONS,
@@ -632,6 +757,23 @@ class AnalysisResource(ModelResource):
             'uuid': ALL
         }
         ordering = ['name', 'creation_date', 'time_start', 'time_end']
+
+    def dehydrate(self, bundle):
+        bundle.data['is_owner'] = False
+        owner = bundle.obj.get_owner()
+        if owner:
+            try:
+                bundle.data['owner'] = owner.userprofile.uuid
+                user = bundle.request.user
+                if (hasattr(user, 'userprofile') and
+                        user.userprofile.uuid == bundle.data['owner']):
+                    bundle.data['is_owner'] = True
+            except:
+                bundle.data['owner'] = None
+
+        else:
+            bundle.data['owner'] = None
+        return bundle
 
     def get_object_list(self, request, **kwargs):
         user = request.user
@@ -947,6 +1089,7 @@ class StatisticsResource(Resource):
         return self.get_object_list(bundle.request)
 
     def get_object_list(self, request):
+
         user_count = User.objects.count()
         group_count = Group.objects.count()
         files_count = FileStoreItem.objects.count()

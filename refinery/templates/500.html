@@ -12,7 +12,7 @@
 
 {% block content %}
 <div class="refinery-panel refinery-panel-content scrollable">
-	<div class="row-fluid">
+	<div class="row">
 		<div class="refinery-header">
 			<span class="refinery-header-left">
 				<h3>Server Problem</h3>
@@ -20,7 +20,8 @@
 		</div>
 		<p>
 			The server encountered an internal error or misconfiguration and was unable to complete your request.<br /><br />
-			Please contact {{REFINERY_CONTACT_EMAIL}} if this is a recurring problem and describe anything you might have done that may have caused the error.
+			Please contact your <a href='mailto:{{ADMINS.0.1}}?Subject=Refinery%20Error' target='_top'>System Administrator</a> if this is a recurring problem and describe
+            anything you might have done that may have caused the error.
 		</p>
 	</div>
 </div>

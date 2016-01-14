@@ -121,6 +121,7 @@ SolrFacetView.prototype._renderTree = function( solrResponse ) {
 SolrFacetView.prototype._generateTree = function( solrResponse ) {
 	var self = this;			
 	var facetCounts = solrResponse._facetCounts;
+	var visibleFacetCount = 0;
 
 	for ( var i = 0; i < configurator.state.objects.length; ++i ) {
 		var attribute = configurator.state.objects[i];
@@ -137,9 +138,9 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 			continue;
 		}
 
-	
 		if ( attribute.is_facet && attribute.is_exposed && !attribute.is_internal &&
 			self._countFacetValues(attribute.solr_field, facetCounts) > 1 ) {
+			visibleFacetCount = visibleFacetCount + 1;
 			//facets[attribute.solr_field] = [];
       //Commented out the following methods which are not being used.
 	    //var counts = self._query.getNumberOfFacetValues( attribute.solr_field );
@@ -172,7 +173,7 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 	
 			// user chooses to open collapsed facet
 		   	$("#" + self._composeFacetId( attribute.solr_field + "___inactive" ) )
-					.on( "show", function() {
+					.on( "show.bs.collapse", function() {
 		   		var facet = self._decomposeFacetId( this.id ).facet;
 				
 				// add facet to list of expanded facets for this view
@@ -183,12 +184,13 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 					.html( self._getFacetLabel( facet, facetCounts ) );
 				
 				// hide active facet section (to avoid showing duplicate facet values)
-		   		$( "#" + self._composeFacetId( facet + "___active" ) ).hide(); //slideUp( "slow" );		   			
+		   		$( "#" + self._composeFacetId( facet + "___active" )).addClass("hidden");
 		   	});						
 	
 			// user chooses to close expanded facet
 		   	$("#" + self._composeFacetId( attribute.solr_field + "___inactive" ) )
-					.on( "hide", function() {
+					.on( "hidden.bs.collapse", function() {
+
 		   		var facet = self._decomposeFacetId( this.id ).facet;
 		   		
 				// remove facet from list of expanded facets for this view
@@ -199,22 +201,18 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
           .html( self._getFacetLabel( facet, facetCounts ) );
 		   		
 				// show active facet section
-	   			$( "#" + self._composeFacetId( facet + "___active" ) ).removeClass( "hidden" );
-	   			$( "#" + self._composeFacetId( facet + "___active" ) ).fadeIn( "slow" ); //slideDown( "slow");
+	   			$( "#" + self._composeFacetId( facet + "___active" )).fadeIn("slow").removeClass( "hidden" );
 		   	});
 		}											
 	}	
 
-	var visibleFacetCount = 0;
 	for (var facet in facetCounts) {
 
 			if (facetCounts.hasOwnProperty(facet)) {
-				visibleFacetCount = visibleFacetCount + 1;
 				var unselectedItems = [];
 				var selectedItems = [];
 
 				var facetValues = facetCounts[facet];
-
 				for (var facetValue in facetValues) {
 					if (facetValues.hasOwnProperty(facetValue)) {
 
@@ -236,16 +234,15 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 								count: facetValueCount,
 								isSelected: self._query._facetSelection[facet][facetValue].isSelected
 							};
-
 							selectedItems.push("<tr class=\"facet-value\" id=\"" +
 								self._composeFacetValueId(facet, facetValue) + "\"><td>" +
-								'<label class="checkbox"><input type="checkbox" checked></label>' +
-								"</td><td width=100%>" + facetValue + "</td><td align=right>" +
+								'<input type="checkbox" checked>' +
+								"</td><td>" + facetValue + "</td><td align=right>" +
 								facetValueCount + "</td>" + "</tr>");
 							unselectedItems.push("<tr class=\"facet-value\" id=\"" +
 								self._composeFacetValueId(facet, facetValue) + "\"><td>" +
-								'<label class="checkbox"><input type="checkbox" checked></label>' +
-								"</td><td width=100%>" + facetValue + "</td><td align=right>" +
+								'<input type="checkbox" checked>' +
+								"</td><td>" + facetValue + "</td><td align=right>" +
 								facetValueCount + "</td>" + "</tr>");
 						}
 						else {
@@ -253,11 +250,10 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 								count: facetValueCount,
 								isSelected: self._query._facetSelection[facet][facetValue].isSelected
 							};
-
 							unselectedItems.push("<tr class=\"facet-value\" id=\"" +
 								self._composeFacetValueId(facet, facetValue) + "\"><td>" +
-								'<label class="checkbox"><input type="checkbox"></label>' +
-								"</td><td width=100%>" + facetValue + "</td><td align=right>" +
+								'<input type="checkbox">' +
+								"</td><td>" + facetValue + "</td><td align=right>" +
 								facetValueCount + "</td><td></td>" + "</tr>");
 						}
 					}
@@ -286,10 +282,10 @@ SolrFacetView.prototype._getFacetLabel = function( facet, facetObj ) {
   var facetValueCount = self._countFacetValues(facet,facetObj);
 
 	if ( self._isFacetExpanded( facet ) ) {
-		indicator = "icon-caret-down";
+		indicator = "fa fa-caret-down";
 	}
 	else {
-		indicator = "icon-caret-right";
+		indicator = "fa fa-caret-right";
 	}
 
 	return ( '<span style="width: 10px; text-align: center; display: inline-block;">' +

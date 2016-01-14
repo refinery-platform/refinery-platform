@@ -4,22 +4,29 @@ Created on Feb 20, 2012
 @author: nils
 '''
 from __future__ import absolute_import
+
+from urlparse import urljoin
+
 from datetime import datetime
 import logging
 import os
 import smtplib
 import socket
-
+import pysolr
+from django import forms
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User, Group, Permission
 from django.contrib.auth.signals import user_logged_in
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.messages import get_messages
+from django.contrib.messages import info
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.mail import mail_admins, send_mail
 from django.db import models, transaction
 from django.db.models import Max
 from django.db.models.fields import IntegerField
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, pre_delete, post_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
 
@@ -27,12 +34,16 @@ from bioblend import galaxy
 from django_extensions.db.fields import UUIDField
 from django_auth_ldap.backend import LDAPBackend
 from guardian.shortcuts import get_users_with_perms, \
-    get_groups_with_perms, assign_perm, remove_perm
+    get_groups_with_perms, assign_perm, remove_perm, get_objects_for_group
 from registration.signals import user_registered, user_activated
 from data_set_manager.models import Investigation, Node, Study, Assay
 from file_store.models import get_file_size, FileStoreItem
 from galaxy_connector.models import Instance
-from .utils import index_data_set
+from .utils import update_data_set_index, delete_data_set_index, \
+    add_read_access_in_neo4j, remove_read_access_in_neo4j, \
+    delete_data_set_neo4j, delete_ontology_from_neo4j, \
+    delete_analysis_index, invalidate_cached_object
+from guardian.models import UserObjectPermission
 
 
 logger = logging.getLogger(__name__)
@@ -53,13 +64,13 @@ NR_TYPES = (
 
 class UserProfile (models.Model):
     """Extends Django user model:
-    https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional-information-about-users
+    https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional
+    -information-about-users
     """
     uuid = UUIDField(unique=True, auto=True)
     user = models.OneToOneField(User)
     affiliation = models.CharField(max_length=100, blank=True)
     catch_all_project = models.ForeignKey('Project', blank=True, null=True)
-    is_public = models.BooleanField(default=False, blank=False, null=False)
 
     def __unicode__(self):
         return (
@@ -124,8 +135,17 @@ user_registered.connect(
 )
 
 
+def messages_dedup(request, msg):
+    # Gets rid duplicate messages in the message queue, provided w/ a
+    # message  to check for
+    if msg not in [m.message for m in get_messages(request)]:
+        info(request, msg)
+
+
 def register_handler(request, sender, user, **kwargs):
+    messages_dedup(request, 'Thank you!  Your account has been activated.')
     messages.success(request, 'Thank you!  Your account has been activated.')
+
 
 user_activated.connect(register_handler, dispatch_uid='activated')
 
@@ -155,7 +175,8 @@ user_logged_in.connect(create_catch_all_project)
 class BaseResource (models.Model):
     """Abstract base class for core resources such as projects, analyses,
     datasets and so on. See
-    https://docs.djangoproject.com/en/1.3/topics/db/models/#abstract-base-classes
+    https://docs.djangoproject.com/en/1.3/topics/db/models/#abstract
+    -base-classes
     for details.
     """
     uuid = UUIDField(unique=True, auto=True)
@@ -171,6 +192,44 @@ class BaseResource (models.Model):
 
     class Meta:
         abstract = True
+
+    def clean(self):
+        # Check if model being saved/altered in Django Admin has a slug
+        # duplicated elsewhere.
+        if self.slug:
+            try:
+                self.__class__.objects.filter(slug=self.slug).exclude(
+                    pk=self.pk).get(slug=self.slug)
+            except self.DoesNotExist:
+                pass
+            else:
+                raise forms.ValidationError("%s with slug: %s "
+                                            "already exists!"
+                                            % (self.__class__.__name__,
+                                               self.slug))
+
+    # Overriding save() method to disallow saving objects with duplicate slugs
+    def save(self, *args, **kwargs):
+        if self.slug:
+            try:
+                self.__class__.objects.filter(slug=self.slug).exclude(
+                    pk=self.pk).get(slug=self.slug)
+            except self.DoesNotExist:
+                try:
+                    super(BaseResource, self).save(*args, **kwargs)
+                except Exception as e:
+                    logger.error("Could not save %s: %s" % (
+                        self.__class__.__name__, e))
+            else:
+                logger.error("%s with slug: %s already exists!" % (
+                    self.__class__.__name__, self.slug))
+        else:
+            try:
+                super(BaseResource, self).save(*args, **kwargs)
+            except Exception as e:
+                logger.error("Could not save %s: %s" % (
+                    self.__class__.__name__, e))
+        invalidate_cached_object(self)
 
 
 class OwnableResource (BaseResource):
@@ -370,9 +429,31 @@ class DataSet(SharableResource):
         )
 
     def __unicode__(self):
-        return (self.name + " - " +
-                self.get_owner_username() + " - " +
-                self.summary)
+        return (
+            unicode(self.name) + u' - ' +
+            unicode(self.get_owner_username()) + u' - ' +
+            unicode(self.summary)
+        )
+
+    def get_owner(self):
+        owner = None
+
+        content_type_id = ContentType.objects.get_for_model(self).id
+        permission_id = Permission.objects.filter(codename='add_dataset')[0].id
+
+        perms = UserObjectPermission.objects.filter(
+            content_type_id=content_type_id,
+            permission_id=permission_id,
+            object_pk=self.id
+        )
+
+        if perms.count() > 0:
+            try:
+                owner = User.objects.get(id=perms[0].user_id)
+            except User.DoesNotExist:
+                pass
+
+        return owner
 
     def set_investigation(self, investigation, message=""):
         """Associate this data set with an investigation. If this data set has
@@ -479,11 +560,45 @@ class DataSet(SharableResource):
 
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
-        index_data_set(self)
+        update_data_set_index(self)
+        invalidate_cached_object(self)
+        user_ids = map(lambda user: user.id, group.user_set.all())
+
+        # We need to give the anonymous user read access too.
+        if group.id == ExtendedGroup.objects.public_group().id:
+            user_ids.append(-1)
+
+        add_read_access_in_neo4j(
+            [self.uuid],
+            user_ids
+        )
 
     def unshare(self, group):
         super(DataSet, self).unshare(group)
-        index_data_set(self)
+        update_data_set_index(self)
+        # Need to check if the users of the group that is unshared still have
+        # access via other groups or by ownership
+        users = group.user_set.all()
+        user_ids = []
+        for user in users:
+            if not user.has_perm('core.read_dataset', DataSet):
+                user_ids.append(user.id)
+
+        # We need to give the anonymous user read access too.
+        if group.id == ExtendedGroup.objects.public_group().id:
+            user_ids.append(-1)
+
+        if user_ids:
+            remove_read_access_in_neo4j(
+                [self.uuid],
+                user_ids
+            )
+
+
+@receiver(pre_delete, sender=DataSet)
+def _dataset_delete(sender, instance, *args, **kwargs):
+    delete_data_set_index(instance)
+    delete_data_set_neo4j(instance.uuid)
 
 
 class InvestigationLink(models.Model):
@@ -661,6 +776,13 @@ class AnalysisResult(models.Model):
     def __unicode__(self):
         return str(self.file_name) + " <-> " + self.analysis_uuid
 
+    class Meta:
+        verbose_name = "analysis result"
+        verbose_name_plural = "analysis results"
+        permissions = (
+            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
+        )
+
 
 class Analysis(OwnableResource):
 
@@ -772,6 +894,28 @@ WORKFLOW_NODE_CONNECTION_TYPES = (
     (INPUT_CONNECTION, 'in'),
     (OUTPUT_CONNECTION, 'out'),
 )
+
+
+# Deletes Analyses' related NodeIndexes from Solr upon deletion
+@receiver(pre_delete, sender=Analysis)
+def _analysis_delete(sender, instance, *args, **kwargs):
+    node_conections = AnalysisNodeConnection.objects.filter(analysis=instance)
+    for item in node_conections:
+        if item.node and "Derived" in item.node.type:
+            try:
+                delete_analysis_index(item.node)
+            except Exception as e:
+                logger.debug("No NodeIndex exists in Solr with id %s: %s",
+                             item.id, e)
+
+    solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
+                               "data_set_manager"),
+                       timeout=10)
+    """
+        solr.optimize() Tells Solr to streamline the number of segments used,
+        essentially a defragmentation/ garbage collection operation.
+    """
+    solr.optimize()
 
 
 class AnalysisNodeConnection(models.Model):
@@ -890,6 +1034,13 @@ class ExtendedGroup(Group):
             return (self.managed_group.all()[0])
         except:
             return None
+
+    def save(self, *args, **kwargs):
+        if len(self.name) == 0:
+            logger.error("Group name cannot be empty.")
+            return
+        else:
+            super(ExtendedGroup, self).save(*args, **kwargs)
 
 
 # automatic creation of a managed group when an extended group is created:
@@ -1240,3 +1391,124 @@ class Invitation(models.Model):
 class FastQC(object):
     def __init__(self, data=None):
         self.data = data
+
+
+@receiver(post_save, sender=User)
+def _add_user_to_neo4j(sender, **kwargs):
+    add_read_access_in_neo4j(
+        map(
+            lambda ds: ds.uuid, get_objects_for_group(
+                ExtendedGroup.objects.public_group(),
+                'core.read_dataset'
+            )
+        ),
+        [kwargs['instance'].id]
+    )
+
+
+class Ontology (models.Model):
+    """Store meta information of imported ontologies
+    """
+
+    # Stores the most recent import date, i.e. this will be overwritten when a
+    # ontology is re-imported.
+    import_date = models.DateTimeField(
+        default=datetime.now,
+        editable=False,
+        auto_now=False
+    )
+
+    # Full name of the ontology
+    # E.g.: Gene Ontology
+    name = models.CharField(max_length=64, blank=True)
+
+    # Equals the abbreviation / acronym / prefix specified during the import.
+    # Note that prefix constist of uppercase letters only. Similar to the OBO
+    # naming convention.
+    # E.g.: GO
+    acronym = models.CharField(max_length=8, blank=True, unique=True)
+
+    # Base URI of the ontology
+    # E.g.: http://purl.obolibrary.org/obo/go.owl
+    uri = models.CharField(max_length=128, blank=True, unique=True)
+
+    # Stores the most recent date when the model was updated in whatever way.
+    update_date = models.DateTimeField(auto_now=True)
+
+    # Stores the versionIRI of the ontology. Can be useful to check which
+    # version is currently imported.
+    version = models.CharField(
+        max_length=256,
+        null=True,
+        blank=True
+    )
+
+    # Stores the version of Owl2Neo4J. This can be helpful to figure out which
+    # ontology needs a re-import when the parser changed dramatically
+    owl2neo4j_version = models.CharField(
+        max_length=16,
+        null=True
+    )
+
+    def __unicode__(self):
+        return '{name} ({acronym})'.format(
+            name=self.name,
+            acronym=self.acronym
+        )
+
+
+@receiver(pre_delete, sender=Ontology)
+def _ontology_delete(sender, instance, *args, **kwargs):
+    delete_ontology_from_neo4j(instance.acronym)
+
+
+# http://web.archive.org/web/20140826013240/http://codeblogging.net/blogs/1/14/
+def get_subclasses(classes, level=0):
+    """
+        Return the list of all subclasses given class (or list of classes) has.
+        Inspired by this question:
+        http://stackoverflow.com/questions/3862310/how-can-i-find-all-
+        subclasses-of-a-given-class-in-python
+    """
+    # for convenience, only one class can can be accepted as argument
+    # converting to list if this is the case
+    if not isinstance(classes, list):
+        classes = [classes]
+
+    if level < len(classes):
+        classes += classes[level].__subclasses__()
+        return get_subclasses(classes, level+1)
+    else:
+        return classes
+
+
+def receiver_subclasses(signal, sender, dispatch_uid_prefix, **kwargs):
+    """
+    A decorator for connecting receivers and all receiver's subclasses to
+    signals. Used by passing in the signal and keyword arguments to connect::
+        @receiver_subclasses(post_save, sender=MyModel)
+        def signal_receiver(sender, **kwargs):
+            ...
+    """
+    def _decorator(func):
+        all_senders = get_subclasses(sender)
+        for snd in all_senders:
+            signal.connect(func, sender=snd,
+                           dispatch_uid=dispatch_uid_prefix+'_'+snd.__name__,
+                           **kwargs)
+        return func
+    return _decorator
+
+
+@receiver_subclasses(post_delete, BaseResource, "baseresource_post_delete")
+def _baseresource_delete(sender, instance, **kwargs):
+    # Handles the invalidation of cached objects
+    # that have BaseResource as a subclass after a delete
+    invalidate_cached_object(instance)
+
+
+@receiver_subclasses(post_save, BaseResource, "baseresource_post_save")
+def _baseresource_save(sender, instance, **kwargs):
+    # Handles the invalidation of cached objects
+    # that have BaseResource as a subclass after a save
+    invalidate_cached_object(instance)

@@ -17,6 +17,7 @@ Example: FILE_STORE_DIR = 'files'
 import os
 import re
 import logging
+from datetime import datetime
 from urlparse import urlparse, urljoin
 from celery.result import AsyncResult
 from django.conf import settings
@@ -26,7 +27,6 @@ from django.db.models.signals import pre_delete
 from django_extensions.db.fields import UUIDField
 from django.contrib.sites.models import Site
 from django.core.files.storage import FileSystemStorage
-
 
 logger = logging.getLogger('file_store')
 
@@ -51,7 +51,7 @@ def _mkdir(path):
 
 # configure and create file store directories
 if not settings.FILE_STORE_DIR:
-    settings.FILE_STORE_DIR = 'file_store'   # relative to MEDIA_ROOT
+    settings.FILE_STORE_DIR = 'file_store'  # relative to MEDIA_ROOT
 
 # absolute path to the file store root dir
 FILE_STORE_BASE_DIR = os.path.join(settings.MEDIA_ROOT,
@@ -112,77 +112,7 @@ VCF = 'vcf'
 WIG = 'wig'
 XML = 'xml'
 ZIP = 'zip'
-UNKNOWN = ''    # special catch-all type with no corresponding extension
-
-# file types with descriptions used by FileStoreItem.filetype choice field
-FILE_TYPES = (
-    # (type, description) in alphabetical order for convenience
-    (BAM, 'Binary compressed SAM'),
-    (BED, 'BED file'),
-    (BIGBED, 'Big BED'),
-    (BIGWIG, 'Big WIG'),
-    (CBS, 'Circular Binary Segmentation File'),  # see SEG below
-    (CEL, 'Affymetrix Probe Results file'),
-    (CSV, 'Comma Separated Values'),
-    (ELAND, 'Eland file'),
-    (GFF, 'GFF file'),
-    (GTF, 'GTF file'),
-    (GZ, 'Gzip compressed archive'),
-    (HTML, 'Hypertext Markup Language'),
-    (IDF, 'IDF file'),
-    (FASTA, 'FASTA file'),
-    (FASTQ, 'FASTQ file'),
-    (FASTQCSANGER, 'FASTQC Sanger'),
-    (FASTQILLUMINA, 'FASTQ Illumina'),
-    (FASTQSANGER, 'FASTQ Sanger'),
-    (FASTQSOLEXA, 'FASTQ Solexa'),
-    (PDF, 'Portable Document Format'),
-    (SAM, 'Sequence Alignment/Map'),
-    (SEG, 'Segmented Data File'),  # http://broadinstitute.org/software/igv/SEG
-    (TABULAR, 'Tabular file'),
-    (TDF, 'TDF file'),
-    (TGZ, 'Gzip compressed tar archive'),
-    (TXT, 'Text file'),
-    (VCF, 'Variant Call Format'),
-    (WIG, 'Wiggle Track Format'),
-    (XML, 'XML file'),
-    (ZIP, 'Zip compressed archive'),
-    (UNKNOWN, 'Unknown file type'),
-)
-
-# mapping of file extensions to file types
-# in alphabetical order by type with extensions of the same type
-# located on the same line for convenience
-FILE_EXTENSIONS = {
-    'bam': BAM,
-    'bed': BED,
-    'bigbed': BIGBED, 'bb': BIGBED,
-    'bigwig': BIGWIG,
-    'cel': CEL,
-    'csv': CSV,
-    'eland': ELAND,
-    'gff': GFF,
-    'gtf': GTF,
-    'gz': GZ,
-    'idf': IDF,
-    'fasta': FASTA,
-    'fastq': FASTQ,
-    'fastqcsanger': FASTQCSANGER,
-    'fastqillumina': FASTQILLUMINA,
-    'fastqsanger': FASTQSANGER,
-    'fastqsolexa': FASTQSOLEXA,
-    'html': HTML,
-    'pdf': PDF,
-    'sam': SAM,
-    'tabular': TABULAR,
-    'tdf': TDF, 'igv.tdf': TDF,
-    'tgz': TGZ,
-    'txt': TXT,
-    'vcf': VCF,
-    'wig': WIG,
-    'xml': XML,
-    'zip': ZIP,
-}
+UNKNOWN = ''  # special catch-all type with no corresponding extension
 
 
 def file_path(instance, filename):
@@ -232,6 +162,7 @@ def generate_file_source_translator(username='', base_path=''):
     username: user's subdirectory in settings.REFINERY_DATA_IMPORT_DIR
     base_path: absolute path to prepend to source if source is relative
     """
+
     def translate(source):
         """Convert file source to absolute path
         source: URL, absolute or relative file system path
@@ -250,12 +181,26 @@ def generate_file_source_translator(username='', base_path=''):
             raise ValueError("Failed to translate relative source path: "
                              "must provide either username or base_path")
         return source
+
     return translate
+
+
+class FileType(models.Model):
+    #: name of file extension
+    name = models.CharField(max_length=50)
+    #: short description of file extension
+    description = models.CharField(max_length=250)
+    #: file extension associated with the filename
+    extension = models.CharField(unique=True, max_length=50)
+
+    def __unicode__(self):
+        return self.description
 
 
 class _FileStoreItemManager(models.Manager):
     """Custom model manager to handle creation and retrieval of FileStoreItems
     """
+
     def create_item(self, source, sharename='', filetype=''):
         """A "constructor" for FileStoreItem.
 
@@ -273,8 +218,8 @@ class _FileStoreItemManager(models.Manager):
         item.set_filetype(filetype)
 
         # symlink if source is a file system path outside of the import dir
-        if (os.path.isabs(item.source) and
-                settings.REFINERY_DATA_IMPORT_DIR not in item.source):
+        if (os.path.isabs(item.source) and settings.
+                REFINERY_DATA_IMPORT_DIR not in item.source):
             item.symlink_datafile()
 
         return item
@@ -302,6 +247,7 @@ class SymlinkedFileSystemStorage(FileSystemStorage):
     '''Custom file system storage class with support for symlinked files.
 
     '''
+
     def exists(self, name):
         # takes broken symlinks into account
         return os.path.lexists(self.path(name))
@@ -330,9 +276,15 @@ class FileStoreItem(models.Model):
     # particular group
     sharename = models.CharField(max_length=20, blank=True)
     #: type of the file
-    filetype = models.CharField(max_length=15, choices=FILE_TYPES, blank=True)
+    filetype = models.ForeignKey(FileType, default=33)
     #: file import task ID
     import_task_id = UUIDField(blank=True)
+    # Date created
+    created = models.DateTimeField(auto_now_add=True, default=datetime.now,
+                                   blank=True)
+    # Date updated
+    updated = models.DateTimeField(auto_now=True, default=datetime.now,
+                                   blank=True)
 
     objects = _FileStoreItemManager()
 
@@ -374,7 +326,7 @@ class FileStoreItem(models.Model):
         # try to get extension from file on disk if exists
         if self.datafile.name:
             return get_extension_from_path(self.datafile.name)
-        else:   # otherwise get it from file source
+        else:  # otherwise get it from file source
             if os.path.isabs(self.source):
                 return get_extension_from_path(self.source)
             else:
@@ -414,22 +366,33 @@ class FileStoreItem(models.Model):
         :returns: True if success, False if failure.
 
         '''
-        # if type wasn't provided guess it from extension
-        if not filetype:
-            filetype = self.get_file_extension().lstrip('.')
-
-        filetype = filetype.lower()
         # make sure the file type is valid before assigning it to model field
-        try:
-            self.filetype = FILE_EXTENSIONS[filetype]
-        except KeyError:
-            logger.info("'%s' is an unknown file type", filetype)
-            self.filetype = UNKNOWN
-            return False
 
-        self.save()
-        logger.info("File type is set to '%s'", filetype)
-        return True
+        all_known_extensions = [e.extension for e in FileType.objects.all()]
+
+        f = str(self.source.rpartition("/")[-1]).split('.', 1)[-1]
+        try:
+            if f in all_known_extensions:
+                self.filetype = FileType.objects.get(extension=f)
+            else:
+                f = f.split('.', 2)[-1]
+                if f in all_known_extensions:
+                    self.filetype = FileType.objects.get(extension=f)
+                else:
+                    f = f.rpartition(".")[-1]
+                    if f in all_known_extensions:
+                        self.filetype = FileType.objects.get(extension=f)
+                    else:
+                        self.filetype = FileType.objects.get(
+                            extension="unknown")
+            self.save()
+            logger.info("File type is set to '%s'", f)
+            return True
+
+        except Exception as e:
+            logger.error("Couldn't save:%s with extension: %s, %s" % (self,
+                                                                      f, e))
+            return False
 
     def is_symlinked(self):
         '''Check if the data file is a symlink.
@@ -477,7 +440,7 @@ class FileStoreItem(models.Model):
                 return False
             logger.info("Datafile deleted")
             return True
-        else:   # datafile doesn't exist
+        else:  # datafile doesn't exist
             return False
 
     def rename_datafile(self, name):

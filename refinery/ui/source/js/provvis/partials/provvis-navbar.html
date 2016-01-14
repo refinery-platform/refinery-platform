@@ -1,0 +1,130 @@
+<div ng-controller="provvisNavbarController">
+  <div id="provenance-controls" style="height: 26px">
+    <div class="row">
+
+      <!-- Show all controls -->
+      <div class="col-md-10">
+
+        <div id="prov-ctrl-node-btn-group" class="btn-group">
+          <button id="prov-ctrl-layers-click" class="btn btn-xs btn-primary">
+            <i class="fa fa-bars"></i>&nbsp;Layers
+          </button>
+          <button id="prov-ctrl-analyses-click"
+                  class="btn btn-xs btn-primary"><i
+              class="fa fa-cogs"></i>&nbsp;Analyses
+          </button>
+          <button id="prov-ctrl-subanalyses-click"
+                  class="btn btn-xs btn-primary"><i
+              class="fa fa-cog"></i>&nbsp;Analysis Groups
+          </button>
+          <button id="prov-ctrl-workflows-click"
+                  class="btn btn-xs btn-primary"><i
+              class="fa fa-sitemap rotate-icon-90"></i>&nbsp;Workflows
+          </button>
+        </div>
+
+        <div id="prov-ctrl-node-labeling-btn-group" class="btn-group">
+          <!-- Attributes -->
+          <button id="prov-ctrl-visible-attribute"
+                  class="refinery-base btn btn-default dropdown">
+            <a class="btn btn-xs dropdown-toggle"
+               data-toggle="dropdown"
+               href="#"
+                aria-expanded="true">
+              <i class="fa fa-wrench"></i>&nbsp;Attributes&nbsp;<i
+                class="fa fa-caret-down"></i>
+            </a>
+            <ul id="prov-ctrl-visible-attribute-list"
+                class="dropdown-menu scrollable-menu"></ul>
+            <script>
+              /* Stop dropdown menu from closing on click. */
+              $("#prov-ctrl-visible-attribute-list").bind("click",
+                  function (e) {
+                    e.stopPropagation();
+                  });
+            </script>
+          </button>
+        </div>
+
+        <label style="display: inline; margin-top: 3px; margin-right: 5px;"
+            >Filter</label>
+
+        <div id="prov-ctrl-filter-action" class="btn-group"
+             data-toggle="buttons">
+          <label class="btn btn-xs active">
+            <input type="radio" id="prov-ctrl-filter-action-blend"
+                   name="Blend" value="blend" /> Blend
+          </label>
+          <label class="btn btn-xs">
+            <input type="radio" id="prov-ctrl-filter-action-hide"
+                   name="Hide" value="hide" /> Hide
+          </label>
+        </div>
+
+        <input id="prov-ctrl-toggle-sidebar"
+               type="checkbox"
+               style="margin-top: 0px;
+               vertical-align: middle;">
+        </input>
+        <label id="prov-ctrl-toggle-sidebar-label"
+               style="margin-right: 20px;">Info panel</label>
+
+        <input id="prov-ctrl-toggle-fit"
+               type="checkbox"
+               checked="checked"
+               style="margin-top: 0px;
+               vertical-align: middle;">
+        </input>
+        <label id="prov-ctrl-toggle-fit-label"
+               style="margin-right: 20px;">Scale graph</label>
+
+        <a href="#" id="help-provenance-button"
+           style="height:20px; width: 20px;">
+          <i class="fa fa-question-circle"
+             style="font-size: 19px; margin-left: 5px; margin-right: 5px;
+             position: relative; top: 3px;"></i>
+        </a>
+
+        <div id="provvis-loader">
+          <i id="provvis-loader-icon"
+             class="fa fa-spinner spin-icon-infinite"></i>
+        </div>
+      </div>
+
+      <div class="col-md-2"></div>
+    </div>
+  </div>
+</div>
+
+<script type="application/javascript">
+    $("#help-provenance-button").click( function(event) {
+    bootbox.alert(
+        "<h3>Provenance Visualization Info</h3>" +
+        "<ul>" +
+        "<li>" +
+        "<div class='refinery-subheader'>" +
+        "<h4>Node and path specific:</h4>" +
+        "</div>" +
+        "</li>" +
+        "</ul>" +
+        "<ul>" +
+        "<li>(Un)Select: Left click</li>" +
+        "<li>Highlight predecessors: Left click on left anchor</li>" +
+        "<li>Highlight successors: Left click on right anchor</li>" +
+        "<li>Collapse Node: Left click on enclosing bounding box</li>" +
+        "<li>Expand Node: Double click on node</li>" +
+        "</ul>" +
+        "<br>" +
+        "<li>" +
+        "<div class='refinery-subheader'>" +
+        "<h4>Global:</h4>" +
+        "</div>" +
+        "</li>" +
+        "<ul>" +
+        "<li>Clear highlighting: Left click on background</li>" +
+        "<li>Fit graph to screen: Left double click on background</li>" +
+        "</ul>" +
+        "</ul>"
+    );
+  });
+</script>

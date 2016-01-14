@@ -7,7 +7,7 @@ Created on May 10, 2012
 from datetime import datetime
 import logging
 import simplejson
-import urllib2
+import requests
 
 from django.conf import settings
 from django.db import models
@@ -565,6 +565,9 @@ class AnnotatedNode(models.Model):
     # other information
     is_annotation = models.BooleanField(default=False)
 
+    def __unicode__(self):
+        return unicode(self.node_uuid)
+
 
 def _is_internal_attribute(attribute):
     return attribute in ["uuid",
@@ -604,38 +607,52 @@ def _is_facet_attribute(attribute, study, assay):
     """
     ratio = 0.5
 
-    query = (
-        settings.REFINERY_SOLR_BASE_URL +
-        "data_set_manager" +
-        "/select?" +
-        "q=django_ct:data_set_manager.node&wt=json&start=0&rows=1&fq=" +
-        "(study_uuid:" +
-        study.uuid +
-        "%20AND%20assay_uuid:" +
-        assay.uuid +
-        "%20AND%20is_annotation:false%20AND%20(type:%22Array%20Data%20File%22"
-        "%20OR%20type:%22Derived%20Array%20Data%20File%22%20OR%20type:%22Raw%"
-        "20Data%20File%22%20OR%20type:%20%22Derived%20Data%20File%22))&facet="
-        "true&facet.field=" +
-        attribute +
-        "&facet.sort=count&facet.limit=-1")
-
-    # proper url encoding
-    query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
-    # opening solr query results
-    results = urllib2.urlopen(query).read()
-    logger.debug(
-        "Query results for initialize_attribute_order: %s" % (results, )
+    types = ' OR '.join(
+        '"{0}"'.format(type) for type in Node.FILES
     )
-    # converting results into json for python
-    results = simplejson.loads(results)
 
-    items = results["response"]["numFound"]
-    attributeValues = len(results["facet_counts"]["facet_fields"][attribute])/2
+    url = '{base_url}data_set_manager/select'.format(
+        base_url=settings.REFINERY_SOLR_BASE_URL
+    )
 
-    logger.debug(results["facet_counts"]["facet_fields"])
+    params = {
+        'facet': 'true',
+        'facet.field': attribute,
+        'facet.sort': 'count',
+        'facet.limit': '-1',
+        'fq': 'study_uuid:{study_uuid} AND '
+              'assay_uuid: {assay_uuid} AND '
+              'is_annotation:false AND '
+              'type:({types})'.format(
+                  study_uuid=study.uuid,
+                  assay_uuid=assay.uuid,
+                  types=types
+              ),
+        'q': 'django_ct:data_set_manager.node',
+        'rows': 1,
+        'start': 0,
+        'wt': 'json'
+    }
 
-    return (attributeValues/items) < ratio
+    logger.debug('Query parameters: %s', params)
+
+    headers = {'Accept': 'application/json'}
+
+    response = requests.get(url, params=params, headers=headers)
+
+    results = response.json()
+
+    logger.debug('Query results: %s', results)
+
+    if results['response']['numFound'] == 0:
+        raise ValueError('No facets found.')
+
+    items = results['response']['numFound']
+    attributeValues = len(
+        results['facet_counts']['facet_fields'][attribute]
+    ) / 2
+
+    return (attributeValues / items) < ratio
 
 
 def initialize_attribute_order(study, assay):
@@ -647,33 +664,49 @@ def initialize_attribute_order(study, assay):
     :type assay: Assay
     :returns: Number of attributes that were indexed.
     """
-    query = (
-        settings.REFINERY_SOLR_BASE_URL +
-        "data_set_manager" +
-        "/select?" +
-        "q=django_ct:data_set_manager.node&wt=json&start=0&rows=1&fq=" +
-        "(study_uuid:" +
-        study.uuid +
-        "%20AND%20assay_uuid:" +
-        assay.uuid +
-        "%20AND%20is_annotation:false%20AND%20(type:%22Array%20Data%20File%22"
-        "%20OR%20type:%22Derived%20Array%20Data%20File%22%20OR%20type:%22Raw%"
-        "20Data%20File%22%20OR%20type:%20%22Derived%20Data%20File%22)"")&face"
-        "t=true&facet.sort=count&facet.limit=-1"
+
+    types = ' OR '.join(
+        '"{0}"'.format(type) for type in Node.FILES
     )
-    # proper url encoding
-    query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
-    # opening solr query results
-    results = urllib2.urlopen(query).read()
-    logger.debug(
-        "Query results for initialize_attribute_order: %s" % (results, )
+
+    url = '{base_url}data_set_manager/select'.format(
+        base_url=settings.REFINERY_SOLR_BASE_URL
     )
-    # converting results into json for python
-    results = simplejson.loads(results)
+
+    params = {
+        'fq': 'study_uuid:{study_uuid} AND '
+              'assay_uuid: {assay_uuid} AND '
+              'is_annotation:false AND '
+              'type:({types})'.format(
+                  study_uuid=study.uuid,
+                  assay_uuid=assay.uuid,
+                  types=types
+              ),
+        'q': 'django_ct:data_set_manager.node',
+        'rows': 1,
+        'start': 0,
+        'wt': 'json'
+    }
+
+    logger.debug('Query parameters: %s', params)
+
+    headers = {'Accept': 'application/json'}
+
+    response = requests.get(url, params=params, headers=headers)
+
+    results = response.json()
+
+    logger.debug('Query results: %s', results)
+
+    if results['response']['numFound'] == 0:
+        raise ValueError(
+            'Assay node type is not supported. Please consult the official '
+            'release candidate.'
+        )
 
     attribute_order_objects = []
     rank = 0
-    for key in results["response"]["docs"][0]:
+    for key in results['response']['docs'][0]:
         is_facet = _is_facet_attribute(key, study, assay)
         is_exposed = _is_exposed_attribute(key)
         is_internal = _is_internal_attribute(key)

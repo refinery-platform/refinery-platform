@@ -2,6 +2,56 @@ var fs           = require('fs');
 var hasbin       = require('hasbin');
 var isBinaryFile = require('isbinaryfile');
 
+/*
+ * A utility function for sorting JavaScript sources.
+ */
+var importanceSortJS = function (a, b) {
+  /*
+   * Give each type of JavaScript file a category according to then they
+   * should be loaded. The lower the number the earlier the files should
+   * be loaded.
+   */
+  var objs = [a, b];
+  for (var i = objs.length - 1; i >= 0; i--) {
+    switch (true) {
+      case objs[i].indexOf('refinery.js') >= 0:
+        objs[i] = 0;
+        break;
+      case objs[i].indexOf('module') >= 0:
+        objs[i] = 1;
+        break;
+      case objs[i].indexOf('settings') >= 0:
+        objs[i] = 2;
+        break;
+      case objs[i].indexOf('config') >= 0:
+        objs[i] = 3;
+        break;
+      case objs[i].indexOf('route') >= 0:
+        objs[i] = 4;
+        break;
+      case objs[i].indexOf('controller') >= 0:
+        objs[i] = 5;
+        break;
+      case objs[i].indexOf('directives') >= 0:
+        objs[i] = 6;
+        break;
+      case objs[i].indexOf('services') >= 0:
+        objs[i] = 7;
+        break;
+      case objs[i].indexOf('filters') >= 0:
+        objs[i] = 8;
+        break;
+      case objs[i].indexOf('libraries') >= 0:
+        objs[i] = 9;
+        break;
+      default:
+        objs[i] = 10;
+        break;
+    }
+  }
+  return objs[0] - objs[1];
+};
+
 module.exports = function(grunt) {
   'use strict';
 
@@ -41,6 +91,37 @@ module.exports = function(grunt) {
   // browsers and can be invoked with `--host`.
   var browsers = !!grunt.option('host') ?
     ['PhantomJS', 'Chrome', 'Firefox', 'Safari'] : ['PhantomJS'];
+
+  var jsFilesByImportance = function (spec) {
+    var files = [];
+
+    // Get all files within a feature
+    grunt
+      .file
+      .expand([
+        config.basePath.ui.src + '/js/**/*.js',
+        '!' + config.basePath.ui.src + '/js/**/*.spec.js'
+      ])
+      .forEach(function (file) {
+        files.push(file);
+      });
+
+    // Sort files
+    files.sort(importanceSortJS);
+
+    if (spec) {// Get all files within a feature
+      grunt
+        .file
+        .expand([
+          config.basePath.ui.src + '/js/**/*.spec.js'
+        ])
+        .forEach(function (file) {
+          files.push(file);
+        });
+    }
+
+    return files;
+  };
 
   grunt.initConfig({
     /*
@@ -122,14 +203,6 @@ module.exports = function(grunt) {
           dest: '<%= cfg.basePath.ui.build %>/js/'
         }]
       },
-      uiBuildStyles: {
-        files: [{
-          expand: true,
-          cwd: '<%= cfg.basePath.ui.src %>/styles/',
-          src: ['**/*.css'],
-          dest: '<%= cfg.basePath.ui.build %>/styles/'
-        }]
-      },
       uiBuildTemplates: {
         files: [{
           expand: true,
@@ -146,8 +219,14 @@ module.exports = function(grunt) {
       uiBuildVendor: {
         files: [{
           expand: true,
-          cwd: '<%= cfg.vendorPath %>/',
-          src: ['<%= cfg.files.vendor %>'],
+          cwd: '<%= cfg.vendorPath %>',
+          src: [
+            '<%= cfg.files.vendor.css %>',
+            '<%= cfg.files.vendor.images %>',
+            '<%= cfg.files.vendor.js %>',
+            '<%= cfg.files.vendor.maps %>',
+            '<%= cfg.files.vendor.font %>'
+          ],
           dest: '<%= cfg.basePath.ui.build %>/vendor/'
         }]
       },
@@ -175,8 +254,14 @@ module.exports = function(grunt) {
       uiCompileVendor: {
         files: [{
           expand: true,
-          cwd: '<%= cfg.vendorPath %>/',
-          src: ['<%= cfg.files.vendor %>'],
+          cwd: '<%= cfg.vendorPath %>',
+          src: [
+            '<%= cfg.files.vendor.css %>',
+            '<%= cfg.files.vendor.images %>',
+            '<%= cfg.files.vendor.js %>',
+            '<%= cfg.files.vendor.maps %>',
+            '<%= cfg.files.vendor.font %>'
+          ],
           dest: '<%= cfg.basePath.ui.compile %>/vendor/'
         }]
       },
@@ -224,20 +309,6 @@ module.exports = function(grunt) {
           cwd: '<%= cfg.basePath.static.src %>/styles/img/',
           src: ['**/*'],
           dest: '<%= cfg.basePath.static.compile %>/styles/img/'
-        }]
-      }
-    },
-
-    /*
-     * Minify CSS.
-     */
-    cssmin: {
-      ui: {
-        files: [{
-          expand: true,
-          cwd: '<%= cfg.basePath.ui.tmp %>/styles',
-          src: ['**/*.css'],
-          dest: '<%= cfg.basePath.ui.compile %>/styles'
         }]
       }
     },
@@ -320,10 +391,10 @@ module.exports = function(grunt) {
        */
       uiStyles: {
         files: [
-          '<%= cfg.basePath.ui.src %>/styles/**/*.css'
+          '<%= cfg.basePath.ui.src %>/styles/**/*.less'
         ],
         tasks: [
-          'copy:uiBuildStyles'
+          'less:build'
         ]
       },
 
@@ -343,9 +414,14 @@ module.exports = function(grunt) {
        * When UI vendor assets change we copy them over.
        */
       uiVendor: {
-        files: config.files.vendor.map(function (file) {
-          return config.vendorPath + '/' + file;
-        }),
+        files: [].concat.apply(
+          [],
+          Object.keys(config.files.vendor).map(
+            function (key) {
+              return config.files.vendor[key];
+            }
+          )
+        ),
         tasks: [
           'copy:uiBuildVendor'
         ]
@@ -360,18 +436,6 @@ module.exports = function(grunt) {
         ],
         tasks: [
           'copy:staticBuild'
-        ]
-      },
-
-      /*
-       * When static LESS files change we translate them.
-       */
-      staticStyles: {
-        files: [
-          '<%= cfg.basePath.static.src %>/styles/less/*.less'
-        ],
-        tasks: [
-          'less:build'
         ]
       },
 
@@ -414,6 +478,23 @@ module.exports = function(grunt) {
     },
 
     /*
+     * Generate documentation
+     */
+    jsdoc : {
+      dist : {
+        src: [
+          '<%= cfg.basePath.ui.src %>/**/!(*spec).js'
+        ],
+        options: {
+          // Doesn't seem to work right now, so we have to specify the right
+          // location manually
+          //destination: '<%= cfg.basePath.ui.docs %>'
+          destination: 'docs'
+        }
+      }
+    },
+
+    /*
      * Lint source JS files to find possible flaws that could lead to errors.
      * Custom code
      */
@@ -434,8 +515,33 @@ module.exports = function(grunt) {
      */
     karma: {
       options: {
+        browsers: browsers,
         configFile: 'karma.config.js',
-        browsers: browsers
+        files: [].concat.apply(
+          [],
+          [
+            config.files.vendor.js.map(function (script) {
+              var include = true;
+              if (script.indexOf('graphlib') >= 0 || script.indexOf('dagre') >= 0) {
+                include = false;
+              }
+              return {
+                pattern: config.vendorPath + '/' + script,
+                watched: false,
+                included: include
+              };
+            }),
+            [{
+              pattern: 'bower_components/angular-mocks/angular-mocks.js',
+              watched: false
+            }],
+            [{
+              pattern: './karma.lodash.noConflict.js',
+              watched: false
+            }],
+            jsFilesByImportance(true)
+          ]
+        )
       },
       unit: {
         port: 9019,
@@ -453,27 +559,29 @@ module.exports = function(grunt) {
       build: {
         options: {
           paths: [
-            '<%= cfg.basePath.static.src %>/styles/less',
-            '<%= cfg.basePath.static.src %>/js/bootstrap/less'
+            '<%= cfg.basePath.ui.src %>/styles',
+            '<%= cfg.basePath.bower_components %>/bootstrap/less',
           ],
           plugins: lessPlugins
         },
         files: {
-          '<%= cfg.basePath.static.build %>/styles/css/font-awesome-ie7.css': '<%= cfg.basePath.static.src %>/styles/less/font-awesome-ie7.less',
-          '<%= cfg.basePath.static.build %>/styles/css/font-awesome.css': '<%= cfg.basePath.static.src %>/styles/less/font-awesome.less',
-          '<%= cfg.basePath.static.build %>/styles/css/galaxy_connector.css': '<%= cfg.basePath.static.src %>/styles/less/galaxy_connector.less',
-          '<%= cfg.basePath.static.build %>/styles/css/refinery-style-bootstrap-responsive.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style-bootstrap-responsive.less',
-          '<%= cfg.basePath.static.build %>/styles/css/refinery-style-bootstrap.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style-bootstrap.less',
-          '<%= cfg.basePath.static.build %>/styles/css/refinery-style.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style.less',
-          '<%= cfg.basePath.static.build %>/styles/css/variables.css': '<%= cfg.basePath.static.src %>/styles/less/variables.less',
-          '<%= cfg.basePath.static.build %>/styles/css/workflow_visualization.css': '<%= cfg.basePath.static.src %>/styles/less/workflow_visualization.less',
-          '<%= cfg.basePath.static.build %>/styles/css/animate.css': '<%= cfg.basePath.static.src %>/styles/less/animate.less',
+          '<%= cfg.basePath.ui.build %>/styles/galaxy-connector.css': '<%= cfg.basePath.ui.src %>/styles/galaxy-connector.less',
+          '<%= cfg.basePath.ui.build %>/styles/refinery-style-bootstrap-responsive.css': '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap-responsive.less',
+          '<%= cfg.basePath.ui.build %>/styles/refinery-style-bootstrap.css': '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap.less',
+          '<%= cfg.basePath.ui.build %>/styles/refinery-style.css': '<%= cfg.basePath.ui.src %>/styles/refinery-style.less',
+          '<%= cfg.basePath.ui.build %>/styles/variables.css': '<%= cfg.basePath.ui.src %>/styles/variables.less',
+          '<%= cfg.basePath.ui.build %>/styles/workflow-visualization.css': '<%= cfg.basePath.ui.src %>/styles/workflow-visualization.less',
+          '<%= cfg.basePath.ui.build %>/styles/animate.css': '<%= cfg.basePath.ui.src %>/styles/animate.less',
+          '<%= cfg.basePath.ui.build %>/styles/treemap.css': '<%= cfg.basePath.ui.src %>/styles/treemap.less',
+          '<%= cfg.basePath.ui.build %>/styles/list-graph.css': '<%= cfg.basePath.ui.src %>/styles/list-graph.less',
+          '<%= cfg.basePath.ui.build %>/styles/dashboard.css': '<%= cfg.basePath.ui.src %>/styles/dashboard.less',
+          '<%= cfg.basePath.ui.build %>/styles/provenance-visualization.css': '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less',
         }
       },
       compile: {
         options: {
           paths: [
-            '<%= cfg.basePath.static.src %>/styles/less',
+            '<%= cfg.basePath.ui.src %>/styles',
             '<%= cfg.basePath.static.src %>/js/bootstrap/less'
           ],
           plugins: [
@@ -492,15 +600,17 @@ module.exports = function(grunt) {
           ]
         },
         files: {
-          '<%= cfg.basePath.static.compile %>/styles/css/font-awesome-ie7.css': '<%= cfg.basePath.static.src %>/styles/less/font-awesome-ie7.less',
-          '<%= cfg.basePath.static.compile %>/styles/css/font-awesome.css': '<%= cfg.basePath.static.src %>/styles/less/font-awesome.less',
-          '<%= cfg.basePath.static.compile %>/styles/css/galaxy_connector.css': '<%= cfg.basePath.static.src %>/styles/less/galaxy_connector.less',
-          '<%= cfg.basePath.static.compile %>/styles/css/refinery-style-bootstrap-responsive.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style-bootstrap-responsive.less',
-          '<%= cfg.basePath.static.compile %>/styles/css/refinery-style-bootstrap.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style-bootstrap.less',
-          '<%= cfg.basePath.static.compile %>/styles/css/refinery-style.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style.less',
-          '<%= cfg.basePath.static.compile %>/styles/css/variables.css': '<%= cfg.basePath.static.src %>/styles/less/variables.less',
-          '<%= cfg.basePath.static.compile %>/styles/css/workflow_visualization.css': '<%= cfg.basePath.static.src %>/styles/less/workflow_visualization.less',
-          '<%= cfg.basePath.static.compile %>/styles/css/animate.css': '<%= cfg.basePath.static.src %>/styles/less/animate.less',
+          '<%= cfg.basePath.ui.compile %>/styles/galaxy-connector.css': '<%= cfg.basePath.ui.src %>/styles/galaxy-connector.less',
+          '<%= cfg.basePath.ui.compile %>/styles/refinery-style-bootstrap-responsive.css': '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap-responsive.less',
+          '<%= cfg.basePath.ui.compile %>/styles/refinery-style-bootstrap.css': '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap.less',
+          '<%= cfg.basePath.ui.compile %>/styles/refinery-style.css': '<%= cfg.basePath.ui.src %>/styles/refinery-style.less',
+          '<%= cfg.basePath.ui.compile %>/styles/variables.css': '<%= cfg.basePath.ui.src %>/styles/variables.less',
+          '<%= cfg.basePath.ui.compile %>/styles/workflow-visualization.css': '<%= cfg.basePath.ui.src %>/styles/workflow-visualization.less',
+          '<%= cfg.basePath.ui.compile %>/styles/animate.css': '<%= cfg.basePath.ui.src %>/styles/animate.less',
+          '<%= cfg.basePath.ui.compile %>/styles/treemap.css': '<%= cfg.basePath.ui.src %>/styles/treemap.less',
+          '<%= cfg.basePath.ui.compile %>/styles/list-graph.css': '<%= cfg.basePath.ui.src %>/styles/list-graph.less',
+          '<%= cfg.basePath.ui.compile %>/styles/dashboard.css': '<%= cfg.basePath.ui.src %>/styles/dashboard.less',
+          '<%= cfg.basePath.ui.compile %>/styles/provenance-visualization.css': '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less',
         }
       }
     },
@@ -535,11 +645,11 @@ module.exports = function(grunt) {
      * Minify JS
      */
     uglify: {
-      options: {
-        banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
-        sourceMap: true
-      },
       ui: {
+        options: {
+          banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
+          sourceMap: true
+        },
         files: [
           {
             expand: true,
@@ -552,8 +662,8 @@ module.exports = function(grunt) {
       vendor_assets: {
         files: [
           {
-            '<%= cfg.vendorPath %>/angular-ui-select2/release/select2.min.js':
-            ['<%= cfg.vendorPath %>/angular-ui-select2/src/select2.js']
+            './bower_components/angular-ui-select2/dist/select2.min.js':
+            ['./bower_components/angular-ui-select2/src/select2.js']
           }
         ]
       }
@@ -564,56 +674,6 @@ module.exports = function(grunt) {
     'concat-by-feature',
     'Concat files by features excluding `spec` files',
     function(mode) {
-      /*
-       * A utility function for sorting JavaScript sources.
-       */
-      function importanceSortJS (a, b) {
-        /*
-         * Give each type of JavaScript file a category according to then they
-         * should be loaded. The lower the number the earlier the files should
-         * be loaded.
-         */
-        var objs = [a, b];
-        for (var i = objs.length - 1; i >= 0; i--) {
-          switch (true) {
-            case objs[i].indexOf('vendor') >= 0:
-              objs[i] = 0;
-              break;
-            case objs[i].indexOf('module') >= 0:
-              objs[i] = 1;
-              break;
-            case objs[i].indexOf('settings') >= 0:
-              objs[i] = 2;
-              break;
-            case objs[i].indexOf('config') >= 0:
-              objs[i] = 3;
-              break;
-            case objs[i].indexOf('state') >= 0:
-              objs[i] = 4;
-              break;
-            case objs[i].indexOf('controller') >= 0:
-              objs[i] = 5;
-              break;
-            case objs[i].indexOf('directives') >= 0:
-              objs[i] = 6;
-              break;
-            case objs[i].indexOf('services') >= 0:
-              objs[i] = 7;
-              break;
-            case objs[i].indexOf('filters') >= 0:
-              objs[i] = 8;
-              break;
-            case objs[i].indexOf('libraries') >= 0:
-              objs[i] = 9;
-              break;
-            default:
-              objs[i] = 10;
-              break;
-          }
-        }
-        return objs[0] - objs[1];
-      }
-
       // Read config
       var cfg = grunt.file.readJSON('config.json'),
           concat = grunt.config.get('concat') || {},
@@ -689,7 +749,7 @@ module.exports = function(grunt) {
   }
 
   // Default task.
-  grunt.registerTask('default', ['build', 'compile']);
+  grunt.registerTask('default', ['build', 'compile', 'test']);
 
   // Task for running unit tests
   grunt.registerTask('test', ['env:compile', 'karma']);
@@ -703,7 +763,6 @@ module.exports = function(grunt) {
     'less:build',
     'copy:uiBuildImages',
     'copy:uiBuildScripts',
-    'copy:uiBuildStyles',
     'copy:uiBuildTemplates',
     'copy:uiBuildVendor',
     'copy:staticBuild',
@@ -718,7 +777,6 @@ module.exports = function(grunt) {
     'clean:staticCompile',
     'less:compile',
     'autoprefixer',
-    'cssmin',
     // IMPORTANT:
     // `concat-by-feature:compile` has to be called before `ngAnnotate` because
     // it adds features to the `ngAnnotate` task.
@@ -730,7 +788,7 @@ module.exports = function(grunt) {
     'copy:uiCompileVendor',
     'copy:staticCompile',
     'clean:uiTmp',
-    'karma'
+    'jsdoc'
   ]);
 
   grunt.renameTask('watch', 'delta');

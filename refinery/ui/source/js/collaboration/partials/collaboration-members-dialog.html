@@ -1,0 +1,19 @@
+<div class="modal-header">
+  <h3>Member Editor</h3>
+  <p>If you are the last manager in a group, you must delete the group in order to remove yourself or assign another manager first.</p>
+</div>
+<div class="modal-body">
+  <div>
+    {{modal.member.username}}
+
+    <button type="button" class="refinery-base btn btn-default"
+      ng-click="modal.remove()" style="float:right;margin-left:10px">Remove</button>
+    
+    <button ng-if="modal.member.is_manager" type="button"
+      class="refinery-base btn btn-default" ng-click="modal.demote()" style="float:right">Demote</button>
+    
+    <button ng-if="!modal.member.is_manager" type="button"
+      class="refinery-base btn btn-default"ng-click="modal.promote()" style="float:right">Promote</button>
+    
+  </div>
+</div>

@@ -1,0 +1,61 @@
+<div class="modal hide"></div>
+  <div ng-switch on="analysisLaunchFlag">
+    <span ng-switch-when="NOCALL">
+      <div class="modal-header">
+        Enter an Analysis Name
+      </div>
+      <ng-form name="analysisLaunchForm" novalidate>
+        <div class="modal-body bootboxAnalysisWidth">
+          Name: <input type="text" name="launchName" ng-model="dataObj.name"
+          ng-minlength="3" required>
+          <span ng-show="analysisLaunchForm.launchName.$error.minlength ||
+          analysisLaunchForm.launchName.$error.required">
+            Names must be 3 characters long.
+          </span>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-warning" ng-click="cancel()">Cancel Analysis</button>
+          <button class="btn btn-primary"
+            ng-click="ok()"
+            ng-disabled="!analysisLaunchForm.$valid">
+              Launch Analysis
+          </button>
+        </div>
+      </ng-form>
+    </span>
+    <span ng-switch-when="LOADING">
+      <div class="modal-header">
+        Analysis Launch Status Loading
+      </div>
+      <div class="modal-body bootboxAnalysisWidth">
+        <span class="refinery-spinner analyses-view"></span>
+        &nbsp;<em>Retrieving analyses list.</em>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-warning" ng-click="cancel()">Cancel Analysis</button>
+      </div>
+    </span>
+    <span ng-switch-default>
+      <div class="modal-header">
+        Analysis Launch Status
+      </div>
+      <div ng-if="analysisLaunchFlag=='SUCCESS'">
+        <div class="modal-body bootboxAnalysisWidth">
+          Analysis Launch Successful.
+        </div>
+        <div class="modal-footer" id="modal-launch-analysis-footer">
+          <button class="btn btn-warning" ng-click="close()">Close</button>
+          <button class="btn btn-primary" ng-click="view()">View Analysis</button>
+        </div>
+      </div>
+      <div ng-if="analysisLaunchFlag=='FAILED'">
+        <div class="modal-body bootboxAnalysisWidth">
+          Analysis Launch Failed.
+        </div>
+        <div class="modal-footer" id="modal-launch-analysis-footer">
+          <button class="btn btn-warning" ng-click="close()">Close</button>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>

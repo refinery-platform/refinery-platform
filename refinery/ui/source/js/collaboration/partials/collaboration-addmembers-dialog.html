@@ -1,0 +1,12 @@
+<div class="modal-header">
+  <h3>Invite New Member</h3>
+</div>
+<div class="modal-body">
+  <form class="navbar-form" style="text-align:center">
+    <input type="email" class="form-control" placeholder="Recipient email" ng-model="email">
+      <button type="submit" class="refinery-base btn btn-default"
+        ng-click="$close()">Cancel</button>
+    <button type="submit" class="btn btn-primary" ng-click="modal.sendInvite
+    (email)">Send Invite</button>
+  </form>
+</div>

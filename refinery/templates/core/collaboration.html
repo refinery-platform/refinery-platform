@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block script %}
-<script type="text/javascript" src="{{ STATIC_URL }}js/bootbox/bootbox.min.js"></script>
+<script type="text/javascript" src="{% static "js/bootbox/bootbox.min.js" %}"></script>
 {% endblock %}
 
 {% block subheader %}
@@ -29,7 +29,7 @@
 
 {% block content %}
     <div
-        class="row-fluid refinery-dashboard"
+        class="row refinery-dashboard"
         ui-view>
     </div>
 {% endblock %}

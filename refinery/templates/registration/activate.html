@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} - Account activated
+{% endblock %}
+
+{% block subheader %}
+<div class="page-header">
+  <h1>Activation complete</h1>
+</div>
+{% endblock %}
+
+{% block content %}
+{% load humanize %}
+
+<div class="refinery-panel refinery-panel-content scrollable">
+  <div class="row">
+
+  <h1>Account not activated</h1>
+
+    <p>Sorry, it didn't work. Either your activation link was incorrect, or
+    the activation key for your account has expired; activation keys are
+    only valid for {{ ACCOUNT_ACTIVATION_DAYS }} days after
+    registration.</p>
+{% endblock %}
+
+</div>
+</div>

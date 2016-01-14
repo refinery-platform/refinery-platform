@@ -1,0 +1,41 @@
+/*!
+ * For Bootstrap v3.3.5
+ *
+ * Based on https://github.com/twitter/bootstrap/issues/1451#issuecomment-3737384
+ */
+
+
+// Responsive.less
+// For phone and tablet devices
+// -------------------------------------------------------------
+
+
+// REPEAT VARIABLES & MIXINS
+// -------------------------
+// Required since we compile the responsive stuff separately
+
+@bootstrap-path: 'bower_components/bootstrap/less';
+
+@import '@{bootstrap-path}/variables.less'; // Modify this for custom colors, font-sizes, etc
+@import 'variables.less';
+
+@import '@{bootstrap-path}/mixins.less';
+
+
+// RESPONSIVE CLASSES
+// ------------------
+
+@import '@{bootstrap-path}/responsive-utilities.less';
+@import '@{bootstrap-path}/responsive-embed.less';
+
+
+// MEDIA QUERIES
+// ------------------
+@import '@{bootstrap-path}/media.less';
+
+
+// RESPONSIVE NAVBAR
+// ------------------
+
+// From 979px and below, show a button to toggle navbar contents
+//@import '@{bootstrap-path}/responsive-navbar.less';

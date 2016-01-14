@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load static %}
 {% block head_html %}
 {% endblock %}
 
@@ -11,7 +11,7 @@
 
 {% block content %}
 <div class="refinery-panel refinery-panel-content scrollable">
-	<div class="row-fluid">		
+	<div class="row">
 
 	<div class="refinery-header">
 		<span class="refinery-header-left">
@@ -41,7 +41,9 @@
 					{{ form.isa_tab_url.errors }}
 					{{ form.isa_tab_url }}
 				</p>
-			<input style="float: left;" class="btn" id="import-button" type="submit" value="Import"/>
+			<input style="float: left;" class="refinery-base btn btn-default"
+        id="import-button"
+        type="submit" value="Import"/>
 			<div style="margin-left: 15px; padding: 15px; float: left; display: block; height: 22px; width: 22px;" id="spinner"></div>	
 		</form>
 	</div>
@@ -49,7 +51,7 @@
 {% endblock %}
 
 {% block script %}
-	<script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/spin/spin.min.js"></script>
+	<script language="javascript" type="text/javascript" src="{% static "js/spin/spin.min.js" %}"></script>
 
 	<script language="javascript" type="text/javascript">
 	    var opts = {

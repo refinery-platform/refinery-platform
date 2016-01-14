@@ -1,0 +1,136 @@
+<div id="group-collab">
+
+  <div class="col-md-4">
+    <div class="refinery-panel">
+      <div class="refinery-header">
+        <span class="refinery-header-left">
+          <h3>
+            <i class="m-r-1-4 fa fa-users"></i>Groups
+          </h3>
+        </span>
+        <span class="refinery-header-right">
+          <a ng-href="#/{{collab.activeGroup.uuid}}/" ng-click="collab
+          .openAddGroup()"><i class="fa fa-plus"></i></a>
+        </span>
+      </div>
+
+      <div class="refinery-panel-content scrollable jquery-full-height">
+        <table class="table">
+          <thead>
+            <tr>
+              <th width="60%">Group</th>
+              <th width="30%" style="text-align:center">Permission</th>
+              <th width="10%" style="text-align:center">Edit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="group in collab.groupList" ng-class="{'active-group': group.active}" style="cursor:pointer;height:40px" ng-click="collab.setActiveGroup(group)">
+              <td>
+                <a ng-href="#/{{group.uuid}}/">{{group.name}}</a>
+              </td>
+              <td style="text-align:center">
+                <p ng-if="group.can_edit" style="color:red">
+                  manager
+                </p>
+              </td>
+              <td style="text-align:center">
+                <a ng-href="#/{{group.uuid}}/" ng-click="collab.openGroupEditor(group)">
+                  <i class="fa fa-cog"></i>
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="refinery-panel">
+      <div class="refinery-header">
+        <span class="refinery-header-left">
+          <h3>
+            <i class="m-r-1-4 fa fa-user"></i>Members
+          </h3>
+        </span>
+        <span ng-if="collab.activeGroup.can_edit" class="refinery-header-right">
+          <a href="#/{{ collab.activeGroup.uuid }}/" ng-click="collab
+          .openEmailInvite()"><i class="fa fa-plus"></i></a>
+        </span>
+      </div>
+
+      <div class="refinery-panel-content scrollable jquery-full-height">
+        <table class="table">
+          <thead>
+            <tr>
+              <th width="60%">Name</th>
+              <th width="30%" style="text-align:center">Permission</th>
+              <th width="10%" style="text-align:center">Edit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="member in collab.activeGroup.member_list" style="height:40px">
+              <td>
+                <a ng-href="/users/{{member.uuid}}/">
+                  {{(member.first_name + ' ' + member.last_name).trim().length > 0 && (member.first_name + ' ' + member.last_name).trim() || member.username}}
+                </a>
+              </td>
+              <td style="text-align:center">
+                <span ng-if="member.is_manager" style="color:red">
+                  manager
+                </span>
+              </td>
+              <td style="text-align:center">
+                <a ng-if="collab.activeGroup.can_edit" ng-href="#/{{collab.activeGroup.uuid}}/" ng-click="collab.openMemberEditor(member)">
+                  <i class="fa fa-cog"></i>
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="refinery-panel">
+      <div class="refinery-header">
+        <span class="refinery-header-left">
+          <h3>
+            <i class="m-r-1-4 envelope"></i>Pending Invitations
+          </h3>
+        </span>
+        <span class="refinery-header-right">
+        </span>
+      </div>
+
+      <div class="refinery-panel-content scrollable jquery-full-height">
+        <table class="table">
+          <thead>
+            <tr>
+              <th width="55%">Email</th>
+              <th width="45%" style="text-align:center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="invite in collab.activeGroupInviteList" style="height:40px" title="Created: {{invite.created}}&#10;Expires: {{invite.expireDuration}} on {{invite.expires}}">
+              <td>
+                <a href="#/{{collab.activeGroup.uuid}}/">{{invite.recipient_email}}</a>
+              </td>
+              <td>
+                <span style="float:left;text-align:center">
+                  <a href="#/{{ collab.activeGroup.uuid }}/" ng-click="collab.revokeInvitation(invite)">Revoke</a>
+                </span>
+                <span style="float:right;text-align:center">
+                  <a href="#/{{ collab.activeGroup.uuid }}/" ng-click="collab.resendInvitation(invite)">Resend</a>
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+

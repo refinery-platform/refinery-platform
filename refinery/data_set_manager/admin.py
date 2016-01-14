@@ -16,11 +16,31 @@ class NodeAdmin(ForeignKeyAutocompleteAdmin):
 
 class AnnotatedNodeAdmin(ForeignKeyAutocompleteAdmin):
     raw_id_fields = ("node", "attribute", "study", "assay")
+    list_display = ["__unicode__", "attribute", "study", "assay",
+                    "node_uuid", "node_file_uuid", "node_type", "node_name",
+                    "attribute_type", "attribute_subtype",
+                    "attribute_value", "attribute_value_unit",
+                    "node_species", "node_genome_build",
+                    "node_analysis_uuid", "node_subanalysis",
+                    "node_workflow_output", "is_annotation"]
 
 
-admin.site.register(NodeCollection)
-admin.site.register(Investigation)
-admin.site.register(Study)
+class NodeCollectionAdmin(ForeignKeyAutocompleteAdmin):
+    list_display = ["__unicode__", "title", "uuid", "identifier",
+                    "description", "release_date", "submission_date"]
+
+
+class InvestigationAdmin(ForeignKeyAutocompleteAdmin):
+    list_display = ["__unicode__", "uuid"]
+
+
+class StudyAdmin(ForeignKeyAutocompleteAdmin):
+    list_display = ["__unicode__", "uuid"]
+
+
+admin.site.register(NodeCollection, NodeCollectionAdmin)
+admin.site.register(Investigation, InvestigationAdmin)
+admin.site.register(Study, StudyAdmin)
 admin.site.register(Publication)
 admin.site.register(Contact)
 admin.site.register(Ontology)

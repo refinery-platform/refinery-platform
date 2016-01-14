@@ -7,14 +7,27 @@ Created on Aug 23, 2012
 # a context processor to pass settings variables to views by default
 # from: http://stackoverflow.com/q/433162
 
+import json
+import logging
+
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.core import serializers
+
+logger = logging.getLogger(__name__)
 
 
 def extra_context(context):
     """return values you want as a dictionary"""
+    """!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    WARNING: Be careful adding Django settings to this dictionary as
+    it exposes each of these settings to the template context/javascript
+    console!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    """
     return {
         "ADMINS": settings.ADMINS[0][1],
+        "CURRENT_COMMIT": settings.CURRENT_COMMIT,
         "REFINERY_CSS": settings.REFINERY_CSS,
         "REFINERY_MAIN_LOGO": settings.REFINERY_MAIN_LOGO,
         "REFINERY_INNER_NAVBAR_HEIGHT": settings.REFINERY_INNER_NAVBAR_HEIGHT,

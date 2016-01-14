@@ -69,23 +69,23 @@ DataSetConfigurator.prototype.render = function () {
 	code += "<thead>";
 	code += "<tr>";
 
-	code += "<th>";
+	code += "<th class='attribute-header'>";
 	code +=  "";
 	code += "</th>";
 
-	code += "<th>";
+	code += "<th class='attribute-header'>";
 	code +=  "Attribute";
 	code += "</th>";
 
-	code += "<th>";
+	code += "<th class='attribute-header'>";
 	code += "Expose to User";
 	code += "</th>";
 
-	code += "<th>";
+	code += "<th class='attribute-header'>";
 	code += "Use as Facet";
 	code += "</th>";
 
-	code += "<th>";
+	code += "<th class='attribute-header'>";
 	code += "Show by Default";
 	code += "</th>";
 
@@ -104,7 +104,8 @@ DataSetConfigurator.prototype.render = function () {
 		code += "<tr class=\"\" data-id=\"" + object.id + "\" data-resource_uri=\"" + object.resource_uri + "\" id=\"attributeorder_" + object.id + "\">";
 
 		code += "<td class=\"\">";
-		code += "<span class=\"refinery-dnd-handle\"><i class=\"icon-reorder\"></i></span>";
+		code += "<span class=\"refinery-dnd-handle\">" +
+			"<i class=\"fa fa-bars\"></i></span>";
 		code += "</td>";
 
 		code += "<td class=\"\">";

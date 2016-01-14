@@ -1,0 +1,24 @@
+@import "variables.less";
+
+#launch-pad.ng-enter {
+  opacity: 0;
+  transition: opacity @normal-transition-speed @ease-in-out-cubic;
+}
+
+#launch-pad.ng-enter-active {
+  opacity: 1;
+}
+
+.request-loading.ng-enter, .request-loading.ng-leave {
+  transition: opacity @fast-transition-speed @ease-in-out-cubic;
+}
+
+.request-loading.ng-enter,
+.request-loading.ng-leave.ng-leave-active {
+  opacity: 0;
+}
+
+.request-loading.ng-leave,
+.request-loading.ng-enter.ng-enter-active {
+  opacity: 1;
+}
