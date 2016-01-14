@@ -527,17 +527,17 @@ def analysis(request, analysis_uuid):
 def assays_files(request, uuid, format=None):
     """Return solr response. Query requires assay_uuid.
     Params/Solr Params
-       @ is_annotation - metadata
-       @ facet_sort - ordering of the facet field constraints, (count or index)
-       @ facet_count/facet -  enables facet counts in query response, true/false
-       @ start - paginate, offset response
-       @ limit/row - maximum number of documents
-       @ study_uuid/assay_uuid - unique ids
-       @ field_limit - set of fields to return
-       @ facet_field - specify a field which should be treated as a facet
-       @ facet_pivot - list of fields to pivot
-       @ sort - Ordering include field name, whitespace, & asc or desc.
-       @ fq - filter query
+       @is_annotation - metadata
+       @facet_sort - ordering of the facet field constraints, (count or index)
+       @facet_count/facet -  enables facet counts in query response, true/false
+       @start - paginate, offset response
+       @limit/row - maximum number of documents
+       @study_uuid/assay_uuid - unique ids
+       @field_limit - set of fields to return
+       @facet_field - specify a field which should be treated as a facet
+       @facet_pivot - list of fields to pivot
+       @sort - Ordering include field name, whitespace, & asc or desc.
+       @fq - filter query
      """
 
     if request.method == 'GET':
@@ -553,7 +553,15 @@ def assays_files(request, uuid, format=None):
 @api_view(['GET'])
 def assays_attributes(request, uuid, format=None):
     """Returns/Updates AttributeOrder model queries. Requires assay_uuid.
-    Params
+    Params for each attribute:
+        @study - Title of study
+        @assay - Title of assay
+        @solr_field - field name
+        @rank - Position of the attribute in the facet list and table
+        @is_exposed - Show to non-owner users
+        @is_facet -  Attribute used as facet
+        @is_active - Shown in table by default
+        @is_internal - Retrived by solr but not shown to ANY user
      """
     try:
         attribute_order = AttributeOrder.objects.filter(assay__uuid=uuid)
