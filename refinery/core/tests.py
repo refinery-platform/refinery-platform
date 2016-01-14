@@ -1061,6 +1061,7 @@ class CachingTest(unittest.TestCase):
             DataSet.objects.create(slug="TestSlug%d" % index)
         # Adding to cache
         cache.add("DataSet", DataSet.objects.all())
+
         # Initial data that is cached, to test against later
         self.initial_cache = cache.get("DataSet")
 
@@ -1074,10 +1075,13 @@ class CachingTest(unittest.TestCase):
         ds.save()
         # Check if cache can be invalidated
         invalidate_cached_object(ds)
+
         self.assertFalse(cache.get("DataSet"))
+
         # Adding to cache again
         cache.add("DataSet", DataSet.objects.all())
         new_cache = cache.get("DataSet")
+
         self.assertTrue(new_cache)
         # Make sure new cache represents the altered data
         self.assertNotEqual(self.initial_cache, new_cache)
@@ -1089,10 +1093,12 @@ class CachingTest(unittest.TestCase):
         ds.delete()
         # Check if cache can be invalidated
         invalidate_cached_object(DataSet.objects.get(slug="TestSlug1"))
+
         self.assertFalse(cache.get("DataSet"))
         # Adding to cache again
         cache.add("DataSet", DataSet.objects.all())
         new_cache = cache.get("DataSet")
+
         self.assertTrue(new_cache)
         # Make sure new cache represents the altered data
         self.assertNotEqual(self.initial_cache, new_cache)
@@ -1103,10 +1109,12 @@ class CachingTest(unittest.TestCase):
         ds.share(group="Public")
         # Check if cache can be invalidated
         invalidate_cached_object(DataSet.objects.get(slug="TestSlug1"))
+        
         self.assertFalse(cache.get("DataSet"))
         # Adding to cache again
         cache.add("DataSet", DataSet.objects.all())
         new_cache = cache.get("DataSet")
+
         self.assertTrue(new_cache)
         # Make sure new cache represents the altered data
         self.assertNotEqual(self.initial_cache, new_cache)
