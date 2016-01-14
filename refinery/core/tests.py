@@ -1008,32 +1008,6 @@ class AnalysisResourceTest(ResourceTestCase):
 
 
 class BaseResourceSlugTest(unittest.TestCase):
-    def setUp(self):
-        self.investigation = \
-            data_set_manager.models.Investigation.objects.create()
-        self.study = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation)
-        self.assay = data_set_manager.models.Assay.objects.create(
-            study=self.study)
-        self.query = simplejson.dumps({
-            "facets": {
-                "platform_Characteristics_10_5_s": [],
-                "cell_or_tissue_Characteristics_10_5_s": [],
-                "REFINERY_TYPE_10_5_s": [],
-                "species_Characteristics_10_5_s": [],
-                "treatment_Characteristics_10_5_s": [],
-                "factor_Characteristics_10_5_s": [],
-                "factor_function_Characteristics_10_5_s": [],
-                "data_source_Characteristics_10_5_s": [],
-                "genome_build_Characteristics_10_5_s": [],
-                "REFINERY_FILETYPE_10_5_s": [],
-                "antibody_Characteristics_10_5_s": [],
-                "data_type_Characteristics_10_5_s": [],
-                "lab_Characteristics_10_5_s": []
-                },
-            "nodeSelection": [],
-            "nodeSelectionBlacklistMode": True
-        })
 
     """Tests for BaseResource Slugs"""
     def test_duplicate_slugs(self):
