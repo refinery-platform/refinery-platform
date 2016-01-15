@@ -19,6 +19,7 @@
   }
 
   .inner-border {
+    fill: transparent;
     stroke: #000;
     stroke-width: 2;
   }
@@ -50,6 +51,25 @@
   .leaf {
     stroke: #fff;
     stroke-width: 2;
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  .inner-node,
+  .leaf {
+    &.locked {
+      .label {
+        color: #000;
+      }
+
+      &:hover {
+        .label {
+          color: #fff;
+        }
+      }
+    }
   }
 
   .label {

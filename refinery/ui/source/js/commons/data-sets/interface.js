@@ -261,9 +261,6 @@ function DataSetFactory (
           return _buildSelection(limit, offset, selection);
         }
         return selection;
-      })
-      .catch(function (e) {
-        deferred.reject(e);
       });
   }
 
@@ -810,21 +807,23 @@ function DataSetFactory (
    *
    * @param   {Object}   dataSetIds  Object of with dataset IDs as attributes.
    * @param   {Boolean}  reset       If `true` then highlight will be `false`.
+   * @param   {String}   mode        Determines the highlight mode, e.g. `hover`
+   *   or `lock`.
    * @return  {Object}               Instance itself to enable chaining.
    */
-  DataSet.prototype.highlight = function (dataSetIds, reset, soft) {
+  DataSet.prototype.highlight = function (dataSetIds, reset, mode) {
     var dataSet,
-        keys = Object.keys(dataSetIds);
+        keys = Object.keys(dataSetIds || {});
 
     // Invert boolean representation so that the default behavior is
     // highlighting.
     reset = !!!reset;
 
     for (var i = keys.length; i--;) {
-      _dataStore.set(keys[i], {
-        highlight: soft ? false : reset,
-        softHighlight: soft ? reset : false,
-      });
+      _dataStore.set(keys[i], { hovered: mode === 'hover' && reset });
+      if (mode === 'lock') {
+        _dataStore.set(keys[i], { locked: mode === 'lock' && reset });
+      }
     }
 
     return this;
