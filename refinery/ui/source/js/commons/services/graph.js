@@ -12,9 +12,9 @@ function GraphFactory (_, Webworker) {
    * @return  {Graph}  Updated graph.
    */
   Graph.updateAnnotations = function (graph, annotations) {
-    // Note: Looping over the large graph uncondtionally and looping again over
+    // Note: Looping over the large graph unconditionally and looping again over
     // all annotations is **faster** than one conditional loop, which is
-    // potentially due to the high number of comparisions.
+    // potentially due to the high number of comparisons.
     var nodeKeys = Object.keys(graph), i;
 
     for (i = nodeKeys.length; i--;) {
@@ -65,12 +65,13 @@ function GraphFactory (_, Webworker) {
      *
      * @method  accumulateAndPruneChildren
      * @author  Fritz Lekschas
-     * @date    2015-08-18
+     * @date    2016-01-15
      *
      * @param   {Object}   node         D3 data object of the node.
      * @param   {Number}   numChildren  Number of children of `node.
-     * @param   {String}   valueProp    Property name of the propery holding the
-     *   value of the node's _size_.
+     * @param   {String}   valueProp    Name of the property that represents an
+     *   object of unique elements. The number of unique elements accounts for
+     *   the rectangle size of the tree map and length of the bar charts.
      * @param   {Number}   depth        Original depth of the current node.
      * @param   {Boolean}  root         If node is the root.
      */
@@ -181,7 +182,7 @@ function GraphFactory (_, Webworker) {
           }
         }
 
-        // Increase `value` if the node by the children's `numDataSets`.
+        // Increase `value` of the current node by the children's `value`.
         if (typeof node.value !== 'undefined') {
           node.value += child.value;
         } else {
@@ -219,7 +220,7 @@ function GraphFactory (_, Webworker) {
    *
    * @description
    * Initially recall will always be `1` because we are expected to return all
-   * datasets in the beginnging.
+   * datasets in the beginning.
    *
    * @method  initPrecisionRecall
    * @author  Fritz Lekschas
@@ -320,7 +321,7 @@ function GraphFactory (_, Webworker) {
       // Remove parent reference
       node.parents = undefined;
       delete node.parents;
-      // Copy URIs temporarly
+      // Copy URIs temporarily
       uris = node.children.slice();
       // Initialize new array
       node.children = [];
@@ -330,7 +331,7 @@ function GraphFactory (_, Webworker) {
       }
     }
 
-    // Deep clone object to be usable by D3's treemap layout.
+    // Deep clone object to be usable by D3's tree map layout.
     return JSON.parse(JSON.stringify(newGraph[root]));
   };
 
