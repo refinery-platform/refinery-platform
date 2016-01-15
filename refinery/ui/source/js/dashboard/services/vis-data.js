@@ -8,13 +8,18 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
   Data.prototype.load = function (root, valueProperty) {
     neo4jToGraph.get()
       .then(function (data) {
-        // Trim graph
-        var prunedData = graph.accumulateAndPrune(
-          data, root ? root : settings.ontRoot, valueProperty
-        );
+        root = root ? root : settings.ontRoot;
+
+        // Prune graph and accumulate the dataset annotations
+        var prunedData = graph.accumulateAndPrune(data, root, valueProperty);
 
         // Init precision and recall
-        graph.initPrecisionRecall(data, dataSet.total);
+        // console.log(root, graph);
+        graph.initPrecisionRecall(
+          data,
+          valueProperty,
+          Object.keys(data[root][valueProperty]).length
+        );
 
         // Make precision and recall available as bars
         graph.propertyToBar(data, ['precision', 'recall']);
