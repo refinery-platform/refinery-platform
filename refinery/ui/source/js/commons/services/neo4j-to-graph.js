@@ -18,6 +18,7 @@ function buildGraph (results) {
       nodes = {
         // Fortunately `owl:Thing` is the mandatory root for any ontology.
         'http://www.w3.org/2002/07/owl#Thing': {
+          assertedDataSets: {},
           children: [],
           dataSets: {},
           name: 'Root',
@@ -56,6 +57,7 @@ function buildGraph (results) {
     // Add parent to nodes if not available
     if (!(currentParent.uri in nodes)) {
       nodes[currentParent.uri] = {
+        assertedDataSets: {},
         children: [],
         dataSets: {},
         name: currentParent['rdfs:label'] || currentParent.name,
@@ -69,6 +71,7 @@ function buildGraph (results) {
     // Add child to nodes if not available
     if (!(currentChild.uri in nodes)) {
       nodes[currentChild.uri] = {
+        assertedDataSets: {},
         children: [],
         dataSets: {},
         name: currentChild['rdfs:label'] || currentChild.name,
@@ -87,8 +90,9 @@ function buildGraph (results) {
 
     // Store annotation if available
     if (currentDataSet !== null &&
-        !nodes[currentChild.uri].dataSets[currentDataSet.id]) {
+        !nodes[currentChild.uri].assertedDataSets[currentDataSet.id]) {
       nodes[currentChild.uri].numDataSets++;
+      nodes[currentChild.uri].assertedDataSets[currentDataSet.id] = true;
       nodes[currentChild.uri].dataSets[currentDataSet.id] = true;
     }
   }
