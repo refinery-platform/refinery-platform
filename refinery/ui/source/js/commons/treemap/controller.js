@@ -124,7 +124,6 @@ function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
   this.treemap.el = this.d3.layout.treemap()
     .children(function(d, depth) { return depth ? null : d._children; })
     .sort(function(a, b) { return a.value - b.value; })
-    .ratio(this.treemap.height / this.treemap.width * 0.5 * (1 + Math.sqrt(5)))
     .round(false)
     .ratio(1);
 
@@ -815,7 +814,8 @@ TreemapCtrl.prototype.draw = function () {
   } else {
     this.rootNode = {
       branchId: 0,
-      ontId: this.data.ontId
+      ontId: this.data.ontId,
+      uri: this.data.uri
     };
   }
 
