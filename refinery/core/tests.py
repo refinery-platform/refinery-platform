@@ -1068,7 +1068,7 @@ class CachingTest(unittest.TestCase):
     def tearDown(self):
         cache.clear()
 
-    def verify_data_after_save(self):
+    def test_verify_data_after_save(self):
         # Grab, alter, and save an object being cached
         ds = DataSet.objects.get(slug="TestSlug5")
         ds.slug = "NewSlug"
@@ -1087,7 +1087,7 @@ class CachingTest(unittest.TestCase):
         self.assertNotEqual(self.initial_cache, new_cache)
         self.assertTrue(DataSet.objects.get(slug="NewSlug"))
 
-    def verify_data_after_delete(self):
+    def test_verify_data_after_delete(self):
         # Grab and delete an object being cached
         ds = DataSet.objects.get(slug="TestSlug5")
         ds.delete()
@@ -1103,7 +1103,7 @@ class CachingTest(unittest.TestCase):
         # Make sure new cache represents the altered data
         self.assertNotEqual(self.initial_cache, new_cache)
 
-    def verify_data_after_perms_change(self):
+    def test_verify_data_after_perms_change(self):
         # Grab and change sharing an object being cached
         ds = DataSet.objects.get(slug="TestSlug5")
         ds.share(group="Public")
