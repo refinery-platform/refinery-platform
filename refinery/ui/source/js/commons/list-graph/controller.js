@@ -12,7 +12,7 @@
  * @param   {Object}  pubSub             PubSub service.
  */
 function ListGraphCtrl (
-  $element, $, graph, listGraphSettings, dataSet, pubSub
+  $element, $, graph, listGraphSettings, dataSet, pubSub, treemapContext
 ) {
   this.$ = $;
   this.$element = this.$($element);
@@ -39,6 +39,22 @@ function ListGraphCtrl (
       );
     }.bind(this));
   }
+
+  treemapContext.on('hoverTerms', function (data) {
+    if (data.reset) {
+      this.listGraph.trigger('d3ListGraphNodeLeave', { id: data.nodeUri });
+    } else {
+      this.listGraph.trigger('d3ListGraphNodeEnter', { id: data.nodeUri });
+    }
+  }.bind(this));
+
+  treemapContext.on('lockTerms'  , function (data) {
+    if (data.reset) {
+      this.listGraph.trigger('d3ListGraphNodeUnlock', { id: data.nodeUri });
+    } else {
+      this.listGraph.trigger('d3ListGraphNodeLock', { id: data.nodeUri });
+    }
+  }.bind(this));
 }
 
 /*
@@ -57,5 +73,6 @@ angular
     'listGraphSettings',
     'dataSet',
     'pubSub',
+    'treemapContext',
     ListGraphCtrl
   ]);

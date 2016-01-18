@@ -573,7 +573,6 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.ui.build %>/styles/workflow-visualization.css': '<%= cfg.basePath.ui.src %>/styles/workflow-visualization.less',
           '<%= cfg.basePath.ui.build %>/styles/animate.css': '<%= cfg.basePath.ui.src %>/styles/animate.less',
           '<%= cfg.basePath.ui.build %>/styles/treemap.css': '<%= cfg.basePath.ui.src %>/styles/treemap.less',
-          '<%= cfg.basePath.ui.build %>/styles/list-graph.css': '<%= cfg.basePath.ui.src %>/styles/list-graph.less',
           '<%= cfg.basePath.ui.build %>/styles/dashboard.css': '<%= cfg.basePath.ui.src %>/styles/dashboard.less',
           '<%= cfg.basePath.ui.build %>/styles/provenance-visualization.css': '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less',
         }
@@ -608,7 +607,6 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.ui.compile %>/styles/workflow-visualization.css': '<%= cfg.basePath.ui.src %>/styles/workflow-visualization.less',
           '<%= cfg.basePath.ui.compile %>/styles/animate.css': '<%= cfg.basePath.ui.src %>/styles/animate.less',
           '<%= cfg.basePath.ui.compile %>/styles/treemap.css': '<%= cfg.basePath.ui.src %>/styles/treemap.less',
-          '<%= cfg.basePath.ui.compile %>/styles/list-graph.css': '<%= cfg.basePath.ui.src %>/styles/list-graph.less',
           '<%= cfg.basePath.ui.compile %>/styles/dashboard.css': '<%= cfg.basePath.ui.src %>/styles/dashboard.less',
           '<%= cfg.basePath.ui.compile %>/styles/provenance-visualization.css': '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less',
         }

@@ -1059,8 +1059,10 @@ a.analysis-header {
       li {
         position: relative;
         z-index: 1;
-        padding: 5px 1.5em 5px 0;
+        padding: 5px 3rem 5px 0;
         border-top: 1px solid @gray-lighter;
+        transition: all @fast-transition-speed @ease-in-out-cubic;
+        box-shadow: inset .2rem 0 0 0 rgba(0, 0, 0, 0), inset .3rem 0 0 0 rgba(255, 255, 255, 0), inset .4rem 0 0 0 fadeout(@orange, 100%), inset .7rem 0 0 0 fadeout(@orange, 100%), 0 1px 0 0 #fff;
 
         // Hack because uiScroll adds another invisible first child to the list.
         &:first-child {
@@ -1078,21 +1080,24 @@ a.analysis-header {
           border-top: none;
         }
 
-        &.soft-highlighting {
-          background: rgba(0, 0, 0, 0.05);
+        &.hovered {
+          padding-left: .4rem;
+          padding-right: 2.6rem;
+          box-shadow: inset .2rem 0 0 0 #000;
 
           a {
             color: @black;
           }
         }
 
-        &.highlighting {
+        &.locked {
           z-index: 2;
+          padding-left: .6rem;
+          padding-right: 2.4rem;
           color: @black;
-          border-top-color: @white;
-          background: lighten(@orange, 85%, relative);
-          // box-shadow: 0 1px 0 0 @white, inset 0 1px 0 0 fade(@orange, 10%), inset 0 -1px 0 0 fade(@orange, 10%);
-          box-shadow: 0 0 0 1px fade(@orange, 15%);
+          border-top-color: #fff;
+          box-shadow: inset .2rem 0 0 0 rgba(0, 0, 0, 0), inset .3rem 0 0 0 rgba(255, 255, 255, 0), inset .4rem 0 0 0 fadeout(@orange, 0%), inset .7rem 0 0 0 fadeout(@orange, 100%), 0 1px 0 0 #fff;
+          background: lighten(@orange, 100%, relative);
 
           a {
             color: @black;
@@ -1104,6 +1109,12 @@ a.analysis-header {
           .preview:focus {
             color: @black !important;
           }
+        }
+
+        &.locked.hovered {
+          padding-left: .9rem;
+          padding-right: 2.1rem;
+          box-shadow: inset .2rem 0 0 0 rgba(0, 0, 0, 1), inset .3rem 0 0 0 rgba(255, 255, 255, 1), inset .4rem 0 0 0 fadeout(@orange, 0%), inset .7rem 0 0 0 fadeout(@orange, 0%), 0 1px 0 0 #fff;
         }
 
         &.previewing {

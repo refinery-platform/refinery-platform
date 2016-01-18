@@ -12,9 +12,9 @@ function GraphFactory (_, Webworker) {
    * @return  {Graph}  Updated graph.
    */
   Graph.updateAnnotations = function (graph, annotations) {
-    // Note: Looping over the large graph uncondtionally and looping again over
+    // Note: Looping over the large graph unconditionally and looping again over
     // all annotations is **faster** than one conditional loop, which is
-    // potentially due to the high number of comparisions.
+    // potentially due to the high number of comparisons.
     var nodeKeys = Object.keys(graph), i;
 
     for (i = nodeKeys.length; i--;) {
@@ -50,11 +50,6 @@ function GraphFactory (_, Webworker) {
 
     if (numChildren) {
       accumulateAndPruneChildren(node, numChildren, valueProp, 0);
-      if (node.value) {
-        node.value += node[valueProp];
-      } else {
-        node.value = node[valueProp];
-      }
     }
 
     /**
@@ -65,12 +60,15 @@ function GraphFactory (_, Webworker) {
      *
      * @method  accumulateAndPruneChildren
      * @author  Fritz Lekschas
-     * @date    2015-08-18
+     * @date    2016-01-15
      *
      * @param   {Object}   node         D3 data object of the node.
      * @param   {Number}   numChildren  Number of children of `node.
-     * @param   {String}   valueProp    Property name of the propery holding the
-     *   value of the node's _size_.
+     * @param   {String}   valueProp    Name of the property that represents an
+     *   object of unique elements. The number of unique elements accounts for
+     *   the rectangle size of the tree map and length of the bar charts. The
+     *   property needs to be an object to easily assess unique IDs without
+     *   having to iterate over the array all the time.
      * @param   {Number}   depth        Original depth of the current node.
      * @param   {Boolean}  root         If node is the root.
      */
@@ -85,6 +83,7 @@ function GraphFactory (_, Webworker) {
       node.meta.originalDepth = depth;
       var i = numChildren;
       var j;
+      var childValue;
 
       // We move in reverse order so that deleting nodes doesn't affect future
       // indices.
@@ -107,14 +106,16 @@ function GraphFactory (_, Webworker) {
           numChildChildren = child.children.length;
         }
 
+        childValue = Object.keys(child[valueProp]);
+
         // We check again the number of children of the child since it can happen
         // that all children have been deleted meanwhile and the inner node became
         // a leaf as well.
         if (numChildChildren) {
           // Inner node.
-          if (child[valueProp]) {
+          if (childValue.length) {
             // Add own `numDataSets` to existing `value`.
-            child.value += child[valueProp];
+            child.value = childValue.length;
           } else {
             // We prune `child` because it doesn't have any direct value in
             // two cases:
@@ -167,26 +168,27 @@ function GraphFactory (_, Webworker) {
           }
         } else {
           // Leaf.
-          if (!child[valueProp]) {
+          if (childValue.length === 0) {
             // Leaf was not used for annotation so we remove it.
             node.children.splice(i, 1);
             numChildren--;
             child.pruned = true;
             continue;
           } else {
-            child.value = child[valueProp];
+            child.value = childValue.length;
             child.meta.leaf = true;
             child.meta.originalDepth = depth + 1;
             child.parents = [node];
           }
         }
 
-        // Increase `value` if the node by the children's `numDataSets`.
-        if (typeof node.value !== 'undefined') {
-          node.value += child.value;
-        } else {
-          node.value = child.value;
+        // Merge child's `valueProp` with the parent's, i.e. `node`,
+        // `valueProp`.
+        for (var p = childValue.length; p--;) {
+          node[valueProp][childValue[p]] = true;
         }
+        node.value = Object.keys(node[valueProp]).length;
+        node.bolzen = Object.keys(node[valueProp]).length;
       }
 
       // Mark node as being parsed
@@ -219,20 +221,27 @@ function GraphFactory (_, Webworker) {
    *
    * @description
    * Initially recall will always be `1` because we are expected to return all
-   * datasets in the beginnging.
+   * datasets in the beginning.
    *
    * @method  initPrecisionRecall
    * @author  Fritz Lekschas
    * @date    2015-12-22
-   * @param   {Object}   graph        Graph to be initialized.
-   * @param   {Integer}  numDataSets  Total number of datasets.
+   * @param   {Object}   graph            Graph to be initialized.
+   * @param   {String}   valueProp        Name of the property that represents
+   *   an object of unique elements. The number of unique elements accounts for
+   *   the rectangle size of the tree map and length of the bar charts. The
+   *   property needs to be an object to easily assess unique IDs without
+   *   having to iterate over the array all the time.
+   * @param   {Integer}  numAnnoDataSets  Total number of annotated datasets.
+   *   This number might be smaller than the total number of all data sets since
+   *   some might not be annotated.
    */
-  Graph.initPrecisionRecall = function (graph, numDataSets) {
+  Graph.initPrecisionRecall = function (graph, valueProperty, numAnnoDataSets) {
     var uris = Object.keys(graph), node;
 
     for (var i = uris.length; i--;) {
       node = graph[uris[i]];
-      node.precision = node.numDataSets / numDataSets;
+      node.precision = Object.keys(node[valueProperty]).length / numAnnoDataSets;
       node.precisionTotal = node.precision;
       node.recall = 1;
     }
@@ -320,7 +329,7 @@ function GraphFactory (_, Webworker) {
       // Remove parent reference
       node.parents = undefined;
       delete node.parents;
-      // Copy URIs temporarly
+      // Copy URIs temporarily
       uris = node.children.slice();
       // Initialize new array
       node.children = [];
@@ -330,7 +339,7 @@ function GraphFactory (_, Webworker) {
       }
     }
 
-    // Deep clone object to be usable by D3's treemap layout.
+    // Deep clone object to be usable by D3's tree map layout.
     return JSON.parse(JSON.stringify(newGraph[root]));
   };
 

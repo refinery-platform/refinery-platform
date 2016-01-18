@@ -34,7 +34,6 @@
     display: inline-block;
     position: relative;
     line-height: @top-bar-height;
-    max-width: 25%;
 
     &:first-child {
       margin-left: 0;
@@ -192,8 +191,7 @@
 .treemap svg {
   .inner-border {
     stroke: #000;
-    stroke-width: 4;
-    stroke-opacity: 0.1;
+    stroke-opacity: 0.15;
     transition: stroke-opacity @fast-transition-speed @ease-in-out-cubic;
   }
 
@@ -224,8 +222,57 @@
 }
 
 .list-graph {
+  position: absolute;
+  top: 0;
+  right: 5px;
+  bottom: 5px;
+  left: 5px;
+
   .top-bar {
-    top: 0 !important;
+    position: relative;
+    top: 0;
+    height: @top-bar-height;
+    border-bottom: 0;
+    overflow: hidden;
+  }
+
+  .top-bar.details .global-controls {
+    margin-top: -@top-bar-height;
+  }
+
+  .controls {
+    opacity: 1 !important;
+  }
+
+  .top-bar .local-controls .controls {
+    float: none;
+    opacity: 1 !important;
+  }
+
+  .controls li {
+    font-size: 12px;
+    line-height: @top-bar-height;
+    background: transparent;
+    max-width: none;
+  }
+
+  .controls [class*=' icon-'],
+  .controls [class^=icon-] {
+    top: 4px;
+    right: 4px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .controls .icon-gear {
+    top: 6px;
+    right: 6px;
+    width: 14px;
+    height: 14px;
+  }
+
+  .controls .expandable-label {
+    line-height: @top-bar-height;
   }
 
   .top-bar .global-controls .control-btn,
@@ -233,8 +280,9 @@
     box-shadow: 1px 0 0 0 #d9d9d9;
   }
 
-  .list-graph .top-bar .control-switch {
-    box-shadow: inset 1px 0 0 0 #d9d9d9, inset -1px 0 0 0 #d9d9d9, inset 0 -1px 0 0 #d9d9d9;
+  .top-bar .control-switch {
+    background: #fff;
+    box-shadow: inset 1px 0 0 0 #d9d9d9, inset 0 -1px 0 0 #d9d9d9;
   }
 
   .top-bar .control-btn {
@@ -252,13 +300,31 @@
     right: 4px;
     width: 16px;
     height: 16px;
-}
+  }
 
-  .top-bar.details .global-controls,
-  .top-bar.details .local-controls {
-    -webkit-transform: translate(0, -26px);
-    -moz-transform: translate(0, -26px);
-    -ms-transform: translate(0, -26px);
-    transform: translate(0, -26px);
+  .wrapper {
+    position: absolute;
+    top: @top-bar-height;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+
+  svg.base {
+    display: block;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .label {
+    display: block;
+    font-weight: normal;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25em;
   }
 }
