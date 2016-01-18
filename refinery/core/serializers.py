@@ -1,5 +1,22 @@
+import yaml
+
 from rest_framework import serializers
 from data_set_manager.models import AttributeOrder
+from data_set_manager.models import Assay
+
+
+class AssaySerializer(serializers.Serializer):
+
+    uuid = serializers.CharField()
+    study = serializers.CharField()
+    measurement = serializers.CharField()
+    measurement_accession = serializers.CharField()
+    measurement_source = serializers.CharField()
+    technology = serializers.CharField()
+    technology_accession = serializers.CharField()
+    technology_source = serializers.CharField()
+    platform = serializers.CharField()
+    file_name = serializers.CharField()
 
 
 class AttributeOrderSerializer(serializers.Serializer):

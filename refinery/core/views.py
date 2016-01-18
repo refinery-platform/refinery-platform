@@ -3,6 +3,7 @@ import re
 import urllib
 import xmltodict
 import json
+import yaml
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -17,6 +18,7 @@ from rest_framework.decorators import api_view
 from rest_framework.decorators import renderer_classes
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -40,7 +42,9 @@ from core.utils import get_data_sets_annotations
 from core.utils import generate_solr_params
 from core.utils import search_solr
 from core.serializers import AttributeOrderSerializer
+from core.serializers import AssaySerializer
 from data_set_manager.models import AttributeOrder
+from data_set_manager.models import Assay
 
 logger = logging.getLogger(__name__)
 
@@ -523,25 +527,45 @@ def analysis(request, analysis_uuid):
                               context_instance=RequestContext(request))
 
 
-@api_view(['GET'])
-def assays_files(request, uuid, format=None):
-    """Return solr response. Query requires assay_uuid.
-    Request & Response Params/Solr Params
-       @is_annotation - metadata
-       @facet_sort - ordering of the facet field constraints, (count or index)
-       @facet_count/facet -  enables facet counts in query response, true/false
-       @start - paginate, offset response
-       @limit/row - maximum number of documents
-       @study_uuid/assay_uuid - unique ids
-       @field_limit - set of fields to return
-       @facet_field - specify a field which should be treated as a facet
-       @facet_pivot - list of fields to pivot
-       @sort - Ordering include field name, whitespace, & asc or desc.
-       @fq - filter query
+class Assays(APIView):
+    """Return assay object
      """
 
-    if request.method == 'GET':
-        # Solr index requires assay uuid
+    def get_object(self, uuid):
+        try:
+            return Assay.objects.filter(uuid=uuid)
+        except Assay.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def get(self, request, uuid, format=None):
+        assays = self.get_object(uuid)
+        serializer = AssaySerializer(assays, many=True)
+        return Response(serializer.data)
+
+
+class AssaysFiles(APIView):
+    """Return solr response. Query requires assay_uuid.
+    Request & Response Params/Solr Params
+    ---
+    GET:
+        serializer: AttributeOrderSerializer
+        omit_serializer: false
+
+       is_annotation -- metadata
+       facet_sort -- ordering of the facet field constraints, (count or index)
+       facet_count/facet --  enables facet counts in query response, true/false
+       start -- paginate, offset response
+       limit/row -- maximum number of documents
+       study_uuid/assay_uuid -- unique ids
+       field_limit -- set of fields to return
+       facet_field -- specify a field which should be treated as a facet
+       facet_pivot -- list of fields to pivot
+       sort -- Ordering include field name, whitespace, & asc or desc.
+       fq -- filter query
+     """
+
+    def get(self, request, uuid, format=None):
+
         params = request.query_params
 
         solr_params = generate_solr_params(params, uuid)
@@ -550,34 +574,65 @@ def assays_files(request, uuid, format=None):
         return Response(solr_response_json)
 
 
-@api_view(['GET', 'POST', 'PUT'])
-def assays_attributes(request, uuid, format=None):
-    """Returns/Updates AttributeOrder model queries. Requires assay_uuid.
-    Response Params for each attribute:
-        @study - Title of study
-        @assay - Title of assay
-        @solr_field - field name
-        @rank - Position of the attribute in the facet list and table
-        @is_exposed - Show to non-owner users
-        @is_facet -  Attribute used as facet
-        @is_active - Shown in table by default
-        @is_internal - Retrived by solr but not shown to ANY user
-     """
-    try:
-        attribute_order = AttributeOrder.objects.filter(assay__uuid=uuid)
-    except AttributeOrder.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+class AssaysAttributes(APIView):
+    """
+    AttributeOrder Resource.
+    Returns/Updates AttributeOrder model queries. Requires assay_uuid.
+    The model is dynamically created, so users will not create new
+    attribute_orders.
 
-    if request.method == 'GET':
+    Updates attribute_model
+
+    ---
+    #YAML
+
+    PUT:
+        parameters_strategy:
+        form: replace
+        query: merge
+
+        serializer: AttributeOrderSerializer
+        omit_serializer: false
+
+        parameters:
+            - name: rank
+              description: Position of the attribute in the facet list and table
+              type: string
+            - name: is_exposed
+              description: Show to non-owner users
+              type: boolean
+            - name: is_facet
+              description: Attribute used as facet
+              type: boolean
+            - name: is_active
+              description: Shown in table by default
+              type: boolean
+            - name: is_internal
+              description: Retrived by solr but not shown to ANY user
+              type: boolean
+
+    ...
+    """
+
+    def get_object(self, uuid):
+        try:
+            return AttributeOrder.objects.filter(assay__uuid=uuid)
+        except AttributeOrder.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def get(self, request, uuid, format=None):
+        attribute_order = self.get_object(uuid)
         serializer = AttributeOrderSerializer(attribute_order, many=True)
         return Response(serializer.data)
 
-    elif request.method == 'POST':
-        data = JSONParser().parse(request)
-        serializer = AttributeOrderSerializer(data=data)
+    def put(self, request, uuid, format=None):
+
+        attribute_order = self.get_object(uuid)
+        serializer = AttributeOrderSerializer(attribute_order,
+                                               data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

@@ -4,7 +4,11 @@ Created on Feb 20, 2012
 @author: nils
 '''
 
-from django.conf.urls.defaults import patterns, url
+from django.conf.urls import patterns, url
+from rest_framework.urlpatterns import format_suffix_patterns
+from core.views import Assays
+from core.views import AssaysFiles
+from core.views import AssaysAttributes
 
 urlpatterns = patterns(
     'core.views',
@@ -42,11 +46,13 @@ urlpatterns = patterns(
         'analysis', name="analysis"),
     url(r'^api/v2/assays/(?P<uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
-        r''r'12})/files/'r'$', 'assays_files', name="assays_files"),
+        r''r'12})/'r'$', Assays.as_view()),
     url(r'^api/v2/assays/(?P<uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
-        r''r'12})/attributes/'r'$', 'assays_attributes',
-        name="assays_attributes"),
+        r''r'12})/files/'r'$', AssaysFiles.as_view()),
+    url(r'^api/v2/assays/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
+        r''r'12})/attributes/'r'$', AssaysAttributes.as_view()),
     url(r'^data_sets/(?P<data_set_uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
         'data_set', name="data_set"),
