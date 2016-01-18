@@ -36,7 +36,8 @@ from django_auth_ldap.backend import LDAPBackend
 from guardian.shortcuts import get_users_with_perms, \
     get_groups_with_perms, assign_perm, remove_perm, get_objects_for_group
 from registration.signals import user_registered, user_activated
-from data_set_manager.models import Investigation, Node, Study, Assay
+from data_set_manager.models import Investigation, Node, Study, Assay, \
+    NodeCollection
 from file_store.models import get_file_size, FileStoreItem
 from galaxy_connector.models import Instance
 from .utils import update_data_set_index, delete_data_set_index, \
