@@ -530,6 +530,15 @@ def analysis(request, analysis_uuid):
 class Assays(APIView):
     """
     Return assay object
+
+    ---
+    #YAML
+
+    GET:
+        serializer: AssaySerializer
+        omit_serializer: false
+
+    ...
     """
 
     def get_object(self, uuid):
@@ -611,6 +620,10 @@ class AssaysAttributes(APIView):
 
     ---
     #YAML
+
+    GET:
+        serializer: AttributeOrderSerializer
+        omit_serializer: false
 
     PUT:
         parameters_strategy:
