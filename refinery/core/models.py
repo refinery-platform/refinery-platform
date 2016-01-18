@@ -730,6 +730,23 @@ class Workflow(SharableResource, ManageableResource):
         )
 
 
+@receiver(pre_delete, sender=Workflow)
+def _workflow_delete(sender, instance, *args, **kwargs):
+    # Check if an Analysis has been run using the Workflow in question
+    if not len(Analysis.objects.filter(workflow=instance)) == 0:
+        # Hide Workflow from ui if an Analysis has been run on it
+        instance.is_active = False
+        instance.save()
+    else:
+        # If an Analysis hasn't been run on said Workflow delete
+        # WorkflowDataInputs and WorkflowInputRelationships if they exist
+        try:
+            instance.data_inputs.clear()
+            instance.input_reationships.clear()
+        except Exception as e:
+            logger.error("Could not delete WorkflowDataInput", e)
+
+
 class Project(SharableResource):
     is_catch_all = models.BooleanField(default=False)
 
