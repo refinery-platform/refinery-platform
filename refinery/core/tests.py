@@ -1118,3 +1118,52 @@ class CachingTest(unittest.TestCase):
         self.assertTrue(new_cache)
         # Make sure new cache represents the altered data
         self.assertNotEqual(self.initial_cache, new_cache)
+
+
+class WorkflowDeletionTest(unittest.TestCase):
+    """Testing for the deletion of workflows"""
+    def setup(self):
+        self.username = self.password = 'user'
+        self.user = User.objects.create_user(
+            self.username, '', self.password
+        )
+        self.get_credentials()
+        self.project = Project.objects.create()
+        self.user_catch_all_project = UserProfile.objects.get(
+            user=self.user
+        ).catch_all_project
+        self.galaxy_instance = Instance.objects.create()
+        self.workflow_engine = WorkflowEngine.objects.create(
+            instance=self.galaxy_instance)
+        self.dataset = DataSet.objects.create()
+
+    def get_credentials(self):
+        """Authenticate as self.user"""
+        # workaround required to use SessionAuthentication
+        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
+        return self.api_client.client.login(username=self.username,
+                                            password=self.password)
+
+    def test_verify_no_deletion_if_workflow_used_in_analysis(self):
+
+        self.workflow1 = Workflow.objects.create(
+            workflow_engine=self.workflow_engine, name="Cool Workflow1"
+        )
+        analysis = Analysis.objects.create(
+            name='bla',
+            summary='keks',
+            project=self.user_catch_all_project,
+            data_set=self.dataset,
+            workflow=self.workflow
+        )
+        analysis.set_owner(self.user)
+        self.workflow.delete()
+        self.assertFalse(Workflow.objects.get(name="Cool Workflow1").is_active)
+
+    def test_verify_deletion_if_workflow_not_used_in_analysis(self):
+
+        workflow1 = Workflow.objects.create(
+            workflow_engine=self.workflow_engine, name="Cool Workflow1"
+        )
+        workflow1.delete()
+        self.assertFalse(Workflow.objects.get(name="Cool Workflow1"))
