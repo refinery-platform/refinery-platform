@@ -528,8 +528,9 @@ def analysis(request, analysis_uuid):
 
 
 class Assays(APIView):
-    """Return assay object
-     """
+    """
+    Return assay object
+    """
 
     def get_object(self, uuid):
         try:
@@ -544,25 +545,50 @@ class Assays(APIView):
 
 
 class AssaysFiles(APIView):
-    """Return solr response. Query requires assay_uuid.
-    Request & Response Params/Solr Params
-    ---
-    GET:
-        serializer: AttributeOrderSerializer
-        omit_serializer: false
 
-       is_annotation -- metadata
-       facet_sort -- ordering of the facet field constraints, (count or index)
-       facet_count/facet --  enables facet counts in query response, true/false
-       start -- paginate, offset response
-       limit/row -- maximum number of documents
-       study_uuid/assay_uuid -- unique ids
-       field_limit -- set of fields to return
-       facet_field -- specify a field which should be treated as a facet
-       facet_pivot -- list of fields to pivot
-       sort -- Ordering include field name, whitespace, & asc or desc.
-       fq -- filter query
-     """
+    """
+    Return solr response. Query requires assay_uuid.
+
+    ---
+    #YAML
+
+    GET:
+        parameters:
+            - name: is_annotation
+              description: metadata
+              type: string
+            - name: facet_sort
+              description: ordering of facet field constraints count or index
+              type: string
+            - name: facet_count
+              description: enables facet counts in query response
+              type: boolean
+            - name: start
+              description: paginate, offset response
+              type: integer
+            - name: limit
+              description: In solr it's Row, maximum number of documents
+              type: integer
+            - name: study_uuid
+              description: unique study id
+              type: string
+            - name: field_limit
+              description: set of fields to return
+              type: string
+            - name: facet_field
+              description: specify a field which should be treated as a facet
+              type: string
+            - name: facet_pivot
+              description: list of fields to pivot
+              type: string
+            - name: sort
+              description: Ordering include field name, whitespace, & asc/desc
+              type: string
+            - name: fq
+              description: filter query
+              type: string
+    ...
+    """
 
     def get(self, request, uuid, format=None):
 
@@ -610,7 +636,6 @@ class AssaysAttributes(APIView):
             - name: is_internal
               description: Retrived by solr but not shown to ANY user
               type: boolean
-
     ...
     """
 
