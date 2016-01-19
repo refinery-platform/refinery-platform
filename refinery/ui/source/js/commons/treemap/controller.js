@@ -358,6 +358,28 @@ TreemapCtrl.prototype.addEventListeners = function () {
     }
     this.blurNode(termIds);
   }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeRoot', function (event, data) {
+    if (data.source !== 'treeMap') {
+      this.setRootNode({
+        ontId: this.nodeIndex[data.nodeUri][0].ontId,
+        uri: data.nodeUri,
+        // This is tricky because there are multiple paths in the tree map but
+        // not in the list graph.
+        branchId: 0
+      }, true);
+    }
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeUnroot', function (event, data) {
+    if (data.source !== 'treeMap') {
+      this.setRootNode({
+        ontId: this.absRootNode.ontId,
+        uri: this.absRootNode.uri,
+        branchId: 0
+      }, true);
+    }
+  }.bind(this));
 };
 
 TreemapCtrl.prototype.getParentAtLevel = function (node, level) {
@@ -804,11 +826,11 @@ TreemapCtrl.prototype.draw = function () {
       rootNodeData
     );
   } else {
-    this.rootNode = {
+    this.setRootNode({
       branchId: 0,
       ontId: this.data.ontId,
       uri: this.data.uri
-    };
+    });
   }
 
   this.addEventListeners();
@@ -1245,10 +1267,13 @@ TreemapCtrl.prototype.setBreadCrumb = function (node) {
  *
  * @method  transition
  * @author  Fritz Lekschas
- * @date    2015-08-03
- * @param   {Object}  data  D3 data object of the node to transition to.
+ * @date    2016-01-19
+ * @param   {Object}  data            D3 data object of the node to transition
+ *   to.
+ * @param   {Object}  noNotification  If `true` doesn't set the tree map context
+ *   since the method was called by `setRootNode` already.
  */
-TreemapCtrl.prototype.transition = function (data) {
+TreemapCtrl.prototype.transition = function (data, noNotification) {
   if (this.treemap.transitioning || !data) {
     return;
   }
@@ -1321,13 +1346,15 @@ TreemapCtrl.prototype.transition = function (data) {
       console.error(e);
     });
 
-  transition.then(function () {
-    this.rootNode = {
-      ontId: data.ontId,
-      uri: data.uri,
-      branchId: data.cache.branchId
-    };
-  }.bind(this));
+  if (!noNotification) {
+    transition.then(function () {
+      this.setRootNode({
+        ontId: data.ontId,
+        uri: data.uri,
+        branchId: data.cache.branchId
+      });
+    }.bind(this));
+  }
 };
 
 
@@ -1423,6 +1450,43 @@ Object.defineProperty(
     writable: true
 });
 
+TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
+  if (root.uri !== this.absRootNode.uri) {
+    if (!noNotification) {
+      this.$rootScope.$emit(
+        'dashboardVisNodeRoot',
+        {
+          nodeUris: [root.uri],
+          source: 'treeMap'
+        });
+    }
+  } else {
+    if (!noNotification && this.treemapContext.get('root')) {
+      this.$rootScope.$emit(
+        'dashboardVisNodeUnroot',
+        {
+          nodeUris: [this.treemapContext.get('root').uri],
+          source: 'treeMap'
+        }
+      );
+    }
+  }
+
+  this.treemapContext.set('root', {
+    ontId: root.ontId,
+    uri: root.uri,
+    branchId: root.branchId || 0
+  });
+
+  this.treemapContext.set(
+    'dataSets',
+    getAssociatedDataSets(this.cacheTerms[root.ontId][root.branchId]),
+    true
+  );
+
+  this.transition(this.cacheTerms[root.ontId][root.branchId], true);
+};
+
 /**
  * Current root node.
  *
@@ -1441,31 +1505,6 @@ Object.defineProperty(
     enumerable: true,
     get: function () {
       return this.treemapContext.get('root');
-    },
-    set: function (root) {
-      console.log(root, this.absRootNode.uri);
-      if (root.uri !== this.absRootNode.uri) {
-        this.$rootScope.$emit('dashboardVisNodeRoot', [root.uri]);
-      } else {
-        this.$rootScope.$emit(
-          'dashboardVisNodeUnroot',
-          [this.treemapContext.get('root').uri]
-        );
-      }
-
-      this.treemapContext.set('root', {
-        ontId: root.ontId,
-        uri: root.uri,
-        branchId: root.branchId
-      });
-
-      this.treemapContext.set(
-        'dataSets',
-        getAssociatedDataSets(this.cacheTerms[root.ontId][root.branchId]),
-        true
-      );
-
-      this.transition(this.cacheTerms[root.ontId][root.branchId]);
     }
 });
 

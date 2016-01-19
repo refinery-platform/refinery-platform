@@ -46,10 +46,78 @@ function ListGraphCtrl (
     }.bind(this));
   }
 
+  pubSub.on('d3ListGraphNodeEnter', function (data) {
+    var dataSetIds = this.getAssociatedDataSets(this.data[data.id]);
+
+    this.$rootScope.$emit(
+      'dashboardVisNodeEnter', {
+        nodeUri: data.id,
+        dataSetIds: dataSetIds,
+        source: 'listGraph'
+      }
+    );
+  }.bind(this));
+
+  pubSub.on('d3ListGraphNodeLeave', function (data) {
+    var dataSetIds = this.getAssociatedDataSets(this.data[data.id]);
+
+    this.$rootScope.$emit(
+      'dashboardVisNodeLeave', {
+        nodeUri: data.id,
+        dataSetIds: dataSetIds,
+        source: 'listGraph'
+      }
+    );
+  }.bind(this));
+
+  pubSub.on('d3ListGraphNodeLock', function (data) {
+    console.log('listgraph > dashboardVisNodeLock', data.id);
+    this.$rootScope.$emit(
+      'dashboardVisNodeLock', {
+        nodeUri: data.id,
+        dataSetIds: undefined,
+        source: 'listGraph'
+      }
+    );
+  }.bind(this));
+
+  pubSub.on('d3ListGraphNodeUnlock', function (data) {
+    console.log('listgraph > dashboardVisNodeUnlock', data.id);
+    this.$rootScope.$emit(
+      'dashboardVisNodeUnlock', {
+        nodeUri: data.id,
+        dataSetIds: undefined,
+        source: 'listGraph'
+      }
+    );
+  }.bind(this));
+
+  pubSub.on('d3ListGraphNodeRoot', function (data) {
+    console.log('listgraph > dashboardVisNodeRoot', data.id);
+    this.$rootScope.$emit(
+      'dashboardVisNodeRoot', {
+        nodeUri: data.id,
+        dataSetIds: undefined,
+        source: 'listGraph'
+      }
+    );
+  }.bind(this));
+
+  pubSub.on('d3ListGraphNodeUnroot', function (data) {
+    console.log('listgraph > dashboardVisNodeUnroot', data.id);
+    this.$rootScope.$emit(
+      'dashboardVisNodeUnroot', {
+        nodeUri: data.id,
+        dataSetIds: undefined,
+        source: 'listGraph'
+      }
+    );
+  }.bind(this));
+
   this.$rootScope.$on('dashboardVisNodeEnter', function (event, data) {
     // List graph might not be ready yet when a user hovers over a data set form
     // the list of data sets.
-    if (this.listGraph) {
+    if (this.listGraph && data.source !== 'listGraph') {
       this.listGraph.trigger('d3ListGraphNodeEnter', [data.nodeUri]);
     }
   }.bind(this));
@@ -57,7 +125,7 @@ function ListGraphCtrl (
   this.$rootScope.$on('dashboardVisNodeLeave', function (event, data) {
     // List graph might not be ready yet when a user hovers over a data set form
     // the list of data sets.
-    if (this.listGraph) {
+    if (this.listGraph && data.source !== 'listGraph') {
       this.listGraph.trigger('d3ListGraphNodeLeave', [data.nodeUri]);
     }
   }.bind(this));
@@ -65,7 +133,7 @@ function ListGraphCtrl (
   this.$rootScope.$on('dashboardVisNodeLock', function (event, data) {
     // List graph might not be ready yet when a user hovers over a data set form
     // the list of data sets.
-    if (this.listGraph) {
+    if (this.listGraph && data.source !== 'listGraph') {
       this.listGraph.trigger('d3ListGraphNodeLock', [data.nodeUri]);
     }
   }.bind(this));
@@ -73,7 +141,7 @@ function ListGraphCtrl (
   this.$rootScope.$on('dashboardVisNodeUnlock', function (event, data) {
     // List graph might not be ready yet when a user hovers over a data set form
     // the list of data sets.
-    if (this.listGraph) {
+    if (this.listGraph && data.source !== 'listGraph') {
       this.listGraph.trigger('d3ListGraphNodeUnlock', [data.nodeUri]);
     }
   }.bind(this));
@@ -81,7 +149,7 @@ function ListGraphCtrl (
   this.$rootScope.$on('dashboardVisNodeFocus', function (event, data) {
     // List graph might not be ready yet when a user hovers over a data set form
     // the list of data sets.
-    if (this.listGraph) {
+    if (this.listGraph && data.source !== 'listGraph') {
       var termIds = [];
       for (var i = data.terms.length; i--;) {
         termIds.push(data.terms[i].term);
@@ -96,7 +164,7 @@ function ListGraphCtrl (
   this.$rootScope.$on('dashboardVisNodeBlur', function (event, data) {
     // List graph might not be ready yet when a user hovers over a data set form
     // the list of data sets.
-    if (this.listGraph) {
+    if (this.listGraph && data.source !== 'listGraph') {
       var termIds = [];
       for (var i = data.terms.length; i--;) {
         termIds.push(data.terms[i].term);
@@ -111,19 +179,55 @@ function ListGraphCtrl (
   this.$rootScope.$on('dashboardVisNodeRoot', function (event, data) {
     // List graph might not be ready yet when a user hovers over a data set form
     // the list of data sets.
-    if (this.listGraph) {
-      this.listGraph.trigger('d3ListGraphNodeRoot', data);
+    if (this.listGraph && data.source !== 'listGraph') {
+      this.listGraph.trigger('d3ListGraphNodeRoot', data.nodeUris);
     }
   }.bind(this));
 
   this.$rootScope.$on('dashboardVisNodeUnroot', function (event, data) {
     // List graph might not be ready yet when a user hovers over a data set form
     // the list of data sets.
-    if (this.listGraph) {
-      this.listGraph.trigger('d3ListGraphNodeUnroot', data);
+    if (this.listGraph && data.source !== 'listGraph') {
+      this.listGraph.trigger('d3ListGraphNodeUnroot', data.nodeUris);
     }
   }.bind(this));
 }
+
+ListGraphCtrl.prototype.getAssociatedDataSets = function (node) {
+  var dataSetIds = {};
+
+  /**
+   * Recursively collecting dataset IDs to an object passed by reference.
+   *
+   * @method  collectIds
+   * @author  Fritz Lekschas
+   * @date    2015-10-14
+   *
+   * @param   {Object}  node        Current node, i.e. ontology term.
+   * @param   {Object}  dataSetIds  Object of boolean keys representing the
+   *   dataset IDs.
+   */
+  function collectIds (node, dataSetIds) {
+    var i, keys;
+
+    if (node.dataSets) {
+      keys = Object.keys(node.dataSets);
+      for (i = keys.length; i--;) {
+        dataSetIds[keys[i]] = true;
+      }
+    }
+
+    if (node.childRefs) {
+      for (i = node.childRefs.length; i--;) {
+        collectIds(node.childRefs[i], dataSetIds);
+      }
+    }
+  }
+
+  collectIds(node, dataSetIds);
+
+  return dataSetIds;
+};
 
 /*
  * -----------------------------------------------------------------------------
