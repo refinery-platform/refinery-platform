@@ -555,20 +555,16 @@ class AssaysFiles(APIView):
     #YAML
 
     GET:
-        type:
-            name:
-                required: true
-                type: string
-
-            url:
-                required: false
-                type: url
-
         parameters_strategy:
             form: replace
             query: merge
 
         parameters:
+            - name: uuid
+              description: assay uuid
+              type: string
+              required: true
+              paramType: path
             - name: is_annotation
               description: metadata
               type: string
@@ -609,10 +605,6 @@ class AssaysFiles(APIView):
               description: Ordering include field name, whitespace, & asc/desc
               type: string
               paramType: query
-            - name: fq
-              description: filter query
-              type: string
-              paramType: query
     ...
     """
 
@@ -651,10 +643,21 @@ class AssaysAttributes(APIView):
         omit_serializer: false
 
         parameters:
+            - name: uuid
+              description: Assay uuid
+              type: string
+              paramType: path
+              required: true
+            - name: solr_field
+              description: Title of solr field
+              type: string
+              paramType: form
+              required: true
             - name: rank
               description: Position of the attribute in facet list and table
               type: string
               paramType: form
+              required: true
             - name: is_exposed
               description: Show to non-owner users
               type: boolean
