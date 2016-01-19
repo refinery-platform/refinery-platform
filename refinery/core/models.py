@@ -611,8 +611,8 @@ def _dataset_delete(sender, instance, *args, **kwargs):
 
     # Delete NodeCollection and related objs. based on uuid of
     # Investigations
-    # This will delete any associated Studys, Assays, Nodes, Annotated
-    # Nodes in addition to the related objects detected by Django
+    # This may delete any associated Studys, Assays, Nodes, Annotated
+    # Nodes??????? in addition to the related objects detected by Django
 
     related_investigation_links = InvestigationLink.objects.filter(
                                                             data_set=instance)
@@ -953,14 +953,30 @@ def _analysis_delete(sender, instance, *args, **kwargs):
             if item.direction == 'in':
                 delete = False
 
-    # If we are deleting the Analysis, let us optimize Solr's index to
-    # reflect that
+    # If None of the Analyis's Nodes have been analyzed further, let us:
+    # 1. Delete assoctiated FileStoreItems
+    # 2. Optimize Solr's index to reflect that
+    # 3. Delete the Nodes
+    # 4. Continue on to delete the Analysis, AnalysisResults,
+    # WorkflowFilesDls, WorkflowDataInputMaps,
+    # AnalysisNodeConnections, and AnalysisStatus
+
     if delete:
 
-        node_conections = AnalysisNodeConnection.objects.filter(
+        # Delete associated FileStoreItems
+        for node in nodes:
+            if node.file_uuid:
+                try:
+                    FileStoreItem.objects.get(uuid=node.file_uuid).delete()
+                except Exception as e:
+                    logger.debug("Could not delete FileStore Item with uuid: "
+                                 "%s. " % node.file_uuid, e)
+
+        analysis_node_connections = AnalysisNodeConnection.objects.filter(
             analysis=instance)
 
-        for item in node_conections:
+        # Optimize Solr's index
+        for item in analysis_node_connections:
             if item.node and "Derived" in item.node.type:
                 try:
                     delete_analysis_index(item.node)
