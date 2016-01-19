@@ -985,16 +985,18 @@ def _analysis_delete(sender, instance, *args, **kwargs):
                                  item.id, e)
 
         solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
-                                   "data_set_manager"),
-                           timeout=10)
+                                   "data_set_manager"), timeout=10)
         """
             solr.optimize() Tells Solr to streamline the number of segments
             used, essentially a defragmentation/ garbage collection operation.
         """
         solr.optimize()
 
-    else:
-        pass
+        for node in nodes:
+            try:
+                node.delete()
+            except Exception as e:
+                logger.debug("Could not delete Node %s:" % node, e)
 
 
 class AnalysisNodeConnection(models.Model):
