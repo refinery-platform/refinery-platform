@@ -72,13 +72,14 @@ function getAssociatedDataSets (node) {
  * @param  {Object}  Webworker              Web Worker service.
  */
 function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
-  treemapSettings, pubSub, treemapContext, Webworker) {
+  treemapSettings, pubSub, treemapContext, Webworker, $rootScope) {
   this.$ = $;
   this._ = _;
   this.$q = $q;
   this.d3 = d3;
   this.HEX = HEX;
   this.$window = $window;
+  this.$rootScope = $rootScope;
   this.$element = this.$($element);
   this.$d3Element = this.$element.find('.treemap svg');
   this.settings = treemapSettings;
@@ -137,6 +138,11 @@ function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
     .select('.root-path');
   this.treemap.$grandParent = this.$(this.treemap.grandParent.node());
   this.treemap.$grandParentContainer = this.treemap.$grandParent.parent();
+
+  // To-DO: Refactor, the `visData` service should handle this properly
+  // The node index is needed to quickly access nodes since D3's tree map layout
+  // requires a data structure which doesn't provide any quick access.
+  this.nodeIndex = {};
 
   if (this.graph) {
     this.graph.then(function (data) {
@@ -218,7 +224,7 @@ TreemapCtrl.prototype.addChildren = function (parent, data, level, firstTime) {
     })
     .enter()
     .append('g')
-      .attr('class', 'leaf-node')
+      .attr('class', 'node leaf-node')
       .attr('opacity', 0);
 
   var extraPadding = (0.25 * (level - 1));
@@ -324,6 +330,114 @@ TreemapCtrl.prototype.addEventListeners = function () {
     e.preventDefault();
     this.visibleDepth += e.deltaY > 0 ? 1 : -1;
   }.bind(this));
+
+  // Listen to triggers from outside
+  this.$rootScope.$on('dashboardVisNodeFocus', function (event, data) {
+    var termIds = [];
+    if (data.terms) {
+      for (var i = data.terms.length; i--;) {
+        termIds.push(data.terms[i].term);
+      }
+    } else {
+      console.log('no annotations?', data);
+    }
+    this.focusNode(termIds);
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeBlur', function (event, data) {
+    var termIds = [];
+    if (data.terms) {
+      for (var i = data.terms.length; i--;) {
+        termIds.push(data.terms[i].term);
+      }
+    } else {
+      console.log('no annotations?', data);
+    }
+    this.blurNode(termIds);
+  }.bind(this));
+};
+
+TreemapCtrl.prototype.getParentAtLevel = function (node, level) {
+  // The parent's level must be lower than the node's level, hence if level is
+  // greater we can stop here directly.
+  if (level > node.meta.level) {
+    return;
+  }
+
+  var parent = node;
+
+  while (parent.meta.depth > level) {
+    parent = parent.parent;
+  }
+
+  return parent;
+};
+
+TreemapCtrl.prototype.focusNode = function (termIds) {
+  var visibleNodes = {},
+      nodes;
+
+  for (var i = termIds.length; i--;) {
+    nodes = this.nodeIndex[termIds[i]];
+    if (nodes && nodes.length) {
+      for (var j = nodes.length; j--;) {
+        if (nodes[j].meta.depth === this.visibleDepth) {
+          // Node is at the current level, i.e. it can be highlighted directly
+          visibleNodes[nodes[j].uri] = true;
+        } else {
+          // Find parent node at the current level
+          visibleNodes[
+            this.getParentAtLevel(nodes[j], this.visibleDepth).uri
+          ] = true;
+        }
+      }
+    }
+  }
+
+  nodes = this.treemap.element.selectAll('.node').filter(function (data) {
+    return visibleNodes[data.uri];
+  });
+
+  nodes.classed('focus', true).select('.bg')
+    .attr('fill', function (data, index) {
+      return this.color.call(this, data, index, undefined, true);
+    }.bind(this));
+
+  this.currentlyFocusedNodes = nodes;
+};
+
+TreemapCtrl.prototype.blurNode = function (termIds) {
+  var nodes = this.currentlyFocusedNodes;
+
+  if (!nodes || nodes.empty()) {
+    var visibleNodes = {};
+
+    for (var i = termIds.length; i--;) {
+      nodes = this.nodeIndex[termIds[i]];
+      if (nodes && nodes.length) {
+        for (var j = nodes.length; j--;) {
+          if (nodes[j].meta.depth === this.visibleDepth) {
+            // Node is at the current level, i.e. it can be highlighted directly
+            visibleNodes[nodes[j].uri] = true;
+          } else {
+            // Find parent node at the current level
+            visibleNodes[
+              this.getParentAtLevel(nodes[j], this.visibleDepth).uri
+            ] = true;
+          }
+        }
+      }
+    }
+
+    nodes = this.treemap.element.selectAll('.node').filter(function (data) {
+      return visibleNodes[data.uri];
+    });
+  }
+
+  nodes.classed('focus', false).select('.bg')
+    .attr('fill', function (data, index) {
+      return this.color.call(this, data);
+    }.bind(this));
 };
 
 /**
@@ -346,7 +460,7 @@ TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
 
   innerNodes = parentsWithChildren
     .append('g')
-      .attr('class', 'inner-node')
+      .attr('class', 'node inner-node')
       .attr('opacity', 0);
 
   innerNodes
@@ -926,6 +1040,15 @@ TreemapCtrl.prototype.layout = function (parent, depth) {
     this.cacheTerms[parent.ontId] = [parent];
     parent.cache.branchId = 0;
   }
+
+  // Store a reference to the node by it's URI. Since nodes can be duplicated
+  // there might be more than one tree map node refering to a term.
+  if (!this.nodeIndex[parent.uri]) {
+    this.nodeIndex[parent.uri] = [parent];
+  } else {
+    this.nodeIndex[parent.uri].push(parent);
+  }
+
   if (parent._children && parent._children.length) {
     this.depth = Math.max(this.depth, depth + 1);
     // This creates an anonymous 1px x 1px treemap and sets the children's
@@ -1396,5 +1519,6 @@ angular
     'pubSub',
     'treemapContext',
     'Webworker',
+    '$rootScope',
     TreemapCtrl
   ]);
