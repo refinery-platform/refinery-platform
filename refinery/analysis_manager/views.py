@@ -74,12 +74,14 @@ def analysis_status(request, uuid):
 
     if request.is_ajax():
         ret_json = {
-            'preprocessing': status.refinery_import_state(),
-            'execution': status.galaxy_import_state(),
-            'postprocessing': status.galaxy_export_state(),
+            'refineryImport': status.refinery_import_state(),
+            'galaxyImport': status.galaxy_import_state(),
+            'galaxyAnalysis': status.galaxy_analysis_state(),
+            'galaxyExport': status.galaxy_export_state(),
             'overall': analysis.get_status(),
         }
-        logger.debug("Analysis status for '%s': %s", analysis.name, ret_json)
+        logger.debug("Analysis status for '%s': %s",
+                     analysis.name, json.dumps(ret_json, indent=4))
         return HttpResponse(json.dumps(ret_json, indent=4),
                             mimetype='application/javascript')
     else:

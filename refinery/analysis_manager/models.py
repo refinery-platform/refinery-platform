@@ -45,34 +45,19 @@ class AnalysisStatus(models.Model):
             raise ValueError("Invalid Galaxy history state given")
 
     def refinery_import_state(self):
-        if self.refinery_import_task_group_id:
-            return get_task_group_state(self.refinery_import_task_group_id)
-        else:
-            return None
+        return get_task_group_state(self.refinery_import_task_group_id)
 
     def galaxy_import_state(self):
-        if self.galaxy_import_task_group_id:
-            state = get_task_group_state(self.galaxy_import_task_group_id)
-            # can not get analysis state in Galaxy from a task state
-            state.append({
-                'state': self.galaxy_history_state,
-                'percent_done': self.galaxy_history_progress
-            })
-            return state
-        else:
-            return None
+        return get_task_group_state(self.galaxy_import_task_group_id)
 
-    # def galaxy_analysis_state(self):
-    #     return {
-    #         'state': self.galaxy_history_state,
-    #         'percent_done': self.galaxy_history_progress
-    #     }
+    def galaxy_analysis_state(self):
+        return [{
+            'state': self.galaxy_history_state,
+            'percent_done': self.galaxy_history_progress
+        }]
 
     def galaxy_export_state(self):
-        if self.galaxy_export_task_group_id:
-            return get_task_group_state(self.galaxy_export_task_group_id)
-        else:
-            return None
+        return get_task_group_state(self.galaxy_export_task_group_id)
 
 
 def get_task_group_state(task_group_id):
@@ -90,11 +75,9 @@ def get_task_group_state(task_group_id):
         if task.state == celery.states.SUCCESS:
             percent_done = 100
         elif task.info:
-            percent_done = task.info.get('percent_done')
+            percent_done = task.info.get('percent_done') or 0
         task_group_state.append({
             'state': task.state,
             'percent_done': percent_done,
         })
-        logger.debug("'%s' - '%s' - '%s' - '%s'",
-                     task.task_name, task.state, task.info, percent_done)
     return task_group_state

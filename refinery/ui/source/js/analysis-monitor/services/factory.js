@@ -6,6 +6,7 @@ function analysisMonitorFactory($http, analysisService) {
   var analysesList = [];
   var analysesGlobalList = [];
   var analysesDetail = {};
+  var analysesDetail2 = {};
   var analysesRunningGlobalList = [];
   var analysesRunningList = [];
   var analysesOne = [];
@@ -21,6 +22,16 @@ function analysisMonitorFactory($http, analysisService) {
       "cancelingAnalyses": false,
     };
   };
+
+  var initializeAnalysesDetail2 = function(uuid){
+  analysesDetail2[uuid] = {
+    "refineryImport": [],
+    "galaxyImport": {},
+    "galaxyAnalysis": {},
+    "galaxyExport": [],
+    "cancelingAnalyses": false
+  };
+};
 
   //Ajax calls
 
@@ -58,7 +69,10 @@ function analysisMonitorFactory($http, analysisService) {
       url: '/analysis_manager/' + uuid + "/?format=json",
       headers: {"X-Requested-With": 'XMLHttpRequest'}
     }).then(function (response) {
-      processAnalysesGlobalDetail(response.data, uuid);
+      //processAnalysesGlobalDetail(response.data, uuid);
+      console.log("in get Analyses Detail");
+      console.log(response.data);
+      processAnalysesGlobalDetail2(response.data, uuid);
     }, function (error) {
       console.error("Error accessing analysis monitoring API");
     });
@@ -159,6 +173,46 @@ function analysisMonitorFactory($http, analysisService) {
       setExecutionStatus(data, uuid);
     }
   };
+  var processAnalysesGlobalDetail2 = function(data, uuid){
+    if (!(analysesDetail2.hasOwnProperty(uuid))){
+      initializeAnalysesDetail2(uuid);
+    }
+    setRefineryImportStatus(data, uuid);
+    setGalaxyImportStatus(data, uuid);
+    if(data.execution != null){
+      setGalaxyAnalysisStatus(data, uuid);
+    }
+    setGalaxyExportStatus(data, uuid);
+  };
+
+  var setRefineryImportStatus = function(data, uuid){
+    if (data.refineryImport){
+      for (var i = 0; i < data.refineryImport.length; i++) {
+        analysesDetail2[uuid].refineryImport[i] = data.refineryImport[i];
+      }
+    }
+  };
+
+  var setGalaxyImportStatus = function(data, uuid){
+    if (data.galaxyImport){
+      analysesDetail2[uuid].galaxyImport[0] = data.galaxyImport[0];
+    }
+  };
+
+  var setGalaxyAnalysisStatus = function(data, uuid){
+    if (data.galaxyAnalysis){
+      analysesDetail2[uuid].galaxyAnalysis[0] = data.galaxyAnalysis[0];
+    }
+  };
+
+  var setGalaxyExportStatus = function(data, uuid){
+    if (data.galaxyExport){
+      for (var i = 0; i < data.galaxyExport.length; i++) {
+        analysesDetail2[uuid].galaxyExport[i] = data.galaxyExport[i];
+      }
+    }
+  };
+
 
   var isNotPending = function(state){
     if(state === 'PENDING'){
@@ -169,7 +223,7 @@ function analysisMonitorFactory($http, analysisService) {
   };
 
   var setPreprocessingStatus = function(data, uuid){
-     if( isNotPending(data.preprocessing[0].state)) {
+     if (data.preprocessing[0] && isNotPending(data.preprocessing[0].state)) {
        analysesDetail[uuid].preprocessing = data.preprocessing[0].state;
        if( data.preprocessing[0].percent_done > analysesDetail[uuid].preprocessingPercentDone) {
         analysesDetail[uuid].preprocessingPercentDone = Math.floor(data.preprocessing[0].percent_done.replace("%","")) + "%";
@@ -178,7 +232,7 @@ function analysisMonitorFactory($http, analysisService) {
   };
 
   var setPostprocessingStatus = function(data, uuid){
-     if( isNotPending(data.postprocessing[0].state)) {
+     if (data.postprocessing[0] && isNotPending(data.postprocessing[0].state)) {
        analysesDetail[uuid].postprocessing = data.postprocessing[0].state;
        if(data.postprocessing[0].percent_done > analysesDetail[uuid].postprocessingPercentDone) {
         analysesDetail[uuid].postprocessingPercentDone = Math.floor(data.postprocessing[0].percent_done.replace("%","")) + "%";
@@ -187,7 +241,7 @@ function analysisMonitorFactory($http, analysisService) {
   };
 
   var setExecutionStatus = function(data, uuid){
-     if(isNotPending(data.execution[0].state)) {
+     if (data.execution[0] && isNotPending(data.execution[0].state)) {
        analysesDetail[uuid].execution = data.execution[0].state;
        if( data.execution[0].percent_done > analysesDetail[uuid].executionPercentDone) {
         analysesDetail[uuid].executionPercentDone = Math.floor(data.execution[0].percent_done.replace("%","")) + "%";
