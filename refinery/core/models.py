@@ -944,7 +944,7 @@ def _analysis_delete(sender, instance, *args, **kwargs):
 
     # Check if any Nodes created by the Analysis being deleted have been
     # analyzed further.
-    nodes = Node.objects.filter(ananlysis_uuid=instance.uuid)
+    nodes = Node.objects.filter(analysis_uuid=instance.uuid)
     delete = True
     for node in nodes:
         analysis_node_connections = AnalysisNodeConnection.objects.filter(
