@@ -609,6 +609,22 @@ def _dataset_delete(sender, instance, *args, **kwargs):
     delete_data_set_index(instance)
     delete_data_set_neo4j(instance.uuid)
 
+    # Delete NodeCollection and related objs. based on uuid of
+    # Investigations
+    # This will delete any associated Studys, Assays, Nodes, Annotated
+    # Nodes in addition to the related objects detected by Django
+
+    related_investigation_links = InvestigationLink.objects.filter(
+                                                            data_set=instance)
+    if related_investigation_links:
+        for item in related_investigation_links:
+            node_collection = NodeCollection.objects.get(
+                uuid=item.investigation.uuid)
+            try:
+                node_collection.delete()
+            except Exception as e:
+                logger.debug("Couldn't delete NodeCollection:", e)
+                
 
 class InvestigationLink(models.Model):
     data_set = models.ForeignKey(DataSet)
