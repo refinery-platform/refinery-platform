@@ -628,7 +628,7 @@ class AssaysAttributes(APIView):
 
         parameters:
             - name: rank
-              description: Position of the attribute in the facet list and table
+              description: Position of the attribute in facet list and table
               type: string
             - name: is_exposed
               description: Show to non-owner users
@@ -660,7 +660,7 @@ class AssaysAttributes(APIView):
 
         attribute_order = self.get_object(uuid)
         serializer = AttributeOrderSerializer(attribute_order,
-                                               data=request.data)
+                                              data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

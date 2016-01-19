@@ -50,7 +50,8 @@ class AttributeOrderSerializer(serializers.Serializer):
         instance.is_exposed = validated_data.get('is_exposed',
                                                  instance.is_exposed)
         instance.is_facet = validated_data.get('is_facet', instance.is_facet)
-        instance.is_active = validated_data.get('is_active', instance.is_active)
+        instance.is_active = validated_data.get('is_active',
+                                                instance.is_active)
         instance.is_internal = validated_data.get('is_internal',
                                                   instance.is_internal)
         instance.save()
