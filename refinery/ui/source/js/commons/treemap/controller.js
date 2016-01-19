@@ -145,6 +145,7 @@ function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
   this.nodeIndex = {};
 
   this.currentlyLockedNodes = {};
+  this.prevEvent = {};
 
   if (this.graph) {
     this.graph.then(function (data) {
@@ -788,6 +789,8 @@ TreemapCtrl.prototype.draw = function () {
     this.data.ready = true;
   }
 
+  this.absRootNode = this.data;
+
   this.display(this.data, true);
 
   var rootNodeData;
@@ -892,18 +895,19 @@ TreemapCtrl.prototype.highlightByTerm = function (
   data, multiple, hover, reset
 ) {
   var dataSetIds = getAssociatedDataSets(data),
-      i,
+      eventName,
       mode = hover ? 'hover' : 'lock',
-      prevData = this.treemapContext.get(mode + 'Terms');
+      prevData = this.prevEvent[mode + 'Terms'],
+      set = false;
 
   if (prevData && reset !== true) {
     if (multiple) {
       dataSetIds = this._.merge(dataSetIds, prevData.dataSetIds);
-    } else {
+    } else if (hover) {
       // Difference between previously highlighted datasets and datasets
       // highlighted next.
       var keys = Object.keys(prevData.dataSetIds);
-      for (i = keys.length; i--;) {
+      for (var i = keys.length; i--;) {
         if (dataSetIds[keys[i]]) {
           delete prevData.dataSetIds[keys[i]];
         }
@@ -911,75 +915,42 @@ TreemapCtrl.prototype.highlightByTerm = function (
     }
   }
 
-  // if (prevData && reset === undefined || reset === true) {
-  //   // Dehighlight previously highlighted data sets.
-  //   this.treemapContext.set(
-  //     mode + 'Terms',
-  //     {
-  //       dataSetIds: prevData.dataSetIds,
-  //       deactivate: true
-  //     },
-  //     true
-  //   );
-  // }
+  if (prevData) {
+    if (hover) {
+      eventName = 'dashboardVisNodeLeave';
+    } else {
+      eventName = 'dashboardVisNodeUnlock';
+    }
+    this.$rootScope.$emit(eventName, {
+      nodeUri: prevData.nodeUri,
+      dataSetIds: prevData.dataSetIds
+    });
 
-  if (prevData && prevData.nodeUri !== data.uri) {
-    this.treemapContext.set(
-      mode + 'Terms',
-      {
-        nodeUri: prevData.nodeUri,
-        dataSetIds: prevData.dataSetIds,
-        reset: true
-      },
-      true
-    );
-    // REFACTOR ASAP
-    if (!reset) {
-      this.treemapContext.set(
-        mode + 'Terms',
-        {
-          nodeUri: data.uri,
-          dataSetIds: dataSetIds,
-          reset: reset
-        },
-        true
-      );
+    if (prevData.nodeUri === data.uri) {
+      this.prevEvent[mode + 'Terms'] = undefined;
+    } else {
+      if (!reset) {
+        set = true;
+      }
     }
   } else {
-    this.treemapContext.set(
-      mode + 'Terms',
-      {
-        nodeUri: data.uri,
-        dataSetIds: dataSetIds,
-        reset: reset
-      },
-      true
-    );
+    if (!reset) {
+      set = true;
+    }
   }
 
-  // if (reset === undefined || reset === true) {
-  //   // Store previously highlighted datasets.
-  //   this.treemapContext.set(
-  //     'prevHighlightedDataSets',
-  //     {
-  //       ids: prevData.ids,
-  //       soft: soft
-  //     },
-  //     true
-  //   );
-  // }
-
-  // if (reset === undefined || reset === false) {
-  //   // Store highlighted datasets.
-  //   this.treemapContext.set(
-  //     'highlightedDataSets',
-  //     {
-  //       ids: dataSetIds,
-  //       soft: soft
-  //     },
-  //     true
-  //   );
-  // }
+  if (set) {
+    if (hover) {
+      eventName = 'dashboardVisNodeEnter';
+    } else {
+      eventName = 'dashboardVisNodeLock';
+    }
+    this.prevEvent[mode + 'Terms'] = {
+      nodeUri: data.uri,
+      dataSetIds: dataSetIds
+    };
+    this.$rootScope.$emit(eventName, this.prevEvent[mode + 'Terms']);
+  }
 };
 
 /**
@@ -1353,6 +1324,7 @@ TreemapCtrl.prototype.transition = function (data) {
   transition.then(function () {
     this.rootNode = {
       ontId: data.ontId,
+      uri: data.uri,
       branchId: data.cache.branchId
     };
   }.bind(this));
@@ -1471,8 +1443,19 @@ Object.defineProperty(
       return this.treemapContext.get('root');
     },
     set: function (root) {
+      console.log(root, this.absRootNode.uri);
+      if (root.uri !== this.absRootNode.uri) {
+        this.$rootScope.$emit('dashboardVisNodeRoot', [root.uri]);
+      } else {
+        this.$rootScope.$emit(
+          'dashboardVisNodeUnroot',
+          [this.treemapContext.get('root').uri]
+        );
+      }
+
       this.treemapContext.set('root', {
         ontId: root.ontId,
+        uri: root.uri,
         branchId: root.branchId
       });
 

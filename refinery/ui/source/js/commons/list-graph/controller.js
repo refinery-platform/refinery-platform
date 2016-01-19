@@ -46,19 +46,35 @@ function ListGraphCtrl (
     }.bind(this));
   }
 
-  treemapContext.on('hoverTerms', function (data) {
-    if (data.reset) {
-      this.listGraph.trigger('d3ListGraphNodeLeave', { id: data.nodeUri });
-    } else {
-      this.listGraph.trigger('d3ListGraphNodeEnter', { id: data.nodeUri });
+  this.$rootScope.$on('dashboardVisNodeEnter', function (event, data) {
+    // List graph might not be ready yet when a user hovers over a data set form
+    // the list of data sets.
+    if (this.listGraph) {
+      this.listGraph.trigger('d3ListGraphNodeEnter', [data.nodeUri]);
     }
   }.bind(this));
 
-  treemapContext.on('lockTerms'  , function (data) {
-    if (data.reset) {
-      this.listGraph.trigger('d3ListGraphNodeUnlock', { id: data.nodeUri });
-    } else {
-      this.listGraph.trigger('d3ListGraphNodeLock', { id: data.nodeUri });
+  this.$rootScope.$on('dashboardVisNodeLeave', function (event, data) {
+    // List graph might not be ready yet when a user hovers over a data set form
+    // the list of data sets.
+    if (this.listGraph) {
+      this.listGraph.trigger('d3ListGraphNodeLeave', [data.nodeUri]);
+    }
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeLock', function (event, data) {
+    // List graph might not be ready yet when a user hovers over a data set form
+    // the list of data sets.
+    if (this.listGraph) {
+      this.listGraph.trigger('d3ListGraphNodeLock', [data.nodeUri]);
+    }
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeUnlock', function (event, data) {
+    // List graph might not be ready yet when a user hovers over a data set form
+    // the list of data sets.
+    if (this.listGraph) {
+      this.listGraph.trigger('d3ListGraphNodeUnlock', [data.nodeUri]);
     }
   }.bind(this));
 
@@ -89,6 +105,22 @@ function ListGraphCtrl (
         nodeIds: termIds,
         zoomIn: true
       });
+    }
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeRoot', function (event, data) {
+    // List graph might not be ready yet when a user hovers over a data set form
+    // the list of data sets.
+    if (this.listGraph) {
+      this.listGraph.trigger('d3ListGraphNodeRoot', data);
+    }
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeUnroot', function (event, data) {
+    // List graph might not be ready yet when a user hovers over a data set form
+    // the list of data sets.
+    if (this.listGraph) {
+      this.listGraph.trigger('d3ListGraphNodeUnroot', data);
     }
   }.bind(this));
 }
