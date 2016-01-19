@@ -12,9 +12,10 @@ from django.contrib.auth.models import User
 from django.db import connection
 from django.utils.http import urlquote
 
-
 from .search_indexes import DataSetIndex
 from data_set_manager.search_indexes import NodeIndex
+from data_set_manager.models import AttributeOrder
+from core.serializers import AttributeOrderSerializer
 
 
 logger = logging.getLogger(__name__)
@@ -684,9 +685,12 @@ def generate_solr_params(params, assay_uuid):
                 facet_field.split(','))
         solr_params = ''.join([solr_params, split_facet_fields])
     else:
-        url_params = '&'.join([solr_params, fixed_solr_params])
-        facet_field_query = get_facet_fields_query(url_params)
-        solr_params = ''.join([solr_params, facet_field_query])
+        attributes_str = AttributeOrder.objects.filter(assay__uuid=assay_uuid)
+        attributes = AttributeOrderSerializer(attributes_str, many=True)
+        filtered_attributes = parse_attributes(attributes.data)
+        # url_params = '&'.join([solr_params, fixed_solr_params])
+        # facet_field_query = get_facet_fields_query(url_params)
+        solr_params = ''.join([solr_params, filtered_attributes])
 
     if field_limit is not None:
         solr_params = ''.join([solr_params, '&fl=', field_limit])
@@ -701,6 +705,16 @@ def generate_solr_params(params, assay_uuid):
     encoded_solr_params = urlquote(url, safe='=& ')
 
     return encoded_solr_params
+
+
+def parse_attributes(attributes):
+    query = ""
+    for field in attributes:
+        is_facet = field.get("is_facet")
+        if is_facet:
+            query = ''.join([query, '&facet.field=', field.get("solr_field")])
+
+    return query
 
 
 def search_solr(encoded_params, core):
