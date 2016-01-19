@@ -688,8 +688,6 @@ def generate_solr_params(params, assay_uuid):
         attributes_str = AttributeOrder.objects.filter(assay__uuid=assay_uuid)
         attributes = AttributeOrderSerializer(attributes_str, many=True)
         filtered_attributes = parse_attributes(attributes.data)
-        # url_params = '&'.join([solr_params, fixed_solr_params])
-        # facet_field_query = get_facet_fields_query(url_params)
         solr_params = ''.join([solr_params, filtered_attributes])
 
     if field_limit is not None:
@@ -710,8 +708,7 @@ def generate_solr_params(params, assay_uuid):
 def parse_attributes(attributes):
     query = ""
     for field in attributes:
-        is_facet = field.get("is_facet")
-        if is_facet:
+        if field.get("is_facet"):
             query = ''.join([query, '&facet.field=', field.get("solr_field")])
 
     return query
