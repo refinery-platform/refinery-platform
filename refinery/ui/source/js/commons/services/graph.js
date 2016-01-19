@@ -133,12 +133,17 @@ function GraphFactory (_, Webworker) {
                   graph[child.children[j]].meta.pruned = [child.name];
                 }
 
+                // Decrease the actual depth
+                graph[child.children[j]].meta.depth--;
+
                 if (graph[child.children[j]].parents) {
                   for (var o = graph[child.children[j]].parents.length; o--;) {
                     // Remove child as parent from child's children and add node
                     // as a parent.
                     if (graph[child.children[j]].parents[o] === child) {
+                      // Remove former parent
                       graph[child.children[j]].parents.splice(o, 1);
+                      // Push new parent
                       graph[child.children[j]].parents.push(node);
                     }
                   }
@@ -177,7 +182,6 @@ function GraphFactory (_, Webworker) {
           } else {
             child.value = childValue.length;
             child.meta.leaf = true;
-            child.meta.originalDepth = depth + 1;
             child.parents = [node];
           }
         }
@@ -188,7 +192,6 @@ function GraphFactory (_, Webworker) {
           node[valueProp][childValue[p]] = true;
         }
         node.value = Object.keys(node[valueProp]).length;
-        node.bolzen = Object.keys(node[valueProp]).length;
       }
 
       // Mark node as being parsed
