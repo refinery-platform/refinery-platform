@@ -711,6 +711,18 @@ DashboardCtrl.prototype.deselectDataSets = function () {
   }.bind(this), 0);
 };
 
+DashboardCtrl.prototype.dataSetMouseEnter = function (dataSet) {
+  this.$rootScope.$emit('dashboardVisNodeFocus', {
+    terms: dataSet.annotations
+  });
+};
+
+DashboardCtrl.prototype.dataSetMouseLeave = function (dataSet) {
+  this.$rootScope.$emit('dashboardVisNodeBlur', {
+    terms: dataSet.annotations
+  });
+};
+
 angular
   .module('refineryDashboard')
   .controller('DashboardCtrl', [

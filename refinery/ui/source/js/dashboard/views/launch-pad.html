@@ -153,7 +153,9 @@
             ui-scroll="dataSet in dashboard.dataSets"
             buffer-size="50"
             adapter="dashboard.dataSetsAdapter"
-            ng-class="{'hovered': dataSet.hovered, 'locked': dataSet.locked, 'previewing': dataSet.preview}">
+            ng-class="{'hovered': dataSet.hovered, 'locked': dataSet.locked, 'previewing': dataSet.preview}"
+            ng-mouseenter="dashboard.dataSetMouseEnter(dataSet)"
+            ng-mouseleave="dashboard.dataSetMouseLeave(dataSet)">
             <button
               class="preview"
               ng-click="dashboard.expandDataSetPreview(dataSet, $index)">

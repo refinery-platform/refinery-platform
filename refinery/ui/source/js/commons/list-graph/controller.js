@@ -12,10 +12,12 @@
  * @param   {Object}  pubSub             PubSub service.
  */
 function ListGraphCtrl (
-  $element, $, graph, listGraphSettings, dataSet, pubSub, treemapContext
+  $element, $rootScope, $, graph, listGraphSettings, dataSet, pubSub,
+  treemapContext
 ) {
   this.$ = $;
   this.$element = this.$($element);
+  this.$rootScope = $rootScope;
   this.settings = listGraphSettings;
   this.$visElement = this.$element.find('.list-graph');
 
@@ -25,6 +27,10 @@ function ListGraphCtrl (
   if (this.graphData) {
     this.graphData.then(function (graphData) {
       this.data = graphData;
+      // Causes bug but should be done.
+      // if (this.rootIds.length === 1) {
+      //   this.rootIds = this.data[this.rootIds[0]].children;
+      // }
       this.listGraph = new ListGraph(
         this.$visElement[0],
         this.data,
@@ -55,6 +61,28 @@ function ListGraphCtrl (
       this.listGraph.trigger('d3ListGraphNodeLock', { id: data.nodeUri });
     }
   }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeFocus', function (event, data) {
+    var termIds = [];
+    for (var i = data.terms.length; i--;) {
+      termIds.push(data.terms[i].term);
+    }
+    this.listGraph.trigger('d3ListGraphFocusNodes', {
+      nodeIds: termIds,
+      zoomOut: true
+    });
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeBlur', function (event, data) {
+    var termIds = [];
+    for (var i = data.terms.length; i--;) {
+      termIds.push(data.terms[i].term);
+    }
+    this.listGraph.trigger('d3ListGraphBlurNodes', {
+      nodeIds: termIds,
+      zoomIn: true
+    });
+  }.bind(this));
 }
 
 /*
@@ -68,6 +96,7 @@ angular
   .module('listGraph')
   .controller('ListGraphCtrl', [
     '$element',
+    '$rootScope',
     '$',
     'graph',
     'listGraphSettings',
