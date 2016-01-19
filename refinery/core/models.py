@@ -941,23 +941,44 @@ WORKFLOW_NODE_CONNECTION_TYPES = (
 # Deletes Analyses' related NodeIndexes from Solr upon deletion
 @receiver(pre_delete, sender=Analysis)
 def _analysis_delete(sender, instance, *args, **kwargs):
-    node_conections = AnalysisNodeConnection.objects.filter(analysis=instance)
-    for item in node_conections:
-        if item.node and "Derived" in item.node.type:
-            try:
-                delete_analysis_index(item.node)
-            except Exception as e:
-                logger.debug("No NodeIndex exists in Solr with id %s: %s",
-                             item.id, e)
 
-    solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
-                               "data_set_manager"),
-                       timeout=10)
-    """
-        solr.optimize() Tells Solr to streamline the number of segments used,
-        essentially a defragmentation/ garbage collection operation.
-    """
-    solr.optimize()
+    # Check if any Nodes created by the Analysis being deleted have been
+    # analyzed further.
+    nodes = Node.objects.filter(ananlysis_uuid=instance.uuid)
+    delete = True
+    for node in nodes:
+        analysis_node_connections = AnalysisNodeConnection.objects.filter(
+            node=node)
+        for item in analysis_node_connections:
+            if item.direction == 'in':
+                delete = False
+
+    # If we are deleting the Analysis, let us optimize Solr's index to
+    # reflect that
+    if delete:
+
+        node_conections = AnalysisNodeConnection.objects.filter(analysis=
+                                                                instance)
+
+        for item in node_conections:
+            if item.node and "Derived" in item.node.type:
+                try:
+                    delete_analysis_index(item.node)
+                except Exception as e:
+                    logger.debug("No NodeIndex exists in Solr with id %s: %s",
+                                 item.id, e)
+
+        solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
+                                   "data_set_manager"),
+                           timeout=10)
+        """
+            solr.optimize() Tells Solr to streamline the number of segments used,
+            essentially a defragmentation/ garbage collection operation.
+        """
+        solr.optimize()
+
+    else:
+        pass
 
 
 class AnalysisNodeConnection(models.Model):
