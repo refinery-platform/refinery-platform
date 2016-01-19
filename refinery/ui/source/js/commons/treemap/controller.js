@@ -144,6 +144,8 @@ function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
   // requires a data structure which doesn't provide any quick access.
   this.nodeIndex = {};
 
+  this.currentlyLockedNodes = {};
+
   if (this.graph) {
     this.graph.then(function (data) {
       this.data = data;
@@ -476,12 +478,18 @@ TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
 
   innerNodes
     .append('use')
-      .attr('xlink:href', '#unlocked')
+      .attr({
+        'class': 'icon-unlocked',
+        'xlink:href': '/static/images/icons.svg#unlocked'
+      })
       .call(this.setUpNodeCenterIcon.bind(this));
 
   innerNodes
     .append('use')
-      .attr('xlink:href', '#locked')
+      .attr({
+        'class': 'icon-locked',
+        'xlink:href': '/static/images/icons.svg#locked'
+      })
       .call(this.setUpNodeCenterIcon.bind(this));
 
   innerNodes
@@ -986,16 +994,30 @@ TreemapCtrl.prototype.highlightByTerm = function (
 TreemapCtrl.prototype.lockHighlightEl = function (element) {
   var d3El = this.d3.select(element);
 
-  // Unlock previously locked element
-  this.treemap.element.select('.locked').classed('locked', false).select('.bg')
+  if (this.currentlyLockedNode) {
+    this.currentlyLockedNode.classed('locked', false).select('.bg')
     .attr('fill', function (data, index) {
       return this.color.call(this, data);
     }.bind(this));
 
-  d3El.classed('locked', true).select('.bg')
-    .attr('fill', function (data, index) {
-      return this.color.call(this, data, index, undefined, true);
-    }.bind(this));
+    if (this.currentlyLockedNode.datum().uri === d3El.datum().uri) {
+      this.currentlyLockedNode = undefined;
+    } else {
+      d3El.classed('locked', true).select('.bg')
+        .attr('fill', function (data, index) {
+          return this.color.call(this, data, index, undefined, true);
+        }.bind(this));
+
+      this.currentlyLockedNode = d3El;
+    }
+  } else {
+    d3El.classed('locked', true).select('.bg')
+      .attr('fill', function (data, index) {
+        return this.color.call(this, data, index, undefined, true);
+      }.bind(this));
+
+    this.currentlyLockedNode = d3El;
+  }
 };
 
 /**

@@ -63,25 +63,33 @@ function ListGraphCtrl (
   }.bind(this));
 
   this.$rootScope.$on('dashboardVisNodeFocus', function (event, data) {
-    var termIds = [];
-    for (var i = data.terms.length; i--;) {
-      termIds.push(data.terms[i].term);
+    // List graph might not be ready yet when a user hovers over a data set form
+    // the list of data sets.
+    if (this.listGraph) {
+      var termIds = [];
+      for (var i = data.terms.length; i--;) {
+        termIds.push(data.terms[i].term);
+      }
+      this.listGraph.trigger('d3ListGraphFocusNodes', {
+        nodeIds: termIds,
+        zoomOut: true
+      });
     }
-    this.listGraph.trigger('d3ListGraphFocusNodes', {
-      nodeIds: termIds,
-      zoomOut: true
-    });
   }.bind(this));
 
   this.$rootScope.$on('dashboardVisNodeBlur', function (event, data) {
-    var termIds = [];
-    for (var i = data.terms.length; i--;) {
-      termIds.push(data.terms[i].term);
+    // List graph might not be ready yet when a user hovers over a data set form
+    // the list of data sets.
+    if (this.listGraph) {
+      var termIds = [];
+      for (var i = data.terms.length; i--;) {
+        termIds.push(data.terms[i].term);
+      }
+      this.listGraph.trigger('d3ListGraphBlurNodes', {
+        nodeIds: termIds,
+        zoomIn: true
+      });
     }
-    this.listGraph.trigger('d3ListGraphBlurNodes', {
-      nodeIds: termIds,
-      zoomIn: true
-    });
   }.bind(this));
 }
 
