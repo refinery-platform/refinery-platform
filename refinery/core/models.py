@@ -624,7 +624,7 @@ def _dataset_delete(sender, instance, *args, **kwargs):
                 node_collection.delete()
             except Exception as e:
                 logger.debug("Couldn't delete NodeCollection:", e)
-                
+
 
 class InvestigationLink(models.Model):
     data_set = models.ForeignKey(DataSet)
@@ -957,8 +957,8 @@ def _analysis_delete(sender, instance, *args, **kwargs):
     # reflect that
     if delete:
 
-        node_conections = AnalysisNodeConnection.objects.filter(analysis=
-                                                                instance)
+        node_conections = AnalysisNodeConnection.objects.filter(
+            analysis=instance)
 
         for item in node_conections:
             if item.node and "Derived" in item.node.type:
@@ -972,8 +972,8 @@ def _analysis_delete(sender, instance, *args, **kwargs):
                                    "data_set_manager"),
                            timeout=10)
         """
-            solr.optimize() Tells Solr to streamline the number of segments used,
-            essentially a defragmentation/ garbage collection operation.
+            solr.optimize() Tells Solr to streamline the number of segments
+            used, essentially a defragmentation/ garbage collection operation.
         """
         solr.optimize()
 
