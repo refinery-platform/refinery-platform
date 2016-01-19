@@ -555,40 +555,64 @@ class AssaysFiles(APIView):
     #YAML
 
     GET:
+        type:
+            name:
+                required: true
+                type: string
+
+            url:
+                required: false
+                type: url
+
+        parameters_strategy:
+            form: replace
+            query: merge
+
         parameters:
             - name: is_annotation
               description: metadata
               type: string
+              paramType: query
             - name: facet_sort
               description: ordering of facet field constraints count or index
               type: string
+              paramType: query
             - name: facet_count
               description: enables facet counts in query response
               type: boolean
+              paramType: query
             - name: start
               description: paginate, offset response
               type: integer
+              paramType: query
             - name: limit
               description: In solr it's Row, maximum number of documents
               type: integer
+              paramType: query
             - name: study_uuid
               description: unique study id
               type: string
+              paramType: query
             - name: field_limit
               description: set of fields to return
               type: string
+              paramType: query
             - name: facet_field
               description: specify a field which should be treated as a facet
               type: string
+              paramType: query
             - name: facet_pivot
               description: list of fields to pivot
               type: string
+              paramType: query
             - name: sort
               description: Ordering include field name, whitespace, & asc/desc
               type: string
+              paramType: query
             - name: fq
               description: filter query
               type: string
+              paramType: query
     ...
     """
 
@@ -630,18 +654,23 @@ class AssaysAttributes(APIView):
             - name: rank
               description: Position of the attribute in facet list and table
               type: string
+              paramType: form
             - name: is_exposed
               description: Show to non-owner users
               type: boolean
+              paramType: form
             - name: is_facet
               description: Attribute used as facet
               type: boolean
+              paramType: form
             - name: is_active
               description: Shown in table by default
               type: boolean
+              paramType: form
             - name: is_internal
               description: Retrived by solr but not shown to ANY user
               type: boolean
+              paramType: form
     ...
     """
 
