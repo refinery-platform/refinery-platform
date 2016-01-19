@@ -3,21 +3,14 @@ import re
 import urllib
 import xmltodict
 import json
-import yaml
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.sites.models import get_current_site
 from django.core.urlresolvers import reverse
 from django.http import (
-    HttpResponse, HttpResponseForbidden, HttpResponseRedirect,
-    HttpResponseBadRequest
-)
+    HttpResponse, HttpResponseForbidden, HttpResponseRedirect)
 
-from rest_framework.decorators import api_view
-from rest_framework.decorators import renderer_classes
-from rest_framework.renderers import JSONRenderer
-from rest_framework.parsers import JSONParser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
