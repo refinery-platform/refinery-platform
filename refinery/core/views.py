@@ -531,6 +531,13 @@ class Assays(APIView):
         serializer: AssaySerializer
         omit_serializer: false
 
+        parameters:
+            - name: uuid
+              description: Assay uuid
+              type: string
+              paramType: path
+              required: true
+
     ...
     """
 
@@ -633,6 +640,13 @@ class AssaysAttributes(APIView):
     GET:
         serializer: AttributeOrderSerializer
         omit_serializer: false
+
+        parameters:
+            - name: uuid
+              description: Assay uuid
+              type: string
+              paramType: path
+              required: true
 
     PUT:
         parameters_strategy:
