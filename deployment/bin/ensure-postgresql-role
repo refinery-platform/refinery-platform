@@ -1,0 +1,23 @@
+#!/bin/sh
+
+USER=refinery
+
+HOST=$(jq -r .Address /home/ubuntu/rds)
+PORT=$(jq -r .Port /home/ubuntu/rds)
+
+psql -c '
+
+DO                
+$body$
+BEGIN
+   IF NOT EXISTS (
+      SELECT *
+      FROM   pg_catalog.pg_roles
+      WHERE  rolname = '"'$USER'"') THEN
+      CREATE ROLE '"$USER"';
+   END IF;
+END
+$body$;
+
+' "postgresql://root:mypassword@$(jq -r .Address ~/rds):$(jq -r .Port ~/rds)/postgres"
+
