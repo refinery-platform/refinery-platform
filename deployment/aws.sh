@@ -25,6 +25,11 @@ bin/aws-rds-endpoint db20160111 > /home/ubuntu/rds
 export FACTER_RDS_HOST=$(jq -r .Address /home/ubuntu/rds)
 export FACTER_RDS_PORT=$(jq -r .Port /home/ubuntu/rds)
 
+# Create RDS user and database here, instead of using puppet
+# (because drj cou;dn't work out how to do it in puppet)
+bin/ensure-postgresql-role
+bin/ensure-postgresql-database
+
 sudo su -c '/usr/local/bin/librarian-puppet install' ubuntu
 
 /usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/modules /srv/refinery-platform/deployment/manifests/aws.pp
