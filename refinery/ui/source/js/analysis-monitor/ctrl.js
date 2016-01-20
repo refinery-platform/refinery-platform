@@ -149,7 +149,6 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
         var runningUuid = vm.analysesRunningList[i].uuid;
         analysisMonitorFactory.getAnalysesDetail(runningUuid).then(function (response) {
           //vm.analysesDetail[runningUuid] = analysisMonitorFactory.analysesDetail[runningUuid];
-          console.log(analysisMonitorFactory.analysesDetail2[runningUuid]);
           vm.analysesDetail2[runningUuid] = analysisMonitorFactory.analysesDetail2[runningUuid];
         });
       }

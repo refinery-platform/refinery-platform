@@ -168,7 +168,7 @@
                     </span>
 
                     <li class="analysisRunningListItem">
-                      Input File Import
+                      Refinery Import
                       <span rp-analysis-monitor-input-tooltip>
                         <i class="fa fa-question-circle"></i>
                       </span>
@@ -181,14 +181,14 @@
                               {{ obj.state }}
                             </div>
                           </div>
-                          <div ng-switch-when="PROGRESS">
+                          <div ng-switch-when="RUNNING">
                             <div class="progress progress-analysis-bg">
                               <div
                                 class="progress-bar progress-bar-striped
                                 active"
                                 role="progressbar"
                                 {# TODO: update name #}
-                                id="preprocessing-{{ analysis.uuid }}"
+                                id="rf-import-{{ analysis.uuid }}"
                                 style="width:{{obj.percent_done}}">
                                 <span class="progress-analyses-text">
                                   {{obj.percent_done}}
@@ -211,36 +211,40 @@
                     </li>
 
                     <li class="analysisRunningListItem">
-                      Execution
+                      Galaxy Import
                       <span rp-analysis-monitor-execution-tooltip>
                         <i class="fa fa-question-circle"></i>
                       </span>
-                      <div ng-switch on="AMCtrl.analysesDetail[analysis.uuid]
-                      .execution">
+
+                      <div ng-switch on="AMCtrl.analysesDetail2[analysis
+                      .uuid].galaxyImport.state">
                         <div ng-switch-when="SUCCESS">
                           <div class="alert alert-success">
-                            {{ AMCtrl.analysesDetail[analysis.uuid]
-                              .execution }}
+                            {{ AMCtrl.analysesDetail2[analysis
+                      .uuid].galaxyImport.state }}
                           </div>
                         </div>
-                        <div ng-switch-when="RETRY">
+                        <div ng-switch-when="RUNNING">
                           <div class="progress progress-analysis-bg">
                             <div
                               class="progress-bar progress-bar-striped
                               active"
                               role="progressbar"
-                              id="execution-{{ analysis.uuid }}" style="width:
-                            {{AMCtrl.analysesDetail[analysis.uuid].executionPercentDone}}">
+                              id="galaxy-import-{{ analysis.uuid }}"
+                              style="width:
+                            {{AMCtrl.analysesDetail2[analysis
+                      .uuid].galaxyImport.percent_done}}">
                               <span class="progress-analyses-text">
-                                {{AMCtrl.analysesDetail[analysis.uuid]
-                                  .executionPercentDone}}
+                                {{AMCtrl.analysesDetail2[analysis
+                      .uuid].galaxyImport.percent_done}}
                               </span>
                             </div>
                           </div>
                         </div>
                         <div ng-switch-when="FAILURE">
                           <div class="alert alert-warning">
-                            {{ AMCtrl.analysesDetail[analysis.uuid].execution }}
+                            {{  AMCtrl.analysesDetail2[analysis
+                      .uuid].galaxyImport.state }}
                             </div>
                         </div>
                         <div ng-switch-default>
@@ -252,35 +256,31 @@
                     </li>
 
                     <li class="analysisRunningListItem">
-                      Output File Import
+                      Galaxy Analysis
                       <span rp-analysis-monitor-output-tooltip>
                         <i class="fa fa-question-circle"></i>
                       </span>
-                      <div ng-switch on="AMCtrl
-                      .analysesDetail[analysis.uuid].postprocessing">
+                      <div ng-switch on="AMCtrl.analysesDetail2[analysis
+                      .uuid].galaxyAnalysis.state">
                         <div ng-switch-when="SUCCESS">
                           <div class="alert alert-success">
-                            {{ AMCtrl.analysesDetail[analysis.uuid]
-                              .postprocessing }}
+                            {{ AMCtrl.analysesDetail2[analysis.uuid].galaxyAnalysis.state }}
                           </div>
                         </div>
                         <div ng-switch-when="FAILURE">
                           <div class="alert alert-warning">
-                            {{ AMCtrl.analysesDetail[analysis.uuid]
-                              .postprocessing }}
+                            {{ AMCtrl.analysesDetail2[analysis.uuid].galaxyAnalysis.state }}
                           </div>
                         </div>
-                        <div ng-switch-when="PROGRESS">
+                        <div ng-switch-when="running">
                           <div class="progress progress-analysis-bg">
                             <div
                               class="progress-bar progress-bar-striped active"
                               role="progressbar"
-                              id="postprocessing-{{ analysis.uuid }}"
-                              style="width:{{AMCtrl.analysesDetail[analysis.uuid]
-                            .postprocessingPercentDone}}">
+                              id="galaxy-analysis-{{ analysis.uuid }}"
+                              style="width:{{AMCtrl.analysesDetail2[analysis.uuid].galaxyAnalysis.percent_done}}%">
                               <span class="progress-analyses-text">
-                                {{AMCtrl.analysesDetail[analysis.uuid]
-                                  .postprocessingPercentDone}}
+                                {{AMCtrl.analysesDetail2[analysis.uuid].galaxyAnalysis.percent_done}}
                                 </span>
                             </div>
                           </div>
@@ -292,6 +292,50 @@
                         </div>
                       </div>
                     </li>
+
+                    <li class="analysisRunningListItem">
+                      Galaxy Export
+                      <span rp-analysis-monitor-input-tooltip>
+                        <i class="fa fa-question-circle"></i>
+                      </span>
+
+                      <div ng-repeat="obj in AMCtrl.analysesDetail2[analysis.uuid]
+                      .galaxyExport">
+                        <div ng-switch on="obj.state">
+                          <div ng-switch-when="SUCCESS">
+                            <div class="alert alert-success">
+                              {{ obj.state }}
+                            </div>
+                          </div>
+                          <div ng-switch-when="PROGRESS">
+                            <div class="progress progress-analysis-bg">
+                              <div
+                                class="progress-bar progress-bar-striped
+                                active"
+                                role="progressbar"
+                                {# TODO: update name #}
+                                id="galaxy-export-{{ analysis.uuid }}"
+                                style="width:{{obj.percent_done}}">
+                                <span class="progress-analyses-text">
+                                  {{obj.percent_done}}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div ng-switch-when="FAILURE">
+                            <div class="alert alert-warning">
+                              {{ obj.state }}
+                              </div>
+                          </div>
+                          <div ng-switch-default>
+                            <div class="alert alert-info">
+                              PENDING
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+
                   </ul>
                 </div>
             </div>
