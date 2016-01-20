@@ -1625,7 +1625,7 @@ def _baseresource_save(sender, instance, **kwargs):
 @receiver_subclasses(pre_delete, NodeCollection,
                      "nodecollection_pre_delete")
 def _nodecollection_delete(sender, instance, **kwargs):
-    # Handles the deletion of Studys/and filestoreitems related to a DataSet
+    # Handles the deletion of filestoreitems related to a DataSet
     nodes = Node.objects.filter(study=instance)
     for node in nodes:
         try:
