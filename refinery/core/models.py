@@ -658,12 +658,12 @@ class WorkflowDataInput (models.Model):
         return self.name + " (" + str(self.internal_id) + ")"
 
 
-class WorkflowEngine (OwnableResource, ManageableResource):
+class WorkflowEngine(OwnableResource, ManageableResource):
     # TODO: remove Galaxy dependency
     instance = models.ForeignKey(Instance, blank=True)
 
     def __unicode__(self):
-        return self.name + " - " + self.summary
+        return str(self.name) + " - " + str(self.summary)
 
     class Meta:
         verbose_name = "workflowengine"
