@@ -13,8 +13,10 @@ BEGIN
    IF NOT EXISTS (
       SELECT *
       FROM   pg_catalog.pg_roles
-      WHERE  rolname = '"'$USER'"') THEN
-      CREATE ROLE '"$USER"';
+      WHERE  rolname = '"'$USER'"' )
+   THEN
+      CREATE ROLE '"$USER"' CREATEDB;
+      GRANT '"$USER"' to root;
    END IF;
 END
 $body$;
