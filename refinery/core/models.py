@@ -955,11 +955,12 @@ def _analysis_delete(sender, instance, *args, **kwargs):
 
     # If None of the Analyis's Nodes have been analyzed further, let us:
     # 1. Delete assoctiated FileStoreItems
-    # 2. Optimize Solr's index to reflect that
-    # 3. Delete the Nodes
-    # 4. Continue on to delete the Analysis, AnalysisResults,
+    # 2. Delete AnalysisResults
+    # 3. Optimize Solr's index to reflect that
+    # 4. Delete the Nodes
+    # 5. Continue on to delete the Analysis,
     # WorkflowFilesDls, WorkflowDataInputMaps,
-    # AnalysisNodeConnections, and AnalysisStatus
+    # AnalysisNodeConnections, and AnalysisStatus'
 
     if delete:
 
