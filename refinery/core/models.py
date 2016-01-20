@@ -763,10 +763,13 @@ def _workflow_delete(sender, instance, *args, **kwargs):
         # If an Analysis hasn't been run on said Workflow delete
         # WorkflowDataInputs and WorkflowInputRelationships if they exist
         try:
-            instance.data_inputs.clear()
-            instance.input_reationships.clear()
+            instance.data_inputs.remove()
         except Exception as e:
             logger.error("Could not delete WorkflowDataInput", e)
+        try:
+            instance.input_relationships.remove()
+        except Exception as e:
+            logger.error("Could not delete WorkflowInputRelationship", e)
 
 
 class Project(SharableResource):
