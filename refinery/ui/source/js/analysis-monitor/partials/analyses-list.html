@@ -189,9 +189,9 @@
                                 role="progressbar"
                                 {# TODO: update name #}
                                 id="rf-import-{{ analysis.uuid }}"
-                                style="width:{{obj.percent_done}}">
+                                style="width:{{obj.percent_done}}%">
                                 <span class="progress-analyses-text">
-                                  {{obj.percent_done}}
+                                  {{obj.percent_done}}%
                                 </span>
                               </div>
                             </div>
@@ -232,11 +232,11 @@
                               role="progressbar"
                               id="galaxy-import-{{ analysis.uuid }}"
                               style="width:
-                            {{AMCtrl.analysesDetail2[analysis
-                      .uuid].galaxyImport.percent_done}}">
+                            {{AMCtrl.analysesDetail2[analysis.uuid]
+                                .galaxyImport.percent_done}}%">
                               <span class="progress-analyses-text">
-                                {{AMCtrl.analysesDetail2[analysis
-                      .uuid].galaxyImport.percent_done}}
+                                {{AMCtrl.analysesDetail2[analysis.uuid]
+                                  .galaxyImport.percent_done}}%
                               </span>
                             </div>
                           </div>
@@ -280,7 +280,8 @@
                               id="galaxy-analysis-{{ analysis.uuid }}"
                               style="width:{{AMCtrl.analysesDetail2[analysis.uuid].galaxyAnalysis.percent_done}}%">
                               <span class="progress-analyses-text">
-                                {{AMCtrl.analysesDetail2[analysis.uuid].galaxyAnalysis.percent_done}}
+                                {{AMCtrl.analysesDetail2[analysis.uuid]
+                                  .galaxyAnalysis.percent_done}}%
                                 </span>
                             </div>
                           </div>
@@ -307,7 +308,7 @@
                               {{ obj.state }}
                             </div>
                           </div>
-                          <div ng-switch-when="PROGRESS">
+                          <div ng-switch-when="RUNNING">
                             <div class="progress progress-analysis-bg">
                               <div
                                 class="progress-bar progress-bar-striped
@@ -315,9 +316,9 @@
                                 role="progressbar"
                                 {# TODO: update name #}
                                 id="galaxy-export-{{ analysis.uuid }}"
-                                style="width:{{obj.percent_done}}">
+                                style="width:{{obj.percent_done}}%">
                                 <span class="progress-analyses-text">
-                                  {{obj.percent_done}}
+                                  {{obj.percent_done}}%
                                 </span>
                               </div>
                             </div>
