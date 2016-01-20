@@ -1008,6 +1008,12 @@ def _analysis_delete(sender, instance, *args, **kwargs):
                 node.delete()
             except Exception as e:
                 logger.debug("Could not delete Node %s:" % node, e)
+    else:
+        logger.error("Cannot delete Analysis: %s because one or  more of "
+                     "it's Nodes have been further analyzed" % instance)
+        raise forms.ValidationError("Cannot delete Analysis: %s because one "
+                                    "or  more of it's Nodes have been "
+                                    "further analyzed" % instance)
 
 
 class AnalysisNodeConnection(models.Model):
