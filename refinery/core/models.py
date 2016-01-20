@@ -975,6 +975,16 @@ def _analysis_delete(sender, instance, *args, **kwargs):
         analysis_node_connections = AnalysisNodeConnection.objects.filter(
             analysis=instance)
 
+        # Delete associated AnalysisResults
+        analysis_results = AnalysisResult.objects.filter(
+            analysis_uuid=instance.uuid)
+        for item in analysis_results:
+            try:
+                item.delete()
+            except Exception as e:
+                logger.debug("Could not delete AnalysisResult %s:" %
+                             item, e)
+
         # Optimize Solr's index
         for item in analysis_node_connections:
             if item.node and "Derived" in item.node.type:
