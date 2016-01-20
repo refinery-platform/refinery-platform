@@ -179,9 +179,7 @@ function analysisMonitorFactory($http, analysisService) {
     }
     setRefineryImportStatus(data, uuid);
     setGalaxyImportStatus(data, uuid);
-    if(data.execution != null){
-      setGalaxyAnalysisStatus(data, uuid);
-    }
+    setGalaxyAnalysisStatus(data, uuid);
     setGalaxyExportStatus(data, uuid);
   };
 
@@ -195,13 +193,13 @@ function analysisMonitorFactory($http, analysisService) {
 
   var setGalaxyImportStatus = function(data, uuid){
     if (data.galaxyImport){
-      analysesDetail2[uuid].galaxyImport[0] = data.galaxyImport[0];
+      analysesDetail2[uuid].galaxyImport = data.galaxyImport[0];
     }
   };
 
   var setGalaxyAnalysisStatus = function(data, uuid){
     if (data.galaxyAnalysis){
-      analysesDetail2[uuid].galaxyAnalysis[0] = data.galaxyAnalysis[0];
+      analysesDetail2[uuid].galaxyAnalysis = data.galaxyAnalysis[0];
     }
   };
 
