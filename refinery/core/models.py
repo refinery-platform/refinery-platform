@@ -1002,6 +1002,7 @@ def _analysis_delete(sender, instance, *args, **kwargs):
         """
         solr.optimize()
 
+        # Delete Nodes Associated w/ the Analysis
         for node in nodes:
             try:
                 node.delete()
