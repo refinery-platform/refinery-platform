@@ -1067,6 +1067,13 @@ class CachingTest(unittest.TestCase):
 
     def tearDown(self):
         cache.clear()
+    def test_cache_invalidation(self):
+        ds = DataSet.objects.get(slug="TestSlug5")
+
+        # Check if cache can be invalidated
+        invalidate_cached_object(ds)
+
+        self.assertEqual(cache.get("%d-DataSet" % self.user.id), None)
 
     def test_verify_data_after_save(self):
         # Grab, alter, and save an object being cached
