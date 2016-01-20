@@ -1611,3 +1611,15 @@ def _baseresource_save(sender, instance, **kwargs):
     # Handles the invalidation of cached objects
     # that have BaseResource as a subclass after a save
     invalidate_cached_object(instance)
+
+
+@receiver_subclasses(pre_delete, NodeCollection,
+                     "nodecollection_pre_delete")
+def _nodecollection_delete(sender, instance, **kwargs):
+    # Handles the deletion of Studys/and filestoreitems related to a DataSet
+    nodes = Node.objects.filter(study=instance)
+    for node in nodes:
+        try:
+            FileStoreItem.objects.filter(uuid=node.file_uuid).delete()
+        except Exception as e:
+            logger.debug("Could not delete FileStoreItem:%s" % str(e))
