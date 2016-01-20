@@ -256,6 +256,7 @@ function analysisMonitorFactory($http, analysisService) {
    analysesList: analysesList,
    analysesGlobalList: analysesGlobalList,
    analysesDetail: analysesDetail,
+   analysesDetail2: analysesDetail2,
    analysesRunningList:analysesRunningList,
    analysesRunningGlobalList:analysesRunningGlobalList,
  };
