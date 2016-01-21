@@ -4,6 +4,7 @@ python:
 services:
   - postgresql
   - neo4j
+  - memcached
 install:
   - pip install -r requirements.txt
 env:
