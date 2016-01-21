@@ -1017,6 +1017,9 @@ class BaseResourceSlugTest(unittest.TestCase):
         self.assertEqual(DataSet.objects.filter(slug="TestSlug")
                          .count(), 1)
 
+    def tearDown(self):
+        DataSet.objects.all().delete()
+
     def test_empty_slug(self):
         self.assertTrue(DataSet.objects.create(slug=""))
 
@@ -1106,7 +1109,7 @@ class CachingTest(unittest.TestCase):
         # Check if cache can be invalidated
         invalidate_cached_object(DataSet.objects.get(slug="TestSlug1"))
 
-        self.assertFalse(cache.get("DataSet"))
+        self.assertFalse(cache.get("%d-DataSet" % self.user.id))
         # Adding to cache again
         cache.add("%d-DataSet" % self.user.id, DataSet.objects.all())
         new_cache = cache.get("%d-DataSet" % self.user.id)
@@ -1114,4 +1117,3 @@ class CachingTest(unittest.TestCase):
         self.assertTrue(new_cache)
         # Make sure new cache represents the altered data
         self.assertNotEqual(self.initial_cache, new_cache)
-
