@@ -17,7 +17,8 @@ from django.conf import settings
 from data_set_manager.models import Node, Attribute, AnnotatedNode, Study, \
     Assay, AnnotatedNodeRegistry
 from data_set_manager.search_indexes import NodeIndex
-from .models import AttributeOrder
+from core.models import DataSet, InvestigationLink
+from .models import AttributeOrder, Study, Investigation
 from .serializers import AttributeOrderSerializer
 
 
@@ -572,6 +573,15 @@ def generate_solr_params(params, assay_uuid):
         solr_params = ''.join([solr_params, split_facet_fields])
     else:
         attributes_str = AttributeOrder.objects.filter(assay__uuid=assay_uuid)
+        study_str = Study.objects.get(assay__uuid=assay_uuid)
+        investigation_link = study_str.investigation
+        dataset_str = InvestigationLink.objects.filter(
+                investigation=investigation_link)
+        dataset_link = dataset_str.model.data_set
+        dataset = DataSet.objects.get(
+                investigationlink=dataset_str).get_owner()
+        #data = dataset.model
+        # owner = data.get_owner()
         attributes = AttributeOrderSerializer(attributes_str, many=True)
         filtered_attributes = parse_attributes(attributes.data)
         solr_params = ''.join([solr_params, filtered_attributes])
