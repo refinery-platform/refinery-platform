@@ -10,6 +10,8 @@ from registration.forms import RegistrationFormUniqueEmail
 from registration.backends.default.views import ActivationView
 from registration.backends.default.views import RegistrationView
 from tastypie.api import Api
+from rest_framework import routers
+
 from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     NodeResource, NodeSetListResource, NodePairResource,\
     NodeRelationshipResource, WorkflowResource, ExtendedGroupResource, \
@@ -18,6 +20,7 @@ from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     UserAuthenticationResource, InvitationResource, FastQCResource,  \
     UserProfileResource
 from core.models import DataSet
+from data_set_manager.views import Assays, AssaysFiles, AssaysAttributes
 from data_set_manager.api import AttributeOrderResource, StudyResource,\
     AssayResource, InvestigationResource, ProtocolResource, \
     ProtocolReferenceResource, ProtocolReferenceParameterResource, \
@@ -36,6 +39,7 @@ sqs = (SearchQuerySet().using("core")
 
 # Uncomment the next two lines to enable the admin:
 admin.autodiscover()
+
 
 # NG: added for tastypie URL
 v1_api = Api(api_name='v1')
@@ -149,6 +153,18 @@ urlpatterns = patterns(
         ),
         name='search'
     ),
+
+    url(r'^api/v2/assays/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
+        r''r'12})/$', Assays.as_view()),
+
+    url(r'^api/v2/assays/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
+        r''r'12})/files/$', AssaysFiles.as_view()),
+
+    url(r'^api/v2/assays/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
+        r''r'12})/attributes/$', AssaysAttributes.as_view()),
 
     # (r'^favicon\.ico$',
     # 'django.views.generic.simple.redirect_to',

@@ -4,18 +4,13 @@ import py2neo
 import core
 import datetime
 import urlparse
-import requests
-import json
+
 from django.conf import settings
 from django.core.cache import cache
 from django.contrib.auth.models import User
 from django.db import connection
-from django.utils.http import urlquote
 
 from .search_indexes import DataSetIndex
-from data_set_manager.search_indexes import NodeIndex
-from data_set_manager.models import AttributeOrder
-from core.serializers import AttributeOrderSerializer
 
 
 logger = logging.getLogger(__name__)
@@ -587,142 +582,3 @@ def invalidate_cached_object(instance):
     except Exception as e:
         logger.debug("Could not delete %s from cache" %
                      instance.__class__.__name__, e)
-
-
-def parse_facet_fields(query):
-    """Returns a list of facet fields."""
-    query_json = json.loads(query)
-    docs_list = query_json['response']['docs']
-    facet_list = docs_list[0].keys()
-    filtered_facet_list = filter_facet_fields(facet_list)
-
-    return filtered_facet_list
-
-
-def filter_facet_fields(facet_list):
-    """Returns a filtered facet field list."""
-    hidden_fields = ["uuid", "id", "django_id", "file_uuid", "study_uuid",
-                     "assay_uuid", "type", "is_annotation", "species",
-                     "genome_build", "name", "django_ct"]
-    filtered_facet_list = []
-
-    for field in facet_list:
-        if field not in hidden_fields:
-            filtered_facet_list.append(field)
-
-    return filtered_facet_list
-
-
-def generate_facet_fields_query(facet_fields):
-    """Return facet_field query (str).
-        Solr requirs facet fields to be separated"""
-    query = ""
-    for field in facet_fields:
-        query = ''.join([query, '&facet.field=', field])
-
-    return query
-
-
-def get_facet_fields_query(params):
-    """Returns a facet_field_query by making a solr request and parsing fields
-    params"""
-    temp_params = urlquote(params, safe='=& ')
-    full_response = search_solr(temp_params, 'data_set_manager')
-    facet_field = parse_facet_fields(full_response)
-    facet_field_query = generate_facet_fields_query(facet_field)
-    return facet_field_query
-
-
-def generate_solr_params(params, assay_uuid):
-    """Creates the encoded solr params requiring only an assay or study uuid.
-    Keyword Argument
-        params -- python dict or QueryDict
-    Params/Solr Params
-        is_annotation - metadata
-        facet_sort - ordering of the facet field constraints, (count or index)
-        facet_count/facet - enables facet counts in query response, true/false
-        start - paginate, offset response
-        limit/row - maximum number of documents
-        study_uuid/assay_uuid - unique ids
-        field_limit - set of fields to return
-        facet_field - specify a field which should be treated as a facet
-        facet_pivot - list of fields to pivot
-        sort - Ordering include field name, whitespace, & asc or desc.
-        fq - filter query
-     """
-
-    file_types = 'fq=type:("Raw Data File" OR ' \
-                 '"Derived Data File" OR ' \
-                 '"Array Data File" OR ' \
-                 '"Derived Array Data File" OR ' \
-                 '"Array Data Matrix File" OR' \
-                 '"Derived Array Data Matrix File")'
-
-    is_annotation = params.get('is_annotation', default='false')
-    facet_sort = params.get('facet_sort', default='count')
-    facet_count = params.get('facet_count', default='true')
-    start = params.get('start', default='0')
-    row = params.get('limit', default='20')
-    field_limit = params.get('field_limit', default=None)
-    facet_field = params.get('facet_field', default=None)
-    facet_pivot = params.get('facet_pivot', default=None)
-    sort = params.get('sort', default=None)
-
-    fixed_solr_params = \
-        '&'.join([file_types,
-                  'fq=is_annotation:%s' % is_annotation,
-                  'start=%s' % start,
-                  'rows=%s' % row,
-                  'q=django_ct:data_set_manager.node&wt=json',
-                  'facet=%s' % facet_count,
-                  'facet.limit=-1',
-                  'facet.sort= %s' % facet_sort])
-
-    solr_params = ''.join(['fq=assay_uuid:', assay_uuid])
-
-    if facet_field is not None:
-        split_facet_fields = generate_facet_fields_query(
-                facet_field.split(','))
-        solr_params = ''.join([solr_params, split_facet_fields])
-    else:
-        attributes_str = AttributeOrder.objects.filter(assay__uuid=assay_uuid)
-        attributes = AttributeOrderSerializer(attributes_str, many=True)
-        filtered_attributes = parse_attributes(attributes.data)
-        solr_params = ''.join([solr_params, filtered_attributes])
-
-    if field_limit is not None:
-        solr_params = ''.join([solr_params, '&fl=', field_limit])
-
-    if facet_pivot is not None:
-        solr_params = ''.join([solr_params, '&facet.pivot=', facet_pivot])
-
-    if sort is not None:
-        solr_params = ''.join([solr_params, '&sort=', sort])
-
-    url = '&'.join([solr_params, fixed_solr_params])
-    encoded_solr_params = urlquote(url, safe='=& ')
-
-    return encoded_solr_params
-
-
-def parse_attributes(attributes):
-    query = ""
-    for field in attributes:
-        if field.get("is_facet"):
-            query = ''.join([query, '&facet.field=', field.get("solr_field")])
-
-    return query
-
-
-def search_solr(encoded_params, core):
-    """Returns solr full_response content by making a solr request
-    Keyword Argument:
-        encoded_params -  Expect the params to be url-ready (using urlquote)
-        core - Specify which node
-    """
-    url_portion = '/'.join([core, "select"])
-    url = urlparse.urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
-    full_response = requests.get(url, params=encoded_params)
-    response = full_response.content
-
-    return response

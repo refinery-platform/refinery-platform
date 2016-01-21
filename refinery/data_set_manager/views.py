@@ -17,6 +17,12 @@ from django.shortcuts import render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
+
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
 from haystack.query import SearchQuerySet
@@ -28,6 +34,10 @@ from data_set_manager.tasks import create_dataset, parse_isatab
 from data_set_manager.utils import *
 from file_store.tasks import download_file, DownloadError
 from file_store.models import get_temp_dir, generate_file_source_translator
+from .utils import generate_solr_params, search_solr
+from .serializers import AttributeOrderSerializer, AssaySerializer
+from .models import AttributeOrder, Assay
+
 
 logger = logging.getLogger(__name__)
 
@@ -345,3 +355,198 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
         message = "You have successfully uploaded {}".format(
             chunked_upload.filename)
         return {"message": message}
+
+
+class Assays(APIView):
+    """
+    Return assay object
+
+    ---
+    #YAML
+
+    GET:
+        serializer: AssaySerializer
+        omit_serializer: false
+
+        parameters:
+            - name: uuid
+              description: Assay uuid
+              type: string
+              paramType: path
+              required: true
+
+    ...
+    """
+
+    def get_object(self, uuid):
+        try:
+            return Assay.objects.filter(uuid=uuid)
+        except Assay.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def get(self, request, uuid, format=None):
+        assays = self.get_object(uuid)
+        serializer = AssaySerializer(assays, many=True)
+        return Response(serializer.data)
+
+
+class AssaysFiles(APIView):
+
+    """
+    Return solr response. Query requires assay_uuid.
+
+    ---
+    #YAML
+
+    GET:
+        parameters_strategy:
+            form: replace
+            query: merge
+
+        parameters:
+            - name: uuid
+              description: assay uuid
+              type: string
+              required: true
+              paramType: path
+            - name: is_annotation
+              description: metadata
+              type: string
+              paramType: query
+            - name: facet_sort
+              description: ordering of facet field constraints count or index
+              type: string
+              paramType: query
+            - name: facet_count
+              description: enables facet counts in query response
+              type: boolean
+              paramType: query
+            - name: start
+              description: paginate, offset response
+              type: integer
+              paramType: query
+            - name: limit
+              description: In solr it's Row, maximum number of documents
+              type: integer
+              paramType: query
+            - name: study_uuid
+              description: unique study id
+              type: string
+              paramType: query
+            - name: field_limit
+              description: set of fields to return
+              type: string
+              paramType: query
+            - name: facet_field
+              description: specify a field which should be treated as a facet
+              type: string
+              paramType: query
+            - name: facet_pivot
+              description: list of fields to pivot
+              type: string
+              paramType: query
+            - name: sort
+              description: Ordering include field name, whitespace, & asc/desc
+              type: string
+              paramType: query
+    ...
+    """
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, uuid, format=None):
+
+        params = request.query_params
+
+        solr_params = generate_solr_params(params, uuid)
+        solr_response = search_solr(solr_params, 'data_set_manager')
+        solr_response_json = json.loads(solr_response)
+        return Response(solr_response_json)
+
+
+class AssaysAttributes(APIView):
+    """
+    AttributeOrder Resource.
+    Returns/Updates AttributeOrder model queries. Requires assay_uuid.
+    The model is dynamically created, so users will not create new
+    attribute_orders.
+
+    Updates attribute_model
+
+    ---
+    #YAML
+
+    GET:
+        serializer: AttributeOrderSerializer
+        omit_serializer: false
+
+        parameters:
+            - name: uuid
+              description: Assay uuid
+              type: string
+              paramType: path
+              required: true
+
+    PUT:
+        parameters_strategy:
+        form: replace
+        query: merge
+
+        serializer: AttributeOrderSerializer
+        omit_serializer: false
+
+        parameters:
+            - name: uuid
+              description: Assay uuid
+              type: string
+              paramType: path
+              required: true
+            - name: solr_field
+              description: Title of solr field
+              type: string
+              paramType: form
+              required: true
+            - name: rank
+              description: Position of the attribute in facet list and table
+              type: string
+              paramType: form
+              required: true
+            - name: is_exposed
+              description: Show to non-owner users
+              type: boolean
+              paramType: form
+            - name: is_facet
+              description: Attribute used as facet
+              type: boolean
+              paramType: form
+            - name: is_active
+              description: Shown in table by default
+              type: boolean
+              paramType: form
+            - name: is_internal
+              description: Retrived by solr but not shown to ANY user
+              type: boolean
+              paramType: form
+    ...
+    """
+
+    def get_object(self, uuid):
+        try:
+            return AttributeOrder.objects.filter(assay__uuid=uuid)
+        except AttributeOrder.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def get(self, request, uuid, format=None):
+        attribute_order = self.get_object(uuid)
+        serializer = AttributeOrderSerializer(attribute_order, many=True)
+        return Response(serializer.data)
+
+    def put(self, request, uuid, format=None):
+
+        attribute_order = self.get_object(uuid)
+        serializer = AttributeOrderSerializer(attribute_order,
+                                              data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

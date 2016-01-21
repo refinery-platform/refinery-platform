@@ -5,9 +5,7 @@ Created on Feb 20, 2012
 '''
 
 from django.conf.urls import patterns, url
-from core.views import Assays
-from core.views import AssaysFiles
-from core.views import AssaysAttributes
+
 
 urlpatterns = patterns(
     'core.views',
@@ -43,15 +41,6 @@ urlpatterns = patterns(
     url(r'^analyses/(?P<analysis_uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
         'analysis', name="analysis"),
-    url(r'^api/v2/assays/(?P<uuid>'
-        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
-        r''r'12})/$', Assays.as_view()),
-    url(r'^api/v2/assays/(?P<uuid>'
-        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
-        r''r'12})/files/$', AssaysFiles.as_view()),
-    url(r'^api/v2/assays/(?P<uuid>'
-        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
-        r''r'12})/attributes/$', AssaysAttributes.as_view()),
     url(r'^data_sets/(?P<data_set_uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
         'data_set', name="data_set"),
