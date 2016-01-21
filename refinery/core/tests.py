@@ -30,8 +30,8 @@ class UserCreateTest(unittest.TestCase):
         self.public_group_name = ExtendedGroup.objects.public_group().name
 
     def tearDown(self):
-        User.objects.all().delete()
-        Group.objects.all().delete()
+        User.objects.delete()
+        Group.objects.delete()
 
     def test_add_new_user_to_public_group(self):
         """Test if User accounts are added to Public group"""
@@ -1018,7 +1018,7 @@ class BaseResourceSlugTest(unittest.TestCase):
                          .count(), 1)
 
     def tearDown(self):
-        DataSet.objects.all().delete()
+        DataSet.objects.delete()
 
     def test_empty_slug(self):
         self.assertTrue(DataSet.objects.create(slug=""))
@@ -1072,8 +1072,8 @@ class CachingTest(unittest.TestCase):
 
     def tearDown(self):
         cache.clear()
-        DataSet.objects.all().delete()
-        User.objects.all().delete()
+        DataSet.objects.delete()
+        User.objects.delete()
 
     def test_cache_invalidation(self):
         ds = DataSet.objects.get(slug="TestSlug5")
