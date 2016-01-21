@@ -323,8 +323,7 @@ TreemapCtrl.prototype.addEventListeners = function () {
         that.highlightByTerm(that.d3.select(this).datum(), false, false, true);
         that.transition(data);
       } else {
-        that.highlightByTerm(data, e.shiftKey);
-        that.lockHighlightEl.call(that, this.parentNode, data);
+        that.lockNode(this.parentNode, data);
       }
     }
   );
@@ -335,6 +334,14 @@ TreemapCtrl.prototype.addEventListeners = function () {
   }.bind(this));
 
   // Listen to triggers from outside
+  this.$rootScope.$on('dashboardVisNodeEnter', function (event, data) {
+    this.hoverRectangle(this.getD3NodeByUri(data.nodeUri), true);
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeLeave', function (event, data) {
+    this.hoverRectangle(this.getD3NodeByUri(data.nodeUri), false);
+  }.bind(this));
+
   this.$rootScope.$on('dashboardVisNodeFocus', function (event, data) {
     var termIds = [];
     if (data.terms) {
@@ -361,6 +368,9 @@ TreemapCtrl.prototype.addEventListeners = function () {
 
   this.$rootScope.$on('dashboardVisNodeRoot', function (event, data) {
     if (data.source !== 'treeMap') {
+      if (!this.nodeIndex[data.nodeUri]) {
+        console.log('not available: ', data.nodeUri);
+      }
       this.setRootNode({
         ontId: this.nodeIndex[data.nodeUri][0].ontId,
         uri: data.nodeUri,
@@ -380,6 +390,46 @@ TreemapCtrl.prototype.addEventListeners = function () {
       }, true);
     }
   }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeLock', function (event, data) {
+    if (data.source !== 'treeMap') {
+      var selection = this.getD3NodeByUri(data.nodeUri);
+      this.lockNode(selection.node(), selection.datum(), true);
+    }
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeUnlock', function (event, data) {
+    if (data.source !== 'treeMap') {
+      var selection = this.getD3NodeByUri(data.nodeUri);
+      this.lockNode(selection.node(), selection.datum(), true);
+    }
+  }.bind(this));
+};
+
+TreemapCtrl.prototype.lockNode = function (element, data, noNotification) {
+  this.highlightByTerm(data, undefined, undefined, undefined, noNotification);
+  this.lockHighlightEl(element);
+};
+
+TreemapCtrl.prototype.hoverRectangle = function (selection, enter) {
+  selection.classed('hovering', enter);
+};
+
+/**
+ * Get a DOM element wrapped as a D3 selection by a node's URI.
+ *
+ * @method  getD3NodeByUri
+ * @author  Fritz Lekschas
+ * @date    2016-01-20
+ * @param   {String}  uri  Node's URI.
+ * @return  {Object}       D3 selection of the DOM element.
+ */
+TreemapCtrl.prototype.getD3NodeByUri = function (uri) {
+  // This feels inefficient. There should be a way to cache node references so
+  // that the DOM doesn't need to be queried all the time.
+  return this.treemap.element.selectAll('.node').filter(function (data) {
+    return data.uri === uri;
+  });
 };
 
 TreemapCtrl.prototype.getParentAtLevel = function (node, level) {
@@ -483,7 +533,7 @@ TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
   // Level needs to be decreased by 1.
   level = Math.max(level ? level - 1 : 0, 0) * 0.25;
 
-  innerNodes = parentsWithChildren
+  var innerNodes = parentsWithChildren
     .append('g')
       .attr('class', 'node inner-node')
       .attr('opacity', 0);
@@ -905,16 +955,17 @@ TreemapCtrl.prototype.initialize = function (data) {
  * @author  Fritz Lekschas
  * @date    2015-12-21
  *
- * @param   {Object}   data      Data object associated to the rectangle being
- *   clicked.
- * @param   {Boolean}  multiple  If `true` currently highlighted datasets will
- *   not be _de-highlighted_.
- * @param   {Boolean}  hover      If `true` reports only mouse over related
+ * @param   {Object}   data            Data object associated to the rectangle
+ *   being clicked.
+ * @param   {Boolean}  multiple        If `true` currently highlighted datasets
+ *   will not be _de-highlighted_.
+ * @param   {Boolean}  hover           If `true` reports only mouse over related
  *   highlighting.
- * @param   {Boolean}  reset     If `true` resets highlighting.
+ * @param   {Boolean}  reset           If `true` resets highlighting.
+ * @param   {Boolean}  noNotification  If `true` suppressed event emiting.
  */
 TreemapCtrl.prototype.highlightByTerm = function (
-  data, multiple, hover, reset
+  data, multiple, hover, reset, noNotification
 ) {
   var dataSetIds = getAssociatedDataSets(data),
       eventName,
@@ -943,10 +994,13 @@ TreemapCtrl.prototype.highlightByTerm = function (
     } else {
       eventName = 'dashboardVisNodeUnlock';
     }
-    this.$rootScope.$emit(eventName, {
-      nodeUri: prevData.nodeUri,
-      dataSetIds: prevData.dataSetIds
-    });
+    if (!noNotification) {
+      this.$rootScope.$emit(eventName, {
+        nodeUri: prevData.nodeUri,
+        dataSetIds: prevData.dataSetIds,
+        source: 'treeMap'
+      });
+    }
 
     if (prevData.nodeUri === data.uri) {
       this.prevEvent[mode + 'Terms'] = undefined;
@@ -969,9 +1023,12 @@ TreemapCtrl.prototype.highlightByTerm = function (
     }
     this.prevEvent[mode + 'Terms'] = {
       nodeUri: data.uri,
-      dataSetIds: dataSetIds
+      dataSetIds: dataSetIds,
+      source: 'treeMap'
     };
-    this.$rootScope.$emit(eventName, this.prevEvent[mode + 'Terms']);
+    if (!noNotification) {
+      this.$rootScope.$emit(eventName, this.prevEvent[mode + 'Terms']);
+    }
   }
 };
 

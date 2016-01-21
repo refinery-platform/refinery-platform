@@ -39,6 +39,7 @@ function ListGraphCtrl (
           columns: Math.round(this.width / 175),
           rows: Math.round(this.height / 36),
           iconPath: this.settings.iconPath,
+          lessAnimations: true,
           sortBy: 'precision',
           dispatcher: pubSub.trigger
         }
@@ -46,74 +47,68 @@ function ListGraphCtrl (
     }.bind(this));
   }
 
+  // List graph internal events that should be broadcasted.
   pubSub.on('d3ListGraphNodeEnter', function (data) {
-    var dataSetIds = this.getAssociatedDataSets(this.data[data.id]);
-
     this.$rootScope.$emit(
       'dashboardVisNodeEnter', {
         nodeUri: data.id,
-        dataSetIds: dataSetIds,
+        dataSetIds: this.getAssociatedDataSets(this.data[data.id]),
         source: 'listGraph'
       }
     );
   }.bind(this));
 
   pubSub.on('d3ListGraphNodeLeave', function (data) {
-    var dataSetIds = this.getAssociatedDataSets(this.data[data.id]);
-
     this.$rootScope.$emit(
       'dashboardVisNodeLeave', {
         nodeUri: data.id,
-        dataSetIds: dataSetIds,
+        dataSetIds: this.getAssociatedDataSets(this.data[data.id]),
         source: 'listGraph'
       }
     );
   }.bind(this));
 
   pubSub.on('d3ListGraphNodeLock', function (data) {
-    console.log('listgraph > dashboardVisNodeLock', data.id);
     this.$rootScope.$emit(
       'dashboardVisNodeLock', {
         nodeUri: data.id,
-        dataSetIds: undefined,
+        dataSetIds: this.getAssociatedDataSets(this.data[data.id]),
         source: 'listGraph'
       }
     );
   }.bind(this));
 
   pubSub.on('d3ListGraphNodeUnlock', function (data) {
-    console.log('listgraph > dashboardVisNodeUnlock', data.id);
     this.$rootScope.$emit(
       'dashboardVisNodeUnlock', {
         nodeUri: data.id,
-        dataSetIds: undefined,
+        dataSetIds: this.getAssociatedDataSets(this.data[data.id]),
         source: 'listGraph'
       }
     );
   }.bind(this));
 
   pubSub.on('d3ListGraphNodeRoot', function (data) {
-    console.log('listgraph > dashboardVisNodeRoot', data.id);
     this.$rootScope.$emit(
       'dashboardVisNodeRoot', {
         nodeUri: data.id,
-        dataSetIds: undefined,
+        dataSetIds: this.getAssociatedDataSets(this.data[data.id]),
         source: 'listGraph'
       }
     );
   }.bind(this));
 
   pubSub.on('d3ListGraphNodeUnroot', function (data) {
-    console.log('listgraph > dashboardVisNodeUnroot', data.id);
     this.$rootScope.$emit(
       'dashboardVisNodeUnroot', {
         nodeUri: data.id,
-        dataSetIds: undefined,
+        dataSetIds: this.getAssociatedDataSets(this.data[data.id]),
         source: 'listGraph'
       }
     );
   }.bind(this));
 
+  // External events that should be delegated to the list graph
   this.$rootScope.$on('dashboardVisNodeEnter', function (event, data) {
     // List graph might not be ready yet when a user hovers over a data set form
     // the list of data sets.
@@ -203,7 +198,7 @@ ListGraphCtrl.prototype.getAssociatedDataSets = function (node) {
    * @author  Fritz Lekschas
    * @date    2015-10-14
    *
-   * @param   {Object}  node        Current node, i.e. ontology term.
+   * @param   {Object}  node        Data associated to the node.
    * @param   {Object}  dataSetIds  Object of boolean keys representing the
    *   dataset IDs.
    */
