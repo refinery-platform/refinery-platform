@@ -573,15 +573,6 @@ def generate_solr_params(params, assay_uuid):
         solr_params = ''.join([solr_params, split_facet_fields])
     else:
         attributes_str = AttributeOrder.objects.filter(assay__uuid=assay_uuid)
-        study_str = Study.objects.get(assay__uuid=assay_uuid)
-        investigation_link = study_str.investigation
-        dataset_str = InvestigationLink.objects.filter(
-                investigation=investigation_link)
-        dataset_link = dataset_str.model.data_set
-        dataset = DataSet.objects.get(
-                investigationlink=dataset_str).get_owner()
-        #data = dataset.model
-        # owner = data.get_owner()
         attributes = AttributeOrderSerializer(attributes_str, many=True)
         filtered_attributes = parse_attributes(attributes.data)
         solr_params = ''.join([solr_params, filtered_attributes])
@@ -622,3 +613,15 @@ def search_solr(encoded_params, core):
     response = full_response.content
 
     return response
+
+
+def grab_owner_from_assay(uuid):
+    # Returns an owner name from an assay_uuid. Ownership is passed down from
+
+    investigation_key = Study.objects.get(assay__uuid=uuid).investigation
+    investigation_link = InvestigationLink.objects.filter(
+            investigation=investigation_key)
+    owner = DataSet.objects.get(
+            investigationlink=investigation_link).get_owner()
+
+    return owner
