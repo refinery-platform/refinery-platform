@@ -229,7 +229,9 @@ class BaseResource (models.Model):
                 logger.error("Could not save %s: %s" % (
                     self.__class__.__name__, e))
 
-        invalidate_cached_object(self)
+    def delete(self, using=None):
+        if not deletion_checks(self):
+            self.save_base()
 
 
 class OwnableResource (BaseResource):
