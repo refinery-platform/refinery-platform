@@ -1587,8 +1587,10 @@ def workflow_deletion_check(instance):
             Hide Workflow from ui if an Analysis has been run on it
         '''
         instance.is_active = False
-        instance.save()
+        logger.error("Could not delete Workflow, one or more Analyses have "
+                     "been run using it.")
         return False
+
     else:
         '''
             If an Analysis hasn't been run on said Workflow delete
@@ -1618,7 +1620,6 @@ def dataset_deletion_check(instance):
     if bool(Analysis.objects.filter(data_set=instance)):
         logger.error("Cannot delete DataSet:%s because there is has been "
                      "one or more Analyses run on it." % instance)
-        instance.save()
         return False
 
     else:
@@ -1664,7 +1665,6 @@ def analysis_deletion_check(instance):
     if not delete:
         logger.error("Cannot delete Analysis: %s because one or  more of "
                      "it's Nodes have been further analyzed" % instance)
-        instance.save()
         return False
 
     else:
