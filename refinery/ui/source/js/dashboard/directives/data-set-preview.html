@@ -53,10 +53,30 @@
         <h6>Description</h6>
         <p>{{ preview.studies.description }}</p>
       </div>
+      <div class="inline-container" ng-if="preview.numAssays > 0">
+        <h6>Technology &amp; Measurment</h6>
+        <ul class="badge-list">
+          <li ng-repeat="assay in preview.assays | limitTo: preview.maxBadges track by $index">
+            {{ assay.technology }}
+            <span
+              class="badge-characteristic"
+              ng-if="assay.measurement.length > 0">
+              {{ assay.measurement }}
+            </span>
+          </li>
+        </ul>
+        <button
+          class="is-mirrorable icon-only"
+          ng-if="preview.maxBadges < this.infinity && preview.maxBadges < preview.studies.sources.length"
+          ng-click="preview.toggleBadges()"
+          ng-class="{'is-mirrored': preview.maxBadges > preview.studies.sources.length}">
+          <i class="fa fa-chevron-right"></i>
+        </button>
+      </div>
       <div class="inline-container" ng-if="preview.studies.sources.length">
         <h6>Sources</h6>
         <ul class="badge-list">
-          <li ng-repeat="source in preview.studies.sources | limitTo: preview.maxBadges track by $index ">
+          <li ng-repeat="source in preview.studies.sources | limitTo: preview.maxBadges track by $index">
             {{ source.name }}
             <span
               class="badge-characteristic"
@@ -119,20 +139,6 @@
         </li>
       </ol>
       <h5 class="refinery-subheader">
-        Protocols
-        <span class="badge">{{ preview.studies.protocols.length }}</span>
-      </h5>
-      <ol
-        class="numbered-list protocols"
-        ng-if="preview.studies.protocols.length">
-        <li ng-repeat="protocol in preview.studies.protocols track by $index">
-          <h6>{{ protocol.name }}</h6>
-          <p class="description" ng-if="protocol.description.length">
-            {{ protocol.description }}
-          </p>
-        </li>
-      </ol>
-      <h5 class="refinery-subheader">
         References
         <span class="badge">{{ preview.studies.publications.length }}</span>
       </h5>
@@ -182,6 +188,20 @@
           </div>
         </li>
       </ul>
+      <h5 class="refinery-subheader">
+        Protocols
+        <span class="badge">{{ preview.studies.protocols.length }}</span>
+      </h5>
+      <ol
+        class="numbered-list protocols"
+        ng-if="preview.studies.protocols.length">
+        <li ng-repeat="protocol in preview.studies.protocols track by $index">
+          <h6>{{ protocol.name }}</h6>
+          <p class="description" ng-if="protocol.description.length">
+            {{ protocol.description }}
+          </p>
+        </li>
+      </ol>
     </div>
     <div
       class="multiStudies"
