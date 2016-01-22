@@ -1,10 +1,8 @@
 from django.contrib.auth.models import User, Group
 from django.utils import unittest, simplejson
 from django.core.cache import cache
-
 from guardian.shortcuts import assign_perm
 from tastypie.test import ResourceTestCase
-
 from core.api import AnalysisResource
 from core.management.commands.init_refinery import create_public_group
 from core.management.commands.create_user import init_user
@@ -19,6 +17,7 @@ from galaxy_connector.models import Instance
 
 class UserCreateTest(unittest.TestCase):
     """Test User instance creation"""
+
     def setUp(self):
         self.username = "testuser"
         self.password = "password"
@@ -52,6 +51,7 @@ class UserCreateTest(unittest.TestCase):
 
 class NodeSetTest(unittest.TestCase):
     """Test all NodeSet operations"""
+
     def setUp(self):
         self.investigation = \
             data_set_manager.models.Investigation.objects.create()
@@ -74,7 +74,7 @@ class NodeSetTest(unittest.TestCase):
                 "antibody_Characteristics_10_5_s": [],
                 "data_type_Characteristics_10_5_s": [],
                 "lab_Characteristics_10_5_s": []
-                },
+            },
             "nodeSelection": [],
             "nodeSelectionBlacklistMode": True
         })
@@ -204,6 +204,7 @@ def make_api_uri(resource_name, resource_id=''):
 
 class NodeSetResourceTest(ResourceTestCase):
     """Test NodeSet REST API operations"""
+
     def setUp(self):
         super(NodeSetResourceTest, self).setUp()
         self.investigation = \
@@ -578,6 +579,7 @@ class NodeSetResourceTest(ResourceTestCase):
 
 class NodeSetListResourceTest(ResourceTestCase):
     """Test NodeSetListResource REST API operations"""
+
     def setUp(self):
         super(NodeSetListResourceTest, self).setUp()
         self.investigation = \
@@ -753,6 +755,7 @@ class NodeSetListResourceTest(ResourceTestCase):
 
 class AnalysisResourceTest(ResourceTestCase):
     """Test Analysis REST API operations"""
+
     def setUp(self):
         super(AnalysisResourceTest, self).setUp()
         self.username = self.password = 'user'
@@ -1008,8 +1011,8 @@ class AnalysisResourceTest(ResourceTestCase):
 
 
 class BaseResourceSlugTest(unittest.TestCase):
-
     """Tests for BaseResource Slugs"""
+
     def setUp(self):
         # make some data
         for index, item in enumerate(range(0, 10)):
@@ -1128,6 +1131,7 @@ class CachingTest(unittest.TestCase):
 
 class WorkflowDeletionTest(unittest.TestCase):
     """Testing for the deletion of workflows"""
+
     def setUp(self):
         self.username = self.password = 'user'
         self.user = User.objects.create_user(
@@ -1138,9 +1142,8 @@ class WorkflowDeletionTest(unittest.TestCase):
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
-        self.workflow = Workflow.objects.create(name="Workflow1",
-                                                workflow_engine=
-                                                self.workflow_engine)
+        self.workflow = Workflow.objects.create(
+            name="Workflow1", workflow_engine=self.workflow_engine)
         self.dataset = DataSet.objects.create()
 
     def tearDown(self):
@@ -1180,7 +1183,6 @@ class WorkflowDeletionTest(unittest.TestCase):
         self.assertEqual(analysis.workflow.name, "Workflow1")
 
     def test_verify_no_deletion_if_workflow_used_in_analysis(self):
-
         analysis = Analysis.objects.create(
             name='bla',
             summary='keks',
