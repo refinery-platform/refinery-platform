@@ -1680,7 +1680,10 @@ def analysis_deletion_check(instance):
             used, essentially a defragmentation/ garbage collection
             operation.
         '''
-        solr.optimize()
+        try:
+            solr.optimize()
+        except Exception as e:
+            logger.error("Could not optimize Solr's index:", e)
 
         '''
             Delete Nodes Associated w/ the Analysis

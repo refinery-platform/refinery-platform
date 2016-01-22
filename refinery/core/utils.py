@@ -22,7 +22,14 @@ def update_data_set_index(data_set):
     """
 
     logger.info('Updated data set (uuid: %s) index', data_set.uuid)
-    DataSetIndex().update_object(data_set, using='core')
+    try:
+        DataSetIndex().update_object(data_set, using='core')
+    except Exception as e:
+        """ Solr is expected to fail and raise an exception when
+        it is not running.
+        (e.g. Travis CI doesn't support solr yet)
+        """
+        logger.error("Could not update DataSetIndex:", e)
 
 
 def add_data_set_to_neo4j(dataset_uuid, user_id):
@@ -204,7 +211,14 @@ def delete_data_set_index(data_set):
     """
 
     logger.debug('Deleted data set (uuid: %s) index', data_set.uuid)
-    DataSetIndex().remove_object(data_set, using='core')
+    try:
+        DataSetIndex().remove_object(data_set, using='core')
+    except Exception as e:
+        """ Solr is expected to fail and raise an exception when
+        it is not running.
+        (e.g. Travis CI doesn't support solr yet)
+        """
+        logger.error("Could not delete from DataSetIndex:", e)
 
 
 def delete_data_set_neo4j(dataset_uuid):
@@ -574,9 +588,16 @@ def create_update_ontology(name, acronym, uri, version, owl2neo4j_version):
 def delete_analysis_index(node_instance):
     """Remove a Analysis' related document from Solr's index.
     """
-    NodeIndex().remove_object(node_instance, using='data_set_manager')
-    logger.debug('Deleted Analysis\' NodeIndex with (uuid: %s)',
-                 node_instance.uuid)
+    try:
+        NodeIndex().remove_object(node_instance, using='data_set_manager')
+        logger.debug('Deleted Analysis\' NodeIndex with (uuid: %s)',
+                     node_instance.uuid)
+    except Exception as e:
+        """ Solr is expected to fail and raise an exception when
+        it is not running.
+        (e.g. Travis CI doesn't support solr yet)
+        """
+        logger.error("Could not delete from NodeIndex:", e)
 
 
 def invalidate_cached_object(instance):
