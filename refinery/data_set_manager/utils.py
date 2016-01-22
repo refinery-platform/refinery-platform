@@ -576,9 +576,7 @@ def remove_hidden_facet_fields(facet_list):
                      "assay_uuid", "type", "is_annotation", "species",
                      "genome_build", "name", "django_ct"]
 
-
     filtered_facet_list = []
-
     for field in facet_list:
         if field not in hidden_fields:
             filtered_facet_list.append(field)
@@ -612,11 +610,6 @@ def generate_filtered_facet_fields(attributes):
     return out_array
 
 
-def sort_rank_facet_fields(fields):
-    sorted_fields = sortby(fields, "rank")
-    return sorted_fields
-
-
 def generate_facet_fields_query(facet_fields):
     """Return facet_field query (str).
         Solr requirs facet fields to be separated"""
@@ -625,12 +618,6 @@ def generate_facet_fields_query(facet_fields):
         query = ''.join([query, '&facet.field=', field])
 
     return query
-
-
-def sortby(list, sort_field):
-    weighted_list = [(field[sort_field], field) for field in list]
-    weighted_list.sort()
-    return [val for (key, val) in weighted_list]
 
 
 def search_solr(encoded_params, core):
