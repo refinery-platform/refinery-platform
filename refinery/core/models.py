@@ -1576,7 +1576,8 @@ def workflow_deletion_check(instance):
 def dataset_deletion_check(instance):
     '''
         Takes a DataSet instance and deletes NodeCollection and related objs.
-        based on uuid of Investigations linked to the DataSet.
+        based on uuid of Investigations linked to the DataSet as long as an
+        Analysis has not been run upon the DataSet.
         This deletes Studys, Assays and Investigations in
         addition to the related objects detected by Django
     '''
