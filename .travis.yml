@@ -1,5 +1,6 @@
 before_script: curl -sSL https://raw.githubusercontent
-.com/moliware/travis-solr/master/travis-solr.sh | SOLR_VERSION=5.3.1 bash
+.com/moliware/travis-solr/master/travis-solr.sh | SOLR_VERSION=5.3.1
+SOLR_CONFS="refinery/solr/solr.xml" bash
 language: python
 python:
   - 2.7
