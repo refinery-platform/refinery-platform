@@ -1224,4 +1224,5 @@ class DataSetDeletionTest(unittest.TestCase):
         self.assertEqual(self.dataset1.delete(), None)
 
     def test_verify_no_dataset_deletion_if_analysis_run_upon_it(self):
-        self.assertNotEqual(self.dataset.delete(), None)
+        self.dataset.delete()
+        self.assertIsNotNone(self.dataset)
