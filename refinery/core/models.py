@@ -1618,7 +1618,7 @@ def analysis_deletion_check(instance):
                 delete = False
 
     '''
-        If None of the Analyis's Nodes have been analyzed further, let us:
+        If None of the Analyis' Nodes have been analyzed further, let us:
         1. Delete assoctiated FileStoreItems
         2. Delete AnalysisResults
         3. Optimize Solr's index to reflect that
