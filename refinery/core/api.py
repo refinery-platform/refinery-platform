@@ -521,6 +521,15 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
                 name='api_%s_get_studies' % (
                     self._meta.resource_name
                 )),
+            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/assays%s$' % (
+                    self._meta.resource_name,
+                    self.uuid_regex,
+                    trailing_slash()
+                ),
+                self.wrap_view('get_assays'),
+                name='api_%s_get_studies' % (
+                    self._meta.resource_name
+                )),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/analyses%s$' % (
                     self._meta.resource_name,
                     self.uuid_regex,
@@ -537,7 +546,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
                     self.uuid_regex,
                     trailing_slash()
                 ),
-                self.wrap_view('get_assays'),
+                self.wrap_view('get_study_assays'),
                 name='api_%s_get_assays' % (
                     self._meta.resource_name
                 )),
@@ -594,6 +603,32 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             investigation_uuid=data_set.get_investigation().uuid
         )
 
+    def get_assays(self, request, **kwargs):
+        try:
+            data_set = DataSet.objects.get(uuid=kwargs['uuid'])
+            assays = data_set.get_assays()
+        except ObjectDoesNotExist:
+            return HttpGone()
+
+        # Unfortunately Tastypie doesn't allow `get_list` to run on a list of
+        # identifiers.
+        return self.create_response(
+            request,
+            {
+                'meta': {
+                    'total_count': len(assays)
+                },
+                'objects': [
+                    {
+                        'id': assay.id,
+                        'uuid': assay.uuid,
+                        'technology': assay.technology,
+                        'measurement': assay.measurement
+                    } for assay in assays
+                ]
+            }
+        )
+
     def get_analyses(self, request, **kwargs):
         try:
             DataSet.objects.get(uuid=kwargs['uuid'])
@@ -605,7 +640,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             data_set__uuid=kwargs['uuid']
         )
 
-    def get_assays(self, request, **kwargs):
+    def get_study_assays(self, request, **kwargs):
         try:
             DataSet.objects.get(uuid=kwargs['uuid'])
             Study.objects.get(uuid=kwargs['study_uuid'])
