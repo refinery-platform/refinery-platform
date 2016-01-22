@@ -1117,3 +1117,72 @@ class CachingTest(unittest.TestCase):
         self.assertTrue(new_cache)
         # Make sure new cache represents the altered data
         self.assertNotEqual(self.initial_cache, new_cache)
+class WorkflowDeletionTest(unittest.TestCase):
+    """Testing for the deletion of workflows"""
+    def setUp(self):
+        self.username = self.password = 'user'
+        self.user = User.objects.create_user(
+            self.username, '', self.password
+        )
+        self.project = Project.objects.create()
+        self.galaxy_instance = Instance.objects.create()
+        self.workflow_engine = WorkflowEngine.objects.create(
+            instance=self.galaxy_instance
+        )
+        self.workflow = Workflow.objects.create(name="Workflow1",
+                                                workflow_engine=
+                                                self.workflow_engine)
+        self.dataset = DataSet.objects.create()
+
+    def tearDown(self):
+        User.objects.all().delete()
+        Project.objects.all().delete()
+        WorkflowEngine.objects.all().delete()
+        Workflow.objects.all().delete()
+        DataSet.objects.all().delete()
+        Instance.objects.all().delete()
+        Analysis.objects.all().delete()
+
+    def test_verify_workflow_creation(self):
+        self.assertEqual(self.workflow.name, "Workflow1")
+
+    def test_verify_analysis_creation(self):
+        analysis = Analysis.objects.create(
+            name='bla',
+            summary='keks',
+            project=self.project,
+            data_set=self.dataset,
+            workflow=self.workflow,
+            status="SUCCESS"
+        )
+        analysis.set_owner(self.user)
+        self.assertEqual(analysis.name, "bla")
+
+    def test_verify_workflow_used_by_analysis(self):
+        analysis = Analysis.objects.create(
+            name='bla',
+            summary='keks',
+            project=self.project,
+            data_set=self.dataset,
+            workflow=self.workflow,
+            status="SUCCESS"
+        )
+        analysis.set_owner(self.user)
+        self.assertEqual(analysis.workflow.name, "Workflow1")
+
+    def test_verify_no_deletion_if_workflow_used_in_analysis(self):
+
+        analysis = Analysis.objects.create(
+            name='bla',
+            summary='keks',
+            project=self.project,
+            data_set=self.dataset,
+            workflow=self.workflow,
+            status="SUCCESS"
+        )
+        analysis.set_owner(self.user)
+        self.workflow.delete()
+        self.assertFalse(self.workflow.is_active)
+
+    def test_verify_deletion_if_workflow_not_used_in_analysis(self):
+        self.assertEqual(self.workflow.delete(), None)
