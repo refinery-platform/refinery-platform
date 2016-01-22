@@ -1130,7 +1130,7 @@ class CachingTest(unittest.TestCase):
 
 
 class WorkflowDeletionTest(unittest.TestCase):
-    """Testing for the deletion of workflows"""
+    """Testing for the deletion of Workflows"""
 
     def setUp(self):
         self.username = self.password = 'user'
