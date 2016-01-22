@@ -1197,3 +1197,46 @@ class WorkflowDeletionTest(unittest.TestCase):
 
     def test_verify_deletion_if_workflow_not_used_in_analysis(self):
         self.assertEqual(self.workflow.delete(), None)
+
+
+class DataSetDeletionTest(unittest.TestCase):
+    """Testing for the deletion of Datasets"""
+
+    def setUp(self):
+        self.username = self.password = 'user'
+        self.user = User.objects.create_user(
+            self.username, '', self.password
+        )
+        self.project = Project.objects.create()
+        self.galaxy_instance = Instance.objects.create()
+        self.workflow_engine = WorkflowEngine.objects.create(
+            instance=self.galaxy_instance
+        )
+        self.workflow = Workflow.objects.create(
+            name="Workflow1", workflow_engine=self.workflow_engine)
+        self.dataset = DataSet.objects.create()
+        self.dataset1 = DataSet.objects.create()
+        self.analysis = Analysis.objects.create(
+            name='bla',
+            summary='keks',
+            project=self.project,
+            data_set=self.dataset,
+            workflow=self.workflow,
+            status="SUCCESS"
+        )
+        self.analysis.set_owner(self.user)
+
+    def tearDown(self):
+        User.objects.all().delete()
+        Project.objects.all().delete()
+        WorkflowEngine.objects.all().delete()
+        Workflow.objects.all().delete()
+        DataSet.objects.all().delete()
+        Instance.objects.all().delete()
+        Analysis.objects.all().delete()
+
+    def test_verify_dataset_deletion_if_no_analysis_run_upon_it(self):
+        self.assertEqual(self.dataset1.delete(), None)
+
+    def test_verify_no_dataset_deletion_if_analysis_run_upon_it(self):
+        self.assertNotEqual(self.dataset.delete(), None)
