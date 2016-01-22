@@ -1155,21 +1155,6 @@ class WorkflowDeletionTest(unittest.TestCase):
         Instance.objects.all().delete()
         Analysis.objects.all().delete()
 
-    def test_verify_workflow_creation(self):
-        self.assertEqual(self.workflow.name, "Workflow1")
-
-    def test_verify_analysis_creation(self):
-        analysis = Analysis.objects.create(
-            name='bla',
-            summary='keks',
-            project=self.project,
-            data_set=self.dataset,
-            workflow=self.workflow,
-            status="SUCCESS"
-        )
-        analysis.set_owner(self.user)
-        self.assertEqual(analysis.name, "bla")
-
     def test_verify_workflow_used_by_analysis(self):
         analysis = Analysis.objects.create(
             name='bla',
