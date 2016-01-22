@@ -1010,45 +1010,48 @@ class AnalysisResourceTest(ResourceTestCase):
 class BaseResourceSlugTest(unittest.TestCase):
 
     """Tests for BaseResource Slugs"""
-    def test_duplicate_slugs(self):
-        DataSet.objects.create(slug="TestSlug")
-        DataSet.objects.create(slug="TestSlug")
-
-        self.assertEqual(DataSet.objects.filter(slug="TestSlug")
-                         .count(), 1)
+    def setUp(self):
+        # make some data
+        for index, item in enumerate(range(0, 10)):
+            DataSet.objects.create(slug="TestSlug%d" % index)
+        Project.objects.create(name="project")
 
     def tearDown(self):
         DataSet.objects.all().delete()
+        Project.objects.all().delete()
+
+    def test_duplicate_slugs(self):
+        DataSet.objects.create(slug="TestSlug1")
+        self.assertEqual(DataSet.objects.filter(slug="TestSlug1")
+                         .count(), 1)
 
     def test_empty_slug(self):
         self.assertTrue(DataSet.objects.create(slug=""))
 
     def test_edit_existing_slug(self):
-        instance = DataSet.objects.create(slug="TestSlug1")
+        instance = DataSet.objects.get(slug="TestSlug1")
         instance.summary = "Edited Summary"
         instance.save()
 
         self.assertTrue(DataSet.objects.get(summary="Edited Summary"))
 
     def test_save_slug_no_change(self):
-        instance = DataSet.objects.create(slug="TestSlug2")
-        instance.save()
-        instance_again = DataSet.objects.get(slug="TestSlug2")
+        instance = DataSet.objects.get(slug="TestSlug1")
+        instance_again = DataSet.objects.get(slug="TestSlug1")
         instance_again.save()
 
         self.assertEqual(instance, instance_again)
 
     def test_save_slug_with_change(self):
-        DataSet.objects.create(slug="TestSlug3")
-        instance = DataSet.objects.get(slug="TestSlug3")
-        instance_again = DataSet.objects.get(slug="TestSlug3")
+        instance = DataSet.objects.get(slug="TestSlug1")
+        instance_again = DataSet.objects.get(slug="TestSlug1")
         instance_again.slug = "CHANGED"
         instance_again.save()
 
         self.assertNotEqual(instance.slug, instance_again.slug)
 
     def test_save_slug_when_another_model_with_same_slug_exists(self):
-        project_instance = Project.objects.create(name="project")
+        project_instance = Project.objects.get(name="project")
         project_instance.slug = "TestSlug4"
         project_instance.save()
 
@@ -1059,31 +1062,19 @@ class CachingTest(unittest.TestCase):
     """Testing the addition and deletion of cached objects"""
 
     def setUp(self):
-        self.username = self.password = 'user'
-        self.user = User.objects.create_user(self.username, '', self.password)
         # make some data
         for index, item in enumerate(range(0, 10)):
             DataSet.objects.create(slug="TestSlug%d" % index)
         # Adding to cache
-        cache.add("%d-DataSet" % self.user.id, DataSet.objects.all())
+        cache.add("DataSet", DataSet.objects.all())
 
         # Initial data that is cached, to test against later
         self.initial_cache = cache.get("DataSet")
 
     def tearDown(self):
         cache.clear()
-        DataSet.objects.all().delete()
-        User.objects.all().delete()
 
-    def test_cache_invalidation(self):
-        ds = DataSet.objects.get(slug="TestSlug5")
-
-        # Check if cache can be invalidated
-        invalidate_cached_object(ds)
-
-        self.assertEqual(cache.get("%d-DataSet" % self.user.id), None)
-
-    def test_verify_data_after_save(self):
+    def verify_data_after_save(self):
         # Grab, alter, and save an object being cached
         ds = DataSet.objects.get(slug="TestSlug5")
         ds.slug = "NewSlug"
@@ -1091,32 +1082,50 @@ class CachingTest(unittest.TestCase):
         # Check if cache can be invalidated
         invalidate_cached_object(ds)
 
-        self.assertEqual(cache.get("%d-DataSet" % self.user.id), None)
+        self.assertFalse(cache.get("DataSet"))
 
         # Adding to cache again
-        cache.add("%d-DataSet" % self.user.id, DataSet.objects.all())
-        new_cache = cache.get("%d-DataSet" % self.user.id)
+        cache.add("DataSet", DataSet.objects.all())
+        new_cache = cache.get("DataSet")
 
         self.assertTrue(new_cache)
         # Make sure new cache represents the altered data
         self.assertNotEqual(self.initial_cache, new_cache)
         self.assertTrue(DataSet.objects.get(slug="NewSlug"))
 
-    def test_verify_data_after_delete(self):
+    def verify_data_after_delete(self):
         # Grab and delete an object being cached
         ds = DataSet.objects.get(slug="TestSlug5")
         ds.delete()
         # Check if cache can be invalidated
         invalidate_cached_object(DataSet.objects.get(slug="TestSlug1"))
 
-        self.assertFalse(cache.get("%d-DataSet" % self.user.id))
+        self.assertFalse(cache.get("DataSet"))
         # Adding to cache again
-        cache.add("%d-DataSet" % self.user.id, DataSet.objects.all())
-        new_cache = cache.get("%d-DataSet" % self.user.id)
+        cache.add("DataSet", DataSet.objects.all())
+        new_cache = cache.get("DataSet")
 
         self.assertTrue(new_cache)
         # Make sure new cache represents the altered data
         self.assertNotEqual(self.initial_cache, new_cache)
+
+    def verify_data_after_perms_change(self):
+        # Grab and change sharing an object being cached
+        ds = DataSet.objects.get(slug="TestSlug5")
+        ds.share(group="Public")
+        # Check if cache can be invalidated
+        invalidate_cached_object(DataSet.objects.get(slug="TestSlug1"))
+
+        self.assertFalse(cache.get("DataSet"))
+        # Adding to cache again
+        cache.add("DataSet", DataSet.objects.all())
+        new_cache = cache.get("DataSet")
+
+        self.assertTrue(new_cache)
+        # Make sure new cache represents the altered data
+        self.assertNotEqual(self.initial_cache, new_cache)
+
+
 class WorkflowDeletionTest(unittest.TestCase):
     """Testing for the deletion of workflows"""
     def setUp(self):
