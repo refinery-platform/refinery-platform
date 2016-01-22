@@ -406,6 +406,18 @@ class ManageableResource:
         abstract = True
 
 
+class DataSetQuerySet(models.query.QuerySet):
+
+    def delete(self):
+        for instance in self:
+            instance.delete()
+
+
+class DataSetManager(models.Manager):
+    def get_query_set(self):
+        return DataSetQuerySet(self.model, using=self._db)
+
+
 class DataSet(SharableResource):
     # TODO: add function to restore earlier version
     # TODO: add collections (of assays in the investigation) and associate them
@@ -420,6 +432,8 @@ class DataSet(SharableResource):
     accession_source = models.CharField(max_length=128, blank=True,  null=True)
     # actual title of the dataset
     title = models.CharField(max_length=250, default='Untitled data set')
+
+    objects = DataSetManager()
 
     class Meta:
         verbose_name = "dataset"
@@ -686,6 +700,18 @@ class WorkflowInputRelationships(models.Model):
         )
 
 
+class WorkflowQuerySet(models.query.QuerySet):
+
+    def delete(self):
+        for instance in self:
+            instance.delete()
+
+
+class WorkflowManager(models.Manager):
+    def get_query_set(self):
+        return WorkflowQuerySet(self.model, using=self._db)
+
+
 class Workflow(SharableResource, ManageableResource):
     ANALYSIS_TYPE = "analysis"
     DOWNLOAD_TYPE = "download"
@@ -719,6 +745,8 @@ class Workflow(SharableResource, ManageableResource):
         max_length=25
     )
     graph = models.TextField(null=True, blank=True)
+
+    objects = WorkflowManager()
 
     def __unicode__(self):
         return self.name + " - " + self.summary
@@ -800,6 +828,18 @@ class AnalysisResult(models.Model):
         )
 
 
+class AnalysisQuerySet(models.query.QuerySet):
+
+    def delete(self):
+        for instance in self:
+            instance.delete()
+
+
+class AnalysisManager(models.Manager):
+    def get_query_set(self):
+        return AnalysisQuerySet(self.model, using=self._db)
+
+
 class Analysis(OwnableResource):
 
     SUCCESS_STATUS = "SUCCESS"
@@ -837,6 +877,8 @@ class Analysis(OwnableResource):
     # possibly replace results
     # output_nodes = models.ManyToManyField(Nodes, blank=True)
     # protocol = i.e. protocol node created when the analysis is created
+
+    objects = AnalysisManager()
 
     def __unicode__(self):
         return (
