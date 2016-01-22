@@ -486,30 +486,6 @@ def parse_facet_fields(query):
     return filtered_facet_list
 
 
-def filter_facet_fields(facet_list):
-    """Returns a filtered facet field list."""
-    hidden_fields = ["uuid", "id", "django_id", "file_uuid", "study_uuid",
-                     "assay_uuid", "type", "is_annotation", "species",
-                     "genome_build", "name", "django_ct"]
-    filtered_facet_list = []
-
-    for field in facet_list:
-        if field not in hidden_fields:
-            filtered_facet_list.append(field)
-
-    return filtered_facet_list
-
-
-def generate_facet_fields_query(facet_fields):
-    """Return facet_field query (str).
-        Solr requirs facet fields to be separated"""
-    query = ""
-    for field in facet_fields:
-        query = ''.join([query, '&facet.field=', field])
-
-    return query
-
-
 def get_facet_fields_query(params):
     """Returns a facet_field_query by making a solr request and parsing fields
     params"""
@@ -574,8 +550,10 @@ def generate_solr_params(params, assay_uuid):
     else:
         attributes_str = AttributeOrder.objects.filter(assay__uuid=assay_uuid)
         attributes = AttributeOrderSerializer(attributes_str, many=True)
-        filtered_attributes = generate_filtered_facet_fields_query(attributes.data)
-        solr_params = ''.join([solr_params, filtered_attributes])
+        filtered_attributes = generate_filtered_facet_fields(attributes.data)
+        facet_field = generate_facet_fields_query(filtered_attributes)
+        field_limit = ','.join(filtered_attributes)
+        solr_params = ''.join([solr_params, facet_field])
 
     if field_limit is not None:
         solr_params = ''.join([solr_params, '&fl=', field_limit])
@@ -592,16 +570,67 @@ def generate_solr_params(params, assay_uuid):
     return encoded_solr_params
 
 
-def generate_filtered_facet_fields_query(attributes):
+def remove_hidden_facet_fields(facet_list):
+    """Returns a filtered facet field list."""
+    hidden_fields = ["uuid", "id", "django_id", "file_uuid", "study_uuid",
+                     "assay_uuid", "type", "is_annotation", "species",
+                     "genome_build", "name", "django_ct"]
+
+
+    filtered_facet_list = []
+
+    for field in facet_list:
+        if field not in hidden_fields:
+            filtered_facet_list.append(field)
+
+    return filtered_facet_list
+
+
+def generate_filtered_facet_fields(attributes):
     # Returns a filter facet field query to be sent to solr.
     # Attribute order contains whether facets should be used.
 
     query = ""
+    weighted_list = []
+    out_array = []
+    hidden_fields = ["uuid", "id", "django_id", "file_uuid", "study_uuid",
+                     "assay_uuid", "type", "is_annotation", "species",
+                     "genome_build", "name", "django_ct"]
+
     for field in attributes:
-        if field.get("is_exposed") or field.get("is_facet"):
-            query = ''.join([query, '&facet.field=', field.get("solr_field")])
+        if field.get("is_exposed") and field.get("is_facet"):
+            weighted_list.append((int(field["rank"]), field))
+
+    weighted_list.sort()
+
+    for (rank, field) in weighted_list:
+        solr_field = field.get("solr_field")
+        if solr_field not in hidden_fields:
+            #query = '&facet.field='.join([query, solr_field])
+            out_array.append(solr_field)
+
+    return out_array
+
+
+def sort_rank_facet_fields(fields):
+    sorted_fields = sortby(fields, "rank")
+    return sorted_fields
+
+
+def generate_facet_fields_query(facet_fields):
+    """Return facet_field query (str).
+        Solr requirs facet fields to be separated"""
+    query = ""
+    for field in facet_fields:
+        query = ''.join([query, '&facet.field=', field])
 
     return query
+
+
+def sortby(list, sort_field):
+    weighted_list = [(field[sort_field], field) for field in list]
+    weighted_list.sort()
+    return [val for (key, val) in weighted_list]
 
 
 def search_solr(encoded_params, core):
