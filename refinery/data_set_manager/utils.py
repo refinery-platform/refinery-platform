@@ -598,7 +598,7 @@ def generate_filtered_facet_fields_query(attributes):
 
     query = ""
     for field in attributes:
-        if field.get("is_facet"):
+        if field.get("is_exposed") or field.get("is_facet"):
             query = ''.join([query, '&facet.field=', field.get("solr_field")])
 
     return query
