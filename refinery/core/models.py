@@ -228,6 +228,7 @@ class BaseResource (models.Model):
             except Exception as e:
                 logger.error("Could not save %s: %s" % (
                     self.__class__.__name__, e))
+
         invalidate_cached_object(self)
 
 
@@ -608,28 +609,7 @@ class DataSet(SharableResource):
 def _dataset_delete(sender, instance, *args, **kwargs):
     delete_data_set_index(instance)
     delete_data_set_neo4j(instance.uuid)
-
-    # Delete NodeCollection and related objs. based on uuid of
-    # Investigations. This deletes Studys, Assays and Investigations in
-    # addition to the related objects detected by Django
-
-    if len(Analysis.objects.filter(data_set=instance)) != 0:
-        logger.error("Cannot delete DataSet:%s because there is has been "
-                     "one or more Analyses run on it." % instance)
-        raise forms.ValidationError(
-            "Cannot delete DataSet:%s because there is has been "
-            "one or more Analyses run on it." % instance)
-    else:
-        related_investigation_links = InvestigationLink.objects.filter(
-            data_set=instance)
-        if related_investigation_links:
-            for item in related_investigation_links:
-                node_collection = NodeCollection.objects.get(
-                    uuid=item.investigation.uuid)
-                try:
-                    node_collection.delete()
-                except Exception as e:
-                    logger.debug("Couldn't delete NodeCollection:", e)
+    deletion_checks(instance)
 
 
 class InvestigationLink(models.Model):
@@ -754,22 +734,7 @@ class Workflow(SharableResource, ManageableResource):
 
 @receiver(pre_delete, sender=Workflow)
 def _workflow_delete(sender, instance, *args, **kwargs):
-    # Check if an Analysis has been run using the Workflow in question
-    if not len(Analysis.objects.filter(workflow=instance)) == 0:
-        # Hide Workflow from ui if an Analysis has been run on it
-        instance.is_active = False
-        instance.save()
-    else:
-        # If an Analysis hasn't been run on said Workflow delete
-        # WorkflowDataInputs and WorkflowInputRelationships if they exist
-        try:
-            instance.data_inputs.remove()
-        except Exception as e:
-            logger.error("Could not delete WorkflowDataInput", e)
-        try:
-            instance.input_relationships.remove()
-        except Exception as e:
-            logger.error("Could not delete WorkflowInputRelationship", e)
+    deletion_checks(instance)
 
 
 class Project(SharableResource):
@@ -947,83 +912,9 @@ WORKFLOW_NODE_CONNECTION_TYPES = (
 )
 
 
-# Deletes Analyses' related NodeIndexes from Solr upon deletion
 @receiver(pre_delete, sender=Analysis)
 def _analysis_delete(sender, instance, *args, **kwargs):
-
-    # Check if any Nodes created by the Analysis being deleted have been
-    # analyzed further.
-    nodes = Node.objects.filter(analysis_uuid=instance.uuid)
-    delete = True
-    for node in nodes:
-        analysis_node_connections = AnalysisNodeConnection.objects.filter(
-            node=node)
-        for item in analysis_node_connections:
-            if item.direction == 'in':
-                delete = False
-
-    # If None of the Analyis's Nodes have been analyzed further, let us:
-    # 1. Delete assoctiated FileStoreItems
-    # 2. Delete AnalysisResults
-    # 3. Optimize Solr's index to reflect that
-    # 4. Delete the Nodes
-    # 5. Continue on to delete the Analysis,
-    # WorkflowFilesDls, WorkflowDataInputMaps,
-    # AnalysisNodeConnections, and AnalysisStatus'
-
-    if delete:
-
-        # Delete associated FileStoreItems
-        for node in nodes:
-            if node.file_uuid:
-                try:
-                    FileStoreItem.objects.get(uuid=node.file_uuid).delete()
-                except Exception as e:
-                    logger.debug("Could not delete FileStore Item with uuid: "
-                                 "%s. " % node.file_uuid, e)
-
-        analysis_node_connections = AnalysisNodeConnection.objects.filter(
-            analysis=instance)
-
-        # Delete associated AnalysisResults
-        analysis_results = AnalysisResult.objects.filter(
-            analysis_uuid=instance.uuid)
-        for item in analysis_results:
-            try:
-                item.delete()
-            except Exception as e:
-                logger.debug("Could not delete AnalysisResult %s:" %
-                             item, e)
-
-        # Optimize Solr's index
-        for item in analysis_node_connections:
-            if item.node and "Derived" in item.node.type:
-                try:
-                    delete_analysis_index(item.node)
-                except Exception as e:
-                    logger.debug("No NodeIndex exists in Solr with id %s: %s",
-                                 item.id, e)
-
-        solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
-                                   "data_set_manager"), timeout=10)
-        """
-            solr.optimize() Tells Solr to streamline the number of segments
-            used, essentially a defragmentation/ garbage collection operation.
-        """
-        solr.optimize()
-
-        # Delete Nodes Associated w/ the Analysis
-        for node in nodes:
-            try:
-                node.delete()
-            except Exception as e:
-                logger.debug("Could not delete Node %s:" % node, e)
-    else:
-        logger.error("Cannot delete Analysis: %s because one or  more of "
-                     "it's Nodes have been further analyzed" % instance)
-        raise forms.ValidationError("Cannot delete Analysis: %s because one "
-                                    "or  more of it's Nodes have been "
-                                    "further analyzed" % instance)
+    deletion_checks(instance)
 
 
 class AnalysisNodeConnection(models.Model):
@@ -1632,3 +1523,136 @@ def _nodecollection_delete(sender, instance, **kwargs):
             FileStoreItem.objects.filter(uuid=node.file_uuid).delete()
         except Exception as e:
             logger.debug("Could not delete FileStoreItem:%s" % str(e))
+
+
+def deletion_checks(instance):
+        return {
+            "DataSet": dataset_deletion_check,
+            "Workflow": workflow_deletion_check,
+            "Analysis": analysis_deletion_check
+        }[instance.__class__.__name__](instance)
+
+
+def workflow_deletion_check(instance):
+    # Check if an Analysis has been run using the Workflow in question
+    if bool(Analysis.objects.filter(workflow=instance)):
+        # Hide Workflow from ui if an Analysis has been run on it
+        instance.is_active = False
+        instance.save()
+        return False
+    else:
+        # If an Analysis hasn't been run on said Workflow delete
+        # WorkflowDataInputs and WorkflowInputRelationships if they exist
+        try:
+            instance.data_inputs.remove()
+        except Exception as e:
+            logger.error("Could not delete WorkflowDataInput", e)
+        try:
+            instance.input_relationships.remove()
+        except Exception as e:
+            logger.error("Could not delete WorkflowInputRelationship", e)
+
+        return True
+
+
+def dataset_deletion_check(instance):
+    # Delete NodeCollection and related objs. based on uuid of
+    # Investigations. This deletes Studys, Assays and Investigations in
+    # addition to the related objects detected by Django
+
+    if bool(Analysis.objects.filter(data_set=instance)):
+        logger.error("Cannot delete DataSet:%s because there is has been "
+                     "one or more Analyses run on it." % instance)
+        instance.save()
+        return False
+    else:
+        related_investigation_links = InvestigationLink.objects.filter(
+            data_set=instance)
+        if related_investigation_links:
+            for item in related_investigation_links:
+                node_collection = NodeCollection.objects.get(
+                    uuid=item.investigation.uuid)
+                try:
+                    node_collection.delete()
+                except Exception as e:
+                    logger.debug("Couldn't delete NodeCollection:", e)
+        return True
+
+
+def analysis_deletion_check(instance):
+    # Check if any Nodes created by the Analysis being deleted have been
+    # analyzed further.
+    nodes = Node.objects.filter(analysis_uuid=instance.uuid)
+    delete = True
+    for node in nodes:
+        analysis_node_connections = AnalysisNodeConnection.objects.filter(
+            node=node)
+        for item in analysis_node_connections:
+            if item.direction == 'in':
+                delete = False
+
+    # If None of the Analyis's Nodes have been analyzed further, let us:
+    # 1. Delete assoctiated FileStoreItems
+    # 2. Delete AnalysisResults
+    # 3. Optimize Solr's index to reflect that
+    # 4. Delete the Nodes
+    # 5. Continue on to delete the Analysis,
+    # WorkflowFilesDls, WorkflowDataInputMaps,
+    # AnalysisNodeConnections, and AnalysisStatus'
+
+    if delete:
+
+        # Delete associated FileStoreItems
+        for node in nodes:
+            if node.file_uuid:
+                try:
+                    FileStoreItem.objects.get(uuid=node.file_uuid).delete()
+                except Exception as e:
+                    logger.debug("Could not delete FileStore Item with  "
+                                 "uuid: "
+                                 "%s. " % node.file_uuid, e)
+
+        analysis_node_connections = AnalysisNodeConnection.objects.filter(
+            analysis=instance)
+
+        # Delete associated AnalysisResults
+        analysis_results = AnalysisResult.objects.filter(
+            analysis_uuid=instance.uuid)
+        for item in analysis_results:
+            try:
+                item.delete()
+            except Exception as e:
+                logger.debug("Could not delete AnalysisResult %s:" %
+                             item, e)
+
+        # Optimize Solr's index
+        for item in analysis_node_connections:
+            if item.node and "Derived" in item.node.type:
+                try:
+                    delete_analysis_index(item.node)
+                except Exception as e:
+                    logger.debug("No NodeIndex exists in Solr with id "
+                                 "%s:  %s",
+                                 item.id, e)
+
+        solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
+                                   "data_set_manager"), timeout=10)
+        """
+            solr.optimize() Tells Solr to streamline the number of segments
+            used, essentially a defragmentation/ garbage collection
+            operation.
+        """
+        solr.optimize()
+
+        # Delete Nodes Associated w/ the Analysis
+        for node in nodes:
+            try:
+                node.delete()
+            except Exception as e:
+                logger.debug("Could not delete Node %s:" % node, e)
+        return True
+    else:
+        logger.error("Cannot delete Analysis: %s because one or  more of "
+                     "it's Nodes have been further analyzed" % instance)
+        instance.save()
+        return False
