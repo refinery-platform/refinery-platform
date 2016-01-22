@@ -623,7 +623,6 @@ class DataSet(SharableResource):
 def _dataset_delete(sender, instance, *args, **kwargs):
     delete_data_set_index(instance)
     delete_data_set_neo4j(instance.uuid)
-    deletion_checks(instance)
 
 
 class InvestigationLink(models.Model):
@@ -758,11 +757,6 @@ class Workflow(SharableResource, ManageableResource):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
         )
-
-
-@receiver(pre_delete, sender=Workflow)
-def _workflow_delete(sender, instance, *args, **kwargs):
-    deletion_checks(instance)
 
 
 class Project(SharableResource):
@@ -952,11 +946,6 @@ WORKFLOW_NODE_CONNECTION_TYPES = (
     (INPUT_CONNECTION, 'in'),
     (OUTPUT_CONNECTION, 'out'),
 )
-
-
-@receiver(pre_delete, sender=Analysis)
-def _analysis_delete(sender, instance, *args, **kwargs):
-    deletion_checks(instance)
 
 
 class AnalysisNodeConnection(models.Model):
