@@ -151,7 +151,7 @@ function ListGraphCtrl (
       }
       this.listGraph.trigger('d3ListGraphFocusNodes', {
         nodeIds: termIds,
-        zoomOut: true
+        zoomOut: !!data.zoomOut
       });
     }
   }.bind(this));

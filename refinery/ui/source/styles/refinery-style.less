@@ -1090,6 +1090,34 @@ a.analysis-header {
           }
         }
 
+        .zoomOut {
+          position: absolute;
+          z-index: 2;
+          top: 0;
+          right: 26px;
+          bottom: 0;
+          display: block;
+          color: @gray-light;
+          border: none;
+          background: rgba(255, 255, 255, 0.9);
+          transition: all @fast-transition-speed @ease-in-out-cubic;
+          opacity: 0;
+
+          &:hover {
+            color: #fff;
+            background: @orange;
+          }
+
+          &:active,
+          &:focus {
+            outline: none;
+          }
+        }
+
+        &:hover .zoomOut.active {
+          opacity: 1;
+        }
+
         &.locked {
           z-index: 2;
           padding-left: .6rem;

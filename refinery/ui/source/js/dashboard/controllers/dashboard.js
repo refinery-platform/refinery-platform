@@ -723,13 +723,23 @@ DashboardCtrl.prototype.deselectDataSets = function () {
 
 DashboardCtrl.prototype.dataSetMouseEnter = function (dataSet) {
   this.$rootScope.$emit('dashboardVisNodeFocus', {
-    terms: dataSet.annotations
+    terms: dataSet.annotations,
+    source: 'resultsList'
+  });
+};
+
+DashboardCtrl.prototype.dataSetMouseEnterZoomOut = function (dataSet) {
+  this.$rootScope.$emit('dashboardVisNodeFocus', {
+    terms: dataSet.annotations,
+    zoomOut: true,
+    source: 'resultsList'
   });
 };
 
 DashboardCtrl.prototype.dataSetMouseLeave = function (dataSet) {
   this.$rootScope.$emit('dashboardVisNodeBlur', {
-    terms: dataSet.annotations
+    terms: dataSet.annotations,
+    source: 'resultsList'
   });
 };
 
