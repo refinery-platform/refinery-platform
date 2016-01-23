@@ -346,6 +346,97 @@ function GraphFactory (_, Webworker) {
     return JSON.parse(JSON.stringify(newGraph[root]));
   };
 
+  Graph.toTree = function (graph, root) {
+    var nodeVisited = {},
+        tree = {};
+
+    function duplicateNode (originalNode) {
+      originalNode.meta.numClones++;
+
+      var newId = originalNode.uri + '.' + originalNode.meta.numClones;
+
+      tree[newId] = {
+        children: [],
+        childrenIds: [],
+        cloneId: originalNode.meta.numClones,
+        uri: newId,
+        meta: originalNode.meta,
+        name: originalNode.name,
+        value: originalNode.value
+      };
+
+      for (var j = 0, jLen = originalNode.childrenIds.length; j < jLen; j++) {
+        tree[newId].childrenIds.push(originalNode.childrenIds[j]);
+      }
+
+      return tree[newId];
+    }
+
+    function traverse (node) {
+      var child;
+
+      nodeVisited[node.uri] = true;
+
+      if (!node.meta) {
+        node.meta = {};
+      }
+
+      if (!node.cloneId) {
+        node.childrenIds = node.children;
+        node.children = [];
+        node.cloneId = 0;
+        node.meta.numClones = 0;
+      }
+
+      for (var i = node.childrenIds.length; i--;) {
+        if (!nodeVisited[node.childrenIds[i]]) {
+          child = tree[node.childrenIds[i]];
+          node.children.push(tree[node.childrenIds[i]]);
+        } else {
+          // Need to duplicate node
+          child = duplicateNode(tree[node.childrenIds[i]]);
+          // Update parent's child ID
+          node.childrenIds[i] = child.uri;
+          node.children.push(child);
+        }
+        traverse(child);
+      }
+    }
+
+    function copyNodes(oldGraph, newGraph) {
+      var nodeIds = Object.keys(oldGraph),
+          properties;
+
+      for (var i = nodeIds.length; i--;) {
+        newGraph[nodeIds[i]] = {};
+        properties = Object.keys(oldGraph[nodeIds[i]]);
+        for (var j = properties.length; j--;) {
+          newGraph[nodeIds[i]][properties[j]] = oldGraph[nodeIds[i]][properties[j]];
+        }
+      }
+    }
+
+    function removeUnusedNodes () {
+      var ids = Object.keys(tree), counterDelete = 0, counterKeep = 0;
+      for (var k = ids.length; k--;) {
+        if (!nodeVisited[ids[k]]) {
+          counterDelete++;
+          delete tree[ids[k]];
+          tree[ids[k]] = undefined;
+        } else {
+          counterKeep++;
+        }
+      }
+      // console.log('Kept: ' + counterKeep + ' | Deleted: ' + counterDelete);
+    }
+
+    copyNodes(graph, tree);
+    traverse(tree[root]);
+    removeUnusedNodes();
+
+    return tree[root];
+  };
+
   return Graph;
 }
 

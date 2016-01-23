@@ -28,7 +28,7 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
         graph.propertyToData(data, ['name']);
 
         // Convert graph into hierarchy for D3
-        treemapData.resolve(graph.toTreemap(data, prunedData.root));
+        treemapData.resolve(graph.toTree(data, prunedData.root));
 
         graphData.resolve(data);
       })
