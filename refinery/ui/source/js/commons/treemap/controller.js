@@ -298,15 +298,16 @@ TreemapCtrl.prototype.addEventListeners = function () {
 
   this.treemap.$element.on(
     'mouseenter',
-    '.group-of-nodes',
+    '.node',
     function (e) {
+      console.log('enter: ' + that.d3.select(this).datum().name);
       that.highlightByTerm(that.d3.select(this).datum(), false, true, false);
     }
   );
 
   this.treemap.$element.on(
     'mouseleave',
-    '.group-of-nodes',
+    '.node',
     function (e) {
       that.highlightByTerm(that.d3.select(this).datum(), false, true, true);
     }
@@ -335,6 +336,17 @@ TreemapCtrl.prototype.addEventListeners = function () {
 
   // Listen to triggers from outside
   this.$rootScope.$on('dashboardVisNodeEnter', function (event, data) {
+    // if (this.nodeIndex[data.nodeUri].meta.depth === this.visibleDepth) {
+    //   // Node is at the current level, i.e. it can be highlighted directly
+    //   this.hoverRectangle(this.getD3NodeByUri(data.nodeUri), true);
+    // } else {
+    //   // Find parent node at the current level
+    //   visibleNodes[
+    //     this.getParentAtLevel(this.nodeIndex[data.nodeUri], this.visibleDepth).uri
+    //   ] = true;
+
+    //   this.getParentAtLevel(this.nodeIndex[data.nodeUri], this.visibleDepth)
+    // }
     this.hoverRectangle(this.getD3NodeByUri(data.nodeUri), true);
   }.bind(this));
 
