@@ -315,7 +315,7 @@ TreemapCtrl.prototype.addEventListeners = function () {
 
   this.treemap.$element.on(
     'click',
-    '.label-wrapper, .outer-border',
+    '.node',
     function (e) {
       var data = that.d3.select(this).datum();
 
