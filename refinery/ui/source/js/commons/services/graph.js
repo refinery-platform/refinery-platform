@@ -29,6 +29,77 @@ function GraphFactory (_, Webworker) {
     }
   };
 
+  Graph.accumulateAndPruneNew = function (graph, root, valueProperty) {
+    var nodeIndex = {};
+
+    function init () {
+      traverseDepthFirst(graph[root], 0, 0);
+    }
+
+    function processChild (parentNode, childNode) {
+      // Store a reference to the parent
+      if (!childNode.parents) {
+        childNode.parents = [];
+      }
+      childNode.parents.push(parentNode);
+    }
+
+    function processLeaf (node, childNo) {
+      if (node.value) {
+        child.meta.leaf = true;
+      } else {
+        if (node.parent) {
+          // Remove node from the parent's children array if parent exist.
+          node.parent.children.splice(childNo, 1);
+        }
+        node.deleted = true;
+      }
+    }
+
+    function processInnerNode (node) {
+      if (node.children.length === 1 && node.value === 0) {
+
+      }
+    }
+
+    function processNode (node, childNo) {
+      // Set `value` property depending on the lenght of the actual value
+      node.value = Object.keys(node[valueProp]).length;
+
+      if (node.children.length) {
+        // Inner node
+        processInnerNode(node);
+      } else {
+        // Leaf
+        processLeaf(node, childNo);
+      }
+    }
+
+    function traverseDepthFirst (node, depth, childNo) {
+      if (nodeIndex[node.uri]) {
+        // Skip node
+        return;
+      }
+
+      if (!node.meta) {
+        node.meta = {};
+      }
+
+      // Distance to `OWL:Thing`
+      node.meta.originalDepth = depth;
+
+      // Traverse over all children from the last to the first
+      for (var i = node.children.length; i--;) {
+        processChild(node, graph[node.children[i]]);
+        traverseDepthFirst(graph[node.children[i]], depth + 1, i);
+      }
+
+      processNode(node, childNo);
+    }
+
+    init();
+  };
+
   /**
    * Prune graph and accumulate the value property.
    *
@@ -84,6 +155,7 @@ function GraphFactory (_, Webworker) {
       var i = numChildren;
       var j;
       var childValue;
+      var parentsUri;
 
       // We move in reverse order so that deleting nodes doesn't affect future
       // indices.
@@ -93,9 +165,9 @@ function GraphFactory (_, Webworker) {
 
         // Store a reference to the parent
         if (!child.parents) {
-          child.parents = [];
+          child.parents = {};
         }
-        child.parents.push(node);
+        child.parents[node.uri] = node;
 
         child.meta = child.meta || {};
 
@@ -137,14 +209,16 @@ function GraphFactory (_, Webworker) {
                 graph[child.children[j]].meta.depth--;
 
                 if (graph[child.children[j]].parents) {
-                  for (var o = graph[child.children[j]].parents.length; o--;) {
+                  parentsUri = Object.keys(graph[child.children[j]].parents);
+                  for (var o = parentsUri.length; o--;) {
                     // Remove child as parent from child's children and add node
                     // as a parent.
-                    if (graph[child.children[j]].parents[o] === child) {
+                    if (graph[child.children[j]].parents[parentsUri[o]] === child) {
                       // Remove former parent
-                      graph[child.children[j]].parents.splice(o, 1);
-                      // Push new parent
-                      graph[child.children[j]].parents.push(node);
+                      graph[child.children[j]].parents[parentsUri[o]] = undefined;
+                      delete graph[child.children[j]].parents[parentsUri[o]];
+                      // Set new parent
+                      graph[child.children[j]].parents[node.uri] = node;
                     }
                   }
                 }
@@ -158,8 +232,9 @@ function GraphFactory (_, Webworker) {
 
               // Check if we've processed the parent of the child to be pruned
               // already and set `pruned` to false.
-              for (var k = child.parents.length; k--;) {
-                if (nodeIndex[child.parents[k].uri]) {
+              parentsUri = Object.keys(child.parents);
+              for (var k = parentsUri.length; k--;) {
+                if (nodeIndex[child.parents[parentsUri[k]].uri]) {
                   // Revert pruning
                   child.pruned = false;
                   break;
@@ -182,7 +257,8 @@ function GraphFactory (_, Webworker) {
           } else {
             child.value = childValue.length;
             child.meta.leaf = true;
-            child.parents = [node];
+            child.parents = {};
+            child.parents[node.uri] = node;
           }
         }
 
