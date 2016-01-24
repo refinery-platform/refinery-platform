@@ -568,12 +568,11 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
 
     def get_all_ids(self, request, **kwargs):
-        # See here why `get_all_data_sets_ids()` has to be wrapped in `list()`
-        # http://stackoverflow.com/q/12609604/981933
+        data_sets = get_objects_for_user(request.user, 'core.read_dataset')
         return self.create_response(
             request,
             {
-                'ids': [data_set['id'] for data_set in get_all_data_sets_ids()]
+                'ids': [data_set.id for data_set in data_sets]
             }
         )
 
