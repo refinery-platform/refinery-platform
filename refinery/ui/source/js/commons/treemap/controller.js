@@ -1526,7 +1526,8 @@ TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
         'dashboardVisNodeRoot',
         {
           nodeUris: [root.uri],
-          source: 'treeMap'
+          source: 'treeMap',
+          depth: this.visibleDepth
         });
     }
   } else {
@@ -1535,7 +1536,8 @@ TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
         'dashboardVisNodeUnroot',
         {
           nodeUris: [this.treemapContext.get('root').uri],
-          source: 'treeMap'
+          source: 'treeMap',
+          depth: this.visibleDepth
         }
       );
     }

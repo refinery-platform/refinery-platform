@@ -28,9 +28,9 @@ function ListGraphCtrl (
     this.graphData.then(function (graphData) {
       this.data = graphData;
       // Causes bug but should be done.
-      // if (this.rootIds.length === 1) {
-      //   this.rootIds = this.data[this.rootIds[0]].children;
-      // }
+      if (this.rootIds.length === 1) {
+        this.rootIds = this.data[this.rootIds[0]].children;
+      }
       this.listGraph = new ListGraph(
         this.$visElement[0],
         this.data,
@@ -175,7 +175,11 @@ function ListGraphCtrl (
     // List graph might not be ready yet when a user hovers over a data set form
     // the list of data sets.
     if (this.listGraph && data.source !== 'listGraph') {
-      this.listGraph.trigger('d3ListGraphNodeRoot', data.nodeUris);
+      console.log(data.depth);
+      this.listGraph.trigger('d3ListGraphNodeRoot', {
+        nodeIds: data.nodeUris,
+        focusNextLevel: data.depth
+      });
     }
   }.bind(this));
 
@@ -183,7 +187,10 @@ function ListGraphCtrl (
     // List graph might not be ready yet when a user hovers over a data set form
     // the list of data sets.
     if (this.listGraph && data.source !== 'listGraph') {
-      this.listGraph.trigger('d3ListGraphNodeUnroot', data.nodeUris);
+      this.listGraph.trigger('d3ListGraphNodeUnroot', {
+        nodeIds: data.nodeUris,
+        focusNextLevel: data.depth
+      });
     }
   }.bind(this));
 }
