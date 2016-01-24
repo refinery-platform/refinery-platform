@@ -25,8 +25,9 @@ function ListGraphCtrl (
   this.height = this.$visElement.find('svg.base').height();
 
   if (this.graphData) {
-    this.graphData.then(function (graphData) {
-      this.data = graphData;
+    this.graphData.then(function (data) {
+      this.data = data.graph;
+      this.rootIds = data.rootIds;
       // Causes bug but should be done.
       if (this.rootIds.length === 1) {
         this.rootIds = this.data[this.rootIds[0]].children;

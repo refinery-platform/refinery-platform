@@ -685,6 +685,10 @@ function DataSetFactory (
     return this;
   };
 
+  DataSet.prototype.allIds = function () {
+    return _allDsIds;
+  };
+
   /**
    * Deselect currently selected data objects.
    *

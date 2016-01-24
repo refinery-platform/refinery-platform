@@ -513,6 +513,53 @@ function GraphFactory (_, Webworker) {
     return tree[root];
   };
 
+  Graph.addPseudoRootAndSibling = function (graph, root, allDsIds) {
+    var dataSets = {},
+        annotatedDsIds = Object.keys(graph[root].dataSets),
+        notAnnotatedDsIds = {},
+        allDsIdsObj = {};
+
+    for (var i = allDsIds.length; i--;) {
+      allDsIdsObj[allDsIds[i]] = true;
+      notAnnotatedDsIds[allDsIds[i]] = true;
+    }
+
+    for (var j = annotatedDsIds.length; j--;) {
+      notAnnotatedDsIds[annotatedDsIds[j]] = undefined;
+      delete notAnnotatedDsIds[annotatedDsIds[j]];
+    }
+
+    graph['_no_annotations'] = {
+      assertedDataSets: {},
+      children: [],
+      meta: {
+        originalDepth: 0
+      },
+      dataSets: notAnnotatedDsIds,
+      name: 'No annotations',
+      numDataSets: Object.keys(notAnnotatedDsIds).length,
+      ontId: '_no_annotations',
+      uri: '_no_annotations',
+      value: Object.keys(notAnnotatedDsIds).length,
+    };
+
+    graph['_root'] = {
+      assertedDataSets: {},
+      children: [root, '_no_annotations'],
+      dataSets: allDsIdsObj,
+      name: 'Root',
+      meta: {
+        originalDepth: -1
+      },
+      numDataSets: Object.keys(allDsIdsObj).length,
+      ontId: '_root',
+      uri: '_root',
+      value: Object.keys(allDsIdsObj).length,
+    };
+
+    return '_root';
+  };
+
   return Graph;
 }
 

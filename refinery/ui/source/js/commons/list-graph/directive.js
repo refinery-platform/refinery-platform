@@ -3,16 +3,14 @@ function listGraphDirective () {
 
   return {
     bindToController: {
-      graphData: '=graph',
-      rootIds: '=root'
+      graphData: '=graph'
     },
     controller: 'ListGraphCtrl',
     controllerAs: 'listGraph',
     restrict: 'E',
     replace: true,
     scope: {
-      graphData: '=graph',
-      rootIds: '=root'
+      graphData: '=graph'
     },
     templateUrl: '/static/partials/commons/list-graph/template.html'
   };

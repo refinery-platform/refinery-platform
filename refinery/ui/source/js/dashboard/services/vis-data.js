@@ -1,7 +1,8 @@
 function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
   var graphData = $q.defer(),
       treemapData = $q.defer(),
-      annotations = $q.defer();
+      annotations = $q.defer(),
+      finalRootNode = $q.defer();
 
   function Data () {}
 
@@ -13,12 +14,18 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
         // Prune graph and accumulate the dataset annotations
         var prunedData = graph.accumulateAndPrune(data, root, valueProperty);
 
+        // Add pseudo-parent and pseudo-sibling for data sets without any
+        // annotation.
+        var pseudoRoot = graph.addPseudoRootAndSibling(
+          data, prunedData.root, dataSet.allIds()
+        );
+
         // Init precision and recall
         // console.log(root, graph);
         graph.initPrecisionRecall(
           data,
           valueProperty,
-          Object.keys(data[root][valueProperty]).length
+          dataSet.allIds().length
         );
 
         // Make precision and recall available as bars
@@ -28,9 +35,12 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
         graph.propertyToData(data, ['name']);
 
         // Convert graph into hierarchy for D3
-        treemapData.resolve(graph.toTree(data, prunedData.root));
+        // treemapData.resolve(graph.toTree(data, prunedData.root));
+        treemapData.resolve(graph.toTreemap(data, pseudoRoot));
 
         graphData.resolve(data);
+
+        finalRootNode.resolve(pseudoRoot);
       })
       .catch(function (e) {
         graphData.reject(e);
@@ -56,11 +66,15 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
     'data',
     {
       get: function() {
-        return $q.all([graphData.promise, treemapData.promise]).then(
+        return $q.all([
+            graphData.promise, treemapData.promise, finalRootNode.promise
+          ]
+        ).then(
           function (results) {
             return {
               graph: results[0],
-              treemap: results[1]
+              treemap: results[1],
+              root: results[2]
             };
           }
         );
