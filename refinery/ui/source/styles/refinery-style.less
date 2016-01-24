@@ -1271,12 +1271,25 @@ a.analysis-header {
             }
           }
 
-          .icon-cursor-default {
+          .icon-cursor-default,
+          .icon-cursor-click,
+          .icon-cursor-dblclick {
             position: relative;
+            color: @black;
+          }
+
+          .icon-cursor-default {
             top: 0.125em;
             width: 0.85em;
             height: 1em;
-            color: @black;
+          }
+
+          .icon-cursor-click,
+          .icon-cursor-dblclick {
+            top: 0;
+            width: 0.85em;
+            height: 1em;
+            transform: scale(1.5);
           }
         }
 
