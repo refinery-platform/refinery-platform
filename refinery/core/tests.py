@@ -1274,7 +1274,6 @@ class AnalysisDeletionTest(unittest.TestCase):
         )
         self.workflow = Workflow.objects.create(
             name="Workflow1", workflow_engine=self.workflow_engine)
-        
         self.dataset_with_analysis = DataSet.objects.create()
         self.dataset_without_analysis = DataSet.objects.create()
 
