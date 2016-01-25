@@ -614,7 +614,8 @@ def invalidate_cached_object(instance, is_test=False):
     """
     if not is_test:
         try:
-            cache.delete_many(['{}-{}'.format(user.id, instance.__class__.__name__)
+            cache.delete_many(['{}-{}'.format(user.id, instance.__class__.
+                                              __name__)
                                for user in User.objects.all()])
 
         except Exception as e:

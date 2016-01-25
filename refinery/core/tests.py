@@ -1111,7 +1111,8 @@ class CachingTest(unittest.TestCase):
         self.cache = invalidate_cached_object(ds, True)
 
         # Adding to cache again
-        self.cache.add("{}-DataSet".format(self.user.id), DataSet.objects.all())
+        self.cache.add("{}-DataSet".format(self.user.id),
+                       DataSet.objects.all())
         new_cache = self.cache.get("{}-DataSet".format(self.user.id))
 
         self.assertTrue(new_cache)
@@ -1130,7 +1131,8 @@ class CachingTest(unittest.TestCase):
 
         self.assertFalse(self.cache.get("{}-DataSet".format(self.user.id)))
         # Adding to cache again
-        self.cache.add("{}-DataSet".format(self.user.id), DataSet.objects.all())
+        self.cache.add("{}-DataSet".format(self.user.id),
+                       DataSet.objects.all())
         new_cache = self.cache.get("{}-DataSet".format(self.user.id))
 
         self.assertTrue(new_cache)
@@ -1148,7 +1150,8 @@ class CachingTest(unittest.TestCase):
 
         self.assertFalse(self.cache.get("{}-DataSet".format(self.user.id)))
         # Adding to cache again
-        self.cache.add("{}-DataSet".format(self.user.id), DataSet.objects.all())
+        self.cache.add("{}-DataSet".format(self.user.id),
+                       DataSet.objects.all())
         new_cache = self.cache.get("{}-DataSet".format(self.user.id))
 
         self.assertTrue(new_cache)
