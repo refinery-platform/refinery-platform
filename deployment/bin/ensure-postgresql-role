@@ -1,6 +1,7 @@
 #!/bin/sh
 
 USER=refinery
+PASSWORD=password
 
 HOST=$(jq -r .Address /home/ubuntu/rds)
 PORT=$(jq -r .Port /home/ubuntu/rds)
@@ -15,7 +16,7 @@ BEGIN
       FROM   pg_catalog.pg_roles
       WHERE  rolname = '"'$USER'"' )
    THEN
-      CREATE ROLE '"$USER"' CREATEDB;
+      CREATE ROLE '"$USER"' CREATEDB PASSWORD '"'$PASSWORD'"';
       GRANT '"$USER"' to root;
    END IF;
 END
