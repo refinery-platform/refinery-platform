@@ -528,8 +528,7 @@ def generate_solr_params(params, assay_uuid):
                 facet_field.split(','))
         solr_params = ''.join([solr_params, split_facet_fields])
     else:
-        """ If facet_fields are not given, it is generated from Attribute Order
-        Model. """
+        # Missing facet_fields, it is generated from Attribute Order Model.
         attributes_str = AttributeOrder.objects.filter(assay__uuid=assay_uuid)
         attributes = AttributeOrderSerializer(attributes_str, many=True)
         facet_field = generate_filtered_facet_fields(attributes.data)
@@ -597,9 +596,9 @@ def generate_facet_fields_query(facet_fields):
 
 def search_solr(encoded_params, core):
     """Returns solr full_response content by making a solr request
-    Keyword Argument:
-        encoded_params -  Expect the params to be url-ready (using urlquote)
-        core - Specify which node
+    Parameters:
+        encoded_params:  Expect the params to be url-ready (using urlquote)
+        core: Specify which node
     """
     url_portion = '/'.join([core, "select"])
     url = urlparse.urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
