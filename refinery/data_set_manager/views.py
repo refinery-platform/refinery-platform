@@ -451,8 +451,8 @@ class AssaysFiles(APIView):
               paramType: query
     ...
     """
-    authentication_classes = (SessionAuthentication, BasicAuthentication)
-    permission_classes = (IsAuthenticated,)
+    # authentication_classes = (SessionAuthentication, BasicAuthentication)
+    # permission_classes = (IsAuthenticated,)
 
     def get(self, request, uuid, format=None):
 
