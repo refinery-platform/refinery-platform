@@ -555,16 +555,6 @@ def generate_solr_params(params, assay_uuid):
     return encoded_solr_params
 
 
-def get_facet_fields_query(params):
-    """Returns a facet_field_query by making a solr request and parsing fields
-    params"""
-    temp_params = urlquote(params, safe='=& ')
-    full_response = search_solr(temp_params, 'data_set_manager')
-    facet_field = parse_facet_fields(full_response)
-    facet_field_query = generate_facet_fields_query(facet_field)
-    return facet_field_query
-
-
 def hide_fields_from_weighted_list(weighted_facet_obj):
     """Returns a filtered facet field list from a weighted facet object."""
     hidden_fields = ["uuid", "id", "django_id", "file_uuid", "study_uuid",
