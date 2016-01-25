@@ -6,7 +6,7 @@ function refineryDashboardVisWrapper () {
     this.pubSub = pubSub;
 
     // Absolute root node.
-    // this.rootUris = ['http://www.w3.org/2002/07/owl#Thing'];
+    // this.roots = ['http://www.w3.org/2002/07/owl#Thing'];
     this.roots = ['http://purl.obolibrary.org/obo/CL_0000003'];
     this.propertyValue = 'dataSets';
 
