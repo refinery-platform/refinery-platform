@@ -543,7 +543,7 @@ def generate_solr_params(params, assay_uuid):
 
     solr_params = ''.join(['fq=assay_uuid:', assay_uuid])
 
-    if facet_field is not None:
+    if facet_field:
         split_facet_fields = generate_facet_fields_query(
                 facet_field.split(','))
         solr_params = ''.join([solr_params, split_facet_fields])
@@ -561,10 +561,10 @@ def generate_solr_params(params, assay_uuid):
         field_limit = facet_field.replace('&facet.field', ',')
         solr_params = ''.join([solr_params, '&fl=', field_limit])
 
-    if facet_pivot is not None:
+    if facet_pivot:
         solr_params = ''.join([solr_params, '&facet.pivot=', facet_pivot])
 
-    if sort is not None:
+    if sort:
         solr_params = ''.join([solr_params, '&sort=', sort])
 
     url = '&'.join([solr_params, fixed_solr_params])
