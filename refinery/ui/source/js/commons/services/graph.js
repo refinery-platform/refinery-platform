@@ -567,7 +567,8 @@ function GraphFactory (_, Webworker) {
       assertedDataSets: {},
       children: [],
       meta: {
-        originalDepth: 0
+        originalDepth: 0,
+        leaf: true
       },
       parents: {},
       dataSets: notAnnotatedDsIds,
