@@ -53,9 +53,9 @@ class AnalysisStatus(models.Model):
     def galaxy_analysis_state(self):
         if self.galaxy_history_state and self.galaxy_history_progress:
             galaxy_history_state = [{
-            'state': self.galaxy_history_state,
-            'percent_done': self.galaxy_history_progress
-        }]
+                'state': self.galaxy_history_state,
+                'percent_done': self.galaxy_history_progress
+            }]
         else:
             galaxy_history_state = []
         return galaxy_history_state
