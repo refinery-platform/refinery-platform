@@ -9,8 +9,8 @@ from core.management.commands.create_user import init_user
 from core.models import (
     NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,
     ExtendedGroup, DataSet, InvestigationLink, Project, Analysis, Workflow,
-    WorkflowEngine, UserProfile, invalidate_cached_object
-)
+    WorkflowEngine, UserProfile, invalidate_cached_object,
+    AnalysisNodeConnection, Node)
 import data_set_manager
 from galaxy_connector.models import Instance
 
@@ -1229,13 +1229,13 @@ class DataSetDeletionTest(unittest.TestCase):
         )
         self.workflow = Workflow.objects.create(
             name="Workflow1", workflow_engine=self.workflow_engine)
-        self.dataset = DataSet.objects.create()
-        self.dataset1 = DataSet.objects.create()
+        self.dataset_with_analysis = DataSet.objects.create()
+        self.dataset_without_analysis = DataSet.objects.create()
         self.analysis = Analysis.objects.create(
             name='bla',
             summary='keks',
             project=self.project,
-            data_set=self.dataset,
+            data_set=self.dataset_with_analysis,
             workflow=self.workflow,
             status="SUCCESS"
         )
@@ -1252,8 +1252,90 @@ class DataSetDeletionTest(unittest.TestCase):
         UserProfile.objects.all().delete()
 
     def test_verify_dataset_deletion_if_no_analysis_run_upon_it(self):
-        self.assertEqual(self.dataset1.delete(), None)
+        self.assertEqual(self.dataset_without_analysis.delete(), None)
 
     def test_verify_no_dataset_deletion_if_analysis_run_upon_it(self):
-        self.dataset.delete()
-        self.assertIsNotNone(self.dataset)
+        self.dataset_with_analysis.delete()
+        self.assertIsNotNone(self.dataset_with_analysis)
+
+
+class AnalysisDeletionTest(unittest.TestCase):
+    """Testing for the deletion of Analyses"""
+
+    def setUp(self):
+        self.username = self.password = 'user'
+        self.user = User.objects.create_user(
+            self.username, '', self.password
+        )
+        self.project = Project.objects.create()
+        self.galaxy_instance = Instance.objects.create()
+        self.workflow_engine = WorkflowEngine.objects.create(
+            instance=self.galaxy_instance
+        )
+        self.workflow = Workflow.objects.create(
+            name="Workflow1", workflow_engine=self.workflow_engine)
+        
+        self.dataset_with_analysis = DataSet.objects.create()
+        self.dataset_without_analysis = DataSet.objects.create()
+
+        self.analysis = Analysis.objects.create(
+            name='bla',
+            summary='keks',
+            project=self.project,
+            data_set=self.dataset_with_analysis,
+            workflow=self.workflow,
+            status="SUCCESS"
+        )
+        self.analysis_with_node_analyzed_further = Analysis.objects.create(
+            name='bla',
+            summary='keks',
+            project=self.project,
+            data_set=self.dataset_with_analysis,
+            workflow=self.workflow,
+            status="SUCCESS"
+        )
+        self.analysis.set_owner(self.user)
+        self.analysis_with_node_analyzed_further.set_owner(self.user)
+
+        self.investigation = \
+            data_set_manager.models.Investigation.objects.create()
+        self.investigation_link = InvestigationLink.objects.create(
+            investigation=self.investigation,
+            data_set=self.dataset_with_analysis)
+        self.study = data_set_manager.models.Study.objects.create(
+            investigation=self.investigation)
+        self.assay = data_set_manager.models.Assay.objects.create(
+            study=self.study)
+
+        self.node = Node.objects.create(assay=self.assay, study=self.study)
+        self.node2 = Node.objects.create(assay=self.assay, study=self.study)
+
+        self.analysis_node_connection = \
+            AnalysisNodeConnection.objects.create(analysis=self.analysis,
+                                                  node=self.node, step=1,
+                                                  direction="out")
+        self.analysis_node_connection_with_node_analyzed_further = \
+            AnalysisNodeConnection.objects.create(
+                analysis=self.analysis_with_node_analyzed_further,
+                node=self.node, step=1,
+                direction="in")
+
+    def tearDown(self):
+        User.objects.all().delete()
+        Project.objects.all().delete()
+        WorkflowEngine.objects.all().delete()
+        Workflow.objects.all().delete()
+        DataSet.objects.all().delete()
+        Instance.objects.all().delete()
+        Analysis.objects.all().delete()
+        UserProfile.objects.all().delete()
+        Node.objects.all().delete()
+
+    def test_verify_analysis_deletion_if_nodes_not_analyzed_further_(self):
+        self.assertIsNone(self.analysis.delete())
+
+    def test_verify_analysis_remains_if_nodes_analyzed_further_(self):
+        # Try to delete Analysis with a Node that has an
+        # AnalysisNodeConnection with direction == 'in'
+        self.analysis_with_node_analyzed_further.delete()
+        self.assertTrue(self.analysis_with_node_analyzed_further)
