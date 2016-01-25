@@ -476,26 +476,6 @@ def _index_annotated_nodes(node_type, study_uuid, assay_uuid=None,
     logger.info("%s nodes indexed in %s", str(counter), str(end - start))
 
 
-def parse_facet_fields(query):
-    """Returns a list of facet fields."""
-    query_json = json.loads(query)
-    docs_list = query_json['response']['docs']
-    facet_list = docs_list[0].keys()
-    filtered_facet_list = filter_facet_fields(facet_list)
-
-    return filtered_facet_list
-
-
-def get_facet_fields_query(params):
-    """Returns a facet_field_query by making a solr request and parsing fields
-    params"""
-    temp_params = urlquote(params, safe='=& ')
-    full_response = search_solr(temp_params, 'data_set_manager')
-    facet_field = parse_facet_fields(full_response)
-    facet_field_query = generate_facet_fields_query(facet_field)
-    return facet_field_query
-
-
 def generate_solr_params(params, assay_uuid):
     """Creates the encoded solr params requiring only an assay or study uuid.
     Keyword Argument
@@ -575,6 +555,16 @@ def generate_solr_params(params, assay_uuid):
     return encoded_solr_params
 
 
+def get_facet_fields_query(params):
+    """Returns a facet_field_query by making a solr request and parsing fields
+    params"""
+    temp_params = urlquote(params, safe='=& ')
+    full_response = search_solr(temp_params, 'data_set_manager')
+    facet_field = parse_facet_fields(full_response)
+    facet_field_query = generate_facet_fields_query(facet_field)
+    return facet_field_query
+
+
 def hide_fields_from_weighted_list(weighted_facet_obj):
     """Returns a filtered facet field list from a weighted facet object."""
     hidden_fields = ["uuid", "id", "django_id", "file_uuid", "study_uuid",
@@ -591,17 +581,15 @@ def hide_fields_from_weighted_list(weighted_facet_obj):
 
 
 def generate_filtered_facet_fields(attributes):
-    # Returns a filter facet field list.
-    # Attribute order contains whether facets should be used.
-    weighted_list = []
-    filtered_facet_fields = []
+    """ Returns a filter facet field list. Attribute order contains whether
+    facets should be used."""
 
+    weighted_list = []
     for field in attributes:
         if field.get("is_exposed") and field.get("is_facet"):
             weighted_list.append((int(field["rank"]), field))
 
     weighted_list.sort()
-
     filtered_facet_fields = hide_fields_from_weighted_list(weighted_list)
 
     return filtered_facet_fields
