@@ -414,8 +414,6 @@ class AssaysFiles(APIView):
               description: metadata
               type: string
               paramType: query
-            - name: facet_sort
-              description: ordering of facet field constraints count or index
               type: string
               paramType: query
             - name: facet_count
@@ -452,8 +450,6 @@ class AssaysFiles(APIView):
               paramType: query
     ...
     """
-    # authentication_classes = (SessionAuthentication, BasicAuthentication)
-    # permission_classes = (IsAuthenticated,)
 
     def get(self, request, uuid, format=None):
 
