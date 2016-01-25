@@ -294,4 +294,43 @@
     vertical-align: baseline;
     border-radius: .25em;
   }
+
+  // Adjust highlight color
+  .bar-border {
+    stroke: mix(lighten(@orange, 20%), #fff, 25%);
+  }
+
+  .bar.highlight .bar-magnitude {
+    fill: lighten(@orange, 20%);
+  }
+
+  .top-bar .sort-precision:hover,
+  .top-bar .sort-recall:hover,
+  .top-bar .sort-name:hover {
+    background: @orange;
+  }
+
+  .node .bg-border {
+    fill: @orange;
+    stroke: @orange;
+  }
+
+  .node.focus-directly .bg {
+    fill: @orange;
+  }
+
+  .node.focus-directly .border,
+  .column.active .node.focus-directly .border {
+    stroke: @orange;
+  }
+
+  .link .link-bg {
+    stroke: @orange;
+  }
+
+  .node.highlight-label .label,
+  .column.active .node.highlight-label .label {
+    color: @orange;
+    text-shadow: 0 0 3px fadeout(@orange, 0.25);
+  }
 }
