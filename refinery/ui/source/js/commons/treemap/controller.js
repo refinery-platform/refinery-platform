@@ -556,7 +556,10 @@ TreemapCtrl.prototype.focusNode = function (termIds) {
         } else {
           // Find parent node at the current level
           visibleNodes[
-            this.getParentAtLevel(nodes[j], this.visibleDepth).uri
+            this.getParentAtLevel(
+              nodes[j],
+              this.currentLevel + this.visibleDepth
+            ).uri
           ] = true;
         }
       }
