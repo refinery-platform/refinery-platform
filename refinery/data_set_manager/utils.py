@@ -570,44 +570,35 @@ def generate_solr_params(params, assay_uuid):
     return encoded_solr_params
 
 
-def remove_hidden_facet_fields(facet_list):
+def remove_hidden_facet_fields(facet_obj):
     """Returns a filtered facet field list."""
     hidden_fields = ["uuid", "id", "django_id", "file_uuid", "study_uuid",
                      "assay_uuid", "type", "is_annotation", "species",
                      "genome_build", "name", "django_ct"]
 
     filtered_facet_list = []
-    for field in facet_list:
-        if field not in hidden_fields:
-            filtered_facet_list.append(field)
+    for field in facet_obj:
+        solr_field = field.get("solr_field")
+        if solr_field not in hidden_fields:
+            filtered_facet_list.append(solr_field)
 
     return filtered_facet_list
 
 
 def generate_filtered_facet_fields(attributes):
-    # Returns a filter facet field query to be sent to solr.
+    # Returns a filter facet field list.
     # Attribute order contains whether facets should be used.
-
-    query = ""
     weighted_list = []
-    out_array = []
-    hidden_fields = ["uuid", "id", "django_id", "file_uuid", "study_uuid",
-                     "assay_uuid", "type", "is_annotation", "species",
-                     "genome_build", "name", "django_ct"]
+    filtered_facet_fields = []
 
     for field in attributes:
         if field.get("is_exposed") and field.get("is_facet"):
             weighted_list.append((int(field["rank"]), field))
 
     weighted_list.sort()
+    filtered_facet_fields = remove_hidden_facet_fields(weighted_list)
 
-    for (rank, field) in weighted_list:
-        solr_field = field.get("solr_field")
-        if solr_field not in hidden_fields:
-            #query = '&facet.field='.join([query, solr_field])
-            out_array.append(solr_field)
-
-    return out_array
+    return filtered_facet_fields
 
 
 def generate_facet_fields_query(facet_fields):
