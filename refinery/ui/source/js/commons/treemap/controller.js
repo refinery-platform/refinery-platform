@@ -316,7 +316,6 @@ TreemapCtrl.prototype.addEventListeners = function () {
     'mouseenter',
     '.node',
     function (e) {
-      console.log('enter: ' + that.d3.select(this).datum().name);
       that.highlightByTerm(that.d3.select(this).datum(), false, true, false);
     }
   );
@@ -374,7 +373,7 @@ TreemapCtrl.prototype.addEventListeners = function () {
         termIds.push(data.terms[i].term);
       }
     } else {
-      console.log('no annotations?', data);
+      console.error('No annotations?', data);
     }
     this.focusNode(termIds);
   }.bind(this));
@@ -386,47 +385,87 @@ TreemapCtrl.prototype.addEventListeners = function () {
         termIds.push(data.terms[i].term);
       }
     } else {
-      console.log('no annotations?', data);
+      console.error('No annotations?', data);
     }
     this.blurNode(termIds);
   }.bind(this));
 
   this.$rootScope.$on('dashboardVisNodeRoot', function (event, data) {
     if (data.source !== 'treeMap') {
-      if (!this.nodeIndex[data.nodeUri]) {
-        console.log('not available: ', data.nodeUri);
+      var uri = data.nodeUri;
+      if (data.clone) {
+        uri = data.clonedFromUri;
       }
-      this.setRootNode({
-        ontId: this.nodeIndex[data.nodeUri][0].ontId,
-        uri: data.nodeUri,
-        // This is tricky because there are multiple paths in the tree map but
-        // not in the list graph.
-        branchId: 0
-      }, true);
+      if (!this.nodeIndex[uri]) {
+        console.error('Node not found: ', uri);
+      } else {
+        this.setRootNode({
+          ontId: this.nodeIndex[uri][0].ontId,
+          uri: uri,
+          // This is tricky because there are multiple paths in the tree map but
+          // not in the list graph.
+          branchId: 0
+        }, true);
+      }
     }
   }.bind(this));
 
   this.$rootScope.$on('dashboardVisNodeUnroot', function (event, data) {
     if (data.source !== 'treeMap') {
-      this.setRootNode({
-        ontId: this.absRootNode.ontId,
-        uri: this.absRootNode.uri,
-        branchId: 0
-      }, true);
+      var uri = data.nodeUri;
+      if (data.clone) {
+        uri = data.clonedFromUri;
+      } else {
+        this.setRootNode({
+          ontId: this.absRootNode.ontId,
+          uri: this.absRootNode.uri,
+          branchId: 0
+        }, true);
+      }
+    }
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeReroot', function (event, data) {
+    if (data.source !== 'treeMap') {
+      var uri = data.nodeUri;
+      if (data.clone) {
+        uri = data.clonedFromUri;
+      }
+      if (!this.nodeIndex[uri]) {
+        console.error('Node not found: ', uri);
+      } else {
+        this.setRootNode({
+          ontId: this.nodeIndex[uri][0].ontId,
+          uri: uri,
+          branchId: 0
+        }, true);
+      }
     }
   }.bind(this));
 
   this.$rootScope.$on('dashboardVisNodeLock', function (event, data) {
     if (data.source !== 'treeMap') {
-      var selection = this.getD3NodeByUri(data.nodeUri);
-      this.lockNode(selection.node(), selection.datum(), true);
+      var uri = data.nodeUri;
+      if (data.clone) {
+        uri = data.clonedFromUri;
+      }
+      var selection = this.getD3NodeByUri(uri);
+      if (!selection.empty()) {
+        this.lockNode(selection.node(), selection.datum(), true);
+      }
     }
   }.bind(this));
 
   this.$rootScope.$on('dashboardVisNodeUnlock', function (event, data) {
     if (data.source !== 'treeMap') {
-      var selection = this.getD3NodeByUri(data.nodeUri);
-      this.lockNode(selection.node(), selection.datum(), true);
+      var uri = data.nodeUri;
+      if (data.clone) {
+        uri = data.clonedFromUri;
+      }
+      var selection = this.getD3NodeByUri(uri);
+      if (!selection.empty()) {
+        this.lockNode(selection.node(), selection.datum(), true);
+      }
     }
   }.bind(this));
 };
@@ -440,19 +479,23 @@ TreemapCtrl.prototype.findNodesToHighlight = function (uri, dehighlight) {
   } else {
     // Loop over all nodes (might be many depending on the number of
     // duplicates).
-    for (var i = this.nodeIndex[uri].length; i--;) {
-      // Try to find a DOM element related to that URI
-      node = this.getD3NodeByUri(
-        this.getParentAtLevel(
-          this.nodeIndex[uri][i],
-          this.currentLevel + this.visibleDepth
-        ).uri
-      );
+    if (this.nodeIndex[uri]) {
+      for (var i = this.nodeIndex[uri].length; i--;) {
+        // Try to find a DOM element related to that URI
+        node = this.getD3NodeByUri(
+          this.getParentAtLevel(
+            this.nodeIndex[uri][i],
+            this.currentLevel + this.visibleDepth
+          ).uri
+        );
 
-      // When a DOM element was found highlight it.
-      if (!node.empty()) {
-        this.hoverRectangle(node, !!!dehighlight);
+        // When a DOM element was found highlight it.
+        if (!node.empty()) {
+          this.hoverRectangle(node, !!!dehighlight);
+        }
       }
+    } else {
+      console.error('Node not found: ', uri);
     }
   }
 };
