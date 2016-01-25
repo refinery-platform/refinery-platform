@@ -352,22 +352,19 @@ TreemapCtrl.prototype.addEventListeners = function () {
 
   // Listen to triggers from outside
   this.$rootScope.$on('dashboardVisNodeEnter', function (event, data) {
-    // if (this.nodeIndex[data.nodeUri].meta.depth === this.visibleDepth) {
-    //   // Node is at the current level, i.e. it can be highlighted directly
-    //   this.hoverRectangle(this.getD3NodeByUri(data.nodeUri), true);
-    // } else {
-    //   // Find parent node at the current level
-    //   visibleNodes[
-    //     this.getParentAtLevel(this.nodeIndex[data.nodeUri], this.visibleDepth).uri
-    //   ] = true;
-
-    //   this.getParentAtLevel(this.nodeIndex[data.nodeUri], this.visibleDepth)
-    // }
-    this.hoverRectangle(this.getD3NodeByUri(data.nodeUri), true);
+    var uri = data.nodeUri;
+    if (data.clone) {
+      uri = data.clonedFromUri;
+    }
+    this.findNodesToHighlight(uri);
   }.bind(this));
 
   this.$rootScope.$on('dashboardVisNodeLeave', function (event, data) {
-    this.hoverRectangle(this.getD3NodeByUri(data.nodeUri), false);
+    var uri = data.nodeUri;
+    if (data.clone) {
+      uri = data.clonedFromUri;
+    }
+    this.findNodesToHighlight(uri, true);
   }.bind(this));
 
   this.$rootScope.$on('dashboardVisNodeFocus', function (event, data) {
@@ -432,6 +429,32 @@ TreemapCtrl.prototype.addEventListeners = function () {
       this.lockNode(selection.node(), selection.datum(), true);
     }
   }.bind(this));
+};
+
+TreemapCtrl.prototype.findNodesToHighlight = function (uri, dehighlight) {
+  var node = this.getD3NodeByUri(uri);
+
+  if (!node.empty() && node.datum().meta.depth === this.visibleDepth) {
+    // Node is at the current level, i.e. it can be highlighted directly
+    this.hoverRectangle(node, !!!dehighlight);
+  } else {
+    // Loop over all nodes (might be many depending on the number of
+    // duplicates).
+    for (var i = this.nodeIndex[uri].length; i--;) {
+      // Try to find a DOM element related to that URI
+      node = this.getD3NodeByUri(
+        this.getParentAtLevel(
+          this.nodeIndex[uri][i],
+          this.currentLevel + this.visibleDepth
+        ).uri
+      );
+
+      // When a DOM element was found highlight it.
+      if (!node.empty()) {
+        this.hoverRectangle(node, !!!dehighlight);
+      }
+    }
+  }
 };
 
 TreemapCtrl.prototype.lockNode = function (element, data, noNotification) {
@@ -1455,7 +1478,6 @@ TreemapCtrl.prototype.transition = function (data, noNotification) {
         }.bind(this));
 
       newGroupsTrans.call(endAll, function () {
-        console.log('lets rock');
         newGroups.selectAll('.icon')
           .call(this.setUpNodeCenterIcon.bind(this))
           .style('opacity', 1);
