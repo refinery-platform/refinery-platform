@@ -239,6 +239,22 @@ TreemapCtrl.prototype.addChildren = function (parent, data, level, firstTime) {
       .call(this.rect.bind(this), extraPadding);
 
   leafs
+    .append('use')
+      .attr({
+        'class': 'icon icon-unlocked',
+        'xlink:href': '/static/images/icons.svg#unlocked'
+      })
+      .call(this.setUpNodeCenterIcon.bind(this));
+
+  leafs
+    .append('use')
+      .attr({
+        'class': 'icon icon-locked',
+        'xlink:href': '/static/images/icons.svg#locked'
+      })
+      .call(this.setUpNodeCenterIcon.bind(this));
+
+  leafs
     .call(this.addLabel.bind(this), 'name', extraPadding);
 
   // Merge `leaf` and `childChildNode` selections. This turns out to be
@@ -324,7 +340,7 @@ TreemapCtrl.prototype.addEventListeners = function () {
         that.highlightByTerm(that.d3.select(this).datum(), false, false, true);
         that.transition(data);
       } else {
-        that.lockNode(this.parentNode, data);
+        that.lockNode(this, data);
       }
     }
   );
@@ -564,7 +580,7 @@ TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
   innerNodes
     .append('use')
       .attr({
-        'class': 'icon-unlocked',
+        'class': 'icon icon-unlocked',
         'xlink:href': '/static/images/icons.svg#unlocked'
       })
       .call(this.setUpNodeCenterIcon.bind(this));
@@ -572,7 +588,7 @@ TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
   innerNodes
     .append('use')
       .attr({
-        'class': 'icon-locked',
+        'class': 'icon icon-locked',
         'xlink:href': '/static/images/icons.svg#locked'
       })
       .call(this.setUpNodeCenterIcon.bind(this));
@@ -1055,17 +1071,19 @@ TreemapCtrl.prototype.highlightByTerm = function (
  */
 TreemapCtrl.prototype.lockHighlightEl = function (element) {
   var d3El = this.d3.select(element);
+  var className = d3El.datum().meta.leaf ? '.leaf' : '.bg';
 
   if (this.currentlyLockedNode) {
-    this.currentlyLockedNode.classed('locked', false).select('.bg')
-    .attr('fill', function (data, index) {
-      return this.color.call(this, data);
-    }.bind(this));
+    this.currentlyLockedNode.classed('locked', false)
+      .select(this.currentlyLockedNode.datum().meta.leaf ? '.leaf' : '.bg')
+        .attr('fill', function (data, index) {
+          return this.color.call(this, data);
+        }.bind(this));
 
     if (this.currentlyLockedNode.datum().uri === d3El.datum().uri) {
       this.currentlyLockedNode = undefined;
     } else {
-      d3El.classed('locked', true).select('.bg')
+      d3El.classed('locked', true).select(className)
         .attr('fill', function (data, index) {
           return this.color.call(this, data, index, undefined, true);
         }.bind(this));
@@ -1073,7 +1091,7 @@ TreemapCtrl.prototype.lockHighlightEl = function (element) {
       this.currentlyLockedNode = d3El;
     }
   } else {
-    d3El.classed('locked', true).select('.bg')
+    d3El.classed('locked', true).select(className)
       .attr('fill', function (data, index) {
         return this.color.call(this, data, index, undefined, true);
       }.bind(this));
@@ -1354,6 +1372,24 @@ TreemapCtrl.prototype.transition = function (data, noNotification) {
   var newGroups = this.display.call(this, data),
       newGroupsTrans, formerGroupWrapper, formerGroupWrapperTrans;
 
+  function endAll (transition, callback) {
+    var n = 0;
+
+    if (transition.size() === 0) {
+      callback();
+    }
+
+    transition
+      .each(function() {
+        ++n;
+      })
+      .each('end', function() {
+        if (!--n) {
+          callback.apply(this, arguments);
+        }
+      });
+  }
+
   // After all newly added inner nodes and leafs have been faded in we call the
   // zoom transition.
   var transition = newGroups[1]
@@ -1378,6 +1414,13 @@ TreemapCtrl.prototype.transition = function (data, noNotification) {
       // Fade-in entering text.
       newGroups.selectAll('.label-wrapper')
         .style('fill-opacity', 0);
+
+      // Icons do not need to be animated. Animating to many DOM elements at
+      // once kills the performance.
+      formerGroupWrapper.selectAll('.icon')
+        .style('opacity', 0);
+      newGroups.selectAll('.icon')
+        .style('opacity', 0);
 
       formerGroupWrapperTrans.selectAll('.bg')
         .call(this.rect.bind(this), 1);
@@ -1410,6 +1453,13 @@ TreemapCtrl.prototype.transition = function (data, noNotification) {
           this.treemap.element.style('shape-rendering', 'crispEdges');
           this.treemap.transitioning = false;
         }.bind(this));
+
+      newGroupsTrans.call(endAll, function () {
+        console.log('lets rock');
+        newGroups.selectAll('.icon')
+          .call(this.setUpNodeCenterIcon.bind(this))
+          .style('opacity', 1);
+      }.bind(this));
     }.bind(this))
     .catch(function (e) {
       console.error(e);
