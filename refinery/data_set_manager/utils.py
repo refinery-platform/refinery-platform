@@ -552,10 +552,13 @@ def generate_solr_params(params, assay_uuid):
         attributes = AttributeOrderSerializer(attributes_str, many=True)
         filtered_attributes = generate_filtered_facet_fields(attributes.data)
         facet_field = generate_facet_fields_query(filtered_attributes)
-        field_limit = ','.join(filtered_attributes)
         solr_params = ''.join([solr_params, facet_field])
 
-    if field_limit is not None:
+    if field_limit:
+        solr_params = ''.join([solr_params, '&fl=', field_limit])
+    else:
+        #create field_limit from facet_fields
+        field_limit = facet_field.replace('&facet.field', ',')
         solr_params = ''.join([solr_params, '&fl=', field_limit])
 
     if facet_pivot is not None:
