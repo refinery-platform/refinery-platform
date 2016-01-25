@@ -1525,17 +1525,21 @@ TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
       this.$rootScope.$emit(
         'dashboardVisNodeRoot',
         {
-          nodeUris: [root.uri],
+          nodeUri: root.uri,
           source: 'treeMap',
           depth: this.visibleDepth
         });
     }
   } else {
     if (!noNotification && this.treemapContext.get('root')) {
+      var uri = this.treemapContext.get('root').uri;
+      if (!uri) {
+        uri = this.cacheTerms[this.treemapContext.get('root').ontId][0].uri;
+      }
       this.$rootScope.$emit(
         'dashboardVisNodeUnroot',
         {
-          nodeUris: [this.treemapContext.get('root').uri],
+          nodeUri: uri,
           source: 'treeMap',
           depth: this.visibleDepth
         }
@@ -1616,6 +1620,7 @@ Object.defineProperty(
       var oldVisibleDepth = this._visibleDepth;
       this._visibleDepth = Math.min(Math.max(1, visibleDepth), this.depth);
       this.adjustLevelDepth(oldVisibleDepth);
+      this.$rootScope.$emit('dashboardVisVisibleDepth', visibleDepth);
     }
 });
 

@@ -16,6 +16,7 @@ function ListGraphCtrl (
   treemapContext
 ) {
   this.$ = $;
+  this.graphLib = graph;
   this.$element = this.$($element);
   this.$rootScope = $rootScope;
   this.settings = listGraphSettings;
@@ -26,17 +27,20 @@ function ListGraphCtrl (
 
   if (this.graphData) {
     this.graphData.then(function (data) {
-      this.data = data.graph;
+      this.graph = data.graph;
       this.rootIds = data.rootIds;
       // Causes bug but should be done.
       if (this.rootIds.length === 1) {
-        this.rootIds = this.data[this.rootIds[0]].children;
+        this.visRoots = this.graph[this.rootIds[0]].children;
+      } else {
+        this.visRoots = this.rootIds;
       }
       this.listGraph = new ListGraph(
         this.$visElement[0],
-        this.data,
-        this.rootIds,
+        this.graph,
+        this.visRoots,
         {
+          activeLevelNumber: 1,
           columns: Math.round(this.width / 175),
           rows: Math.round(this.height / 36),
           iconPath: this.settings.iconPath,
@@ -53,7 +57,7 @@ function ListGraphCtrl (
     this.$rootScope.$emit(
       'dashboardVisNodeEnter', {
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSets(this.data[data.id]),
+        dataSetIds: this.getAssociatedDataSets(this.graph[data.id]),
         source: 'listGraph'
       }
     );
@@ -63,7 +67,7 @@ function ListGraphCtrl (
     this.$rootScope.$emit(
       'dashboardVisNodeLeave', {
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSets(this.data[data.id]),
+        dataSetIds: this.getAssociatedDataSets(this.graph[data.id]),
         source: 'listGraph'
       }
     );
@@ -73,7 +77,7 @@ function ListGraphCtrl (
     this.$rootScope.$emit(
       'dashboardVisNodeLock', {
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSets(this.data[data.id]),
+        dataSetIds: this.getAssociatedDataSets(this.graph[data.id]),
         source: 'listGraph'
       }
     );
@@ -83,7 +87,7 @@ function ListGraphCtrl (
     this.$rootScope.$emit(
       'dashboardVisNodeUnlock', {
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSets(this.data[data.id]),
+        dataSetIds: this.getAssociatedDataSets(this.graph[data.id]),
         source: 'listGraph'
       }
     );
@@ -93,7 +97,7 @@ function ListGraphCtrl (
     this.$rootScope.$emit(
       'dashboardVisNodeRoot', {
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSets(this.data[data.id]),
+        dataSetIds: this.getAssociatedDataSets(this.graph[data.id]),
         source: 'listGraph'
       }
     );
@@ -103,10 +107,17 @@ function ListGraphCtrl (
     this.$rootScope.$emit(
       'dashboardVisNodeUnroot', {
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSets(this.data[data.id]),
+        dataSetIds: this.getAssociatedDataSets(this.graph[data.id]),
         source: 'listGraph'
       }
     );
+  }.bind(this));
+
+  pubSub.on('d3ListGraphUpdateBarsRequest', function (data) {
+    this.updatePrecisionRecall(
+      this.graph[data.id ? data.id : this.rootIds[0]]
+    );
+    this.listGraph.trigger('d3ListGraphUpdateBars');
   }.bind(this));
 
   // External events that should be delegated to the list graph
@@ -176,10 +187,10 @@ function ListGraphCtrl (
     // List graph might not be ready yet when a user hovers over a data set form
     // the list of data sets.
     if (this.listGraph && data.source !== 'listGraph') {
-      console.log(data.depth);
+      this.updatePrecisionRecall(this.graph[data.nodeUri]);
+      console.log('focusNextLevel', data.depth, data);
       this.listGraph.trigger('d3ListGraphNodeRoot', {
-        nodeIds: data.nodeUris,
-        focusNextLevel: data.depth
+        nodeIds: [data.nodeUri]
       });
     }
   }.bind(this));
@@ -188,13 +199,32 @@ function ListGraphCtrl (
     // List graph might not be ready yet when a user hovers over a data set form
     // the list of data sets.
     if (this.listGraph && data.source !== 'listGraph') {
+      this.updatePrecisionRecall(this.graph[data.nodeUri]);
+      console.log('focusNextLevel', data.depth, data);
       this.listGraph.trigger('d3ListGraphNodeUnroot', {
-        nodeIds: data.nodeUris,
-        focusNextLevel: data.depth
+        nodeIds: [data.nodeUri]
       });
     }
   }.bind(this));
+
+  this.$rootScope.$on('dashboardVisVisibleDepth', function (event, data) {
+    // List graph might not be ready yet when a user hovers over a data set form
+    // the list of data sets.
+    if (this.listGraph) {
+      console.log('d3ListGraphActiveLevel', data);
+      this.listGraph.trigger('d3ListGraphActiveLevel', data);
+    }
+  }.bind(this));
 }
+
+ListGraphCtrl.prototype.updatePrecisionRecall = function (rootNode) {
+  this.graphLib.updatePrecisionRecall(
+    this.graph,
+    this.valuePropertyName,
+    Object.keys(rootNode.dataSets).length
+  );
+  this.graphLib.updatePropertyToBar(this.graph, ['precision', 'recall']);
+};
 
 ListGraphCtrl.prototype.getAssociatedDataSets = function (node) {
   var dataSetIds = {};

@@ -320,9 +320,24 @@ function GraphFactory (_, Webworker) {
 
     for (var i = uris.length; i--;) {
       node = graph[uris[i]];
-      node.precision = Object.keys(node[valueProperty]).length / numAnnoDataSets;
+      node.precision = Object.keys(node[valueProperty]).length /
+        numAnnoDataSets;
       node.precisionTotal = node.precision;
       node.recall = 1;
+    }
+  };
+
+  Graph.updatePrecisionRecall = function (graph, valueProperty, numAnnoDataSets) {
+    var uris = Object.keys(graph), node;
+
+    for (var i = uris.length; i--;) {
+      node = graph[uris[i]];
+
+      if (!node.clone) {
+        node.precision = Object.keys(node[valueProperty]).length /
+          numAnnoDataSets;
+        node.recall = 1;
+      }
     }
   };
 
@@ -370,13 +385,32 @@ function GraphFactory (_, Webworker) {
       if (!node.data) {
         node.data = { bars: {} };
       } else {
-        node.data.bars = {};
+        if (!node.data.bars) {
+          node.data.bars = {};
+        }
       }
       for (var j = propLeng; j--;) {
         if (node[properties[j]]) {
           node.data.bars[properties[j]] = node[properties[j]];
         } else {
           node.data.bars[properties[j]] = 0;
+        }
+      }
+    }
+  };
+
+  Graph.updatePropertyToBar = function (graph, properties) {
+    var uris = Object.keys(graph), node, propLeng = properties.length;
+
+    for (var i = uris.length; i--;) {
+      node = graph[uris[i]];
+      for (var j = propLeng; j--;) {
+        if (node[properties[j]]) {
+          for (var k = node.data.bars.length; k--;) {
+            if (node.data.bars[k].id === properties[j]) {
+              node.data.bars[k].value = node[properties[j]];
+            }
+          }
         }
       }
     }
@@ -535,6 +569,7 @@ function GraphFactory (_, Webworker) {
       meta: {
         originalDepth: 0
       },
+      parents: {},
       dataSets: notAnnotatedDsIds,
       name: 'No annotations',
       numDataSets: Object.keys(notAnnotatedDsIds).length,
@@ -556,6 +591,10 @@ function GraphFactory (_, Webworker) {
       uri: '_root',
       value: Object.keys(allDsIdsObj).length,
     };
+
+    graph['_no_annotations'].parents['_root'] = graph['_root'];
+    graph[root].parents = {};
+    graph[root].parents['_root'] = graph['_root'];
 
     return '_root';
   };
