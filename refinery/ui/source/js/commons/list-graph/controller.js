@@ -41,6 +41,7 @@ function ListGraphCtrl (
         this.visRoots,
         {
           activeLevelNumber: 1,
+          noRootedNodeDifference: 1,
           columns: Math.round(this.width / 175),
           rows: Math.round(this.height / 36),
           iconPath: this.settings.iconPath,
@@ -188,7 +189,6 @@ function ListGraphCtrl (
     // the list of data sets.
     if (this.listGraph && data.source !== 'listGraph') {
       this.updatePrecisionRecall(this.graph[data.nodeUri]);
-      console.log('focusNextLevel', data.depth, data);
       this.listGraph.trigger('d3ListGraphNodeRoot', {
         nodeIds: [data.nodeUri]
       });
@@ -200,7 +200,6 @@ function ListGraphCtrl (
     // the list of data sets.
     if (this.listGraph && data.source !== 'listGraph') {
       this.updatePrecisionRecall(this.graph[data.nodeUri]);
-      console.log('focusNextLevel', data.depth, data);
       this.listGraph.trigger('d3ListGraphNodeUnroot', {
         nodeIds: [data.nodeUri]
       });
