@@ -573,14 +573,14 @@ def generate_solr_params(params, assay_uuid):
     return encoded_solr_params
 
 
-def remove_hidden_facet_fields(facet_obj):
-    """Returns a filtered facet field list."""
+def hide_fields_from_weighted_list(weighted_facet_obj):
+    """Returns a filtered facet field list from a weighted facet object."""
     hidden_fields = ["uuid", "id", "django_id", "file_uuid", "study_uuid",
                      "assay_uuid", "type", "is_annotation", "species",
                      "genome_build", "name", "django_ct"]
 
     filtered_facet_list = []
-    for field in facet_obj:
+    for (rank, field) in weighted_facet_obj:
         solr_field = field.get("solr_field")
         if solr_field not in hidden_fields:
             filtered_facet_list.append(solr_field)
@@ -599,7 +599,8 @@ def generate_filtered_facet_fields(attributes):
             weighted_list.append((int(field["rank"]), field))
 
     weighted_list.sort()
-    filtered_facet_fields = remove_hidden_facet_fields(weighted_list)
+
+    filtered_facet_fields = hide_fields_from_weighted_list(weighted_list)
 
     return filtered_facet_fields
 
