@@ -482,7 +482,6 @@ def generate_solr_params(params, assay_uuid):
         params -- python dict or QueryDict
     Params/Solr Params
         is_annotation - metadata
-        facet_sort - ordering of the facet field constraints, (count or index)
         facet_count/facet - enables facet counts in query response, true/false
         start - paginate, offset response
         limit/row - maximum number of documents
@@ -502,7 +501,6 @@ def generate_solr_params(params, assay_uuid):
                  '"Derived Array Data Matrix File")'
 
     is_annotation = params.get('is_annotation', default='false')
-    facet_sort = params.get('facet_sort', default='count')
     facet_count = params.get('facet_count', default='true')
     start = params.get('start', default='0')
     row = params.get('limit', default='20')
@@ -519,7 +517,8 @@ def generate_solr_params(params, assay_uuid):
                   'q=django_ct:data_set_manager.node&wt=json',
                   'facet=%s' % facet_count,
                   'facet.limit=-1',
-                  'facet.sort= %s' % facet_sort])
+                  'facet.mincount=1'
+                  ])
 
     solr_params = ''.join(['fq=assay_uuid:', assay_uuid])
 
