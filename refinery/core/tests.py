@@ -1069,63 +1069,87 @@ class CachingTest(unittest.TestCase):
 
     def setUp(self):
         # make some data
-        for index, item in enumerate(range(0, 10)):
+        self.username = self.password = 'Cool'
+        self.user = User.objects.create_user(
+            self.username, '', self.password
+        )
+        self.username1 = self.password1 = 'Cool1'
+        self.user1 = User.objects.create_user(
+            self.username1, '', self.password1
+        )
+        create_public_group()
+        self.public_group_name = ExtendedGroup.objects.public_group().name
+        for index, item in enumerate(range(0, 6)):
             DataSet.objects.create(slug="TestSlug%d" % index)
         # Adding to cache
-        cache.add("DataSet", DataSet.objects.all())
+        cache.add("{}-DataSet".format(self.user.id), DataSet.objects.all())
 
         # Initial data that is cached, to test against later
-        self.initial_cache = cache.get("DataSet")
+        self.initial_cache = cache.get("{}-DataSet".format(self.user.id))
 
     def tearDown(self):
-        cache.clear()
+        self.cache = invalidate_cached_object(DataSet.objects.get(
+            slug="TestSlug1"), True)
+        DataSet.objects.all().delete()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+        ExtendedGroup.objects.all().delete()
 
-    def verify_data_after_save(self):
+    def test_verify_cache_invalidation(self):
+        # Grab a DataSet and see if we can invalidate the cache
+        ds = DataSet.objects.get(slug="TestSlug5")
+        self.cache = invalidate_cached_object(ds, True)
+        self.assertIsNone(self.cache.get("{}-DataSet".format(self.user.id)))
+
+    def test_verify_data_after_save(self):
         # Grab, alter, and save an object being cached
         ds = DataSet.objects.get(slug="TestSlug5")
         ds.slug = "NewSlug"
         ds.save()
-        # Check if cache can be invalidated
-        invalidate_cached_object(ds)
 
-        self.assertFalse(cache.get("DataSet"))
+        # Invalidate cache
+        self.cache = invalidate_cached_object(ds, True)
 
         # Adding to cache again
-        cache.add("DataSet", DataSet.objects.all())
-        new_cache = cache.get("DataSet")
+        self.cache.add("{}-DataSet".format(self.user.id), DataSet.objects.all())
+        new_cache = self.cache.get("{}-DataSet".format(self.user.id))
 
         self.assertTrue(new_cache)
         # Make sure new cache represents the altered data
         self.assertNotEqual(self.initial_cache, new_cache)
         self.assertTrue(DataSet.objects.get(slug="NewSlug"))
 
-    def verify_data_after_delete(self):
+    def test_verify_data_after_delete(self):
         # Grab and delete an object being cached
         ds = DataSet.objects.get(slug="TestSlug5")
         ds.delete()
-        # Check if cache can be invalidated
-        invalidate_cached_object(DataSet.objects.get(slug="TestSlug1"))
 
-        self.assertFalse(cache.get("DataSet"))
+        # Invalidate cache
+        self.cache = invalidate_cached_object(DataSet.objects.get(
+            slug="TestSlug1"), True)
+
+        self.assertFalse(self.cache.get("{}-DataSet".format(self.user.id)))
         # Adding to cache again
-        cache.add("DataSet", DataSet.objects.all())
-        new_cache = cache.get("DataSet")
+        self.cache.add("{}-DataSet".format(self.user.id), DataSet.objects.all())
+        new_cache = self.cache.get("{}-DataSet".format(self.user.id))
 
         self.assertTrue(new_cache)
         # Make sure new cache represents the altered data
         self.assertNotEqual(self.initial_cache, new_cache)
 
-    def verify_data_after_perms_change(self):
+    def test_verify_data_after_perms_change(self):
         # Grab and change sharing an object being cached
         ds = DataSet.objects.get(slug="TestSlug5")
-        ds.share(group="Public")
-        # Check if cache can be invalidated
-        invalidate_cached_object(DataSet.objects.get(slug="TestSlug1"))
+        ds.share(group=Group.objects.get(name="Public"))
 
-        self.assertFalse(cache.get("DataSet"))
+        # Invalidate cache
+        self.cache = invalidate_cached_object(DataSet.objects.get(
+            slug="TestSlug1"), True)
+
+        self.assertFalse(self.cache.get("{}-DataSet".format(self.user.id)))
         # Adding to cache again
-        cache.add("DataSet", DataSet.objects.all())
-        new_cache = cache.get("DataSet")
+        self.cache.add("{}-DataSet".format(self.user.id), DataSet.objects.all())
+        new_cache = self.cache.get("{}-DataSet".format(self.user.id))
 
         self.assertTrue(new_cache)
         # Make sure new cache represents the altered data
@@ -1222,6 +1246,7 @@ class DataSetDeletionTest(unittest.TestCase):
         DataSet.objects.all().delete()
         Instance.objects.all().delete()
         Analysis.objects.all().delete()
+        UserProfile.objects.all().delete()
 
     def test_verify_dataset_deletion_if_no_analysis_run_upon_it(self):
         self.assertEqual(self.dataset1.delete(), None)
