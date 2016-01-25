@@ -600,11 +600,27 @@ def delete_analysis_index(node_instance):
         logger.error("Could not delete from NodeIndex:", e)
 
 
-def invalidate_cached_object(instance):
-    try:
-        cache.delete_many(['{}-{}'.format(user.id, instance.__class__.__name__)
-                           for user in User.objects.all()])
+def invalidate_cached_object(instance, is_test=False):
+    """
+        Removes cached objects for all users based on the class name of the
+        instance passed.
 
-    except Exception as e:
-        logger.debug("Could not delete %s from cache" %
-                     instance.__class__.__name__, e)
+        Ex: Given a DataSet instance, all possible cached objects holding
+        DataSets will be deleted to represent the saving, updating,
+        deletion, or perms change that was performed upon it.
+
+        If the is_test flag is set, a new instance of a mockcache Client
+        will be returned
+    """
+    if not is_test:
+        try:
+            cache.delete_many(['{}-{}'.format(user.id, instance.__class__.__name__)
+                               for user in User.objects.all()])
+
+        except Exception as e:
+            logger.debug("Could not delete %s from cache" %
+                         instance.__class__.__name__, e)
+    else:
+        from mockcache import Client
+        mc = Client()
+        return mc
