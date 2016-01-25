@@ -50,7 +50,7 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
 
 
 @task(track_started=True)
-def import_file(uuid, permanent=False, refresh=False, file_size=1):
+def import_file(uuid, permanent=False, refresh=False, file_size=0):
     """Download or copy file specified by UUID.
 
     :param permanent: Flag for adding the FileStoreItem to cache.
@@ -120,26 +120,28 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         tmpfile = NamedTemporaryFile(dir=get_temp_dir(), delete=False)
 
         # provide a default value in case Content-Length is missing
-        remotefilesize = int(
+        remote_file_size = int(
             response.headers.get('Content-Length', file_size)
         )
         logger.debug("Downloading from '%s'", item.source)
         # download and save the file
-        localfilesize = 0
-        blocksize = 1 * 1024 * 1024  # 1MB
-        for buf in iter(lambda: response.raw.read(blocksize), ''):
-            localfilesize += len(buf)
+        local_file_size = 0
+        block_size = 10 * 1024 * 1024  # 10MB
+        for buf in iter(lambda: response.raw.read(block_size), ''):
+            local_file_size += len(buf)
             tmpfile.write(buf)
             # check if we have a sane value for file size
-            if remotefilesize > 0:
-                percent_done = localfilesize * 100. / remotefilesize
+            if remote_file_size > 0:
+                percent_done = local_file_size * 100. / remote_file_size
             else:
                 percent_done = 0
             import_file.update_state(
                 state="PROGRESS",
-                meta={"percent_done": "%3.2f%%" % percent_done,
-                      'current': localfilesize, 'total': remotefilesize}
-                )
+                meta={
+                    "percent_done": "{:.0f}".format(percent_done),
+                    "current": local_file_size,
+                    "total": remote_file_size
+                })
         # cleanup
         # TODO: delete temp file if download failed
         tmpfile.flush()

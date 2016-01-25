@@ -30,7 +30,7 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
       'data_set__uuid': dataSetUuid,
     };
 
-    vm.timerList =  $timeout(vm.updateAnalysesList, 30000);
+    vm.timerList =  $timeout(vm.updateAnalysesList, 3000);
 
     $scope.$on('refinery/analyze-tab-inactive', function(){
       $timeout.cancel(vm.timerList);
@@ -92,7 +92,7 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
       vm.launchAnalysisFlag = false;
     });
 
-    vm.timerRunList = $timeout(vm.updateAnalysesRunningList, 1000);
+    vm.timerRunList = $timeout(vm.updateAnalysesRunningList, 3000);
 
     if(typeof dataSetUuid === 'undefined' || dataSetUuid === "None"){
       $timeout.cancel(vm.timerRunList);

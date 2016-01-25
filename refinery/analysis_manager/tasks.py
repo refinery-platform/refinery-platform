@@ -118,7 +118,7 @@ def run_analysis(analysis_uuid):
         galaxy_import.save()
         analysis_status.galaxy_import_task_group_id = \
             galaxy_import.taskset_id
-        analysis_status.set_galaxy_history_state(AnalysisStatus.RUNNING)
+        analysis_status.set_galaxy_history_state(AnalysisStatus.PROGRESS)
         run_analysis.retry(countdown=RETRY_INTERVAL)
 
     # check if data files were successfully imported into Galaxy

@@ -13,14 +13,14 @@ logger = logging.getLogger(__name__)
 
 
 class AnalysisStatus(models.Model):
-    OK = 'ok'
-    ERROR = 'error'
-    RUNNING = 'running'
+    OK = 'SUCCESS'
+    ERROR = 'FAILURE'
+    PROGRESS = 'PROGRESS'
     UNKNOWN = ''
     GALAXY_HISTORY_STATES = (
         (OK, 'OK'),
         (ERROR, 'Error'),
-        (RUNNING, 'Running'),
+        (PROGRESS, 'Running'),
         (UNKNOWN, 'Unknown')
     )
     analysis = models.ForeignKey("core.Analysis")  # prevents circular import
@@ -29,7 +29,7 @@ class AnalysisStatus(models.Model):
     galaxy_import_task_group_id = UUIDField(blank=True, null=True, auto=False)
     galaxy_export_task_group_id = UUIDField(blank=True, null=True, auto=False)
     #: state of Galaxy history
-    galaxy_history_state = CharField(max_length=7, blank=True,
+    galaxy_history_state = CharField(max_length=10, blank=True,
                                      choices=GALAXY_HISTORY_STATES)
     #: percentage of successfully processed datasets in Galaxy history
     galaxy_history_progress = PositiveSmallIntegerField(blank=True, null=True)
@@ -51,10 +51,14 @@ class AnalysisStatus(models.Model):
         return get_task_group_state(self.galaxy_import_task_group_id)
 
     def galaxy_analysis_state(self):
-        return [{
+        if self.galaxy_history_state and self.galaxy_history_progress:
+            galaxy_history_state = [{
             'state': self.galaxy_history_state,
             'percent_done': self.galaxy_history_progress
         }]
+        else:
+            galaxy_history_state = []
+        return galaxy_history_state
 
     def galaxy_export_state(self):
         return get_task_group_state(self.galaxy_export_task_group_id)
