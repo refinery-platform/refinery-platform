@@ -548,17 +548,19 @@ def generate_solr_params(params, assay_uuid):
                 facet_field.split(','))
         solr_params = ''.join([solr_params, split_facet_fields])
     else:
+        """ If facet_fields are not given, it is generated from Attribute Order
+        Model. """
         attributes_str = AttributeOrder.objects.filter(assay__uuid=assay_uuid)
         attributes = AttributeOrderSerializer(attributes_str, many=True)
-        filtered_attributes = generate_filtered_facet_fields(attributes.data)
-        facet_field = generate_facet_fields_query(filtered_attributes)
-        solr_params = ''.join([solr_params, facet_field])
+        facet_field = generate_filtered_facet_fields(attributes.data)
+        facet_field_query = generate_facet_fields_query(facet_field)
+        solr_params = ''.join([solr_params, facet_field_query])
 
     if field_limit:
         solr_params = ''.join([solr_params, '&fl=', field_limit])
     else:
-        #create field_limit from facet_fields
-        field_limit = facet_field.replace('&facet.field', ',')
+        # create field_limit from facet_fields
+        field_limit = ','.join(facet_field)
         solr_params = ''.join([solr_params, '&fl=', field_limit])
 
     if facet_pivot:
