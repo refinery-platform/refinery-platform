@@ -57,8 +57,12 @@ function ListGraphCtrl (
   pubSub.on('d3ListGraphNodeEnter', function (data) {
     this.$rootScope.$emit(
       'dashboardVisNodeEnter', {
+        clone: data.clone,
+        clonedFromUri: data.clonedFromId,
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSets(this.graph[data.id]),
+        dataSetIds: this.getAssociatedDataSets(
+          this.graph[data.clone ? data.clonedFromId : data.id]
+        ),
         source: 'listGraph'
       }
     );
@@ -67,8 +71,12 @@ function ListGraphCtrl (
   pubSub.on('d3ListGraphNodeLeave', function (data) {
     this.$rootScope.$emit(
       'dashboardVisNodeLeave', {
+        clone: data.clone,
+        clonedFromUri: data.clonedFromId,
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSets(this.graph[data.id]),
+        dataSetIds: this.getAssociatedDataSets(
+          this.graph[data.clone ? data.clonedFromId : data.id]
+        ),
         source: 'listGraph'
       }
     );
