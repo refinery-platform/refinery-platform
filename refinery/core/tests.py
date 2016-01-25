@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User, Group
 from django.utils import unittest, simplejson
-from django.core.cache import cache
 from guardian.shortcuts import assign_perm
+import mockcache as memcache
 from tastypie.test import ResourceTestCase
 from core.api import AnalysisResource
 from core.management.commands.init_refinery import create_public_group
@@ -13,6 +13,9 @@ from core.models import (
 )
 import data_set_manager
 from galaxy_connector.models import Instance
+
+
+cache = memcache.Client(["127.0.0.1:11211"])
 
 
 class UserCreateTest(unittest.TestCase):
