@@ -1,6 +1,6 @@
 #!/bin/sh
 
-USER=refinery
+USER=ubuntu
 PASSWORD=password
 
 HOST=$(jq -r .Address /home/ubuntu/rds)
