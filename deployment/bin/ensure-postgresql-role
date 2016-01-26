@@ -16,7 +16,7 @@ BEGIN
       FROM   pg_catalog.pg_roles
       WHERE  rolname = '"'$USER'"' )
    THEN
-      CREATE ROLE '"$USER"' CREATEDB PASSWORD '"'$PASSWORD'"';
+      CREATE ROLE '"$USER"' CREATEDB LOGIN PASSWORD '"'$PASSWORD'"';
       GRANT '"$USER"' to root;
    END IF;
 END
