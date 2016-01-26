@@ -737,8 +737,10 @@ TreemapCtrl.prototype.checkLabelReadbility = function () {
     if (parentHeight < this.children[0].getBoundingClientRect().height) {
       el.classed('smaller', true);
       that.$timeout(function () {
-        if (this.getBoundingClientRect().height < this.children[0].getBoundingClientRect().height) {
-          console.log('hidden', this.children[0].textContent);
+        if (
+          this.getBoundingClientRect().height <
+            this.children[0].getBoundingClientRect().height
+        ) {
           d3.select(this).classed({
             'smaller': false,
             'hidden': true
