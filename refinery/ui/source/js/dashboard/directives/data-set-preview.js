@@ -200,7 +200,6 @@ function refineryDataSetPreview () {
         .then(function (data) {
           this.numAssays = data.meta.total_count;
           this.assays = data.objects;
-          console.log(this.assays, data);
         }.bind(this));
   };
 
