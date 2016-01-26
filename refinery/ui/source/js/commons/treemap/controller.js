@@ -551,8 +551,14 @@ TreemapCtrl.prototype.focusNode = function (termIds) {
     nodes = this.nodeIndex[termIds[i]];
     if (nodes && nodes.length) {
       for (var j = nodes.length; j--;) {
-        if (nodes[j].meta.depth === this.visibleDepth) {
+        if (nodes[j].meta.depth === this.currentLevel + this.visibleDepth) {
           // Node is at the current level, i.e. it can be highlighted directly
+          visibleNodes[nodes[j].uri] = true;
+        } else if (
+          nodes[j].meta.leaf &&
+          nodes[j].meta.depth < this.currentLevel + this.visibleDepth
+        ) {
+          // Leafs should be highlighted up until the visible depth.
           visibleNodes[nodes[j].uri] = true;
         } else {
           // Find parent node at the current level
@@ -571,7 +577,7 @@ TreemapCtrl.prototype.focusNode = function (termIds) {
     return visibleNodes[data.uri];
   });
 
-  nodes.classed('focus', true).select('.bg')
+  nodes.classed('focus', true).selectAll('.bg, .leaf')
     .attr('fill', function (data, index) {
       return this.color.call(this, data, index, undefined, true);
     }.bind(this));
@@ -589,10 +595,16 @@ TreemapCtrl.prototype.blurNode = function (termIds) {
       nodes = this.nodeIndex[termIds[i]];
       if (nodes && nodes.length) {
         for (var j = nodes.length; j--;) {
-          if (nodes[j].meta.depth === this.visibleDepth) {
+          if (nodes[j].meta.depth === this.currentLevel + this.visibleDepth) {
             // Node is at the current level, i.e. it can be highlighted directly
             visibleNodes[nodes[j].uri] = true;
-          } else {
+          } else if (
+            nodes[j].meta.leaf &&
+            nodes[j].meta.depth < this.currentLevel + this.visibleDepth
+          ) {
+            // Leafs should be highlighted up until the visible depth.
+            visibleNodes[nodes[j].uri] = true;
+          }else {
             // Find parent node at the current level
             visibleNodes[
               this.getParentAtLevel(nodes[j], this.visibleDepth).uri
@@ -607,7 +619,7 @@ TreemapCtrl.prototype.blurNode = function (termIds) {
     });
   }
 
-  nodes.classed('focus', false).select('.bg')
+  nodes.classed('focus', false).selectAll('.bg, .leaf')
     .attr('fill', function (data, index) {
       return this.color.call(this, data);
     }.bind(this));
