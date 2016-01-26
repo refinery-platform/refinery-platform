@@ -14,7 +14,6 @@ from core.models import (
 import data_set_manager
 from galaxy_connector.models import Instance
 
-
 cache = memcache.Client(["127.0.0.1:11211"])
 
 
@@ -1262,59 +1261,96 @@ class DataSetDeletionTest(unittest.TestCase):
 
     def test_verify_no_dataset_deletion_if_analysis_run_upon_it(self):
         self.dataset_with_analysis.delete()
-        self.assertIsNotNone(self.dataset_with_analysis)
+        self.assertNotEqual(self.dataset_with_analysis, None)
 
 
 class AnalysisDeletionTest(unittest.TestCase):
     """Testing for the deletion of Analyses"""
 
     def setUp(self):
+        # Create a user
         self.username = self.password = 'user'
         self.user = User.objects.create_user(
             self.username, '', self.password
         )
+
+        # Create a Project
         self.project = Project.objects.create()
+        self.project1 = Project.objects.create()
+
+        # Creae a galaxy Instance
         self.galaxy_instance = Instance.objects.create()
+
+        # Create a WorkflowEngine
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
+
+        # Create a Workflow
         self.workflow = Workflow.objects.create(
             name="Workflow1", workflow_engine=self.workflow_engine)
+        self.workflow1 = Workflow.objects.create(
+            name="Workflow1", workflow_engine=self.workflow_engine)
+
+        # Create some DataSets that will have an analysis run upon them
         self.dataset_with_analysis = DataSet.objects.create()
+        self.dataset_with_analysis1 = DataSet.objects.create()
+
+        # Create a DataSet that won't have an analysis run upon it
         self.dataset_without_analysis = DataSet.objects.create()
 
+        # Create two Analyses using the two DataSets made earlier
         self.analysis = Analysis.objects.create(
-            name='bla',
-            summary='keks',
+            name='analysis_without_node_analyzed_further',
+            summary='This is a summary',
             project=self.project,
             data_set=self.dataset_with_analysis,
             workflow=self.workflow,
             status="SUCCESS"
         )
         self.analysis_with_node_analyzed_further = Analysis.objects.create(
-            name='bla',
-            summary='keks',
-            project=self.project,
-            data_set=self.dataset_with_analysis,
-            workflow=self.workflow,
+            name='analysis_with_node_analyzed_further',
+            summary='This is a summary',
+            project=self.project1,
+            data_set=self.dataset_with_analysis1,
+            workflow=self.workflow1,
             status="SUCCESS"
         )
+        # Set Ownership
         self.analysis.set_owner(self.user)
         self.analysis_with_node_analyzed_further.set_owner(self.user)
 
+        # Create Investigation/InvestigationLinks for the DataSets
         self.investigation = \
             data_set_manager.models.Investigation.objects.create()
         self.investigation_link = InvestigationLink.objects.create(
             investigation=self.investigation,
             data_set=self.dataset_with_analysis)
+        self.investigation1 = \
+            data_set_manager.models.Investigation.objects.create()
+        self.investigation_link1 = InvestigationLink.objects.create(
+            investigation=self.investigation1,
+            data_set=self.dataset_with_analysis1)
+
+        # Create Studys and Assays
         self.study = data_set_manager.models.Study.objects.create(
             investigation=self.investigation)
         self.assay = data_set_manager.models.Assay.objects.create(
             study=self.study)
+        self.study1 = data_set_manager.models.Study.objects.create(
+            investigation=self.investigation1)
+        self.assay1 = data_set_manager.models.Assay.objects.create(
+            study=self.study1)
 
-        self.node = Node.objects.create(assay=self.assay, study=self.study)
-        self.node2 = Node.objects.create(assay=self.assay, study=self.study)
+        # Create Nodes
+        self.node = Node.objects.create(assay=self.assay, study=self.study,
+                                        analysis_uuid=self.analysis.uuid)
 
+        self.node2 = Node.objects.create(assay=self.assay1, study=self.study1,
+                                         analysis_uuid=self.
+                                         analysis_with_node_analyzed_further
+                                         .uuid)
+        # Create AnalysisNodeConnections
         self.analysis_node_connection = \
             AnalysisNodeConnection.objects.create(analysis=self.analysis,
                                                   node=self.node, step=1,
@@ -1322,7 +1358,7 @@ class AnalysisDeletionTest(unittest.TestCase):
         self.analysis_node_connection_with_node_analyzed_further = \
             AnalysisNodeConnection.objects.create(
                 analysis=self.analysis_with_node_analyzed_further,
-                node=self.node, step=1,
+                node=self.node2, step=2,
                 direction="in")
 
     def tearDown(self):
@@ -1341,11 +1377,13 @@ class AnalysisDeletionTest(unittest.TestCase):
         AnalysisNodeConnection.objects.all().delete()
         InvestigationLink.objects.all().delete()
 
-    def test_verify_analysis_deletion_if_nodes_not_analyzed_further_(self):
-        self.assertIsNone(self.analysis.delete())
+    def test_verify_analysis_deletion_if_nodes_not_analyzed_further(self):
+        # Try to delete Analysis with a Node that has an
+        # AnalysisNodeConnection with direction == 'out'
+        self.assertEqual(self.analysis.delete(), None)
 
-    def test_verify_analysis_remains_if_nodes_analyzed_further_(self):
+    def test_verify_analysis_remains_if_nodes_analyzed_further(self):
         # Try to delete Analysis with a Node that has an
         # AnalysisNodeConnection with direction == 'in'
         self.analysis_with_node_analyzed_further.delete()
-        self.assertTrue(self.analysis_with_node_analyzed_further)
+        self.assertNotEqual(self.analysis_with_node_analyzed_further, None)
