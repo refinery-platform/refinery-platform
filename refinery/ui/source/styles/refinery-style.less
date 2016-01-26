@@ -1057,7 +1057,6 @@ a.analysis-header {
 
       li {
         position: relative;
-        z-index: 1;
         padding: 5px 3rem 5px 0;
         border-top: 1px solid @gray-lighter;
         transition: all @fast-transition-speed @ease-in-out-cubic;
@@ -1116,6 +1115,13 @@ a.analysis-header {
 
         &:hover .zoomOut.active {
           opacity: 1;
+        }
+
+        &.locked .zoomOut {
+          background: fadeout(lighten(@orange, 100%, relative), 10%);
+          &:hover {
+            background: @orange;
+          }
         }
 
         &.locked {
