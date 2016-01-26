@@ -1250,6 +1250,12 @@ class DataSetDeletionTest(unittest.TestCase):
         Instance.objects.all().delete()
         Analysis.objects.all().delete()
         UserProfile.objects.all().delete()
+        Node.objects.all().delete()
+        data_set_manager.models.Study.objects.all().delete()
+        data_set_manager.models.Assay.objects.all().delete()
+        data_set_manager.models.Investigation.objects.all().delete()
+        AnalysisNodeConnection.objects.all().delete()
+        InvestigationLink.objects.all().delete()
 
     def test_verify_dataset_deletion_if_no_analysis_run_upon_it(self):
         self.assertEqual(self.dataset_without_analysis.delete(), None)
@@ -1329,6 +1335,11 @@ class AnalysisDeletionTest(unittest.TestCase):
         Analysis.objects.all().delete()
         UserProfile.objects.all().delete()
         Node.objects.all().delete()
+        data_set_manager.models.Study.objects.all().delete()
+        data_set_manager.models.Assay.objects.all().delete()
+        data_set_manager.models.Investigation.objects.all().delete()
+        AnalysisNodeConnection.objects.all().delete()
+        InvestigationLink.objects.all().delete()
 
     def test_verify_analysis_deletion_if_nodes_not_analyzed_further_(self):
         self.assertIsNone(self.analysis.delete())
