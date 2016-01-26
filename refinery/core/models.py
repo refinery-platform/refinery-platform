@@ -44,7 +44,8 @@ from guardian.shortcuts import (get_users_with_perms,
                                 remove_perm, get_objects_for_group)
 from registration.signals import user_registered, user_activated
 
-from data_set_manager.models import Investigation, Node, Study, Assay
+from data_set_manager.models import (Investigation, Node, Study, Assay,
+                                     NodeCollection)
 from data_set_manager.utils import (add_annotated_nodes_selection,
                                     index_annotated_nodes_selection)
 from file_store.models import get_file_size, FileStoreItem, ZIP
