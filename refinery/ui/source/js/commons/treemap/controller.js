@@ -72,7 +72,7 @@ function getAssociatedDataSets (node) {
  * @param  {Object}  Webworker              Web Worker service.
  */
 function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
-  treemapSettings, pubSub, treemapContext, Webworker, $rootScope) {
+  treemapSettings, pubSub, treemapContext, Webworker, $rootScope, $timeout) {
   this.$ = $;
   this._ = _;
   this.$q = $q;
@@ -86,6 +86,7 @@ function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
   this.pubSub = pubSub;
   this.treemapContext = treemapContext;
   this.$visWrapper = this.$element.closest('.visWrapper');
+  this.$timeout = $timeout;
 
   this.Webworker = Webworker;
 
@@ -674,37 +675,11 @@ TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
 };
 
 TreemapCtrl.prototype.setUpNodeCenterIcon = function (selection) {
-  function cacheAndReturnWidth (data) {
-    if (!data.cache.width) {
-      data.cache.width = Math.max(0, (
-        that.treemap.x(data.x + data.dx) -
-        that.treemap.x(data.x) -
-        (2 * reduction)
-      ));
-    }
-    return data.cache.width;
-  }
-
-  function cacheAndReturnHeight (data) {
-    if (!data.cache.height) {
-      data.cache.height = Math.max(0, (
-        that.treemap.y(data.y + data.dy) -
-        that.treemap.y(data.y) -
-        (2 * reduction)
-      ));
-    }
-    return data.cache.height;
-  }
-
   selection
     .attr('x', function (data) {
-      cacheAndReturnWidth(data);
-
       return this.treemap.x(data.x) + (data.cache.width / 2) - 8;
     }.bind(this))
     .attr('y', function (data) {
-      cacheAndReturnWidth(data);
-
       return this.treemap.y(data.y) + (data.cache.height / 2) - 8;
     }.bind(this))
     .attr('width', function (data) {
@@ -730,7 +705,7 @@ TreemapCtrl.prototype.addLabel = function (el, attr, level) {
 
   level = Math.max(level ? level : 0, 0) * 0.25;
 
-  el.append('foreignObject')
+  var label = el.append('foreignObject')
     .attr('class', 'label-wrapper')
     .call(this.rect.bind(this), 2, level)
     .append('xhtml:div')
@@ -751,6 +726,29 @@ TreemapCtrl.prototype.addLabel = function (el, attr, level) {
         .text(function(data) {
             return data[attr];
         });
+};
+
+TreemapCtrl.prototype.checkLabelReadbility = function () {
+  var el, parentHeight, that = this;
+  this.treemap.element.selectAll('.label').each(function () {
+    el = d3.select(this);
+    parentHeight = this.getBoundingClientRect().height;
+
+    if (parentHeight < this.children[0].getBoundingClientRect().height) {
+      el.classed('smaller', true);
+      that.$timeout(function () {
+        if (this.getBoundingClientRect().height < this.children[0].getBoundingClientRect().height) {
+          console.log('hidden', this.children[0].textContent);
+          d3.select(this).classed({
+            'smaller': false,
+            'hidden': true
+          });
+        }
+      }.bind(this), 5);
+    } else {
+      el.classed('hidden', false);
+    }
+  });
 };
 
 /**
@@ -808,6 +806,8 @@ TreemapCtrl.prototype.adjustLevelDepth = function (oldVisibleDepth) {
   if (oldVisibleDepth > this.visibleDepth) {
     this.removeLevelsOfNodes(oldVisibleDepth);
   }
+
+  this.checkLabelReadbility();
 };
 
 /**
@@ -1524,6 +1524,7 @@ TreemapCtrl.prototype.transition = function (data, noNotification) {
         }.bind(this));
 
       newGroupsTrans.call(endAll, function () {
+        this.checkLabelReadbility();
         newGroups.selectAll('.icon')
           .call(this.setUpNodeCenterIcon.bind(this))
           .style('opacity', 1);
@@ -1758,5 +1759,6 @@ angular
     'treemapContext',
     'Webworker',
     '$rootScope',
+    '$timeout',
     TreemapCtrl
   ]);
