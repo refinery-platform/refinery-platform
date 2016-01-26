@@ -458,15 +458,12 @@ class AssaysFiles(APIView):
         solr_params = generate_solr_params(params, uuid)
         solr_response = search_solr(solr_params, 'data_set_manager')
         solr_response_json = json.loads(solr_response)
-        #response_docs = solr_response_json.get('response').get('docs')
+        # response_docs = solr_response_json.get('response').get('docs')
         order_facet_fields = solr_response_json.get('responseHeader').get(
-                'params').get(
-                'facet.field')
-        solr_response_json.get('response')["column_order"]= \
-            order_facet_fields
+                'params').get('facet.field')
+        solr_response_json.get('response')["column_order"] = order_facet_fields
 
         return Response(solr_response_json)
-
 
 
 class AssaysAttributes(APIView):
