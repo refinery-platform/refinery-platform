@@ -165,7 +165,7 @@
             </button>
             <button
               class="zoomOut"
-              ng-class="{'active': dashboard.dataSetExploration}"
+              ng-class="{'active': dashboard.dataSetExploration && !dashboard.dataSetExplorationTempHidden}"
               ng-mouseenter="dashboard.dataSetMouseEnterZoomOut(dataSet)"
               ng-mouseleave="dashboard.dataSetMouseEnter(dataSet)">
               <i class="fa fa-search-minus"></i>

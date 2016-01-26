@@ -593,21 +593,25 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery,
   }
 };
 
-DashboardCtrl.prototype.expandDataSetPreview = function (dataSet, fromStateEvent) {
-  this.dataSetExploration = false;
-  this.pubSub.trigger('treemap.hide');
-
-  if (!fromStateEvent) {
-    this.$state.transitionTo(
-      'launchPad.preview',
-      {
-        uuid: dataSet.uuid
-      },
-      {
-        inherit: true,
-        notify: false
-      }
-    );
+DashboardCtrl.prototype.expandDataSetPreview = function (
+  dataSet, fromStateEvent
+) {
+  if (this.dataSetExploration) {
+    this.dataSetExplorationTempHidden = true;
+    this.pubSub.trigger('vis.tempHide');
+  } else {
+    if (!fromStateEvent) {
+      this.$state.transitionTo(
+        'launchPad.preview',
+        {
+          uuid: dataSet.uuid
+        },
+        {
+          inherit: true,
+          notify: false
+        }
+      );
+    }
   }
 
   if (!this.dashboardDataSetPreviewService.previewing) {
@@ -629,19 +633,25 @@ DashboardCtrl.prototype.expandDataSetPreview = function (dataSet, fromStateEvent
 };
 
 DashboardCtrl.prototype.collapseDataSetPreview = function (dataSet) {
-  this.$state.transitionTo(
-    'launchPad',
-    {},
-    {
-      inherit: true,
-      notify: false
-    }
-  );
+  if (this.dataSetExploration) {
+    this.dataSetExplorationTempHidden = false;
+    this.pubSub.trigger('vis.show');
+  } else {
+    this.$state.transitionTo(
+      'launchPad',
+      {},
+      {
+        inherit: true,
+        notify: false
+      }
+    );
 
-  this.dashboardDataSetPreviewService.close();
-  this.expandDataSetPanel = false;
+    this.expandDataSetPanel = false;
+    this.dashboardExpandablePanelService.trigger('collapser');
+  }
+
   this.dataSetPreview = false;
-  this.dashboardExpandablePanelService.trigger('collapser');
+  this.dashboardDataSetPreviewService.close();
 };
 
 DashboardCtrl.prototype.toggleDataSetsExploration = function () {
@@ -676,7 +686,7 @@ DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
     this.dashboardExpandablePanelService.trigger('expander');
   } else {
     this.$timeout(function () {
-      this.pubSub.trigger('treemap.show');
+      this.pubSub.trigger('vis.show');
     }.bind(this), 0);
   }
 };

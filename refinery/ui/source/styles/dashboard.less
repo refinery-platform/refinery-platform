@@ -334,3 +334,13 @@
     text-shadow: 0 0 3px fadeout(@orange, 50%);
   }
 }
+
+.preview {
+  .content-container {
+    transition: opacity @fast-transition-speed @ease-in-out-cubic;
+
+    &.invisible {
+      opacity: 0;
+    }
+  }
+}
