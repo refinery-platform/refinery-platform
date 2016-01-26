@@ -9,6 +9,7 @@ import time
 import urlparse
 import requests
 import json
+import collections
 
 from django.db.models import Q
 from django.utils.http import urlquote
