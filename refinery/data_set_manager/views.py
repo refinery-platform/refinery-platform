@@ -381,14 +381,17 @@ class Assays(APIView):
 
     def get_object(self, uuid):
         try:
-            return Assay.objects.filter(uuid=uuid)
+            return Assay.objects.get(uuid=uuid)
         except Assay.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return None
 
     def get(self, request, uuid, format=None):
-        assays = self.get_object(uuid)
-        serializer = AssaySerializer(assays, many=True)
-        return Response(serializer.data)
+        assay = self.get_object(uuid)
+        if assay:
+            serializer = AssaySerializer(assay)
+            return Response(serializer.data)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 class AssaysFiles(APIView):
@@ -458,7 +461,6 @@ class AssaysFiles(APIView):
         solr_params = generate_solr_params(params, uuid)
         solr_response = search_solr(solr_params, 'data_set_manager')
         solr_response_json = json.loads(solr_response)
-        # response_docs = solr_response_json.get('response').get('docs')
         order_facet_fields = solr_response_json.get('responseHeader').get(
                 'params').get('facet.field')
         solr_response_json.get('response')["column_order"] = order_facet_fields
