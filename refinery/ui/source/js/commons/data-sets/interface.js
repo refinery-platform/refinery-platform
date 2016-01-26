@@ -686,6 +686,9 @@ function DataSetFactory (
   };
 
   DataSet.prototype.allIds = function () {
+    if (_search) {
+      return _searchResultDsIds;
+    }
     return _allDsIds;
   };
 
