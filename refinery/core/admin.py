@@ -75,6 +75,7 @@ class WorkflowAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
                 messages.success(request, "Workflow:{} deleted "
                                           "successfully!".format(instance))
 
+    delete_selected.short_description = "Delete selected Workflows"
     actions = [delete_selected, hide_selected_workflows,
                show_selected_workflows]
 
@@ -103,6 +104,7 @@ class DataSetAdmin(GuardedModelAdmin):
                 messages.success(request, "DataSet:{} deleted "
                                           "successfully!".format(instance))
 
+    delete_selected.short_description = "Delete selected DataSets"
     actions = [delete_selected]
 
 
@@ -135,6 +137,7 @@ class AnalysisAdmin(GuardedModelAdmin):
                 messages.success(request, "Analysis:{} deleted "
                                           "successfully!".format(instance))
 
+    delete_selected.short_description = "Delete selected Analyses"
     actions = [delete_selected]
 
 
