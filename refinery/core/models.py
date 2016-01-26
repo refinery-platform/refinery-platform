@@ -229,9 +229,12 @@ class BaseResource (models.Model):
                 logger.error("Could not save %s: %s" % (
                     self.__class__.__name__, e))
 
-    def delete(self, using=None):
+    # Overriding delete() method For models that Inherit from BaseResource
+    def delete(self, using=None, *args, **kwargs):
         if not deletion_checks(self):
-            self.save_base()
+            super(BaseResource, self).save()
+        else:
+            super(BaseResource, self).delete()
 
 
 class OwnableResource (BaseResource):
