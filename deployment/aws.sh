@@ -11,7 +11,7 @@ set -x
 GIT_BRANCH=${GIT_BRANCH:-develop}
 
 /usr/bin/apt-get -q -y install htop
-/usr/bin/apt-get -q -y install awscli jq
+/usr/bin/apt-get -q -y install awscli jq postgresql-client-common
 
 mkdir /srv/refinery-platform
 chown ubuntu:ubuntu /srv/refinery-platform
