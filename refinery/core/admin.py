@@ -67,6 +67,8 @@ class WorkflowAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
 
         for instance in objects.all():
             if not deletion_checks(instance):
+                instance.is_active = False
+                instance.save()
                 messages.error(request, "Could not delete Workflow:{} It has "
                                         "been used in one or more "
                                         "Analyses!".format(instance))
