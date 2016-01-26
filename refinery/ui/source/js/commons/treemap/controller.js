@@ -732,6 +732,10 @@ TreemapCtrl.prototype.checkLabelReadbility = function () {
   var el, parentHeight, that = this;
   this.treemap.element.selectAll('.label').each(function () {
     el = d3.select(this);
+    el.classed({
+      'visible': false,
+      'hidden': false
+    });
     parentHeight = this.getBoundingClientRect().height;
 
     if (parentHeight < this.children[0].getBoundingClientRect().height) {
@@ -746,10 +750,23 @@ TreemapCtrl.prototype.checkLabelReadbility = function () {
             'hidden': true
           });
         }
-      }.bind(this), 5);
+      }.bind(this), 0);
     } else {
       el.classed('hidden', false);
     }
+
+    if (
+      (this.getBoundingClientRect().width * 1.5) <
+        this.children[0].getBoundingClientRect().width
+    ) {
+      el.classed('hidden', true);
+    }
+
+    that.$timeout(function () {
+      if (!d3.select(this).classed('hidden')) {
+        d3.select(this).classed('visible', true);
+      }
+    }.bind(this), 5);
   });
 };
 
@@ -1483,8 +1500,7 @@ TreemapCtrl.prototype.transition = function (data, noNotification) {
       this.treemap.element.style('shape-rendering', null);
 
       // Fade-in entering text.
-      newGroups.selectAll('.label-wrapper')
-        .style('fill-opacity', 0);
+      newGroups.selectAll('.label').classed('visible', false);
 
       // Icons do not need to be animated. Animating to many DOM elements at
       // once kills the performance.
@@ -1515,7 +1531,6 @@ TreemapCtrl.prototype.transition = function (data, noNotification) {
         .call(this.rect.bind(this));
 
       newGroupsTrans.selectAll('.label-wrapper')
-        .style('fill-opacity', 1)
         .call(this.rect.bind(this), 2);
 
       // Remove the old node when the transition is finished.
