@@ -685,6 +685,10 @@ function DataSetFactory (
     return this;
   };
 
+  DataSet.prototype.allIds = function () {
+    return _allDsIds;
+  };
+
   /**
    * Deselect currently selected data objects.
    *
@@ -820,9 +824,11 @@ function DataSetFactory (
     reset = !!!reset;
 
     for (var i = keys.length; i--;) {
-      _dataStore.set(keys[i], { hovered: mode === 'hover' && reset });
+      if (mode === 'hover') {
+        _dataStore.set(keys[i], { hovered: reset });
+      }
       if (mode === 'lock') {
-        _dataStore.set(keys[i], { locked: mode === 'lock' && reset });
+        _dataStore.set(keys[i], { locked: reset });
       }
     }
 

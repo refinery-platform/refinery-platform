@@ -21,7 +21,16 @@
   .inner-border {
     fill: transparent;
     stroke: #000;
-    stroke-width: 2;
+    stroke-opacity: 0.15;
+    transition: stroke-opacity @fast-transition-speed @ease-in-out-cubic;
+  }
+
+  .label {
+    transition: all @fast-transition-speed @ease-in-out-cubic;
+
+    span {
+      padding: 0.15em 0.25em 0.15em 0.15em;
+    }
   }
 
   .outer-border {
@@ -31,19 +40,21 @@
   }
 
   .inner-node {
-    &:hover {
+    &:hover,
+    &.hovering {
       cursor: pointer;
 
       .label {
         color: #fff;
 
         span {
-          background: rgba(0, 0, 0, 0.66);
+          background: rgba(0, 0, 0, 1);
         }
       }
 
       .inner-border {
-        stroke-width: 4;
+        stroke-width: 6;
+        stroke-opacity: 1;
       }
     }
   }
@@ -59,12 +70,15 @@
 
   .inner-node,
   .leaf {
+    &.focus,
     &.locked {
       .label {
         color: #000;
+        font-weight: bold;
       }
 
-      &:hover {
+      &:hover,
+      &.hovering {
         .label {
           color: #fff;
         }
@@ -97,5 +111,31 @@
       padding: 0.1em 0.25em 0.1em 0.1em;
       border-radius: 0 0 0.25em 0;
     }
+  }
+
+  .node .icon-locked,
+  .node .icon-unlocked {
+    transition: opacity @fast-transition-speed @ease-in-out-cubic;
+    shape-rendering: auto;
+  }
+
+  .node.locked .icon-locked {
+    display: block;
+    color: rgba(0, 0, 0, 0.33);
+  }
+
+  .node .icon-locked,
+  .node.locked .icon-unlocked {
+    display: none;
+  }
+
+  .node .icon-unlocked {
+    display: block;
+    color: rgba(0, 0, 0, 0);
+  }
+
+  .node:hover .icon-unlocked,
+  .node.hovering .icon-unlocked {
+    color: rgba(0, 0, 0, 0.2);
   }
 }

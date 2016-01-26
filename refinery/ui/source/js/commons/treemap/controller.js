@@ -72,13 +72,14 @@ function getAssociatedDataSets (node) {
  * @param  {Object}  Webworker              Web Worker service.
  */
 function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
-  treemapSettings, pubSub, treemapContext, Webworker) {
+  treemapSettings, pubSub, treemapContext, Webworker, $rootScope) {
   this.$ = $;
   this._ = _;
   this.$q = $q;
   this.d3 = d3;
   this.HEX = HEX;
   this.$window = $window;
+  this.$rootScope = $rootScope;
   this.$element = this.$($element);
   this.$d3Element = this.$element.find('.treemap svg');
   this.settings = treemapSettings;
@@ -137,6 +138,14 @@ function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
     .select('.root-path');
   this.treemap.$grandParent = this.$(this.treemap.grandParent.node());
   this.treemap.$grandParentContainer = this.treemap.$grandParent.parent();
+
+  // To-DO: Refactor, the `visData` service should handle this properly
+  // The node index is needed to quickly access nodes since D3's tree map layout
+  // requires a data structure which doesn't provide any quick access.
+  this.nodeIndex = {};
+
+  this.currentlyLockedNodes = {};
+  this.prevEvent = {};
 
   if (this.graph) {
     this.graph.then(function (data) {
@@ -218,7 +227,7 @@ TreemapCtrl.prototype.addChildren = function (parent, data, level, firstTime) {
     })
     .enter()
     .append('g')
-      .attr('class', 'leaf-node')
+      .attr('class', 'node leaf-node')
       .attr('opacity', 0);
 
   var extraPadding = (0.25 * (level - 1));
@@ -228,6 +237,22 @@ TreemapCtrl.prototype.addChildren = function (parent, data, level, firstTime) {
       .attr('class', 'leaf')
       .attr('fill', this.color.bind(this))
       .call(this.rect.bind(this), extraPadding);
+
+  leafs
+    .append('use')
+      .attr({
+        'class': 'icon icon-unlocked',
+        'xlink:href': '/static/images/icons.svg#unlocked'
+      })
+      .call(this.setUpNodeCenterIcon.bind(this));
+
+  leafs
+    .append('use')
+      .attr({
+        'class': 'icon icon-locked',
+        'xlink:href': '/static/images/icons.svg#locked'
+      })
+      .call(this.setUpNodeCenterIcon.bind(this));
 
   leafs
     .call(this.addLabel.bind(this), 'name', extraPadding);
@@ -289,7 +314,7 @@ TreemapCtrl.prototype.addEventListeners = function () {
 
   this.treemap.$element.on(
     'mouseenter',
-    '.group-of-nodes',
+    '.node',
     function (e) {
       that.highlightByTerm(that.d3.select(this).datum(), false, true, false);
     }
@@ -297,7 +322,7 @@ TreemapCtrl.prototype.addEventListeners = function () {
 
   this.treemap.$element.on(
     'mouseleave',
-    '.group-of-nodes',
+    '.node',
     function (e) {
       that.highlightByTerm(that.d3.select(this).datum(), false, true, true);
     }
@@ -305,7 +330,7 @@ TreemapCtrl.prototype.addEventListeners = function () {
 
   this.treemap.$element.on(
     'click',
-    '.label-wrapper, .outer-border',
+    '.node',
     function (e) {
       var data = that.d3.select(this).datum();
 
@@ -314,8 +339,7 @@ TreemapCtrl.prototype.addEventListeners = function () {
         that.highlightByTerm(that.d3.select(this).datum(), false, false, true);
         that.transition(data);
       } else {
-        that.highlightByTerm(data, e.shiftKey);
-        that.lockHighlightEl.call(that, this.parentNode, data);
+        that.lockNode(this, data);
       }
     }
   );
@@ -324,6 +348,268 @@ TreemapCtrl.prototype.addEventListeners = function () {
     e.preventDefault();
     this.visibleDepth += e.deltaY > 0 ? 1 : -1;
   }.bind(this));
+
+  // Listen to triggers from outside
+  this.$rootScope.$on('dashboardVisNodeEnter', function (event, data) {
+    var uri = data.nodeUri;
+    if (data.clone) {
+      uri = data.clonedFromUri;
+    }
+    this.findNodesToHighlight(uri);
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeLeave', function (event, data) {
+    var uri = data.nodeUri;
+    if (data.clone) {
+      uri = data.clonedFromUri;
+    }
+    this.findNodesToHighlight(uri, true);
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeFocus', function (event, data) {
+    var termIds = [];
+    if (data.terms) {
+      for (var i = data.terms.length; i--;) {
+        termIds.push(data.terms[i].term);
+      }
+    } else {
+      console.error('No annotations?', data);
+    }
+    this.focusNode(termIds);
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeBlur', function (event, data) {
+    var termIds = [];
+    if (data.terms) {
+      for (var i = data.terms.length; i--;) {
+        termIds.push(data.terms[i].term);
+      }
+    } else {
+      console.error('No annotations?', data);
+    }
+    this.blurNode(termIds);
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeRoot', function (event, data) {
+    if (data.source !== 'treeMap') {
+      var uri = data.nodeUri;
+      if (data.clone) {
+        uri = data.clonedFromUri;
+      }
+      if (!this.nodeIndex[uri]) {
+        console.error('Node not found: ', uri);
+      } else {
+        this.setRootNode({
+          ontId: this.nodeIndex[uri][0].ontId,
+          uri: uri,
+          // This is tricky because there are multiple paths in the tree map but
+          // not in the list graph.
+          branchId: 0
+        }, true);
+      }
+    }
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeUnroot', function (event, data) {
+    if (data.source !== 'treeMap') {
+      var uri = data.nodeUri;
+      if (data.clone) {
+        uri = data.clonedFromUri;
+      } else {
+        this.setRootNode({
+          ontId: this.absRootNode.ontId,
+          uri: this.absRootNode.uri,
+          branchId: 0
+        }, true);
+      }
+    }
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeReroot', function (event, data) {
+    if (data.source !== 'treeMap') {
+      var uri = data.nodeUri;
+      if (data.clone) {
+        uri = data.clonedFromUri;
+      }
+      if (!this.nodeIndex[uri]) {
+        console.error('Node not found: ', uri);
+      } else {
+        this.setRootNode({
+          ontId: this.nodeIndex[uri][0].ontId,
+          uri: uri,
+          branchId: 0
+        }, true);
+      }
+    }
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeLock', function (event, data) {
+    if (data.source !== 'treeMap') {
+      var uri = data.nodeUri;
+      if (data.clone) {
+        uri = data.clonedFromUri;
+      }
+      var selection = this.getD3NodeByUri(uri);
+      if (!selection.empty()) {
+        this.lockNode(selection.node(), selection.datum(), true);
+      }
+    }
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeUnlock', function (event, data) {
+    if (data.source !== 'treeMap') {
+      var uri = data.nodeUri;
+      if (data.clone) {
+        uri = data.clonedFromUri;
+      }
+      var selection = this.getD3NodeByUri(uri);
+      if (!selection.empty()) {
+        this.lockNode(selection.node(), selection.datum(), true);
+      }
+    }
+  }.bind(this));
+};
+
+TreemapCtrl.prototype.findNodesToHighlight = function (uri, dehighlight) {
+  var node = this.getD3NodeByUri(uri);
+
+  if (!node.empty() && node.datum().meta.depth === this.visibleDepth) {
+    // Node is at the current level, i.e. it can be highlighted directly
+    this.hoverRectangle(node, !!!dehighlight);
+  } else {
+    // Loop over all nodes (might be many depending on the number of
+    // duplicates).
+    if (this.nodeIndex[uri]) {
+      for (var i = this.nodeIndex[uri].length; i--;) {
+        // Try to find a DOM element related to that URI
+        node = this.getD3NodeByUri(
+          this.getParentAtLevel(
+            this.nodeIndex[uri][i],
+            this.currentLevel + this.visibleDepth
+          ).uri
+        );
+
+        // When a DOM element was found highlight it.
+        if (!node.empty()) {
+          this.hoverRectangle(node, !!!dehighlight);
+        }
+      }
+    } else {
+      console.error('Node not found: ', uri);
+    }
+  }
+};
+
+TreemapCtrl.prototype.lockNode = function (element, data, noNotification) {
+  this.highlightByTerm(data, undefined, undefined, undefined, noNotification);
+  this.lockHighlightEl(element);
+};
+
+TreemapCtrl.prototype.hoverRectangle = function (selection, enter) {
+  selection.classed('hovering', enter);
+};
+
+/**
+ * Get a DOM element wrapped as a D3 selection by a node's URI.
+ *
+ * @method  getD3NodeByUri
+ * @author  Fritz Lekschas
+ * @date    2016-01-20
+ * @param   {String}  uri  Node's URI.
+ * @return  {Object}       D3 selection of the DOM element.
+ */
+TreemapCtrl.prototype.getD3NodeByUri = function (uri) {
+  // This feels inefficient. There should be a way to cache node references so
+  // that the DOM doesn't need to be queried all the time.
+  return this.treemap.element.selectAll('.node').filter(function (data) {
+    return data.uri === uri;
+  });
+};
+
+TreemapCtrl.prototype.getParentAtLevel = function (node, level) {
+  // The parent's level must be lower than the node's level, hence if level is
+  // greater we can stop here directly.
+  if (level > node.meta.level) {
+    return;
+  }
+
+  var parent = node;
+
+  while (parent.meta.depth > level) {
+    parent = parent.parent;
+  }
+
+  return parent;
+};
+
+TreemapCtrl.prototype.focusNode = function (termIds) {
+  var visibleNodes = {},
+      nodes;
+
+  for (var i = termIds.length; i--;) {
+    nodes = this.nodeIndex[termIds[i]];
+    if (nodes && nodes.length) {
+      for (var j = nodes.length; j--;) {
+        if (nodes[j].meta.depth === this.visibleDepth) {
+          // Node is at the current level, i.e. it can be highlighted directly
+          visibleNodes[nodes[j].uri] = true;
+        } else {
+          // Find parent node at the current level
+          visibleNodes[
+            this.getParentAtLevel(
+              nodes[j],
+              this.currentLevel + this.visibleDepth
+            ).uri
+          ] = true;
+        }
+      }
+    }
+  }
+
+  nodes = this.treemap.element.selectAll('.node').filter(function (data) {
+    return visibleNodes[data.uri];
+  });
+
+  nodes.classed('focus', true).select('.bg')
+    .attr('fill', function (data, index) {
+      return this.color.call(this, data, index, undefined, true);
+    }.bind(this));
+
+  this.currentlyFocusedNodes = nodes;
+};
+
+TreemapCtrl.prototype.blurNode = function (termIds) {
+  var nodes = this.currentlyFocusedNodes;
+
+  if (!nodes || nodes.empty()) {
+    var visibleNodes = {};
+
+    for (var i = termIds.length; i--;) {
+      nodes = this.nodeIndex[termIds[i]];
+      if (nodes && nodes.length) {
+        for (var j = nodes.length; j--;) {
+          if (nodes[j].meta.depth === this.visibleDepth) {
+            // Node is at the current level, i.e. it can be highlighted directly
+            visibleNodes[nodes[j].uri] = true;
+          } else {
+            // Find parent node at the current level
+            visibleNodes[
+              this.getParentAtLevel(nodes[j], this.visibleDepth).uri
+            ] = true;
+          }
+        }
+      }
+    }
+
+    nodes = this.treemap.element.selectAll('.node').filter(function (data) {
+      return visibleNodes[data.uri];
+    });
+  }
+
+  nodes.classed('focus', false).select('.bg')
+    .attr('fill', function (data, index) {
+      return this.color.call(this, data);
+    }.bind(this));
 };
 
 /**
@@ -344,9 +630,9 @@ TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
   // Level needs to be decreased by 1.
   level = Math.max(level ? level - 1 : 0, 0) * 0.25;
 
-  innerNodes = parentsWithChildren
+  var innerNodes = parentsWithChildren
     .append('g')
-      .attr('class', 'inner-node')
+      .attr('class', 'node inner-node')
       .attr('opacity', 0);
 
   innerNodes
@@ -362,12 +648,18 @@ TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
 
   innerNodes
     .append('use')
-      .attr('xlink:href', '#unlocked')
+      .attr({
+        'class': 'icon icon-unlocked',
+        'xlink:href': '/static/images/icons.svg#unlocked'
+      })
       .call(this.setUpNodeCenterIcon.bind(this));
 
   innerNodes
     .append('use')
-      .attr('xlink:href', '#locked')
+      .attr({
+        'class': 'icon icon-locked',
+        'xlink:href': '/static/images/icons.svg#locked'
+      })
       .call(this.setUpNodeCenterIcon.bind(this));
 
   innerNodes
@@ -666,6 +958,8 @@ TreemapCtrl.prototype.draw = function () {
     this.data.ready = true;
   }
 
+  this.absRootNode = this.data;
+
   this.display(this.data, true);
 
   var rootNodeData;
@@ -679,11 +973,11 @@ TreemapCtrl.prototype.draw = function () {
       rootNodeData
     );
   } else {
-    this.rootNode = {
+    this.setRootNode({
       branchId: 0,
       ontId: this.data.ontId,
       uri: this.data.uri
-    };
+    });
   }
 
   this.addEventListeners();
@@ -758,30 +1052,32 @@ TreemapCtrl.prototype.initialize = function (data) {
  * @author  Fritz Lekschas
  * @date    2015-12-21
  *
- * @param   {Object}   data      Data object associated to the rectangle being
- *   clicked.
- * @param   {Boolean}  multiple  If `true` currently highlighted datasets will
- *   not be _de-highlighted_.
- * @param   {Boolean}  hover      If `true` reports only mouse over related
+ * @param   {Object}   data            Data object associated to the rectangle
+ *   being clicked.
+ * @param   {Boolean}  multiple        If `true` currently highlighted datasets
+ *   will not be _de-highlighted_.
+ * @param   {Boolean}  hover           If `true` reports only mouse over related
  *   highlighting.
- * @param   {Boolean}  reset     If `true` resets highlighting.
+ * @param   {Boolean}  reset           If `true` resets highlighting.
+ * @param   {Boolean}  noNotification  If `true` suppressed event emiting.
  */
 TreemapCtrl.prototype.highlightByTerm = function (
-  data, multiple, hover, reset
+  data, multiple, hover, reset, noNotification
 ) {
   var dataSetIds = getAssociatedDataSets(data),
-      i,
+      eventName,
       mode = hover ? 'hover' : 'lock',
-      prevData = this.treemapContext.get(mode + 'Terms');
+      prevData = this.prevEvent[mode + 'Terms'],
+      set = false;
 
   if (prevData && reset !== true) {
     if (multiple) {
       dataSetIds = this._.merge(dataSetIds, prevData.dataSetIds);
-    } else {
+    } else if (hover) {
       // Difference between previously highlighted datasets and datasets
       // highlighted next.
       var keys = Object.keys(prevData.dataSetIds);
-      for (i = keys.length; i--;) {
+      for (var i = keys.length; i--;) {
         if (dataSetIds[keys[i]]) {
           delete prevData.dataSetIds[keys[i]];
         }
@@ -789,75 +1085,48 @@ TreemapCtrl.prototype.highlightByTerm = function (
     }
   }
 
-  // if (prevData && reset === undefined || reset === true) {
-  //   // Dehighlight previously highlighted data sets.
-  //   this.treemapContext.set(
-  //     mode + 'Terms',
-  //     {
-  //       dataSetIds: prevData.dataSetIds,
-  //       deactivate: true
-  //     },
-  //     true
-  //   );
-  // }
-
-  if (prevData && prevData.nodeUri !== data.uri) {
-    this.treemapContext.set(
-      mode + 'Terms',
-      {
+  if (prevData) {
+    if (hover) {
+      eventName = 'dashboardVisNodeLeave';
+    } else {
+      eventName = 'dashboardVisNodeUnlock';
+    }
+    if (!noNotification) {
+      this.$rootScope.$emit(eventName, {
         nodeUri: prevData.nodeUri,
         dataSetIds: prevData.dataSetIds,
-        reset: true
-      },
-      true
-    );
-    // REFACTOR ASAP
-    if (!reset) {
-      this.treemapContext.set(
-        mode + 'Terms',
-        {
-          nodeUri: data.uri,
-          dataSetIds: dataSetIds,
-          reset: reset
-        },
-        true
-      );
+        source: 'treeMap'
+      });
+    }
+
+    if (prevData.nodeUri === data.uri) {
+      this.prevEvent[mode + 'Terms'] = undefined;
+    } else {
+      if (!reset) {
+        set = true;
+      }
     }
   } else {
-    this.treemapContext.set(
-      mode + 'Terms',
-      {
-        nodeUri: data.uri,
-        dataSetIds: dataSetIds,
-        reset: reset
-      },
-      true
-    );
+    if (!reset) {
+      set = true;
+    }
   }
 
-  // if (reset === undefined || reset === true) {
-  //   // Store previously highlighted datasets.
-  //   this.treemapContext.set(
-  //     'prevHighlightedDataSets',
-  //     {
-  //       ids: prevData.ids,
-  //       soft: soft
-  //     },
-  //     true
-  //   );
-  // }
-
-  // if (reset === undefined || reset === false) {
-  //   // Store highlighted datasets.
-  //   this.treemapContext.set(
-  //     'highlightedDataSets',
-  //     {
-  //       ids: dataSetIds,
-  //       soft: soft
-  //     },
-  //     true
-  //   );
-  // }
+  if (set) {
+    if (hover) {
+      eventName = 'dashboardVisNodeEnter';
+    } else {
+      eventName = 'dashboardVisNodeLock';
+    }
+    this.prevEvent[mode + 'Terms'] = {
+      nodeUri: data.uri,
+      dataSetIds: dataSetIds,
+      source: 'treeMap'
+    };
+    if (!noNotification) {
+      this.$rootScope.$emit(eventName, this.prevEvent[mode + 'Terms']);
+    }
+  }
 };
 
 /**
@@ -871,17 +1140,33 @@ TreemapCtrl.prototype.highlightByTerm = function (
  */
 TreemapCtrl.prototype.lockHighlightEl = function (element) {
   var d3El = this.d3.select(element);
+  var className = d3El.datum().meta.leaf ? '.leaf' : '.bg';
 
-  // Unlock previously locked element
-  this.treemap.element.select('.locked').classed('locked', false).select('.bg')
-    .attr('fill', function (data, index) {
-      return this.color.call(this, data);
-    }.bind(this));
+  if (this.currentlyLockedNode) {
+    this.currentlyLockedNode.classed('locked', false)
+      .select(this.currentlyLockedNode.datum().meta.leaf ? '.leaf' : '.bg')
+        .attr('fill', function (data, index) {
+          return this.color.call(this, data);
+        }.bind(this));
 
-  d3El.classed('locked', true).select('.bg')
-    .attr('fill', function (data, index) {
-      return this.color.call(this, data, index, undefined, true);
-    }.bind(this));
+    if (this.currentlyLockedNode.datum().uri === d3El.datum().uri) {
+      this.currentlyLockedNode = undefined;
+    } else {
+      d3El.classed('locked', true).select(className)
+        .attr('fill', function (data, index) {
+          return this.color.call(this, data, index, undefined, true);
+        }.bind(this));
+
+      this.currentlyLockedNode = d3El;
+    }
+  } else {
+    d3El.classed('locked', true).select(className)
+      .attr('fill', function (data, index) {
+        return this.color.call(this, data, index, undefined, true);
+      }.bind(this));
+
+    this.currentlyLockedNode = d3El;
+  }
 };
 
 /**
@@ -926,6 +1211,15 @@ TreemapCtrl.prototype.layout = function (parent, depth) {
     this.cacheTerms[parent.ontId] = [parent];
     parent.cache.branchId = 0;
   }
+
+  // Store a reference to the node by it's URI. Since nodes can be duplicated
+  // there might be more than one tree map node refering to a term.
+  if (!this.nodeIndex[parent.uri]) {
+    this.nodeIndex[parent.uri] = [parent];
+  } else {
+    this.nodeIndex[parent.uri].push(parent);
+  }
+
   if (parent._children && parent._children.length) {
     this.depth = Math.max(this.depth, depth + 1);
     // This creates an anonymous 1px x 1px treemap and sets the children's
@@ -1129,10 +1423,13 @@ TreemapCtrl.prototype.setBreadCrumb = function (node) {
  *
  * @method  transition
  * @author  Fritz Lekschas
- * @date    2015-08-03
- * @param   {Object}  data  D3 data object of the node to transition to.
+ * @date    2016-01-19
+ * @param   {Object}  data            D3 data object of the node to transition
+ *   to.
+ * @param   {Object}  noNotification  If `true` doesn't set the tree map context
+ *   since the method was called by `setRootNode` already.
  */
-TreemapCtrl.prototype.transition = function (data) {
+TreemapCtrl.prototype.transition = function (data, noNotification) {
   if (this.treemap.transitioning || !data) {
     return;
   }
@@ -1143,6 +1440,24 @@ TreemapCtrl.prototype.transition = function (data) {
 
   var newGroups = this.display.call(this, data),
       newGroupsTrans, formerGroupWrapper, formerGroupWrapperTrans;
+
+  function endAll (transition, callback) {
+    var n = 0;
+
+    if (transition.size() === 0) {
+      callback();
+    }
+
+    transition
+      .each(function() {
+        ++n;
+      })
+      .each('end', function() {
+        if (!--n) {
+          callback.apply(this, arguments);
+        }
+      });
+  }
 
   // After all newly added inner nodes and leafs have been faded in we call the
   // zoom transition.
@@ -1168,6 +1483,13 @@ TreemapCtrl.prototype.transition = function (data) {
       // Fade-in entering text.
       newGroups.selectAll('.label-wrapper')
         .style('fill-opacity', 0);
+
+      // Icons do not need to be animated. Animating to many DOM elements at
+      // once kills the performance.
+      formerGroupWrapper.selectAll('.icon')
+        .style('opacity', 0);
+      newGroups.selectAll('.icon')
+        .style('opacity', 0);
 
       formerGroupWrapperTrans.selectAll('.bg')
         .call(this.rect.bind(this), 1);
@@ -1200,17 +1522,26 @@ TreemapCtrl.prototype.transition = function (data) {
           this.treemap.element.style('shape-rendering', 'crispEdges');
           this.treemap.transitioning = false;
         }.bind(this));
+
+      newGroupsTrans.call(endAll, function () {
+        newGroups.selectAll('.icon')
+          .call(this.setUpNodeCenterIcon.bind(this))
+          .style('opacity', 1);
+      }.bind(this));
     }.bind(this))
     .catch(function (e) {
       console.error(e);
     });
 
-  transition.then(function () {
-    this.rootNode = {
-      ontId: data.ontId,
-      branchId: data.cache.branchId
-    };
-  }.bind(this));
+  if (!noNotification) {
+    transition.then(function () {
+      this.setRootNode({
+        ontId: data.ontId,
+        uri: data.uri,
+        branchId: data.cache.branchId
+      });
+    }.bind(this));
+  }
 };
 
 
@@ -1306,6 +1637,49 @@ Object.defineProperty(
     writable: true
 });
 
+TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
+  if (root.uri !== this.absRootNode.uri) {
+    if (!noNotification) {
+      this.$rootScope.$emit(
+        'dashboardVisNodeRoot',
+        {
+          nodeUri: root.uri,
+          source: 'treeMap',
+          depth: this.visibleDepth
+        });
+    }
+  } else {
+    if (!noNotification && this.treemapContext.get('root')) {
+      var uri = this.treemapContext.get('root').uri;
+      if (!uri) {
+        uri = this.cacheTerms[this.treemapContext.get('root').ontId][0].uri;
+      }
+      this.$rootScope.$emit(
+        'dashboardVisNodeUnroot',
+        {
+          nodeUri: uri,
+          source: 'treeMap',
+          depth: this.visibleDepth
+        }
+      );
+    }
+  }
+
+  this.treemapContext.set('root', {
+    ontId: root.ontId,
+    uri: root.uri,
+    branchId: root.branchId || 0
+  });
+
+  this.treemapContext.set(
+    'dataSets',
+    getAssociatedDataSets(this.cacheTerms[root.ontId][root.branchId]),
+    true
+  );
+
+  this.transition(this.cacheTerms[root.ontId][root.branchId], true);
+};
+
 /**
  * Current root node.
  *
@@ -1324,20 +1698,6 @@ Object.defineProperty(
     enumerable: true,
     get: function () {
       return this.treemapContext.get('root');
-    },
-    set: function (root) {
-      this.treemapContext.set('root', {
-        ontId: root.ontId,
-        branchId: root.branchId
-      });
-
-      this.treemapContext.set(
-        'dataSets',
-        getAssociatedDataSets(this.cacheTerms[root.ontId][root.branchId]),
-        true
-      );
-
-      this.transition(this.cacheTerms[root.ontId][root.branchId]);
     }
 });
 
@@ -1378,6 +1738,7 @@ Object.defineProperty(
       var oldVisibleDepth = this._visibleDepth;
       this._visibleDepth = Math.min(Math.max(1, visibleDepth), this.depth);
       this.adjustLevelDepth(oldVisibleDepth);
+      this.$rootScope.$emit('dashboardVisVisibleDepth', visibleDepth);
     }
 });
 
@@ -1396,5 +1757,6 @@ angular
     'pubSub',
     'treemapContext',
     'Webworker',
+    '$rootScope',
     TreemapCtrl
   ]);

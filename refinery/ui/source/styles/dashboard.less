@@ -188,39 +188,6 @@
   left: 5px;
 }
 
-.treemap svg {
-  .inner-border {
-    stroke: #000;
-    stroke-opacity: 0.15;
-    transition: stroke-opacity @fast-transition-speed @ease-in-out-cubic;
-  }
-
-  .label {
-    transition: all @fast-transition-speed @ease-in-out-cubic;
-  }
-
-  .inner-node {
-    &:hover {
-      .label {
-        span {
-          background: rgba(0, 0, 0, 1);
-        }
-      }
-
-      .inner-border {
-        stroke-width: 6;
-        stroke-opacity: 1;
-      }
-    }
-  }
-
-  .label {
-    span {
-      padding: 0.15em 0.25em 0.15em 0.15em;
-    }
-  }
-}
-
 .list-graph {
   position: absolute;
   top: 0;
@@ -326,5 +293,44 @@
     white-space: nowrap;
     vertical-align: baseline;
     border-radius: .25em;
+  }
+
+  // Adjust highlight color
+  .bar-border {
+    stroke: mix(lighten(@orange, 20%), #fff, 25%);
+  }
+
+  .bar.highlight .bar-magnitude {
+    fill: lighten(@orange, 20%);
+  }
+
+  .top-bar .sort-precision:hover,
+  .top-bar .sort-recall:hover,
+  .top-bar .sort-name:hover {
+    background: @orange;
+  }
+
+  .node .bg-border {
+    fill: @orange;
+    stroke: @orange;
+  }
+
+  .node.focus-directly .bg {
+    fill: @orange;
+  }
+
+  .node.focus-directly .border,
+  .column.active .node.focus-directly .border {
+    stroke: @orange;
+  }
+
+  .link .link-bg {
+    stroke: @orange;
+  }
+
+  .node.highlight-label .label,
+  .column.active .node.highlight-label .label {
+    color: darken(@orange, 5%);
+    text-shadow: 0 0 3px fadeout(@orange, 50%);
   }
 }

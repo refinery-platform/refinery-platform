@@ -1053,7 +1053,6 @@ a.analysis-header {
 
     ul.results {
       position: relative;
-      z-index: 1;
       background: @white;
 
       li {
@@ -1088,6 +1087,35 @@ a.analysis-header {
           a {
             color: @black;
           }
+        }
+
+        .zoomOut {
+          position: absolute;
+          z-index: 1;
+          top: 0;
+          right: 20px;
+          bottom: 0;
+          display: block;
+          color: @gray-light;
+          border: none;
+          background: rgba(255, 255, 255, 0.9);
+          transition: all @fast-transition-speed @ease-in-out-cubic;
+          opacity: 0;
+
+          &:hover {
+            color: #fff;
+            background: @orange;
+            box-shadow: 0 1px 0 0 @orange, 0 -1px 0 0 @orange;
+          }
+
+          &:active,
+          &:focus {
+            outline: none;
+          }
+        }
+
+        &:hover .zoomOut.active {
+          opacity: 1;
         }
 
         &.locked {
@@ -1243,12 +1271,25 @@ a.analysis-header {
             }
           }
 
-          .icon-cursor-default {
+          .icon-cursor-default,
+          .icon-cursor-click,
+          .icon-cursor-dblclick {
             position: relative;
+            color: @black;
+          }
+
+          .icon-cursor-default {
             top: 0.125em;
             width: 0.85em;
             height: 1em;
-            color: @black;
+          }
+
+          .icon-cursor-click,
+          .icon-cursor-dblclick {
+            top: 0;
+            width: 0.85em;
+            height: 1em;
+            transform: scale(1.5);
           }
         }
 

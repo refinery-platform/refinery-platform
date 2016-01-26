@@ -153,13 +153,22 @@
             ui-scroll="dataSet in dashboard.dataSets"
             buffer-size="50"
             adapter="dashboard.dataSetsAdapter"
-            ng-class="{'hovered': dataSet.hovered, 'locked': dataSet.locked, 'previewing': dataSet.preview}">
+            ng-class="{'hovered': dataSet.hovered, 'locked': dataSet.locked, 'previewing': dataSet.preview}"
+            ng-mouseenter="dashboard.dataSetMouseEnter(dataSet)"
+            ng-mouseleave="dashboard.dataSetMouseLeave(dataSet)">
             <button
               class="preview"
               ng-click="dashboard.expandDataSetPreview(dataSet, $index)">
               <i
                 class="fa fa-angle-double-right is-mirrorable"
                 ng-class="{'is-mirrored': dataSet.preview}"></i>
+            </button>
+            <button
+              class="zoomOut"
+              ng-class="{'active': dashboard.dataSetExploration}"
+              ng-mouseenter="dashboard.dataSetMouseEnterZoomOut(dataSet)"
+              ng-mouseleave="dashboard.dataSetMouseEnter(dataSet)">
+              <i class="fa fa-search-minus"></i>
             </button>
             <i
               class="fa fa-user"

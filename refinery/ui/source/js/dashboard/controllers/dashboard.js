@@ -234,13 +234,23 @@ function DashboardCtrl (
     }.bind(this));
   }.bind(this));
 
-  this.treemapContext.on('hoverTerms', function (data) {
-    this.dataSet.highlight(data.dataSetIds, data.reset, 'hover');
+  this.$rootScope.$on('dashboardVisNodeEnter'  , function (event, data) {
+    this.dataSet.highlight(data.dataSetIds, false, 'hover');
     this.$rootScope.$digest();
   }.bind(this));
 
-  this.treemapContext.on('lockTerms'  , function (data) {
-    this.dataSet.highlight(data.dataSetIds, data.reset, 'lock');
+  this.$rootScope.$on('dashboardVisNodeLeave'  , function (event, data) {
+    this.dataSet.highlight(data.dataSetIds, true, 'hover');
+    this.$rootScope.$digest();
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeLock'  , function (event, data) {
+    this.dataSet.highlight(data.dataSetIds, false, 'lock');
+    this.$rootScope.$digest();
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeUnlock'  , function (event, data) {
+    this.dataSet.highlight(data.dataSetIds, true, 'lock');
     this.$rootScope.$digest();
   }.bind(this));
 }
@@ -709,6 +719,28 @@ DashboardCtrl.prototype.deselectDataSets = function () {
   this.$timeout(function() {
     this.dashboardDataSetsReloadService.reload();
   }.bind(this), 0);
+};
+
+DashboardCtrl.prototype.dataSetMouseEnter = function (dataSet) {
+  this.$rootScope.$emit('dashboardVisNodeFocus', {
+    terms: dataSet.annotations,
+    source: 'resultsList'
+  });
+};
+
+DashboardCtrl.prototype.dataSetMouseEnterZoomOut = function (dataSet) {
+  this.$rootScope.$emit('dashboardVisNodeFocus', {
+    terms: dataSet.annotations,
+    zoomOut: true,
+    source: 'resultsList'
+  });
+};
+
+DashboardCtrl.prototype.dataSetMouseLeave = function (dataSet) {
+  this.$rootScope.$emit('dashboardVisNodeBlur', {
+    terms: dataSet.annotations,
+    source: 'resultsList'
+  });
 };
 
 angular

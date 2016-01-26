@@ -6,12 +6,12 @@ function refineryDashboardVisWrapper () {
     this.pubSub = pubSub;
 
     // Absolute root node.
-    // this.rootUris = ['http://www.w3.org/2002/07/owl#Thing'];
-    this.rootUris = ['http://purl.obolibrary.org/obo/CL_0000003'];
+    // this.roots = ['http://www.w3.org/2002/07/owl#Thing'];
+    this.roots = ['http://purl.obolibrary.org/obo/CL_0000003'];
     this.propertyValue = 'dataSets';
 
     // Trigger preloading / precomputing of D3 data for exploration.
-    dashboardVisData.load(this.rootUris[0], this.propertyValue);
+    dashboardVisData.load(this.roots[0], this.propertyValue);
 
     var graph = this.$q.defer();
     this.graph = graph.promise;
@@ -23,10 +23,14 @@ function refineryDashboardVisWrapper () {
     this.annotations = annotations.promise;
 
     dashboardVisData.data.then(function (results) {
-      graph.resolve(results.graph);
+      this.roots = [results.root];
+      graph.resolve({
+        graph: results.graph,
+        rootIds: [results.root]
+      });
       treemap.resolve(results.treemap);
       annotations.resolve(results.annotations);
-    });
+    }.bind(this));
 
     this.loading = true;
     this.treemapLoading = $q.defer();

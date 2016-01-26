@@ -9,17 +9,38 @@
         <div class="floatbox-min-right">
           <ul class="help no-list-style horizontal-list">
             <li>
+              Highlight:
               <span class="inputs">
-                <kbd>
+                <kbd
+                  title="Hover with mouse"
+                  tool-tip
+                  tool-tip-container="body"
+                  tool-tip-placement="top">
                   <svg class="icon-cursor-default">
                     <use
                       xmlns:xlink="http://www.w3.org/1999/xlink"
                       xlink:href="/static/images/icons.svg#cursor-default"></use>
                   </svg>
                 </kbd>
-              </span> Highlight
+              </span>
             </li>
             <li>
+              Lock:
+              <span class="inputs">
+                <kbd
+                  title="Click with mouse"
+                  tool-tip
+                  tool-tip-container="body"
+                  tool-tip-placement="top">
+                  <svg class="icon-cursor-click">
+                    <use
+                      xmlns:xlink="http://www.w3.org/1999/xlink"
+                      xlink:href="/static/images/icons.svg#cursor-click"></use>
+                  </svg>
+                </kbd>
+              </span>
+            </li>
+<!--             <li>
               <span class="inputs">
                 <kbd>&#8679;</kbd> +
                 <kbd>
@@ -30,18 +51,36 @@
                   </svg>
                 </kbd>
               </span> Multi Highlight
-            </li>
+            </li> -->
             <li>
+              Query:
               <span class="inputs">
-                <kbd>&#8984;</kbd> +
-                <kbd>
-                  <svg class="icon-cursor-default">
+                <span
+                  title="Hold Command Key and click with mouse"
+                  tool-tip
+                  tool-tip-container="body"
+                  tool-tip-placement="top">
+                  <kbd>&#8984;</kbd> +
+                  <kbd>
+                    <svg class="icon-cursor-click">
+                      <use
+                        xmlns:xlink="http://www.w3.org/1999/xlink"
+                        xlink:href="/static/images/icons.svg#cursor-click"></use>
+                    </svg>
+                  </kbd>
+                </span> or
+                <kbd
+                  title="Double click with mouse"
+                  tool-tip
+                  tool-tip-container="body"
+                  tool-tip-placement="top">
+                  <svg class="icon-cursor-dblclick">
                     <use
                       xmlns:xlink="http://www.w3.org/1999/xlink"
-                      xlink:href="/static/images/icons.svg#cursor-default"></use>
+                      xlink:href="/static/images/icons.svg#cursor-dblclick"></use>
                   </svg>
                 </kbd>
-              </span> Drill down
+              </span>
             </li>
           </ul>
         </div>
@@ -59,7 +98,7 @@
           <list-graph
             ng-if="visWrapper.ready"
             graph="visWrapper.graph"
-            root="visWrapper.rootUris"></list-graph>
+            value-property-name="visWrapper.propertyValue"></list-graph>
         </div>
       </div>
       <div class="bottom-half">

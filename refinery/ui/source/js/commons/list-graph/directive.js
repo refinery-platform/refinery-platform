@@ -4,7 +4,7 @@ function listGraphDirective () {
   return {
     bindToController: {
       graphData: '=graph',
-      rootIds: '=root'
+      valuePropertyName: '=valuePropertyName'
     },
     controller: 'ListGraphCtrl',
     controllerAs: 'listGraph',
@@ -12,7 +12,7 @@ function listGraphDirective () {
     replace: true,
     scope: {
       graphData: '=graph',
-      rootIds: '=root'
+      valuePropertyName: '=valuePropertyName'
     },
     templateUrl: '/static/partials/commons/list-graph/template.html'
   };

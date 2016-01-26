@@ -21,7 +21,7 @@ function buildGraph (results) {
           assertedDataSets: {},
           children: [],
           dataSets: {},
-          name: 'Root',
+          name: 'OWL Thing',
           numDataSets: 0,
           ontId: 'OWL:Thing',
           uri: 'http://www.w3.org/2002/07/owl#Thing',

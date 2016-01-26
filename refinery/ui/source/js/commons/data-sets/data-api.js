@@ -59,7 +59,9 @@ function DataSetDataApiFactory ($q, _, dataSetService) {
       }
 
       return $q.all([data, allIds]).then(function (results) {
-        results[0].addIds = results[1];
+        if (results[1]) {
+          results[0].allIds = results[1].ids;
+        }
         return results[0];
       });
     };

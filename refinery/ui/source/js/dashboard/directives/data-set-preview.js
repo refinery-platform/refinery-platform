@@ -10,6 +10,7 @@ function refineryDataSetPreview () {
     userService,
     authService,
     studyService,
+    assayService,
     sharingService,
     citationService,
     analysisService,
@@ -25,6 +26,7 @@ function refineryDataSetPreview () {
     this.user = authService;
     this.userService = userService;
     this.studyService = studyService;
+    this.assayService = assayService;
     this.sharingService = sharingService;
     this.citationService = citationService;
     this.analysisService = analysisService;
@@ -105,7 +107,25 @@ function refineryDataSetPreview () {
 
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
+    'numAssays', {
+      configurable: false,
+      enumerable: true,
+      value: 0,
+      writable: true
+  });
+
+  Object.defineProperty(
+    DataSetPreviewCtrl.prototype,
     'studies', {
+      configurable: false,
+      enumerable: true,
+      value: {},
+      writable: true
+  });
+
+  Object.defineProperty(
+    DataSetPreviewCtrl.prototype,
+    'assays', {
       configurable: false,
       enumerable: true,
       value: {},
@@ -168,6 +188,19 @@ function refineryDataSetPreview () {
           } else {
             this.studies = data.objects;
           }
+        }.bind(this));
+  };
+
+  DataSetPreviewCtrl.prototype.getAssay = function (uuid) {
+    return this.assayService
+      .get({
+        uuid: uuid
+      })
+      .$promise
+        .then(function (data) {
+          this.numAssays = data.meta.total_count;
+          this.assays = data.objects;
+          console.log(this.assays, data);
         }.bind(this));
   };
 
@@ -259,6 +292,7 @@ function refineryDataSetPreview () {
     this.userName = undefined;
 
     var studies = this.getStudies(dataset.uuid),
+        assays = this.getAssay(dataset.uuid),
         analyses = this.getAnalysis(dataset.uuid),
         user = this.getUser(dataset.owner),
         permissions;
@@ -272,7 +306,7 @@ function refineryDataSetPreview () {
 
     this
       .$q
-      .all([studies, analyses])
+      .all([studies, analyses, assays])
         .then(function () {
           this.loading = false;
         }.bind(this))
@@ -362,6 +396,7 @@ function refineryDataSetPreview () {
       'userService',
       'authService',
       'studyService',
+      'assayService',
       'sharingService',
       'citationService',
       'analysisService',
