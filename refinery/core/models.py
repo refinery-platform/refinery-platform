@@ -1560,7 +1560,7 @@ def _nodecollection_delete(sender, instance, **kwargs):
     nodes = Node.objects.filter(study=instance)
     for node in nodes:
         try:
-            FileStoreItem.objects.filter(uuid=node.file_uuid).delete()
+            FileStoreItem.objects.get(uuid=node.file_uuid).delete()
         except Exception as e:
             logger.debug("Could not delete FileStoreItem:%s" % str(e))
 
