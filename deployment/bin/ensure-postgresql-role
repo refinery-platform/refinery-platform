@@ -22,5 +22,5 @@ BEGIN
 END
 $body$;
 
-' "postgresql://root:mypassword@$(jq -r .Address ~/rds):$(jq -r .Port ~/rds)/postgres"
+' "postgresql://root:mypassword@${HOST}:${PORT}/postgres"
 

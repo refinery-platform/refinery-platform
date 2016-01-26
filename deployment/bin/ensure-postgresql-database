@@ -14,7 +14,7 @@ Exists=$(psql -t -q -c '
       SELECT $$true$$
       FROM   pg_catalog.pg_database
       WHERE  datname = '"'$DATABASE'"'
-' "postgresql://root:mypassword@$(jq -r .Address ~/rds):$(jq -r .Port ~/rds)/postgres"
+' "postgresql://root:mypassword@${HOST}:${PORT}/postgres"
 )
 
 Exists=${Exists:-false}
@@ -25,5 +25,5 @@ then
   # http://stackoverflow.com/a/34898033/242457
   psql -c '
   CREATE DATABASE '"$DATABASE"' OWNER = '"$OWNER"';
-  ' "postgresql://root:mypassword@$(jq -r .Address ~/rds):$(jq -r .Port ~/rds)/postgres"
+  ' "postgresql://root:mypassword@${HOST}:${PORT}/postgres"
 fi
