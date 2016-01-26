@@ -64,13 +64,16 @@ class WorkflowAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
             obj.save()
 
     def delete_selected(self, request, objects):
+
         for instance in objects.all():
-            if deletion_checks(instance):
-                instance.delete()
-            else:
+            if not deletion_checks(instance):
                 messages.error(request, "Could not delete Workflow:{} It has "
                                         "been used in one or more "
                                         "Analyses!".format(instance))
+            else:
+                instance.delete()
+                messages.success(request, "Workflow:{} deleted "
+                                          "successfully!".format(instance))
 
     actions = [delete_selected, hide_selected_workflows,
                show_selected_workflows]
@@ -88,16 +91,19 @@ class DataSetAdmin(GuardedModelAdmin):
     readonly_fields = ('uuid',)
     list_display = ['__unicode__', 'id', 'name', 'file_count', 'file_size',
                     'accession', 'accession_source', 'title']
-    actions = ['delete_selected']
 
     def delete_selected(self, request, objects):
         for instance in objects.all():
-            if deletion_checks(instance):
-                instance.delete()
-            else:
+            if not deletion_checks(instance):
                 messages.error(request, "Could not delete DataSet:{} It has "
                                         "been used in one or more "
                                         "Analyses!".format(instance))
+            else:
+                instance.delete()
+                messages.success(request, "DataSet:{} deleted "
+                                          "successfully!".format(instance))
+
+    actions = [delete_selected]
 
 
 class InvitationAdmin(GuardedModelAdmin):
@@ -120,12 +126,15 @@ class AnalysisAdmin(GuardedModelAdmin):
 
     def delete_selected(self, request, objects):
         for instance in objects.all():
-            if deletion_checks(instance):
-                instance.delete()
-            else:
+            if not deletion_checks(instance):
                 messages.error(request, "Could not delete Analysis:{} It has "
                                         "one or more Nodes that have been "
                                         "re-analyzed!".format(instance))
+            else:
+                instance.delete()
+                messages.success(request, "Analysis:{} deleted "
+                                          "successfully!".format(instance))
+
     actions = [delete_selected]
 
 
