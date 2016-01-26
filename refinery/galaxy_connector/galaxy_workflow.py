@@ -40,13 +40,13 @@ class GalaxyWorkflowInput(object):
 # Helper functions
 def createBaseWorkflow(workflow_name):
     """Creates base template workflow"""
-    base_dict = {}
-    base_dict["a_galaxy_workflow"] = "true"
-    base_dict["annotation"] = ""
-    base_dict["format-version"] = "0.1"
-    base_dict["name"] = workflow_name + "-" + str(datetime.now())
-    base_dict["steps"] = {}
-    return base_dict
+    return {
+        "a_galaxy_workflow": "true",
+        "annotation": "",
+        "format-version": "0.1",
+        "name": workflow_name + "-" + str(datetime.now()),
+        "steps": {},
+    }
 
 
 def workflowMap(workflow):
@@ -91,7 +91,7 @@ def createStepsAnnot(file_list, workflow):
     """Replicates an input dictionary:
     "X" number of times depending on value of repeat_num
     """
-    logger.debug("galaxy_workflow.createStepsAnnot called")
+    logger.debug("Creating workflow steps annotation")
     updated_dict = {}
     temp_steps = workflow["steps"]
     repeat_num = len(file_list)
@@ -496,7 +496,7 @@ def countWorkflowSteps(workflow):
     workflow. Number of steps in workflow is not reflective of the actual
     number of workflows created by galaxy when run
     """
-    logger.debug("galaxy_connector.galaxy_workflow countWorkflowSteps called")
+    logger.debug("Counting workflow steps")
     workflow_steps = workflow["steps"]
     total_steps = 0
     for j in range(0, len(workflow["steps"])):
@@ -528,6 +528,42 @@ def countWorkflowSteps(workflow):
         elif curr_step['type'] == 'data_input':
             total_steps += 1
     return total_steps
+
+
+def configure_workflow(workflow_dict, ret_list):
+    """Takes a workflow and associated data input map
+    Returns an expanded workflow from core.models.workflow and
+    workflow_data_input_map
+    """
+    logger.debug("Configuring Galaxy workflow")
+    # creating base workflow to replicate input workflow
+    new_workflow = createBaseWorkflow(workflow_dict["name"])
+    # checking to see what kind of workflow exists:
+    # does it have  "annotation": "type=COMPACT", in the workflow annotation
+    # field
+    work_type = getStepOptions(workflow_dict["annotation"])
+    COMPACT_WORKFLOW = False
+
+    for k, v in work_type.iteritems():
+        if k.upper() == 'TYPE':
+            try:
+                if v[0].upper() == 'COMPACT':
+                    COMPACT_WORKFLOW = True
+            except:
+                logger.exception("Malformed workflow tag, cannot parse: %s",
+                                 work_type)
+                return
+    # if workflow is tagged w/ type=COMPACT tag,
+    if COMPACT_WORKFLOW:
+        logger.debug("Workflow processing: COMPACT")
+        new_workflow["steps"], history_download, analysis_node_connections = \
+            createStepsCompact(ret_list, workflow_dict)
+    else:
+        logger.debug("Workflow processing: EXPANSION")
+        # Updating steps in imported workflow X number of times
+        new_workflow["steps"], history_download, analysis_node_connections = \
+            createStepsAnnot(ret_list, workflow_dict)
+    return new_workflow, history_download, analysis_node_connections
 
 
 def parse_tool_name(toolname):
