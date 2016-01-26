@@ -1633,7 +1633,7 @@ def dataset_deletion_check(instance):
     '''
 
     if bool(Analysis.objects.filter(data_set=instance)):
-        logger.error("Cannot delete DataSet:%s because there is has been "
+        logger.error("Cannot delete DataSet:%s because there has been "
                      "one or more Analyses run on it." % instance)
         return False
 
