@@ -392,6 +392,18 @@ def get_data_set_annotations(dataset_uuid):
               WHERE
                 technology_accession IS NOT NULL AND
                 technology_accession NOT LIKE ''
+
+              UNION ALL
+
+              SELECT
+                study_id,
+                type_source AS value_source,
+                type_accession AS value_accession
+              FROM
+                data_set_manager_factor
+              WHERE
+                type_accession IS NOT NULL AND
+                type_accession NOT LIKE ''
             ) AS annotated_node
             ON
             annotated_node.study_id = study.nodecollection_ptr_id
