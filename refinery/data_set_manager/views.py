@@ -533,10 +533,11 @@ class AssaysAttributes(APIView):
     """
 
     def get_object(self, uuid):
-        try:
-            return AttributeOrder.objects.filter(assay__uuid=uuid)
-        except AttributeOrder.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        attributes = AttributeOrder.objects.filter(assay__uuid=uuid)
+        if len(attributes):
+            return attributes
+        else:
+            raise Http404
 
     def get(self, request, uuid, format=None):
         attribute_order = self.get_object(uuid)
