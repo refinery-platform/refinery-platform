@@ -144,6 +144,23 @@ function GraphFactory (_, Webworker) {
      * @param   {Boolean}  root         If node is the root.
      */
     function accumulateAndPruneChildren (node, numChildren, valueProp, depth) {
+      function compareValues (arrayOne, arrayTwo) {
+        var lenOne = arrayOne.length,
+            lenTwo = arrayTwo.length;
+
+        if (lenOne !== lenTwo) {
+          return false;
+        }
+
+        for (var i = lenOne; i--;) {
+          if (arrayOne[i] !== arrayTwo[i]) {
+            return false;
+          }
+        }
+
+        return true;
+      }
+
       // Check if node has been processed already
       if (nodeIndex[node.uri]) {
         // Skip node
@@ -184,8 +201,15 @@ function GraphFactory (_, Webworker) {
         // that all children have been deleted meanwhile and the inner node became
         // a leaf as well.
         if (numChildChildren) {
+          var childChildValue = [], valueSame = false;
+          // When the child has only one child, check whether the childs
+          // annotations and the child child's annotation are equal
+          if (numChildChildren === 1) {
+            childChildValue = Object.keys(graph[child.children[0]][valueProp]);
+            valueSame = compareValues(childValue, childChildValue);
+          }
           // Inner node.
-          if (childValue.length) {
+          if (childValue.length && !valueSame) {
             // Add own `numDataSets` to existing `value`.
             child.value = childValue.length;
           } else {
