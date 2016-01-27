@@ -851,7 +851,7 @@ def neo4j_dataset_annotations(request):
     # Note: this returns the while subclass hierarchy tree but only adds
     # associates dataset annotations the user has read access to.
     cql = (
-        'MATCH (sup:CL:Class)<-[:`RDFS:subClassOf`]-(sub:CL:Class) ' +
+        'MATCH (sup:EFO:Class)<-[:`RDFS:subClassOf`]-(sub:EFO:Class) ' +
         'OPTIONAL MATCH (ds:DataSet), ' +
         '               (u:User {id:%s}), ' +
         '               (ds)-[:`annotated_with`]->(sub), ' +

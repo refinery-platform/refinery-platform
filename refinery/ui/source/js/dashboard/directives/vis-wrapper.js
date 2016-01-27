@@ -5,9 +5,14 @@ function refineryDashboardVisWrapper () {
     this.$q = $q;
     this.pubSub = pubSub;
 
-    // Absolute root node.
-    // this.roots = ['http://www.w3.org/2002/07/owl#Thing'];
-    this.roots = ['http://purl.obolibrary.org/obo/CL_0000003'];
+    // Absolute root node: OWL:Thing
+    // Useful for:
+    // - EFO
+    this.roots = ['http://www.w3.org/2002/07/owl#Thing'];
+
+    // Relative root node for Cell Ontology (CL):
+    // this.roots = ['http://purl.obolibrary.org/obo/CL_0000003'];
+
     this.propertyValue = 'dataSets';
 
     // Trigger preloading / precomputing of D3 data for exploration.
