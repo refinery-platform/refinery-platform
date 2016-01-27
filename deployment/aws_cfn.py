@@ -20,10 +20,12 @@ import os       # for os.popen
 
 cft = CloudFormationTemplate(description="refinery monolithic template.")
 
-# We discover the current git branch
+# We discover the current git branch/commit
 # so that the deployment script can use it
 # to clone the same branch.
-branch = os.popen("""git branch | awk '$1=="*"{print $2}'""").read()
+# (we actually record a commit hash, but it
+# works just like a branch).
+branch = os.popen("""git rev-parse HEAD""").read().rstrip()
 assert branch
 
 # The userdata script is executed via cloudinit.
@@ -36,6 +38,7 @@ user_data_script = join(
         "RDS_NAME=", ref("RDSName"), "\n",
         "RDS_SUPERUSER_PASSWORD=", ref("RDSSuperuserPassword"), "\n",
         "GIT_BRANCH=", branch, "\n",
+        "\n",
         open('bootstrap.sh').read(),
         open('aws.sh').read())
 
