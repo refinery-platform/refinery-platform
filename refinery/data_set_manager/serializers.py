@@ -22,6 +22,7 @@ class AssaySerializer(serializers.Serializer):
 class AttributeOrderSerializer(serializers.Serializer):
 
     study = serializers.CharField(required=False, allow_blank=True)
+    assay = serializers.CharField(required=True)
     solr_field = serializers.CharField()
     rank = serializers.CharField()
     is_exposed = serializers.BooleanField()
