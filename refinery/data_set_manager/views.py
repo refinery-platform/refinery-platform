@@ -23,6 +23,7 @@ from rest_framework import status
 from rest_framework.authentication import SessionAuthentication, \
     BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
+from django.http import Http404
 
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
@@ -383,15 +384,12 @@ class Assays(APIView):
         try:
             return Assay.objects.get(uuid=uuid)
         except Assay.DoesNotExist:
-            return None
+            raise Http404
 
     def get(self, request, uuid, format=None):
         assay = self.get_object(uuid)
-        if assay:
-            serializer = AssaySerializer(assay)
-            return Response(serializer.data)
-        else:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = AssaySerializer(assay)
+        return Response(serializer.data)
 
 
 class AssaysFiles(APIView):
