@@ -8,6 +8,8 @@ OWNER=refinery
 HOST=$(jq -r .Address /home/ubuntu/rds)
 PORT=$(jq -r .Port /home/ubuntu/rds)
 
+: ${RDS_SUPERUSER_PASSWORD?RDS_SUPERUSER_PASSWORD should be set}
+
 
 # Test to see if database already exists
 Exists=$(psql -t -q -c '
@@ -25,5 +27,5 @@ then
   # http://stackoverflow.com/a/34898033/242457
   psql -c '
   CREATE DATABASE '"$DATABASE"' OWNER = '"$OWNER"';
-  ' "postgresql://root:mypassword@${HOST}:${PORT}/postgres"
+  ' "postgresql://root:${RDS_SUPERUSER_PASSWORD}@${HOST}:${PORT}/postgres"
 fi

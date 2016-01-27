@@ -28,6 +28,8 @@ export FACTER_RDS_PORT=$(jq -r .Port /home/ubuntu/rds)
 # Create RDS user and database here, instead of using puppet
 # (because drj couldn't work out how to do it in puppet)
 export FACTER_RDS_ROLE_PASSWORD=password
+# Already set by earlier part of userdata
+export RDS_SUPERUSER_PASSWORD
 PASSWORD=$FACTER_RDS_ROLE_PASSWORD bin/ensure-postgresql-role
 bin/ensure-postgresql-database
 

@@ -6,6 +6,8 @@ PASSWORD=${PASSWORD-password}
 HOST=$(jq -r .Address /home/ubuntu/rds)
 PORT=$(jq -r .Port /home/ubuntu/rds)
 
+: ${RDS_SUPERUSER_PASSWORD?RDS_SUPERUSER_PASSWORD should be set}
+
 psql -c '
 
 DO                
@@ -22,5 +24,5 @@ BEGIN
 END
 $body$;
 
-' "postgresql://root:mypassword@${HOST}:${PORT}/postgres"
+' "postgresql://root:${RDS_SUPERUSER_PASSWORD}@${HOST}:${PORT}/postgres"
 
