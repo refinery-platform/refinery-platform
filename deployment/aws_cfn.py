@@ -56,16 +56,16 @@ cft.resources.ec2_instance = Resource(
 
 parameters = [
     Parameter(
-    'RDSName', 'String',
-    {
-        'Description': 'Name of the RDS to connect to',
-    }),
+        'RDSName', 'String',
+        {
+            'Description': 'Name of the RDS to connect to',
+        }),
     Parameter(
-    'RDSSuperuserPassword', 'String',
-    {
-        'Description': 'Password for the root account on the RDS',
-        'Default': 'mypassword',
-    })
+        'RDSSuperuserPassword', 'String',
+        {
+            'Description': 'Password for the root account on the RDS',
+            'Default': 'mypassword',
+        })
 ]
 
 for parameter in parameters:
