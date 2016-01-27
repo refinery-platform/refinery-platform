@@ -26,8 +26,9 @@ export FACTER_RDS_HOST=$(jq -r .Address /home/ubuntu/rds)
 export FACTER_RDS_PORT=$(jq -r .Port /home/ubuntu/rds)
 
 # Create RDS user and database here, instead of using puppet
-# (because drj cou;dn't work out how to do it in puppet)
-bin/ensure-postgresql-role
+# (because drj couldn't work out how to do it in puppet)
+export FACTER_RDS_ROLE_PASSWORD=password
+PASSWORD=$FACTER_RDS_ROLE_PASSWORD bin/ensure-postgresql-role
 bin/ensure-postgresql-database
 
 sudo su -c '/usr/local/bin/librarian-puppet install' ubuntu

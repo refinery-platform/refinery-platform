@@ -1,6 +1,5 @@
 $app_user = "ubuntu"
 $app_group = "ubuntu"
-$db_password = "password"
 $virtualenv = "/home/${app_user}/.virtualenvs/refinery-platform"
 $project_root = "/srv/refinery-platform"
 $deployment_root = "${project_root}/deployment"
