@@ -13,9 +13,15 @@ GIT_BRANCH=${GIT_BRANCH:-develop}
 /usr/bin/apt-get -q -y install htop
 /usr/bin/apt-get -q -y install awscli jq postgresql-client-9.3
 
+# Fetch the source code repo (from github),
+# and switch to the desired commit/branch.
 mkdir /srv/refinery-platform
 chown ubuntu:ubuntu /srv/refinery-platform
-sudo su -c 'git clone -b '"$GIT_BRANCH"' https://github.com/parklab/refinery-platform.git /srv/refinery-platform' ubuntu
+sudo su -c '
+  git clone https://github.com/parklab/refinery-platform.git /srv/refinery-platform
+  cd /srv/refinery-platform
+  git checkout '"$GIT_BRANCH"'
+' ubuntu
 
 cd /srv/refinery-platform/deployment
 
