@@ -612,7 +612,7 @@ def get_owner_from_assay(uuid):
     # Returns an owner name from an assay_uuid. Ownership is passed down from
 
     investigation_key = Study.objects.get(assay__uuid=uuid).investigation
-    investigation_link = InvestigationLink.objects.filter(
+    investigation_link = InvestigationLink.objects.get(
             investigation=investigation_key)
     owner = DataSet.objects.get(
             investigationlink=investigation_link).get_owner()
