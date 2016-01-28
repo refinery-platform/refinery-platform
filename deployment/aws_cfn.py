@@ -59,6 +59,7 @@ parameters = [
         'RDSName', 'String',
         {
             'Description': 'Name of the RDS to connect to',
+            'Default': 'rds-refinery',
         }),
     Parameter(
         'RDSSuperuserPassword', 'String',
