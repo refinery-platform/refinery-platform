@@ -551,63 +551,34 @@ class AssaysAttributes(APIView):
         request_user = request.user
 
         if owner == request_user:
-            if type(request.data) == 'list':
-                for field in request.data:
-                    solr_field = field.get('solr_field', None)
-                    id = field.get('id', None)
+            solr_field = request.data.get('solr_field', None)
+            id = request.data.get('id', None)
 
-                    if id:
-                        attribute_order = AttributeOrder.objects.get(
-                                assay__uuid=uuid, id=id)
-                    elif solr_field:
-                        attribute_order = AttributeOrder.objects.get(
-                                assay__uuid=uuid, solr_field=solr_field)
-                    else:
-                        return Response(
-                                "Requires attribute id or solr_field name.",
-                                status=status.HTTP_400_BAD_REQUEST)
-
-                    serializer = AttributeOrderSerializer(attribute_order,
-                                                          data=field,
-                                                          partial=True)
-                    if serializer.is_valid():
-                        serializer.save()
-
-                updated_attribute_order = self.get_objects(uuid)
-                serializer = AttributeOrderSerializer(updated_attribute_order,
-                                                      many=True)
-
-                return Response(serializer.data)
-
+            if id:
+                attribute_order = AttributeOrder.objects.get(
+                        assay__uuid=uuid, id=id)
+            elif solr_field:
+                attribute_order = AttributeOrder.objects.get(
+                        assay__uuid=uuid, solr_field=solr_field)
             else:
-                solr_field = request.data.get('solr_field', None)
-                id = request.data.get('id', None)
-
-                if id:
-                    attribute_order = AttributeOrder.objects.get(
-                            assay__uuid=uuid, id=id)
-                elif solr_field:
-                    attribute_order = AttributeOrder.objects.get(
-                            assay__uuid=uuid, solr_field=solr_field)
-                else:
-                    return Response(
-                            "Requires attribute id or solr_field name.",
-                            status=status.HTTP_400_BAD_REQUEST)
-
-                serializer = AttributeOrderSerializer(attribute_order,
-                                                      data=request.data,
-                                                      partial=True)
-
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response(
-                            serializer.data,
-                            status=status.HTTP_202_ACCEPTED
-                    )
                 return Response(
-                            serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST
-                    )
+                        "Requires attribute id or solr_field name.",
+                        status=status.HTTP_400_BAD_REQUEST)
+
+            serializer = AttributeOrderSerializer(attribute_order,
+                                                  data=request.data,
+                                                  partial=True)
+
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                        serializer.data,
+                        status=status.HTTP_202_ACCEPTED
+                )
+            return Response(
+                        serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST
+                )
         else:
             message = "Only owner may edit attribute order."
             return Response(message, status=status.HTTP_401_UNAUTHORIZED)
