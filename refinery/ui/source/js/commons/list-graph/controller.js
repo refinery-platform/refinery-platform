@@ -155,9 +155,13 @@ function ListGraphCtrl (
   }.bind(this));
 
   pubSub.on('d3ListGraphUpdateBarsRequest', function (data) {
-    this.updatePrecisionRecall(
-      this.graph[data.id ? data.id : this.rootIds[0]]
-    );
+    var uri = this.rootIds[0];
+
+    if (data.id) {
+      uri = data.clone ? data.clonedFromId : data.id;
+    }
+
+    this.updatePrecisionRecall(this.graph[uri]);
     this.listGraph.trigger('d3ListGraphUpdateBars');
   }.bind(this));
 
