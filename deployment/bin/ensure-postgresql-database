@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -e
+
+DATABASE=refinery
+OWNER=refinery
+
+HOST=$(jq -r .Address /home/ubuntu/rds)
+PORT=$(jq -r .Port /home/ubuntu/rds)
+
+: ${RDS_SUPERUSER_PASSWORD?RDS_SUPERUSER_PASSWORD should be set}
+
+
+# Test to see if database already exists
+Exists=$(psql -t -q -c '
+      SELECT $$true$$
+      FROM   pg_catalog.pg_database
+      WHERE  datname = '"'$DATABASE'"'
+' "postgresql://root:mypassword@${HOST}:${PORT}/postgres"
+)
+
+Exists=${Exists:-false}
+
+if ! $Exists
+then
+  # It is surprisingly tricky to create a database in RDS. See
+  # http://stackoverflow.com/a/34898033/242457
+  psql -c '
+  CREATE DATABASE '"$DATABASE"' OWNER = '"$OWNER"';
+  ' "postgresql://root:${RDS_SUPERUSER_PASSWORD}@${HOST}:${PORT}/postgres"
+fi
