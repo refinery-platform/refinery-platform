@@ -161,6 +161,18 @@ function GraphFactory (_, Webworker) {
         return true;
       }
 
+      function removeDuplicatedChildren (children) {
+        var childIndex = {};
+
+        for (var i = children.length; i--;) {
+          if (!childIndex[children[i]]) {
+            childIndex[children[i]] = true;
+          } else {
+            children.splice(i, 1);
+          }
+        }
+      }
+
       // Check if node has been processed already
       if (nodeIndex[node.uri]) {
         // Skip node
@@ -293,6 +305,8 @@ function GraphFactory (_, Webworker) {
         }
         node.value = Object.keys(node[valueProp]).length;
       }
+
+      removeDuplicatedChildren(node.children);
 
       // Mark node as being parsed
       nodeIndex[node.uri] = true;
@@ -434,6 +448,10 @@ function GraphFactory (_, Webworker) {
             if (node.data.bars[k].id === properties[j]) {
               node.data.bars[k].value = node[properties[j]];
             }
+          }
+          // Update helper bar references as well
+          if (node.data.barRefs && node.data.barRefs[properties[j]]) {
+            node.data.barRefs[properties[j]] = node[properties[j]];
           }
         }
       }
