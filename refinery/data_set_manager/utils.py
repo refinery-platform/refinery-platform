@@ -608,7 +608,7 @@ def search_solr(encoded_params, core):
     return response
 
 
-def grab_owner_from_assay(uuid):
+def get_owner_from_assay(uuid):
     # Returns an owner name from an assay_uuid. Ownership is passed down from
 
     investigation_key = Study.objects.get(assay__uuid=uuid).investigation
