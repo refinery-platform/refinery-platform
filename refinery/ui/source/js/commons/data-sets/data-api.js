@@ -8,11 +8,15 @@ function DataSetDataApiFactory ($q, _, dataSetService) {
    *
    * @param   {Object}  extra  Parameters other than `limit` and `offset`.
    */
-  function DataSetDataApi (extra, firstTimeAllIds) {
+  function DataSetDataApi (extra, firstTimeAllIds, onlyIds) {
     var params = {};
 
     if (_.isObject(extra)) {
       params = _.cloneDeep(extra);
+    }
+
+    if (onlyIds) {
+      return dataSetService.query({extra:'ids'}).$promise;
     }
 
     /**
