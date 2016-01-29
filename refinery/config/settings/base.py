@@ -5,7 +5,6 @@ import djcelery
 from subprocess import check_output
 from django.core.exceptions import ImproperlyConfigured
 
-
 logger = logging.getLogger(__name__)
 
 # get the absolute path of the top level project dir
@@ -465,9 +464,11 @@ CACHES = {
 
 try:
     CURRENT_COMMIT = check_output(['/usr/bin/git', 'rev-parse', "HEAD"])
+
 except Exception as e:
-    logger.debug("Error Retrieving Most Recent Commit: ", e)
-    CURRENT_COMMIT = "Error Retrieving Most Recent Commit: " + str(e)
+    CURRENT_COMMIT = check_output(['/usr/bin/git', '-C',
+                                   '/vagrant/refinery', 'log',
+                                   "--pretty=format:%H", '-n', '1'])
 
 # Neo4J Settings
 NEO4J_BASE_URL = "http://localhost:7474"
