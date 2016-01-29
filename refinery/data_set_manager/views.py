@@ -553,6 +553,7 @@ class AssaysAttributes(APIView):
         if owner == request_user:
             solr_field = request.data.get('solr_field', None)
             id = request.data.get('id', None)
+            new_rank = request.data.get('rank', None)
 
             if id:
                 attribute_order = AttributeOrder.objects.get(
@@ -562,13 +563,19 @@ class AssaysAttributes(APIView):
                         assay__uuid=uuid, solr_field=solr_field)
             else:
                 return Response(
-                        "Requires attribute id or solr_field name.",
+                        'Requires attribute id or solr_field name.',
                         status=status.HTTP_400_BAD_REQUEST)
+
+            # updates all ranks in assay's attribute order
+            if new_rank and new_rank != attribute_order.rank:
+                try:
+                    update_attribute_order_ranks(attribute_order, new_rank)
+                except Exception as e:
+                    return e
 
             serializer = AttributeOrderSerializer(attribute_order,
                                                   data=request.data,
                                                   partial=True)
-
             if serializer.is_valid():
                 serializer.save()
                 return Response(
@@ -580,5 +587,5 @@ class AssaysAttributes(APIView):
                         status=status.HTTP_400_BAD_REQUEST
                 )
         else:
-            message = "Only owner may edit attribute order."
+            message = 'Only owner may edit attribute order.'
             return Response(message, status=status.HTTP_401_UNAUTHORIZED)
