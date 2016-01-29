@@ -7,8 +7,14 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
   function Data () {}
 
   Data.prototype.load = function (root, valueProperty) {
-    neo4jToGraph.get()
-      .then(function (data) {
+    dataSet.loadAllDsIds();
+    var allDsIds = dataSet.allIds('dataset');
+    var neo4jToGraphData = neo4jToGraph.get();
+
+    $q.all([allDsIds, neo4jToGraphData]).then(function (results) {
+        var allDsIds = results[0];
+        var data = results[1];
+
         root = root ? root : settings.ontRoot;
 
         // Prune graph and accumulate the dataset annotations
@@ -17,30 +23,31 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
         // Add pseudo-parent and pseudo-sibling for data sets without any
         // annotation.
         var pseudoRoot = graph.addPseudoRootAndSibling(
-          data, prunedData.root, dataSet.allIds()
+          data, prunedData.root, allDsIds
         );
 
         // Init precision and recall
-        // console.log(root, graph);
-        graph.initPrecisionRecall(
-          data,
-          valueProperty,
-          dataSet.allIds().length
-        );
+        dataSet.allIds().then(function (allDsIds) {
+          graph.calcPrecisionRecall(
+            data,
+            valueProperty,
+            allDsIds
+          );
 
-        // Make precision and recall available as bars
-        graph.propertyToBar(data, ['precision', 'recall']);
+          // Make precision and recall available as bars
+          graph.propertyToBar(data, ['precision', 'recall']);
 
-        // Make precision and recall available as bars
-        graph.propertyToData(data, ['name']);
+          // Make precision and recall available as bars
+          graph.propertyToData(data, ['name']);
 
-        // Convert graph into hierarchy for D3
-        // treemapData.resolve(graph.toTree(data, prunedData.root));
-        treemapData.resolve(graph.toTreemap(data, pseudoRoot));
+          // Convert graph into hierarchy for D3
+          // treemapData.resolve(graph.toTree(data, prunedData.root));
+          treemapData.resolve(graph.toTreemap(data, pseudoRoot));
 
-        graphData.resolve(data);
+          graphData.resolve(data);
 
-        finalRootNode.resolve(pseudoRoot);
+          finalRootNode.resolve(pseudoRoot);
+        }.bind(this));
       })
       .catch(function (e) {
         graphData.reject(e);

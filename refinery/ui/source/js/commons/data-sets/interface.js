@@ -8,7 +8,7 @@ function DataSetFactory (
 
   /* ------------------------------ Variables ------------------------------- */
 
-  var _allDsIds;
+  var _allDsIds = $q.defer();
 
   /**
    * Indicates whether the total number of data objects is just an
@@ -67,7 +67,7 @@ function DataSetFactory (
    *
    * @type  {Array}
    */
-  var _searchResultDsIds = [];
+  var _searchResultDsIds = $q.defer();
 
   /**
    * Promise that resolves to the distinct search result annotations and their
@@ -407,10 +407,10 @@ function DataSetFactory (
       // The first time a search is issued all dataset IDs will be returned
       if (response.allIds && response.allIds.length) {
         if (_search) {
-          _searchResultDsIds = response.allIds;
+          _searchResultDsIds.resolve(response.allIds);
           _calculatePrecisionRecall();
         } else {
-          _allDsIds = response.allIds;
+          _allDsIds.resolve(response.allIds);
         }
       }
 
@@ -544,13 +544,13 @@ function DataSetFactory (
   function _setSelection (set) {
     var selection = {};
 
-    if (_.isObject(set)) {
+    if (_.isObject(set) && !_.isArray(set)) {
       selection = set;
     }
 
     if (_.isArray(set)) {
       for (var i = set.length; i--;) {
-        selection[i] = true;
+        selection[set[i]] = true;
       }
     }
 
@@ -673,6 +673,9 @@ function DataSetFactory (
    */
   DataSet.prototype.all = function () {
     _search = false;
+    _searchResultDsIds.reject();
+
+    _allDsIds = $q.defer();
 
     if (_browsePath.length &&
         _browsePath[_browsePath.length - 1].type === 'search') {
@@ -685,11 +688,29 @@ function DataSetFactory (
     return this;
   };
 
-  DataSet.prototype.allIds = function () {
-    if (_search) {
-      return _searchResultDsIds;
+  DataSet.prototype.allIds = function (src) {
+    if (src) {
+      if (src === 'search') {
+        return _searchResultDsIds.promise;
+      }
+      return _allDsIds.promise;
     }
-    return _allDsIds;
+
+    if (_search) {
+      return _searchResultDsIds.promise;
+    }
+
+    return _allDsIds.promise;
+  };
+
+  DataSet.prototype.loadAllDsIds = function () {
+    var allDsIdsApiCall = new DataSetDataApi(undefined, true, true);
+
+    allDsIdsApiCall.then(function (allDsIds) {
+      _allDsIds.resolve(allDsIds.ids);
+    });
+
+    return allDsIdsApiCall;
   };
 
   /**
@@ -889,6 +910,8 @@ function DataSetFactory (
 
     // Reset search result annotation promise.
     _searchResultAnnotations = $q.defer();
+
+    _searchResultDsIds = $q.defer();
 
     if (!!_getLastBrowseStep('select')) {
       _clearOrderCache(true);
