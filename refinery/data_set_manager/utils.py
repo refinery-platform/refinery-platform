@@ -618,3 +618,51 @@ def get_owner_from_assay(uuid):
             investigationlink=investigation_link).get_owner()
 
     return owner
+
+
+def update_attribute_order_ranks(old_attribute, new_rank):
+    try:
+        assert(int(new_rank) >= 0)
+    except AssertionError:
+        return "Invalid: rank must be integer >= 0"
+    except TypeError:
+        return "Invalid: rank must be a string or a number."
+
+    assay = old_attribute.assay
+    old_rank = old_attribute.rank
+    attribute_list = AttributeOrder.objects.filter(assay=assay)
+
+    for attribute in attribute_list:
+        attribute_new_rank = attribute.rank
+        if new_rank == 0:
+            if old_rank < attribute.rank:
+                attribute_new_rank = attribute.rank-1
+
+            elif attribute == old_attribute:
+                 attribute_new_rank = new_rank
+
+        elif old_rank == 0:
+            if old_rank < attribute.rank >= new_rank:
+                attribute_new_rank = attribute.rank+1
+
+            elif attribute == old_attribute:
+                 attribute_new_rank = new_rank
+        else:
+            if old_rank > attribute.rank >= new_rank:
+                attribute_new_rank = attribute.rank+1
+
+            elif old_rank < attribute.rank <= new_rank:
+                attribute_new_rank = attribute.rank-1
+            elif attribute == old_attribute:
+                attribute_new_rank = new_rank
+
+        serializer = AttributeOrderSerializer(
+                        attribute,
+                        {'rank': attribute_new_rank},
+                        partial=True)
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            return serializer.error
+
+    return "Successful update"
