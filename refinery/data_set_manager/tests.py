@@ -393,31 +393,33 @@ class AssaysFilesAPITests(APITestCase):
         self.client.login(username='ownerJane', password='test1234')
         uuid = self.valid_uuid
         updated_attribute_1 = {'solr_field': 'Character_Title',
-                               'rank': '1',
+                               'rank': '3',
                                'is_exposed': 'False',
                                'is_facet': 'False',
                                'is_active': 'False',
                               }
         updated_attribute_2 = {'id': '6',
-                               'rank': '2',
+                               'rank': '1',
                                'is_exposed': 'False',
                                'is_facet': 'False',
                                'is_active': 'False',
                               }
         updated_attribute_3 = {'solr_field': 'Cell Type',
-                               'rank': '3',
+                               'rank': '4',
                                'is_exposed': 'False',
                                'is_facet': 'False',
                                'is_active': 'False',
                               }
         updated_attribute_4 = {'solr_field': 'Analysis',
                                'id': '8',
-                               'rank': '4',
+                               'rank': '2',
                                'is_exposed': 'False',
                                'is_facet': 'False',
                                'is_active': 'False',
                               }
         #Api client needs url to end / or it will redirect
+
+        #update with solr_title
         response = self.client.put('/api/v2/assays/%s/attributes/' % uuid,
                                    updated_attribute_1)
         response.render()
@@ -431,7 +433,7 @@ class AssaysFilesAPITests(APITestCase):
                 'Platform: Genome Analyzer II; '
                 'File: test_assay_filename.txt",'
                 '"solr_field":"Character_Title",'
-                '"rank":"1",'
+                '"rank":"3",'
                 '"is_exposed":true,'
                 '"is_facet":true,'
                 '"is_active":true,'
@@ -447,13 +449,54 @@ class AssaysFilesAPITests(APITestCase):
                 'Platform: Genome Analyzer II; '
                 'File: test_assay_filename.txt",'
                 '"solr_field":"Character_Title",'
-                '"rank":"1",'
+                '"rank":"3",'
                 '"is_exposed":false,'
                 '"is_facet":false,'
                 '"is_active":false,'
                 '"is_internal":false,'
                 '"id":5}'
                 )
+
+        #Update with attribute_order id
+        response = self.client.put('/api/v2/assays/%s/attributes/' % uuid,
+                                   updated_attribute_2)
+        response.render()
+        self.assertEqual(response.status_code, 202)
+        self.assertEqual(
+                response.content,
+                '{"study":"None: Study Title Test",'
+                '"assay":'
+                '"Measurement: transcription factor binding site; '
+                'Technology: nucleotide sequencing; '
+                'Platform: Genome Analyzer II; '
+                'File: test_assay_filename.txt",'
+                '"solr_field":"Specimen",'
+                '"rank":"1",'
+                '"is_exposed":false,'
+                '"is_facet":false,'
+                '"is_active":false,'
+                '"is_internal":false,'
+                '"id":6}'
+                )
+
+        # Invalid objects
+        response = self.client.put('/api/v2/assays/%s/attributes/' % uuid,
+                                   {})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+                response.content, '"Requires attribute id or solr_field name."'
+                )
+        self.client.logout()
+
+        # Invalid Login
+        self.client.login(username='guestName', password='test1234')
+        response = self.client.put('/api/v2/assays/%s/attributes/' % uuid,
+                                   updated_attribute_3)
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(
+                response.content, '"Only owner may edit attribute order."'
+                )
+
         self.client.logout()
 
 
