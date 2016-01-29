@@ -154,6 +154,35 @@ function ListGraphCtrl (
     );
   }.bind(this));
 
+  pubSub.on('d3ListGraphNodeQuery', function (data) {
+    this.$rootScope.$emit(
+      'dashboardVisNodeQuery', {
+        clone: data.clone,
+        clonedFromUri: data.clonedFromId,
+        nodeUri: data.id,
+        dataSetIds: this.getAssociatedDataSets(
+          this.graph[data.clone ? data.clonedFromId : data.id]
+        ),
+        mode: data.mode,
+        source: 'listGraph'
+      }
+    );
+  }.bind(this));
+
+  pubSub.on('d3ListGraphNodeUnquery', function (data) {
+    this.$rootScope.$emit(
+      'dashboardVisNodeUnquery', {
+        clone: data.clone,
+        clonedFromUri: data.clonedFromId,
+        nodeUri: data.id,
+        dataSetIds: this.getAssociatedDataSets(
+          this.graph[data.clone ? data.clonedFromId : data.id]
+        ),
+        source: 'listGraph'
+      }
+    );
+  }.bind(this));
+
   pubSub.on('d3ListGraphUpdateBarsRequest', function (data) {
     var uri = this.rootIds[0];
 
@@ -161,8 +190,18 @@ function ListGraphCtrl (
       uri = data.clone ? data.clonedFromId : data.id;
     }
 
-    this.updatePrecisionRecall(this.graph[uri]);
+    this.updatePrecisionRecall(Object.keys(this.graph[uri].dataSets));
     this.listGraph.trigger('d3ListGraphUpdateBars');
+  }.bind(this));
+
+  // External events that should be delegated to the list graph
+  this.$rootScope.$on('dashboardVisSearch', function (event, data) {
+    if (data.source !== 'listGraph') {
+      this.updatePrecisionRecall(data.dsIds);
+      if (this.listGraph) {
+        this.listGraph.trigger('d3ListGraphUpdateBars');
+      }
+    }
   }.bind(this));
 
   // External events that should be delegated to the list graph
@@ -231,8 +270,8 @@ function ListGraphCtrl (
   this.$rootScope.$on('dashboardVisNodeRoot', function (event, data) {
     // List graph might not be ready yet when a user hovers over a data set form
     // the list of data sets.
-    if (this.listGraph && data.source !== 'listGraph') {
-      this.updatePrecisionRecall(this.graph[data.nodeUri]);
+    if (this.listGraph && data.source !== 'listGraph' && !data.init) {
+      this.updatePrecisionRecall(Object.keys(this.graph[uri].dataSets));
       this.listGraph.trigger('d3ListGraphNodeRoot', {
         nodeIds: [data.nodeUri]
       });
@@ -243,7 +282,7 @@ function ListGraphCtrl (
     // List graph might not be ready yet when a user hovers over a data set form
     // the list of data sets.
     if (this.listGraph && data.source !== 'listGraph') {
-      this.updatePrecisionRecall(this.graph[data.nodeUri]);
+      this.updatePrecisionRecall(Object.keys(this.graph[uri].dataSets));
       this.listGraph.trigger('d3ListGraphNodeUnroot', {
         nodeIds: [data.nodeUri]
       });
@@ -259,11 +298,11 @@ function ListGraphCtrl (
   }.bind(this));
 }
 
-ListGraphCtrl.prototype.updatePrecisionRecall = function (rootNode) {
-  this.graphLib.updatePrecisionRecall(
+ListGraphCtrl.prototype.updatePrecisionRecall = function (dsIds) {
+  this.graphLib.calcPrecisionRecall(
     this.graph,
     this.valuePropertyName,
-    Object.keys(rootNode.dataSets).length
+    dsIds
   );
   this.graphLib.updatePropertyToBar(this.graph, ['precision', 'recall']);
 };

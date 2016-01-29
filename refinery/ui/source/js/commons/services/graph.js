@@ -343,40 +343,43 @@ function GraphFactory (_, Webworker) {
    * @method  initPrecisionRecall
    * @author  Fritz Lekschas
    * @date    2015-12-22
-   * @param   {Object}   graph            Graph to be initialized.
-   * @param   {String}   valueProp        Name of the property that represents
+   * @param   {Object}   graph      Graph to be initialized.
+   * @param   {String}   valueProp  Name of the property that represents
    *   an object of unique elements. The number of unique elements accounts for
    *   the rectangle size of the tree map and length of the bar charts. The
    *   property needs to be an object to easily assess unique IDs without
    *   having to iterate over the array all the time.
-   * @param   {Integer}  numAnnoDataSets  Total number of annotated datasets.
-   *   This number might be smaller than the total number of all data sets since
-   *   some might not be annotated.
+   * @param   {Array}  allIds      All data set IDs
    */
-  Graph.initPrecisionRecall = function (graph, valueProperty, numAnnoDataSets) {
+  Graph.calcPrecisionRecall = function (graph, valueProperty, allIds) {
     var uris = Object.keys(graph), node;
-
-    for (var i = uris.length; i--;) {
-      node = graph[uris[i]];
-      node.precision = Object.keys(node[valueProperty]).length /
-        numAnnoDataSets;
-      node.precisionTotal = node.precision;
-      node.recall = 1;
-    }
-  };
-
-  Graph.updatePrecisionRecall = function (graph, valueProperty, numAnnoDataSets) {
-    var uris = Object.keys(graph), node;
+    var numAnnoDataSets = allIds.length;
+    var retrievedDataSetsId;
 
     for (var i = uris.length; i--;) {
       node = graph[uris[i]];
 
       if (!node.clone) {
-        node.precision = Object.keys(node[valueProperty]).length /
-          numAnnoDataSets;
-        node.recall = 1;
+        retrievedDataSetsId = Object.keys(Graph.getNodeRetrievedDataSet(
+          Object.keys(node[valueProperty]), allIds
+        )).length;
+        node.precision = retrievedDataSetsId / numAnnoDataSets;
+        node.recall = retrievedDataSetsId /
+          Object.keys(node[valueProperty]).length;
       }
     }
+  };
+
+  Graph.getNodeRetrievedDataSet = function (dsIds, retrievedIds) {
+    var retrievedNodeDsIds = {};
+
+    for (var i = dsIds.length; i--;) {
+      if (!!~retrievedIds.indexOf(parseInt(dsIds[i]))) {
+        retrievedNodeDsIds[dsIds[i]] = true;
+      }
+    }
+
+    return retrievedNodeDsIds;
   };
 
   /**
