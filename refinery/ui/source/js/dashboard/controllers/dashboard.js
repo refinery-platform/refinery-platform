@@ -228,6 +228,9 @@ function DashboardCtrl (
     );
   }.bind(this));
 
+  this.queryTerms = {};
+  this.queryRelatedDataSets = {};
+
   this.treemapContext.on('dataSets', function (response) {
     this.$q.when(response).then(function (dataSets) {
       this.selectDataSets(dataSets);
@@ -253,7 +256,131 @@ function DashboardCtrl (
     this.dataSet.highlight(data.dataSetIds, true, 'lock');
     this.$rootScope.$digest();
   }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeQuery', function (event, data) {
+    var uri = this.getOriginalUri(data), i;
+
+    // 1. Update query terms
+    if (!this.queryTerms[uri]) {
+      this.queryTerms[uri] = {};
+      this.queryTerms[uri].uri = uri;
+      this.queryTerms[uri].dataSetIds = data.dataSetIds;
+    }
+    this.queryTerms[uri].mode = data.mode;
+
+    // Update data set selection
+    this.collectDataSetIds().then(function (dsIds) {
+      this.selectDataSets(dsIds);
+    }.bind(this));
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeUnquery', function (event, data) {
+    var uri = this.getOriginalUri(data);
+
+    this.queryTerms[uri] = undefined;
+    delete this.queryTerms[uri];
+
+    if (Object.keys(this.queryTerms).length) {
+      this.collectDataSetIds().then(function (dsIds) {
+        this.selectDataSets(dsIds);
+      }.bind(this));
+    } else  {
+      this.deselectDataSets();
+    }
+  }.bind(this));
 }
+
+DashboardCtrl.prototype.collectDataSetIds = function () {
+  var deferred = this.$q.defer();
+  var queryTermUris = Object.keys(this.queryTerms);
+  var andOrNotTerms = this.collectAndOrNotTerms(queryTermUris);
+  var dataSets = {};
+
+  // Collection exclusions of all _NOTs_
+  var notUnion = [];
+  for (i = andOrNotTerms.notTerms.length; i--;) {
+    notUnion = this._.union(
+      notUnion,
+      Object.keys(andOrNotTerms.notTerms[i].dataSetIds)
+    );
+  }
+
+  // Collection intersection of all _ANDs_
+  var andIntersection = [];
+  for (i = andOrNotTerms.andTerms.length; i--;) {
+    if (i === andOrNotTerms.andTerms.length - 1) {
+      andIntersection = Object.keys(andOrNotTerms.andTerms[i].dataSetIds);
+    } else {
+      andIntersection = this._.intersection(
+        andIntersection,
+        Object.keys(andOrNotTerms.andTerms[i].dataSetIds)
+      );
+    }
+  }
+
+  // Collection union of all _ORs_
+  var orUnion = [];
+  for (i = andOrNotTerms.orTerms.length; i--;) {
+    orUnion = this._.union(
+      orUnion,
+      Object.keys(andOrNotTerms.orTerms[i].dataSetIds)
+    );
+  }
+  // Final intersection of intersection of _ANDs_ with union of all _ORs_
+  var allDsIds = orUnion;
+  if (andIntersection.length && !orUnion.length) {
+    allDsIds = andIntersection;
+  }
+  if (andIntersection.length && orUnion.length) {
+    allDsIds = this._.intersection(allDsIds, andIntersection);
+  }
+
+  // In case only **nots** are available
+  if (!andIntersection.length && !orUnion.length) {
+    allDsIds = this.dataSet.allIds();
+  } else {
+    allDsIds = this.$q.when(allDsIds);
+  }
+
+  allDsIds.then(function (allIds) {
+    if (allIds.length && this._.isFinite(allIds[0])) {
+      allIds = this._.map(allIds, function (el) {
+        return el.toString();
+      });
+    }
+    if (notUnion.length) {
+      deferred.resolve(this._.difference(allIds, notUnion));
+    } else {
+      deferred.resolve(allDsIds);
+    }
+  }.bind(this));
+
+  return deferred.promise;
+};
+
+DashboardCtrl.prototype.collectAndOrNotTerms = function (termUris) {
+  var andTerms = [], orTerms = [], notTerms = [];
+
+  for (var i = termUris.length; i--;) {
+    if (this.queryTerms[termUris[i]].mode === 'and') {
+      andTerms.push(this.queryTerms[termUris[i]]);
+    } else if (this.queryTerms[termUris[i]].mode === 'or') {
+      orTerms.push(this.queryTerms[termUris[i]]);
+    } else {
+      notTerms.push(this.queryTerms[termUris[i]]);
+    }
+  }
+
+  return {
+    andTerms: andTerms,
+    orTerms: orTerms,
+    notTerms: notTerms,
+  };
+};
+
+DashboardCtrl.prototype.getOriginalUri = function (eventData) {
+  return eventData.clone ? eventData.clonedFromUri : eventData.nodeUri;
+};
 
 /*
  * -----------------------------------------------------------------------------
@@ -535,9 +662,13 @@ DashboardCtrl.prototype.resetDataSetSearch = function () {
   this.setDataSetSource();
 };
 
-DashboardCtrl.prototype.setDataSetSource = function (searchQuery,
-  fromStateEvent) {
+DashboardCtrl.prototype.setDataSetSource = function (
+  searchQuery,
+  fromStateEvent
+) {
   this.showFilterSort = false;
+
+
 
   if (!fromStateEvent) {
     var stateChange = this.$state.go(
@@ -590,6 +721,14 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery,
     this.dataSets.newOrCachedCache(browseState);
     this.searchDataSet = false;
     this.dashboardDataSetsReloadService.reload();
+
+    this.dataSet.allIds().then(function (allDsIds) {
+      // console.log('lo', allDsIds);
+      this.$rootScope.$emit('dashboardVisSearch', {
+        dsIds: allDsIds,
+        source: 'dashboard'
+      });
+    }.bind(this));
   }
 };
 
@@ -714,10 +853,35 @@ DashboardCtrl.prototype.findDataSet = function (uuid) {
 };
 
 DashboardCtrl.prototype.selectDataSets = function (ids) {
-  this.dataSet.select(ids, this.treemapRoot.ontId);
+  var queryTermUris = Object.keys(this.queryTerms);
+  var query = this.treemapRoot.ontId;
+
+  if (queryTermUris && queryTermUris.length) {
+    query = '';
+    for (var i = queryTermUris.length; i--;) {
+      query += (
+        queryTermUris[i] +
+        '.' +
+        this.queryTerms[queryTermUris[i]].mode +
+        '+'
+      );
+    }
+    // Remove last `+`
+    query = query.slice(0, -1);
+  }
+
+  this.dataSet.select(ids, query);
   this.dataSets.newOrCachedCache(
-    'selection.' + this.treemapRoot.ontId
+    'selection.' + query
   );
+  this.$timeout(function() {
+    this.dashboardDataSetsReloadService.reload();
+  }.bind(this), 0);
+};
+
+DashboardCtrl.prototype.deselectDataSets = function () {
+  this.dataSet.deselect();
+  this.dataSets.newOrCachedCache();
   this.$timeout(function() {
     this.dashboardDataSetsReloadService.reload();
   }.bind(this), 0);
