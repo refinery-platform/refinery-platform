@@ -356,6 +356,11 @@ function GraphFactory (_, Webworker) {
     var numAnnoDataSets = allIds.length;
     var retrievedDataSetsId;
 
+    // Convert to an array of ints.
+    allIds = _.map(allIds, function (el) {
+      return parseInt(el);
+    });
+
     for (var i = uris.length; i--;) {
       node = graph[uris[i]];
 
