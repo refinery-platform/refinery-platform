@@ -886,3 +886,40 @@ class UtilitiesTest(TestCase):
         response = update_attribute_order_ranks(attribute_order, 5)
         self.assertEqual(response,
                          'Error: New rank == old rank')
+
+        attribute_order = AttributeOrder.objects.get(
+                                                    assay=self.assay,
+                                                    solr_field='Specimen')
+        new_rank = str(9)
+        response = update_attribute_order_ranks(attribute_order, new_rank)
+        attribute_list = AttributeOrder.objects.filter(
+                assay=self.assay)
+
+        self.assertEqual(response, 'Successful update')
+        self.assertEqual(
+                str(attribute_list),
+                '[<AttributeOrder: Character_Title '
+                '[facet = True exp = True act = True int = False] = 6>, '
+                '<AttributeOrder: Specimen '
+                '[facet = True exp = True act = True int = False] = 9>, '
+                '<AttributeOrder: Cell Type '
+                '[facet = True exp = True act = True int = False] = 1>, '
+                '<AttributeOrder: Analysis '
+                '[facet = True exp = True act = True int = False] = 3>, '
+                '<AttributeOrder: Organism '
+                '[facet = True exp = True act = True int = False] = 5>, '
+                '<AttributeOrder: Cell Line '
+                '[facet = True exp = True act = True int = False] = 4>, '
+                '<AttributeOrder: Type '
+                '[facet = True exp = True act = True int = False] = 10>, '
+                '<AttributeOrder: Group Name '
+                '[facet = True exp = True act = True int = False] = 7>, '
+                '<AttributeOrder: Gene '
+                '[facet = True exp = True act = True int = False] = 8>, '
+                '<AttributeOrder: Replicate Id '
+                '[facet = True exp = True act = True int = False] = 11>, '
+                '<AttributeOrder: Organism Part '
+                '[facet = True exp = True act = True int = False] = 0>, '
+                '<AttributeOrder: Name '
+                '[facet = True exp = True act = True int = False] = 2>]'
+                )
