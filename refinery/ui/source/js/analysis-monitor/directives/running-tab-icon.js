@@ -10,7 +10,7 @@ function rpAnalysisMonitorRunningTabIcon() {
     controller: 'AnalysisMonitorCtrl',
     controllerAs: 'AMCtrl',
     bindToController: {
-      launchAnalysisFlag: '='
+      launchAnalysisFlag: '=?'
     },
     link: function (scope, element, attr) {
       //if an analysis is launched, then the running list needs to be updated.
@@ -18,7 +18,7 @@ function rpAnalysisMonitorRunningTabIcon() {
       scope.$on("rf/launchAnalysis", function (e) {
         scope.AMCtrl.launchAnalysisFlag = true;
       });
-      
+
       scope.$on("rf/cancelAnalysis", function(e){
         scope.AMCtrl.cancelTimerRunningList();
         scope.AMCtrl.updateAnalysesRunningList();
