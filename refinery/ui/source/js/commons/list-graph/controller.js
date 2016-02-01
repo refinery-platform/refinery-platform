@@ -271,7 +271,7 @@ function ListGraphCtrl (
     // List graph might not be ready yet when a user hovers over a data set form
     // the list of data sets.
     if (this.listGraph && data.source !== 'listGraph' && !data.init) {
-      this.updatePrecisionRecall(Object.keys(this.graph[uri].dataSets));
+      this.updatePrecisionRecall(Object.keys(this.graph[data.nodeUri].dataSets));
       this.listGraph.trigger('d3ListGraphNodeRoot', {
         nodeIds: [data.nodeUri]
       });
@@ -282,7 +282,7 @@ function ListGraphCtrl (
     // List graph might not be ready yet when a user hovers over a data set form
     // the list of data sets.
     if (this.listGraph && data.source !== 'listGraph') {
-      this.updatePrecisionRecall(Object.keys(this.graph[uri].dataSets));
+      this.updatePrecisionRecall(Object.keys(this.graph[data.nodeUri].dataSets));
       this.listGraph.trigger('d3ListGraphNodeUnroot', {
         nodeIds: [data.nodeUri]
       });
@@ -295,6 +295,22 @@ function ListGraphCtrl (
     if (this.listGraph) {
       this.listGraph.trigger('d3ListGraphActiveLevel', data);
     }
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardDsSelected', function (event, data) {
+    this.updatePrecisionRecall(data.ids);
+    if (this.listGraph) {
+      this.listGraph.trigger('d3ListGraphUpdateBars');
+    }
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardDsDeselected', function (event, data) {
+    dataSet.allIds().then(function (allIds) {
+      this.updatePrecisionRecall(allIds);
+      if (this.listGraph) {
+        this.listGraph.trigger('d3ListGraphUpdateBars');
+      }
+    }.bind(this));
   }.bind(this));
 }
 
