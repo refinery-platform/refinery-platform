@@ -54,6 +54,15 @@ cft.resources.ec2_instance = Resource(
     })
 )
 
+cft.resources.mount = Resource(
+    'RefineryVolume', 'AWS::EC2::VolumeAttachment',
+    Properties({
+        'Device': '/dev/xvdh',
+        'InstanceId': ref('WebInstance'),
+        'VolumeId': ref('Volume'),
+    })
+)
+
 parameters = [
     Parameter(
         'RDSName', 'String',
@@ -66,6 +75,12 @@ parameters = [
         {
             'Description': 'Password for the root account on the RDS',
             'Default': 'mypassword',
+        }),
+    Parameter(
+        'Volume', 'String',
+        {
+            'Description': 'Volume ID of EC2 volume to mount for data',
+            'Default': 'vol-db678e04',
         })
 ]
 
