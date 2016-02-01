@@ -512,7 +512,7 @@ class AssaysAttributes(APIView):
               required: false
             - name: rank
               description: Position of the attribute in facet list and table
-              type: string
+              type: int
               paramType: form
               required: true
             - name: is_exposed
