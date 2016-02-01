@@ -628,13 +628,55 @@ def format_solr_response(solr_response):
     facet_field_docs = solr_response_json.get('response').get(
             'docs')
     solr_response_json['facet_field_counts'] = facet_field_counts
-    solr_response_json["attributes"] = order_facet_fields
+    attributes = customize_attribute_response(order_facet_fields)
+    solr_response_json["attributes"] = attributes
     solr_response_json["nodes"] = facet_field_docs
     del solr_response_json['responseHeader']
     del solr_response_json['facet_counts']
     del solr_response_json['response']
 
     return solr_response_json
+
+
+def customize_attribute_response(facet_fields):
+    attribute_array = []
+    for field in facet_fields:
+        customized_field = {'internal_name': field}
+
+        field_name = field.split('_')
+        customized_field['datatype'] = field_name[-1]
+
+        if 'REFINERY_SUBANALYSIS' in field:
+            customized_field['display_name'] = 'Analysis Group'
+        elif 'REFINERY_WORKFLOW_OUTPUT' in field:
+            customized_field['display_name'] = 'Output Type'
+        elif 'FILETYPE' in field:
+            customized_field['display_name'] = 'File Type'
+        elif 'REFINERY' in field:
+            customized_field['display_name'] = field_name[1].title()
+        elif 'Comment' in field:
+            index = field_name.index('Comment')
+            field_name = ' '.join(field_name[0:index])
+            customized_field['display_name'] = field_name.title()
+            customized_field['attribute_type'] = 'Comment'
+        elif 'Factor' in field:
+            index = field_name.index('Factor')
+            field_name = ' '.join(field_name[0:index])
+            customized_field['display_name'] = field_name.title()
+            customized_field['attribute_type'] = 'Factor Value'
+        elif 'Characteristics' in field:
+            index = field_name.index('Characteristics')
+            field_name = ' '.join(field_name[0:index])
+            customized_field['display_name'] = field_name.title()
+            customized_field['attribute_type'] = 'Characteristics'
+        else:
+            customized_field['display_name'] = ' '.join(
+                    field_name[0:-3]).title()
+
+        attribute_array.append(customized_field)
+
+    return attribute_array
+
 
 def update_attribute_order_ranks(old_attribute, new_rank):
     # Updates an assays attribute order ranks based on a singular object
