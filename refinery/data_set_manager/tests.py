@@ -21,7 +21,7 @@ from rest_framework.test import APIClient
 
 from .models import AttributeOrder, Assay, Study, Investigation
 from .views import Assays, AssaysFiles, AssaysAttributes
-from .utils import update_attribute_order_ranks
+from .utils import update_attribute_order_ranks, prettify_facet_fields
 from core.models import UserProfile, ExtendedGroup, DataSet, InvestigationLink
 from core.management.commands.create_user import init_user
 from core.management.commands.init_refinery import create_public_group
@@ -638,6 +638,63 @@ class UtilitiesTest(TestCase):
         Study.objects.all().delete()
         Investigation.objects.all().delete()
         AttributeOrder.objects.all().delete()
+
+    def test_prettify_facet_fields(self):
+        attributes = ['REFINERY_FILETYPE_6_3_s',
+                      'Title_Characteristics_6_3_s',
+                      'REFINERY_TYPE_6_3_s',
+                      'REFINERY_SUBANALYSIS_6_3_s',
+                      'Month_Characteristics_6_3_s',
+                      'REFINERY_NAME_6_3_s',
+                      'REFINERY_WORKFLOW_OUTPUT_6_3_s',
+                      'REFINERY_ANALYSIS_UUID_6_3_s',
+                      'Author_Characteristics_6_3_s',
+                      'Year_Characteristics_6_3_s']
+
+        prettified_attributes = prettify_facet_fields(attributes)
+        self.assertDictEqual(prettified_attributes,
+                             {'REFINERY_FILETYPE_6_3_s': 'File Type',
+                              'Title_Characteristics_6_3_s': 'Title',
+                              'REFINERY_TYPE_6_3_s': 'Type',
+                              'REFINERY_SUBANALYSIS_6_3_s': 'Analysis Group',
+                              'Month_Characteristics_6_3_s': 'Month',
+                              'REFINERY_NAME_6_3_s': 'Name',
+                              'REFINERY_WORKFLOW_OUTPUT_6_3_s': 'Output Type',
+                              'REFINERY_ANALYSIS_UUID_6_3_s': 'Analysis',
+                              'Author_Characteristics_6_3_s': 'Author',
+                              'Year_Characteristics_6_3_s': 'Year'})
+
+        attributes = ['treatment_Factor_Value_22_11_s',
+                      'treatment_Characteristics_22_11_s',
+                      'REFINERY_NAME_22_11_s',
+                      'strain_Characteristics_22_11_s',
+                      'organism_Characteristics_22_11_s',
+                      'REFINERY_WORKFLOW_OUTPUT_22_11_s',
+                      'Replicate_Id_Comment_22_11_s',
+                      'REFINERY_ANALYSIS_UUID_22_11_s',
+                      'REFINERY_FILETYPE_22_11_s',
+                      'cell_line_Factor_Value_22_11_s',
+                      'cell_line_Characteristics_22_11_s',
+                      'Group_Name_Comment_22_11_s',
+                      'REFINERY_TYPE_22_11_s',
+                      'REFINERY_SUBANALYSIS_22_11_s']
+
+        prettified_attributes = prettify_facet_fields(attributes)
+        self.assertDictEqual(prettified_attributes,
+                         {'treatment_Factor_Value_22_11_s': 'Treatment',
+                          'treatment_Characteristics_22_11_s': 'Treatment',
+                          'REFINERY_ANALYSIS_UUID_22_11_s': 'Analysis',
+                          'strain_Characteristics_22_11_s': 'Strain',
+                          'organism_Characteristics_22_11_s': 'Organism',
+                          'REFINERY_WORKFLOW_OUTPUT_22_11_s': 'Output Type',
+                          'REFINERY_NAME_22_11_s': 'Name',
+                          'REFINERY_FILETYPE_22_11_s': 'File Type',
+                          'cell_line_Factor_Value_22_11_s': 'Cell Line',
+                          'cell_line_Characteristics_22_11_s': 'Cell Line',
+                          'Group_Name_Comment_22_11_s': 'Group Name',
+                          'REFINERY_TYPE_22_11_s': 'Type',
+                          'REFINERY_SUBANALYSIS_22_11_s': 'Analysis Group',
+                          'Replicate_Id_Comment_22_11_s': 'Replicate Id'})
 
     def test_update_attribute_order_ranks(self):
 
