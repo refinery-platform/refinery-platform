@@ -57,7 +57,7 @@ cft.resources.ec2_instance = Resource(
 cft.resources.mount = Resource(
     'RefineryVolume', 'AWS::EC2::VolumeAttachment',
     Properties({
-        'Device': '/dev/xvdh',
+        'Device': '/dev/xvdr',
         'InstanceId': ref('WebInstance'),
         'VolumeId': ref('Volume'),
     })
