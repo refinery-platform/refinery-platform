@@ -620,13 +620,17 @@ def get_owner_from_assay(uuid):
 
 
 def format_solr_response(solr_response):
-    solr_response_json = json.loads(solr_response)
+    # Returns a reformatted solr response
+    try:
+        solr_response_json = json.loads(solr_response)
+    except ValueError:
+        return "Error loading json."
+
     order_facet_fields = solr_response_json.get('responseHeader').get(
             'params').get('facet.field')
     facet_field_counts = solr_response_json.get('facet_counts').get(
             'facet_fields')
-    facet_field_docs = solr_response_json.get('response').get(
-            'docs')
+    facet_field_docs = solr_response_json.get('response').get('docs')
     solr_response_json['facet_field_counts'] = facet_field_counts
     attributes = customize_attribute_response(order_facet_fields)
     solr_response_json["attributes"] = attributes
@@ -639,6 +643,7 @@ def format_solr_response(solr_response):
 
 
 def customize_attribute_response(facet_fields):
+    # Returns an array of attribute objects based on parsing the title
     attribute_array = []
     for field in facet_fields:
         customized_field = {'internal_name': field}
