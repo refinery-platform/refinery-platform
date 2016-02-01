@@ -1668,6 +1668,19 @@ Object.defineProperty(
 });
 
 TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
+  var prevRoot = this.treemapContext.get('root');
+  var prevRootUri;
+  if (prevRoot) {
+    prevRootUri = prevRoot.uri;
+    if (!prevRootUri) {
+      prevRootUri = this.cacheTerms[prevRoot.ontId][0].uri;
+    }
+  }
+
+  if (prevRootUri === root.uri) {
+    return;
+  }
+
   if (root.uri !== this.absRootNode.uri) {
     if (!noNotification) {
       this.$rootScope.$emit(
@@ -1680,14 +1693,10 @@ TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
     }
   } else {
     if (!noNotification && this.treemapContext.get('root')) {
-      var uri = this.treemapContext.get('root').uri;
-      if (!uri) {
-        uri = this.cacheTerms[this.treemapContext.get('root').ontId][0].uri;
-      }
       this.$rootScope.$emit(
         'dashboardVisNodeUnroot',
         {
-          nodeUri: uri,
+          nodeUri: prevRootUri,
           source: 'treeMap',
           depth: this.visibleDepth
         }
@@ -1695,17 +1704,32 @@ TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
     }
   }
 
+  this.$rootScope.$emit('dashboardVisNodeToggleQuery', {
+    terms: [
+      {
+        nodeUri: root.uri,
+        dataSetIds: getAssociatedDataSets(
+          this.cacheTerms[root.ontId][root.branchId]
+        ),
+        mode: 'and',
+        query: true,
+        source: 'treeMap'
+      },
+      {
+        nodeUri: prevRootUri,
+        dataSetIds: getAssociatedDataSets(
+          this.cacheTerms[prevRoot.ontId][prevRoot.branchId]
+        ),
+      }
+    ],
+    source: 'treeMap'
+  });
+
   this.treemapContext.set('root', {
     ontId: root.ontId,
     uri: root.uri,
     branchId: root.branchId || 0
   });
-
-  this.treemapContext.set(
-    'dataSets',
-    getAssociatedDataSets(this.cacheTerms[root.ontId][root.branchId]),
-    true
-  );
 
   this.transition(this.cacheTerms[root.ontId][root.branchId], true);
 };
