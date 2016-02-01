@@ -4,11 +4,11 @@ import py2neo
 import core
 import datetime
 import urlparse
+
 from django.conf import settings
 from django.core.cache import cache
 from django.contrib.auth.models import User
 from django.db import connection
-
 
 from .search_indexes import DataSetIndex
 from data_set_manager.search_indexes import NodeIndex
@@ -22,7 +22,14 @@ def update_data_set_index(data_set):
     """
 
     logger.info('Updated data set (uuid: %s) index', data_set.uuid)
-    DataSetIndex().update_object(data_set, using='core')
+    try:
+        DataSetIndex().update_object(data_set, using='core')
+    except Exception as e:
+        """ Solr is expected to fail and raise an exception when
+        it is not running.
+        (e.g. Travis CI doesn't support solr yet)
+        """
+        logger.error("Could not update DataSetIndex:", e)
 
 
 def add_data_set_to_neo4j(dataset_uuid, user_id):
@@ -204,7 +211,14 @@ def delete_data_set_index(data_set):
     """
 
     logger.debug('Deleted data set (uuid: %s) index', data_set.uuid)
-    DataSetIndex().remove_object(data_set, using='core')
+    try:
+        DataSetIndex().remove_object(data_set, using='core')
+    except Exception as e:
+        """ Solr is expected to fail and raise an exception when
+        it is not running.
+        (e.g. Travis CI doesn't support solr yet)
+        """
+        logger.error("Could not delete from DataSetIndex:", e)
 
 
 def delete_data_set_neo4j(dataset_uuid):
@@ -586,16 +600,40 @@ def create_update_ontology(name, acronym, uri, version, owl2neo4j_version):
 def delete_analysis_index(node_instance):
     """Remove a Analysis' related document from Solr's index.
     """
-    NodeIndex().remove_object(node_instance, using='data_set_manager')
-    logger.debug('Deleted Analysis\' NodeIndex with (uuid: %s)',
-                 node_instance.uuid)
-
-
-def invalidate_cached_object(instance):
     try:
-        cache.delete_many(['{}-{}'.format(user.id, instance.__class__.__name__)
-                           for user in User.objects.all()])
-
+        NodeIndex().remove_object(node_instance, using='data_set_manager')
+        logger.debug('Deleted Analysis\' NodeIndex with (uuid: %s)',
+                     node_instance.uuid)
     except Exception as e:
-        logger.debug("Could not delete %s from cache" %
-                     instance.__class__.__name__, e)
+        """ Solr is expected to fail and raise an exception when
+        it is not running.
+        (e.g. Travis CI doesn't support solr yet)
+        """
+        logger.error("Could not delete from NodeIndex:", e)
+
+
+def invalidate_cached_object(instance, is_test=False):
+    """
+        Removes cached objects for all users based on the class name of the
+        instance passed.
+
+        Ex: Given a DataSet instance, all possible cached objects holding
+        DataSets will be deleted to represent the saving, updating,
+        deletion, or perms change that was performed upon it.
+
+        If the is_test flag is set, a new instance of a mockcache Client
+        will be returned
+    """
+    if not is_test:
+        try:
+            cache.delete_many(['{}-{}'.format(user.id, instance.__class__.
+                                              __name__)
+                               for user in User.objects.all()])
+
+        except Exception as e:
+            logger.debug("Could not delete %s from cache" %
+                         instance.__class__.__name__, e)
+    else:
+        from mockcache import Client
+        mc = Client()
+        return mc

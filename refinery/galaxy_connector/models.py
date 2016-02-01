@@ -2,8 +2,8 @@ from django.db import models
 
 from bioblend import galaxy
 
-from galaxy_connector.galaxy_workflow import GalaxyWorkflow, \
-    GalaxyWorkflowInput
+from galaxy_connector.galaxy_workflow import (GalaxyWorkflow,
+                                              GalaxyWorkflowInput)
 
 
 class Instance(models.Model):

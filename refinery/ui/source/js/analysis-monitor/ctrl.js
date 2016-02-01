@@ -9,6 +9,7 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
   vm.analysesList = [];
   vm.analysesGlobalList = [];
   vm.analysesDetail = {};
+  vm.analysesDetail2 = {};
   vm.analysesGlobalDetail = {};
   vm.analysesRunningList = [];
   vm.analysesRunningGlobalList = [];
@@ -29,7 +30,7 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
       'data_set__uuid': dataSetUuid,
     };
 
-    vm.timerList =  $timeout(vm.updateAnalysesList, 30000);
+    vm.timerList =  $timeout(vm.updateAnalysesList, 3000);
 
     $scope.$on('refinery/analyze-tab-inactive', function(){
       $timeout.cancel(vm.timerList);
@@ -91,7 +92,7 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
       vm.launchAnalysisFlag = false;
     });
 
-    vm.timerRunList = $timeout(vm.updateAnalysesRunningList, 30000);
+    vm.timerRunList = $timeout(vm.updateAnalysesRunningList, 3000);
 
     if(typeof dataSetUuid === 'undefined' || dataSetUuid === "None"){
       $timeout.cancel(vm.timerRunList);
@@ -147,7 +148,8 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
       if(typeof vm.analysesRunningList[i] !== 'undefined') {
         var runningUuid = vm.analysesRunningList[i].uuid;
         analysisMonitorFactory.getAnalysesDetail(runningUuid).then(function (response) {
-          vm.analysesDetail[runningUuid] = analysisMonitorFactory.analysesDetail[runningUuid];
+          //vm.analysesDetail[runningUuid] = analysisMonitorFactory.analysesDetail[runningUuid];
+          vm.analysesDetail2[runningUuid] = analysisMonitorFactory.analysesDetail2[runningUuid];
         });
       }
     })(i);
@@ -158,7 +160,7 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
       if(typeof vm.analysesRunningGlobalList[i] !== 'undefined') {
         var runningUuid = vm.analysesRunningGlobalList[i].uuid;
         analysisMonitorFactory.getAnalysesDetail(runningUuid).then(function (response) {
-          vm.analysesGlobalDetail[runningUuid] = analysisMonitorFactory.analysesDetail[runningUuid];
+          vm.analysesGlobalDetail[runningUuid] = analysisMonitorFactory.analysesDetail2[runningUuid];
         });
       }
     })(i);
@@ -217,9 +219,9 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
   };
 
   vm.isAnalysisDetailLoaded = function(uuid){
-    if(typeof vm.analysesDetail[uuid] !== "undefined" && vm.analysesDetail[uuid].preprocessing !== ""){
+    if(typeof vm.analysesDetail2[uuid] !== "undefined"){
       return true;
-    }else{
+    } else {
       return false;
     }
   };

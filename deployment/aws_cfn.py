@@ -1,19 +1,46 @@
 # This is a cfn-pyplates template file
-# for generating
-# an AWS CloudFormation json file.
-# See AWS.md for notes on how to use this
-# to deply to Amazon AWS.
+# for generating deploy.json,
+# which is an AWS CloudFormation json file.
+# See https://github.com/parklab/refinery-platform/wiki/AWS-installation
+# for notes on how to use this to deploy to Amazon AWS.
+# Instance are configured using CloudInit
+
+
+#
+# REFERENCES
+#
+# cfn-pyplates:
+#   https://cfn-pyplates.readthedocs.org/en/latest/index.html
+# AWS Cloudformation
+#   https://aws.amazon.com/cloudformation/
+# CloudInit
+#   https://help.ubuntu.com/community/CloudInit
 
 import os       # for os.popen
 
 cft = CloudFormationTemplate(description="refinery monolithic template.")
-branch = os.popen("""git branch | awk '$1=="*"{print $2}'""").read()
+
+# We discover the current git branch/commit
+# so that the deployment script can use it
+# to clone the same branch.
+# (we actually record a commit hash, but it
+# works just like a branch).
+branch = os.popen("""git rev-parse HEAD""").read().rstrip()
 assert branch
 
-user_data_script = (
-    open('bootstrap.sh').read() +
-    "GIT_BRANCH={}\n".format(branch) +
-    open('aws.sh').read())
+# The userdata script is executed via cloudinit.
+# It's made by concatenating a block of parameter variables,
+# with the bootstrap.sh script,
+# and the aws.sh script.
+user_data_script = join(
+        "",
+        "#!/bin/sh\n",
+        "RDS_NAME=", ref("RDSName"), "\n",
+        "RDS_SUPERUSER_PASSWORD=", ref("RDSSuperuserPassword"), "\n",
+        "GIT_BRANCH=", branch, "\n",
+        "\n",
+        open('bootstrap.sh').read(),
+        open('aws.sh').read())
 
 cft.resources.ec2_instance = Resource(
     'MonolithicInstance', 'AWS::EC2::Instance',
@@ -26,3 +53,21 @@ cft.resources.ec2_instance = Resource(
         'Tags': [{'Key': 'refinery', 'Value': 'refinery'}],
     })
 )
+
+parameters = [
+    Parameter(
+        'RDSName', 'String',
+        {
+            'Description': 'Name of the RDS to connect to',
+            'Default': 'rds-refinery',
+        }),
+    Parameter(
+        'RDSSuperuserPassword', 'String',
+        {
+            'Description': 'Password for the root account on the RDS',
+            'Default': 'mypassword',
+        })
+]
+
+for parameter in parameters:
+    cft.parameters.add(parameter)
