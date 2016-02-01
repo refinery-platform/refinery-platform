@@ -635,11 +635,12 @@ def update_attribute_order_ranks(old_attribute, new_rank):
         return "Error: New rank == old rank"
 
     assay = old_attribute.assay
-    old_rank = old_attribute.rank
+    old_rank = int(old_attribute.rank)
     attribute_list = AttributeOrder.objects.filter(assay=assay)
+    new_rank = int(new_rank)
 
     for attribute in attribute_list:
-        attribute_new_rank = attribute.rank
+        attribute_new_rank = int(attribute.rank)
 
         if attribute == old_attribute:
             attribute_new_rank = new_rank
