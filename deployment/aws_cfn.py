@@ -43,7 +43,7 @@ user_data_script = join(
         open('aws.sh').read())
 
 cft.resources.ec2_instance = Resource(
-    'MonolithicInstance', 'AWS::EC2::Instance',
+    'WebInstance', 'AWS::EC2::Instance',
     Properties({
         'ImageId': 'ami-d05e75b8',
         'InstanceType': 'm3.medium',
