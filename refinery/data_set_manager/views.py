@@ -457,7 +457,8 @@ class AssaysFiles(APIView):
         solr_response_json = json.loads(solr_response)
         order_facet_fields = solr_response_json.get('responseHeader').get(
                 'params').get('facet.field')
-        solr_response_json.get('response')["column_order"] = order_facet_fields
+        solr_response_json.get('response')["attributes"] = order_facet_fields
+        del solr_response_json['responseHeader']
 
         return Response(solr_response_json)
 
