@@ -257,8 +257,36 @@ function DashboardCtrl (
     this.$rootScope.$digest();
   }.bind(this));
 
+  this.$rootScope.$on('dashboardVisNodeToggleQuery', function (event, data) {
+    var uri;
+
+    for (var i = data.terms.length; i--;) {
+      uri = this.getOriginalUri(data.terms[i]);
+
+      if (data.terms[i].query) {
+        // 1. Update query terms
+        if (!this.queryTerms[uri]) {
+          this.queryTerms[uri] = {};
+          this.queryTerms[uri].uri = uri;
+          this.queryTerms[uri].dataSetIds = data.terms[i].dataSetIds;
+        }
+        this.queryTerms[uri].mode = data.terms[i].mode;
+      } else {
+        if (this.queryTerms[uri]) {
+          this.queryTerms[uri] = undefined;
+          delete this.queryTerms[uri];
+        }
+      }
+    }
+
+    // Update data set selection
+    this.collectDataSetIds().then(function (dsIds) {
+      this.selectDataSets(dsIds);
+    }.bind(this));
+  }.bind(this));
+
   this.$rootScope.$on('dashboardVisNodeQuery', function (event, data) {
-    var uri = this.getOriginalUri(data), i;
+    var uri = this.getOriginalUri(data);
 
     // 1. Update query terms
     if (!this.queryTerms[uri]) {
@@ -877,6 +905,10 @@ DashboardCtrl.prototype.selectDataSets = function (ids) {
   this.$timeout(function() {
     this.dashboardDataSetsReloadService.reload();
   }.bind(this), 0);
+
+  this.$rootScope.$emit('dashboardDsSelected', {
+    ids: ids
+  });
 };
 
 DashboardCtrl.prototype.deselectDataSets = function () {
@@ -885,14 +917,8 @@ DashboardCtrl.prototype.deselectDataSets = function () {
   this.$timeout(function() {
     this.dashboardDataSetsReloadService.reload();
   }.bind(this), 0);
-};
 
-DashboardCtrl.prototype.deselectDataSets = function () {
-  this.dataSet.deselect();
-  this.dataSets.newOrCachedCache();
-  this.$timeout(function() {
-    this.dashboardDataSetsReloadService.reload();
-  }.bind(this), 0);
+  this.$rootScope.$emit('dashboardDsDeselected');
 };
 
 DashboardCtrl.prototype.dataSetMouseEnter = function (dataSet) {
