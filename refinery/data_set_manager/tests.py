@@ -27,14 +27,6 @@ from core.management.commands.create_user import init_user
 from core.management.commands.init_refinery import create_public_group
 
 
-class SimpleTest(TestCase):
-    def test_basic_addition(self):
-        """
-        Tests that 1 + 1 always equals 2.
-        """
-        self.assertEqual(1 + 1, 2)
-
-
 class AssaysAPITests(APITestCase):
 
     def setUp(self):
@@ -62,7 +54,7 @@ class AssaysAPITests(APITestCase):
 
     def test_get(self):
 
-        #valid_uuid
+        # valid_uuid
         uuid = self.valid_uuid
         request = self.factory.get('/api/v2/assays/%s/' % uuid)
         response = self.view(request, uuid)
@@ -113,6 +105,7 @@ class AssaysAPITests(APITestCase):
 
 
 class AssaysFilesAPITests(APITestCase):
+
     def setUp(self):
         self.user1 = User.objects.create_user("ownerJane", '', 'test1234')
         self.user2 = User.objects.create_user("guestName", '', 'test1234')
@@ -199,7 +192,7 @@ class AssaysFilesAPITests(APITestCase):
 
     def test_get(self):
 
-        #valid_uuid
+        # valid_uuid
         uuid = self.valid_uuid
         request = self.factory.get('/api/v2/assays/%s/attributes' % uuid)
         response = self.view(request, uuid)
@@ -387,9 +380,9 @@ class AssaysFilesAPITests(APITestCase):
                 )
         self.assertEqual(response.content, '{"detail":"Not found."}')
 
-
     def test_put(self):
-        #valid_uuid
+
+        # valid_uuid
         self.client.login(username='ownerJane', password='test1234')
         uuid = self.valid_uuid
         updated_attribute_1 = {'solr_field': 'Character_Title',
@@ -417,9 +410,9 @@ class AssaysFilesAPITests(APITestCase):
                                'is_facet': 'False',
                                'is_active': 'False',
                               }
-        #Api client needs url to end / or it will redirect
+        # Api client needs url to end / or it will redirect
 
-        #update with solr_title
+        # update with solr_title
         response = self.client.put('/api/v2/assays/%s/attributes/' % uuid,
                                    updated_attribute_1)
         response.render()
@@ -457,7 +450,7 @@ class AssaysFilesAPITests(APITestCase):
                 '"id":5}'
                 )
 
-        #Update with attribute_order id
+        # Update with attribute_order id
         response = self.client.put('/api/v2/assays/%s/attributes/' % uuid,
                                    updated_attribute_2)
         response.render()
@@ -501,6 +494,7 @@ class AssaysFilesAPITests(APITestCase):
 
 
 class UtilitiesTest(TestCase):
+
     def setUp(self):
         investigation = Investigation.objects.create()
         study = Study.objects.create(file_name='test_filename123.txt',
@@ -646,6 +640,8 @@ class UtilitiesTest(TestCase):
         AttributeOrder.objects.all().delete()
 
     def test_update_attribute_order_ranks(self):
+
+        # Test basic increase
         attribute_order = AttributeOrder.objects.get(
                 assay=self.assay,
                 solr_field='Character_Title')
@@ -683,6 +679,7 @@ class UtilitiesTest(TestCase):
                 '[facet = True exp = True act = True int = False] = 0>]'
                 )
 
+        # Test top edge case
         attribute_order = AttributeOrder.objects.get(
                 assay=self.assay,
                 solr_field='Character_Title')
@@ -719,6 +716,7 @@ class UtilitiesTest(TestCase):
                 '<AttributeOrder: Name '
                 '[facet = True exp = True act = True int = False] = 0>]'
                 )
+        # Test bottom edge case
         attribute_order = AttributeOrder.objects.get(
                 assay=self.assay,
                 solr_field='Character_Title')
@@ -755,7 +753,7 @@ class UtilitiesTest(TestCase):
                 '<AttributeOrder: Name '
                 '[facet = True exp = True act = True int = False] = 0>]'
                 )
-
+        # Test removing a rank to 0
         attribute_order = AttributeOrder.objects.\
             get(assay=self.assay, solr_field='Character_Title')
         new_rank = 0
@@ -791,6 +789,8 @@ class UtilitiesTest(TestCase):
                 '<AttributeOrder: Name '
                 '[facet = True exp = True act = True int = False] = 0>]'
                 )
+
+        # Test multiple changes, including inserting field back in rank order
         attribute_order = AttributeOrder.objects.\
             get(assay=self.assay, solr_field='Character_Title')
         new_rank = 7
@@ -838,6 +838,7 @@ class UtilitiesTest(TestCase):
                 '<AttributeOrder: Name '
                 '[facet = True exp = True act = True int = False] = 3>]'
                 )
+        # Test small rank change
         attribute_order = AttributeOrder.objects.get(
                                                     assay=self.assay,
                                                     solr_field='Cell Line')
@@ -875,6 +876,7 @@ class UtilitiesTest(TestCase):
                 '[facet = True exp = True act = True int = False] = 3>]'
                 )
 
+        # Test invalid cases
         attribute_order = AttributeOrder.objects.get(
                                                     assay=self.assay,
                                                     solr_field='Cell Line')
@@ -890,6 +892,7 @@ class UtilitiesTest(TestCase):
         attribute_order = AttributeOrder.objects.get(
                                                     assay=self.assay,
                                                     solr_field='Specimen')
+        # Test string type
         new_rank = str(9)
         response = update_attribute_order_ranks(attribute_order, new_rank)
         attribute_list = AttributeOrder.objects.filter(
