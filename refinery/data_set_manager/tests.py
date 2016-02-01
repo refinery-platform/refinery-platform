@@ -21,7 +21,8 @@ from rest_framework.test import APIClient
 
 from .models import AttributeOrder, Assay, Study, Investigation
 from .views import Assays, AssaysFiles, AssaysAttributes
-from .utils import update_attribute_order_ranks, prettify_facet_fields
+from .utils import update_attribute_order_ranks, \
+    customize_attribute_response, format_solr_response
 from core.models import UserProfile, ExtendedGroup, DataSet, InvestigationLink
 from core.management.commands.create_user import init_user
 from core.management.commands.init_refinery import create_public_group
@@ -639,7 +640,79 @@ class UtilitiesTest(TestCase):
         Investigation.objects.all().delete()
         AttributeOrder.objects.all().delete()
 
-    def test_prettify_facet_fields(self):
+    def test_format_solr_response(self):
+        solr_response = '{"responseHeader":{"status": 0, "QTime": 5, "params":' \
+                        '{"facet": "true", "facet.mincount": "1",' \
+                        '"start": "0",'\
+                        '"q": "django_ct:data_set_manager.node",'\
+                        '"facet.limit": "-1",'\
+                        '"facet.field":'\
+                        '["REFINERY_TYPE_6_3_s",'\
+                        '"REFINERY_SUBANALYSIS_6_3_s",'\
+                        '"REFINERY_WORKFLOW_OUTPUT_6_3_s",'\
+                        '"REFINERY_ANALYSIS_UUID_6_3_s",'\
+                        '"Author_Characteristics_6_3_s",'\
+                        '"Year_Characteristics_6_3_s"],'\
+                        '"wt": "json", "rows": "20"}},'\
+                        '"response": {'\
+                        '"numFound": 1, "start": 0,'\
+                        '"docs": ['\
+                        '{"Author_Characteristics_6_3_s": "Crocker",'\
+                        '"REFINERY_ANALYSIS_UUID_6_3_s": "N/A",'\
+                        '"REFINERY_WORKFLOW_OUTPUT_6_3_s": "N/A",'\
+                        '"REFINERY_SUBANALYSIS_6_3_s": "-1",'\
+                        '"Year_Characteristics_6_3_s": "1971",'\
+                        '"REFINERY_TYPE_6_3_s": "Raw Data File"}]},'\
+                        '"facet_counts": {"facet_queries": {},'\
+                        '"facet_fields": {'\
+                        '"REFINERY_TYPE_6_3_s":'\
+                        '["Derived Data File", 105,'\
+                        '"Raw Data File", 9],'\
+                        '"REFINERY_SUBANALYSIS_6_3_s":'\
+                        '["-1", 9, "0", 95, "1", 8, "2", 2]},'\
+                        '"facet_dates": {}, "facet_ranges": {},'\
+                        '"facet_intervals": {}, "facet_heatmaps": {}}}'
+
+        formatted_response = format_solr_response(solr_response)
+        self.assertDictEqual(
+                formatted_response,
+                {'facet_field_counts':
+                    {u'REFINERY_SUBANALYSIS_6_3_s':
+                         [u'-1', 9, u'0', 95, u'1', 8, u'2', 2],
+                     u'REFINERY_TYPE_6_3_s':
+                         [u'Derived Data File', 105, u'Raw Data File', 9]},
+                 'attributes':
+                     [{'datatype': u's',
+                       'display_name': u'Type',
+                       'internal_name': u'REFINERY_TYPE_6_3_s'},
+                      {'datatype': u's',
+                       'display_name': 'Analysis Group',
+                       'internal_name': u'REFINERY_SUBANALYSIS_6_3_s'},
+                      {'datatype': u's',
+                       'display_name': 'Output Type',
+                       'internal_name': u'REFINERY_WORKFLOW_OUTPUT_6_3_s'},
+                      {'datatype': u's',
+                       'display_name': u'Analysis',
+                       'internal_name': u'REFINERY_ANALYSIS_UUID_6_3_s'},
+                      {'datatype': u's',
+                       'attribute_type': 'Characteristics',
+                       'display_name': u'Author',
+                       'internal_name': u'Author_Characteristics_6_3_s'},
+                      {'datatype': u's',
+                       'attribute_type': 'Characteristics',
+                       'display_name': u'Year',
+                       'internal_name': u'Year_Characteristics_6_3_s'}],
+                 'nodes':
+                     [{u'REFINERY_WORKFLOW_OUTPUT_6_3_s': u'N/A',
+                       u'REFINERY_ANALYSIS_UUID_6_3_s': u'N/A',
+                       u'Author_Characteristics_6_3_s': u'Crocker',
+                       u'Year_Characteristics_6_3_s': u'1971',
+                       u'REFINERY_SUBANALYSIS_6_3_s': u'-1',
+                       u'REFINERY_TYPE_6_3_s': u'Raw Data File'}]
+                 }
+        )
+
+    def test_customize_attribute_response(self):
         attributes = ['REFINERY_FILETYPE_6_3_s',
                       'Title_Characteristics_6_3_s',
                       'REFINERY_TYPE_6_3_s',
@@ -651,18 +724,43 @@ class UtilitiesTest(TestCase):
                       'Author_Characteristics_6_3_s',
                       'Year_Characteristics_6_3_s']
 
-        prettified_attributes = prettify_facet_fields(attributes)
-        self.assertDictEqual(prettified_attributes,
-                             {'REFINERY_FILETYPE_6_3_s': 'File Type',
-                              'Title_Characteristics_6_3_s': 'Title',
-                              'REFINERY_TYPE_6_3_s': 'Type',
-                              'REFINERY_SUBANALYSIS_6_3_s': 'Analysis Group',
-                              'Month_Characteristics_6_3_s': 'Month',
-                              'REFINERY_NAME_6_3_s': 'Name',
-                              'REFINERY_WORKFLOW_OUTPUT_6_3_s': 'Output Type',
-                              'REFINERY_ANALYSIS_UUID_6_3_s': 'Analysis',
-                              'Author_Characteristics_6_3_s': 'Author',
-                              'Year_Characteristics_6_3_s': 'Year'})
+        prettified_attributes = customize_attribute_response(attributes)
+        self.assertListEqual(
+                prettified_attributes,
+                [{'datatype': 's',
+                  'display_name': 'File Type',
+                  'internal_name': 'REFINERY_FILETYPE_6_3_s'},
+                 {'datatype': 's',
+                  'attribute_type': 'Characteristics',
+                  'display_name': 'Title',
+                  'internal_name': 'Title_Characteristics_6_3_s'},
+                 {'datatype': 's',
+                  'display_name': 'Type',
+                  'internal_name': 'REFINERY_TYPE_6_3_s'},
+                 {'datatype': 's',
+                  'display_name': 'Analysis Group',
+                  'internal_name': 'REFINERY_SUBANALYSIS_6_3_s'},
+                 {'datatype': 's',
+                  'attribute_type': 'Characteristics',
+                  'display_name': 'Month',
+                  'internal_name': 'Month_Characteristics_6_3_s'},
+                 {'datatype': 's',
+                  'display_name': 'Name',
+                  'internal_name': 'REFINERY_NAME_6_3_s'},
+                 {'datatype': 's',
+                  'display_name': 'Output Type',
+                  'internal_name': 'REFINERY_WORKFLOW_OUTPUT_6_3_s'},
+                 {'datatype': 's',
+                  'display_name': 'Analysis',
+                  'internal_name': 'REFINERY_ANALYSIS_UUID_6_3_s'},
+                 {'datatype': 's',
+                  'attribute_type': 'Characteristics',
+                  'display_name': 'Author',
+                  'internal_name': 'Author_Characteristics_6_3_s'},
+                 {'datatype': 's',
+                  'attribute_type': 'Characteristics',
+                  'display_name': 'Year',
+                  'internal_name': 'Year_Characteristics_6_3_s'}])
 
         attributes = ['treatment_Factor_Value_22_11_s',
                       'treatment_Characteristics_22_11_s',
@@ -679,22 +777,59 @@ class UtilitiesTest(TestCase):
                       'REFINERY_TYPE_22_11_s',
                       'REFINERY_SUBANALYSIS_22_11_s']
 
-        prettified_attributes = prettify_facet_fields(attributes)
-        self.assertDictEqual(prettified_attributes,
-                         {'treatment_Factor_Value_22_11_s': 'Treatment',
-                          'treatment_Characteristics_22_11_s': 'Treatment',
-                          'REFINERY_ANALYSIS_UUID_22_11_s': 'Analysis',
-                          'strain_Characteristics_22_11_s': 'Strain',
-                          'organism_Characteristics_22_11_s': 'Organism',
-                          'REFINERY_WORKFLOW_OUTPUT_22_11_s': 'Output Type',
-                          'REFINERY_NAME_22_11_s': 'Name',
-                          'REFINERY_FILETYPE_22_11_s': 'File Type',
-                          'cell_line_Factor_Value_22_11_s': 'Cell Line',
-                          'cell_line_Characteristics_22_11_s': 'Cell Line',
-                          'Group_Name_Comment_22_11_s': 'Group Name',
-                          'REFINERY_TYPE_22_11_s': 'Type',
-                          'REFINERY_SUBANALYSIS_22_11_s': 'Analysis Group',
-                          'Replicate_Id_Comment_22_11_s': 'Replicate Id'})
+        prettified_attributes = customize_attribute_response(attributes)
+        self.assertListEqual(
+                prettified_attributes,
+                [{'datatype': 's',
+                  'attribute_type': 'Factor Value',
+                  'display_name': 'Treatment',
+                  'internal_name': 'treatment_Factor_Value_22_11_s'},
+                 {'datatype': 's',
+                  'attribute_type': 'Characteristics',
+                  'display_name': 'Treatment',
+                  'internal_name': 'treatment_Characteristics_22_11_s'},
+                 {'datatype': 's',
+                  'display_name': 'Name',
+                  'internal_name': 'REFINERY_NAME_22_11_s'},
+                 {'datatype': 's',
+                  'attribute_type': 'Characteristics',
+                  'display_name': 'Strain',
+                  'internal_name': 'strain_Characteristics_22_11_s'},
+                 {'datatype': 's',
+                  'attribute_type': 'Characteristics',
+                  'display_name': 'Organism',
+                  'internal_name': 'organism_Characteristics_22_11_s'},
+                 {'datatype': 's',
+                  'display_name': 'Output Type',
+                  'internal_name': 'REFINERY_WORKFLOW_OUTPUT_22_11_s'},
+                 {'datatype': 's',
+                  'attribute_type': 'Comment',
+                  'display_name': 'Replicate Id',
+                  'internal_name': 'Replicate_Id_Comment_22_11_s'},
+                 {'datatype': 's',
+                  'display_name': 'Analysis',
+                  'internal_name': 'REFINERY_ANALYSIS_UUID_22_11_s'},
+                 {'datatype': 's',
+                  'display_name': 'File Type',
+                  'internal_name': 'REFINERY_FILETYPE_22_11_s'},
+                 {'datatype': 's',
+                  'attribute_type': 'Factor Value',
+                  'display_name': 'Cell Line',
+                  'internal_name': 'cell_line_Factor_Value_22_11_s'},
+                 {'datatype': 's',
+                  'attribute_type': 'Characteristics',
+                  'display_name': 'Cell Line',
+                  'internal_name': 'cell_line_Characteristics_22_11_s'},
+                 {'datatype': 's',
+                  'attribute_type': 'Comment',
+                  'display_name': 'Group Name',
+                  'internal_name': 'Group_Name_Comment_22_11_s'},
+                 {'datatype': 's',
+                  'display_name': 'Type',
+                  'internal_name': 'REFINERY_TYPE_22_11_s'},
+                 {'datatype': 's',
+                  'display_name': 'Analysis Group',
+                  'internal_name': 'REFINERY_SUBANALYSIS_22_11_s'}])
 
     def test_update_attribute_order_ranks(self):
 
