@@ -36,7 +36,6 @@ from data_set_manager.tasks import create_dataset, parse_isatab
 from data_set_manager.utils import *
 from file_store.tasks import download_file, DownloadError
 from file_store.models import get_temp_dir, generate_file_source_translator
-from .utils import generate_solr_params, search_solr
 from .serializers import AttributeOrderSerializer, AssaySerializer
 from .models import AttributeOrder, Assay
 
@@ -454,11 +453,7 @@ class AssaysFiles(APIView):
 
         solr_params = generate_solr_params(params, uuid)
         solr_response = search_solr(solr_params, 'data_set_manager')
-        solr_response_json = json.loads(solr_response)
-        order_facet_fields = solr_response_json.get('responseHeader').get(
-                'params').get('facet.field')
-        solr_response_json.get('response')["attributes"] = order_facet_fields
-        del solr_response_json['responseHeader']
+        solr_response_json = format_solr_response(solr_response)
 
         return Response(solr_response_json)
 

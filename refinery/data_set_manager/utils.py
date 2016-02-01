@@ -619,6 +619,23 @@ def get_owner_from_assay(uuid):
     return owner
 
 
+def format_solr_response(solr_response):
+    solr_response_json = json.loads(solr_response)
+    order_facet_fields = solr_response_json.get('responseHeader').get(
+            'params').get('facet.field')
+    facet_field_counts = solr_response_json.get('facet_counts').get(
+            'facet_fields')
+    facet_field_docs = solr_response_json.get('response').get(
+            'docs')
+    solr_response_json['facet_field_counts'] = facet_field_counts
+    solr_response_json["attributes"] = order_facet_fields
+    solr_response_json["nodes"] = facet_field_docs
+    del solr_response_json['responseHeader']
+    del solr_response_json['facet_counts']
+    del solr_response_json['response']
+
+    return solr_response_json
+
 def update_attribute_order_ranks(old_attribute, new_rank):
     # Updates an assays attribute order ranks based on a singular object
     try:
