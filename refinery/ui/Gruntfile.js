@@ -657,7 +657,7 @@ module.exports = function(grunt) {
           }
         ]
       },
-      vendor_assets: {
+      vendorAssets: {
         files: [
           {
             './bower_components/angular-ui-select2/dist/select2.min.js':
@@ -747,12 +747,15 @@ module.exports = function(grunt) {
   }
 
   // Default task.
-  grunt.registerTask('default', ['build', 'compile', 'test']);
+  grunt.registerTask('default', ['make', 'test']);
 
   // Task for running unit tests
   grunt.registerTask('test', ['env:compile', 'karma']);
 
-  // Do as little as possible to get Refinery running to keep grunt watch
+  // Complete build
+  grunt.registerTask('make', ['uglify:vendorAssets', 'build', 'compile']);
+
+  // Do as little as possible to get Refineryrunning to keep grunt watch
   // responsive.
   grunt.registerTask('build', [
     'jshint',
@@ -780,7 +783,7 @@ module.exports = function(grunt) {
     // it adds features to the `ngAnnotate` task.
     'concat-by-feature:compile',
     'ngAnnotate',
-    'uglify',
+    'uglify:ui',
     'copy:uiCompileImages',
     'copy:uiCompileTemplates',
     'copy:uiCompileVendor',
