@@ -478,7 +478,7 @@ def _index_annotated_nodes(node_type, study_uuid, assay_uuid=None,
 
 
 def generate_solr_params(params, assay_uuid):
-    """Creates the encoded solr params requiring only an assay or study uuid.
+    """Creates the encoded solr params requiring only an assay.
     Keyword Argument
         params -- python dict or QueryDict
     Params/Solr Params
@@ -486,7 +486,6 @@ def generate_solr_params(params, assay_uuid):
         facet_count/facet - enables facet counts in query response, true/false
         start - paginate, offset response
         limit/row - maximum number of documents
-        study_uuid/assay_uuid - unique ids
         field_limit - set of fields to return
         facet_field - specify a field which should be treated as a facet
         facet_pivot - list of fields to pivot
@@ -621,7 +620,7 @@ def get_owner_from_assay(uuid):
 
 
 def update_attribute_order_ranks(old_attribute, new_rank):
-    #Updates an assays attribute order ranks based on a singular object
+    # Updates an assays attribute order ranks based on a singular object
     try:
         assert(int(new_rank) >= 0)
     except AssertionError:

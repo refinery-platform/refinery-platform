@@ -429,10 +429,6 @@ class AssaysFiles(APIView):
               description: In solr it's Row, maximum number of documents
               type: integer
               paramType: query
-            - name: study_uuid
-              description: unique study id
-              type: string
-              paramType: query
             - name: field_limit
               description: set of fields to return
               type: string
