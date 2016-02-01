@@ -30,3 +30,6 @@ cft.resources.ebs = Resource(
         'VolumeType': 'gp2'
     })
 )
+
+cft.outputs.ebs = Output(
+     "Volume", ref('RefineryData'), "Volume ID")
