@@ -4,10 +4,10 @@ web.json: web_cfn.py
 web-stack: web.json .PHONY
 	aws cloudformation create-stack --stack-name refinery-web-$$(date +%Y%m%dT%H%M) --template-body file://web.json
 
-ebs.json: ebs_cfn.py
-	cfn_py_generate ebs_cfn.py ebs.json
+volume.json: volume_cfn.py
+	cfn_py_generate volume_cfn.py volume.json
 
-volume-stack: ebs.json .PHONY
-	aws cloudformation create-stack --stack-name refinery-volume-$$(date +%Y%m%dT%H%M) --template-body file://ebs.json
+volume-stack: volume.json .PHONY
+	aws cloudformation create-stack --stack-name refinery-volume-$$(date +%Y%m%dT%H%M) --template-body file://volume.json
 
 .PHONY:
