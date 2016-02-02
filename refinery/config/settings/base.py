@@ -466,14 +466,14 @@ try:
     # with an old version of git)
     CURRENT_COMMIT = subprocess.check_output([
         '/usr/bin/git',
-        '--git-dir', '/vagrant/.git',
-        '--work-tree', '/vagrant',
+        '--git-dir', os.path.join(BASE_DIR, '.git'),
+        '--work-tree', BASE_DIR,
         'rev-parse', 'HEAD'
     ])
 except (ValueError, subprocess.CalledProcessError) as exc:
     logger.debug("Error retrieving hash of the most recent commit: %s",
                  exc)
-    CURRENT_COMMIT = "Error retrieving hash of the most recent commit"
+    CURRENT_COMMIT = ""
 
 # Neo4J Settings
 NEO4J_BASE_URL = "http://localhost:7474"
