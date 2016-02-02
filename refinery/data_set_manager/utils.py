@@ -635,7 +635,8 @@ def format_solr_response(solr_response):
     facet_field_counts = solr_response_json.get('facet_counts').get(
             'facet_fields')
     facet_field_docs = solr_response_json.get('response').get('docs')
-    solr_response_json['facet_field_counts'] = facet_field_counts
+    facet_field_counts_obj = objectify_facet_field_counts(facet_field_counts)
+    solr_response_json['facet_field_counts'] = facet_field_counts_obj
     attributes = customize_attribute_response(order_facet_fields)
     solr_response_json["attributes"] = attributes
     solr_response_json["nodes"] = facet_field_docs
@@ -644,6 +645,20 @@ def format_solr_response(solr_response):
     del solr_response_json['response']
 
     return solr_response_json
+
+
+def objectify_facet_field_counts(facet_fields):
+    # Returns an object with facet_field_count corrected. Solr returns an
+    # array with key and value. count_array = [key1,value1,key2,value2...]
+    for field, count_array in facet_fields.iteritems():
+        count_obj = {}
+
+        for index in range(0, len(count_array), 2):
+            count_obj[count_array[index]] = count_array[index + 1]
+
+        facet_fields[field] = count_obj
+
+    return facet_fields
 
 
 def customize_attribute_response(facet_fields):

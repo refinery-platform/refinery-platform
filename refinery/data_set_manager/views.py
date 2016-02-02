@@ -493,11 +493,6 @@ class AssaysAttributes(APIView):
               type: string
               paramType: path
               required: true
-            - name: study
-              description: study uuid used as an identifier
-              type: string
-              paramType: form
-              required: false
             - name: solr_field
               description: Title of solr field used as an identifier
               type: string
@@ -507,7 +502,7 @@ class AssaysAttributes(APIView):
               description: Position of the attribute in facet list and table
               type: int
               paramType: form
-              required: true
+              required: false
             - name: is_exposed
               description: Show to non-owner users
               type: boolean

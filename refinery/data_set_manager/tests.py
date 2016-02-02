@@ -17,7 +17,8 @@ from .views import Assays, AssaysFiles, AssaysAttributes
 from .utils import update_attribute_order_ranks, \
     customize_attribute_response, format_solr_response, get_owner_from_assay,\
     generate_facet_fields_query, hide_fields_from_weighted_list,\
-    generate_filtered_facet_fields, generate_solr_params
+    generate_filtered_facet_fields, generate_solr_params, \
+    objectify_facet_field_counts
 from .serializers import AttributeOrderSerializer
 from core.models import DataSet, InvestigationLink
 
@@ -646,6 +647,53 @@ class UtilitiesTest(TestCase):
         InvestigationLink.objects.all().delete()
         AttributeOrder.objects.all().delete()
 
+    def test_objectify_facet_field_counts(self):
+        facet_field_array = {'WORKFLOW': ['1_test_04', 1,
+                                          'output_file', 60,
+                                          '1_test_02', 1],
+                             'ANALYSIS': ['5dd6d3c3', 5,
+                                          '08fc3964', 2,
+                                          '0907a312', 1,
+                                          '276adefd', 3,
+                                          '2d761e26', 1,
+                                          'b624d225', 5,
+                                          '7ce99c97', 1,
+                                          'bcc1644a', 5,
+                                          '5499cc41', 5],
+                             'Author': ['Vezza', 10,
+                                        'Harslem/Heafner', 4,
+                                        'McConnell', 5,
+                                        'Vezza + Crocker', 2,
+                                        'Crocker', 28],
+                             'Year': ['1971', 54],
+                             'SUBANALYSIS': ['1', 8, '2', 2, '-1', 9],
+                             'TYPE': ['Derived Data File', 105,
+                                      'Raw Data File', 9]}
+
+        facet_field_obj = objectify_facet_field_counts(facet_field_array)
+        self.assertDictEqual(facet_field_obj,
+                        {'WORKFLOW': {'1_test_04': 1,
+                                          'output_file': 60,
+                                          '1_test_02': 1},
+                             'ANALYSIS': {'5dd6d3c3': 5,
+                                          '08fc3964': 2,
+                                          '0907a312': 1,
+                                          '276adefd': 3,
+                                          '2d761e26': 1,
+                                          'b624d225': 5,
+                                          '7ce99c97': 1,
+                                          'bcc1644a': 5,
+                                          '5499cc41': 5},
+                             'Author': {'Vezza': 10,
+                                        'Harslem/Heafner': 4,
+                                        'McConnell': 5,
+                                        'Vezza + Crocker': 2,
+                                        'Crocker': 28},
+                             'Year': {'1971': 54},
+                             'SUBANALYSIS': {'1': 8, '2': 2, '-1': 9},
+                             'TYPE': {'Derived Data File': 105,
+                                      'Raw Data File': 9}})
+
     def test_hide_fields_from_weighted_list(self):
         weighted_list = [(0, {'solr_field': 'uuid'}),
                          (0, {'solr_field': 'is_annotation'}),
@@ -783,41 +831,46 @@ class UtilitiesTest(TestCase):
         formatted_response = format_solr_response(solr_response)
         self.assertDictEqual(
                 formatted_response,
-                {'facet_field_counts':
-                     {u'REFINERY_SUBANALYSIS_6_3_s':
-                          [""u'-1', 9, u'0', 95, u'1', 8, u'2', 2],
-                      u'REFINERY_TYPE_6_3_s':
-                          [u'Derived Data File', 105, u'Raw Data File', 9]},
-                      'attributes':
-                          [{'data_type': u's','attribute_type':
-                          u'internal','display_name': u'Type',
-                            'internal_name': u'REFINERY_TYPE_6_3_s'},
-                          {'data_type': u's','attribute_type': u'internal',
-                           'display_name': 'Analysis Group',
-                           'internal_name': u'REFINERY_SUBANALYSIS_6_3_s'},
-                           {'data_type': u's','attribute_type': u'internal',
-                            'display_name': 'Output Type',
-                            'internal_name':
-                                u'REFINERY_WORKFLOW_OUTPUT_6_3_s'},
-                           {'data_type': u's', 'attribute_type': u'internal',
-                            'display_name': u'Analysis',
-                            'internal_name':
-                                u'REFINERY_ANALYSIS_UUID_6_3_s'},
-                           {'data_type': u's',
-                            'attribute_type': 'Characteristics',
-                            'display_name': u'Author', 'internal_name':
-                                u'Author_Characteristics_6_3_s'},
-                           {'data_type': u's',
-                            'attribute_type': 'Characteristics',
-                            'display_name': u'Year',
-                            'internal_name':
-                                u'Year_Characteristics_6_3_s'}],
-                 'nodes': [{u'REFINERY_WORKFLOW_OUTPUT_6_3_s': u'N/A',
-                            u'REFINERY_ANALYSIS_UUID_6_3_s': u'N/A',
-                            u'Author_Characteristics_6_3_s': u'Crocker',
-                            u'Year_Characteristics_6_3_s': u'1971',
-                            u'REFINERY_SUBANALYSIS_6_3_s': u'-1',
-                            u'REFINERY_TYPE_6_3_s': u'Raw Data File'}]}
+                {
+                    'facet_field_counts':
+                         {u'REFINERY_SUBANALYSIS_6_3_s':
+                              {u'1': 8, u'0': 95, u'2': 2, u'-1': 9},
+                          u'REFINERY_TYPE_6_3_s':
+                              {u'Derived Data File': 105,
+                               u'Raw Data File': 9}},
+                     'attributes': [{
+                         'attribute_type': 'Internal',
+                         'display_name': u'Type',
+                         'data_type': u's',
+                         'internal_name': u'REFINERY_TYPE_6_3_s'},
+                         {'attribute_type': 'Internal',
+                          'display_name': 'Analysis Group',
+                          'data_type': u's',
+                          'internal_name': u'REFINERY_SUBANALYSIS_6_3_s'},
+                         {'attribute_type': 'Internal',
+                          'display_name': 'Output Type',
+                          'data_type': u's',
+                          'internal_name': u'REFINERY_WORKFLOW_OUTPUT_6_3_s'},
+                         {'attribute_type': 'Internal',
+                          'display_name': u'Analysis',
+                          'data_type': u's',
+                          'internal_name': u'REFINERY_ANALYSIS_UUID_6_3_s'},
+                         {'attribute_type': 'Characteristics',
+                          'display_name': u'Author',
+                          'data_type': u's',
+                          'internal_name': u'Author_Characteristics_6_3_s'},
+                         {'attribute_type': 'Characteristics',
+                          'display_name': u'Year',
+                          'data_type': u's',
+                          'internal_name': u'Year_Characteristics_6_3_s'}],
+                     'nodes': [{
+                         u'REFINERY_WORKFLOW_OUTPUT_6_3_s': u'N/A',
+                         u'REFINERY_ANALYSIS_UUID_6_3_s': u'N/A',
+                         u'Author_Characteristics_6_3_s': u'Crocker',
+                         u'Year_Characteristics_6_3_s': u'1971',
+                         u'REFINERY_SUBANALYSIS_6_3_s': u'-1',
+                         u'REFINERY_TYPE_6_3_s': u'Raw Data File'}]
+                }
         )
 
         # invalid input
