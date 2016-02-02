@@ -93,7 +93,7 @@ def conf(mode=None):
         backup='')
     # update static files
     with cd(env.refinery_ui_dir):
-        run("grunt")
+        run("grunt make")
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("{refinery_app_dir}/manage.py collectstatic --clear --noinput"
             .format(**env))
@@ -144,7 +144,7 @@ def relaunch_refinery(dependencies=False, migrations=False):
     with cd(os.path.join(env.refinery_app_dir, "ui")):
         if dependencies:
             run("bower update --config.interactive=false")
-        run("grunt")
+        run("grunt make")
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         if dependencies:
             run("pip install -r {refinery_project_dir}/requirements.txt"

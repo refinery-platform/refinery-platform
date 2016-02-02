@@ -313,7 +313,7 @@ class ui {
   }
   ->
   exec { "grunt":
-    command   => "/usr/bin/grunt build && /usr/bin/grunt compile",
+    command   => "/usr/bin/grunt make",
     cwd       => $ui_app_root,
     logoutput => on_failure,
     user      => $app_user,
