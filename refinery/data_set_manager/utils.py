@@ -9,18 +9,17 @@ import time
 import urlparse
 import requests
 import json
-import collections
 
 from django.db.models import Q
 from django.utils.http import urlquote
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
-from data_set_manager.models import Node, Attribute, AnnotatedNode, Study, \
+from data_set_manager.models import Node, Attribute, AnnotatedNode, \
     Assay, AnnotatedNodeRegistry
 from data_set_manager.search_indexes import NodeIndex
 from core.models import DataSet, InvestigationLink
-from .models import AttributeOrder, Study, Investigation
+from .models import AttributeOrder, Study
 from .serializers import AttributeOrderSerializer
 
 
@@ -630,6 +629,7 @@ def format_solr_response(solr_response):
     except TypeError:
         return "Error loading json."
 
+    # Reorganizes solr response into easier to digest objects.
     order_facet_fields = solr_response_json.get('responseHeader').get(
             'params').get('facet.field')
     facet_field_counts = solr_response_json.get('facet_counts').get(
@@ -640,6 +640,8 @@ def format_solr_response(solr_response):
     attributes = customize_attribute_response(order_facet_fields)
     solr_response_json["attributes"] = attributes
     solr_response_json["nodes"] = facet_field_docs
+
+    # Remove unused fields from solr response
     del solr_response_json['responseHeader']
     del solr_response_json['facet_counts']
     del solr_response_json['response']
