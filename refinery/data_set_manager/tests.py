@@ -22,7 +22,8 @@ from rest_framework.test import APIClient
 from .models import AttributeOrder, Assay, Study, Investigation
 from .views import Assays, AssaysFiles, AssaysAttributes
 from .utils import update_attribute_order_ranks, \
-    customize_attribute_response, format_solr_response
+    customize_attribute_response, format_solr_response, get_owner_from_assay,\
+    generate_facet_fields_query, hide_fields_from_weighted_list
 from core.models import UserProfile, ExtendedGroup, DataSet, InvestigationLink
 from core.management.commands.create_user import init_user
 from core.management.commands.init_refinery import create_public_group
@@ -497,7 +498,18 @@ class AssaysFilesAPITests(APITestCase):
 class UtilitiesTest(TestCase):
 
     def setUp(self):
+        self.user1 = User.objects.create_user("ownerJane", '', 'test1234')
+        self.user2 = User.objects.create_user("guestName", '', 'test1234')
+        self.user1.save()
+        self.user2.save()
+        self.client = APIClient()
+        self.client.login(username='ownerJane', password='test1234')
         investigation = Investigation.objects.create()
+        self.data_set = DataSet.objects.create(
+                title="Test DataSet")
+        InvestigationLink.objects.create(data_set=self.data_set,
+                                         investigation=investigation)
+        self.data_set.set_owner(self.user1)
         study = Study.objects.create(file_name='test_filename123.txt',
                                      title='Study Title Test',
                                      investigation=investigation)
@@ -633,15 +645,61 @@ class UtilitiesTest(TestCase):
             is_internal=False
         )
         self.valid_uuid = self.assay.uuid
+        self.invalid_uuid = 'xxxxxxxx'
 
     def tearDown(self):
+        User.objects.all().delete()
         Assay.objects.all().delete()
         Study.objects.all().delete()
         Investigation.objects.all().delete()
         AttributeOrder.objects.all().delete()
 
+    def test_hide_fields_from_weighted_list(self):
+        weighted_list = [(0, {'solr_field': 'uuid'}),
+                         (0, {'solr_field': 'is_annotation'}),
+                         (2, {'solr_field': 'genome_build'}),
+                         (3, {'solr_field': 'django_ct'}),
+                         (6, {'solr_field': 'django_id'}),
+                         (7, {'solr_field': 'species'}),
+                         (8, {'solr_field': 'file_uuid'}),
+                         (12, {'solr_field': 'study_uuid'}),
+                         (11, {'solr_field': 'assay_uuid'}),
+                         (10, {'solr_field': 'type'}),
+                         (9, {'solr_field': 'id'}),
+                         (1, {'solr_field': 'name'}),
+                         (4, {'solr_field': 'SubAnalysis'})]
+
+        filtered_list = hide_fields_from_weighted_list(weighted_list)
+        self.assertListEqual(filtered_list, ['SubAnalysis'])
+
+    def test_generate_facet_fields_query(self):
+        facet_field_string = ['REFINERY_SUBANALYSIS_6_3_s',
+                              'REFINERY_WORKFLOW_OUTPUT_6_3_s',
+                              'REFINERY_ANALYSIS_UUID_6_3_s',
+                              'Author_Characteristics_6_3_s',
+                              'Year_Characteristics_6_3_s']
+
+        str_query = generate_facet_fields_query(facet_field_string)
+        self.assertEqual(str_query,
+                         '&facet.field=REFINERY_SUBANALYSIS_6_3_s'
+                         '&facet.field=REFINERY_WORKFLOW_OUTPUT_6_3_s'
+                         '&facet.field=REFINERY_ANALYSIS_UUID_6_3_s'
+                         '&facet.field=Author_Characteristics_6_3_s'
+                         '&facet.field=Year_Characteristics_6_3_s')
+
+    def test_get_owner_from_assay(self):
+        owner = get_owner_from_assay(self.valid_uuid).username
+        # valid owner with valid uuid
+        self.assertEqual(str(owner), 'ownerJane')
+
+        # invalid uuid
+        response = get_owner_from_assay(self.invalid_uuid)
+        self.assertEqual(response, 'Error: Invalid uuid')
+
     def test_format_solr_response(self):
-        solr_response = '{"responseHeader":{"status": 0, "QTime": 5, "params":' \
+
+        # valid input
+        solr_response = '{"responseHeader":{"status": 0, "params":' \
                         '{"facet": "true", "facet.mincount": "1",' \
                         '"start": "0",'\
                         '"q": "django_ct:data_set_manager.node",'\
@@ -674,43 +732,38 @@ class UtilitiesTest(TestCase):
                         '"facet_intervals": {}, "facet_heatmaps": {}}}'
 
         formatted_response = format_solr_response(solr_response)
-        self.assertDictEqual(
-                formatted_response,
-                {'facet_field_counts':
-                    {u'REFINERY_SUBANALYSIS_6_3_s':
-                         [u'-1', 9, u'0', 95, u'1', 8, u'2', 2],
-                     u'REFINERY_TYPE_6_3_s':
-                         [u'Derived Data File', 105, u'Raw Data File', 9]},
-                 'attributes':
-                     [{'datatype': u's',
-                       'display_name': u'Type',
-                       'internal_name': u'REFINERY_TYPE_6_3_s'},
-                      {'datatype': u's',
-                       'display_name': 'Analysis Group',
-                       'internal_name': u'REFINERY_SUBANALYSIS_6_3_s'},
-                      {'datatype': u's',
-                       'display_name': 'Output Type',
-                       'internal_name': u'REFINERY_WORKFLOW_OUTPUT_6_3_s'},
-                      {'datatype': u's',
-                       'display_name': u'Analysis',
-                       'internal_name': u'REFINERY_ANALYSIS_UUID_6_3_s'},
-                      {'datatype': u's',
-                       'attribute_type': 'Characteristics',
-                       'display_name': u'Author',
-                       'internal_name': u'Author_Characteristics_6_3_s'},
-                      {'datatype': u's',
-                       'attribute_type': 'Characteristics',
-                       'display_name': u'Year',
-                       'internal_name': u'Year_Characteristics_6_3_s'}],
-                 'nodes':
-                     [{u'REFINERY_WORKFLOW_OUTPUT_6_3_s': u'N/A',
-                       u'REFINERY_ANALYSIS_UUID_6_3_s': u'N/A',
-                       u'Author_Characteristics_6_3_s': u'Crocker',
-                       u'Year_Characteristics_6_3_s': u'1971',
-                       u'REFINERY_SUBANALYSIS_6_3_s': u'-1',
-                       u'REFINERY_TYPE_6_3_s': u'Raw Data File'}]
-                 }
+        self.assertEqual(
+                str(formatted_response),
+                "{'facet_field_counts': "
+                "{u'REFINERY_SUBANALYSIS_6_3_s': "
+                "[""u'-1', 9, u'0', 95, u'1', 8, u'2', 2],"
+                " u'REFINERY_TYPE_6_3_s': "
+                "[u'Derived Data File', 105, u'Raw Data File', 9]},"
+                " 'attributes': [{'datatype': u's', 'display_name': u'Type',"
+                " 'internal_name': u'REFINERY_TYPE_6_3_s'}, "
+                "{'datatype': u's', 'display_name': 'Analysis Group',"
+                " 'internal_name': u'REFINERY_SUBANALYSIS_6_3_s'},"
+                " {'datatype': u's', 'display_name': 'Output Type', "
+                "'internal_name': u'REFINERY_WORKFLOW_OUTPUT_6_3_s'},"
+                " {'datatype': u's', 'display_name': u'Analysis', "
+                "'internal_name': u'REFINERY_ANALYSIS_UUID_6_3_s'}, "
+                "{'datatype': u's', 'attribute_type': 'Characteristics',"
+                " 'display_name': u'Author', 'internal_name': "
+                "u'Author_Characteristics_6_3_s'}, {'datatype': u's',"
+                " 'attribute_type': 'Characteristics', 'display_name':"
+                " u'Year', 'internal_name': u'Year_Characteristics_6_3_s'}],"
+                " 'nodes': [{u'REFINERY_WORKFLOW_OUTPUT_6_3_s': u'N/A', "
+                "u'REFINERY_ANALYSIS_UUID_6_3_s': u'N/A', "
+                "u'Author_Characteristics_6_3_s': u'Crocker',"
+                " u'Year_Characteristics_6_3_s': u'1971',"
+                " u'REFINERY_SUBANALYSIS_6_3_s': u'-1', "
+                "u'REFINERY_TYPE_6_3_s': u'Raw Data File'}]}"
         )
+
+        # invalid input
+        solr_response = {"test_object": "not a string"}
+        error = format_solr_response(solr_response)
+        self.assertEqual(error, "Error loading json.")
 
     def test_customize_attribute_response(self):
         attributes = ['REFINERY_FILETYPE_6_3_s',
