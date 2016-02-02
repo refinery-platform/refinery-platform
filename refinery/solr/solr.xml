@@ -27,6 +27,7 @@
 -->
 
 <solr>
+  <str name="sharedLib">${sharedLib:lib}</str>
 
   <solrcloud>
 

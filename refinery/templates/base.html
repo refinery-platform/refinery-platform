@@ -28,7 +28,8 @@
     window.djangoApp = {
       userId: '{{ user.id }}',
       userName: '{{ user.username }}',
-      admins: '{{ ADMINS|safe }}'
+      admins: '{{ ADMINS|safe }}',
+      solrSynonymSearch: '{{ ADMINS|safe }}'
     };
 
     if (window.djangoApp.userId === 'None' || window.djangoApp.userName === 'None') {
