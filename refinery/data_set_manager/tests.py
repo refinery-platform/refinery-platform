@@ -393,27 +393,23 @@ class AssaysFilesAPITests(APITestCase):
                                'rank': '3',
                                'is_exposed': 'False',
                                'is_facet': 'False',
-                               'is_active': 'False',
-                              }
+                               'is_active': 'False'}
         updated_attribute_2 = {'id': '6',
                                'rank': '1',
                                'is_exposed': 'False',
                                'is_facet': 'False',
-                               'is_active': 'False',
-                              }
+                               'is_active': 'False'}
         updated_attribute_3 = {'solr_field': 'Cell Type',
                                'rank': '4',
                                'is_exposed': 'False',
                                'is_facet': 'False',
-                               'is_active': 'False',
-                              }
+                               'is_active': 'False'}
         updated_attribute_4 = {'solr_field': 'Analysis',
                                'id': '8',
                                'rank': '2',
                                'is_exposed': 'False',
                                'is_facet': 'False',
-                               'is_active': 'False',
-                              }
+                               'is_active': 'False'}
         # Api client needs url to end / or it will redirect
 
         # update with solr_title
@@ -680,9 +676,9 @@ class UtilitiesTest(TestCase):
         attributes = AttributeOrderSerializer(attribute_orders, many=True)
         filtered = generate_filtered_facet_fields(attributes.data)
         self.assertListEqual(filtered, ['Character_Title', 'Specimen',
-                                             'Cell Type', 'Analysis',
-                                             'Organism', 'Cell Line',
-                                             'Type', 'Group Name'])
+                                        'Cell Type', 'Analysis',
+                                        'Organism', 'Cell Line',
+                                        'Type', 'Group Name'])
 
     def test_generate_facet_fields_query(self):
         facet_field_string = ['REFINERY_SUBANALYSIS_6_3_s',
