@@ -14,6 +14,7 @@ import collections
 from django.db.models import Q
 from django.utils.http import urlquote
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 
 from data_set_manager.models import Node, Attribute, AnnotatedNode, Study, \
     Assay, AnnotatedNodeRegistry
@@ -609,8 +610,11 @@ def search_solr(encoded_params, core):
 
 def get_owner_from_assay(uuid):
     # Returns an owner name from an assay_uuid. Ownership is passed down from
+    try:
+        investigation_key = Study.objects.get(assay__uuid=uuid).investigation
+    except ObjectDoesNotExist:
+        return "Error: Invalid uuid"
 
-    investigation_key = Study.objects.get(assay__uuid=uuid).investigation
     investigation_link = InvestigationLink.objects.get(
             investigation=investigation_key)
     owner = DataSet.objects.get(
@@ -623,7 +627,7 @@ def format_solr_response(solr_response):
     # Returns a reformatted solr response
     try:
         solr_response_json = json.loads(solr_response)
-    except ValueError:
+    except TypeError:
         return "Error loading json."
 
     order_facet_fields = solr_response_json.get('responseHeader').get(
