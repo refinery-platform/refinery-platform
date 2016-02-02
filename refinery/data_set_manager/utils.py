@@ -653,16 +653,20 @@ def customize_attribute_response(facet_fields):
         customized_field = {'internal_name': field}
 
         field_name = field.split('_')
-        customized_field['datatype'] = field_name[-1]
+        customized_field['data_type'] = field_name[-1]
 
         if 'REFINERY_SUBANALYSIS' in field:
             customized_field['display_name'] = 'Analysis Group'
+            customized_field['attribute_type'] = 'Internal'
         elif 'REFINERY_WORKFLOW_OUTPUT' in field:
             customized_field['display_name'] = 'Output Type'
-        elif 'FILETYPE' in field:
+            customized_field['attribute_type'] = 'Internal'
+        elif 'REFINERY_FILETYPE' in field:
             customized_field['display_name'] = 'File Type'
+            customized_field['attribute_type'] = 'Internal'
         elif 'REFINERY' in field:
             customized_field['display_name'] = field_name[1].title()
+            customized_field['attribute_type'] = 'Internal'
         elif 'Comment' in field:
             index = field_name.index('Comment')
             field_name = ' '.join(field_name[0:index])

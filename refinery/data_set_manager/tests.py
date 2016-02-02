@@ -781,32 +781,43 @@ class UtilitiesTest(TestCase):
                         '"facet_intervals": {}, "facet_heatmaps": {}}}'
 
         formatted_response = format_solr_response(solr_response)
-        self.assertEqual(
-                str(formatted_response),
-                "{'facet_field_counts': "
-                "{u'REFINERY_SUBANALYSIS_6_3_s': "
-                "[""u'-1', 9, u'0', 95, u'1', 8, u'2', 2],"
-                " u'REFINERY_TYPE_6_3_s': "
-                "[u'Derived Data File', 105, u'Raw Data File', 9]},"
-                " 'attributes': [{'datatype': u's', 'display_name': u'Type',"
-                " 'internal_name': u'REFINERY_TYPE_6_3_s'}, "
-                "{'datatype': u's', 'display_name': 'Analysis Group',"
-                " 'internal_name': u'REFINERY_SUBANALYSIS_6_3_s'},"
-                " {'datatype': u's', 'display_name': 'Output Type', "
-                "'internal_name': u'REFINERY_WORKFLOW_OUTPUT_6_3_s'},"
-                " {'datatype': u's', 'display_name': u'Analysis', "
-                "'internal_name': u'REFINERY_ANALYSIS_UUID_6_3_s'}, "
-                "{'datatype': u's', 'attribute_type': 'Characteristics',"
-                " 'display_name': u'Author', 'internal_name': "
-                "u'Author_Characteristics_6_3_s'}, {'datatype': u's',"
-                " 'attribute_type': 'Characteristics', 'display_name':"
-                " u'Year', 'internal_name': u'Year_Characteristics_6_3_s'}],"
-                " 'nodes': [{u'REFINERY_WORKFLOW_OUTPUT_6_3_s': u'N/A', "
-                "u'REFINERY_ANALYSIS_UUID_6_3_s': u'N/A', "
-                "u'Author_Characteristics_6_3_s': u'Crocker',"
-                " u'Year_Characteristics_6_3_s': u'1971',"
-                " u'REFINERY_SUBANALYSIS_6_3_s': u'-1', "
-                "u'REFINERY_TYPE_6_3_s': u'Raw Data File'}]}"
+        self.assertDictEqual(
+                formatted_response,
+                {'facet_field_counts':
+                     {u'REFINERY_SUBANALYSIS_6_3_s':
+                          [""u'-1', 9, u'0', 95, u'1', 8, u'2', 2],
+                      u'REFINERY_TYPE_6_3_s':
+                          [u'Derived Data File', 105, u'Raw Data File', 9]},
+                      'attributes':
+                          [{'data_type': u's','attribute_type':
+                          u'internal','display_name': u'Type',
+                            'internal_name': u'REFINERY_TYPE_6_3_s'},
+                          {'data_type': u's','attribute_type': u'internal',
+                           'display_name': 'Analysis Group',
+                           'internal_name': u'REFINERY_SUBANALYSIS_6_3_s'},
+                           {'data_type': u's','attribute_type': u'internal',
+                            'display_name': 'Output Type',
+                            'internal_name':
+                                u'REFINERY_WORKFLOW_OUTPUT_6_3_s'},
+                           {'data_type': u's', 'attribute_type': u'internal',
+                            'display_name': u'Analysis',
+                            'internal_name':
+                                u'REFINERY_ANALYSIS_UUID_6_3_s'},
+                           {'data_type': u's',
+                            'attribute_type': 'Characteristics',
+                            'display_name': u'Author', 'internal_name':
+                                u'Author_Characteristics_6_3_s'},
+                           {'data_type': u's',
+                            'attribute_type': 'Characteristics',
+                            'display_name': u'Year',
+                            'internal_name':
+                                u'Year_Characteristics_6_3_s'}],
+                 'nodes': [{u'REFINERY_WORKFLOW_OUTPUT_6_3_s': u'N/A',
+                            u'REFINERY_ANALYSIS_UUID_6_3_s': u'N/A',
+                            u'Author_Characteristics_6_3_s': u'Crocker',
+                            u'Year_Characteristics_6_3_s': u'1971',
+                            u'REFINERY_SUBANALYSIS_6_3_s': u'-1',
+                            u'REFINERY_TYPE_6_3_s': u'Raw Data File'}]}
         )
 
         # invalid input
@@ -829,37 +840,43 @@ class UtilitiesTest(TestCase):
         prettified_attributes = customize_attribute_response(attributes)
         self.assertListEqual(
                 prettified_attributes,
-                [{'datatype': 's',
+                [{'data_type': 's',
+                  'attribute_type': 'Internal',
                   'display_name': 'File Type',
                   'internal_name': 'REFINERY_FILETYPE_6_3_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
                   'attribute_type': 'Characteristics',
                   'display_name': 'Title',
                   'internal_name': 'Title_Characteristics_6_3_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
+                  'attribute_type': 'Internal',
                   'display_name': 'Type',
                   'internal_name': 'REFINERY_TYPE_6_3_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
+                  'attribute_type': 'Internal',
                   'display_name': 'Analysis Group',
                   'internal_name': 'REFINERY_SUBANALYSIS_6_3_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
                   'attribute_type': 'Characteristics',
                   'display_name': 'Month',
                   'internal_name': 'Month_Characteristics_6_3_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
+                  'attribute_type': 'Internal',
                   'display_name': 'Name',
                   'internal_name': 'REFINERY_NAME_6_3_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
+                  'attribute_type': 'Internal',
                   'display_name': 'Output Type',
                   'internal_name': 'REFINERY_WORKFLOW_OUTPUT_6_3_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
+                  'attribute_type': 'Internal',
                   'display_name': 'Analysis',
                   'internal_name': 'REFINERY_ANALYSIS_UUID_6_3_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
                   'attribute_type': 'Characteristics',
                   'display_name': 'Author',
                   'internal_name': 'Author_Characteristics_6_3_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
                   'attribute_type': 'Characteristics',
                   'display_name': 'Year',
                   'internal_name': 'Year_Characteristics_6_3_s'}])
@@ -882,54 +899,60 @@ class UtilitiesTest(TestCase):
         prettified_attributes = customize_attribute_response(attributes)
         self.assertListEqual(
                 prettified_attributes,
-                [{'datatype': 's',
+                [{'data_type': 's',
                   'attribute_type': 'Factor Value',
                   'display_name': 'Treatment',
                   'internal_name': 'treatment_Factor_Value_22_11_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
                   'attribute_type': 'Characteristics',
                   'display_name': 'Treatment',
                   'internal_name': 'treatment_Characteristics_22_11_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
+                  'attribute_type': 'Internal',
                   'display_name': 'Name',
                   'internal_name': 'REFINERY_NAME_22_11_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
                   'attribute_type': 'Characteristics',
                   'display_name': 'Strain',
                   'internal_name': 'strain_Characteristics_22_11_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
                   'attribute_type': 'Characteristics',
                   'display_name': 'Organism',
                   'internal_name': 'organism_Characteristics_22_11_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
+                  'attribute_type': 'Internal',
                   'display_name': 'Output Type',
                   'internal_name': 'REFINERY_WORKFLOW_OUTPUT_22_11_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
                   'attribute_type': 'Comment',
                   'display_name': 'Replicate Id',
                   'internal_name': 'Replicate_Id_Comment_22_11_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
+                  'attribute_type': 'Internal',
                   'display_name': 'Analysis',
                   'internal_name': 'REFINERY_ANALYSIS_UUID_22_11_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
+                  'attribute_type': 'Internal',
                   'display_name': 'File Type',
                   'internal_name': 'REFINERY_FILETYPE_22_11_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
                   'attribute_type': 'Factor Value',
                   'display_name': 'Cell Line',
                   'internal_name': 'cell_line_Factor_Value_22_11_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
                   'attribute_type': 'Characteristics',
                   'display_name': 'Cell Line',
                   'internal_name': 'cell_line_Characteristics_22_11_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
                   'attribute_type': 'Comment',
                   'display_name': 'Group Name',
                   'internal_name': 'Group_Name_Comment_22_11_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
+                  'attribute_type': 'Internal',
                   'display_name': 'Type',
                   'internal_name': 'REFINERY_TYPE_22_11_s'},
-                 {'datatype': 's',
+                 {'data_type': 's',
+                  'attribute_type': 'Internal',
                   'display_name': 'Analysis Group',
                   'internal_name': 'REFINERY_SUBANALYSIS_22_11_s'}])
 
