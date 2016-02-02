@@ -23,7 +23,9 @@ from .models import AttributeOrder, Assay, Study, Investigation
 from .views import Assays, AssaysFiles, AssaysAttributes
 from .utils import update_attribute_order_ranks, \
     customize_attribute_response, format_solr_response, get_owner_from_assay,\
-    generate_facet_fields_query, hide_fields_from_weighted_list
+    generate_facet_fields_query, hide_fields_from_weighted_list,\
+    generate_filtered_facet_fields
+from .serializers import AttributeOrderSerializer
 from core.models import UserProfile, ExtendedGroup, DataSet, InvestigationLink
 from core.management.commands.create_user import init_user
 from core.management.commands.init_refinery import create_public_group
@@ -609,8 +611,8 @@ class UtilitiesTest(TestCase):
             assay=self.assay,
             solr_field='Gene',
             rank=9,
-            is_exposed=True,
-            is_facet=True,
+            is_exposed=False,
+            is_facet=False,
             is_active=True,
             is_internal=False
         )
@@ -619,8 +621,8 @@ class UtilitiesTest(TestCase):
             assay=self.assay,
             solr_field='Replicate Id',
             rank=10,
-            is_exposed=True,
-            is_facet=True,
+            is_exposed=False,
+            is_facet=False,
             is_active=True,
             is_internal=False
         )
@@ -629,8 +631,8 @@ class UtilitiesTest(TestCase):
             assay=self.assay,
             solr_field='Organism Part',
             rank=0,
-            is_exposed=True,
-            is_facet=True,
+            is_exposed=False,
+            is_facet=False,
             is_active=True,
             is_internal=False
         )
@@ -639,8 +641,8 @@ class UtilitiesTest(TestCase):
             assay=self.assay,
             solr_field='Name',
             rank=0,
-            is_exposed=True,
-            is_facet=True,
+            is_exposed=False,
+            is_facet=False,
             is_active=True,
             is_internal=False
         )
@@ -671,6 +673,16 @@ class UtilitiesTest(TestCase):
 
         filtered_list = hide_fields_from_weighted_list(weighted_list)
         self.assertListEqual(filtered_list, ['SubAnalysis'])
+
+    def test_generate_filtered_facet_fields(self):
+        attribute_orders = AttributeOrder.objects.filter(
+                assay__uuid=self.valid_uuid)
+        attributes = AttributeOrderSerializer(attribute_orders, many=True)
+        filtered = generate_filtered_facet_fields(attributes.data)
+        self.assertListEqual(filtered, ['Character_Title', 'Specimen',
+                                             'Cell Type', 'Analysis',
+                                             'Organism', 'Cell Line',
+                                             'Type', 'Group Name'])
 
     def test_generate_facet_fields_query(self):
         facet_field_string = ['REFINERY_SUBANALYSIS_6_3_s',
@@ -915,13 +927,13 @@ class UtilitiesTest(TestCase):
                 '<AttributeOrder: Group Name '
                 '[facet = True exp = True act = True int = False] = 8>, '
                 '<AttributeOrder: Gene '
-                '[facet = True exp = True act = True int = False] = 9>, '
+                '[facet = False exp = False act = True int = False] = 9>, '
                 '<AttributeOrder: Replicate Id '
-                '[facet = True exp = True act = True int = False] = 10>, '
+                '[facet = False exp = False act = True int = False] = 10>, '
                 '<AttributeOrder: Organism Part '
-                '[facet = True exp = True act = True int = False] = 0>, '
+                '[facet = False exp = False act = True int = False] = 0>, '
                 '<AttributeOrder: Name '
-                '[facet = True exp = True act = True int = False] = 0>]'
+                '[facet = False exp = False act = True int = False] = 0>]'
                 )
 
         # Test top edge case
@@ -953,13 +965,13 @@ class UtilitiesTest(TestCase):
                 '<AttributeOrder: Group Name '
                 '[facet = True exp = True act = True int = False] = 7>, '
                 '<AttributeOrder: Gene '
-                '[facet = True exp = True act = True int = False] = 8>, '
+                '[facet = False exp = False act = True int = False] = 8>, '
                 '<AttributeOrder: Replicate Id '
-                '[facet = True exp = True act = True int = False] = 9>, '
+                '[facet = False exp = False act = True int = False] = 9>, '
                 '<AttributeOrder: Organism Part '
-                '[facet = True exp = True act = True int = False] = 0>, '
+                '[facet = False exp = False act = True int = False] = 0>, '
                 '<AttributeOrder: Name '
-                '[facet = True exp = True act = True int = False] = 0>]'
+                '[facet = False exp = False act = True int = False] = 0>]'
                 )
         # Test bottom edge case
         attribute_order = AttributeOrder.objects.get(
@@ -990,13 +1002,13 @@ class UtilitiesTest(TestCase):
                 '<AttributeOrder: Group Name '
                 '[facet = True exp = True act = True int = False] = 8>, '
                 '<AttributeOrder: Gene '
-                '[facet = True exp = True act = True int = False] = 9>, '
+                '[facet = False exp = False act = True int = False] = 9>, '
                 '<AttributeOrder: Replicate Id '
-                '[facet = True exp = True act = True int = False] = 10>, '
+                '[facet = False exp = False act = True int = False] = 10>, '
                 '<AttributeOrder: Organism Part '
-                '[facet = True exp = True act = True int = False] = 0>, '
+                '[facet = False exp = False act = True int = False] = 0>, '
                 '<AttributeOrder: Name '
-                '[facet = True exp = True act = True int = False] = 0>]'
+                '[facet = False exp = False act = True int = False] = 0>]'
                 )
         # Test removing a rank to 0
         attribute_order = AttributeOrder.objects.\
@@ -1026,13 +1038,13 @@ class UtilitiesTest(TestCase):
                 '<AttributeOrder: Group Name '
                 '[facet = True exp = True act = True int = False] = 7>, '
                 '<AttributeOrder: Gene '
-                '[facet = True exp = True act = True int = False] = 8>, '
+                '[facet = False exp = False act = True int = False] = 8>, '
                 '<AttributeOrder: Replicate Id '
-                '[facet = True exp = True act = True int = False] = 9>, '
+                '[facet = False exp = False act = True int = False] = 9>, '
                 '<AttributeOrder: Organism Part '
-                '[facet = True exp = True act = True int = False] = 0>, '
+                '[facet = False exp = False act = True int = False] = 0>, '
                 '<AttributeOrder: Name '
-                '[facet = True exp = True act = True int = False] = 0>]'
+                '[facet = False exp = False act = True int = False] = 0>]'
                 )
 
         # Test multiple changes, including inserting field back in rank order
@@ -1075,13 +1087,13 @@ class UtilitiesTest(TestCase):
                 '<AttributeOrder: Group Name '
                 '[facet = True exp = True act = True int = False] = 8>, '
                 '<AttributeOrder: Gene '
-                '[facet = True exp = True act = True int = False] = 9>, '
+                '[facet = False exp = False act = True int = False] = 9>, '
                 '<AttributeOrder: Replicate Id '
-                '[facet = True exp = True act = True int = False] = 11>, '
+                '[facet = False exp = False act = True int = False] = 11>, '
                 '<AttributeOrder: Organism Part '
-                '[facet = True exp = True act = True int = False] = 0>, '
+                '[facet = False exp = False act = True int = False] = 0>, '
                 '<AttributeOrder: Name '
-                '[facet = True exp = True act = True int = False] = 3>]'
+                '[facet = False exp = False act = True int = False] = 3>]'
                 )
         # Test small rank change
         attribute_order = AttributeOrder.objects.get(
@@ -1112,13 +1124,13 @@ class UtilitiesTest(TestCase):
                 '<AttributeOrder: Group Name '
                 '[facet = True exp = True act = True int = False] = 8>, '
                 '<AttributeOrder: Gene '
-                '[facet = True exp = True act = True int = False] = 9>, '
+                '[facet = False exp = False act = True int = False] = 9>, '
                 '<AttributeOrder: Replicate Id '
-                '[facet = True exp = True act = True int = False] = 11>, '
+                '[facet = False exp = False act = True int = False] = 11>, '
                 '<AttributeOrder: Organism Part '
-                '[facet = True exp = True act = True int = False] = 0>, '
+                '[facet = False exp = False act = True int = False] = 0>, '
                 '<AttributeOrder: Name '
-                '[facet = True exp = True act = True int = False] = 3>]'
+                '[facet = False exp = False act = True int = False] = 3>]'
                 )
 
         # Test invalid cases
@@ -1163,11 +1175,11 @@ class UtilitiesTest(TestCase):
                 '<AttributeOrder: Group Name '
                 '[facet = True exp = True act = True int = False] = 7>, '
                 '<AttributeOrder: Gene '
-                '[facet = True exp = True act = True int = False] = 8>, '
+                '[facet = False exp = False act = True int = False] = 8>, '
                 '<AttributeOrder: Replicate Id '
-                '[facet = True exp = True act = True int = False] = 11>, '
+                '[facet = False exp = False act = True int = False] = 11>, '
                 '<AttributeOrder: Organism Part '
-                '[facet = True exp = True act = True int = False] = 0>, '
+                '[facet = False exp = False act = True int = False] = 0>, '
                 '<AttributeOrder: Name '
-                '[facet = True exp = True act = True int = False] = 2>]'
+                '[facet = False exp = False act = True int = False] = 2>]'
                 )
