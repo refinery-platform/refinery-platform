@@ -4,19 +4,12 @@ when you run "manage.py test".
 
 Replace this with more appropriate tests for your application.
 """
-import json
-
-from django.utils import unittest, simplejson
 from django.test import TestCase
-from django.core.urlresolvers import reverse
-from django.contrib.auth.models import User, Group
-
-from guardian.shortcuts import assign_perm
+from django.contrib.auth.models import User
+from django.http import QueryDict
 
 from rest_framework.test import APIRequestFactory
 from rest_framework.test import APITestCase
-from rest_framework import status
-from rest_framework.test import force_authenticate
 from rest_framework.test import APIClient
 
 from .models import AttributeOrder, Assay, Study, Investigation
@@ -24,11 +17,9 @@ from .views import Assays, AssaysFiles, AssaysAttributes
 from .utils import update_attribute_order_ranks, \
     customize_attribute_response, format_solr_response, get_owner_from_assay,\
     generate_facet_fields_query, hide_fields_from_weighted_list,\
-    generate_filtered_facet_fields
+    generate_filtered_facet_fields, generate_solr_params
 from .serializers import AttributeOrderSerializer
-from core.models import UserProfile, ExtendedGroup, DataSet, InvestigationLink
-from core.management.commands.create_user import init_user
-from core.management.commands.init_refinery import create_public_group
+from core.models import DataSet, InvestigationLink
 
 
 class AssaysAPITests(APITestCase):
@@ -55,6 +46,11 @@ class AssaysAPITests(APITestCase):
         self.view = Assays.as_view()
         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
         self.invalid_format_uuid = "xxxxxxxx"
+
+    def tearDown(self):
+        Assay.objects.all().delete()
+        Study.objects.all().delete()
+        Investigation.objects.all().delete()
 
     def test_get(self):
 
@@ -497,17 +493,13 @@ class UtilitiesTest(TestCase):
 
     def setUp(self):
         self.user1 = User.objects.create_user("ownerJane", '', 'test1234')
-        self.user2 = User.objects.create_user("guestName", '', 'test1234')
         self.user1.save()
-        self.user2.save()
-        self.client = APIClient()
-        self.client.login(username='ownerJane', password='test1234')
         investigation = Investigation.objects.create()
-        self.data_set = DataSet.objects.create(
+        data_set = DataSet.objects.create(
                 title="Test DataSet")
-        InvestigationLink.objects.create(data_set=self.data_set,
+        InvestigationLink.objects.create(data_set=data_set,
                                          investigation=investigation)
-        self.data_set.set_owner(self.user1)
+        data_set.set_owner(self.user1)
         study = Study.objects.create(file_name='test_filename123.txt',
                                      title='Study Title Test',
                                      investigation=investigation)
@@ -650,6 +642,8 @@ class UtilitiesTest(TestCase):
         Assay.objects.all().delete()
         Study.objects.all().delete()
         Investigation.objects.all().delete()
+        DataSet.objects.all().delete()
+        InvestigationLink.objects.all().delete()
         AttributeOrder.objects.all().delete()
 
     def test_hide_fields_from_weighted_list(self):
@@ -669,6 +663,51 @@ class UtilitiesTest(TestCase):
 
         filtered_list = hide_fields_from_weighted_list(weighted_list)
         self.assertListEqual(filtered_list, ['SubAnalysis'])
+
+    def test_generate_solr_params(self):
+        # empty params
+        query = generate_solr_params(QueryDict({}), self.valid_uuid)
+        self.assertEqual(str(query),
+                         'fq=assay_uuid%3A{}'
+                         '&facet.field=Character_Title&'
+                         'facet.field=Specimen&facet.field=Cell Type&'
+                         'facet.field=Analysis&facet.field=Organism&'
+                         'facet.field=Cell Line&facet.field=Type&'
+                         'facet.field=Group Name&fl=Character_Title%2C'
+                         'Specimen%2CCell Type%2CAnalysis%2COrganism%2C'
+                         'Cell Line%2CType%2CGroup Name&'
+                         'fq=type%3A%28%22Raw Data File%22 OR %22'
+                         'Derived Data File%22 OR %22Array Data File'
+                         '%22 OR %22Derived Array Data File%22 OR %22'
+                         'Array Data Matrix File%22 OR%22Derived Array '
+                         'Data Matrix File%22%29&fq=is_annotation%3A'
+                         'false&start=0&rows=20&q=django_ct%3A'
+                         'data_set_manager.node&wt=json&facet=true&'
+                         'facet.limit=-1&facet.mincount=1'.format(
+                                 self.valid_uuid))
+        # added parameter
+        parameter_dict = {'limit': 7, 'start': 2, 'facet_count': 'true',
+                          'field_limit': 'cats,mouse,dog,horse',
+                          'facet_field': 'cats,mouse,dog,horse',
+                          'facet_pivot': 'cats,mouse',
+                          'is_annotation': 'true'}
+        parameter_qdict = QueryDict('', mutable=True).update(dict)
+        query = generate_solr_params(parameter_qdict, self.valid_uuid)
+        self.assertEqual(str(query),
+                         'fq=assay_uuid%3A{}'
+                         '&facet.field=cats&'
+                         'facet.field=mouse&facet.field=dog&'
+                         'facet.field=horse&fl=cats%2C'
+                         'mouse%2Cdog%2Chorse&facet.pivot=cats%2Cmouse&'
+                         'fq=type%3A%28%22Raw Data File%22 OR %22'
+                         'Derived Data File%22 OR %22Array Data File'
+                         '%22 OR %22Derived Array Data File%22 OR %22'
+                         'Array Data Matrix File%22 OR%22Derived Array '
+                         'Data Matrix File%22%29&fq=is_annotation%3A'
+                         'true&start=2&rows=7&q=django_ct%3A'
+                         'data_set_manager.node&wt=json&facet=true&'
+                         'facet.limit=-1&facet.mincount=1'.format(
+                                 self.valid_uuid))
 
     def test_generate_filtered_facet_fields(self):
         attribute_orders = AttributeOrder.objects.filter(
