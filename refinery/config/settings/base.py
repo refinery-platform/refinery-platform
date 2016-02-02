@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import djcelery
-from subprocess import check_output
+import subprocess
 from django.core.exceptions import ImproperlyConfigured
 
 logger = logging.getLogger(__name__)
@@ -461,14 +461,19 @@ CACHES = {
 
 # CURRENT_COMMIT retrieves the most recent commit used allowing for easier
 # debugging of a Refinery instance
-
 try:
-    CURRENT_COMMIT = check_output(['/usr/bin/git', 'rev-parse', "HEAD"])
-
-except Exception as e:
-    CURRENT_COMMIT = check_output(['/usr/bin/git', '-C',
-                                   '/vagrant/refinery', 'log',
-                                   "--pretty=format:%H", '-n', '1'])
+    # TODO: use option -C (removed as a temp workaround for compatibility
+    # with an old version of git)
+    CURRENT_COMMIT = subprocess.check_output([
+        '/usr/bin/git',
+        '--git-dir', os.path.join(BASE_DIR, '.git'),
+        '--work-tree', BASE_DIR,
+        'rev-parse', 'HEAD'
+    ])
+except (ValueError, subprocess.CalledProcessError) as exc:
+    logger.debug("Error retrieving hash of the most recent commit: %s",
+                 exc)
+    CURRENT_COMMIT = ""
 
 # Neo4J Settings
 NEO4J_BASE_URL = "http://localhost:7474"
