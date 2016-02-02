@@ -6,8 +6,9 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
           // Query for all dataset IDs and annotations. This is needed for some
           // visualization tools.
           'allIds': firstTimeAllIds ? 1 : 0,
-          // Extended DisMax
-          'defType': 'edismax',
+          // Synonym eDisMax Query Parser
+          // https://github.com/healthonnet/hon-lucene-synonyms
+          'defType': settings.solrSynonymSearch ? 'synonym_edismax' : 'edismax',
           // Alternative field for `title` when no highlights were
           // found
           'f.title.hl.alternateField': 'title',
@@ -37,7 +38,9 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
           // # results returned
           'rows': limit,
           // Start of return
-          'start': offset
+          'start': offset,
+          // Enable synonym search
+          'synonyms': settings.solrSynonymSearch ? true : false
         },
         {
           index: 'core'

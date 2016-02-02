@@ -29,7 +29,7 @@
       userId: '{{ user.id }}',
       userName: '{{ user.username }}',
       admins: '{{ ADMINS|safe }}',
-      solrSynonymSearch: '{{ ADMINS|safe }}'
+      solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }}
     };
 
     if (window.djangoApp.userId === 'None' || window.djangoApp.userName === 'None') {
