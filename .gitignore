@@ -46,6 +46,7 @@ setup_refinery.sh
 /refinery/*.pid
 /refinery/solr/*/data
 /refinery/solr/lib/
+/refinery/solr/*/conf/custom-synonyms.txt
 /refinery/fabric/
 supervisord.conf
 codekit-config.json
