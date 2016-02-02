@@ -502,12 +502,12 @@ def generate_solr_params(params, assay_uuid):
                  '"Derived Array Data Matrix File")'
 
     is_annotation = params.get('is_annotation', default='false')
-    facet_count = params.get('facet_count', default='true')
+    facet_count = params.get('include_facet_count', default='true')
     start = params.get('start', default='0')
     row = params.get('limit', default='20')
-    field_limit = params.get('field_limit', default=None)
-    facet_field = params.get('facet_field', default=None)
-    facet_pivot = params.get('facet_pivot', default=None)
+    field_limit = params.get('attributes', default=None)
+    facet_field = params.get('facets', default=None)
+    facet_pivot = params.get('pivots', default=None)
     sort = params.get('sort', default=None)
 
     fixed_solr_params = \

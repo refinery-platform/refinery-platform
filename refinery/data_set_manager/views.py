@@ -412,11 +412,11 @@ class AssaysFiles(APIView):
               paramType: path
             - name: is_annotation
               description: metadata
-              type: string
+              type: boolean
               paramType: query
               type: string
               paramType: query
-            - name: facet_count
+            - name: include_facet_count
               description: enables facet counts in query response
               type: boolean
               paramType: query
@@ -428,20 +428,21 @@ class AssaysFiles(APIView):
               description: In solr it's Row, maximum number of documents
               type: integer
               paramType: query
-            - name: field_limit
-              description: set of fields to return
+            - name: attributes
+              description: set of attributes to return separated by a comma
               type: string
               paramType: query
-            - name: facet_field
-              description: specify a field which should be treated as a facet
+            - name: facets
+              description: specify fields which should be treated as a facet
+              separated by a comma
               type: string
               paramType: query
-            - name: facet_pivot
-              description: list of fields to pivot
+            - name: pivots
+              description: list of fields to pivot separated by a comma
               type: string
               paramType: query
             - name: sort
-              description: Ordering include field name, whitespace, & asc/desc
+              description: Ordering include field name asc/desc, ex: title asc
               type: string
               paramType: query
     ...

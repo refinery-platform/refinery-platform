@@ -686,12 +686,14 @@ class UtilitiesTest(TestCase):
                          'facet.limit=-1&facet.mincount=1'.format(
                                  self.valid_uuid))
         # added parameter
-        parameter_dict = {'limit': 7, 'start': 2, 'facet_count': 'true',
-                          'field_limit': 'cats,mouse,dog,horse',
-                          'facet_field': 'cats,mouse,dog,horse',
-                          'facet_pivot': 'cats,mouse',
+        parameter_dict = {'limit': 7, 'start': 2,
+                          'include_facet_count': 'true',
+                          'attributes': 'cats,mouse,dog,horse',
+                          'facets': 'cats,mouse,dog,horse',
+                          'pivots': 'cats,mouse',
                           'is_annotation': 'true'}
-        parameter_qdict = QueryDict('', mutable=True).update(dict)
+        parameter_qdict = QueryDict('', mutable=True)
+        parameter_qdict.update(parameter_dict)
         query = generate_solr_params(parameter_qdict, self.valid_uuid)
         self.assertEqual(str(query),
                          'fq=assay_uuid%3A{}'
