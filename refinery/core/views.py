@@ -1,20 +1,15 @@
-import json
 import os
 import re
 import urllib
 import xmltodict
-import py2neo
-import urlparse
 
-from django.utils import simplejson
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.sites.models import get_current_site
 from django.core.urlresolvers import reverse
 from django.http import (
-    HttpResponse, HttpResponseForbidden, HttpResponseRedirect
-)
+    HttpResponse, HttpResponseForbidden, HttpResponseRedirect)
+
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext, loader
 
