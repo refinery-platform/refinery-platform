@@ -898,12 +898,12 @@ class UtilitiesTest(TestCase):
                 formatted_response,
                 {
                     'facet_field_counts':
-                         {u'REFINERY_SUBANALYSIS_6_3_s':
-                              {u'1': 8, u'0': 95, u'2': 2, u'-1': 9},
-                          u'REFINERY_TYPE_6_3_s':
-                              {u'Derived Data File': 105,
-                               u'Raw Data File': 9}},
-                     'attributes': [{
+                        {u'REFINERY_SUBANALYSIS_6_3_s':
+                            {u'1': 8, u'0': 95, u'2': 2, u'-1': 9},
+                         u'REFINERY_TYPE_6_3_s':
+                            {u'Derived Data File': 105,
+                             u'Raw Data File': 9}},
+                    'attributes': [{
                          'attribute_type': 'Internal',
                          'display_name': u'Type',
                          'data_type': u's',
@@ -928,7 +928,7 @@ class UtilitiesTest(TestCase):
                           'display_name': u'Year',
                           'data_type': u's',
                           'internal_name': u'Year_Characteristics_6_3_s'}],
-                     'nodes': [{
+                    'nodes': [{
                          u'REFINERY_WORKFLOW_OUTPUT_6_3_s': u'N/A',
                          u'REFINERY_ANALYSIS_UUID_6_3_s': u'N/A',
                          u'Author_Characteristics_6_3_s': u'Crocker',
