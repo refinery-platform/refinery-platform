@@ -75,6 +75,8 @@ NR_TYPES = (
     (TYPE_REPLICATE, 'replicate')
 )
 
+UNTITLED_DATA_SET_TITLE = "Untitled data set"
+
 
 class UserProfile (models.Model):
     """Extends Django user model:
@@ -449,7 +451,8 @@ class DataSet(SharableResource):
     # name of source database for the accession number (e.g. "ArrayExpress")
     accession_source = models.CharField(max_length=128, blank=True,  null=True)
     # actual title of the dataset
-    title = models.CharField(max_length=250, default='Untitled data set')
+    title = models.CharField(max_length=250, default=
+    UNTITLED_DATA_SET_TITLE)
 
     objects = DataSetManager()
 
@@ -472,9 +475,9 @@ class DataSet(SharableResource):
         # `blank=False` will only affect the admin interface
         try:
             if not self.title.strip():
-                self.title = settings.UNTITLED_DATA_SET_TITLE
+                self.title = UNTITLED_DATA_SET_TITLE
         except AttributeError:
-            self.title = settings.UNTITLED_DATA_SET_TITLE
+            self.title = UNTITLED_DATA_SET_TITLE
         super(DataSet, self).save(*args, **kwargs)
 
     def get_owner(self):
