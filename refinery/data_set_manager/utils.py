@@ -665,6 +665,11 @@ def objectify_facet_field_counts(facet_fields):
 
 def customize_attribute_response(facet_fields):
     # Returns an array of attribute objects based on parsing the title
+    try:
+        iter(facet_fields)
+    except TypeError:
+        return facet_fields
+
     attribute_array = []
     for field in facet_fields:
         customized_field = {'internal_name': field}

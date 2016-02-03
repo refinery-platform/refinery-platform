@@ -108,6 +108,71 @@ class AssaysAPITests(APITestCase):
 class AssaysFilesAPITests(APITestCase):
 
     def setUp(self):
+        self.factory = APIRequestFactory()
+        investigation = Investigation.objects.create()
+        study = Study.objects.create(file_name='test_filename123.txt',
+                                     title='Study Title Test',
+                                     investigation=investigation)
+
+        assay = Assay.objects.create(
+                study=study,
+                measurement='transcription factor binding site',
+                measurement_accession='http://www.testurl.org/testID',
+                measurement_source='OBI',
+                technology='nucleotide sequencing',
+                technology_accession='test info',
+                technology_source='test source',
+                platform='Genome Analyzer II',
+                file_name='test_assay_filename.txt',
+                )
+        self.valid_uuid = assay.uuid
+        self.view = AssaysFiles.as_view()
+        self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
+        self.invalid_format_uuid = "xxxxxxxx"
+
+    def tearDown(self):
+        Assay.objects.all().delete()
+        Study.objects.all().delete()
+        Investigation.objects.all().delete()
+
+    def test_get(self):
+        # valid_uuid
+        uuid = self.valid_uuid
+        request = self.factory.get('/api/v2/assays/%s/files' % uuid)
+        response = self.view(request, uuid)
+        response.render()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content,
+                         '{"facet_field_counts":{},'
+                         '"attributes":null,'
+                         '"nodes":[]}')
+
+        # invalid_uuid
+        uuid = self.invalid_uuid
+        request = self.factory.get('/api/v2/assays/%s/files' % uuid)
+        response = self.view(request, uuid)
+        response.render()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content,
+                         '{"facet_field_counts":{},'
+                         '"attributes":null,'
+                         '"nodes":[]}')
+
+        # invalid_format_uuid
+        uuid = self.invalid_format_uuid
+        request = self.factory.get('/api/v2/assays/%s/files' % uuid)
+        response = self.view(request, uuid)
+        response.render()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content,
+                         '{"facet_field_counts":{},'
+                         '"attributes":null,'
+                         '"nodes":[]}')
+
+
+class AssaysAttributesAPITests(APITestCase):
+
+    def setUp(self):
         self.user1 = User.objects.create_user("ownerJane", '', 'test1234')
         self.user2 = User.objects.create_user("guestName", '', 'test1234')
         self.user1.save()
