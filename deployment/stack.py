@@ -39,8 +39,10 @@ import yaml
 from cfn_pyplates.core import *
 from cfn_pyplates.functions import *
 
+
 class ConfigError(Exception):
     pass
+
 
 def main():
     config = load_config()
@@ -88,6 +90,7 @@ def main():
     )
 
     print(str(cft))
+
 
 def load_config():
     config_path = "stack-config.yaml"

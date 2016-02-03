@@ -26,7 +26,7 @@ cft.resources.ebs = Resource(
         'AvailabilityZone': 'us-east-1b',
         'Encrypted': True,
         'Size': 10,
-#        'Tags': foo,
+        # 'Tags': foo,
         'VolumeType': 'gp2'
     })
 )
