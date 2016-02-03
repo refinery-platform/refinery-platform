@@ -451,8 +451,7 @@ class DataSet(SharableResource):
     # name of source database for the accession number (e.g. "ArrayExpress")
     accession_source = models.CharField(max_length=128, blank=True,  null=True)
     # actual title of the dataset
-    title = models.CharField(max_length=250, default=
-    UNTITLED_DATA_SET_TITLE)
+    title = models.CharField(max_length=250, default=UNTITLED_DATA_SET_TITLE)
 
     objects = DataSetManager()
 
