@@ -14,5 +14,5 @@ class { 'timezone':
 }
 
 # See code in refinery-modules/refinery/...
-include postgresql
 include refinery
+include refinery::pg
