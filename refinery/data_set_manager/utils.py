@@ -15,11 +15,9 @@ from django.utils.http import urlquote
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
-from data_set_manager.models import Node, Attribute, AnnotatedNode, \
+from .search_indexes import NodeIndex
+from .models import AttributeOrder, Study, Node, Attribute, AnnotatedNode, \
     Assay, AnnotatedNodeRegistry
-from data_set_manager.search_indexes import NodeIndex
-from core.models import DataSet, InvestigationLink
-from .models import AttributeOrder, Study
 from .serializers import AttributeOrderSerializer
 
 

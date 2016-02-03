@@ -30,7 +30,7 @@ from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
 from haystack.query import SearchQuerySet
 import simplejson as json
 
-from core.models import *
+from core.models import os, get_user_import_dir
 from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import create_dataset, parse_isatab
 from data_set_manager.utils import *
