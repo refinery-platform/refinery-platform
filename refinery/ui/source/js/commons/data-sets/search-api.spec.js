@@ -54,14 +54,32 @@ describe('DataSet.search-api: unit tests', function () {
       '  }' +
       '}';
 
-  function params (query, limit, offset, allIds) {
-    return '?allIds=' + allIds + '&defType=edismax&f.description.hl.alternateField=description&' +
-    'f.title.hl.alternateField=title&fl=dbid,uuid,access&' +
-    'fq=django_ct:core.dataset&hl=true&hl.fl=title,description&' +
-    'hl.maxAlternateFieldLength=128&hl.simple.post=%3C%2Fem%3E&' +
-    'hl.simple.pre=%3Cem%3E&q=' + query + '&' +
-    'qf=title%5E0.5+accession+submitter+text&rows=' + limit +
-    '&start=' + offset +'&wt=json';
+  function params (query, limit, offset, allIds, synonyms) {
+    var parameters = {
+      'allIds': allIds,
+      'defType': synonyms ? 'synonym_edismax' : 'edismax',
+      'f.description.hl.alternateField': 'description',
+      'f.title.hl.alternateField': 'title',
+      'fl': 'dbid,uuid,access',
+      'fq': 'django_ct:core.dataset',
+      'hl': 'true',
+      'hl.fl': 'title,description',
+      'hl.maxAlternateFieldLength': '128',
+      'hl.simple.post': '%3C%2Fem%3E',
+      'hl.simple.pre': '%3Cem%3E',
+      'q': query,
+      'qf': 'title%5E0.5+accession+submitter+text',
+      'rows': limit,
+      'start': offset,
+      'synonyms': '' + !!synonyms + '',
+      'wt': 'json',
+    };
+    var url = '';
+    var paramNames = Object.keys(parameters);
+    for (var i = 0, len = paramNames.length; i < len; i++) {
+      url += '&' + paramNames[i] + '=' + parameters[paramNames[i]];
+    }
+    return '?' + url.substr(1);
   }
 
   beforeEach(function () {
@@ -156,6 +174,39 @@ describe('DataSet.search-api: unit tests', function () {
               limit,
               offset,
               0
+            )
+          )
+          .respond(200, fakeQueryResponse);
+
+        $httpBackend.flush();
+
+        promise.then(function (data) {
+          results = data;
+        });
+
+        $rootScope.$digest();
+
+        expect(results.meta.total).toEqual(1);
+      }
+    );
+
+    it('should use different `defType` when synonym search is turned on',
+      function () {
+        settings.djangoApp.solrSynonymSearch = true;
+        factoryInstance = new Factory(query, true);
+
+        var data = 'test',
+            results,
+            promise = factoryInstance(limit, offset);
+
+        $httpBackend
+          .expectGET(
+            settings.appRoot + settings.solrApi + '/core/select' + params(
+              query,
+              limit,
+              offset,
+              1,
+              true
             )
           )
           .respond(200, fakeQueryResponse);

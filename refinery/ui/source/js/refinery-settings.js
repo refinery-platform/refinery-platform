@@ -52,7 +52,6 @@ angular
     neo4jApi: '/neo4j',
     refineryApi: '/api/v1',
     solrApi: '/solr',
-    solrSynonymSearch: window.djangoApp.solrSynonymSearch,
     treemap: {
       singleRequestLimit: 200
     },
