@@ -1,4 +1,4 @@
-class postgresql {
+class refinery::pg {
 class { 'postgresql::globals':
   version  => '9.3',
   encoding => 'UTF8',

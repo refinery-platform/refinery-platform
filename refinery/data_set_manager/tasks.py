@@ -19,12 +19,12 @@ from django.core.management import call_command
 
 from celery.task import task
 
-from core.models import *
+from core.models import DataSet, FileStoreItem, ExtendedGroup
 from core.utils import update_data_set_index, add_data_set_to_neo4j
-from data_set_manager.isa_tab_parser import IsaTabParser
-from data_set_manager.models import Investigation, Node, \
+from .isa_tab_parser import IsaTabParser
+from .models import Investigation, Node, \
     initialize_attribute_order
-from data_set_manager.utils import get_node_types, update_annotated_nodes, \
+from .utils import get_node_types, update_annotated_nodes, \
     index_annotated_nodes, calculate_checksum
 
 

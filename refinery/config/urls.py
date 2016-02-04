@@ -10,6 +10,8 @@ from registration.forms import RegistrationFormUniqueEmail
 from registration.backends.default.views import ActivationView
 from registration.backends.default.views import RegistrationView
 from tastypie.api import Api
+from rest_framework import routers
+
 from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     NodeResource, NodeSetListResource, NodePairResource,\
     NodeRelationshipResource, WorkflowResource, ExtendedGroupResource, \
@@ -18,8 +20,12 @@ from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     UserAuthenticationResource, InvitationResource, FastQCResource,  \
     UserProfileResource
 from core.models import DataSet
+
 from core.views import WorkflowViewset
 from file_store.views import FileStoreItemViewSet
+
+from data_set_manager.views import Assays, AssaysFiles, AssaysAttributes
+
 from data_set_manager.api import AttributeOrderResource, StudyResource,\
     AssayResource, InvestigationResource, ProtocolResource, \
     ProtocolReferenceResource, ProtocolReferenceParameterResource, \
@@ -39,10 +45,12 @@ sqs = (SearchQuerySet().using("core")
 # Uncomment the next two lines to enable the admin:
 admin.autodiscover()
 
+
 # Django REST Framework urls
 router = routers.DefaultRouter()
 router.register(r'filestoreitems', FileStoreItemViewSet)
 router.register(r'workflows', WorkflowViewset)
+
 
 # NG: added for tastypie URL
 v1_api = Api(api_name='v1')
@@ -101,6 +109,7 @@ urlpatterns = patterns(
     url(r'^visualization_manager/', include('visualization_manager.urls')),
     url(r'^file_server/', include('file_server.urls')),
     url(r'^tasks/', include('djcelery.urls')),
+    url(r'^docs/', include('rest_framework_swagger.urls')),
 
     # NG: added to include additional views for admin
     # (this is not the recommended way but the only one I got to work)
@@ -158,6 +167,18 @@ urlpatterns = patterns(
     # Wire up our API using automatic URL routing.
     url(r"^api/v2/", include(router.urls)),
 
+
+    url(r'^api/v2/assays/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
+        r''r'12})/$', Assays.as_view()),
+
+    url(r'^api/v2/assays/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
+        r''r'12})/files/$', AssaysFiles.as_view()),
+
+    url(r'^api/v2/assays/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
+        r''r'12})/attributes/$', AssaysAttributes.as_view()),
 
     # (r'^favicon\.ico$',
     # 'django.views.generic.simple.redirect_to',

@@ -47,4 +47,5 @@ def extra_context(context):
         "REFINERY_EXTERNAL_AUTH": settings.REFINERY_EXTERNAL_AUTH,
         "REFINERY_EXTERNAL_AUTH_MESSAGE":
             settings.REFINERY_EXTERNAL_AUTH_MESSAGE,
+        "SOLR_SYNONYM_SEARCH": settings.SOLR_SYNONYMS
     }

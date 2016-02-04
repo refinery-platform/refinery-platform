@@ -6,12 +6,19 @@ Created on May 29, 2012
 import hashlib
 import logging
 import time
+import urlparse
+import requests
+import json
 
 from django.db.models import Q
+from django.utils.http import urlquote
+from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 
-from data_set_manager.models import Node, Attribute, AnnotatedNode, Study, \
+from .search_indexes import NodeIndex
+from .models import AttributeOrder, Study, Node, Attribute, AnnotatedNode, \
     Assay, AnnotatedNodeRegistry
-from data_set_manager.search_indexes import NodeIndex
+from .serializers import AttributeOrderSerializer
 
 
 logger = logging.getLogger(__name__)
@@ -492,3 +499,289 @@ def _index_annotated_nodes(node_type, study_uuid, assay_uuid=None,
         counter += 1
     end = time.time()
     logger.info("%s nodes indexed in %s", str(counter), str(end - start))
+
+
+def generate_solr_params(params, assay_uuid):
+    """Creates the encoded solr params requiring only an assay.
+    Keyword Argument
+        params -- python dict or QueryDict
+    Params/Solr Params
+        is_annotation - metadata
+        facet_count/facet - enables facet counts in query response, true/false
+        start - paginate, offset response
+        limit/row - maximum number of documents
+        field_limit - set of fields to return
+        facet_field - specify a field which should be treated as a facet
+        facet_pivot - list of fields to pivot
+        sort - Ordering include field name, whitespace, & asc or desc.
+        fq - filter query
+     """
+
+    file_types = 'fq=type:("Raw Data File" OR ' \
+                 '"Derived Data File" OR ' \
+                 '"Array Data File" OR ' \
+                 '"Derived Array Data File" OR ' \
+                 '"Array Data Matrix File" OR' \
+                 '"Derived Array Data Matrix File")'
+
+    is_annotation = params.get('is_annotation', default='false')
+    facet_count = params.get('include_facet_count', default='true')
+    start = params.get('start', default='0')
+    row = params.get('limit', default='20')
+    field_limit = params.get('attributes', default=None)
+    facet_field = params.get('facets', default=None)
+    facet_pivot = params.get('pivots', default=None)
+    sort = params.get('sort', default=None)
+
+    fixed_solr_params = \
+        '&'.join([file_types,
+                  'fq=is_annotation:%s' % is_annotation,
+                  'start=%s' % start,
+                  'rows=%s' % row,
+                  'q=django_ct:data_set_manager.node&wt=json',
+                  'facet=%s' % facet_count,
+                  'facet.limit=-1',
+                  'facet.mincount=1'
+                  ])
+
+    solr_params = ''.join(['fq=assay_uuid:', assay_uuid])
+
+    if facet_field:
+        split_facet_fields = generate_facet_fields_query(
+                facet_field.split(','))
+        solr_params = ''.join([solr_params, split_facet_fields])
+    else:
+        # Missing facet_fields, it is generated from Attribute Order Model.
+        attributes_str = AttributeOrder.objects.filter(assay__uuid=assay_uuid)
+        attributes = AttributeOrderSerializer(attributes_str, many=True)
+        facet_field = generate_filtered_facet_fields(attributes.data)
+        facet_field_query = generate_facet_fields_query(facet_field)
+        solr_params = ''.join([solr_params, facet_field_query])
+
+    if field_limit:
+        solr_params = ''.join([solr_params, '&fl=', field_limit])
+    else:
+        # create field_limit from facet_fields
+        field_limit = ','.join(facet_field)
+        solr_params = ''.join([solr_params, '&fl=', field_limit])
+
+    if facet_pivot:
+        solr_params = ''.join([solr_params, '&facet.pivot=', facet_pivot])
+
+    if sort:
+        solr_params = ''.join([solr_params, '&sort=', sort])
+
+    url = '&'.join([solr_params, fixed_solr_params])
+    encoded_solr_params = urlquote(url, safe='=& ')
+
+    return encoded_solr_params
+
+
+def hide_fields_from_weighted_list(weighted_facet_obj):
+    """Returns a filtered facet field list from a weighted facet object."""
+    hidden_fields = ["uuid", "id", "django_id", "file_uuid", "study_uuid",
+                     "assay_uuid", "type", "is_annotation", "species",
+                     "genome_build", "name", "django_ct"]
+
+    filtered_facet_list = []
+    for (rank, field) in weighted_facet_obj:
+        solr_field = field.get("solr_field")
+        if solr_field not in hidden_fields:
+            filtered_facet_list.append(solr_field)
+
+    return filtered_facet_list
+
+
+def generate_filtered_facet_fields(attributes):
+    """ Returns a filter facet field list. Attribute order contains whether
+    facets should be used."""
+
+    weighted_list = []
+    for field in attributes:
+        if field.get("is_exposed") and field.get("is_facet"):
+            weighted_list.append((int(field["rank"]), field))
+
+    weighted_list.sort()
+    filtered_facet_fields = hide_fields_from_weighted_list(weighted_list)
+
+    return filtered_facet_fields
+
+
+def generate_facet_fields_query(facet_fields):
+    """Return facet_field query (str).
+        Solr requirs facet fields to be separated"""
+    query = ""
+    for field in facet_fields:
+        query = ''.join([query, '&facet.field=', field])
+
+    return query
+
+
+def search_solr(encoded_params, core):
+    """Returns solr full_response content by making a solr request
+    Parameters:
+        encoded_params:  Expect the params to be url-ready (using urlquote)
+        core: Specify which node
+    """
+    url_portion = '/'.join([core, "select"])
+    url = urlparse.urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
+    full_response = requests.get(url, params=encoded_params)
+    response = full_response.content
+
+    return response
+
+
+def get_owner_from_assay(uuid):
+    from core.models import DataSet, InvestigationLink
+    # Returns an owner name from an assay_uuid. Ownership is passed down from
+    try:
+        investigation_key = Study.objects.get(assay__uuid=uuid).investigation
+    except ObjectDoesNotExist:
+        return "Error: Invalid uuid"
+
+    investigation_link = InvestigationLink.objects.get(
+            investigation=investigation_key)
+    owner = DataSet.objects.get(
+            investigationlink=investigation_link).get_owner()
+
+    return owner
+
+
+def format_solr_response(solr_response):
+    # Returns a reformatted solr response
+    try:
+        solr_response_json = json.loads(solr_response)
+    except TypeError:
+        return "Error loading json."
+
+    # Reorganizes solr response into easier to digest objects.
+    order_facet_fields = solr_response_json.get('responseHeader').get(
+            'params').get('facet.field')
+    facet_field_counts = solr_response_json.get('facet_counts').get(
+            'facet_fields')
+    facet_field_docs = solr_response_json.get('response').get('docs')
+    facet_field_counts_obj = objectify_facet_field_counts(facet_field_counts)
+    solr_response_json['facet_field_counts'] = facet_field_counts_obj
+    attributes = customize_attribute_response(order_facet_fields)
+    solr_response_json["attributes"] = attributes
+    solr_response_json["nodes"] = facet_field_docs
+
+    # Remove unused fields from solr response
+    del solr_response_json['responseHeader']
+    del solr_response_json['facet_counts']
+    del solr_response_json['response']
+
+    return solr_response_json
+
+
+def objectify_facet_field_counts(facet_fields):
+    # Returns an object with facet_field_count corrected. Solr returns an
+    # array with key and value. count_array = [key1,value1,key2,value2...]
+    for field, count_array in facet_fields.iteritems():
+        count_obj = {}
+
+        for index in range(0, len(count_array), 2):
+            count_obj[count_array[index]] = count_array[index + 1]
+
+        facet_fields[field] = count_obj
+
+    return facet_fields
+
+
+def customize_attribute_response(facet_fields):
+    # Returns an array of attribute objects based on parsing the title
+    try:
+        iter(facet_fields)
+    except TypeError:
+        return facet_fields
+
+    attribute_array = []
+    for field in facet_fields:
+        customized_field = {'internal_name': field}
+
+        field_name = field.split('_')
+        customized_field['data_type'] = field_name[-1]
+
+        if 'REFINERY_SUBANALYSIS' in field:
+            customized_field['display_name'] = 'Analysis Group'
+            customized_field['attribute_type'] = 'Internal'
+        elif 'REFINERY_WORKFLOW_OUTPUT' in field:
+            customized_field['display_name'] = 'Output Type'
+            customized_field['attribute_type'] = 'Internal'
+        elif 'REFINERY_FILETYPE' in field:
+            customized_field['display_name'] = 'File Type'
+            customized_field['attribute_type'] = 'Internal'
+        elif 'REFINERY' in field:
+            customized_field['display_name'] = field_name[1].title()
+            customized_field['attribute_type'] = 'Internal'
+        elif 'Comment' in field:
+            index = field_name.index('Comment')
+            field_name = ' '.join(field_name[0:index])
+            customized_field['display_name'] = field_name.title()
+            customized_field['attribute_type'] = 'Comment'
+        elif 'Factor' in field:
+            index = field_name.index('Factor')
+            field_name = ' '.join(field_name[0:index])
+            customized_field['display_name'] = field_name.title()
+            customized_field['attribute_type'] = 'Factor Value'
+        elif 'Characteristics' in field:
+            index = field_name.index('Characteristics')
+            field_name = ' '.join(field_name[0:index])
+            customized_field['display_name'] = field_name.title()
+            customized_field['attribute_type'] = 'Characteristics'
+        else:
+            customized_field['display_name'] = ' '.join(
+                    field_name[0:-3]).title()
+
+        attribute_array.append(customized_field)
+
+    return attribute_array
+
+
+def update_attribute_order_ranks(old_attribute, new_rank):
+    # Updates an assays attribute order ranks based on a singular object
+    try:
+        assert(int(new_rank) >= 0)
+    except AssertionError:
+        return "Invalid: rank must be integer >= 0"
+    except TypeError:
+        return "Invalid: rank must be a string or a number."
+
+    try:
+        assert(old_attribute.rank != new_rank)
+    except AssertionError:
+        return "Error: New rank == old rank"
+
+    assay = old_attribute.assay
+    old_rank = int(old_attribute.rank)
+    attribute_list = AttributeOrder.objects.filter(assay=assay)
+    new_rank = int(new_rank)
+
+    for attribute in attribute_list:
+        attribute_new_rank = int(attribute.rank)
+
+        if attribute == old_attribute:
+            attribute_new_rank = new_rank
+        elif new_rank == 0:
+            if old_rank < attribute.rank:
+                attribute_new_rank = attribute.rank-1
+        elif old_rank == 0:
+            if old_rank < attribute.rank >= new_rank:
+                attribute_new_rank = attribute.rank+1
+        else:
+            if old_rank > attribute.rank >= new_rank:
+                attribute_new_rank = attribute.rank+1
+            elif old_rank < attribute.rank <= new_rank:
+                attribute_new_rank = attribute.rank-1
+
+        serializer = AttributeOrderSerializer(
+                        attribute,
+                        {'rank': attribute_new_rank},
+                        partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            return serializer.error
+
+    return "Successful update"

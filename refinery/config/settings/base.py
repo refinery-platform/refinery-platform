@@ -173,6 +173,7 @@ INSTALLED_APPS = (
     'south',
     'chunked_upload',
     'rest_framework',
+    'rest_framework_swagger',
 )
 
 # NG: added for django-guardian
@@ -524,4 +525,7 @@ NEO4J_CONSTRAINTS = [
     }
 ]
 
-UNTITLED_DATA_SET_TITLE = "Untitled data set"
+SOLR_SYNONYMS = get_setting("SOLR_SYNONYMS")
+SOLR_LIB_DIR = "/vagrant/refinery/solr/lib"
+SOLR_CUSTOM_SYNONYMS_FILE = \
+    "/vagrant/refinery/solr/core/conf/custom-synonyms.txt"

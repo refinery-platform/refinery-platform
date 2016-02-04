@@ -17,17 +17,28 @@ from django.shortcuts import render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.authentication import SessionAuthentication, \
+    BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
+from django.http import Http404
+
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
 from haystack.query import SearchQuerySet
 import simplejson as json
 
-from core.models import *
+from core.models import os, get_user_import_dir
 from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import create_dataset, parse_isatab
 from data_set_manager.utils import *
 from file_store.tasks import download_file, DownloadError
 from file_store.models import get_temp_dir, generate_file_source_translator
+from .serializers import AttributeOrderSerializer, AssaySerializer
+from .models import AttributeOrder, Assay
+
 
 logger = logging.getLogger(__name__)
 
@@ -345,3 +356,224 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
         message = "You have successfully uploaded {}".format(
             chunked_upload.filename)
         return {"message": message}
+
+
+class Assays(APIView):
+    """
+    Return assay object
+
+    ---
+    #YAML
+
+    GET:
+        serializer: AssaySerializer
+        omit_serializer: false
+
+        parameters:
+            - name: uuid
+              description: Assay uuid
+              type: string
+              paramType: path
+              required: true
+
+    ...
+    """
+
+    def get_object(self, uuid):
+        try:
+            return Assay.objects.get(uuid=uuid)
+        except Assay.DoesNotExist:
+            raise Http404
+
+    def get(self, request, uuid, format=None):
+        assay = self.get_object(uuid)
+        serializer = AssaySerializer(assay)
+        return Response(serializer.data)
+
+
+class AssaysFiles(APIView):
+
+    """
+    Return solr response. Query requires assay_uuid.
+
+    ---
+    #YAML
+
+    GET:
+        parameters_strategy:
+            form: replace
+            query: merge
+
+        parameters:
+            - name: uuid
+              description: assay uuid
+              type: string
+              required: true
+              paramType: path
+            - name: is_annotation
+              description: metadata
+              type: boolean
+              paramType: query
+              type: string
+              paramType: query
+            - name: include_facet_count
+              description: enables facet counts in query response
+              type: boolean
+              paramType: query
+            - name: start
+              description: paginate, offset response
+              type: integer
+              paramType: query
+            - name: limit
+              description: In solr it's Row, maximum number of documents
+              type: integer
+              paramType: query
+            - name: attributes
+              description: set of attributes to return separated by a comma
+              type: string
+              paramType: query
+            - name: facets
+              description: specify fields which should be treated as a facet
+              separated by a comma
+              type: string
+              paramType: query
+            - name: pivots
+              description: list of fields to pivot separated by a comma
+              type: string
+              paramType: query
+            - name: sort
+              description: Ordering include field name asc/desc, ex: title asc
+              type: string
+              paramType: query
+    ...
+    """
+
+    def get(self, request, uuid, format=None):
+
+        params = request.query_params
+
+        solr_params = generate_solr_params(params, uuid)
+        solr_response = search_solr(solr_params, 'data_set_manager')
+        solr_response_json = format_solr_response(solr_response)
+
+        return Response(solr_response_json)
+
+
+class AssaysAttributes(APIView):
+    """
+    AttributeOrder Resource.
+    Returns/Updates AttributeOrder model queries. Requires assay_uuid.
+    The model is dynamically created, so users will not create new
+    attribute_orders.
+
+    Updates attribute_model
+
+    ---
+    #YAML
+
+    GET:
+        serializer: AttributeOrderSerializer
+        omit_serializer: false
+
+        parameters:
+            - name: uuid
+              description: Assay uuid
+              type: string
+              paramType: path
+              required: true
+
+    PUT:
+        parameters_strategy:
+        form: replace
+        query: merge
+
+        parameters:
+            - name: uuid
+              description: Assay uuid used as an identifier
+              type: string
+              paramType: path
+              required: true
+            - name: solr_field
+              description: Title of solr field used as an identifier
+              type: string
+              paramType: form
+              required: false
+            - name: rank
+              description: Position of the attribute in facet list and table
+              type: int
+              paramType: form
+              required: false
+            - name: is_exposed
+              description: Show to non-owner users
+              type: boolean
+              paramType: form
+            - name: is_facet
+              description: Attribute used as facet
+              type: boolean
+              paramType: form
+            - name: is_active
+              description: Shown in table by default
+              type: boolean
+              paramType: form
+            - name: id
+              description: Attribute ID used as an identifier
+              type: integer
+              paramType: form
+    ...
+    """
+
+    def get_objects(self, uuid):
+        attributes = AttributeOrder.objects.filter(assay__uuid=uuid)
+        if len(attributes):
+            return attributes
+        else:
+            raise Http404
+
+    def get(self, request, uuid, format=None):
+        attribute_order = self.get_objects(uuid)
+        serializer = AttributeOrderSerializer(attribute_order, many=True)
+        return Response(serializer.data)
+
+    def put(self, request, uuid, format=None):
+        owner = get_owner_from_assay(uuid)
+        request_user = request.user
+
+        if owner == request_user:
+            solr_field = request.data.get('solr_field', None)
+            id = request.data.get('id', None)
+            new_rank = request.data.get('rank', None)
+
+            if id:
+                attribute_order = AttributeOrder.objects.get(
+                        assay__uuid=uuid, id=id)
+            elif solr_field:
+                attribute_order = AttributeOrder.objects.get(
+                        assay__uuid=uuid, solr_field=solr_field)
+            else:
+                return Response(
+                        'Requires attribute id or solr_field name.',
+                        status=status.HTTP_400_BAD_REQUEST)
+
+            # updates all ranks in assay's attribute order
+            if new_rank and new_rank != attribute_order.rank:
+                try:
+                    update_attribute_order_ranks(attribute_order, new_rank)
+                except Exception as e:
+                    return e
+
+            serializer = AttributeOrderSerializer(attribute_order,
+                                                  data=request.data,
+                                                  partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                        serializer.data,
+                        status=status.HTTP_202_ACCEPTED
+                )
+            return Response(
+                        serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            message = 'Only owner may edit attribute order.'
+            return Response(message, status=status.HTTP_401_UNAUTHORIZED)

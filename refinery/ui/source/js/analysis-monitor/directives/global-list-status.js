@@ -10,9 +10,9 @@ function rpAnalysisMonitorGlobalListStatus(){
     controller: 'AnalysisMonitorCtrl',
     controllerAs: 'AMCtrl',
     bindToController: {
-      launchAnalysisFlag: '=',
-      analysesRunningGlobalListCount: '=',
-      analysesRunningGlobalList: '&',
+      launchAnalysisFlag: '=?',
+      analysesRunningGlobalListCount: '=?',
+      analysesRunningGlobalList: '&?',
     },
     link: function(scope, element, attr, AMCtrl){
       scope.AMCtrl.updateAnalysesRunningGlobalList();
