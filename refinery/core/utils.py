@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 from django.db import connection
 
 from .search_indexes import DataSetIndex
+from data_set_manager.search_indexes import NodeIndex
 
 
 logger = logging.getLogger(__name__)
