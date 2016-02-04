@@ -5,6 +5,12 @@ Script to generate CloudFormation JSON files via cfn-pyplates.
 
 Usage:
 python stack.py > web.json
+
+(Usually invoked via the Makefile:
+ make web.json
+ or
+ make web-stack
+)
 """
 
 # This Python script is
