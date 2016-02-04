@@ -12,7 +12,6 @@ class AssaySerializer(serializers.ModelSerializer):
             'uuid', 'study', 'measurement', 'measurement_accession',
             'measurement_source', 'technology', 'technology_accession',
             'technology_source', 'platform', 'file_name')
-        depth = 1
 
 
 class AttributeOrderSerializer(serializers.ModelSerializer):
@@ -23,7 +22,6 @@ class AttributeOrderSerializer(serializers.ModelSerializer):
             'assay', 'study', 'solr_field', 'rank',
             'is_exposed', 'is_facet', 'is_active',
             'is_internal', 'id')
-        depth = 1
 
     def update(self, instance, validated_data):
         """

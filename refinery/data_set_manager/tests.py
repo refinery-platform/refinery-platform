@@ -28,22 +28,26 @@ class AssaysAPITests(APITestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
         investigation = Investigation.objects.create()
-        study = Study.objects.create(file_name='test_filename123.txt',
-                                     title='Study Title Test',
-                                     investigation=investigation)
-
-        assay = Assay.objects.create(
-                study=study,
-                measurement='transcription factor binding site',
-                measurement_accession='http://www.testurl.org/testID',
-                measurement_source='OBI',
-                technology='nucleotide sequencing',
-                technology_accession='test info',
-                technology_source='test source',
-                platform='Genome Analyzer II',
-                file_name='test_assay_filename.txt',
-                )
+        study = Study.objects.create(
+                file_name='test_filename123.txt',
+                title='Study Title Test',
+                investigation=investigation)
+        self.assay = {
+            'study': study,
+            'measurement': 'transcription factor binding site',
+            'measurement_accession': 'http://www.testurl.org/testID',
+            'measurement_source': 'OBI',
+            'technology': 'nucleotide sequencing',
+            'technology_accession': 'test info',
+            'technology_source': 'test source',
+            'platform': 'Genome Analyzer II',
+            'file_name': 'test_assay_filename.txt'
+        }
+        assay = Assay.objects.create(**self.assay)
+        self.assay['uuid'] = assay.uuid
+        self.assay['study'] = study.id
         self.valid_uuid = assay.uuid
+        self.url_root = '/api/v2/assays/'
         self.view = Assays.as_view()
         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
         self.invalid_format_uuid = "xxxxxxxx"
@@ -53,56 +57,27 @@ class AssaysAPITests(APITestCase):
         Study.objects.all().delete()
         Investigation.objects.all().delete()
 
-    def test_get(self):
-
+    def test_get_valid(self):
         # valid_uuid
-        uuid = self.valid_uuid
-        request = self.factory.get('/api/v2/assays/%s/' % uuid)
-        response = self.view(request, uuid)
-        response.render()
+        request = self.factory.get('%s/%s/' % (self.url_root, self.valid_uuid))
+        response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-                response.content,
-                '{"uuid":"%s",'
-                '"study":"None: Study Title Test",'
-                '"measurement":"transcription factor binding site",'
-                '"measurement_accession":"http://www.testurl.org/testID",'
-                '"measurement_source":"OBI",'
-                '"technology":"nucleotide sequencing",'
-                '"technology_accession":"test info",'
-                '"technology_source":"test source",'
-                '"platform":"Genome Analyzer II",'
-                '"file_name":"test_assay_filename.txt"}'
-                % uuid
-                )
-        # invalid_uuid
-        uuid = self.invalid_uuid
-        request = self.factory.get('/api/v2/assays/%s/' % uuid)
-        response = self.view(request, uuid)
-        response.render()
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.content, '{"detail":"Not found."}')
+        self.assertItemsEqual(response.data.keys(), self.assay.keys())
+        self.assertItemsEqual(response.data.values(), self.assay.values())
 
-        # invalid_format_uuid
-        uuid = self.invalid_format_uuid
-        request = self.factory.get('/api/v2/assays/%s/' % uuid)
-        response = self.view(request, uuid)
-        response.render()
+    def test_get_invalid(self):
+        # invalid_uuid
+        request = self.factory.get('%s/%s/' % (self.url_root,
+                                               self.invalid_uuid))
+        response = self.view(request, self.invalid_uuid)
         self.assertEqual(response.status_code, 404)
-        self.assertNotEqual(
-                response.content,
-                '{"uuid":"%s",'
-                '"study":"None: Study Title Test",'
-                '"measurement":"transcription factor binding site",'
-                '"measurement_accession":"http://www.testurl.org/testID",'
-                '"measurement_source":"OBI",'
-                '"technology":"nucleotide sequencing",'
-                '"technology_accession":"test info",'
-                '"technology_source":"test source",'
-                '"platform":"Genome Analyzer II",'
-                '"file_name":"test_assay_filename.txt"}'
-                % uuid)
-        self.assertEqual(response.content, '{"detail":"Not found."}')
+
+    def test_get_invalid_format(self):
+        # invalid_format_uuid
+        request = self.factory.get('%s/%s/'
+                                   % (self.url_root, self.invalid_format_uuid))
+        response = self.view(request, self.invalid_format_uuid)
+        self.assertEqual(response.status_code, 404)
 
 
 # class AssaysFilesAPITests(APITestCase):
