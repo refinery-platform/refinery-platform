@@ -525,8 +525,6 @@ NEO4J_CONSTRAINTS = [
     }
 ]
 
-UNTITLED_DATA_SET_TITLE = "Untitled data set"
-
 SOLR_SYNONYMS = get_setting("SOLR_SYNONYMS")
 SOLR_LIB_DIR = "/vagrant/refinery/solr/lib"
 SOLR_CUSTOM_SYNONYMS_FILE = \
