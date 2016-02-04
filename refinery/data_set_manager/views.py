@@ -406,43 +406,40 @@ class AssaysFiles(APIView):
 
         parameters:
             - name: uuid
-              description: assay uuid
+              description: Assay uuid
               type: string
               required: true
               paramType: path
             - name: is_annotation
-              description: metadata
+              description: Metadata
               type: boolean
               paramType: query
-              type: string
-              paramType: query
             - name: include_facet_count
-              description: enables facet counts in query response
+              description: Enables facet counts in query response
               type: boolean
               paramType: query
             - name: start
-              description: paginate, offset response
+              description: Paginate offset response
               type: integer
               paramType: query
             - name: limit
-              description: In solr it's Row, maximum number of documents
+              description: Maximum number of documents returned
               type: integer
               paramType: query
             - name: attributes
-              description: set of attributes to return separated by a comma
+              description: Set of attributes to return separated by a comma
               type: string
               paramType: query
             - name: facets
-              description: specify fields which should be treated as a facet
-              separated by a comma
+              description: Specify facet fields separated by a comma
               type: string
               paramType: query
             - name: pivots
-              description: list of fields to pivot separated by a comma
+              description: List of fields to pivot separated by a comma
               type: string
               paramType: query
             - name: sort
-              description: Ordering include field name asc/desc, ex: title asc
+              description: Order node response with field name asc/desc
               type: string
               paramType: query
     ...
