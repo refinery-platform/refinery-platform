@@ -1,35 +1,29 @@
-import yaml
-
 from rest_framework import serializers
-from data_set_manager.models import AttributeOrder
-from data_set_manager.models import Assay
+
+from .models import AttributeOrder
+from .models import Assay
 
 
-class AssaySerializer(serializers.Serializer):
+class AssaySerializer(serializers.ModelSerializer):
 
-    uuid = serializers.CharField()
-    study = serializers.CharField()
-    measurement = serializers.CharField()
-    measurement_accession = serializers.CharField()
-    measurement_source = serializers.CharField()
-    technology = serializers.CharField()
-    technology_accession = serializers.CharField()
-    technology_source = serializers.CharField()
-    platform = serializers.CharField()
-    file_name = serializers.CharField()
+    class Meta:
+        model = Assay
+        fields = (
+            'uuid', 'study', 'measurement', 'measurement_accession',
+            'measurement_source', 'technology', 'technology_accession',
+            'technology_source', 'platform', 'file_name')
+        depth = 1
 
 
-class AttributeOrderSerializer(serializers.Serializer):
+class AttributeOrderSerializer(serializers.ModelSerializer):
 
-    study = serializers.CharField(required=False, allow_blank=True)
-    assay = serializers.CharField(required=True)
-    solr_field = serializers.CharField()
-    rank = serializers.CharField()
-    is_exposed = serializers.BooleanField()
-    is_facet = serializers.BooleanField()
-    is_active = serializers.BooleanField()
-    is_internal = serializers.BooleanField()
-    id = serializers.IntegerField()
+    class Meta:
+        model = AttributeOrder
+        fields = (
+            'assay', 'study', 'solr_field', 'rank',
+            'is_exposed', 'is_facet', 'is_active',
+            'is_internal', 'id')
+        depth = 1
 
     def update(self, instance, validated_data):
         """
