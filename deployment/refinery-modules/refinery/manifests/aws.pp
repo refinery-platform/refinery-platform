@@ -10,22 +10,37 @@ package { 'lvm2':
   ensure => present,
 }
 ->
-lvm::volume { 'media':
+lvm::volume { 'data':
   ensure => present,
-  vg     => 'mediavg',
+  vg     => 'refinerydata',
   pv     => '/dev/xvdr',
   fstype => $fstype,
 }
 ->
-file { '/media':
+# Mountpoint
+file { '/data':
   ensure => directory,
 }
 ->
-mount { '/media':
+mount { '/data':
   ensure => mounted,
-  device => '/dev/mediavg/media',
+  device => '/dev/refinerydata/data',
   fstype => $fstype,
   options => 'defaults',
+}
+->
+file { '/data/media':
+  ensure => directory,
+  owner => "$app_user",
+  group => "$app_user",
+  mode => "0755",
+}
+->
+file { '/data/isa-tab':
+  ensure => directory,
+  owner => "$app_user",
+  group => "$app_user",
+  mode => "0755",
 }
 
 }
