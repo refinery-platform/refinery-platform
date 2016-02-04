@@ -632,6 +632,7 @@ def search_solr(encoded_params, core):
 
 
 def get_owner_from_assay(uuid):
+    from core.models import DataSet, InvestigationLink
     # Returns an owner name from an assay_uuid. Ownership is passed down from
     try:
         investigation_key = Study.objects.get(assay__uuid=uuid).investigation
