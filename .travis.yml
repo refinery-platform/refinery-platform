@@ -12,7 +12,7 @@ before_script:
   - createuser --createdb --no-superuser --no-createrole vagrant
   - createdb -O vagrant refinery
   - cd refinery
-  - cp config/config.json.sample config/config.json
+  - erb config/config.json.erb > config/config.json
   - python manage.py syncdb --migrate --noinput
   - npm install --quiet -g grunt-cli karma bower
   - cd ui && npm install && bower install && cd ../
