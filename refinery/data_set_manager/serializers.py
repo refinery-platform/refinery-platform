@@ -31,13 +31,6 @@ class AttributeOrderSerializer(serializers.Serializer):
     is_internal = serializers.BooleanField()
     id = serializers.IntegerField()
 
-    def create(self, validated_data):
-        """
-        Create and return a new `AttributeOrder` instance, given the validated
-        data.
-        """
-        return AttributeOrder.objects.create(**validated_data)
-
     def update(self, instance, validated_data):
         """
         Update and return an existing `AttributeOrder` instance, given the
