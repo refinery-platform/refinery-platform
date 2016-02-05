@@ -62,11 +62,10 @@ def get_workflows(workflow_engine):
         try:
             workflow_dictionary = connection.workflows.export_workflow_json(
                 workflow.identifier)
-        except galaxy.client.ConnectionError:
-            msg = "Unable to retrieve workflow '{}' from '{}' - skipping ..."
-            msg = msg.format(workflow.identifier,
-                             workflow_engine.instance.base_url)
-            logger.exception(msg)
+        except galaxy.client.ConnectionError as exc:
+            logger.error("Unable to retrieve workflow '%s' from '%s'"
+                         " - skipping ... (%s)", workflow.identifier,
+                         workflow_engine.instance.base_url, exc)
 
         workflow_issues = import_workflow(workflow, workflow_engine,
                                           workflow_dictionary)
