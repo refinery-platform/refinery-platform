@@ -174,50 +174,56 @@ class AssaysAttributesAPITests(APITestCase):
                 technology_accession='test info',
                 technology_source='test source',
                 platform='Genome Analyzer II',
-                file_name='test_assay_filename.txt',
-                )
-        AttributeOrder.objects.create(
-            study=study,
-            assay=assay,
-            solr_field='Character_Title',
-            rank=1,
-            is_exposed=True,
-            is_facet=True,
-            is_active=True,
-            is_internal=False
-        )
-        AttributeOrder.objects.create(
-            study=study,
-            assay=assay,
-            solr_field='Specimen',
-            rank=2,
-            is_exposed=True,
-            is_facet=True,
-            is_active=True,
-            is_internal=False
-        )
-        AttributeOrder.objects.create(
-            study=study,
-            assay=assay,
-            solr_field='Cell Type',
-            rank=3,
-            is_exposed=True,
-            is_facet=True,
-            is_active=True,
-            is_internal=False
-        )
-        AttributeOrder.objects.create(
-            study=study,
-            assay=assay,
-            solr_field='Analysis',
-            rank=4,
-            is_exposed=True,
-            is_facet=True,
-            is_active=True,
-            is_internal=False
-        )
+                file_name='test_assay_filename.txt')
 
+        self.attribute_order_array = [
+            {
+                'study': study,
+                'assay': assay,
+                'solr_field': 'Character_Title',
+                'rank': 1,
+                'is_exposed': True,
+                'is_facet': True,
+                'is_active': True,
+                'is_internal': False
+            },{
+                'study': study,
+                'assay': assay,
+                'solr_field': 'Specimen',
+                'rank': 2,
+                'is_exposed': True,
+                'is_facet': True,
+                'is_active': True,
+                'is_internal': False
+            },{
+                'study': study,
+                'assay': assay,
+                'solr_field': 'Cell Type',
+                'rank': 3,
+                'is_exposed': True,
+                'is_facet': True,
+                'is_active': True,
+                'is_internal': False
+            },{
+                'study': study,
+                'assay': assay,
+                'solr_field': 'Analysis',
+                'rank': 4,
+                'is_exposed': True,
+                'is_facet': True,
+                'is_active': True,
+                'is_internal': False
+            }]
+
+        for attribute in self.attribute_order_array:
+            response = AttributeOrder.objects.create(**attribute)
+            attribute['id'] = response.id
+            attribute['assay'] = response.assay.id
+            attribute['study'] = response.study.id
+
+        list.sort(self.attribute_order_array)
         self.valid_uuid = assay.uuid
+        self.url_root = '/api/v2/assays'
         self.view = AssaysAttributes.as_view()
         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
         self.invalid_format_uuid = "xxxxxxxx"
@@ -231,302 +237,117 @@ class AssaysAttributesAPITests(APITestCase):
         DataSet.objects.all().delete()
         AttributeOrder.objects.all().delete()
 
-    def test_get(self):
-
+    def test_get_valid_uuid(self):
         # valid_uuid
         uuid = self.valid_uuid
-        request = self.factory.get('/api/v2/assays/%s/attributes' % uuid)
+        request = self.factory.get('%s/%s/attributes/' % (self.url_root, uuid))
         response = self.view(request, uuid)
-        response.render()
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-                response.content,
-                '[{"study":"None: Study Title Test",'
-                '"assay":'
-                '"Measurement: transcription factor binding site; '
-                'Technology: nucleotide sequencing; '
-                'Platform: Genome Analyzer II; '
-                'File: test_assay_filename.txt",'
-                '"solr_field":"Character_Title",'
-                '"rank":"1",'
-                '"is_exposed":true,'
-                '"is_facet":true,'
-                '"is_active":true,'
-                '"is_internal":false,'
-                '"id":1},'
-                '{"study":"None: Study Title Test",'
-                '"assay":'
-                '"Measurement: transcription factor binding site; '
-                'Technology: nucleotide sequencing; '
-                'Platform: Genome Analyzer II; '
-                'File: test_assay_filename.txt",'
-                '"solr_field":"Specimen",'
-                '"rank":"2",'
-                '"is_exposed":true,'
-                '"is_facet":true,'
-                '"is_active":true,'
-                '"is_internal":false,'
-                '"id":2},'
-                '{"study":"None: Study Title Test",'
-                '"assay":'
-                '"Measurement: transcription factor binding site; '
-                'Technology: nucleotide sequencing; '
-                'Platform: Genome Analyzer II; '
-                'File: test_assay_filename.txt",'
-                '"solr_field":"Cell Type",'
-                '"rank":"3",'
-                '"is_exposed":true,'
-                '"is_facet":true,'
-                '"is_active":true,'
-                '"is_internal":false,'
-                '"id":3},'
-                '{"study":"None: Study Title Test",'
-                '"assay":'
-                '"Measurement: transcription factor binding site; '
-                'Technology: nucleotide sequencing; '
-                'Platform: Genome Analyzer II; '
-                'File: test_assay_filename.txt",'
-                '"solr_field":"Analysis",'
-                '"rank":"4",'
-                '"is_exposed":true,'
-                '"is_facet":true,'
-                '"is_active":true,'
-                '"is_internal":false,'
-                '"id":4}]'
-                )
+        list.sort(response.data)
+        ind = 0
+        for attributes in response.data:
+            self.assertItemsEqual(
+                    attributes.keys(), self.attribute_order_array[ind].keys())
+            self.assertItemsEqual(
+                    attributes.values(),
+                    self.attribute_order_array[ind].values())
+            ind = ind + 1
 
+    def test_get_invalid_uuid(self):
         # invalid uuid
-        uuid = self.invalid_format_uuid
-        request = self.factory.get('/api/v2/assays/%s/attributes' % uuid)
-        response = self.view(request, uuid)
+        request = self.factory.get('%s/%s/attributes/' % (
+            self.url_root, self.invalid_uuid))
+        response = self.view(request, self.invalid_uuid)
         response.render()
         self.assertEqual(response.status_code, 404)
-        self.assertNotEqual(
-                response.content,
-                '[{"study":"None: Study Title Test",'
-                '"assay":'
-                '"Measurement: transcription factor binding site; '
-                'Technology: nucleotide sequencing; '
-                'Platform: Genome Analyzer II; '
-                'File: test_assay_filename.txt",'
-                '"solr_field":"Character_Title",'
-                '"rank":"1",'
-                '"is_exposed":true,'
-                '"is_facet":true,'
-                '"is_active":true,'
-                '"is_internal":false,'
-                '"id":1},'
-                '{"study":"None: Study Title Test",'
-                '"assay":'
-                '"Measurement: transcription factor binding site; '
-                'Technology: nucleotide sequencing; '
-                'Platform: Genome Analyzer II; '
-                'File: test_assay_filename.txt",'
-                '"solr_field":"Specimen",'
-                '"rank":"2",'
-                '"is_exposed":true,'
-                '"is_facet":true,'
-                '"is_active":true,'
-                '"is_internal":false,'
-                '"id":2},'
-                '{"study":"None: Study Title Test",'
-                '"assay":'
-                '"Measurement: transcription factor binding site; '
-                'Technology: nucleotide sequencing; '
-                'Platform: Genome Analyzer II; '
-                'File: test_assay_filename.txt",'
-                '"solr_field":"Cell Type",'
-                '"rank":"3",'
-                '"is_exposed":true,'
-                '"is_facet":true,'
-                '"is_active":true,'
-                '"is_internal":false,'
-                '"id":3},'
-                '{"study":"None: Study Title Test",'
-                '"assay":'
-                '"Measurement: transcription factor binding site; '
-                'Technology: nucleotide sequencing; '
-                'Platform: Genome Analyzer II; '
-                'File: test_assay_filename.txt",'
-                '"solr_field":"Analysis",'
-                '"rank":"4",'
-                '"is_exposed":true,'
-                '"is_facet":true,'
-                '"is_active":true,'
-                '"is_internal":false,'
-                '"id":4}]'
-                )
         self.assertEqual(response.content, '{"detail":"Not found."}')
 
-        # invalid uuid
-        uuid = ""
-        request = self.factory.get('/api/v2/assays/%s/attributes' % uuid)
-        response = self.view(request, uuid)
+    def test_get_invalid_form_uuid(self):
+        # invalid form uuid
+        request = self.factory.get('%s/%s/attributes/' % (
+            self.url_root, self.invalid_format_uuid))
+        response = self.view(request, self.invalid_format_uuid)
         response.render()
         self.assertEqual(response.status_code, 404)
-        self.assertNotEqual(
-                response.content,
-                '[{"study":"None: Study Title Test",'
-                '"assay":'
-                '"Measurement: transcription factor binding site; '
-                'Technology: nucleotide sequencing; '
-                'Platform: Genome Analyzer II; '
-                'File: test_assay_filename.txt",'
-                '"solr_field":"Character_Title",'
-                '"rank":"1",'
-                '"is_exposed":true,'
-                '"is_facet":true,'
-                '"is_active":true,'
-                '"is_internal":false,'
-                '"id":1},'
-                '{"study":"None: Study Title Test",'
-                '"assay":'
-                '"Measurement: transcription factor binding site; '
-                'Technology: nucleotide sequencing; '
-                'Platform: Genome Analyzer II; '
-                'File: test_assay_filename.txt",'
-                '"solr_field":"Specimen",'
-                '"rank":"2",'
-                '"is_exposed":true,'
-                '"is_facet":true,'
-                '"is_active":true,'
-                '"is_internal":false,'
-                '"id":2},'
-                '{"study":"None: Study Title Test",'
-                '"assay":'
-                '"Measurement: transcription factor binding site; '
-                'Technology: nucleotide sequencing; '
-                'Platform: Genome Analyzer II; '
-                'File: test_assay_filename.txt",'
-                '"solr_field":"Cell Type",'
-                '"rank":"3",'
-                '"is_exposed":true,'
-                '"is_facet":true,'
-                '"is_active":true,'
-                '"is_internal":false,'
-                '"id":3},'
-                '{"study":"None: Study Title Test",'
-                '"assay":'
-                '"Measurement: transcription factor binding site; '
-                'Technology: nucleotide sequencing; '
-                'Platform: Genome Analyzer II; '
-                'File: test_assay_filename.txt",'
-                '"solr_field":"Analysis",'
-                '"rank":"4",'
-                '"is_exposed":true,'
-                '"is_facet":true,'
-                '"is_active":true,'
-                '"is_internal":false,'
-                '"id":4}]'
-                )
         self.assertEqual(response.content, '{"detail":"Not found."}')
 
-    def test_put(self):
-
+    def test_put_valid_uuid(self):
         # valid_uuid
         self.client.login(username='ownerJane', password='test1234')
-        uuid = self.valid_uuid
         updated_attribute_1 = {'solr_field': 'Character_Title',
-                               'rank': '3',
-                               'is_exposed': 'False',
-                               'is_facet': 'False',
-                               'is_active': 'False'}
+                               'rank': 3,
+                               'is_exposed': False,
+                               'is_facet': False,
+                               'is_active': False}
         updated_attribute_2 = {'id': '6',
-                               'rank': '1',
-                               'is_exposed': 'False',
-                               'is_facet': 'False',
-                               'is_active': 'False'}
-        updated_attribute_3 = {'solr_field': 'Cell Type',
-                               'rank': '4',
-                               'is_exposed': 'False',
-                               'is_facet': 'False',
-                               'is_active': 'False'}
-        updated_attribute_4 = {'solr_field': 'Analysis',
-                               'id': '8',
-                               'rank': '2',
-                               'is_exposed': 'False',
-                               'is_facet': 'False',
-                               'is_active': 'False'}
+                               'rank': 1,
+                               'is_exposed': False,
+                               'is_facet': False,
+                               'is_active': False}
         # Api client needs url to end / or it will redirect
-
         # update with solr_title
-        response = self.client.put('/api/v2/assays/%s/attributes/' % uuid,
-                                   updated_attribute_1)
-        response.render()
+        response = self.client.put(
+                '{0}/{1}/attributes/'.format(
+                        self.url_root, self.valid_uuid), updated_attribute_1)
         self.assertEqual(response.status_code, 202)
-        self.assertNotEqual(
-                response.content,
-                '{"study":"None: Study Title Test",'
-                '"assay":'
-                '"Measurement: transcription factor binding site; '
-                'Technology: nucleotide sequencing; '
-                'Platform: Genome Analyzer II; '
-                'File: test_assay_filename.txt",'
-                '"solr_field":"Character_Title",'
-                '"rank":"3",'
-                '"is_exposed":true,'
-                '"is_facet":true,'
-                '"is_active":true,'
-                '"is_internal":true,'
-                '"id":5}'
-                )
+        self.assertEqual(response.data.get('rank'), updated_attribute_1.get(
+                'rank'))
         self.assertEqual(
-                response.content,
-                '{"study":"None: Study Title Test",'
-                '"assay":'
-                '"Measurement: transcription factor binding site; '
-                'Technology: nucleotide sequencing; '
-                'Platform: Genome Analyzer II; '
-                'File: test_assay_filename.txt",'
-                '"solr_field":"Character_Title",'
-                '"rank":"3",'
-                '"is_exposed":false,'
-                '"is_facet":false,'
-                '"is_active":false,'
-                '"is_internal":false,'
-                '"id":5}'
-                )
+                response.data.get('is_exposed'),
+                updated_attribute_1.get('is_exposed'))
+        self.assertEqual(
+                response.data.get('is_facet'),
+                updated_attribute_1.get('is_facet'))
 
         # Update with attribute_order id
-        response = self.client.put('/api/v2/assays/%s/attributes/' % uuid,
-                                   updated_attribute_2)
-        response.render()
+        response = self.client.put(
+                '{0}/{1}/attributes/'.format(
+                        self.url_root, self.valid_uuid), updated_attribute_2)
         self.assertEqual(response.status_code, 202)
+        self.assertEqual(response.data.get('rank'),
+                         updated_attribute_2.get('rank'))
         self.assertEqual(
-                response.content,
-                '{"study":"None: Study Title Test",'
-                '"assay":'
-                '"Measurement: transcription factor binding site; '
-                'Technology: nucleotide sequencing; '
-                'Platform: Genome Analyzer II; '
-                'File: test_assay_filename.txt",'
-                '"solr_field":"Specimen",'
-                '"rank":"1",'
-                '"is_exposed":false,'
-                '"is_facet":false,'
-                '"is_active":false,'
-                '"is_internal":false,'
-                '"id":6}'
-                )
+                response.data.get('is_exposed'),
+                updated_attribute_2.get('is_exposed'))
+        self.assertEqual(
+                response.data.get('is_facet'),
+                updated_attribute_2.get('is_facet'))
+        self.client.logout()
 
+    def test_put_invalid_object(self):
         # Invalid objects
-        response = self.client.put('/api/v2/assays/%s/attributes/' % uuid,
-                                   {})
+        updated_attribute_3 = {'rank': '4',
+                               'is_exposed': 'False',
+                               'is_facet': 'False',
+                               'is_active': 'False'}
+
+        self.client.login(username='ownerJane', password='test1234')
+        response = self.client.put('{0}/{1}/attributes/'
+                                   .format(self.url_root, self.valid_uuid),
+                                    updated_attribute_3)
+        response.render()
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
                 response.content, '"Requires attribute id or solr_field name."'
                 )
         self.client.logout()
 
+    def test_put_invalid_login(self):
         # Invalid Login
+        updated_attribute_4 = {'solr_field': 'Cell Type',
+                                    'rank': '4',
+                                    'is_exposed': 'False',
+                                    'is_facet': 'False',
+                                    'is_active': 'False'}
+
         self.client.login(username='guestName', password='test1234')
-        response = self.client.put('/api/v2/assays/%s/attributes/' % uuid,
-                                   updated_attribute_3)
+        response = self.client.put('{0}/{1}/attributes/'
+                                   .format(self.url_root, self.valid_uuid),
+                                   updated_attribute_4)
         self.assertEqual(response.status_code, 401)
         self.assertEqual(
                 response.content, '"Only owner may edit attribute order."'
                 )
-
         self.client.logout()
 
 
