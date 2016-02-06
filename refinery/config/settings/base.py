@@ -309,7 +309,6 @@ EMAIL_SUBJECT_PREFIX = get_setting("EMAIL_SUBJECT_PREFIX")
 # for system stability
 CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
-CELERY_ENABLE_UTC = True
 
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
 
