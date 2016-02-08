@@ -4,9 +4,6 @@ describe('Filter: RunningStatusBtn', function () {
 
   beforeEach(function () {
     module('refineryApp');
-    var params = {
-
-    }
 
     inject(function ($filter) {
       filter = $filter('analysisMonitorRunningStatusBtn');
@@ -19,34 +16,34 @@ describe('Filter: RunningStatusBtn', function () {
 
   var emptyParam = {};
   var startedParam = {
-    'refineryImport': 'RUNNING',
-    'galaxyImport': 'PENDING',
-    'galaxyAnalysis': 'PENDING',
-    'galaxyExport': 'PENDING'
+    'refineryImport': {'state': 'RUNNING'},
+    'galaxyImport':   {'state': 'PENDING'},
+    'galaxyAnalysis': {'state': 'PENDING'},
+    'galaxyExport':   {'state': 'PENDING'}
   };
   var partialParam1 = {
-    'refineryImport': 'SUCCESS',
-    'galaxyImport': 'RUNNING',
-    'galaxyAnalysis': 'PENDING',
-    'galaxyExport': 'PENDING'
+    'refineryImport': {'state': 'SUCCESS'},
+    'galaxyImport':   {'state': 'RUNNING'},
+    'galaxyAnalysis': {'state': 'PENDING'},
+    'galaxyExport':   {'state': 'PENDING'}
   };
   var partialParam2 = {
-    'refineryImport': 'SUCCESS',
-    'galaxyImport': 'SUCCESS',
-    'galaxyAnalysis': 'RUNNING',
-    'galaxyExport': 'PENDING'
+    'refineryImport': {'state': 'SUCCESS'},
+    'galaxyImport':   {'state': 'SUCCESS'},
+    'galaxyAnalysis': {'state': 'RUNNING'},
+    'galaxyExport':   {'state': 'PENDING'}
   };
   var partialParam3 = {
-    'refineryImport': 'SUCCESS',
-    'galaxyImport': 'SUCCESS',
-    'galaxyAnalysis': 'SUCCESS',
-    'galaxyExport': 'RUNNING'
+    'refineryImport': {'state': 'SUCCESS'},
+    'galaxyImport':   {'state': 'SUCCESS'},
+    'galaxyAnalysis': {'state': 'SUCCESS'},
+    'galaxyExport':   {'state': 'RUNNING'}
   };
   var completedParam = {
-    'refineryImport': 'SUCCESS',
-    'galaxyImport': 'SUCCESS',
-    'galaxyAnalysis': 'SUCCESS',
-    'galaxyExport': 'SUCCESS'
+    'refineryImport': {'state': 'SUCCESS'},
+    'galaxyImport':   {'state': 'SUCCESS'},
+    'galaxyAnalysis': {'state': 'SUCCESS'},
+    'galaxyExport':   {'state': 'SUCCESS'}
   };
 
   it('should return correct icon depending on completed state', function () {
