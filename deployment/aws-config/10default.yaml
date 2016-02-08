@@ -1,0 +1,44 @@
+# aws-config is a directory
+# containing all the YAML files that
+# describe the configuration of
+# a refinery-platform stack.
+
+# All the .yaml files are used as configuration.
+
+# This is the 00defauly.yaml file;
+# it specifies defaults.
+# Some of which might be overridden in later
+# configuration files.
+
+# Currently (2016-02), the only required value is VOLUME.
+
+# If an entry says "FIXED to blah"
+# then you can't change it,
+# but it might become configurable later.
+
+
+# The name of the EC2 key pair to use for SSH.
+# FIXED to "id_rsa".
+
+# The name of the IAM role to grant to the EC2 instance.
+# (this role must have readonly access to the RDS API)
+# FIXED to "refinery-web"
+
+# The AMI image for the EC2 instance
+# FIXED to "ami-d05e75b8"
+
+# The instance type for the EC2 instance
+# FIXED to "m3.medium"
+
+# The volume ID of the pre-existing EC2 volume to attach and use.
+# VOLUME: REQUIRED
+
+# The name of the pre-existing RDS instance to connect to.
+# (must use the PostgreSQL engine)
+# RDS_SUPERUSER_NAME: "rds-refinery"
+
+# The name of the RDS superuser account.
+# FIXED to "root"
+
+# The password for the RDS superuser account.
+# RDS_SUPERUSER_PASSWORD: "mypassword"

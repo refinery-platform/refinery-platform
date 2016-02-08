@@ -24,7 +24,7 @@
         "NAME": "refinery",
         "PASSWORD": "<%= @rds_role_password %>",
         "PORT": "<%= @rds_port %>",
-        "USER": "<%= @app_user %>"
+        "USER": "<%= @app_user || "vagrant" %>"
     }
   },
   "DEFAULT_FROM_EMAIL": "webmaster@localhost",
@@ -36,12 +36,12 @@
     "GALAXY": 10.0,
     "SOLR": 10.0
   },
-  "ISA_TAB_DIR": "/vagrant/isa-tab",
-  "JAVA_ENTITY_EXPANSION_LIMIT": 100000,
+  "ISA_TAB_DIR": "<%= @isa_tab_dir || "/vagrant/isa-tab" %>",
+  "JAVA_ENTITY_EXPANSION_LIMIT": 1000000,
   "LANGUAGE_CODE": "en-us",
   "LIBS_DIR": "/opt",
   "LOG_LEVEL": "DEBUG",
-  "MEDIA_ROOT": "",
+  "MEDIA_ROOT": "<%= @media_root %>",
   "MEDIA_URL": "/media/",
   "NEO4J": {
     "BASE_URL": "http://localhost:7474",
