@@ -9,7 +9,6 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
   vm.analysesList = [];
   vm.analysesGlobalList = [];
   vm.analysesDetail = {};
-  vm.analysesDetail2 = {};
   vm.analysesGlobalDetail = {};
   vm.analysesRunningList = [];
   vm.analysesRunningGlobalList = [];
@@ -148,8 +147,7 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
       if(typeof vm.analysesRunningList[i] !== 'undefined') {
         var runningUuid = vm.analysesRunningList[i].uuid;
         analysisMonitorFactory.getAnalysesDetail(runningUuid).then(function (response) {
-          //vm.analysesDetail[runningUuid] = analysisMonitorFactory.analysesDetail[runningUuid];
-          vm.analysesDetail2[runningUuid] = analysisMonitorFactory.analysesDetail2[runningUuid];
+          vm.analysesDetail[runningUuid] = analysisMonitorFactory.analysesDetail[runningUuid];
         });
       }
     })(i);
@@ -160,7 +158,7 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
       if(typeof vm.analysesRunningGlobalList[i] !== 'undefined') {
         var runningUuid = vm.analysesRunningGlobalList[i].uuid;
         analysisMonitorFactory.getAnalysesDetail(runningUuid).then(function (response) {
-          vm.analysesGlobalDetail[runningUuid] = analysisMonitorFactory.analysesDetail2[runningUuid];
+          vm.analysesGlobalDetail[runningUuid] = analysisMonitorFactory.analysesDetail[runningUuid];
         });
       }
     })(i);
@@ -219,7 +217,7 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
   };
 
   vm.isAnalysisDetailLoaded = function(uuid){
-    if(typeof vm.analysesDetail2[uuid] !== "undefined"){
+    if(typeof vm.analysesDetail[uuid] !== "undefined"){
       return true;
     } else {
       return false;

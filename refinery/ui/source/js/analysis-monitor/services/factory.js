@@ -6,25 +6,12 @@ function analysisMonitorFactory($http, analysisService) {
   var analysesList = [];
   var analysesGlobalList = [];
   var analysesDetail = {};
-  var analysesDetail2 = {};
   var analysesRunningGlobalList = [];
   var analysesRunningList = [];
-  var analysesOne = [];
 
-  var initializeAnalysesDetail = function (uuid) {
-    analysesDetail[uuid] = {
-      "preprocessing": '',
-      "preprocessingPercentDone": '0%',
-      "execution": '',
-      "executionPercentDone": '0%',
-      "postprocessing": '',
-      "postprocessingPercentDone": '0%',
-      "cancelingAnalyses": false,
-    };
-  };
 
-  var initializeAnalysesDetail2 = function(uuid){
-  analysesDetail2[uuid] = {
+  var initializeAnalysesDetail = function(uuid){
+  analysesDetail[uuid] = {
     "refineryImport": [],
     "galaxyImport": {},
     "galaxyAnalysis": {},
@@ -34,7 +21,6 @@ function analysisMonitorFactory($http, analysisService) {
 };
 
   //Ajax calls
-
   var getAnalysesList = function (params) {
     params = params || {};
 
@@ -69,9 +55,6 @@ function analysisMonitorFactory($http, analysisService) {
       url: '/analysis_manager/' + uuid + "/?format=json",
       headers: {"X-Requested-With": 'XMLHttpRequest'}
     }).then(function (response) {
-      //processAnalysesGlobalDetail(response.data, uuid);
-      console.log("in get Analyses Detail");
-      console.log(response.data);
       processAnalysesGlobalDetail2(response.data, uuid);
     }, function (error) {
       console.error("Error accessing analysis monitoring API");
@@ -163,19 +146,9 @@ function analysisMonitorFactory($http, analysisService) {
      }
   };
 
-  var processAnalysesGlobalDetail = function(data, uuid){
-    if(!(analysesDetail.hasOwnProperty(uuid))){
-      initializeAnalysesDetail(uuid);
-    }
-    setPreprocessingStatus(data, uuid);
-    setPostprocessingStatus(data, uuid);
-    if(data.execution != null){
-      setExecutionStatus(data, uuid);
-    }
-  };
   var processAnalysesGlobalDetail2 = function(data, uuid){
-    if (!(analysesDetail2.hasOwnProperty(uuid))){
-      initializeAnalysesDetail2(uuid);
+    if (!(analysesDetail.hasOwnProperty(uuid))){
+      initializeAnalysesDetail(uuid);
     }
     setRefineryImportStatus(data, uuid);
     setGalaxyImportStatus(data, uuid);
@@ -186,31 +159,30 @@ function analysisMonitorFactory($http, analysisService) {
   var setRefineryImportStatus = function(data, uuid){
     if (data.refineryImport){
       for (var i = 0; i < data.refineryImport.length; i++) {
-        analysesDetail2[uuid].refineryImport[i] = data.refineryImport[i];
+        analysesDetail[uuid].refineryImport[i] = data.refineryImport[i];
       }
     }
   };
 
   var setGalaxyImportStatus = function(data, uuid){
     if (data.galaxyImport){
-      analysesDetail2[uuid].galaxyImport = data.galaxyImport[0];
+      analysesDetail[uuid].galaxyImport = data.galaxyImport[0];
     }
   };
 
   var setGalaxyAnalysisStatus = function(data, uuid){
     if (data.galaxyAnalysis){
-      analysesDetail2[uuid].galaxyAnalysis = data.galaxyAnalysis[0];
+      analysesDetail[uuid].galaxyAnalysis = data.galaxyAnalysis[0];
     }
   };
 
   var setGalaxyExportStatus = function(data, uuid){
     if (data.galaxyExport){
       for (var i = 0; i < data.galaxyExport.length; i++) {
-        analysesDetail2[uuid].galaxyExport[i] = data.galaxyExport[i];
+        analysesDetail[uuid].galaxyExport[i] = data.galaxyExport[i];
       }
     }
   };
-
 
   var isNotPending = function(state){
     if(state === 'PENDING'){
@@ -220,32 +192,6 @@ function analysisMonitorFactory($http, analysisService) {
     }
   };
 
-  var setPreprocessingStatus = function(data, uuid){
-     if (data.preprocessing[0] && isNotPending(data.preprocessing[0].state)) {
-       analysesDetail[uuid].preprocessing = data.preprocessing[0].state;
-       if( data.preprocessing[0].percent_done > analysesDetail[uuid].preprocessingPercentDone) {
-        analysesDetail[uuid].preprocessingPercentDone = Math.floor(data.preprocessing[0].percent_done.replace("%","")) + "%";
-       }
-    }
-  };
-
-  var setPostprocessingStatus = function(data, uuid){
-     if (data.postprocessing[0] && isNotPending(data.postprocessing[0].state)) {
-       analysesDetail[uuid].postprocessing = data.postprocessing[0].state;
-       if(data.postprocessing[0].percent_done > analysesDetail[uuid].postprocessingPercentDone) {
-        analysesDetail[uuid].postprocessingPercentDone = Math.floor(data.postprocessing[0].percent_done.replace("%","")) + "%";
-       }
-    }
-  };
-
-  var setExecutionStatus = function(data, uuid){
-     if (data.execution[0] && isNotPending(data.execution[0].state)) {
-       analysesDetail[uuid].execution = data.execution[0].state;
-       if( data.execution[0].percent_done > analysesDetail[uuid].executionPercentDone) {
-        analysesDetail[uuid].executionPercentDone = Math.floor(data.execution[0].percent_done.replace("%","")) + "%";
-       }
-     }
-  };
 
  return{
    getAnalysesList: getAnalysesList,
@@ -254,7 +200,6 @@ function analysisMonitorFactory($http, analysisService) {
    analysesList: analysesList,
    analysesGlobalList: analysesGlobalList,
    analysesDetail: analysesDetail,
-   analysesDetail2: analysesDetail2,
    analysesRunningList:analysesRunningList,
    analysesRunningGlobalList:analysesRunningGlobalList,
  };

@@ -16,7 +16,7 @@ function analysisMonitorAnalysesList() {
     controllerAs: 'AMCtrl',
     bindToController: {
        analysesList: '@',
-       analysesDetail2: '@'
+       analysesDetail: '@'
     },
     link: function(scope, element, attr){
 

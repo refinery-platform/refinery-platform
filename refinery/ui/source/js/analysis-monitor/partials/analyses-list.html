@@ -155,7 +155,7 @@
 
               <div ng-show="AMCtrl.isAnalysisDetailLoaded(analysis.uuid)">
                 <ul class="analysisRunningList">
-                  <span ng-if="AMCtrl.analysesDetail2[analysis.uuid].cancelingAnalyses == true ||
+                  <span ng-if="AMCtrl.analysesDetail[analysis.uuid].cancelingAnalyses == true ||
                                AMCtrl.initializedFlag[analysis.uuid] == true">
                     <li id="analyses-cancel-notice">
                       <div class="alert alert-warning">Canceling...</div>
@@ -168,7 +168,7 @@
                       <i class="fa fa-question-circle"></i>
                     </span>
 
-                    <div ng-repeat="obj in AMCtrl.analysesDetail2[analysis.uuid].refineryImport">
+                    <div ng-repeat="obj in AMCtrl.analysesDetail[analysis.uuid].refineryImport">
                       <div ng-switch on="obj.state">
                         <div ng-switch-when="SUCCESS">
                           <div class="alert alert-success">{{obj.state}}</div>
@@ -203,10 +203,10 @@
                       <i class="fa fa-question-circle"></i>
                     </span>
 
-                    <div ng-switch on="AMCtrl.analysesDetail2[analysis.uuid].galaxyImport.state">
+                    <div ng-switch on="AMCtrl.analysesDetail[analysis.uuid].galaxyImport.state">
                       <div ng-switch-when="SUCCESS">
                         <div class="alert alert-success">
-                          {{AMCtrl.analysesDetail2[analysis.uuid].galaxyImport.state}}
+                          {{AMCtrl.analysesDetail[analysis.uuid].galaxyImport.state}}
                         </div>
                       </div>
                       <div ng-switch-when="PROGRESS">
@@ -215,16 +215,16 @@
                             class="progress-bar progress-bar-striped active"
                             role="progressbar"
                             id="galaxy-import-{{analysis.uuid}}"
-                            style="width:{{AMCtrl.analysesDetail2[analysis.uuid].galaxyImport.percent_done}}%">
+                            style="width:{{AMCtrl.analysesDetail[analysis.uuid].galaxyImport.percent_done}}%">
                             <span class="progress-analyses-text">
-                              {{AMCtrl.analysesDetail2[analysis.uuid].galaxyImport.percent_done}}%
+                              {{AMCtrl.analysesDetail[analysis.uuid].galaxyImport.percent_done}}%
                             </span>
                           </div>
                         </div>
                       </div>
                       <div ng-switch-when="FAILURE">
                         <div class="alert alert-warning">
-                          {{AMCtrl.analysesDetail2[analysis.uuid].galaxyImport.state}}
+                          {{AMCtrl.analysesDetail[analysis.uuid].galaxyImport.state}}
                         </div>
                       </div>
                       <div ng-switch-default>
@@ -238,15 +238,15 @@
                     <span rp-analysis-monitor-output-tooltip>
                       <i class="fa fa-question-circle"></i>
                     </span>
-                    <div ng-switch on="AMCtrl.analysesDetail2[analysis.uuid].galaxyAnalysis.state">
+                    <div ng-switch on="AMCtrl.analysesDetail[analysis.uuid].galaxyAnalysis.state">
                       <div ng-switch-when="SUCCESS">
                         <div class="alert alert-success">
-                          {{AMCtrl.analysesDetail2[analysis.uuid].galaxyAnalysis.state}}
+                          {{AMCtrl.analysesDetail[analysis.uuid].galaxyAnalysis.state}}
                         </div>
                       </div>
                       <div ng-switch-when="FAILURE">
                         <div class="alert alert-warning">
-                          {{AMCtrl.analysesDetail2[analysis.uuid].galaxyAnalysis.state}}
+                          {{AMCtrl.analysesDetail[analysis.uuid].galaxyAnalysis.state}}
                         </div>
                       </div>
                       <div ng-switch-when="PROGRESS">
@@ -255,9 +255,9 @@
                             class="progress-bar progress-bar-striped active"
                             role="progressbar"
                             id="galaxy-analysis-{{analysis.uuid}}"
-                            style="width:{{AMCtrl.analysesDetail2[analysis.uuid].galaxyAnalysis.percent_done}}%">
+                            style="width:{{AMCtrl.analysesDetail[analysis.uuid].galaxyAnalysis.percent_done}}%">
                             <span class="progress-analyses-text">
-                              {{AMCtrl.analysesDetail2[analysis.uuid].galaxyAnalysis.percent_done}}%
+                              {{AMCtrl.analysesDetail[analysis.uuid].galaxyAnalysis.percent_done}}%
                             </span>
                           </div>
                         </div>
@@ -274,7 +274,7 @@
                       <i class="fa fa-question-circle"></i>
                     </span>
 
-                    <div ng-repeat="obj in AMCtrl.analysesDetail2[analysis.uuid].galaxyExport">
+                    <div ng-repeat="obj in AMCtrl.analysesDetail[analysis.uuid].galaxyExport">
                       <div ng-switch on="obj.state">
                         <div ng-switch-when="SUCCESS">
                           <div class="alert alert-success">{{obj.state}}</div>
