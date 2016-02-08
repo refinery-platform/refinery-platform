@@ -20,7 +20,7 @@ function analysisMonitorFactory($http, analysisService) {
   };
 };
 
-  //Ajax calls
+  //Ajax calls, grabs the entire analysis list for a particular data set
   var getAnalysesList = function (params) {
     params = params || {};
 
@@ -34,6 +34,7 @@ function analysisMonitorFactory($http, analysisService) {
     return analysis.$promise;
   };
 
+  //Copies and sorts analyses list
   var processAnalysesList = function (data, params) {
     if ('status' in params && 'data_set__uuid' in params) {
       angular.copy(data, analysesRunningList);
@@ -55,7 +56,7 @@ function analysisMonitorFactory($http, analysisService) {
       url: '/analysis_manager/' + uuid + "/?format=json",
       headers: {"X-Requested-With": 'XMLHttpRequest'}
     }).then(function (response) {
-      processAnalysesGlobalDetail2(response.data, uuid);
+      processAnalysesGlobalDetail(response.data, uuid);
     }, function (error) {
       console.error("Error accessing analysis monitoring API");
     });
@@ -146,7 +147,7 @@ function analysisMonitorFactory($http, analysisService) {
      }
   };
 
-  var processAnalysesGlobalDetail2 = function(data, uuid){
+  var processAnalysesGlobalDetail = function(data, uuid){
     if (!(analysesDetail.hasOwnProperty(uuid))){
       initializeAnalysesDetail(uuid);
     }
@@ -184,15 +185,6 @@ function analysisMonitorFactory($http, analysisService) {
     }
   };
 
-  var isNotPending = function(state){
-    if(state === 'PENDING'){
-      return false;
-    }else{
-      return true;
-    }
-  };
-
-
  return{
    getAnalysesList: getAnalysesList,
    getAnalysesDetail: getAnalysesDetail,
@@ -201,7 +193,7 @@ function analysisMonitorFactory($http, analysisService) {
    analysesGlobalList: analysesGlobalList,
    analysesDetail: analysesDetail,
    analysesRunningList:analysesRunningList,
-   analysesRunningGlobalList:analysesRunningGlobalList,
+   analysesRunningGlobalList:analysesRunningGlobalList
  };
 }
 
