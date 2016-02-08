@@ -20,7 +20,7 @@ from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     UserProfileResource
 from core.models import DataSet
 
-from core.views import WorkflowViewset
+from core.views import WorkflowViewSet
 from file_store.views import FileStoreItemViewSet
 
 from data_set_manager.views import Assays, AssaysFiles, AssaysAttributes
@@ -47,7 +47,7 @@ admin.autodiscover()
 # Django REST Framework urls
 router = routers.DefaultRouter()
 router.register(r'filestoreitems', FileStoreItemViewSet)
-router.register(r'workflows', WorkflowViewset)
+router.register(r'workflows', WorkflowViewSet)
 
 
 # NG: added for tastypie URL
