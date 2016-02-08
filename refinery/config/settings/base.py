@@ -473,7 +473,7 @@ try:
     repo_url.replace("origin ", "")
 
 except Exception as e:
-    logger.error("could not get repo url:%s" % e)
+    logger.error("could not get repo url: %s", e)
 
 try:
     # TODO: use option -C (removed as a temp workaround for compatibility
