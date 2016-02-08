@@ -3,6 +3,7 @@ import logging
 import os
 import djcelery
 import subprocess
+from urlparse import urljoin
 from django.core.exceptions import ImproperlyConfigured
 
 logger = logging.getLogger(__name__)
@@ -469,8 +470,8 @@ try:
         '--work-tree', BASE_DIR,
         'config', '--get', 'remote.origin.url'
     ])
-    repo_url = repo_url.split(".git", 1)[0] + "/commit/"
-    repo_url.replace("origin ", "")
+    repo_url = repo_url.replace(".git", "/")
+    repo_url = urljoin(repo_url, "commit/")
 
 except Exception as e:
     logger.error("could not get repo url: %s", e)
@@ -484,7 +485,7 @@ try:
         '--work-tree', BASE_DIR,
         'rev-parse', 'HEAD'
     ])
-    CURRENT_COMMIT = repo_url + commit
+    CURRENT_COMMIT = urljoin(repo_url, commit)
 
 
 except (ValueError, subprocess.CalledProcessError) as exc:
