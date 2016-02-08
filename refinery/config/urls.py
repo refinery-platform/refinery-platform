@@ -30,7 +30,6 @@ from data_set_manager.api import AttributeOrderResource, StudyResource,\
     AssayResource, InvestigationResource, ProtocolResource, \
     ProtocolReferenceResource, ProtocolReferenceParameterResource, \
     PublicationResource, AttributeResource
-from rest_framework import routers
 
 
 logger = logging.getLogger(__name__)
