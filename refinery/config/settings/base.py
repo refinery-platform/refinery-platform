@@ -313,6 +313,10 @@ CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
 
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
 
+SOUTH_MIGRATION_MODULES = {
+    'djcelery': 'djcelery.south_migrations',
+}
+
 # === Refinery Settings ===
 
 # for registration module
