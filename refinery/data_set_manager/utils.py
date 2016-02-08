@@ -785,4 +785,4 @@ def update_attribute_order_ranks(old_attribute, new_rank):
         else:
             return serializer.error
 
-    return "Successful update"
+    return
