@@ -5,6 +5,7 @@ $project_root = "/${app_user}"
 $deployment_root = "${project_root}/deployment"
 $django_root = "${project_root}/refinery"
 $requirements = "${project_root}/requirements.txt"
+$isa_tab_dir = "${project_root}/isa-tab"
 $django_settings_module = "config.settings.dev"
 $ui_app_root = "${django_root}/ui"
 
