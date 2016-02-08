@@ -6,7 +6,6 @@ from django.contrib import admin
 from haystack.forms import FacetedSearchForm
 from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
-from registration.forms import RegistrationFormUniqueEmail
 from registration.backends.default.views import ActivationView
 from registration.backends.default.views import RegistrationView
 from tastypie.api import Api
