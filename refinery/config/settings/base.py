@@ -31,6 +31,7 @@ def get_setting(name, settings=local_settings):
         raise ImproperlyConfigured("Missing setting '{0}'".format(name))
 
 
+# TODO: remove after switching to the new Celery API
 djcelery.setup_loader()
 
 # a tuple that lists people who get code error notifications

@@ -6,7 +6,7 @@ Created on May 11, 2012
 
 import logging
 import shutil
-from urlparse import urlparse
+import urlparse
 
 from django import forms
 from django.core.exceptions import MultipleObjectsReturned
@@ -118,7 +118,7 @@ class ProcessISATabView(View):
                                           context_instance=context)
             response.delete_cookie(self.isa_tab_cookie_name)
             return response
-        u = urlparse(url)
+        u = urlparse.urlparse(url)
         file_name = u.path.split('/')[-1]
         temp_file_path = os.path.join(get_temp_dir(), file_name)
         try:
@@ -161,7 +161,7 @@ class ProcessISATabView(View):
             if url:
                 # TODO: replace with chain
                 # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks
-                u = urlparse(url)
+                u = urlparse.urlparse(url)
                 file_name = u.path.split('/')[-1]
                 temp_file_path = os.path.join(get_temp_dir(), file_name)
                 try:
