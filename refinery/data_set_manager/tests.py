@@ -116,7 +116,8 @@ class AssaysAPITests(APITestCase):
 #
 #     def test_get(self):
 #         # valid_uuid, patch date in the module that uses it
-#         with patch('data_set_manager.views.AssaysFiles.get') as mock_search_solr:
+#         with patch(
+# 'data_set_manager.views.AssaysFiles.get') as mock_search_solr:
 #             mock_search_solr.search_solr = {
 #                 "facet_field_counts": {},
 #                 "attributes": 'cow',
@@ -142,7 +143,6 @@ class AssaysAPITests(APITestCase):
 #                          '{"facet_field_counts":{},'
 #                          '"attributes":cow,'
 #                          '"nodes":[]}')
-
 
 
 class AssaysAttributesAPITests(APITestCase):
@@ -325,7 +325,7 @@ class AssaysAttributesAPITests(APITestCase):
         self.client.login(username='ownerJane', password='test1234')
         response = self.client.put('{0}/{1}/attributes/'
                                    .format(self.url_root, self.valid_uuid),
-                                    updated_attribute_3)
+                                   updated_attribute_3)
         response.render()
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
@@ -336,10 +336,10 @@ class AssaysAttributesAPITests(APITestCase):
     def test_put_invalid_login(self):
         # Invalid Login
         updated_attribute_4 = {'solr_field': 'Cell Type',
-                                    'rank': '4',
-                                    'is_exposed': 'False',
-                                    'is_facet': 'False',
-                                    'is_active': 'False'}
+                               'rank': '4',
+                               'is_exposed': 'False',
+                               'is_facet': 'False',
+                               'is_active': 'False'}
 
         self.client.login(username='guestName', password='test1234')
         response = self.client.put('{0}/{1}/attributes/'
@@ -737,7 +737,7 @@ class UtilitiesTest(TestCase):
         self.assertEqual(error, "Error loading json.")
 
     def test_customize_attribute_response(self):
-        #valid input
+        # valid input
         attributes = ['REFINERY_FILETYPE_6_3_s',
                       'Title_Characteristics_6_3_s',
                       'REFINERY_TYPE_6_3_s',
@@ -793,7 +793,7 @@ class UtilitiesTest(TestCase):
                   'display_name': 'Year',
                   'internal_name': 'Year_Characteristics_6_3_s'}])
 
-        #another valid input
+        # another valid input
         attributes = ['treatment_Factor_Value_22_11_s',
                       'treatment_Characteristics_22_11_s',
                       'REFINERY_NAME_22_11_s',
