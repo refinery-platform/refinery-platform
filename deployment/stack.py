@@ -34,6 +34,7 @@ python stack.py > web.json
 # CloudInit
 #   https://help.ubuntu.com/community/CloudInit
 
+import glob
 import os       # for os.popen
 import sys      # sys.stderr, sys.exit, and so on
 
@@ -99,9 +100,20 @@ def main():
 
 
 def load_config():
-    config_path = "stack-config.yaml"
-    with open(config_path) as f:
-        config = yaml.load(f)
+    """
+    Configuration is loaded from the aws-config/ directory.
+    All the YAML files are loaded in ASCIIbetical order.
+    """
+
+    config_dir = "aws-config"
+    pattern = os.path.join(config_dir, "*.yaml")
+
+    config = {}
+    for config_filename in sorted(glob.glob(pattern)):
+        with open(config_filename) as f:
+            y = yaml.load(f)
+            if y:
+                config.update(y)
 
     # Collect and report list of missing keys.
     required = ['VOLUME']
@@ -111,7 +123,7 @@ def load_config():
             bad.append(key)
     if bad:
         sys.stderr.write("{:s} must have values for:\n{!r}\n".format(
-            config_path, bad))
+            config_dir, bad))
         raise ConfigError()
 
     config.setdefault('RDS_SUPERUSER_PASSWORD', 'mypassword')
