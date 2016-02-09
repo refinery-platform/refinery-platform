@@ -1704,24 +1704,29 @@ TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
     }
   }
 
+  var terms = [
+    {
+      nodeUri: root.uri,
+      dataSetIds: getAssociatedDataSets(
+        this.cacheTerms[root.ontId][root.branchId]
+      ),
+      mode: 'and',
+      query: true,
+      source: 'treeMap'
+    }
+  ];
+
+  if (prevRoot) {
+    terms.push({
+      nodeUri: prevRootUri,
+      dataSetIds: getAssociatedDataSets(
+        this.cacheTerms[prevRoot.ontId][prevRoot.branchId]
+      ),
+    });
+  }
+
   this.$rootScope.$emit('dashboardVisNodeToggleQuery', {
-    terms: [
-      {
-        nodeUri: root.uri,
-        dataSetIds: getAssociatedDataSets(
-          this.cacheTerms[root.ontId][root.branchId]
-        ),
-        mode: 'and',
-        query: true,
-        source: 'treeMap'
-      },
-      {
-        nodeUri: prevRootUri,
-        dataSetIds: getAssociatedDataSets(
-          this.cacheTerms[prevRoot.ontId][prevRoot.branchId]
-        ),
-      }
-    ],
+    terms: terms,
     source: 'treeMap'
   });
 

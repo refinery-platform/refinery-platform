@@ -221,7 +221,7 @@ include neo4j
 
 class neo4jOntology {
   $neo4j_config = '/etc/neo4j/neo4j-server.properties'
-  $version = "0.3.0"
+  $version = "0.5.0"
   $url = "https://github.com/refinery-platform/neo4j-ontology/releases/download/v${version}/ontology.jar"
 
   # Need to remove the old file manually as wget throws a weird

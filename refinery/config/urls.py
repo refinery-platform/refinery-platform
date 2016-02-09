@@ -6,7 +6,6 @@ from django.contrib import admin
 from haystack.forms import FacetedSearchForm
 from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
-from registration.forms import RegistrationFormUniqueEmail
 from registration.backends.default.views import ActivationView
 from registration.backends.default.views import RegistrationView
 from tastypie.api import Api
@@ -21,7 +20,7 @@ from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     UserProfileResource
 from core.models import DataSet
 
-from core.views import WorkflowViewset
+from core.views import WorkflowViewSet
 from file_store.views import FileStoreItemViewSet
 
 from data_set_manager.views import Assays, AssaysFiles, AssaysAttributes
@@ -30,7 +29,6 @@ from data_set_manager.api import AttributeOrderResource, StudyResource,\
     AssayResource, InvestigationResource, ProtocolResource, \
     ProtocolReferenceResource, ProtocolReferenceParameterResource, \
     PublicationResource, AttributeResource
-from rest_framework import routers
 
 
 logger = logging.getLogger(__name__)
@@ -49,7 +47,7 @@ admin.autodiscover()
 # Django REST Framework urls
 router = routers.DefaultRouter()
 router.register(r'filestoreitems', FileStoreItemViewSet)
-router.register(r'workflows', WorkflowViewset)
+router.register(r'workflows', WorkflowViewSet)
 
 
 # NG: added for tastypie URL
