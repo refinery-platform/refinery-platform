@@ -55,7 +55,6 @@ function analysisMonitorFactory($http, analysisService) {
       url: '/analysis_manager/' + uuid + "/?format=json",
       headers: {"X-Requested-With": 'XMLHttpRequest'}
     }).then(function (response) {
-      console.log(response);
       processAnalysesGlobalDetail(response.data, uuid);
     }, function (error) {
       console.error("Error accessing analysis monitoring API");
@@ -182,9 +181,8 @@ function analysisMonitorFactory($http, analysisService) {
             'percent_done': avgPercentDone
           };
         }
-      }else{
-        analysesDetail[uuid][stage].state = dataArr[0].state;
-        analysesDetail[uuid][stage].percent_done = dataArr[0].percent_done;
+      }else if(dataArr.length === 1){
+          analysesDetail[uuid][stage] = dataArr[0];
       }
     });
   };
