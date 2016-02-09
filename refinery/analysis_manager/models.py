@@ -16,7 +16,7 @@ class AnalysisStatus(models.Model):
     OK = 'SUCCESS'
     ERROR = 'FAILURE'
     PROGRESS = 'PROGRESS'
-    UNKNOWN = ''
+    UNKNOWN = 'PENDING'
     GALAXY_HISTORY_STATES = (
         (OK, 'OK'),
         (ERROR, 'Error'),
