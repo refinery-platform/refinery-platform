@@ -154,7 +154,6 @@ INSTALLED_APPS = (
     'django.contrib.admindocs',
     # NG: added for that human touch ...
     'django.contrib.humanize',
-    'django.contrib.markup',
     # NG: added for search and faceting (Solr support)
     'haystack',
     # NG: added for celery (task queue)
