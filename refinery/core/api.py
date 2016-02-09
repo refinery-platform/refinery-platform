@@ -15,7 +15,7 @@ from celery.task import task
 from subprocess import check_output
 
 from django.conf import settings
-from django.conf.urls.defaults import url
+from django.conf.urls import url
 from django.contrib.auth.models import User, Group
 from django.contrib.sites.models import get_current_site
 from django.contrib.contenttypes.models import ContentType
