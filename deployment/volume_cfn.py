@@ -20,26 +20,12 @@ import os       # for os.popen
 
 import yaml
 
-# Get the local user's email address
-email = os.popen("git config --get user.email").read().rstrip()
+import tags
 
-
-def load_tags():
-    """
-    Tags come from the YAML files in the aws-tags directory,
-    additionally, the tag `owner` if it is not set by those YAML
-    files, will be set to the email address of the local git
-    user.
-    """
-
-    tags = {}
-    for filename in sorted(glob.glob("aws-tags/*")):
-        with open(filename) as f:
-            tags.update(yaml.load(f))
-    if 'owner' not in tags:
-        tags['owner'] = email
-
-    return [{'Key': k, 'Value': v} for k, v in tags.items()]
+# Simulate the environment that "cfn_generate" runs scripts in.
+# http://cfn-pyplates.readthedocs.org/en/latest/advanced.html#generating-templates-in-python
+from cfn_pyplates.core import *
+from cfn_pyplates.functions import *
 
 cft = CloudFormationTemplate(description="refinery EBS volume.")
 
@@ -50,10 +36,12 @@ cft.resources.ebs = Resource(
         'AvailabilityZone': 'us-east-1b',
         'Encrypted': True,
         'Size': 10,
-        'Tags': load_tags(),
+        'Tags': tags.load(),
         'VolumeType': 'gp2'
     })
 )
 
 cft.outputs.ebs = Output(
      "Volume", ref('RefineryData'), "Volume ID")
+
+print(str(cft))
