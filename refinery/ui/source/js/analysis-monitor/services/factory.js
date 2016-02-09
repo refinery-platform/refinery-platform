@@ -156,13 +156,13 @@ function analysisMonitorFactory($http, analysisService) {
   };
 
   var setAnalysesStatus = function(data, uuid){
-    angular.forEach(data, function(valueObj, stage) {
+    angular.forEach(data, function(dataArr, stage) {
       var tempArr = [];
       var failureFlag = false;
-      if(typeof stage !== 'undefined' && valueObj.length > 1) {
-        for (var i = 0; i < valueObj.length; i++) {
-          tempArr.push(valueObj[i].percent_done);
-          if(valueObj[i].state === 'FAILURE'){
+      if(typeof stage !== 'undefined' && dataArr.length > 1) {
+        for (var i = 0; i < dataArr.length; i++) {
+          tempArr.push(dataArr[i].percent_done);
+          if(dataArr[i].state === 'FAILURE'){
             failureFlag = true;
           }
         }
@@ -184,7 +184,7 @@ function analysisMonitorFactory($http, analysisService) {
           };
         }
       }else{
-        analysesDetail[uuid][stage] = valueObj[0];
+        analysesDetail[uuid][stage] = dataArr[0];
       }
     });
   };
