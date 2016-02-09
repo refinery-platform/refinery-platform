@@ -163,7 +163,7 @@
                   </span>
 
                   <div ng-repeat="(stage, value) in AMCtrl.analysesDetail[analysis.uuid]">
-                    <div ng-if="!(stage=='overall' || stage=='cancelingAnalyses')">
+                    <div ng-if="!(stage=='cancelingAnalyses')">
                       <li class="analysisRunningListItem">
                         {{ stage }}
                         <span rp-analysis-monitor-input-tooltip>

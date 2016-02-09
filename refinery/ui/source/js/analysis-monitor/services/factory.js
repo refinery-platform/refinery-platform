@@ -4,18 +4,17 @@ angular.module('refineryAnalysisMonitor')
 function analysisMonitorFactory($http, analysisService) {
   "use strict";
   var analysesList = [];
-  var analysesGlobalList = [];
-  var analysesDetail = {};
-  var analysesRunningGlobalList = [];
   var analysesRunningList = [];
-
+  var analysesGlobalList = [];
+  var analysesRunningGlobalList = [];
+  var analysesDetail = {};
 
   var initializeAnalysesDetail = function(uuid){
   analysesDetail[uuid] = {
-    "refineryImport": [],
+    "refineryImport": {},
     "galaxyImport": {},
     "galaxyAnalysis": {},
-    "galaxyExport": [],
+    "galaxyExport": {},
     "cancelingAnalyses": false
   };
 };
@@ -184,7 +183,8 @@ function analysisMonitorFactory($http, analysisService) {
           };
         }
       }else{
-        analysesDetail[uuid][stage] = dataArr[0];
+        analysesDetail[uuid][stage].state = dataArr[0].state;
+        analysesDetail[uuid][stage].percent_done = dataArr[0].percent_done;
       }
     });
   };
