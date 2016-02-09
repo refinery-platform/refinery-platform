@@ -1,9 +1,9 @@
 angular.module('refineryAnalysisMonitor')
     .controller('AnalysisMonitorCtrl',
-    ['analysisMonitorFactory', 'analysisMonitorAlertService','$scope','$timeout', '$rootScope','$filter','analysisService', '$q', AnalysisMonitorCtrl]);
+    ['analysisMonitorFactory', 'analysisMonitorAlertService','$scope','$timeout', '$rootScope', AnalysisMonitorCtrl]);
 
 
-function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService, $scope, $timeout, $rootScope, $filter, analysisService, $q) {
+function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService, $scope, $timeout, $rootScope) {
   "use strict";
   var vm = this;
   vm.analysesList = [];
