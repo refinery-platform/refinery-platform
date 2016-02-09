@@ -167,34 +167,32 @@
                     <span rp-analysis-monitor-input-tooltip>
                       <i class="fa fa-question-circle"></i>
                     </span>
-
-                    <div ng-repeat="obj in AMCtrl.analysesDetail[analysis.uuid].refineryImport">
-                      <div ng-switch on="obj.state">
+                      <div ng-switch on="AMCtrl.analysesDetail[analysis.uuid].refineryImport.state">
                         <div ng-switch-when="SUCCESS">
-                          <div class="alert alert-success">{{obj.state}}</div>
+                          <div class="alert alert-success">{{AMCtrl.analysesDetail[analysis.uuid].refineryImport.state}}</div>
                         </div>
                         <div ng-switch-when="PROGRESS">
                           <div class="progress progress-analysis-bg">
                             <div
                               class="progress-bar progress-bar-striped active"
                               role="progressbar"
-                              {# TODO: update name #}
                               id="rf-import-{{analysis.uuid}}"
-                              style="width:{{obj.percent_done}}%">
+                              style="width:{{AMCtrl.analysesDetail[analysis.uuid]
+                                  .refineryImport.percent_done}}">
                               <span class="progress-analyses-text">
-                                {{obj.percent_done}}%
+                                {{AMCtrl.analysesDetail[analysis.uuid]
+                                  .refineryImport.percent_done}}%
                               </span>
                             </div>
                           </div>
                         </div>
                         <div ng-switch-when="FAILURE">
-                          <div class="alert alert-warning">{{obj.state}}</div>
+                          <div class="alert alert-warning">{{AMCtrl.analysesDetail[analysis.uuid].refineryImport.state}}</div>
                         </div>
                         <div ng-switch-default>
                           <div class="alert alert-info">PENDING</div>
                         </div>
                       </div>
-                    </div>
                   </li>
 
                   <li class="analysisRunningListItem">

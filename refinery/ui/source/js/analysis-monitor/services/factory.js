@@ -56,6 +56,7 @@ function analysisMonitorFactory($http, analysisService) {
       url: '/analysis_manager/' + uuid + "/?format=json",
       headers: {"X-Requested-With": 'XMLHttpRequest'}
     }).then(function (response) {
+      console.log(response);
       processAnalysesGlobalDetail(response.data, uuid);
     }, function (error) {
       console.error("Error accessing analysis monitoring API");
@@ -102,7 +103,7 @@ function analysisMonitorFactory($http, analysisService) {
   };
 
   var isObjExist = function (data) {
-    if (typeof data !== "undefined" && data !== null){
+    if(typeof data !== "undefined" && data !== null){
       return true;
       }else{
       return false;
@@ -151,37 +152,52 @@ function analysisMonitorFactory($http, analysisService) {
     if (!(analysesDetail.hasOwnProperty(uuid))){
       initializeAnalysesDetail(uuid);
     }
-    setRefineryImportStatus(data, uuid);
-    setGalaxyImportStatus(data, uuid);
-    setGalaxyAnalysisStatus(data, uuid);
-    setGalaxyExportStatus(data, uuid);
+    setAnalysesStatus(data, uuid);
   };
 
-  var setRefineryImportStatus = function(data, uuid){
-    if (data.refineryImport){
-      for (var i = 0; i < data.refineryImport.length; i++) {
-        analysesDetail[uuid].refineryImport[i] = data.refineryImport[i];
+  var setAnalysesStatus = function(data, uuid){
+    angular.forEach(data, function(valueObj, stage) {
+      var tempArr = [];
+      var failureFlag = false;
+      if(typeof stage !== 'undefined' && valueObj.length > 1) {
+        for (var i = 0; i < valueObj.length; i++) {
+          tempArr.push(valueObj[i].percent_done);
+          if(valueObj[i].state === 'FAILURE'){
+            failureFlag = true;
+          }
+        }
+        var avgPercentDone = averagePercentDone(tempArr);
+        if(failureFlag){
+          analysesDetail[uuid][stage] = {
+            'state': 'FAILURE',
+            'percent_done': null
+          };
+        }else if(avgPercentDone == 100){
+          analysesDetail[uuid][stage] = {
+            'state': 'SUCCESS',
+            'percent_done': avgPercentDone
+          };
+        }else{
+          analysesDetail[uuid][stage] = {
+            'state': 'PROGRESS',
+            'percent_done': avgPercentDone
+          };
+        }
+      }else{
+        analysesDetail[uuid][stage] = valueObj[0];
       }
-    }
+    });
   };
 
-  var setGalaxyImportStatus = function(data, uuid){
-    if (data.galaxyImport){
-      analysesDetail[uuid].galaxyImport = data.galaxyImport[0];
+  var averagePercentDone = function(numArr){
+    var totalSum = 0;
+    for(var i = 0; i < numArr.length; i++){
+      totalSum = totalSum + numArr[i];
     }
-  };
-
-  var setGalaxyAnalysisStatus = function(data, uuid){
-    if (data.galaxyAnalysis){
-      analysesDetail[uuid].galaxyAnalysis = data.galaxyAnalysis[0];
-    }
-  };
-
-  var setGalaxyExportStatus = function(data, uuid){
-    if (data.galaxyExport){
-      for (var i = 0; i < data.galaxyExport.length; i++) {
-        analysesDetail[uuid].galaxyExport[i] = data.galaxyExport[i];
-      }
+    if (totalSum > 0) {
+      return totalSum / numArr.length;
+    }else {
+      return totalSum;
     }
   };
 
