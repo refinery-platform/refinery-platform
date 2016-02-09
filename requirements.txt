@@ -34,11 +34,8 @@ enum34==1.0.4
 flower==0.8.4
 Jinja2==2.6
 jsonpickle==0.4.0
-<<<<<<< HEAD
 kombu==2.1.0
-librabbitmq=1.6.1
-=======
->>>>>>> 84f2afa0b4c484af8281fa7ff3a110fb15b28532
+librabbitmq==1.6.1
 Markdown==2.2.1
 meld3==0.6.10
 mimeparse==0.1.3
