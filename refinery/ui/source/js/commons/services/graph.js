@@ -458,7 +458,10 @@ function GraphFactory (_, Webworker) {
             }
           }
           // Update helper bar references as well
-          if (node.data.barRefs && node.data.barRefs[properties[j]]) {
+          if (
+            node.data.barRefs &&
+            typeof node.data.barRefs[properties[j]] !== 'undefined'
+          ) {
             node.data.barRefs[properties[j]] = node[properties[j]];
           }
         }
