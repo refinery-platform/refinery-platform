@@ -32,6 +32,7 @@ def get_setting(name, settings=local_settings):
         raise ImproperlyConfigured("Missing setting '{0}'".format(name))
 
 
+# TODO: remove after switching to the new Celery API
 djcelery.setup_loader()
 
 # a tuple that lists people who get code error notifications
@@ -60,6 +61,9 @@ USE_I18N = get_setting("USE_I18N")
 # If you set this to False, Django will not format dates, numbers and
 # calendars according to the current locale
 USE_L10N = get_setting("USE_L10N")
+
+# stores date and time information in UTC in the database
+USE_TZ = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
@@ -309,6 +313,10 @@ CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
 
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
+
+SOUTH_MIGRATION_MODULES = {
+    'djcelery': 'djcelery.south_migrations',
+}
 
 # === Refinery Settings ===
 
