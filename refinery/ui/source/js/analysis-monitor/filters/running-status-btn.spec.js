@@ -16,28 +16,28 @@ describe('Filter: RunningStatusBtn', function () {
 
   var emptyParam = {};
   var startedParam = {
-    'refineryImport': {'state': 'RUNNING'},
+    'refineryImport': {'state': 'PROGRESS'},
     'galaxyImport':   {'state': 'PENDING'},
     'galaxyAnalysis': {'state': 'PENDING'},
     'galaxyExport':   {'state': 'PENDING'}
   };
   var partialParam1 = {
     'refineryImport': {'state': 'SUCCESS'},
-    'galaxyImport':   {'state': 'RUNNING'},
+    'galaxyImport':   {'state': 'PROGRESS'},
     'galaxyAnalysis': {'state': 'PENDING'},
     'galaxyExport':   {'state': 'PENDING'}
   };
   var partialParam2 = {
     'refineryImport': {'state': 'SUCCESS'},
     'galaxyImport':   {'state': 'SUCCESS'},
-    'galaxyAnalysis': {'state': 'RUNNING'},
+    'galaxyAnalysis': {'state': 'PROGRESS'},
     'galaxyExport':   {'state': 'PENDING'}
   };
   var partialParam3 = {
     'refineryImport': {'state': 'SUCCESS'},
     'galaxyImport':   {'state': 'SUCCESS'},
     'galaxyAnalysis': {'state': 'SUCCESS'},
-    'galaxyExport':   {'state': 'RUNNING'}
+    'galaxyExport':   {'state': 'PROGRESS'}
   };
   var completedParam = {
     'refineryImport': {'state': 'SUCCESS'},

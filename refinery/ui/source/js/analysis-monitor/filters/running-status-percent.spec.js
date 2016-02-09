@@ -16,37 +16,37 @@ describe('Filter: AnalysisMonitorRunningStatusPercent', function () {
 
   var emptyParam = {};
   var startedParam = {
-    'refineryImport': {'state': 'RUNNING', 'percentDone': 50},
+    'refineryImport': {'state': 'RUNNING', 'percent_done': 50},
     'galaxyImport':   {'state': 'PENDING'},
     'galaxyAnalysis': {'state': 'PENDING'},
     'galaxyExport':   {'state': 'PENDING'}
   };
   var partialParam1 = {
-    'refineryImport': {'state': 'SUCCESS', 'percentDone': 100},
-    'galaxyImport':   {'state': 'RUNNING', 'percentDone': 25},
+    'refineryImport': {'state': 'SUCCESS', 'percent_done': 100},
+    'galaxyImport':   {'state': 'PROGRESS', 'percent_done': 25},
     'galaxyAnalysis': {'state': 'PENDING'},
     'galaxyExport':   {'state': 'PENDING'}
   };
   var partialParam2 = {
-    'refineryImport': {'state': 'SUCCESS', 'percentDone': 100},
-    'galaxyImport':   {'state': 'SUCCESS', 'percentDone': 100},
-    'galaxyAnalysis': {'state': 'RUNNING', 'percentDone': 35},
+    'refineryImport': {'state': 'SUCCESS', 'percent_done': 100},
+    'galaxyImport':   {'state': 'SUCCESS', 'percent_done': 100},
+    'galaxyAnalysis': {'state': 'PROGRESS', 'percent_done': 35},
     'galaxyExport':   {'state': 'PENDING'}
   };
   var partialParam3 = {
-    'refineryImport': {'state': 'SUCCESS', 'percentDone': 100},
-    'galaxyImport':   {'state': 'SUCCESS', 'percentDone': 100},
-    'galaxyAnalysis': {'state': 'SUCCESS', 'percentDone': 100},
-    'galaxyExport':   {'state': 'RUNNING', 'percentDone': 78}
+    'refineryImport': {'state': 'SUCCESS', 'percent_done': 100},
+    'galaxyImport':   {'state': 'SUCCESS', 'percent_done': 100},
+    'galaxyAnalysis': {'state': 'SUCCESS', 'percent_done': 100},
+    'galaxyExport':   {'state': 'PROGRESS', 'percent_done': 78}
   };
   var completedParam = {
-    'refineryImport': {'state': 'SUCCESS', 'percentDone': 100},
-    'galaxyImport':   {'state': 'SUCCESS', 'percentDone': 100},
-    'galaxyAnalysis': {'state': 'SUCCESS', 'percentDone': 100},
-    'galaxyExport':   {'state': 'SUCCESS', 'percentDone': 100}
+    'refineryImport': {'state': 'SUCCESS', 'percent_done': 100},
+    'galaxyImport':   {'state': 'SUCCESS', 'percent_done': 100},
+    'galaxyAnalysis': {'state': 'SUCCESS', 'percent_done': 100},
+    'galaxyExport':   {'state': 'SUCCESS', 'percent_done': 100}
   };
 
-  it('should return percentDone depending on completed state', function () {
+  it('should return percent_done depending on completed state', function () {
       expect(filter(emptyParam))
         .toBe('...');
       expect(filter(startedParam))
