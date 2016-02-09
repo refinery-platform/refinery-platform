@@ -23,6 +23,7 @@ import yaml
 # Get the local user's email address
 email = os.popen("git config --get user.email").read().rstrip()
 
+
 def load_tags():
     """
     Tags come from the YAML files in the aws-tags directory,
@@ -38,7 +39,7 @@ def load_tags():
     if 'owner' not in tags:
         tags['owner'] = email
 
-    return [{'Key': k, 'Value': v} for k,v in tags.items()]
+    return [{'Key': k, 'Value': v} for k, v in tags.items()]
 
 cft = CloudFormationTemplate(description="refinery EBS volume.")
 
