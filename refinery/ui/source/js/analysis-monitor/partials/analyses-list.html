@@ -163,44 +163,42 @@
                   </span>
 
                   <div ng-repeat="(stage, value) in AMCtrl.analysesDetail[analysis.uuid]">
-                    <div ng-if="!(stage == 'overall' || stage ==
-                    'cancelingAnalyses')">
+                    <div ng-if="!(stage=='overall' || stage=='cancelingAnalyses')">
                       <li class="analysisRunningListItem">
                         {{ stage }}
                         <span rp-analysis-monitor-input-tooltip>
-                      <i class="fa fa-question-circle"></i>
-                    </span>
+                          <i class="fa fa-question-circle"></i>
+                        </span>
                         <div ng-switch on="value.state">
-                      <div ng-switch-when="SUCCESS">
-                        <div class="alert alert-success">
-                          {{value.state}}</div>
-                      </div>
-                      <div ng-switch-when="PROGRESS">
-                        <div class="progress progress-analysis-bg">
-                          <div
-                            class="progress-bar progress-bar-striped active"
-                            role="progressbar"
-                            id="rf-import-{{analysis.uuid}}"
-                            style="width:{{value.percent_done}}">
-                            <span class="progress-analyses-text">
-                              {{value.percent_done}}%
-                            </span>
+                          <div ng-switch-when="SUCCESS">
+                            <div class="alert alert-success">
+                              {{value.state}}</div>
+                          </div>
+                          <div ng-switch-when="PROGRESS">
+                            <div class="progress progress-analysis-bg">
+                              <div
+                                class="progress-bar progress-bar-striped active"
+                                role="progressbar"
+                                id="rf-import-{{analysis.uuid}}"
+                                style="width:{{value.percent_done}}">
+                                <span class="progress-analyses-text">
+                                  {{value.percent_done}}%
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div ng-switch-when="FAILURE">
+                            <div class="alert alert-warning">
+                              {{value.state}}
+                            </div>
+                          </div>
+                          <div ng-switch-default>
+                            <div class="alert alert-info">PENDING</div>
                           </div>
                         </div>
-                      </div>
-                      <div ng-switch-when="FAILURE">
-                        <div class="alert alert-warning">
-                          {{value.state}}
-                        </div>
-                      </div>
-                      <div ng-switch-default>
-                        <div class="alert alert-info">PENDING</div>
-                      </div>
-                    </div>
                        </li>
                     </div>
                   </div>
-
                 </ul>
               </div>
             </div>
