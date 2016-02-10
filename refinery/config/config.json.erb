@@ -21,7 +21,7 @@
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
         "HOST": "<%= @rds_host %>",
-        "NAME": "refinery",
+        "NAME": "<%= @rds_role || "refinery" %>",
         "PASSWORD": "<%= @rds_role_password %>",
         "PORT": "<%= @rds_port %>",
         "USER": "<%= @app_user || "vagrant" %>"
