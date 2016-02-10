@@ -35,9 +35,10 @@
 
 # The name of the pre-existing RDS instance to connect to.
 # (must use the PostgreSQL engine)
-# RDS_SUPERUSER_NAME: "rds-refinery"
+# RDS_NAME: "rds-refinery"
 
 # The name of the RDS superuser account.
+# RDS_SUPERUSER_NAME:
 # FIXED to "root"
 
 # The password for the RDS superuser account.

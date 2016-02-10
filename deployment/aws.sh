@@ -27,7 +27,8 @@ cd /srv/refinery-platform/deployment
 
 # Discover IP endpoint for our PostgreSQL RDS, and place it in
 # environment variables for puppet/facter to use
-bin/aws-rds-endpoint db20160111 > /home/ubuntu/rds
+: ${RDS_NAME?RDS_NAME must be set}
+bin/aws-rds-endpoint "$RDS_NAME" > /home/ubuntu/rds
 export FACTER_RDS_HOST=$(jq -r .Address /home/ubuntu/rds)
 export FACTER_RDS_PORT=$(jq -r .Port /home/ubuntu/rds)
 
