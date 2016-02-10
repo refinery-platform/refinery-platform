@@ -15,7 +15,17 @@
 # AWS Cloudformation
 #   https://aws.amazon.com/cloudformation/
 
+import glob
 import os       # for os.popen
+
+import yaml
+
+import tags
+
+# Simulate the environment that "cfn_generate" runs scripts in.
+# http://cfn-pyplates.readthedocs.org/en/latest/advanced.html#generating-templates-in-python
+from cfn_pyplates.core import *
+from cfn_pyplates.functions import *
 
 cft = CloudFormationTemplate(description="refinery EBS volume.")
 
@@ -26,10 +36,12 @@ cft.resources.ebs = Resource(
         'AvailabilityZone': 'us-east-1b',
         'Encrypted': True,
         'Size': 10,
-        # 'Tags': foo,
+        'Tags': tags.load(),
         'VolumeType': 'gp2'
     })
 )
 
 cft.outputs.ebs = Output(
      "Volume", ref('RefineryData'), "Volume ID")
+
+print(str(cft))
