@@ -1,6 +1,7 @@
 #!/bin/sh
 
-USER=ubuntu
+# Name and password of PostgreSQL role to create.
+USER=${RDS_ROLE:-refinery}
 PASSWORD=${PASSWORD-password}
 
 HOST=$(jq -r .Address /home/ubuntu/rds)

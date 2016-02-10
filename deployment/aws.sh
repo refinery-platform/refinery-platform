@@ -29,8 +29,12 @@ cd /srv/refinery-platform/deployment
 # environment variables for puppet/facter to use
 : ${RDS_NAME?RDS_NAME must be set}
 bin/aws-rds-endpoint "$RDS_NAME" > /home/ubuntu/rds
+
+# FACTER environment variables become facts for puppet;
+# see https://puppetlabs.com/blog/facter-part-1-facter-101
 export FACTER_RDS_HOST=$(jq -r .Address /home/ubuntu/rds)
 export FACTER_RDS_PORT=$(jq -r .Port /home/ubuntu/rds)
+export FACTER_RDS_ROLE="$RDS_ROLE"
 
 # Create RDS user and database here, instead of using puppet
 # (because drj couldn't work out how to do it in puppet)

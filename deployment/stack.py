@@ -70,6 +70,7 @@ def main():
         "#!/bin/sh\n",
         "RDS_NAME=", config['RDS_NAME'], "\n",
         "RDS_SUPERUSER_PASSWORD=", config['RDS_SUPERUSER_PASSWORD'], "\n",
+        "RDS_ROLE=", config['RDS_ROLE'], "\n",
         "GIT_BRANCH=", commit, "\n",
         "\n",
         open('bootstrap.sh').read(),
