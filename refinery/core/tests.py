@@ -289,7 +289,7 @@ class NodeSetResourceTest(ResourceTestCase):
     #         name='ns1',
     #         study=self.study,
     #         assay=self.assay,
-    #         solr_query=simplejson.dumps(self.query)
+    #         solr_query=json.dumps(self.query)
     #     )
     #     # nodeset1.set_owner(self.user)
     #     assign_perm(
@@ -301,7 +301,7 @@ class NodeSetResourceTest(ResourceTestCase):
     #         name='ns2',
     #         study=self.study,
     #         assay=self.assay,
-    #         solr_query=simplejson.dumps(self.query)
+    #         solr_query=json.dumps(self.query)
     #     )
     #     # nodeset2.set_owner(self.user2)
     #     assign_perm(
@@ -421,7 +421,7 @@ class NodeSetResourceTest(ResourceTestCase):
     #         name='nodeset',
     #         study=self.study,
     #         assay=self.assay,
-    #         solr_query=simplejson.dumps(self.query)
+    #         solr_query=json.dumps(self.query)
     #     )
     #     nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
     #     response = self.api_client.get(
@@ -440,7 +440,7 @@ class NodeSetResourceTest(ResourceTestCase):
     #         name='nodeset',
     #         study=self.study,
     #         assay=self.assay,
-    #         solr_query=simplejson.dumps(self.query)
+    #         solr_query=json.dumps(self.query)
     #     )
     #     assign_perm(
     #         "read_%s" % nodeset._meta.module_name, self.user2, nodeset
@@ -648,7 +648,7 @@ class NodeSetListResourceTest(ResourceTestCase):
     #         assay=self.assay,
     #         node_count=1,
     #         is_implicit=True,
-    #         solr_query=simplejson.dumps(self.query)
+    #         solr_query=json.dumps(self.query)
     #     )
     #     assign_perm(
     #         "read_%s" % nodeset1._meta.module_name,
@@ -661,7 +661,7 @@ class NodeSetListResourceTest(ResourceTestCase):
     #         assay=self.assay2,
     #         node_count=1,
     #         is_implicit=True,
-    #         solr_query=simplejson.dumps(self.query)
+    #         solr_query=json.dumps(self.query)
     #     )
     #     assign_perm(
     #         "read_%s" % nodeset2._meta.module_name,
