@@ -55,6 +55,11 @@ class ConfigError(Exception):
 
 def main():
     config = load_config()
+
+    # The Availability Zone of the new instance needs to match
+    # the availability zone of the existing EBS.
+    derive_config(config)
+
     cft = CloudFormationTemplate(description="refinery platform.")
 
     # We discover the current git branch/commit
@@ -81,6 +86,7 @@ def main():
     cft.resources.ec2_instance = Resource(
         'WebInstance', 'AWS::EC2::Instance',
         Properties({
+            'AvailabilityZone': config['AVAILABILITY_ZONE'],
             'ImageId': 'ami-d05e75b8',
             'InstanceType': 'm3.medium',
             'UserData': base64(user_data_script),
@@ -132,6 +138,32 @@ def load_config():
     config.setdefault('RDS_SUPERUSER_PASSWORD', 'mypassword')
     config.setdefault('RDS_NAME', 'rds-refinery')
     return config
+
+
+def derive_config(config):
+    """
+    Modify `config` so that extra, derived, configuration is
+    added to it.
+
+    The only case at the moment is that the availability zone of
+    the VOLUME is added so that the instance can share the same
+    availability zone.
+    """
+
+    import boto3
+
+    # Discover the Availability Zone for the volume,
+    # and add it to the config.
+    ec2 = boto3.resource('ec2')
+    volume = ec2.Volume(config['VOLUME'])
+    # http://boto3.readthedocs.org/en/latest/reference/services/ec2.html#volume
+    az = volume.availability_zone
+
+    # If AVAILABILITY_ZONE is already set, it must match.
+    if 'AVAILABILITY_ZONE' in config:
+        assert config['AVAILABILITY_ZONE'] == az
+
+    config['AVAILABILITY_ZONE'] = az
 
 
 if __name__ == '__main__':
