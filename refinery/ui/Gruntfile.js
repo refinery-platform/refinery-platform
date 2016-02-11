@@ -365,7 +365,7 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.ui.src %>/images/**/*'
         ],
         tasks: [
-          'copy:uiBuildImages'
+          'newer:copy:uiBuildImages'
         ]
       },
 
@@ -377,8 +377,8 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.ui.src %>/js/**/*.js'
         ],
         tasks: [
-          'jshint:src',
-          'copy:uiBuildScripts',
+          'newer:jshint:sourceCode',
+          'newer:copy:uiBuildScripts',
           'concat-by-feature:build'
         ],
         options: {
@@ -394,7 +394,7 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.ui.src %>/styles/**/*.less'
         ],
         tasks: [
-          'less:build'
+          'newer:less:build'
         ]
       },
 
@@ -406,7 +406,7 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.ui.src %>/**/*.html'
         ],
         tasks: [
-          'copy:uiBuildTemplates'
+          'newer:copy:uiBuildTemplates'
         ]
       },
 
@@ -435,7 +435,7 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.static.src %>/js/**/*.js'
         ],
         tasks: [
-          'copy:staticBuild'
+          'newer:copy:staticBuild'
         ]
       },
 
@@ -500,10 +500,14 @@ module.exports = function(grunt) {
      * Custom code
      */
     jshint: {
-      src: [
-        '<%= cfg.basePath.ui.src %>/js/**/*.js'
-      ],
-      gruntfile: 'Gruntfile.js',
+      sourceCode: {
+        src: [
+          '<%= cfg.basePath.ui.src %>/js/**/*.js'
+        ]
+      },
+      gruntfile: {
+        src: 'Gruntfile.js'
+      },
       options: {
         // All jsHint configs are located in `.jshintrc`. This is useful as
         // editor plugins can pick up this file as well.
@@ -786,15 +790,15 @@ module.exports = function(grunt) {
   // Do as little as possible to get Refineryrunning to keep grunt watch
   // responsive.
   grunt.registerTask('build', [
-    'jshint',
+    'newer:jshint',
     'clean:uiBuild',
     'clean:staticBuild',
-    'less:build',
-    'copy:uiBuildImages',
-    'copy:uiBuildScripts',
-    'copy:uiBuildTemplates',
-    'copy:uiBuildVendor',
-    'copy:staticBuild',
+    'newer:less:build',
+    'newer:copy:uiBuildImages',
+    'newer:copy:uiBuildScripts',
+    'newer:copy:uiBuildTemplates',
+    'newer:copy:uiBuildVendor',
+    'newer:copy:staticBuild',
     'concat-by-feature:build'
   ]);
 
