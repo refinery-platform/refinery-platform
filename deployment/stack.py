@@ -41,6 +41,8 @@ import sys      # sys.stderr, sys.exit, and so on
 # https://pypi.python.org/pypi/PyYAML/3.11
 import yaml
 
+import tags
+
 # Simulate the environment that "cfn_generate" runs scripts in.
 # http://cfn-pyplates.readthedocs.org/en/latest/advanced.html#generating-templates-in-python
 from cfn_pyplates.core import *
@@ -70,6 +72,7 @@ def main():
         "#!/bin/sh\n",
         "RDS_NAME=", config['RDS_NAME'], "\n",
         "RDS_SUPERUSER_PASSWORD=", config['RDS_SUPERUSER_PASSWORD'], "\n",
+        "RDS_ROLE=", config['RDS_ROLE'], "\n",
         "GIT_BRANCH=", commit, "\n",
         "\n",
         open('bootstrap.sh').read(),
@@ -83,7 +86,7 @@ def main():
             'UserData': base64(user_data_script),
             'KeyName': 'id_rsa',
             'IamInstanceProfile': 'refinery-web',
-            'Tags': [{'Key': 'refinery', 'Value': 'refinery'}],
+            'Tags': tags.load(),
         })
     )
 
