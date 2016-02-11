@@ -33,6 +33,16 @@ function DataSetFactory (
   var _browsePath = [];
 
   /**
+   * Stores all dataset IDs corresponding to the current base selection.
+   *
+   * @author  Fritz Lekschas
+   * @date    2015-12-10
+   *
+   * @type  {Array}
+   */
+  var _currentDsIds = $q.defer();
+
+  /**
    * Caches the data objects in a central place.
    *
    * @author  Fritz Lekschas
@@ -58,16 +68,6 @@ function DataSetFactory (
    * @type  {Array}
    */
   var _orderCache = [];
-
-  /**
-   * Stores all dataset IDs corresponding to a search.
-   *
-   * @author  Fritz Lekschas
-   * @date    2015-12-10
-   *
-   * @type  {Array}
-   */
-  var _searchResultDsIds = $q.defer();
 
   /**
    * Promise that resolves to the distinct search result annotations and their
@@ -407,7 +407,7 @@ function DataSetFactory (
       // The first time a search is issued all dataset IDs will be returned
       if (response.allIds && response.allIds.length) {
         if (_search) {
-          _searchResultDsIds.resolve(response.allIds);
+          _currentDsIds.resolve(response.allIds);
           _calculatePrecisionRecall();
         } else {
           _allDsIds.resolve(response.allIds);
@@ -489,8 +489,8 @@ function DataSetFactory (
     _annotations.load().then(function (data) {
       // Get annotations used and the total number of their usage in relation to
       // the current search results.
-      for (var i = _searchResultDsIds.length; i--;) {
-        dataSet = _dataStore.get(_searchResultDsIds[i]);
+      for (var i = _currentDsIds.length; i--;) {
+        dataSet = _dataStore.get(_currentDsIds[i]);
 
         if (dataSet) {
           annotations = dataSet.annotations;
@@ -510,7 +510,7 @@ function DataSetFactory (
       // Trigger the actual calculation of precision and recall
       _annotations.calcPR(
         uniqueSearchResAnno,
-        _searchResultDsIds.length
+        _currentDsIds.length
       );
 
       _searchResultAnnotations.resolve(uniqueSearchResAnno);
@@ -579,6 +579,51 @@ function DataSetFactory (
   }
 
   /* ------------------------------ Variables ------------------------------- */
+
+  /**
+   * Promise resolving to all IDs.
+   *
+   * @author  Fritz Lekschas
+   * @date    2016-02-11
+   *
+   * @type    {Object}
+   */
+  Object.defineProperty(
+    DataSet.prototype,
+    'allIds',
+    {
+      enumerable: true,
+      configurable: false,
+      get: function () {
+        return _allDsIds.promise;
+      }
+    }
+  );
+
+  /**
+   * Promise resolving to all currently selected data set IDs.
+   *
+   * @description
+   * In contrast to `allIds` this can either be all IDs when `DataSet.all()` has
+   * been selected or all data set IDs of the current base selection, i.e.
+   * filter or search. Selections based on `select` are not included.
+   *
+   * @author  Fritz Lekschas
+   * @date    2016-02-11
+   *
+   * @type    {Object}
+   */
+  Object.defineProperty(
+    DataSet.prototype,
+    'ids',
+    {
+      enumerable: true,
+      configurable: false,
+      get: function () {
+        return _allDsIds.promise;
+      }
+    }
+  );
 
   /**
    * Current selection.
@@ -673,7 +718,6 @@ function DataSetFactory (
    */
   DataSet.prototype.all = function () {
     _search = false;
-    _searchResultDsIds.reject();
 
     _allDsIds = $q.defer();
 
@@ -688,29 +732,23 @@ function DataSetFactory (
     return this;
   };
 
-  DataSet.prototype.allIds = function (src) {
-    if (src) {
-      if (src === 'search') {
-        return _searchResultDsIds.promise;
-      }
-      return _allDsIds.promise;
-    }
+  /**
+   * Helper method to load all data set IDs that the user has access to
+   *
+   * @method  loadAllIds
+   * @author  Fritz Lekschas
+   * @date    2016-02-11
+   *
+   * @return  {Object}  Promise of the HTTP call made.
+   */
+  DataSet.prototype.loadAllIds = function () {
+    var allDsApiCall = new DataSetDataApi(undefined, true, true);
 
-    if (_search) {
-      return _searchResultDsIds.promise;
-    }
-
-    return _allDsIds.promise;
-  };
-
-  DataSet.prototype.loadAllDsIds = function () {
-    var allDsIdsApiCall = new DataSetDataApi(undefined, true, true);
-
-    allDsIdsApiCall.then(function (allDsIds) {
-      _allDsIds.resolve(allDsIds.ids);
+    allDsApiCall.then(function (allDs) {
+      _allDsIds.resolve(allDs.ids);
     });
 
-    return allDsIdsApiCall;
+    return allDsApiCall;
   };
 
   /**
@@ -911,7 +949,7 @@ function DataSetFactory (
     // Reset search result annotation promise.
     _searchResultAnnotations = $q.defer();
 
-    _searchResultDsIds = $q.defer();
+    _currentDsIds = $q.defer();
 
     if (!!_getLastBrowseStep('select')) {
       _clearOrderCache(true);
