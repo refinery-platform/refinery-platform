@@ -24,7 +24,7 @@
         "NAME": "refinery",
         "PASSWORD": "<%= @rds_role_password %>",
         "PORT": "<%= @rds_port %>",
-        "USER": "<%= @app_user || "vagrant" %>"
+        "USER": "<%= @rds_role || "vagrant" %>"
     }
   },
   "DEFAULT_FROM_EMAIL": "webmaster@localhost",
