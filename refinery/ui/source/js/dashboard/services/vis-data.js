@@ -85,13 +85,6 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
             };
           }
         );
-
-
-        // return graphData.promise.then(function (graph) {
-        //   return {
-        //     graph: graphData.promise
-        //   };
-        // });
       }
     }
   );
