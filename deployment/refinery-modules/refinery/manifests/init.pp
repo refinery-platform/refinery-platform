@@ -172,6 +172,24 @@ class solr {
 }
 include solr
 
+class solrSynonymAnalyzer {
+  $version = "2.0.0"
+  $url = "https://github.com/refinery-platform/solr-synonyms-analyzer/releases/download/v${version}/hon-lucene-synonyms.jar"
+
+  # Need to remove the old file manually as wget throws a weird
+  # `HTTP request sent, awaiting response... 403 Forbidden` error when the file
+  # already exists.
+
+  exec { "solr-synonym-analyzer-download":
+    command => "rm -f /vagrant/refinery/solr/lib/hon-lucene-synonyms.jar && wget -P /vagrant/refinery/solr/lib/ ${url}",
+    creates => "/vagrant/refinery/solr/lib/hon-lucene-synonyms.jar",
+    path    => "/usr/bin:/bin",
+    timeout => 120,  # downloading can take some time
+    notify => Service['solr'],
+  }
+}
+include solrSynonymAnalyzer
+
 class neo4j {
   $neo4j_config_file = '/etc/neo4j/neo4j-server.properties'
   include apt
@@ -228,7 +246,7 @@ class neo4jOntology {
   # `HTTP request sent, awaiting response... 403 Forbidden` error when the file
   # already exists.
 
-  exec { "download":
+  exec { "neo4j-ontology-plugin-download":
     command => "rm -f /var/lib/neo4j/plugins/ontology.jar && wget -P /var/lib/neo4j/plugins/ ${url}",
     creates => "/var/lib/neo4j/plugins/ontology.jar",
     path    => "/usr/bin:/bin",
