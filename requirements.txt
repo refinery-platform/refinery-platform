@@ -61,7 +61,6 @@ python-ptrace==0.6.4
 PyYAML==3.11
 readline==6.2.2
 requests==2.7.0
-simplejson==2.4.0
 six==1.5.2
 South==1.0.2
 Sphinx==1.1.3

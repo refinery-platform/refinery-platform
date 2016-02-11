@@ -1,5 +1,6 @@
 import os
 import re
+import json
 import urllib
 import xmltodict
 
@@ -589,7 +590,7 @@ def solr_core_search(request):
             if annotations:
                 response['response']['annotations'] = annotation_data
 
-            response = simplejson.dumps(response)
+            response = json.dumps(response)
 
     return HttpResponse(response, mimetype='application/json')
 
@@ -616,9 +617,9 @@ def solr_igv(request):
 
     # copy querydict to make it editable
     if request.is_ajax():
-        igv_config = simplejson.loads(request.body)
+        igv_config = json.loads(request.body)
 
-        logger.debug(simplejson.dumps(igv_config, indent=4))
+        logger.debug(json.dumps(igv_config, indent=4))
 
         logger.debug('IGV data query: ' + str(igv_config['query']))
         logger.debug('IGV annotation query: ' + str(igv_config['annotation']))
@@ -646,9 +647,9 @@ def solr_igv(request):
                 session_urls = "Couldn't find the provided genome build."
 
         logger.debug("session_urls")
-        logger.debug(simplejson.dumps(session_urls, indent=4))
+        logger.debug(json.dumps(session_urls, indent=4))
 
-        return HttpResponse(simplejson.dumps(session_urls),
+        return HttpResponse(json.dumps(session_urls),
                             mimetype='application/json')
 
 
@@ -693,7 +694,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
     results = requests.get(query, stream=True).raw.read()
 
     # converting results into json for python
-    results = simplejson.loads(results)
+    results = json.loads(results)
 
     # IF list of nodes to remove from query exists
     if selected_nodes:
@@ -774,7 +775,7 @@ def pubmed_abstract(request, id):
 
     response = requests.get(url, params=params, headers=headers)
     return HttpResponse(
-        simplejson.dumps(xmltodict.parse(response.text)),
+        json.dumps(xmltodict.parse(response.text)),
         mimetype='application/json'
     )
 
