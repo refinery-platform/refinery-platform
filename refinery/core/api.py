@@ -777,13 +777,7 @@ class AnalysisResource(ModelResource):
         authentication = Authentication()
         authorization = Authorization()
         allowed_methods = ["get"]
-        fields = [
-            'data_set', 'data_set__uuid', 'creation_date',
-            'modification_date', 'history_id', 'library_id', 'name',
-            'workflow__uuid', 'resource_uri', 'status', 'time_end',
-            'time_start', 'uuid', 'workflow_galaxy_id', 'workflow_steps_num',
-            'workflow_copy', 'owner', 'is_owner'
-        ]
+
         filtering = {
             'data_set': ALL_WITH_RELATIONS,
             'workflow_steps_num': ALL_WITH_RELATIONS,
@@ -808,6 +802,10 @@ class AnalysisResource(ModelResource):
 
         else:
             bundle.data['owner'] = None
+
+        bundle.data['status'] = Analysis.objects.get(uuid=bundle.data[
+            'uuid']).get_status()
+
         return bundle
 
     def get_object_list(self, request, **kwargs):
