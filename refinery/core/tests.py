@@ -106,7 +106,7 @@ class NodeSetTest(unittest.TestCase):
     def test_get_nodeset_with_valid_uuid(self):
         """Test retrieving an existing NodeSet instance"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay, is_implicit=True)
+                                         assay=self.assay)
         self.assertEqual(get_nodeset(nodeset.uuid), nodeset)
 
     def test_get_nodeset_with_invalid_uuid(self):
@@ -131,7 +131,7 @@ class NodeSetTest(unittest.TestCase):
     def test_update_nodeset_name(self):
         """Test updating NodeSet name"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay, is_implicit=True)
+                                         assay=self.assay)
         new_name = 'new nodeset name'
         update_nodeset(uuid=nodeset.uuid, name=new_name)
         self.assertEqual(
@@ -141,7 +141,7 @@ class NodeSetTest(unittest.TestCase):
     def test_update_nodeset_summary(self):
         """Test updating NodeSet summary"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay, is_implicit=True)
+                                         assay=self.assay)
         new_summary = 'new nodeset summary'
         update_nodeset(uuid=nodeset.uuid, summary=new_summary)
         self.assertEqual(
@@ -150,7 +150,7 @@ class NodeSetTest(unittest.TestCase):
     def test_update_nodeset_study(self):
         """Test updating NodeSet study"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay, is_implicit=True)
+                                         assay=self.assay)
         new_study = data_set_manager.models.Study.objects.create(
             investigation=self.investigation)
         update_nodeset(uuid=nodeset.uuid, study=new_study)
@@ -161,7 +161,7 @@ class NodeSetTest(unittest.TestCase):
     def test_update_nodeset_assay(self):
         """Test updating NodeSet assay"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay, is_implicit=True)
+                                         assay=self.assay)
         new_assay = data_set_manager.models.Assay.objects.create(
             study=self.study)
         update_nodeset(uuid=nodeset.uuid, assay=new_assay)
@@ -172,8 +172,7 @@ class NodeSetTest(unittest.TestCase):
     def test_update_nodeset_with_solr_query(self):
         """Test updating NodeSet with a new Solr query"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay, solr_query='',
-                                         is_implicit=True)
+                                         assay=self.assay, solr_query='')
         update_nodeset(uuid=nodeset.uuid, solr_query=self.query)
         self.assertEqual(
             NodeSet.objects.get(uuid=nodeset.uuid).solr_query, self.query
@@ -183,8 +182,7 @@ class NodeSetTest(unittest.TestCase):
         """Test deleting Solr query from a NodeSet"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
                                          assay=self.assay,
-                                         solr_query=self.query,
-                                         is_implicit=True)
+                                         solr_query=self.query)
         new_query = ''
         update_nodeset(uuid=nodeset.uuid, solr_query=new_query)
         self.assertEqual(
@@ -264,9 +262,7 @@ class NodeSetResourceTest(ResourceTestCase):
             name='ns',
             study=self.study,
             assay=self.assay,
-            solr_query=json.dumps(self.query),
-            is_implicit=True
-        )
+            solr_query=json.dumps(self.query))
         assign_perm("read_%s" % nodeset._meta.module_name, self.user, nodeset)
         nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
         response = self.api_client.get(
@@ -325,15 +321,13 @@ class NodeSetResourceTest(ResourceTestCase):
         """Test retrieving a list of NodeSets for given study and assay"""
         nodeset1 = NodeSet.objects.create(
             name='ns1', study=self.study, assay=self.assay,
-            solr_query=json.dumps(self.query), is_implicit=True
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
         )
         nodeset2 = NodeSet.objects.create(
             name='ns2', study=self.study2, assay=self.assay2,
-            solr_query=json.dumps(self.query), is_implicit=True
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset2._meta.module_name, self.user2, nodeset2
         )
@@ -353,15 +347,13 @@ class NodeSetResourceTest(ResourceTestCase):
         """
         nodeset1 = NodeSet.objects.create(
             name='ns1', study=self.study, assay=self.assay,
-            solr_query=json.dumps(self.query), is_implicit=True
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
         )
         nodeset2 = NodeSet.objects.create(
             name='ns2', study=self.study2, assay=self.assay2,
-            solr_query=json.dumps(self.query), is_implicit=True
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset2._meta.module_name, self.user, nodeset2
         )
@@ -387,8 +379,7 @@ class NodeSetResourceTest(ResourceTestCase):
         """Test retrieving an existing NodeSet without logging in"""
         nodeset = NodeSet.objects.create(
             name='ns', study=self.study, assay=self.assay,
-            solr_query=json.dumps(self.query), is_implicit=True
-        )
+            solr_query=json.dumps(self.query))
         assign_perm("read_%s" % nodeset._meta.module_name, self.user, nodeset)
         nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
         response = self.api_client.get(nodeset_uri, format='json')
@@ -398,14 +389,12 @@ class NodeSetResourceTest(ResourceTestCase):
         """Test retrieving a list of NodeSets without logging in"""
         nodeset1 = NodeSet.objects.create(
             name='ns1', study=self.study, assay=self.assay,
-            solr_query=json.dumps(self.query), is_implicit=True
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
         nodeset2 = NodeSet.objects.create(
             name='ns2', study=self.study, assay=self.assay,
-            solr_query=json.dumps(self.query), is_implicit=True
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset2._meta.module_name, self.user2, nodeset2
         )
@@ -457,8 +446,7 @@ class NodeSetResourceTest(ResourceTestCase):
         """Test retrieving a NodeSet instance that doesn't exist"""
         nodeset = NodeSet.objects.create(
             name='nodeset', study=self.study, assay=self.assay,
-            solr_query=json.dumps(self.query), is_implicit=True
-        )
+            solr_query=json.dumps(self.query))
         assign_perm("read_%s" % nodeset._meta.module_name, self.user, nodeset)
         nodeset_uri = make_api_uri('nodeset', 'Invalid UUID')
         response = self.api_client.get(nodeset_uri, format='json',
@@ -524,7 +512,7 @@ class NodeSetResourceTest(ResourceTestCase):
     def test_update_nodeset(self):
         """Test updating an existing NodeSet instance with new data"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay, is_implicit=False)
+                                         assay=self.assay)
         self.assertEqual(NodeSet.objects.count(), 1)
         self.assertEqual(nodeset.name, 'nodeset')
         self.assertFalse(nodeset.is_implicit)
@@ -570,7 +558,7 @@ class NodeSetResourceTest(ResourceTestCase):
     def test_delete_nodeset(self):
         """Test deleting an existing NodeSet instance"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay, is_implicit=True)
+                                         assay=self.assay)
         self.assertEqual(NodeSet.objects.count(), 1)
         assign_perm(
             "delete_%s" % nodeset._meta.module_name, self.user, nodeset
@@ -684,15 +672,13 @@ class NodeSetListResourceTest(ResourceTestCase):
         """
         nodeset1 = NodeSet.objects.create(
             name='ns1', study=self.study, assay=self.assay, node_count=1,
-            is_implicit=True, solr_query=json.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
         )
         nodeset2 = NodeSet.objects.create(
             name='ns2', study=self.study2, assay=self.assay2, node_count=1,
-            is_implicit=True, solr_query=json.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset2._meta.module_name, self.user, nodeset2
         )
@@ -708,15 +694,13 @@ class NodeSetListResourceTest(ResourceTestCase):
         """Test retrieving a list of NodeSets for given study and assay"""
         nodeset1 = NodeSet.objects.create(
             name='ns1', study=self.study, assay=self.assay, node_count=1,
-            is_implicit=True, solr_query=json.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
         )
         nodeset2 = NodeSet.objects.create(
             name='ns2', study=self.study2, assay=self.assay2, node_count=1,
-            is_implicit=True, solr_query=json.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset2._meta.module_name, self.user2, nodeset2
         )
@@ -745,9 +729,7 @@ class NodeSetListResourceTest(ResourceTestCase):
     def test_delete_nodeset_list(self):
         """Test deleting a list of NodeSets"""
         nodeset = NodeSet.objects.create(
-            name='nodeset', study=self.study, assay=self.assay,
-            is_implicit=True
-        )
+            name='nodeset', study=self.study, assay=self.assay)
         self.assertEqual(NodeSet.objects.count(), 1)
         assign_perm(
             "delete_%s" % nodeset._meta.module_name, self.user, nodeset
