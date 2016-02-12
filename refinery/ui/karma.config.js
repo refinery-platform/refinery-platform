@@ -29,7 +29,14 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
+      'source/**/*.html': 'ng-html2js',
       'source/**/!(*spec).js': 'coverage'
+    },
+
+    ngHtml2JsPreprocessor: {
+      moduleName: 'refineryApp.templates',
+      prependPrefix: '/static/partials/',
+      stripPrefix: 'source/js/'
     },
 
     // test results reporter to use
@@ -76,7 +83,8 @@ module.exports = function(config) {
       'karma-jasmine',
       'karma-chrome-launcher',
       'karma-firefox-launcher',
-      'karma-safari-launcher'
+      'karma-safari-launcher',
+      'karma-ng-html2js-preprocessor'
     ],
 
     // start these browsers
