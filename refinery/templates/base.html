@@ -210,10 +210,11 @@
   <script src="{% static "vendor/ng-webworker/src/ng-webworker.min.js" %}"></script>
   <script src="{% static "vendor/ng-webworker/src/worker_wrapper.min.js" %}"></script>
   <script src="{% static "vendor/lodash/lodash.min.js" %}"></script>
+  <script src="{% static "vendor/lodash-migrate/dist/lodash-migrate.min.js" %}"></script>
   <script type="text/javascript">
     // Assign lodash v3.9.3 to a special variable so it doesn't conflict with
     // lodash v2 or other libraries like underscore.
-    window.lodash3 = _.noConflict();
+    window.lodashLatest = _.noConflict();
   </script>
   <script src="{% static "vendor/d3/d3.min.js" %}"></script>
   <script src="{% static "vendor/humanize/humanize.js" %}"></script>
