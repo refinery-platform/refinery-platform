@@ -6,8 +6,25 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
 
   function Data () {}
 
+  /**
+   * Load data required by the visualization tools.
+   *
+   * @description
+   * The method loads the complete user-accessible annotation set and triggers
+   * the data preparation for the tree map and list graph.
+   *
+   * @method  load
+   * @author  Fritz Lekschas
+   * @date    2016-02-11
+   * @param   {String}  root           Absolute root term used for pruning the
+   *   graph.
+   * @param   {String}  valueProperty  Node property that holds an object with
+   *   items that account for the nodes size; e.g. `dataSets`.
+   */
   Data.prototype.load = function (root, valueProperty) {
+    // Make sure that all globally user-accessible data set IDs are loaded.
     dataSet.loadAllIds();
+
     var allDsIds = dataSet.allIds;
     var neo4jToGraphData = neo4jToGraph.get();
 
@@ -68,6 +85,15 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
     });
   };
 
+  /**
+   * Promise that resolved to all required data.
+   *
+   * @method  get
+   * @author  Fritz Lekschas
+   * @date    2016-02-11
+   *
+   * @type    {Object}
+   */
   Object.defineProperty(
     Data.prototype,
     'data',
