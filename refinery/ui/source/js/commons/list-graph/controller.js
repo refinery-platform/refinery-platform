@@ -3,21 +3,19 @@
  *
  * @method  ListGraphCtrl
  * @author  Fritz Lekschas
- * @date    2015-12-22
+ * @date    2016-02-11
  *
  * @param   {Object}  $element           Directive's root element.
- * @param   {Object}  $                  jQuery.
  * @param   {Object}  graph              Graph library.
  * @param   {Object}  listGraphSettings  Settings.
+ * @param   {Object}  dataSet            DataSet service.
  * @param   {Object}  pubSub             PubSub service.
  */
 function ListGraphCtrl (
-  $element, $rootScope, $, graph, listGraphSettings, dataSet, pubSub,
-  treemapContext
+  $element, $rootScope, graph, listGraphSettings, dataSet, pubSub, ListGraphVis
 ) {
-  this.$ = $;
   this.graphLib = graph;
-  this.$element = this.$($element);
+  this.$element = $element;
   this.$rootScope = $rootScope;
   this.settings = listGraphSettings;
   this.$visElement = this.$element.find('.list-graph');
@@ -34,7 +32,7 @@ function ListGraphCtrl (
       } else {
         this.visRoots = this.rootIds;
       }
-      this.listGraph = new ListGraph(
+      this.listGraph = new ListGraphVis(
         this.$visElement[0],
         this.graph,
         this.visRoots,
@@ -59,7 +57,7 @@ function ListGraphCtrl (
         clone: data.clone,
         clonedFromUri: data.clonedFromId,
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSets(
+        dataSetIds: this.getAssociatedDataSetsIds(
           this.graph[data.clone ? data.clonedFromId : data.id]
         ),
         source: 'listGraph'
@@ -73,7 +71,7 @@ function ListGraphCtrl (
         clone: data.clone,
         clonedFromUri: data.clonedFromId,
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSets(
+        dataSetIds: this.getAssociatedDataSetsIds(
           this.graph[data.clone ? data.clonedFromId : data.id]
         ),
         source: 'listGraph'
@@ -87,7 +85,7 @@ function ListGraphCtrl (
         clone: data.clone,
         clonedFromUri: data.clonedFromId,
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSets(
+        dataSetIds: this.getAssociatedDataSetsIds(
           this.graph[data.clone ? data.clonedFromId : data.id]
         ),
         source: 'listGraph'
@@ -101,7 +99,7 @@ function ListGraphCtrl (
         clone: data.clone,
         clonedFromUri: data.clonedFromId,
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSets(
+        dataSetIds: this.getAssociatedDataSetsIds(
           this.graph[data.clone ? data.clonedFromId : data.id]
         ),
         source: 'listGraph'
@@ -115,7 +113,7 @@ function ListGraphCtrl (
         clone: data.clone,
         clonedFromUri: data.clonedFromId,
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSets(
+        dataSetIds: this.getAssociatedDataSetsIds(
           this.graph[data.clone ? data.clonedFromId : data.id]
         ),
         source: 'listGraph'
@@ -129,7 +127,7 @@ function ListGraphCtrl (
         clone: data.clone,
         clonedFromUri: data.clonedFromId,
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSets(
+        dataSetIds: this.getAssociatedDataSetsIds(
           this.graph[data.clone ? data.clonedFromId : data.id]
         ),
         source: 'listGraph'
@@ -143,7 +141,7 @@ function ListGraphCtrl (
         clone: data.rooted.clone,
         clonedFromUri: data.rooted.clonedFromId,
         nodeUri: data.rooted.id,
-        dataSetIds: this.getAssociatedDataSets(
+        dataSetIds: this.getAssociatedDataSetsIds(
           this.graph[
             data.rooted.clone ? data.rooted.clonedFromId : data.rooted.id
           ]
@@ -159,7 +157,7 @@ function ListGraphCtrl (
         clone: data.clone,
         clonedFromUri: data.clonedFromId,
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSets(
+        dataSetIds: this.getAssociatedDataSetsIds(
           this.graph[data.clone ? data.clonedFromId : data.id]
         ),
         mode: data.mode,
@@ -174,7 +172,7 @@ function ListGraphCtrl (
         clone: data.clone,
         clonedFromUri: data.clonedFromId,
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSets(
+        dataSetIds: this.getAssociatedDataSetsIds(
           this.graph[data.clone ? data.clonedFromId : data.id]
         ),
         source: 'listGraph'
@@ -304,7 +302,7 @@ function ListGraphCtrl (
   }.bind(this));
 
   this.$rootScope.$on('dashboardDsDeselected', function (event, data) {
-    dataSet.allIds().then(function (allIds) {
+    dataSet.ids.then(function (allIds) {
       this.updatePrecisionRecall(allIds);
       if (this.listGraph) {
         this.listGraph.trigger('d3ListGraphUpdateBars');
@@ -313,6 +311,14 @@ function ListGraphCtrl (
   }.bind(this));
 }
 
+/**
+ * Update precision recall
+ *
+ * @method  updatePrecisionRecall
+ * @author  Fritz Lekschas
+ * @date    2016-02-11
+ * @param   {Object}  dsIds  Object list of data set IDs.
+ */
 ListGraphCtrl.prototype.updatePrecisionRecall = function (dsIds) {
   this.graphLib.calcPrecisionRecall(
     this.graph,
@@ -322,7 +328,16 @@ ListGraphCtrl.prototype.updatePrecisionRecall = function (dsIds) {
   this.graphLib.updatePropertyToBar(this.graph, ['precision', 'recall']);
 };
 
-ListGraphCtrl.prototype.getAssociatedDataSets = function (node) {
+/**
+ * Collect data set IDs associated with a given ontology term.
+ *
+ * @method  getAssociatedDataSetsIds
+ * @author  Fritz Lekschas
+ * @date    2016-02-11
+ * @param   {Object}  term  Ontology term represented by a node object.
+ * @return  {Object}        Object list of data set IDs.
+ */
+ListGraphCtrl.prototype.getAssociatedDataSetsIds = function (term) {
   var dataSetIds = {};
 
   /**
@@ -332,37 +347,31 @@ ListGraphCtrl.prototype.getAssociatedDataSets = function (node) {
    * @author  Fritz Lekschas
    * @date    2015-10-14
    *
-   * @param   {Object}  node        Data associated to the node.
+   * @param   {Object}  term        Data associated to the term.
    * @param   {Object}  dataSetIds  Object of boolean keys representing the
    *   dataset IDs.
    */
-  function collectIds (node, dataSetIds) {
+  function collectIds (term, dataSetIds) {
     var i, keys;
 
-    if (node.dataSets) {
-      keys = Object.keys(node.dataSets);
+    if (term.dataSets) {
+      keys = Object.keys(term.dataSets);
       for (i = keys.length; i--;) {
         dataSetIds[keys[i]] = true;
       }
     }
 
-    if (node.childRefs) {
-      for (i = node.childRefs.length; i--;) {
-        collectIds(node.childRefs[i], dataSetIds);
+    if (term.childRefs) {
+      for (i = term.childRefs.length; i--;) {
+        collectIds(term.childRefs[i], dataSetIds);
       }
     }
   }
 
-  collectIds(node, dataSetIds);
+  collectIds(term, dataSetIds);
 
   return dataSetIds;
 };
-
-/*
- * -----------------------------------------------------------------------------
- * Methods
- * -----------------------------------------------------------------------------
- */
 
 
 angular
@@ -370,11 +379,10 @@ angular
   .controller('ListGraphCtrl', [
     '$element',
     '$rootScope',
-    '$',
     'graph',
     'listGraphSettings',
     'dataSet',
     'pubSub',
-    'treemapContext',
+    'ListGraphVis',
     ListGraphCtrl
   ]);
