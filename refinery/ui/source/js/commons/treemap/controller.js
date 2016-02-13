@@ -80,7 +80,7 @@ function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
   this.HEX = HEX;
   this.$window = $window;
   this.$rootScope = $rootScope;
-  this.$element = this.$($element);
+  this.$element = $element;
   this.$d3Element = this.$element.find('.treemap svg');
   this.settings = treemapSettings;
   this.pubSub = pubSub;
