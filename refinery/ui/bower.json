@@ -36,7 +36,7 @@
     "jquery-file-upload": "9.10.4",
     "jquery-mousewheel": "~3.1.13",
     "lodash": "3.10.1",
-    "lodash-migrate": "^0.2.6"
+    "lodash-migrate": "^0.2.6",
     "ng-file-upload": "1.6.6",
     "ng-webworker": "0.2.2",
     "spark-md5": "0.0.5",
