@@ -80,7 +80,7 @@ var Neo4jToGraphService = (function () {
    * @method  get
    * @author  Fritz Lekschas
    * @date    2016-02-11
-   * @return  {[type]}    [description]
+   * @return  {Object}  Promise resolving to the prepared annotation graph.
    */
   Neo4jToGraph.prototype.get = function () {
     // Intermediate promise. We can't use the promise returned by ngResource
