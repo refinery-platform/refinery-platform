@@ -6,8 +6,6 @@ function refineryDashboardVisWrapper () {
     this.pubSub = pubSub;
 
     // Absolute root node: OWL:Thing
-    // Useful for:
-    // - EFO
     this.roots = ['http://www.w3.org/2002/07/owl#Thing'];
 
     // Relative root node for Cell Ontology (CL):
