@@ -395,7 +395,7 @@ def get_aux_file_item(data_file_uuid):
         return None
 
 
-@transaction.autocommit()
+@transaction.commit_manually()
 def _add_tdf(data_file):
     """Create a new TDFItem instance.
     :param data_file: TDF file instance.
@@ -416,7 +416,7 @@ def _add_tdf(data_file):
     return item
 
 
-@transaction.autocommit()
+@transaction.commit_manually()
 def _add_bigbed(data_file):
     """Create a new BigBEDItem instance.
     :param data_file: BigBED file instance.
@@ -436,7 +436,7 @@ def _add_bigbed(data_file):
     return item
 
 
-@transaction.autocommit()
+@transaction.commit_manually
 def _add_bam(data_file, tdf_file_uuid=None):
     """Create a new BAMItem instance.
     Manual transaction control is required when using PostgreSQL and save() or
@@ -467,7 +467,7 @@ def _add_bam(data_file, tdf_file_uuid=None):
     return item
 
 
-@transaction.autocommit()
+@transaction.commit_manually
 def _add_wig(data_file, tdf_file_uuid=None):
     """Create a new WIGItem instance.
     Manual transaction control is required when using PostgreSQL and save() or
