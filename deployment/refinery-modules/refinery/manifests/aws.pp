@@ -6,21 +6,11 @@ class refinery::aws {
 
 $fstype = 'ext3'
 
-package { 'lvm2':
-  ensure => present,
-}
-->
-volume_group { 'refinerydata':
-  ensure => present,
-  physical_volumes => '/dev/xvdr',
-}
-->
-logical_volumes { 'data':
-  ensure => present,
-  volume_group => 'refinerydata',
-}
-->
-filesystem { '/dev/refinerydata/data/':
+# This is the block device for the external data.
+# It must match the attachment point for the EC2 EBS volume.
+$block_device = '/dev/xvdr'
+
+filesystem { $block_device:
   ensure => present,
   fstype => $fstype,
 }
@@ -32,7 +22,7 @@ file { '/data':
 ->
 mount { '/data':
   ensure => mounted,
-  device => '/dev/refinerydata/data',
+  device => $block_device,
   fstype => $fstype,
   options => 'defaults',
 }
