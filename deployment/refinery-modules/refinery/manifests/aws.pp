@@ -10,10 +10,18 @@ package { 'lvm2':
   ensure => present,
 }
 ->
-lvm::volume { 'data':
+volume_group { 'refinerydata':
   ensure => present,
-  vg     => 'refinerydata',
-  pv     => '/dev/xvdr',
+  physical_volumes => '/dev/xvdr',
+}
+->
+logical_volumes { 'data':
+  ensure => present,
+  volume_group => 'refinerydata',
+}
+->
+filesystem { '/dev/refinerydata/data/':
+  ensure => present,
   fstype => $fstype,
 }
 ->
