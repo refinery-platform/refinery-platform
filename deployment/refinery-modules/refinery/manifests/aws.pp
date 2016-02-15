@@ -12,7 +12,7 @@ $block_device = '/dev/xvdr'
 
 filesystem { $block_device:
   ensure => present,
-  fstype => $fstype,
+  fs_type => $fstype,
 }
 ->
 # Mountpoint
