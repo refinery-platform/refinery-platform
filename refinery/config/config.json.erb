@@ -28,8 +28,11 @@
     }
   },
   "DEFAULT_FROM_EMAIL": "webmaster@localhost",
-  "EMAIL_HOST": "localhost",
+  "EMAIL_HOST": "<%= @email_host || "localhost" %>",
   "EMAIL_PORT": 25,
+  "EMAIL_HOST_USER": "<%= @email_host_user %>",
+  "EMAIL_HOST_PASSWORD": "<%= @email_host_password %>",
+  "EMAIL_USE_TLS": <%= @email_use_tls || "false" %>,
   "EMAIL_SUBJECT_PREFIX": "[Refinery] ",
   "INTERVAL_BETWEEN_CHECKS": {
     "CELERY": 10.0,

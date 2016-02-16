@@ -78,6 +78,8 @@ def main():
         "RDS_NAME=", config['RDS_NAME'], "\n",
         "RDS_SUPERUSER_PASSWORD=", config['RDS_SUPERUSER_PASSWORD'], "\n",
         "RDS_ROLE=", config['RDS_ROLE'], "\n",
+        "EMAIL_HOST_USER=", config['EMAIL_HOST_USER'], "\n",
+        "EMAIL_HOST_PASSWORD=", config['EMAIL_HOST_PASSWORD'], "\n",
         "GIT_BRANCH=", commit, "\n",
         "\n",
         open('bootstrap.sh').read(),
