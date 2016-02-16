@@ -941,7 +941,7 @@ class NodeSetResource(ModelResource):
     solr_query_components = fields.CharField(
         attribute='solr_query_components', null=True)
     node_count = fields.IntegerField(attribute='node_count', null=True)
-    is_implicit = fields.BooleanField(attribute='is_implicit')
+    is_implicit = fields.BooleanField(attribute='is_implicit', default=False)
     study = fields.ToOneField(StudyResource, 'study')
     assay = fields.ToOneField(AssayResource, 'assay')
 
@@ -1021,7 +1021,7 @@ class NodeSetListResource(ModelResource):
     study = fields.ToOneField(StudyResource, 'study')
     assay = fields.ToOneField(AssayResource, 'assay')
     node_count = fields.IntegerField(attribute='node_count', readonly=True)
-    is_implicit = fields.BooleanField(attribute='is_implicit')
+    is_implicit = fields.BooleanField(attribute='is_implicit', default=False)
 
     class Meta:
         # create node count attribute on the fly - node_count field has to be
