@@ -810,9 +810,6 @@ class AnalysisResource(ModelResource):
         else:
             bundle.data['owner'] = None
 
-        bundle.data['status'] = Analysis.objects.get(uuid=bundle.data[
-            'uuid']).get_status()
-
         return bundle
 
     def get_object_list(self, request, **kwargs):
