@@ -1533,7 +1533,7 @@ class NodeSet(SharableResource, TemporaryResource):
     node_count = models.IntegerField(blank=True, null=True)
     #: Implicit node is created "on the fly" to support an analysis while
     #: explicit node is created by the user to store a particular selection
-    is_implicit = models.BooleanField()
+    is_implicit = models.BooleanField(default=False)
     study = models.ForeignKey(Study)
     assay = models.ForeignKey(Assay)
     # is this the "current selection" node set for the associated study/assay?
