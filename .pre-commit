@@ -1,0 +1,11 @@
+#!/bin/sh
+
+if command -v pep8 >/dev/null 2>&1
+then
+  pep8 --exclude=migrations,ui .
+fi
+
+if command -v grunt >/dev/null 2>&1
+then
+  grunt jshint --base refinery/ui --gruntfile ./refinery/ui/Gruntfile.js
+fi
