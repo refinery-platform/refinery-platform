@@ -741,7 +741,7 @@ class WorkflowInputRelationshipsResource(ModelResource):
 
 
 class AnalysisResource(ModelResource):
-    data_set = fields.ToOneField(DataSetResource, 'data_set', use_in='detail')
+    data_set = fields.ToOneField(DataSetResource, 'data_set', use_in='all')
     uuid = fields.CharField(attribute='uuid', use_in='all')
     name = fields.CharField(attribute='name', use_in='all')
     data_set__uuid = fields.CharField(attribute='data_set__uuid', use_in='all')
@@ -752,22 +752,22 @@ class AnalysisResource(ModelResource):
         use_in='all'
     )
     workflow_steps_num = fields.IntegerField(
-        attribute='workflow_steps_num', blank=True, null=True, use_in='detail')
+        attribute='workflow_steps_num', blank=True, null=True, use_in='all')
     workflow_copy = fields.CharField(
-        attribute='workflow_copy', blank=True, null=True, use_in='detail')
+        attribute='workflow_copy', blank=True, null=True, use_in='all')
     history_id = fields.CharField(
-        attribute='history_id', blank=True, null=True, use_in='detail')
+        attribute='history_id', blank=True, null=True, use_in='all')
     workflow_galaxy_id = fields.CharField(
-        attribute='workflow_galaxy_id', blank=True, null=True, use_in='detail')
+        attribute='workflow_galaxy_id', blank=True, null=True, use_in='all')
     library_id = fields.CharField(
-        attribute='library_id', blank=True, null=True, use_in='detail')
+        attribute='library_id', blank=True, null=True, use_in='all')
     time_start = fields.DateTimeField(
-        attribute='time_start', blank=True, null=True, use_in='detail')
+        attribute='time_start', blank=True, null=True, use_in='all')
     time_end = fields.DateTimeField(
-        attribute='time_end', blank=True, null=True, use_in='detail')
+        attribute='time_end', blank=True, null=True, use_in='all')
     status = fields.CharField(
         attribute='status', default=Analysis.INITIALIZED_STATUS, blank=True,
-        null=True, use_in='detail')
+        null=True, use_in='all')
 
     class Meta:
         queryset = Analysis.objects.all()
