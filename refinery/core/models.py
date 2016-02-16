@@ -2044,23 +2044,17 @@ def dataset_deletion_check(instance):
         addition to the related objects detected by Django
     '''
 
-    if bool(Analysis.objects.filter(data_set=instance)):
-        logger.error("Cannot delete DataSet:%s because there has been "
-                     "one or more Analyses run on it." % instance)
-        return False
-
-    else:
-        related_investigation_links = InvestigationLink.objects.filter(
-            data_set=instance)
-        if related_investigation_links:
-            for item in related_investigation_links:
-                node_collection = NodeCollection.objects.get(
-                    uuid=item.investigation.uuid)
-                try:
-                    node_collection.delete()
-                except Exception as e:
-                    logger.debug("Couldn't delete NodeCollection:", e)
-        return True
+    related_investigation_links = InvestigationLink.objects.filter(
+        data_set=instance)
+    if related_investigation_links:
+        for item in related_investigation_links:
+            node_collection = NodeCollection.objects.get(
+                uuid=item.investigation.uuid)
+            try:
+                node_collection.delete()
+            except Exception as e:
+                logger.debug("Couldn't delete NodeCollection:", e)
+    return True
 
 
 def analysis_deletion_check(instance):
