@@ -205,13 +205,6 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
     }
   };
 
-  //Alert message which show on analysis view filtered page
-  vm.setAnalysesAlertMsg = function () {
-    var uuid = window.analysisUuid;
-    analysisMonitorAlertService.setAnalysesMsg(uuid);
-    vm.analysesMsg = analysisMonitorAlertService.getAnalysesMsg();
-  };
-
   vm.isAnalysesRunning = function () {
     if (typeof vm.analysesRunningList !== 'undefined' && vm.analysesRunningList.length > 0) {
       return true;
@@ -242,6 +235,13 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
     } else {
       return false;
     }
+  };
+
+  //Alert message which show on analysis view filtered page
+  vm.setAnalysesAlertMsg = function () {
+    var uuid = window.analysisUuid;
+    analysisMonitorAlertService.setAnalysesMsg(uuid);
+    vm.analysesMsg = analysisMonitorAlertService.getAnalysesMsg();
   };
 
   //checks url to see if view is filtered by analysis in data_set.html. Used
