@@ -1,4 +1,8 @@
 /** Unit Tests **/
+
+//Global variable for both test and ctrl.
+var dataSetUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+
 describe('Controller: AnalysisMonitorCtrl', function(){
   var ctrl,
       scope,
@@ -31,6 +35,103 @@ describe('Controller: AnalysisMonitorCtrl', function(){
     expect(ctrl.analysesLoadingFlag).toBeDefined();
     expect(ctrl.analysesGlobalLoadingFlag).toBeDefined();
     expect(ctrl.initializedFlag).toBeDefined();
+  });
+
+  describe('Update Analyse Lists from Factory', function(){
+    var $timeout;
+
+    beforeEach(inject(function(_$timeout_, _$q_) {
+       $timeout = _$timeout_;
+      $q = _$q_;
+    }));
+
+    afterEach(function() {
+      $timeout.cancel(ctrl.timerList);
+      $timeout.cancel(ctrl.timerGlobalList);
+      $timeout.cancel(ctrl.timerRunGlobalList);
+      $timeout.cancel(ctrl.timerRunList);
+    });
+
+    it("updateAnalysesList is method", function(){
+      expect(angular.isFunction(ctrl.cancelAnalysis)).toBe(true);
+    });
+
+    it("updateAnalysesList sets timer and returns promise", function(){
+      var mockAnalysesFlag = false;
+      spyOn(factory, "getAnalysesList").and.callFake(function() {
+        return {
+          then: function () {
+            mockAnalysesFlag = true;
+          }
+        };
+      });
+
+      expect(typeof ctrl.timerList).toEqual('undefined');
+      ctrl.updateAnalysesList();
+      expect(typeof ctrl.timerList).toBeDefined();
+      expect(mockAnalysesFlag).toEqual(true);
+    });
+
+    it("updateAnalysesGlobalList is  method", function(){
+      expect(angular.isFunction(ctrl.cancelAnalysis)).toBe(true);
+    });
+
+    it("updateAnalysesGlobalList sets timer and returns promise", function(){
+      var mockAnalysesGlobalFlag = false;
+      spyOn(factory, "getAnalysesList").and.callFake(function() {
+        return {
+          then: function () {
+            mockAnalysesGlobalFlag = true;
+          }
+        };
+      });
+
+      expect(typeof ctrl.timerGlobalList).toEqual('undefined');
+      ctrl.updateAnalysesGlobalList();
+      expect(typeof ctrl.timerGlobalList).toBeDefined();
+      expect(mockAnalysesGlobalFlag).toEqual(true);
+    });
+
+    it("updateAnalysesRunningGlobalList is method", function(){
+      expect(angular.isFunction(ctrl.cancelAnalysis)).toBe(true);
+    });
+
+    it("updateAnalysesRunningList sets timer and returns promise", function(){
+      var mockAnalysesRunningFlag = false;
+      spyOn(factory, "getAnalysesList").and.callFake(function() {
+        return {
+          then: function () {
+            mockAnalysesRunningFlag = true;
+          }
+        };
+      });
+
+      expect(typeof ctrl.timerRunList).toEqual('undefined');
+      ctrl.updateAnalysesRunningList();
+      expect(typeof ctrl.timerRunList).toBeDefined();
+      expect(mockAnalysesRunningFlag).toEqual(true);
+    });
+
+    it("updateAnalysesRunningGlobalList is method", function(){
+      expect(angular.isFunction(ctrl.cancelAnalysis)).toBe(true);
+    });
+
+    it("updateAnalysesRunningGlobalList sets timer and returns promise", function(){
+      var mockAnalysesRunningGlobalFlag = false;
+      spyOn(factory, "getAnalysesList").and.callFake(function() {
+        return {
+          then: function () {
+            mockAnalysesRunningGlobalFlag = true;
+          }
+        };
+      });
+
+      expect(typeof ctrl.timerRunGlobalList).toEqual('undefined');
+      ctrl.updateAnalysesRunningGlobalList();
+      expect(typeof ctrl.timerRunGlobalList).toBeDefined();
+      expect(mockAnalysesRunningGlobalFlag).toEqual(true);
+    });
+
   });
 
   describe('Canceling Analyses', function(){
