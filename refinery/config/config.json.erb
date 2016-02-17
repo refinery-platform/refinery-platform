@@ -1,7 +1,7 @@
 {
   "ACCOUNT_ACTIVATION_DAYS": 7,
   "ADMINS": [
-    ["Refinery Admin", "admin@example.org"]
+    ["Refinery Admin", "<%= @admin || "admin@example.org" %>"]
   ],
   "ALLOWED_HOSTS": ["localhost", "127.0.0.1", "192.168.50.50"],
   "AUTH_LDAP_BASE_DN": "OU=Domain Users,DC=Domain",
@@ -27,7 +27,7 @@
         "USER": "<%= @rds_role || "vagrant" %>"
     }
   },
-  "DEFAULT_FROM_EMAIL": "webmaster@localhost",
+  "DEFAULT_FROM_EMAIL": "<%= @default_from_email || "webmaster@localhost" %>",
   "EMAIL_HOST": "<%= @email_host || "localhost" %>",
   "EMAIL_PORT": 25,
   "EMAIL_HOST_USER": "<%= @email_host_user %>",
