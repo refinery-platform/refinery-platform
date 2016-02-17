@@ -19,7 +19,7 @@ describe('Controller: AnalysisMonitorCtrl', function(){
     expect(ctrl).toBeDefined();
   });
 
-  describe('Cancelining Analyses', function(){
+  describe('Canceling Analyses', function(){
     var mockCancelFlag = false;
 
     beforeEach(inject(function() {
@@ -77,6 +77,34 @@ describe('Controller: AnalysisMonitorCtrl', function(){
             "overrall": "RUNNING"
           };
     }));
+
+    it("setAnalysesLoadingFlag method", function(){
+      expect(angular.isFunction(ctrl.setAnalysesLoadingFlag)).toBe(true);
+    });
+
+    it("setAnalysesLoadingFlag responds correctly", function(){
+      //Default of analysesList should be 0.
+      ctrl.setAnalysesLoadingFlag();
+      expect(ctrl.analysesLoadingFlag).toEqual("EMPTY");
+
+      ctrl.analysesList = [{},{},{}];
+      ctrl.setAnalysesLoadingFlag();
+      expect(ctrl.analysesLoadingFlag).toEqual("DONE");
+    });
+
+    it("setAnalysesGlobalLoadingFlag method", function(){
+      expect(angular.isFunction(ctrl.setAnalysesGlobalLoadingFlag)).toBe(true);
+    });
+
+    it("setAnalysesGlobalLoadingFlag responds correctly", function(){
+      //Default of analysesList should be 0.
+      ctrl.setAnalysesGlobalLoadingFlag();
+      expect(ctrl.analysesGlobalLoadingFlag).toEqual("EMPTY");
+
+      ctrl.analysesGlobalList = [{},{},{}];
+      ctrl.setAnalysesGlobalLoadingFlag();
+      expect(ctrl.analysesGlobalLoadingFlag).toEqual("DONE");
+    });
 
     it("isAnalysesRunning method", function(){
       expect(angular.isFunction(ctrl.isAnalysesRunning)).toBe(true);
