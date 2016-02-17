@@ -20,6 +20,13 @@ function analysisMonitorAnalysesList() {
     },
     link: function(scope, element, attr){
 
+      scope.stageTooltipInfo = {
+        refineryImport: 'Downloading workflow input files into Refinery',
+        galaxyImport: 'Uploading workflow input files into Galaxy',
+        galaxyAnalysis: 'Running analysis in Galaxy',
+        galaxyExport: 'Downloading analysis results from Galaxy'
+      };
+
       scope.$on('refinery/analyze-tab-active', function () {
         scope.AMCtrl.updateAnalysesList();
       });

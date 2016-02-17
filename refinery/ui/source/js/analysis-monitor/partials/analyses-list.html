@@ -167,7 +167,10 @@
                     stage=='overall')">
                       <li class="analysisRunningListItem">
                         {{ stage }}
-                        <span rp-analysis-monitor-input-tooltip>
+                        <span tool-tip
+                              tool-tip-container="body"
+                              tool-tip-placement="bottom"
+                              title={{stageTooltipInfo[stage]}}>
                           <i class="fa fa-question-circle"></i>
                         </span>
                         <div ng-switch on="value.state">
