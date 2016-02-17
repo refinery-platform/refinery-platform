@@ -65,9 +65,11 @@ describe('Controller: AnalysisMonitorCtrl', function(){
     });
   });
 
-  describe('HTML helper functions', function(){
-    beforeEach(inject(function($rootScope, $controller){
+  describe('Helper functions', function(){
+
+    beforeEach(inject(function($rootScope, _$timeout_){
       scope = $rootScope.$new();
+      $timeout = _$timeout_;
 
       ctrl.analysesDetail[valid_uuid]={
             "refineryImport": [{status: "PROGRESS", percent_done: 30}],
@@ -78,7 +80,40 @@ describe('Controller: AnalysisMonitorCtrl', function(){
           };
     }));
 
-    it("setAnalysesLoadingFlag method", function(){
+    it("cancelTimerGlobalList method is function", function(){
+      expect(angular.isFunction(ctrl.cancelTimerGlobalList)).toBe(true);
+    });
+
+    it("cancelTimerGlobalList method cancel timerGlobalList", function(){
+      ctrl.timerGlobalList = $timeout(10);
+      expect(typeof ctrl.timerGlobalList.$$state.value).toEqual('undefined');
+      ctrl.cancelTimerGlobalList();
+      expect(ctrl.timerGlobalList.$$state.value).toEqual('canceled');
+    });
+
+    it("cancelTimerRunningList method is function", function(){
+      expect(angular.isFunction(ctrl.cancelTimerRunningList)).toBe(true);
+    });
+
+    it("cancelTimerRunningList method cancel timerRunList", function(){
+      ctrl.timerRunList = $timeout(10);
+      expect(typeof ctrl.timerRunList.$$state.value).toEqual('undefined');
+      ctrl.cancelTimerRunningList();
+      expect(ctrl.timerRunList.$$state.value).toEqual('canceled');
+    });
+
+    it("cancelTimerRunningGlobalList method is function", function(){
+      expect(angular.isFunction(ctrl.cancelTimerRunningGlobalList)).toBe(true);
+    });
+
+     it("cancelTimerRunningGlobalList method cancel timerRunGlobalList", function(){
+      ctrl.timerRunGlobalList = $timeout(10);
+      expect(typeof ctrl.timerRunGlobalList.$$state.value).toEqual('undefined');
+      ctrl.cancelTimerRunningGlobalList();
+      expect(ctrl.timerRunGlobalList.$$state.value).toEqual('canceled');
+    });
+
+    it("setAnalysesLoadingFlag method is function", function(){
       expect(angular.isFunction(ctrl.setAnalysesLoadingFlag)).toBe(true);
     });
 
@@ -92,7 +127,7 @@ describe('Controller: AnalysisMonitorCtrl', function(){
       expect(ctrl.analysesLoadingFlag).toEqual("DONE");
     });
 
-    it("setAnalysesGlobalLoadingFlag method", function(){
+    it("setAnalysesGlobalLoadingFlag method is function", function(){
       expect(angular.isFunction(ctrl.setAnalysesGlobalLoadingFlag)).toBe(true);
     });
 
@@ -106,7 +141,7 @@ describe('Controller: AnalysisMonitorCtrl', function(){
       expect(ctrl.analysesGlobalLoadingFlag).toEqual("DONE");
     });
 
-    it("isAnalysesRunning method", function(){
+    it("isAnalysesRunning method is function", function(){
       expect(angular.isFunction(ctrl.isAnalysesRunning)).toBe(true);
     });
 
@@ -120,7 +155,7 @@ describe('Controller: AnalysisMonitorCtrl', function(){
       expect(response_valid).toEqual(true);
     });
 
-    it("isAnalysesRunningGlobal method", function(){
+    it("isAnalysesRunningGlobal method is function", function(){
        expect(angular.isFunction(ctrl.isAnalysesRunningGlobal)).toBe(true);
     });
 
@@ -134,7 +169,7 @@ describe('Controller: AnalysisMonitorCtrl', function(){
       expect(response_valid).toEqual(true);
     });
 
-    it("isEmptyAnalysesGlobalList method", function(){
+    it("isEmptyAnalysesGlobalList method is function", function(){
        expect(angular.isFunction(ctrl.isEmptyAnalysesGlobalList)).toBe(true);
     });
 
@@ -149,7 +184,7 @@ describe('Controller: AnalysisMonitorCtrl', function(){
       expect(response_valid).toEqual(false);
     });
 
-    it("isAnalysisDetailLoaded method", function(){
+    it("isAnalysisDetailLoaded method is function", function(){
        expect(angular.isFunction(ctrl.isAnalysisDetailLoaded)).toBe(true);
     });
 
