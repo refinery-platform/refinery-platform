@@ -175,6 +175,7 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
     }
   };
 
+//Analysis monitor details gets populated from service - tabular
   vm.updateAnalysesDetail = function (i) {
     (function (i) {
       if(typeof vm.analysesRunningList[i] !== 'undefined') {
@@ -186,6 +187,7 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
     })(i);
   };
 
+//Analysis monitor details gets populated from service - global
   vm.updateAnalysesGlobalDetail = function (i) {
     (function (i) {
       if(typeof vm.analysesRunningGlobalList[i] !== 'undefined') {

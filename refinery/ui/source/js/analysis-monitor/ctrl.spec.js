@@ -1,5 +1,5 @@
+/** Unit Tests **/
 describe('Controller: AnalysisMonitorCtrl', function(){
-
   var ctrl,
       scope,
       factory,
@@ -17,6 +17,20 @@ describe('Controller: AnalysisMonitorCtrl', function(){
 
   it('AnalysisMonitorCtrl ctrl should exist', function() {
     expect(ctrl).toBeDefined();
+  });
+
+  it('Data & UI displays variables should exist for views', function() {
+    expect(ctrl.analysesList).toEqual([]);
+    expect(ctrl.analysesGlobalList).toEqual([]);
+    expect(ctrl.analysesDetail).toEqual({});
+    expect(ctrl.analysesGlobalDetail).toEqual({});
+    expect(ctrl.analysesRunningList).toEqual([]);
+    expect(ctrl.analysesRunningGlobalList).toEqual([]);
+    expect(ctrl.launchAnalysisFlag).toBeDefined();
+    expect(ctrl.analysesRunningGlobalListCount).toBeDefined();
+    expect(ctrl.analysesLoadingFlag).toBeDefined();
+    expect(ctrl.analysesGlobalLoadingFlag).toBeDefined();
+    expect(ctrl.initializedFlag).toBeDefined();
   });
 
   describe('Canceling Analyses', function(){
@@ -79,6 +93,48 @@ describe('Controller: AnalysisMonitorCtrl', function(){
             "overrall": "RUNNING"
           };
     }));
+
+    it("refreshAnalysesDetail method is function", function(){
+      expect(angular.isFunction(ctrl.refreshAnalysesDetail)).toBe(true);
+    });
+
+    it("refreshAnalysesDetail method calls update Analyses Detail", function(){
+      factory.analysesRunningList = [
+        {uuid: "xxx0"},
+        {uuid: "xxx1"},
+        {uuid: "xxx2"}
+      ];
+      spyOn(ctrl, 'updateAnalysesDetail').and.returnValue(true);
+      ctrl.refreshAnalysesDetail();
+      expect(ctrl.analysesRunningList).toEqual(factory.analysesRunningList);
+      expect(ctrl.updateAnalysesDetail.calls.count())
+        .toEqual(factory.analysesRunningList.length);
+    });
+
+    it("refreshAnalysesGlobalDetail method is function", function(){
+      expect(angular.isFunction(ctrl.refreshAnalysesGlobalDetail)).toBe(true);
+    });
+
+    it("refreshAnalysesGlobalDetail method calls update Analyses Detail", function(){
+      factory.analysesRunningGlobalList = [
+        {uuid: "xxx0"},
+        {uuid: "xxx1"},
+        {uuid: "xxx2"}
+      ];
+      spyOn(ctrl, 'updateAnalysesGlobalDetail').and.returnValue(true);
+      ctrl.refreshAnalysesGlobalDetail();
+      expect(ctrl.analysesRunningGlobalList).toEqual(factory.analysesRunningGlobalList);
+      expect(ctrl.updateAnalysesGlobalDetail.calls.count())
+        .toEqual(factory.analysesRunningGlobalList.length);
+    });
+
+    it("updateAnalysesDetail method is function", function(){
+      expect(angular.isFunction(ctrl.updateAnalysesDetail)).toBe(true);
+    });
+
+    it("updateAnalysesGlobalDetail method is function", function(){
+      expect(angular.isFunction(ctrl.updateAnalysesGlobalDetail)).toBe(true);
+    });
 
     it("cancelTimerGlobalList method is function", function(){
       expect(angular.isFunction(ctrl.cancelTimerGlobalList)).toBe(true);
