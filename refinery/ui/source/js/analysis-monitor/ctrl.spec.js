@@ -29,7 +29,7 @@ describe('Controller: AnalysisMonitorCtrl', function(){
           then: function () {
             mockCancelFlag = true;
           }
-        }
+        };
       });
 
       ctrl.analysesDetail[valid_uuid] = {
