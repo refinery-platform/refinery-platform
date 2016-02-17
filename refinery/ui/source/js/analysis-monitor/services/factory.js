@@ -1,7 +1,7 @@
 angular.module('refineryAnalysisMonitor')
-    .factory("analysisMonitorFactory", ['$http','analysisService', analysisMonitorFactory]);
+    .factory("analysisMonitorFactory", ['$http','analysisService','analysisDetailService', analysisMonitorFactory]);
 
-function analysisMonitorFactory($http, analysisService) {
+function analysisMonitorFactory($http, analysisService, analysisDetailService) {
   "use strict";
   var analysesList = [];
   var analysesRunningList = [];
@@ -46,19 +46,14 @@ function analysisMonitorFactory($http, analysisService) {
     }
   };
 
-  //http.post header needed to be adjusted because django was not recognizing it
-  // as an ajax call.
   var getAnalysesDetail = function (uuid) {
-
-    return $http({
-      method: 'POST',
-      url: '/analysis_manager/' + uuid + "/?format=json",
-      headers: {"X-Requested-With": 'XMLHttpRequest'}
-    }).then(function (response) {
-      processAnalysesGlobalDetail(response.data, uuid);
+    var analysesDetail = analysisDetailService.query({uuid: uuid});
+     analysesDetail.$promise.then(function (response) {
+      processAnalysesGlobalDetail(response, uuid);
     }, function (error) {
       console.error("Error accessing analysis monitoring API");
     });
+    return analysesDetail.$promise;
   };
 
   var postCancelAnalysis = function (uuid) {
@@ -70,7 +65,8 @@ function analysisMonitorFactory($http, analysisService) {
     }).then(function (response) {
       console.log(response);
     }, function (error) {
-      console.error("Error accessing analysis_cancel API");
+      console.log(error);
+
     });
   };
 
