@@ -393,7 +393,7 @@ def annotate_nodes(investigation_uuid):
                 )
                 index_annotated_nodes(node_type, study.uuid, assay.uuid)
             # initialize attribute order for this assay
-            attribute_count = initialize_attribute_order(study, assay)
+            initialize_attribute_order(study, assay)
 
 
 @task()

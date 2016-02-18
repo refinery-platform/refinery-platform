@@ -64,7 +64,6 @@ def get_sequence(request, genome, chrom, start, end):
     # NO SUBSTRING METHOD USING DJANGO ORM
     if genome in SUPPORTED_GENOMES:
         cursor = connection.cursor()
-        db_table = 'annotation_server_dm3_sequence'
         query = ("select name as chrom, substr(seq, %s, %s) as seq "
                  "from annotation_server_%s_sequence where name = '%s'")\
             .format(start, offset, genome, chrom)

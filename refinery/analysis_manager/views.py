@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.http import (
-    HttpResponse, HttpResponseRedirect, HttpResponseServerError,
+    HttpResponse, HttpResponseServerError,
     HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden
 )
 from django.shortcuts import render_to_response
@@ -24,7 +24,7 @@ from core.models import (
 )
 from core.views import get_solr_results, custom_error_page
 from data_set_manager.models import Study, Assay, Node
-from workflow_manager.tasks import get_workflow_inputs, get_workflows
+from workflow_manager.tasks import get_workflows
 
 
 logger = logging.getLogger(__name__)
@@ -235,8 +235,6 @@ def run(request):
         analysis.save()
         analysis.set_owner(request.user)
 
-        # gets galaxy internal id for specified workflow
-        workflow_galaxy_id = curr_workflow.internal_id
         # getting distinct workflow inputs
         workflow_data_inputs = curr_workflow.data_inputs.all()[0]
 
@@ -324,8 +322,6 @@ def run(request):
         analysis.save()
         analysis.set_owner(request.user)
 
-        # gets galaxy internal id for specified workflow
-        workflow_galaxy_id = curr_workflow.internal_id
         # getting distinct workflow inputs
         workflow_data_inputs = curr_workflow.data_inputs.all()
 
@@ -474,7 +470,6 @@ class DictDiffer(object):
 def match_nodesets(ns1, ns2, diff_f, all_f, rel_type=None):
     """Helper function for matching 2 nodesets solr results"""
     logger.debug("analysis_manager.views match_nodesets called")
-    num_fields = len(all_f)
     ret_info = {}
     ret_info['total'] = str(len(ns1) + len(ns2))
     ret_info['node1_count'] = str(len(ns1))

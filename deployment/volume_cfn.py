@@ -15,11 +15,6 @@
 # AWS Cloudformation
 #   https://aws.amazon.com/cloudformation/
 
-import glob
-import os       # for os.popen
-
-import yaml
-
 import tags
 
 # Simulate the environment that "cfn_generate" runs scripts in.

@@ -320,7 +320,6 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
 
 def data_set_edit(request, uuid):
     data_set = get_object_or_404(DataSet, uuid=uuid)
-    public_group = ExtendedGroup.objects.public_group()
 
     if not request.user.has_perm('core.change_dataset', data_set):
         if request.user.is_authenticated():
