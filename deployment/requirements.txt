@@ -6,3 +6,4 @@ pycrypto==2.6.1
 cfn-pyplates==0.5.0
 awscli==1.8.13
 boto3==1.2.3
+pre-commit==0.7.6
