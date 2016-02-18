@@ -29,7 +29,6 @@ function ListGraphCtrl (
     this.graphData.then(function (data) {
       this.graph = data.graph;
       this.rootIds = data.rootIds;
-      // Causes bug but should be done.
       if (this.rootIds.length === 1) {
         this.visRoots = this.graph[this.rootIds[0]].children;
       } else {
@@ -43,7 +42,7 @@ function ListGraphCtrl (
           activeLevelNumber: 1,
           noRootedNodeDifference: 1,
           columns: Math.round(this.width / 175),
-          rows: Math.round(this.height / 36),
+          rows: Math.round(this.height / 24),
           iconPath: this.settings.iconPath,
           lessAnimations: true,
           sortBy: 'precision',

@@ -31,6 +31,7 @@
     "grunt-env": "^0.4.4",
     "grunt-jsdoc": "^1.0.0",
     "grunt-karma": "^0.12.1",
+    "grunt-newer": "^1.1.1",
     "grunt-ng-annotate": "^1.0.1",
     "hasbin": "^1.1.1",
     "isbinaryfile": "^3.0.0",
