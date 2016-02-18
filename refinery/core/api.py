@@ -15,7 +15,7 @@ from celery.task import task
 from subprocess import check_output
 
 from django.conf import settings
-from django.conf.urls.defaults import url
+from django.conf.urls import url
 from django.contrib.auth.models import User, Group
 from django.contrib.sites.models import get_current_site
 from django.contrib.contenttypes.models import ContentType
@@ -741,7 +741,7 @@ class WorkflowInputRelationshipsResource(ModelResource):
 
 
 class AnalysisResource(ModelResource):
-    data_set = fields.ToOneField(DataSetResource, 'data_set', use_in='detail')
+    data_set = fields.ToOneField(DataSetResource, 'data_set', use_in='all')
     uuid = fields.CharField(attribute='uuid', use_in='all')
     name = fields.CharField(attribute='name', use_in='all')
     data_set__uuid = fields.CharField(attribute='data_set__uuid', use_in='all')
@@ -752,22 +752,22 @@ class AnalysisResource(ModelResource):
         use_in='all'
     )
     workflow_steps_num = fields.IntegerField(
-        attribute='workflow_steps_num', blank=True, null=True, use_in='detail')
+        attribute='workflow_steps_num', blank=True, null=True, use_in='all')
     workflow_copy = fields.CharField(
-        attribute='workflow_copy', blank=True, null=True, use_in='detail')
+        attribute='workflow_copy', blank=True, null=True, use_in='all')
     history_id = fields.CharField(
-        attribute='history_id', blank=True, null=True, use_in='detail')
+        attribute='history_id', blank=True, null=True, use_in='all')
     workflow_galaxy_id = fields.CharField(
-        attribute='workflow_galaxy_id', blank=True, null=True, use_in='detail')
+        attribute='workflow_galaxy_id', blank=True, null=True, use_in='all')
     library_id = fields.CharField(
-        attribute='library_id', blank=True, null=True, use_in='detail')
+        attribute='library_id', blank=True, null=True, use_in='all')
     time_start = fields.DateTimeField(
-        attribute='time_start', blank=True, null=True, use_in='detail')
+        attribute='time_start', blank=True, null=True, use_in='all')
     time_end = fields.DateTimeField(
-        attribute='time_end', blank=True, null=True, use_in='detail')
+        attribute='time_end', blank=True, null=True, use_in='all')
     status = fields.CharField(
         attribute='status', default=Analysis.INITIALIZED_STATUS, blank=True,
-        null=True, use_in='detail')
+        null=True, use_in='all')
 
     class Meta:
         queryset = Analysis.objects.all()
@@ -784,6 +784,7 @@ class AnalysisResource(ModelResource):
             'time_start', 'uuid', 'workflow_galaxy_id', 'workflow_steps_num',
             'workflow_copy', 'owner', 'is_owner'
         ]
+
         filtering = {
             'data_set': ALL_WITH_RELATIONS,
             'workflow_steps_num': ALL_WITH_RELATIONS,
@@ -808,6 +809,7 @@ class AnalysisResource(ModelResource):
 
         else:
             bundle.data['owner'] = None
+
         return bundle
 
     def get_object_list(self, request, **kwargs):
@@ -939,7 +941,7 @@ class NodeSetResource(ModelResource):
     solr_query_components = fields.CharField(
         attribute='solr_query_components', null=True)
     node_count = fields.IntegerField(attribute='node_count', null=True)
-    is_implicit = fields.BooleanField(attribute='is_implicit')
+    is_implicit = fields.BooleanField(attribute='is_implicit', default=False)
     study = fields.ToOneField(StudyResource, 'study')
     assay = fields.ToOneField(AssayResource, 'assay')
 
@@ -1019,7 +1021,7 @@ class NodeSetListResource(ModelResource):
     study = fields.ToOneField(StudyResource, 'study')
     assay = fields.ToOneField(AssayResource, 'assay')
     node_count = fields.IntegerField(attribute='node_count', readonly=True)
-    is_implicit = fields.BooleanField(attribute='is_implicit')
+    is_implicit = fields.BooleanField(attribute='is_implicit', default=False)
 
     class Meta:
         # create node count attribute on the fly - node_count field has to be

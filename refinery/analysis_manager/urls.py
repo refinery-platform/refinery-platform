@@ -4,7 +4,7 @@ Created on Apr 12, 2012
 @author: nils
 '''
 
-from django.conf.urls.defaults import patterns, url
+from django.conf.urls import patterns, url
 
 
 urlpatterns = patterns(

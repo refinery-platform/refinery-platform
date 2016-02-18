@@ -3,12 +3,11 @@ Created on Apr 21, 2012
 
 '''
 
+import json
 import logging
 
 from django.db import models, transaction
 from django.db.utils import IntegrityError
-
-import simplejson
 
 import file_store.models as fs_models
 import file_server.tdf_file as tdf_module
@@ -115,7 +114,7 @@ class TDFItem(_FileServerItem):
             tdf_file = tdf_module.TDFFile(file_object)
             tdf_file.cache()
             profile = tdf_file.get_profile(seq, zoom, window, start, end)
-        return simplejson.dumps(profile)
+        return json.dumps(profile)
 
     def get_file_object(self):
         """Return the TDF file object.
@@ -183,7 +182,7 @@ class BAMItem(_FileServerItem):
             tdf_file = tdf_module.TDFFile(file_object)
             tdf_file.cache()
             profile = tdf_file.get_profile(seq, zoom, ["mean"], start, end)
-        return simplejson.dumps(profile)
+        return json.dumps(profile)
 
     def get_file_object(self):
         """Return the TDF file object.
@@ -258,7 +257,7 @@ class WIGItem(_FileServerItem):
             tdf_file = tdf_module.TDFFile(file_object)
             tdf_file.cache()
             profile = tdf_file.get_profile(seq, zoom, ["mean"], start, end)
-        return simplejson.dumps(profile)
+        return json.dumps(profile)
 
     def get_file_object(self):
         """Return the TDF file object.
