@@ -1,12 +1,14 @@
-# a YAML file that
-# describes the configuration of
+# aws-config is a directory
+# containing all the YAML files that
+# describe the configuration of
 # a refinery-platform stack.
-# This is used as inputs for
-# the various cloud formation create stack scripts.
 
-# If an entry is optional
-# then it is commented out
-# with the default specified in the comment.
+# All the .yaml files are used as configuration.
+
+# This is the 00defauly.yaml file;
+# it specifies defaults.
+# Some of which might be overridden in later
+# configuration files.
 
 # Currently (2016-02), the only required value is VOLUME.
 
@@ -33,10 +35,14 @@
 
 # The name of the pre-existing RDS instance to connect to.
 # (must use the PostgreSQL engine)
-# RDS_SUPERUSER_NAME: "rds-refinery"
+# RDS_NAME: "rds-refinery"
 
 # The name of the RDS superuser account.
+# RDS_SUPERUSER_NAME:
 # FIXED to "root"
 
 # The password for the RDS superuser account.
 # RDS_SUPERUSER_PASSWORD: "mypassword"
+
+# The name of the PostgreSQL role to create.
+RDS_ROLE: "refinery"

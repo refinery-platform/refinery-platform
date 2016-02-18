@@ -12,4 +12,5 @@ $ui_app_root = "${django_root}/ui"
 
 # See code in refinery-modules/refinery/...
 include refinery
+include refinery::pg
 include refinery::aws

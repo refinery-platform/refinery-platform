@@ -1,13 +1,13 @@
 # This is a real file, but it depends on the github checksum,
 # so we always want to build it. (and it's fast)
-web.json: stack.py stack-config.yaml .PHONY
+web.json: .PHONY
 	python stack.py > web.json
 
 web-stack: web.json .PHONY
 	aws cloudformation create-stack --stack-name refinery-web-$$(date +%Y%m%dT%H%M) --template-body file://web.json
 
-volume.json: volume_cfn.py .PHONY
-	cfn_py_generate volume_cfn.py volume.json
+volume.json: .PHONY
+	python volume_cfn.py > volume.json
 
 volume-stack: volume.json .PHONY
 	aws cloudformation create-stack --stack-name refinery-volume-$$(date +%Y%m%dT%H%M) --template-body file://volume.json

@@ -3,6 +3,7 @@ import logging
 import os
 import djcelery
 import subprocess
+from urlparse import urljoin
 from django.core.exceptions import ImproperlyConfigured
 
 logger = logging.getLogger(__name__)
@@ -31,6 +32,7 @@ def get_setting(name, settings=local_settings):
         raise ImproperlyConfigured("Missing setting '{0}'".format(name))
 
 
+# TODO: remove after switching to the new Celery API
 djcelery.setup_loader()
 
 # a tuple that lists people who get code error notifications
@@ -59,6 +61,9 @@ USE_I18N = get_setting("USE_I18N")
 # If you set this to False, Django will not format dates, numbers and
 # calendars according to the current locale
 USE_L10N = get_setting("USE_L10N")
+
+# stores date and time information in UTC in the database
+USE_TZ = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
@@ -309,6 +314,10 @@ CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
 
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
 
+SOUTH_MIGRATION_MODULES = {
+    'djcelery': 'djcelery.south_migrations',
+}
+
 # === Refinery Settings ===
 
 # for registration module
@@ -463,14 +472,30 @@ CACHES = {
 # CURRENT_COMMIT retrieves the most recent commit used allowing for easier
 # debugging of a Refinery instance
 try:
+    repo_url = subprocess.check_output([
+        '/usr/bin/git',
+        '--git-dir', os.path.join(BASE_DIR, '.git'),
+        '--work-tree', BASE_DIR,
+        'config', '--get', 'remote.origin.url'
+    ])
+    repo_url = repo_url.replace(".git", "/")
+    repo_url = urljoin(repo_url, "commit/")
+
+except Exception as e:
+    logger.error("could not get repo url: %s", e)
+
+try:
     # TODO: use option -C (removed as a temp workaround for compatibility
     # with an old version of git)
-    CURRENT_COMMIT = subprocess.check_output([
+    commit = subprocess.check_output([
         '/usr/bin/git',
         '--git-dir', os.path.join(BASE_DIR, '.git'),
         '--work-tree', BASE_DIR,
         'rev-parse', 'HEAD'
     ])
+    CURRENT_COMMIT = urljoin(repo_url, commit)
+
+
 except (ValueError, subprocess.CalledProcessError) as exc:
     logger.debug("Error retrieving hash of the most recent commit: %s",
                  exc)

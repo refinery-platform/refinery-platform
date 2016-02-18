@@ -75,8 +75,6 @@ NR_TYPES = (
     (TYPE_REPLICATE, 'replicate')
 )
 
-UNTITLED_DATA_SET_TITLE = "Untitled data set"
-
 
 class UserProfile (models.Model):
     """Extends Django user model:
@@ -439,6 +437,9 @@ class DataSetManager(models.Manager):
 
 
 class DataSet(SharableResource):
+
+    UNTITLED_DATA_SET_TITLE = "Untitled data set"
+
     # TODO: add function to restore earlier version
     # TODO: add collections (of assays in the investigation) and associate them
     # with the versions
@@ -474,9 +475,9 @@ class DataSet(SharableResource):
         # `blank=False` will only affect the admin interface
         try:
             if not self.title.strip():
-                self.title = UNTITLED_DATA_SET_TITLE
+                self.title = self.UNTITLED_DATA_SET_TITLE
         except AttributeError:
-            self.title = UNTITLED_DATA_SET_TITLE
+            self.title = self.UNTITLED_DATA_SET_TITLE
         super(DataSet, self).save(*args, **kwargs)
 
     def get_owner(self):

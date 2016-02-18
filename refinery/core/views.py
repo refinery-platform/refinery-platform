@@ -881,7 +881,7 @@ def neo4j_dataset_annotations(request):
     return HttpResponse(response, mimetype='application/json')
 
 
-class WorkflowViewset(viewsets.ModelViewSet):
+class WorkflowViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows Workflows to be viewed
     """

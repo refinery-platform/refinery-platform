@@ -34,11 +34,14 @@ python stack.py > web.json
 # CloudInit
 #   https://help.ubuntu.com/community/CloudInit
 
+import glob
 import os       # for os.popen
 import sys      # sys.stderr, sys.exit, and so on
 
 # https://pypi.python.org/pypi/PyYAML/3.11
 import yaml
+
+import tags
 
 # Simulate the environment that "cfn_generate" runs scripts in.
 # http://cfn-pyplates.readthedocs.org/en/latest/advanced.html#generating-templates-in-python
@@ -52,6 +55,11 @@ class ConfigError(Exception):
 
 def main():
     config = load_config()
+
+    # The Availability Zone of the new instance needs to match
+    # the availability zone of the existing EBS.
+    derive_config(config)
+
     cft = CloudFormationTemplate(description="refinery platform.")
 
     # We discover the current git branch/commit
@@ -69,6 +77,7 @@ def main():
         "#!/bin/sh\n",
         "RDS_NAME=", config['RDS_NAME'], "\n",
         "RDS_SUPERUSER_PASSWORD=", config['RDS_SUPERUSER_PASSWORD'], "\n",
+        "RDS_ROLE=", config['RDS_ROLE'], "\n",
         "GIT_BRANCH=", commit, "\n",
         "\n",
         open('bootstrap.sh').read(),
@@ -77,12 +86,13 @@ def main():
     cft.resources.ec2_instance = Resource(
         'WebInstance', 'AWS::EC2::Instance',
         Properties({
+            'AvailabilityZone': config['AVAILABILITY_ZONE'],
             'ImageId': 'ami-d05e75b8',
             'InstanceType': 'm3.medium',
             'UserData': base64(user_data_script),
             'KeyName': 'id_rsa',
             'IamInstanceProfile': 'refinery-web',
-            'Tags': [{'Key': 'refinery', 'Value': 'refinery'}],
+            'Tags': tags.load(),
         })
     )
 
@@ -99,9 +109,20 @@ def main():
 
 
 def load_config():
-    config_path = "stack-config.yaml"
-    with open(config_path) as f:
-        config = yaml.load(f)
+    """
+    Configuration is loaded from the aws-config/ directory.
+    All the YAML files are loaded in ASCIIbetical order.
+    """
+
+    config_dir = "aws-config"
+    pattern = os.path.join(config_dir, "*.yaml")
+
+    config = {}
+    for config_filename in sorted(glob.glob(pattern)):
+        with open(config_filename) as f:
+            y = yaml.load(f)
+            if y:
+                config.update(y)
 
     # Collect and report list of missing keys.
     required = ['VOLUME']
@@ -111,12 +132,38 @@ def load_config():
             bad.append(key)
     if bad:
         sys.stderr.write("{:s} must have values for:\n{!r}\n".format(
-            config_path, bad))
+            config_dir, bad))
         raise ConfigError()
 
     config.setdefault('RDS_SUPERUSER_PASSWORD', 'mypassword')
     config.setdefault('RDS_NAME', 'rds-refinery')
     return config
+
+
+def derive_config(config):
+    """
+    Modify `config` so that extra, derived, configuration is
+    added to it.
+
+    The only case at the moment is that the availability zone of
+    the VOLUME is added so that the instance can share the same
+    availability zone.
+    """
+
+    import boto3
+
+    # Discover the Availability Zone for the volume,
+    # and add it to the config.
+    ec2 = boto3.resource('ec2')
+    volume = ec2.Volume(config['VOLUME'])
+    # http://boto3.readthedocs.org/en/latest/reference/services/ec2.html#volume
+    az = volume.availability_zone
+
+    # If AVAILABILITY_ZONE is already set, it must match.
+    if 'AVAILABILITY_ZONE' in config:
+        assert config['AVAILABILITY_ZONE'] == az
+
+    config['AVAILABILITY_ZONE'] = az
 
 
 if __name__ == '__main__':

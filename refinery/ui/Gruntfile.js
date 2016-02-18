@@ -455,7 +455,8 @@ module.exports = function(grunt) {
     env: {
       compile: {
         PHANTOMJS_BIN: function() {
-          var localPhantomJS = 'node_modules/phantomjs/lib/phantom/bin/phantomjs';
+          var localPhantomJS =
+            'node_modules/phantomjs/lib/phantom/bin/phantomjs';
 
           // Look for a phantomjs binary of the VM by default when no `--host`
           // flag is passed to grunt
@@ -522,7 +523,9 @@ module.exports = function(grunt) {
           [
             config.files.vendor.js.map(function (script) {
               var include = true;
-              if (script.indexOf('graphlib') >= 0 || script.indexOf('dagre') >= 0) {
+              if (
+                script.indexOf('graphlib') >= 0 || script.indexOf('dagre') >= 0
+              ) {
                 include = false;
               }
               return {
@@ -565,16 +568,26 @@ module.exports = function(grunt) {
           plugins: lessPlugins
         },
         files: {
-          '<%= cfg.basePath.ui.build %>/styles/galaxy-connector.css': '<%= cfg.basePath.ui.src %>/styles/galaxy-connector.less',
-          '<%= cfg.basePath.ui.build %>/styles/refinery-style-bootstrap-responsive.css': '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap-responsive.less',
-          '<%= cfg.basePath.ui.build %>/styles/refinery-style-bootstrap.css': '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap.less',
-          '<%= cfg.basePath.ui.build %>/styles/refinery-style.css': '<%= cfg.basePath.ui.src %>/styles/refinery-style.less',
-          '<%= cfg.basePath.ui.build %>/styles/variables.css': '<%= cfg.basePath.ui.src %>/styles/variables.less',
-          '<%= cfg.basePath.ui.build %>/styles/workflow-visualization.css': '<%= cfg.basePath.ui.src %>/styles/workflow-visualization.less',
-          '<%= cfg.basePath.ui.build %>/styles/animate.css': '<%= cfg.basePath.ui.src %>/styles/animate.less',
-          '<%= cfg.basePath.ui.build %>/styles/treemap.css': '<%= cfg.basePath.ui.src %>/styles/treemap.less',
-          '<%= cfg.basePath.ui.build %>/styles/dashboard.css': '<%= cfg.basePath.ui.src %>/styles/dashboard.less',
-          '<%= cfg.basePath.ui.build %>/styles/provenance-visualization.css': '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less',
+          '<%= cfg.basePath.ui.build %>/styles/galaxy-connector.css':
+            '<%= cfg.basePath.ui.src %>/styles/galaxy-connector.less',
+          '<%= cfg.basePath.ui.build %>/styles/refinery-style-bootstrap-responsive.css':
+            '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap-responsive.less',
+          '<%= cfg.basePath.ui.build %>/styles/refinery-style-bootstrap.css':
+            '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap.less',
+          '<%= cfg.basePath.ui.build %>/styles/refinery-style.css':
+            '<%= cfg.basePath.ui.src %>/styles/refinery-style.less',
+          '<%= cfg.basePath.ui.build %>/styles/variables.css':
+            '<%= cfg.basePath.ui.src %>/styles/variables.less',
+          '<%= cfg.basePath.ui.build %>/styles/workflow-visualization.css':
+            '<%= cfg.basePath.ui.src %>/styles/workflow-visualization.less',
+          '<%= cfg.basePath.ui.build %>/styles/animate.css':
+            '<%= cfg.basePath.ui.src %>/styles/animate.less',
+          '<%= cfg.basePath.ui.build %>/styles/treemap.css':
+            '<%= cfg.basePath.ui.src %>/styles/treemap.less',
+          '<%= cfg.basePath.ui.build %>/styles/dashboard.css':
+            '<%= cfg.basePath.ui.src %>/styles/dashboard.less',
+          '<%= cfg.basePath.ui.build %>/styles/provenance-visualization.css':
+            '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less',
         }
       },
       compile: {
@@ -599,16 +612,26 @@ module.exports = function(grunt) {
           ]
         },
         files: {
-          '<%= cfg.basePath.ui.compile %>/styles/galaxy-connector.css': '<%= cfg.basePath.ui.src %>/styles/galaxy-connector.less',
-          '<%= cfg.basePath.ui.compile %>/styles/refinery-style-bootstrap-responsive.css': '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap-responsive.less',
-          '<%= cfg.basePath.ui.compile %>/styles/refinery-style-bootstrap.css': '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap.less',
-          '<%= cfg.basePath.ui.compile %>/styles/refinery-style.css': '<%= cfg.basePath.ui.src %>/styles/refinery-style.less',
-          '<%= cfg.basePath.ui.compile %>/styles/variables.css': '<%= cfg.basePath.ui.src %>/styles/variables.less',
-          '<%= cfg.basePath.ui.compile %>/styles/workflow-visualization.css': '<%= cfg.basePath.ui.src %>/styles/workflow-visualization.less',
-          '<%= cfg.basePath.ui.compile %>/styles/animate.css': '<%= cfg.basePath.ui.src %>/styles/animate.less',
-          '<%= cfg.basePath.ui.compile %>/styles/treemap.css': '<%= cfg.basePath.ui.src %>/styles/treemap.less',
-          '<%= cfg.basePath.ui.compile %>/styles/dashboard.css': '<%= cfg.basePath.ui.src %>/styles/dashboard.less',
-          '<%= cfg.basePath.ui.compile %>/styles/provenance-visualization.css': '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less',
+          '<%= cfg.basePath.ui.compile %>/styles/galaxy-connector.css':
+            '<%= cfg.basePath.ui.src %>/styles/galaxy-connector.less',
+          '<%= cfg.basePath.ui.compile %>/styles/refinery-style-bootstrap-responsive.css':
+            '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap-responsive.less',
+          '<%= cfg.basePath.ui.compile %>/styles/refinery-style-bootstrap.css':
+            '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap.less',
+          '<%= cfg.basePath.ui.compile %>/styles/refinery-style.css':
+            '<%= cfg.basePath.ui.src %>/styles/refinery-style.less',
+          '<%= cfg.basePath.ui.compile %>/styles/variables.css':
+            '<%= cfg.basePath.ui.src %>/styles/variables.less',
+          '<%= cfg.basePath.ui.compile %>/styles/workflow-visualization.css':
+            '<%= cfg.basePath.ui.src %>/styles/workflow-visualization.less',
+          '<%= cfg.basePath.ui.compile %>/styles/animate.css':
+            '<%= cfg.basePath.ui.src %>/styles/animate.less',
+          '<%= cfg.basePath.ui.compile %>/styles/treemap.css':
+            '<%= cfg.basePath.ui.src %>/styles/treemap.less',
+          '<%= cfg.basePath.ui.compile %>/styles/dashboard.css':
+            '<%= cfg.basePath.ui.src %>/styles/dashboard.less',
+          '<%= cfg.basePath.ui.compile %>/styles/provenance-visualization.css':
+            '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less',
         }
       }
     },
@@ -645,7 +668,8 @@ module.exports = function(grunt) {
     uglify: {
       ui: {
         options: {
-          banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
+          banner: '/*! <%= pkg.name %> ' +
+            '<%= grunt.template.today("yyyy-mm-dd") %> */\n',
           sourceMap: true
         },
         files: [
@@ -675,7 +699,8 @@ module.exports = function(grunt) {
       // Read config
       var cfg = grunt.file.readJSON('config.json'),
           concat = grunt.config.get('concat') || {},
-          destination = mode === 'build' ? cfg.basePath.ui.build : cfg.basePath.ui.tmp,
+          destination = mode === 'build' ?
+            cfg.basePath.ui.build : cfg.basePath.ui.tmp,
           features = cfg.files.features,
           files,
           ngAnnotate = grunt.config.get('ngAnnotate') || {};
@@ -706,7 +731,10 @@ module.exports = function(grunt) {
             // Remove all 'use strict' statements
             process: function(src, filepath) {
               return '// Source: ' + filepath + '\n' +
-                src.replace(/(^|\n)[ \t]*('use strict'|"use strict");?\s*/g, '$1');
+                src.replace(
+                  /(^|\n)[ \t]*('use strict'|"use strict");?\s*/g,
+                  '$1'
+                );
             },
           },
           src: files,
