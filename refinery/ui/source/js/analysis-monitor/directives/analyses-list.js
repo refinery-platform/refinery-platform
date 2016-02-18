@@ -21,8 +21,8 @@ function analysisMonitorAnalysesList() {
     link: function(scope, element, attr){
 
       scope.stageTooltipInfo = {
-        refineryImport: 'Downloading workflow input files into Refinery',
-        galaxyImport: 'Uploading workflow input files into Galaxy',
+        refineryImport: 'Downloading analysis input files into Refinery',
+        galaxyImport: 'Uploading analysis input files into Galaxy',
         galaxyAnalysis: 'Running analysis in Galaxy',
         galaxyExport: 'Downloading analysis results from Galaxy'
       };
