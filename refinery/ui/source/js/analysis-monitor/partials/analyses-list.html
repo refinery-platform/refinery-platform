@@ -203,14 +203,8 @@
                             </div>
                           </div>
                           <div ng-switch-default>
-                            <span ng-if="analysis.status=='UNKNOWN'">
-                              <span tool-tip
-                                tool-tip-container="body"
-                                tool-tip-placement="bottom"
-                                title="UNKNOWN status, due to possible
-                                connection error.">
-                                <i class="fa fa-exclamation-triangle"></i>
-                              </span>
+                            <span ng-if="analysis.status=='UNKNOWN' &&
+                            value.percent_done > 0">
                               <div class="progress progress-analysis-bg">
                                 <div
                                     class="progress-bar progress-bar-striped active"
@@ -222,8 +216,15 @@
                                     </span>
                                 </div>
                               </div>
+                               <span tool-tip
+                                tool-tip-container="body"
+                                tool-tip-placement="bottom"
+                                title="UNKNOWN status, due to possible
+                                connection error.">
+                                <i class="fa fa-exclamation-triangle"></i>
+                              </span>
                             </span>
-                            <span ng-if="!(analysis.status=='UNKNOWN')">
+                            <span ng-if="value.percent_done == 0">
                               <div class="alert alert-info">PENDING</div>
                             </span>
                           </div>
