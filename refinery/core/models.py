@@ -1051,8 +1051,8 @@ class Analysis(OwnableResource):
                 self.set_status(Analysis.UNKNOWN_STATUS, error_msg)
                 raise
 
-        if (history['state'] == 'error'
-                or history['state_details']['error'] > 0):
+        if (history['state'] == 'error' or
+                history['state_details']['error'] > 0):
             error_msg = "Analysis '{}' failed in Galaxy".format(self)
             logger.error(error_msg)
             self.set_status(Analysis.FAILURE_STATUS, error_msg)
