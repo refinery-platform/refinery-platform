@@ -87,7 +87,9 @@
             &nbsp;
             <span class="spinner">
               <i class="{{analysis.status | analysisStatusIcon}} analyses-status"
-                tool-tip tool-tip-container="body" tool-tip-placement="bottom"
+                tool-tip
+                tool-tip-container="body"
+                tool-tip-placement="bottom"
                 title="{{ analysis.status | analysisStatusTitle }}">
               </i>
             </span>
@@ -104,11 +106,14 @@
               </span>
             </span>
             <span ng-show="analysis.status=='RUNNING' ||
-            analysis.status=='INITIALIZED'" class="analysis-cancel-col">
+            analysis.status=='INITIALIZED' || analysis.status=='UNKNOWN'"
+              class="analysis-cancel-col">
               &nbsp;
-             <a rp-analysis-monitor-cancel-confirm confirmed-click=
-               "AMCtrl.cancelAnalysis(analysis.uuid)"
-                tool-tip tool-tip-container="body" tool-tip-placement="right"
+             <a rp-analysis-monitor-cancel-confirm
+               confirmed-click="AMCtrl.cancelAnalysis(analysis.uuid)"
+                tool-tip
+               tool-tip-container="body"
+               tool-tip-placement="right"
                 title="Cancel Analysis">
                <i class="fa fa-times-circle analyses-cancel"></i>
              </a>
@@ -206,17 +211,19 @@
                                 connection error.">
                                 <i class="fa fa-exclamation-triangle"></i>
                               </span>
-                              <div
-                                  class="progress-bar progress-bar-striped active"
-                                  role="progressbar"
-                                  id="rf-import-{{analysis.uuid}}"
-                                  style="width:{{value.percent_done}}%">
-                                  <span class="progress-analyses-text">
-                                    {{value.percent_done}}%
-                                  </span>
+                              <div class="progress progress-analysis-bg">
+                                <div
+                                    class="progress-bar progress-bar-striped active"
+                                    role="progressbar"
+                                    id="rf-import-{{analysis.uuid}}"
+                                    style="width:{{value.percent_done}}%">
+                                    <span class="progress-analyses-text">
+                                      {{value.percent_done}}%
+                                    </span>
+                                </div>
                               </div>
                             </span>
-                            <span ng-if="analysis.status!='UNKNOWN'">
+                            <span ng-if="!(analysis.status=='UNKNOWN')">
                               <div class="alert alert-info">PENDING</div>
                             </span>
                           </div>
