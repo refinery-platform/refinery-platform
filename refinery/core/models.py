@@ -1052,8 +1052,7 @@ class Analysis(OwnableResource):
                 raise
 
         if (history['state'] == 'error'
-                or (history['state'] == 'queued'
-                    and history['state_details']['error'] > 0)):
+                or history['state_details']['error'] > 0):
             error_msg = "Analysis '{}' failed in Galaxy".format(self)
             logger.error(error_msg)
             self.set_status(Analysis.FAILURE_STATUS, error_msg)
