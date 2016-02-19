@@ -11,10 +11,22 @@ function analysisMonitorFactory($http, analysisService, analysisDetailService) {
 
   var initializeAnalysesDetail = function(uuid){
   analysesDetail[uuid] = {
-    "refineryImport": {},
-    "galaxyImport": {},
-    "galaxyAnalysis": {},
-    "galaxyExport": {},
+    "refineryImport": {
+      status: "",
+      percent_done: 0
+    },
+    "galaxyImport": {
+      status: "",
+      percent_done: 0
+    },
+    "galaxyAnalysis": {
+      status: "",
+      percent_done: 0
+    },
+    "galaxyExport": {
+      status: "",
+      percent_done: 0
+    },
     "cancelingAnalyses": false
   };
 };
