@@ -29,7 +29,8 @@ import simplejson as json
 from core.models import os, get_user_import_dir
 from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import parse_isatab
-from data_set_manager.utils import *
+from data_set_manager.utils import generate_solr_params, search_solr, \
+    format_solr_response, get_owner_from_assay, update_attribute_order_ranks
 from file_store.tasks import download_file, DownloadError
 from file_store.models import get_temp_dir, generate_file_source_translator
 from .serializers import AttributeOrderSerializer, AssaySerializer
