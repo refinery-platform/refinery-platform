@@ -45,8 +45,8 @@ import tags
 
 # Simulate the environment that "cfn_generate" runs scripts in.
 # http://cfn-pyplates.readthedocs.org/en/latest/advanced.html#generating-templates-in-python
-from cfn_pyplates.core import *
-from cfn_pyplates.functions import *
+from cfn_pyplates import core
+from cfn_pyplates import functions
 
 
 class ConfigError(Exception):
@@ -60,7 +60,7 @@ def main():
     # the availability zone of the existing EBS.
     derive_config(config)
 
-    cft = CloudFormationTemplate(description="refinery platform.")
+    cft = core.CloudFormationTemplate(description="refinery platform.")
 
     # We discover the current git branch/commit
     # so that the deployment script can use it
@@ -72,7 +72,7 @@ def main():
     # It's made by concatenating a block of parameter variables,
     # with the bootstrap.sh script,
     # and the aws.sh script.
-    user_data_script = join(
+    user_data_script = functions.join(
         "",
         "#!/bin/sh\n",
         "RDS_NAME=", config['RDS_NAME'], "\n",
@@ -83,24 +83,24 @@ def main():
         open('bootstrap.sh').read(),
         open('aws.sh').read())
 
-    cft.resources.ec2_instance = Resource(
+    cft.resources.ec2_instance = core.Resource(
         'WebInstance', 'AWS::EC2::Instance',
-        Properties({
+        core.Properties({
             'AvailabilityZone': config['AVAILABILITY_ZONE'],
             'ImageId': 'ami-d05e75b8',
             'InstanceType': 'm3.medium',
-            'UserData': base64(user_data_script),
+            'UserData': functions.base64(user_data_script),
             'KeyName': 'id_rsa',
             'IamInstanceProfile': 'refinery-web',
             'Tags': tags.load(),
         })
     )
 
-    cft.resources.mount = Resource(
+    cft.resources.mount = core.Resource(
         'RefineryVolume', 'AWS::EC2::VolumeAttachment',
-        Properties({
+        core.Properties({
             'Device': '/dev/xvdr',
-            'InstanceId': ref('WebInstance'),
+            'InstanceId': functions.ref('WebInstance'),
             'VolumeId': config['VOLUME']
         })
     )
