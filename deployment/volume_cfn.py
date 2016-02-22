@@ -19,15 +19,15 @@ import tags
 
 # Simulate the environment that "cfn_generate" runs scripts in.
 # http://cfn-pyplates.readthedocs.org/en/latest/advanced.html#generating-templates-in-python
-from cfn_pyplates.core import *
-from cfn_pyplates.functions import *
+from cfn_pyplates import core
+from cfn_pyplates import functions
 
-cft = CloudFormationTemplate(description="refinery EBS volume.")
+cft = core.CloudFormationTemplate(description="refinery EBS volume.")
 
 # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-ebs-volume.html
-cft.resources.ebs = Resource(
+cft.resources.ebs = core.Resource(
     'RefineryData', 'AWS::EC2::Volume',
-    Properties({
+    core.Properties({
         'AvailabilityZone': 'us-east-1b',
         'Encrypted': True,
         'Size': 10,
@@ -36,7 +36,7 @@ cft.resources.ebs = Resource(
     })
 )
 
-cft.outputs.ebs = Output(
-     "Volume", ref('RefineryData'), "Volume ID")
+cft.outputs.ebs = core.Output(
+     "Volume", functions.ref('RefineryData'), "Volume ID")
 
 print(str(cft))

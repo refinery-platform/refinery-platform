@@ -1,4 +1,4 @@
-from .dev import *
+from .dev import *  # NOQA
 
 # required for Django Debug Toolbar
 # https://github.com/django-debug-toolbar/django-debug-toolbar/issues/529
