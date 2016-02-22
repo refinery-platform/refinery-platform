@@ -4,6 +4,7 @@ import urllib
 import xmltodict
 import logging
 import json
+from urlparse import urljoin
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -32,6 +33,8 @@ from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
 from core.utils import get_data_sets_annotations
 from core.serializers import WorkflowSerializer
+
+from django.views.decorators.gzip import gzip_page
 
 logger = logging.getLogger(__name__)
 
@@ -828,56 +831,40 @@ def fastqc_viewer(request):
                               context_instance=RequestContext(request))
 
 
+@gzip_page
 def neo4j_dataset_annotations(request):
     """Query Neo4J for dataset annotations per user
     """
 
-    user_id = -1 if request.user.id is None else request.user.id
+    if request.user.username:
+        user_name = request.user.username
+    else:
+        user_name = 'anonymous'
 
-    url = '{}/db/data/transaction/commit'.format(settings.NEO4J_BASE_URL)
+    url = urljoin(
+        settings.NEO4J_BASE_URL,
+        'ontology/unmanaged/annotations/{}'.format(user_name)
+    )
 
     headers = {
         'Accept': 'application/json; charset=UTF-8',
+        'Accept-Encoding': 'gzip,deflate',
         'Content-type': 'application/json'
     }
 
-    # sub = sub class
-    # sup = super class
-    # ds = dataset
-    #
-    # Note: this returns the while subclass hierarchy tree but only adds
-    # associates dataset annotations the user has read access to.
-    cql = (
-        'MATCH (sup:EFO:Class)<-[:`RDFS:subClassOf`]-(sub:EFO:Class) ' +
-        'OPTIONAL MATCH (ds:DataSet), ' +
-        '               (u:User {id:%s}), ' +
-        '               (ds)-[:`annotated_with`]->(sub), ' +
-        '               (u)-[:`read_access`]->(ds) ' +
-        'RETURN sup, sub, ds'
-    ) % user_id
-
-    stmt = {
-        'statements': [{
-            'statement': cql
-        }]
+    params = {
+        'objectification': 2
     }
 
     try:
-        response = requests.post(url, json=stmt, headers=headers)
+        response = requests.get(url, params=params, headers=headers)
     except requests.exceptions.ConnectionError as e:
         logger.error('Neo4J seems to be offline.')
         logger.error(e)
         return HttpResponse(
             'Neo4J seems to be offline.',
-            mimetype='application/json',
+            mimetype='text/plain',
             status=503
-        )
-    except requests.exceptions.RequestException as e:
-        logger.error(e)
-        return HttpResponse(
-            'Request failed.',
-            mimetype='application/json',
-            status=500
         )
 
     return HttpResponse(response, mimetype='application/json')

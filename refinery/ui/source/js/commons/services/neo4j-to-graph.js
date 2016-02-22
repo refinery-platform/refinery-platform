@@ -1,110 +1,47 @@
-function buildGraph (results) {
-  var child,
-      // Stores the children of each node..
-      // The only difference to `nodes` is that the `children` is an object
-      // holding the name of the child node.
-      childIndex = {
-        'http://www.w3.org/2002/07/owl#Thing': {}
-      },
-      currentChild,
-      currentDataSet,
-      currentParent,
-      data = results.data,
-      dataSet,
-      i,
-      lastNode,
-      len,
-      // To do: great a graph instead of just a simple object.
-      nodes = {
-        // Fortunately `owl:Thing` is the mandatory root for any ontology.
-        'http://www.w3.org/2002/07/owl#Thing': {
-          assertedDataSets: {},
-          children: [],
-          dataSets: {},
-          name: 'OWL Thing',
-          numDataSets: 0,
-          ontId: 'OWL:Thing',
-          uri: 'http://www.w3.org/2002/07/owl#Thing',
-        }
-      },
-      parent;
+function buildGraph (nodes) {
+  var j;
+  var node;
+  var parentsIds;
+  var uris = Object.keys(nodes);
 
-  // Determine which column corresponce to which node
-  len = results.columns.length;
-  for (i = 0; i < len; i++) {
-    switch (results.columns[i]) {
-      case 'sub':
-        child = i;
-        break;
-      case 'ds':
-        dataSet = i;
-        break;
-      case 'sup':
-        parent = i;
-        break;
-    }
-  }
+  for (var i = uris.length; i--;) {
 
-  // Loop over all rows and build the tree
-  len = data.length;
-  for (i = 0; i < len; i++) {
-    // Cache for speed:
-    // Extensive object nesting is expensive;
-    currentChild = data[i].row[child];
-    currentDataSet = data[i].row[dataSet];
-    currentParent = data[i].row[parent];
+    node = nodes[uris[i]];
 
-    // Add parent to nodes if not available
-    if (!(currentParent.uri in nodes)) {
-      nodes[currentParent.uri] = {
-        assertedDataSets: {},
-        children: [],
-        dataSets: {},
-        name: currentParent['rdfs:label'] || currentParent.name,
-        numDataSets: 0,
-        ontId: currentParent.name,
-        uri: currentParent.uri
-      };
-      childIndex[currentParent.uri] = {};
+    node.name = node.label || node.ontId;
+    node.numDataSets = 0;
+
+    if (!node.children) {
+      node.children = [];
     }
 
-    // Add child to nodes if not available
-    if (!(currentChild.uri in nodes)) {
-      nodes[currentChild.uri] = {
-        assertedDataSets: {},
-        children: [],
-        dataSets: {},
-        name: currentChild['rdfs:label'] || currentChild.name,
-        numDataSets: 0,
-        ontId: currentChild.name,
-        uri: currentChild.uri
-      };
-      childIndex[currentChild.uri] = {};
+    parentsIds = Object.keys(node.parents);
+    for (j = parentsIds.length; j--;) {
+      // Push children
+      if (!nodes[parentsIds[j]].children) {
+        nodes[parentsIds[j]].children = [node.uri];
+      } else {
+        nodes[parentsIds[j]].children.push(node.uri);
+      }
+      // Set parent reference
+      node.parents[parentsIds[j]] = nodes[parentsIds[j]];
     }
 
-    // Store parent-child relationship
-    if (!childIndex[currentParent.uri][currentChild.uri]) {
-      nodes[currentParent.uri].children.push(currentChild.uri);
-      childIndex[currentParent.uri][currentChild.uri] = true;
-    }
-
-    // Store annotation if available
-    if (currentDataSet !== null &&
-        !nodes[currentChild.uri].assertedDataSets[currentDataSet.id]) {
-      nodes[currentChild.uri].numDataSets++;
-      nodes[currentChild.uri].assertedDataSets[currentDataSet.id] = true;
-      nodes[currentChild.uri].dataSets[currentDataSet.id] = true;
+    // Store assorted data sets seperately to be able to distinguish them from
+    // infered data sets.
+    node.assertedDataSets = {};
+    var dsIds = Object.keys(node.dataSets);
+    for (j = dsIds.length; j--;) {
+      node.assertedDataSets[dsIds[j]] = true;
     }
   }
 
   return nodes;
 }
 
-function Neo4jToGraph ($q, neo4j, Webworker) {
+function Neo4jToGraph ($q, neo4j) {
   this.$q = $q;
   this.neo4j = neo4j;
-
-  this.Webworker = Webworker;
 }
 
 Neo4jToGraph.prototype.get = function () {
@@ -114,15 +51,11 @@ Neo4jToGraph.prototype.get = function () {
   var neo4jData = this.$q.defer();
 
   this.neo4j.query({
-      res: 'dataset-annotations'
+      res: 'annotations'
     })
     .$promise
     .then(function (response) {
-      if (response.errors.length === 0) {
-        neo4jData.resolve(response.results[0]);
-      } else {
-        neo4jData.reject(response.errors);
-      }
+      neo4jData.resolve(response.nodes);
     }.bind(this))
     .catch(function (error) {
       neo4jData.reject(error);
@@ -130,7 +63,7 @@ Neo4jToGraph.prototype.get = function () {
     });
 
   return neo4jData.promise.then(function (data) {
-    return this.Webworker.create(buildGraph).run(data);
+    return buildGraph(data);
   }.bind(this));
 };
 
@@ -139,6 +72,5 @@ angular
   .service('neo4jToGraph', [
     '$q',
     'neo4j',
-    'Webworker',
     Neo4jToGraph
   ]);

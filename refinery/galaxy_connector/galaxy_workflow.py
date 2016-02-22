@@ -9,7 +9,7 @@ import copy
 from datetime import datetime
 import logging
 import networkx as nx
-import simplejson
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -436,7 +436,7 @@ def createStepsCompact(file_list, workflow):
             temp[key_tool_state] = key_tool_val
             # dump the dictionary as string before putting it back into
             # workflow
-            curr_workflow_step['tool_state'] = simplejson.dumps(temp)
+            curr_workflow_step['tool_state'] = json.dumps(temp)
             # add updated connections back to galaxy workflow step
             curr_workflow_step['input_connections'] = new_connections
             curr_workflow_step['id'] = counter

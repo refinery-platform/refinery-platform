@@ -7,8 +7,8 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
   function Data () {}
 
   Data.prototype.load = function (root, valueProperty) {
-    dataSet.loadAllDsIds();
-    var allDsIds = dataSet.allIds('dataset');
+    dataSet.loadAllIds();
+    var allDsIds = dataSet.allIds;
     var neo4jToGraphData = neo4jToGraph.get();
 
     $q.all([allDsIds, neo4jToGraphData]).then(function (results) {
@@ -27,7 +27,7 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
         );
 
         // Init precision and recall
-        dataSet.allIds().then(function (allDsIds) {
+        dataSet.ids.then(function (allDsIds) {
           graph.calcPrecisionRecall(
             data,
             valueProperty,

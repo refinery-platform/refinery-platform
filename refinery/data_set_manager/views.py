@@ -7,6 +7,7 @@ Created on May 11, 2012
 import logging
 import shutil
 import urlparse
+import json
 
 from django import forms
 from django.core.exceptions import MultipleObjectsReturned
@@ -24,7 +25,6 @@ from django.http import Http404
 
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
-import simplejson as json
 
 from core.models import os, get_user_import_dir
 from data_set_manager.single_file_column_parser import process_metadata_table

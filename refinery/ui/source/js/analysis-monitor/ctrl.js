@@ -1,28 +1,34 @@
 angular.module('refineryAnalysisMonitor')
     .controller('AnalysisMonitorCtrl',
-    ['analysisMonitorFactory', 'analysisMonitorAlertService','$scope','$timeout', '$rootScope','$filter','analysisService', '$q', AnalysisMonitorCtrl]);
+    ['analysisMonitorFactory', 'analysisMonitorAlertService','$scope','$timeout', '$rootScope', AnalysisMonitorCtrl]);
 
 
-function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService, $scope, $timeout, $rootScope, $filter, analysisService, $q) {
+function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService, $scope, $timeout, $rootScope) {
   "use strict";
   var vm = this;
+  //Long list of analysis
   vm.analysesList = [];
   vm.analysesGlobalList = [];
+  //Details for running analyses
   vm.analysesDetail = {};
-  vm.analysesDetail2 = {};
   vm.analysesGlobalDetail = {};
+  //For analysis tab & global running icons also manage showing analyses details
   vm.analysesRunningList = [];
   vm.analysesRunningGlobalList = [];
+  //For refreshing lists
   vm.timerList = undefined;
   vm.timerGlobalList = undefined;
   vm.timerRunGlobalList = undefined;
   vm.timerRunList = undefined;
+  //Used for UI displays
   vm.launchAnalysisFlag = false;
   vm.analysesRunningGlobalListCount = 0;
   vm.analysesLoadingFlag = "LOADING";
   vm.analysesGlobalLoadingFlag = "LOADING";
   vm.initializedFlag = {};
 
+  // On data set browser analysis tab, method set timer and refreshes the
+  // analysis list and refreshes details for running analyses.
   vm.updateAnalysesList = function () {
     var param = {
       format: 'json',
@@ -30,8 +36,8 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
       'data_set__uuid': dataSetUuid,
     };
 
-    vm.timerList =  $timeout(vm.updateAnalysesList, 3000);
-
+    vm.timerList =  $timeout(vm.updateAnalysesList, 15000);
+    //Cancels timer when away from analyses tab
     $scope.$on('refinery/analyze-tab-inactive', function(){
       $timeout.cancel(vm.timerList);
     });
@@ -44,16 +50,13 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
     });
   };
 
-  vm.setAnalysesLoadingFlag = function(){
-    if(vm.analysesList.length === 0){
-        vm.analysesLoadingFlag = "EMPTY";
-      }else{
-        vm.analysesLoadingFlag = "DONE";
-      }
-  };
-
+  // On global analysis icon, method set timer and refreshes the
+  // analysis list and refreshes details for running analyses.
   vm.updateAnalysesGlobalList = function () {
-    var params = {format:'json', limit: 10};
+    var params = {
+      format:'json',
+      limit: 10
+    };
 
     analysisMonitorFactory.getAnalysesList(params).then(function () {
       vm.analysesGlobalList = analysisMonitorFactory.analysesGlobalList;
@@ -64,22 +67,9 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
    vm.timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 30000);
   };
 
-  vm.setAnalysesGlobalLoadingFlag = function(){
-    if(vm.analysesGlobalList.length === 0){
-      vm.analysesGlobalLoadingFlag = "EMPTY";
-    }else{
-      vm.analysesGlobalLoadingFlag = "DONE";
-    }
-  };
-
-  vm.cancelTimerGlobalList = function(){
-    if(typeof vm.timerGlobalList !== "undefined") {
-      $timeout.cancel(vm.timerGlobalList);
-    }
-  };
-
+  // This method runs when user is in the data set browser. It triggers
+  // the analysis running icon on tab
   vm.updateAnalysesRunningList = function () {
-
     var params = {
       format: 'json',
       limit: 0,
@@ -92,15 +82,16 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
       vm.launchAnalysisFlag = false;
     });
 
-    vm.timerRunList = $timeout(vm.updateAnalysesRunningList, 3000);
+    vm.timerRunList = $timeout(vm.updateAnalysesRunningList, 10000);
 
+    //Cancels when user is away from dataset browser
     if(typeof dataSetUuid === 'undefined' || dataSetUuid === "None"){
       $timeout.cancel(vm.timerRunList);
     }
   };
 
+  //Method always runs to show running number on global analysis icon
   vm.updateAnalysesRunningGlobalList = function () {
-
     var params = {
       format:'json', limit: 0, 'status': 'RUNNING'
     };
@@ -114,6 +105,47 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
 
     if(typeof dataSetUuid === 'undefined' || dataSetUuid === "None"){
       $timeout.cancel(vm.timerRunList);
+    }
+  };
+
+  vm.cancelAnalysis = function (uuid) {
+    vm.setCancelAnalysisFlag(true, uuid);
+
+    analysisMonitorFactory.postCancelAnalysis(uuid)
+    .then(function (result) {
+      //Immediate refresh of analysis list
+      $timeout.cancel(vm.timerList);
+
+      vm.updateAnalysesList().then(function(response) {
+        $rootScope.$broadcast("rf/cancelAnalysis");
+        //Removes flag because list is updated
+        vm.setCancelAnalysisFlag(false, uuid);
+      });
+    }, function (error) {
+      vm.setCancelAnalysisFlag(false, uuid);
+    });
+  };
+
+  /** HELPER FUNCTIONS **/
+  vm.setAnalysesLoadingFlag = function(){
+    if(vm.analysesList.length === 0){
+        vm.analysesLoadingFlag = "EMPTY";
+      }else{
+        vm.analysesLoadingFlag = "DONE";
+      }
+  };
+
+  vm.setAnalysesGlobalLoadingFlag = function(){
+    if(vm.analysesGlobalList.length === 0){
+      vm.analysesGlobalLoadingFlag = "EMPTY";
+    }else{
+      vm.analysesGlobalLoadingFlag = "DONE";
+    }
+  };
+
+  vm.cancelTimerGlobalList = function(){
+    if(typeof vm.timerGlobalList !== "undefined") {
+      $timeout.cancel(vm.timerGlobalList);
     }
   };
 
@@ -143,55 +175,36 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
     }
   };
 
+//Analysis monitor details gets populated from service - tabular
   vm.updateAnalysesDetail = function (i) {
     (function (i) {
       if(typeof vm.analysesRunningList[i] !== 'undefined') {
         var runningUuid = vm.analysesRunningList[i].uuid;
         analysisMonitorFactory.getAnalysesDetail(runningUuid).then(function (response) {
-          //vm.analysesDetail[runningUuid] = analysisMonitorFactory.analysesDetail[runningUuid];
-          vm.analysesDetail2[runningUuid] = analysisMonitorFactory.analysesDetail2[runningUuid];
+          vm.analysesDetail[runningUuid] = analysisMonitorFactory.analysesDetail[runningUuid];
         });
       }
     })(i);
   };
 
+//Analysis monitor details gets populated from service - global
   vm.updateAnalysesGlobalDetail = function (i) {
     (function (i) {
       if(typeof vm.analysesRunningGlobalList[i] !== 'undefined') {
         var runningUuid = vm.analysesRunningGlobalList[i].uuid;
         analysisMonitorFactory.getAnalysesDetail(runningUuid).then(function (response) {
-          vm.analysesGlobalDetail[runningUuid] = analysisMonitorFactory.analysesDetail2[runningUuid];
+          vm.analysesGlobalDetail[runningUuid] = analysisMonitorFactory.analysesDetail[runningUuid];
         });
       }
     })(i);
   };
 
-  vm.cancelAnalysis = function (uuid) {
-    vm.setCancelAnalysisFlag(true, uuid);
-    analysisMonitorFactory.postCancelAnalysis(uuid).then(function (result) {
-      $timeout.cancel(vm.timerList);
-      vm.updateAnalysesList().then(function(response) {
-        $rootScope.$broadcast("rf/cancelAnalysis");
-        vm.setCancelAnalysisFlag(false, uuid);
-      });
-    }, function (error) {
-      vm.setCancelAnalysisFlag(false, uuid);
-    });
-  };
-
-  vm.setCancelAnalysisFlag = function(logic,uuid){
+  vm.setCancelAnalysisFlag = function(logic, uuid){
     if(typeof vm.analysesDetail[uuid] !== 'undefined'){
       vm.analysesDetail[uuid].cancelingAnalyses = logic;
     }else{
       vm.initializedFlag[uuid] = logic;
     }
-  };
-
-  //Alert message which show on analysis view filtered page
-  vm.setAnalysesAlertMsg = function () {
-    var uuid = window.analysisUuid;
-    analysisMonitorAlertService.setAnalysesMsg(uuid);
-    vm.analysesMsg = analysisMonitorAlertService.getAnalysesMsg();
   };
 
   vm.isAnalysesRunning = function () {
@@ -219,11 +232,18 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
   };
 
   vm.isAnalysisDetailLoaded = function(uuid){
-    if(typeof vm.analysesDetail2[uuid] !== "undefined"){
+    if(typeof vm.analysesDetail[uuid] !== "undefined"){
       return true;
     } else {
       return false;
     }
+  };
+
+  //Alert message which show on analysis view filtered page
+  vm.setAnalysesAlertMsg = function () {
+    var uuid = window.analysisUuid;
+    analysisMonitorAlertService.setAnalysesMsg(uuid);
+    vm.analysesMsg = analysisMonitorAlertService.getAnalysesMsg();
   };
 
   //checks url to see if view is filtered by analysis in data_set.html. Used

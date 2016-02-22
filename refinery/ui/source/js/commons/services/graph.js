@@ -192,12 +192,6 @@ function GraphFactory (_, Webworker) {
         var child = graph[node.children[i]];
         var numChildChildren = child.children ? child.children.length : false;
 
-        // Store a reference to the parent
-        if (!child.parents) {
-          child.parents = {};
-        }
-        child.parents[node.uri] = node;
-
         child.meta = child.meta || {};
 
         if (numChildChildren) {

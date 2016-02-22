@@ -1725,10 +1725,12 @@ TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
     });
   }
 
-  this.$rootScope.$emit('dashboardVisNodeToggleQuery', {
-    terms: terms,
-    source: 'treeMap'
-  });
+  if (!noNotification) {
+    this.$rootScope.$emit('dashboardVisNodeToggleQuery', {
+      terms: terms,
+      source: 'treeMap'
+    });
+  }
 
   this.treemapContext.set('root', {
     ontId: root.ontId,

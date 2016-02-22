@@ -1,40 +1,25 @@
 angular.module('refineryAnalysisMonitor')
-    .factory("analysisMonitorFactory", ['$http','analysisService', analysisMonitorFactory]);
+    .factory("analysisMonitorFactory", ['$http','analysisService','analysisDetailService', analysisMonitorFactory]);
 
-function analysisMonitorFactory($http, analysisService) {
+function analysisMonitorFactory($http, analysisService, analysisDetailService) {
   "use strict";
   var analysesList = [];
-  var analysesGlobalList = [];
-  var analysesDetail = {};
-  var analysesDetail2 = {};
-  var analysesRunningGlobalList = [];
   var analysesRunningList = [];
-  var analysesOne = [];
+  var analysesGlobalList = [];
+  var analysesRunningGlobalList = [];
+  var analysesDetail = {};
 
-  var initializeAnalysesDetail = function (uuid) {
-    analysesDetail[uuid] = {
-      "preprocessing": '',
-      "preprocessingPercentDone": '0%',
-      "execution": '',
-      "executionPercentDone": '0%',
-      "postprocessing": '',
-      "postprocessingPercentDone": '0%',
-      "cancelingAnalyses": false,
-    };
-  };
-
-  var initializeAnalysesDetail2 = function(uuid){
-  analysesDetail2[uuid] = {
-    "refineryImport": [],
+  var initializeAnalysesDetail = function(uuid){
+  analysesDetail[uuid] = {
+    "refineryImport": {},
     "galaxyImport": {},
     "galaxyAnalysis": {},
-    "galaxyExport": [],
+    "galaxyExport": {},
     "cancelingAnalyses": false
   };
 };
 
-  //Ajax calls
-
+  //Ajax calls, grabs the entire analysis list for a particular data set
   var getAnalysesList = function (params) {
     params = params || {};
 
@@ -48,6 +33,7 @@ function analysisMonitorFactory($http, analysisService) {
     return analysis.$promise;
   };
 
+  //Copies and sorts analyses list
   var processAnalysesList = function (data, params) {
     if ('status' in params && 'data_set__uuid' in params) {
       angular.copy(data, analysesRunningList);
@@ -60,22 +46,14 @@ function analysisMonitorFactory($http, analysisService) {
     }
   };
 
-  //http.post header needed to be adjusted because django was not recognizing it
-  // as an ajax call.
   var getAnalysesDetail = function (uuid) {
-
-    return $http({
-      method: 'POST',
-      url: '/analysis_manager/' + uuid + "/?format=json",
-      headers: {"X-Requested-With": 'XMLHttpRequest'}
-    }).then(function (response) {
-      //processAnalysesGlobalDetail(response.data, uuid);
-      console.log("in get Analyses Detail");
-      console.log(response.data);
-      processAnalysesGlobalDetail2(response.data, uuid);
+    var analysesDetail = analysisDetailService.query({uuid: uuid});
+     analysesDetail.$promise.then(function (response) {
+      processAnalysesGlobalDetail(response, uuid);
     }, function (error) {
       console.error("Error accessing analysis monitoring API");
     });
+    return analysesDetail.$promise;
   };
 
   var postCancelAnalysis = function (uuid) {
@@ -87,7 +65,8 @@ function analysisMonitorFactory($http, analysisService) {
     }).then(function (response) {
       console.log(response);
     }, function (error) {
-      console.error("Error accessing analysis_cancel API");
+      console.log(error);
+
     });
   };
 
@@ -118,7 +97,7 @@ function analysisMonitorFactory($http, analysisService) {
   };
 
   var isObjExist = function (data) {
-    if (typeof data !== "undefined" && data !== null){
+    if(typeof data !== "undefined" && data !== null){
       return true;
       }else{
       return false;
@@ -164,87 +143,56 @@ function analysisMonitorFactory($http, analysisService) {
   };
 
   var processAnalysesGlobalDetail = function(data, uuid){
-    if(!(analysesDetail.hasOwnProperty(uuid))){
+    if (!(analysesDetail.hasOwnProperty(uuid))){
       initializeAnalysesDetail(uuid);
     }
-    setPreprocessingStatus(data, uuid);
-    setPostprocessingStatus(data, uuid);
-    if(data.execution != null){
-      setExecutionStatus(data, uuid);
-    }
-  };
-  var processAnalysesGlobalDetail2 = function(data, uuid){
-    if (!(analysesDetail2.hasOwnProperty(uuid))){
-      initializeAnalysesDetail2(uuid);
-    }
-    setRefineryImportStatus(data, uuid);
-    setGalaxyImportStatus(data, uuid);
-    setGalaxyAnalysisStatus(data, uuid);
-    setGalaxyExportStatus(data, uuid);
+    setAnalysesStatus(data, uuid);
   };
 
-  var setRefineryImportStatus = function(data, uuid){
-    if (data.refineryImport){
-      for (var i = 0; i < data.refineryImport.length; i++) {
-        analysesDetail2[uuid].refineryImport[i] = data.refineryImport[i];
+  var setAnalysesStatus = function(data, uuid){
+    angular.forEach(data, function(dataArr, stage) {
+      var tempArr = [];
+      var failureFlag = false;
+      if(typeof stage !== 'undefined' && dataArr.length > 1) {
+        for (var i = 0; i < dataArr.length; i++) {
+          tempArr.push(dataArr[i].percent_done);
+          if(dataArr[i].state === 'FAILURE'){
+            failureFlag = true;
+          }
+        }
+        var avgPercentDone = averagePercentDone(tempArr);
+        if(failureFlag){
+          analysesDetail[uuid][stage] = {
+            'state': 'FAILURE',
+            'percent_done': null
+          };
+        }else if(avgPercentDone == 100){
+          analysesDetail[uuid][stage] = {
+            'state': 'SUCCESS',
+            'percent_done': avgPercentDone
+          };
+        }else{
+          analysesDetail[uuid][stage] = {
+            'state': 'PROGRESS',
+            'percent_done': avgPercentDone
+          };
+        }
+      }else if(dataArr.length === 1){
+          analysesDetail[uuid][stage] = dataArr[0];
       }
-    }
+    });
   };
 
-  var setGalaxyImportStatus = function(data, uuid){
-    if (data.galaxyImport){
-      analysesDetail2[uuid].galaxyImport = data.galaxyImport[0];
+  var averagePercentDone = function(numArr){
+    var totalSum = 0;
+    for(var i = 0; i < numArr.length; i++){
+      totalSum = totalSum + numArr[i];
     }
-  };
-
-  var setGalaxyAnalysisStatus = function(data, uuid){
-    if (data.galaxyAnalysis){
-      analysesDetail2[uuid].galaxyAnalysis = data.galaxyAnalysis[0];
+    if (totalSum > 0) {
+      return totalSum / numArr.length;
+    }else {
+      return totalSum;
     }
-  };
-
-  var setGalaxyExportStatus = function(data, uuid){
-    if (data.galaxyExport){
-      for (var i = 0; i < data.galaxyExport.length; i++) {
-        analysesDetail2[uuid].galaxyExport[i] = data.galaxyExport[i];
-      }
-    }
-  };
-
-
-  var isNotPending = function(state){
-    if(state === 'PENDING'){
-      return false;
-    }else{
-      return true;
-    }
-  };
-
-  var setPreprocessingStatus = function(data, uuid){
-     if (data.preprocessing[0] && isNotPending(data.preprocessing[0].state)) {
-       analysesDetail[uuid].preprocessing = data.preprocessing[0].state;
-       if( data.preprocessing[0].percent_done > analysesDetail[uuid].preprocessingPercentDone) {
-        analysesDetail[uuid].preprocessingPercentDone = Math.floor(data.preprocessing[0].percent_done.replace("%","")) + "%";
-       }
-    }
-  };
-
-  var setPostprocessingStatus = function(data, uuid){
-     if (data.postprocessing[0] && isNotPending(data.postprocessing[0].state)) {
-       analysesDetail[uuid].postprocessing = data.postprocessing[0].state;
-       if(data.postprocessing[0].percent_done > analysesDetail[uuid].postprocessingPercentDone) {
-        analysesDetail[uuid].postprocessingPercentDone = Math.floor(data.postprocessing[0].percent_done.replace("%","")) + "%";
-       }
-    }
-  };
-
-  var setExecutionStatus = function(data, uuid){
-     if (data.execution[0] && isNotPending(data.execution[0].state)) {
-       analysesDetail[uuid].execution = data.execution[0].state;
-       if( data.execution[0].percent_done > analysesDetail[uuid].executionPercentDone) {
-        analysesDetail[uuid].executionPercentDone = Math.floor(data.execution[0].percent_done.replace("%","")) + "%";
-       }
-     }
   };
 
  return{
@@ -254,9 +202,8 @@ function analysisMonitorFactory($http, analysisService) {
    analysesList: analysesList,
    analysesGlobalList: analysesGlobalList,
    analysesDetail: analysesDetail,
-   analysesDetail2: analysesDetail2,
    analysesRunningList:analysesRunningList,
-   analysesRunningGlobalList:analysesRunningGlobalList,
+   analysesRunningGlobalList:analysesRunningGlobalList
  };
 }
 

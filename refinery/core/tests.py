@@ -1,5 +1,6 @@
+import json
 from django.contrib.auth.models import User, Group
-from django.utils import unittest, simplejson
+from django.utils import unittest
 from guardian.shortcuts import assign_perm
 import mockcache as memcache
 from tastypie.test import ResourceTestCase
@@ -61,7 +62,7 @@ class NodeSetTest(unittest.TestCase):
             investigation=self.investigation)
         self.assay = data_set_manager.models.Assay.objects.create(
             study=self.study)
-        self.query = simplejson.dumps({
+        self.query = json.dumps({
             "facets": {
                 "platform_Characteristics_10_5_s": [],
                 "cell_or_tissue_Characteristics_10_5_s": [],
@@ -261,8 +262,7 @@ class NodeSetResourceTest(ResourceTestCase):
             name='ns',
             study=self.study,
             assay=self.assay,
-            solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm("read_%s" % nodeset._meta.module_name, self.user, nodeset)
         nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
         response = self.api_client.get(
@@ -285,7 +285,7 @@ class NodeSetResourceTest(ResourceTestCase):
     #         name='ns1',
     #         study=self.study,
     #         assay=self.assay,
-    #         solr_query=simplejson.dumps(self.query)
+    #         solr_query=json.dumps(self.query)
     #     )
     #     # nodeset1.set_owner(self.user)
     #     assign_perm(
@@ -297,7 +297,7 @@ class NodeSetResourceTest(ResourceTestCase):
     #         name='ns2',
     #         study=self.study,
     #         assay=self.assay,
-    #         solr_query=simplejson.dumps(self.query)
+    #         solr_query=json.dumps(self.query)
     #     )
     #     # nodeset2.set_owner(self.user2)
     #     assign_perm(
@@ -321,15 +321,13 @@ class NodeSetResourceTest(ResourceTestCase):
         """Test retrieving a list of NodeSets for given study and assay"""
         nodeset1 = NodeSet.objects.create(
             name='ns1', study=self.study, assay=self.assay,
-            solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
         )
         nodeset2 = NodeSet.objects.create(
             name='ns2', study=self.study2, assay=self.assay2,
-            solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset2._meta.module_name, self.user2, nodeset2
         )
@@ -349,15 +347,13 @@ class NodeSetResourceTest(ResourceTestCase):
         """
         nodeset1 = NodeSet.objects.create(
             name='ns1', study=self.study, assay=self.assay,
-            solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
         )
         nodeset2 = NodeSet.objects.create(
             name='ns2', study=self.study2, assay=self.assay2,
-            solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset2._meta.module_name, self.user, nodeset2
         )
@@ -383,8 +379,7 @@ class NodeSetResourceTest(ResourceTestCase):
         """Test retrieving an existing NodeSet without logging in"""
         nodeset = NodeSet.objects.create(
             name='ns', study=self.study, assay=self.assay,
-            solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm("read_%s" % nodeset._meta.module_name, self.user, nodeset)
         nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
         response = self.api_client.get(nodeset_uri, format='json')
@@ -394,14 +389,12 @@ class NodeSetResourceTest(ResourceTestCase):
         """Test retrieving a list of NodeSets without logging in"""
         nodeset1 = NodeSet.objects.create(
             name='ns1', study=self.study, assay=self.assay,
-            solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
         nodeset2 = NodeSet.objects.create(
             name='ns2', study=self.study, assay=self.assay,
-            solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset2._meta.module_name, self.user2, nodeset2
         )
@@ -417,7 +410,7 @@ class NodeSetResourceTest(ResourceTestCase):
     #         name='nodeset',
     #         study=self.study,
     #         assay=self.assay,
-    #         solr_query=simplejson.dumps(self.query)
+    #         solr_query=json.dumps(self.query)
     #     )
     #     nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
     #     response = self.api_client.get(
@@ -436,7 +429,7 @@ class NodeSetResourceTest(ResourceTestCase):
     #         name='nodeset',
     #         study=self.study,
     #         assay=self.assay,
-    #         solr_query=simplejson.dumps(self.query)
+    #         solr_query=json.dumps(self.query)
     #     )
     #     assign_perm(
     #         "read_%s" % nodeset._meta.module_name, self.user2, nodeset
@@ -453,8 +446,7 @@ class NodeSetResourceTest(ResourceTestCase):
         """Test retrieving a NodeSet instance that doesn't exist"""
         nodeset = NodeSet.objects.create(
             name='nodeset', study=self.study, assay=self.assay,
-            solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm("read_%s" % nodeset._meta.module_name, self.user, nodeset)
         nodeset_uri = make_api_uri('nodeset', 'Invalid UUID')
         response = self.api_client.get(nodeset_uri, format='json',
@@ -644,7 +636,7 @@ class NodeSetListResourceTest(ResourceTestCase):
     #         assay=self.assay,
     #         node_count=1,
     #         is_implicit=True,
-    #         solr_query=simplejson.dumps(self.query)
+    #         solr_query=json.dumps(self.query)
     #     )
     #     assign_perm(
     #         "read_%s" % nodeset1._meta.module_name,
@@ -657,7 +649,7 @@ class NodeSetListResourceTest(ResourceTestCase):
     #         assay=self.assay2,
     #         node_count=1,
     #         is_implicit=True,
-    #         solr_query=simplejson.dumps(self.query)
+    #         solr_query=json.dumps(self.query)
     #     )
     #     assign_perm(
     #         "read_%s" % nodeset2._meta.module_name,
@@ -680,15 +672,13 @@ class NodeSetListResourceTest(ResourceTestCase):
         """
         nodeset1 = NodeSet.objects.create(
             name='ns1', study=self.study, assay=self.assay, node_count=1,
-            is_implicit=True, solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
         )
         nodeset2 = NodeSet.objects.create(
             name='ns2', study=self.study2, assay=self.assay2, node_count=1,
-            is_implicit=True, solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset2._meta.module_name, self.user, nodeset2
         )
@@ -704,15 +694,13 @@ class NodeSetListResourceTest(ResourceTestCase):
         """Test retrieving a list of NodeSets for given study and assay"""
         nodeset1 = NodeSet.objects.create(
             name='ns1', study=self.study, assay=self.assay, node_count=1,
-            is_implicit=True, solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
         )
         nodeset2 = NodeSet.objects.create(
             name='ns2', study=self.study2, assay=self.assay2, node_count=1,
-            is_implicit=True, solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset2._meta.module_name, self.user2, nodeset2
         )
@@ -741,8 +729,7 @@ class NodeSetListResourceTest(ResourceTestCase):
     def test_delete_nodeset_list(self):
         """Test deleting a list of NodeSets"""
         nodeset = NodeSet.objects.create(
-            name='nodeset', study=self.study, assay=self.assay
-        )
+            name='nodeset', study=self.study, assay=self.assay)
         self.assertEqual(NodeSet.objects.count(), 1)
         assign_perm(
             "delete_%s" % nodeset._meta.module_name, self.user, nodeset

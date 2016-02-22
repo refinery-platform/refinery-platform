@@ -14,7 +14,6 @@ from django.http import (
 )
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from django.utils import simplejson
 
 from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import run_analysis
@@ -174,7 +173,7 @@ def run(request):
     if request.method not in allowed_methods:
         return HttpResponseNotAllowed(allowed_methods)  # 405
 
-    analysis_config = simplejson.loads(request.body)
+    analysis_config = json.loads(request.body)
     try:
         workflow_uuid = analysis_config['workflowUuid']
         study_uuid = analysis_config['studyUuid']
@@ -194,7 +193,7 @@ def run(request):
         # TODO: handle DoesNotExist exception
         curr_node_set = NodeSet.objects.get(uuid=node_set_uuid)
         curr_node_dict = curr_node_set.solr_query_components
-        curr_node_dict = simplejson.loads(curr_node_dict)
+        curr_node_dict = json.loads(curr_node_dict)
         # solr results
         solr_uuids = get_solr_results(
             curr_node_set.solr_query,
@@ -326,7 +325,7 @@ def run(request):
         workflow_data_inputs = curr_workflow.data_inputs.all()
 
         logger.debug("ret_list")
-        logger.debug(simplejson.dumps(ret_list, indent=4))
+        logger.debug(json.dumps(ret_list, indent=4))
 
         # ANALYSIS MODEL
         # Updating Refinery Models for updated workflow input
@@ -357,7 +356,7 @@ def create_noderelationship(request):
     """ajax function for creating noderelationships based on multiple node sets
     """
     logger.debug("analysis_manager.views create_noderelationship called")
-    logger.debug(simplejson.dumps(request.POST, indent=4))
+    logger.debug(json.dumps(request.POST, indent=4))
     if request.is_ajax():
         nr_name = request.POST.getlist('name')[0]
         nr_description = request.POST.getlist('description')[0]
@@ -382,9 +381,9 @@ def create_noderelationship(request):
         # Need to deal w/ limits on current solr queries
         # solr results
         curr_node_dict1 = curr_node_set1.solr_query_components
-        curr_node_dict1 = simplejson.loads(curr_node_dict1)
+        curr_node_dict1 = json.loads(curr_node_dict1)
         curr_node_dict2 = curr_node_set2.solr_query_components
-        curr_node_dict2 = simplejson.loads(curr_node_dict2)
+        curr_node_dict2 = json.loads(curr_node_dict2)
         # getting list of node uuids based on input solr query
         node_set_solr1 = get_solr_results(
             curr_node_set1.solr_query,
@@ -406,7 +405,7 @@ def create_noderelationship(request):
             node_set_results1, node_set_results2, diff_fields, all_fields)
 
         logger.debug("MAKING RELATIONSHIPS NOW")
-        logger.debug(simplejson.dumps(nodes_set_match, indent=4))
+        logger.debug(json.dumps(nodes_set_match, indent=4))
         logger.debug(nodes_set_match)
         # TODO: need to include names, descriptions, summary
         if nr_name.strip() == '':
@@ -432,7 +431,7 @@ def create_noderelationship(request):
             new_pair.save()
             new_relationship.node_pairs.add(new_pair)
 
-        return HttpResponse(simplejson.dumps(match_info, indent=4),
+        return HttpResponse(json.dumps(match_info, indent=4),
                             mimetype='application/json')
 
 

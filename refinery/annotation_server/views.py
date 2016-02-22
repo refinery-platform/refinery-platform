@@ -1,6 +1,6 @@
 from decimal import Decimal
 import logging
-import simplejson
+import json
 
 from django.db import connection
 from django.db.models import Q
@@ -241,7 +241,7 @@ def cursor_to_json(cursor_in):
                 val = float(val)
             row[prop] = val
         out.append(row)
-    return simplejson.dumps(out)
+    return json.dumps(out)
 
 
 def ValuesQuerySetToDict(vqs):
@@ -250,4 +250,4 @@ def ValuesQuerySetToDict(vqs):
     Based on http://djangosnippets.org/snippets/2454/
     """
     ret = [item for item in vqs]
-    return simplejson.dumps(ret, indent=4)
+    return json.dumps(ret, indent=4)

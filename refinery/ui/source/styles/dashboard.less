@@ -191,20 +191,25 @@
 .list-graph {
   position: absolute;
   top: 0;
-  right: 5px;
-  bottom: 5px;
-  left: 5px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
 
   .top-bar {
     position: relative;
+    z-index: 1;
     top: 0;
-    height: @top-bar-height;
+    left: 5px;
+    right: 5px;
+    height: @top-bar-height + 1;
     border-bottom: 0;
     overflow: hidden;
+    background: #fff;
   }
 
   .top-bar.details .global-controls {
-    margin-top: -@top-bar-height;
+    margin-top: -@top-bar-height + 1;
   }
 
   .controls {
@@ -271,10 +276,11 @@
 
   .wrapper {
     position: absolute;
-    top: @top-bar-height;
-    right: 0;
+    z-index: 0;
+    top: @top-bar-height + 1;
+    right: 5px;
     bottom: 0;
-    left: 0;
+    left: 5px;
   }
 
   svg.base {
@@ -283,13 +289,17 @@
     left: 0;
     width: 100%;
     height: 100%;
+    overflow: visible;
   }
 
   .label {
     display: block;
+    padding: 0;
     font-weight: normal;
-    line-height: 1;
-    text-align: center;
+    font-size: 1em;
+    line-height: 24px;
+    color: inherit;
+    text-align: left;
     white-space: nowrap;
     vertical-align: baseline;
     border-radius: .25em;
