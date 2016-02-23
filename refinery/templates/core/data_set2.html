@@ -264,11 +264,10 @@
                       <div class="tabbable">
                         <div class="tab-content">
                           <div class="tab-pane active fade in" id="table-view-tab">
-                            <dynamic>
-                              <div class="refinery-panel-content">
-                                <div id="solr-table-view" class="scrollable scrollable-floatThead jquery-full-height"></div>
-                              </div>
-                            </dynamic>
+                            <div ng-controller="FileBrowserCtrl">
+                              <rp-file-browser-assay-files>
+                              </rp-file-browser-assay-files>
+                            </div>
                           </div>
                           <div class="tab-pane fade in" id="pivot-view-tab">
                             <div id="pivot-view"></div>
@@ -303,22 +302,6 @@
             </div>
             <!-- FileMappingCtrl -->
           </div>
-
-          {% if has_change_dataset_permission %}
-            <div class="dataSetTabContent ng-cloak" id="attributes">
-              <div class="refinery-header">
-                <span class="refinery-header-left">
-                    <h3>Attributes</h3>
-                </span>
-              </div>
-
-              <div class="refinery-subheader">
-                <h4>Attribute Order and Visibility</h4>
-              </div>
-              <div id="configurator-panel">
-              </div>
-            </div>
-          {% endif %}
 
           <div class="dataSetTabContent ng-cloak" id="analyses">
             <div class="refinery-header">

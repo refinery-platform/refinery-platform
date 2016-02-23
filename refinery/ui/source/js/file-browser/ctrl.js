@@ -7,6 +7,7 @@ function FileBrowserCtrl(fileBrowserFactory) {
   "use strict";
   var vm = this;
   vm.assayFiles = [];
+  vm.assayAttributes = [];
 
   vm.updateAssayFiles = function () {
     var param = {
@@ -16,12 +17,13 @@ function FileBrowserCtrl(fileBrowserFactory) {
 
     return fileBrowserFactory.getAssayFiles(param).then(function (response) {
       vm.assayFiles = fileBrowserFactory.assayFiles;
+      vm.assayAttributes = fileBrowserFactory.assayAttributes;
       console.log("in ctrl");
       console.log(vm.assayFiles);
       return response;
     });
   };
 
-  vm.updateAssayFiles();
+ // vm.updateAssayFiles();
 
 }
