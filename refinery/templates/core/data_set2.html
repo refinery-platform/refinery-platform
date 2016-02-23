@@ -78,10 +78,6 @@
                 Files
               </a>
             </li>
-            {% if has_change_dataset_permission %}
-              <li ui-sref-active="active"><a
-              ui-sref="attributes" class="dataSetTabs">Attributes</a></li>
-            {% endif %}
             <li ui-sref-active="active">
               <a ui-sref="analyses" id="analyze-tab" class="dataSetTabs">
                 <span ng-controller="AnalysisMonitorCtrl">
@@ -93,11 +89,6 @@
             <li ui-sref-active="active">
               <a ui-sref="details" class="dataSetTabs" >
                 Details
-              </a>
-            </li>
-            <li ui-sref-active="active">
-              <a ui-sref="sharing" class="dataSetTabs">
-                Sharing
               </a>
             </li>
           </ul>
@@ -118,7 +109,6 @@
         </form>
 
           <div class="dataSetTabContent ng-cloak" id="files">
-            <!-- <div ng-controller="FileMappingCtrl"> -->
             <div class="row">
 
               {% verbatim %}
@@ -126,7 +116,6 @@
                    ng-init="$root.ctrlTabSpanSize='col-md-2'"
                    ng-show="showCtrlTab" ng-cloak
                    style="background-color: #eaeaea; padding: 10px;">
-                <!-- <div ui-view="data-set-ui-mode-controls"></div> -->
                 <div ui-view></div>
               </div>
               {% endverbatim %}
@@ -148,11 +137,6 @@
                         <div class="row" style="margin-bottom: 5px;">
                           <div class="col-md-12">
                               <span id="node-set-manager-panel">
-                                <!-- <label class="control-label"
-                                style="font-size: large; margin-left: 15px;
-                                margin-right: 5px; position: relative; top: 3px;">
-                                Selection
-                                </label> -->
                                 <span id="node-set-manager-controls"></span>
                               </span>
                           </div>
@@ -168,17 +152,11 @@
                                 class="refinery-base btn btn-default btn-xs">
                                 Reset
                               </div>
-                              <!-- <div id="" class="btn btn-mini">Download</div> -->
                             </div>
                           </div>
                         </div>
                       {% endif %}
 
-                    <!--
-                    <ul class="nav nav-pills" id="navigation-tabs">
-                        <li class="active"><a href="#solr-facet-view" data-toggle="pill">Facets</a></li>
-                    </ul>
-                    -->
                       <div class="row y-scrollable">
                         <div class="col-md-12">
                           <span style="font-style: italic; color: darkgray;">
@@ -210,10 +188,6 @@
                       </div>
 
                       <div class="col-md-9">
-                        <!--
-                        <a id="igv-multi-species" href="#" role="button" style="margin-left: 5px" class="btn btn-warning" data-toggle="modal" rel="tooltip" data-placement="bottom" data-html="true" title="Launch IGV with<br>current selection."><i class="icon-bar-chart"></i>&nbsp;&nbsp;View in IGV</a>
-                        <a href="#" id="help-igv-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
-                        -->
 
                         {% if REFINERY_REPOSITORY_MODE %}
                           <!-- CHECK BOXES FOR SELECTING SAMPLES -->
@@ -323,59 +297,11 @@
                       </div>
                     </div>
 
-                  <!--
-                  <div class="span2" id="process_container" style="opacity: 0; ">
-
-                      <script type="text/template" id="template_workflow_item">
-                          <%= name %>
-                      </script>
-
-                      <script type="text/template" id="template_inputs">
-                          <div class="refinery-subheader">
-                          <label class="control-label" for="pr_workflow">Choose Workflow</label>
-                          </div>
-                      </script>
-
-                      <div id="process_2" class="well"></div>
-
-                      <script type="text/template" id="template_field_item">
-                          <input name="matchingRadio" type="radio" value=<%= full_name%> id=<%= full_name%>><%= name %>
-                      </script>
-
-                      <div class="well" id="process_3_p" style="opacity:0">
-                          <legend>Relationship<button type="button" class="close" aria-hidden="true" onclick="nrApp.nrMod.hidePanel('#process_3_p')">&times;</button>
-                          </legend>
-                          <form>
-
-                              <div class="control-group">
-                                  <div class="input-prepend">
-                                      <span class="add-on"><i class="icon-pencil"></i></span>
-                                      <input id="rel_name" type="text" class="input-small" required placeholder="Name">
-                                  </div>
-                                  <div class="input-prepend">
-                                      <span class="add-on"><i class="icon-book"></i></span>
-                                      <input id="rel_description" type="text" class="input-small" placeholder="Description">
-                                  </div>
-                              </div>
-
-
-                              <div class="control-group">
-                                  <div id="process_3"></div>
-                              </div>
-
-                              <a id="run_analysis_single_btn" href="#" onclick="nrApp.nrMod.createRelationship()" role="button" class="btn-block  btn btn-warning" data-toggle="modal" rel="tooltip"><i class="icon-dashboard"></i>&nbsp;&nbsp;Create</a>
-
-                          </form>
-                      </div>
-
-                  </div>
-                  -->
-
                     </div>
                   </div>
                 </div>
             </div>
-            <!-- </div> --> <!-- FileMappingCtrl -->
+            <!-- FileMappingCtrl -->
           </div>
 
           {% if has_change_dataset_permission %}
