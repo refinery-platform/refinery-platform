@@ -80,6 +80,7 @@ def main():
         "RDS_ROLE=", config['RDS_ROLE'], "\n",
         "ADMIN=", config['ADMIN'], "\n",
         "DEFAULT_FROM_EMAIL=", config['DEFAULT_FROM_EMAIL'], "\n",
+        "SERVER_EMAIL=", config['SERVER_EMAIL'], "\n",
         "EMAIL_HOST_USER=", config['EMAIL_HOST_USER'], "\n",
         "EMAIL_HOST_PASSWORD=", config['EMAIL_HOST_PASSWORD'], "\n",
         "GIT_BRANCH=", commit, "\n",
