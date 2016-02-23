@@ -157,7 +157,6 @@ def igv_multi_species(solr_results, solr_annot=None):
 
     unique_annot = None
 
-    results = solr_results["response"]["docs"]
     fields = str(solr_results["responseHeader"]["params"]["fl"]).split(',')
 
     unique_species, unique_species_num = get_unique_species(solr_results)
@@ -459,7 +458,6 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
 
     # getting file information based on file_uuids
     curr_fs = FileStoreItem.objects.get(uuid=filestore_uuid)
-    curr_name = curr_fs.datafile.name
 
     # full path to selected UUID File
     curr_url = curr_fs.get_full_url()

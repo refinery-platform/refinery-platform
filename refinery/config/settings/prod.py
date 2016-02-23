@@ -1,6 +1,6 @@
 # custom settings for production environment
 
-from .base import *
+from .base import *  # NOQA
 
 DEBUG = False
 TEMPLATE_DEBUG = DEBUG

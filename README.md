@@ -36,7 +36,7 @@ install virtualenvwrapper):
 $ mkvirtualenv -a $(pwd) refinery-deployment
 ```
 
-Install Fabric (assumes header files for Python are installed, for
+Install development tools (assumes header files for Python are installed, for
 example in Ubuntu: apt-get install python-dev):
 
 ```bash
@@ -54,6 +54,12 @@ To pull the latest code and update Refinery installation:
 
 ```bash
 $ fab vm update
+```
+
+Install pre-commit hooks:
+
+```bash
+$ pre-commit install
 ```
 
 ### Refinery Operations on the VM

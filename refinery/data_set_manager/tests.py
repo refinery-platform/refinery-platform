@@ -4,9 +4,6 @@ when you run "manage.py test".
 
 Replace this with more appropriate tests for your application.
 """
-from mock import patch, Mock
-import requests
-
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.http import QueryDict
@@ -16,12 +13,12 @@ from rest_framework.test import APITestCase
 from rest_framework.test import APIClient
 
 from .models import AttributeOrder, Assay, Study, Investigation
-from .views import Assays, AssaysFiles, AssaysAttributes
+from .views import Assays, AssaysAttributes
 from .utils import update_attribute_order_ranks, \
     customize_attribute_response, format_solr_response, get_owner_from_assay,\
     generate_facet_fields_query, hide_fields_from_weighted_list,\
     generate_filtered_facet_fields, generate_solr_params, \
-    objectify_facet_field_counts, search_solr
+    objectify_facet_field_counts
 from .serializers import AttributeOrderSerializer
 from core.models import DataSet, InvestigationLink
 
@@ -489,7 +486,7 @@ class UtilitiesTest(TestCase):
         }]
 
         for attribute in self.attribute_order_array:
-            response = AttributeOrder.objects.create(**attribute)
+            AttributeOrder.objects.create(**attribute)
 
         self.url_root = '/api/v2/assays'
         self.valid_uuid = self.assay.uuid

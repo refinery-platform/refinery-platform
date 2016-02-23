@@ -82,7 +82,6 @@ def import_workflow(workflow, workflow_engine, workflow_dictionary):
     issues = []
     has_step_issues = False
     has_input_issues = False
-    has_annotation_issues = False
 
     workflow_annotation = get_workflow_annotation(workflow_dictionary)
 
