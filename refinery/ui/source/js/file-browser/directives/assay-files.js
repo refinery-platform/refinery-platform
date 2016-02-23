@@ -23,7 +23,6 @@ function rpFileBrowserAssayFiles() {
         };
 
       var customColumnName = [];
-      var customColumnData = [];
       var createColumnDefs = function(){
         scope.FBCtrl.assayAttributes.forEach(function(attribute){
           customColumnName.push(
@@ -42,9 +41,6 @@ function rpFileBrowserAssayFiles() {
         columnDefs: customColumnName,
         data: scope.FBCtrl.assayFiles
       };
-        console.log(customColumnName);
-      console.log(scope.FBCtrl.assayFiles);
-
       });
     }
   };
