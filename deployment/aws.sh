@@ -36,6 +36,12 @@ export FACTER_RDS_HOST=$(jq -r .Address /home/ubuntu/rds)
 export FACTER_RDS_PORT=$(jq -r .Port /home/ubuntu/rds)
 export FACTER_RDS_ROLE="$RDS_ROLE"
 
+export FACTER_ADMIN="$ADMIN"
+export FACTER_DEFAULT_FROM_EMAIL="$DEFAULT_FROM_EMAIL"
+export FACTER_SERVER_EMAIL="$DEFAULT_FROM_EMAIL"
+export FACTER_EMAIL_HOST_USER="$EMAIL_HOST_USER"
+export FACTER_EMAIL_HOST_PASSWORD="$EMAIL_HOST_PASSWORD"
+
 # Create RDS user and database here, instead of using puppet
 # (because drj couldn't work out how to do it in puppet)
 export FACTER_RDS_ROLE_PASSWORD=password
