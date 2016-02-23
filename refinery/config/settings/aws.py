@@ -4,7 +4,7 @@
 # more details.
 
 # Like dev, but overriding some things.
-from .dev import *
+from .dev import *  # NOQA
 
 EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
 EMAIL_HOST_USER = get_setting('EMAIL_HOST_USER')
