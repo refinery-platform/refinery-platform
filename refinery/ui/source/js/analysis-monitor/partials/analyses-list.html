@@ -155,153 +155,56 @@
 
               <div ng-show="AMCtrl.isAnalysisDetailLoaded(analysis.uuid)">
                 <ul class="analysisRunningList">
-                  <span ng-if="AMCtrl.analysesDetail2[analysis.uuid].cancelingAnalyses == true ||
+                  <span ng-if="AMCtrl.analysesDetail[analysis.uuid].cancelingAnalyses == true ||
                                AMCtrl.initializedFlag[analysis.uuid] == true">
                     <li id="analyses-cancel-notice">
                       <div class="alert alert-warning">Canceling...</div>
                     </li>
                   </span>
 
-                  <li class="analysisRunningListItem">
-                    Refinery Import
-                    <span rp-analysis-monitor-input-tooltip>
-                      <i class="fa fa-question-circle"></i>
-                    </span>
-
-                    <div ng-repeat="obj in AMCtrl.analysesDetail2[analysis.uuid].refineryImport">
-                      <div ng-switch on="obj.state">
-                        <div ng-switch-when="SUCCESS">
-                          <div class="alert alert-success">{{obj.state}}</div>
-                        </div>
-                        <div ng-switch-when="PROGRESS">
-                          <div class="progress progress-analysis-bg">
-                            <div
-                              class="progress-bar progress-bar-striped active"
-                              role="progressbar"
-                              {# TODO: update name #}
-                              id="rf-import-{{analysis.uuid}}"
-                              style="width:{{obj.percent_done}}%">
-                              <span class="progress-analyses-text">
-                                {{obj.percent_done}}%
-                              </span>
+                  <div ng-repeat="(stage, value) in AMCtrl.analysesDetail[analysis.uuid]">
+                    <div ng-if="!(stage=='cancelingAnalyses' ||
+                    stage=='overall')">
+                      <li class="analysisRunningListItem">
+                        {{ stage }}
+                        <span tool-tip
+                              tool-tip-container="body"
+                              tool-tip-placement="bottom"
+                              title={{stageTooltipInfo[stage]}}>
+                          <i class="fa fa-question-circle"></i>
+                        </span>
+                        <div ng-switch on="value.state">
+                          <div ng-switch-when="SUCCESS">
+                            <div class="alert alert-success">
+                              {{value.state}}</div>
+                          </div>
+                          <div ng-switch-when="PROGRESS">
+                            <div class="progress progress-analysis-bg">
+                              <div
+                                class="progress-bar progress-bar-striped active"
+                                role="progressbar"
+                                id="rf-import-{{analysis.uuid}}"
+                                style="width:{{value.percent_done}}%">
+                                <span class="progress-analyses-text">
+                                  {{value.percent_done}}%
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div ng-switch-when="FAILURE">
-                          <div class="alert alert-warning">{{obj.state}}</div>
-                        </div>
-                        <div ng-switch-default>
-                          <div class="alert alert-info">PENDING</div>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-
-                  <li class="analysisRunningListItem">
-                    Galaxy Import
-                    <span rp-analysis-monitor-execution-tooltip>
-                      <i class="fa fa-question-circle"></i>
-                    </span>
-
-                    <div ng-switch on="AMCtrl.analysesDetail2[analysis.uuid].galaxyImport.state">
-                      <div ng-switch-when="SUCCESS">
-                        <div class="alert alert-success">
-                          {{AMCtrl.analysesDetail2[analysis.uuid].galaxyImport.state}}
-                        </div>
-                      </div>
-                      <div ng-switch-when="PROGRESS">
-                        <div class="progress progress-analysis-bg">
-                          <div
-                            class="progress-bar progress-bar-striped active"
-                            role="progressbar"
-                            id="galaxy-import-{{analysis.uuid}}"
-                            style="width:{{AMCtrl.analysesDetail2[analysis.uuid].galaxyImport.percent_done}}%">
-                            <span class="progress-analyses-text">
-                              {{AMCtrl.analysesDetail2[analysis.uuid].galaxyImport.percent_done}}%
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div ng-switch-when="FAILURE">
-                        <div class="alert alert-warning">
-                          {{AMCtrl.analysesDetail2[analysis.uuid].galaxyImport.state}}
-                        </div>
-                      </div>
-                      <div ng-switch-default>
-                        <div class="alert alert-info">PENDING</div>
-                      </div>
-                    </div>
-                  </li>
-
-                  <li class="analysisRunningListItem">
-                    Galaxy Analysis
-                    <span rp-analysis-monitor-output-tooltip>
-                      <i class="fa fa-question-circle"></i>
-                    </span>
-                    <div ng-switch on="AMCtrl.analysesDetail2[analysis.uuid].galaxyAnalysis.state">
-                      <div ng-switch-when="SUCCESS">
-                        <div class="alert alert-success">
-                          {{AMCtrl.analysesDetail2[analysis.uuid].galaxyAnalysis.state}}
-                        </div>
-                      </div>
-                      <div ng-switch-when="FAILURE">
-                        <div class="alert alert-warning">
-                          {{AMCtrl.analysesDetail2[analysis.uuid].galaxyAnalysis.state}}
-                        </div>
-                      </div>
-                      <div ng-switch-when="PROGRESS">
-                        <div class="progress progress-analysis-bg">
-                          <div
-                            class="progress-bar progress-bar-striped active"
-                            role="progressbar"
-                            id="galaxy-analysis-{{analysis.uuid}}"
-                            style="width:{{AMCtrl.analysesDetail2[analysis.uuid].galaxyAnalysis.percent_done}}%">
-                            <span class="progress-analyses-text">
-                              {{AMCtrl.analysesDetail2[analysis.uuid].galaxyAnalysis.percent_done}}%
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                       <div ng-switch-default>
-                        <div class="alert alert-info">PENDING</div>
-                      </div>
-                    </div>
-                  </li>
-
-                  <li class="analysisRunningListItem">
-                    Galaxy Export
-                    <span rp-analysis-monitor-input-tooltip>
-                      <i class="fa fa-question-circle"></i>
-                    </span>
-
-                    <div ng-repeat="obj in AMCtrl.analysesDetail2[analysis.uuid].galaxyExport">
-                      <div ng-switch on="obj.state">
-                        <div ng-switch-when="SUCCESS">
-                          <div class="alert alert-success">{{obj.state}}</div>
-                        </div>
-                        <div ng-switch-when="PROGRESS">
-                          <div class="progress progress-analysis-bg">
-                            <div
-                              class="progress-bar progress-bar-striped active"
-                              role="progressbar"
-                              id="galaxy-export-{{analysis.uuid}}"
-                              style="width:{{obj.percent_done}}%">
-                              <span class="progress-analyses-text">{{obj.percent_done}}%</span>
+                          <div ng-switch-when="FAILURE">
+                            <div class="alert alert-warning">
+                              {{value.state}}
                             </div>
                           </div>
+                          <div ng-switch-default>
+                            <div class="alert alert-info">PENDING</div>
+                          </div>
                         </div>
-                        <div ng-switch-when="FAILURE">
-                          <div class="alert alert-warning">{{obj.state}}</div>
-                        </div>
-                        <div ng-switch-default>
-                          <div class="alert alert-info">PENDING</div>
-                        </div>
-                      </div>
+                       </li>
                     </div>
-                  </li>
-
-                  </ul>
-                </div>
+                  </div>
+                </ul>
+              </div>
             </div>
           </div>
         </span>

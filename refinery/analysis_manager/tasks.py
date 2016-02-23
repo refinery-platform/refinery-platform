@@ -301,10 +301,11 @@ def start_galaxy_analysis(analysis_uuid):
         ds_map[in_key] = {"id": winput_id, "src": "ld"}
     # Running workflow
     try:
-        result = connection.workflows.run_workflow(
-             workflow_id=analysis.workflow_galaxy_id,
-             dataset_map=ds_map,
-             history_id=analysis.history_id)
+        connection.workflows.run_workflow(
+            workflow_id=analysis.workflow_galaxy_id,
+            dataset_map=ds_map,
+            history_id=analysis.history_id
+        )
     except galaxy.client.ConnectionError as exc:
         error_msg += "error running Galaxy workflow for analysis '%s': %s"
         logger.error(error_msg, analysis.name, exc.message)

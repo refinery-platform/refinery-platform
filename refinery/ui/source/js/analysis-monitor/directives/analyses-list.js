@@ -16,9 +16,16 @@ function analysisMonitorAnalysesList() {
     controllerAs: 'AMCtrl',
     bindToController: {
        analysesList: '@',
-       analysesDetail2: '@'
+       analysesDetail: '@'
     },
     link: function(scope, element, attr){
+
+      scope.stageTooltipInfo = {
+        refineryImport: 'Downloading analysis input files into Refinery',
+        galaxyImport: 'Uploading analysis input files into Galaxy',
+        galaxyAnalysis: 'Running analysis in Galaxy',
+        galaxyExport: 'Downloading analysis results from Galaxy'
+      };
 
       scope.$on('refinery/analyze-tab-active', function () {
         scope.AMCtrl.updateAnalysesList();

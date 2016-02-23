@@ -6,8 +6,6 @@ from django.db import models
 from django.db.models.fields import CharField, PositiveSmallIntegerField
 from django_extensions.db.fields import UUIDField
 
-from file_store.models import FileStoreItem
-
 
 logger = logging.getLogger(__name__)
 

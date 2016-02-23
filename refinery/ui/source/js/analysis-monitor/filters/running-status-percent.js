@@ -4,15 +4,17 @@ angular.module('refineryAnalysisMonitor')
 //stage percent for the global analysis
 function analysisMonitorRunningStatusPercent(){
   return function(param) {
-    if (typeof param !== "undefined") {
-      if (param.preprocessing !== "SUCCESS") {
-        return param.preprocessingPercentDone;
-      } else if (param.execution !== "SUCCESS") {
-        return param.executionPercentDone;
-      } else if (param.postprocessing !== "SUCCESS") {
-        return param.postprocessingPercentDone;
+    if (typeof param !== "undefined" && Object.keys(param).length > 0) {
+      if (param.refineryImport.state !== "SUCCESS") {
+        return param.refineryImport.percent_done;
+      } else if (param.galaxyImport.state !== "SUCCESS") {
+        return param.galaxyImport.percent_done;
+      } else if (param.galaxyAnalysis.state !== "SUCCESS") {
+        return param.galaxyAnalysis.percent_done;
+      } else if (param.galaxyExport.state !== "SUCCESS") {
+        return param.galaxyExport.percent_done;
       } else {
-        return "0%";
+        return 0;
       }
     } else {
       return "...";

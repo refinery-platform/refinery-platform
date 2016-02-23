@@ -1,13 +1,12 @@
-from decimal import *
+from decimal import Decimal
 import logging
-import simplejson
+import json
 
 from django.db import connection
 from django.db.models import Q
 from django.http import HttpResponse
 
-from annotation_server.models import *
-from annotation_server.utils import *
+from annotation_server import utils
 
 
 logger = logging.getLogger(__name__)
@@ -21,7 +20,7 @@ def search_genes(request, genome, search_string):
                  "%s search: %s",
                  genome, search_string)
 
-    if genome in SUPPORTED_GENOMES:
+    if genome in utils.SUPPORTED_GENOMES:
         current_table = eval(genome + "_EnsGene")
         curr_vals = current_table.objects.filter(
             Q(name__contains=search_string) | Q(name2__contains=search_string)
@@ -45,7 +44,11 @@ def search_genes(request, genome, search_string):
     # (search_string)
     # cursor.execute(query)
 
-    return HttpResponse(cursor_to_json(cursor), 'application/javascript')
+    # return HttpResponse(cursor_to_json(cursor), 'application/javascript')
+
+    # The code above doesn't work because `cursor` was already commented out.
+    # This method probably needs refactoring.
+    return HttpResponse(status=500)
 
 
 def search_extended_genes(request, genome, search_string):
@@ -62,9 +65,8 @@ def get_sequence(request, genome, chrom, start, end):
                  "%s chrom: %s", genome, chrom)
     offset = int(end) - int(start)
     # NO SUBSTRING METHOD USING DJANGO ORM
-    if genome in SUPPORTED_GENOMES:
+    if genome in utils.SUPPORTED_GENOMES:
         cursor = connection.cursor()
-        db_table = 'annotation_server_dm3_sequence'
         query = ("select name as chrom, substr(seq, %s, %s) as seq "
                  "from annotation_server_%s_sequence where name = '%s'")\
             .format(start, offset, genome, chrom)
@@ -79,7 +81,7 @@ def get_length(request, genome):
     """
     logger.debug("annotation_server.get_length called for genome: %s", genome)
 
-    if genome in SUPPORTED_GENOMES:
+    if genome in utils.SUPPORTED_GENOMES:
         current_table = eval(genome + "_ChromInfo")
         data = ValuesQuerySetToDict(
             current_table.objects.values('chrom', 'size'))
@@ -93,7 +95,7 @@ def get_chrom_length(request, genome, chrom):
     logger.debug("annotation_server.get_chrom_length called for genome: "
                  "%s chromosome: %s", genome, chrom)
 
-    if genome in SUPPORTED_GENOMES:
+    if genome in utils.SUPPORTED_GENOMES:
         current_table = eval(genome + "_ChromInfo")
         curr_vals = current_table.objects.filter(chrom__iexact=chrom).values(
             'chrom', 'size')
@@ -110,7 +112,7 @@ def get_cytoband(request, genome, chrom):
     logger.debug("annotation_server.get_cytoband called for genome: "
                  "%s chromosome: %s", genome, chrom)
 
-    if genome in SUPPORTED_GENOMES:
+    if genome in utils.SUPPORTED_GENOMES:
         current_table = eval(genome + "_CytoBand")
         curr_vals = current_table.objects.filter(chrom__iexact=chrom).values(
             'chrom', 'chromStart', 'chromEnd', 'name', 'gieStain')
@@ -125,7 +127,7 @@ def get_genes(request, genome, chrom, start, end):
     logger.debug("annotation_server.get_genes called for genome: "
                  "%s chromosome: %s", genome, chrom)
 
-    if genome in SUPPORTED_GENOMES:
+    if genome in utils.SUPPORTED_GENOMES:
         current_table = eval(genome + "_EnsGene")
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
@@ -143,7 +145,7 @@ def get_gc(request, genome, chrom, start, end):
     logger.debug("annotation_server.get_gc called for genome: "
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
-    if genome in SUPPORTED_GENOMES:
+    if genome in utils.SUPPORTED_GENOMES:
         current_table = eval(genome + "_GC")
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
@@ -162,7 +164,7 @@ def get_maptheo(request, genome, chrom, start, end):
     logger.debug("annotation_server.get_maptheo called for genome: "
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
-    if genome in MAPPABILITY_THEORETICAL:
+    if genome in utils.MAPPABILITY_THEORETICAL:
         current_table = eval(genome + "_MappabilityTheoretical")
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
@@ -180,7 +182,7 @@ def get_mapemp(request, genome, chrom, start, end):
     logger.debug("annotation_server.get_mapemp called for genome: "
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
-    if genome in SUPPORTED_GENOMES:
+    if genome in utils.SUPPORTED_GENOMES:
         current_table = eval(genome + "_MappabilityEmpirial")
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
@@ -197,7 +199,7 @@ def get_conservation(request, genome, chrom, start, end):
     logger.debug("annotation_server.get_conservation called for genome: "
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
-    if genome in SUPPORTED_GENOMES:
+    if genome in utils.SUPPORTED_GENOMES:
         current_table = eval(genome + "_Conservation")
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
@@ -215,7 +217,7 @@ def get_gapregion(request, genome, chrom, start, end):
     logger.debug("annotation_server.get_gapregion called for genome: "
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
-    if genome in GAP_REGIONS:
+    if genome in utils.GAP_REGIONS:
         current_table = eval(genome + "_GapRegions")
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
@@ -239,7 +241,7 @@ def cursor_to_json(cursor_in):
                 val = float(val)
             row[prop] = val
         out.append(row)
-    return simplejson.dumps(out)
+    return json.dumps(out)
 
 
 def ValuesQuerySetToDict(vqs):
@@ -248,4 +250,4 @@ def ValuesQuerySetToDict(vqs):
     Based on http://djangosnippets.org/snippets/2454/
     """
     ret = [item for item in vqs]
-    return simplejson.dumps(ret, indent=4)
+    return json.dumps(ret, indent=4)

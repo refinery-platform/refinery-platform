@@ -2,7 +2,8 @@ import os
 import re
 import urllib
 import xmltodict
-
+import logging
+import json
 from urlparse import urljoin
 
 from django.conf import settings
@@ -19,7 +20,7 @@ from django.template import RequestContext, loader
 from guardian.shortcuts import get_perms
 import requests
 from rest_framework import viewsets
-from data_set_manager.models import *
+from data_set_manager.models import Node
 from core.forms import (
     ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 )
@@ -325,7 +326,6 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
 
 def data_set_edit(request, uuid):
     data_set = get_object_or_404(DataSet, uuid=uuid)
-    public_group = ExtendedGroup.objects.public_group()
 
     if not request.user.has_perm('core.change_dataset', data_set):
         if request.user.is_authenticated():
@@ -594,7 +594,7 @@ def solr_core_search(request):
             if annotations:
                 response['response']['annotations'] = annotation_data
 
-            response = simplejson.dumps(response)
+            response = json.dumps(response)
 
     return HttpResponse(response, mimetype='application/json')
 
@@ -621,9 +621,9 @@ def solr_igv(request):
 
     # copy querydict to make it editable
     if request.is_ajax():
-        igv_config = simplejson.loads(request.body)
+        igv_config = json.loads(request.body)
 
-        logger.debug(simplejson.dumps(igv_config, indent=4))
+        logger.debug(json.dumps(igv_config, indent=4))
 
         logger.debug('IGV data query: ' + str(igv_config['query']))
         logger.debug('IGV annotation query: ' + str(igv_config['annotation']))
@@ -651,9 +651,9 @@ def solr_igv(request):
                 session_urls = "Couldn't find the provided genome build."
 
         logger.debug("session_urls")
-        logger.debug(simplejson.dumps(session_urls, indent=4))
+        logger.debug(json.dumps(session_urls, indent=4))
 
-        return HttpResponse(simplejson.dumps(session_urls),
+        return HttpResponse(json.dumps(session_urls),
                             mimetype='application/json')
 
 
@@ -698,7 +698,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
     results = requests.get(query, stream=True).raw.read()
 
     # converting results into json for python
-    results = simplejson.loads(results)
+    results = json.loads(results)
 
     # IF list of nodes to remove from query exists
     if selected_nodes:
@@ -779,7 +779,7 @@ def pubmed_abstract(request, id):
 
     response = requests.get(url, params=params, headers=headers)
     return HttpResponse(
-        simplejson.dumps(xmltodict.parse(response.text)),
+        json.dumps(xmltodict.parse(response.text)),
         mimetype='application/json'
     )
 

@@ -9,7 +9,7 @@ import copy
 from datetime import datetime
 import logging
 import networkx as nx
-import simplejson
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +108,6 @@ def createStepsAnnot(file_list, workflow):
             curr_workflow_step["id"] = int(curr_id)
             # 2. Update any connecting input_ids
             input_dict = curr_workflow_step["input_connections"]
-            num_inputs = len(input_dict)
             if input_dict:
                 for key in input_dict.keys():
                     if input_dict[key]['id'] is not None:
@@ -120,13 +119,11 @@ def createStepsAnnot(file_list, workflow):
             pos_dict = curr_workflow_step["position"]
             if pos_dict:
                 top_pos = pos_dict["top"]
-                left_pos = pos_dict["left"]
                 # TODO: find a better way of defining positions
                 pos_dict["top"] = top_pos * (i + 1)
             # 4. Updating post job actions for renaming datasets
             input_type = map[int(curr_step)]
             if len(curr_workflow_step['inputs']) == 0:
-                tool_name = parse_tool_name(curr_workflow_step["tool_id"])
                 # getting current filename for workflow
                 curr_filename = ''
                 if input_type in file_list[i].keys():
@@ -149,7 +146,6 @@ def createStepsAnnot(file_list, workflow):
                 # workflow
                 # parsing annotation field in galaxy workflows to parse output
                 # files to keep: "keep=output_file, keep=output_file2" etc..
-                step_annot = curr_workflow_step['annotation']
                 keep_files = {}
                 # Update with added JSON to define description and new names
                 # of files
@@ -175,8 +171,6 @@ def createStepsAnnot(file_list, workflow):
                         # galaxy output file type
                         otype = str(ofiles['type'])
                         temp_key = 'RenameDatasetAction' + oname
-                        new_output_name = curr_filename + "," + tool_name + \
-                            ',' + input_type + ',' + oname
                         new_tool_name = str(curr_id) + "_" + oname
                         # store information about the output files of this
                         # tools
@@ -277,7 +271,6 @@ def createStepsCompact(file_list, workflow):
     logger.debug("galaxy_workflow.createStepsCompact called")
     updated_dict = {}
     temp_steps = workflow["steps"]
-    repeat_num = len(file_list)
     history_download = []
     map = workflowMap(workflow)
     lookup_edges = {}
@@ -353,21 +346,21 @@ def createStepsCompact(file_list, workflow):
                 # store information about this output file
                 connections.append(analysis_node_connection)
                 # if rename dataset action already exists for this tool output
-                if temp_key in pja_dict:
-                    # renaming output files according with step_id of workflow
-                    # FIXME: assignment from an undefined variable
-                    # new_output_name
-                    pja_dict[temp_key]['action_arguments']['newname'] = \
-                        new_output_name
+                # if False and temp_key in pja_dict:
+                # renaming output files according with step_id of workflow
+                # FIXME: assignment from an undefined variable
+                # new_output_name
+                # pja_dict[temp_key]['action_arguments']['newname'] = \
+                #     new_output_name
                 # whether post_job_action,RenameDatasetAction exists or not
-                else:
-                    # renaming output files according with step_id of workflow
-                    new_rename_action = \
-                        '{ "action_arguments": { "newname": "%s" }, ' \
-                        '"action_type": "RenameDatasetAction", ' \
-                        '"output_name": "%s"}' % (new_tool_name, oname)
-                    new_rename_dict = ast.literal_eval(new_rename_action)
-                    pja_dict[temp_key] = new_rename_dict
+                # else:
+                # renaming output files according with step_id of workflow
+                new_rename_action = \
+                    '{ "action_arguments": { "newname": "%s" }, ' \
+                    '"action_type": "RenameDatasetAction", ' \
+                    '"output_name": "%s"}' % (new_tool_name, oname)
+                new_rename_dict = ast.literal_eval(new_rename_action)
+                pja_dict[temp_key] = new_rename_dict
         # checking to see if repeat_for tag exists for current tool
         if "repeat_for" in keep_files:
             check_step = keep_files["repeat_for"]
@@ -443,7 +436,7 @@ def createStepsCompact(file_list, workflow):
             temp[key_tool_state] = key_tool_val
             # dump the dictionary as string before putting it back into
             # workflow
-            curr_workflow_step['tool_state'] = simplejson.dumps(temp)
+            curr_workflow_step['tool_state'] = json.dumps(temp)
             # add updated connections back to galaxy workflow step
             curr_workflow_step['input_connections'] = new_connections
             curr_workflow_step['id'] = counter
@@ -510,12 +503,10 @@ def countWorkflowSteps(workflow):
             if 'post_job_actions' in curr_step.keys():
                 pja_step = curr_step['post_job_actions']
                 pja_hide_count = 0
-                pja_hide = False
                 # if using HideDatasetActions from older versions of galaxy
                 for k, v in pja_step.iteritems():
                     if (k.find('HideDatasetActionoutput_') > -1):
                         pja_hide_count += 1
-                        pja_hide = True
                 diff_count = output_num - pja_hide_count
                 # add one step if HideDatasetActionoutput_ = outputs for file
                 if diff_count == 0:

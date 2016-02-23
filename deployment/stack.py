@@ -45,8 +45,8 @@ import tags
 
 # Simulate the environment that "cfn_generate" runs scripts in.
 # http://cfn-pyplates.readthedocs.org/en/latest/advanced.html#generating-templates-in-python
-from cfn_pyplates.core import *
-from cfn_pyplates.functions import *
+from cfn_pyplates import core
+from cfn_pyplates import functions
 
 
 class ConfigError(Exception):
@@ -55,7 +55,12 @@ class ConfigError(Exception):
 
 def main():
     config = load_config()
-    cft = CloudFormationTemplate(description="refinery platform.")
+
+    # The Availability Zone of the new instance needs to match
+    # the availability zone of the existing EBS.
+    derive_config(config)
+
+    cft = core.CloudFormationTemplate(description="refinery platform.")
 
     # We discover the current git branch/commit
     # so that the deployment script can use it
@@ -67,34 +72,40 @@ def main():
     # It's made by concatenating a block of parameter variables,
     # with the bootstrap.sh script,
     # and the aws.sh script.
-    user_data_script = join(
+    user_data_script = functions.join(
         "",
         "#!/bin/sh\n",
         "RDS_NAME=", config['RDS_NAME'], "\n",
         "RDS_SUPERUSER_PASSWORD=", config['RDS_SUPERUSER_PASSWORD'], "\n",
         "RDS_ROLE=", config['RDS_ROLE'], "\n",
+        "ADMIN=", config['ADMIN'], "\n",
+        "DEFAULT_FROM_EMAIL=", config['DEFAULT_FROM_EMAIL'], "\n",
+        "SERVER_EMAIL=", config['SERVER_EMAIL'], "\n",
+        "EMAIL_HOST_USER=", config['EMAIL_HOST_USER'], "\n",
+        "EMAIL_HOST_PASSWORD=", config['EMAIL_HOST_PASSWORD'], "\n",
         "GIT_BRANCH=", commit, "\n",
         "\n",
         open('bootstrap.sh').read(),
         open('aws.sh').read())
 
-    cft.resources.ec2_instance = Resource(
+    cft.resources.ec2_instance = core.Resource(
         'WebInstance', 'AWS::EC2::Instance',
-        Properties({
+        core.Properties({
+            'AvailabilityZone': config['AVAILABILITY_ZONE'],
             'ImageId': 'ami-d05e75b8',
             'InstanceType': 'm3.medium',
-            'UserData': base64(user_data_script),
+            'UserData': functions.base64(user_data_script),
             'KeyName': 'id_rsa',
             'IamInstanceProfile': 'refinery-web',
             'Tags': tags.load(),
         })
     )
 
-    cft.resources.mount = Resource(
+    cft.resources.mount = core.Resource(
         'RefineryVolume', 'AWS::EC2::VolumeAttachment',
-        Properties({
+        core.Properties({
             'Device': '/dev/xvdr',
-            'InstanceId': ref('WebInstance'),
+            'InstanceId': functions.ref('WebInstance'),
             'VolumeId': config['VOLUME']
         })
     )
@@ -132,6 +143,32 @@ def load_config():
     config.setdefault('RDS_SUPERUSER_PASSWORD', 'mypassword')
     config.setdefault('RDS_NAME', 'rds-refinery')
     return config
+
+
+def derive_config(config):
+    """
+    Modify `config` so that extra, derived, configuration is
+    added to it.
+
+    The only case at the moment is that the availability zone of
+    the VOLUME is added so that the instance can share the same
+    availability zone.
+    """
+
+    import boto3
+
+    # Discover the Availability Zone for the volume,
+    # and add it to the config.
+    ec2 = boto3.resource('ec2')
+    volume = ec2.Volume(config['VOLUME'])
+    # http://boto3.readthedocs.org/en/latest/reference/services/ec2.html#volume
+    az = volume.availability_zone
+
+    # If AVAILABILITY_ZONE is already set, it must match.
+    if 'AVAILABILITY_ZONE' in config:
+        assert config['AVAILABILITY_ZONE'] == az
+
+    config['AVAILABILITY_ZONE'] = az
 
 
 if __name__ == '__main__':

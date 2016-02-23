@@ -9,7 +9,7 @@ from django.conf import settings
 from django.test import SimpleTestCase
 
 from file_store.models import file_path, get_temp_dir, get_file_object,\
-    FileStoreItem, FileType, FILE_STORE_TEMP_DIR, BIGBED, UNKNOWN, WIG,\
+    FileStoreItem, FileType, FILE_STORE_TEMP_DIR, \
     generate_file_source_translator
 
 

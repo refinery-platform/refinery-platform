@@ -1051,7 +1051,8 @@ class Analysis(OwnableResource):
                 self.set_status(Analysis.UNKNOWN_STATUS, error_msg)
                 raise
 
-        if history['state'] == 'error':
+        if (history['state'] == 'error' or
+                history['state_details']['error'] > 0):
             error_msg = "Analysis '{}' failed in Galaxy".format(self)
             logger.error(error_msg)
             self.set_status(Analysis.FAILURE_STATUS, error_msg)
@@ -1533,7 +1534,7 @@ class NodeSet(SharableResource, TemporaryResource):
     node_count = models.IntegerField(blank=True, null=True)
     #: Implicit node is created "on the fly" to support an analysis while
     #: explicit node is created by the user to store a particular selection
-    is_implicit = models.BooleanField()
+    is_implicit = models.BooleanField(default=False)
     study = models.ForeignKey(Study)
     assay = models.ForeignKey(Assay)
     # is this the "current selection" node set for the associated study/assay?
@@ -2044,23 +2045,17 @@ def dataset_deletion_check(instance):
         addition to the related objects detected by Django
     '''
 
-    if bool(Analysis.objects.filter(data_set=instance)):
-        logger.error("Cannot delete DataSet:%s because there has been "
-                     "one or more Analyses run on it." % instance)
-        return False
-
-    else:
-        related_investigation_links = InvestigationLink.objects.filter(
-            data_set=instance)
-        if related_investigation_links:
-            for item in related_investigation_links:
-                node_collection = NodeCollection.objects.get(
-                    uuid=item.investigation.uuid)
-                try:
-                    node_collection.delete()
-                except Exception as e:
-                    logger.debug("Couldn't delete NodeCollection:", e)
-        return True
+    related_investigation_links = InvestigationLink.objects.filter(
+        data_set=instance)
+    if related_investigation_links:
+        for item in related_investigation_links:
+            node_collection = NodeCollection.objects.get(
+                uuid=item.investigation.uuid)
+            try:
+                node_collection.delete()
+            except Exception as e:
+                logger.debug("Couldn't delete NodeCollection:", e)
+    return True
 
 
 def analysis_deletion_check(instance):

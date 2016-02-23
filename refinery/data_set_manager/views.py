@@ -7,6 +7,7 @@ Created on May 11, 2012
 import logging
 import shutil
 import urlparse
+import json
 
 from django import forms
 from django.core.exceptions import MultipleObjectsReturned
@@ -20,20 +21,16 @@ from django.views.generic import View
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.authentication import SessionAuthentication, \
-    BasicAuthentication
-from rest_framework.permissions import IsAuthenticated
 from django.http import Http404
 
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
-from haystack.query import SearchQuerySet
-import simplejson as json
 
 from core.models import os, get_user_import_dir
 from data_set_manager.single_file_column_parser import process_metadata_table
-from data_set_manager.tasks import create_dataset, parse_isatab
-from data_set_manager.utils import *
+from data_set_manager.tasks import parse_isatab
+from data_set_manager.utils import generate_solr_params, search_solr, \
+    format_solr_response, get_owner_from_assay, update_attribute_order_ranks
 from file_store.tasks import download_file, DownloadError
 from file_store.models import get_temp_dir, generate_file_source_translator
 from .serializers import AttributeOrderSerializer, AssaySerializer

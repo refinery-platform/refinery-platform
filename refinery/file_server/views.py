@@ -4,13 +4,12 @@ Created on Apr 21, 2012
 @author: nils
 '''
 
+import json
 import logging
 
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
-
-import simplejson
 
 import file_store.tasks
 import file_server.tdf_file as tdf_module
@@ -74,7 +73,7 @@ def index(request):
 
     file_object.close()
 
-    return HttpResponse(simplejson.dumps(profile), mimetype='application/json')
+    return HttpResponse(json.dumps(profile), mimetype='application/json')
 
 
 def _get_cache(session, uuid):
@@ -200,7 +199,7 @@ def cache_tdf(request, uuid, refresh=False):
             str(uuid) +
             " data set information is cached and refresh not requested")
 
-    return HttpResponse(simplejson.dumps(
+    return HttpResponse(json.dumps(
         _get_tdf_data_set_information_from_cache(request.session, uuid),
         sort_keys=True, indent=4), mimetype='application/json')
 
@@ -241,7 +240,7 @@ def get_tdf_profile(request, uuid, sequence_name, zoom_level, start_location,
 
     print("Profile Length: " + str(len(profile)))
 
-    return HttpResponse(simplejson.dumps(profile), mimetype='application/json')
+    return HttpResponse(json.dumps(profile), mimetype='application/json')
 
 
 def get_zoom_levels(request, uuid, sequence_name):
@@ -276,7 +275,7 @@ def get_zoom_levels(request, uuid, sequence_name):
         zoom_level_ranges[zoom_level] = [lower_bound, upper_bound]
 
     return HttpResponse(
-        simplejson.dumps(zoom_level_ranges, sort_keys=True, indent=4),
+        json.dumps(zoom_level_ranges, sort_keys=True, indent=4),
         mimetype='application/json')
 
 

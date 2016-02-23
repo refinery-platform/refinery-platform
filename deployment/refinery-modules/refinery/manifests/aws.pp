@@ -6,15 +6,13 @@ class refinery::aws {
 
 $fstype = 'ext3'
 
-package { 'lvm2':
+# This is the block device for the external data.
+# It must match the attachment point for the EC2 EBS volume.
+$block_device = '/dev/xvdr'
+
+filesystem { $block_device:
   ensure => present,
-}
-->
-lvm::volume { 'data':
-  ensure => present,
-  vg     => 'refinerydata',
-  pv     => '/dev/xvdr',
-  fstype => $fstype,
+  fs_type => $fstype,
 }
 ->
 # Mountpoint
@@ -24,7 +22,7 @@ file { '/data':
 ->
 mount { '/data':
   ensure => mounted,
-  device => '/dev/refinerydata/data',
+  device => $block_device,
   fstype => $fstype,
   options => 'defaults',
 }
@@ -41,6 +39,14 @@ file { '/data/isa-tab':
   owner => "$app_user",
   group => "$app_user",
   mode => "0755",
+}
+
+
+python::requirements { "/srv/refinery-platform/deployment/aws-requirements.txt":
+  require     => Python::Requirements[$requirements],
+  virtualenv => $virtualenv,
+  owner      => $app_user,
+  group      => $app_group,
 }
 
 }
