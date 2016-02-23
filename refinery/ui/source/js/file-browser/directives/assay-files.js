@@ -1,7 +1,6 @@
 angular.module('refineryFileBrowser')
     .directive("rpFileBrowserAssayFiles",
   [
-    '$rootScope',
     rpFileBrowserAssayFiles
   ]
 );
@@ -18,8 +17,35 @@ function rpFileBrowserAssayFiles() {
        assayFiles: '@',
        assayAttributes: '@'
     },
-    link: function(scope, element, attr){
-      scope.FBCtrl.updateAssayFiles();
+    link: function(scope){
+
+       scope.gridOptions = {
+        };
+
+      var customColumnName = [];
+      var customColumnData = [];
+      var createColumnDefs = function(){
+        scope.FBCtrl.assayAttributes.forEach(function(attribute){
+          customColumnName.push(
+            {
+              name: attribute.display_name,
+              field: attribute.internal_name
+            }
+          );
+        });
+      };
+
+      scope.FBCtrl.updateAssayFiles().then(function(){
+        createColumnDefs();
+        scope.gridOptions = {
+        enableSorting: true,
+        columnDefs: customColumnName,
+        data: scope.FBCtrl.assayFiles
+      };
+        console.log(customColumnName);
+      console.log(scope.FBCtrl.assayFiles);
+
+      });
     }
   };
 }

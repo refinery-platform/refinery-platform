@@ -1,2 +1,4 @@
 angular
-  .module( 'refineryFileBrowser', [] );
+  .module( 'refineryFileBrowser', [
+    'ui.grid'
+  ]);
