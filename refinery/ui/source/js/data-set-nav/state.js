@@ -214,7 +214,7 @@ angular
           'files',
           {
             url: '/files/',
-            templateUrl: '/static/partials/file-browser/partials/file-browser.html',
+            templateUrl: '/static/partials/file-browser/partials/assay-files.html',
             controller: 'refineryDataSetNavFilesCtrl'
           },
           '^\/data_sets2\/.*\/$',
