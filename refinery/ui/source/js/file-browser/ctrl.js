@@ -1,9 +1,9 @@
 angular.module('refineryFileBrowser')
     .controller('FileBrowserCtrl',
-    ['fileBrowserFactory', FileBrowserCtrl]);
+    ['fileBrowserFactory','$window', FileBrowserCtrl]);
 
 
-function FileBrowserCtrl(fileBrowserFactory) {
+function FileBrowserCtrl(fileBrowserFactory, $window) {
   "use strict";
   var vm = this;
   vm.assayFiles = [];
@@ -11,8 +11,7 @@ function FileBrowserCtrl(fileBrowserFactory) {
 
   vm.updateAssayFiles = function () {
     var param = {
-      format: 'json',
-      'uuid': '5eff885e-49cb-477a-ad76-f65d74d78f8a',
+      'uuid': $window.externalAssayUuid
     };
 
     return fileBrowserFactory.getAssayFiles(param).then(function (response) {
@@ -23,7 +22,4 @@ function FileBrowserCtrl(fileBrowserFactory) {
       return response;
     });
   };
-
- // vm.updateAssayFiles();
-
 }
