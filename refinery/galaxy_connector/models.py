@@ -60,10 +60,10 @@ class Instance(models.Model):
             history_content = connection.histories.show_dataset(
                 history_id, history_content_entry["id"])
 
-            if "data_type" not in history_content:
+            if "file_ext" not in history_content:
                 file_info["type"] = None
             else:
-                file_info["type"] = history_content["data_type"]
+                file_info["type"] = history_content["file_ext"]
 
             if "state" not in history_content:
                 file_info["state"] = None
