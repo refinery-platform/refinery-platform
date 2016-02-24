@@ -124,9 +124,9 @@
           <i
             class="analyses-status {{ analysis.status | analysisStatusIcon }}"
             title="{{ analysis.status | analysisStatusTitle }}"
-            tool-tip
-            tool-tip-container="body"
-            tool-tip-placement="left">
+            refinery-tooltip
+            refinery-tooltip-container="body"
+            refinery-tooltip-placement="left">
           </i>
           <span ng-if="analysis.status === 'UNKNOWN'">
             {{ analysis.name }}

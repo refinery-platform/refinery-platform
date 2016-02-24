@@ -87,7 +87,9 @@
             &nbsp;
             <span class="spinner">
               <i class="{{analysis.status | analysisStatusIcon}} analyses-status"
-                tool-tip tool-tip-container="body" tool-tip-placement="bottom"
+                refinery-tooltip
+                refinery-tooltip-container="body"
+                refinery-tooltip-placement="bottom"
                 title="{{ analysis.status | analysisStatusTitle }}">
               </i>
             </span>
@@ -108,7 +110,9 @@
               &nbsp;
              <a rp-analysis-monitor-cancel-confirm confirmed-click=
                "AMCtrl.cancelAnalysis(analysis.uuid)"
-                tool-tip tool-tip-container="body" tool-tip-placement="right"
+                refinery-tooltip
+                refinery-tooltip-container="body"
+                refinery-tooltip-placement="right"
                 title="Cancel Analysis">
                <i class="fa fa-times-circle analyses-cancel"></i>
              </a>
@@ -116,7 +120,7 @@
            </div>
 
           <div class="col-md-1">
-            <span  rp-analysis-monitor-start-time-tooltip>
+            <span rp-analysis-monitor-start-time-tooltip>
               {{analysis.humanizeStartTime }}
             </span>
           </div>
@@ -126,7 +130,7 @@
           </div>
 
           <div class="col-md-1">
-            <span  rp-analysis-monitor-end-time-tooltip>
+            <span rp-analysis-monitor-end-time-tooltip>
                {{analysis.humanizeEndTime }}
             </span>
           </div>
@@ -167,9 +171,9 @@
                     stage=='overall')">
                       <li class="analysisRunningListItem">
                         {{ stage }}
-                        <span tool-tip
-                              tool-tip-container="body"
-                              tool-tip-placement="bottom"
+                        <span refinery-tooltip
+                              refinery-tooltip-container="body"
+                              refinery-tooltip-placement="bottom"
                               title={{stageTooltipInfo[stage]}}>
                           <i class="fa fa-question-circle"></i>
                         </span>

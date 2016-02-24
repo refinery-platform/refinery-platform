@@ -80,9 +80,9 @@
               ng-click="dashboard.showDataSetsFilterSort = !!!dashboard.showDataSetsFilterSort"
               ng-if="!dashboard.searchQueryDataSets.length"
               close-on-outer-click-external-trigger="dashboard.dataSetsfilterSort"
-              tool-tip
-              tool-tip-container="body"
-              tool-tip-placement="right">
+              refinery-tooltip
+              refinery-tooltip-container="body"
+              refinery-tooltip-placement="right">
             </button>
           </div>
           <div class="floatbox-max-left">
@@ -174,30 +174,30 @@
               class="fa fa-user"
               title="You own this data set"
               ng-if="dataSet.is_owner"
-              tool-tip
-              tool-tip-container="body"
-              tool-tip-placement="top"></i>
+              refinery-tooltip
+              refinery-tooltip-container="body"
+              refinery-tooltip-placement="top"></i>
             <i
               class="fa fa-users icon-shared-out"
               title="You privately share this data set"
               ng-if="dataSet.is_shared && dataSet.is_owner"
-              tool-tip
-              tool-tip-container="body"
-              tool-tip-placement="top"></i>
+              refinery-tooltip
+              refinery-tooltip-container="body"
+              refinery-tooltip-placement="top"></i>
             <i
               class="fa fa-users icon-shared-in"
               title="This data set is shared with you"
               ng-if="dataSet.is_shared && !dataSet.is_owner && dashboard.userIsAuthenticated"
-              tool-tip
-              tool-tip-container="body"
-              tool-tip-placement="top"></i>
+              refinery-tooltip
+              refinery-tooltip-container="body"
+              refinery-tooltip-placement="top"></i>
             <i
               class="fa fa-globe"
               title="This file is publicly available"
               ng-if="dataSet.public && dashboard.userIsAuthenticated"
-              tool-tip
-              tool-tip-container="body"
-              tool-tip-placement="top"></i>
+              refinery-tooltip
+              refinery-tooltip-container="body"
+              refinery-tooltip-placement="top"></i>
             <a
               class="title"
               ng-href="data_sets/{{ dataSet.uuid }}"
@@ -296,9 +296,9 @@
               ng-click="dashboard.showAnalysesFilterSort = !!!dashboard.showAnalysesFilterSort"
               ng-if="dashboard.analysesIsFilterable"
               close-on-outer-click-external-trigger="dashboard.analysesFilterSort"
-              tool-tip
-              tool-tip-container="body"
-              tool-tip-placement="right">
+              refinery-tooltip
+              refinery-tooltip-container="body"
+              refinery-tooltip-placement="right">
             </button>
           </div>
           <div class="floatbox-max-left">
@@ -396,25 +396,25 @@
               <i
                 class="analyses-status {{ analysis.status | analysisStatusIcon }}"
                 title="{{ analysis.status | analysisStatusTitle }}"
-                tool-tip
-                tool-tip-container="body"
-                tool-tip-placement="left">
+                refinery-tooltip
+                refinery-tooltip-container="body"
+                refinery-tooltip-placement="left">
               </i>
             </span>
             <i
               class="fa fa-user"
               title="You ran this analysis"
               ng-if="analysis.is_owner"
-              tool-tip
-              tool-tip-container="body"
-              tool-tip-placement="top"></i>
+              refinery-tooltip
+              refinery-tooltip-container="body"
+              refinery-tooltip-placement="top"></i>
             <i
               class="fa fa-users icon-shared-in"
               title="Some collaborator ran this analysis"
               ng-if="!analysis.is_owner"
-              tool-tip
-              tool-tip-container="body"
-              tool-tip-placement="top"></i>
+              refinery-tooltip
+              refinery-tooltip-container="body"
+              refinery-tooltip-placement="top"></i>
             <span ng-if="analysis.status === 'RUNNING' || analysis.status === 'UNKNOWN'">
               <a
                 ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}/#/analyses">
@@ -469,9 +469,9 @@
               ng-click="dashboard.showWorkflowsFilterSort = !!!dashboard.showWorkflowsFilterSort"
               ng-if="dashboard.workflows.totalReadable"
               close-on-outer-click-external-trigger="dashboard.workflowsFilterSort"
-              tool-tip
-              tool-tip-container="body"
-              tool-tip-placement="left">
+              refinery-tooltip
+              refinery-tooltip-container="body"
+              refinery-tooltip-placement="left">
             </button>
           </div>
           <div class="floatbox-max-left">

@@ -2,16 +2,20 @@
   <span ng-if="AMCtrl.isAnalysesRunningGlobal() ||
    AMCtrl.launchAnalysisFlag">
     <span class="spinner" id="global-analysis-status-run-div"
-        tool-tip tool-tip-container="body" tool-tip-placement="left"
-         title="View Recent Analyses">
+      refinery-tooltip
+      refinery-tooltip-container="body"
+      refinery-tooltip-placement="left"
+      title="View Recent Analyses">
       <i class="fa fa-cog" id="global-analysis-status-run"></i>
       {{ AMCtrl.analysesRunningGlobalListCount }}
     </span>
   </span>
    <span ng-if="!(AMCtrl.isAnalysesRunningGlobal()||
     AMCtrl.launchAnalysisFlag)">
-    <i class="fa fa-cog" id="global-analysis-status" tool-tip
-      tool-tip-container="body"
-      tool-tip-placement="left" title="View Recent Analyses"></i>
+    <i class="fa fa-cog" id="global-analysis-status"
+      refinery-tooltip
+      refinery-tooltip-container="body"
+      refinery-tooltip-placement="left"
+      title="View Recent Analyses"></i>
   </span>
 </span>
