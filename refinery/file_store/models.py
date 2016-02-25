@@ -385,6 +385,10 @@ class FileStoreItem(models.Model):
                     else:
                         self.filetype = FileType.objects.get(
                             extension="unknown")
+                        logger.warning("%s is an unknown filetype! If this "
+                                       "filetype is something you would like, "
+                                       "please add it in the Admin "
+                                       "interface." % f)
             self.save()
             logger.info("File type is set to '%s'", f)
             return True
