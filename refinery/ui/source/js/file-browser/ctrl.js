@@ -17,8 +17,6 @@ function FileBrowserCtrl(fileBrowserFactory, $window) {
     return fileBrowserFactory.getAssayFiles(param).then(function (response) {
       vm.assayFiles = fileBrowserFactory.assayFiles;
       vm.assayAttributes = fileBrowserFactory.assayAttributes;
-      console.log("in ctrl");
-      console.log(vm.assayFiles);
       return response;
     });
   };

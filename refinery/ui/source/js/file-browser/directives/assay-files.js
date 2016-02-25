@@ -19,8 +19,8 @@ function rpFileBrowserAssayFiles() {
     },
     link: function(scope){
 
-       scope.gridOptions = {
-        };
+      scope.gridOptions = {
+       };
 
       var customColumnName = [];
       var createColumnDefs = function(){
@@ -37,11 +37,11 @@ function rpFileBrowserAssayFiles() {
       scope.FBCtrl.updateAssayFiles().then(function(){
         createColumnDefs();
         scope.gridOptions = {
-        enableSorting: true,
         columnDefs: customColumnName,
         data: scope.FBCtrl.assayFiles
-      };
+        };
       });
+
     }
   };
 }

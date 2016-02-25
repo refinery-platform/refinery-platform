@@ -11,7 +11,6 @@ function fileBrowserFactory($http, assayFileService) {
 
     var assayFile = assayFileService.query(params);
     assayFile.$promise.then(function (response) {
-      console.log(response.attributes, params);
       angular.copy(response.attributes, assayAttributes);
       angular.copy(response.nodes, assayFiles);
     }, function (error) {
