@@ -591,7 +591,7 @@ class UtilitiesTest(TestCase):
                          'facet.limit=-1&facet.mincount=1'.format(
                                  self.valid_uuid))
         # added parameter
-        parameter_dict = {'limit': 7, 'start': 2,
+        parameter_dict = {'limit': 7, 'offset': 2,
                           'include_facet_count': 'true',
                           'attributes': 'cats,mouse,dog,horse',
                           'facets': 'cats,mouse,dog,horse',
@@ -667,7 +667,7 @@ class UtilitiesTest(TestCase):
                         '"Year_Characteristics_6_3_s"],'\
                         '"wt": "json", "rows": "20"}},'\
                         '"response": {'\
-                        '"numFound": 1, "start": 0,'\
+                        '"numFound": 1, "offset": 0,'\
                         '"docs": ['\
                         '{"Author_Characteristics_6_3_s": "Crocker",'\
                         '"REFINERY_ANALYSIS_UUID_6_3_s": "N/A",'\
@@ -726,7 +726,10 @@ class UtilitiesTest(TestCase):
                          u'Author_Characteristics_6_3_s': u'Crocker',
                          u'Year_Characteristics_6_3_s': u'1971',
                          u'REFINERY_SUBANALYSIS_6_3_s': u'-1',
-                         u'REFINERY_TYPE_6_3_s': u'Raw Data File'}]
+                         u'REFINERY_TYPE_6_3_s': u'Raw Data File'}],
+                    'meta': {
+                        u'total_count': 1
+                    }
                 }
         )
 
