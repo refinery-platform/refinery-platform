@@ -509,7 +509,7 @@ def generate_solr_params(params, assay_uuid):
     Params/Solr Params
         is_annotation - metadata
         facet_count/facet - enables facet counts in query response, true/false
-        start - paginate, offset response
+        offset - paginate, offset response
         limit/row - maximum number of documents
         field_limit - set of fields to return
         facet_field - specify a field which should be treated as a facet
@@ -527,7 +527,7 @@ def generate_solr_params(params, assay_uuid):
 
     is_annotation = params.get('is_annotation', default='false')
     facet_count = params.get('include_facet_count', default='true')
-    start = params.get('start', default='0')
+    start = params.get('offset', default='0')
     row = params.get('limit', default='20')
     field_limit = params.get('attributes', default=None)
     facet_field = params.get('facets', default=None)
@@ -660,12 +660,14 @@ def format_solr_response(solr_response):
             'params').get('facet.field')
     facet_field_counts = solr_response_json.get('facet_counts').get(
             'facet_fields')
+    facet_field_total = solr_response_json.get('response').get('numFound')
     facet_field_docs = solr_response_json.get('response').get('docs')
     facet_field_counts_obj = objectify_facet_field_counts(facet_field_counts)
     solr_response_json['facet_field_counts'] = facet_field_counts_obj
     attributes = customize_attribute_response(order_facet_fields)
     solr_response_json["attributes"] = attributes
     solr_response_json["nodes"] = facet_field_docs
+    solr_response_json["meta"] = {"total_count": facet_field_total}
 
     # Remove unused fields from solr response
     del solr_response_json['responseHeader']
