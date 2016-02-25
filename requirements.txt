@@ -33,6 +33,7 @@ django-uuidfield==0.2
 djangular==0.2.3
 docutils==0.10
 enum34==1.0.4
+flake8==2.5.4
 flower==0.8.4
 Jinja2==2.6
 jsonpickle==0.4.0
@@ -45,7 +46,6 @@ mockcache==1.0.2
 ndg-httpsclient==0.3.2
 networkx==1.7
 pathtools==0.1.2
-pep8==1.6.2
 poster==0.8.1
 psycopg2==2.4.5
 py2neo==2.0.7
