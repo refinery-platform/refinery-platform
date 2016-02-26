@@ -1,4 +1,5 @@
 angular
   .module( 'refineryFileBrowser', [
-    'ui.grid'
+    'ui.grid',
+    'ui.scroll'
   ]);

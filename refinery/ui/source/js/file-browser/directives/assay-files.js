@@ -15,7 +15,8 @@ function rpFileBrowserAssayFiles() {
     controllerAs: 'FBCtrl',
     bindToController: {
        assayFiles: '@',
-       assayAttributes: '@'
+       assayAttributes: '@',
+       assayFiles2: '@'
     },
     link: function(scope){
 
@@ -41,7 +42,6 @@ function rpFileBrowserAssayFiles() {
         data: scope.FBCtrl.assayFiles
         };
       });
-
     }
   };
 }
