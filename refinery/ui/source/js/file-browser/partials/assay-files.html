@@ -8,10 +8,13 @@
    </ul>
  </div>-->
 
-<div ng-if="gridOptions.data">
+<div ng-show="gridOptions.data">
   <div id="grid1"
     ui-grid="gridOptions"
     ui-grid-selection
     class="grid">
   </div>
 </div>
+
+{{ selectRow }}
+{{ test }}
