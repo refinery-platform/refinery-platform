@@ -1,11 +1,12 @@
 angular.module('refineryFileBrowser')
     .directive("rpFileBrowserAssayFiles",
   [
+    'uiGridConstants',
     rpFileBrowserAssayFiles
   ]
 );
 
-function rpFileBrowserAssayFiles() {
+function rpFileBrowserAssayFiles(uiGridConstants) {
     "use strict";
 
   return {
@@ -21,7 +22,16 @@ function rpFileBrowserAssayFiles() {
     link: function(scope){
 
       scope.gridOptions = {
-       };
+        enableRowSelection: true,
+        enableSelectAll: true,
+        selectionRowHeaderWidth: 35,
+        rowHeight: 35,
+        showGridFooter:true,
+        enableSelectionBatchEvent: true
+      };
+
+      scope.info = {};
+      scope.gridOptions.multiSelect = true;
 
       var customColumnName = [];
       var createColumnDefs = function(){
@@ -39,16 +49,26 @@ function rpFileBrowserAssayFiles() {
         createColumnDefs();
         scope.gridOptions = {
         columnDefs: customColumnName,
-        data: scope.FBCtrl.assayFiles,
-        enableRowSelection: true,
-        enableSelectAll: true,
-        selectionRowHeaderWidth: 35,
-        rowHeight: 35,
-        showGridFooter:true
+        data: scope.FBCtrl.assayFiles
         };
       });
 
-      scope.gridOptions.multiSelect = true;
+      scope.gridOptions.onRegisterApi = function(gridApi) {
+        //set gridApi on scope
+
+        scope.gridApi = gridApi;
+        scope.gridApi.selection.on.rowSelectionChanged(scope, function (row) {
+           scope.selectNodes = gridApi.selection.getSelectedRows();
+          console.log(scope.selectNodes);
+        });
+
+        scope.gridApi.selection.on.rowSelectionChangedBatch(scope, function (rows) {
+          scope.selectNodes = gridApi.selection.getSelectedRows();
+           console.log(scope.selectNodes);
+        });
+
+      };
+
     }
   };
 }
