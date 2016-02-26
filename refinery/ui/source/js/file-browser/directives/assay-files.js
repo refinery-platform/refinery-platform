@@ -39,9 +39,16 @@ function rpFileBrowserAssayFiles() {
         createColumnDefs();
         scope.gridOptions = {
         columnDefs: customColumnName,
-        data: scope.FBCtrl.assayFiles
+        data: scope.FBCtrl.assayFiles,
+        enableRowSelection: true,
+        enableSelectAll: true,
+        selectionRowHeaderWidth: 35,
+        rowHeight: 35,
+        showGridFooter:true
         };
       });
+
+      scope.gridOptions.multiSelect = true;
     }
   };
 }
