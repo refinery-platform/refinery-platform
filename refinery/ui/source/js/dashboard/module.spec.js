@@ -42,8 +42,8 @@ describe('Dashboard.module: unit tests', function () {
       expect(hasModule('cut')).toEqual(true);
     });
 
-    it('should have "toolTip" as a dependency', function () {
-      expect(hasModule('toolTip')).toEqual(true);
+    it('should have "tooltip" as a dependency', function () {
+      expect(hasModule('tooltip')).toEqual(true);
     });
 
     it('should have "treemap" as a dependency', function () {

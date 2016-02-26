@@ -96,8 +96,57 @@ def main():
             'InstanceType': 'm3.medium',
             'UserData': functions.base64(user_data_script),
             'KeyName': 'id_rsa',
-            'IamInstanceProfile': 'refinery-web',
+            'IamInstanceProfile': functions.ref('WebInstanceProfile'),
             'Tags': tags.load(),
+        })
+    )
+
+    cft.resources.instance_profile = core.Resource(
+        'WebInstanceProfile', 'AWS::IAM::InstanceProfile',
+        core.Properties({
+            'Path': '/',
+            'Roles': [
+              functions.ref('WebInstanceRole')
+            ]
+        })
+    )
+
+    cft.resources.web_role = core.Resource(
+        'WebInstanceRole', 'AWS::IAM::Role',
+        core.Properties({
+            # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html#cfn-iam-role-templateexamples
+            "AssumeRolePolicyDocument": {
+               "Version": "2012-10-17",
+               "Statement": [{
+                  "Effect": "Allow",
+                  "Principal": {
+                     "Service": ["ec2.amazonaws.com"]
+                  },
+                  "Action": ["sts:AssumeRole"]
+               }]
+            },
+            'ManagedPolicyArns': [
+                'arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess',
+                'arn:aws:iam::aws:policy/AmazonRDSReadOnlyAccess'
+            ],
+            'Path': '/',
+            'Policies': [{
+                'PolicyName': "CreateAccessKey",
+                'PolicyDocument': {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": [
+                                "iam:CreateAccessKey"
+                            ],
+                            "Resource": [
+                                "*"
+                            ]
+                        }
+                    ]
+                }
+            }]
         })
     )
 
