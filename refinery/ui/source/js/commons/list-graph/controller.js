@@ -32,21 +32,22 @@ function ListGraphCtrl (
       } else {
         this.visRoots = this.rootIds;
       }
-      this.listGraph = new ListGraphVis(
-        this.$visElement[0],
-        this.graph,
-        this.visRoots,
-        {
-          activeLevelNumber: 1,
-          noRootedNodeDifference: 1,
-          columns: Math.round(this.width / 175),
-          rows: Math.round(this.height / 24),
-          iconPath: this.settings.iconPath,
-          lessAnimations: true,
-          sortBy: 'precision',
-          dispatcher: pubSub.trigger
-        }
-      );
+      this.listGraph = new ListGraphVis({
+        // Mandatory
+        element: this.$visElement[0],
+        data: this.graph,
+        rootNodes: this.visRoots,
+        iconPath: this.settings.iconPath,
+        // Optional
+        activeLevel: 1,
+        columns: Math.round(this.width / 175),
+        dispatcher: pubSub.trigger,
+        lessTransitions: 1,
+        noRootActiveLevelDiff: 1,
+        querying: true,
+        rows: Math.round(this.height / 24),
+        sortBy: 'precision'
+      });
     }.bind(this));
   }
 
