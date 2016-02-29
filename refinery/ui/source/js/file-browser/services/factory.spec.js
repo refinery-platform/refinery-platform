@@ -51,4 +51,71 @@ describe("File Browser Factory", function(){
       expect(successData).toEqual(assayFiles);
     });
   });
+
+  describe("getAssayAttributes", function() {
+    var $httpBackend, settings, responseData, url;
+
+    beforeEach(inject(function(_$httpBackend_,_settings_) {
+      $httpBackend = _$httpBackend_;
+      settings = _settings_;
+      responseData = [
+        {
+          "assay": 3,
+          "study": 6,
+          "solr_field": "is_annotation",
+          "rank": 0,
+          "is_exposed": true,
+          "is_facet": true,
+          "is_active": false,
+          "is_internal": true,
+          "id": 49
+        },
+        {
+          "assay": 3,
+          "study": 6,
+          "solr_field": "study_uuid",
+          "rank": 0,
+          "is_exposed": true,
+          "is_facet": false,
+          "is_active": false,
+          "is_internal": true,
+          "id": 51
+        },
+        {
+          "assay": 3,
+          "study": 6,
+          "solr_field": "type",
+          "rank": 0,
+          "is_exposed": true,
+          "is_facet": true,
+          "is_active": false,
+          "is_internal": true,
+          "id": 54
+        }
+      ];
+      url = settings.appRoot + settings.refineryApiV2 + '/assays/:uuid/attributes/';
+    }));
+
+    it('getAssayAttributes is a method', function () {
+      expect(angular.isFunction(factory.getAssayAttributes)).toBe(true);
+    });
+
+    it('getAssayAttributes makes success call', function () {
+      var data;
+      $httpBackend.expect(
+        'GET',
+        url,
+        {'csrfmiddlewaretoken': valid_token, 'uuid': valid_uuid},
+        {"Accept":"application/json, text/plain, */*"}
+      ).respond(200, {}, {});
+      var response = factory.getAssayAttributes(valid_uuid).then(function(){
+        data = 'SUCCESS';
+      }, function(){
+        data = 'ERROR';
+      });
+      $httpBackend.flush();
+      expect(typeof response.then).toEqual('function');
+      expect(data).toEqual('SUCCESS');
+    });
+  });
 });
