@@ -82,8 +82,6 @@ def main():
         "DEFAULT_FROM_EMAIL=", config['DEFAULT_FROM_EMAIL'], "\n",
         "SERVER_EMAIL=", config['SERVER_EMAIL'], "\n",
         "IAM_SMTP_USER=", functions.ref('RefinerySMTPUser'), "\n",
-        "EMAIL_HOST_USER=", config['EMAIL_HOST_USER'], "\n",
-        "EMAIL_HOST_PASSWORD=", config['EMAIL_HOST_PASSWORD'], "\n",
         "GIT_BRANCH=", commit, "\n",
         "\n",
         open('bootstrap.sh').read(),
