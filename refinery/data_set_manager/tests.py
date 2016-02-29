@@ -728,8 +728,7 @@ class UtilitiesTest(TestCase):
                          u'REFINERY_SUBANALYSIS_6_3_s': u'-1',
                          u'REFINERY_TYPE_6_3_s': u'Raw Data File'}],
                     'meta': {
-                        u'total_count': 1
-                    }
+                        u'total_count': 1}
                 }
         )
 
