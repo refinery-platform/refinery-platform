@@ -87,10 +87,10 @@
             &nbsp;
             <span class="spinner">
               <i class="{{analysis.status | analysisStatusIcon}} analyses-status"
-                tool-tip
-                tool-tip-container="body"
-                tool-tip-placement="bottom"
-                title="{{ analysis.status | analysisStatusTitle }}">
+                 tool-tip
+                 tool-tip-container="body"
+                 tool-tip-placement="bottom"
+                 title="{{ analysis.status | analysisStatusTitle }}">
               </i>
             </span>
           </div>
@@ -109,14 +109,14 @@
             analysis.status=='INITIALIZED' || analysis.status=='UNKNOWN'"
               class="analysis-cancel-col">
               &nbsp;
-             <a rp-analysis-monitor-cancel-confirm
-               confirmed-click="AMCtrl.cancelAnalysis(analysis.uuid)"
-                tool-tip
-               tool-tip-container="body"
-               tool-tip-placement="right"
-                title="Cancel Analysis">
-               <i class="fa fa-times-circle analyses-cancel"></i>
-             </a>
+              <a rp-analysis-monitor-cancel-confirm
+                 confirmed-click="AMCtrl.cancelAnalysis(analysis.uuid)"
+                 tool-tip
+                 tool-tip-container="body"
+                 tool-tip-placement="right"
+                 title="Cancel Analysis">
+                <i class="fa fa-times-circle analyses-cancel"></i>
+              </a>
             </span>
            </div>
 
