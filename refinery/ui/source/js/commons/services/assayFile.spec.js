@@ -1,4 +1,4 @@
-describe('Common.service.analysis: unit tests', function () {
+describe('Common.service.assayFile: unit tests', function () {
   'use strict';
 
   var $httpBackend,
@@ -53,22 +53,26 @@ describe('Common.service.analysis: unit tests', function () {
               "display_name":"Analysis Group",
               "data_type":"s",
               "internal_name":"REFINERY_SUBANALYSIS_6_3_s"
-            },{
+            },
+            {
               "attribute_type":"Internal",
               "display_name":"Output Type",
               "data_type":"s",
               "internal_name":"REFINERY_WORKFLOW_OUTPUT_6_3_s"
-            },{
+            },
+            {
             "attribute_type":"Internal",
             "display_name":"Analysis",
             "data_type":"s",
             "internal_name":"REFINERY_ANALYSIS_UUID_6_3_s"
-          },{
+          },
+            {
             "attribute_type":"Characteristics",
             "display_name":"Author",
             "data_type":"s",
             "internal_name":"Author_Characteristics_6_3_s"
-          },{
+          },
+            {
             "attribute_type":"Characteristics",
             "display_name":"Year",
             "data_type":"s",
@@ -139,7 +143,10 @@ describe('Common.service.analysis: unit tests', function () {
             "REFINERY_SUBANALYSIS_6_3_s":"-1",
             "Title_Characteristics_6_3_s":"Network graphic attention handling"
           }
-        ]};
+        ],
+      "meta":{
+        "total_count":6
+      }};
 
 
 

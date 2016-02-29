@@ -6,13 +6,15 @@ angular
       var assayFile = $resource(
         settings.appRoot + settings.refineryApiV2 + '/assays/:uuid/files/',
         {
-          uuid: '@uuid',
-          limit: 'limit',
-          offset: 'offset'
+          uuid: '@uuid'
         },
         {
           query: {
             method: 'GET'
+          },
+          params: {
+            limit: 'limit',
+            offset: 'offset'
           }
         }
       );
