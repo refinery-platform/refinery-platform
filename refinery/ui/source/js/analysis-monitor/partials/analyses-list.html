@@ -121,7 +121,7 @@
            </div>
 
           <div class="col-md-1">
-            <span  rp-analysis-monitor-start-time-tooltip>
+            <span rp-analysis-monitor-start-time-tooltip>
               {{analysis.humanizeStartTime }}
             </span>
           </div>
@@ -131,7 +131,7 @@
           </div>
 
           <div class="col-md-1">
-            <span  rp-analysis-monitor-end-time-tooltip>
+            <span rp-analysis-monitor-end-time-tooltip>
                {{analysis.humanizeEndTime }}
             </span>
           </div>
@@ -173,9 +173,9 @@
                     <div ng-if="!(stage=='cancelingAnalyses' || stage=='overall')">
                       <li class="analysisRunningListItem">
                         {{ stage }}
-                        <span tool-tip
-                              tool-tip-container="body"
-                              tool-tip-placement="bottom"
+                        <span refinery-tooltip
+                              refinery-tooltip-container="body"
+                              refinery-tooltip-placement="bottom"
                               title={{stageTooltipInfo[stage]}}>
                           <i class="fa fa-question-circle"></i>
                         </span>

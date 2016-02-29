@@ -13,8 +13,8 @@ Requirements:
 """
 
 import os
-from fabric.api import settings, run, env, sudo, execute
-from fabric.context_managers import hide, prefix, cd, shell_env
+from fabric.api import env, run, sudo, execute
+from fabric.context_managers import prefix, cd, shell_env
 from fabric.contrib.files import sed
 from fabric.decorators import task, with_settings
 from fabric.operations import require

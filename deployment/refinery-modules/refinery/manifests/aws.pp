@@ -41,4 +41,12 @@ file { '/data/isa-tab':
   mode => "0755",
 }
 
+
+python::requirements { "/srv/refinery-platform/deployment/aws-requirements.txt":
+  require     => Python::Requirements[$requirements],
+  virtualenv => $virtualenv,
+  owner      => $app_user,
+  group      => $app_group,
+}
+
 }

@@ -7,8 +7,8 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand, CommandError
 
-from annotation_server.models import *
-from annotation_server.utils import *
+from annotation_server import models
+from annotation_server import utils
 from file_store.models import _mkdir
 
 
@@ -124,7 +124,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['genome']:
             self.GENOME_BUILD = options['genome'].strip()
-            if self.GENOME_BUILD in SUPPORTED_GENOMES:
+            if self.GENOME_BUILD in utils.SUPPORTED_GENOMES:
                 # temp dir should be located on the same file system as the
                 # base dir
                 self.ANNOTATION_TEMP_DIR = os.path.join(
@@ -182,7 +182,7 @@ class Command(BaseCommand):
                 if t1[0] == 'track':
                     # overwrite if already entered into db
                     try:
-                        item = WigDescription.objects.get(
+                        item = models.WigDescription.objects.get(
                             genome_build=self.GENOME_BUILD,
                             annotation_type=annot_type
                         )
@@ -308,7 +308,7 @@ class Command(BaseCommand):
                     'start=t1[3], end=t1[4], score=t1[5], strand=t1[6], '
                     'frame=t1[7], attribute=t1[8], %s)'
                 )
-                parse_attrib = parse_db_string(attrib, table_vals)
+                parse_db_string(attrib, table_vals)
                 db_string = db_string % (parse_db_string(attrib, table_vals))
                 item = eval(db_string)
                 item.save()

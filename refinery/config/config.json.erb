@@ -1,7 +1,7 @@
 {
   "ACCOUNT_ACTIVATION_DAYS": 7,
   "ADMINS": [
-    ["Refinery Admin", "admin@example.org"]
+    ["Refinery Admin", "<%= @admin || "admin@example.org" %>"]
   ],
   "ALLOWED_HOSTS": ["localhost", "127.0.0.1", "192.168.50.50"],
   "AUTH_LDAP_BASE_DN": "OU=Domain Users,DC=Domain",
@@ -27,9 +27,12 @@
         "USER": "<%= @rds_role || "vagrant" %>"
     }
   },
-  "DEFAULT_FROM_EMAIL": "webmaster@localhost",
-  "EMAIL_HOST": "localhost",
+  "DEFAULT_FROM_EMAIL": "<%= @default_from_email || "webmaster@localhost" %>",
+  "EMAIL_HOST": "<%= @email_host || "localhost" %>",
   "EMAIL_PORT": 25,
+  "EMAIL_HOST_USER": "<%= @email_host_user %>",
+  "EMAIL_HOST_PASSWORD": "<%= @email_host_password %>",
+  "EMAIL_USE_TLS": <%= @email_use_tls || "false" %>,
   "EMAIL_SUBJECT_PREFIX": "[Refinery] ",
   "INTERVAL_BETWEEN_CHECKS": {
     "CELERY": 10.0,
@@ -109,7 +112,7 @@
   "REFINERY_WELCOME_EMAIL_SUBJECT": "Welcome to Refinery",
   "REGISTRATION_OPEN": true,
   "SECRET_KEY": "SECRET",
-  "SERVER_EMAIL": "root@localhost",
+  "SERVER_EMAIL": "<%= @server_email || "root@localhost" %>",
   "SOLR_SYNONYMS": false,
   "STATIC_ROOT": "",
   "STATIC_URL": "/static/",

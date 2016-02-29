@@ -1,6 +1,6 @@
 # custom settings for development environment (e.g., Vagrant VM)
 
-from .base import *
+from .base import *  # NOQA
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG

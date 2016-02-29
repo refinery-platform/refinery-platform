@@ -444,7 +444,6 @@ JAVA_ENTITY_EXPANSION_LIMIT = get_setting("JAVA_ENTITY_EXPANSION_LIMIT")
 if REFINERY_EXTERNAL_AUTH:
     # enable LDAP authentication
     try:
-        import ldap
         from django_auth_ldap.config import LDAPSearch
     except ImportError:
         logger.info("Failed to configure LDAP authentication")

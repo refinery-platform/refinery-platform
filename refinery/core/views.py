@@ -1,9 +1,9 @@
 import os
 import re
-import json
 import urllib
 import xmltodict
-
+import logging
+import json
 from urlparse import urljoin
 
 from django.conf import settings
@@ -20,7 +20,7 @@ from django.template import RequestContext, loader
 from guardian.shortcuts import get_perms
 import requests
 from rest_framework import viewsets
-from data_set_manager.models import *
+from data_set_manager.models import Node
 from core.forms import (
     ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 )
@@ -391,7 +391,6 @@ def data_set2(request, data_set_uuid, analysis_uuid=None):
 
 def data_set_edit(request, uuid):
     data_set = get_object_or_404(DataSet, uuid=uuid)
-    public_group = ExtendedGroup.objects.public_group()
 
     if not request.user.has_perm('core.change_dataset', data_set):
         if request.user.is_authenticated():

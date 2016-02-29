@@ -18,7 +18,7 @@ before_script:
   - npm install --quiet -g grunt-cli karma bower
   - cd ui && npm install && bower install && cd ../
 script:
-  - pep8 --exclude=migrations,ui ..
+  - flake8 --exclude=migrations,ui ..
   - coverage run manage.py test
   - cd ui && grunt && cd ../
 after_success:

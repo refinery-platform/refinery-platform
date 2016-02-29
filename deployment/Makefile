@@ -4,7 +4,7 @@ web.json: .PHONY
 	python stack.py > web.json
 
 web-stack: web.json .PHONY
-	aws cloudformation create-stack --stack-name refinery-web-$$(date +%Y%m%dT%H%M) --template-body file://web.json
+	aws cloudformation create-stack --capabilities CAPABILITY_IAM --stack-name refinery-web-$$(date +%Y%m%dT%H%M) --template-body file://web.json
 
 volume.json: .PHONY
 	python volume_cfn.py > volume.json
