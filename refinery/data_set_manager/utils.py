@@ -701,7 +701,7 @@ def customize_attribute_response(facet_fields):
         customized_field = {'internal_name': field}
 
         field_name = field.split('_')
-        customized_field['data_type'] = field_name[-1]
+        customized_field['file_ext'] = field_name[-1]
 
         if 'REFINERY_SUBANALYSIS' in field:
             customized_field['display_name'] = 'Analysis Group'
