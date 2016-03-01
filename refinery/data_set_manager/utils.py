@@ -555,15 +555,12 @@ def generate_solr_params(params, assay_uuid):
         # Missing facet_fields, it is generated from Attribute Order Model.
         attributes_str = AttributeOrder.objects.filter(assay__uuid=assay_uuid)
         attributes = AttributeOrderSerializer(attributes_str, many=True)
+        field_limit = ','.join(generate_limited_facet_fields(attributes.data))
         facet_field = generate_filtered_facet_fields(attributes.data)
         facet_field_query = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, facet_field_query])
 
     if field_limit:
-        solr_params = ''.join([solr_params, '&fl=', field_limit])
-    else:
-        # create field_limit from facet_fields
-        field_limit = ','.join(facet_field)
         solr_params = ''.join([solr_params, '&fl=', field_limit])
 
     if facet_pivot:
@@ -595,7 +592,7 @@ def hide_fields_from_weighted_list(weighted_facet_obj):
 
 def generate_filtered_facet_fields(attributes):
     """ Returns a filter facet field list. Attribute order contains whether
-    facets should be used."""
+    facets should be used. Based on is_exposed and is_facet."""
 
     weighted_list = []
     for field in attributes:
@@ -606,6 +603,20 @@ def generate_filtered_facet_fields(attributes):
     filtered_facet_fields = hide_fields_from_weighted_list(weighted_list)
 
     return filtered_facet_fields
+
+
+def generate_limited_facet_fields(attributes):
+    """ Returns a facet limit list based only on facet.is_exposed."""
+
+    weighted_list = []
+    for field in attributes:
+        if field.get("is_exposed"):
+            weighted_list.append((int(field["rank"]), field))
+
+    weighted_list.sort()
+    limited_facet_fields = hide_fields_from_weighted_list(weighted_list)
+
+    return limited_facet_fields
 
 
 def generate_facet_fields_query(facet_fields):

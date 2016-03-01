@@ -17,8 +17,8 @@ from .views import Assays, AssaysAttributes
 from .utils import update_attribute_order_ranks, \
     customize_attribute_response, format_solr_response, get_owner_from_assay,\
     generate_facet_fields_query, hide_fields_from_weighted_list,\
-    generate_filtered_facet_fields, generate_solr_params, \
-    objectify_facet_field_counts
+    generate_filtered_facet_fields, generate_limited_facet_fields, \
+    generate_solr_params, objectify_facet_field_counts
 from .serializers import AttributeOrderSerializer
 from core.models import DataSet, InvestigationLink
 
@@ -381,7 +381,7 @@ class UtilitiesTest(TestCase):
             'solr_field': 'Character_Title',
             'rank': 1,
             'is_exposed': True,
-            'is_facet': True,
+            'is_facet': False,
             'is_active': True,
             'is_internal': False
         }, {
@@ -390,7 +390,7 @@ class UtilitiesTest(TestCase):
             'solr_field': 'Specimen',
             'rank': 2,
             'is_exposed': True,
-            'is_facet': True,
+            'is_facet': False,
             'is_active': True,
             'is_internal': False
         }, {
@@ -571,8 +571,7 @@ class UtilitiesTest(TestCase):
         query = generate_solr_params(QueryDict({}), self.valid_uuid)
         self.assertEqual(str(query),
                          'fq=assay_uuid%3A{}'
-                         '&facet.field=Character_Title&'
-                         'facet.field=Specimen&facet.field=Cell Type&'
+                         '&facet.field=Cell Type&'
                          'facet.field=Analysis&facet.field=Organism&'
                          'facet.field=Cell Line&facet.field=Type&'
                          'facet.field=Group Name&fl=Character_Title%2C'
@@ -618,6 +617,15 @@ class UtilitiesTest(TestCase):
                 assay__uuid=self.valid_uuid)
         attributes = AttributeOrderSerializer(attribute_orders, many=True)
         filtered = generate_filtered_facet_fields(attributes.data)
+        self.assertItemsEqual(filtered, ['Cell Type', 'Analysis',
+                                         'Organism', 'Cell Line',
+                                         'Type', 'Group Name'])
+
+    def test_generate_limited_facet_fields(self):
+        attribute_orders = AttributeOrder.objects.filter(
+                assay__uuid=self.valid_uuid)
+        attributes = AttributeOrderSerializer(attribute_orders, many=True)
+        filtered = generate_limited_facet_fields(attributes.data)
         self.assertItemsEqual(filtered, ['Character_Title', 'Specimen',
                                          'Cell Type', 'Analysis',
                                          'Organism', 'Cell Line',
