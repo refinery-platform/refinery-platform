@@ -727,9 +727,7 @@ class UtilitiesTest(TestCase):
                          u'Author_Characteristics_6_3_s': u'Crocker',
                          u'Year_Characteristics_6_3_s': u'1971',
                          u'REFINERY_SUBANALYSIS_6_3_s': u'-1',
-                         u'REFINERY_TYPE_6_3_s': u'Raw Data File'}],
-                    'meta': {
-                        u'total_count': 1}
+                         u'REFINERY_TYPE_6_3_s': u'Raw Data File'}]
                 }
         )
 

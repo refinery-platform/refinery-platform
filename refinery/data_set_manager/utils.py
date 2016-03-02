@@ -665,14 +665,12 @@ def format_solr_response(solr_response):
             'params').get('facet.field')
     facet_field_counts = solr_response_json.get('facet_counts').get(
             'facet_fields')
-    facet_field_total = solr_response_json.get('response').get('numFound')
     facet_field_docs = solr_response_json.get('response').get('docs')
     facet_field_counts_obj = objectify_facet_field_counts(facet_field_counts)
     solr_response_json['facet_field_counts'] = facet_field_counts_obj
     attributes = customize_attribute_response(order_facet_fields)
     solr_response_json["attributes"] = attributes
     solr_response_json["nodes"] = facet_field_docs
-    solr_response_json["meta"] = {"total_count": facet_field_total}
 
     # Remove unused fields from solr response
     del solr_response_json['responseHeader']
