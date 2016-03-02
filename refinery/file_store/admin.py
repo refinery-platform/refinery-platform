@@ -1,6 +1,6 @@
 import os
 from django.contrib import admin
-from file_store.models import FileStoreItem, FileType
+from file_store.models import FileStoreItem, FileType, FileExtension
 
 
 class FileStoreItemAdmin(admin.ModelAdmin):
@@ -20,7 +20,13 @@ class FileStoreItemAdmin(admin.ModelAdmin):
 
 class FileTypeAdmin(admin.ModelAdmin):
 
-    list_display = ['__unicode__', 'id', 'name', 'description', 'extension']
+    list_display = ['__unicode__', 'id', 'name', 'description']
+
+
+class FileExtensionAdmin(admin.ModelAdmin):
+
+    list_display = ['__unicode__', 'id', 'name', 'extension']
 
 admin.site.register(FileStoreItem, FileStoreItemAdmin)
 admin.site.register(FileType, FileTypeAdmin)
+admin.site.register(FileExtension, FileExtensionAdmin)
