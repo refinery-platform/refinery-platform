@@ -6,23 +6,35 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
   var assayFiles = [];
   var assayAttributes = [];
   var assayAttributeOrder = [];
-  //var exposedAttributes = [];
-  //var facetAttributes = [];
+  var attributeFilter = [];
 
   var getAssayFiles = function (params) {
     params = params || {};
-    params.attributes = exposedAttributes.join(',');
-    params.facets = facetAttributes.join(',');
 
     var assayFile = assayFileService.query(params);
     assayFile.$promise.then(function (response) {
       angular.copy(response.attributes, assayAttributes);
       angular.copy(response.nodes, assayFiles);
+      generateFilters(response.attributes, response.facet_field_counts);
     }, function (error) {
       console.log(error);
     });
 
     return assayFile.$promise;
+  };
+
+  var generateFilters = function(attributes, facet_counts){
+    //filters have more than 1 option
+
+    attributes.forEach(function(facetObj){
+      var facetObjCount =  facet_counts[facetObj.internal_name];
+
+      if(facetObjCount){
+        var tempObj = {};
+        tempObj[facetObj.display_name]= facetObjCount;
+        attributeFilter.push(tempObj);
+      }
+    });
   };
 
   var getAssayAttributeOrder = function () {
@@ -35,27 +47,11 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
       url: apiUrl,
       data: {'csrfmiddlewaretoken': csrf_token, 'uuid': assay_uuid}
     }).then(function (response) {
-     // filterExposedAttributes(response.data);
       angular.copy(response.data, assayAttributeOrder);
     }, function (error) {
       console.log(error);
     });
   };
-
-  //var filterExposedAttributes = function(attributes){
-  //  var tempExposedAttributes = [];
-  //  var tempFacetAttributes = [];
-  //  attributes.forEach(function(attribute) {
-  //    if (attribute.is_exposed) {
-  //      tempExposedAttributes.push(attribute);
-  //      if(attribute.is_facet) {
-  //        tempFacetAttributes.push(attribute);
-  //      }
-  //    }
-  //  });
-  //  angular.copy(tempExposedAttributes, exposedAttributes);
-  //  angular.copy(tempFacetAttributes, FacetAttributes);
-  //};
 
   var postAssayAttributeOrder = function (uuid) {
     return $http({
@@ -73,6 +69,7 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
     assayFiles: assayFiles,
     assayAttributes: assayAttributes,
     assayAttributeOrder: assayAttributeOrder,
+    attributeFilter: attributeFilter,
     getAssayFiles: getAssayFiles,
     getAssayAttributeOrder: getAssayAttributeOrder,
     postAssayAttributeOrder: postAssayAttributeOrder,
