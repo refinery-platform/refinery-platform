@@ -21,14 +21,12 @@ function rpFileBrowserAssayFiles(uiGridConstants,fileBrowserFactory) {
     },
     link: function(scope){
 
-      fileBrowserFactory.getAssayAttributeOrder().then(function(){
-        scope.FBCtrl.updateAssayFiles().then(function(){
-          createColumnDefs();
-          scope.gridOptions = {
-          columnDefs: customColumnName,
-          data: scope.FBCtrl.assayFiles
-          };
-        });
+      scope.FBCtrl.updateAssayFiles().then(function(){
+        createColumnDefs();
+        scope.gridOptions = {
+        columnDefs: customColumnName,
+        data: scope.FBCtrl.assayFiles
+        };
       });
 
       scope.gridOptions = {
