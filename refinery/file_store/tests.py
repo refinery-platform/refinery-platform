@@ -9,7 +9,7 @@ from django.conf import settings
 from django.test import SimpleTestCase
 
 from file_store.models import file_path, get_temp_dir, get_file_object,\
-    FileStoreItem, FileType, FileExtension, FILE_STORE_TEMP_DIR, \
+    FileStoreItem, FileExtension, FILE_STORE_TEMP_DIR, \
     generate_file_source_translator
 
 
@@ -114,8 +114,7 @@ class FileStoreItemTest(SimpleTestCase):
 
     def test_get_file_type(self):
         """Check that the correct file type is returned"""
-        filetype = FileType.objects.get(
-            description=FileExtension.objects.get(extension='bb'))
+        filetype = FileExtension.objects.get(extension='bb').name
         item_from_path = FileStoreItem.objects.create(source=self.url_source,
                                                       sharename=self.sharename,
                                                       filetype=filetype)
@@ -131,8 +130,7 @@ class FileStoreItemTest(SimpleTestCase):
                                                       sharename=self.sharename)
         item_from_url = FileStoreItem.objects.create(source=self.path_source,
                                                      sharename=self.sharename)
-        filetype = FileType.objects.get(
-            description=FileExtension.objects.get(extension='wig'))
+        filetype = FileExtension.objects.get(extension='wig').name
         self.assertTrue(item_from_path.set_filetype(filetype))
         self.assertNotEqual(item_from_path.filetype, filetype)
         self.assertTrue(item_from_url.set_filetype(filetype))
@@ -144,8 +142,7 @@ class FileStoreItemTest(SimpleTestCase):
                                                      sharename=self.sharename)
         item_from_path = FileStoreItem.objects.create(source=self.url_source,
                                                       sharename=self.sharename)
-        filetype = FileType.objects.get(
-            description=FileExtension.objects.get(extension='unknown'))
+        filetype = FileExtension.objects.get(extension='unknown').name
         self.assertTrue(item_from_path.set_filetype(filetype))
         self.assertNotEqual(item_from_path.filetype, filetype)
         self.assertTrue(item_from_url.set_filetype(filetype))
