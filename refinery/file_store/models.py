@@ -78,42 +78,6 @@ if not settings.FILE_UPLOAD_MAX_MEMORY_SIZE:
 FILE_STORE_BASE_URL = \
     urljoin(settings.MEDIA_URL, settings.FILE_STORE_DIR) + '/'
 
-# TODO: expand the list of file types. Reference:
-# http://wiki.g2.bx.psu.edu/Admin/Datatypes/Adding%20Datatypes
-# http://en.wikipedia.org/wiki/List_of_file_formats#Biology
-# list of file types in alphabetical order for convenience
-BAM = 'bam'
-BED = 'bed'
-BIGBED = 'bigbed'
-BIGWIG = 'bigwig'
-CBS = 'cbs'
-CEL = 'cel'
-CSV = 'csv'
-ELAND = 'eland'
-GFF = 'gff'
-GTF = 'gtf'
-GZ = 'gz'
-HTML = 'html'
-IDF = 'idf'
-FASTA = 'fasta'
-FASTQ = 'fastq'
-FASTQCSANGER = 'fastqcsanger'
-FASTQILLUMINA = 'fastqillumina'
-FASTQSANGER = 'fastqsanger'
-FASTQSOLEXA = 'fastqsolexa'
-PDF = 'pdf'
-SAM = 'sam'
-SEG = 'seg'
-TABULAR = 'tabular'
-TDF = 'tdf'
-TGZ = 'tgz'
-TXT = 'txt'
-VCF = 'vcf'
-WIG = 'wig'
-XML = 'xml'
-ZIP = 'zip'
-UNKNOWN = ''  # special catch-all type with no corresponding extension
-
 
 def file_path(instance, filename):
     """Construct relative file system path for new file store files relative to

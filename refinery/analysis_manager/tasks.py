@@ -17,11 +17,14 @@ import requests
 from analysis_manager.models import AnalysisStatus
 from core.models import Analysis, AnalysisResult, Workflow
 from data_set_manager.models import Node
-from file_store.models import FileStoreItem, HTML, ZIP
+from file_store.models import FileStoreItem, FileType
 from file_store.tasks import import_file, create
 
 
 logger = logging.getLogger(__name__)
+
+HTML = FileType.objects.get(name="HTML")
+ZIP = FileType.objects.get(name="ZIP")
 
 
 class AnalysisHandlerTask(Task):
