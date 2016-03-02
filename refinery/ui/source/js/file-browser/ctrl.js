@@ -4,13 +4,11 @@ angular.module('refineryFileBrowser')
       'fileBrowserFactory',
       'assayFileService',
       '$window',
-      '_',
-      'UiScrollSource',
       FileBrowserCtrl
     ]);
 
 
-function FileBrowserCtrl(fileBrowserFactory, assayFileService, $window, _, UiScrollSource) {
+function FileBrowserCtrl(fileBrowserFactory, assayFileService, $window) {
   "use strict";
   var vm = this;
   vm.assayFiles = [];
@@ -30,20 +28,14 @@ function FileBrowserCtrl(fileBrowserFactory, assayFileService, $window, _, UiScr
     });
   };
 
-  vm.assayFiles2 = new UiScrollSource(
-    'fileBrowser/assayFiles2',
-    1,
-    function (limit, offset, extra) {
-      var params = _.merge(_.cloneDeep(extra) || {}, {
-            limit: limit,
-            offset: offset,
-            uuid: $window.externalAssayUuid
-          });
-
-      return assayFileService.query(params).$promise;
-    }.bind(vm),
-    'nodes',
-    'total_count'
-  );
+  vm.updateAssayAttributes = function () {
+    var assay_uuid = $window.externalAssayUuid;
+    fileBrowserFactory.getAssayAttributeOrder(assay_uuid).then(function(){
+      vm.assayAttributeOrder = fileBrowserFactory.assayAttributeOrder;
+      console.log(vm.assayAttributeOrder);
+    },function(error){
+      console.log(error);
+    });
+  };
 
 }

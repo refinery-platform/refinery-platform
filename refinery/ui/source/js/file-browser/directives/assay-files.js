@@ -2,11 +2,12 @@ angular.module('refineryFileBrowser')
     .directive("rpFileBrowserAssayFiles",
   [
     'uiGridConstants',
+    'fileBrowserFactory',
     rpFileBrowserAssayFiles
   ]
 );
 
-function rpFileBrowserAssayFiles(uiGridConstants) {
+function rpFileBrowserAssayFiles(uiGridConstants,fileBrowserFactory) {
     "use strict";
 
   return {
@@ -16,10 +17,19 @@ function rpFileBrowserAssayFiles(uiGridConstants) {
     controllerAs: 'FBCtrl',
     bindToController: {
        assayFiles: '@',
-       assayAttributes: '@',
-       assayFiles2: '@'
+       assayAttributes: '@'
     },
     link: function(scope){
+
+      fileBrowserFactory.getAssayAttributeOrder().then(function(){
+        scope.FBCtrl.updateAssayFiles().then(function(){
+          createColumnDefs();
+          scope.gridOptions = {
+          columnDefs: customColumnName,
+          data: scope.FBCtrl.assayFiles
+          };
+        });
+      });
 
       scope.gridOptions = {
         enableRowSelection: true,
@@ -44,14 +54,6 @@ function rpFileBrowserAssayFiles(uiGridConstants) {
           );
         });
       };
-
-      scope.FBCtrl.updateAssayFiles().then(function(){
-        createColumnDefs();
-        scope.gridOptions = {
-        columnDefs: customColumnName,
-        data: scope.FBCtrl.assayFiles
-        };
-      });
 
       scope.gridOptions.onRegisterApi = function(gridApi) {
         //set gridApi on scope
