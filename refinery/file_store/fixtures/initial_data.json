@@ -1,5 +1,301 @@
 [
   {
+    "model": "file_store.FileExtension",
+    "pk": 1,
+    "fields": {
+      "extension": "bam",
+      "name": 1
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 2,
+    "fields": {
+      "extension": "bed",
+      "name": 2
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 3,
+    "fields": {
+      "extension":"bigbed",
+      "name": 3
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 4,
+    "fields": {
+      "extension": "bigwig",
+      "name": 4
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 5,
+    "fields": {
+      "extension": "cbs",
+      "name": 5
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 6,
+    "fields": {
+      "extension": "cel",
+      "name": 6
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 7,
+    "fields": {
+      "extension": "csv",
+      "name": 7
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 8,
+    "fields": {
+      "extension": "eland",
+      "name": 8
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 9,
+    "fields": {
+      "extension": "gff",
+      "name": 9
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 10,
+    "fields": {
+      "extension": "gtf",
+      "name": 10
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 11,
+    "fields": {
+      "extension": "gz",
+      "name": 11
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 12,
+    "fields": {
+      "extension": "html",
+      "name": 12
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 13,
+    "fields": {
+      "extension": "idf",
+      "name": 13
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 14,
+    "fields": {
+      "extension": "fasta",
+      "name": 14
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 15,
+    "fields": {
+      "extension": "fastq",
+      "name": 15
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 16,
+    "fields": {
+      "extension": "fastqcsanger",
+      "name": 16
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 17,
+    "fields": {
+      "extension": "fastqillumina",
+      "name": 17
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 18,
+    "fields": {
+      "extension": "fastqsanger",
+      "name": 18
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 19,
+    "fields": {
+      "extension": "fastqsolexa",
+      "name": 19
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 20,
+    "fields": {
+      "extension": "pdf",
+      "name": 20
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 21,
+    "fields": {
+      "extension": "sam",
+      "name": 21
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 22,
+    "fields": {
+      "extension": "seg",
+      "name": 22
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 23,
+    "fields": {
+      "extension": "tabular",
+      "name": 23
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 24,
+    "fields": {
+      "extension": "tdf",
+      "name": 24
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 25,
+    "fields": {
+      "extension": "tgz",
+      "name": 25
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 26,
+    "fields": {
+      "extension": "txt",
+      "name": 26
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 27,
+    "fields": {
+      "extension": "vcf",
+      "name": 27
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 28,
+    "fields": {
+      "extension": "wig",
+      "name": 28
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 29,
+    "fields": {
+      "extension": "xml",
+      "name": 29
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 30,
+    "fields": {
+      "extension": "bb",
+      "name": 3
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 31,
+    "fields": {
+      "extension": "igv.tdf",
+      "name": 24
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 32,
+    "fields": {
+      "extension": "zip",
+      "name": 31
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 33,
+    "fields": {
+      "extension": "unknown",
+      "name": 32
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 34,
+    "fields": {
+      "extension": "fastq.gz",
+      "name": 33
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 35,
+    "fields": {
+      "extension": "gct",
+      "name": 34
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 36,
+    "fields": {
+      "extension": "CEL",
+      "name": 35
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 37,
+    "fields": {
+      "extension": "dat",
+      "name": 36
+    }
+  },
+  {
     "model": "file_store.FileType",
     "pk": 1,
     "fields": {
@@ -233,24 +529,7 @@
   },
   {
     "model": "file_store.FileType",
-    "pk": 30,
-    "fields": {
-      "description": "Big BED",
-      "name": "BIGBED"
-    }
-  },
-  {
-    "model": "file_store.FileType",
     "pk": 31,
-    "fields": {
-
-      "description": "TDF file",
-      "name": "TDF"
-    }
-  },
-  {
-    "model": "file_store.FileType",
-    "pk": 32,
     "fields": {
       "description": "Zip compressed archive",
       "name": "ZIP"
@@ -258,7 +537,7 @@
   },
   {
     "model": "file_store.FileType",
-    "pk": 33,
+    "pk": 32,
     "fields": {
       "description": "Unknown filetype",
       "name": "UNKNOWN"
@@ -266,7 +545,7 @@
   },
   {
     "model": "file_store.FileType",
-    "pk": 34,
+    "pk": 33,
     "fields": {
       "description": "FASTQ.GZ file",
       "name": "FASTQ.GZ"
@@ -274,7 +553,7 @@
   },
   {
     "model": "file_store.FileType",
-    "pk": 35,
+    "pk": 34,
     "fields": {
       "description": "GCT file",
       "name": "GCT"
@@ -282,7 +561,7 @@
   },
   {
     "model": "file_store.FileType",
-    "pk": 36,
+    "pk": 35,
     "fields": {
       "description": "Affymetrix Probe Results File",
       "name": "CEL"
@@ -290,7 +569,7 @@
   },
   {
     "model": "file_store.FileType",
-    "pk": 37,
+    "pk": 36,
     "fields": {
       "description": "DAT file",
       "name": "DAT"
