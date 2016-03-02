@@ -162,7 +162,7 @@ class FileType(models.Model):
 class FileExtension(models.Model):
     # file extension associated with the filename
     extension = models.CharField(max_length=50, default=33)
-    name = models.ForeignKey("FileType", default=33,
+    name = models.ForeignKey("FileType", default=32,
                              related_name='filetype_names')
 
     def __unicode__(self):
@@ -340,7 +340,8 @@ class FileStoreItem(models.Model):
         '''
         # make sure the file type is valid before assigning it to model field
 
-        all_known_extensions = [e.extension for e in FileType.objects.all()]
+        all_known_extensions = [e.extension for e in
+                                FileExtension.objects.all()]
 
         # If filetype argument is one that we know of great, Else we try to
         # guess
@@ -354,18 +355,24 @@ class FileStoreItem(models.Model):
         # '.' again etc. If we fail, the filetype is set to unknown
         try:
             if f in all_known_extensions:
-                self.filetype = FileType.objects.get(extension=f)
+                self.filetype = FileType.objects.get(
+                    description=FileExtension.objects.get(extension=f).name)
             else:
                 f = f.split('.', 2)[-1]
                 if f in all_known_extensions:
-                    self.filetype = FileType.objects.get(extension=f)
+                    self.filetype = FileType.objects.get(
+                        description=FileExtension.objects.get(
+                            extension=f).name)
                 else:
                     f = f.rpartition(".")[-1]
                     if f in all_known_extensions:
-                        self.filetype = FileType.objects.get(extension=f)
+                        self.filetype = FileType.objects.get(
+                            description=FileExtension.objects.get(
+                                extension=f).name)
                     else:
                         self.filetype = FileType.objects.get(
-                            extension="unknown")
+                            description=FileExtension.objects.get(
+                                extension="unknown").name)
                         logger.warning("%s is an unknown filetype! If this "
                                        "filetype is something you would like, "
                                        "please add it in the Admin "
