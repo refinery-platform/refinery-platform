@@ -16,8 +16,8 @@ from .models import AttributeOrder, Assay, Study, Investigation
 from .views import Assays, AssaysAttributes
 from .utils import update_attribute_order_ranks, \
     customize_attribute_response, format_solr_response, get_owner_from_assay,\
-    generate_facet_fields_query, hide_fields_from_weighted_list,\
-    generate_filtered_facet_fields, generate_limited_facet_fields, \
+    generate_facet_fields_query, hide_fields_from_list,\
+    generate_filtered_facet_fields, \
     generate_solr_params, objectify_facet_field_counts
 from .serializers import AttributeOrderSerializer
 from core.models import DataSet, InvestigationLink
@@ -548,23 +548,23 @@ class UtilitiesTest(TestCase):
                               'TYPE': {'Derived Data File': 105,
                                        'Raw Data File': 9}})
 
-    def test_hide_fields_from_weighted_list(self):
-        weighted_list = [(0, {'solr_field': 'uuid'}),
-                         (0, {'solr_field': 'is_annotation'}),
-                         (2, {'solr_field': 'genome_build'}),
-                         (3, {'solr_field': 'django_ct'}),
-                         (6, {'solr_field': 'django_id'}),
-                         (7, {'solr_field': 'species'}),
-                         (8, {'solr_field': 'file_uuid'}),
-                         (12, {'solr_field': 'study_uuid'}),
-                         (11, {'solr_field': 'assay_uuid'}),
-                         (10, {'solr_field': 'type'}),
-                         (9, {'solr_field': 'id'}),
-                         (1, {'solr_field': 'name'}),
-                         (4, {'solr_field': 'SubAnalysis'})]
+    def test_hide_fields_from_list(self):
+        weighted_list = [{'solr_field': 'uuid'},
+                         {'solr_field': 'is_annotation'},
+                         {'solr_field': 'genome_build'},
+                         {'solr_field': 'django_ct'},
+                         {'solr_field': 'django_id'},
+                         {'solr_field': 'species'},
+                         {'solr_field': 'file_uuid'},
+                         {'solr_field': 'study_uuid'},
+                         {'solr_field': 'assay_uuid'},
+                         {'solr_field': 'type'},
+                         {'solr_field': 'id'},
+                         {'solr_field': 'name'},
+                         {'solr_field': 'SubAnalysis'}]
 
-        filtered_list = hide_fields_from_weighted_list(weighted_list)
-        self.assertListEqual(filtered_list, ['SubAnalysis'])
+        filtered_list = hide_fields_from_list(weighted_list)
+        self.assertListEqual(filtered_list, [{'solr_field': 'SubAnalysis'}])
 
     def test_generate_solr_params(self):
         # empty params
@@ -617,19 +617,15 @@ class UtilitiesTest(TestCase):
                 assay__uuid=self.valid_uuid)
         attributes = AttributeOrderSerializer(attribute_orders, many=True)
         filtered = generate_filtered_facet_fields(attributes.data)
-        self.assertItemsEqual(filtered, ['Cell Type', 'Analysis',
+        self.assertDictEqual(filtered, {'facet_field':
+                                        ['Cell Type', 'Analysis',
                                          'Organism', 'Cell Line',
-                                         'Type', 'Group Name'])
-
-    def test_generate_limited_facet_fields(self):
-        attribute_orders = AttributeOrder.objects.filter(
-                assay__uuid=self.valid_uuid)
-        attributes = AttributeOrderSerializer(attribute_orders, many=True)
-        filtered = generate_limited_facet_fields(attributes.data)
-        self.assertItemsEqual(filtered, ['Character_Title', 'Specimen',
+                                         'Type', 'Group Name'],
+                                        'field_limit':
+                                        ['Character_Title', 'Specimen',
                                          'Cell Type', 'Analysis',
                                          'Organism', 'Cell Line',
-                                         'Type', 'Group Name'])
+                                         'Type', 'Group Name']})
 
     def test_generate_facet_fields_query(self):
         facet_field_string = ['REFINERY_SUBANALYSIS_6_3_s',
