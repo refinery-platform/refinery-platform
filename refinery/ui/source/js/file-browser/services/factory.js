@@ -35,15 +35,14 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
     });
   };
 
-  var getAssayAttributeOrder = function () {
-    var assay_uuid = $window.externalAssayUuid;
+  var getAssayAttributeOrder = function (uuid) {
     var apiUrl = settings.appRoot + settings.refineryApiV2 +
-      '/assays/' + assay_uuid + '/attributes/';
+      '/assays/' + uuid + '/attributes/';
 
     return $http({
       method: 'GET',
       url: apiUrl,
-      data: {'csrfmiddlewaretoken': csrf_token, 'uuid': assay_uuid}
+      data: {'csrfmiddlewaretoken': csrf_token, 'uuid': uuid}
     }).then(function (response) {
       angular.copy(response.data, assayAttributeOrder);
     }, function (error) {

@@ -24,10 +24,14 @@ describe("File Browser Factory", function(){
   });
 
   describe("getAssayFiles", function() {
-    var assayFiles;
+    var assayFiles, attributeFilter;
 
     beforeEach(inject( function(assayFileService, $q, $rootScope){
-      assayFiles = [{test1:1},{test2:2},{test3:3},{test4:4}];
+      assayFiles = {
+        'nodes':[{test1:1},{test2:2},{test3:3},{test4:4}],
+        'attributes':[{test1:1},{test2:2},{test3:3},{test4:4}],
+        'facet_field_counts': [{test1: 1}, {test2: 2}, {test3: 3}, {test4: 4}]
+      };
       spyOn(assayFileService, "query").and.callFake(function() {
         deferred = $q.defer();
         deferred.resolve(assayFiles);
@@ -52,7 +56,7 @@ describe("File Browser Factory", function(){
     });
   });
 
-  describe("getAssayAttributes", function() {
+  describe("getAssayAttributeOrder", function() {
     var $httpBackend, settings, responseData, url;
 
     beforeEach(inject(function(_$httpBackend_,_settings_) {
@@ -93,14 +97,15 @@ describe("File Browser Factory", function(){
           "id": 54
         }
       ];
-      url = settings.appRoot + settings.refineryApiV2 + '/assays/:uuid/attributes/';
+      url = settings.appRoot + settings.refineryApiV2 + '/assays/'+
+      valid_uuid + '/attributes/';
     }));
 
-    it('getAssayAttributes is a method', function () {
-      expect(angular.isFunction(factory.getAssayAttributes)).toBe(true);
+    it('getAssayAttributeOrder is a method', function () {
+      expect(angular.isFunction(factory.getAssayAttributeOrder)).toBe(true);
     });
 
-    it('getAssayAttributes makes success call', function () {
+    it('getAssayAttributeOrder makes success call', function () {
       var data;
       $httpBackend.expect(
         'GET',
@@ -108,7 +113,7 @@ describe("File Browser Factory", function(){
         {'csrfmiddlewaretoken': valid_token, 'uuid': valid_uuid},
         {"Accept":"application/json, text/plain, */*"}
       ).respond(200, {}, {});
-      var response = factory.getAssayAttributes(valid_uuid).then(function(){
+      var response = factory.getAssayAttributeOrder(valid_uuid).then(function(){
         data = 'SUCCESS';
       }, function(){
         data = 'ERROR';
