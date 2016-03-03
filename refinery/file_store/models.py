@@ -162,11 +162,10 @@ class FileType(models.Model):
 class FileExtension(models.Model):
     # file extension associated with the filename
     name = models.CharField(max_length=50, default=33)
-    filetype = models.ForeignKey("FileType", default=32,
-                                 related_name='filetype_names')
+    filetype = models.ForeignKey("FileType")
 
     def __unicode__(self):
-        return self.filetype
+        return self.name
 
 
 class _FileStoreItemManager(models.Manager):
@@ -248,7 +247,7 @@ class FileStoreItem(models.Model):
     # particular group
     sharename = models.CharField(max_length=20, blank=True)
     #: type of the file
-    filetype = models.ForeignKey(FileType, default=32)
+    filetype = models.ForeignKey(FileType)
     #: file import task ID
     import_task_id = UUIDField(blank=True)
     # Date created
