@@ -311,15 +311,13 @@ def add(data_file_uuid, aux_file_uuid=None):
         return None
 
     file_type = data_file.get_filetype()
-    if file_type == fs_models.FileExtension.objects.get(extension="tdf").name:
+    if file_type == fs_models.FileExtension.objects.get(extension="tdf"):
         return _add_tdf(data_file=data_file)
-    elif file_type == fs_models.FileExtension.objects.get(extension="bam").\
-            name:
+    elif file_type == fs_models.FileExtension.objects.get(extension="bam"):
         return _add_bam(data_file=data_file, tdf_file_uuid=aux_file_uuid)
-    elif file_type == fs_models.FileExtension.objects.get(extension="wig").\
-            name:
+    elif file_type == fs_models.FileExtension.objects.get(extension="wig"):
         return _add_wig(data_file=data_file, tdf_file_uuid=aux_file_uuid)
-    elif file_type == fs_models.FileExtension.objects.get(extension="bb").name:
+    elif file_type == fs_models.FileExtension.objects.get(extension="bb"):
         return _add_bigbed(data_file=data_file)
     else:
         logger.error("Could not create _FileServerItem: "
