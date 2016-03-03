@@ -248,7 +248,7 @@ class FileStoreItem(models.Model):
     # particular group
     sharename = models.CharField(max_length=20, blank=True)
     #: type of the file
-    filetype = models.ForeignKey(FileType, default=33)
+    filetype = models.ForeignKey(FileType, default=32)
     #: file import task ID
     import_task_id = UUIDField(blank=True)
     # Date created
