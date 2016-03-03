@@ -81,8 +81,7 @@ def main():
         "ADMIN=", config['ADMIN'], "\n",
         "DEFAULT_FROM_EMAIL=", config['DEFAULT_FROM_EMAIL'], "\n",
         "SERVER_EMAIL=", config['SERVER_EMAIL'], "\n",
-        "EMAIL_HOST_USER=", config['EMAIL_HOST_USER'], "\n",
-        "EMAIL_HOST_PASSWORD=", config['EMAIL_HOST_PASSWORD'], "\n",
+        "IAM_SMTP_USER=", functions.ref('RefinerySMTPUser'), "\n",
         "GIT_BRANCH=", commit, "\n",
         "\n",
         open('bootstrap.sh').read(),
@@ -145,6 +144,23 @@ def main():
                             ]
                         }
                     ]
+                }
+            }]
+        })
+    )
+
+    cft.resources.smtp_user = core.Resource(
+        'RefinerySMTPUser', 'AWS::IAM::User',
+        core.Properties({
+            'Policies': [{
+                'PolicyName': "SESSendingAccess",
+                'PolicyDocument': {
+                    "Version": "2012-10-17",
+                    "Statement": [{
+                        "Effect": "Allow",
+                        "Action": "ses:SendRawEmail",
+                        "Resource": "*"
+                    }]
                 }
             }]
         })
