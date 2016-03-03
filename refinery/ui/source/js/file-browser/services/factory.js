@@ -29,7 +29,7 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
     attributes.forEach(function(facetObj){
       var facetObjCount =  facet_counts[facetObj.internal_name];
 
-      if(facetObjCount){
+      if(facetObjCount.length > 1){
         attributeFilter[facetObj.display_name]= facetObjCount;
       }
     });
