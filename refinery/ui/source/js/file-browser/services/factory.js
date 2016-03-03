@@ -24,12 +24,11 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
   };
 
   var generateFilters = function(attributes, facet_counts){
-    //filters have more than 1 option
 
     attributes.forEach(function(facetObj){
       var facetObjCount =  facet_counts[facetObj.internal_name];
 
-      if(facetObjCount.length > 1){
+      if(facetObjCount){
         attributeFilter[facetObj.display_name]= facetObjCount;
       }
     });
