@@ -114,7 +114,7 @@ class FileStoreItemTest(SimpleTestCase):
 
     def test_get_file_type(self):
         """Check that the correct file type is returned"""
-        filetype = FileExtension.objects.get(extension='bb')
+        filetype = FileExtension.objects.get(name='bb').filetype
         item_from_path = FileStoreItem.objects.create(source=self.url_source,
                                                       sharename=self.sharename,
                                                       filetype=filetype)
@@ -130,7 +130,7 @@ class FileStoreItemTest(SimpleTestCase):
                                                       sharename=self.sharename)
         item_from_url = FileStoreItem.objects.create(source=self.path_source,
                                                      sharename=self.sharename)
-        filetype = FileExtension.objects.get(extension='wig')
+        filetype = FileExtension.objects.get(name='wig').filetype
         self.assertTrue(item_from_path.set_filetype(filetype))
         self.assertNotEqual(item_from_path.filetype, filetype)
         self.assertTrue(item_from_url.set_filetype(filetype))
@@ -142,7 +142,7 @@ class FileStoreItemTest(SimpleTestCase):
                                                      sharename=self.sharename)
         item_from_path = FileStoreItem.objects.create(source=self.url_source,
                                                       sharename=self.sharename)
-        filetype = FileExtension.objects.get(extension='unknown')
+        filetype = FileExtension.objects.get(name='unknown').filetype
         self.assertTrue(item_from_path.set_filetype(filetype))
         self.assertNotEqual(item_from_path.filetype, filetype)
         self.assertTrue(item_from_url.set_filetype(filetype))
