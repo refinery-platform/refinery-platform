@@ -360,10 +360,10 @@ service { 'memcached':
 }
 
 file { "${django_root}/supervisord.conf":
-  ensure => file,
-  source => "${django_root}/supervisord.conf.sample",
-  owner  => $app_user,
-  group  => $app_group,
+  ensure  => file,
+  content => template("${django_root}/supervisord.conf.erb"),
+  owner   => $app_user,
+  group   => $app_group,
 }
 ->
 exec { "supervisord":
