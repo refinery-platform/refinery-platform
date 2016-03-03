@@ -87,9 +87,9 @@
             &nbsp;
             <span class="spinner">
               <i class="{{analysis.status | analysisStatusIcon}} analyses-status"
-                 tool-tip
-                 tool-tip-container="body"
-                 tool-tip-placement="bottom"
+                 refinery-tooltip
+                 refinery-tooltip-container="body"
+                 refinery-tooltip-placement="bottom"
                  title="{{ analysis.status | analysisStatusTitle }}">
               </i>
             </span>
@@ -111,9 +111,9 @@
               &nbsp;
               <a rp-analysis-monitor-cancel-confirm
                  confirmed-click="AMCtrl.cancelAnalysis(analysis.uuid)"
-                 tool-tip
-                 tool-tip-container="body"
-                 tool-tip-placement="right"
+                 refinery-tooltip
+                 refinery-tooltip-container="body"
+                 refinery-tooltip-placement="right"
                  title="Cancel Analysis">
                 <i class="fa fa-times-circle analyses-cancel"></i>
               </a>
@@ -216,9 +216,10 @@
                                     </span>
                                 </div>
                               </div>
-                               <span tool-tip
-                                tool-tip-container="body"
-                                tool-tip-placement="bottom"
+                               <span
+                                refinery-tooltip
+                                refinery-tooltip-container="body"
+                                refinery-tooltip-placement="bottom"
                                 title="UNKNOWN status, due to possible
                                 connection error.">
                                 <i class="fa fa-exclamation-triangle"></i>
