@@ -1,16 +1,37 @@
 <div ng-if="FBCtrl.attributeFilter">
+  <h4>Attribute Filter</h4>
   <div ng-repeat="(attribute, fields) in FBCtrl.attributeFilter track by $index">
-    Attribute Filter
-    <div ng-if="!(attribute == 'Analysis Group')">
-      {{ attribute }}:
-        <div ng-repeat="(field, value) in fields track by $index">
-          {{ field }}: {{ value }}
+    {{ attribute }}:
+      <div ng-repeat="(field, value) in fields track by $index">
+        <div class="checkbox">
+          <label>
+            <input type="checkbox"
+            name="optionsCheckboxes"
+            id="$index"
+            value="field">
+              {{ field }}: {{ value }}
+          </label>
         </div>
-    </div>
-    <div ng-if="attribute == 'Analysis Group'">
-      Analysis Filter
-      {{ field }}
-    </div>
+      </div>
   </div>
 </div>
+
+<div ng-if="FBCtrl.analysisFilter">
+  <h4>Assay Filter</h4>
+  <div ng-repeat="(attribute, fields) in FBCtrl.assayFilter track by $index">
+    {{ attribute }}:
+      <div ng-repeat="(field, value) in fields track by $index">
+        <div class="checkbox">
+          <label>
+            <input type="checkbox"
+            name="optionsCheckboxes"
+            id="$index"
+            value="field">
+              {{ field }}: {{ value }}
+          </label>
+        </div>
+      </div>
+  </div>
+</div>
+
 
