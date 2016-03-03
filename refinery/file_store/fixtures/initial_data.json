@@ -420,7 +420,7 @@
     "pk": 16,
     "fields": {
       "description": "FASTQC Sanger",
-      "name": "FASTQSANGER"
+      "name": "FASTQCSANGER"
     }
   },
   {
@@ -559,14 +559,7 @@
       "name": "GCT"
     }
   },
-  {
-    "model": "file_store.FileType",
-    "pk": 35,
-    "fields": {
-      "description": "Affymetrix Probe Results File",
-      "name": "CEL"
-    }
-  },
+
   {
     "model": "file_store.FileType",
     "pk": 36,
