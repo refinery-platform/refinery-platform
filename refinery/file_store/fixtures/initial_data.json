@@ -3,296 +3,296 @@
     "model": "file_store.FileExtension",
     "pk": 1,
     "fields": {
-      "extension": "bam",
-      "name": 1
+      "name": "bam",
+      "filetype": 1
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 2,
     "fields": {
-      "extension": "bed",
-      "name": 2
+      "name": "bed",
+      "filetype": 2
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 3,
     "fields": {
-      "extension":"bigbed",
-      "name": 3
+      "name":"bigbed",
+      "filetype": 3
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 4,
     "fields": {
-      "extension": "bigwig",
-      "name": 4
+      "name": "bigwig",
+      "filetype": 4
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 5,
     "fields": {
-      "extension": "cbs",
-      "name": 5
+      "name": "cbs",
+      "filetype": 5
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 6,
     "fields": {
-      "extension": "cel",
-      "name": 6
+      "name": "cel",
+      "filetype": 6
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 7,
     "fields": {
-      "extension": "csv",
-      "name": 7
+      "name": "csv",
+      "filetype": 7
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 8,
     "fields": {
-      "extension": "eland",
-      "name": 8
+      "name": "eland",
+      "filetype": 8
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 9,
     "fields": {
-      "extension": "gff",
-      "name": 9
+      "name": "gff",
+      "filetype": 9
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 10,
     "fields": {
-      "extension": "gtf",
-      "name": 10
+      "name": "gtf",
+      "filetype": 10
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 11,
     "fields": {
-      "extension": "gz",
-      "name": 11
+      "name": "gz",
+      "filetype": 11
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 12,
     "fields": {
-      "extension": "html",
-      "name": 12
+      "name": "html",
+      "filetype": 12
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 13,
     "fields": {
-      "extension": "idf",
-      "name": 13
+      "name": "idf",
+      "filetype": 13
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 14,
     "fields": {
-      "extension": "fasta",
-      "name": 14
+      "name": "fasta",
+      "filetype": 14
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 15,
     "fields": {
-      "extension": "fastq",
-      "name": 15
+      "name": "fastq",
+      "filetype": 15
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 16,
     "fields": {
-      "extension": "fastqcsanger",
-      "name": 16
+      "name": "fastqcsanger",
+      "filetype": 16
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 17,
     "fields": {
-      "extension": "fastqillumina",
-      "name": 17
+      "name": "fastqillumina",
+      "filetype": 17
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 18,
     "fields": {
-      "extension": "fastqsanger",
-      "name": 18
+      "name": "fastqsanger",
+      "filetype": 18
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 19,
     "fields": {
-      "extension": "fastqsolexa",
-      "name": 19
+      "name": "fastqsolexa",
+      "filetype": 19
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 20,
     "fields": {
-      "extension": "pdf",
-      "name": 20
+      "name": "pdf",
+      "filetype": 20
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 21,
     "fields": {
-      "extension": "sam",
-      "name": 21
+      "name": "sam",
+      "filetype": 21
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 22,
     "fields": {
-      "extension": "seg",
-      "name": 22
+      "name": "seg",
+      "filetype": 22
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 23,
     "fields": {
-      "extension": "tabular",
-      "name": 23
+      "name": "tabular",
+      "filetype": 23
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 24,
     "fields": {
-      "extension": "tdf",
-      "name": 24
+      "name": "tdf",
+      "filetype": 24
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 25,
     "fields": {
-      "extension": "tgz",
-      "name": 25
+      "name": "tgz",
+      "filetype": 25
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 26,
     "fields": {
-      "extension": "txt",
-      "name": 26
+      "name": "txt",
+      "filetype": 26
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 27,
     "fields": {
-      "extension": "vcf",
-      "name": 27
+      "name": "vcf",
+      "filetype": 27
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 28,
     "fields": {
-      "extension": "wig",
-      "name": 28
+      "name": "wig",
+      "filetype": 28
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 29,
     "fields": {
-      "extension": "xml",
-      "name": 29
+      "name": "xml",
+      "filetype": 29
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 30,
     "fields": {
-      "extension": "bb",
-      "name": 3
+      "name": "bb",
+      "filetype": 3
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 31,
     "fields": {
-      "extension": "igv.tdf",
-      "name": 24
+      "name": "igv.tdf",
+      "filetype": 24
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 32,
     "fields": {
-      "extension": "zip",
-      "name": 31
+      "name": "zip",
+      "filetype": 31
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 33,
     "fields": {
-      "extension": "unknown",
-      "name": 32
+      "name": "unknown",
+      "filetype": 32
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 34,
     "fields": {
-      "extension": "fastq.gz",
-      "name": 33
+      "name": "fastq.gz",
+      "filetype": 33
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 35,
     "fields": {
-      "extension": "gct",
-      "name": 34
+      "name": "gct",
+      "filetype": 34
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 36,
     "fields": {
-      "extension": "CEL",
-      "name": 35
+      "name": "CEL",
+      "filetype": 6
     }
   },
   {
     "model": "file_store.FileExtension",
     "pk": 37,
     "fields": {
-      "extension": "dat",
-      "name": 36
+      "name": "dat",
+      "filetype": 36
     }
   },
   {
