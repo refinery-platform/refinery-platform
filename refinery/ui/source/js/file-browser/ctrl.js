@@ -13,6 +13,7 @@ function FileBrowserCtrl(fileBrowserFactory, assayFileService, $window) {
   var vm = this;
   vm.assayFiles = [];
   vm.assayAttributes = [];
+  vm.attributeFilter = [];
 
   vm.updateAssayFiles = function (limit, offset) {
     var param = {
@@ -24,6 +25,7 @@ function FileBrowserCtrl(fileBrowserFactory, assayFileService, $window) {
     return fileBrowserFactory.getAssayFiles(param).then(function (response) {
       vm.assayFiles = fileBrowserFactory.assayFiles;
       vm.assayAttributes = fileBrowserFactory.assayAttributes;
+      vm.attributeFilter = fileBrowserFactory.attributeFilter;
       return response;
     });
   };
