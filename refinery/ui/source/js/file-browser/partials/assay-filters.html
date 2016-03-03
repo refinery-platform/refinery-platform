@@ -1,18 +1,34 @@
 <div ng-if="FBCtrl.attributeFilter">
+
+<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
   <h4>Attribute Filter</h4>
   <div ng-repeat="(attribute, fields) in FBCtrl.attributeFilter track by $index">
-    {{ attribute }}:
-      <div ng-repeat="(field, value) in fields track by $index">
-        <div class="checkbox">
-          <label>
-            <input type="checkbox"
-            name="optionsCheckboxes"
-            id="$index"
-            value="field">
-              {{ field }}: {{ value }}
-          </label>
+    <div class="panel panel-default">
+      <div class="panel-heading" role="tab" id="headingOne">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion"
+            href="#{{ $index }}" aria-expanded="true" aria-controls="$index">
+             {{ attribute }}
+          </a>
+        </h4>
+      </div>
+      <div id="{{$index}}" class="panel-collapse collapse" role="tabpanel"
+        aria-labelledby="headingOne">
+        <div class="panel-body">
+          <div ng-repeat="(field, value) in fields track by $index">
+            <div class="checkbox">
+              <label>
+          <input type="checkbox"
+          name="optionsCheckboxes"
+          id="$index"
+          value="field">
+            {{ field }}: {{ value }}
+        </label>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
   </div>
 </div>
 
@@ -33,5 +49,3 @@
       </div>
   </div>
 </div>
-
-
