@@ -340,7 +340,7 @@ class FileStoreItem(models.Model):
         '''
         # make sure the file type is valid before assigning it to model field
 
-        all_known_extensions = [e.extension for e in
+        all_known_extensions = [e.name for e in
                                 FileExtension.objects.all()]
 
         # If filetype argument is one that we know of great, Else we try to
