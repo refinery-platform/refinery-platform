@@ -356,23 +356,23 @@ class FileStoreItem(models.Model):
         try:
             if f in all_known_extensions:
                 self.filetype = FileType.objects.get(
-                    description=FileExtension.objects.get(extension=f).name)
+                    description=FileExtension.objects.get(name=f).filetype)
             else:
                 f = f.split('.', 2)[-1]
                 if f in all_known_extensions:
                     self.filetype = FileType.objects.get(
                         description=FileExtension.objects.get(
-                            extension=f).name)
+                            name=f).filetype)
                 else:
                     f = f.rpartition(".")[-1]
                     if f in all_known_extensions:
                         self.filetype = FileType.objects.get(
                             description=FileExtension.objects.get(
-                                extension=f).name)
+                                name=f).filetype)
                     else:
                         self.filetype = FileType.objects.get(
                             description=FileExtension.objects.get(
-                                extension="unknown").name)
+                                name="unknown").filetype)
                         logger.warning("%s is an unknown filetype! If this "
                                        "filetype is something you would like, "
                                        "please add it in the Admin "
