@@ -17,7 +17,10 @@ class Migration(SchemaMigration):
                 default=32, related_name='filetype_names', to=orm['file_store.FileType'])),
         ))
         db.send_create_signal(u'file_store', ['FileExtension'])
+
+        # Delete duplicated Filetypes
         FileType.objects.get(id=37).delete()
+        FileType.objects.get(id=35).delete()
         FileType.objects.get(id=30).delete()
 
     def backwards(self, orm):
