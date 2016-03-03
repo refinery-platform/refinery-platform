@@ -3,6 +3,7 @@ from south.utils import datetime_utils as datetime
 from south.db import db
 from south.v2 import SchemaMigration
 from django.db import models
+from file_store.models import FileType
 
 
 class Migration(SchemaMigration):
@@ -12,10 +13,12 @@ class Migration(SchemaMigration):
         db.create_table(u'file_store_fileextension', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('extension', self.gf('django.db.models.fields.CharField')(default=33, max_length=50)),
-            ('name', self.gf('django.db.models.fields.related.ForeignKey')(default=33, related_name='filetype_names', to=orm['file_store.FileType'])),
+            ('name', self.gf('django.db.models.fields.related.ForeignKey')(
+                default=32, related_name='filetype_names', to=orm['file_store.FileType'])),
         ))
         db.send_create_signal(u'file_store', ['FileExtension'])
-
+        FileType.objects.get(id=37).delete()
+        FileType.objects.get(id=30).delete()
 
     def backwards(self, orm):
         # Deleting model 'FileExtension'
