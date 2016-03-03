@@ -7,6 +7,7 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
   var assayAttributes = [];
   var assayAttributeOrder = [];
   var attributeFilter = {};
+  var analysisFilter = {};
 
   var getAssayFiles = function (params) {
     params = params || {};
@@ -28,8 +29,10 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
     attributes.forEach(function(facetObj){
       var facetObjCount =  facet_counts[facetObj.internal_name];
 
-      if(facetObjCount){
+      if(facetObjCount && facetObj.display_name != 'Analysis'){
         attributeFilter[facetObj.display_name]= facetObjCount;
+      }else if(facetObjCount && facetObj.display_name == 'Analysis'){
+        analysisFilter[facetObj.display_name]= facetObjCount;
       }
     });
   };

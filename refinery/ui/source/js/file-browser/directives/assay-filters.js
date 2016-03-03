@@ -15,7 +15,8 @@ function rpFileBrowserAssayFilters(fileBrowserFactory) {
     controller: 'FileBrowserCtrl',
     controllerAs: 'FBCtrl',
     bindToController: {
-       attributeFilter: '=?bind'
+       attributeFilter: '=?bind',
+       analysisFilter: '=?bind'
     }
   };
 }
