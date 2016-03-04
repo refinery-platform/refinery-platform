@@ -22,12 +22,15 @@
       <div id="{{$index}}" class="panel-collapse collapse" role="tabpanel"
         aria-labelledby="{{ attribute }}">
         <div class="panel-body">
-          <div ng-repeat="(field, value) in fields">
+          <div ng-repeat="(field, value) in fields.facetObj">
             <div class="checkbox">
               <label>
                 <input
                   type="checkbox"
                   name="optionsCheckboxes"
+                  ng-model="selectedField[field]"
+                  ng-change="attributeSelectionUpdate(
+                  fields.internal_name, field)"
                   id="attribute-filter-{{ field }}"
                   value="{{ value }}">
                   {{ field }}: {{ value }}
@@ -65,7 +68,7 @@
           role="tabpanel"
           aria-labelledby="{{ analysis }}">
           <div class="panel-body">
-            <div ng-repeat="(field, value) in fields">
+            <div ng-repeat="(field, value) in fields.facetObj">
               <div class="checkbox">
                 <label>
                   <input
