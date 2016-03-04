@@ -157,7 +157,7 @@ def generate_file_source_translator(username='', base_path=''):
 
 class FileType(models.Model):
     #: name of file extension
-    name = models.CharField(max_length=50)
+    name = models.CharField(unique=True, max_length=50)
     #: short description of file extension
     description = models.CharField(max_length=250)
 
@@ -175,11 +175,15 @@ class FileType(models.Model):
             logger.warning("You aren't allowed to delete the UNKNOWN "
                            "Filetype.")
             return False
+        else:
+            super(FileType, self).delete()
+            return True
 
 
 class FileExtension(models.Model):
     # file extension associated with the filename
     name = models.CharField(max_length=50)
+    name = models.CharField(unique=True, max_length=50)
     filetype = models.ForeignKey("FileType", default=UNKNOWN_FILETYPE)
 
     def __unicode__(self):
@@ -196,6 +200,10 @@ class FileExtension(models.Model):
             logger.warning("You aren't allowed to delete the UNKNOWN "
                            "FileExtension.")
             return False
+
+        else:
+            super(FileExtension, self).delete()
+            return True
 
 
 class _FileStoreItemManager(models.Manager):
