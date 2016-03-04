@@ -25,13 +25,13 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
   };
 
   var generateFilters = function(attributes, facet_counts){
-
+    console.log(attributes);
     attributes.forEach(function(facetObj){
       var facetObjCount =  facet_counts[facetObj.internal_name];
 
-      if(facetObjCount && facetObj.display_name != 'Analysis'){
+      if(facetObjCount && facetObj.display_name !== 'Analysis'){
         attributeFilter[facetObj.display_name]= facetObjCount;
-      }else if(facetObjCount && facetObj.display_name == 'Analysis'){
+      }else if(facetObjCount && facetObj.display_name === 'Analysis'){
         analysisFilter[facetObj.display_name]= facetObjCount;
       }
     });
@@ -69,6 +69,7 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
     assayAttributes: assayAttributes,
     assayAttributeOrder: assayAttributeOrder,
     attributeFilter: attributeFilter,
+    analysisFilter: analysisFilter,
     getAssayFiles: getAssayFiles,
     getAssayAttributeOrder: getAssayAttributeOrder,
     postAssayAttributeOrder: postAssayAttributeOrder,
