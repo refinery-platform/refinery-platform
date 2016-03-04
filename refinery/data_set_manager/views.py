@@ -415,7 +415,7 @@ class AssaysFiles(APIView):
               description: Enables facet counts in query response
               type: boolean
               paramType: query
-            - name: start
+            - name: offset
               description: Paginate offset response
               type: integer
               paramType: query

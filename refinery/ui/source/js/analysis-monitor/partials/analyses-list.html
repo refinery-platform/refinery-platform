@@ -87,10 +87,10 @@
             &nbsp;
             <span class="spinner">
               <i class="{{analysis.status | analysisStatusIcon}} analyses-status"
-                refinery-tooltip
-                refinery-tooltip-container="body"
-                refinery-tooltip-placement="bottom"
-                title="{{ analysis.status | analysisStatusTitle }}">
+                 refinery-tooltip
+                 refinery-tooltip-container="body"
+                 refinery-tooltip-placement="bottom"
+                 title="{{ analysis.status | analysisStatusTitle }}">
               </i>
             </span>
           </div>
@@ -106,16 +106,17 @@
               </span>
             </span>
             <span ng-show="analysis.status=='RUNNING' ||
-            analysis.status=='INITIALIZED'" class="analysis-cancel-col">
+            analysis.status=='INITIALIZED' || analysis.status=='UNKNOWN'"
+              class="analysis-cancel-col">
               &nbsp;
-             <a rp-analysis-monitor-cancel-confirm confirmed-click=
-               "AMCtrl.cancelAnalysis(analysis.uuid)"
-                refinery-tooltip
-                refinery-tooltip-container="body"
-                refinery-tooltip-placement="right"
-                title="Cancel Analysis">
-               <i class="fa fa-times-circle analyses-cancel"></i>
-             </a>
+              <a rp-analysis-monitor-cancel-confirm
+                 confirmed-click="AMCtrl.cancelAnalysis(analysis.uuid)"
+                 refinery-tooltip
+                 refinery-tooltip-container="body"
+                 refinery-tooltip-placement="right"
+                 title="Cancel Analysis">
+                <i class="fa fa-times-circle analyses-cancel"></i>
+              </a>
             </span>
            </div>
 
@@ -144,7 +145,9 @@
 
         </div>
 
-        <span ng-if="analysis.status=='RUNNING' || analysis.status=='INITIALIZED'">
+        <span ng-if="analysis.status=='RUNNING' ||
+                     analysis.status=='INITIALIZED' ||
+                     analysis.status=='UNKNOWN'">
           <div class="row" id="{{analysis.uuid}}" uib-collapse="isCollapsed">
             <div class="col-md-1">&nbsp;</div>
             <div class="col-md-11 analysis-running">
@@ -167,8 +170,7 @@
                   </span>
 
                   <div ng-repeat="(stage, value) in AMCtrl.analysesDetail[analysis.uuid]">
-                    <div ng-if="!(stage=='cancelingAnalyses' ||
-                    stage=='overall')">
+                    <div ng-if="!(stage=='cancelingAnalyses' || stage=='overall')">
                       <li class="analysisRunningListItem">
                         {{ stage }}
                         <span refinery-tooltip
@@ -201,7 +203,31 @@
                             </div>
                           </div>
                           <div ng-switch-default>
-                            <div class="alert alert-info">PENDING</div>
+                            <span ng-if="analysis.status=='UNKNOWN' &&
+                            value.percent_done > 0">
+                              <div class="progress progress-analysis-bg">
+                                <div
+                                    class="progress-bar progress-bar-striped active"
+                                    role="progressbar"
+                                    id="rf-import-{{analysis.uuid}}"
+                                    style="width:{{value.percent_done}}%">
+                                    <span class="progress-analyses-text">
+                                      {{value.percent_done}}%
+                                    </span>
+                                </div>
+                              </div>
+                               <span
+                                refinery-tooltip
+                                refinery-tooltip-container="body"
+                                refinery-tooltip-placement="bottom"
+                                title="UNKNOWN status, due to possible
+                                connection error.">
+                                <i class="fa fa-exclamation-triangle"></i>
+                              </span>
+                            </span>
+                            <span ng-if="value.percent_done == 0">
+                              <div class="alert alert-info">PENDING</div>
+                            </span>
                           </div>
                         </div>
                        </li>
