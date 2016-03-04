@@ -244,8 +244,10 @@ class FileSourceTranslationTest(SimpleTestCase):
 
 class UnknownFileTypeTest(SimpleTestCase):
     def setUp(self):
-        self.filetype = FileType.objects.get(name="UNKNOWN",
-                                             description="Unknown Filetype")
+        self.filetype = FileType.objects.get(name="UNKNOWN")
+
+    def tearDown(self):
+        FileType.objects.get(name="UNKNOWN").delete()
 
     def test_filetype_persistence_after_deletion(self):
         self.filetype.delete()
@@ -254,11 +256,12 @@ class UnknownFileTypeTest(SimpleTestCase):
 
 class UnknownFileExtensionTest(SimpleTestCase):
     def setUp(self):
-        self.filetype = FileType.objects.get(name="UNKNOWN",
-                                             description="Unknown Filetype")
-        self.fileextension = FileExtension.objects.get(name="unknown",
-                                                       filetype=self.
-                                                       filetype)
+        self.filetype = FileType.objects.get(name="UNKNOWN")
+        self.fileextension = FileExtension.objects.get(name="unknown")
+
+    def tearDown(self):
+        FileType.objects.get(name="UNKNOWN").delete()
+        FileExtension.objects.get(name="unknown").delete()
 
     def test_file_extension_persistence_after_deletion(self):
         self.fileextension.delete()
