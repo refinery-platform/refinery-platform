@@ -19,10 +19,10 @@ class Migration(SchemaMigration):
         db.send_create_signal(u'file_store', ['FileExtension'])
 
         # Delete duplicated Filetypes
-        for filetype_id in [37, 35, 30]:
+        for item in [37, 35, 30]:
 
             try:
-                FileType.objects.get(id=filetype_id).delete()
+                FileType.objects.get(id=item).delete()
 
             except FileType.DoesNotExist:
                 pass
