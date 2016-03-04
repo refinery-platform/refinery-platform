@@ -25,16 +25,22 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
   };
 
   var generateFilters = function(attributes, facet_counts){
-    console.log(attributes);
     attributes.forEach(function(facetObj){
       var facetObjCount =  facet_counts[facetObj.internal_name];
 
       if(facetObjCount && facetObj.display_name !== 'Analysis'){
-        attributeFilter[facetObj.display_name]= facetObjCount;
+        attributeFilter[facetObj.display_name]= {
+          'facetObj': facetObjCount,
+          'internal_name': facetObj.internal_name
+        };
       }else if(facetObjCount && facetObj.display_name === 'Analysis'){
-        analysisFilter[facetObj.display_name]= facetObjCount;
+        analysisFilter[facetObj.display_name]= {
+          'facetObj': facetObjCount,
+          'internal_name': facetObj.internal_name
+        };
       }
     });
+    console.log(attributeFilter);
   };
 
   var getAssayAttributeOrder = function (uuid) {
