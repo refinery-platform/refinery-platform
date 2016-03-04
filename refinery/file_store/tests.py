@@ -8,13 +8,14 @@ from urlparse import urljoin
 from django.conf import settings
 from django.test import SimpleTestCase
 
-from file_store.models import file_path, get_temp_dir, get_file_object,\
+from file_store.models import file_path, get_temp_dir, get_file_object, \
     FileStoreItem, FileExtension, FILE_STORE_TEMP_DIR, \
-    generate_file_source_translator
+    generate_file_source_translator, FileType
 
 
 class FileStoreModuleTest(SimpleTestCase):
     """File store module functions test"""
+
     def setUp(self):
         self.filename = 'test_file.dat'
         self.sharename = 'labname'
@@ -82,6 +83,7 @@ class FileStoreModuleTest(SimpleTestCase):
 
 class FileStoreItemTest(SimpleTestCase):
     """FileStoreItem methods test"""
+
     def setUp(self):
         self.filename = 'test_file.tdf'
         self.sharename = 'labname'
@@ -164,6 +166,7 @@ class FileStoreItemTest(SimpleTestCase):
 
 class FileStoreItemManagerTest(SimpleTestCase):
     """FileStoreItemManager methods test"""
+
     def setUp(self):
         self.filename = 'test_file.tdf'
         self.sharename = 'labname'
@@ -237,3 +240,26 @@ class FileSourceTranslationTest(SimpleTestCase):
         translate_file_source = generate_file_source_translator()
         with self.assertRaises(ValueError):
             translate_file_source(self.rel_path_source)
+
+
+class UnknownFileTypeTest(SimpleTestCase):
+    def setUp(self):
+        self.filetype = FileType.objects.create(name="UNKNOWN",
+                                                description="Unknown Filetype")
+
+    def test_filetype_persistence_after_deletion(self):
+        self.filetype.delete()
+        self.assertIsNotNone(self.filetype)
+
+
+class UnknownFileExtensionTest(SimpleTestCase):
+    def setUp(self):
+        self.filetype = FileType.objects.create(name="UNKNOWN",
+                                                description="Unknown Filetype")
+        self.fileextension = FileExtension.objects.create(name="unknown",
+                                                          filetype=self.
+                                                          filetype)
+
+    def test_file_extension_persistence_after_deletion(self):
+        self.fileextension.delete()
+        self.assertIsNotNone(self.fileextension)
