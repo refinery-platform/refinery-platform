@@ -20,15 +20,21 @@ import logging
 from datetime import datetime
 from urlparse import urlparse, urljoin
 from celery.result import AsyncResult
+
 from django.conf import settings
 from django.dispatch import receiver
 from django.db import models
 from django.db.models.signals import pre_delete
+from django.forms import forms
 from django_extensions.db.fields import UUIDField
 from django.contrib.sites.models import Site
 from django.core.files.storage import FileSystemStorage
 
 logger = logging.getLogger('file_store')
+
+# the Unknown filetype is not allowed to be deleted from the datatbase,
+# therefore providing the FileType id as a default value is acceptable
+UNKNOWN_FILETYPE = 32
 
 
 def _mkdir(path):
@@ -158,14 +164,38 @@ class FileType(models.Model):
     def __unicode__(self):
         return self.description
 
+    def clean(self):
+        if self.name == "UNKNOWN":
+            raise forms.ValidationError(
+                "You aren't allowed to alter the UNKNOWN "
+                "FileType.")
+
+    def delete(self, **kwargs):
+        if self.name == "UNKNOWN":
+            logger.warning("You aren't allowed to delete the UNKNOWN "
+                           "Filetype.")
+            return False
+
 
 class FileExtension(models.Model):
     # file extension associated with the filename
-    name = models.CharField(max_length=50, default=33)
-    filetype = models.ForeignKey("FileType")
+    name = models.CharField(max_length=50)
+    filetype = models.ForeignKey("FileType", default=UNKNOWN_FILETYPE)
 
     def __unicode__(self):
         return self.name
+
+    def clean(self):
+        if self.name == "unknown":
+            raise forms.ValidationError(
+                "You aren't allowed to alter the UNKNOWN "
+                "FileExtension.")
+
+    def delete(self, **kwargs):
+        if self.name == "unknown":
+            logger.warning("You aren't allowed to delete the UNKNOWN "
+                           "FileExtension.")
+            return False
 
 
 class _FileStoreItemManager(models.Manager):
@@ -247,7 +277,7 @@ class FileStoreItem(models.Model):
     # particular group
     sharename = models.CharField(max_length=20, blank=True)
     #: type of the file
-    filetype = models.ForeignKey(FileType)
+    filetype = models.ForeignKey(FileType, default=UNKNOWN_FILETYPE)
     #: file import task ID
     import_task_id = UUIDField(blank=True)
     # Date created
