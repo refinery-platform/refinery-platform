@@ -210,9 +210,9 @@ class neo4j {
   }
   ->
   limits::fragment {
-    "vagrant/soft/nofile":
+    "${app_user}/soft/nofile":
       value => "40000";
-    "vagrant/hard/nofile":
+    "${app_user}/hard/nofile":
       value => "40000";
   }
   ->
