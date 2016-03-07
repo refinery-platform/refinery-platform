@@ -22,6 +22,7 @@ function rpFileBrowserAssayFilters(fileBrowserFactory) {
 
       scope.selectedField = {};
       scope.selectedFieldList = {};
+      var selectedFieldQuery = {};
 
       scope.attributeSelectionUpdate = function(internal_name, field){
         if(scope.selectedField[field] &&
@@ -36,6 +37,14 @@ function rpFileBrowserAssayFilters(fileBrowserFactory) {
           if(ind > -1){
             scope.selectedFieldList[internal_name].splice(ind, 1);
           }
+          selectedFieldQuery = {
+            'attributeFilter': scope.selectedFieldList
+          };
+          scope.FBCtrl.updateAssayFiles(selectedFieldQuery).then(function(){
+            scope.gridOptions = {
+            data: scope.FBCtrl.assayFiles
+            };
+          });
         }
       };
     }
