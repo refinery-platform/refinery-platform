@@ -37,15 +37,17 @@ function rpFileBrowserAssayFilters(fileBrowserFactory) {
           if(ind > -1){
             scope.selectedFieldList[internal_name].splice(ind, 1);
           }
-          selectedFieldQuery = {
-            'attributeFilter': scope.selectedFieldList
-          };
-          scope.FBCtrl.updateAssayFiles(selectedFieldQuery).then(function(){
-            scope.gridOptions = {
-            data: scope.FBCtrl.assayFiles
-            };
-          });
+          if(scope.selectedFieldList[internal_name].length === 0){
+            delete scope.selectedFieldList[internal_name];
+          }
+
         }
+
+        scope.FBCtrl.updateAssayFiles(scope.selectedFieldList).then(function(){
+          scope.gridOptions = {
+          data: scope.FBCtrl.assayFiles
+          };
+        });
       };
     }
   };

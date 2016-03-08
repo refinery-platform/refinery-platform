@@ -16,15 +16,15 @@ function FileBrowserCtrl(fileBrowserFactory, assayFileService, $window) {
   vm.attributeFilter = [];
   vm.analysisFilter = [];
 
-  vm.updateAssayFiles = function (attributeFilter, limit, offset) {
+  vm.updateAssayFiles = function (filterAttribute, limit, offset) {
     var param = {
       'uuid': $window.externalAssayUuid,
       limit: limit,
       offset: offset
     };
 
-    if(fieldFilter){
-      param.attribute_filter = attributeFilter;
+    if(typeof filterAttribute !== 'undefined'){
+      param.filter_attribute = filterAttribute;
     }
 
     return fileBrowserFactory.getAssayFiles(param).then(function (response) {
@@ -40,7 +40,6 @@ function FileBrowserCtrl(fileBrowserFactory, assayFileService, $window) {
     var assay_uuid = $window.externalAssayUuid;
     fileBrowserFactory.getAssayAttributeOrder(assay_uuid).then(function(){
       vm.assayAttributeOrder = fileBrowserFactory.assayAttributeOrder;
-      console.log(vm.assayAttributeOrder);
     },function(error){
       console.log(error);
     });
