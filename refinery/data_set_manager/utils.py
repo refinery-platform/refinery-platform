@@ -580,7 +580,7 @@ def generate_solr_params(params, assay_uuid):
         solr_params = ''.join([solr_params, facet_filter_str])
 
     url = '&'.join([solr_params, fixed_solr_params])
-    encoded_solr_params = urlquote(url, safe='\\=&(){}:!')
+    encoded_solr_params = urlquote(url, safe='\\=&! ')
 
     return encoded_solr_params
 
