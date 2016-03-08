@@ -586,7 +586,8 @@ def generate_solr_params(params, assay_uuid):
 
 
 def remove_duplicate_facet_field(facet_filter, facet_field_arr):
-    # For solr requests, removes duplicate facet fields with filters and plain
+    # For solr requests, removes duplicate facet fields with filters from
+    # facet_field_arr
     # facets
     if facet_filter:
         facet_filter = json.loads(facet_filter)
