@@ -558,6 +558,7 @@ def generate_solr_params(params, assay_uuid):
         attributes = AttributeOrderSerializer(attributes_str, many=True)
         facet_field_obj = generate_filtered_facet_fields(attributes.data)
         facet_field = facet_field_obj.get('facet_field')
+        # Removes duplicate facet fields when they are a filter
         if facet_filter:
             facet_filter = json.loads(facet_filter)
             for facet in facet_filter:
@@ -584,6 +585,7 @@ def generate_solr_params(params, assay_uuid):
                 field_str = facet_filter[facet][0]
 
             field_str = field_str.replace(' ', '\\ ')
+            field_str = field_str.replace(':', '\\:')
             field_str = field_str.replace('OR', ' OR ')
             encoded_field_str = urlquote(field_str, safe='\\=&:+ ')
 
