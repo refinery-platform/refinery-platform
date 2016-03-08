@@ -551,7 +551,7 @@ def generate_solr_params(params, assay_uuid):
 
     if facet_field:
         facet_field = facet_field.split(',')
-        facet_field = remove_duplicate_facet_field(facet_filter, facet_field)
+        facet_field = insert_facet_field_filter(facet_filter, facet_field)
         split_facet_fields = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, split_facet_fields])
     else:
@@ -560,7 +560,7 @@ def generate_solr_params(params, assay_uuid):
         attributes = AttributeOrderSerializer(attributes_str, many=True)
         facet_field_obj = generate_filtered_facet_fields(attributes.data)
         facet_field = facet_field_obj.get('facet_field')
-        facet_field = remove_duplicate_facet_field(facet_filter, facet_field)
+        facet_field = insert_facet_field_filter(facet_filter, facet_field)
         field_limit = ','.join(facet_field_obj.get('field_limit'))
         facet_field_query = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, facet_field_query])
@@ -585,13 +585,14 @@ def generate_solr_params(params, assay_uuid):
     return encoded_solr_params
 
 
-def remove_duplicate_facet_field(facet_filter, facet_field_arr):
+def insert_facet_field_filter(facet_filter, facet_field_arr):
     # For solr requests, removes duplicate facet fields with filters from
-    # facet_field_arr
+    # facet_field_arr, maintains facet_field order
     if facet_filter:
         facet_filter = json.loads(facet_filter)
         for facet in facet_filter:
-            facet_field_arr.remove(facet)
+            ind = facet_field_arr.index(facet)
+            facet_field_arr[ind] = ''.join(['{!ex=', facet, '}', facet])
 
     return facet_field_arr
 
@@ -610,8 +611,7 @@ def create_facet_filter_query(facet_filter_fields):
         field_str = field_str.replace('OR', ' OR ')
         encoded_field_str = urlquote(field_str, safe='\\=&:+ ')
 
-        query = ''.join([query, '&facet.field={!ex=', facet, '}', facet,
-                        '&fq={!tag=', facet, '}',
+        query = ''.join([query, '&fq={!tag=', facet, '}',
                          facet, ':(', encoded_field_str, ')'])
     return query
 
@@ -743,6 +743,10 @@ def customize_attribute_response(facet_fields):
 
     attribute_array = []
     for field in facet_fields:
+        # For fields with filters, they need to be trimmed
+        if '!ex' in field:
+            field = field.split("}")[1]
+
         customized_field = {'internal_name': field}
 
         field_name = field.split('_')
