@@ -912,11 +912,6 @@ a.analysis-header {
           }
         }
 
-        &.active {
-          color: @yellow;
-          text-shadow: 0 0 3px fade(@yellow-shadow, 50%);
-        }
-
         &:before {
           position: relative;
           width: 1.25em;
@@ -1070,7 +1065,52 @@ a.analysis-header {
       position: relative;
       background: @white;
 
-      li {
+      .title {
+        display: -webkit-box;
+        width: 100%;
+        color: #006f99;
+        font-size: 1.5rem;
+        line-height: 1.4em;
+        max-height: 2.8em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-line-clamp: 2; /* number of lines to show */
+        -webkit-box-orient: vertical;
+
+        &:hover {
+          color: inherit;
+        }
+
+        &:visited {
+          color: #4f38a6;
+          background: fade(lighten(#4f38a6, 25%), 15%);
+        }
+
+        >em {
+          font-weight: bold;
+          font-style: normal;
+          background: fade(lighten(@blue-light, 25%), 15%);
+        }
+      }
+
+      .snippet {
+        margin: 2px 0 0 0;
+        color: lighten(@gray, 10%);
+        font-size: 1.3rem;
+        line-height: 1.4em;
+        max-height: 2.8em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-line-clamp: 2; /* number of lines to show */
+        -webkit-box-orient: vertical;
+
+        > em {
+          font-weight: bold;
+          font-style: normal;
+        }
+      }
+
+      >li {
         position: relative;
         padding: 5px 3rem 5px 0;
         border-top: 1px solid @gray-lighter;
@@ -1110,12 +1150,11 @@ a.analysis-header {
           top: 0;
           right: 20px;
           bottom: 0;
-          display: block;
+          display: none;
           color: @gray-light;
           border: none;
           background: rgba(255, 255, 255, 0.9);
           transition: all @fast-transition-speed @ease-in-out-cubic;
-          opacity: 0;
 
           &:hover {
             color: #fff;
@@ -1130,7 +1169,7 @@ a.analysis-header {
         }
 
         &:hover .zoomOut.active {
-          opacity: 1;
+          display: block;
         }
 
         &.locked .zoomOut {
@@ -1470,35 +1509,7 @@ a.analysis-header {
     }
 
     ul.results.search {
-      a.title {
-        font-size: @base-font-size + 1;
-        color: #006f99;
-      }
 
-      a.title > em {
-        font-weight: bold;
-        font-style: normal;
-        background: fade(lighten(@blue-light, 25%), 15%);
-      }
-
-      a.title:hover {
-        color: inherit;
-      }
-
-      a.title:visited {
-        color: #4f38a6;
-        background: fade(lighten(#4f38a6, 25%), 15%);
-      }
-
-      p.snippet {
-        margin: 2px 0 0 0;
-        color: lighten(@gray, 10%);
-      }
-
-      p.snippet > em {
-        font-weight: bold;
-        font-style: normal;
-      }
     }
 
     ul.controls {
@@ -1898,7 +1909,7 @@ button.icon-only {
 }
 
 .is-mirrored {
-  transform: rotate(180deg);
+  transform: scale(-1, 1);
 }
 
 .inline-container {
@@ -2229,6 +2240,15 @@ ul.badge-list {
 
 .bottom-half {
   top: 50%;
+}
+
+.is-glowing-yellow-text {
+  color: @yellow !important;
+  text-shadow: 0 0 3px fade(@yellow-shadow, 50%) !important;
+}
+
+.pointer {
+  cursor: pointer;
 }
 
 .CURRENT_COMMIT{

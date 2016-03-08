@@ -2,6 +2,55 @@
 
 @top-bar-height: 24px;
 
+.flex-box,
+.flex-left,
+.flex-right {
+  display: flex;
+}
+
+.flex-left,
+.flex-right {
+  flex-direction: row;
+}
+
+.flex-right {
+  justify-content: flex-end;
+}
+
+.flex-item-two {
+  flex: 2 0 0;
+}
+
+.flex-item-one {
+  flex: 1 0 0;
+}
+
+.indicators {
+  font-size: 1.2rem;
+
+  .indicator {
+    margin: 0 0.25rem;
+    color: @gray-light;
+
+    &:hover {
+      color: @gray;
+    }
+
+    &:first-child {
+      margin-left: 0;
+    }
+
+    &:first-right {
+      margin-right: 0;
+    }
+  }
+
+  .separator {
+    margin: 0 0.2rem;
+    color: @gray-lighter;
+  }
+}
+
 .visWrapper .top-bar {
   position: relative;
   top: -5px;
