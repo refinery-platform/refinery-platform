@@ -588,7 +588,6 @@ def generate_solr_params(params, assay_uuid):
 def remove_duplicate_facet_field(facet_filter, facet_field_arr):
     # For solr requests, removes duplicate facet fields with filters from
     # facet_field_arr
-    # facets
     if facet_filter:
         facet_filter = json.loads(facet_filter)
         for facet in facet_filter:
@@ -599,20 +598,22 @@ def remove_duplicate_facet_field(facet_filter, facet_field_arr):
 
 def create_facet_filter_query(facet_filter_fields):
     # Creates the solr request for the attribute filters
+    query = ''
     for facet in facet_filter_fields:
         if len(facet_filter_fields[facet]) > 1:
             field_str = 'OR'.join(facet_filter_fields[facet])
         else:
             field_str = facet_filter_fields[facet][0]
-
+        # This escapes certain characters for solr requests fields
         field_str = field_str.replace(' ', '\\ ')
         field_str = field_str.replace(':', '\\:')
         field_str = field_str.replace('OR', ' OR ')
         encoded_field_str = urlquote(field_str, safe='\\=&:+ ')
 
-        return(''.join(['&facet.field={!ex=', facet, '}', facet,
+        query = ''.join([query, '&facet.field={!ex=', facet, '}', facet,
                         '&fq={!tag=', facet, '}',
-                        facet, ':(', encoded_field_str, ')']))
+                         facet, ':(', encoded_field_str, ')'])
+    return query
 
 
 def hide_fields_from_list(facet_obj):
