@@ -24,7 +24,8 @@ function DashboardCtrl (
   dashboardExpandablePanelService,
   dashboardDataSetPreviewService,
   treemapContext,
-  dashboardVisData) {
+  dashboardVisData,
+  dataCard) {
   var that = this;
 
   // Construct Angular modules
@@ -54,6 +55,7 @@ function DashboardCtrl (
   this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
   this.treemapContext = treemapContext;
   this.dashboardVisData = dashboardVisData;
+  this.dataCard = dataCard;
 
   // Construct class variables
   this.dataSetServiceLoading = false;
@@ -988,5 +990,6 @@ angular
     'dashboardDataSetPreviewService',
     'treemapContext',
     'dashboardVisData',
+    'dataCard',
     DashboardCtrl
   ]);
