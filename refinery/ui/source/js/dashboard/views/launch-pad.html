@@ -170,38 +170,56 @@
               ng-mouseleave="dashboard.dataSetMouseEnter(dataSet)">
               <i class="fa fa-search-minus"></i>
             </button>
-            <i
-              class="fa fa-user"
-              title="You own this data set"
-              ng-if="dataSet.is_owner"
-              refinery-tooltip
-              refinery-tooltip-container="body"
-              refinery-tooltip-placement="top"></i>
-            <i
-              class="fa fa-users icon-shared-out"
-              title="You privately share this data set"
-              ng-if="dataSet.is_shared && dataSet.is_owner"
-              refinery-tooltip
-              refinery-tooltip-container="body"
-              refinery-tooltip-placement="top"></i>
-            <i
-              class="fa fa-users icon-shared-in"
-              title="This data set is shared with you"
-              ng-if="dataSet.is_shared && !dataSet.is_owner && dashboard.userIsAuthenticated"
-              refinery-tooltip
-              refinery-tooltip-container="body"
-              refinery-tooltip-placement="top"></i>
-            <i
-              class="fa fa-globe"
-              title="This file is publicly available"
-              ng-if="dataSet.public && dashboard.userIsAuthenticated"
-              refinery-tooltip
-              refinery-tooltip-container="body"
-              refinery-tooltip-placement="top"></i>
             <a
               class="title"
               ng-href="data_sets/{{ dataSet.uuid }}"
               ng-bind-html="dataSet.title"></a>
+            <div class="flex-box indicators">
+              <ul class="flex-item-two flex-left no-list-style">
+                <li class="indicator"
+                  ng-if="dataSet.is_owner"
+                  title="You own this data set"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="top">
+                  <i class="fa fa-user"></i>
+                </li>
+                <li class="indicator"
+                  ng-if="dataSet.is_shared && dataSet.is_owner"
+                  title="You privately share this data set"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="top">
+                  <i class="fa fa-users icon-shared-out"></i>
+                </li>
+                <li class="indicator"
+                  ng-if="dataSet.is_shared && !dataSet.is_owner && dashboard.userIsAuthenticated"
+                  title="This data set is shared with you"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="top">
+                  <i class="fa fa-users icon-shared-in"></i>
+                </li>
+                <li class="indicator"
+                  ng-if="dataSet.public && dashboard.userIsAuthenticated"
+                  title="This file is publicly available"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="top">
+                  <i class="fa fa-globe"></i>
+                </li>
+                <li class="indicator"
+                  ng-if="dashboard.readibleDate(dataSet, 'modificationDate')"
+                  title="Modification Date"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="top">
+                  <i class="fa fa-calendar-o"
+                    ng-click="dashboard.dataCard.add(dataSet)"></i>
+                  {{ dashboard.readibleDate(dataSet, 'modificationDate') }}
+                </li>
+              </ul>
+            </div>
             <p
               class="snippet"
               ng-if="dataSet.description && dashboard.searchDataSet"
