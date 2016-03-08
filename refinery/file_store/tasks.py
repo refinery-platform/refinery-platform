@@ -2,15 +2,18 @@ import os
 import stat
 import logging
 import requests
-from urlparse import urlparse
 from tempfile import NamedTemporaryFile
+from urlparse import urlparse
+
+import celery
 from celery.task import task
 from django.core.files import File
-from file_store.models import FileStoreItem, get_temp_dir, file_path,\
-    FILE_STORE_BASE_DIR
+
+from file_store.models import (FileStoreItem, get_temp_dir, file_path,
+    FILE_STORE_BASE_DIR)
 
 
-logger = logging.getLogger('file_store')
+logger = logging.getLogger(__name__)
 
 
 @task()
@@ -129,7 +132,13 @@ def import_file(uuid, permanent=False, refresh=False, file_size=0):
         block_size = 10 * 1024 * 1024  # 10MB
         for buf in iter(lambda: response.raw.read(block_size), ''):
             local_file_size += len(buf)
-            tmpfile.write(buf)
+            try:
+                tmpfile.write(buf)
+            except IOError as exc:  # e.g., [Errno 28] No space left on device
+                logger.error("Error downloading from '%s': %s",
+                             item.source, exc)
+                import_file.update_state(state=celery.states.FAILURE)
+                return
             # check if we have a sane value for file size
             if remote_file_size > 0:
                 percent_done = local_file_size * 100. / remote_file_size
