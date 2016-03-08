@@ -16,7 +16,7 @@ BACKUP_FILE_PATH=$1
 REFINERY_BASE_DIR="/vagrant/refinery"
 CONFIG_DIR="config"
 CONFIG_FILE="config.json"
-LOG_FILE="restore.log"
+LOG_FILE="restore-$NOW.log"
 
 # Check if the backup directory exist and if it doesn't create it
 mkdir -p "$BACKUP_TEMP/$NOW"
@@ -44,7 +44,9 @@ if [ ! -f "$BACKUP_FILE_PATH" ]; then
 fi
 
 # Reset log
-> "$BACKUP_TEMP/$BACKUP/$LOG_FILE"
+if [ -f "$BACKUP_TEMP/$LOG_FILE" ]; then
+  > "$BACKUP_TEMP/$LOG_FILE"
+fi
 
 # Copy backup archive into the VM
 echo -e "Backup... \c"
@@ -115,7 +117,7 @@ if [ ! -d "$BACKUP_TEMP/$BACKUP/file_store/" ]; then
   exit 1
 fi
 mkdir -p "/vagrant/media/file_store"
-rsync -az --partial "$BACKUP_TEMP/$BACKUP/file_store/" "/vagrant/media/file_store"
+sudo rsync -az --partial "$BACKUP_TEMP/$BACKUP/file_store/" "/vagrant/media/file_store"
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
@@ -130,7 +132,7 @@ if [ ! -d "$BACKUP_TEMP/$BACKUP/neo4j/" ]; then
   exit 1
 fi
 sudo service neo4j-service stop
-rsync -az --partial "$BACKUP_TEMP/$BACKUP/neo4j/" "$NEO4J_DATA"
+sudo rsync -az --partial "$BACKUP_TEMP/$BACKUP/neo4j/" "$NEO4J_DATA"
 sudo service neo4j-service start > /dev/null
 
 TIME_INTERMEDIATE_END=$(date +"%s")
@@ -149,22 +151,12 @@ echo -e "$GREEN\xE2\x9C\x93 Backup completely loaded! $DEFAULT$DIM($(($TIME_DIFF
 echo -e "Indexing data. This might take a while... \c"
 TIME_INTERMEDIATE_START=$(date +"%s")
 
-if [ ! `pgrep supervisord` ]; then
-  workon refinery-platform
-  supervisord
-fi
-if [ "$(supervisorctl pid solr)" == "0" ]; then
-  supervisorctl start solr && python "$REFINERY_BASE_DIR/manage.py" update_index --batch-size 25 > "$BACKUP_TEMP/$BACKUP/$LOG_FILE"
-else
-  python "$REFINERY_BASE_DIR/manage.py" update_index --batch-size 25
-fi
+sudo service solr start
+python "$REFINERY_BASE_DIR/manage.py" update_index --batch-size 25 > "$BACKUP_TEMP/$BACKUP/$LOG_FILE"
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
 echo -e "done! $DIM($(($TIME_INTERMEDIATE_DIFF / 60)) min and $(($TIME_INTERMEDIATE_DIFF % 60)) sec)$RESET"
-
-rm "$BACKUP_TEMP/$BACKUP_FILE"
-rm -rf "$BACKUP_TEMP/$BACKUP"
 
 TIME_END=$(date +"%s")
 TIME_DIFF=$(($TIME_END-$TIME_START))
