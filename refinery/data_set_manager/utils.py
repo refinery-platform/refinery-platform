@@ -513,6 +513,7 @@ def generate_solr_params(params, assay_uuid):
         limit/row - maximum number of documents
         field_limit - set of fields to return
         facet_field - specify a field which should be treated as a facet
+        facet_filter - adds params to facet fields&fqs for filtering on fields
         facet_pivot - list of fields to pivot
         sort - Ordering include field name, whitespace, & asc or desc.
         fq - filter query
@@ -549,8 +550,9 @@ def generate_solr_params(params, assay_uuid):
     solr_params = ''.join(['fq=assay_uuid:', assay_uuid])
 
     if facet_field:
-        split_facet_fields = generate_facet_fields_query(
-                facet_field.split(','))
+        facet_field = facet_field.split(',')
+        facet_field = remove_duplicate_facet_field(facet_filter, facet_field)
+        split_facet_fields = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, split_facet_fields])
     else:
         # Missing facet_fields, it is generated from Attribute Order Model.
@@ -558,12 +560,7 @@ def generate_solr_params(params, assay_uuid):
         attributes = AttributeOrderSerializer(attributes_str, many=True)
         facet_field_obj = generate_filtered_facet_fields(attributes.data)
         facet_field = facet_field_obj.get('facet_field')
-        # Removes duplicate facet fields when they are a filter
-        if facet_filter:
-            facet_filter = json.loads(facet_filter)
-            for facet in facet_filter:
-                facet_field.remove(facet)
-
+        facet_field = remove_duplicate_facet_field(facet_filter, facet_field)
         field_limit = ','.join(facet_field_obj.get('field_limit'))
         facet_field_query = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, facet_field_query])
@@ -578,35 +575,43 @@ def generate_solr_params(params, assay_uuid):
         solr_params = ''.join([solr_params, '&sort=', sort])
 
     if facet_filter:
-        for facet in facet_filter:
-            if len(facet_filter[facet]) > 1:
-                field_str = 'OR'.join(facet_filter[facet])
-            else:
-                field_str = facet_filter[facet][0]
-
-            field_str = field_str.replace(' ', '\\ ')
-            field_str = field_str.replace(':', '\\:')
-            field_str = field_str.replace('OR', ' OR ')
-            encoded_field_str = urlquote(field_str, safe='\\=&:+ ')
-
-            solr_params = ''.join([
-                 solr_params,
-                 '&facet.field={!ex=',
-                 str(facet),
-                 '}',
-                 str(facet),
-                 '&fq={!tag=',
-                 str(facet),
-                 '}',
-                 str(facet),
-                 ':(',
-                 encoded_field_str,
-                 ')'])
+        facet_filter = json.loads(facet_filter)
+        facet_filter_str = create_facet_filter_query(facet_filter)
+        solr_params = ''.join([solr_params, facet_filter_str])
 
     url = '&'.join([solr_params, fixed_solr_params])
     encoded_solr_params = urlquote(url, safe='\\=&(){}:!')
 
     return encoded_solr_params
+
+
+def remove_duplicate_facet_field(facet_filter, facet_field_arr):
+    # For solr requests, removes duplicate facet fields with filters and plain
+    # facets
+    if facet_filter:
+        facet_filter = json.loads(facet_filter)
+        for facet in facet_filter:
+            facet_field_arr.remove(facet)
+
+    return facet_field_arr
+
+
+def create_facet_filter_query(facet_filter_fields):
+    # Creates the solr request for the attribute filters
+    for facet in facet_filter_fields:
+        if len(facet_filter_fields[facet]) > 1:
+            field_str = 'OR'.join(facet_filter_fields[facet])
+        else:
+            field_str = facet_filter_fields[facet][0]
+
+        field_str = field_str.replace(' ', '\\ ')
+        field_str = field_str.replace(':', '\\:')
+        field_str = field_str.replace('OR', ' OR ')
+        encoded_field_str = urlquote(field_str, safe='\\=&:+ ')
+
+        return(''.join(['&facet.field={!ex=', facet, '}', facet,
+                        '&fq={!tag=', facet, '}',
+                        facet, ':(', encoded_field_str, ')']))
 
 
 def hide_fields_from_list(facet_obj):
