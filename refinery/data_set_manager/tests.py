@@ -17,8 +17,9 @@ from .views import Assays, AssaysAttributes
 from .utils import update_attribute_order_ranks, \
     customize_attribute_response, format_solr_response, get_owner_from_assay,\
     generate_facet_fields_query, hide_fields_from_list,\
-    generate_filtered_facet_fields, \
-    generate_solr_params, objectify_facet_field_counts
+    generate_filtered_facet_fields, remove_duplicate_facet_field, \
+    create_facet_filter_query, generate_solr_params, \
+    objectify_facet_field_counts
 from .serializers import AttributeOrderSerializer
 from core.models import DataSet, InvestigationLink
 
@@ -547,6 +548,28 @@ class UtilitiesTest(TestCase):
                               'SUBANALYSIS': {'1': 8, '2': 2, '-1': 9},
                               'TYPE': {'Derived Data File': 105,
                                        'Raw Data File': 9}})
+
+    def test_remove_duplicate_facet_field(self):
+        facet_filter = u'{"Author": ["Vezza", "McConnell"]}'
+        facet_field_array = ['WORKFLOW', 'ANALYSIS', 'Author', 'Year']
+        edited_facet_field_list = remove_duplicate_facet_field(
+                facet_filter, facet_field_array)
+        self.assertListEqual(edited_facet_field_list,
+                             ['WORKFLOW', 'ANALYSIS', 'Year'])
+        edited_facet_field_list = remove_duplicate_facet_field(
+                None, facet_field_array)
+        self.assertListEqual(edited_facet_field_list,
+                             ['WORKFLOW', 'ANALYSIS', 'Year'])
+
+    def test_create_facet_filter_query(self):
+        facet_filter = {'Author': ['Vezza', 'McConnell'],
+                        'TYPE': ['Raw Data File']}
+        facet_field_query = create_facet_filter_query(facet_filter)
+        self.assertEqual(facet_field_query,
+                         u'&facet.field={!ex=TYPE}TYPE&fq={'
+                         u'!tag=TYPE}TYPE:(Raw\\ Data\\ File)'
+                         u'&facet.field={!ex=Author}Author&fq={'
+                         u'!tag=Author}Author:(Vezza OR McConnell)')
 
     def test_hide_fields_from_list(self):
         weighted_list = [{'solr_field': 'uuid'},
