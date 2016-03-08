@@ -533,6 +533,7 @@ def generate_solr_params(params, assay_uuid):
     facet_field = params.get('facets', default=None)
     facet_pivot = params.get('pivots', default=None)
     sort = params.get('sort', default=None)
+    facet_filter = params.get('filter_attribute', default=None)
 
     fixed_solr_params = \
         '&'.join([file_types,
@@ -557,6 +558,11 @@ def generate_solr_params(params, assay_uuid):
         attributes = AttributeOrderSerializer(attributes_str, many=True)
         facet_field_obj = generate_filtered_facet_fields(attributes.data)
         facet_field = facet_field_obj.get('facet_field')
+        if facet_filter:
+            facet_filter = json.loads(facet_filter)
+            for facet in facet_filter:
+                facet_field.remove(facet)
+
         field_limit = ','.join(facet_field_obj.get('field_limit'))
         facet_field_query = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, facet_field_query])
@@ -570,8 +576,33 @@ def generate_solr_params(params, assay_uuid):
     if sort:
         solr_params = ''.join([solr_params, '&sort=', sort])
 
+    if facet_filter:
+        for facet in facet_filter:
+            if len(facet_filter[facet]) > 1:
+                field_str = 'OR'.join(facet_filter[facet])
+            else:
+                field_str = facet_filter[facet][0]
+
+            field_str = field_str.replace(' ', '\\ ')
+            field_str = field_str.replace('OR', ' OR ')
+            encoded_field_str = urlquote(field_str, safe='\\=&:+ ')
+
+            solr_params = ''.join([
+                 solr_params,
+                 '&facet.field={!ex=',
+                 str(facet),
+                 '}',
+                 str(facet),
+                 '&fq={!tag=',
+                 str(facet),
+                 '}',
+                 str(facet),
+                 ':(',
+                 encoded_field_str,
+                 ')'])
+
     url = '&'.join([solr_params, fixed_solr_params])
-    encoded_solr_params = urlquote(url, safe='=& ')
+    encoded_solr_params = urlquote(url, safe='\\=&(){}:!')
 
     return encoded_solr_params
 
