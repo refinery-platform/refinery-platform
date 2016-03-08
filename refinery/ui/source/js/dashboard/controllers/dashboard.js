@@ -943,6 +943,20 @@ DashboardCtrl.prototype.dataSetMouseLeave = function (dataSet) {
   });
 };
 
+DashboardCtrl.prototype.readibleDate = function (dataSet, property) {
+  var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
+    'Sep', 'Oct', 'Nov', 'Dec'];
+
+  if (dataSet[property] && !dataSet[property + 'Readible']) {
+    dataSet[property + 'Readible'] =
+      months[dataSet[property].getMonth()] + ' ' +
+      dataSet[property].getDate() + ', ' +
+      dataSet[property].getFullYear();
+  }
+
+  return dataSet[property + 'Readible'];
+};
+
 angular
   .module('refineryDashboard')
   .controller('DashboardCtrl', [
