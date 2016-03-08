@@ -23,6 +23,7 @@
       "globals",
       "analysis-launch",
       "analysis-monitor",
+      "file-browser",
       "collaboration",
       "chart",
       "data-set-nav"

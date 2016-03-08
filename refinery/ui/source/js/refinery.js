@@ -38,6 +38,7 @@ angular
   'refineryAnalysisMonitor',
   'refineryCollaboration',
   'refineryChart',
+  'refineryFileBrowser',
 ])
 .config([
   '$provide',

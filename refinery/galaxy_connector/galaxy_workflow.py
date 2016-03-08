@@ -5,6 +5,7 @@ Created on Jan 11, 2012
 '''
 
 import ast
+import uuid
 import copy
 from datetime import datetime
 import logging
@@ -261,6 +262,13 @@ def createStepsAnnot(file_list, workflow):
                          'is_refinery_file': True})
                     # Adds updated module
             updated_dict[curr_id] = curr_workflow_step
+
+            # Assign a uuid that is unique to each step (allow multiple
+            # inputs for a workflow)
+            for item in updated_dict:
+                updated_dict[item]['uuid'] = unicode(str(
+                    uuid.uuid4()))
+
     return updated_dict, history_download, connections
 
 

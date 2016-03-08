@@ -210,9 +210,9 @@ class neo4j {
   }
   ->
   limits::fragment {
-    "neo4j/soft/nofile":
+    "${app_user}/soft/nofile":
       value => "40000";
-    "neo4j/hard/nofile":
+    "${app_user}/hard/nofile":
       value => "40000";
   }
   ->
@@ -239,7 +239,7 @@ include neo4j
 
 class neo4jOntology {
   $neo4j_config = '/etc/neo4j/neo4j-server.properties'
-  $version = "0.5.0"
+  $version = "0.6.0"
   $url = "https://github.com/refinery-platform/neo4j-ontology/releases/download/v${version}/ontology.jar"
 
   # Need to remove the old file manually as wget throws a weird
@@ -264,7 +264,7 @@ class neo4jOntology {
 include neo4jOntology
 
 class owl2neo4j {
-  $owl2neo4j_version = "0.5.0"
+  $owl2neo4j_version = "0.6.0"
   $owl2neo4j_url = "https://github.com/flekschas/owl2neo4j/releases/download/v${owl2neo4j_version}/owl2neo4j.jar"
 
   # Need to remove the old file manually as wget throws a weird
