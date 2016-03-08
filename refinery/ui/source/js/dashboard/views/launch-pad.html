@@ -76,14 +76,24 @@
             <button
               class="fa fa-filter icon-only"
               title="Filter &amp; Sort"
-              ng-class="{'showing': dashboard.showDataSetsFilterSort, 'active': dashboard.dataSetsFilterSort}"
-              ng-click="dashboard.showDataSetsFilterSort = !!!dashboard.showDataSetsFilterSort"
+              ng-class="{'showing': dashboard.showDataSetsFilter, 'active': dashboard.dataSetsFilter}"
+              ng-click="dashboard.showDataSetsFilter = !!!dashboard.showDataSetsFilter"
               ng-if="!dashboard.searchQueryDataSets.length"
-              close-on-outer-click-external-trigger="dashboard.dataSetsfilterSort"
+              close-on-outer-click-external-trigger="dashboard.dataSetsFilter"
+              refinery-tooltip
+              refinery-tooltip-container="body"
+              refinery-tooltip-placement="top">
+            </button>
+            <button
+              class="fa fa-sort icon-only"
+              title="Filter &amp; Sort"
+              ng-class="{'showing': dashboard.showDataSetsFilterSort, 'active': dashboard.dataSetsSort}"
+              ng-click="dashboard.showDataSetsSort = !!!dashboard.showDataSetsSort"
+              ng-if="!dashboard.searchQueryDataSets.length"
+              close-on-outer-click-external-trigger="dashboard.dataSetsSort"
               refinery-tooltip
               refinery-tooltip-container="body"
               refinery-tooltip-placement="right">
-            </button>
           </div>
           <div class="floatbox-max-left">
             <h4>
@@ -102,9 +112,9 @@
       </div>
       <div
         class="refinery-filter-sort"
-        ng-show="dashboard.showDataSetsFilterSort"
-        close-on-outer-click="dashboard.showDataSetsFilterSort"
-        close-on-outer-click-id="dashboard.dataSetsfilterSort">
+        ng-show="dashboard.showDataSetsFilter"
+        close-on-outer-click="dashboard.showDataSetsFilter"
+        close-on-outer-click-id="dashboard.dataSetsFilter">
         <h5 ng-if="dashboard.userIsAuthenticated">Filter by</h5>
         <div class="entry" ng-if="dashboard.userIsAuthenticated">
           <label class="checkbox">
@@ -120,7 +130,12 @@
               ng-model="dashboard.dataSetsFilterPublic"> Public
           </label>
         </div>
-        <h5>Sort by</h5>
+      </div>
+      <div
+        class="refinery-filter-sort"
+        ng-show="dashboard.showDataSetsSort"
+        close-on-outer-click="dashboard.showDataSetsSort"
+        close-on-outer-click-id="dashboard.dataSetsSort">
         <div
           class="entry"
           ng-repeat="sorting in dashboard.dataSetsSorting track by $index">

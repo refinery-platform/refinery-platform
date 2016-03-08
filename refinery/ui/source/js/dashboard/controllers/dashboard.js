@@ -466,7 +466,7 @@ Object.defineProperty(
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
-      this.checkDataSetsFilterSort();
+      this.checkDataSetsFilter();
     }
 });
 
@@ -489,7 +489,7 @@ Object.defineProperty(
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
-      this.checkDataSetsFilterSort();
+      this.checkDataSetsFilter();
     }
 });
 
@@ -507,7 +507,7 @@ Object.defineProperty(
       this.dataSetsSortDesc = false;
 
       this.triggerSorting('dataSets');
-      this.checkDataSetsFilterSort();
+      this.checkDataSetsSort();
     }
 });
 
@@ -610,20 +610,25 @@ DashboardCtrl.prototype.checkAnalysesFilterSort = function () {
   this.analysesFilterSort = false;
 };
 
-DashboardCtrl.prototype.checkDataSetsFilterSort = function () {
+DashboardCtrl.prototype.checkDataSetsFilter = function () {
   if (this.dataSetsFilterOwner) {
-    this.dataSetsFilterSort = true;
+    this.dataSetsFilter = true;
     return;
   }
   if (this.dataSetsFilterPublic) {
-    this.dataSetsFilterSort = true;
+    this.dataSetsFilter = true;
     return;
   }
+  this.dataSetsFilter = false;
+};
+
+DashboardCtrl.prototype.checkDataSetsSort = function () {
+
   if (this.dataSetsSortBy) {
-    this.dataSetsFilterSort = true;
+    this.dataSetsSort = true;
     return;
   }
-  this.dataSetsFilterSort = false;
+  this.dataSetsSort = false;
 };
 
 DashboardCtrl.prototype.checkWorkflowsFilterSort = function () {
