@@ -605,15 +605,31 @@ def create_facet_filter_query(facet_filter_fields):
             field_str = 'OR'.join(facet_filter_fields[facet])
         else:
             field_str = facet_filter_fields[facet][0]
-        # This escapes certain characters for solr requests fields
-        field_str = field_str.replace(' ', '\\ ')
-        field_str = field_str.replace(':', '\\:')
+
+        field_str = escape_character_solr(field_str)
         field_str = field_str.replace('OR', ' OR ')
-        encoded_field_str = urlquote(field_str, safe='\\=&:+ ')
+        encoded_field_str = urlquote(field_str, safe='\\/=&:+ ')
 
         query = ''.join([query, '&fq={!tag=', facet, '}',
                          facet, ':(', encoded_field_str, ')'])
     return query
+
+
+def escape_character_solr(field):
+    # This escapes certain characters for solr requests fields
+    match = ['\\',  '+', '-', '&', '|', '!', '(', ')',
+             '{', '}', '[', ']', '^', '~', '*',
+             '?', ':', '"', ';', ' ', '/']
+    replacer = ['\\\\', '\\+', '\\-', '\\&', '\\|', '\\!', '\\(', '\\)',
+                '\\{', '\\}', '\\[', '\\]', '\\^', '\\~', '\\*',
+                '\\?', '\\:', '\\"', '\\;', '\\ ', '\\/']
+    ind = 0
+    for item in match:
+        if item in field:
+            field = field.replace(item, replacer[ind])
+        ind = ind + 1
+
+    return field
 
 
 def hide_fields_from_list(facet_obj):
