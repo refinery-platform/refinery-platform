@@ -25,7 +25,7 @@ function DashboardCtrl (
   dashboardDataSetPreviewService,
   treemapContext,
   dashboardVisData,
-  dataCard) {
+  dataCart) {
   var that = this;
 
   // Construct Angular modules
@@ -55,11 +55,14 @@ function DashboardCtrl (
   this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
   this.treemapContext = treemapContext;
   this.dashboardVisData = dashboardVisData;
-  this.dataCard = dataCard;
+  this.dataCart = dataCart;
 
   // Construct class variables
   this.dataSetServiceLoading = false;
   this.expandedDataSetPanelBorder = false;
+
+  this.dataSetsPanelHeight = 1;
+  this.dataCartPanelHeight = 0;
 
   // Check authentication
   // This should ideally be moved to the global APP controller, which we don't
@@ -964,6 +967,44 @@ DashboardCtrl.prototype.readibleDate = function (dataSet, property) {
   return dataSet[property + 'Readible'];
 };
 
+DashboardCtrl.prototype.toggleDataCart = function () {
+  if (this.dataCart.length) {
+    if (this.showDataCart) {
+      this.dataSetsPanelHeight = 1;
+      this.dataCartPanelHeight = 0;
+    } else {
+      this.dataSetsPanelHeight = 0.75;
+      this.dataCartPanelHeight = 0.25;
+    }
+
+    this.pubSub.trigger('refineryPanelUpdateHeight', {
+      ids: {
+        dataCart: true,
+        dataSets: true
+      }
+    });
+
+    this.$timeout(function () {
+      // Reload dataSet infinite scroll adapter
+      if (this.dataSetsAdapter) {
+        this.dataSetsAdapter.reload();
+      }
+    }.bind(this), 250);
+
+    this.showDataCart = !!!this.showDataCart;
+  }
+};
+
+// This is a hack as Angular doesn't like two-way data binding for primitives
+DashboardCtrl.prototype.getDataSetsPanelHeight = function () {
+  return this.dataSetsPanelHeight;
+};
+
+// This is a hack as Angular doesn't like two-way data binding for primitives
+DashboardCtrl.prototype.getDataCartPanelHeight = function () {
+  return this.dataCartPanelHeight;
+};
+
 angular
   .module('refineryDashboard')
   .controller('DashboardCtrl', [
@@ -990,6 +1031,6 @@ angular
     'dashboardDataSetPreviewService',
     'treemapContext',
     'dashboardVisData',
-    'dataCard',
+    'dataCart',
     DashboardCtrl
   ]);
