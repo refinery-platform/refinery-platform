@@ -259,6 +259,7 @@ class neo4jOntology {
       path  => $neo4j_config,
       line  => 'org.neo4j.server.thirdparty_jaxrs_classes=org.neo4j.ontology.server.unmanaged=/ontology/unmanaged',
       notify => Service['neo4j-service'],
+      require => Package['neo4j'],
   }
 }
 include neo4jOntology
