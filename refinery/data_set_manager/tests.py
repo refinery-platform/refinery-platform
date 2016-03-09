@@ -19,7 +19,7 @@ from .utils import update_attribute_order_ranks, \
     generate_facet_fields_query, hide_fields_from_list,\
     generate_filtered_facet_fields, insert_facet_field_filter, \
     create_facet_filter_query, generate_solr_params, \
-    objectify_facet_field_counts
+    objectify_facet_field_counts, escape_character_solr
 from .serializers import AttributeOrderSerializer
 from core.models import DataSet, InvestigationLink
 
@@ -548,6 +548,15 @@ class UtilitiesTest(TestCase):
                               'SUBANALYSIS': {'1': 8, '2': 2, '-1': 9},
                               'TYPE': {'Derived Data File': 105,
                                        'Raw Data File': 9}})
+
+    def test_escape_character_solr(self):
+        field = "(mouse){index}[dog]^~*?:;/ +-&|"
+        expected_response = "\\(mouse\\)\\{index\\}\\[" \
+                            "dog\\]\\^\\~\\*\\?\\:\\;\\/\\ \\+\\-\\&\\|"
+        response = escape_character_solr(field)
+        self.assertEqual(response, expected_response)
+        response = escape_character_solr("")
+        self.assertEqual(response, "")
 
     def test_insert_facet_field_filter(self):
         facet_filter = u'{"Author": ["Vezza", "McConnell"]}'
