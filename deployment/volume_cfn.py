@@ -37,7 +37,7 @@ def main():
         core.Properties({
             'AvailabilityZone': az,
             'Encrypted': True,
-            'Size': 10,
+            'Size': 100,
             'Tags': tags.load(),
             'VolumeType': 'gp2'
         })
