@@ -411,7 +411,7 @@ class AssaysFiles(APIView):
               description: Metadata
               type: boolean
               paramType: query
-            - name: facet_filter
+            - name: filter_attribute
               description: Filters for attributes fields
               type: string
               paramType: query
