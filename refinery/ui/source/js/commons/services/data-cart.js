@@ -37,9 +37,7 @@ function dataCartFactory (_$q_, _$resource_, _settings_) {
         reference: dataSet
       };
       card[dataSet.uuid].index = stack.push(card[dataSet.uuid].reference) - 1;
-      console.log('add ' + card[dataSet.uuid].index);
     }
-    console.log('added', card, stack);
     return this;
   };
 
