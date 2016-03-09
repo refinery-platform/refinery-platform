@@ -16,13 +16,15 @@ BACKUP_FILE_PATH=$1
 REFINERY_BASE_DIR="/vagrant/refinery"
 CONFIG_DIR="config"
 CONFIG_FILE="config.json"
-LOG_FILE="restore-$NOW.log"
-
-# Check if the backup directory exist and if it doesn't create it
-mkdir -p "$BACKUP_TEMP/$NOW"
 
 # Do not edit the code below that line!
 # ------------------------------------------------------------------------------
+NOW=$(date +%Y%m%d)
+
+LOG_FILE="restore-$NOW.log"
+
+# Check if the backup directory exist and if it doesn't create it
+mkdir -p "$BACKUP_TEMP"
 
 BACKUP_FILE=$(basename $BACKUP_FILE_PATH)
 BACKUP="${BACKUP_FILE%%.*}"
