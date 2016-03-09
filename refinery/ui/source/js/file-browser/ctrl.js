@@ -17,8 +17,9 @@ function FileBrowserCtrl(fileBrowserFactory, assayFileService, $window) {
   vm.analysisFilter = [];
 
   //vm.updateAssayFiles = function (filterAttribute, limit, offset) {
-  vm.updateAssayFiles = function (param) {
-    param.uuid = $window.externalAssayUuid;
+  vm.updateAssayFiles = function (in_param) {
+    var param = in_param || {};
+    param['uuid'] = $window.externalAssayUuid;
 
     return fileBrowserFactory.getAssayFiles(param).then(function (response) {
       vm.assayFiles = fileBrowserFactory.assayFiles;

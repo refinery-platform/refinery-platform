@@ -30,6 +30,7 @@ function rpFileBrowserAssayFiles(uiGridConstants,fileBrowserFactory) {
       });
 
       scope.gridOptions = {
+        useExternalSorting: true,
         enableRowSelection: true,
         enableSelectAll: true,
         selectionRowHeaderWidth: 35,
@@ -53,21 +54,91 @@ function rpFileBrowserAssayFiles(uiGridConstants,fileBrowserFactory) {
         });
       };
 
+      //sort:REFINERY_SUBANALYSIS_6_3_s asc
+
       scope.gridOptions.onRegisterApi = function(gridApi) {
         //set gridApi on scope
 
         scope.gridApi = gridApi;
+
+        //Sort events
+        scope.gridApi.core.on.sortChanged( scope, scope.sortChanged );
+        scope.sortChanged(scope.gridApi.grid, [ scope.gridOptions.columnDefs[1] ] );
+
+        //Checkbox selection events
         scope.gridApi.selection.on.rowSelectionChanged(scope, function (row) {
            scope.selectNodes = gridApi.selection.getSelectedRows();
-          console.log(scope.selectNodes);
         });
 
         scope.gridApi.selection.on.rowSelectionChangedBatch(scope, function (rows) {
           scope.selectNodes = gridApi.selection.getSelectedRows();
-           console.log(scope.selectNodes);
         });
-
       };
+
+      scope.sortChanged = function ( grid, sortColumns ) {
+        var param = {};
+        if (typeof sortColumns !== 'undefined' && typeof sortColumns[0] !== 'undefined') {
+          switch (sortColumns[0].sort.direction) {
+            case uiGridConstants.ASC:
+              param = {'sort': sortColumns[0].field + ' asc'};
+              scope.FBCtrl.updateAssayFiles(param)
+                .then(function(){
+                  scope.gridOptions.data = scope.FBCtrl.assayFiles;
+              });
+              break;
+            case uiGridConstants.DESC:
+              param = {'sort': sortColumns[0].field + ' desc'};
+              scope.FBCtrl.updateAssayFiles(param)
+                .then(function(){
+                  scope.gridOptions.data = scope.FBCtrl.assayFiles;
+              });
+              break;
+            case undefined:
+              scope.FBCtrl.updateAssayFiles()
+                .then(function(){
+                  scope.gridOptions.data = scope.FBCtrl.assayFiles;
+              });
+              break;
+          }
+        }
+      };
+
+
+
+
+
+
+
+  //scope.sortChanged = function ( grid, sortColumns ) {
+  //  if( sortColumns.length === 0 || sortColumns[0].name !== $scope.gridOptions.columnDefs[0].name ){
+  //    $http.get('/data/100.json')
+  //    .success(function(data) {
+  //      $scope.gridOptions.data = data;
+  //    });
+  //  } else {
+  //    switch( sortColumns[0].sort.direction ) {
+  //      case uiGridConstants.ASC:
+  //        $http.get('/data/100_ASC.json')
+  //        .success(function(data) {
+  //          $scope.gridOptions.data = data;
+  //        });
+  //        break;
+  //      case uiGridConstants.DESC:
+  //        $http.get('/data/100_DESC.json')
+  //        .success(function(data) {
+  //          $scope.gridOptions.data = data;
+  //        });
+  //        break;
+  //      case undefined:
+  //        $http.get('/data/100.json')
+  //        .success(function(data) {
+  //          $scope.gridOptions.data = data;
+  //        });
+  //        break;
+  //    }
+  //  }
+  //};
+
 
     }
   };
