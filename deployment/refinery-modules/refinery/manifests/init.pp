@@ -210,9 +210,9 @@ class neo4j {
   }
   ->
   limits::fragment {
-    "neo4j/soft/nofile":
+    "${app_user}/soft/nofile":
       value => "40000";
-    "neo4j/hard/nofile":
+    "${app_user}/hard/nofile":
       value => "40000";
   }
   ->
@@ -259,12 +259,13 @@ class neo4jOntology {
       path  => $neo4j_config,
       line  => 'org.neo4j.server.thirdparty_jaxrs_classes=org.neo4j.ontology.server.unmanaged=/ontology/unmanaged',
       notify => Service['neo4j-service'],
+      require => Package['neo4j'],
   }
 }
 include neo4jOntology
 
 class owl2neo4j {
-  $owl2neo4j_version = "0.5.0"
+  $owl2neo4j_version = "0.6.0"
   $owl2neo4j_url = "https://github.com/flekschas/owl2neo4j/releases/download/v${owl2neo4j_version}/owl2neo4j.jar"
 
   # Need to remove the old file manually as wget throws a weird
@@ -359,10 +360,10 @@ service { 'memcached':
 }
 
 file { "${django_root}/supervisord.conf":
-  ensure => file,
-  source => "${django_root}/supervisord.conf.sample",
-  owner  => $app_user,
-  group  => $app_group,
+  ensure  => file,
+  content => template("${django_root}/supervisord.conf.erb"),
+  owner   => $app_user,
+  group   => $app_group,
 }
 ->
 exec { "supervisord":

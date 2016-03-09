@@ -11,10 +11,22 @@ function analysisMonitorFactory($http, analysisService, analysisDetailService) {
 
   var initializeAnalysesDetail = function(uuid){
   analysesDetail[uuid] = {
-    "refineryImport": {},
-    "galaxyImport": {},
-    "galaxyAnalysis": {},
-    "galaxyExport": {},
+    "refineryImport": {
+      status: "",
+      percent_done: 0
+    },
+    "galaxyImport": {
+      status: "",
+      percent_done: 0
+    },
+    "galaxyAnalysis": {
+      status: "",
+      percent_done: 0
+    },
+    "galaxyExport": {
+      status: "",
+      percent_done: 0
+    },
     "cancelingAnalyses": false
   };
 };
@@ -35,9 +47,9 @@ function analysisMonitorFactory($http, analysisService, analysisDetailService) {
 
   //Copies and sorts analyses list
   var processAnalysesList = function (data, params) {
-    if ('status' in params && 'data_set__uuid' in params) {
+    if ('status__in' in params && 'data_set__uuid' in params) {
       angular.copy(data, analysesRunningList);
-    } else if ('status' in params) {
+    } else if ('status__in' in params) {
       angular.copy(data, analysesRunningGlobalList);
     } else if ('limit' in params && 'data_set__uuid' in params) {
       addElapseAndHumanTime(data);

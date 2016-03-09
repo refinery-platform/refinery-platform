@@ -73,8 +73,8 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
     var params = {
       format: 'json',
       limit: 0,
-      'data_set__uuid': dataSetUuid,
-      'status': 'RUNNING'
+      data_set__uuid: dataSetUuid,
+      status__in: 'RUNNING,UNKNOWN'
     };
 
     analysisMonitorFactory.getAnalysesList(params).then(function () {
@@ -93,7 +93,9 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
   //Method always runs to show running number on global analysis icon
   vm.updateAnalysesRunningGlobalList = function () {
     var params = {
-      format:'json', limit: 0, 'status': 'RUNNING'
+      format:'json',
+      limit: 0,
+      status__in: 'RUNNING,UNKNOWN'
     };
 
     analysisMonitorFactory.getAnalysesList(params).then(function () {

@@ -1,0 +1,16 @@
+<div ng-if="FBCtrl.attributeFilter">
+  <div ng-repeat="(attribute, fields) in FBCtrl.attributeFilter track by $index">
+    Attribute Filter
+    <div ng-if="!(attribute == 'Analysis Group')">
+      {{ attribute }}:
+        <div ng-repeat="(field, value) in fields track by $index">
+          {{ field }}: {{ value }}
+        </div>
+    </div>
+    <div ng-if="attribute == 'Analysis Group'">
+      Analysis Filter
+      {{ field }}
+    </div>
+  </div>
+</div>
+
