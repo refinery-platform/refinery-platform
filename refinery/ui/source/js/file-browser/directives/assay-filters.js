@@ -42,11 +42,9 @@ function rpFileBrowserAssayFilters(fileBrowserFactory) {
           }
 
         }
-        var param = {
-          'filter_attribute': scope.selectedFieldList
-        };
+        scope.filesParam['filter_attribute']= scope.selectedFieldList;
 
-        scope.FBCtrl.updateAssayFiles(param).then(function(){
+        scope.FBCtrl.updateAssayFiles().then(function(){
           scope.gridOptions = {
           data: scope.FBCtrl.assayFiles
           };

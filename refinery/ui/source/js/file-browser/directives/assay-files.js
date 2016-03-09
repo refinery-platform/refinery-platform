@@ -54,8 +54,6 @@ function rpFileBrowserAssayFiles(uiGridConstants,fileBrowserFactory) {
         });
       };
 
-      //sort:REFINERY_SUBANALYSIS_6_3_s asc
-
       scope.gridOptions.onRegisterApi = function(gridApi) {
         //set gridApi on scope
 
@@ -76,19 +74,18 @@ function rpFileBrowserAssayFiles(uiGridConstants,fileBrowserFactory) {
       };
 
       scope.sortChanged = function ( grid, sortColumns ) {
-        var param = {};
         if (typeof sortColumns !== 'undefined' && typeof sortColumns[0] !== 'undefined') {
           switch (sortColumns[0].sort.direction) {
             case uiGridConstants.ASC:
-              param = {'sort': sortColumns[0].field + ' asc'};
-              scope.FBCtrl.updateAssayFiles(param)
+              scope.filesParam['sort'] = sortColumns[0].field + ' asc';
+              scope.FBCtrl.updateAssayFiles()
                 .then(function(){
                   scope.gridOptions.data = scope.FBCtrl.assayFiles;
               });
               break;
             case uiGridConstants.DESC:
-              param = {'sort': sortColumns[0].field + ' desc'};
-              scope.FBCtrl.updateAssayFiles(param)
+              scope.filesParam['sort'] = sortColumns[0].field + ' desc';
+              scope.FBCtrl.updateAssayFiles()
                 .then(function(){
                   scope.gridOptions.data = scope.FBCtrl.assayFiles;
               });

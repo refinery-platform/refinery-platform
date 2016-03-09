@@ -1,6 +1,7 @@
 angular.module('refineryFileBrowser')
     .controller('FileBrowserCtrl',
     [
+      '$scope',
       'fileBrowserFactory',
       'assayFileService',
       '$window',
@@ -8,20 +9,19 @@ angular.module('refineryFileBrowser')
     ]);
 
 
-function FileBrowserCtrl(fileBrowserFactory, assayFileService, $window) {
+function FileBrowserCtrl($scope, fileBrowserFactory, assayFileService, $window) {
   "use strict";
   var vm = this;
   vm.assayFiles = [];
   vm.assayAttributes = [];
   vm.attributeFilter = [];
   vm.analysisFilter = [];
+  //Param is generated from services
+  $scope.filesParam = {'uuid': $window.externalAssayUuid};
 
   //vm.updateAssayFiles = function (filterAttribute, limit, offset) {
-  vm.updateAssayFiles = function (in_param) {
-    var param = in_param || {};
-    param['uuid'] = $window.externalAssayUuid;
-
-    return fileBrowserFactory.getAssayFiles(param).then(function (response) {
+  vm.updateAssayFiles = function () {
+    return fileBrowserFactory.getAssayFiles($scope.filesParam).then(function (response) {
       vm.assayFiles = fileBrowserFactory.assayFiles;
       vm.assayAttributes = fileBrowserFactory.assayAttributes;
       vm.attributeFilter = fileBrowserFactory.attributeFilter;
