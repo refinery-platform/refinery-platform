@@ -16,13 +16,15 @@ BACKUP_FILE_PATH=$1
 REFINERY_BASE_DIR="/vagrant/refinery"
 CONFIG_DIR="config"
 CONFIG_FILE="config.json"
-LOG_FILE="restore-$NOW.log"
-
-# Check if the backup directory exist and if it doesn't create it
-mkdir -p "$BACKUP_TEMP/$NOW"
 
 # Do not edit the code below that line!
 # ------------------------------------------------------------------------------
+NOW=$(date +%Y%m%d)
+
+LOG_FILE="restore-$NOW.log"
+
+# Check if the backup directory exist and if it doesn't create it
+mkdir -p "$BACKUP_TEMP"
 
 BACKUP_FILE=$(basename $BACKUP_FILE_PATH)
 BACKUP="${BACKUP_FILE%%.*}"
@@ -100,9 +102,9 @@ fi
 # plpgsql extension.
 #
 # See http://stackoverflow.com/a/11776053/981933
-dropdb refinery > "$BACKUP_TEMP/$BACKUP/$LOG_FILE"
-createdb refinery > "$BACKUP_TEMP/$BACKUP/$LOG_FILE"
-pg_restore --schema=public --dbname=refinery "$BACKUP_TEMP/$BACKUP/postgresql/refinery.dump" > "$BACKUP_TEMP/$BACKUP/$LOG_FILE"
+dropdb refinery > "$BACKUP_TEMP/$LOG_FILE"
+createdb refinery > "$BACKUP_TEMP/$LOG_FILE"
+pg_restore --schema=public --dbname=refinery "$BACKUP_TEMP/$BACKUP/postgresql/refinery.dump" > "$BACKUP_TEMP/$LOG_FILE"
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
@@ -151,8 +153,7 @@ echo -e "$GREEN\xE2\x9C\x93 Backup completely loaded! $DEFAULT$DIM($(($TIME_DIFF
 echo -e "Indexing data. This might take a while... \c"
 TIME_INTERMEDIATE_START=$(date +"%s")
 
-sudo service solr start
-python "$REFINERY_BASE_DIR/manage.py" update_index --batch-size 25 > "$BACKUP_TEMP/$BACKUP/$LOG_FILE"
+python "$REFINERY_BASE_DIR/manage.py" update_index --batch-size 25 > "$BACKUP_TEMP/$LOG_FILE"
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
