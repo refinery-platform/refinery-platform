@@ -81,6 +81,9 @@
               refinery-tooltip
               refinery-tooltip-container="body"
               refinery-tooltip-placement="left">
+              <span ng-if="dashboard.dataCart.length" class="is-mirrored is-mirrored-text">
+                {{ dashboard.dataCart.length }}
+              </span>
             </button>
             <button
               class="fa fa-filter icon-only"
