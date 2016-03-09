@@ -900,8 +900,17 @@ a.analysis-header {
         position: relative;
         margin: 0;
         padding: 5px 2px;
-        // background: radial-gradient(at bottom, red, white, white);
         transition: background @fast-transition-speed @ease-in-out-cubic;
+
+        &.disabled-default {
+          color: @gray-light;
+          cursor: default;
+
+          &.enabled {
+            color: @blue;
+            cursor: pointer;
+          }
+        }
 
         &.showing {
           color: @blue-active;
@@ -1063,7 +1072,6 @@ a.analysis-header {
 
     ul.results {
       position: relative;
-      background: @white;
 
       .title {
         display: -webkit-box;
@@ -1086,6 +1094,11 @@ a.analysis-header {
           background: fade(lighten(#4f38a6, 25%), 15%);
         }
 
+        &.one-line {
+          max-height: 1.4em;
+          -webkit-line-clamp: 1;
+        }
+
         >em {
           font-weight: bold;
           font-style: normal;
@@ -1095,7 +1108,7 @@ a.analysis-header {
 
       .snippet {
         margin: 2px 0 0 0;
-        color: lighten(@gray, 10%);
+        color: @gray-rgba;
         font-size: 1.3rem;
         line-height: 1.4em;
         max-height: 2.8em;
@@ -1112,25 +1125,15 @@ a.analysis-header {
 
       >li {
         position: relative;
-        padding: 5px 3rem 5px 0;
-        border-top: 1px solid @gray-lighter;
+        padding: 5px 2.2rem 5px 0;
+        border-top: 1px solid @gray-lighter-rgba;
         transition: all @fast-transition-speed @ease-in-out-cubic;
-        box-shadow: inset .2rem 0 0 0 rgba(0, 0, 0, 0), inset .3rem 0 0 0 rgba(255, 255, 255, 0), inset .4rem 0 0 0 fadeout(@orange, 100%), inset .7rem 0 0 0 fadeout(@orange, 100%), 0 1px 0 0 #fff;
+        // box-shadow: inset .2rem 0 0 0 rgba(0, 0, 0, 0), inset .3rem 0 0 0 rgba(255, 255, 255, 0), inset .4rem 0 0 0 fadeout(@orange, 100%), inset .7rem 0 0 0 fadeout(@orange, 100%), 0 1px 0 0 #fff;
 
         // Hack because uiScroll adds another invisible first child to the list.
         &:first-child {
-          padding: 0;
-          border-top: none;
-          transition: none !important;
-        }
-
-        // Hack because uiScroll adds another invisible first child to the list.
-        &:first-child + li {
-          border-top: none;
-        }
-
-        // Hack because uiScroll adds another invisible last child to the list.
-        &:last-child {
+          padding-top: 0;
+          padding-bottom: 0;
           border-top: none;
         }
 
@@ -1151,7 +1154,7 @@ a.analysis-header {
           right: 20px;
           bottom: 0;
           display: none;
-          color: @gray-light;
+          color: @gray-light-rgba;
           border: none;
           background: rgba(255, 255, 255, 0.9);
           transition: all @fast-transition-speed @ease-in-out-cubic;
@@ -1208,8 +1211,8 @@ a.analysis-header {
 
         &.previewing {
           z-index: 2;
-          background: #f2f7f8;
-          box-shadow: 0 1px 0 0 @white, inset 0 1px 0 0 rgba(50, 97, 128, 0.1), inset 0 -1px 0 0 rgba(50, 97, 128, 0.1);
+          background: fade(@blue, 10%);
+          box-shadow: 0 1px 0 0 @white, inset 0 1px 0 0 fade(@blue, 10%), inset 0 -1px 0 0 fade(@blue, 10%);
           border-top-color: @white;
 
           .preview,
@@ -1227,14 +1230,14 @@ a.analysis-header {
           right: 0;
           bottom: 0;
           display: block;
-          color: @gray-lighter;
+          color: @gray-lighter-rgba;
           border: none;
           background: rgba(0, 0, 0, 0);
           transition: all @fast-transition-speed @ease-in-out-cubic;
 
           &:focus {
             color: @black;
-            background: rgba(0, 0, 0, 0.07);
+            background: @gray-lighter-rgba;
           }
 
           &:active,
@@ -1246,8 +1249,8 @@ a.analysis-header {
         &:hover {
 
           .preview {
-            color: @gray-light;
-            background: rgba(0, 0, 0, 0.07);
+            color: @gray-light-rgba;
+            background: @gray-lighter-rgba;
 
             &:hover {
               color: @black;
@@ -1258,6 +1261,23 @@ a.analysis-header {
             color: white;
             background: #326180;
           }
+        }
+      }
+
+      &.infinite-scrolling {
+        // Hack because uiScroll adds another invisible first child to the list.
+        >li:first-child {
+          transition: none !important;
+        }
+
+        // Hack because uiScroll adds another invisible first child to the list.
+        >li:first-child + li {
+          border-top: none;
+        }
+
+        // Hack because uiScroll adds another invisible last child to the list.
+        >li:last-child {
+          border-top: none;
         }
       }
     }

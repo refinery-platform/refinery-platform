@@ -30,7 +30,7 @@
 
   .indicator {
     margin: 0 0.25rem;
-    color: @gray-light;
+    color: @gray-light-rgba;
 
     &:hover {
       color: @gray;
@@ -47,8 +47,32 @@
 
   .separator {
     margin: 0 0.2rem;
-    color: @gray-lighter;
+    color: @gray-lighter-rgba;
   }
+}
+
+.default-height-zero {
+  min-height: 0;
+  height: 0;
+}
+
+.refinery-dashboard .refinery-panel-content.refinery-panel-content.default-height-zero {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.data-card {
+  background: @gray-lightest;
+  box-shadow: 0 -1px 0 0 @gray-lighter-rgba, 0 1px 0 0 @gray-lighter-rgba;
+}
+
+.refinery-dashboard .refinery-panel .data-card ul.results > li.previewing {
+  box-shadow: 0 1px 0 0 @gray-lightest, inset 0 1px 0 0 fade(@blue, 10%), inset 0 -1px 0 0 fade(@blue, 10%);
+  border-top-color: @gray-lightest;
+}
+
+.refinery-panel-content {
+  transition: height @fast-transition-speed @ease-in-out-cubic;
 }
 
 .visWrapper .top-bar {
