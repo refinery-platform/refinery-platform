@@ -100,9 +100,9 @@ fi
 # plpgsql extension.
 #
 # See http://stackoverflow.com/a/11776053/981933
-dropdb refinery > "$BACKUP_TEMP/$BACKUP/$LOG_FILE"
-createdb refinery > "$BACKUP_TEMP/$BACKUP/$LOG_FILE"
-pg_restore --schema=public --dbname=refinery "$BACKUP_TEMP/$BACKUP/postgresql/refinery.dump" > "$BACKUP_TEMP/$BACKUP/$LOG_FILE"
+dropdb refinery > "$BACKUP_TEMP/$LOG_FILE"
+createdb refinery > "$BACKUP_TEMP/$LOG_FILE"
+pg_restore --schema=public --dbname=refinery "$BACKUP_TEMP/$BACKUP/postgresql/refinery.dump" > "$BACKUP_TEMP/$LOG_FILE"
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
@@ -152,7 +152,7 @@ echo -e "Indexing data. This might take a while... \c"
 TIME_INTERMEDIATE_START=$(date +"%s")
 
 sudo service solr start
-python "$REFINERY_BASE_DIR/manage.py" update_index --batch-size 25 > "$BACKUP_TEMP/$BACKUP/$LOG_FILE"
+python "$REFINERY_BASE_DIR/manage.py" update_index --batch-size 25 > "$BACKUP_TEMP/$LOG_FILE"
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
