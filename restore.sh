@@ -151,7 +151,6 @@ echo -e "$GREEN\xE2\x9C\x93 Backup completely loaded! $DEFAULT$DIM($(($TIME_DIFF
 echo -e "Indexing data. This might take a while... \c"
 TIME_INTERMEDIATE_START=$(date +"%s")
 
-sudo service solr start
 python "$REFINERY_BASE_DIR/manage.py" update_index --batch-size 25 > "$BACKUP_TEMP/$LOG_FILE"
 
 TIME_INTERMEDIATE_END=$(date +"%s")
