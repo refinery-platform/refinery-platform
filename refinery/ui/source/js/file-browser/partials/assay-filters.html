@@ -8,18 +8,18 @@
       <div class="panel panel-default">
         <div class="panel-heading" role="tab" id="{{ attribute }}">
           <h4 class="panel-title">
-          <a
+          <div
             role="button"
             data-toggle="collapse"
             data-parent="#attribute-filter"
-            href="#{{ attributeIndex }}"
+            ng-click="dropAttributePanel($event, attributeIndex)"
             aria-expanded="true"
-            aria-controls="attributeIndex">
+            aria-controls="{{ attributeIndex }}">
              {{ attribute }}
-          </a>
+          </div>
           </h4>
         </div>
-      <div id="{{$index}}" class="panel-collapse collapse" role="tabpanel"
+      <div id="{{attributeIndex}}" class="panel-collapse collapse" role="tabpanel"
         aria-labelledby="{{ attribute }}">
         <div class="panel-body">
           <div ng-repeat="(field, value) in fields.facetObj">

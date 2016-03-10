@@ -24,6 +24,17 @@ function rpFileBrowserAssayFilters($location, fileBrowserFactory) {
       scope.selectedField = {};
       scope.selectedFieldList = {};
 
+      scope.dropAttributePanel  = function(e, attributeId){
+        e.preventDefault();
+        var attribute = $('#' + attributeId);
+        var classStr = attribute[0].className;
+        if(classStr.indexOf('in') > -1){
+          attribute.removeClass('in');
+        }else{
+          attribute.addClass('in');
+        }
+      };
+
       scope.query = $location.search();
       var queryKeys = Object.keys(scope.query);
 
