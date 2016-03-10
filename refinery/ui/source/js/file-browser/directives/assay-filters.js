@@ -22,7 +22,6 @@ function rpFileBrowserAssayFilters(fileBrowserFactory) {
 
       scope.selectedField = {};
       scope.selectedFieldList = {};
-      var selectedFieldQuery = {};
 
       scope.attributeSelectionUpdate = function(internal_name, field){
         if(scope.selectedField[field] &&
