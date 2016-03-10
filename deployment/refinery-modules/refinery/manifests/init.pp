@@ -239,7 +239,7 @@ include neo4j
 
 class neo4jOntology {
   $neo4j_config = '/etc/neo4j/neo4j-server.properties'
-  $version = "0.6.0"
+  $version = "0.5.0"
   $url = "https://github.com/refinery-platform/neo4j-ontology/releases/download/v${version}/ontology.jar"
 
   # Need to remove the old file manually as wget throws a weird
@@ -259,6 +259,7 @@ class neo4jOntology {
       path  => $neo4j_config,
       line  => 'org.neo4j.server.thirdparty_jaxrs_classes=org.neo4j.ontology.server.unmanaged=/ontology/unmanaged',
       notify => Service['neo4j-service'],
+      require => Package['neo4j'],
   }
 }
 include neo4jOntology
@@ -359,10 +360,10 @@ service { 'memcached':
 }
 
 file { "${django_root}/supervisord.conf":
-  ensure => file,
-  source => "${django_root}/supervisord.conf.sample",
-  owner  => $app_user,
-  group  => $app_group,
+  ensure  => file,
+  content => template("${django_root}/supervisord.conf.erb"),
+  owner   => $app_user,
+  group   => $app_group,
 }
 ->
 exec { "supervisord":
