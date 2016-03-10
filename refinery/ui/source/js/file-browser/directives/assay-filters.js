@@ -23,10 +23,34 @@ function rpFileBrowserAssayFilters($location, fileBrowserFactory) {
 
       scope.selectedField = {};
       scope.selectedFieldList = {};
+      var query = $location.search();
+      var queryKeys = Object.keys(query);
 
-      scope.dropAttributePanel  = function(e, attributeId){
+      //checks url for params to update the filter
+      scope.checkUrlQueryFilters = function(){
+        //Merge attribute and analysis filter data obj
+        var allFilters = scope.FBCtrl.attributeFilter;
+        allFilters['Analysis'] = scope.FBCtrl.analysisFilter['Analysis'];
+
+        angular.forEach(allFilters, function(fieldObj, attribute) {
+          updateSelectedFieldFromQuery(fieldObj);
+        });
+      };
+
+      var updateSelectedFieldFromQuery = function(fieldObj){
+        angular.forEach(fieldObj.facetObj, function (value, field) {
+          if(queryKeys.indexOf(field) > -1){
+            scope.selectedField[field]=true;
+            scope.attributeSelectionUpdate(fieldObj.internal_name,
+             field);
+          }
+        });
+      };
+
+      //ng-click event for attribute filter panels
+      scope.dropAttributePanel = function(e, attributeIndex){
         e.preventDefault();
-        var attribute = $('#' + attributeId);
+        var attribute = $('#' + attributeIndex);
         var classStr = attribute[0].className;
         if(classStr.indexOf('in') > -1){
           attribute.removeClass('in');
@@ -35,27 +59,8 @@ function rpFileBrowserAssayFilters($location, fileBrowserFactory) {
         }
       };
 
-      scope.query = $location.search();
-      var queryKeys = Object.keys(scope.query);
-
-      scope.checkUrlQueryFilters = function(){
-        var allFilters = scope.FBCtrl.attributeFilter;
-        allFilters['Analysis'] = scope.FBCtrl.analysisFilter['Analysis'];
-
-        angular.forEach(allFilters, function(fieldObj, attribute) {
-          angular.forEach(fieldObj.facetObj, function (value, field) {
-            var ind = queryKeys.indexOf(field);
-            if(ind > -1){
-              scope.selectedField[field]=true;
-              scope.attributeSelectionUpdate(fieldObj.internal_name,
-               field);
-            }
-          });
-        });
-      };
-
+      //Updates which attribute filters are selected and the ui-grid data
       scope.attributeSelectionUpdate = function(internal_name, field){
-        console.log(scope.selectedField);
         if(scope.selectedField[field] &&
           typeof scope.selectedFieldList[internal_name] !== 'undefined'){
           scope.selectedFieldList[internal_name].push(field);
