@@ -24,8 +24,24 @@ function rpFileBrowserAssayFilters($location, fileBrowserFactory) {
       scope.selectedField = {};
       scope.selectedFieldList = {};
 
-      var query = $location.search();
+      scope.query = $location.search();
+      var queryKeys = Object.keys(scope.query);
+
+      scope.checkUrlQueryFilters = function(){
+        angular.forEach(scope.FBCtrl.attributeFilter, function(fieldObj, attribute) {
+          angular.forEach(fieldObj.facetObj, function (value, field) {
+            var ind = queryKeys.indexOf(field);
+            if(ind > -1){
+              scope.selectedField[field]=true;
+              scope.attributeSelectionUpdate(fieldObj.internal_name,
+               field);
+            }
+          });
+        });
+      };
+
       scope.attributeSelectionUpdate = function(internal_name, field){
+        console.log(scope.selectedField);
         if(scope.selectedField[field] &&
           typeof scope.selectedFieldList[internal_name] !== 'undefined'){
           scope.selectedFieldList[internal_name].push(field);

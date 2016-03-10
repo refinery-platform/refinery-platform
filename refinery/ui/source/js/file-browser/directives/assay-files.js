@@ -27,6 +27,8 @@ function rpFileBrowserAssayFiles(uiGridConstants,fileBrowserFactory) {
         columnDefs: customColumnName,
         data: scope.FBCtrl.assayFiles
         };
+
+        scope.checkUrlQueryFilters();
       });
 
       scope.gridOptions = {
@@ -99,44 +101,6 @@ function rpFileBrowserAssayFiles(uiGridConstants,fileBrowserFactory) {
           }
         }
       };
-
-
-
-
-
-
-
-  //scope.sortChanged = function ( grid, sortColumns ) {
-  //  if( sortColumns.length === 0 || sortColumns[0].name !== $scope.gridOptions.columnDefs[0].name ){
-  //    $http.get('/data/100.json')
-  //    .success(function(data) {
-  //      $scope.gridOptions.data = data;
-  //    });
-  //  } else {
-  //    switch( sortColumns[0].sort.direction ) {
-  //      case uiGridConstants.ASC:
-  //        $http.get('/data/100_ASC.json')
-  //        .success(function(data) {
-  //          $scope.gridOptions.data = data;
-  //        });
-  //        break;
-  //      case uiGridConstants.DESC:
-  //        $http.get('/data/100_DESC.json')
-  //        .success(function(data) {
-  //          $scope.gridOptions.data = data;
-  //        });
-  //        break;
-  //      case undefined:
-  //        $http.get('/data/100.json')
-  //        .success(function(data) {
-  //          $scope.gridOptions.data = data;
-  //        });
-  //        break;
-  //    }
-  //  }
-  //};
-
-
     }
   };
 }
