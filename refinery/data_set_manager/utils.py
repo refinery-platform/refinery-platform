@@ -620,14 +620,10 @@ def escape_character_solr(field):
     match = ['\\',  '+', '-', '&', '|', '!', '(', ')',
              '{', '}', '[', ']', '^', '~', '*',
              '?', ':', '"', ';', ' ', '/']
-    replacer = ['\\\\', '\\+', '\\-', '\\&', '\\|', '\\!', '\\(', '\\)',
-                '\\{', '\\}', '\\[', '\\]', '\\^', '\\~', '\\*',
-                '\\?', '\\:', '\\"', '\\;', '\\ ', '\\/']
-    ind = 0
+
     for item in match:
         if item in field:
-            field = field.replace(item, replacer[ind])
-        ind = ind + 1
+            field = field.replace(item, ('\\' + item))
 
     return field
 
