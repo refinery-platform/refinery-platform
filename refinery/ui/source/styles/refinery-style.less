@@ -900,8 +900,17 @@ a.analysis-header {
         position: relative;
         margin: 0;
         padding: 5px 2px;
-        // background: radial-gradient(at bottom, red, white, white);
         transition: background @fast-transition-speed @ease-in-out-cubic;
+
+        &.disabled-default {
+          color: @gray-light;
+          cursor: default;
+
+          &.enabled {
+            color: @blue;
+            cursor: pointer;
+          }
+        }
 
         &.showing {
           color: @blue-active;
@@ -910,11 +919,6 @@ a.analysis-header {
           &:after {
             background: radial-gradient(at bottom, fade(@blue-active, 66%), transparent, transparent);
           }
-        }
-
-        &.active {
-          color: @yellow;
-          text-shadow: 0 0 3px fade(@yellow-shadow, 50%);
         }
 
         &:before {
@@ -1068,29 +1072,68 @@ a.analysis-header {
 
     ul.results {
       position: relative;
-      background: @white;
 
-      li {
+      .title {
+        display: -webkit-box;
+        width: 100%;
+        color: #006f99;
+        font-size: 1.5rem;
+        line-height: 1.4em;
+        max-height: 2.8em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-line-clamp: 2; /* number of lines to show */
+        -webkit-box-orient: vertical;
+
+        &:hover {
+          color: inherit;
+        }
+
+        &:visited {
+          color: #4f38a6;
+          background: fade(lighten(#4f38a6, 25%), 15%);
+        }
+
+        &.one-line {
+          max-height: 1.4em;
+          -webkit-line-clamp: 1;
+        }
+
+        >em {
+          font-weight: bold;
+          font-style: normal;
+          background: fade(lighten(@blue-light, 25%), 15%);
+        }
+      }
+
+      .snippet {
+        margin: 2px 0 0 0;
+        color: @gray-rgba;
+        font-size: 1.3rem;
+        line-height: 1.4em;
+        max-height: 2.8em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-line-clamp: 2; /* number of lines to show */
+        -webkit-box-orient: vertical;
+
+        > em {
+          font-weight: bold;
+          font-style: normal;
+        }
+      }
+
+      >li {
         position: relative;
-        padding: 5px 3rem 5px 0;
-        border-top: 1px solid @gray-lighter;
+        padding: 5px 2.2rem 5px 0;
+        border-top: 1px solid @gray-lighter-rgba;
         transition: all @fast-transition-speed @ease-in-out-cubic;
-        box-shadow: inset .2rem 0 0 0 rgba(0, 0, 0, 0), inset .3rem 0 0 0 rgba(255, 255, 255, 0), inset .4rem 0 0 0 fadeout(@orange, 100%), inset .7rem 0 0 0 fadeout(@orange, 100%), 0 1px 0 0 #fff;
+        // box-shadow: inset .2rem 0 0 0 rgba(0, 0, 0, 0), inset .3rem 0 0 0 rgba(255, 255, 255, 0), inset .4rem 0 0 0 fadeout(@orange, 100%), inset .7rem 0 0 0 fadeout(@orange, 100%), 0 1px 0 0 #fff;
 
         // Hack because uiScroll adds another invisible first child to the list.
         &:first-child {
-          padding: 0;
-          border-top: none;
-          transition: none !important;
-        }
-
-        // Hack because uiScroll adds another invisible first child to the list.
-        &:first-child + li {
-          border-top: none;
-        }
-
-        // Hack because uiScroll adds another invisible last child to the list.
-        &:last-child {
+          padding-top: 0;
+          padding-bottom: 0;
           border-top: none;
         }
 
@@ -1110,12 +1153,11 @@ a.analysis-header {
           top: 0;
           right: 20px;
           bottom: 0;
-          display: block;
-          color: @gray-light;
+          display: none;
+          color: @gray-light-rgba;
           border: none;
           background: rgba(255, 255, 255, 0.9);
           transition: all @fast-transition-speed @ease-in-out-cubic;
-          opacity: 0;
 
           &:hover {
             color: #fff;
@@ -1130,7 +1172,7 @@ a.analysis-header {
         }
 
         &:hover .zoomOut.active {
-          opacity: 1;
+          display: block;
         }
 
         &.locked .zoomOut {
@@ -1169,8 +1211,8 @@ a.analysis-header {
 
         &.previewing {
           z-index: 2;
-          background: #f2f7f8;
-          box-shadow: 0 1px 0 0 @white, inset 0 1px 0 0 rgba(50, 97, 128, 0.1), inset 0 -1px 0 0 rgba(50, 97, 128, 0.1);
+          background: fade(@blue, 10%);
+          box-shadow: 0 1px 0 0 @white, inset 0 1px 0 0 fade(@blue, 10%), inset 0 -1px 0 0 fade(@blue, 10%);
           border-top-color: @white;
 
           .preview,
@@ -1188,14 +1230,14 @@ a.analysis-header {
           right: 0;
           bottom: 0;
           display: block;
-          color: @gray-lighter;
+          color: @gray-lighter-rgba;
           border: none;
           background: rgba(0, 0, 0, 0);
           transition: all @fast-transition-speed @ease-in-out-cubic;
 
           &:focus {
             color: @black;
-            background: rgba(0, 0, 0, 0.07);
+            background: @gray-lighter-rgba;
           }
 
           &:active,
@@ -1207,8 +1249,8 @@ a.analysis-header {
         &:hover {
 
           .preview {
-            color: @gray-light;
-            background: rgba(0, 0, 0, 0.07);
+            color: @gray-light-rgba;
+            background: @gray-lighter-rgba;
 
             &:hover {
               color: @black;
@@ -1219,6 +1261,23 @@ a.analysis-header {
             color: white;
             background: #326180;
           }
+        }
+      }
+
+      &.infinite-scrolling {
+        // Hack because uiScroll adds another invisible first child to the list.
+        >li:first-child {
+          transition: none !important;
+        }
+
+        // Hack because uiScroll adds another invisible first child to the list.
+        >li:first-child + li {
+          border-top: none;
+        }
+
+        // Hack because uiScroll adds another invisible last child to the list.
+        >li:last-child {
+          border-top: none;
         }
       }
     }
@@ -1470,35 +1529,7 @@ a.analysis-header {
     }
 
     ul.results.search {
-      a.title {
-        font-size: @base-font-size + 1;
-        color: #006f99;
-      }
 
-      a.title > em {
-        font-weight: bold;
-        font-style: normal;
-        background: fade(lighten(@blue-light, 25%), 15%);
-      }
-
-      a.title:hover {
-        color: inherit;
-      }
-
-      a.title:visited {
-        color: #4f38a6;
-        background: fade(lighten(#4f38a6, 25%), 15%);
-      }
-
-      p.snippet {
-        margin: 2px 0 0 0;
-        color: lighten(@gray, 10%);
-      }
-
-      p.snippet > em {
-        font-weight: bold;
-        font-style: normal;
-      }
     }
 
     ul.controls {
@@ -1898,7 +1929,11 @@ button.icon-only {
 }
 
 .is-mirrored {
-  transform: rotate(180deg);
+  transform: scale(-1, 1);
+}
+
+.is-mirrored-text {
+  display: inline-block;
 }
 
 .inline-container {
@@ -2229,6 +2264,15 @@ ul.badge-list {
 
 .bottom-half {
   top: 50%;
+}
+
+.is-glowing-yellow-text {
+  color: @yellow !important;
+  text-shadow: 0 0 3px fade(@yellow-shadow, 50%) !important;
+}
+
+.pointer {
+  cursor: pointer;
 }
 
 .CURRENT_COMMIT{

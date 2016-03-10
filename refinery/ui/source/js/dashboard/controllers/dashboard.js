@@ -24,7 +24,8 @@ function DashboardCtrl (
   dashboardExpandablePanelService,
   dashboardDataSetPreviewService,
   treemapContext,
-  dashboardVisData) {
+  dashboardVisData,
+  dataCart) {
   var that = this;
 
   // Construct Angular modules
@@ -54,10 +55,14 @@ function DashboardCtrl (
   this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
   this.treemapContext = treemapContext;
   this.dashboardVisData = dashboardVisData;
+  this.dataCart = dataCart;
 
   // Construct class variables
   this.dataSetServiceLoading = false;
   this.expandedDataSetPanelBorder = false;
+
+  this.dataSetsPanelHeight = 1;
+  this.dataCartPanelHeight = 0;
 
   // Check authentication
   // This should ideally be moved to the global APP controller, which we don't
@@ -466,7 +471,7 @@ Object.defineProperty(
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
-      this.checkDataSetsFilterSort();
+      this.checkDataSetsFilter();
     }
 });
 
@@ -489,7 +494,7 @@ Object.defineProperty(
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
-      this.checkDataSetsFilterSort();
+      this.checkDataSetsFilter();
     }
 });
 
@@ -507,7 +512,7 @@ Object.defineProperty(
       this.dataSetsSortDesc = false;
 
       this.triggerSorting('dataSets');
-      this.checkDataSetsFilterSort();
+      this.checkDataSetsSort();
     }
 });
 
@@ -610,20 +615,25 @@ DashboardCtrl.prototype.checkAnalysesFilterSort = function () {
   this.analysesFilterSort = false;
 };
 
-DashboardCtrl.prototype.checkDataSetsFilterSort = function () {
+DashboardCtrl.prototype.checkDataSetsFilter = function () {
   if (this.dataSetsFilterOwner) {
-    this.dataSetsFilterSort = true;
+    this.dataSetsFilter = true;
     return;
   }
   if (this.dataSetsFilterPublic) {
-    this.dataSetsFilterSort = true;
+    this.dataSetsFilter = true;
     return;
   }
+  this.dataSetsFilter = false;
+};
+
+DashboardCtrl.prototype.checkDataSetsSort = function () {
+
   if (this.dataSetsSortBy) {
-    this.dataSetsFilterSort = true;
+    this.dataSetsSort = true;
     return;
   }
-  this.dataSetsFilterSort = false;
+  this.dataSetsSort = false;
 };
 
 DashboardCtrl.prototype.checkWorkflowsFilterSort = function () {
@@ -943,6 +953,58 @@ DashboardCtrl.prototype.dataSetMouseLeave = function (dataSet) {
   });
 };
 
+DashboardCtrl.prototype.readibleDate = function (dataSet, property) {
+  var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
+    'Sep', 'Oct', 'Nov', 'Dec'];
+
+  if (dataSet[property] && !dataSet[property + 'Readible']) {
+    dataSet[property + 'Readible'] =
+      months[dataSet[property].getMonth()] + ' ' +
+      dataSet[property].getDate() + ', ' +
+      dataSet[property].getFullYear();
+  }
+
+  return dataSet[property + 'Readible'];
+};
+
+DashboardCtrl.prototype.toggleDataCart = function () {
+  if (this.dataCart.length) {
+    if (this.showDataCart) {
+      this.dataSetsPanelHeight = 1;
+      this.dataCartPanelHeight = 0;
+    } else {
+      this.dataSetsPanelHeight = 0.75;
+      this.dataCartPanelHeight = 0.25;
+    }
+
+    this.pubSub.trigger('refineryPanelUpdateHeight', {
+      ids: {
+        dataCart: true,
+        dataSets: true
+      }
+    });
+
+    this.$timeout(function () {
+      // Reload dataSet infinite scroll adapter
+      if (this.dataSetsAdapter) {
+        this.dataSetsAdapter.reload();
+      }
+    }.bind(this), 250);
+
+    this.showDataCart = !!!this.showDataCart;
+  }
+};
+
+// This is a hack as Angular doesn't like two-way data binding for primitives
+DashboardCtrl.prototype.getDataSetsPanelHeight = function () {
+  return this.dataSetsPanelHeight;
+};
+
+// This is a hack as Angular doesn't like two-way data binding for primitives
+DashboardCtrl.prototype.getDataCartPanelHeight = function () {
+  return this.dataCartPanelHeight;
+};
+
 angular
   .module('refineryDashboard')
   .controller('DashboardCtrl', [
@@ -969,5 +1031,6 @@ angular
     'dashboardDataSetPreviewService',
     'treemapContext',
     'dashboardVisData',
+    'dataCart',
     DashboardCtrl
   ]);

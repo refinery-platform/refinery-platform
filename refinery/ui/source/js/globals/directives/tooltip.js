@@ -17,6 +17,12 @@ var TooltipCtrl = function ($element) {
         // event again to immediately show the tool tip.
         _element.trigger('mouseenter', _element);
       }.bind(this));
+
+    if (this.hideOnClick) {
+      _element.on('click', function () {
+        _element.tooltip('hide');
+      });
+    }
   };
 
   return tooltip.apply(this);
@@ -25,6 +31,7 @@ var TooltipCtrl = function ($element) {
 var tooltipDirective = function () {
   return {
     bindToController: {
+      hideOnClick: '@refineryTooltipHideOnClick',
       container: '@refineryTooltipContainer',
       placement: '@refineryTooltipPlacement'
     },
