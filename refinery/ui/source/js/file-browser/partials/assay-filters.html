@@ -51,15 +51,15 @@
       <div class="panel panel-default">
         <div class="panel-heading" role="tab" id="{{ analysis }}">
           <h4 class="panel-title">
-          <a
+          <div
             role="button"
             data-toggle="collapse"
             data-parent="#analysis-filter"
-            href="#analysisFilterPanel"
+            ng-click="dropAttributePanel($event, 'analysisFilterPanel')"
             aria-expanded="true"
-            aria-controls="analysisIndex">
+            aria-controls="analysisFilterPanel">
             {{ analysis }}
-          </a>
+          </div>
           </h4>
         </div>
         <div

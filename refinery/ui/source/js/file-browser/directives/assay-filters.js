@@ -39,7 +39,10 @@ function rpFileBrowserAssayFilters($location, fileBrowserFactory) {
       var queryKeys = Object.keys(scope.query);
 
       scope.checkUrlQueryFilters = function(){
-        angular.forEach(scope.FBCtrl.attributeFilter, function(fieldObj, attribute) {
+        var allFilters = scope.FBCtrl.attributeFilter;
+        allFilters['Analysis'] = scope.FBCtrl.analysisFilter['Analysis'];
+
+        angular.forEach(allFilters, function(fieldObj, attribute) {
           angular.forEach(fieldObj.facetObj, function (value, field) {
             var ind = queryKeys.indexOf(field);
             if(ind > -1){
