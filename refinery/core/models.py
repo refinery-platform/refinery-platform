@@ -48,7 +48,7 @@ from data_set_manager.models import (Investigation, Node, Study, Assay,
                                      NodeCollection)
 from data_set_manager.utils import (add_annotated_nodes_selection,
                                     index_annotated_nodes_selection)
-from file_store.models import get_file_size, FileStoreItem, ZIP
+from file_store.models import get_file_size, FileStoreItem, FileType
 from file_store.tasks import rename
 from galaxy_connector.galaxy_workflow import (create_expanded_workflow_graph,
                                               countWorkflowSteps,
@@ -1198,7 +1198,8 @@ class Analysis(OwnableResource):
             (root, ext) = os.path.splitext(new_file_name)
             item = FileStoreItem.objects.get_item(uuid=result.file_store_uuid)
             # TODO: update for use with the new file type model
-            if ext == '.html' and item.get_filetype() == ZIP:
+            if ext == '.html' and item.get_filetype() == \
+                    FileType.objects.get(name="ZIP"):
                 new_file_name = root + '.zip'
             rename(result.file_store_uuid, new_file_name)
 
