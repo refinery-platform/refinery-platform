@@ -4,9 +4,11 @@ Created on Nov 29, 2012
 @author: nils
 '''
 
-from data_set_manager.models import Investigation, Study, Assay, \
-    AttributeOrder, Protocol, ProtocolReference, ProtocolReferenceParameter, \
-    Publication, Attribute, Node
+from data_set_manager.models import (Investigation, Study, Assay,
+                                     AttributeOrder, Protocol,
+                                     ProtocolReference,
+                                     ProtocolReferenceParameter, Publication,
+                                     Attribute, Node)
 from tastypie import fields
 from tastypie.authentication import Authentication
 from tastypie.authorization import Authorization

@@ -12,8 +12,8 @@ import json
 from django import forms
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect, HttpResponse, \
-    HttpResponseBadRequest
+from django.http import (HttpResponseRedirect, HttpResponse,
+                         HttpResponseBadRequest)
 from django.shortcuts import render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
@@ -29,8 +29,9 @@ from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
 from core.models import os, get_user_import_dir
 from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import parse_isatab
-from data_set_manager.utils import generate_solr_params, search_solr, \
-    format_solr_response, get_owner_from_assay, update_attribute_order_ranks
+from data_set_manager.utils import (generate_solr_params, search_solr,
+                                    format_solr_response, get_owner_from_assay,
+                                    update_attribute_order_ranks)
 from file_store.tasks import download_file, DownloadError
 from file_store.models import get_temp_dir, generate_file_source_translator
 from .serializers import AttributeOrderSerializer, AssaySerializer

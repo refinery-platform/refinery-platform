@@ -14,12 +14,13 @@ from rest_framework.test import APIClient
 
 from .models import AttributeOrder, Assay, Study, Investigation
 from .views import Assays, AssaysAttributes
-from .utils import update_attribute_order_ranks, \
-    customize_attribute_response, format_solr_response, get_owner_from_assay,\
-    generate_facet_fields_query, hide_fields_from_list,\
-    generate_filtered_facet_fields, insert_facet_field_filter, \
-    create_facet_filter_query, generate_solr_params, \
-    objectify_facet_field_counts, escape_character_solr
+from .utils import (update_attribute_order_ranks,
+                    customize_attribute_response, format_solr_response,
+                    get_owner_from_assay, generate_facet_fields_query,
+                    hide_fields_from_list, generate_filtered_facet_fields,
+                    insert_facet_field_filter, create_facet_filter_query,
+                    generate_solr_params, objectify_facet_field_counts,
+                    escape_character_solr)
 from .serializers import AttributeOrderSerializer
 from core.models import DataSet, InvestigationLink
 
