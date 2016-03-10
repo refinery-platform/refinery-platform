@@ -381,7 +381,10 @@ def get_data_set_annotations(dataset_uuid):
                 node.id = attr.node_id
               WHERE
                 attr.value_source IS NOT NULL AND
-                attr.value_source NOT LIKE ''
+                attr.value_source NOT LIKE '' AND (
+                    attr.value_unit IS NULL OR
+                    attr.value_unit = ''
+                )
 
               UNION ALL
 
@@ -500,7 +503,10 @@ def get_data_sets_annotations(dataset_ids=[]):
                 node.id = attr.node_id
               WHERE
                 attr.value_source IS NOT NULL AND
-                attr.value_source NOT LIKE ''
+                attr.value_source NOT LIKE '' AND (
+                    attr.value_unit IS NULL OR
+                    attr.value_unit = ''
+                )
 
               UNION ALL
 

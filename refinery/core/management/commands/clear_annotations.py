@@ -17,14 +17,10 @@ class Command(BaseCommand):
             urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data')
         )
 
-        tx = graph.cypher.begin()
-
-        cql = (
-            'MATCH (ds:DataSet), (u:User) ' +
-            'OPTIONAL MATCH (ds)-[r1]-(), (u)-[r2]-() ' +
-            'DELETE ds, u, r1, r2'
+        graph.cypher.execute(
+            'MATCH (ds:DataSet) OPTIONAL MATCH (ds)-[r]-() DELETE ds, r',
         )
 
-        tx.append(cql)
-
-        tx.commit()
+        graph.cypher.execute(
+            'MATCH (u:User) OPTIONAL MATCH (u)-[r]-() DELETE u, r',
+        )
