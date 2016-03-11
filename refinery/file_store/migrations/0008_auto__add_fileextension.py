@@ -3,7 +3,6 @@ from south.utils import datetime_utils as datetime
 from south.db import db
 from south.v2 import SchemaMigration
 from django.db import models
-from file_store.models import FileType
 
 
 class Migration(SchemaMigration):
@@ -17,15 +16,6 @@ class Migration(SchemaMigration):
                 default=32, related_name='filetype_names', to=orm['file_store.FileType'])),
         ))
         db.send_create_signal(u'file_store', ['FileExtension'])
-
-        # Delete duplicated Filetypes
-        for item in [37, 35, 30]:
-
-            try:
-                FileType.objects.get(id=item).delete()
-
-            except FileType.DoesNotExist:
-                pass
 
     def backwards(self, orm):
         # Deleting model 'FileExtension'
@@ -59,3 +49,4 @@ class Migration(SchemaMigration):
     }
 
     complete_apps = ['file_store']
+
