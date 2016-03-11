@@ -9,7 +9,7 @@ class Migration(DataMigration):
 
     def forwards(self, orm):
         "Write your forwards methods here."
-        filetype_duplicates = [37, 36, 35, 31, 30]
+        filetype_duplicates = [37, 35, 30]
         try:
             for id in filetype_duplicates:
                 orm.Filetype.objects.get(id=id).delete()
