@@ -9,7 +9,7 @@ class Migration(DataMigration):
 
     def forwards(self, orm):
         "Write your forwards methods here."
-        filetype_duplicates = [37, 35, 30]
+        filetype_duplicates = [37, 36, 35, 31, 30]
         try:
             for id in filetype_duplicates:
                 orm.Filetype.objects.get(id=id).delete()
@@ -48,5 +48,5 @@ class Migration(DataMigration):
 
     complete_apps = ['file_store']
     symmetrical = True
-    
+
     call_command('loaddata', 'file_store/fixtures/file_store_data.json')
