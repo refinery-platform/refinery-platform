@@ -4,10 +4,24 @@ from south.db import db
 from south.v2 import SchemaMigration
 from django.db import models
 
+from file_store.models import FileType
+
 
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
+
+        # Delete duplicated Filetypes
+        for item in [37, 35, 30]:
+
+            try:
+                db.start_transaction()
+                FileType.objects.get(id=item).delete()
+                db.commit_transaction()
+
+            except FileType.DoesNotExist:
+                pass
+
         # Adding unique constraint on 'FileType', fields ['name']
         db.create_unique(u'file_store_filetype', ['name'])
 

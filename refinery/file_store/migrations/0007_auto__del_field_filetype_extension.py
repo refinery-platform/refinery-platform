@@ -3,7 +3,7 @@ from south.utils import datetime_utils as datetime
 from south.db import db
 from south.v2 import SchemaMigration
 from django.db import models
-
+from file_store.models import FileType
 
 class Migration(SchemaMigration):
 
@@ -11,6 +11,11 @@ class Migration(SchemaMigration):
         # Deleting field 'FileType.extension'
         db.delete_column(u'file_store_filetype', 'extension')
 
+        db.start_transaction()
+        fastqcsanger = FileType.objects.get(description="FASTQC Sanger")
+        fastqcsanger.name = "FASTQCSANGER"
+        fastqcsanger.save()
+        db.commit_transaction()
 
     def backwards(self, orm):
         # Adding field 'FileType.extension'
