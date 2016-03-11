@@ -3,6 +3,7 @@ from south.utils import datetime_utils as datetime
 from south.db import db
 from south.v2 import DataMigration
 from django.db import models
+from django.core.management import call_command
 
 class Migration(DataMigration):
 
@@ -47,3 +48,5 @@ class Migration(DataMigration):
 
     complete_apps = ['file_store']
     symmetrical = True
+    
+    call_command('loaddata', 'file_store/fixtures/file_store_data.json')
