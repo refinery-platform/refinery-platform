@@ -28,9 +28,56 @@ describe("File Browser Factory", function(){
 
     beforeEach(inject( function(assayFileService, $q, $rootScope){
       assayFiles = {
-        'nodes':[{test1:1},{test2:2},{test3:3},{test4:4}],
-        'attributes':[{test1:1},{test2:2},{test3:3},{test4:4}],
-        'facet_field_counts': [{test1: 1}, {test2: 2}, {test3: 3}, {test4: 4}]
+        'nodes':[
+        {
+            "REFINERY_ANALYSIS_UUID_6_3_s": "N/A",
+            "Author_Characteristics_6_3_s": "McConnell",
+            "REFINERY_WORKFLOW_OUTPUT_6_3_s": "N/A"
+        },
+        {
+            "REFINERY_ANALYSIS_UUID_6_3_s": "fbc78aaa-1050-403b-858c-a1504a40ef54",
+            "Author_Characteristics_6_3_s": "McConnell",
+            "REFINERY_WORKFLOW_OUTPUT_6_3_s": "1_test_01"
+        },
+        {
+            "REFINERY_ANALYSIS_UUID_6_3_s": "547ac4a0-7d5a-48a9-8859-8620ad94c7a2",
+            "Author_Characteristics_6_3_s": "McConnell",
+            "REFINERY_WORKFLOW_OUTPUT_6_3_s": "1_test tool out"
+        }],
+        'attributes':[ {
+            "attribute_type": "Internal",
+            "file_ext": "s",
+            "display_name": "Output Type",
+            "internal_name": "REFINERY_WORKFLOW_OUTPUT_6_3_s"
+        }, {
+            "attribute_type": "Internal",
+            "file_ext": "s",
+            "display_name": "Analysis",
+            "internal_name": "REFINERY_ANALYSIS_UUID_6_3_s"
+        }, {
+            "attribute_type": "Characteristics",
+            "file_ext": "s",
+            "display_name": "Author",
+            "internal_name": "Author_Characteristics_6_3_s"
+        }],
+        "facet_field_counts": {
+          "REFINERY_WORKFLOW_OUTPUT_6_3_s": {
+            "1_test_04": 2,
+            "1_test_02": 2
+          },
+          "REFINERY_ANALYSIS_UUID_6_3_s": {
+            "5d2311d1-6d8c-4857-bc57-2f25563aee91": 4
+          },
+          "Author_Characteristics_6_3_s": {
+            "Vezza": 1,
+            "Harslem/Heafner": 1,
+            "McConnell": 6,
+            "Crocker + McConnell": 4,
+            "Crocker": 4,
+            "Postel/Cerf": 1,
+            "Cotton": 1
+          }
+        }
       };
       spyOn(assayFileService, "query").and.callFake(function() {
         deferred = $q.defer();
