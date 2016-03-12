@@ -28,7 +28,8 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
     var allDsIds = dataSet.allIds;
     var neo4jToGraphData = neo4jToGraph.get();
 
-    $q.all([allDsIds, neo4jToGraphData]).then(function (results) {
+    $q.all([allDsIds, neo4jToGraphData])
+      .then(function (results) {
         var allDsIds = results[0];
         var data = results[1];
 
@@ -100,17 +101,14 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
     {
       get: function() {
         return $q.all([
-            graphData.promise, treemapData.promise, finalRootNode.promise
-          ]
-        ).then(
-          function (results) {
-            return {
-              graph: results[0],
-              treemap: results[1],
-              root: results[2]
-            };
-          }
-        );
+          graphData.promise, treemapData.promise, finalRootNode.promise
+        ]).then(function (results) {
+          return {
+            graph: results[0],
+            treemap: results[1],
+            root: results[2]
+          };
+        });
       }
     }
   );
