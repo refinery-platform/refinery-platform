@@ -888,12 +888,20 @@ a.analysis-header {
       border-radius: 0;
       background-color: @white;
 
-      h4 {
+      .floatbox-max-left >* {
+        display: inline-block;
+        float: left;
         margin: 0;
         padding: 5px 0;
         color: @gray-light;
         font-size: 14px;
         line-height: 1em;
+      }
+
+      .separator {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+        color: @gray-lighter;
       }
 
       button.icon-only {
@@ -1147,12 +1155,11 @@ a.analysis-header {
           }
         }
 
-        .zoomOut {
+        .zoom-out,
+        .annotations-only {
           position: absolute;
           z-index: 1;
-          top: 0;
           right: 20px;
-          bottom: 0;
           display: none;
           color: @gray-light-rgba;
           border: none;
@@ -1160,26 +1167,43 @@ a.analysis-header {
           transition: all @fast-transition-speed @ease-in-out-cubic;
 
           &:hover {
-            color: #fff;
-            background: @orange;
-            box-shadow: 0 1px 0 0 @orange, 0 -1px 0 0 @orange;
+            color: @black;
+            background: @gray-lighter;
+            box-shadow: 0 1px 0 0 @gray-lighter, 0 -1px 0 0 @gray-lighter;
           }
 
           &:active,
           &:focus {
             outline: none;
           }
+
+          &.active {
+            color: @white;
+            background: @orange;
+            box-shadow: 0 1px 0 0 @orange, 0 -1px 0 0 @orange;
+          }
         }
 
-        &:hover .zoomOut.active {
+        &:hover .zoom-out.activated,
+        &:hover .annotations-only.activated {
           display: block;
         }
 
-        &.locked .zoomOut {
+        .zoom-out {
+          top: 0;
+          bottom: 50%;
+        }
+
+        &.locked .zoom-out {
           background: fadeout(lighten(@orange, 100%, relative), 10%);
           &:hover {
             background: @orange;
           }
+        }
+
+        .annotations-only {
+          top: 50%;
+          bottom: 0;
         }
 
         &.locked {

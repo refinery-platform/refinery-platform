@@ -45,7 +45,7 @@
       <div class="refinery-panel-header">
         <div
           class="refinery-notification"
-          ng-class="{'active': dashboard.searchQueryDataSets.length > 0 || dashboard.dataSets.total === 0}">
+          ng-class="{'active': dashboard.showNotification() }">
           <div
             class="refinery-notification-info"
             ng-show="dashboard.searchQueryDataSets.length === 1">
@@ -70,7 +70,7 @@
             <strong>Error: </strong>
             Please contact your <a ng-href="mailto:{{ app.settings.djangoApp.admins }}?Subject=Refinery%20Error">System Administrator</a>.
           </div>
-            </div>
+        </div>
         <div class="floatbox">
           <div class="floatbox-min-right">
             <button
@@ -106,6 +106,7 @@
               refinery-tooltip
               refinery-tooltip-container="body"
               refinery-tooltip-placement="right">
+            </button>
           </div>
           <div class="floatbox-max-left">
             <h4>
@@ -119,6 +120,33 @@
               </span>
               {{ dashboard.searchQueryDataSets.length > 1 ? 'results' : 'data sets' }}
             </h4>
+            <span class="separator">&middot;</span>
+            <div class="data-card-indicator">
+              <i class="fa fa-star is-glowing-yellow-text pointer"
+                title="All added to data cart. Click to remove."
+                ng-if="dashboard.allCurrentDataSetsInDataCart === 2"
+                ng-click="dashboard.removeAllCurrentToDataCart()"
+                refinery-tooltip
+                refinery-tooltip-container="body"
+                refinery-tooltip-placement="top"
+                refinery-tooltip-hide-on-click="true"></i>
+              <i class="fa fa-star-half-o is-glowing-yellow-text pointer"
+                title="Add remaining to data cart"
+                ng-if="dashboard.allCurrentDataSetsInDataCart === 1"
+                ng-click="dashboard.addAllCurrentToDataCart()"
+                refinery-tooltip
+                refinery-tooltip-container="body"
+                refinery-tooltip-placement="top"
+                refinery-tooltip-hide-on-click="true"></i>
+              <i class="fa fa-star-o pointer"
+                title="Add all to data cart"
+                ng-if="!dashboard.allCurrentDataSetsInDataCart"
+                ng-click="dashboard.addAllCurrentToDataCart()"
+                refinery-tooltip
+                refinery-tooltip-container="body"
+                refinery-tooltip-placement="top"
+                refinery-tooltip-hide-on-click="true"></i>
+            </div>
           </div>
         </div>
       </div>
@@ -192,11 +220,16 @@
                   ng-class="{'is-mirrored': dataSet.preview}"></i>
               </button>
               <button
-                class="zoomOut"
-                ng-class="{'active': dashboard.dataSetExploration && !dashboard.dataSetExplorationTempHidden}"
-                ng-mouseenter="dashboard.dataSetMouseEnterZoomOut(dataSet)"
-                ng-mouseleave="dashboard.dataSetMouseEnter(dataSet)">
+                class="zoom-out"
+                ng-class="{'activated': dashboard.dataSetExploration && !dashboard.dataSetExplorationTempHidden, 'active': dashboard.listGraphZoomedOut}"
+                ng-click="dashboard.toggleListGraphZoom(dataSet)">
                 <i class="fa fa-search-minus"></i>
+              </button>
+              <button
+                class="annotations-only"
+                ng-class="{'activated': dashboard.dataSetExploration && !dashboard.dataSetExplorationTempHidden, 'active': dashboard.listGraphHideUnrelatedNodes}"
+                ng-click="dashboard.toggleListUnrelatedNodes(dataSet)">
+                <i class="fa fa-compress"></i>
               </button>
               <a
                 class="title one-line"
@@ -251,7 +284,7 @@
                     <i class="fa fa-star is-glowing-yellow-text pointer"
                       title="Added to data card. Click to remove."
                       ng-if="dashboard.dataCart.added(dataSet)"
-                      ng-click="dashboard.dataCart.remove(dataSet)"
+                      ng-click="dashboard.removeFromDataCart(dataSet)"
                       refinery-tooltip
                       refinery-tooltip-container="body"
                       refinery-tooltip-placement="top"
@@ -259,7 +292,7 @@
                     <i class="fa fa-star-o pointer"
                       title="Add to data card"
                       ng-if="!dashboard.dataCart.added(dataSet)"
-                      ng-click="dashboard.dataCart.add(dataSet)"
+                      ng-click="dashboard.addToDataCart(dataSet)"
                       refinery-tooltip
                       refinery-tooltip-container="body"
                       refinery-tooltip-placement="top"
@@ -294,11 +327,16 @@
                   ng-class="{'is-mirrored': dataSet.preview}"></i>
               </button>
               <button
-                class="zoomOut"
-                ng-class="{'active': dashboard.dataSetExploration && !dashboard.dataSetExplorationTempHidden}"
-                ng-mouseenter="dashboard.dataSetMouseEnterZoomOut(dataSet)"
-                ng-mouseleave="dashboard.dataSetMouseEnter(dataSet)">
+                class="zoom-out"
+                ng-class="{'activated': dashboard.dataSetExploration && !dashboard.dataSetExplorationTempHidden, 'active': dashboard.listGraphZoomedOut}"
+                ng-click="dashboard.toggleListGraphZoom(dataSet)">
                 <i class="fa fa-search-minus"></i>
+              </button>
+              <button
+                class="annotations-only"
+                ng-class="{'activated': dashboard.dataSetExploration && !dashboard.dataSetExplorationTempHidden, 'active': dashboard.listGraphHideUnrelatedNodes}"
+                ng-click="dashboard.toggleListUnrelatedNodes(dataSet)">
+                <i class="fa fa-compress"></i>
               </button>
               <a
                 class="title"
@@ -353,7 +391,7 @@
                     <i class="fa fa-star is-glowing-yellow-text pointer"
                       title="Added to data card. Click to remove."
                       ng-if="dashboard.dataCart.added(dataSet)"
-                      ng-click="dashboard.dataCart.remove(dataSet)"
+                      ng-click="dashboard.removeFromDataCart(dataSet)"
                       refinery-tooltip
                       refinery-tooltip-container="body"
                       refinery-tooltip-placement="top"
@@ -361,7 +399,7 @@
                     <i class="fa fa-star-o pointer"
                       title="Add to data card"
                       ng-if="!dashboard.dataCart.added(dataSet)"
-                      ng-click="dashboard.dataCart.add(dataSet)"
+                      ng-click="dashboard.addToDataCart(dataSet)"
                       refinery-tooltip
                       refinery-tooltip-container="body"
                       refinery-tooltip-placement="top"
