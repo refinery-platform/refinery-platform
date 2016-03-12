@@ -97,7 +97,6 @@ var Neo4jToGraphService = (function () {
       })
       .catch(function (error) {
         neo4jData.reject(error);
-        console.error(error);
       });
 
     return neo4jData.promise.then(function (data) {
