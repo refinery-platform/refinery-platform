@@ -1187,7 +1187,11 @@ a.analysis-header {
           padding-right: 2.4rem;
           color: @black;
           border-top-color: #fff;
-          box-shadow: inset .2rem 0 0 0 rgba(0, 0, 0, 0), inset .3rem 0 0 0 rgba(255, 255, 255, 0), inset .4rem 0 0 0 fadeout(@orange, 0%), inset .7rem 0 0 0 fadeout(@orange, 100%), 0 1px 0 0 #fff;
+          box-shadow: inset .2rem 0 0 0 rgba(0, 0, 0, 0),
+                      inset .3rem 0 0 0 rgba(255, 255, 255, 0),
+                      inset .4rem 0 0 0 fadeout(@orange, 0%),
+                      inset .7rem 0 0 0 fadeout(@orange, 100%),
+                      0 1px 0 0 #fff;
           background: lighten(@orange, 100%, relative);
 
           a {
@@ -1205,13 +1209,19 @@ a.analysis-header {
         &.locked.hovered {
           padding-left: .9rem;
           padding-right: 2.1rem;
-          box-shadow: inset .2rem 0 0 0 rgba(0, 0, 0, 1), inset .3rem 0 0 0 rgba(255, 255, 255, 1), inset .4rem 0 0 0 fadeout(@orange, 0%), inset .7rem 0 0 0 fadeout(@orange, 0%), 0 1px 0 0 #fff;
+          box-shadow: inset .2rem 0 0 0 rgba(0, 0, 0, 1),
+                      inset .3rem 0 0 0 rgba(255, 255, 255, 1),
+                      inset .4rem 0 0 0 fadeout(@orange, 0%),
+                      inset .7rem 0 0 0 fadeout(@orange, 0%),
+                      0 1px 0 0 #fff;
         }
 
         &.previewing {
           z-index: 2;
           background: fade(@blue, 10%);
-          box-shadow: 0 1px 0 0 @white, inset 0 1px 0 0 fade(@blue, 10%), inset 0 -1px 0 0 fade(@blue, 10%);
+          box-shadow: 0 1px 0 0 @white,
+                      inset 0 1px 0 0 fade(@blue, 10%),
+                      inset 0 -1px 0 0 fade(@blue, 10%);
           border-top-color: @white;
 
           .preview,
