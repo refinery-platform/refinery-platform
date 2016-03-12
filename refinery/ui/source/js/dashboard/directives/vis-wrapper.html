@@ -40,18 +40,6 @@
                 </kbd>
               </span>
             </li>
-<!--             <li>
-              <span class="inputs">
-                <kbd>&#8679;</kbd> +
-                <kbd>
-                  <svg class="icon-cursor-default">
-                    <use
-                      xmlns:xlink="http://www.w3.org/1999/xlink"
-                      xlink:href="/static/images/icons.svg#cursor-default"></use>
-                  </svg>
-                </kbd>
-              </span> Multi Highlight
-            </li> -->
             <li>
               Query:
               <span class="inputs">
@@ -91,8 +79,10 @@
     </div>
     <div class="full-without-topbar">
       <div class="top-half">
-        <div class="refinery-global-spinner" ng-if="visWrapper.loading !== false">
-          <div class="refinery-spinner"></div>
+        <div class="refinery-global-spinner"
+          ng-if="visWrapper.loading || visWrapper.error">
+          <div class="refinery-spinner" ng-if="visWrapper.loading"></div>
+          <i class="refinery-error fa fa-exclamation-triangle" ng-if="visWrapper.error"></i>
         </div>
         <div class="content">
           <list-graph
@@ -102,8 +92,10 @@
         </div>
       </div>
       <div class="bottom-half">
-        <div class="refinery-global-spinner" ng-if="visWrapper.loading !== false">
-          <div class="refinery-spinner"></div>
+        <div class="refinery-global-spinner"
+          ng-if="visWrapper.loading || visWrapper.error">
+          <div class="refinery-spinner" ng-if="visWrapper.loading"></div>
+          <i class="refinery-error fa fa-exclamation-triangle" ng-if="visWrapper.error"></i>
         </div>
         <div class="content">
           <treemap

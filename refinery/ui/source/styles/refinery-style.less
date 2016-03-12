@@ -1128,7 +1128,6 @@ a.analysis-header {
         padding: 5px 2.2rem 5px 0;
         border-top: 1px solid @gray-lighter-rgba;
         transition: all @fast-transition-speed @ease-in-out-cubic;
-        // box-shadow: inset .2rem 0 0 0 rgba(0, 0, 0, 0), inset .3rem 0 0 0 rgba(255, 255, 255, 0), inset .4rem 0 0 0 fadeout(@orange, 100%), inset .7rem 0 0 0 fadeout(@orange, 100%), 0 1px 0 0 #fff;
 
         // Hack because uiScroll adds another invisible first child to the list.
         &:first-child {
@@ -1408,7 +1407,8 @@ a.analysis-header {
           opacity: 1;
         }
 
-        .refinery-spinner {
+        .refinery-spinner,
+        .refinery-error {
           position: absolute;
           top: 50%;
           left: 50%;
@@ -1758,16 +1758,25 @@ a.analysis-header {
   margin-top: 5px;
   margin-bottom: 2px;
 }
-
+.refinery-error,
 .refinery-spinner {
   display: block;
   width: 20px;
   height: 20px;
   margin: 0 auto;
+}
+
+.refinery-spinner {
   background-color: @gray;
   border-radius: 100%;
   -webkit-animation: refinery-pulseScaleOut @slow-transition-speed infinite @ease-in-out-cubic;
           animation: refinery-pulseScaleOut @slow-transition-speed infinite @ease-in-out-cubic;
+}
+
+.refinery-error {
+  color: @red;
+  font-size: 2em;
+  text-align: center;
 }
 
 .no-animation .refinery-spinner {

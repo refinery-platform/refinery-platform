@@ -25,15 +25,20 @@ function refineryDashboardVisWrapper () {
     var annotations = this.$q.defer();
     this.annotations = annotations.promise;
 
-    dashboardVisData.data.then(function (results) {
-      this.roots = [results.root];
-      graph.resolve({
-        graph: results.graph,
-        rootIds: [results.root]
-      });
-      treemap.resolve(results.treemap);
-      annotations.resolve(results.annotations);
-    }.bind(this));
+    dashboardVisData.data
+      .then(function (results) {
+        this.roots = [results.root];
+        graph.resolve({
+          graph: results.graph,
+          rootIds: [results.root]
+        });
+        treemap.resolve(results.treemap);
+        annotations.resolve(results.annotations);
+      }.bind(this))
+      .catch(function (e) {
+        this.error = true;
+        this.loading = false;
+      }.bind(this));
 
     this.loading = true;
     this.treemapLoading = $q.defer();
