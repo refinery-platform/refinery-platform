@@ -47,4 +47,6 @@ function NodeSetListApiCtrl ($scope, $rootScope, $window, NodeSetList) {
 
 angular
   .module('refineryNodeMapping')
-  .controller('NodeSetListApiCtrl', NodeSetListApiCtrl);
+  .controller('NodeSetListApiCtrl', [
+    '$scope', '$rootScope', '$window', 'NodeSetList', NodeSetListApiCtrl
+  ]);

@@ -12,4 +12,6 @@ function DataSetUiModeCtrl ($scope, $location, $rootScope) {
 
 angular
   .module('refineryNodeMapping')
-  .controller('DataSetUiModeCtrl', DataSetUiModeCtrl);
+  .controller('DataSetUiModeCtrl', [
+    '$scope', '$location', '$rootScope', DataSetUiModeCtrl
+  ]);
