@@ -1,12 +1,11 @@
 // http://jsfiddle.net/jgoemat/CPRda/1/
+function nodeDraggableDirective () {
+  return {
+    controller: 'NodeDraggableCtrl',
+    restrict: 'A'
+  };
+}
+
 angular
   .module('refineryNodeMapping')
-  .directive('nodeDraggable', [function () {
-    return {
-      restrict: 'A',
-      link: function (scope, element, attrs) {
-        element[0].addEventListener('dragstart', scope.handleNodeDragStart, false);
-        element[0].addEventListener('dragend', scope.handleNodeDragEnd, false);
-      }
-    };
-  }]);
+  .directive('nodeDraggable', nodeDraggableDirective);
