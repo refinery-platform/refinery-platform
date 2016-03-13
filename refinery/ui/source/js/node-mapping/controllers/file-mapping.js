@@ -19,15 +19,16 @@ function FileMappingCtrl (
   $scope.currentNodeRelationship = null;
   $scope.attributeOrderList = null;
 
-  $scope.$onRootScope('nodeRelationshipChangedEvent', function (event, currentNodeRelationship) {
+  $scope.$onRootScope(
+    'nodeRelationshipChangedEvent', function (event, currentNodeRelationship) {
     $scope.currentNodeRelationship = currentNodeRelationship;
 
     if (!$scope.currentNodeRelationship) {
       return;
     }
 
-    // calls global resizing function implemented in base.html to rescale height of scrollable elements
-    // timeout is needed to execute after DOM changes
+    // calls global resizing function implemented in base.html to rescale height
+    // of scrollable elements timeout is needed to execute after DOM changes.
     $timeout(sizing, 0);
 
     $scope.currentNodePairIndex = 0;
@@ -72,7 +73,8 @@ function FileMappingCtrl (
       $scope.currentWorkflow.input_relationships[0].set2
     );
     $scope.currentNodePair = null;
-    $scope.currentNodePairIndex = $scope.currentNodeRelationship.node_pairs.length;
+    $scope.currentNodePairIndex =
+      $scope.currentNodeRelationship.node_pairs.length;
   };
 
   $scope.deleteMapping = function () {
@@ -199,7 +201,10 @@ function FileMappingCtrl (
       return;
     }
 
-    if ($scope.currentNodeRelationship.node_pairs.length <= ++$scope.currentNodePairIndex) {
+    if (
+      $scope.currentNodeRelationship.node_pairs.length <=
+      ++$scope.currentNodePairIndex
+    ) {
       $scope.currentNodePairIndex = 0;
     }
     $scope.loadMapping($scope.currentNodePairIndex);
@@ -211,7 +216,8 @@ function FileMappingCtrl (
     }
 
     if (0 > --$scope.currentNodePairIndex) {
-      $scope.currentNodePairIndex = $scope.currentNodeRelationship.node_pairs.length - 1;
+      $scope.currentNodePairIndex =
+        $scope.currentNodeRelationship.node_pairs.length - 1;
     }
     $scope.loadMapping($scope.currentNodePairIndex);
   };
@@ -248,7 +254,10 @@ function FileMappingCtrl (
       this.style.opacity = '0.4';
 
       var uuid = event.srcElement.attributes['node-uuid'].value;
-      event.originalEvent.dataTransfer.setData('text/plain', JSON.stringify({ uuid: uuid, html: this.innerHTML }));
+      event.originalEvent.dataTransfer.setData(
+        'text/plain',
+        JSON.stringify({ uuid: uuid, html: this.innerHTML })
+      );
   };
 
   $scope.handleNodeDragEnd = function () {
