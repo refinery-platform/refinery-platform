@@ -1,24 +1,24 @@
 function DiffAttributeListCtrl ($log, $scope) {
-  $scope.$watch('setA.attributes', function(oldVal, newVal) {
-       if(oldVal && !newVal) {
-         $log.debug("Attribute setA initialized");
-         this.updateDiff();
-       }
-       if(newVal) {
-         $log.debug("Attribute setA changed");
-         this.updateDiff();
-       }
+  $scope.$watch('setA.attributes', function (oldVal, newVal) {
+    if(oldVal && !newVal) {
+      $log.debug("Attribute setA initialized");
+      this.updateDiff();
+    }
+    if(newVal) {
+      $log.debug("Attribute setA changed");
+      this.updateDiff();
+    }
   }.bind(this));
 
-  $scope.$watch('setB.attributes', function(oldVal, newVal) {
-       if(oldVal && !newVal) {
-         $log.debug("Attribute setB initialized");
-         this.updateDiff();
-       }
-       if(newVal) {
-         $log.debug("Attribute setB changed");
-         this.updateDiff();
-       }
+  $scope.$watch('setB.attributes', function (oldVal, newVal) {
+    if (oldVal && !newVal) {
+      $log.debug("Attribute setB initialized");
+      this.updateDiff();
+    }
+    if (newVal) {
+      $log.debug("Attribute setB changed");
+      this.updateDiff();
+    }
   }.bind(this));
 }
 
@@ -46,26 +46,22 @@ DiffAttributeListCtrl.prototype.updateDiff = function () {
         }
       }
     }
-
     return;
   }
 
   if (this.setA.attributes === null) {
     for (i = 0; i < this.setB.attributes.length; ++i) {
-          this.commonAttributes.push({ name: this.setB.attributes[i].name, value: this.setB.attributes[i].value });
+      this.commonAttributes.push({ name: this.setB.attributes[i].name, value: this.setB.attributes[i].value });
     }
-
     return;
   }
 
   if (this.setB.attributes === null) {
     for (i = 0; i < this.setA.attributes.length; ++i) {
-          this.commonAttributes.push({ name: this.setA.attributes[i].name, value: this.setA.attributes[i].value });
+      this.commonAttributes.push({ name: this.setA.attributes[i].name, value: this.setA.attributes[i].value });
     }
-
     return;
   }
-
 };
 
 angular
