@@ -44,5 +44,5 @@ function nodeRelationshipService ($log, NodeRelationshipResource) {
 }
 
 angular
-  .module('refineryNodeMapping')
+  .module('refineryNodeRelationship')
   .service('nodeRelationshipService', nodeRelationshipService);

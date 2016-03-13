@@ -14,5 +14,5 @@ function NodeRelationshipFactory ($resource) {
 }
 
 angular
-  .module('refineryNodeMapping')
+  .module('refineryNodeRelationship')
   .factory('NodeRelationshipResource', ['$resource', NodeRelationshipFactory]);
