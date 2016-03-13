@@ -12,8 +12,12 @@ function DiffAttributeListCtrl ($log, $scope) {
     }
   }
 
-  $scope.$watch('setA.attributes', checkIfUpdateDiff.bind(this));
-  $scope.$watch('setB.attributes', checkIfUpdateDiff.bind(this));
+  $scope.$watch(function () {
+    return this.setA.attributes;
+  }.bind(this), checkIfUpdateDiff.bind(this));
+  $scope.$watch(function () {
+    return this.setB.attributes;
+  }.bind(this), checkIfUpdateDiff.bind(this));
 }
 
 DiffAttributeListCtrl.prototype.updateDiff = function () {
