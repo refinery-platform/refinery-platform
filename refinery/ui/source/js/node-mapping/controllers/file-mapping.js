@@ -40,21 +40,21 @@ function FileMappingCtrl (
   });
 
   $scope.initializeNodeDropzones = function( name0, name1 ) {
-    name0 = name0 || "";
-    name1 = name1 || "";
+    name0 = name0 || '';
+    name1 = name1 || '';
 
     $scope.nodeDropzones = {
-        "0": {
-          "name": name0,
-          "color": "purple",
-          "attributes": null,
-          "uuid": null
+        '0': {
+          'name': name0,
+          'color': 'purple',
+          'attributes': null,
+          'uuid': null
         },
-        "1": {
-          "name": name1,
-          "color": "green",
-          "attributes": null,
-          "uuid": null
+        '1': {
+          'name': name1,
+          'color': 'green',
+          'attributes': null,
+          'uuid': null
         }
       };
   };
@@ -67,7 +67,7 @@ function FileMappingCtrl (
   };
 
   $scope.createMapping = function() {
-    $log.debug( "Creating pair ... ");
+    $log.debug( 'Creating pair ... ');
     $scope.initializeNodeDropzones(
       $scope.currentWorkflow.input_relationships[0].set1,
       $scope.currentWorkflow.input_relationships[0].set2
@@ -77,7 +77,7 @@ function FileMappingCtrl (
   };
 
   $scope.deleteMapping = function() {
-    $log.debug( "Deleting pair ... ");
+    $log.debug( 'Deleting pair ... ');
 
     if ( $scope.currentNodePair ) {
       // update node relationship
@@ -98,11 +98,11 @@ function FileMappingCtrl (
                 uuid: $scope.currentNodePair.uuid
               },
               function(){
-                $log.debug( "Deleted pair." );
+                $log.debug( 'Deleted pair.' );
               }
             );
 
-            $log.debug("Removed pair from node mapping.");
+            $log.debug('Removed pair from node mapping.');
             if ($scope.hasNextMapping()) {
               $scope.loadPreviousMapping();
             }
@@ -110,9 +110,9 @@ function FileMappingCtrl (
               $scope.createMapping();
             }
           }, function() {
-            $log.error( "Unable to remove pair " +
+            $log.error( 'Unable to remove pair ' +
               $scope.currentNodeRelationship.uuid +
-              " from mapping " + $scope.currentNodeRelationship.name
+              ' from mapping ' + $scope.currentNodeRelationship.name
             );
         // TODO: show error message
         }
@@ -126,7 +126,7 @@ function FileMappingCtrl (
   };
 
   $scope.deleteAllMappings = function() {
-    $log.debug( "Deleting mappings ... ");
+    $log.debug( 'Deleting mappings ... ');
 
     var nodePairsForDeletion = $scope.currentNodeRelationship.node_pairs;
 
@@ -138,20 +138,20 @@ function FileMappingCtrl (
       },
       $scope.currentNodeRelationship,
       function(){
-      $log.debug("Removed all pairs from node mapping.");
+      $log.debug('Removed all pairs from node mapping.');
       // delete node pairs
       // TODO: handle errors
       for ( var i = 0; i < nodePairsForDeletion.length; ++i ) {
         NodePairResource.delete(
           {
-            uuid: nodePairsForDeletion[i].split("/").reverse()[1]
+            uuid: nodePairsForDeletion[i].split('/').reverse()[1]
           }
         );
       }
 
       $scope.createMapping();
     }, function() {
-      $log.error( "Unable to remove all pairs from mapping " +
+      $log.error( 'Unable to remove all pairs from mapping ' +
         $scope.currentNodeRelationship.name );
       // TODO: show error message
     });
@@ -161,23 +161,23 @@ function FileMappingCtrl (
   };
 
   $scope.loadMapping = function( index ) {
-    $log.debug( "Loading pair " + index + "... ");
+    $log.debug( 'Loading pair ' + index + '... ');
 
     if ( $scope.currentNodeRelationship.node_pairs.length > index )
     {
-      var uriArr = $scope.currentNodeRelationship.node_pairs[index].split("/");
+      var uriArr = $scope.currentNodeRelationship.node_pairs[index].split('/');
       var tempUuid = _.compact(uriArr).pop();
       $scope.currentNodePair = new NodePairResource.get(
        {
          uuid : tempUuid
        },
        function ( data ) {
-        $scope.updateNodeDropzone( 0, data.node1.split("/").reverse()[1] );
-        $scope.updateNodeDropzone( 1, data.node2.split("/").reverse()[1] );
+        $scope.updateNodeDropzone( 0, data.node1.split('/').reverse()[1] );
+        $scope.updateNodeDropzone( 1, data.node2.split('/').reverse()[1] );
        },
        function ( error ) {
         $scope.currentNodePair = null;
-        console.error( "Failed to load mapping." );
+        console.error( 'Failed to load mapping.' );
         }
       );
     }
@@ -224,7 +224,7 @@ function FileMappingCtrl (
         var attributes = [];
         if ( data.response.docs.length == 1 ) {
           angular.forEach( $scope.attributeOrderList, function( attribute ) {
-            attributes.push( { "name": solrService.extra.prettifyFieldName( attribute, true ), "value": data.response.docs[0][attribute] } );
+            attributes.push( { 'name': solrService.extra.prettifyFieldName( attribute, true ), 'value': data.response.docs[0][attribute] } );
           });
         }
         else {
@@ -273,11 +273,11 @@ function FileMappingCtrl (
         }
         else {
           // this browser doesn't seem to support any dragstart known to us
-          console.error("Unable to obtain dropzone index of droppable.");
+          console.error('Unable to obtain dropzone index of droppable.');
         }
       }
       catch (exception) {
-        console.error("No dropzone index.");
+        console.error('No dropzone index.');
       }
 
       // parse incoming data into object
@@ -285,8 +285,8 @@ function FileMappingCtrl (
         data = JSON.parse(dataString);
       }
       catch (exception) {
-        console.error("Please select a node, by dragging/dropping the" +
-          " reorder icon located on the far left of each row.");
+        console.error('Please select a node, by dragging/dropping the' +
+          ' reorder icon located on the far left of each row.');
       }
 
       if( data !== null){
@@ -296,11 +296,11 @@ function FileMappingCtrl (
         // save node pair?
         if ($scope.nodeDropzones[0].uuid && $scope.nodeDropzones[1].uuid) {
           if ($scope.isPending()) {
-            $log.debug("Saving new file pair ...");
+            $log.debug('Saving new file pair ...');
             $scope.currentNodePair = new NodePairResource(
               {
-                node1: "/api/v1/node/" + $scope.nodeDropzones[0].uuid + "/",
-                node2: "/api/v1/node/" + $scope.nodeDropzones[1].uuid + "/"
+                node1: '/api/v1/node/' + $scope.nodeDropzones[0].uuid + '/',
+                node2: '/api/v1/node/' + $scope.nodeDropzones[1].uuid + '/'
               }
             );
 
@@ -312,23 +312,23 @@ function FileMappingCtrl (
                 {
                   uuid: $scope.currentNodeRelationship.uuid
                 }, $scope.currentNodeRelationship);
-              $log.debug("New file pair saved.");
+              $log.debug('New file pair saved.');
             });
 
           } else {
-            $log.debug("Updating existing file pair ...");
-            $scope.currentNodePair.node1 = "/api/v1/node/" +
-              $scope.nodeDropzones[0].uuid + "/";
-            $scope.currentNodePair.node2 = "/api/v1/node/" +
-              $scope.nodeDropzones[1].uuid + "/";
+            $log.debug('Updating existing file pair ...');
+            $scope.currentNodePair.node1 = '/api/v1/node/' +
+              $scope.nodeDropzones[0].uuid + '/';
+            $scope.currentNodePair.node2 = '/api/v1/node/' +
+              $scope.nodeDropzones[1].uuid + '/';
             $scope.currentNodePair.$update(function (response, responseHeaders) {
               if ($scope.currentNodePair === response) {
-                $log.debug("Existing file pair updated.");
+                $log.debug('Existing file pair updated.');
               } else {
                 $scope.currentNodePair = response;
-                $log.debug("Error updating file pair, please try again.");
-                var node1Arr = $scope.currentNodePair.node1.split("/");
-                var node2Arr = $scope.currentNodePair.node2.split("/");
+                $log.debug('Error updating file pair, please try again.');
+                var node1Arr = $scope.currentNodePair.node1.split('/');
+                var node2Arr = $scope.currentNodePair.node2.split('/');
                 var tempUuid1 = _.compact(node1Arr).pop();
                 var tempUuid2 = _.compact(node2Arr).pop();
                 $scope.updateNodeDropzone(0, tempUuid1);
@@ -377,8 +377,8 @@ function FileMappingCtrl (
   $scope.loadNodeAttributes = function (uuid, attributeList, success, error) {
     solrFactory.get(
       {
-        "nodeUuid": uuid,
-        "attributeList": attributeList.join()
+        'nodeUuid': uuid,
+        'attributeList': attributeList.join()
       },
       function( data ) { success( data ); },
       function( data ) { error( data ); }
