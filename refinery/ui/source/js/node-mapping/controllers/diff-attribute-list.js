@@ -1,5 +1,6 @@
 function DiffAttributeListCtrl ($log, $scope) {
-  $scope.$watch('setA.attributes', function (oldVal, newVal) {
+  function checkIfUpdateDiff (oldVal, newVal) {
+    console.log('checkIfUpdateDiff', oldVal, newVal);
     if(oldVal && !newVal) {
       $log.debug("Attribute setA initialized");
       this.updateDiff();
@@ -8,18 +9,11 @@ function DiffAttributeListCtrl ($log, $scope) {
       $log.debug("Attribute setA changed");
       this.updateDiff();
     }
-  }.bind(this));
+  }
 
-  $scope.$watch('setB.attributes', function (oldVal, newVal) {
-    if (oldVal && !newVal) {
-      $log.debug("Attribute setB initialized");
-      this.updateDiff();
-    }
-    if (newVal) {
-      $log.debug("Attribute setB changed");
-      this.updateDiff();
-    }
-  }.bind(this));
+  $scope.$watch('setA.attributes', checkIfUpdateDiff.bind(this));
+
+  $scope.$watch('setB.attributes', checkIfUpdateDiff.bind(this));
 }
 
 DiffAttributeListCtrl.prototype.updateDiff = function () {
