@@ -1,18 +1,18 @@
 function DiffAttributeListCtrl ($log, $scope) {
+  this.log = $log;
+
   function checkIfUpdateDiff (oldVal, newVal) {
-    console.log('checkIfUpdateDiff', oldVal, newVal);
     if(oldVal && !newVal) {
-      $log.debug("Attribute setA initialized");
+      this.log.debug("Attribute setA initialized");
       this.updateDiff();
     }
     if(newVal) {
-      $log.debug("Attribute setA changed");
+      this.log.debug("Attribute setA changed");
       this.updateDiff();
     }
   }
 
   $scope.$watch('setA.attributes', checkIfUpdateDiff.bind(this));
-
   $scope.$watch('setB.attributes', checkIfUpdateDiff.bind(this));
 }
 
@@ -22,10 +22,10 @@ DiffAttributeListCtrl.prototype.updateDiff = function () {
 
   var i = 0;
 
-  $log.debug("Updating diff lists ...");
+  this.log.debug("Updating diff lists ...");
 
   if (this.setA.attributes === null && this.setB.attributes === null) {
-    $log.debug("Both sets empty");
+    this.log.debug("Both sets empty");
     return;
   }
 
