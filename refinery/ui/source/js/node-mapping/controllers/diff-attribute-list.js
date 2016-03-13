@@ -39,10 +39,17 @@ DiffAttributeListCtrl.prototype.updateDiff = function () {
     for (i = 0; i < this.setA.attributes.length; ++i) {
       if (this.setA.attributes[i].name === this.setB.attributes[i].name) {
         if (this.setA.attributes[i].value === this.setB.attributes[i].value) {
-          this.commonAttributes.push({ name: this.setA.attributes[i].name, value: this.setA.attributes[i].value });
+          this.commonAttributes.push({
+            name: this.setA.attributes[i].name,
+            value: this.setA.attributes[i].value
+          });
         }
         else {
-          this.diffAttributes.push({ name: this.setA.attributes[i].name, valueSetA: this.setA.attributes[i].value, valueSetB: this.setB.attributes[i].value });
+          this.diffAttributes.push({
+            name: this.setA.attributes[i].name,
+            valueSetA: this.setA.attributes[i].value,
+            valueSetB: this.setB.attributes[i].value
+          });
         }
       }
     }
@@ -51,14 +58,20 @@ DiffAttributeListCtrl.prototype.updateDiff = function () {
 
   if (this.setA.attributes === null) {
     for (i = 0; i < this.setB.attributes.length; ++i) {
-      this.commonAttributes.push({ name: this.setB.attributes[i].name, value: this.setB.attributes[i].value });
+      this.commonAttributes.push({
+        name: this.setB.attributes[i].name,
+        value: this.setB.attributes[i].value
+      });
     }
     return;
   }
 
   if (this.setB.attributes === null) {
     for (i = 0; i < this.setA.attributes.length; ++i) {
-      this.commonAttributes.push({ name: this.setA.attributes[i].name, value: this.setA.attributes[i].value });
+      this.commonAttributes.push({
+        name: this.setA.attributes[i].name,
+        value: this.setA.attributes[i].value
+      });
     }
     return;
   }
