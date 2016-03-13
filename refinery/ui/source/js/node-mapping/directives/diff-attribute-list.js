@@ -1,4 +1,4 @@
-function diffAttributeListDirective ($log) {
+function diffAttributeListDirective () {
   return {
     bindToController: {
       setA: '=',
