@@ -1,82 +1,12 @@
-angular.module('refineryNodeRelationship', [
-  'ngResource',
-])
-
-.factory('NodeRelationshipResource', function($resource) {
-  'use strict';
-
-  return $resource(
-    "/api/v1/noderelationship/:uuid/", {
-      uuid: "@uuid",
-      format: "json",
-    },
-    {
-      'update': { method:'PUT' },
-      'update_partial': { method:'PATCH' }
-    }
-  );
-})
-
-.factory("NodePairResource", function($resource, $http) {
-  'use strict';
-
-  return $resource(
-    '/api/v1/nodepair/:uuid/',{
-      uuid: "@uuid",
-      format: 'json',
-    },
-    {
-      'update': { method: 'PUT' }
-    }
-  );
-})
-
-.service( 'nodeRelationshipService', function($log, NodeRelationshipResource) {
-
-  var createCurrentNodeRelationship = function( name, type, success, error ) {
-    _createNodeRelationship( name, type, "", true, success, error );
-  };
-
-  var createNodeRelationship = function( name, summary, type, success, error ) {
-    _createNodeRelationship( name, summary, type, false, success, error );
-  };
-
-  var _createNodeRelationship = function( name, summary, type, is_current, success, error ) {
-    //internal method -- call createNodeRelationship or createCurrentNodeRelationship
-
-    var resource = new NodeRelationshipResource( {study: "/api/v1/study/" + externalStudyUuid + "/", assay: "/api/v1/assay/" + externalAssayUuid + "/", node_pairs: [], name: name, summary: summary, type: type, is_current: is_current } );
-    resource.$save( success, error );
-  };
-
-  var deleteNodeRelationship = function( nodeRelationship, success, error ) {
-    $log.debug( "Deleting node relationship " + nodeRelationship.name + " ..." );
-    if ( nodeRelationship.is_current ) {
-      $log.error( "Cannot delete current node relationship." );
-    }
-    else {
-      NodeRelationshipResource.delete( { uuid: nodeRelationship.uuid }, success, error );
-    }
-  };
-
-  var updateNodeRelationship = function( nodeRelationship, success, error ) {
-    $log.debug( 'Updating node relationship ' + nodeRelationship.name + ' ...' );
-    if ( nodeRelationship.is_current ) {
-      $log.error( 'Cannot update "current" node relationship.' );
-    }
-    else {
-      NodeRelationshipResource.update({uuid: nodeRelationship.uuid}, nodeRelationship, success, error );
-    }
-  };
-
-  return ({
-    createCurrentNodeRelationship: createCurrentNodeRelationship,
-    createNodeRelationship: createNodeRelationship,
-    deleteNodeRelationship: deleteNodeRelationship,
-    updateNodeRelationship: updateNodeRelationship
-  });
-})
-
-.controller('NodeRelationshipListCtrl', function($scope, $rootScope, $element, $log, $uibModal, NodeRelationshipResource, nodeRelationshipService ) {
+function NodeRelationshipListCtrl (
+  $scope,
+  $rootScope,
+  $element,
+  $log,
+  $uibModal,
+  NodeRelationshipResource,
+  nodeRelationshipService
+) {
   'use strict';
 
   $scope.$onRootScope('workflowChangedEvent', function( event, currentWorkflow ) {
@@ -184,8 +114,8 @@ angular.module('refineryNodeRelationship', [
     $scope.renameMappingDialogConfig = { title: 'Rename File Mapping', text: 'Enter a new name for the mapping "' + nodeRelationship.name + '".', val:  nodeRelationship.name };
 
     var modalInstance = $uibModal.open({
-      templateUrl: '/static/partials/input-dialog.html',
-      controller: InputDialogInstanceController,
+      templateUrl: '/static/partials/node-relationship/dialogs/input-dialog.html',
+      controller: 'InputDialogInstanceCtrl',
       resolve: {
         config: function () {
           return $scope.renameMappingDialogConfig;
@@ -211,8 +141,8 @@ angular.module('refineryNodeRelationship', [
     };
 
     var modalInstance = $uibModal.open({
-      templateUrl: '/static/partials/confirmation-dialog.html',
-      controller: ConfirmationDialogInstanceController,
+      templateUrl: '/static/partials/node-relationship/dialogs/confirmation-dialog.html',
+      controller: 'ConfirmationDialogInstanceCtrl',
       resolve: {
         config: function () {
           return $scope.newDeleteMappingDialogConfig;
@@ -233,32 +163,17 @@ angular.module('refineryNodeRelationship', [
   };
 
   var NodeRelationshipList =  $scope.loadNodeRelationshipList( externalStudyUuid, externalAssayUuid );
-});
+}
 
-var InputDialogInstanceController = function ($scope, $uibModalInstance, config ) {
-  $scope.config = config;
-  $scope.val = {
-    val: $scope.config.val
-  };
-
-  $scope.ok = function () {
-    $uibModalInstance.close($scope.config.val);
-  };
-
-  $scope.cancel = function () {
-    $uibModalInstance.dismiss('cancel');
-  };
-};
-
-var ConfirmationDialogInstanceController = function ($scope, $uibModalInstance, config ) {
-  $scope.config = config;
-
-  $scope.ok = function () {
-    $uibModalInstance.close();
-  };
-
-  $scope.cancel = function () {
-    $uibModalInstance.dismiss('cancel');
-  };
-};
-
+angular
+  .module('refineryNodeRelationship')
+  .controller('NodeRelationshipListCtrl', [
+    '$scope',
+    '$rootScope',
+    '$element',
+    '$log',
+    '$uibModal',
+    'NodeRelationshipResource',
+    'nodeRelationshipService',
+    NodeRelationshipListCtrl
+  ]);
