@@ -1,6 +1,6 @@
 <table class="table table-striped table-condensed">
   <thead>
-    <tr ng-if="diffAttributeList.setA.attributes.length > 0 && !diffAttributeListsetB.attributes">
+    <tr ng-if="diffAttributeList.setA.attributes.length > 0 && !diffAttributeList.setB.attributes">
       <th></th>
       <th
         colspan=2
@@ -8,35 +8,35 @@
         <b>{{diffAttributeList.setA['name']}}</b>
       </th>
     </tr>
-    <tr ng-if="diffAttributeListsetB.attributes.length > 0 && !diffAttributeList.setA.attributes">
+    <tr ng-if="diffAttributeList.setB.attributes.length > 0 && !diffAttributeList.setA.attributes">
       <th></th>
       <th
         colspan=2
-        class="refinery-workflow-input-label-{{diffAttributeListsetB.color}}">
-        <b>{{ diffAttributeListsetB['name'] }}</b>
+        class="refinery-workflow-input-label-{{ diffAttributeList.setB.color }}">
+        <b>{{ diffAttributeList.setB['name'] }}</b>
       </th>
     </tr>
     <tr ng-if="diffAttributeList.diffAttributes.length > 0">
       <th></th>
-      <th class="refinery-workflow-input-label-{{diffAttributeList.setA.color}}">
-        <b>{{diffAttributeList.setA['name']}}</b>
+      <th class="refinery-workflow-input-label-{{ diffAttributeList.setA.color }}">
+        <b>{{ diffAttributeList.setA['name'] }}</b>
       </th>
-      <th class="refinery-workflow-input-label-{{diffAttributeListsetB.color}}">
-        <b>{{diffAttributeListsetB['name']}}</b>
+      <th class="refinery-workflow-input-label-{{ diffAttributeList.setB.color }}">
+        <b>{{ diffAttributeList.setB['name'] }}</b>
       </th>
     </tr>
     <tr ng-if="diffAttributeList.diffAttributes.length == 0 &&
                commonAttributes.length > 0 &&
                diffAttributeList.setA.attributes.length > 0 &&
-               diffAttributeListsetB.attributes.length > 0">
+               diffAttributeList.setB.attributes.length > 0">
       <th></th>
       <th colspan=2>
-        <b class="refinery-workflow-input-label-{{diffAttributeList.setA.color}}">
+        <b class="refinery-workflow-input-label-{{ diffAttributeList.setA.color }}">
           {{ diffAttributeList.setA['name'] }}
         </b>
         &amp;
-        <b class="refinery-workflow-input-label-{{diffAttributeListsetB.color}}">
-          {{ diffAttributeListsetB['name'] }}
+        <b class="refinery-workflow-input-label-{{ diffAttributeList.setB.color }}">
+          {{ diffAttributeList.setB['name'] }}
         </b> (identical files)
       </th>
     </tr>
@@ -47,7 +47,7 @@
     ng-repeat="attribute in diffAttributeList.diffAttributes">
     <td>{{ attribute.name }}</td>
     <td><b>{{ attribute.valuediffAttributeList.SetA }}</b></td>
-    <td><b>{{ attribute.valuediffAttributeListSetB }}</b></td>
+    <td><b>{{ attribute.valuediffAttributeList.SetB }}</b></td>
   </tr>
   <tr ng-if="commonAttributes.length > 0">
     <td>Shared</td>
