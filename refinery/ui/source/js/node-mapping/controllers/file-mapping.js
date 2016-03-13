@@ -343,40 +343,46 @@ function FileMappingCtrl (
       }
   };
 
-  $scope.handleNodeDragEnter = function (e) {
-      e.preventDefault(); // Necessary. Allows us to drop.
-      e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
+  $scope.handleNodeDragEnter = function (event) {
+    // Necessary. Allows us to drop.
+    event.preventDefault();
+    // See the section on the DataTransfer object.
+    event.dataTransfer.dropEffect = 'move';
 
-      this.style.opacity = 0.5;
+    this.style.opacity = 0.5;
 
-      return false;
+    return false;
   };
 
-  $scope.handleNodeDragLeave = function (e) {
-      e.preventDefault(); // Necessary. Allows us to drop.
-      e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
+  $scope.handleNodeDragLeave = function (event) {
+     // Necessary. Allows us to drop.
+    event.preventDefault();
+    // See the section on the DataTransfer object.
+    event.dataTransfer.dropEffect = 'move';
 
-      this.style.opacity = 1.0;
+    this.style.opacity = 1.0;
 
-      return false;
+    return false;
   };
 
-  $scope.handleNodeDragOver = function (e) {
-      e.preventDefault(); // Necessary. Allows us to drop.
-      e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
+  $scope.handleNodeDragOver = function (event) {
+    // Necessary. Allows us to drop.
+    event.preventDefault();
+    // See the section on the DataTransfer object.
+    event.dataTransfer.dropEffect = 'move';
 
-      return false;
+    return false;
   };
 
-  $scope.loadNodeAttributes = function( uuid, attributeList, success, error ) {
-      solrFactory.get(
-        {
-          "nodeUuid": uuid,
-          "attributeList": attributeList.join()
-        },
-        function( data ) { success( data ); },
-        function( data ) { error( data ); }
-      );
+  $scope.loadNodeAttributes = function (uuid, attributeList, success, error) {
+    solrFactory.get(
+      {
+        "nodeUuid": uuid,
+        "attributeList": attributeList.join()
+      },
+      function( data ) { success( data ); },
+      function( data ) { error( data ); }
+    );
   };
 
   var AttributeOrderList = AttributeOrder.get(
@@ -391,4 +397,19 @@ function FileMappingCtrl (
 
 angular
   .module('refineryNodeMapping')
-  .controller('FileMappingCtrl', FileMappingCtrl);
+  .controller('FileMappingCtrl', [
+    '$timeout',
+    '$resource',
+    '$log',
+    '$scope',
+    '$location',
+    '$rootScope',
+    '$sce',
+    '$http',
+    'NodePairResource',
+    'NodeRelationshipResource',
+    'AttributeOrder',
+    'solrFactory',
+    'solrService',
+    FileMappingCtrl
+  ]);
