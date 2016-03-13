@@ -79,4 +79,6 @@ DiffAttributeListCtrl.prototype.updateDiff = function () {
 
 angular
   .module('refineryNodeMapping')
-  .controller('DiffAttributeListCtrl', DiffAttributeListCtrl);
+  .controller('DiffAttributeListCtrl', [
+    '$log', '$scope', DiffAttributeListCtrl
+  ]);
