@@ -1,4 +1,4 @@
-<div ng-controller="FileMappingCtrl"> 
+<div ng-controller="FileMappingCtrl">
   <div class="col-md-12" ng-if="currentNodeRelationship">
     <div class="row">
       <div class="col-md-4">
@@ -14,7 +14,7 @@
           5px; margin-right: 10px; position: relative; top: 5px;"></i>
         </a>
 
-      </div>            
+      </div>
 
       <div class="col-md-8">
         <!-- Prepared for future use! Do not remove. -->
@@ -23,7 +23,7 @@
           <label style="dispaly: inline; float:left; margin-top: 3px; margin-right: 5px;">Mapping </label>
           <div class="btn-group">
             <button class="btn active">Manual</button>
-            <button class="btn">Automatic</button>                  
+            <button class="btn">Automatic</button>
           </div>
           <a href="#" id="help-mapping-mode-button" style="height: 20px; width: 20px;">
             <i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 0px; position: relative; top: 5px;"></i>
@@ -34,12 +34,12 @@
           <label style="dispaly: inline; float:left; margin-top: 3px; margin-right: 5px;">Mode </label>
           <div class="btn-group">
             <button class="btn active">Edit</button>
-            <button class="btn">Overview</button>                 
+            <button class="btn">Overview</button>
           </div>
           <a href="#" id="help-mapping-view-button" style="height: 20px; width: 20px;">
             <i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 10px; position: relative; top: 5px;"></i>
           </a>
-        </div>        
+        </div>
         -->
       </div>
     </div>
@@ -65,7 +65,7 @@
     <div class="row">
       <p>
       </p>
-    </div>                        
+    </div>
 
     <div diff-attribute-list set-a="nodeDropzones[0]" set-b="nodeDropzones[1]"></div>
 
@@ -77,11 +77,11 @@
         <td style="text-align: right; width: 50%; padding-right: 5px;" >
             <b><i class="refinery-workflow-input-label-{{nodeDropzones[0].color}}">{{currentWorkflow.input_relationships[0].set1}}</i></b><br>
             <small>
-            <span ng-if="!nodeDropzones[0].attributes">          
+            <span ng-if="!nodeDropzones[0].attributes">
               Grab <i class="fa fa-bars"></i> in table below to drag file on
               dropzone to <b>add</b> to the assignment.
             </span>
-            <span ng-if="nodeDropzones[0].attributes">          
+            <span ng-if="nodeDropzones[0].attributes">
               Grab <i class="fa fa-bars"></i> in table below to drag file on
               dropzone to <b>update</b> the assignment.
             </span>
@@ -98,11 +98,11 @@
         <td style="text-align: left; width: 50%; padding-left: 5px;" >
           <b><i class="refinery-workflow-input-label-{{nodeDropzones[1].color}}">{{currentWorkflow.input_relationships[0].set2}}</i></b><br>
           <small>
-          <span ng-if="!nodeDropzones[1].attributes">          
+          <span ng-if="!nodeDropzones[1].attributes">
               Grab <i class="fa fa-bars"></i> in table below to drag file on
             dropzone to <b>add</b> to the assignment.
           </span>
-          <span ng-if="nodeDropzones[1].attributes">          
+          <span ng-if="nodeDropzones[1].attributes">
               Grab <i class="fa fa-bars"></i> in table below to drag file on
             dropzone to <b>update</b> the assignment.
           </span>
@@ -113,5 +113,5 @@
       </div>
     </div>
 
-  </div>  
+  </div>
 </div>
