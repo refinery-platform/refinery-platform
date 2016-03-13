@@ -1,21 +1,18 @@
-angular
-  .module('refineryNodeMapping')
-  .controller('FileMappingCtrl', function(
-    $timeout,
-    $resource,
-    $log,
-    $scope,
-    $location,
-    $rootScope,
-    $sce,
-    $http,
-    NodePairResource,
-    NodeRelationshipResource,
-    AttributeOrder,
-    solrFactory,
-    solrService
-  ) {
-
+function FileMappingCtrl (
+  $timeout,
+  $resource,
+  $log,
+  $scope,
+  $location,
+  $rootScope,
+  $sce,
+  $http,
+  NodePairResource,
+  NodeRelationshipResource,
+  AttributeOrder,
+  solrFactory,
+  solrService
+) {
   $scope.nodeDropzones = null;
   $scope.currentNodePair = null;
   $scope.currentNodePairIndex = 0;
@@ -390,4 +387,8 @@ angular
         $scope.attributeOrderList.push( response.objects[i].solr_field );
       }
   });
-});
+}
+
+angular
+  .module('refineryNodeMapping')
+  .controller('FileMappingCtrl', FileMappingCtrl);

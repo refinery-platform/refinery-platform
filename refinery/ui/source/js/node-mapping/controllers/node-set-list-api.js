@@ -1,6 +1,4 @@
-angular
-  .module('refineryNodeMapping')
-  .controller('NodeSetListApiCtrl', function($scope, $rootScope, $window, NodeSetList) {
+function NodeSetListApiCtrl ($scope, $rootScope, $window, NodeSetList) {
   'use strict';
 
   $scope.updateCurrentNodeSet = function() {
@@ -45,4 +43,8 @@ angular
   });
 
   $scope.getCurrentNodeSet();
-});
+}
+
+angular
+  .module('refineryNodeMapping')
+  .controller('NodeSetListApiCtrl', NodeSetListApiCtrl);
