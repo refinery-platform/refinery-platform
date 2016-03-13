@@ -248,7 +248,7 @@ function FileMappingCtrl (
       this.style.opacity = '0.4';
 
       var uuid = event.srcElement.attributes['node-uuid'].value;
-      event.dataTransfer.setData('text/plain', JSON.stringify({ uuid: uuid, html: this.innerHTML }));
+      event.originalEvent.dataTransfer.setData('text/plain', JSON.stringify({ uuid: uuid, html: this.innerHTML }));
   };
 
   $scope.handleNodeDragEnd = function () {
@@ -263,25 +263,13 @@ function FileMappingCtrl (
     this.style.opacity = 1.0;
 
     // grab dropped data (coming in a string)
-    var dataString = event.dataTransfer.getData('text/plain');
+    var dataString = event.originalEvent.dataTransfer.getData('text/plain');
     var data = null;
 
     // get dropzone index
     var dropzoneIndex = null;
     try {
-      // here we have to deal with browser specific differences in the dropevent event data structure
-      if (event.srcElement) {
-        // safari, chrome
-        dropzoneIndex = event.srcElement.attributes['node-dropzone-index'].value;
-      }
-      else if (event.originalTarget) {
-        // firefox
-        dropzoneIndex = event.originalTarget.attributes['node-dropzone-index'].value;
-      }
-      else {
-        // this browser doesn't seem to support any dragstart known to us
-        console.error('Unable to obtain dropzone index of droppable.');
-      }
+      dropzoneIndex = event.target.attributes['node-dropzone-index'].value;
     }
     catch (exception) {
       console.error('No dropzone index.');
@@ -354,7 +342,7 @@ function FileMappingCtrl (
     // Necessary. Allows us to drop.
     event.preventDefault();
     // See the section on the DataTransfer object.
-    event.dataTransfer.dropEffect = 'move';
+    event.originalEvent.dataTransfer.dropEffect = 'move';
 
     this.style.opacity = 0.5;
 
@@ -365,7 +353,7 @@ function FileMappingCtrl (
      // Necessary. Allows us to drop.
     event.preventDefault();
     // See the section on the DataTransfer object.
-    event.dataTransfer.dropEffect = 'move';
+    event.originalEvent.dataTransfer.dropEffect = 'move';
 
     this.style.opacity = 1.0;
 
@@ -376,7 +364,7 @@ function FileMappingCtrl (
     // Necessary. Allows us to drop.
     event.preventDefault();
     // See the section on the DataTransfer object.
-    event.dataTransfer.dropEffect = 'move';
+    event.originalEvent.dataTransfer.dropEffect = 'move';
 
     return false;
   };
