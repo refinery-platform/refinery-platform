@@ -223,41 +223,41 @@ function FileMappingCtrl (
   };
 
   $scope.updateNodeDropzone = function (dropzoneIndex, uuid) {
-      $scope.nodeDropzones[dropzoneIndex].uuid = uuid;
+    $scope.nodeDropzones[dropzoneIndex].uuid = uuid;
 
-      $scope.loadNodeAttributes(
-        uuid,
-        $scope.attributeOrderList,
-        function (data) {
-          var attributes = [];
-          if (data.response.docs.length == 1) {
-            angular.forEach($scope.attributeOrderList, function (attribute) {
-              attributes.push({
-                'name': solrService.extra.prettifyFieldName(attribute, true),
-                'value': data.response.docs[0][attribute]
-              });
+    $scope.loadNodeAttributes(
+      uuid,
+      $scope.attributeOrderList,
+      function (data) {
+        var attributes = [];
+        if (data.response.docs.length == 1) {
+          angular.forEach($scope.attributeOrderList, function (attribute) {
+            attributes.push({
+              'name': solrService.extra.prettifyFieldName(attribute, true),
+              'value': data.response.docs[0][attribute]
             });
-          }
-          else {
-            attributes = null;
-          }
-
-          $scope.nodeDropzones[dropzoneIndex].attributes = attributes;
-        },
-        function (error) {
-          $scope.nodeDropzones[dropzoneIndex].attributes = null;
+          });
         }
-      );
+        else {
+          attributes = null;
+        }
+
+        $scope.nodeDropzones[dropzoneIndex].attributes = attributes;
+      },
+      function (error) {
+        $scope.nodeDropzones[dropzoneIndex].attributes = null;
+      }
+    );
   };
 
   $scope.handleNodeDragStart = function (event) {
-      this.style.opacity = '0.4';
+    this.style.opacity = '0.4';
 
-      var uuid = event.srcElement.attributes['node-uuid'].value;
-      event.originalEvent.dataTransfer.setData(
-        'text/plain',
-        JSON.stringify({ uuid: uuid, html: this.innerHTML })
-      );
+    var uuid = event.srcElement.attributes['node-uuid'].value;
+    event.originalEvent.dataTransfer.setData(
+      'text/plain',
+      JSON.stringify({ uuid: uuid, html: this.innerHTML })
+    );
   };
 
   $scope.handleNodeDragEnd = function () {
@@ -295,7 +295,7 @@ function FileMappingCtrl (
       );
     }
 
-    if(data !== null){
+    if (data !== null) {
       // update dropzone
       $scope.updateNodeDropzone(dropzoneIndex, data.uuid);
 
@@ -314,13 +314,11 @@ function FileMappingCtrl (
             $scope.currentNodePair = response;
             $scope.currentNodeRelationship.node_pairs
               .push($scope.currentNodePair.resource_uri);
-            NodeRelationshipResource.update(
-              {
-                uuid: $scope.currentNodeRelationship.uuid
-              }, $scope.currentNodeRelationship);
+            NodeRelationshipResource.update({
+              uuid: $scope.currentNodeRelationship.uuid
+            }, $scope.currentNodeRelationship);
             $log.debug('New file pair saved.');
           });
-
         } else {
           $log.debug('Updating existing file pair ...');
           $scope.currentNodePair.node1 = '/api/v1/node/' +
