@@ -75,7 +75,7 @@ function FileMappingCtrl (
     $scope.currentNodePairIndex = $scope.currentNodeRelationship.node_pairs.length;
   };
 
-  $scope.deleteMapping = function() {
+  $scope.deleteMapping = function () {
     $log.debug('Deleting pair ... ');
 
     if ($scope.currentNodePair) {
@@ -123,7 +123,7 @@ function FileMappingCtrl (
     );
   };
 
-  $scope.deleteAllMappings = function() {
+  $scope.deleteAllMappings = function () {
     $log.debug('Deleting mappings ... ');
 
     var nodePairsForDeletion = $scope.currentNodeRelationship.node_pairs;
@@ -292,8 +292,10 @@ function FileMappingCtrl (
       data = JSON.parse(dataString);
     }
     catch (exception) {
-      console.error('Please select a node, by dragging/dropping the' +
-        ' reorder icon located on the far left of each row.');
+      console.error(
+        'Please select a node, by dragging/dropping the ' +
+        'reorder icon located on the far left of each row.'
+      );
     }
 
     if(data !== null){
@@ -385,14 +387,17 @@ function FileMappingCtrl (
         'nodeUuid': uuid,
         'attributeList': attributeList.join()
       },
-      function(data) { success(data); },
-      function(data) { error(data); }
+      function (data) { success(data); },
+      function (data) { error(data); }
    );
   };
 
   var AttributeOrderList = AttributeOrder.get(
-    {study__uuid: externalStudyUuid, assay__uuid: externalAssayUuid},
-    function(response) {
+    {
+      study__uuid: externalStudyUuid,
+      assay__uuid: externalAssayUuid
+    },
+    function (response) {
       $scope.attributeOrderList = [];
       for (var i = 0; i < response.objects.length; ++i) {
         $scope.attributeOrderList.push(response.objects[i].solr_field);
