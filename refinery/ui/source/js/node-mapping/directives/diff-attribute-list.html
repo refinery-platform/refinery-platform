@@ -46,8 +46,8 @@
     ng-if="diffAttributeList.diffAttributes.length > 0"
     ng-repeat="attribute in diffAttributeList.diffAttributes">
     <td>{{ attribute.name }}</td>
-    <td><b>{{ attribute.valuediffAttributeList.SetA }}</b></td>
-    <td><b>{{ attribute.valuediffAttributeList.SetB }}</b></td>
+    <td><b>{{ attribute.valueSetA }}</b></td>
+    <td><b>{{ attribute.valueSetB }}</b></td>
   </tr>
   <tr ng-if="commonAttributes.length > 0">
     <td>Shared</td>
