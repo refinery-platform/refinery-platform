@@ -42,10 +42,12 @@ function ListGraphCtrl (
         activeLevel: 1,
         columns: Math.round(this.width / 175),
         dispatcher: pubSub.trigger,
+        hideOutwardsLinks: true,
         lessTransitions: 1,
         noRootActiveLevelDiff: 1,
         querying: true,
         rows: Math.round(this.height / 24),
+        showLinkLocation: true,
         sortBy: 'precision'
       });
     }.bind(this));
