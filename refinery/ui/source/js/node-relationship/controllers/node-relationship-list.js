@@ -151,7 +151,7 @@ function NodeRelationshipListCtrl (
         '1-N',
         successCreate,
         function (response) {
-          alert('Error!'); console.log(response);
+          $log.error(response);
         });
     }, function () {
       $log.info('Modal dismissed at: ' + new Date());
@@ -182,9 +182,8 @@ function NodeRelationshipListCtrl (
       nodeRelationshipService.updateNodeRelationship(
         nodeRelationship,
         successUpdate,
-        function (response) {
-          $log.error('Error!');
-          $log.error(response);
+        function (error) {
+          $log.error(error);
         });
 
     }, function () {
@@ -213,9 +212,10 @@ function NodeRelationshipListCtrl (
 
     modalInstance.result.then(function () {
       nodeRelationshipService.deleteNodeRelationship(
-        nodeRelationship, successDelete, function (response) {
-          $log.error('Error!');
-          $log.error(response);
+        nodeRelationship,
+        successDelete,
+        function (error) {
+          $log.error(error);
         }
      );
     }, function () {
