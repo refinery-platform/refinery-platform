@@ -941,6 +941,9 @@ DashboardCtrl.prototype.dataSetMouseEnter = function (dataSet) {
     terms: dataSet.annotations,
     source: 'resultsList'
   });
+  if (this.listGraphHideUnrelatedNodes !== dataSet.id) {
+    this.listGraphHideUnrelatedNodes = undefined;
+  }
 };
 
 DashboardCtrl.prototype.dataSetMouseLeave = function (dataSet) {
@@ -948,6 +951,7 @@ DashboardCtrl.prototype.dataSetMouseLeave = function (dataSet) {
     terms: dataSet.annotations,
     source: 'resultsList'
   });
+  this.listGraphHideUnrelatedNodes = undefined;
 };
 
 DashboardCtrl.prototype.readibleDate = function (dataSet, property) {
@@ -1054,25 +1058,28 @@ DashboardCtrl.prototype.toggleListGraphZoom = function (dataSet) {
   if (this.listGraphZoomedOut) {
     this.$rootScope.$emit('dashboardVisNodeFocus', {
       terms: dataSet.annotations,
-      source: 'resultsList'
+      source: 'resultsList',
+      hideUnrelatedNodes: this.listGraphHideUnrelatedNodes === dataSet.id
     });
   } else {
     this.$rootScope.$emit('dashboardVisNodeFocus', {
       terms: dataSet.annotations,
       zoomOut: true,
-      source: 'resultsList'
+      source: 'resultsList',
+      hideUnrelatedNodes: this.listGraphHideUnrelatedNodes === dataSet.id
     });
   }
   this.listGraphZoomedOut = !!!this.listGraphZoomedOut;
 };
 
 DashboardCtrl.prototype.toggleListUnrelatedNodes = function (dataSet) {
-  if (this.listGraphHideUnrelatedNodes) {
+  if (this.listGraphHideUnrelatedNodes === dataSet.id) {
     this.$rootScope.$emit('dashboardVisNodeFocus', {
       terms: dataSet.annotations,
       source: 'resultsList',
       zoomOut: this.listGraphZoomedOut
     });
+    this.listGraphHideUnrelatedNodes = undefined;
   } else {
     this.$rootScope.$emit('dashboardVisNodeFocus', {
       terms: dataSet.annotations,
@@ -1080,8 +1087,8 @@ DashboardCtrl.prototype.toggleListUnrelatedNodes = function (dataSet) {
       zoomOut: this.listGraphZoomedOut,
       hideUnrelatedNodes: true
     });
+    this.listGraphHideUnrelatedNodes = dataSet.id;
   }
-  this.listGraphAnnotationsOnly = !!!this.listGraphAnnotationsOnly;
 };
 
 angular
