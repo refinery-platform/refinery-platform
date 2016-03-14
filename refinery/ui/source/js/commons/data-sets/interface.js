@@ -484,16 +484,13 @@ function DataSetFactory (
    * @date    2016-03-10
    * @param   {String}   id     Data set identifier.
    * @param   {Boolean}  isUid  If `true` the identifier is a UUID.
-   * @return  {[type]}        [description]
+   * @return  {Object}          Promise resolving to the data set.
    */
   function _get (id, isUuid) {
     if (_dataStore.get(id)) {
-      console.log('ID: ' + id + ' has already been loaded');
       return $q.when(_dataStore.get(id));
     } else {
-      console.log('ID: ' + id + ' needs to be loaded first.');
       return _sourceDetails(id).then(function (dataSet) {
-        console.log('geloditzt', dataSet);
         _dataStore.add(dataSet.id, dataSet, true);
       });
     }
