@@ -1,6 +1,6 @@
 function DataSetFactory (
-  $q, _, settings, DataSetDataApi, DataSetSearchApi, DataSetStore,
-  DataSetAnnotations) {
+  $q, _, settings, DataSetDataApi, DataSetDataDetailsApi, DataSetSearchApi,
+  DataSetStore, DataSetAnnotations) {
 
   /*
    * ------------------------------- Private -----------------------------------
@@ -138,6 +138,8 @@ function DataSetFactory (
    */
   var _source;
 
+  var _sourceDetails = new DataSetDataDetailsApi();
+
   /**
    * Total number of currently returned data objects.
    *
@@ -232,7 +234,7 @@ function DataSetFactory (
     // enough datasets that fall within the selection. For that reason it makes
     // sense to increase the limit.
     var realLimit = Math.max(limit, settings.treemap.singleRequestLimit);
-    return _getDataFromOrderCache(realLimit, _selectionCacheLastIndex)
+    return _fetchDataFromOrderCache(realLimit, _selectionCacheLastIndex)
       .then(function (data) {
         var dataLen = data.length,
             selectionCacheLen;
@@ -324,7 +326,7 @@ function DataSetFactory (
   /**
    * Request a set of data objects.
    *
-   * @method  _get
+   * @method  _fetch
    * @author  Fritz Lekschas
    * @date    2015-10-08
    *
@@ -332,7 +334,7 @@ function DataSetFactory (
    * @param   {Number}  offset  Starting point for retrieving data objects.
    * @return  {Object}          Promise with data objects.
    */
-  function _get (limit, offset) {
+  function _fetch (limit, offset) {
     var data;
 
     if (_selectionLen()) {
@@ -344,7 +346,7 @@ function DataSetFactory (
         data = _getSelection(limit, offset);
       }
     } else {
-      data = _getDataFromOrderCache(limit, offset);
+      data = _fetchDataFromOrderCache(limit, offset);
     }
 
     return $q.when(data);
@@ -353,7 +355,7 @@ function DataSetFactory (
   /**
    * Get cached data from `_orderCache`.
    *
-   * @method  _getDataFromOrderCache
+   * @method  _fetchDataFromOrderCache
    * @author  Fritz Lekschas
    * @date    2015-10-08
    *
@@ -361,10 +363,10 @@ function DataSetFactory (
    * @param   {Number}  offset  Starting point for retrieving data objects.
    * @return  {Object}          Promise of list of references to the data.
    */
-  function _getDataFromOrderCache (limit, offset) {
+  function _fetchDataFromOrderCache (limit, offset) {
     var data = _orderCache.slice(offset, limit + offset);
     if (data.length < limit && data.length < (_totalSelection || _totalSource)) {
-      data = _getDataFromSource(limit, offset);
+      data = _fetchDataFromSource(limit, offset);
     }
 
     return $q.when(data);
@@ -388,7 +390,7 @@ function DataSetFactory (
    * ```
    * It's okay if the object has further properties.
    *
-   * @method  _getDataFromSource
+   * @method  _fetchDataFromSource
    * @author  Fritz Lekschas
    * @date    2015-10-08
    *
@@ -397,7 +399,7 @@ function DataSetFactory (
    * @return  {Object}          Promise of list of references to the data.
    *   objects.
    */
-  function _getDataFromSource (limit, offset) {
+  function _fetchDataFromSource (limit, offset) {
     return _source(limit, offset).then(function (response) {
       for (var i = response.data.length; i--;) {
         _dataStore.add(response.data[i].id, response.data[i], true);
@@ -472,6 +474,26 @@ function DataSetFactory (
     }).catch(function (e) {
       deferred.reject(e);
     });
+  }
+
+  /**
+   * Get or load a single data set
+   *
+   * @method  _get
+   * @author  Fritz Lekschas
+   * @date    2016-03-10
+   * @param   {String}   id     Data set identifier.
+   * @param   {Boolean}  isUid  If `true` the identifier is a UUID.
+   * @return  {Object}          Promise resolving to the data set.
+   */
+  function _get (id, isUuid) {
+    if (_dataStore.get(id)) {
+      return $q.when(_dataStore.get(id));
+    } else {
+      return _sourceDetails(id).then(function (dataSet) {
+        _dataStore.add(dataSet.id, dataSet, true);
+      });
+    }
   }
 
   /**
@@ -595,6 +617,9 @@ function DataSetFactory (
       enumerable: true,
       configurable: false,
       get: function () {
+        if (_search) {
+          return _currentDsIds.promise;
+        }
         return _allDsIds.promise;
       }
     }
@@ -794,7 +819,16 @@ function DataSetFactory (
   };
 
   /**
-   * Request a set of data objects.
+   * Fetch a set of data objects.
+   *
+   * @method  fetch
+   * @author  Fritz Lekschas
+   * @date    2016-03-10
+   */
+  DataSet.prototype.fetch = _fetch;
+
+  /**
+   * Get a single data set.
    *
    * @method  get
    * @author  Fritz Lekschas
@@ -843,16 +877,16 @@ function DataSetFactory (
    * @description
    * This is needed for some services like `UiScollSource`.
    *
-   * @method  getInclMeta
+   * @method  fetchInclMeta
    * @author  Fritz Lekschas
    * @date    2015-10-09
    *
    * @param   {Number}  limit   Number of data objects to be fetched.
    * @param   {Number}  offset  Starting point for retrieving data objects.
-   * @return  {Object}          Promise with data objects.
+   * @return  {Object}          Promise with data objects. HURZ
    */
-  DataSet.prototype.getInclMeta = function (limit, offset) {
-    return _get(limit, offset).then(function (data) {
+  DataSet.prototype.fetchInclMeta = function (limit, offset) {
+    return _fetch(limit, offset).then(function (data) {
       return {
         meta: {
           total: _total,
@@ -997,6 +1031,7 @@ angular
     '_',
     'settings',
     'DataSetDataApi',
+    'DataSetDataDetailsApi',
     'DataSetSearchApi',
     'DataSetStore',
     'DataSetAnnotations',

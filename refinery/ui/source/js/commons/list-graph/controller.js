@@ -247,7 +247,8 @@ function ListGraphCtrl (
       }
       this.listGraph.trigger('d3ListGraphFocusNodes', {
         nodeIds: termIds,
-        zoomOut: !!data.zoomOut
+        zoomOut: !!data.zoomOut,
+        hideUnrelatedNodes: !!data.hideUnrelatedNodes
       });
     }
   }.bind(this));

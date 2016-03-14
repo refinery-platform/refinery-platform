@@ -57,6 +57,8 @@ function DashboardCtrl (
   this.dashboardVisData = dashboardVisData;
   this.dataCart = dataCart;
 
+  this.searchQueryDataSets = '';
+
   // Construct class variables
   this.dataSetServiceLoading = false;
   this.expandedDataSetPanelBorder = false;
@@ -78,7 +80,7 @@ function DashboardCtrl (
   this.dataSets = new UiScrollSource(
     'dashboard/dataSets',
     10,
-    this.dataSet.getInclMeta
+    this.dataSet.fetchInclMeta
   );
 
   // Set up analyses for `uiScroll`
@@ -370,7 +372,7 @@ DashboardCtrl.prototype.collectDataSetIds = function () {
 
   // In case only **nots** are available
   if (!andIntersection.length && !orUnion.length) {
-    allDsIds = this.dataSet.allIds();
+    allDsIds = this.dataSet.allIds;
   } else {
     allDsIds = this.$q.when(allDsIds);
   }
@@ -472,6 +474,7 @@ Object.defineProperty(
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
       this.checkDataSetsFilter();
+      this.checkAllCurrentDataSetsInDataCart();
     }
 });
 
@@ -495,6 +498,7 @@ Object.defineProperty(
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
       this.checkDataSetsFilter();
+      this.checkAllCurrentDataSetsInDataCart();
     }
 });
 
@@ -706,8 +710,6 @@ DashboardCtrl.prototype.setDataSetSource = function (
 ) {
   this.showFilterSort = false;
 
-
-
   if (!fromStateEvent) {
     var stateChange = this.$state.go(
       '.',
@@ -760,7 +762,7 @@ DashboardCtrl.prototype.setDataSetSource = function (
     this.searchDataSet = false;
     this.dashboardDataSetsReloadService.reload();
 
-    this.dataSet.allIds().then(function (allDsIds) {
+    this.dataSet.allIds.then(function (allDsIds) {
       // console.log('lo', allDsIds);
       this.$rootScope.$emit('dashboardVisSearch', {
         dsIds: allDsIds,
@@ -768,6 +770,7 @@ DashboardCtrl.prototype.setDataSetSource = function (
       });
     }.bind(this));
   }
+  this.checkAllCurrentDataSetsInDataCart();
 };
 
 DashboardCtrl.prototype.expandDataSetPreview = function (
@@ -919,6 +922,7 @@ DashboardCtrl.prototype.selectDataSets = function (ids) {
   this.$rootScope.$emit('dashboardDsSelected', {
     ids: ids
   });
+  this.checkAllCurrentDataSetsInDataCart();
 };
 
 DashboardCtrl.prototype.deselectDataSets = function () {
@@ -928,20 +932,13 @@ DashboardCtrl.prototype.deselectDataSets = function () {
     this.dashboardDataSetsReloadService.reload();
   }.bind(this), 0);
 
+  this.checkAllCurrentDataSetsInDataCart();
   this.$rootScope.$emit('dashboardDsDeselected');
 };
 
 DashboardCtrl.prototype.dataSetMouseEnter = function (dataSet) {
   this.$rootScope.$emit('dashboardVisNodeFocus', {
     terms: dataSet.annotations,
-    source: 'resultsList'
-  });
-};
-
-DashboardCtrl.prototype.dataSetMouseEnterZoomOut = function (dataSet) {
-  this.$rootScope.$emit('dashboardVisNodeFocus', {
-    terms: dataSet.annotations,
-    zoomOut: true,
     source: 'resultsList'
   });
 };
@@ -1003,6 +1000,88 @@ DashboardCtrl.prototype.getDataSetsPanelHeight = function () {
 // This is a hack as Angular doesn't like two-way data binding for primitives
 DashboardCtrl.prototype.getDataCartPanelHeight = function () {
   return this.dataCartPanelHeight;
+};
+
+DashboardCtrl.prototype.addToDataCart = function (dataSet) {
+  this.dataCart.add(dataSet);
+  this.checkAllCurrentDataSetsInDataCart();
+};
+
+DashboardCtrl.prototype.removeFromDataCart = function (dataSet) {
+  this.dataCart.remove(dataSet);
+  this.checkAllCurrentDataSetsInDataCart();
+};
+
+DashboardCtrl.prototype.addAllCurrentToDataCart = function () {
+  this.dataSet.allIds.then(function (allIds) {
+    var promisedDataSets = [];
+    for (var i = allIds.length; i--;) {
+      promisedDataSets.push(this.dataSet.get(allIds[i]));
+    }
+    this.$q.all(promisedDataSets).then(function (dataSets) {
+      this.dataCart.add(dataSets);
+      console.log('add All Current', allIds, dataSets);
+      this.allCurrentDataSetsInDataCart = 2;
+    }.bind(this));
+  }.bind(this));
+};
+
+DashboardCtrl.prototype.removeAllCurrentToDataCart = function () {
+  this.dataSet.allIds.then(function (allIds) {
+    this.dataCart.remove(allIds, true);
+    console.log('remove All Current', allIds);
+    this.allCurrentDataSetsInDataCart = 0;
+  }.bind(this));
+};
+
+DashboardCtrl.prototype.checkAllCurrentDataSetsInDataCart = function () {
+  this.dataSet.allIds.then(function (allIds) {
+    this.allCurrentDataSetsInDataCart = this.dataCart.added(allIds);
+  }.bind(this));
+};
+
+DashboardCtrl.prototype.showNotification = function () {
+  return (
+    this.dataSets.error ||
+    this.dataSets.total === 0 ||
+    this.searchQueryDataSets.length === 1 || (
+      this.searchQueryDataSets.length > 1 && this.dataSets.total === 0
+    )
+  );
+};
+
+DashboardCtrl.prototype.toggleListGraphZoom = function (dataSet) {
+  if (this.listGraphZoomedOut) {
+    this.$rootScope.$emit('dashboardVisNodeFocus', {
+      terms: dataSet.annotations,
+      source: 'resultsList'
+    });
+  } else {
+    this.$rootScope.$emit('dashboardVisNodeFocus', {
+      terms: dataSet.annotations,
+      zoomOut: true,
+      source: 'resultsList'
+    });
+  }
+  this.listGraphZoomedOut = !!!this.listGraphZoomedOut;
+};
+
+DashboardCtrl.prototype.toggleListUnrelatedNodes = function (dataSet) {
+  if (this.listGraphHideUnrelatedNodes) {
+    this.$rootScope.$emit('dashboardVisNodeFocus', {
+      terms: dataSet.annotations,
+      source: 'resultsList',
+      zoomOut: this.listGraphZoomedOut
+    });
+  } else {
+    this.$rootScope.$emit('dashboardVisNodeFocus', {
+      terms: dataSet.annotations,
+      source: 'resultsList',
+      zoomOut: this.listGraphZoomedOut,
+      hideUnrelatedNodes: true
+    });
+  }
+  this.listGraphAnnotationsOnly = !!!this.listGraphAnnotationsOnly;
 };
 
 angular
