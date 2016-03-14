@@ -3,7 +3,7 @@ function NodePairFactory ($resource, $http) {
 
   return $resource(
     '/api/v1/nodepair/:uuid/',{
-      uuid: "@uuid",
+      uuid: '@uuid',
       format: 'json',
     },
     {
