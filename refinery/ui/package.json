@@ -3,6 +3,7 @@
   "version": "1.1.0",
   "description": "Web GUI for Refinery Platform",
   "main": "index.js",
+  "private": true,
   "scripts": {
     "test": "grunt test",
     "codecov": "codecov &lt; coverage/cobertura.xml"
