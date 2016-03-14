@@ -1167,8 +1167,7 @@ a.analysis-header {
 
           &:hover {
             color: @black;
-            background: @gray-lighter;
-            box-shadow: 0 1px 0 0 @gray-lighter, 0 -1px 0 0 @gray-lighter;
+            background: @gray-lighter-rgba;
           }
 
           &:active,
@@ -1179,8 +1178,15 @@ a.analysis-header {
           &.active {
             color: @white;
             background: @orange;
-            box-shadow: 0 1px 0 0 @orange, 0 -1px 0 0 @orange;
           }
+        }
+
+        .zoom-out.active {
+          box-shadow: 0 -1px 0 0 @orange;
+        }
+
+        .annotations-only.active {
+          box-shadow: 0 1px 0 0 @orange;
         }
 
         &:hover .zoom-out.activated,
