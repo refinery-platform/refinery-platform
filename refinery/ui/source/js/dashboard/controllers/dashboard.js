@@ -952,6 +952,7 @@ DashboardCtrl.prototype.dataSetMouseLeave = function (dataSet) {
     source: 'resultsList'
   });
   this.listGraphHideUnrelatedNodes = undefined;
+  this.listGraphZoomedOut = false;
 };
 
 DashboardCtrl.prototype.readibleDate = function (dataSet, property) {
