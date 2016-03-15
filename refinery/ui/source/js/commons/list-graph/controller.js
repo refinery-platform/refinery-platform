@@ -110,6 +110,32 @@ function ListGraphCtrl (
     );
   }.bind(this));
 
+  pubSub.on('d3ListGraphNodeLockChange', function (data) {
+    this.$rootScope.$emit(
+      'dashboardVisNodeLockChange', {
+        lock: {
+          clone: data.lock.clone,
+          clonedFromUri: data.lock.clonedFromId,
+          nodeUri: data.lock.id,
+          dataSetIds: this.getAssociatedDataSetsIds(
+            this.graph[data.lock.clone ? data.lock.clonedFromId : data.lock.id]
+          ),
+        },
+        unlock: {
+          clone: data.unlock.clone,
+          clonedFromUri: data.unlock.clonedFromId,
+          nodeUri: data.unlock.id,
+          dataSetIds: this.getAssociatedDataSetsIds(
+            this.graph[
+              data.unlock.clone ? data.unlock.clonedFromId : data.unlock.id
+            ]
+          ),
+        },
+        source: 'listGraph'
+      }
+    );
+  }.bind(this));
+
   pubSub.on('d3ListGraphNodeRoot', function (data) {
     this.$rootScope.$emit(
       'dashboardVisNodeRoot', {

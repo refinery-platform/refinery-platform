@@ -264,6 +264,12 @@ function DashboardCtrl (
     this.$rootScope.$digest();
   }.bind(this));
 
+  this.$rootScope.$on('dashboardVisNodeLockChange', function (event, data) {
+    this.dataSet.highlight(data.unlock.dataSetIds, true, 'lock');
+    this.dataSet.highlight(data.lock.dataSetIds, false, 'lock');
+    this.$rootScope.$digest();
+  }.bind(this));
+
   this.$rootScope.$on('dashboardVisNodeToggleQuery', function (event, data) {
     var uri;
 
