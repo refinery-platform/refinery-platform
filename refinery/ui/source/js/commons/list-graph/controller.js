@@ -209,6 +209,32 @@ function ListGraphCtrl (
     );
   }.bind(this));
 
+  pubSub.on('d3ListGraphBatchQuery', function (data) {
+    var terms = [];
+
+    for (var i = data.length; i--;) {
+      terms.push({
+        clone: data[i].data.clone,
+        clonedFromUri: data[i].data.clonedFromId,
+        nodeUri: data[i].data.id,
+        dataSetIds: this.getAssociatedDataSetsIds(
+          this.graph[
+            data[i].data.clone ? data[i].data.clonedFromId : data[i].data.id
+          ]
+        ),
+        mode: data[i].data.mode,
+        query: data[i].name === 'd3ListGraphNodeQuery'
+      });
+    }
+
+    this.$rootScope.$emit(
+      'dashboardVisNodeToggleQuery', {
+        terms: terms,
+        source: 'listGraph'
+      }
+    );
+  }.bind(this));
+
   pubSub.on('d3ListGraphUpdateBarsRequest', function (data) {
     var uri = this.rootIds[0];
 
