@@ -244,22 +244,22 @@ function DashboardCtrl (
     }.bind(this));
   }.bind(this));
 
-  this.$rootScope.$on('dashboardVisNodeEnter'  , function (event, data) {
+  this.$rootScope.$on('dashboardVisNodeEnter', function (event, data) {
     this.dataSet.highlight(data.dataSetIds, false, 'hover');
     this.$rootScope.$digest();
   }.bind(this));
 
-  this.$rootScope.$on('dashboardVisNodeLeave'  , function (event, data) {
+  this.$rootScope.$on('dashboardVisNodeLeave', function (event, data) {
     this.dataSet.highlight(data.dataSetIds, true, 'hover');
     this.$rootScope.$digest();
   }.bind(this));
 
-  this.$rootScope.$on('dashboardVisNodeLock'  , function (event, data) {
+  this.$rootScope.$on('dashboardVisNodeLock', function (event, data) {
     this.dataSet.highlight(data.dataSetIds, false, 'lock');
     this.$rootScope.$digest();
   }.bind(this));
 
-  this.$rootScope.$on('dashboardVisNodeUnlock'  , function (event, data) {
+  this.$rootScope.$on('dashboardVisNodeUnlock', function (event, data) {
     this.dataSet.highlight(data.dataSetIds, true, 'lock');
     this.$rootScope.$digest();
   }.bind(this));
