@@ -583,6 +583,15 @@ function DataSetFactory (
     _total = _totalSelection;
   }
 
+  function _objListToArray (objList) {
+    var arr = [];
+    var ids = Object.keys(objList);
+    for (var i = ids.length; i--;) {
+      arr.push(ids[i]);
+    }
+    return arr;
+  }
+
   /*
    * ------------------------------- Public ------------------------------------
    */
@@ -617,6 +626,9 @@ function DataSetFactory (
       enumerable: true,
       configurable: false,
       get: function () {
+        if (_selectionLen()) {
+          return $q.when(_objListToArray(_selection));
+        }
         if (_search) {
           return _currentDsIds.promise;
         }
@@ -791,7 +803,7 @@ function DataSetFactory (
       _browsePath.pop();
     }
 
-    _selection = [];
+    _selection = {};
     _clearSelectionCache(true);
 
     return this;
