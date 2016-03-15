@@ -769,7 +769,6 @@ DashboardCtrl.prototype.setDataSetSource = function (
     this.dashboardDataSetsReloadService.reload();
 
     this.dataSet.allIds.then(function (allDsIds) {
-      // console.log('lo', allDsIds);
       this.$rootScope.$emit('dashboardVisSearch', {
         dsIds: allDsIds,
         source: 'dashboard'
@@ -1031,7 +1030,6 @@ DashboardCtrl.prototype.addAllCurrentToDataCart = function () {
     }
     this.$q.all(promisedDataSets).then(function (dataSets) {
       this.dataCart.add(dataSets);
-      console.log('add All Current', allIds, dataSets);
       this.allCurrentDataSetsInDataCart = 2;
     }.bind(this));
   }.bind(this));
@@ -1040,7 +1038,6 @@ DashboardCtrl.prototype.addAllCurrentToDataCart = function () {
 DashboardCtrl.prototype.removeAllCurrentToDataCart = function () {
   this.dataSet.allIds.then(function (allIds) {
     this.dataCart.remove(allIds, true);
-    console.log('remove All Current', allIds);
     this.allCurrentDataSetsInDataCart = 0;
   }.bind(this));
 };
