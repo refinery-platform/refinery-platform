@@ -71,8 +71,22 @@ function getAssociatedDataSets (node) {
  * @param  {Object}  treemapContext         Context helper.
  * @param  {Object}  Webworker              Web Worker service.
  */
-function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
-  treemapSettings, pubSub, treemapContext, Webworker, $rootScope, $timeout) {
+function TreemapCtrl (
+  $element,
+  $q,
+  $,
+  $window,
+  _,
+  d3,
+  HEX,
+  D3Colors,
+  treemapSettings,
+  pubSub,
+  treemapContext,
+  Webworker,
+  $rootScope,
+  $timeout
+) {
   this.$ = $;
   this._ = _;
   this.$q = $q;
@@ -90,7 +104,7 @@ function TreemapCtrl ($element, $q, $, $window, _, d3, HEX, D3Colors,
 
   this.Webworker = Webworker;
 
-  this._visibleDepth = 1;
+  this._visibleDepth = 2;
   this.currentLevel = 0;
 
   this.treemap.width = this.$d3Element.width();
@@ -1711,8 +1725,7 @@ TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
         this.cacheTerms[root.ontId][root.branchId]
       ),
       mode: 'and',
-      query: true,
-      source: 'treeMap'
+      query: true
     }
   ];
 
