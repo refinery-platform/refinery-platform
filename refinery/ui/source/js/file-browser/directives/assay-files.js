@@ -22,39 +22,8 @@ function rpFileBrowserAssayFiles(uiGridConstants,fileBrowserFactory) {
     link: function(scope){
 
       scope.FBCtrl.updateAssayFiles().then(function(){
-        createColumnDefs();
-        scope.gridOptions = {
-        columnDefs: customColumnName,
-        data: scope.FBCtrl.assayFiles
-        };
-
-        scope.checkUrlQueryFilters();
+        scope.FBCtrl.checkUrlQueryFilters();
       });
-
-      scope.gridOptions = {
-        useExternalSorting: true,
-        enableRowSelection: true,
-        enableSelectAll: true,
-        selectionRowHeaderWidth: 35,
-        rowHeight: 35,
-        showGridFooter:true,
-        enableSelectionBatchEvent: true
-      };
-
-      scope.info = {};
-      scope.gridOptions.multiSelect = true;
-
-      var customColumnName = [];
-      var createColumnDefs = function(){
-        scope.FBCtrl.assayAttributes.forEach(function(attribute){
-          customColumnName.push(
-            {
-              name: attribute.display_name,
-              field: attribute.internal_name
-            }
-          );
-        });
-      };
 
       scope.gridOptions.onRegisterApi = function(gridApi) {
         //set gridApi on scope
