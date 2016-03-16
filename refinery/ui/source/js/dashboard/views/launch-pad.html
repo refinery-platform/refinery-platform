@@ -75,7 +75,7 @@
           <div class="floatbox-min-right">
             <button
               class="fa fa-shopping-cart is-mirrored icon-only disabled-default"
-              title="Data Card"
+              title="Data Cart"
               ng-class="{ 'enabled': dashboard.dataCart.length, 'showing': dashboard.showDataCart }"
               ng-click="dashboard.toggleDataCart()"
               refinery-tooltip
@@ -121,7 +121,7 @@
               {{ dashboard.searchQueryDataSets.length > 1 ? 'results' : 'data sets' }}
             </h4>
             <span class="separator">&middot;</span>
-            <div class="data-card-indicator">
+            <div class="data-cart-indicator">
               <i class="fa fa-star is-glowing-yellow-text pointer"
                 title="All added to data cart. Click to remove."
                 ng-if="dashboard.allCurrentDataSetsInDataCart === 2"
@@ -199,7 +199,7 @@
       </div>
       <div refinery-panel-ref-offset>
         <div
-          class="refinery-panel-content scrollable data-card default-height-zero"
+          class="refinery-panel-content scrollable data-cart default-height-zero"
           ui-scroll-viewport
           refinery-panel
           refinery-panel-id="dataCart"
@@ -282,7 +282,7 @@
                   <li class="separator">&middot;</li>
                   <li class="indicator">
                     <i class="fa fa-star is-glowing-yellow-text pointer"
-                      title="Added to data card. Click to remove."
+                      title="Added to data cart. Click to remove."
                       ng-if="dashboard.dataCart.added(dataSet)"
                       ng-click="dashboard.removeFromDataCart(dataSet)"
                       refinery-tooltip
@@ -290,7 +290,7 @@
                       refinery-tooltip-placement="top"
                       refinery-tooltip-hide-on-click="true"></i>
                     <i class="fa fa-star-o pointer"
-                      title="Add to data card"
+                      title="Add to data cart"
                       ng-if="!dashboard.dataCart.added(dataSet)"
                       ng-click="dashboard.addToDataCart(dataSet)"
                       refinery-tooltip
@@ -389,7 +389,7 @@
                   <li class="separator">&middot;</li>
                   <li class="indicator">
                     <i class="fa fa-star is-glowing-yellow-text pointer"
-                      title="Added to data card. Click to remove."
+                      title="Added to data cart. Click to remove."
                       ng-if="dashboard.dataCart.added(dataSet)"
                       ng-click="dashboard.removeFromDataCart(dataSet)"
                       refinery-tooltip
@@ -397,7 +397,7 @@
                       refinery-tooltip-placement="top"
                       refinery-tooltip-hide-on-click="true"></i>
                     <i class="fa fa-star-o pointer"
-                      title="Add to data card"
+                      title="Add to data cart"
                       ng-if="!dashboard.dataCart.added(dataSet)"
                       ng-click="dashboard.addToDataCart(dataSet)"
                       refinery-tooltip
