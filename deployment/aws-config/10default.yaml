@@ -5,7 +5,7 @@
 
 # All the .yaml files are used as configuration.
 
-# This is the 00defauly.yaml file;
+# This is the 10default.yaml file;
 # it specifies defaults.
 # Some of which might be overridden in later
 # configuration files.
