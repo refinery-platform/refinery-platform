@@ -218,7 +218,14 @@
                 ng-mouseleave="dashboard.dataSetMouseLeave(dataSet)">
                 <button
                   class="preview"
-                  ng-click="dashboard.expandDataSetPreview(dataSet, $index)">
+                  title="Preview the data set"
+                  ng-click="dashboard.expandDataSetPreview(dataSet, $index)"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="right"
+                  refinery-tooltip-delay-show="750"
+                  refinery-tooltip-delay-hide="150"
+                  refinery-tooltip-hide-on-click="true">
                   <i
                     class="fa fa-angle-double-right is-mirrorable"
                     ng-class="{'is-mirrored': dataSet.preview}"></i>
@@ -338,7 +345,14 @@
               ng-mouseleave="dashboard.dataSetMouseLeave(dataSet)">
               <button
                 class="preview"
-                ng-click="dashboard.expandDataSetPreview(dataSet, $index)">
+                title="Preview the data set"
+                ng-click="dashboard.expandDataSetPreview(dataSet, $index)"
+                refinery-tooltip
+                refinery-tooltip-container="body"
+                refinery-tooltip-placement="right"
+                refinery-tooltip-delay-show="750"
+                refinery-tooltip-delay-hide="150"
+                refinery-tooltip-hide-on-click="true">
                 <i
                   class="fa fa-angle-double-right is-mirrorable"
                   ng-class="{'is-mirrored': dataSet.preview}"></i>
