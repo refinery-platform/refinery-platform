@@ -26,7 +26,7 @@ describe('Controller: FileBrowserCtrl', function(){
     expect(ctrl.assayAttributes).toEqual([]);
     expect(ctrl.attributeFilter).toEqual([]);
     expect(ctrl.analysisFilter).toEqual([]);
-    expect(scope.filesParam).toBeDefined();
+    expect(ctrl.filesParam).toBeDefined();
   });
 
   describe('Update AssayFiles from Factory', function(){
