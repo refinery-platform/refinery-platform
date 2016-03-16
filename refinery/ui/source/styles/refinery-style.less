@@ -920,12 +920,13 @@ a.analysis-header {
           }
         }
 
-        &.showing {
-          color: @blue-active;
-          text-shadow: 0 0 3px fade(@blue-active, 33%), 0 0 6px fade(@blue-active, 10%);
+        &.showing,
+        &.enabled.showing {
+          color: @yellow;
+          text-shadow: 0 0 3px fade(@yellow-shadow, 33%), 0 0 6px fade(@yellow-shadow, 10%);
 
           &:after {
-            background: radial-gradient(at bottom, fade(@blue-active, 66%), transparent, transparent);
+            background: radial-gradient(at bottom, fade(@yellow, 80%), transparent, transparent);
           }
         }
 
