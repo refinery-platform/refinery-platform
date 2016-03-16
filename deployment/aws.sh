@@ -45,6 +45,8 @@ export FACTER_DEFAULT_FROM_EMAIL="$DEFAULT_FROM_EMAIL"
 export FACTER_SERVER_EMAIL="$DEFAULT_FROM_EMAIL"
 export FACTER_EMAIL_HOST_USER="$EMAIL_HOST_USER"
 export FACTER_EMAIL_HOST_PASSWORD="$EMAIL_HOST_PASSWORD"
+export FACTER_SITE_URL="$SITE_URL"
+export FACTER_SITE_NAME="$SITE_NAME"
 
 # Create RDS user and database here, instead of using puppet
 # (because drj couldn't work out how to do it in puppet)

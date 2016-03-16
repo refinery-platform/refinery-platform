@@ -17,6 +17,10 @@
 # but it might become configurable later.
 
 
+# Name and URL for the site.
+SITE_NAME: Refinery
+SITE_URL: "192.168.50.50:8000"
+
 # The name of the EC2 key pair to use for SSH.
 # FIXED to "id_rsa".
 
