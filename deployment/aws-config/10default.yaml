@@ -24,10 +24,6 @@ SITE_URL: "192.168.50.50:8000"
 # The name of the EC2 key pair to use for SSH.
 # FIXED to "id_rsa".
 
-# The name of the IAM role to grant to the EC2 instance.
-# (this role must have readonly access to the RDS API)
-# FIXED to "refinery-web"
-
 # The AMI image for the EC2 instance
 # FIXED to "ami-d05e75b8"
 
