@@ -199,121 +199,126 @@
       </div>
       <div refinery-panel-ref-offset>
         <div
-          class="refinery-panel-content scrollable data-cart default-height-zero"
-          ui-scroll-viewport
+          class="data-cart"
+          ng-class="{ 'active': dashboard.showDataCart }"
           refinery-panel
           refinery-panel-id="dataCart"
           refinery-panel-get-rel-height="dashboard.getDataCartPanelHeight()">
-          <ul
-            class="results no-list-style">
-            <li
-              ng-repeat="dataSet in dashboard.dataCart.dataSets | orderBy : $index : true"
-              adapter="dashboard.dataCartAdapter"
-              ng-class="{'hovered': dataSet.hovered, 'locked': dataSet.locked, 'previewing': dataSet.preview}"
-              ng-mouseenter="dashboard.dataSetMouseEnter(dataSet)"
-              ng-mouseleave="dashboard.dataSetMouseLeave(dataSet)">
-              <button
-                class="preview"
-                ng-click="dashboard.expandDataSetPreview(dataSet, $index)">
-                <i
-                  class="fa fa-angle-double-right is-mirrorable"
-                  ng-class="{'is-mirrored': dataSet.preview}"></i>
-              </button>
-              <button
-                class="zoom-out"
-                title="Zoom out to show all annotations in the list graph to the right"
-                ng-class="{'activated': dashboard.dataSetExploration && !dashboard.dataSetExplorationTempHidden, 'active': dashboard.listGraphZoomedOut}"
-                ng-click="dashboard.toggleListGraphZoom(dataSet)"
-                refinery-tooltip
-                refinery-tooltip-container="body"
-                refinery-tooltip-placement="top"
-                refinery-tooltip-delay-show="500"
-                refinery-tooltip-delay-hide="150">
-                <i class="fa fa-search-minus"></i>
-              </button>
-              <button
-                class="annotations-only"
-                title="Hide all unrelated nodes in the list graph to the right"
-                ng-class="{'activated': dashboard.dataSetExploration && !dashboard.dataSetExplorationTempHidden, 'active': dashboard.listGraphHideUnrelatedNodes}"
-                ng-click="dashboard.toggleListUnrelatedNodes(dataSet)"
-                refinery-tooltip
-                refinery-tooltip-container="body"
-                refinery-tooltip-placement="bottom"
-                refinery-tooltip-delay-show="500"
-                refinery-tooltip-delay-hide="150">
-                <i class="fa fa-compress"></i>
-              </button>
-              <a
-                class="title one-line"
-                ng-href="data_sets/{{ dataSet.uuid }}"
-                ng-bind-html="dataSet.title"></a>
-              <div class="flex-box indicators">
-                <ul class="flex-item-two flex-left no-list-style">
-                  <li class="indicator"
-                    ng-if="dataSet.is_owner"
-                    title="You own this data set"
-                    refinery-tooltip
-                    refinery-tooltip-container="body"
-                    refinery-tooltip-placement="top">
-                    <i class="fa fa-user"></i>
-                  </li>
-                  <li class="indicator"
-                    ng-if="dataSet.is_shared && dataSet.is_owner"
-                    title="You privately share this data set"
-                    refinery-tooltip
-                    refinery-tooltip-container="body"
-                    refinery-tooltip-placement="top">
-                    <i class="fa fa-users icon-shared-out"></i>
-                  </li>
-                  <li class="indicator"
-                    ng-if="dataSet.is_shared && !dataSet.is_owner && dashboard.userIsAuthenticated"
-                    title="This data set is shared with you"
-                    refinery-tooltip
-                    refinery-tooltip-container="body"
-                    refinery-tooltip-placement="top">
-                    <i class="fa fa-users icon-shared-in"></i>
-                  </li>
-                  <li class="indicator"
-                    ng-if="dataSet.public && dashboard.userIsAuthenticated"
-                    title="This file is publicly available"
-                    refinery-tooltip
-                    refinery-tooltip-container="body"
-                    refinery-tooltip-placement="top">
-                    <i class="fa fa-globe"></i>
-                  </li>
-                  <li class="indicator"
-                    ng-if="dashboard.readibleDate(dataSet, 'modificationDate')"
-                    title="Modification Date"
-                    refinery-tooltip
-                    refinery-tooltip-container="body"
-                    refinery-tooltip-placement="top">
-                    <i class="fa fa-calendar-o"
-                      ng-click="dashboard.dataCart.add(dataSet)"></i>
-                    {{ dashboard.readibleDate(dataSet, 'modificationDate') }}
-                  </li>
-                  <li class="separator">&middot;</li>
-                  <li class="indicator">
-                    <i class="fa fa-star is-glowing-yellow-text pointer"
-                      title="Added to data cart. Click to remove."
-                      ng-if="dashboard.dataCart.added(dataSet)"
-                      ng-click="dashboard.removeFromDataCart(dataSet)"
+          <div class="bg"></div>
+          <div
+            class="refinery-panel-content scrollable adjustable-height"
+            ui-scroll-viewport>
+            <ul
+              class="results no-list-style">
+              <li
+                ng-repeat="dataSet in dashboard.dataCart.dataSets | orderBy : $index : true"
+                adapter="dashboard.dataCartAdapter"
+                ng-class="{'hovered': dataSet.hovered, 'locked': dataSet.locked, 'previewing': dataSet.preview}"
+                ng-mouseenter="dashboard.dataSetMouseEnter(dataSet)"
+                ng-mouseleave="dashboard.dataSetMouseLeave(dataSet)">
+                <button
+                  class="preview"
+                  ng-click="dashboard.expandDataSetPreview(dataSet, $index)">
+                  <i
+                    class="fa fa-angle-double-right is-mirrorable"
+                    ng-class="{'is-mirrored': dataSet.preview}"></i>
+                </button>
+                <button
+                  class="zoom-out"
+                  title="Zoom out to show all annotations in the list graph to the right"
+                  ng-class="{'activated': dashboard.dataSetExploration && !dashboard.dataSetExplorationTempHidden, 'active': dashboard.listGraphZoomedOut}"
+                  ng-click="dashboard.toggleListGraphZoom(dataSet)"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="top"
+                  refinery-tooltip-delay-show="500"
+                  refinery-tooltip-delay-hide="150">
+                  <i class="fa fa-search-minus"></i>
+                </button>
+                <button
+                  class="annotations-only"
+                  title="Hide all unrelated nodes in the list graph to the right"
+                  ng-class="{'activated': dashboard.dataSetExploration && !dashboard.dataSetExplorationTempHidden, 'active': dashboard.listGraphHideUnrelatedNodes}"
+                  ng-click="dashboard.toggleListUnrelatedNodes(dataSet)"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="bottom"
+                  refinery-tooltip-delay-show="500"
+                  refinery-tooltip-delay-hide="150">
+                  <i class="fa fa-compress"></i>
+                </button>
+                <a
+                  class="title one-line"
+                  ng-href="data_sets/{{ dataSet.uuid }}"
+                  ng-bind-html="dataSet.title"></a>
+                <div class="flex-box indicators">
+                  <ul class="flex-item-two flex-left no-list-style">
+                    <li class="indicator"
+                      ng-if="dataSet.is_owner"
+                      title="You own this data set"
                       refinery-tooltip
                       refinery-tooltip-container="body"
-                      refinery-tooltip-placement="top"
-                      refinery-tooltip-hide-on-click="true"></i>
-                    <i class="fa fa-star-o pointer"
-                      title="Add to data cart"
-                      ng-if="!dashboard.dataCart.added(dataSet)"
-                      ng-click="dashboard.addToDataCart(dataSet)"
+                      refinery-tooltip-placement="top">
+                      <i class="fa fa-user"></i>
+                    </li>
+                    <li class="indicator"
+                      ng-if="dataSet.is_shared && dataSet.is_owner"
+                      title="You privately share this data set"
                       refinery-tooltip
                       refinery-tooltip-container="body"
-                      refinery-tooltip-placement="top"
-                      refinery-tooltip-hide-on-click="true"></i>
-                  </li>
-                </ul>
-              </div>
-            </li>
-          </ul>
+                      refinery-tooltip-placement="top">
+                      <i class="fa fa-users icon-shared-out"></i>
+                    </li>
+                    <li class="indicator"
+                      ng-if="dataSet.is_shared && !dataSet.is_owner && dashboard.userIsAuthenticated"
+                      title="This data set is shared with you"
+                      refinery-tooltip
+                      refinery-tooltip-container="body"
+                      refinery-tooltip-placement="top">
+                      <i class="fa fa-users icon-shared-in"></i>
+                    </li>
+                    <li class="indicator"
+                      ng-if="dataSet.public && dashboard.userIsAuthenticated"
+                      title="This file is publicly available"
+                      refinery-tooltip
+                      refinery-tooltip-container="body"
+                      refinery-tooltip-placement="top">
+                      <i class="fa fa-globe"></i>
+                    </li>
+                    <li class="indicator"
+                      ng-if="dashboard.readibleDate(dataSet, 'modificationDate')"
+                      title="Modification Date"
+                      refinery-tooltip
+                      refinery-tooltip-container="body"
+                      refinery-tooltip-placement="top">
+                      <i class="fa fa-calendar-o"
+                        ng-click="dashboard.dataCart.add(dataSet)"></i>
+                      {{ dashboard.readibleDate(dataSet, 'modificationDate') }}
+                    </li>
+                    <li class="separator">&middot;</li>
+                    <li class="indicator">
+                      <i class="fa fa-star is-glowing-yellow-text pointer"
+                        title="Added to data cart. Click to remove."
+                        ng-if="dashboard.dataCart.added(dataSet)"
+                        ng-click="dashboard.removeFromDataCart(dataSet)"
+                        refinery-tooltip
+                        refinery-tooltip-container="body"
+                        refinery-tooltip-placement="top"
+                        refinery-tooltip-hide-on-click="true"></i>
+                      <i class="fa fa-star-o pointer"
+                        title="Add to data cart"
+                        ng-if="!dashboard.dataCart.added(dataSet)"
+                        ng-click="dashboard.addToDataCart(dataSet)"
+                        refinery-tooltip
+                        refinery-tooltip-container="body"
+                        refinery-tooltip-placement="top"
+                        refinery-tooltip-hide-on-click="true"></i>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+            </ul>
+          </div>
         </div>
         <div
           class="refinery-panel-content scrollable"
