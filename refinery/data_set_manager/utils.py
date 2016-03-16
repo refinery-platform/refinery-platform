@@ -513,6 +513,7 @@ def generate_solr_params(params, assay_uuid):
         limit/row - maximum number of documents
         field_limit - set of fields to return
         facet_field - specify a field which should be treated as a facet
+        facet_filter - adds params to facet fields&fqs for filtering on fields
         facet_pivot - list of fields to pivot
         sort - Ordering include field name, whitespace, & asc or desc.
         fq - filter query
@@ -533,6 +534,7 @@ def generate_solr_params(params, assay_uuid):
     facet_field = params.get('facets', default=None)
     facet_pivot = params.get('pivots', default=None)
     sort = params.get('sort', default=None)
+    facet_filter = params.get('filter_attribute', default=None)
 
     fixed_solr_params = \
         '&'.join([file_types,
@@ -548,8 +550,9 @@ def generate_solr_params(params, assay_uuid):
     solr_params = ''.join(['fq=assay_uuid:', assay_uuid])
 
     if facet_field:
-        split_facet_fields = generate_facet_fields_query(
-                facet_field.split(','))
+        facet_field = facet_field.split(',')
+        facet_field = insert_facet_field_filter(facet_filter, facet_field)
+        split_facet_fields = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, split_facet_fields])
     else:
         # Missing facet_fields, it is generated from Attribute Order Model.
@@ -557,6 +560,7 @@ def generate_solr_params(params, assay_uuid):
         attributes = AttributeOrderSerializer(attributes_str, many=True)
         facet_field_obj = generate_filtered_facet_fields(attributes.data)
         facet_field = facet_field_obj.get('facet_field')
+        facet_field = insert_facet_field_filter(facet_filter, facet_field)
         field_limit = ','.join(facet_field_obj.get('field_limit'))
         facet_field_query = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, facet_field_query])
@@ -570,10 +574,58 @@ def generate_solr_params(params, assay_uuid):
     if sort:
         solr_params = ''.join([solr_params, '&sort=', sort])
 
+    if facet_filter:
+        facet_filter = json.loads(facet_filter)
+        facet_filter_str = create_facet_filter_query(facet_filter)
+        solr_params = ''.join([solr_params, facet_filter_str])
+
     url = '&'.join([solr_params, fixed_solr_params])
-    encoded_solr_params = urlquote(url, safe='=& ')
+    encoded_solr_params = urlquote(url, safe='\\=&! ')
 
     return encoded_solr_params
+
+
+def insert_facet_field_filter(facet_filter, facet_field_arr):
+    # For solr requests, removes duplicate facet fields with filters from
+    # facet_field_arr, maintains facet_field order
+    if facet_filter:
+        facet_filter = json.loads(facet_filter)
+        for facet in facet_filter:
+            ind = facet_field_arr.index(facet)
+            facet_field_arr[ind] = ''.join(['{!ex=', facet, '}', facet])
+
+    return facet_field_arr
+
+
+def create_facet_filter_query(facet_filter_fields):
+    # Creates the solr request for the attribute filters
+    query = ''
+    for facet in facet_filter_fields:
+        if len(facet_filter_fields[facet]) > 1:
+            field_str = 'OR'.join(facet_filter_fields[facet])
+        else:
+            field_str = facet_filter_fields[facet][0]
+
+        field_str = escape_character_solr(field_str)
+        field_str = field_str.replace('OR', ' OR ')
+        encoded_field_str = urlquote(field_str, safe='\\/=&:+ ')
+
+        query = ''.join([query, '&fq={!tag=', facet, '}',
+                         facet, ':(', encoded_field_str, ')'])
+    return query
+
+
+def escape_character_solr(field):
+    # This escapes certain characters for solr requests fields
+    match = ['\\',  '+', '-', '&', '|', '!', '(', ')',
+             '{', '}', '[', ']', '^', '~', '*',
+             '?', ':', '"', ';', ' ', '/']
+
+    for item in match:
+        if item in field:
+            field = field.replace(item, ('\\' + item))
+
+    return field
 
 
 def hide_fields_from_list(facet_obj):
@@ -703,6 +755,10 @@ def customize_attribute_response(facet_fields):
 
     attribute_array = []
     for field in facet_fields:
+        # For fields with filters, they need to be trimmed
+        if '!ex' in field:
+            field = field.split("}")[1]
+
         customized_field = {'internal_name': field}
 
         field_name = field.split('_')

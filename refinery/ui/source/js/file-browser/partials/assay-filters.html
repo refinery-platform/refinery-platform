@@ -1,16 +1,91 @@
 <div ng-if="FBCtrl.attributeFilter">
-  <div ng-repeat="(attribute, fields) in FBCtrl.attributeFilter track by $index">
-    Attribute Filter
-    <div ng-if="!(attribute == 'Analysis Group')">
-      {{ attribute }}:
-        <div ng-repeat="(field, value) in fields track by $index">
-          {{ field }}: {{ value }}
+  <div class="panel-group" id="attribute-filter" role="tablist"
+    aria-multiselectable="true">
+    <h4>Attribute Filter</h4>
+    <div
+      ng-repeat="(attribute, fields) in FBCtrl.attributeFilter track by $index"
+      ng-init="attributeIndex = $index">
+      <div class="panel panel-default">
+        <div class="panel-heading" role="tab" id="{{ attribute }}">
+          <h4 class="panel-title">
+          <a
+            role="button"
+            data-toggle="collapse"
+            data-parent="#attribute-filter"
+            href="#{{ attributeIndex }}"
+            aria-expanded="true"
+            aria-controls="attributeIndex">
+             {{ attribute }}
+          </a>
+          </h4>
         </div>
-    </div>
-    <div ng-if="attribute == 'Analysis Group'">
-      Analysis Filter
-      {{ field }}
+      <div id="{{$index}}" class="panel-collapse collapse" role="tabpanel"
+        aria-labelledby="{{ attribute }}">
+        <div class="panel-body">
+          <div ng-repeat="(field, value) in fields.facetObj">
+            <div class="checkbox">
+              <label>
+                <input
+                  type="checkbox"
+                  name="optionsCheckboxes"
+                  ng-model="selectedField[field]"
+                  ng-change="attributeSelectionUpdate(
+                  fields.internal_name, field)"
+                  id="attribute-filter-{{ field }}"
+                  value="{{ value }}">
+                  {{ field }}: {{ value }}
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
+<div ng-if="FBCtrl.analysisFilter">
+  <div class="panel-group" id="analysis-filter" role="tablist"
+    aria-multiselectable="true">
+    <h4>Analysis Filter</h4>
+    <div ng-repeat="(analysis, fields) in FBCtrl.analysisFilter">
+      <div class="panel panel-default">
+        <div class="panel-heading" role="tab" id="{{ analysis }}">
+          <h4 class="panel-title">
+          <a
+            role="button"
+            data-toggle="collapse"
+            data-parent="#analysis-filter"
+            href="#analysisFilterPanel"
+            aria-expanded="true"
+            aria-controls="analysisIndex">
+            {{ analysis }}
+          </a>
+          </h4>
+        </div>
+        <div
+          id="analysisFilterPanel"
+          class="panel-collapse collapse"
+          role="tabpanel"
+          aria-labelledby="{{ analysis }}">
+          <div class="panel-body">
+            <div ng-repeat="(field, value) in fields.facetObj">
+              <div class="checkbox">
+                <label>
+                  <input
+                    type="checkbox"
+                    name="optionsCheckboxes"
+                    ng-model="selectedField[field]"
+                    ng-change="attributeSelectionUpdate(
+                    fields.internal_name, field)"
+                    id="analysis-filter-{{ field }}"
+                    value="{{ value }}">
+                    {{ field }}: {{ value }}
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

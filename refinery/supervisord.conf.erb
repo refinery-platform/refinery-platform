@@ -48,7 +48,7 @@ priority = 995
 [program:worker2]
 ; limits concurrency of file imports to one to avoid overloading system IO
 command = python %(here)s/manage.py celeryd -c 1 -Q file_import --events
-environment = PATH="<% @virtualenv %>/bin"
+environment = PATH="<%= @virtualenv %>/bin"
 stdout_logfile = %(here)s/log/celeryd-w2.log
 stdout_logfile_maxbytes = 5MB
 stdout_logfile_backups = 4
@@ -65,7 +65,7 @@ priority = 995
 
 [program:celerycam]
 command = python %(here)s/manage.py celerycam
-environment = PATH="<% @virtualenv %>/bin"
+environment = PATH="<%= @virtualenv %>/bin"
 stdout_logfile = %(here)s/log/celerycam.log
 stdout_logfile_maxbytes = 5MB
 stdout_logfile_backups = 4
@@ -77,7 +77,7 @@ priority= 994
 
 [program:celerybeat]
 command = python %(here)s/manage.py celerybeat
-environment = PATH="<% @virtualenv %>/bin"
+environment = PATH="<%= @virtualenv %>/bin"
 stdout_logfile = %(here)s/log/celerybeat.log
 stdout_logfile_maxbytes = 5MB
 stdout_logfile_backups = 4
@@ -89,7 +89,7 @@ priority= 996
 
 [program:runserver]
 command = python %(here)s/manage.py runserver 0.0.0.0:8000 --noreload
-environment = PATH="<% @virtualenv %>/bin"
+environment = PATH="<%= @virtualenv %>/bin"
 stdout_logfile = %(here)s/log/refinery.log
 stdout_logfile_maxbytes = 5MB
 stdout_logfile_backups = 4

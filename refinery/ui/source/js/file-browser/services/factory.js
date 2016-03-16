@@ -7,6 +7,7 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
   var assayAttributes = [];
   var assayAttributeOrder = [];
   var attributeFilter = {};
+  var analysisFilter = {};
 
   var getAssayFiles = function (params) {
     params = params || {};
@@ -24,12 +25,21 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
   };
 
   var generateFilters = function(attributes, facet_counts){
-
     attributes.forEach(function(facetObj){
       var facetObjCount =  facet_counts[facetObj.internal_name];
+       //for filtering out (only)attributes with only 1 field
+      var facetObjCountMinLen = Object.keys(facetObjCount).length > 1;
 
-      if(facetObjCount){
-        attributeFilter[facetObj.display_name]= facetObjCount;
+      if(facetObjCountMinLen && facetObj.display_name !== 'Analysis'){
+          attributeFilter[facetObj.display_name] = {
+            'facetObj': facetObjCount,
+            'internal_name': facetObj.internal_name
+          };
+      }else if(facetObjCount && facetObj.display_name === 'Analysis'){
+        analysisFilter[facetObj.display_name]= {
+          'facetObj': facetObjCount,
+          'internal_name': facetObj.internal_name
+        };
       }
     });
   };
@@ -66,6 +76,7 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
     assayAttributes: assayAttributes,
     assayAttributeOrder: assayAttributeOrder,
     attributeFilter: attributeFilter,
+    analysisFilter: analysisFilter,
     getAssayFiles: getAssayFiles,
     getAssayAttributeOrder: getAssayAttributeOrder,
     postAssayAttributeOrder: postAssayAttributeOrder,

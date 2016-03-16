@@ -17,16 +17,16 @@
   },
   "files": {
     "features": [
+      "analysis-launch",
+      "analysis-monitor",
+      "chart",
+      "collaboration",
       "commons",
       "dashboard",
       "data-set-import",
-      "globals",
-      "analysis-launch",
-      "analysis-monitor",
+      "data-set-nav",
       "file-browser",
-      "collaboration",
-      "chart",
-      "data-set-nav"
+      "globals"
     ],
     "vendor": {
       "css": [
