@@ -28,8 +28,8 @@
                 <input
                   type="checkbox"
                   name="optionsCheckboxes"
-                  ng-model="selectedField[field]"
-                  ng-change="attributeSelectionUpdate(
+                  ng-model="FBCtrl.selectedField[field]"
+                  ng-change="FBCtrl.attributeSelectionUpdate(
                   fields.internal_name, field)"
                   id="attribute-filter-{{ field }}"
                   value="{{ value }}">
@@ -74,8 +74,8 @@
                   <input
                     type="checkbox"
                     name="optionsCheckboxes"
-                    ng-model="selectedField[field]"
-                    ng-change="attributeSelectionUpdate(
+                    ng-model="FBCtrl.selectedField[field]"
+                    ng-change="FBCtrl.attributeSelectionUpdate(
                     fields.internal_name, field)"
                     id="analysis-filter-{{ field }}"
                     value="{{ value }}">

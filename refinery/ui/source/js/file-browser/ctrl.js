@@ -2,15 +2,14 @@ angular.module('refineryFileBrowser')
     .controller('FileBrowserCtrl',
     [
       '$location',
-      '$scope',
+      'uiGridConstants',
       'fileBrowserFactory',
-      'assayFileService',
       '$window',
       FileBrowserCtrl
     ]);
 
 
-function FileBrowserCtrl($location, $scope, fileBrowserFactory, assayFileService, $window) {
+function FileBrowserCtrl($location, uiGridConstants, fileBrowserFactory, $window) {
   "use strict";
   var vm = this;
   vm.assayFiles = [];
@@ -21,10 +20,11 @@ function FileBrowserCtrl($location, $scope, fileBrowserFactory, assayFileService
   vm.queryKeys = Object.keys($location.search());
 
   //Param is generated from services
-  $scope.filesParam = {'uuid': $window.externalAssayUuid};
-  $scope.selectedField = {};
-  $scope.selectedFieldList = {};
-  $scope.gridOptions = {
+  vm.filesParam = {'uuid': $window.externalAssayUuid};
+  vm.selectedField = {};
+  vm.selectedFieldList = {};
+  vm.gridOptions = {
+    appScopeProvider: vm,
     useExternalSorting: true,
     enableRowSelection: true,
     enableSelectAll: true,
@@ -33,24 +33,17 @@ function FileBrowserCtrl($location, $scope, fileBrowserFactory, assayFileService
     showGridFooter:true,
     enableSelectionBatchEvent: true,
     info: {},
-    multiSelect: true
+    multiSelect: true,
   };
 
-  //vm.updateAssayFiles = function (filterAttribute, limit, offset) {
   vm.updateAssayFiles = function () {
-    console.log("in update Assay");
 
-    return fileBrowserFactory.getAssayFiles($scope.filesParam).then(function (response) {
+    return fileBrowserFactory.getAssayFiles(vm.filesParam).then(function (response) {
       vm.assayFiles = fileBrowserFactory.assayFiles;
       vm.assayAttributes = fileBrowserFactory.assayAttributes;
       vm.attributeFilter = fileBrowserFactory.attributeFilter;
       vm.analysisFilter = fileBrowserFactory.analysisFilter;
-
-      vm.createColumnDefs();
-      $scope.gridOptions = {
-      columnDefs: vm.customColumnName,
-      data: $scope.FBCtrl.assayFiles
-      };
+      vm.gridOptions.data =  vm.assayFiles;
       return vm.assayFiles;
     });
   };
@@ -79,7 +72,7 @@ function FileBrowserCtrl($location, $scope, fileBrowserFactory, assayFileService
     angular.forEach(fieldObj.facetObj, function (value, field) {
       if(vm.queryKeys.indexOf(field) > -1){
         console.log(vm.queryKeys);
-        $scope.selectedField[field]=true;
+        vm.selectedField[field]=true;
         vm.attributeSelectionUpdate(fieldObj.internal_name, field);
       }
     });
@@ -87,44 +80,77 @@ function FileBrowserCtrl($location, $scope, fileBrowserFactory, assayFileService
 
   //Updates which attribute filters are selected and the ui-grid data
   vm.attributeSelectionUpdate = function(internal_name, field){
-    if($scope.selectedField[field] &&
-      typeof $scope.selectedFieldList[internal_name] !== 'undefined'){
-      $scope.selectedFieldList[internal_name].push(field);
-      $location.search(field, $scope.selectedField[field]);
+    if(vm.selectedField[field] &&
+      typeof vm.selectedFieldList[internal_name] !== 'undefined'){
+      vm.selectedFieldList[internal_name].push(field);
+      $location.search(field, vm.selectedField[field]);
 
-    }else if($scope.selectedField[field]){
-      $scope.selectedFieldList[internal_name]=[field];
-      $location.search(field, $scope.selectedField[field]);
+    }else if(vm.selectedField[field]){
+      vm.selectedFieldList[internal_name]=[field];
+      $location.search(field, vm.selectedField[field]);
 
     }else{
-      var ind = $scope.selectedFieldList[internal_name].indexOf(field);
+      var ind = vm.selectedFieldList[internal_name].indexOf(field);
       if(ind > -1){
-        $scope.selectedFieldList[internal_name].splice(ind, 1);
+        vm.selectedFieldList[internal_name].splice(ind, 1);
       }
-      if($scope.selectedFieldList[internal_name].length === 0){
-        delete $scope.selectedFieldList[internal_name];
+      if(vm.selectedFieldList[internal_name].length === 0){
+        delete vm.selectedFieldList[internal_name];
       }
       $location.search(field, null);
 
     }
-    $scope.filesParam['filter_attribute']= $scope.selectedFieldList;
+    vm.filesParam['filter_attribute']= vm.selectedFieldList;
+    vm.updateAssayFiles();
+  };
 
-    vm.updateAssayFiles().then(function(){
-      $scope.gridOptions = {
-        data: vm.assayFiles
-      };
+  vm.gridOptions.onRegisterApi = function(gridApi) {
+    //set gridApi on scope
+
+    vm.gridApi = gridApi;
+
+    //Sort events
+    vm.gridApi.core.on.sortChanged( null, vm.sortChanged );
+    vm.sortChanged(vm.gridApi.grid, [ vm.gridOptions.columnDefs[1] ] );
+
+    //Checkbox selection events
+    vm.gridApi.selection.on.rowSelectionChanged(null, function (row) {
+       vm.selectNodes = gridApi.selection.getSelectedRows();
     });
+
+    vm.gridApi.selection.on.rowSelectionChangedBatch(null, function (rows) {
+      vm.selectNodes = gridApi.selection.getSelectedRows();
+    });
+  };
+
+  vm.sortChanged = function ( grid, sortColumns ) {
+    if (typeof sortColumns !== 'undefined' && typeof sortColumns[0] !== 'undefined') {
+      switch (sortColumns[0].sort.direction) {
+        case uiGridConstants.ASC:
+          vm.filesParam['sort'] = sortColumns[0].field + ' asc';
+          vm.updateAssayFiles();
+          break;
+        case uiGridConstants.DESC:
+          vm.filesParam['sort'] = sortColumns[0].field + ' desc';
+          vm.updateAssayFiles();
+          break;
+        case undefined:
+          vm.updateAssayFiles();
+          break;
+      }
+    }
   };
 
   vm.createColumnDefs = function(){
     vm.assayAttributes.forEach(function(attribute){
       vm.customColumnName.push(
         {
-          name: attribute.display_name,
-          field: attribute.internal_name
+          'name': attribute.display_name,
+          'field': attribute.internal_name
         }
       );
     });
+    vm.gridOptions.columnDefs = vm.customColumnName;
   };
 
 }
