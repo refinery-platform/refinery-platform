@@ -41,18 +41,25 @@ function rpFileBrowserAssayFilters(_, $timeout, $location, fileBrowserFactory) {
         var queryFields = Object.keys($location.search());
         var allFilters = scope.FBCtrl.attributeFilter;
             allFilters['Analysis'] = scope.FBCtrl.analysisFilter['Analysis'];
+
         angular.forEach(allFilters, function (attributeObj, attribute) {
           var allFields = Object.keys(attributeObj.facetObj);
+          //time out allows the dom to load
           $timeout(function () {
-            for(var ind=0; ind<allFields.length; ind++){
-              if(queryFields.indexOf(allFields[ind]) > -1){
-                $('#' + attribute).addClass('in');
-                break;
-              }
-            }
+            updateDomDropdown(allFields, queryFields, attribute);
           }, 0);
         });
       });
+
+      //Loops through fields to find matching attributes and drops down panel
+      var updateDomDropdown = function(allFields, queryFields, attribute){
+        for(var ind=0; ind<allFields.length; ind++){
+          if(queryFields.indexOf(allFields[ind]) > -1){
+            $('#' + attribute).addClass('in');
+            break;
+          }
+        }
+      };
     }
   };
 }
