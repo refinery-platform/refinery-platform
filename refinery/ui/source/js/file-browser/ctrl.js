@@ -33,7 +33,6 @@ function FileBrowserCtrl($scope, $location, uiGridConstants, fileBrowserFactory,
     rowHeight: 35,
     showGridFooter:true,
     enableSelectionBatchEvent: true,
-    info: {},
     multiSelect: true
   };
 
@@ -66,11 +65,11 @@ function FileBrowserCtrl($scope, $location, uiGridConstants, fileBrowserFactory,
     $scope.$broadcast('rf/attributeFilter-ready');
 
     angular.forEach(allFilters, function(fieldObj, attribute) {
-      vm.updateSelectedFieldFromQuery(fieldObj, attribute);
+      vm.refreshSelectedFieldFromQuery(fieldObj, attribute);
     });
   };
 
-  vm.updateSelectedFieldFromQuery = function(fieldObj, attribute){
+  vm.refreshSelectedFieldFromQuery = function(fieldObj, attribute){
     angular.forEach(fieldObj.facetObj, function (value, field) {
       if(vm.queryKeys.indexOf(field) > -1){
         vm.selectedField[field]=true;
@@ -104,6 +103,7 @@ function FileBrowserCtrl($scope, $location, uiGridConstants, fileBrowserFactory,
     vm.updateAssayFiles();
   };
 
+  //Ui-grid methods for catchin grid events
   vm.gridOptions.onRegisterApi = function(gridApi) {
     //set gridApi on scope
 

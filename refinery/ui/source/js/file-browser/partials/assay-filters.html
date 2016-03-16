@@ -6,24 +6,24 @@
       ng-repeat="(attribute, fields) in FBCtrl.attributeFilter track by $index"
       ng-init="attributeIndex = $index">
       <div class="panel panel-default">
-        <div class="panel-heading" role="tab" id="{{ attribute }}">
+        <div class="panel-heading" role="tab">
           <h4 class="panel-title">
           <div
             role="button"
             data-toggle="collapse"
             data-parent="#attribute-filter"
-            ng-click="dropAttributePanel($event, attributeIndex)"
+            ng-click="dropAttributePanel($event, attribute)"
             aria-expanded="true"
-            aria-controls="{{ attributeIndex }}">
+            aria-controls="{{ attribute }}">
              {{ attribute }}
           </div>
           </h4>
         </div>
-      <div id="{{attributeIndex}}" class="panel-collapse collapse" role="tabpanel"
+      <div id="{{attribute}}" class="panel-collapse collapse" role="tabpanel"
         aria-labelledby="{{ attribute }}">
         <div class="panel-body">
           <div ng-repeat="(field, value) in fields.facetObj">
-            <div class="checkbox">
+            <div class="checkbox" id="attribute-filter-{{ field }}">
               <label>
                 <input
                   type="checkbox"
@@ -31,7 +31,6 @@
                   ng-model="FBCtrl.selectedField[field]"
                   ng-change="FBCtrl.attributeSelectionUpdate(
                   fields.internal_name, field)"
-                  id="attribute-filter-{{ field }}"
                   value="{{ value }}">
                   {{ field }}: {{ value }}
               </label>
@@ -55,15 +54,15 @@
             role="button"
             data-toggle="collapse"
             data-parent="#analysis-filter"
-            ng-click="dropAttributePanel($event, 'analysisFilterPanel')"
+            ng-click="dropAttributePanel($event, 'Analysis')"
             aria-expanded="true"
-            aria-controls="analysisFilterPanel">
+            aria-controls="Analysis">
             {{ analysis }}
           </div>
           </h4>
         </div>
         <div
-          id="analysisFilterPanel"
+          id="Analysis"
           class="panel-collapse collapse"
           role="tabpanel"
           aria-labelledby="{{ analysis }}">
