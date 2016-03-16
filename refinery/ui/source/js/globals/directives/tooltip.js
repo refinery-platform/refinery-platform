@@ -11,7 +11,11 @@ var TooltipCtrl = function ($element) {
         // first time by the mouse cursor. This ensures that Angular has
         // successfully rendered the title and avoids performance issues.
         _element.tooltip({
-          placement: this.placement
+          placement: this.placement,
+          delay: {
+            hide: this.delayHide || 0,
+            show: this.delayShow || 0
+          }
         });
         // After initializing the plugin we need to trigger the `mouseover`
         // event again to immediately show the tool tip.
@@ -31,6 +35,8 @@ var TooltipCtrl = function ($element) {
 var tooltipDirective = function () {
   return {
     bindToController: {
+      delayHide: '@refineryTooltipDelayHide',
+      delayShow: '@refineryTooltipDelayShow',
       hideOnClick: '@refineryTooltipHideOnClick',
       container: '@refineryTooltipContainer',
       placement: '@refineryTooltipPlacement'
