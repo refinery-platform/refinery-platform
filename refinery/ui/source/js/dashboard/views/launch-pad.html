@@ -221,14 +221,26 @@
               </button>
               <button
                 class="zoom-out"
+                title="Zoom out to show all annotations in the list graph to the right"
                 ng-class="{'activated': dashboard.dataSetExploration && !dashboard.dataSetExplorationTempHidden, 'active': dashboard.listGraphZoomedOut}"
-                ng-click="dashboard.toggleListGraphZoom(dataSet)">
+                ng-click="dashboard.toggleListGraphZoom(dataSet)"
+                refinery-tooltip
+                refinery-tooltip-container="body"
+                refinery-tooltip-placement="top"
+                refinery-tooltip-delay-show="500"
+                refinery-tooltip-delay-hide="150">
                 <i class="fa fa-search-minus"></i>
               </button>
               <button
                 class="annotations-only"
+                title="Hide all unrelated nodes in the list graph to the right"
                 ng-class="{'activated': dashboard.dataSetExploration && !dashboard.dataSetExplorationTempHidden, 'active': dashboard.listGraphHideUnrelatedNodes}"
-                ng-click="dashboard.toggleListUnrelatedNodes(dataSet)">
+                ng-click="dashboard.toggleListUnrelatedNodes(dataSet)"
+                refinery-tooltip
+                refinery-tooltip-container="body"
+                refinery-tooltip-placement="bottom"
+                refinery-tooltip-delay-show="500"
+                refinery-tooltip-delay-hide="150">
                 <i class="fa fa-compress"></i>
               </button>
               <a
@@ -328,14 +340,26 @@
               </button>
               <button
                 class="zoom-out"
+                title="Zoom out to show all annotations in the list graph to the right"
                 ng-class="{'activated': dashboard.dataSetExploration && !dashboard.dataSetExplorationTempHidden, 'active': dashboard.listGraphZoomedOut}"
-                ng-click="dashboard.toggleListGraphZoom(dataSet)">
+                ng-click="dashboard.toggleListGraphZoom(dataSet)"
+                refinery-tooltip
+                refinery-tooltip-container="body"
+                refinery-tooltip-placement="top"
+                refinery-tooltip-delay-show="500"
+                refinery-tooltip-delay-hide="150">
                 <i class="fa fa-search-minus"></i>
               </button>
               <button
                 class="annotations-only"
+                title="Hide all unrelated nodes in the list graph to the right"
                 ng-class="{'activated': dashboard.dataSetExploration && !dashboard.dataSetExplorationTempHidden, 'active': dashboard.listGraphHideUnrelatedNodes}"
-                ng-click="dashboard.toggleListUnrelatedNodes(dataSet)">
+                ng-click="dashboard.toggleListUnrelatedNodes(dataSet)"
+                refinery-tooltip
+                refinery-tooltip-container="body"
+                refinery-tooltip-placement="bottom"
+                refinery-tooltip-delay-show="500"
+                refinery-tooltip-delay-hide="150">
                 <i class="fa fa-compress"></i>
               </button>
               <a
