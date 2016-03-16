@@ -1,6 +1,7 @@
 angular.module('refineryFileBrowser')
     .controller('FileBrowserCtrl',
     [
+      '$scope',
       '$location',
       'uiGridConstants',
       'fileBrowserFactory',
@@ -9,18 +10,18 @@ angular.module('refineryFileBrowser')
     ]);
 
 
-function FileBrowserCtrl($location, uiGridConstants, fileBrowserFactory, $window) {
+function FileBrowserCtrl($scope, $location, uiGridConstants, fileBrowserFactory, $window) {
   "use strict";
   var vm = this;
   vm.assayFiles = [];
   vm.assayAttributes = [];
   vm.attributeFilter = [];
   vm.analysisFilter = [];
+  vm.filesParam = {'uuid': $window.externalAssayUuid};
+
+  //Ui-grid parameters
   vm.customColumnName = [];
   vm.queryKeys = Object.keys($location.search());
-
-  //Param is generated from services
-  vm.filesParam = {'uuid': $window.externalAssayUuid};
   vm.selectedField = {};
   vm.selectedFieldList = {};
   vm.gridOptions = {
@@ -33,7 +34,7 @@ function FileBrowserCtrl($location, uiGridConstants, fileBrowserFactory, $window
     showGridFooter:true,
     enableSelectionBatchEvent: true,
     info: {},
-    multiSelect: true,
+    multiSelect: true
   };
 
   vm.updateAssayFiles = function () {
@@ -62,6 +63,7 @@ function FileBrowserCtrl($location, uiGridConstants, fileBrowserFactory, $window
     //Merge attribute and analysis filter data obj
     var allFilters = vm.attributeFilter;
     allFilters['Analysis'] = vm.analysisFilter['Analysis'];
+    $scope.$broadcast('rf/attributeFilter-ready');
 
     angular.forEach(allFilters, function(fieldObj, attribute) {
       vm.updateSelectedFieldFromQuery(fieldObj, attribute);
@@ -71,9 +73,8 @@ function FileBrowserCtrl($location, uiGridConstants, fileBrowserFactory, $window
   vm.updateSelectedFieldFromQuery = function(fieldObj, attribute){
     angular.forEach(fieldObj.facetObj, function (value, field) {
       if(vm.queryKeys.indexOf(field) > -1){
-        console.log(vm.queryKeys);
         vm.selectedField[field]=true;
-        vm.attributeSelectionUpdate(fieldObj.internal_name, field);
+        vm.attributeSelectionUpdate(fieldObj.internal_name, field, attribute);
       }
     });
   };
@@ -98,7 +99,6 @@ function FileBrowserCtrl($location, uiGridConstants, fileBrowserFactory, $window
         delete vm.selectedFieldList[internal_name];
       }
       $location.search(field, null);
-
     }
     vm.filesParam['filter_attribute']= vm.selectedFieldList;
     vm.updateAssayFiles();
