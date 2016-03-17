@@ -70,7 +70,7 @@ echo -e "File store... \c"
 TIME_INTERMEDIATE_START=$(date +"%s")
 
 mkdir -p "$BACKUP_TEMP/$NOW/file_store"
-rsync -az --partial "/vagrant/media/file_store/" "$BACKUP_TEMP/$NOW/file_store"
+sudo rsync -az --partial "/vagrant/media/file_store/" "$BACKUP_TEMP/$NOW/file_store"
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
@@ -82,7 +82,7 @@ TIME_INTERMEDIATE_START=$(date +"%s")
 
 mkdir -p "$BACKUP_TEMP/$NOW/neo4j"
 sudo service neo4j-service stop
-rsync -az --partial "$NEO4J_DATA" "$BACKUP_TEMP/$NOW/neo4j"
+sudo rsync -az --partial "$NEO4J_DATA" "$BACKUP_TEMP/$NOW/neo4j"
 sudo service neo4j-service start > /dev/null
 
 TIME_INTERMEDIATE_END=$(date +"%s")
