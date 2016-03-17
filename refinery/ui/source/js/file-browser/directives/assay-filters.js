@@ -19,12 +19,16 @@ function rpFileBrowserAssayFilters( $timeout, $location) {
        attributeFilter: '@',
        analysisFilter: '@'
     },
-    link: function(scope){
+    link: function(scope, element){
 
       //ng-click event for attribute filter panels
-      scope.dropAttributePanel = function(e, attributeIndex){
+      scope.dropAttributePanel = function(e, attributeName){
         e.preventDefault();
-        var attribute = $('#' + attributeIndex);
+        var escapeAttributeName = attributeName.replace(' ', '-');
+        var attribute = angular.element(
+          document.querySelector('#' + escapeAttributeName)
+        );
+        console.log(attribute);
         var classStr = attribute[0].className;
         if(classStr.indexOf('in') > -1){
           attribute.removeClass('in');
@@ -36,7 +40,8 @@ function rpFileBrowserAssayFilters( $timeout, $location) {
       //Drop down windows when they are in the URL query
       scope.$on('rf/attributeFilter-ready', function(){
         var queryFields = Object.keys($location.search());
-        var allFilters = scope.FBCtrl.attributeFilter;
+        var allFilters = {};
+        angular.copy(scope.FBCtrl.attributeFilter, allFilters);
             allFilters['Analysis'] = scope.FBCtrl.analysisFilter['Analysis'];
 
         angular.forEach(allFilters, function (attributeObj, attribute) {
@@ -49,10 +54,13 @@ function rpFileBrowserAssayFilters( $timeout, $location) {
       });
 
       //Loops through fields to find matching attributes and drops down panel
-      var updateDomDropdown = function(allFields, queryFields, attribute){
+      var updateDomDropdown = function(allFields, queryFields, attributeName){
         for(var ind=0; ind<allFields.length; ind++){
           if(queryFields.indexOf(allFields[ind]) > -1){
-            $('#' + attribute).addClass('in');
+            var escapeAttributeName = attributeName.replace(' ', '-');
+            angular.element(
+              document.querySelector('#' + escapeAttributeName)
+            ).addClass('in');
             break;
           }
         }
