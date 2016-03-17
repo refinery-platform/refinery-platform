@@ -53,7 +53,7 @@ describe('Controller: AnalysisMonitorCtrl', function(){
     });
 
     it("updateAnalysesList is method", function(){
-      expect(angular.isFunction(ctrl.cancelAnalysis)).toBe(true);
+      expect(angular.isFunction(ctrl.updateAnalysesList)).toBe(true);
     });
 
     it("updateAnalysesList sets timer and returns promise", function(){
@@ -73,7 +73,7 @@ describe('Controller: AnalysisMonitorCtrl', function(){
     });
 
     it("updateAnalysesGlobalList is  method", function(){
-      expect(angular.isFunction(ctrl.cancelAnalysis)).toBe(true);
+      expect(angular.isFunction(ctrl.updateAnalysesGlobalList)).toBe(true);
     });
 
     it("updateAnalysesGlobalList sets timer and returns promise", function(){
@@ -93,7 +93,7 @@ describe('Controller: AnalysisMonitorCtrl', function(){
     });
 
     it("updateAnalysesRunningGlobalList is method", function(){
-      expect(angular.isFunction(ctrl.cancelAnalysis)).toBe(true);
+      expect(angular.isFunction(ctrl.updateAnalysesRunningGlobalList)).toBe(true);
     });
 
     it("updateAnalysesRunningList sets timer and returns promise", function(){
@@ -113,7 +113,7 @@ describe('Controller: AnalysisMonitorCtrl', function(){
     });
 
     it("updateAnalysesRunningGlobalList is method", function(){
-      expect(angular.isFunction(ctrl.cancelAnalysis)).toBe(true);
+      expect(angular.isFunction(ctrl.updateAnalysesRunningGlobalList)).toBe(true);
     });
 
     it("updateAnalysesRunningGlobalList sets timer and returns promise", function(){
