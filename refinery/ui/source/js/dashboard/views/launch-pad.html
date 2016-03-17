@@ -80,7 +80,10 @@
               ng-click="dashboard.toggleDataCart()"
               refinery-tooltip
               refinery-tooltip-container="body"
-              refinery-tooltip-placement="left">
+              refinery-tooltip-placement="left"
+              refinery-tooltip-delay-show="750"
+              refinery-tooltip-delay-hide="150"
+              refinery-tooltip-hide-on-click="true">
               <span ng-if="dashboard.dataCart.length" class="is-mirrored is-mirrored-text">
                 {{ dashboard.dataCart.length }}
               </span>
@@ -94,7 +97,10 @@
               close-on-outer-click-external-trigger="dashboard.dataSetsFilter"
               refinery-tooltip
               refinery-tooltip-container="body"
-              refinery-tooltip-placement="top">
+              refinery-tooltip-placement="top"
+              refinery-tooltip-delay-show="750"
+              refinery-tooltip-delay-hide="150"
+              refinery-tooltip-hide-on-click="true">
             </button>
             <button
               class="fa fa-sort icon-only"
@@ -105,7 +111,10 @@
               close-on-outer-click-external-trigger="dashboard.dataSetsSort"
               refinery-tooltip
               refinery-tooltip-container="body"
-              refinery-tooltip-placement="right">
+              refinery-tooltip-placement="right"
+              refinery-tooltip-delay-show="750"
+              refinery-tooltip-delay-hide="150"
+              refinery-tooltip-hide-on-click="true">
             </button>
           </div>
           <div class="floatbox-max-left">
