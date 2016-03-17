@@ -984,6 +984,8 @@ DashboardCtrl.prototype.toggleDataCart = function () {
       this.dataCartPanelHeight = 0.25;
     }
 
+    this.showDataCart = !!!this.showDataCart;
+
     this.pubSub.trigger('refineryPanelUpdateHeight', {
       ids: {
         dataCart: true,
@@ -997,8 +999,6 @@ DashboardCtrl.prototype.toggleDataCart = function () {
         this.dataSetsAdapter.reload();
       }
     }.bind(this), 250);
-
-    this.showDataCart = !!!this.showDataCart;
   }
 };
 
