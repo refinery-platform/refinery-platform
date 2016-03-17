@@ -1,15 +1,13 @@
 angular.module('refineryFileBrowser')
     .directive("rpFileBrowserAssayFilters",
   [
-    '_',
     '$timeout',
     '$location',
-    'fileBrowserFactory',
     rpFileBrowserAssayFilters
   ]
 );
 
-function rpFileBrowserAssayFilters(_, $timeout, $location, fileBrowserFactory) {
+function rpFileBrowserAssayFilters( $timeout, $location) {
     "use strict";
 
   return {
