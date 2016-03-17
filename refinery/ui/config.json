@@ -27,7 +27,8 @@
       "data-set-nav",
       "file-browser",
       "globals",
-      "node-mapping"
+      "node-mapping",
+      "node-relationship"
     ],
     "vendor": {
       "css": [
