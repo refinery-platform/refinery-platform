@@ -24,7 +24,6 @@ var Neo4jToGraphService = (function () {
     var uris = Object.keys(nodes);
 
     for (var i = uris.length; i--;) {
-
       node = nodes[uris[i]];
 
       node.name = node.label || node.ontId;
