@@ -37,19 +37,18 @@ function FileBrowserCtrl($scope, $location, uiGridConstants, fileBrowserFactory,
   };
 
   vm.updateAssayFiles = function () {
-    return fileBrowserFactory.getAssayFiles(vm.filesParam).then(function (response) {
+    return fileBrowserFactory.getAssayFiles(vm.filesParam).then(function () {
       vm.assayFiles = fileBrowserFactory.assayFiles;
       vm.assayAttributes = fileBrowserFactory.assayAttributes;
       vm.attributeFilter = fileBrowserFactory.attributeFilter;
       vm.analysisFilter = fileBrowserFactory.analysisFilter;
       vm.gridOptions.data =  vm.assayFiles;
-      return vm.assayFiles;
     });
   };
 
   vm.updateAssayAttributes = function () {
     var assay_uuid = $window.externalAssayUuid;
-    fileBrowserFactory.getAssayAttributeOrder(assay_uuid).then(function(){
+    return fileBrowserFactory.getAssayAttributeOrder(assay_uuid).then(function(){
       vm.assayAttributeOrder = fileBrowserFactory.assayAttributeOrder;
     },function(error){
       console.log(error);
@@ -61,6 +60,7 @@ function FileBrowserCtrl($scope, $location, uiGridConstants, fileBrowserFactory,
     //Merge attribute and analysis filter data obj
     var allFilters = vm.attributeFilter;
     allFilters['Analysis'] = vm.analysisFilter['Analysis'];
+    //for attribute filter directive, drop panels in query
     $scope.$broadcast('rf/attributeFilter-ready');
 
     angular.forEach(allFilters, function(fieldObj, attribute) {
@@ -102,7 +102,7 @@ function FileBrowserCtrl($scope, $location, uiGridConstants, fileBrowserFactory,
     vm.updateAssayFiles();
   };
 
-  //Ui-grid methods for catchin grid events
+  //Ui-grid methods for catching grid events
   vm.gridOptions.onRegisterApi = function(gridApi) {
     //set gridApi on scope
 
@@ -122,8 +122,10 @@ function FileBrowserCtrl($scope, $location, uiGridConstants, fileBrowserFactory,
     });
   };
 
+  //Generates param: sort for api call from ui-grid response
   vm.sortChanged = function ( grid, sortColumns ) {
-    if (typeof sortColumns !== 'undefined' && typeof sortColumns[0] !== 'undefined') {
+    if (typeof sortColumns !== 'undefined' &&
+      typeof sortColumns[0] !== 'undefined') {
       switch (sortColumns[0].sort.direction) {
         case uiGridConstants.ASC:
           vm.filesParam['sort'] = sortColumns[0].field + ' asc';
@@ -140,6 +142,7 @@ function FileBrowserCtrl($scope, $location, uiGridConstants, fileBrowserFactory,
     }
   };
 
+  //populates the  ui-grid columns variable
   vm.createColumnDefs = function(){
     vm.assayAttributes.forEach(function(attribute){
       vm.customColumnName.push(
