@@ -37,7 +37,6 @@ function FileBrowserCtrl($scope, $location, uiGridConstants, fileBrowserFactory,
   };
 
   vm.updateAssayFiles = function () {
-
     return fileBrowserFactory.getAssayFiles(vm.filesParam).then(function (response) {
       vm.assayFiles = fileBrowserFactory.assayFiles;
       vm.assayAttributes = fileBrowserFactory.assayAttributes;
