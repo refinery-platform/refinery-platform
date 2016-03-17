@@ -1,12 +1,13 @@
 angular.module('refineryFileBrowser')
     .directive("rpFileBrowserAssayFilters",
   [
-    'fileBrowserFactory',
+    '$timeout',
+    '$location',
     rpFileBrowserAssayFilters
   ]
 );
 
-function rpFileBrowserAssayFilters(fileBrowserFactory) {
+function rpFileBrowserAssayFilters( $timeout, $location) {
     "use strict";
 
   return {
@@ -15,40 +16,46 @@ function rpFileBrowserAssayFilters(fileBrowserFactory) {
     controller: 'FileBrowserCtrl',
     controllerAs: 'FBCtrl',
     bindToController: {
-       attributeFilter: '=?bind',
-       analysisFilter: '=?bind'
+       attributeFilter: '@',
+       analysisFilter: '@'
     },
     link: function(scope){
 
-      scope.selectedField = {};
-      scope.selectedFieldList = {};
-      var selectedFieldQuery = {};
-
-      scope.attributeSelectionUpdate = function(internal_name, field){
-        if(scope.selectedField[field] &&
-          typeof scope.selectedFieldList[internal_name] !== 'undefined'){
-          scope.selectedFieldList[internal_name].push(field);
-
-        }else if(scope.selectedField[field]){
-          scope.selectedFieldList[internal_name]=[field];
-
+      //ng-click event for attribute filter panels
+      scope.dropAttributePanel = function(e, attributeIndex){
+        e.preventDefault();
+        var attribute = $('#' + attributeIndex);
+        var classStr = attribute[0].className;
+        if(classStr.indexOf('in') > -1){
+          attribute.removeClass('in');
         }else{
-          var ind = scope.selectedFieldList[internal_name].indexOf(field);
-          if(ind > -1){
-            scope.selectedFieldList[internal_name].splice(ind, 1);
-          }
-          if(scope.selectedFieldList[internal_name].length === 0){
-            delete scope.selectedFieldList[internal_name];
-          }
-
+          attribute.addClass('in');
         }
-        scope.filesParam['filter_attribute']= scope.selectedFieldList;
+      };
 
-        scope.FBCtrl.updateAssayFiles().then(function(){
-          scope.gridOptions = {
-          data: scope.FBCtrl.assayFiles
-          };
+      //Drop down windows when they are in the URL query
+      scope.$on('rf/attributeFilter-ready', function(){
+        var queryFields = Object.keys($location.search());
+        var allFilters = scope.FBCtrl.attributeFilter;
+            allFilters['Analysis'] = scope.FBCtrl.analysisFilter['Analysis'];
+
+        angular.forEach(allFilters, function (attributeObj, attribute) {
+          var allFields = Object.keys(attributeObj.facetObj);
+          //time out allows the dom to load
+          $timeout(function () {
+            updateDomDropdown(allFields, queryFields, attribute);
+          }, 0);
         });
+      });
+
+      //Loops through fields to find matching attributes and drops down panel
+      var updateDomDropdown = function(allFields, queryFields, attribute){
+        for(var ind=0; ind<allFields.length; ind++){
+          if(queryFields.indexOf(allFields[ind]) > -1){
+            $('#' + attribute).addClass('in');
+            break;
+          }
+        }
       };
     }
   };
