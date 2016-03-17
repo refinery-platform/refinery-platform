@@ -42,9 +42,6 @@ function FileBrowserCtrl($scope, $location, uiGridConstants, fileBrowserFactory,
       vm.assayAttributes = fileBrowserFactory.assayAttributes;
       vm.attributeFilter = fileBrowserFactory.attributeFilter;
       vm.analysisFilter = fileBrowserFactory.analysisFilter;
-      console.log("in ctrl");
-      console.log(vm.attributeFilter);
-      console.log(vm.analysisFilter);
       vm.gridOptions.data =  vm.assayFiles;
     });
   };
@@ -60,18 +57,12 @@ function FileBrowserCtrl($scope, $location, uiGridConstants, fileBrowserFactory,
 
   //checks url for params to update the filter
   vm.checkUrlQueryFilters = function(){
-     console.log("start check url query filter");
-    console.log(vm.attributeFilter);
     var allFilters = {};
     //Merge attribute and analysis filter data obj
     angular.copy(vm.attributeFilter, allFilters);
     allFilters['Analysis'] = vm.analysisFilter['Analysis'];
-    console.log("after allFilters query filter");
-    console.log(vm.attributeFilter);
     //for attribute filter directive, drop panels in query
     $scope.$broadcast('rf/attributeFilter-ready');
-     console.log("after broadcast query filter");
-    console.log(vm.attributeFilter);
     angular.forEach(allFilters, function(fieldObj, attribute) {
       vm.refreshSelectedFieldFromQuery(fieldObj, attribute);
     });
