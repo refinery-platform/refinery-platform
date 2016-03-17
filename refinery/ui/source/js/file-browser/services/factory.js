@@ -22,7 +22,9 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
     assayFile.$promise.then(function (response) {
       angular.copy(response.attributes, assayAttributes);
       angular.copy(response.nodes, assayFiles);
-      generateFilters(response.attributes, response.facet_field_counts);
+      var filterObj = generateFilters(response.attributes, response.facet_field_counts);
+      angular.copy(filterObj.attributeFilter, attributeFilter);
+      angular.copy(filterObj.analysisFilter, analysisFilter);
     }, function (error) {
       console.log(error);
     });
@@ -31,24 +33,33 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
   };
 
   var generateFilters = function(attributes, facet_counts){
+    //resets the attribute filters, which can be changed by owners
+    var outAttributeFilter = {};
+    var outAnalysisFilter = {};
+
     attributes.forEach(function(facetObj){
       var facetObjCount =  facet_counts[facetObj.internal_name];
        //for filtering out (only)attributes with only 1 field
       var facetObjCountMinLen = Object.keys(facetObjCount).length > 1;
 
       if(facetObjCountMinLen && facetObj.display_name !== 'Analysis'){
-          attributeFilter[facetObj.display_name] = {
-            'facetObj': facetObjCount,
-            'internal_name': facetObj.internal_name
-          };
+        outAttributeFilter[facetObj.display_name] = {
+          'facetObj': facetObjCount,
+          'internal_name': facetObj.internal_name
+        };
       }else if(facetObjCount && facetObj.display_name === 'Analysis'){
-        analysisFilter[facetObj.display_name]= {
+        outAnalysisFilter[facetObj.display_name]= {
           'facetObj': facetObjCount,
           'internal_name': facetObj.internal_name
         };
       }
     });
+    return {
+      'attributeFilter': outAttributeFilter,
+      'analysisFilter': outAnalysisFilter
+    };
   };
+
 
   var getAssayAttributeOrder = function (uuid) {
     var apiUrl = settings.appRoot + settings.refineryApiV2 +
@@ -79,12 +90,13 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
 
   //Helper function encodes field array in an obj
   var encodeAttributeFields = function(attributeObj) {
-    attributeObj.forEach(function(fieldArray){
+    for(var fieldArray in attributeObj){
       var copyFieldArray = fieldArray;
+
       for(var ind=0; ind < fieldArray.length; ind++){
         fieldArray[ind] = $window.encodeURIComponent(fieldArray[ind]);
       }
-    });
+    }
   };
 
   return{
