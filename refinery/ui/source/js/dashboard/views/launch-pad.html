@@ -205,9 +205,32 @@
           refinery-panel-id="dataCart"
           refinery-panel-get-rel-height="dashboard.getDataCartPanelHeight()">
           <div class="bg"></div>
+          <div class="refinery-panel-header">
+            <div class="floatbox">
+              <div class="floatbox-min-right">
+                <button
+                  class="fa fa-trash-o btn"
+                  title="Clear data cart"
+                  ng-click="dashboard.clearDataCart()"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="top"
+                  refinery-tooltip-delay-show="750"
+                  refinery-tooltip-delay-hide="150"
+                  refinery-tooltip-hide-on-click="true">
+                  Clear
+                </button>
+              </div>
+              <div class="floatbox-max-left">
+                <h4>Data Cart:</h4>
+                <span class="num-data-sets">
+                  {{ dashboard.dataCart.length }} data sets
+                </span>
+              </div>
+            </div>
+          </div>
           <div
-            class="refinery-panel-content scrollable adjustable-height"
-            ui-scroll-viewport>
+            class="refinery-panel-content scrollable adjustable-height">
             <ul
               class="results no-list-style">
               <li

@@ -826,31 +826,32 @@ a.analysis-header {
       font-size: 0.8em;
       color: @gray-light;
     }
+  }
 
-    .btn {
-      padding: 2px 10px 3px;
-      white-space: nowrap;
-      overflow: hidden;
-      color: #000;
-      text-overflow: ellipsis;
-      background: none;
-      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+  .refinery-header .btn,
+  .refinery-panel-header .btn {
+    padding: 2px 10px 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    color: #000;
+    text-overflow: ellipsis;
+    background: none;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
 
-      &:active,
-      &:focus {
-        outline: none;
-      }
+    &:active,
+    &:focus {
+      outline: none;
+    }
 
-      &:focus {
-        background-position: 0 0;
-        box-shadow: 0 0 4px 0 @blue-shadow;
-      }
+    &:focus {
+      background-position: 0 0;
+      box-shadow: 0 0 4px 0 @blue-shadow;
+    }
 
-      &.active {
-        text-shadow: none;
-        box-shadow: inset 0 1px 4px 0 rgba(0, 0, 0, 0.25);
-        background: darken(@gray-lighter, 5%);
-      }
+    &.active {
+      text-shadow: none;
+      box-shadow: inset 0 1px 4px 0 rgba(0, 0, 0, 0.25);
+      background: darken(@gray-lighter, 5%);
     }
   }
 
@@ -926,7 +927,7 @@ a.analysis-header {
           text-shadow: 0 0 3px fade(@yellow-shadow, 33%), 0 0 6px fade(@yellow-shadow, 10%);
 
           &:after {
-            background: radial-gradient(at bottom, fade(@yellow, 80%), transparent, transparent);
+            opacity: 1;
           }
         }
 
@@ -938,12 +939,17 @@ a.analysis-header {
 
         &:after {
           position: absolute;
+          opacity: 0;
           z-index: 1;
           content: '';
-          bottom: -5px;
-          left: -1px;
-          width: 1.25em;
-          height: 1em;
+          bottom: -0.9em;
+          left: -0.625em;
+          width: 0;
+          height: 0;
+          border-left: 1.25em solid transparent;
+          border-right: 1.25em solid transparent;
+          border-bottom: 1.25em solid @gray-lighterish;
+          transition: opacity @fast-transition-speed @ease-in-out-cubic;
         }
       }
 

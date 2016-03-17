@@ -66,12 +66,14 @@
 
 .data-cart {
   position: relative;
+  top: -1px;
   overflow: hidden;
+  visibility: hidden;
   transition: height @fast-transition-speed @ease-in-out-cubic;
-}
 
-.data-cart.active {
-  overflow: visible;
+  &.active {
+    visibility: visible;
+  }
 }
 
 .data-cart > .bg {
@@ -81,15 +83,43 @@
   right: 0;
   bottom: 0;
   background: @gray-lightest;
-  box-shadow: 0 -1px 0 0 #c1c1c1,
-              0 1px 0 0 rgba(0, 0, 0, 0.2),
-              inset 0 6px 6px -6px rgba(0, 0, 0, 0.15),
+  box-shadow: inset 0 -1px 0 0 rgba(0, 0, 0, 0.15),
               inset 0 -6px 6px -6px rgba(0, 0, 0, 0.15);
 }
 
 .data-cart .refinery-panel-content {
+  position: absolute !important;
+  top: 24px;
+  right: 0;
+  bottom: 0;
+  left: 0;
   min-height: 0;
-  height: 100%;
+}
+
+.refinery-dashboard .refinery-panel .data-cart .refinery-panel-header {
+  margin: 0;
+  padding: 0 10px;
+  background-color: darken(@gray-lighter, 5%);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.15),
+              inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+              0 0 6px 0 rgba(0, 0, 0, 0.15);
+
+  h4 {
+    color: @text-color;
+    font-weight: bold;
+  }
+
+  .num-data-sets {
+    color: @gray;
+    margin-left: 3px;
+  }
+
+  .btn {
+    padding: 2px 6px;
+    font-size: 0.9em;
+    color: @gray;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+  }
 }
 
 .refinery-dashboard .refinery-panel .data-cart ul.results > li.previewing {
