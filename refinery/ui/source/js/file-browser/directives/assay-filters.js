@@ -25,7 +25,6 @@ function rpFileBrowserAssayFilters( $timeout, $location) {
       scope.dropAttributePanel = function(e, attributeIndex){
         e.preventDefault();
         var attribute = $('#' + attributeIndex);
-        console.log(attribute);
         var classStr = attribute[0].className;
         if(classStr.indexOf('in') > -1){
           attribute.removeClass('in');
