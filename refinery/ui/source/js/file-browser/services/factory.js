@@ -9,8 +9,14 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
   var attributeFilter = {};
   var analysisFilter = {};
 
+
   var getAssayFiles = function (params) {
     params = params || {};
+
+    //encodes all field names to avoid issues with escape characters.
+    if(typeof params.filter_attribute !== 'undefined'){
+      params.filter_attribute = encodeAttributeFields(params.filter_attribute);
+    }
 
     var assayFile = assayFileService.query(params);
     assayFile.$promise.then(function (response) {
@@ -68,6 +74,16 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
       console.log(response);
     }, function (error) {
       console.log(error);
+    });
+  };
+
+  //Helper function encodes field array in an obj
+  var encodeAttributeFields = function(attributeObj) {
+    attributeObj.forEach(function(fieldArray){
+      var copyFieldArray = fieldArray;
+      for(var ind=0; ind < fieldArray.length; ind++){
+        fieldArray[ind] = $window.encodeURIComponent(fieldArray[ind]);
+      }
     });
   };
 
