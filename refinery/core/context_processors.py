@@ -26,6 +26,7 @@ def extra_context(context):
     return {
         "ADMINS": settings.ADMINS[0][1],
         "CURRENT_COMMIT": settings.CURRENT_COMMIT,
+        "DEBUG": settings.DEBUG,
         "REFINERY_CSS": settings.REFINERY_CSS,
         "REFINERY_MAIN_LOGO": settings.REFINERY_MAIN_LOGO,
         "REFINERY_INNER_NAVBAR_HEIGHT": settings.REFINERY_INNER_NAVBAR_HEIGHT,

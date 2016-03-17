@@ -26,7 +26,8 @@
       "data-set-import",
       "data-set-nav",
       "file-browser",
-      "globals"
+      "globals",
+      "node-mapping"
     ],
     "vendor": {
       "css": [
