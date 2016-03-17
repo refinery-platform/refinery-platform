@@ -974,9 +974,9 @@ DashboardCtrl.prototype.readibleDate = function (dataSet, property) {
   return dataSet[property + 'Readible'];
 };
 
-DashboardCtrl.prototype.toggleDataCart = function () {
-  if (this.dataCart.length) {
-    if (this.showDataCart) {
+DashboardCtrl.prototype.toggleDataCart = function (forceClose) {
+  if (this.dataCart.length || forceClose) {
+    if (this.showDataCart || forceClose) {
       this.dataSetsPanelHeight = 1;
       this.dataCartPanelHeight = 0;
     } else {
@@ -984,7 +984,7 @@ DashboardCtrl.prototype.toggleDataCart = function () {
       this.dataCartPanelHeight = 0.25;
     }
 
-    this.showDataCart = !!!this.showDataCart;
+    this.showDataCart = forceClose ? false : !!!this.showDataCart;
 
     this.pubSub.trigger('refineryPanelUpdateHeight', {
       ids: {
@@ -1046,6 +1046,12 @@ DashboardCtrl.prototype.checkAllCurrentDataSetsInDataCart = function () {
   this.dataSet.allIds.then(function (allIds) {
     this.allCurrentDataSetsInDataCart = this.dataCart.added(allIds);
   }.bind(this));
+};
+
+DashboardCtrl.prototype.clearDataCart = function () {
+  this.dataCart.clear();
+  this.allCurrentDataSetsInDataCart = 0;
+  this.toggleDataCart(true);
 };
 
 DashboardCtrl.prototype.showNotification = function () {

@@ -94,6 +94,13 @@ function dataCartFactory (_$q_, _$resource_, _settings_) {
     return !!card[dataSet.id];
   };
 
+  DataCart.prototype.clear = function () {
+    var ids = Object.keys(card);
+    for (var i = ids.length; i--;) {
+      remove(ids[i], true);
+    }
+  };
+
   DataCart.prototype.get = function (offset, limit, success) {
     success(stack.slice(Math.max(offset--, 0), limit));
   };
