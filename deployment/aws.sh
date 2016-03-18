@@ -36,6 +36,10 @@ export FACTER_RDS_HOST=$(jq -r .Address /home/ubuntu/rds)
 export FACTER_RDS_PORT=$(jq -r .Port /home/ubuntu/rds)
 export FACTER_RDS_ROLE="$RDS_ROLE"
 
+# Create SMTP credentials and
+# place them in (facter) environment variables.
+. bin/create-smtp-credentials
+
 export FACTER_ADMIN="$ADMIN"
 export FACTER_DEFAULT_FROM_EMAIL="$DEFAULT_FROM_EMAIL"
 export FACTER_SERVER_EMAIL="$DEFAULT_FROM_EMAIL"

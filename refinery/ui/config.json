@@ -17,15 +17,18 @@
   },
   "files": {
     "features": [
+      "analysis-launch",
+      "analysis-monitor",
+      "chart",
+      "collaboration",
       "commons",
       "dashboard",
       "data-set-import",
+      "data-set-nav",
+      "file-browser",
       "globals",
-      "analysis-launch",
-      "analysis-monitor",
-      "collaboration",
-      "chart",
-      "data-set-nav"
+      "node-mapping",
+      "node-relationship"
     ],
     "vendor": {
       "css": [

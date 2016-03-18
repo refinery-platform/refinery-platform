@@ -509,10 +509,11 @@ def generate_solr_params(params, assay_uuid):
     Params/Solr Params
         is_annotation - metadata
         facet_count/facet - enables facet counts in query response, true/false
-        start - paginate, offset response
+        offset - paginate, offset response
         limit/row - maximum number of documents
         field_limit - set of fields to return
         facet_field - specify a field which should be treated as a facet
+        facet_filter - adds params to facet fields&fqs for filtering on fields
         facet_pivot - list of fields to pivot
         sort - Ordering include field name, whitespace, & asc or desc.
         fq - filter query
@@ -527,12 +528,13 @@ def generate_solr_params(params, assay_uuid):
 
     is_annotation = params.get('is_annotation', default='false')
     facet_count = params.get('include_facet_count', default='true')
-    start = params.get('start', default='0')
+    start = params.get('offset', default='0')
     row = params.get('limit', default='20')
     field_limit = params.get('attributes', default=None)
     facet_field = params.get('facets', default=None)
     facet_pivot = params.get('pivots', default=None)
     sort = params.get('sort', default=None)
+    facet_filter = params.get('filter_attribute', default=None)
 
     fixed_solr_params = \
         '&'.join([file_types,
@@ -548,22 +550,22 @@ def generate_solr_params(params, assay_uuid):
     solr_params = ''.join(['fq=assay_uuid:', assay_uuid])
 
     if facet_field:
-        split_facet_fields = generate_facet_fields_query(
-                facet_field.split(','))
+        facet_field = facet_field.split(',')
+        facet_field = insert_facet_field_filter(facet_filter, facet_field)
+        split_facet_fields = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, split_facet_fields])
     else:
         # Missing facet_fields, it is generated from Attribute Order Model.
         attributes_str = AttributeOrder.objects.filter(assay__uuid=assay_uuid)
         attributes = AttributeOrderSerializer(attributes_str, many=True)
-        facet_field = generate_filtered_facet_fields(attributes.data)
+        facet_field_obj = generate_filtered_facet_fields(attributes.data)
+        facet_field = facet_field_obj.get('facet_field')
+        facet_field = insert_facet_field_filter(facet_filter, facet_field)
+        field_limit = ','.join(facet_field_obj.get('field_limit'))
         facet_field_query = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, facet_field_query])
 
     if field_limit:
-        solr_params = ''.join([solr_params, '&fl=', field_limit])
-    else:
-        # create field_limit from facet_fields
-        field_limit = ','.join(facet_field)
         solr_params = ''.join([solr_params, '&fl=', field_limit])
 
     if facet_pivot:
@@ -572,40 +574,95 @@ def generate_solr_params(params, assay_uuid):
     if sort:
         solr_params = ''.join([solr_params, '&sort=', sort])
 
+    if facet_filter:
+        facet_filter = json.loads(facet_filter)
+        facet_filter_str = create_facet_filter_query(facet_filter)
+        solr_params = ''.join([solr_params, facet_filter_str])
+
     url = '&'.join([solr_params, fixed_solr_params])
-    encoded_solr_params = urlquote(url, safe='=& ')
+    encoded_solr_params = urlquote(url, safe='\\=&! ')
 
     return encoded_solr_params
 
 
-def hide_fields_from_weighted_list(weighted_facet_obj):
+def insert_facet_field_filter(facet_filter, facet_field_arr):
+    # For solr requests, removes duplicate facet fields with filters from
+    # facet_field_arr, maintains facet_field order
+    if facet_filter:
+        facet_filter = json.loads(facet_filter)
+        for facet in facet_filter:
+            ind = facet_field_arr.index(facet)
+            facet_field_arr[ind] = ''.join(['{!ex=', facet, '}', facet])
+
+    return facet_field_arr
+
+
+def create_facet_filter_query(facet_filter_fields):
+    # Creates the solr request for the attribute filters
+    query = ''
+    for facet in facet_filter_fields:
+        if len(facet_filter_fields[facet]) > 1:
+            field_str = 'OR'.join(facet_filter_fields[facet])
+        else:
+            field_str = facet_filter_fields[facet][0]
+
+        field_str = escape_character_solr(field_str)
+        field_str = field_str.replace('OR', ' OR ')
+        encoded_field_str = urlquote(field_str, safe='\\/=&:+ ')
+
+        query = ''.join([query, '&fq={!tag=', facet, '}',
+                         facet, ':(', encoded_field_str, ')'])
+    return query
+
+
+def escape_character_solr(field):
+    # This escapes certain characters for solr requests fields
+    match = ['\\',  '+', '-', '&', '|', '!', '(', ')',
+             '{', '}', '[', ']', '^', '~', '*',
+             '?', ':', '"', ';', ' ', '/']
+
+    for item in match:
+        if item in field:
+            field = field.replace(item, ('\\' + item))
+
+    return field
+
+
+def hide_fields_from_list(facet_obj):
     """Returns a filtered facet field list from a weighted facet object."""
-    hidden_fields = ["uuid", "id", "django_id", "file_uuid", "study_uuid",
-                     "assay_uuid", "type", "is_annotation", "species",
-                     "genome_build", "name", "django_ct"]
+    hidden_fields = ['uuid', 'id', 'django_id', 'file_uuid', 'study_uuid',
+                     'assay_uuid', 'type', 'is_annotation', 'species',
+                     'genome_build', 'name', 'django_ct']
 
     filtered_facet_list = []
-    for (rank, field) in weighted_facet_obj:
-        solr_field = field.get("solr_field")
+    for field in facet_obj:
+        solr_field = field.get('solr_field')
         if solr_field not in hidden_fields:
-            filtered_facet_list.append(solr_field)
+            filtered_facet_list.append(field)
 
     return filtered_facet_list
 
 
 def generate_filtered_facet_fields(attributes):
     """ Returns a filter facet field list. Attribute order contains whether
-    facets should be used."""
+    facets should be used. Based on is_exposed and is_facet."""
+    weighted_facet_list = []
+    field_limit_list = []
+    facet_field = []
+    filtered_attributes = hide_fields_from_list(attributes)
 
-    weighted_list = []
-    for field in attributes:
-        if field.get("is_exposed") and field.get("is_facet"):
-            weighted_list.append((int(field["rank"]), field))
+    for field in filtered_attributes:
+        if field.get('is_exposed'):
+            field_limit_list.append(field.get('solr_field'))
+            if field.get('is_facet'):
+                weighted_facet_list.append((int(field['rank']), field))
 
-    weighted_list.sort()
-    filtered_facet_fields = hide_fields_from_weighted_list(weighted_list)
+    weighted_facet_list.sort()
+    for (rank, field) in weighted_facet_list:
+        facet_field.append(field.get("solr_field"))
 
-    return filtered_facet_fields
+    return {'facet_field': facet_field,
+            'field_limit': field_limit_list}
 
 
 def generate_facet_fields_query(facet_fields):
@@ -698,6 +755,10 @@ def customize_attribute_response(facet_fields):
 
     attribute_array = []
     for field in facet_fields:
+        # For fields with filters, they need to be trimmed
+        if '!ex' in field:
+            field = field.split("}")[1]
+
         customized_field = {'internal_name': field}
 
         field_name = field.split('_')

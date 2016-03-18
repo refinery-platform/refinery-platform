@@ -14,11 +14,13 @@ from rest_framework.test import APIClient
 
 from .models import AttributeOrder, Assay, Study, Investigation
 from .views import Assays, AssaysAttributes
-from .utils import update_attribute_order_ranks, \
-    customize_attribute_response, format_solr_response, get_owner_from_assay,\
-    generate_facet_fields_query, hide_fields_from_weighted_list,\
-    generate_filtered_facet_fields, generate_solr_params, \
-    objectify_facet_field_counts
+from .utils import (update_attribute_order_ranks,
+                    customize_attribute_response, format_solr_response,
+                    get_owner_from_assay, generate_facet_fields_query,
+                    hide_fields_from_list, generate_filtered_facet_fields,
+                    insert_facet_field_filter, create_facet_filter_query,
+                    generate_solr_params, objectify_facet_field_counts,
+                    escape_character_solr)
 from .serializers import AttributeOrderSerializer
 from core.models import DataSet, InvestigationLink
 
@@ -381,7 +383,7 @@ class UtilitiesTest(TestCase):
             'solr_field': 'Character_Title',
             'rank': 1,
             'is_exposed': True,
-            'is_facet': True,
+            'is_facet': False,
             'is_active': True,
             'is_internal': False
         }, {
@@ -390,7 +392,7 @@ class UtilitiesTest(TestCase):
             'solr_field': 'Specimen',
             'rank': 2,
             'is_exposed': True,
-            'is_facet': True,
+            'is_facet': False,
             'is_active': True,
             'is_internal': False
         }, {
@@ -548,31 +550,58 @@ class UtilitiesTest(TestCase):
                               'TYPE': {'Derived Data File': 105,
                                        'Raw Data File': 9}})
 
-    def test_hide_fields_from_weighted_list(self):
-        weighted_list = [(0, {'solr_field': 'uuid'}),
-                         (0, {'solr_field': 'is_annotation'}),
-                         (2, {'solr_field': 'genome_build'}),
-                         (3, {'solr_field': 'django_ct'}),
-                         (6, {'solr_field': 'django_id'}),
-                         (7, {'solr_field': 'species'}),
-                         (8, {'solr_field': 'file_uuid'}),
-                         (12, {'solr_field': 'study_uuid'}),
-                         (11, {'solr_field': 'assay_uuid'}),
-                         (10, {'solr_field': 'type'}),
-                         (9, {'solr_field': 'id'}),
-                         (1, {'solr_field': 'name'}),
-                         (4, {'solr_field': 'SubAnalysis'})]
+    def test_escape_character_solr(self):
+        field = "(mouse){index}[dog]^~*?:;/ +-&|"
+        expected_response = "\\(mouse\\)\\{index\\}\\[" \
+                            "dog\\]\\^\\~\\*\\?\\:\\;\\/\\ \\+\\-\\&\\|"
+        response = escape_character_solr(field)
+        self.assertEqual(response, expected_response)
+        response = escape_character_solr("")
+        self.assertEqual(response, "")
 
-        filtered_list = hide_fields_from_weighted_list(weighted_list)
-        self.assertListEqual(filtered_list, ['SubAnalysis'])
+    def test_insert_facet_field_filter(self):
+        facet_filter = u'{"Author": ["Vezza", "McConnell"]}'
+        facet_field_array = ['WORKFLOW', 'ANALYSIS', 'Author', 'Year']
+        response = ['WORKFLOW', 'ANALYSIS', u'{!ex=Author}Author', 'Year']
+        edited_facet_field_list = insert_facet_field_filter(
+                facet_filter, facet_field_array)
+        self.assertListEqual(edited_facet_field_list, response)
+        edited_facet_field_list = insert_facet_field_filter(
+                None, facet_field_array)
+        self.assertListEqual(edited_facet_field_list, response)
+
+    def test_create_facet_filter_query(self):
+        facet_filter = {'Author': ['Vezza', 'McConnell'],
+                        'TYPE': ['Raw Data File']}
+        facet_field_query = create_facet_filter_query(facet_filter)
+        self.assertEqual(facet_field_query,
+                         u'&fq={!tag=TYPE}TYPE:(Raw\\ Data\\ File)'
+                         u'&fq={!tag=Author}Author:(Vezza OR McConnell)')
+
+    def test_hide_fields_from_list(self):
+        weighted_list = [{'solr_field': 'uuid'},
+                         {'solr_field': 'is_annotation'},
+                         {'solr_field': 'genome_build'},
+                         {'solr_field': 'django_ct'},
+                         {'solr_field': 'django_id'},
+                         {'solr_field': 'species'},
+                         {'solr_field': 'file_uuid'},
+                         {'solr_field': 'study_uuid'},
+                         {'solr_field': 'assay_uuid'},
+                         {'solr_field': 'type'},
+                         {'solr_field': 'id'},
+                         {'solr_field': 'name'},
+                         {'solr_field': 'SubAnalysis'}]
+
+        filtered_list = hide_fields_from_list(weighted_list)
+        self.assertListEqual(filtered_list, [{'solr_field': 'SubAnalysis'}])
 
     def test_generate_solr_params(self):
         # empty params
         query = generate_solr_params(QueryDict({}), self.valid_uuid)
         self.assertEqual(str(query),
                          'fq=assay_uuid%3A{}'
-                         '&facet.field=Character_Title&'
-                         'facet.field=Specimen&facet.field=Cell Type&'
+                         '&facet.field=Cell Type&'
                          'facet.field=Analysis&facet.field=Organism&'
                          'facet.field=Cell Line&facet.field=Type&'
                          'facet.field=Group Name&fl=Character_Title%2C'
@@ -588,7 +617,7 @@ class UtilitiesTest(TestCase):
                          'facet.limit=-1&facet.mincount=1'.format(
                                  self.valid_uuid))
         # added parameter
-        parameter_dict = {'limit': 7, 'start': 2,
+        parameter_dict = {'limit': 7, 'offset': 2,
                           'include_facet_count': 'true',
                           'attributes': 'cats,mouse,dog,horse',
                           'facets': 'cats,mouse,dog,horse',
@@ -618,10 +647,15 @@ class UtilitiesTest(TestCase):
                 assay__uuid=self.valid_uuid)
         attributes = AttributeOrderSerializer(attribute_orders, many=True)
         filtered = generate_filtered_facet_fields(attributes.data)
-        self.assertItemsEqual(filtered, ['Character_Title', 'Specimen',
+        self.assertDictEqual(filtered, {'facet_field':
+                                        ['Cell Type', 'Analysis',
+                                         'Organism', 'Cell Line',
+                                         'Type', 'Group Name'],
+                                        'field_limit':
+                                        ['Character_Title', 'Specimen',
                                          'Cell Type', 'Analysis',
                                          'Organism', 'Cell Line',
-                                         'Type', 'Group Name'])
+                                         'Type', 'Group Name']})
 
     def test_generate_facet_fields_query(self):
         facet_field_string = ['REFINERY_SUBANALYSIS_6_3_s',
@@ -664,7 +698,7 @@ class UtilitiesTest(TestCase):
                         '"Year_Characteristics_6_3_s"],'\
                         '"wt": "json", "rows": "20"}},'\
                         '"response": {'\
-                        '"numFound": 1, "start": 0,'\
+                        '"numFound": 1, "offset": 0,'\
                         '"docs": ['\
                         '{"Author_Characteristics_6_3_s": "Crocker",'\
                         '"REFINERY_ANALYSIS_UUID_6_3_s": "N/A",'\

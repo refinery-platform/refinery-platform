@@ -1,0 +1,54 @@
+describe('RefineryNodeMapping.module: unit tests', function () {
+  'use strict';
+
+  var module;
+
+  beforeEach(function () {
+    module = angular.module('refineryNodeMapping');
+  });
+
+  describe('Module', function () {
+
+    it('should be registered', function () {
+      expect(!!module).toEqual(true);
+    });
+
+  });
+
+  describe('Dependencies:', function () {
+
+    var deps,
+        hasModule = function (m) {
+          return deps.indexOf(m) >= 0;
+        };
+
+    beforeEach(function () {
+      deps = module.value('refineryNodeMapping').requires;
+    });
+
+    it('should have "ngResource" as a dependency', function () {
+      expect(hasModule('ngResource')).toEqual(true);
+    });
+
+    it('should have "refinerySolr" as a dependency', function () {
+      expect(hasModule('refinerySolr')).toEqual(true);
+    });
+
+    it('should have "refineryWorkflows" as a dependency', function () {
+      expect(hasModule('refineryWorkflows')).toEqual(true);
+    });
+
+    it('should have "ui.bootstrap" as a dependency', function () {
+      expect(hasModule('ui.bootstrap')).toEqual(true);
+    });
+
+    it('should have "ui.router" as a dependency', function () {
+      expect(hasModule('ui.router')).toEqual(true);
+    });
+
+    it('should have "ui.select2" as a dependency', function () {
+      expect(hasModule('ui.select2')).toEqual(true);
+    });
+
+  });
+});
