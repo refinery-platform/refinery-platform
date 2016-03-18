@@ -31,7 +31,7 @@ describe('Filter: replaceWhiteSpaceWithHyphen', function () {
     expect(filter).toBeDefined();
   });
 
-  it('should return correct status depending on state', function () {
+  it('should return param with spaces replaced with hyphens', function () {
     expect(filter('Analysis Out')).toBe('Analysis-Out');
     expect(filter('The Analysis Output Test')).toBe('The-Analysis-Output-Test');
     expect(filter('Title')).toBe('Title');
