@@ -3,17 +3,13 @@ from south.utils import datetime_utils as datetime
 from south.db import db
 from south.v2 import DataMigration
 from django.db import models
+from django.core.management import call_command
 
 class Migration(DataMigration):
 
     def forwards(self, orm):
         "Write your forwards methods here."
-        filetype_duplicates = [36, 31, 30]
-        try:
-            for id in filetype_duplicates:
-                orm.Filetype.objects.get(id=id).delete()
-        except orm.Filetype.DoesNotExist:
-            pass
+        call_command('loaddata', 'file_store/fixtures/file_store_data.json')
 
     def backwards(self, orm):
         "Write your backwards methods here."
