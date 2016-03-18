@@ -1,4 +1,5 @@
-angular.module('replaceWhiteSpaceWithHyphen', [])
+angular
+  .module('replaceWhiteSpaceWithHyphen', [])
   .filter('replaceWhiteSpaceWithHyphen',replaceWhiteSpaceWithHyphen);
 
 //swap white spaces with hypens
