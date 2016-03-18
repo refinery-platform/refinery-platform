@@ -16,6 +16,8 @@ class Migration(DataMigration):
         except orm.Filetype.DoesNotExist:
             pass
 
+        call_command('loaddata', 'file_store/fixtures/file_store_data.json')
+
     def backwards(self, orm):
         "Write your backwards methods here."
 
@@ -50,5 +52,3 @@ class Migration(DataMigration):
 
     complete_apps = ['file_store']
     symmetrical = True
-
-    call_command('loaddata', 'file_store/fixtures/file_store_data.json')
