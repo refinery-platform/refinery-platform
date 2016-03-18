@@ -252,7 +252,7 @@
     "pk": 32,
     "fields": {
       "name": "zip",
-      "filetype": 31
+      "filetype": 32
     }
   },
   {
@@ -260,7 +260,7 @@
     "pk": 33,
     "fields": {
       "name": "unknown",
-      "filetype": 32
+      "filetype": 33
     }
   },
   {
@@ -268,7 +268,7 @@
     "pk": 34,
     "fields": {
       "name": "fastq.gz",
-      "filetype": 33
+      "filetype": 34
     }
   },
   {
@@ -276,7 +276,7 @@
     "pk": 35,
     "fields": {
       "name": "gct",
-      "filetype": 34
+      "filetype": 35
     }
   },
   {
@@ -292,7 +292,7 @@
     "pk": 37,
     "fields": {
       "name": "dat",
-      "filetype": 36
+      "filetype": 37
     }
   }
 ]
