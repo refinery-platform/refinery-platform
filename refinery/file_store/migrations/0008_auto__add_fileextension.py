@@ -13,7 +13,8 @@ class Migration(SchemaMigration):
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('extension', self.gf('django.db.models.fields.CharField')(default=33, max_length=50)),
             ('name', self.gf('django.db.models.fields.related.ForeignKey')(
-                default=32, related_name='filetype_names', to=orm['file_store.FileType'])),
+                default=33, related_name='filetype_names', to=orm[
+                    'file_store.FileType'])),
         ))
         db.send_create_signal(u'file_store', ['FileExtension'])
 

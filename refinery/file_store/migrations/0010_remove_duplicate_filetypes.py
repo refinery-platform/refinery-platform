@@ -9,7 +9,7 @@ class Migration(DataMigration):
 
     def forwards(self, orm):
         "Write your forwards methods here."
-        filetype_duplicates = [37, 35, 30]
+        filetype_duplicates = [36, 31, 30]
         try:
             for id in filetype_duplicates:
                 orm.Filetype.objects.get(id=id).delete()
@@ -22,7 +22,8 @@ class Migration(DataMigration):
     models = {
         u'file_store.fileextension': {
             'Meta': {'object_name': 'FileExtension'},
-            'filetype': ('django.db.models.fields.related.ForeignKey', [], {'default': '32', 'to': u"orm['file_store.FileType']"}),
+            'filetype': ('django.db.models.fields.related.ForeignKey', [],
+                         {'default': '33', 'to': u"orm['file_store.FileType']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'})
         },
@@ -30,7 +31,8 @@ class Migration(DataMigration):
             'Meta': {'object_name': 'FileStoreItem'},
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'auto_now_add': 'True', 'blank': 'True'}),
             'datafile': ('django.db.models.fields.files.FileField', [], {'max_length': '1024', 'blank': 'True'}),
-            'filetype': ('django.db.models.fields.related.ForeignKey', [], {'default': '32', 'to': u"orm['file_store.FileType']"}),
+            'filetype': ('django.db.models.fields.related.ForeignKey', [],
+                         {'default': '33', 'to': u"orm['file_store.FileType']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'import_task_id': ('django.db.models.fields.CharField', [], {'max_length': '36', 'blank': 'True'}),
             'sharename': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
