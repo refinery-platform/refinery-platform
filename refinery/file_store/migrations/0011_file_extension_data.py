@@ -2,13 +2,15 @@
 from south.utils import datetime_utils as datetime
 from south.db import db
 from south.v2 import DataMigration
-from django.core.management import call_command
+from django.core import serializers
 
 class Migration(DataMigration):
 
     def forwards(self, orm):
         "Write your forwards methods here."
-        call_command('loaddata', 'file_store/fixtures/file_store_data.json')
+
+        for deserialized_object in serializers.deserialize("json", "../fixtures/file_store_data.json"):
+            deserialized_object.save()
 
     def backwards(self, orm):
         "Write your backwards methods here."

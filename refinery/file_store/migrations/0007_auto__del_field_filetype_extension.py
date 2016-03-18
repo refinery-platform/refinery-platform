@@ -12,7 +12,7 @@ class Migration(SchemaMigration):
         db.delete_column(u'file_store_filetype', 'extension')
 
         db.start_transaction()
-        fastqcsanger = FileType.objects.get(id=16)
+        fastqcsanger = FileType.objects.get(description="FASTQC Sanger")
         fastqcsanger.name = "FASTQCSANGER"
         fastqcsanger.save()
         db.commit_transaction()
