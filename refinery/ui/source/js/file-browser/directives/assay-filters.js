@@ -1,5 +1,6 @@
-angular.module('refineryFileBrowser')
-    .directive("rpFileBrowserAssayFilters",
+angular
+  .module('refineryFileBrowser')
+  .directive("rpFileBrowserAssayFilters",
   [
     '$timeout',
     '$location',
@@ -28,7 +29,6 @@ function rpFileBrowserAssayFilters( $timeout, $location) {
         var attribute = angular.element(
           document.querySelector('#' + escapeAttributeName)
         );
-        console.log(attribute);
         var classStr = attribute[0].className;
         if(classStr.indexOf('in') > -1){
           attribute.removeClass('in');

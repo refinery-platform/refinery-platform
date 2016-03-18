@@ -1,5 +1,6 @@
-angular.module('refineryFileBrowser')
-    .directive("rpFileBrowserAssayFiles",
+angular
+  .module('refineryFileBrowser')
+  .directive("rpFileBrowserAssayFiles",
   [
     rpFileBrowserAssayFiles
   ]

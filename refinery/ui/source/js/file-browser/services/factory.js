@@ -1,5 +1,14 @@
-angular.module('refineryFileBrowser')
-    .factory("fileBrowserFactory", ['$http','assayFileService','settings', '$window', fileBrowserFactory]);
+angular
+  .module('refineryFileBrowser')
+  .factory("fileBrowserFactory",
+    [
+      '$http',
+      'assayFileService',
+      'settings',
+      '$window',
+      fileBrowserFactory
+    ]
+  );
 
 function fileBrowserFactory($http, assayFileService, settings, $window) {
   "use strict";

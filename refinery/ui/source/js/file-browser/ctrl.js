@@ -1,5 +1,6 @@
-angular.module('refineryFileBrowser')
-    .controller('FileBrowserCtrl',
+angular
+  .module('refineryFileBrowser')
+  .controller('FileBrowserCtrl',
     [
       '$scope',
       '$location',
@@ -10,7 +11,13 @@ angular.module('refineryFileBrowser')
     ]);
 
 
-function FileBrowserCtrl($scope, $location, uiGridConstants, fileBrowserFactory, $window) {
+function FileBrowserCtrl(
+  $scope,
+  $location,
+  uiGridConstants,
+  fileBrowserFactory,
+  $window) {
+
   "use strict";
   var vm = this;
   vm.assayFiles = [];
