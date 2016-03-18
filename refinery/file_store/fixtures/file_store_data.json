@@ -1,0 +1,298 @@
+[
+  {
+    "model": "file_store.FileExtension",
+    "pk": 1,
+    "fields": {
+      "name": "bam",
+      "filetype": 1
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 2,
+    "fields": {
+      "name": "bed",
+      "filetype": 2
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 3,
+    "fields": {
+      "name":"bigbed",
+      "filetype": 3
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 4,
+    "fields": {
+      "name": "bigwig",
+      "filetype": 4
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 5,
+    "fields": {
+      "name": "cbs",
+      "filetype": 5
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 6,
+    "fields": {
+      "name": "cel",
+      "filetype": 6
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 7,
+    "fields": {
+      "name": "csv",
+      "filetype": 7
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 8,
+    "fields": {
+      "name": "eland",
+      "filetype": 8
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 9,
+    "fields": {
+      "name": "gff",
+      "filetype": 9
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 10,
+    "fields": {
+      "name": "gtf",
+      "filetype": 10
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 11,
+    "fields": {
+      "name": "gz",
+      "filetype": 11
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 12,
+    "fields": {
+      "name": "html",
+      "filetype": 12
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 13,
+    "fields": {
+      "name": "idf",
+      "filetype": 13
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 14,
+    "fields": {
+      "name": "fasta",
+      "filetype": 14
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 15,
+    "fields": {
+      "name": "fastq",
+      "filetype": 15
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 16,
+    "fields": {
+      "name": "fastqcsanger",
+      "filetype": 16
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 17,
+    "fields": {
+      "name": "fastqillumina",
+      "filetype": 17
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 18,
+    "fields": {
+      "name": "fastqsanger",
+      "filetype": 18
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 19,
+    "fields": {
+      "name": "fastqsolexa",
+      "filetype": 19
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 20,
+    "fields": {
+      "name": "pdf",
+      "filetype": 20
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 21,
+    "fields": {
+      "name": "sam",
+      "filetype": 21
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 22,
+    "fields": {
+      "name": "seg",
+      "filetype": 22
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 23,
+    "fields": {
+      "name": "tabular",
+      "filetype": 23
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 24,
+    "fields": {
+      "name": "tdf",
+      "filetype": 24
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 25,
+    "fields": {
+      "name": "tgz",
+      "filetype": 25
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 26,
+    "fields": {
+      "name": "txt",
+      "filetype": 26
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 27,
+    "fields": {
+      "name": "vcf",
+      "filetype": 27
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 28,
+    "fields": {
+      "name": "wig",
+      "filetype": 28
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 29,
+    "fields": {
+      "name": "xml",
+      "filetype": 29
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 30,
+    "fields": {
+      "name": "bb",
+      "filetype": 3
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 31,
+    "fields": {
+      "name": "igv.tdf",
+      "filetype": 24
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 32,
+    "fields": {
+      "name": "zip",
+      "filetype": 31
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 33,
+    "fields": {
+      "name": "unknown",
+      "filetype": 32
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 34,
+    "fields": {
+      "name": "fastq.gz",
+      "filetype": 33
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 35,
+    "fields": {
+      "name": "gct",
+      "filetype": 34
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 36,
+    "fields": {
+      "name": "CEL",
+      "filetype": 6
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 37,
+    "fields": {
+      "name": "dat",
+      "filetype": 36
+    }
+  }
+]

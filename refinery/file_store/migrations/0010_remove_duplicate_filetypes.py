@@ -1,27 +1,23 @@
 # -*- coding: utf-8 -*-
 from south.utils import datetime_utils as datetime
 from south.db import db
-from south.v2 import SchemaMigration
+from south.v2 import DataMigration
 from django.db import models
+from django.core.management import call_command
 
-
-class Migration(SchemaMigration):
+class Migration(DataMigration):
 
     def forwards(self, orm):
-        # Adding unique constraint on 'FileType', fields ['name']
-        db.create_unique(u'file_store_filetype', ['name'])
-
-        # Adding unique constraint on 'FileExtension', fields ['name']
-        db.create_unique(u'file_store_fileextension', ['name'])
-
+        "Write your forwards methods here."
+        filetype_duplicates = [37, 35, 30]
+        try:
+            for id in filetype_duplicates:
+                orm.Filetype.objects.get(id=id).delete()
+        except orm.Filetype.DoesNotExist:
+            pass
 
     def backwards(self, orm):
-        # Removing unique constraint on 'FileExtension', fields ['name']
-        db.delete_unique(u'file_store_fileextension', ['name'])
-
-        # Removing unique constraint on 'FileType', fields ['name']
-        db.delete_unique(u'file_store_filetype', ['name'])
-
+        "Write your backwards methods here."
 
     models = {
         u'file_store.fileextension': {
@@ -51,3 +47,6 @@ class Migration(SchemaMigration):
     }
 
     complete_apps = ['file_store']
+    symmetrical = True
+
+    call_command('loaddata', 'file_store/fixtures/file_store_data.json')
