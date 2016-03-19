@@ -2347,3 +2347,53 @@ ul.badge-list {
 .CURRENT_COMMIT:hover{
   overflow: visible;
 }
+
+body.is-screenshot-ready {
+  background: #fff !important;
+  margin-top: 10px !important;
+
+  .refinery-base.navbar.navbar-default {
+    display: none;
+  }
+
+  .refinery-panel {
+    border: 2px solid #e5e5e5 !important;
+    border-radius: 5px !important;
+    box-shadow: none;
+  }
+
+  .refinery-header {
+    padding: 5px !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+    background-color: #e5e5e5 !important;
+
+    .btn {
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1) !important;
+
+      &.active {
+        color: darken(@orange, 33%);
+        background: @orange;
+        box-shadow: inset 0 0 0 1px #fff !important;
+      }
+    }
+
+    .refinery-header-right button.active {
+      display: none;
+    }
+  }
+
+  .navbar-search {
+    background-color: #e5e5e5 !important;
+    border-bottom-color: #e5e5e5 !important;
+
+    .search-query {
+      border: 0 !important;
+      box-shadow: none !important;
+    }
+  }
+
+  .refinery-panel-topbar {
+    background-color: #e5e5e5 !important;
+    border-bottom-color: #e5e5e5 !important;
+  }
+}
