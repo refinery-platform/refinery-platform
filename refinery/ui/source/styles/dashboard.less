@@ -391,19 +391,29 @@
     line-height: 24px;
   }
 
-  .control-btn .wrapper {
+  .top-bar .global-controls .control-btn .wrapper {
     top: 0;
+    padding: 0 3.5rem 0 1.25rem;
+  }
+
+  .top-bar .control-btn.active:before {
+    background: fadeout(@blue-shadow, 50%);
+    box-shadow: 0 0 8px 0 @blue-shadow;
+  }
+
+  .top-bar .control-btn.active:hover:before {
+    background: @blue-shadow;
   }
 
   .top-bar .control-btn [class*=' icon-'],
   .top-bar .control-btn [class^=icon-] {
     top: 4px;
-    right: 4px;
+    right: 8px;
     width: 16px;
     height: 16px;
   }
 
-  .wrapper {
+  >.wrapper {
     position: absolute;
     z-index: 0;
     top: @top-bar-height + 1;
@@ -440,17 +450,17 @@
 
   // Adjust highlight color
   .bar-border {
-    stroke: mix(lighten(@orange, 20%), #fff, 25%);
+    stroke: mix(lighten(@blue-shadow, 20%), #fff, 25%);
   }
 
   .bar.highlight .bar-magnitude {
-    fill: lighten(@orange, 20%);
+    fill: lighten(@blue-shadow, 20%);
   }
 
   .top-bar .sort-precision:hover,
   .top-bar .sort-recall:hover,
   .top-bar .sort-name:hover {
-    background: @orange;
+    background: tint(@blue-shadow, 75%);
   }
 
   .node .bg-border {
@@ -458,28 +468,46 @@
     stroke: @orange;
   }
 
-  .node.focus-directly .bg {
+  .bar-indicator,
+  .node.focus-directly .bg,
+  .node.hovering-directly .active .bar-magnitude,
+  .node.rooted .focus-controls.root:hover .hover-helper,
+  .node.query-and .focus-controls.query:hover .hover-helper,
+  .node.query-or .focus-controls.query:hover .hover-helper,
+  .node.query-not .focus-controls.query:hover .hover-helper {
     fill: @orange;
   }
 
+  .link .link-bg,
   .node.focus-directly .border,
-  .column.active .node.focus-directly .border {
+  .column.active .node.focus-directly .border,
+  .node .focus-controls .hover-helper {
     stroke: @orange;
   }
 
-  .link .link-bg {
-    stroke: @orange;
+  .node .focus-controls .icon {
+    color: @orange;
   }
 
   .node.highlight-label .label,
   .column.active .node.highlight-label .label {
-    color: darken(@orange, 5%);
-    text-shadow: 0 0 3px fadeout(@orange, 50%);
+    color: @blue;
+    text-shadow: 0 0 3px fadeout(@blue-shadow, 50%);
   }
 
   .context-menu .button .label,
   .context-menu .button .label-two {
     font-size: 1.2rem;
+  }
+
+  .context-menu .button .bg-bam-effect,
+  .context-menu .button.semi-active .checkbox-knob {
+    fill: @blue-shadow;
+  }
+
+  .context-menu .button .bg-fill-effect,
+  .context-menu .button.semi-active.active .bg {
+    fill: fadeout(@blue-shadow, 50%);
   }
 }
 
