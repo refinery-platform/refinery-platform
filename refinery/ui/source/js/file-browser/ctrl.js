@@ -1,5 +1,6 @@
-angular.module('refineryFileBrowser')
-    .controller('FileBrowserCtrl',
+angular
+  .module('refineryFileBrowser')
+  .controller('FileBrowserCtrl',
     [
       '$scope',
       '$location',
@@ -10,7 +11,13 @@ angular.module('refineryFileBrowser')
     ]);
 
 
-function FileBrowserCtrl($scope, $location, uiGridConstants, fileBrowserFactory, $window) {
+function FileBrowserCtrl(
+  $scope,
+  $location,
+  uiGridConstants,
+  fileBrowserFactory,
+  $window) {
+
   "use strict";
   var vm = this;
   vm.assayFiles = [];
@@ -57,12 +64,12 @@ function FileBrowserCtrl($scope, $location, uiGridConstants, fileBrowserFactory,
 
   //checks url for params to update the filter
   vm.checkUrlQueryFilters = function(){
+    var allFilters = {};
     //Merge attribute and analysis filter data obj
-    var allFilters = vm.attributeFilter;
+    angular.copy(vm.attributeFilter, allFilters);
     allFilters['Analysis'] = vm.analysisFilter['Analysis'];
     //for attribute filter directive, drop panels in query
     $scope.$broadcast('rf/attributeFilter-ready');
-
     angular.forEach(allFilters, function(fieldObj, attribute) {
       vm.refreshSelectedFieldFromQuery(fieldObj, attribute);
     });
@@ -98,7 +105,7 @@ function FileBrowserCtrl($scope, $location, uiGridConstants, fileBrowserFactory,
       }
       $location.search(field, null);
     }
-    vm.filesParam['filter_attribute']= vm.selectedFieldList;
+    vm.filesParam['filter_attribute'] = vm.selectedFieldList;
     vm.updateAssayFiles();
   };
 

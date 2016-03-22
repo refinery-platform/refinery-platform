@@ -365,7 +365,7 @@ DashboardCtrl.prototype.collectDataSetIds = function () {
 
   // In case only **nots** are available
   if (!andIntersection.length && !orUnion.length) {
-    allDsIds = this.dataSet.allIds();
+    allDsIds = this.dataSet.allIds;
   } else {
     allDsIds = this.$q.when(allDsIds);
   }

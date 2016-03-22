@@ -9,6 +9,7 @@ import time
 import urlparse
 import requests
 import json
+import urllib2
 
 from django.db.models import Q
 from django.utils.http import urlquote
@@ -575,6 +576,7 @@ def generate_solr_params(params, assay_uuid):
         solr_params = ''.join([solr_params, '&sort=', sort])
 
     if facet_filter:
+        facet_filter = urllib2.unquote(facet_filter)
         facet_filter = json.loads(facet_filter)
         facet_filter_str = create_facet_filter_query(facet_filter)
         solr_params = ''.join([solr_params, facet_filter_str])
@@ -608,7 +610,7 @@ def create_facet_filter_query(facet_filter_fields):
 
         field_str = escape_character_solr(field_str)
         field_str = field_str.replace('OR', ' OR ')
-        encoded_field_str = urlquote(field_str, safe='\\/=&:+ ')
+        encoded_field_str = urlquote(field_str, safe='\\/+-&|!(){}[]^~*?:"; ')
 
         query = ''.join([query, '&fq={!tag=', facet, '}',
                          facet, ':(', encoded_field_str, ')'])

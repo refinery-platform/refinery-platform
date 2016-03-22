@@ -50,15 +50,35 @@ Neo4jToGraph.prototype.get = function () {
   // returned body.
   var neo4jData = this.$q.defer();
 
+  function rejectNoData () {
+    neo4jData.reject({
+      number: 1,
+      message: 'No data'
+    });
+  }
+
   this.neo4j.query({
       res: 'annotations'
     })
     .$promise
     .then(function (response) {
-      neo4jData.resolve(response.nodes);
+      var numNodes = 0;
+      try {
+        numNodes = Object.keys(response.nodes);
+      } catch (e) {
+        rejectNoData();
+      }
+      if (numNodes) {
+        neo4jData.resolve(response.nodes);
+      } else {
+        rejectNoData();
+      }
     }.bind(this))
     .catch(function (error) {
-      neo4jData.reject(error);
+      neo4jData.reject({
+        number: 1,
+        originalError: error
+      });
       console.error(error);
     });
 
