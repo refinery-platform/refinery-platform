@@ -29,8 +29,7 @@ function rpFileBrowserAssayFilters( $timeout, $location) {
         var attribute = angular.element(
           document.querySelector('#' + escapeAttributeName)
         );
-        var classStr = attribute[0].className;
-        if(classStr.indexOf('in') > -1){
+        if(attribute.hasClass('in')){
           attribute.removeClass('in');
         }else{
           attribute.addClass('in');
