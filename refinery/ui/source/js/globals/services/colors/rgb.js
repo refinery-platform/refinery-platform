@@ -1,3 +1,5 @@
+'use strict';
+
 angular
   .module('colors')
   .service('RGB', ['$injector', function ($injector) {
@@ -39,22 +41,22 @@ angular
      * @return  Array      The HSL representation.
      */
     RGB.prototype.toHsl = function () {
-      var r = this.red / 255,
-          g = this.green / 255,
-          b = this.blue / 255,
-          max = Math.max(r, g, b),
-          min = Math.min(r, g, b),
-          h,
-          s,
-          l = (max + min) / 2,
-          HSL = $injector.get('HSL');
+      var r = this.red / 255;
+      var g = this.green / 255;
+      var b = this.blue / 255;
+      var max = Math.max(r, g, b);
+      var min = Math.min(r, g, b);
+      var h;
+      var s;
+      var l = (max + min) / 2;
+      var HSL = $injector.get('HSL');
 
       if (max === min) {
         h = s = 0; // achromatic
       } else {
         var d = max - min;
         s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        switch (max) {
+        switch (max) {  // eslint-disable-line default-case
           case r:
             h = (g - b) / d + (g < b ? 6 : 0);
             break;
@@ -93,10 +95,14 @@ angular
 
     RGB.prototype.luminosity = function (red, green, blue) {
       // http://www.w3.org/TR/WCAG20/#relativeluminancedef
+      var _red = red;
+      var _green = green;
+      var _blue = blue;
+
       if (typeof red === 'undefined') {
-        red = this.red;
-        green = this.green;
-        blue = this.blue;
+        _red = this.red;
+        _green = this.green;
+        _blue = this.blue;
       }
 
       function lum (absValue) {
@@ -105,7 +111,7 @@ angular
           relValue / 12.92 : Math.pow(((relValue + 0.055) / 1.055), 2.4);
       }
 
-      return 0.2126 * lum(red) + 0.7152 * lum(green) + 0.0722 * lum(blue);
+      return 0.2126 * lum(_red) + 0.7152 * lum(_green) + 0.0722 * lum(_blue);
     };
 
     RGB.prototype.contrast = function (color) {
@@ -113,16 +119,16 @@ angular
       var lum1 = this.luminosity(this.red, this.green, this.blue);
       var lum2 = this.luminosity(color.red, color.green, color.blue);
       if (lum1 > lum2) {
-         return (lum1 + 0.05) / (lum2 + 0.05);
+        return (lum1 + 0.05) / (lum2 + 0.05);
       }
       return (lum2 + 0.05) / (lum1 + 0.05);
     };
 
     Object.defineProperty(RGB.prototype, 'blue', {
-      get: function() {
+      get: function () {
         return this._blue;
       },
-      set: function(blue) {
+      set: function (blue) {
         if (!(Number(blue) === blue && blue % 1 === 0 && blue >= 0 && blue <= 255)) {
           throw new Error('Blue must be an integer between 0 and 255.');
         }
@@ -131,10 +137,10 @@ angular
     });
 
     Object.defineProperty(RGB.prototype, 'green', {
-      get: function() {
+      get: function () {
         return this._green;
       },
-      set: function(green) {
+      set: function (green) {
         if (!(Number(green) === green && green % 1 === 0 && green >= 0 && green <= 255)) {
           throw new Error('Green must be an integer between 0 and 255.');
         }
@@ -143,10 +149,10 @@ angular
     });
 
     Object.defineProperty(RGB.prototype, 'red', {
-      get: function() {
+      get: function () {
         return this._red;
       },
-      set: function(red) {
+      set: function (red) {
         if (!(Number(red) === red && red % 1 === 0 && red >= 0 && red <= 255)) {
           throw new Error('Red must be an integer between 0 and 255.');
         }

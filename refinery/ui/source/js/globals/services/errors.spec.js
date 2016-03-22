@@ -1,8 +1,8 @@
-describe('errors: Errors (unit testing)', function () {
-  'use strict';
+'use strict';
 
-  var errors,
-      rootScope;
+describe('errors: Errors (unit testing)', function () {
+  var errors;
+  var rootScope;
 
   beforeEach(function () {
     module('errors');
@@ -53,11 +53,10 @@ describe('errors: Errors (unit testing)', function () {
   it('should provide an error object',
     inject(function ($q) {
       var error = {
-            type: 'type',
-            message: 'message',
-            reason: 'error'
-          },
-          returnedErrId;
+        type: 'type',
+        message: 'message',
+        reason: 'error'
+      };
 
       $q.reject(error.reason)
         .catch(errors.catch(error.type, error.message));
@@ -69,5 +68,4 @@ describe('errors: Errors (unit testing)', function () {
       expect(errors.get(0)).toEqual(error);
     })
   );
-
 });
