@@ -38,14 +38,15 @@ function rpFileBrowserAssayFilters( $timeout, $location) {
 
       //Drop down windows when they are in the URL query
       scope.$on('rf/attributeFilter-ready', function(){
+        console.log('argh');
         scope.generateFilterDropSelection();
       });
 
       scope.generateFilterDropSelection = function(){
         var queryFields = Object.keys($location.search());
         var allFilters = {};
-        angular.copy(ctrl.attributeFilter, allFilters);
-        angular.copy(ctrl.analysisFilter['Analysis'], allFilters['Analysis']);
+        angular.copy(scope.FBCtrl.attributeFilter, allFilters);
+        allFilters['Analysis'] = scope.FBCtrl.analysisFilter['Analysis'];
 
         angular.forEach(allFilters, function (attributeObj, attribute) {
           var allFields = Object.keys(attributeObj.facetObj);
