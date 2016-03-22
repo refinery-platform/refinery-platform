@@ -4,8 +4,8 @@
     -   id: flake8
         exclude: (migrations|ui)
 
--   repo: git://github.com/pre-commit/mirrors-jshint
-    sha: v2.8.0
+-   repo: git://github.com/pre-commit/mirrors-eslint
+    sha: v2.4.0
     hooks:
-    -   id: jshint
+    -   id: eslint
         files: ui/source/js/.+\.js
