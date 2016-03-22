@@ -105,7 +105,7 @@ exec { "create_superuser":
 }
 ->
 exec { "init_refinery":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py init_refinery 'Refinery' '192.168.50.50:8000'",
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py init_refinery '${site_name}' '${site_url}'",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,

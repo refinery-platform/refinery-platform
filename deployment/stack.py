@@ -68,6 +68,8 @@ def main():
     commit = os.popen("""git rev-parse HEAD""").read().rstrip()
     assert commit
 
+    assert "'" not in config['SITE_NAME']
+
     # The userdata script is executed via CloudInit.
     # It's made by concatenating a block of parameter variables,
     # with the bootstrap.sh script,
@@ -82,6 +84,9 @@ def main():
         "DEFAULT_FROM_EMAIL=", config['DEFAULT_FROM_EMAIL'], "\n",
         "SERVER_EMAIL=", config['SERVER_EMAIL'], "\n",
         "IAM_SMTP_USER=", functions.ref('RefinerySMTPUser'), "\n",
+        "SITE_URL=", config['SITE_URL'], "\n",
+        # May contain spaces, but can't contain "'"
+        "SITE_NAME='", config['SITE_NAME'], "'\n",
         "GIT_BRANCH=", commit, "\n",
         "\n",
         open('bootstrap.sh').read(),
@@ -195,7 +200,7 @@ def load_config():
                 config.update(y)
 
     # Collect and report list of missing keys.
-    required = ['VOLUME']
+    required = ['SITE_NAME', 'SITE_URL', 'VOLUME']
     bad = []
     for key in required:
         if key not in config:
