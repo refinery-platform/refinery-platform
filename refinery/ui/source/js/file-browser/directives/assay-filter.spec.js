@@ -7,39 +7,45 @@ describe('rpAssayFiles directive unit test', function() {
       rootScope,
       scope,
       ctrl,
-      settings,
       $controller,
-      valid_uuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+      template,
+      directiveElement;
 
-  beforeEach(inject(function(_$compile_, _$rootScope_, _$controller_,
-                             _$httpBackend_, _settings_,  $templateCache) {
+  beforeEach(inject(function(
+    _$compile_,
+    _$rootScope_,
+    _$controller_,
+    $templateCache
+  ) {
 
     $templateCache.put(
-      '/static/partials/file-browser/partials/assay-files.html',
-      '<div id="grid1"></div>'
+      '/static/partials/file-browser/partials/assay-filters.html',
+      '<div id="attribute-filter">' +
+      '<div id="Analysis-Output" class="collapse"></div>' +
+      '</div>'
     );
     compile = _$compile_;
-    settings = _settings_;
     rootScope = _$rootScope_;
-    $httpBackend = _$httpBackend_;
     scope = rootScope.$new();
     $controller = _$controller_;
     ctrl = $controller('FileBrowserCtrl', {$scope: scope});
-
+    template = '<rp-file-browser-assay-filters></rp-file-browser-assay-filters>';
+    directiveElement = compile(template)(scope);
+    angular.element(document.body).append(directiveElement);
+    scope.$digest();
   }));
 
   it('generates the appropriate HTML', function() {
-    var template = '<rp-file-browser-assay-files></rp-file-browser-assay-files>';
-    //Link makes an api call to update attribute filter
-    $httpBackend.expectGET(
-      settings.appRoot +
-      settings.refineryApiV2 +
-      '/assays/' + valid_uuid + '/files/'
-    ).respond(200, {});
-    var directiveElement = compile(template)(scope);
-
-    scope.$digest();
-    expect(directiveElement.html()).toContain('grid1');
+    expect(directiveElement.html()).toContain('attribute-filter');
     expect(directiveElement.html()).toContain('</div>');
+  });
+
+   it('dropAttributePanel test, add class name', function() {
+     var mockEvent = $.Event('click');
+     spyOn(mockEvent,'preventDefault');
+     var domElement = angular.element(document.querySelector('#Analysis-Output'));
+     expect(domElement.hasClass('in')).toEqual(false);
+     scope.dropAttributePanel(mockEvent, 'Analysis Output');
+     expect(domElement.hasClass('in')).toEqual(true);
   });
 });
