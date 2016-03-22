@@ -38,7 +38,6 @@ function rpFileBrowserAssayFilters( $timeout, $location) {
 
       //Drop down windows when they are in the URL query
       scope.$on('rf/attributeFilter-ready', function(){
-        console.log('argh');
         scope.generateFilterDropSelection();
       });
 
