@@ -48,4 +48,10 @@ describe('rpAssayFiles directive unit test', function() {
      scope.dropAttributePanel(mockEvent, 'Analysis Output');
      expect(domElement.hasClass('in')).toEqual(true);
   });
+
+  it('test broadcast triggers watcher', function() {
+    spyOn(scope, 'generateFilterDropSelection');
+    scope.$broadcast('rf/attributeFilter-ready');
+    expect(scope.generateFilterDropSelection).toHaveBeenCalled();
+  });
 });
