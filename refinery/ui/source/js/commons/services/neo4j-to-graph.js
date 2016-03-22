@@ -55,10 +55,20 @@ Neo4jToGraph.prototype.get = function () {
     })
     .$promise
     .then(function (response) {
-      neo4jData.resolve(response.nodes);
+      if (Object.keys(response).length) {
+        neo4jData.resolve(response.nodes);
+      } else {
+        neo4jData.reject({
+          number: 1,
+          message: 'No data'
+        });
+      }
     }.bind(this))
     .catch(function (error) {
-      neo4jData.reject(error);
+      neo4jData.reject({
+        number: 1,
+        originalError: error
+      });
       console.error(error);
     });
 
