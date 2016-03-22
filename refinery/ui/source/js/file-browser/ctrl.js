@@ -73,8 +73,6 @@ function FileBrowserCtrl(
     angular.forEach(allFilters, function(fieldObj, attribute) {
       vm.refreshSelectedFieldFromQuery(fieldObj, attribute);
     });
-
-
   };
 
   vm.refreshSelectedFieldFromQuery = function(fieldObj, attribute){
@@ -107,7 +105,7 @@ function FileBrowserCtrl(
       }
       $location.search(field, null);
     }
-    vm.filesParam['filter_attribute']= vm.selectedFieldList;
+    vm.filesParam['filter_attribute'] = vm.selectedFieldList;
     vm.updateAssayFiles();
   };
 
