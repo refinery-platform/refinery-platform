@@ -1,5 +1,7 @@
-var fs           = require('fs');
-var hasbin       = require('hasbin');
+'use strict';
+
+var fs = require('fs');
+var hasbin = require('hasbin');
 var isBinaryFile = require('isbinaryfile');
 
 /*
@@ -52,9 +54,7 @@ var importanceSortJS = function (a, b) {
   return objs[0] - objs[1];
 };
 
-module.exports = function(grunt) {
-  'use strict';
-
+module.exports = function (grunt) {
   // Auto-load all packages
   require('load-grunt-tasks')(grunt);
 
@@ -446,7 +446,7 @@ module.exports = function(grunt) {
         files: [
           '<%= cfg.basePath.djangoTemplates %>/**/*'
         ]
-      },
+      }
     },
 
     /*
@@ -454,7 +454,7 @@ module.exports = function(grunt) {
      */
     env: {
       compile: {
-        PHANTOMJS_BIN: function() {
+        PHANTOMJS_BIN: function () {
           var localPhantomJS =
             'node_modules/phantomjs/lib/phantom/bin/phantomjs';
 
@@ -495,15 +495,15 @@ module.exports = function(grunt) {
     /*
      * Generate documentation
      */
-    jsdoc : {
-      dist : {
+    jsdoc: {
+      dist: {
         src: [
           '<%= cfg.basePath.ui.src %>/**/!(*spec).js'
         ],
         options: {
           // Doesn't seem to work right now, so we have to specify the right
           // location manually
-          //destination: '<%= cfg.basePath.ui.docs %>'
+          // destination: '<%= cfg.basePath.ui.docs %>'
           destination: 'docs'
         }
       }
@@ -565,7 +565,7 @@ module.exports = function(grunt) {
         options: {
           paths: [
             '<%= cfg.basePath.ui.src %>/styles',
-            '<%= cfg.basePath.bower_components %>/bootstrap/less',
+            '<%= cfg.basePath.bower_components %>/bootstrap/less'
           ],
           plugins: lessPlugins
         },
@@ -589,7 +589,7 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.ui.build %>/styles/dashboard.css':
             '<%= cfg.basePath.ui.src %>/styles/dashboard.less',
           '<%= cfg.basePath.ui.build %>/styles/provenance-visualization.css':
-            '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less',
+            '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less'
         }
       },
       compile: {
@@ -633,7 +633,7 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.ui.compile %>/styles/dashboard.css':
             '<%= cfg.basePath.ui.src %>/styles/dashboard.less',
           '<%= cfg.basePath.ui.compile %>/styles/provenance-visualization.css':
-            '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less',
+            '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less'
         }
       }
     },
@@ -656,7 +656,7 @@ module.exports = function(grunt) {
             dest: '<%= cfg.basePath.ui.tmp %>/js'
           }
         ]
-      },
+      }
     },
 
     /*
@@ -697,15 +697,15 @@ module.exports = function(grunt) {
   grunt.registerTask(
     'concat-by-feature',
     'Concat files by features excluding `spec` files',
-    function(mode) {
+    function (mode) {
       // Read config
-      var cfg = grunt.file.readJSON('config.json'),
-          concat = grunt.config.get('concat') || {},
-          destination = mode === 'build' ?
-            cfg.basePath.ui.build : cfg.basePath.ui.tmp,
-          features = cfg.files.features,
-          files,
-          ngAnnotate = grunt.config.get('ngAnnotate') || {};
+      var cfg = grunt.file.readJSON('config.json');
+      var concat = grunt.config.get('concat') || {};
+      var destination = mode === 'build' ?
+            cfg.basePath.ui.build : cfg.basePath.ui.tmp;
+      var features = cfg.files.features;
+      var files;
+      var ngAnnotate = grunt.config.get('ngAnnotate') || {};
 
       // Loop over all features
       features.forEach(function (feature) {
@@ -731,13 +731,13 @@ module.exports = function(grunt) {
         concat[feature] = {
           options: {
             // Remove all 'use strict' statements
-            process: function(src, filepath) {
+            process: function (src, filepath) {
               return '// Source: ' + filepath + '\n' +
                 src.replace(
                   /(^|\n)[ \t]*('use strict'|"use strict");?\s*/g,
                   '$1'
                 );
-            },
+            }
           },
           src: files,
           dest: destination + '/js/' + feature.replace('/', '.') + '.js'
@@ -770,7 +770,7 @@ module.exports = function(grunt) {
 
   // Event handling
   if (!spawn) {
-    grunt.event.on('watch', function(action, filepath){
+    grunt.event.on('watch', function (action, filepath) {
       // Update the config to only build the changed less file.
       grunt.config(['eslint', 'src'], filepath);
     });
