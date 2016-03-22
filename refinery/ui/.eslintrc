@@ -21,6 +21,7 @@
     semi: [2, "always"],
     space-before-function-paren: [2, "always"],
     keyword-spacing: 2,
-    strict: [2, "global"]
+    strict: [2, "global"],
+    vars-on-top: 0
   }
 }
