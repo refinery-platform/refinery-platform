@@ -352,7 +352,7 @@ module.exports = function(grunt) {
       gruntfile: {
         files: 'Gruntfile.js',
         tasks: [
-          'jshint:gruntfile',
+          'eslint:gruntfile',
           'build'
         ]
       },
@@ -377,7 +377,7 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.ui.src %>/js/**/*.js'
         ],
         tasks: [
-          'newer:jshint:sourceCode',
+          'newer:eslint:sourceCode',
           'newer:copy:uiBuildScripts',
           'concat-by-feature:build'
         ],
@@ -479,6 +479,20 @@ module.exports = function(grunt) {
     },
 
     /*
+     * Lint source JS files to find possible flaws that could lead to errors.
+     */
+    eslint: {
+      sourceCode: {
+        src: [
+          '<%= cfg.basePath.ui.src %>/js/**/*.js'
+        ]
+      },
+      gruntfile: {
+        src: 'Gruntfile.js'
+      }
+    },
+
+    /*
      * Generate documentation
      */
     jsdoc : {
@@ -492,26 +506,6 @@ module.exports = function(grunt) {
           //destination: '<%= cfg.basePath.ui.docs %>'
           destination: 'docs'
         }
-      }
-    },
-
-    /*
-     * Lint source JS files to find possible flaws that could lead to errors.
-     * Custom code
-     */
-    jshint: {
-      sourceCode: {
-        src: [
-          '<%= cfg.basePath.ui.src %>/js/**/*.js'
-        ]
-      },
-      gruntfile: {
-        src: 'Gruntfile.js'
-      },
-      options: {
-        // All jsHint configs are located in `.jshintrc`. This is useful as
-        // editor plugins can pick up this file as well.
-        jshintrc: './.jshintrc'
       }
     },
 
@@ -778,7 +772,7 @@ module.exports = function(grunt) {
   if (!spawn) {
     grunt.event.on('watch', function(action, filepath){
       // Update the config to only build the changed less file.
-      grunt.config(['jshint', 'src'], filepath);
+      grunt.config(['eslint', 'src'], filepath);
     });
   }
 
@@ -794,7 +788,7 @@ module.exports = function(grunt) {
   // Do as little as possible to get Refineryrunning to keep grunt watch
   // responsive.
   grunt.registerTask('build', [
-    'newer:jshint',
+    'newer:eslint',
     'clean:uiBuild',
     'clean:staticBuild',
     'newer:less:build',
@@ -809,7 +803,7 @@ module.exports = function(grunt) {
   // Do all the heavy lifting to get Refinery ready for production.
   grunt.registerTask('compile', [
     'env:compile',
-    'jshint',
+    'eslint',
     'clean:uiCompile',
     'clean:staticCompile',
     'less:compile',
