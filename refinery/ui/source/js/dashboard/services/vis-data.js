@@ -15,7 +15,7 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
         var allDsIds = results[0];
         var data = results[1];
 
-        root = root ? root : settings.ontRoot;
+        root = root || settings.ontRoot;
 
         // Prune graph and accumulate the dataset annotations
         var prunedData = graph.accumulateAndPrune(data, root, valueProperty);
@@ -85,13 +85,6 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
             };
           }
         );
-
-
-        // return graphData.promise.then(function (graph) {
-        //   return {
-        //     graph: graphData.promise
-        //   };
-        // });
       }
     }
   );
