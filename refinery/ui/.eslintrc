@@ -3,9 +3,15 @@
     browser: true
   },
   extends: "airbnb/legacy",
-  global: {
+  globals: {
     angular: false,
-    d3: false
+    d3: false,
+    describe: false,
+    it: false,
+    inject: false,
+    beforeEach: false,
+    expect: false,
+    spyOn: false
   },
   rules: {
     comma-dangle: [1, "never"],
@@ -21,7 +27,7 @@
     semi: [2, "always"],
     space-before-function-paren: [2, "always"],
     keyword-spacing: 2,
-    strict: [2, "global"],
+    strict: [2, "safe"],
     vars-on-top: 0
   }
 }
