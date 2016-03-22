@@ -19,8 +19,8 @@
           </div>
           </h4>
         </div>
-      <div id="{{attribute | replaceWhiteSpaceWithHyphen}}" class="panel-collapse
-      collapse"
+      <div id="{{attribute | replaceWhiteSpaceWithHyphen}}"
+        class="panel-collapse collapse"
         role="tabpanel"
         aria-labelledby="{{ attribute }}">
         <div class="panel-body">
@@ -50,7 +50,7 @@
     <h4>Analysis Filter</h4>
     <div ng-repeat="(analysis, fields) in FBCtrl.analysisFilter">
       <div class="panel panel-default">
-        <div class="panel-heading" role="tab" id="{{ analysis }}">
+        <div class="panel-heading" role="tab">
           <h4 class="panel-title">
           <div
             role="button"
