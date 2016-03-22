@@ -20,7 +20,7 @@ function rpFileBrowserAssayFilters( $timeout, $location) {
        attributeFilter: '@',
        analysisFilter: '@'
     },
-    link: function(scope, element){
+    link: function(scope, element, attr, ctrl){
 
       //ng-click event for attribute filter panels
       scope.dropAttributePanel = function(e, attributeName){
@@ -38,10 +38,14 @@ function rpFileBrowserAssayFilters( $timeout, $location) {
 
       //Drop down windows when they are in the URL query
       scope.$on('rf/attributeFilter-ready', function(){
+        scope.generateFilterDropSelection();
+      });
+
+      scope.generateFilterDropSelection = function(){
         var queryFields = Object.keys($location.search());
         var allFilters = {};
-        angular.copy(scope.FBCtrl.attributeFilter, allFilters);
-            allFilters['Analysis'] = scope.FBCtrl.analysisFilter['Analysis'];
+        angular.copy(ctrl.attributeFilter, allFilters);
+            allFilters['Analysis'] = ctrl.analysisFilter['Analysis'];
 
         angular.forEach(allFilters, function (attributeObj, attribute) {
           var allFields = Object.keys(attributeObj.facetObj);
@@ -50,7 +54,7 @@ function rpFileBrowserAssayFilters( $timeout, $location) {
             updateDomDropdown(allFields, queryFields, attribute);
           }, 0);
         });
-      });
+      };
 
       //Loops through fields to find matching attributes and drops down panel
       var updateDomDropdown = function(allFields, queryFields, attributeName){
