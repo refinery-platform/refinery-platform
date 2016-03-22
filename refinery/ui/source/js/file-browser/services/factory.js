@@ -26,6 +26,7 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
     if(typeof params.filter_attribute !== 'undefined'){
       params.filter_attribute = encodeAttributeFields(params.filter_attribute);
     }
+    console.log(params);
 
     var assayFile = assayFileService.query(params);
     assayFile.$promise.then(function (response) {
@@ -100,12 +101,11 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
   //Helper function encodes field array in an obj
   var encodeAttributeFields = function(attributeObj) {
     for(var fieldArray in attributeObj){
-      var copyFieldArray = fieldArray;
-
       for(var ind=0; ind < fieldArray.length; ind++){
         fieldArray[ind] = $window.encodeURIComponent(fieldArray[ind]);
       }
     }
+    return(attributeObj);
   };
 
   return{
