@@ -1060,8 +1060,9 @@ class Analysis(OwnableResource):
 
         return history['percent_complete']
 
-    def galaxy_cleanup(self):
-        """Delete library, workflow and history from Galaxy if they exist"""
+    def delete_from_galaxy(self):
+        """Delete Galaxy libraries, workflows and histories"""
+
         connection = self.galaxy_connection()
         error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
 
@@ -1083,6 +1084,24 @@ class Analysis(OwnableResource):
                     self.history_id, purge=True)
             except galaxy.client.ConnectionError as e:
                 logger.error(error_msg, 'history', self.name, e.message)
+
+    def galaxy_cleanup(self):
+        """Determine when/if Galaxy libraries, workflows and histories are
+        to be deleted based on the value of
+        global setting: REFINERY_GALAXY_ANALYSIS_CLEANUP"""
+
+        refinery_galaxy_analysis_cleanup = \
+            settings.REFINERY_GALAXY_ANALYSIS_CLEANUP
+
+        if refinery_galaxy_analysis_cleanup == 'always':
+            self.delete_from_galaxy()
+
+        if refinery_galaxy_analysis_cleanup == 'on_success' and self.status \
+                == Analysis.SUCCESS_STATUS:
+            self.delete_from_galaxy()
+
+        if refinery_galaxy_analysis_cleanup == 'never':
+            pass
 
     def cancel(self):
         """Mark analysis as cancelled"""
