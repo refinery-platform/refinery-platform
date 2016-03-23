@@ -40,7 +40,7 @@ class FileTypeAdmin(admin.ModelAdmin):
     # Override Djangos deletion of a single object and disallow the Unknown
     # FileType from being deleted
     def delete_view(self, request, object_id, extra_context=None):
-        obj = FileType.objects.get(id=int(object_id))
+        obj = FileType.objects.get(pk=int(object_id))
         if not obj.delete():
             messages.error(request, "Could not delete FileType:{} "
                                     "It has models dependant on it and "
@@ -71,7 +71,7 @@ class FileExtensionAdmin(admin.ModelAdmin):
     # Override Djangos deletion of a single object and disallow the Unknown
     # FileExtension from being deleted
     def delete_view(self, request, object_id, extra_context=None):
-        obj = FileExtension.objects.get(id=int(object_id))
+        obj = FileExtension.objects.get(pk=int(object_id))
         if not obj.delete():
             messages.error(request, "Could not delete FileExtension:{} "
                                     "It has models dependant on it and "
