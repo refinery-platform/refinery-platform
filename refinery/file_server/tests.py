@@ -7,9 +7,12 @@ import struct
 import cStringIO
 
 from django.utils import unittest
+from django.core.management import call_command
 
 from file_server import tdf_file, models
 from file_store import models as fs_models
+
+call_command("loaddata", "file_store/fixtures/test_file_store_data.json")
 
 
 class TDFItemTest(unittest.TestCase):
