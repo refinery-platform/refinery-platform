@@ -34,7 +34,7 @@ logger = logging.getLogger('file_store')
 
 # the Unknown filetype is not allowed to be deleted from the datatbase,
 # therefore providing the FileType id as a default value is acceptable
-UNKNOWN_FILETYPE = 32
+UNKNOWN_FILETYPE = 33
 
 
 def _mkdir(path):
@@ -284,7 +284,8 @@ class FileStoreItem(models.Model):
     # particular group
     sharename = models.CharField(max_length=20, blank=True)
     #: type of the file
-    filetype = models.ForeignKey(FileType, default=UNKNOWN_FILETYPE)
+    filetype = models.ForeignKey("file_store.FileType",
+                                 default=UNKNOWN_FILETYPE)
     #: file import task ID
     import_task_id = UUIDField(blank=True)
     # Date created
