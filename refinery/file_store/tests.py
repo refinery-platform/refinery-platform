@@ -7,6 +7,7 @@ from urlparse import urljoin
 
 from django.conf import settings
 from django.test import SimpleTestCase
+from django.core.management import call_command
 
 from file_store.models import file_path, get_temp_dir, get_file_object, \
     FileStoreItem, FileExtension, FILE_STORE_TEMP_DIR, \
@@ -17,6 +18,8 @@ class FileStoreModuleTest(SimpleTestCase):
     """File store module functions test"""
 
     def setUp(self):
+        call_command("loaddata",
+                     "file_store/fixtures/test_file_store_data.json")
         self.filename = 'test_file.dat'
         self.sharename = 'labname'
 
@@ -27,6 +30,10 @@ class FileStoreModuleTest(SimpleTestCase):
         self.url_source = urljoin('http://example.org/', self.filename)
         self.item_from_url = FileStoreItem.objects.create(
             source=self.url_source, sharename=self.sharename)
+
+    def tearDown(self):
+        FileType.objects.all().delete()
+        FileExtension.objects.all().delete()
 
     def test_file_path(self):
         """Check that the file store path contains share name and file name"""
@@ -85,13 +92,16 @@ class FileStoreItemTest(SimpleTestCase):
     """FileStoreItem methods test"""
 
     def setUp(self):
+        call_command("loaddata",
+                     "file_store/fixtures/test_file_store_data.json")
         self.filename = 'test_file.tdf'
         self.sharename = 'labname'
         self.path_source = os.path.join('/example/path', self.filename)
         self.url_source = urljoin('http://example.org/', self.filename)
 
     def tearDown(self):
-        FileStoreItem.objects.all().delete()
+        FileType.objects.all().delete()
+        FileExtension.objects.all().delete()
 
     def test_get_full_url_remote_file(self):
         """Check if the source URL is returned for files that have not been
@@ -171,6 +181,8 @@ class FileStoreItemManagerTest(SimpleTestCase):
     """FileStoreItemManager methods test"""
 
     def setUp(self):
+        call_command("loaddata",
+                     "file_store/fixtures/test_file_store_data.json")
         self.filename = 'test_file.tdf'
         self.sharename = 'labname'
         self.path_prefix = '/example/local/path/'
@@ -179,7 +191,8 @@ class FileStoreItemManagerTest(SimpleTestCase):
         self.url_source = urljoin(self.url_prefix, self.filename)
 
     def tearDown(self):
-        FileStoreItem.objects.all().delete()
+        FileType.objects.all().delete()
+        FileExtension.objects.all().delete()
 
     def test_file_source_map_translation(self):
         """Test translation from URL to file system path when creating a new
@@ -250,10 +263,13 @@ class FileSourceTranslationTest(SimpleTestCase):
 
 class UnknownFileTypeTest(SimpleTestCase):
     def setUp(self):
+        call_command("loaddata",
+                     "file_store/fixtures/test_file_store_data.json")
         self.filetype = FileType.objects.get(name="UNKNOWN")
 
     def tearDown(self):
-        FileType.objects.get(name="UNKNOWN").delete()
+        FileType.objects.all().delete()
+        FileExtension.objects.all().delete()
 
     def test_filetype_persistence_after_deletion(self):
         self.filetype.delete()
@@ -262,12 +278,14 @@ class UnknownFileTypeTest(SimpleTestCase):
 
 class UnknownFileExtensionTest(SimpleTestCase):
     def setUp(self):
+        call_command("loaddata",
+                     "file_store/fixtures/test_file_store_data.json")
         self.filetype = FileType.objects.get(name="UNKNOWN")
         self.fileextension = FileExtension.objects.get(name="unknown")
 
     def tearDown(self):
-        FileType.objects.get(name="UNKNOWN").delete()
-        FileExtension.objects.get(name="unknown").delete()
+        FileType.objects.all().delete()
+        FileExtension.objects.all().delete()
 
     def test_file_extension_persistence_after_deletion(self):
         self.fileextension.delete()

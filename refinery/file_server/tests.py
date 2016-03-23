@@ -12,16 +12,18 @@ from django.core.management import call_command
 from file_server import tdf_file, models
 from file_store import models as fs_models
 
-call_command("loaddata", "file_store/fixtures/test_file_store_data.json")
-
 
 class TDFItemTest(unittest.TestCase):
     """Test all operations on TDFItem instances"""
     # TODO: add missing tests
     def setUp(self):
+        call_command("loaddata",
+                     "file_store/fixtures/test_file_store_data.json")
         self.tdf_file = fs_models.FileStoreItem.objects.create_item("tdf")
 
     def tearDown(self):
+        fs_models.FileType.objects.all().delete()
+        fs_models.FileExtension.objects.all().delete()
         self.tdf_file.delete()
 
     def test_add_tdfitem(self):
@@ -32,6 +34,8 @@ class BigBEDItemTest(unittest.TestCase):
     """Test all operations on BigBEDItem instances"""
 
     def setUp(self):
+        call_command("loaddata",
+                     "file_store/fixtures/test_file_store_data.json")
         self.bigbed_file = fs_models.FileStoreItem.objects.create_item("bb")
 
     def tearDown(self):
@@ -59,9 +63,13 @@ class BAMItemTest(unittest.TestCase):
 
     # TODO: add missing tests
     def setUp(self):
+        call_command("loaddata",
+                     "file_store/fixtures/test_file_store_data.json")
         self.bam_file = fs_models.FileStoreItem.objects.create_item("bam")
 
     def tearDown(self):
+        fs_models.FileType.objects.all().delete()
+        fs_models.FileExtension.objects.all().delete()
         self.bam_file.delete()
 
     def test_add_bamitem(self):
@@ -73,9 +81,13 @@ class WIGItemTest(unittest.TestCase):
 
     # TODO: add missing tests
     def setUp(self):
+        call_command("loaddata",
+                     "file_store/fixtures/test_file_store_data.json")
         self.wig_file = fs_models.FileStoreItem.objects.create_item("wig")
 
     def tearDown(self):
+        fs_models.FileType.objects.all().delete()
+        fs_models.FileExtension.objects.all().delete()
         self.wig_file.delete()
 
     def test_add_wigitem(self):
@@ -86,10 +98,14 @@ class InvalidItemTest(unittest.TestCase):
     """Test operations on invalid instances"""
 
     def setUp(self):
+        call_command("loaddata",
+                     "file_store/fixtures/test_file_store_data.json")
         self.undefined_file = fs_models.FileStoreItem.objects.create_item(
             "testfile")
 
     def tearDown(self):
+        fs_models.FileType.objects.all().delete()
+        fs_models.FileExtension.objects.all().delete()
         self.undefined_file.delete()
 
     def test_add_unknown_file_type(self):
@@ -341,7 +357,3 @@ class TDFByteStreamRegressionTest(unittest.TestCase):
         self.assertEqual(bytestr.update_offset(None),
                          bitstr.update_offset(None))
         self.assertEqual(bytestr.update_offset(5), bitstr.update_offset(5))
-
-# Remove data loaded from test fixture
-fs_models.FileType.objects.all().delete()
-fs_models.FileExtension.objects.all().delete()
