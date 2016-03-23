@@ -418,6 +418,11 @@ REFINERY_BANNER = get_setting("REFINERY_BANNER")
 # Display REFINERY_BANNER to anonymous users only
 REFINERY_BANNER_ANONYMOUS_ONLY = get_setting("REFINERY_BANNER_ANONYMOUS_ONLY")
 
+# Setting to allow users to select if they want to keep workflows,
+# histories, and libraries in Galaxy or not.
+# Deletion options are ALWAYS, ON_SUCCESS, and NEVER
+REFINERY_GALAXY_ANALYSIS_CLEANUP = get_setting(
+    "REFINERY_GALAXY_ANALYSIS_CLEANUP")["ON_SUCCESS"]
 # Subject and message body of the welcome email sent to new users
 REFINERY_WELCOME_EMAIL_SUBJECT = get_setting("REFINERY_WELCOME_EMAIL_SUBJECT")
 REFINERY_WELCOME_EMAIL_MESSAGE = get_setting("REFINERY_WELCOME_EMAIL_MESSAGE")
