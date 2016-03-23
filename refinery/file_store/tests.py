@@ -90,6 +90,9 @@ class FileStoreItemTest(SimpleTestCase):
         self.path_source = os.path.join('/example/path', self.filename)
         self.url_source = urljoin('http://example.org/', self.filename)
 
+    def tearDown(self):
+        FileStoreItem.objects.all().delete()
+
     def test_get_full_url_remote_file(self):
         """Check if the source URL is returned for files that have not been
         imported
@@ -174,6 +177,9 @@ class FileStoreItemManagerTest(SimpleTestCase):
         self.path_source = os.path.join(self.path_prefix, self.filename)
         self.url_prefix = 'http://example.org/web/path/'
         self.url_source = urljoin(self.url_prefix, self.filename)
+
+    def tearDown(self):
+        FileStoreItem.objects.all().delete()
 
     def test_file_source_map_translation(self):
         """Test translation from URL to file system path when creating a new

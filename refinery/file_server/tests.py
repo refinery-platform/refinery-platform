@@ -21,14 +21,21 @@ class TDFItemTest(unittest.TestCase):
     def setUp(self):
         self.tdf_file = fs_models.FileStoreItem.objects.create_item("tdf")
 
+    def tearDown(self):
+        self.tdf_file.delete()
+
     def test_add_tdfitem(self):
         self.assertIsNotNone(models.add(self.tdf_file.uuid))
 
 
 class BigBEDItemTest(unittest.TestCase):
     """Test all operations on BigBEDItem instances"""
+
     def setUp(self):
         self.bigbed_file = fs_models.FileStoreItem.objects.create_item("bb")
+
+    def tearDown(self):
+        self.bigbed_file.delete()
 
     def test_add_bigbeditem(self):
         self.assertIsNotNone(models.add(self.bigbed_file.uuid))
@@ -49,9 +56,13 @@ class BigBEDItemTest(unittest.TestCase):
 
 class BAMItemTest(unittest.TestCase):
     """Test all operations on BAMItem instances"""
+
     # TODO: add missing tests
     def setUp(self):
         self.bam_file = fs_models.FileStoreItem.objects.create_item("bam")
+
+    def tearDown(self):
+        self.bam_file.delete()
 
     def test_add_bamitem(self):
         self.assertIsNotNone(models.add(self.bam_file.uuid))
@@ -59,9 +70,13 @@ class BAMItemTest(unittest.TestCase):
 
 class WIGItemTest(unittest.TestCase):
     """Test all operations on WIGItem instances"""
+
     # TODO: add missing tests
     def setUp(self):
         self.wig_file = fs_models.FileStoreItem.objects.create_item("wig")
+
+    def tearDown(self):
+        self.wig_file.delete()
 
     def test_add_wigitem(self):
         self.assertIsNotNone(models.add(self.wig_file.uuid))
@@ -69,11 +84,17 @@ class WIGItemTest(unittest.TestCase):
 
 class InvalidItemTest(unittest.TestCase):
     """Test operations on invalid instances"""
+
+    def setUp(self):
+        self.undefined_file = fs_models.FileStoreItem.objects.create_item(
+            "testfile")
+
+    def tearDown(self):
+        self.undefined_file.delete()
+
     def test_add_unknown_file_type(self):
         # create a FileStoreItem without a file type
-        undefined_file = fs_models.FileStoreItem.objects.create_item(
-            "testfile")
-        self.assertIsNone(models.add(undefined_file.uuid))
+        self.assertIsNone(models.add(self.undefined_file.uuid))
 
 
 class TDFByteStreamTest(unittest.TestCase):
@@ -83,6 +104,7 @@ class TDFByteStreamTest(unittest.TestCase):
 
 class TDFByteStreamTestUpdateOffset(TDFByteStreamTest):
     """Test moving around the file"""
+
     def setUp(self):
         self.data = [1, 2, 3]
         self.fmt = self.endianness + 'iii'  # three ints
@@ -112,6 +134,7 @@ class TDFByteStreamTestUpdateOffset(TDFByteStreamTest):
 
 class TDFByteStreamTestReadInteger(TDFByteStreamTest):
     """Test reading four byte integer values"""
+
     def setUp(self):
         self.data = [1, 2, 3]
         self.fmt = self.endianness + 'iii'  # three ints
@@ -129,6 +152,7 @@ class TDFByteStreamTestReadLong(TDFByteStreamTest):
     """Test reading eight byte integer values.
 
     """
+
     def setUp(self):
         self.data = [1, 2, 3]
         self.fmt = self.endianness + 'qqq'   # three longs
@@ -146,6 +170,7 @@ class TDFByteStreamTestReadFloat(TDFByteStreamTest):
     """Test reading four byte floating point numbers.
 
     """
+
     def setUp(self):
         self.data = [1.1, 2.2, 3.3]
         self.fmt = self.endianness + 'fff'   # three floats
@@ -163,6 +188,7 @@ class TDFByteStreamTestReadBytes(TDFByteStreamTest):
     """Test reading a number of bytes.
 
     """
+
     def setUp(self):
         self.data = ['a', 'b', 'c']
         self.fmt = self.endianness + 'ccc'  # three one-byte characters
@@ -214,6 +240,7 @@ class TDFByteTestInvalidValues(TDFByteStreamTest):
     """Test reading invalid values.
 
     """
+
     def setUp(self):
         self.data = 'a'
         self.fmt = self.endianness + 'c'  # char - one byte long
@@ -236,6 +263,7 @@ class TDFByteStreamRegressionTest(unittest.TestCase):
     """Regression test against TDFBitStream class.
 
     """
+
     def setUp(self):
         self.endianness = '<'   # should match endianness of TDFByteStream
 
@@ -313,3 +341,7 @@ class TDFByteStreamRegressionTest(unittest.TestCase):
         self.assertEqual(bytestr.update_offset(None),
                          bitstr.update_offset(None))
         self.assertEqual(bytestr.update_offset(5), bitstr.update_offset(5))
+
+# Remove data loaded from test fixture
+fs_models.FileType.objects.all().delete()
+fs_models.FileExtension.objects.all().delete()
