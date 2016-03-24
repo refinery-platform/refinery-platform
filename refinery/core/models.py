@@ -1065,18 +1065,34 @@ class Analysis(OwnableResource):
         to be deleted based on the value of
         global setting: REFINERY_GALAXY_ANALYSIS_CLEANUP"""
 
-        refinery_galaxy_analysis_cleanup = \
-            settings.REFINERY_GALAXY_ANALYSIS_CLEANUP
+        cleanup = settings.REFINERY_GALAXY_ANALYSIS_CLEANUP
 
-        if refinery_galaxy_analysis_cleanup == 'always':
-            self.delete_from_galaxy()
+        if cleanup == 'always' or cleanup == 'on_success' and \
+                      self.get_status() == self.SUCCESS_STATUS:
 
-        if refinery_galaxy_analysis_cleanup == 'on_success' and self.status \
-                == Analysis.SUCCESS_STATUS:
-            self.delete_from_galaxy()
+            connection = self.galaxy_connection()
+            error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
 
-        if refinery_galaxy_analysis_cleanup == 'never':
-            pass
+            # Delete Galaxy libraries, workflows and histories
+            if self.library_id:
+                try:
+                    connection.libraries.delete_library(self.library_id)
+                except galaxy.client.ConnectionError as e:
+                    logger.error(error_msg, 'library', self.name, e.message)
+
+            if self.workflow_galaxy_id:
+                try:
+                    connection.workflows.delete_workflow(
+                        self.workflow_galaxy_id)
+                except galaxy.client.ConnectionError as e:
+                    logger.error(error_msg, 'workflow', self.name, e.message)
+
+            if self.history_id:
+                try:
+                    connection.histories.delete_history(self.history_id,
+                                                        purge=True)
+                except galaxy.client.ConnectionError as e:
+                    logger.error(error_msg, 'history', self.name, e.message)
 
     def cancel(self):
         """Mark analysis as cancelled"""
