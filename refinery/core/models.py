@@ -1061,28 +1061,38 @@ class Analysis(OwnableResource):
         return history['percent_complete']
 
     def galaxy_cleanup(self):
-        """Delete library, workflow and history from Galaxy if they exist"""
-        connection = self.galaxy_connection()
-        error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
+        """Determine when/if Galaxy libraries, workflows and histories are
+        to be deleted based on the value of
+        global setting: REFINERY_GALAXY_ANALYSIS_CLEANUP"""
 
-        if self.library_id:
-            try:
-                connection.libraries.delete_library(self.library_id)
-            except galaxy.client.ConnectionError as e:
-                logger.error(error_msg, 'library', self.name, e.message)
+        cleanup = settings.REFINERY_GALAXY_ANALYSIS_CLEANUP
 
-        if self.workflow_galaxy_id:
-            try:
-                connection.workflows.delete_workflow(self.workflow_galaxy_id)
-            except galaxy.client.ConnectionError as e:
-                logger.error(error_msg, 'workflow', self.name, e.message)
+        if cleanup == 'always' or cleanup == 'on_success' and \
+                      self.get_status() == self.SUCCESS_STATUS:
 
-        if self.history_id:
-            try:
-                connection.histories.delete_history(
-                    self.history_id, purge=True)
-            except galaxy.client.ConnectionError as e:
-                logger.error(error_msg, 'history', self.name, e.message)
+            connection = self.galaxy_connection()
+            error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
+
+            # Delete Galaxy libraries, workflows and histories
+            if self.library_id:
+                try:
+                    connection.libraries.delete_library(self.library_id)
+                except galaxy.client.ConnectionError as e:
+                    logger.error(error_msg, 'library', self.name, e.message)
+
+            if self.workflow_galaxy_id:
+                try:
+                    connection.workflows.delete_workflow(
+                        self.workflow_galaxy_id)
+                except galaxy.client.ConnectionError as e:
+                    logger.error(error_msg, 'workflow', self.name, e.message)
+
+            if self.history_id:
+                try:
+                    connection.histories.delete_history(self.history_id,
+                                                        purge=True)
+                except galaxy.client.ConnectionError as e:
+                    logger.error(error_msg, 'history', self.name, e.message)
 
     def cancel(self):
         """Mark analysis as cancelled"""
