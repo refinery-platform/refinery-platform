@@ -19,7 +19,7 @@ class FileStoreModuleTest(SimpleTestCase):
 
     def setUp(self):
         call_command("loaddata",
-                     "file_store/fixtures/test_file_store_data.json")
+                     "file_store/fixtures/file_store_data.json")
         self.filename = 'test_file.dat'
         self.sharename = 'labname'
 
@@ -93,7 +93,7 @@ class FileStoreItemTest(SimpleTestCase):
 
     def setUp(self):
         call_command("loaddata",
-                     "file_store/fixtures/test_file_store_data.json")
+                     "file_store/fixtures/file_store_data.json")
         self.filename = 'test_file.tdf'
         self.sharename = 'labname'
         self.path_source = os.path.join('/example/path', self.filename)
@@ -182,7 +182,7 @@ class FileStoreItemManagerTest(SimpleTestCase):
 
     def setUp(self):
         call_command("loaddata",
-                     "file_store/fixtures/test_file_store_data.json")
+                     "file_store/fixtures/file_store_data.json")
         self.filename = 'test_file.tdf'
         self.sharename = 'labname'
         self.path_prefix = '/example/local/path/'
@@ -264,7 +264,7 @@ class FileSourceTranslationTest(SimpleTestCase):
 class UnknownFileTypeTest(SimpleTestCase):
     def setUp(self):
         call_command("loaddata",
-                     "file_store/fixtures/test_file_store_data.json")
+                     "file_store/fixtures/file_store_data.json")
         self.filetype = FileType.objects.get(name="UNKNOWN")
 
     def tearDown(self):
@@ -279,7 +279,7 @@ class UnknownFileTypeTest(SimpleTestCase):
 class UnknownFileExtensionTest(SimpleTestCase):
     def setUp(self):
         call_command("loaddata",
-                     "file_store/fixtures/test_file_store_data.json")
+                     "file_store/fixtures/file_store_data.json")
         self.filetype = FileType.objects.get(name="UNKNOWN")
         self.fileextension = FileExtension.objects.get(name="unknown")
 

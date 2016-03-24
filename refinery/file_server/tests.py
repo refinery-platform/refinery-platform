@@ -18,7 +18,7 @@ class TDFItemTest(unittest.TestCase):
     # TODO: add missing tests
     def setUp(self):
         call_command("loaddata",
-                     "file_store/fixtures/test_file_store_data.json")
+                     "file_store/fixtures/file_store_data.json")
         self.tdf_file = fs_models.FileStoreItem.objects.create_item("tdf")
 
     def tearDown(self):
@@ -35,7 +35,7 @@ class BigBEDItemTest(unittest.TestCase):
 
     def setUp(self):
         call_command("loaddata",
-                     "file_store/fixtures/test_file_store_data.json")
+                     "file_store/fixtures/file_store_data.json")
         self.bigbed_file = fs_models.FileStoreItem.objects.create_item("bb")
 
     def tearDown(self):
@@ -64,7 +64,7 @@ class BAMItemTest(unittest.TestCase):
     # TODO: add missing tests
     def setUp(self):
         call_command("loaddata",
-                     "file_store/fixtures/test_file_store_data.json")
+                     "file_store/fixtures/file_store_data.json")
         self.bam_file = fs_models.FileStoreItem.objects.create_item("bam")
 
     def tearDown(self):
@@ -82,7 +82,7 @@ class WIGItemTest(unittest.TestCase):
     # TODO: add missing tests
     def setUp(self):
         call_command("loaddata",
-                     "file_store/fixtures/test_file_store_data.json")
+                     "file_store/fixtures/file_store_data.json")
         self.wig_file = fs_models.FileStoreItem.objects.create_item("wig")
 
     def tearDown(self):
@@ -99,7 +99,7 @@ class InvalidItemTest(unittest.TestCase):
 
     def setUp(self):
         call_command("loaddata",
-                     "file_store/fixtures/test_file_store_data.json")
+                     "file_store/fixtures/file_store_data.json")
         self.undefined_file = fs_models.FileStoreItem.objects.create_item(
             "testfile")
 
