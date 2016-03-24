@@ -11,7 +11,7 @@ class Migration(DataMigration):
         filetype_duplicates = [36, 31, 30]
         try:
             for id in filetype_duplicates:
-                orm.Filetype.objects.get(pk=id).delete()
+                orm.Filetype.objects.get(id=id).delete()
         except orm.Filetype.DoesNotExist:
             pass
 
