@@ -1444,7 +1444,7 @@ class ExtendedGroupManager(models.Manager):
     def public_group(self):
         try:
             return ExtendedGroup.objects.get(
-                pk=settings.REFINERY_PUBLIC_GROUP_ID
+                id=settings.REFINERY_PUBLIC_GROUP_ID
             )
         except:
             return None
@@ -1863,7 +1863,7 @@ def _add_user_to_neo4j(sender, **kwargs):
                 'core.read_dataset'
             )
         ),
-        [kwargs['instance'].pk]
+        [kwargs['instance'].id]
     )
 
 
