@@ -1067,8 +1067,9 @@ class Analysis(OwnableResource):
 
         cleanup = settings.REFINERY_GALAXY_ANALYSIS_CLEANUP
 
-        if cleanup == 'always' or cleanup == 'on_success' and \
-                      self.get_status() == self.SUCCESS_STATUS:
+        if (cleanup == 'always' or
+            cleanup == 'on_success' and
+                self.get_status() == self.SUCCESS_STATUS):
 
             connection = self.galaxy_connection()
             error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
