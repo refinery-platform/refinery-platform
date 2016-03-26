@@ -1809,8 +1809,15 @@ Object.defineProperty(
       return this._visibleDepth;
     },
     set: function (visibleDepth) {
+      var newVisibleDepth = Math.min(Math.max(1, visibleDepth), this.depth);
+
+      if (newVisibleDepth === this._visibleDepth) {
+        return;
+      }
+
       var oldVisibleDepth = this._visibleDepth;
-      this._visibleDepth = Math.min(Math.max(1, visibleDepth), this.depth);
+      this._visibleDepth = newVisibleDepth;
+
       this.adjustLevelDepth(oldVisibleDepth);
       this.$rootScope.$emit('dashboardVisVisibleDepth', visibleDepth);
     }
