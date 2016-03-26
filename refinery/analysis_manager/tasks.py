@@ -23,8 +23,13 @@ from file_store.tasks import import_file, create
 
 logger = logging.getLogger(__name__)
 
-HTML = FileExtension.objects.get(name="html")
-ZIP = FileExtension.objects.get(name="zip")
+# Fetch HTML and ZIP FileExtensions
+try:
+    HTML = FileExtension.objects.get(name="html")
+    ZIP = FileExtension.objects.get(name="zip")
+
+except FileExtension.DoesNotExist as e:
+    logger.error("Could not retrieve FileExtension: %s", e)
 
 
 class AnalysisHandlerTask(Task):
