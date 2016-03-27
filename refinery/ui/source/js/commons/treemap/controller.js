@@ -1847,15 +1847,20 @@ Object.defineProperty(
       var oldVisibleDepth = this._visibleDepth;
       this._visibleDepth = newVisibleDepth;
 
-      var adjustedLabels = this.adjustLevelDepth(oldVisibleDepth);
-      this.$rootScope.$emit('dashboardVisVisibleDepth', visibleDepth);
-      adjustedLabels.finally(function () {
-        this.loadingVisibleDepth = false;
-        // Wait one digestion cycle.
-        this.$timeout(function() {
-          this.$rootScope.$broadcast('focusOn', 'visibleDepthInput');
-        }.bind(this), 0);
-      }.bind(this));
+      // Wait one digestion cycle. Otherwise adding or removing new nodes will
+      // happen before the spinner has been loaded.
+      this.$timeout(function() {
+
+        var adjustedLabels = this.adjustLevelDepth(oldVisibleDepth);
+        this.$rootScope.$emit('dashboardVisVisibleDepth', visibleDepth);
+        adjustedLabels.finally(function () {
+          this.loadingVisibleDepth = false;
+          // Wait one digestion cycle.
+          this.$timeout(function() {
+            this.$rootScope.$broadcast('focusOn', 'visibleDepthInput');
+          }.bind(this), 0);
+        }.bind(this));
+      }.bind(this), 0);
     }
 });
 
