@@ -774,43 +774,40 @@ TreemapCtrl.prototype.addLabel = function (el, attr, level) {
 
 TreemapCtrl.prototype.checkLabelReadbility = function () {
   var el, parentHeight, that = this;
+
   this.treemap.element.selectAll('.label').each(function () {
     el = d3.select(this);
     el.classed({
       'visible': false,
       'hidden': false
     });
-    parentHeight = this.getBoundingClientRect().height;
 
-    if (parentHeight < this.children[0].getBoundingClientRect().height) {
-      el.classed('smaller', true);
-      that.$timeout(function () {
-        if (
-          this.getBoundingClientRect().height <
-            this.children[0].getBoundingClientRect().height
-        ) {
-          d3.select(this).classed({
-            'smaller': false,
-            'hidden': true
-          });
-        }
-      }.bind(this), 0);
-    } else {
-      el.classed('hidden', false);
-    }
+    var visible = false;
+    var hidden = false;
+    var smaller = false;
 
-    if (
-      (this.getBoundingClientRect().width * 1.5) <
-        this.children[0].getBoundingClientRect().width
-    ) {
-      el.classed('hidden', true);
-    }
+    rectBox = this.getBoundingClientRect();
+    labelBox = this.children[0].getBoundingClientRect();
 
-    that.$timeout(function () {
-      if (!d3.select(this).classed('hidden')) {
-        d3.select(this).classed('visible', true);
+    if (rectBox.height / labelBox.height < 1) {
+      if (rectBox.height / labelBox.height > 0.5) {
+        smaller = true;
+      } else {
+        hidden = true;
       }
-    }.bind(this), 5);
+    }
+
+    if (rectBox.width * 1.5 < labelBox.width) {
+      hidden = true;
+    }
+
+    visible = !hidden;
+
+    el.classed({
+      'hidden': hidden,
+      'smaller': smaller,
+      'visible': visible
+    });
   });
 };
 
