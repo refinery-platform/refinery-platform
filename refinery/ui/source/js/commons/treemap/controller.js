@@ -1815,11 +1815,15 @@ Object.defineProperty(
         return;
       }
 
+      // Disable visible depth field until new level of nodes have been loaded
+      this.loadingVisibleDepth = true;
+
       var oldVisibleDepth = this._visibleDepth;
       this._visibleDepth = newVisibleDepth;
 
       this.adjustLevelDepth(oldVisibleDepth);
       this.$rootScope.$emit('dashboardVisVisibleDepth', visibleDepth);
+      this.loadingVisibleDepth = false;
     }
 });
 
