@@ -1371,15 +1371,29 @@ TreemapCtrl.prototype.removeLevelsOfNodes = function (oldVisibleDepth) {
     /* jshint +W083 */
   }
 
-  // Remove all children deeper than what is specified.
-  for (i = 0, len = this.children[this.visibleDepth + 1].length; i < len; i++) {
-    var group = this.children[this.visibleDepth + 1][i].transition().duration(250);
-
-    // Fade groups out and remove them
-    group
-      .style('opacity', 0)
-      .remove();
+  var groups = false;
+  if (this.children[this.visibleDepth + 1].length) {
+    groups = this.children[this.visibleDepth + 1][0];
   }
+
+  function pushSelection (target, selection) {
+    selection.each(function pushDomNode () {
+      target[0].push(this);
+    });
+  }
+
+  for (
+    i = 1, len = this.children[this.visibleDepth + 1].length;
+    i < len;
+    i++
+  ) {
+    // Merge selections into one single selection
+    pushSelection(groups, this.children[this.visibleDepth + 1][i]);
+  }
+
+  var transition = groups.transition().duration(250);
+  transition.style('opacity', 0).remove();
+
   // Unset intemediate levels
   for (i = this.visibleDepth + 1; i <= oldVisibleDepth; i++) {
     this.children[i] = undefined;
