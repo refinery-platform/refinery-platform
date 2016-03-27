@@ -1850,9 +1850,11 @@ Object.defineProperty(
       var oldVisibleDepth = this._visibleDepth;
       this._visibleDepth = newVisibleDepth;
 
-      this.adjustLevelDepth(oldVisibleDepth);
+      var adjustedLabels = this.adjustLevelDepth(oldVisibleDepth);
       this.$rootScope.$emit('dashboardVisVisibleDepth', visibleDepth);
-      this.loadingVisibleDepth = false;
+      adjustedLabels.finally(function () {
+        this.loadingVisibleDepth = false;
+      }.bind(this));
     }
 });
 
