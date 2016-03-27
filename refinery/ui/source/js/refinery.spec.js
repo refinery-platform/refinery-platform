@@ -50,6 +50,10 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('colors')).toEqual(true);
     });
 
+    it('should have "focusOn" as a dependency', function () {
+      expect(hasModule('focusOn')).toEqual(true);
+    });
+
     it('should have "refineryRouter" as a dependency', function () {
       expect(hasModule('refineryRouter')).toEqual(true);
     });

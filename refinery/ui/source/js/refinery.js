@@ -18,6 +18,7 @@ angular
   'pubSub',
   'closeOnOuterClick',
   'colors',
+  'focusOn',
 
   /*
    * Refinery modules
