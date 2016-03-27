@@ -1356,34 +1356,34 @@ TreemapCtrl.prototype.rect = function (elements, reduction) {
  * @param   {Number}  oldVisibleDepth  Former level of depth.
  */
 TreemapCtrl.prototype.removeLevelsOfNodes = function (oldVisibleDepth) {
-    var i,
-      len,
-      startLevel = this.currentLevel + this.visibleDepth,
-      that = this;
+  var i,
+    len,
+    startLevel = this.currentLevel + this.visibleDepth,
+    that = this;
 
-    // Add inner nodes to `.group-of-nodes` at `startLevel`.
-    for (i = 0, len = this.children[this.visibleDepth].length; i < len; i++) {
-      // Ignoring jsHint because basically we just have another nested for loop.
-      /* jshint -W083 */
-      this.children[this.visibleDepth][i].each(function (data) {
-        that.fadeIn(that.addInnerNodes(that.d3.select(this)));
-      });
-      /* jshint +W083 */
-    }
+  // Add inner nodes to `.group-of-nodes` at `startLevel`.
+  for (i = 0, len = this.children[this.visibleDepth].length; i < len; i++) {
+    // Ignoring jsHint because basically we just have another nested for loop.
+    /* jshint -W083 */
+    this.children[this.visibleDepth][i].each(function (data) {
+      that.fadeIn(that.addInnerNodes(that.d3.select(this)));
+    });
+    /* jshint +W083 */
+  }
 
-    // Remove all children deeper than what is specified.
-    for (i = 0, len = this.children[this.visibleDepth + 1].length; i < len; i++) {
-      var group = this.children[this.visibleDepth + 1][i].transition().duration(250);
+  // Remove all children deeper than what is specified.
+  for (i = 0, len = this.children[this.visibleDepth + 1].length; i < len; i++) {
+    var group = this.children[this.visibleDepth + 1][i].transition().duration(250);
 
-      // Fade groups out and remove them
-      group
-        .style('opacity', 0)
-        .remove();
-    }
-    // Unset intemediate levels
-    for (i = this.visibleDepth + 1; i <= oldVisibleDepth; i++) {
-      this.children[i] = undefined;
-    }
+    // Fade groups out and remove them
+    group
+      .style('opacity', 0)
+      .remove();
+  }
+  // Unset intemediate levels
+  for (i = this.visibleDepth + 1; i <= oldVisibleDepth; i++) {
+    this.children[i] = undefined;
+  }
 };
 
 /**
