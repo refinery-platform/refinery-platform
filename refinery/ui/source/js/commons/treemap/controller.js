@@ -50,6 +50,24 @@ function getAssociatedDataSets (node) {
   return dataSetIds;
 }
 
+function endAll (transition, callback) {
+  var n = 0;
+
+  if (transition.size() === 0) {
+    callback();
+  }
+
+  transition
+    .each(function() {
+      ++n;
+    })
+    .each('end', function() {
+      if (!--n) {
+        callback.apply(this, arguments);
+      }
+    });
+}
+
 /**
  * TreeMap controller constructor.
  *
@@ -801,9 +819,11 @@ TreemapCtrl.prototype.checkLabelReadbility = function () {
  *
  * @method  addLevelsOfNodes
  * @author  Fritz Lekschas
- * @date    2015-08-18
+ * @date    2016-03-27
  *
  * @param   {Number}  oldVisibleDepth  Starting level.
+ * @return  {Object}                   Promise resolving when all new nodes have
+ *   been faded in.
  */
 TreemapCtrl.prototype.addLevelsOfNodes = function (oldVisibleDepth) {
   var currentInnerNodes = this.d3.selectAll('.inner-node'),
@@ -827,7 +847,7 @@ TreemapCtrl.prototype.addLevelsOfNodes = function (oldVisibleDepth) {
 
   // Remove formerly displayed inner nodes after all new inner nodes have been
   // faded in.
-  this.$q.all(promises)
+  return this.$q.all(promises)
     .then(function () {
       currentInnerNodes.remove();
     });
@@ -838,21 +858,26 @@ TreemapCtrl.prototype.addLevelsOfNodes = function (oldVisibleDepth) {
  *
  * @method  adjustLevelDepth
  * @author  Fritz Lekschas
- * @date    2015-08-18
+ * @date    2016-03-27
  *
  * @param   {Number}  oldVisibleDepth  Former level of depth.
+ * @return  {Object}                   Promise resolving when node have been
+ *   faded in and labels have been checked.
  */
 TreemapCtrl.prototype.adjustLevelDepth = function (oldVisibleDepth) {
   var that = this;
+  var transition = this.$q.when();
 
   if (oldVisibleDepth < this.visibleDepth) {
-    this.addLevelsOfNodes(oldVisibleDepth);
-  }
-  if (oldVisibleDepth > this.visibleDepth) {
-    this.removeLevelsOfNodes(oldVisibleDepth);
+    transition = this.addLevelsOfNodes(oldVisibleDepth);
+  } else {
+    transition = this.removeLevelsOfNodes(oldVisibleDepth);
   }
 
-  this.checkLabelReadbility();
+  return transition.then(function () {
+    this.checkLabelReadbility();
+    return true;
+  }.bind(this));
 };
 
 /**
@@ -1352,14 +1377,17 @@ TreemapCtrl.prototype.rect = function (elements, reduction) {
  *
  * @method  removeLevelsOfNodes
  * @author  Fritz Lekschas
- * @date    2015-08-05
+ * @date    2016-03-27
  * @param   {Number}  oldVisibleDepth  Former level of depth.
+ * @return  {Object}                   Promise resolving when all nodes have
+ *   been removed.
  */
 TreemapCtrl.prototype.removeLevelsOfNodes = function (oldVisibleDepth) {
   var i,
     len,
     startLevel = this.currentLevel + this.visibleDepth,
     that = this;
+  var deferred = this.$q.defer();
 
   // Add inner nodes to `.group-of-nodes` at `startLevel`.
   for (i = 0, len = this.children[this.visibleDepth].length; i < len; i++) {
@@ -1393,11 +1421,16 @@ TreemapCtrl.prototype.removeLevelsOfNodes = function (oldVisibleDepth) {
 
   var transition = groups.transition().duration(250);
   transition.style('opacity', 0).remove();
+  transition.call(endAll, function () {
+    deferred.resolve();
+  });
 
   // Unset intemediate levels
   for (i = this.visibleDepth + 1; i <= oldVisibleDepth; i++) {
     this.children[i] = undefined;
   }
+
+  return deferred.promise;
 };
 
 /**
@@ -1499,24 +1532,6 @@ TreemapCtrl.prototype.transition = function (data, noNotification) {
 
   var newGroups = this.display.call(this, data),
       newGroupsTrans, formerGroupWrapper, formerGroupWrapperTrans;
-
-  function endAll (transition, callback) {
-    var n = 0;
-
-    if (transition.size() === 0) {
-      callback();
-    }
-
-    transition
-      .each(function() {
-        ++n;
-      })
-      .each('end', function() {
-        if (!--n) {
-          callback.apply(this, arguments);
-        }
-      });
-  }
 
   // After all newly added inner nodes and leafs have been faded in we call the
   // zoom transition.
