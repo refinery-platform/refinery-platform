@@ -1851,6 +1851,10 @@ Object.defineProperty(
       this.$rootScope.$emit('dashboardVisVisibleDepth', visibleDepth);
       adjustedLabels.finally(function () {
         this.loadingVisibleDepth = false;
+        // Wait one digestion cycle.
+        this.$timeout(function() {
+          this.$rootScope.$broadcast('focusOn', 'visibleDepthInput');
+        }.bind(this), 0);
       }.bind(this));
     }
 });
