@@ -370,13 +370,11 @@ class FileStoreItem(models.Model):
                             description=FileExtension.objects.get(
                                 name=f).filetype)
                     else:
-                        self.filetype = FileType.objects.get(
-                            description=FileExtension.objects.get(
-                                name="unknown").filetype)
-                        logger.warning("%s is an unknown filetype! If this "
-                                       "filetype is something you would like, "
-                                       "please add it in the Admin "
-                                       "interface." % f)
+                        # If we cannot assign a filetype after all of this,
+                        # we let the filetype associated with the filestore
+                        # item be null
+                        pass
+
             self.save()
             logger.info("File type is set to '%s'", f)
             return True
