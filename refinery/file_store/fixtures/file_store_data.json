@@ -241,14 +241,6 @@
   },
   {
     "model": "file_store.FileType",
-    "pk": 33,
-    "fields": {
-      "description": "Unknown filetype",
-      "name": "UNKNOWN"
-    }
-  },
-  {
-    "model": "file_store.FileType",
     "pk": 34,
     "fields": {
       "description": "FASTQ.GZ file",
@@ -525,14 +517,6 @@
     "fields": {
       "name": "zip",
       "filetype": 32
-    }
-  },
-  {
-    "model": "file_store.FileExtension",
-    "pk": 33,
-    "fields": {
-      "name": "unknown",
-      "filetype": 33
     }
   },
   {
