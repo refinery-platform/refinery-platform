@@ -122,7 +122,7 @@ function TreemapCtrl (
 
   this.Webworker = Webworker;
 
-  this._visibleDepth = 2;
+  this._visibleDepth = 1;
   this.currentLevel = 0;
 
   this.treemap.width = this.$d3Element.width();
@@ -499,6 +499,13 @@ TreemapCtrl.prototype.addEventListeners = function () {
       if (!selection.empty()) {
         this.lockNode(selection.node(), selection.datum(), true);
       }
+    }
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisVisibleDepth', function (event, data) {
+    if (data.source !== 'treeMap') {
+      this._noVisibleDepthNotification = true;
+      this.visibleDepth = data.visibleDepth;
     }
   }.bind(this));
 };
@@ -1043,8 +1050,14 @@ TreemapCtrl.prototype.draw = function () {
     this.setRootNode({
       branchId: 0,
       ontId: this.data.ontId,
-      uri: this.data.uri
+      uri: this.data.uri,
+      visibleDepth: this.visibleDepth
     });
+  }
+
+  if (this.rootNode && this.rootNode.visibleDepth) {
+    this._noVisibleDepthNotification = true;
+    this.visibleDepth = this.rootNode.visibleDepth;
   }
 
   this.addEventListeners();
@@ -1727,8 +1740,7 @@ TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
         'dashboardVisNodeRoot',
         {
           nodeUri: root.uri,
-          source: 'treeMap',
-          depth: this.visibleDepth
+          source: 'treeMap'
         });
     }
   } else {
@@ -1737,8 +1749,7 @@ TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
         'dashboardVisNodeUnroot',
         {
           nodeUri: prevRootUri,
-          source: 'treeMap',
-          depth: this.visibleDepth
+          source: 'treeMap'
         }
       );
     }
@@ -1835,7 +1846,9 @@ Object.defineProperty(
       return this._visibleDepth;
     },
     set: function (visibleDepth) {
-      var newVisibleDepth = Math.min(Math.max(1, visibleDepth), this.depth);
+      var newVisibleDepth = Math.min(
+        Math.max(1, parseInt(visibleDepth) || 0), this.depth
+      );
 
       if (newVisibleDepth === this._visibleDepth) {
         return;
@@ -1851,10 +1864,17 @@ Object.defineProperty(
       // happen before the spinner has been loaded.
       this.$timeout(function() {
         var adjustedLabels = this.adjustLevelDepth(oldVisibleDepth);
-        this.$rootScope.$emit('dashboardVisVisibleDepth', {
-          source: 'treeMap',
-          visibleDepth: visibleDepth
-        });
+
+        if (!this._noVisibleDepthNotification) {
+          this.$rootScope.$emit('dashboardVisVisibleDepth', {
+            source: 'treeMap',
+            visibleDepth: visibleDepth
+          });
+        } else {
+          // Reset no notification.
+          this._noVisibleDepthNotification = undefined;
+        }
+
         adjustedLabels.finally(function () {
           this.loadingVisibleDepth = false;
           // Wait one digestion cycle.

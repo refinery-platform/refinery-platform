@@ -199,12 +199,13 @@ function DashboardCtrl (
         if (toParams.context) {
           this.treemapRoot = {
             branchId: toParams.branchId ? toParams.branchId : 0,
-            ontId: toParams.context
+            ontId: toParams.context,
+            visibleDepth: toParams.visibleDepth
           };
         }
         // Need to wait another digestion cycle to ensure the layout is set
         // properly.
-        $timeout(function () {
+        this.$timeout(function () {
           this.expandDatasetExploration(true);
         }.bind(this), 0);
       }
@@ -226,7 +227,7 @@ function DashboardCtrl (
       this.$state.current,
       {
         context: root ? root.ontId : null,
-        branchId: root ? root.branchId : null,
+        branchId: root ? root.branchId : null
       },
       {
         inherit: true,
@@ -328,6 +329,19 @@ function DashboardCtrl (
     } else  {
       this.deselectDataSets();
     }
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisVisibleDepth', function (event, data) {
+    this.$state.transitionTo(
+      this.$state.current,
+      {
+        visibleDepth: data.visibleDepth || null
+      },
+      {
+        inherit: true,
+        notify: false
+      }
+    );
   }.bind(this));
 }
 
