@@ -163,7 +163,7 @@ class FileType(models.Model):
 class FileExtension(models.Model):
     # file extension associated with the filename
     name = models.CharField(unique=True, max_length=50)
-    filetype = models.ForeignKey("FileType", null=True)
+    filetype = models.ForeignKey("FileType")
 
     def __unicode__(self):
         return self.name
