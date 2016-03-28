@@ -252,30 +252,3 @@ class FileSourceTranslationTest(SimpleTestCase):
         translate_file_source = generate_file_source_translator()
         with self.assertRaises(ValueError):
             translate_file_source(self.rel_path_source)
-
-
-class UnknownFileTypeTest(SimpleTestCase):
-    def setUp(self):
-        self.filetype = FileType.objects.get(name="UNKNOWN")
-
-    def tearDown(self):
-        FileType.objects.all().delete()
-        FileExtension.objects.all().delete()
-
-    def test_filetype_persistence_after_deletion(self):
-        self.filetype.delete()
-        self.assertIsNotNone(self.filetype)
-
-
-class UnknownFileExtensionTest(SimpleTestCase):
-    def setUp(self):
-        self.filetype = FileType.objects.get(name="UNKNOWN")
-        self.fileextension = FileExtension.objects.get(name="unknown")
-
-    def tearDown(self):
-        FileType.objects.all().delete()
-        FileExtension.objects.all().delete()
-
-    def test_file_extension_persistence_after_deletion(self):
-        self.fileextension.delete()
-        self.assertIsNotNone(self.fileextension)
