@@ -1850,9 +1850,11 @@ Object.defineProperty(
       // Wait one digestion cycle. Otherwise adding or removing new nodes will
       // happen before the spinner has been loaded.
       this.$timeout(function() {
-
         var adjustedLabels = this.adjustLevelDepth(oldVisibleDepth);
-        this.$rootScope.$emit('dashboardVisVisibleDepth', visibleDepth);
+        this.$rootScope.$emit('dashboardVisVisibleDepth', {
+          source: 'treeMap',
+          visibleDepth: visibleDepth
+        });
         adjustedLabels.finally(function () {
           this.loadingVisibleDepth = false;
           // Wait one digestion cycle.

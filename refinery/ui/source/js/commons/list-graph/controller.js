@@ -346,7 +346,7 @@ function ListGraphCtrl (
     // List graph might not be ready yet when a user hovers over a data set form
     // the list of data sets.
     if (this.listGraph) {
-      this.listGraph.trigger('d3ListGraphActiveLevel', data);
+      this.listGraph.trigger('d3ListGraphActiveLevel', data.visibleDepth);
     }
   }.bind(this));
 
