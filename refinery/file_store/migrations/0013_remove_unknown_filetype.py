@@ -10,15 +10,13 @@ class Migration(DataMigration):
         "Write your forwards methods here."
         call_command('loaddata', 'file_store/fixtures/file_store_data.json')
 
-
     def backwards(self, orm):
         "Write your backwards methods here."
 
     models = {
         u'file_store.fileextension': {
             'Meta': {'object_name': 'FileExtension'},
-            'filetype': ('django.db.models.fields.related.ForeignKey', [],
-                         {'default': '33', 'to': u"orm['file_store.FileType']"}),
+            'filetype': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['file_store.FileType']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'})
         },
@@ -26,8 +24,7 @@ class Migration(DataMigration):
             'Meta': {'object_name': 'FileStoreItem'},
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'auto_now_add': 'True', 'blank': 'True'}),
             'datafile': ('django.db.models.fields.files.FileField', [], {'max_length': '1024', 'blank': 'True'}),
-            'filetype': ('django.db.models.fields.related.ForeignKey', [],
-                         {'default': '33', 'to': u"orm['file_store.FileType']"}),
+            'filetype': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['file_store.FileType']", 'null': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'import_task_id': ('django.db.models.fields.CharField', [], {'max_length': '36', 'blank': 'True'}),
             'sharename': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
