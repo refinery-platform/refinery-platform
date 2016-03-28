@@ -7,7 +7,6 @@ import struct
 import cStringIO
 
 from django.utils import unittest
-from django.core.management import call_command
 
 from file_server import tdf_file, models
 from file_store import models as fs_models
@@ -17,8 +16,6 @@ class TDFItemTest(unittest.TestCase):
     """Test all operations on TDFItem instances"""
     # TODO: add missing tests
     def setUp(self):
-        call_command("loaddata",
-                     "file_store/fixtures/file_store_data.json")
         self.tdf_file = fs_models.FileStoreItem.objects.create_item("tdf")
 
     def tearDown(self):
@@ -34,8 +31,6 @@ class BigBEDItemTest(unittest.TestCase):
     """Test all operations on BigBEDItem instances"""
 
     def setUp(self):
-        call_command("loaddata",
-                     "file_store/fixtures/file_store_data.json")
         self.bigbed_file = fs_models.FileStoreItem.objects.create_item("bb")
 
     def tearDown(self):
@@ -63,8 +58,6 @@ class BAMItemTest(unittest.TestCase):
 
     # TODO: add missing tests
     def setUp(self):
-        call_command("loaddata",
-                     "file_store/fixtures/file_store_data.json")
         self.bam_file = fs_models.FileStoreItem.objects.create_item("bam")
 
     def tearDown(self):
@@ -81,8 +74,6 @@ class WIGItemTest(unittest.TestCase):
 
     # TODO: add missing tests
     def setUp(self):
-        call_command("loaddata",
-                     "file_store/fixtures/file_store_data.json")
         self.wig_file = fs_models.FileStoreItem.objects.create_item("wig")
 
     def tearDown(self):
@@ -98,8 +89,6 @@ class InvalidItemTest(unittest.TestCase):
     """Test operations on invalid instances"""
 
     def setUp(self):
-        call_command("loaddata",
-                     "file_store/fixtures/file_store_data.json")
         self.undefined_file = fs_models.FileStoreItem.objects.create_item(
             "testfile")
 
