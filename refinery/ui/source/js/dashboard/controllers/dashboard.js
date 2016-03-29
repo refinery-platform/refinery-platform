@@ -461,6 +461,15 @@ Object.defineProperty(
 
 Object.defineProperty(
   DashboardCtrl.prototype,
+  'numQueryTerms', {
+    enumerable: true,
+    get: function () {
+      return Object.keys(this.queryTerms).length;
+    }
+});
+
+Object.defineProperty(
+  DashboardCtrl.prototype,
   'analysesIsFilterable', {
     enumerable: true,
     get: function () {
@@ -742,6 +751,10 @@ DashboardCtrl.prototype.setDataSetSource = function (
 
   if (searchQuery) {
     if (searchQuery.length > 1) {
+      if (this.numQueryTerms && !this.oldTotalDs) {
+        this.oldTotalDs = this.dataSets.totalReadable;
+      }
+
       this.searchDataSet = true;
       var annotations = this.dataSet.search(searchQuery).getCurrentAnnotations();
       this.dataSets.newOrCachedCache(searchQuery);
@@ -755,6 +768,8 @@ DashboardCtrl.prototype.setDataSetSource = function (
       this.dashboardVisData.updateGraph(annotations);
     }
   } else {
+    this.oldTotalDs = undefined;
+
     this.dataSet.all();
 
     var browseState = this.dataSet.getCurrentBrowseState();

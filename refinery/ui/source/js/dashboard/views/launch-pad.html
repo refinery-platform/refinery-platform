@@ -119,15 +119,21 @@
           </div>
           <div class="floatbox-max-left">
             <h4>
+              <span ng-if="dashboard.searchQueryDataSets.length">
+                Found
+              </span>
               <span ng-if="dashboard.dataSets.totalUpperBound">
                 {{ dashboard.dataSets.totalReadable }} of
                 <abbr title="approximately">~</abbr>
                 {{ dashboard.dataSets.totalUpperBound }}
               </span>
               <span ng-if="!dashboard.dataSets.totalUpperBound">
-                {{ dashboard.dataSets.totalReadable }}
+                <strong>{{ dashboard.dataSets.totalReadable }}</strong>
               </span>
-              {{ dashboard.searchQueryDataSets.length > 1 ? 'results' : 'data sets' }}
+              <span ng-if="dashboard.oldTotalDs">
+                out of <strong>{{ dashboard.oldTotalDs }}</strong>
+              </span>
+              data sets
             </h4>
             <span class="separator">&middot;</span>
             <div class="data-cart-indicator">
