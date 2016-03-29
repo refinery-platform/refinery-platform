@@ -84,7 +84,7 @@
               refinery-tooltip-delay-show="750"
               refinery-tooltip-delay-hide="150"
               refinery-tooltip-hide-on-click="true">
-              <span ng-if="dashboard.dataCart.length" class="is-mirrored is-mirrored-text">
+              <span ng-if="dashboard.dataCart.length" class="is-mirrored is-mirrored-text is-icon-text">
                 {{ dashboard.dataCart.length }}
               </span>
             </button>
@@ -233,7 +233,9 @@
                   refinery-tooltip-delay-show="750"
                   refinery-tooltip-delay-hide="150"
                   refinery-tooltip-hide-on-click="true">
-                  Clear
+                  <span class="is-icon-text">
+                    Clear
+                  </span>
                 </button>
               </div>
               <div class="floatbox-max-left">
