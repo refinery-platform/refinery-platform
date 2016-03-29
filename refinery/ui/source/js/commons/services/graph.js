@@ -445,7 +445,7 @@ function GraphFactory (_, Webworker) {
     for (var i = uris.length; i--;) {
       node = graph[uris[i]];
       for (var j = propLeng; j--;) {
-        if (node[properties[j]]) {
+        if (typeof node[properties[j]] !== 'undefined') {
           for (var k = node.data.bars.length; k--;) {
             if (node.data.bars[k].id === properties[j]) {
               node.data.bars[k].value = node[properties[j]];
