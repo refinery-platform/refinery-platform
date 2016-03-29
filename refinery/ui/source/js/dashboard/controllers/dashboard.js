@@ -446,7 +446,6 @@ Object.defineProperty(
   DashboardCtrl.prototype,
   'visibleDataSets', {
     enumerable: true,
-    configurable: false,
     get: function () {
       return this.dataSetsAdapter.visibleItems('uuid');
     }
@@ -456,7 +455,6 @@ Object.defineProperty(
   DashboardCtrl.prototype,
   'expandDataSetPanel', {
     enumerable: true,
-    configurable: false,
     value: false,
     writable: true
 });
@@ -465,7 +463,6 @@ Object.defineProperty(
   DashboardCtrl.prototype,
   'analysesIsFilterable', {
     enumerable: true,
-    configurable: false,
     get: function () {
       if (!this._analysesIsFilterable && this.analyses.totalReadable) {
         this._analysesIsFilterable = true;
@@ -478,7 +475,6 @@ Object.defineProperty(
   DashboardCtrl.prototype,
   'dataSetsFilterOwner', {
     enumerable: true,
-    configurable: false,
     get: function () {
       return this._dataSetsFilterOwner;
     },
@@ -502,7 +498,6 @@ Object.defineProperty(
   DashboardCtrl.prototype,
   'dataSetsFilterPublic', {
     enumerable: true,
-    configurable: false,
     get: function () {
       return this._dataSetsFilterPublic;
     },
@@ -526,7 +521,6 @@ Object.defineProperty(
   DashboardCtrl.prototype,
   'dataSetsSortBy', {
     enumerable: true,
-    configurable: false,
     get: function () {
       return this._dataSetsSortBy;
     },
@@ -544,7 +538,6 @@ Object.defineProperty(
   DashboardCtrl.prototype,
   'analysesFilterStatus', {
     enumerable: true,
-    configurable: false,
     get: function () {
       return this._analysesFilterStatus;
     },
@@ -566,7 +559,6 @@ Object.defineProperty(
   DashboardCtrl.prototype,
   'analysesSortBy', {
     enumerable: true,
-    configurable: false,
     get: function () {
       return this._analysesSortBy;
     },
@@ -584,7 +576,6 @@ Object.defineProperty(
   DashboardCtrl.prototype,
   'explorationEnabled', {
     enumerable: true,
-    configurable: false,
     get: function () {
       return this.settings.djangoApp.numOntologiesImported > 0;
     }
@@ -594,7 +585,6 @@ Object.defineProperty(
   DashboardCtrl.prototype,
   'workflowsSortBy', {
     enumerable: true,
-    configurable: false,
     get: function () {
       return this._workflowsSortBy;
     },
@@ -612,7 +602,6 @@ Object.defineProperty(
   DashboardCtrl.prototype,
   'treemapRoot', {
     enumerable: true,
-    configurable: false,
     get: function () {
       return this.treemapContext.get('root');
     },
