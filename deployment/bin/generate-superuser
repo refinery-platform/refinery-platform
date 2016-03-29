@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+
+import json
+import os
+
+# https://docs.djangoproject.com/en/1.9/topics/auth/passwords/#django.contrib.auth.hashers.make_password
+from django.contrib.auth.hashers import make_password
+
+def main():
+
+    if 'ADMIN_PASSWORD' not in os.environ:
+        raise Exception("The ADMIN_PASSWORD environment variable must be set")
+    password = os.environ['ADMIN_PASSWORD']
+
+    o = json.load('../refinery/core/fixtures/superuser.json')
+    admin_index = [(i, d) for (i, d) in enumerate(o)
+      if d['fields']['username'] == 'admin']
+    assert len(admin_index) == 1
+    (admin_index,) = admin_index
+
+    hashed_password = make_password(password)
+
+    o[admin_index]['fields']['password'] = hashed_password
+
+    print json.dumps(o, indent=2)
+
+if __name__ == '__main__':
+    main()
