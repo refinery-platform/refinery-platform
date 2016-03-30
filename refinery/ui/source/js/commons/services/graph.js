@@ -333,6 +333,17 @@ function GraphFactory (_, Webworker) {
         graph[uris[i]] = undefined;
         delete graph[uris[i]];
       }
+
+      // Normalize labels
+      var noUnderScore = /_/gi;
+      if (graph[uris[i]]) {
+        graph[uris[i]].name = (
+          graph[uris[i]].label = (
+            graph[uris[i]].label.charAt(0).toUpperCase() +
+            graph[uris[i]].label.slice(1)
+          ).replace(noUnderScore, ' ')
+        );
+      }
     }
 
     return {
