@@ -21,7 +21,7 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
    * @param   {String}  valueProperty  Node property that holds an object with
    *   items that account for the nodes size; e.g. `dataSets`.
    */
-  Data.prototype.load = function (root, valueProperty, remixRoots) {
+  Data.prototype.load = function (root, valueProperty, remixRoots, rename) {
     // Make sure that all globally user-accessible data set IDs are loaded.
     dataSet.loadAllIds();
 
@@ -57,6 +57,15 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
         graph.addPseudoSiblingToRoot(
           data, prunedData.root, allDsIds
         );
+
+        // Rename weird labels
+        for (var ii = rename.length; ii--;) {
+          if (data[rename[ii].uri]) {
+            data[rename[ii].uri].name = (
+              data[rename[ii].uri].label = rename[ii].label
+            );
+          }
+        }
 
         // Init precision and recall
         dataSet.ids.then(function (allDsIds) {

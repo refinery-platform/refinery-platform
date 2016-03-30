@@ -55,13 +55,19 @@ function refineryDashboardVisWrapper () {
       'http://purl.obolibrary.org/obo/UO_0000000'
     ];
 
+    this.rename = [{
+      uri: 'http://purl.obolibrary.org/obo/CHEBI_37577',
+      label: 'chemical compound'
+    }];
+
     this.propertyValue = 'dataSets';
 
     // Trigger preloading / precomputing of D3 data for exploration.
     dashboardVisData.load(
       this.absRoot,
       this.propertyValue,
-      this.remixRoots
+      this.remixRoots,
+      this.rename
     );
 
     var graph = this.$q.defer();
