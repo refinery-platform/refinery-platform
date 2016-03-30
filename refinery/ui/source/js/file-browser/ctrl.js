@@ -58,7 +58,7 @@ function FileBrowserCtrl(
 
   vm.updateAssayFiles = function () {
     vm.filesParam['offset'] = vm.lastPage * vm.rowCount;
-    vm.filesParam['limit'] = vm.rowCount ;
+    vm.filesParam['limit'] = vm.rowCount;
     var promise = $q.defer();
     fileBrowserFactory.getAssayFiles(vm.filesParam).then(function () {
       vm.assayFiles = vm.assayFiles.concat(fileBrowserFactory.assayFiles);
@@ -126,7 +126,7 @@ function FileBrowserCtrl(
       $location.search(field, null);
     }
     vm.filesParam['filter_attribute'] = vm.selectedFieldList;
-    vm.updateAssayFiles();
+    vm.reset();
   };
 
   //Ui-grid methods for catching grid events
@@ -254,14 +254,14 @@ function FileBrowserCtrl(
       switch (sortColumns[0].sort.direction) {
         case uiGridConstants.ASC:
           vm.filesParam['sort'] = sortColumns[0].field + ' asc';
-          vm.updateAssayFiles();
+          vm.reset();
           break;
         case uiGridConstants.DESC:
           vm.filesParam['sort'] = sortColumns[0].field + ' desc';
-          vm.updateAssayFiles();
+          vm.reset();
           break;
         case undefined:
-          vm.updateAssayFiles();
+          vm.reset();
           break;
       }
     }
