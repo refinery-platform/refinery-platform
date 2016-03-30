@@ -57,7 +57,7 @@ function refineryDashboardVisWrapper () {
 
     this.rename = [{
       uri: 'http://purl.obolibrary.org/obo/CHEBI_37577',
-      label: 'chemical compound'
+      label: 'Chemical compound'
     }];
 
     this.propertyValue = 'dataSets';
