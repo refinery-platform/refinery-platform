@@ -57,21 +57,23 @@ function FileBrowserCtrl(
   vm.cachePages = 2;
 
   vm.updateAssayFiles = function () {
-     var pageDiff = vm.lastPage - vm.firstPage;
+    var pageDiff = (vm.lastPage - vm.firstPage) + vm.firstPage;
     vm.filesParam['offset'] = pageDiff * vm.rowCount;
-    //figure out how to change limit according to vh
     vm.filesParam['limit'] = vm.rowCount ;
+    var promise = $q.defer();
 
-    return fileBrowserFactory.getAssayFiles(vm.filesParam).then(function () {
+    fileBrowserFactory.getAssayFiles(vm.filesParam).then(function () {
+      var newData = vm.getPage(fileBrowserFactory.assayFiles, vm.lastPage);
+      vm.assayFiles = vm.assayFiles.concat(newData);
+      vm.gridOptions.data = vm.assayFiles;
       vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
-      vm.totalPages = Math.ceil(vm.assayFilesTotal/vm.rowCount);
-    //  var newData = vm.getPage(fileBrowserFactory.assayFiles, vm.lastPage);
-   //   vm.assayFiles = vm.assayFiles.concat(newData);
-   //   vm.gridOptions.data = vm.assayFiles;
+      vm.totalPages = Math.floor(vm.assayFilesTotal/vm.rowCount);
       vm.assayAttributes = fileBrowserFactory.assayAttributes;
       vm.attributeFilter = fileBrowserFactory.attributeFilter;
       vm.analysisFilter = fileBrowserFactory.analysisFilter;
+      promise.resolve();
     });
+    return promise.promise;
   };
 
   vm.updateAssayAttributes = function () {
@@ -154,34 +156,13 @@ function FileBrowserCtrl(
     });
   };
 
-  vm.getFirstData = function() {
-    var pageDiff = (vm.lastPage - vm.firstPage) + vm.firstPage;
-    vm.filesParam['offset'] = pageDiff * vm.rowCount;
-    //figure out how to change limit according to vh
-    vm.filesParam['limit'] = vm.rowCount ;
-    var promise = $q.defer();
-
-    fileBrowserFactory.getAssayFiles(vm.filesParam)
-    .then(function() {
-      var newData = vm.getPage(fileBrowserFactory.assayFiles, vm.lastPage);
-      vm.assayFiles = vm.assayFiles.concat(newData);
-      vm.gridOptions.data = vm.assayFiles;
-      vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
-      vm.totalPages = Math.ceil(vm.assayFilesTotal/vm.rowCount);
-      vm.assayAttributes = fileBrowserFactory.assayAttributes;
-      vm.attributeFilter = fileBrowserFactory.attributeFilter;
-      vm.analysisFilter = fileBrowserFactory.analysisFilter;
-      promise.resolve();
-    });
-    return promise.promise;
-  };
-
   vm.getDataDown = function() {
     vm.lastPage++;
     vm.filesParam['offset'] = vm.lastPage * vm.rowCount;
     //figure out how to change limit according to vh
     vm.filesParam['limit'] = vm.rowCount;
     var promise = $q.defer();
+    console.log(vm.filesParam);
     fileBrowserFactory.getAssayFiles(vm.filesParam)
     .then(function() {
       var newData = vm.getPage(fileBrowserFactory.assayFiles, vm.lastPage);
@@ -211,6 +192,7 @@ function FileBrowserCtrl(
     vm.filesParam['offset'] = vm.firstPage * vm.rowCount;
     //figure out how to change limit according to vh
     vm.filesParam['limit'] = vm.rowCount;
+     console.log(vm.filesParam);
     var promise = $q.defer();
     fileBrowserFactory.getAssayFiles(vm.filesParam)
     .then(function() {
@@ -274,7 +256,7 @@ function FileBrowserCtrl(
     vm.gridApi.infiniteScroll.setScrollDirections( false, false );
     vm.assayFiles = [];
 
-    vm.getFirstData().then(function(){
+    vm.updateAssayFiles().then(function(){
       $timeout(function() {
         // timeout needed to allow digest cycle to complete,and grid to finish ingesting the data
         vm.gridApi.infiniteScroll.resetScroll( vm.firstPage > 0, vm.lastPage < vm.totalPages );
