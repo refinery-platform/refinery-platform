@@ -12,7 +12,7 @@ from core.models import (
     ExtendedGroup, DataSet, InvestigationLink, Project, Analysis, Workflow,
     WorkflowEngine, UserProfile, invalidate_cached_object,
     AnalysisNodeConnection, Node)
-from file_store.models import FileExtension
+from file_store.models import FileExtension, FileType
 import data_set_manager
 from galaxy_connector.models import Instance
 
@@ -747,8 +747,14 @@ class AnalysisResourceTest(ResourceTestCase):
     """Test Analysis REST API operations"""
 
     def setUp(self):
-        FileExtension.objects.create(name="html")
-        FileExtension.objects.create(name="zip")
+        self.html_filetype = FileType.objects.create(
+            name="HTML", description="Html File")
+        self.zip_filetype = FileType.objects.create(
+            name="ZIP", description="Zip File")
+        self.html_fileextension = FileExtension.objects.create(
+            name="html", filetype=self.html_filetype)
+        self.zip_fileextension = FileExtension.objects.create(
+            name="zip", filetype=self.zip_filetype)
         super(AnalysisResourceTest, self).setUp()
         self.username = self.password = 'user'
         self.user = User.objects.create_user(
