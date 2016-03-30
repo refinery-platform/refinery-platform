@@ -17,8 +17,7 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
   var assayAttributeOrder = [];
   var attributeFilter = {};
   var analysisFilter = {};
-  var assayFilesTotalItems;
-
+  var assayFilesTotalItems = {};
 
   var getAssayFiles = function (params) {
     params = params || {};
@@ -30,17 +29,16 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
 
     var assayFile = assayFileService.query(params);
     assayFile.$promise.then(function (response) {
-      console.log(response);
+     // console.log(response);
       angular.copy(response.attributes, assayAttributes);
       angular.copy(response.nodes, assayFiles);
-      angular.copy(response.nodes_count, assayFilesTotalItems);
+      assayFilesTotalItems.count = response.nodes_count;
       var filterObj = generateFilters(response.attributes, response.facet_field_counts);
       angular.copy(filterObj.attributeFilter, attributeFilter);
       angular.copy(filterObj.analysisFilter, analysisFilter);
     }, function (error) {
       console.log(error);
     });
-
     return assayFile.$promise;
   };
 
