@@ -47,7 +47,7 @@ function FileBrowserCtrl(
     rowHeight: 35,
     showGridFooter:false,
     enableSelectionBatchEvent: true,
-    multiSelect: true,
+    multiSelect: true
   };
   vm.firstPage = 0;
   vm.lastPage = 0;
@@ -61,8 +61,7 @@ function FileBrowserCtrl(
     vm.filesParam['limit'] = vm.rowCount ;
     var promise = $q.defer();
     fileBrowserFactory.getAssayFiles(vm.filesParam).then(function () {
-      var newData = vm.getPage(fileBrowserFactory.assayFiles, vm.lastPage);
-      vm.assayFiles = vm.assayFiles.concat(newData);
+      vm.assayFiles = vm.assayFiles.concat(fileBrowserFactory.assayFiles);
       vm.gridOptions.data = vm.assayFiles;
       vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
       vm.totalPages = Math.floor(vm.assayFilesTotal/vm.rowCount);
@@ -162,9 +161,8 @@ function FileBrowserCtrl(
     console.log(vm.filesParam);
     fileBrowserFactory.getAssayFiles(vm.filesParam)
     .then(function() {
-      var newData = vm.getPage(fileBrowserFactory.assayFiles, vm.lastPage);
+      vm.assayFiles = vm.assayFiles.concat(fileBrowserFactory.assayFiles);
       vm.gridApi.infiniteScroll.saveScrollPercentage();
-      vm.assayFiles = vm.assayFiles.concat(newData);
       vm.gridOptions.data = vm.assayFiles;
       vm.gridApi.infiniteScroll
         .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
@@ -191,9 +189,8 @@ function FileBrowserCtrl(
     var promise = $q.defer();
     fileBrowserFactory.getAssayFiles(vm.filesParam)
     .then(function() {
-      var newData = vm.getPage(fileBrowserFactory.assayFiles, vm.firstPage);
+      vm.assayFiles = fileBrowserFactory.assayFiles.concat(vm.assayFiles);
       vm.gridApi.infiniteScroll.saveScrollPercentage();
-      vm.assayFiles = newData.concat(vm.assayFiles);
       vm.gridOptions.data = vm.assayFiles;
       vm.gridApi.infiniteScroll
         .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
@@ -208,14 +205,6 @@ function FileBrowserCtrl(
       promise.reject();
     });
     return promise.promise;
-  };
-
-  vm.getPage = function(data, page) {
-    var res = [];
-    for (var i = 0; i < vm.rowCount && i < data.length; i++) {
-      res.push(data[i]);
-    }
-    return res;
   };
 
   vm.checkDataLength = function( discardDirection) {
