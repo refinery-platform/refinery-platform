@@ -318,6 +318,20 @@ function GraphFactory (_, Webworker) {
       if (graph[uris[i]].pruned) {
         graph[uris[i]] = undefined;
         delete graph[uris[i]];
+      } else if (!graph[uris[i]].meta) {
+        // Remove parent reference first
+        for (var ii = graph[uris[i]].children.length; ii--;) {
+          if (!graph[graph[uris[i]].children[ii]]) {
+            continue;
+          }
+
+          graph[graph[uris[i]].children[ii]].parents[uris[i]] = undefined;
+          delete graph[graph[uris[i]].children[ii]].parents[uris[i]];
+        }
+
+        // Remove reference to the node itself
+        graph[uris[i]] = undefined;
+        delete graph[uris[i]];
       }
     }
 
