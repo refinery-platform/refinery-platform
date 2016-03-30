@@ -29,7 +29,6 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
 
     var assayFile = assayFileService.query(params);
     assayFile.$promise.then(function (response) {
-     // console.log(response);
       angular.copy(response.attributes, assayAttributes);
       angular.copy(response.nodes, assayFiles);
       assayFilesTotalItems.count = response.nodes_count;
@@ -100,11 +99,11 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
 
   //Helper function encodes field array in an obj
   var encodeAttributeFields = function(attributeObj) {
-    for(var fieldArray in attributeObj){
-      for(var ind=0; ind < fieldArray.length; ind++){
+    angular.forEach(attributeObj, function(fieldArray){
+       for(var ind=0; ind < fieldArray.length; ind++){
         fieldArray[ind] = $window.encodeURIComponent(fieldArray[ind]);
-      }
-    }
+       }
+    });
     return(attributeObj);
   };
 
