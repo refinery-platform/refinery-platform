@@ -598,7 +598,6 @@ function GraphFactory (_, Webworker) {
           counterKeep++;
         }
       }
-      // console.log('Kept: ' + counterKeep + ' | Deleted: ' + counterDelete);
     }
 
     copyNodes(graph, tree);
@@ -608,7 +607,7 @@ function GraphFactory (_, Webworker) {
     return tree[root];
   };
 
-  Graph.addPseudoRootAndSibling = function (graph, root, allDsIds) {
+  Graph.addPseudoSiblingToRoot = function (graph, root, allDsIds) {
     var dataSets = {},
         annotatedDsIds = Object.keys(graph[root].dataSets),
         notAnnotatedDsIds = {},
@@ -628,7 +627,7 @@ function GraphFactory (_, Webworker) {
       assertedDataSets: {},
       children: [],
       meta: {
-        originalDepth: 0,
+        originalDepth: 1,
         leaf: true
       },
       parents: {},
@@ -640,25 +639,10 @@ function GraphFactory (_, Webworker) {
       value: Object.keys(notAnnotatedDsIds).length,
     };
 
-    graph['_root'] = {
-      assertedDataSets: {},
-      children: [root, '_no_annotations'],
-      dataSets: allDsIdsObj,
-      name: 'Root',
-      meta: {
-        originalDepth: -1
-      },
-      numDataSets: Object.keys(allDsIdsObj).length,
-      ontId: '_root',
-      uri: '_root',
-      value: Object.keys(allDsIdsObj).length,
-    };
-
-    graph['_no_annotations'].parents['_root'] = graph['_root'];
+    graph['_no_annotations'].parents[root] = graph[root];
     graph[root].parents = {};
-    graph[root].parents['_root'] = graph['_root'];
-
-    return '_root';
+    graph[root].children.push('_no_annotations');
+    graph[root].meta.originalDepth = -1;
   };
 
   return Graph;
