@@ -21,7 +21,7 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
    * @param   {String}  valueProperty  Node property that holds an object with
    *   items that account for the nodes size; e.g. `dataSets`.
    */
-  Data.prototype.load = function (root, valueProperty) {
+  Data.prototype.load = function (root, valueProperty, remixRoots) {
     // Make sure that all globally user-accessible data set IDs are loaded.
     dataSet.loadAllIds();
 
@@ -35,12 +35,26 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
 
         root = root ? root : settings.ontRoot;
 
+        if (remixRoots) {
+          // Check existance of remix roots
+          var checkedRemixRoots = [];
+
+          for (var i = remixRoots.length; i--;) {
+            if (data[remixRoots[i]]) {
+              checkedRemixRoots.push(remixRoots[i]);
+            }
+          }
+
+          // Replace original root nodes with the existing remix roots
+          data[root].children = checkedRemixRoots;
+        }
+
         // Prune graph and accumulate the dataset annotations
         var prunedData = graph.accumulateAndPrune(data, root, valueProperty);
 
         // Add pseudo-parent and pseudo-sibling for data sets without any
         // annotation.
-        var pseudoRoot = graph.addPseudoRootAndSibling(
+        graph.addPseudoSiblingToRoot(
           data, prunedData.root, allDsIds
         );
 
@@ -60,11 +74,11 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
 
           // Convert graph into hierarchy for D3
           // treemapData.resolve(graph.toTree(data, prunedData.root));
-          treemapData.resolve(graph.toTreemap(data, pseudoRoot));
+          treemapData.resolve(graph.toTreemap(data, root));
 
           graphData.resolve(data);
 
-          finalRootNode.resolve(pseudoRoot);
+          finalRootNode.resolve(root);
         }.bind(this));
       })
       .catch(function (e) {
