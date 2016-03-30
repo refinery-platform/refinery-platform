@@ -34,7 +34,7 @@ describe('rpAssayFiles directive unit test', function() {
     $httpBackend.expectGET(
       settings.appRoot +
       settings.refineryApiV2 +
-      '/assays/' + valid_uuid + '/files/'
+      '/assays/' + valid_uuid + '/files/?limit=100&offset=0'
     ).respond(200, {});
     var directiveElement = compile(template)(scope);
 
