@@ -294,9 +294,13 @@ function DashboardCtrl (
     }
 
     // Update data set selection
-    this.collectDataSetIds().then(function (dsIds) {
-      this.selectDataSets(dsIds);
-    }.bind(this));
+    if (this.numQueryTerms) {
+      this.collectDataSetIds().then(function (dsIds) {
+        this.selectDataSets(dsIds);
+      }.bind(this));
+    } else {
+      this.deselectDataSets();
+    }
   }.bind(this));
 
   this.$rootScope.$on('dashboardVisNodeQuery', function (event, data) {
