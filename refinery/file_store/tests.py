@@ -89,6 +89,11 @@ class FileStoreItemTest(SimpleTestCase):
     """FileStoreItem methods test"""
 
     def setUp(self):
+        self.tdf_filetype = FileType.objects.create(
+            name="TDF", description="TDF file")
+        self.tdf_fileextension = FileExtension.objects.create(
+                name="tdf", filetype=self.tdf_filetype)
+
         self.filename = 'test_file.tdf'
         self.sharename = 'labname'
         self.path_source = os.path.join('/example/path', self.filename)
@@ -124,6 +129,11 @@ class FileStoreItemTest(SimpleTestCase):
 
     def test_get_file_type(self):
         """Check that the correct file type is returned"""
+        self.bigbed_filetype = FileType.objects.create(
+            name="BIGBED", description="BIGBED File")
+        self.bigbed_fileextension = FileExtension.objects.create(
+            name="bb", filetype=self.bigbed_filetype)
+
         filetype = FileExtension.objects.get(name='bb').filetype
         item_from_path = FileStoreItem.objects.create(source=self.url_source,
                                                       sharename=self.sharename,
@@ -136,6 +146,10 @@ class FileStoreItemTest(SimpleTestCase):
 
     def test_set_valid_file_type(self):
         """Check that a valid file type is set correctly"""
+        self.wig_filetype = FileType.objects.create(
+            name="WIG", description="WIG File")
+        self.wig_fileextension = FileExtension.objects.create(
+            name="wig", filetype=self.wig_filetype)
         item_from_path = FileStoreItem.objects.create(source=self.url_source,
                                                       sharename=self.sharename)
         item_from_url = FileStoreItem.objects.create(source=self.path_source,
@@ -152,11 +166,8 @@ class FileStoreItemTest(SimpleTestCase):
                                                      sharename=self.sharename)
         item_from_path = FileStoreItem.objects.create(source=self.url_source,
                                                       sharename=self.sharename)
-        filetype = FileExtension.objects.get(name='unknown').filetype
-        self.assertTrue(item_from_path.set_filetype(filetype))
-        self.assertNotEqual(item_from_path.filetype, filetype)
-        self.assertTrue(item_from_url.set_filetype(filetype))
-        self.assertNotEqual(item_from_url.filetype, filetype)
+        self.assertIsNone(item_from_url.filetype)
+        self.assertIsNone(item_from_path.filetype)
 
     def test_set_file_type_automatically(self):
         """Check that a file type is set automatically"""
