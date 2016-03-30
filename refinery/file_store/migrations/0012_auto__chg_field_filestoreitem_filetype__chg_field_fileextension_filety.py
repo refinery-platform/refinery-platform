@@ -12,15 +12,21 @@ class Migration(SchemaMigration):
         # Changing field 'FileStoreItem.filetype'
         db.alter_column(u'file_store_filestoreitem', 'filetype_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['file_store.FileType'], null=True))
 
+        # Changing field 'FileExtension.filetype'
+        db.alter_column(u'file_store_fileextension', 'filetype_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['file_store.FileType'], null=True))
+
     def backwards(self, orm):
 
         # Changing field 'FileStoreItem.filetype'
         db.alter_column(u'file_store_filestoreitem', 'filetype_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['file_store.FileType']))
 
+        # Changing field 'FileExtension.filetype'
+        db.alter_column(u'file_store_fileextension', 'filetype_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['file_store.FileType']))
+
     models = {
         u'file_store.fileextension': {
             'Meta': {'object_name': 'FileExtension'},
-            'filetype': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['file_store.FileType']"}),
+            'filetype': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['file_store.FileType']", 'null': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'})
         },
