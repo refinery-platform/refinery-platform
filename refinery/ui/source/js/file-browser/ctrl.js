@@ -179,10 +179,9 @@ function FileBrowserCtrl(
   vm.getDataDown = function() {
     vm.gridApi.infiniteScroll['direction']='up';
     vm.lastPage++;
-    var pageDiff = (vm.lastPage - vm.firstPage) + vm.firstPage;
-    vm.filesParam['offset'] = pageDiff * vm.rowCount;
+    vm.filesParam['offset'] = vm.lastPage * vm.rowCount;
     //figure out how to change limit according to vh
-    vm.filesParam['limit'] = vm.rowCount ;
+    vm.filesParam['limit'] = vm.rowCount;
     var promise = $q.defer();
     fileBrowserFactory.getAssayFiles(vm.filesParam)
     .then(function() {
@@ -190,26 +189,29 @@ function FileBrowserCtrl(
       vm.gridApi.infiniteScroll.saveScrollPercentage();
       vm.assayFiles = vm.assayFiles.concat(newData);
       vm.gridOptions.data = vm.assayFiles;
-      vm.gridApi.infiniteScroll.dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages).then(function(){
-        vm.checkDataLength('up');
-      }).then(function(){
-        promise.resolve();
-      });
+      vm.gridApi.infiniteScroll
+        .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
+        .then(function(){
+          vm.checkDataLength('up');
+        })
+        .then(function(){
+          promise.resolve();
+        });
     }, function(error) {
-      vm.gridApi.infiniteScroll.dataLoaded();
-       promise.reject();
+        vm.gridApi.infiniteScroll.dataLoaded();
+        promise.reject();
     });
 
     return promise.promise;
   };
 
   vm.getDataUp = function() {
-    vm.firstPage--;
-    var pageDiff = vm.lastPage - vm.firstPage;
-    vm.filesParam['offset'] = pageDiff * vm.rowCount;
+    if(vm.firstPage > 0){
+      vm.firstPage--;
+    }
+    vm.filesParam['offset'] = vm.firstPage * vm.rowCount;
     //figure out how to change limit according to vh
     vm.filesParam['limit'] = vm.rowCount;
-        console.log(vm.filesParam);
     var promise = $q.defer();
     fileBrowserFactory.getAssayFiles(vm.filesParam)
     .then(function() {
@@ -221,13 +223,15 @@ function FileBrowserCtrl(
         .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
         .then(function(){
           vm.checkDataLength('down');
-        }).then(function(){
+        })
+        .then(function(){
           promise.resolve();
         });
     }, function(error) {
       vm.gridApi.infiniteScroll.dataLoaded();
       promise.reject();
     });
+
     return promise.promise;
   };
 
@@ -240,17 +244,14 @@ function FileBrowserCtrl(
   };
 
   vm.checkDataLength = function( discardDirection) {
-    console.log('checkDataLength');
     // work out whether we need to discard a page, if so discard from the direction passed in
     if( vm.lastPage - vm.firstPage > vm.cachePages ){
       // we want to remove a page
       vm.gridApi.infiniteScroll.saveScrollPercentage();
 
       if( discardDirection === 'up' ){
-        console.log('in discard direction');
         vm.assayFiles = vm.assayFiles.slice(vm.rowCount);
         vm.firstPage++;
-        console.log(vm.assayFiles.length);
         $timeout(function() {
           // wait for grid to ingest data changes
           vm.gridApi.infiniteScroll.dataRemovedTop(vm.firstPage > 0, vm.lastPage < vm.totalPages);
