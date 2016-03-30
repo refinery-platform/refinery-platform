@@ -177,7 +177,6 @@ function FileBrowserCtrl(
   };
 
   vm.getDataDown = function() {
-    vm.gridApi.infiniteScroll['direction']='up';
     vm.lastPage++;
     vm.filesParam['offset'] = vm.lastPage * vm.rowCount;
     //figure out how to change limit according to vh
