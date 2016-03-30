@@ -322,11 +322,11 @@ function DashboardCtrl (
     this.queryTerms[uri] = undefined;
     delete this.queryTerms[uri];
 
-    if (Object.keys(this.queryTerms).length) {
+    if (this.numQueryTerms) {
       this.collectDataSetIds().then(function (dsIds) {
         this.selectDataSets(dsIds);
       }.bind(this));
-    } else  {
+    } else {
       this.deselectDataSets();
     }
   }.bind(this));
