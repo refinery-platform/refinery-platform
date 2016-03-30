@@ -57,11 +57,9 @@ function FileBrowserCtrl(
   vm.cachePages = 2;
 
   vm.updateAssayFiles = function () {
-    var pageDiff = (vm.lastPage - vm.firstPage) + vm.firstPage;
-    vm.filesParam['offset'] = pageDiff * vm.rowCount;
+    vm.filesParam['offset'] = vm.lastPage * vm.rowCount;
     vm.filesParam['limit'] = vm.rowCount ;
     var promise = $q.defer();
-
     fileBrowserFactory.getAssayFiles(vm.filesParam).then(function () {
       var newData = vm.getPage(fileBrowserFactory.assayFiles, vm.lastPage);
       vm.assayFiles = vm.assayFiles.concat(newData);
@@ -159,7 +157,6 @@ function FileBrowserCtrl(
   vm.getDataDown = function() {
     vm.lastPage++;
     vm.filesParam['offset'] = vm.lastPage * vm.rowCount;
-    //figure out how to change limit according to vh
     vm.filesParam['limit'] = vm.rowCount;
     var promise = $q.defer();
     console.log(vm.filesParam);
@@ -181,7 +178,6 @@ function FileBrowserCtrl(
         vm.gridApi.infiniteScroll.dataLoaded();
         promise.reject();
     });
-
     return promise.promise;
   };
 
@@ -190,7 +186,6 @@ function FileBrowserCtrl(
       vm.firstPage--;
     }
     vm.filesParam['offset'] = vm.firstPage * vm.rowCount;
-    //figure out how to change limit according to vh
     vm.filesParam['limit'] = vm.rowCount;
      console.log(vm.filesParam);
     var promise = $q.defer();
@@ -212,7 +207,6 @@ function FileBrowserCtrl(
       vm.gridApi.infiniteScroll.dataLoaded();
       promise.reject();
     });
-
     return promise.promise;
   };
 
