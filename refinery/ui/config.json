@@ -85,7 +85,7 @@
         "jquery-file-upload/js/jquery.fileupload-process.js",
         "jquery-mousewheel/jquery.mousewheel.min.js",
         "lodash/lodash.min.js",
-        "angular-ui-grid/ui-grid.js",
+        "angular-ui-grid/ui-grid.min.js",
         "spark-md5/spark-md5.js",
         "spectrum/spectrum.js",
         "tipsy/src/javascripts/jquery.tipsy.js"
