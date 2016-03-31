@@ -51,7 +51,13 @@
       <h5 class="refinery-subheader">Summary</h5>
       <div class="inline-container">
         <h6>Description</h6>
-        <p>{{ preview.studies.description }}</p>
+        <p>{{ preview.studies.description | cut:true:preview.descLength }}</p>
+        <button
+          class="is-mirrorable icon-only"
+          ng-click="preview.toggleDescription()"
+          ng-class="{'is-mirrored': preview.descLength > preview.studies.description.length }">
+          <i class="fa fa-chevron-right"></i>
+        </button>
       </div>
       <div class="inline-container" ng-if="preview.numAssays > 0">
         <h6>Technology &amp; Measurement</h6>

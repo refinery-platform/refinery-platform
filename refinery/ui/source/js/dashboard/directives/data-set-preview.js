@@ -43,6 +43,8 @@ function refineryDataSetPreview () {
     this.dashboardExpandablePanelService.collapser.push(function () {
       this.animationFinished = false;
     }.bind(this));
+
+    this.descLength = this.descDefaultLength;
   }
 
   Object.defineProperty(
@@ -76,6 +78,15 @@ function refineryDataSetPreview () {
         }
         return ds;
       }
+  });
+
+  Object.defineProperty(
+    DataSetPreviewCtrl.prototype,
+    'descDefaultLength', {
+      configurable: false,
+      enumerable: true,
+      value: 384,
+      writable: true
   });
 
   Object.defineProperty(
@@ -378,6 +389,23 @@ function refineryDataSetPreview () {
       this.maxBadges = Number.POSITIVE_INFINITY;
     } else {
       this.maxBadges = this.settings.dashboard.preview.maxBadges;
+    }
+  };
+
+  /**
+   * Toggle abstract length
+   *
+   * @method  toggleAbstract
+   * @author  Fritz Lekschas
+   * @date    2015-08-21
+   *
+   * @param   {Object  citation  Citation object.
+   */
+  DataSetPreviewCtrl.prototype.toggleDescription = function () {
+    if (this.descLength < Number.POSITIVE_INFINITY) {
+      this.descLength = Number.POSITIVE_INFINITY;
+    } else {
+      this.descLength = this.descDefaultLength;
     }
   };
 
