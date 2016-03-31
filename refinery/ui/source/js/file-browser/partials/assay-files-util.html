@@ -8,7 +8,63 @@
     </i>
     <span class="caret"></span>
   </button>
-  <ul class="dropdown-menu" aria-labelledby="dLabel">
-    ...
+
+  <ul class="dropdown-menu"
+    aria-labelledby="dLabel" style="width:75%">
+    <div class="row">
+      <div class="col-xs-3 col-xs-offset-3">
+        <h5>Expose to User</h5>
+      </div>
+      <div class="col-xs-3">
+        <h5>Use as a Facet</h5>
+      </div>
+      <div class="col-xs-3">
+        <h5>Show by Default</h5>
+      </div>
+    </div>
+    <li ng-repeat="attributeObj in FBCtrl.assayAttributeOrder"
+        track by solr_field>
+      <div class="row">
+        <div class="col-xs-3">
+          <h4>
+            {{ attributeObj.display_name }}
+          </h4>
+        </div>
+        <div class="col-xs-3">
+          <h4>
+            <div class="radio">
+            <label>
+              <input type="radio" name="optionsRadios"
+                id="util-{{solr_field}}-expose"
+                value="solr_field">
+            </label>
+            </div>
+          </h4>
+        </div>
+        <div class="col-xs-3">
+           <h4>
+             <div class="radio">
+              <label>
+                <input type="radio" name="optionsRadios"
+                  id="util-{{solr_field}}-facet"
+                  value="solr_field">
+              </label>
+            </div>
+           </h4>
+        </div>
+        <div class="col-xs-3">
+           <h4>
+             <div class="radio">
+              <label>
+                <input type="radio" name="optionsRadios"
+                  id="util-{{solr_field}}-default"
+                  value="solr_field">
+              </label>
+            </div>
+           </h4>
+        </div>
+      </div>
+    </li>
   </ul>
+
 </div>
