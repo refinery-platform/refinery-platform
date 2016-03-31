@@ -632,17 +632,25 @@ def escape_character_solr(field):
 
 def hide_fields_from_list(facet_obj):
     """Returns a filtered facet field list from a weighted facet object."""
-    hidden_fields = ['uuid', 'id', 'django_id', 'file_uuid', 'study_uuid',
-                     'assay_uuid', 'type', 'is_annotation', 'species',
-                     'genome_build', 'name', 'django_ct']
 
     filtered_facet_list = []
     for field in facet_obj:
         solr_field = field.get('solr_field')
-        if solr_field not in hidden_fields:
+        if not is_field_in_hidden_list(solr_field):
             filtered_facet_list.append(field)
 
     return filtered_facet_list
+
+
+def is_field_in_hidden_list(field):
+    hidden_fields = ['uuid', 'id', 'django_id', 'file_uuid', 'study_uuid',
+                     'assay_uuid', 'type', 'is_annotation', 'species',
+                     'genome_build', 'name', 'django_ct']
+
+    if field in hidden_fields:
+        return True
+    else:
+        return False
 
 
 def generate_filtered_facet_fields(attributes):
