@@ -16,14 +16,15 @@ function rpFileBrowserAssayFiles() {
     controllerAs: 'FBCtrl',
     bindToController: {
        assayFiles: '@',
-       assayAttributes: '@'
+       assayAttributes: '@',
+       assayAttributeOrder: '@'
     },
     link: function(scope, element, attr, ctrl){
       ctrl.updateAssayFiles().then(function(){
         ctrl.checkUrlQueryFilters();
         ctrl.createColumnDefs();
       });
-
+      ctrl.updateAssayAttributes();
     }
   };
 }
