@@ -273,7 +273,7 @@ angular
       refineryUrlRouterProvider
         .otherwise(
           '/files/browse',
-          '^\/data_sets2\/.*\/$',
+          '^\/data_sets\/.*\/$',
           true
         );
     }
