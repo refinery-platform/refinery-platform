@@ -31,7 +31,9 @@ from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import parse_isatab
 from data_set_manager.utils import (generate_solr_params, search_solr,
                                     format_solr_response, get_owner_from_assay,
-                                    update_attribute_order_ranks)
+                                    update_attribute_order_ranks,
+                                    is_field_in_hidden_list,
+                                    customize_attribute_response)
 from file_store.tasks import download_file, DownloadError
 from file_store.models import get_temp_dir, generate_file_source_translator
 from .serializers import AttributeOrderSerializer, AssaySerializer
@@ -531,7 +533,19 @@ class AssaysAttributes(APIView):
     def get(self, request, uuid, format=None):
         attribute_order = self.get_objects(uuid)
         serializer = AttributeOrderSerializer(attribute_order, many=True)
-        return Response(serializer.data)
+
+        # add a display name to the attribute object
+        attributes = serializer.data
+        # Reverse check, so can remove objects from the end
+        for ind in range(len(attributes)-1, -1, -1):
+            if is_field_in_hidden_list(attributes[ind].get('solr_field')):
+                del attributes[ind]
+            else:
+                attributes[ind]['display_name'] = customize_attribute_response(
+                        [attributes[ind].get('solr_field')])[0].get(
+                        'display_name')
+
+        return Response(attributes)
 
     def put(self, request, uuid, format=None):
         owner = get_owner_from_assay(uuid)
