@@ -275,6 +275,11 @@ angular
           '/files/browse',
           '^\/data_sets\/.*\/$',
           true
+        )
+        .otherwise(
+          '/files/browse',
+          '^\/data_sets2\/.*\/$',
+          true
         );
     }
   ]
