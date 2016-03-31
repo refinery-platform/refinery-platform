@@ -56,6 +56,9 @@ function refineryDashboardVisWrapper () {
     ];
 
     this.rename = [{
+      uri: 'http://www.w3.org/2002/07/owl#Thing',
+      label: 'Root'
+    }, {
       uri: 'http://purl.obolibrary.org/obo/CHEBI_37577',
       label: 'Chemical compound'
     }];
