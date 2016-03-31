@@ -52,7 +52,7 @@ function refineryDataSetPreview () {
     'abstractLength', {
       configurable: false,
       enumerable: true,
-      value: 128,
+      value: 256,
       writable: true
   });
 
