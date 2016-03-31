@@ -3,6 +3,13 @@
 import json
 import os
 
+# The local package refinery/core/__init__.py
+import core     # Only used for its location
+
+core_path = os.path.dirname(os.path.abspath(core.__file__))
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.dev")
+
 # https://docs.djangoproject.com/en/1.9/topics/auth/passwords/#django.contrib.auth.hashers.make_password
 from django.contrib.auth.hashers import make_password
 
@@ -12,9 +19,11 @@ def main():
         raise Exception("The ADMIN_PASSWORD environment variable must be set")
     password = os.environ['ADMIN_PASSWORD']
 
-    o = json.load('../refinery/core/fixtures/superuser.json')
-    admin_index = [(i, d) for (i, d) in enumerate(o)
-      if d['fields']['username'] == 'admin']
+    with open(os.path.join(core_path, 'fixtures/superuser.json')) as j:
+	o = json.load(j)
+
+    admin_index = [index for (index, obj) in enumerate(o)
+      if obj['fields']['username'] == 'admin']
     assert len(admin_index) == 1
     (admin_index,) = admin_index
 
