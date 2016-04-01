@@ -17,7 +17,8 @@ from .views import Assays, AssaysAttributes
 from .utils import (update_attribute_order_ranks,
                     customize_attribute_response, format_solr_response,
                     get_owner_from_assay, generate_facet_fields_query,
-                    hide_fields_from_list, generate_filtered_facet_fields,
+                    hide_fields_from_list, is_field_in_hidden_list,
+                    generate_filtered_facet_fields,
                     insert_facet_field_filter, create_facet_filter_query,
                     generate_solr_params, objectify_facet_field_counts,
                     escape_character_solr)
@@ -595,6 +596,20 @@ class UtilitiesTest(TestCase):
 
         filtered_list = hide_fields_from_list(weighted_list)
         self.assertListEqual(filtered_list, [{'solr_field': 'SubAnalysis'}])
+
+    def test_is_field_in_hidden_list(self):
+        list_of_hidden_field = ['uuid', 'id', 'django_id', 'file_uuid',
+                                'study_uuid', 'assay_uuid', 'type',
+                                'is_annotation', 'species', 'genome_build',
+                                'name', 'django_ct']
+        list_not_hidden_field = ['Analysis', 'Cell Type', '', 'Cell Line',
+                                 'Group Name', 'Character Title']
+
+        for field in list_of_hidden_field:
+            self.assertEqual(is_field_in_hidden_list(field), True)
+
+        for field in list_not_hidden_field:
+            self.assertEqual(is_field_in_hidden_list(field), False)
 
     def test_generate_solr_params(self):
         # empty params
