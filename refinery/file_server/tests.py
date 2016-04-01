@@ -6,6 +6,7 @@ Created on Apr 21, 2012
 import struct
 import cStringIO
 
+from django.db import IntegrityError
 from django.utils import unittest
 
 from file_server import tdf_file, models
@@ -17,22 +18,26 @@ class TDFItemTest(unittest.TestCase):
 
     # TODO: add missing tests
     def setUp(self):
-        self.tdf_filetype = fs_models.FileType.objects.create(
-            name="TDF", description="TDF file")
-        self.tdf_fileextension = fs_models.FileExtension.objects.create(
-                name="tdf", filetype=self.tdf_filetype)
-        self.bigbed_filetype = fs_models.FileType.objects.create(
-            name="BIGBED", description="BIGBED File")
-        self.bigbed_fileextension = fs_models.FileExtension.objects.create(
-            name="bb", filetype=self.bigbed_filetype)
-        self.bam_filetype = fs_models.FileType.objects.create(
-            name="BAM", description="BAM file")
-        self.bam_fileextension = fs_models.FileExtension.objects.create(
-            name="bam", filetype=self.bam_filetype)
-        self.wig_filetype = fs_models.FileType.objects.create(
-            name="WIG", description="WIG File")
-        self.wig_fileextension = fs_models.FileExtension.objects.create(
-            name="wig", filetype=self.wig_filetype)
+        try:
+            self.tdf_filetype = fs_models.FileType.objects.create(
+                name="TDF", description="TDF file")
+            self.tdf_fileextension = fs_models.FileExtension.objects.create(
+                    name="tdf", filetype=self.tdf_filetype)
+            self.bigbed_filetype = fs_models.FileType.objects.create(
+                name="BIGBED", description="BIGBED File")
+            self.bigbed_fileextension = fs_models.FileExtension.objects.create(
+                name="bb", filetype=self.bigbed_filetype)
+            self.bam_filetype = fs_models.FileType.objects.create(
+                name="BAM", description="BAM file")
+            self.bam_fileextension = fs_models.FileExtension.objects.create(
+                name="bam", filetype=self.bam_filetype)
+            self.wig_filetype = fs_models.FileType.objects.create(
+                name="WIG", description="WIG File")
+            self.wig_fileextension = fs_models.FileExtension.objects.create(
+                name="wig", filetype=self.wig_filetype)
+        except IntegrityError:
+            # Data Already exists in Refinery
+            pass
         self.tdf_file = fs_models.FileStoreItem.objects.create_item("tdf")
 
     def tearDown(self):
@@ -48,22 +53,26 @@ class BigBEDItemTest(unittest.TestCase):
     """Test all operations on BigBEDItem instances"""
 
     def setUp(self):
-        self.tdf_filetype = fs_models.FileType.objects.create(
-            name="TDF", description="TDF file")
-        self.tdf_fileextension = fs_models.FileExtension.objects.create(
-                name="tdf", filetype=self.tdf_filetype)
-        self.bigbed_filetype = fs_models.FileType.objects.create(
-            name="BIGBED", description="BIGBED File")
-        self.bigbed_fileextension = fs_models.FileExtension.objects.create(
-            name="bb", filetype=self.bigbed_filetype)
-        self.bam_filetype = fs_models.FileType.objects.create(
-            name="BAM", description="BAM file")
-        self.bam_fileextension = fs_models.FileExtension.objects.create(
-            name="bam", filetype=self.bam_filetype)
-        self.wig_filetype = fs_models.FileType.objects.create(
-            name="WIG", description="WIG File")
-        self.wig_fileextension = fs_models.FileExtension.objects.create(
-            name="wig", filetype=self.wig_filetype)
+        try:
+            self.tdf_filetype = fs_models.FileType.objects.create(
+                name="TDF", description="TDF file")
+            self.tdf_fileextension = fs_models.FileExtension.objects.create(
+                    name="tdf", filetype=self.tdf_filetype)
+            self.bigbed_filetype = fs_models.FileType.objects.create(
+                name="BIGBED", description="BIGBED File")
+            self.bigbed_fileextension = fs_models.FileExtension.objects.create(
+                name="bb", filetype=self.bigbed_filetype)
+            self.bam_filetype = fs_models.FileType.objects.create(
+                name="BAM", description="BAM file")
+            self.bam_fileextension = fs_models.FileExtension.objects.create(
+                name="bam", filetype=self.bam_filetype)
+            self.wig_filetype = fs_models.FileType.objects.create(
+                name="WIG", description="WIG File")
+            self.wig_fileextension = fs_models.FileExtension.objects.create(
+                name="wig", filetype=self.wig_filetype)
+        except IntegrityError:
+            # Data Already exists in Refinery
+            pass
         self.bigbed_file = fs_models.FileStoreItem.objects.create_item("bb")
 
     def tearDown(self):
@@ -93,22 +102,26 @@ class BAMItemTest(unittest.TestCase):
 
     # TODO: add missing tests
     def setUp(self):
-        self.tdf_filetype = fs_models.FileType.objects.create(
-            name="TDF", description="TDF file")
-        self.tdf_fileextension = fs_models.FileExtension.objects.create(
-                name="tdf", filetype=self.tdf_filetype)
-        self.bigbed_filetype = fs_models.FileType.objects.create(
-            name="BIGBED", description="BIGBED File")
-        self.bigbed_fileextension = fs_models.FileExtension.objects.create(
-            name="bb", filetype=self.bigbed_filetype)
-        self.bam_filetype = fs_models.FileType.objects.create(
-            name="BAM", description="BAM file")
-        self.bam_fileextension = fs_models.FileExtension.objects.create(
-            name="bam", filetype=self.bam_filetype)
-        self.wig_filetype = fs_models.FileType.objects.create(
-            name="WIG", description="WIG File")
-        self.wig_fileextension = fs_models.FileExtension.objects.create(
-            name="wig", filetype=self.wig_filetype)
+        try:
+            self.tdf_filetype = fs_models.FileType.objects.create(
+                name="TDF", description="TDF file")
+            self.tdf_fileextension = fs_models.FileExtension.objects.create(
+                    name="tdf", filetype=self.tdf_filetype)
+            self.bigbed_filetype = fs_models.FileType.objects.create(
+                name="BIGBED", description="BIGBED File")
+            self.bigbed_fileextension = fs_models.FileExtension.objects.create(
+                name="bb", filetype=self.bigbed_filetype)
+            self.bam_filetype = fs_models.FileType.objects.create(
+                name="BAM", description="BAM file")
+            self.bam_fileextension = fs_models.FileExtension.objects.create(
+                name="bam", filetype=self.bam_filetype)
+            self.wig_filetype = fs_models.FileType.objects.create(
+                name="WIG", description="WIG File")
+            self.wig_fileextension = fs_models.FileExtension.objects.create(
+                name="wig", filetype=self.wig_filetype)
+        except IntegrityError:
+            # Data Already exists in Refinery
+            pass
         self.bam_file = fs_models.FileStoreItem.objects.create_item("bam")
 
     def tearDown(self):
@@ -125,22 +138,26 @@ class WIGItemTest(unittest.TestCase):
 
     # TODO: add missing tests
     def setUp(self):
-        self.tdf_filetype = fs_models.FileType.objects.create(
-            name="TDF", description="TDF file")
-        self.tdf_fileextension = fs_models.FileExtension.objects.create(
-                name="tdf", filetype=self.tdf_filetype)
-        self.bigbed_filetype = fs_models.FileType.objects.create(
-            name="BIGBED", description="BIGBED File")
-        self.bigbed_fileextension = fs_models.FileExtension.objects.create(
-            name="bb", filetype=self.bigbed_filetype)
-        self.bam_filetype = fs_models.FileType.objects.create(
-            name="BAM", description="BAM file")
-        self.bam_fileextension = fs_models.FileExtension.objects.create(
-            name="bam", filetype=self.bam_filetype)
-        self.wig_filetype = fs_models.FileType.objects.create(
-            name="WIG", description="WIG File")
-        self.wig_fileextension = fs_models.FileExtension.objects.create(
-            name="wig", filetype=self.wig_filetype)
+        try:
+            self.tdf_filetype = fs_models.FileType.objects.create(
+                name="TDF", description="TDF file")
+            self.tdf_fileextension = fs_models.FileExtension.objects.create(
+                    name="tdf", filetype=self.tdf_filetype)
+            self.bigbed_filetype = fs_models.FileType.objects.create(
+                name="BIGBED", description="BIGBED File")
+            self.bigbed_fileextension = fs_models.FileExtension.objects.create(
+                name="bb", filetype=self.bigbed_filetype)
+            self.bam_filetype = fs_models.FileType.objects.create(
+                name="BAM", description="BAM file")
+            self.bam_fileextension = fs_models.FileExtension.objects.create(
+                name="bam", filetype=self.bam_filetype)
+            self.wig_filetype = fs_models.FileType.objects.create(
+                name="WIG", description="WIG File")
+            self.wig_fileextension = fs_models.FileExtension.objects.create(
+                name="wig", filetype=self.wig_filetype)
+        except IntegrityError:
+            # Data Already exists in Refinery
+            pass
         self.wig_file = fs_models.FileStoreItem.objects.create_item("wig")
 
     def tearDown(self):
@@ -156,22 +173,26 @@ class InvalidItemTest(unittest.TestCase):
     """Test operations on invalid instances"""
 
     def setUp(self):
-        self.tdf_filetype = fs_models.FileType.objects.create(
-            name="TDF", description="TDF file")
-        self.tdf_fileextension = fs_models.FileExtension.objects.create(
-                name="tdf", filetype=self.tdf_filetype)
-        self.bigbed_filetype = fs_models.FileType.objects.create(
-            name="BIGBED", description="BIGBED File")
-        self.bigbed_fileextension = fs_models.FileExtension.objects.create(
-            name="bb", filetype=self.bigbed_filetype)
-        self.bam_filetype = fs_models.FileType.objects.create(
-            name="BAM", description="BAM file")
-        self.bam_fileextension = fs_models.FileExtension.objects.create(
-            name="bam", filetype=self.bam_filetype)
-        self.wig_filetype = fs_models.FileType.objects.create(
-            name="WIG", description="WIG File")
-        self.wig_fileextension = fs_models.FileExtension.objects.create(
-            name="wig", filetype=self.wig_filetype)
+        try:
+            self.tdf_filetype = fs_models.FileType.objects.create(
+                name="TDF", description="TDF file")
+            self.tdf_fileextension = fs_models.FileExtension.objects.create(
+                    name="tdf", filetype=self.tdf_filetype)
+            self.bigbed_filetype = fs_models.FileType.objects.create(
+                name="BIGBED", description="BIGBED File")
+            self.bigbed_fileextension = fs_models.FileExtension.objects.create(
+                name="bb", filetype=self.bigbed_filetype)
+            self.bam_filetype = fs_models.FileType.objects.create(
+                name="BAM", description="BAM file")
+            self.bam_fileextension = fs_models.FileExtension.objects.create(
+                name="bam", filetype=self.bam_filetype)
+            self.wig_filetype = fs_models.FileType.objects.create(
+                name="WIG", description="WIG File")
+            self.wig_fileextension = fs_models.FileExtension.objects.create(
+                name="wig", filetype=self.wig_filetype)
+        except IntegrityError:
+            # Data Already exists in Refinery
+            pass
         self.undefined_file = fs_models.FileStoreItem.objects.create_item(
             "testfile")
 
