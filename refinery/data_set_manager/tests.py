@@ -180,7 +180,7 @@ class AssaysAttributesAPITests(APITestCase):
             {
                 'study': study,
                 'assay': assay,
-                'solr_field': 'Character_Title',
+                'solr_field': 'Character_Title_6_3_s',
                 'rank': 1,
                 'is_exposed': True,
                 'is_facet': True,
@@ -189,7 +189,7 @@ class AssaysAttributesAPITests(APITestCase):
             }, {
                 'study': study,
                 'assay': assay,
-                'solr_field': 'Specimen',
+                'solr_field': 'Specimen_6_3_s',
                 'rank': 2,
                 'is_exposed': True,
                 'is_facet': True,
@@ -198,7 +198,7 @@ class AssaysAttributesAPITests(APITestCase):
             }, {
                 'study': study,
                 'assay': assay,
-                'solr_field': 'Cell Type',
+                'solr_field': 'Cell_Type_6_3_s',
                 'rank': 3,
                 'is_exposed': True,
                 'is_facet': True,
@@ -207,7 +207,7 @@ class AssaysAttributesAPITests(APITestCase):
             }, {
                 'study': study,
                 'assay': assay,
-                'solr_field': 'Analysis',
+                'solr_field': 'Analysis_6_3_s',
                 'rank': 4,
                 'is_exposed': True,
                 'is_facet': True,
@@ -215,13 +215,61 @@ class AssaysAttributesAPITests(APITestCase):
                 'is_internal': False
             }]
 
+        self.attribute_order_response = [
+            {
+                'study': study,
+                'assay': assay,
+                'solr_field': 'Character_Title_6_3_s',
+                'rank': 1,
+                'is_exposed': True,
+                'is_facet': True,
+                'is_active': True,
+                'is_internal': False,
+                'display_name': 'Character Title'
+            }, {
+                'study': study,
+                'assay': assay,
+                'solr_field': 'Specimen_6_3_s',
+                'rank': 2,
+                'is_exposed': True,
+                'is_facet': True,
+                'is_active': True,
+                'is_internal': False,
+                'display_name': 'Specimen'
+            }, {
+                'study': study,
+                'assay': assay,
+                'solr_field': 'Cell_Type_6_3_s',
+                'rank': 3,
+                'is_exposed': True,
+                'is_facet': True,
+                'is_active': True,
+                'is_internal': False,
+                'display_name': 'Cell Type'
+            }, {
+                'study': study,
+                'assay': assay,
+                'solr_field': 'Analysis_6_3_s',
+                'rank': 4,
+                'is_exposed': True,
+                'is_facet': True,
+                'is_active': True,
+                'is_internal': False,
+                'display_name': 'Analysis'
+            }]
+
+        index = 0
         for attribute in self.attribute_order_array:
             response = AttributeOrder.objects.create(**attribute)
             attribute['id'] = response.id
             attribute['assay'] = response.assay.id
             attribute['study'] = response.study.id
+            self.attribute_order_response[index]['id'] = response.id
+            self.attribute_order_response[index]['assay'] = response.assay.id
+            self.attribute_order_response[index]['study'] = response.study.id
+            index = index + 1
 
-        list.sort(self.attribute_order_array)
+        list.sort(self.attribute_order_response)
         self.valid_uuid = assay.uuid
         self.url_root = '/api/v2/assays'
         self.view = AssaysAttributes.as_view()
@@ -243,14 +291,17 @@ class AssaysAttributesAPITests(APITestCase):
         request = self.factory.get('%s/%s/attributes/' % (self.url_root, uuid))
         response = self.view(request, uuid)
         self.assertEqual(response.status_code, 200)
+
         list.sort(response.data)
+
         ind = 0
         for attributes in response.data:
             self.assertItemsEqual(
-                    attributes.keys(), self.attribute_order_array[ind].keys())
+                    self.attribute_order_response[ind].keys(),
+                    attributes.keys())
             self.assertItemsEqual(
-                    attributes.values(),
-                    self.attribute_order_array[ind].values())
+                    self.attribute_order_response[ind].values(),
+                    attributes.values())
             ind = ind + 1
 
     def test_get_invalid_uuid(self):
@@ -274,7 +325,7 @@ class AssaysAttributesAPITests(APITestCase):
     def test_put_valid_uuid(self):
         # valid_uuid
         self.client.login(username='ownerJane', password='test1234')
-        updated_attribute_1 = {'solr_field': 'Character_Title',
+        updated_attribute_1 = {'solr_field': 'Character_Title_6_3_s',
                                'rank': 3,
                                'is_exposed': False,
                                'is_facet': False,
@@ -386,7 +437,7 @@ class UtilitiesTest(TestCase):
             'is_exposed': True,
             'is_facet': False,
             'is_active': True,
-            'is_internal': False
+            'is_internal': False,
         }, {
             'study': study,
             'assay': self.assay,
