@@ -18,8 +18,8 @@ from django.core.exceptions import ObjectDoesNotExist
 
 import core
 from .search_indexes import NodeIndex
-from .models import AttributeOrder, Study, Node, Attribute, AnnotatedNode, \
-    Assay, AnnotatedNodeRegistry
+from .models import (AttributeOrder, Study, Node, Attribute, AnnotatedNode,
+                     Assay, AnnotatedNodeRegistry)
 from .serializers import AttributeOrderSerializer
 
 
