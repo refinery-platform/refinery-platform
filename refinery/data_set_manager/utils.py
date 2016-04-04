@@ -9,7 +9,7 @@ import time
 import urlparse
 import requests
 import json
-import urllib2
+import urllib
 
 from django.db.models import Q
 from django.utils.http import urlquote
@@ -576,13 +576,13 @@ def generate_solr_params(params, assay_uuid):
         solr_params = ''.join([solr_params, '&sort=', sort])
 
     if facet_filter:
-        facet_filter = urllib2.unquote(facet_filter)
+        facet_filter = urllib.unquote(facet_filter)
         facet_filter = json.loads(facet_filter)
         facet_filter_str = create_facet_filter_query(facet_filter)
         solr_params = ''.join([solr_params, facet_filter_str])
 
     url = '&'.join([solr_params, fixed_solr_params])
-    encoded_solr_params = urlquote(url, safe='\\=&! ')
+    encoded_solr_params = urllib.quote(url, safe='\\=&! ')
 
     return encoded_solr_params
 
