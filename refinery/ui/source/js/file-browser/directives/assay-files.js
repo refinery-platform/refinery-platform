@@ -24,7 +24,7 @@ function rpFileBrowserAssayFiles() {
         ctrl.checkUrlQueryFilters();
         ctrl.createColumnDefs();
       });
-      ctrl.updateAssayAttributes();
+      ctrl.refreshAssayAttributes();
     }
   };
 }
