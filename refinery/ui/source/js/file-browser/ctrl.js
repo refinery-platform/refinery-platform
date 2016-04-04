@@ -56,7 +56,7 @@ function FileBrowserCtrl(
   vm.totalPages = 1;
   vm.cachePages = 2;
 
-  vm.updateAssayFiles = function () {
+  vm.refreshAssayFiles = function () {
     vm.filesParam['offset'] = vm.lastPage * vm.rowCount;
     vm.filesParam['limit'] = vm.rowCount;
     var promise = $q.defer();
@@ -73,13 +73,17 @@ function FileBrowserCtrl(
     return promise.promise;
   };
 
-  vm.updateAssayAttributes = function () {
+  vm.refreshAssayAttributes = function () {
     var assay_uuid = $window.externalAssayUuid;
     return fileBrowserFactory.getAssayAttributeOrder(assay_uuid).then(function(){
       vm.assayAttributeOrder = fileBrowserFactory.assayAttributeOrder;
     },function(error){
       console.log(error);
     });
+  };
+
+  vm.putAssayAttributes = function(){
+
   };
 
   //checks url for params to update the filter

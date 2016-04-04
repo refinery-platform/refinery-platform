@@ -20,7 +20,7 @@ function rpFileBrowserAssayFiles() {
        assayAttributeOrder: '@'
     },
     link: function(scope, element, attr, ctrl){
-      ctrl.updateAssayFiles().then(function(){
+      ctrl.refreshAssayFiles().then(function(){
         ctrl.checkUrlQueryFilters();
         ctrl.createColumnDefs();
       });
