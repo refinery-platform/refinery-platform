@@ -31,11 +31,11 @@ from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
 from file_store.tasks import download_file, DownloadError
 from file_store.models import get_temp_dir, generate_file_source_translator
+from .models import AttributeOrder, Assay
+from .serializers import AttributeOrderSerializer, AssaySerializer
 from .utils import (generate_solr_params, search_solr, format_solr_response,
                     get_owner_from_assay, update_attribute_order_ranks,
                     is_field_in_hidden_list, customize_attribute_response)
-from .serializers import AttributeOrderSerializer, AssaySerializer
-from .models import AttributeOrder, Assay
 
 
 logger = logging.getLogger(__name__)
