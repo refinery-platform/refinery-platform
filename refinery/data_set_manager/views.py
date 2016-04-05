@@ -577,8 +577,13 @@ class AssaysAttributes(APIView):
                                                   partial=True)
             if serializer.is_valid():
                 serializer.save()
+                attributes = serializer.data
+                attributes['display_name'] = customize_attribute_response(
+                        [attributes.get('solr_field')])[0].get(
+                        'display_name')
+
                 return Response(
-                        serializer.data,
+                        attributes,
                         status=status.HTTP_202_ACCEPTED
                 )
             return Response(
