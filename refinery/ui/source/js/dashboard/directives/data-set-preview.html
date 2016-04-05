@@ -150,7 +150,7 @@
       </h5>
       <ul
         class="no-list-style references"
-        ng-if="preview.studies.publications.length">
+        ng-if="preview.studies.publications.length && !preview.citationError">
         <li ng-repeat="publication in preview.studies.publications track by $index">
           <span
             class="refinery-spinner"
@@ -194,6 +194,16 @@
           </div>
         </li>
       </ul>
+      <div class="refinery-error" ng-if="preview.citationError">
+        <i
+          class="fa fa-exclamation-triangle"
+          title="We're deeply sorry but unfortunately something went wrong."
+          refinery-tooltip
+          refinery-tooltip-container="body"
+          refinery-tooltip-placement="top"
+          refinery-tooltip-delay-show="750"
+          refinery-tooltip-delay-hide="150"></i>
+      </div>
       <h5 class="refinery-subheader">
         Protocols
         <span class="badge">{{ preview.studies.protocols.length }}</span>
