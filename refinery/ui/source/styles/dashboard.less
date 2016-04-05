@@ -96,6 +96,16 @@
   min-height: 0;
 }
 
+.refinery-dashboard .refinery-panel .data-cart ul.results > li .zoom-out,
+.refinery-dashboard .refinery-panel .data-cart ul.results > li .annotations-only {
+  background: rgba(242, 242, 242, 0.9);
+
+  &:hover {
+    color: @black;
+    background: rgba(217, 217, 217, 0.9);
+  }
+}
+
 .refinery-dashboard .refinery-panel .data-cart .refinery-panel-header {
   margin: 0;
   padding: 0 10px;
@@ -309,7 +319,7 @@
   box-shadow: inset 0 -1px 0 0 fade(@blue-shadow, 50%), inset 10px 0 8px -8px white, inset -10px 0 8px -8px white, inset 0 -8px 8px -8px @blue-shadow;
 }
 
-.refinery-dashboard .refinery-panel .expansion-panel .visWrapper .top-bar .refinery-global-spinner {
+.refinery-dashboard .refinery-panel .expansion-panel .visWrapper .top-bar .refinery-global-notifier {
   top: 0;
   bottom: 1px;
   left: 1px;
