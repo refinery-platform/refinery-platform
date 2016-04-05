@@ -726,19 +726,43 @@ TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
 };
 
 TreemapCtrl.prototype.setUpNodeCenterIcon = function (selection) {
+  var that = this;
+
   selection
-    .attr('x', function (data) {
-      return this.treemap.x(data.x) + (data.cache.width / 2) - 8;
-    }.bind(this))
-    .attr('y', function (data) {
-      return this.treemap.y(data.y) + (data.cache.height / 2) - 8;
-    }.bind(this))
     .attr('width', function (data) {
+      if (data.cache.width < 20 || data.cache.height < 20) {
+        data.cache.iconLockSmall = true;
+        return 8;
+      }
+      data.cache.iconLockSmall = false;
       return 16;
-    }.bind(this))
+    })
     .attr('height', function (data) {
+      if (data.cache.iconLockSmall) {
+        return 8;
+      }
       return 16;
-    }.bind(this));
+    })
+    .attr('x', function (data) {
+      return that.treemap.x(data.x) +
+        (data.cache.width / 2) - (data.cache.iconLockSmall ? 4 : 8);
+    })
+    .attr('y', function (data) {
+      return that.treemap.y(data.y) +
+      (data.cache.height / 2) - (data.cache.iconLockSmall ? 4 : 8);
+    })
+    .classed('hidden', function (data) {
+      if (data.cache.width < 10) {
+        data.lockIconHidden = true;
+        return true;
+      }
+      if (data.cache.height < 10) {
+        data.lockIconHidden = true;
+        return true;
+      }
+      data.lockIconHidden = false;
+      return false;
+    });
 };
 
 /**
@@ -1609,7 +1633,9 @@ TreemapCtrl.prototype.transition = function (data, noNotification) {
         this.checkLabelReadbility();
         newGroups.selectAll('.icon')
           .call(this.setUpNodeCenterIcon.bind(this))
-          .style('opacity', 1);
+          .style('opacity', function (data) {
+            return data.lockIconHidden ? 1 : undefined;
+          });
       }.bind(this));
     }.bind(this))
     .catch(function (e) {
@@ -1861,7 +1887,7 @@ Object.defineProperty(
       this._visibleDepth = newVisibleDepth;
 
       // Wait one digestion cycle. Otherwise adding or removing new nodes will
-      // happen before the spinner has been loaded.
+      // happen before the spinner is displayed.
       this.$timeout(function() {
         var adjustedLabels = this.adjustLevelDepth(oldVisibleDepth);
 
@@ -1879,6 +1905,9 @@ Object.defineProperty(
           this.loadingVisibleDepth = false;
           // Wait one digestion cycle.
           this.$timeout(function() {
+            // Focus the input element again because it lost the focus when the
+            // input was disabled during the time the new nodes have been
+            // loaded.
             this.$rootScope.$broadcast('focusOn', 'visibleDepthInput');
           }.bind(this), 0);
         }.bind(this));
