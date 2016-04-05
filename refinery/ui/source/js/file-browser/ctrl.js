@@ -78,15 +78,12 @@ function FileBrowserCtrl(
     var assay_uuid = $window.externalAssayUuid;
     return fileBrowserFactory.getAssayAttributeOrder(assay_uuid).then(function(){
       vm.assayAttributeOrder = fileBrowserFactory.assayAttributeOrder;
-      console.log(vm.assayAttributeOrder);
     },function(error){
       console.log(error);
     });
   };
 
   vm.updateAssayAttributes = function(attributeParam){
-    console.log("update Assay Attributes");
-
     fileBrowserFactory.postAssayAttributeOrder(attributeParam).then(function(){
       vm.reset();
     });
@@ -171,7 +168,6 @@ function FileBrowserCtrl(
     vm.filesParam['offset'] = vm.lastPage * vm.rowCount;
     vm.filesParam['limit'] = vm.rowCount;
     var promise = $q.defer();
-    console.log(vm.filesParam);
     fileBrowserFactory.getAssayFiles(vm.filesParam)
     .then(function() {
       vm.assayFiles = vm.assayFiles.concat(fileBrowserFactory.assayFiles);
@@ -198,7 +194,6 @@ function FileBrowserCtrl(
     }
     vm.filesParam['offset'] = vm.firstPage * vm.rowCount;
     vm.filesParam['limit'] = vm.rowCount;
-     console.log(vm.filesParam);
     var promise = $q.defer();
     fileBrowserFactory.getAssayFiles(vm.filesParam)
     .then(function() {
@@ -282,6 +277,7 @@ function FileBrowserCtrl(
 
   //populates the  ui-grid columns variable
   vm.createColumnDefs = function(){
+    vm.customColumnName = [];
     vm.assayAttributes.forEach(function(attribute){
       vm.customColumnName.push(
         {

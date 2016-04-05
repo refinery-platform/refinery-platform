@@ -38,7 +38,7 @@
                 type="checkbox"
                 name="utilsCheckboxes"
                 ng-model= "attributeObj.is_facet"
-                ng-change="FBCtrl.updateAssayAttributes()"
+                ng-change="FBCtrl.updateAssayAttributes(attributeObj)"
                 value="{{ attributeObj.is_exposed }}">
             </label>
             </div>
@@ -50,7 +50,7 @@
               <label>
                 <input type="checkbox"
                   ng-model="attributeObj.is_facet"
-                  ng-change="FBCtrl.updateAssayAttributes()"
+                  ng-change="FBCtrl.updateAssayAttributes(attributeObj)"
                   value={{ attributeObj.is_facet }}>
               </label>
             </div>
@@ -63,7 +63,7 @@
                 <input
                   type="checkbox"
                   ng-model="attributeObj.is_active"
-                  ng-change="FBCtrl.updateAssayAttributes()"
+                  ng-change="FBCtrl.updateAssayAttributes(attributeObj)"
                   value={{ attributeObj.is_active }}>
               </label>
             </div>
