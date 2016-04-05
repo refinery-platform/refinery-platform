@@ -68,6 +68,7 @@ function FileBrowserCtrl(
       vm.assayAttributes = fileBrowserFactory.assayAttributes;
       vm.attributeFilter = fileBrowserFactory.attributeFilter;
       vm.analysisFilter = fileBrowserFactory.analysisFilter;
+      vm.createColumnDefs();
       promise.resolve();
     });
     return promise.promise;
@@ -87,7 +88,7 @@ function FileBrowserCtrl(
     console.log("update Assay Attributes");
 
     fileBrowserFactory.postAssayAttributeOrder(attributeParam).then(function(){
-
+      vm.reset();
     });
   };
 
@@ -96,7 +97,10 @@ function FileBrowserCtrl(
     var allFilters = {};
     //Merge attribute and analysis filter data obj
     angular.copy(vm.attributeFilter, allFilters);
-    allFilters['Analysis'] = vm.analysisFilter['Analysis'];
+    if(typeof vm.analysisFilter['Analysis'] !== 'undefined'){
+      allFilters['Analysis'] = vm.analysisFilter['Analysis'];
+    }
+
     //for attribute filter directive, drop panels in query
     $scope.$broadcast('rf/attributeFilter-ready');
     angular.forEach(allFilters, function(fieldObj, attribute) {
