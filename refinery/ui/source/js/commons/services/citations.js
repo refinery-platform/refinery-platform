@@ -21,9 +21,6 @@ angular
             )
             .then(function (data) {
               return preparePubmedSummary(reference, data.result[reference]);
-            })
-            .catch(function (error) {
-              return error;
             });
 
           var abstract = pubmedService
@@ -35,18 +32,12 @@ angular
             )
             .then(function (data) {
               return preparePubmedAbstract(data);
-            })
-            .catch(function (error) {
-              return error;
             });
 
           return $q.all([summary, abstract])
             .then(function (data) {
               data[0].abstract = data[1];
               return data[0];
-            })
-            .catch(function (error) {
-              return error;
             });
         }
 
@@ -61,9 +52,6 @@ angular
             .$promise
             .then(function (data) {
               return prepareDoi(data);
-            })
-            .catch(function (error) {
-              return error;
             });
 
           // Look for a PubMed entry
@@ -94,9 +82,6 @@ angular
                   });
               }
               return null;
-            })
-            .catch(function (error) {
-              return error;
             });
 
           return $q.all([doi, pubmed])
