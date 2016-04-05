@@ -283,8 +283,8 @@ function refineryDataSetPreview () {
         );
       }.bind(this))
       .catch(function (error) {
-        console.error(error);
-      });
+        this.citationError = true;
+      }.bind(this));
   };
 
   /**
