@@ -82,7 +82,7 @@ def analysis_status(request, uuid):
         logger.debug("Analysis status for '%s': %s",
                      analysis.name, json.dumps(ret_json, indent=4))
         return HttpResponse(json.dumps(ret_json, indent=4),
-                            mimetype='application/javascript')
+                            content_type='application/javascript')
     else:
         return render_to_response(
             'analysis_manager/analysis_status.html',
@@ -145,7 +145,7 @@ def update_workflows(request):
         json_serializer = serializers.get_serializer("json")()
         return HttpResponse(
             json_serializer.serialize(workflows, ensure_ascii=False),
-            mimetype='application/javascript')
+            content_type='application/javascript')
     else:
         return HttpResponse(status=400)
 
@@ -157,9 +157,9 @@ def getWorkflowDataInputMap(request, workflow_uuid):
     curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
     data = serializers.serialize('json', curr_workflow.data_inputs.all())
     if request.is_ajax():
-        return HttpResponse(data, mimetype='application/javascript')
+        return HttpResponse(data, content_type='application/javascript')
     else:
-        return HttpResponse(data, mimetype='application/json')
+        return HttpResponse(data, content_type='application/json')
 
 
 def run(request):
@@ -432,7 +432,7 @@ def create_noderelationship(request):
             new_relationship.node_pairs.add(new_pair)
 
         return HttpResponse(json.dumps(match_info, indent=4),
-                            mimetype='application/json')
+                            content_type='application/json')
 
 
 class DictDiffer(object):

@@ -73,7 +73,7 @@ def index(request):
 
     file_object.close()
 
-    return HttpResponse(json.dumps(profile), mimetype='application/json')
+    return HttpResponse(json.dumps(profile), content_type='application/json')
 
 
 def _get_cache(session, uuid):
@@ -201,7 +201,7 @@ def cache_tdf(request, uuid, refresh=False):
 
     return HttpResponse(json.dumps(
         _get_tdf_data_set_information_from_cache(request.session, uuid),
-        sort_keys=True, indent=4), mimetype='application/json')
+        sort_keys=True, indent=4), content_type='application/json')
 
 
 def get_tdf_profile(request, uuid, sequence_name, zoom_level, start_location,
@@ -240,7 +240,7 @@ def get_tdf_profile(request, uuid, sequence_name, zoom_level, start_location,
 
     print("Profile Length: " + str(len(profile)))
 
-    return HttpResponse(json.dumps(profile), mimetype='application/json')
+    return HttpResponse(json.dumps(profile), content_type='application/json')
 
 
 def get_zoom_levels(request, uuid, sequence_name):
@@ -276,7 +276,7 @@ def get_zoom_levels(request, uuid, sequence_name):
 
     return HttpResponse(
         json.dumps(zoom_level_ranges, sort_keys=True, indent=4),
-        mimetype='application/json')
+        content_type='application/json')
 
 
 def profile_viewer(request, uuid, sequence_name, start_location, end_location):
@@ -356,4 +356,4 @@ def profile(request):
     except AttributeError as e:
         return HttpResponse(e.message)
 
-    return HttpResponse(profile, mimetype='application/json')
+    return HttpResponse(profile, content_type='application/json')
