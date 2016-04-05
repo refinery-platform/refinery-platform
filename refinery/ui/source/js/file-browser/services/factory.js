@@ -85,13 +85,30 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
     });
   };
 
-  var postAssayAttributeOrder = function (uuid) {
+  var postAssayAttributeOrder = function (attributeParam) {
+    var assayUuid = $window.externalAssayUuid;
+    var dataObj = {
+      'csrfmiddlewaretoken': csrf_token,
+      'uuid': assayUuid,
+      'solr_field':attributeParam.solr_field,
+      'is_exposed': attributeParam.is_exposed,
+      'is_active': attributeParam.is_active,
+      'is_facet': attributeParam.is_facet,
+      'rank': attributeParam.rank
+    };
+
     return $http({
-      method: 'POST',
-      url: settings.appRoot + settings.refineryApiV2 + '/assays/:uuid/attributes/',
-      data: {'csrfmiddlewaretoken': csrf_token, 'uuid': uuid}
+      method: 'PUT',
+      url: settings.appRoot + settings.refineryApiV2 +
+          '/assays/' + assayUuid + '/attributes/',
+      data: dataObj
     }).then(function (response) {
-      console.log(response);
+      for (var ind = 0; ind < assayAttributeOrder.length; ind++){
+        if(assayAttributeOrder[ind].solr_field === response.data.solr_field){
+          angular.copy(response.data, assayAttributeOrder[ind]);
+          break;
+        }
+      }
     }, function (error) {
       console.log(error);
     });
