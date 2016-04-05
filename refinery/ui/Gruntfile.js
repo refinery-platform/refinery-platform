@@ -90,7 +90,7 @@ module.exports = function(grunt) {
   // Local testing, i.e. triggered on your host machine, starts all major
   // browsers and can be invoked with `--host`.
   var browsers = !!grunt.option('host') ?
-    ['PhantomJS', 'Chrome', 'Firefox', 'Safari'] : ['PhantomJS'];
+    ['Chrome', 'Firefox', 'Safari'] : ['PhantomJS'];
 
   var jsFilesByImportance = function (spec) {
     var files = [];
@@ -554,13 +554,7 @@ module.exports = function(grunt) {
           ]
         )
       },
-      unit: {
-        port: 9019,
-        background: true
-      },
-      continuous: {
-        singleRun: true
-      }
+      unit: {}
     },
 
     /*
