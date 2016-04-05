@@ -824,7 +824,12 @@ def doi(request, id):
     id = id.replace('$', '/')
     url = "https://dx.doi.org/{id}".format(id=id)
     headers = {'Accept': 'application/json'}
-    response = requests.get(url, headers=headers)
+
+    try:
+        response = requests.get(url, headers=headers)
+    except requests.exceptions.ConnectionError:
+        return HttpResponse('Service currently unavailbale', status=503)
+
     return HttpResponse(response, mimetype='application/json')
 
 
@@ -879,7 +884,11 @@ def pubmed_search(request, term):
         'Accept': 'application/json'
     }
 
-    response = requests.get(url, params=params, headers=headers)
+    try:
+        response = requests.get(url, params=params, headers=headers)
+    except requests.exceptions.ConnectionError:
+        return HttpResponse('Service currently unavailbale', status=503)
+
     return HttpResponse(response, mimetype='application/json')
 
 
@@ -898,7 +907,11 @@ def pubmed_summary(request, id):
         'Accept': 'application/json'
     }
 
-    response = requests.get(url, params=params, headers=headers)
+    try:
+        response = requests.get(url, params=params, headers=headers)
+    except requests.exceptions.ConnectionError:
+        return HttpResponse('Service currently unavailbale', status=503)
+
     return HttpResponse(response, mimetype='application/json')
 
 
