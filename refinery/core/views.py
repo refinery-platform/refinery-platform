@@ -34,6 +34,8 @@ from file_store.models import FileStoreItem
 from core.utils import get_data_sets_annotations
 from core.serializers import WorkflowSerializer
 
+from xml.parsers.expat import ExpatError
+
 from django.views.decorators.gzip import gzip_page
 
 logger = logging.getLogger(__name__)
@@ -842,9 +844,18 @@ def pubmed_abstract(request, id):
         'Accept': 'text/xml'
     }
 
-    response = requests.get(url, params=params, headers=headers)
+    try:
+        response = requests.get(url, params=params, headers=headers)
+    except requests.exceptions.ConnectionError:
+        return HttpResponse('Service currently unavailbale', status=503)
+
+    try:
+        response_dict = xmltodict.parse(response.text)
+    except ExpatError:
+        return HttpResponse('Service currently unavailbale', status=503)
+
     return HttpResponse(
-        json.dumps(xmltodict.parse(response.text)),
+        json.dumps(response_dict),
         mimetype='application/json'
     )
 
