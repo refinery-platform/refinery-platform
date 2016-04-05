@@ -22,7 +22,6 @@ function rpFileBrowserAssayFiles() {
     link: function(scope, element, attr, ctrl){
       ctrl.refreshAssayFiles().then(function(){
         ctrl.checkUrlQueryFilters();
-        ctrl.createColumnDefs();
       });
       ctrl.refreshAssayAttributes();
     }
