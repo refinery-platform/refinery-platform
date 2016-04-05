@@ -456,7 +456,7 @@ module.exports = function(grunt) {
       compile: {
         PHANTOMJS_BIN: function() {
           var localPhantomJS =
-            'node_modules/phantomjs/lib/phantom/bin/phantomjs';
+            'node_modules/phantomjs-prebuilt/lib/phantom/bin/phantomjs';
 
           // Look for a phantomjs binary of the VM by default when no `--host`
           // flag is passed to grunt
