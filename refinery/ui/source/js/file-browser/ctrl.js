@@ -77,13 +77,18 @@ function FileBrowserCtrl(
     var assay_uuid = $window.externalAssayUuid;
     return fileBrowserFactory.getAssayAttributeOrder(assay_uuid).then(function(){
       vm.assayAttributeOrder = fileBrowserFactory.assayAttributeOrder;
+      console.log(vm.assayAttributeOrder);
     },function(error){
       console.log(error);
     });
   };
 
-  vm.putAssayAttributes = function(){
+  vm.updateAssayAttributes = function(attributeParam){
+    console.log("update Assay Attributes");
 
+    fileBrowserFactory.postAssayAttributeOrder(attributeParam).then(function(){
+
+    });
   };
 
   //checks url for params to update the filter
@@ -243,7 +248,7 @@ function FileBrowserCtrl(
     vm.gridApi.infiniteScroll.setScrollDirections( false, false );
     vm.assayFiles = [];
 
-    vm.updateAssayFiles().then(function(){
+    vm.refreshAssayFiles().then(function(){
       $timeout(function() {
         // timeout needed to allow digest cycle to complete,and grid to finish ingesting the data
         vm.gridApi.infiniteScroll.resetScroll( vm.firstPage > 0, vm.lastPage < vm.totalPages );
