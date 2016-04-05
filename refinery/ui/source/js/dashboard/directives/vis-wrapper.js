@@ -6,7 +6,12 @@ function refineryDashboardVisWrapper () {
     this.pubSub = pubSub;
 
     // Absolute root node: OWL:Thing
+    // The absolute root node is used for pruning the graph as it acts as a
+    // single entry point.
     this.absRoot = 'http://www.w3.org/2002/07/owl#Thing';
+
+    // Remix root nodes are a collection of nodes that act as meaningful entry
+    // points across different ontologies in regards to browsing.
     this.remixRoots = [
       'http://purl.obolibrary.org/obo/BTO_0002666',
       'http://purl.obolibrary.org/obo/BTO_0000088',
@@ -55,6 +60,8 @@ function refineryDashboardVisWrapper () {
       'http://purl.obolibrary.org/obo/UO_0000000'
     ];
 
+    // Currently OWL2NEO4J doesn't extract the preferred label and even then we
+    // might want to rename certain nodes in case their label is confusing.
     this.rename = [{
       uri: 'http://www.w3.org/2002/07/owl#Thing',
       label: 'Root'
@@ -63,6 +70,9 @@ function refineryDashboardVisWrapper () {
       label: 'Chemical compound'
     }];
 
+    // Name of the property that is used to assess the size of a term.
+    // E.g. if `Liver` is used to annotate 5 data sets then the size of `Liver`
+    // is 5. The property of the term object is `dataSets` in this case.
     this.propertyValue = 'dataSets';
 
     // Trigger preloading / precomputing of D3 data for exploration.
