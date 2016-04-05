@@ -117,6 +117,10 @@ var Neo4jToGraphService = (function () {
           originalError: error
         });
       });
+
+    return neo4jData.promise.then(function (data) {
+      return prepareGraph(data);
+    }.bind(this));
   };
 
   return Neo4jToGraph;
