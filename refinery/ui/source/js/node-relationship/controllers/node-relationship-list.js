@@ -134,8 +134,9 @@ function NodeRelationshipListCtrl (
     };
 
     var modalInstance = $uibModal.open({
-      templateUrl: '/static/partials/input-dialog.html',
-      controller: InputDialogInstanceController,
+      templateUrl:
+        '/static/partials/node-relationship/dialogs/input-dialog.html',
+      controller: 'InputDialogInstanceCtrl',
       resolve: {
         config: function () {
           return $scope.newMappingDialogConfig;

@@ -13,6 +13,8 @@ $email_host = "email-smtp.us-east-1.amazonaws.com"
 $email_use_tls = "true"
 $django_settings_module = "config.settings.aws"
 $ui_app_root = "${django_root}/ui"
+# $site_name set by Facter
+# $site_url set by Facter
 
 # See code in refinery-modules/refinery/...
 include refinery

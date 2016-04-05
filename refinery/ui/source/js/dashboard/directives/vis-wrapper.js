@@ -91,9 +91,13 @@ function refineryDashboardVisWrapper () {
         treemap.resolve(results.treemap);
         annotations.resolve(results.annotations);
       }.bind(this))
-      .catch(function (e) {
-        this.error = true;
+      .catch(function (error) {
         this.loading = false;
+        if (error.number === 0) {
+          this.error = true;
+        } else {
+          this.noData = true;
+        }
       }.bind(this));
 
     this.loading = true;

@@ -79,10 +79,20 @@
     </div>
     <div class="full-without-topbar">
       <div class="top-half">
-        <div class="refinery-global-spinner"
-          ng-if="visWrapper.loading || visWrapper.error">
-          <div class="refinery-spinner" ng-if="visWrapper.loading"></div>
-          <i class="refinery-error fa fa-exclamation-triangle" ng-if="visWrapper.error"></i>
+        <div class="refinery-global-notifier" ng-if="visWrapper.loading !== false">
+          <div class="refinery-notifier-icon refinery-spinner"></div>
+        </div>
+        <div class="refinery-global-notifier" ng-if="visWrapper.noData === true">
+          <div class="refinery-notifier-icon-text refinery-info">
+            <i class="fa fa-info-circle"></i>
+            No data available!
+          </div>
+        </div>
+        <div class="refinery-global-notifier" ng-if="visWrapper.error === true">
+          <div class="refinery-notifier-icon-text refinery-error">
+            <i class="fa fa-exclamation-triangle"></i>
+            Oh no, something went terribly wrong. Please send an angry email to the developers.
+          </div>
         </div>
         <div class="content">
           <list-graph
@@ -92,10 +102,20 @@
         </div>
       </div>
       <div class="bottom-half">
-        <div class="refinery-global-spinner"
-          ng-if="visWrapper.loading || visWrapper.error">
-          <div class="refinery-spinner" ng-if="visWrapper.loading"></div>
-          <i class="refinery-error fa fa-exclamation-triangle" ng-if="visWrapper.error"></i>
+        <div class="refinery-global-notifier" ng-if="visWrapper.loading !== false">
+          <div class="refinery-notifier-icon refinery-spinner"></div>
+        </div>
+        <div class="refinery-global-notifier" ng-if="visWrapper.noData === true">
+          <div class="refinery-notifier-icon-text refinery-info">
+            <i class="fa fa-info-circle"></i>
+            No data available!
+          </div>
+        </div>
+        <div class="refinery-global-notifier" ng-if="visWrapper.error === true">
+          <div class="refinery-notifier-icon-text refinery-error">
+            <i class="fa fa-exclamation-triangle"></i>
+            Oh no, something went terribly wrong. Please send an angry email to the developers.
+          </div>
         </div>
         <div class="content">
           <treemap

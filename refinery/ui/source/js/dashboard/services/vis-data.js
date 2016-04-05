@@ -33,7 +33,7 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
         var allDsIds = results[0];
         var data = results[1];
 
-        root = root ? root : settings.ontRoot;
+        root = root || settings.ontRoot;
 
         if (remixRoots) {
           // Check existance of remix roots

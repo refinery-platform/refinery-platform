@@ -1429,7 +1429,7 @@ a.analysis-header {
         overflow: visible;
       }
 
-      .refinery-global-spinner {
+      .refinery-global-notifier {
         position: absolute;
         z-index: 2;
         top: 36px;
@@ -1455,11 +1455,19 @@ a.analysis-header {
         }
 
         .refinery-spinner,
-        .refinery-error {
+        .refinery-error,
+        .refinery-notifier-icon {
           position: absolute;
           top: 50%;
           left: 50%;
           margin: -10px 0 0 -10px;
+        }
+
+        .refinery-notifier-icon-text {
+          position: absolute;
+          top: 50%;
+          margin: -10px 0 0 0;
+          width: 100%;
         }
       }
 
@@ -1822,16 +1830,30 @@ a.analysis-header {
   margin-bottom: 2px;
 }
 .refinery-error,
+.refinery-info,
 .refinery-spinner {
   display: block;
-  width: 20px;
-  height: 20px;
   margin: 0 auto;
 }
 
+.refinery-error,
+.refinery-info {
+  text-align: center;
+}
+
+.refinery-error {
+  color: @red;
+}
+
+.refinery-info {
+  color: @gray;
+}
+
 .refinery-spinner {
-  background-color: @gray;
+  width: 20px;
+  height: 20px;
   border-radius: 100%;
+  background-color: @gray;
   -webkit-animation: refinery-pulseScaleOut @slow-transition-speed infinite @ease-in-out-cubic;
           animation: refinery-pulseScaleOut @slow-transition-speed infinite @ease-in-out-cubic;
 }

@@ -19,6 +19,7 @@ angular
   'closeOnOuterClick',
   'colors',
   'focusOn',
+  'replaceWhiteSpaceWithHyphen',
 
   /*
    * Refinery modules
