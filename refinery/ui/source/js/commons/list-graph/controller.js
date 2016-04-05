@@ -48,7 +48,14 @@ function ListGraphCtrl (
         querying: true,
         rows: Math.round(this.height / 24),
         showLinkLocation: true,
-        sortBy: 'precision'
+        sortBy: 'precision',
+        nodeInfoContextMenu: [{
+          label: 'ID',
+          property: function (data) { return data.ontId; }
+        }, {
+          label: 'URI',
+          property: function (data) { return data.uri; }
+        }]
       });
     }.bind(this));
   }
