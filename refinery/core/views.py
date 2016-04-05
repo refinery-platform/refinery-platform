@@ -137,7 +137,7 @@ def user(request, query):
 
 @login_required()
 def user_profile(request):
-    return user(request, request.user.get_profile().uuid)
+    return user(request, request.user.profile.uuid)
 
 
 @login_required()
@@ -167,7 +167,7 @@ def user_edit(request, uuid):
 
 @login_required()
 def user_profile_edit(request):
-    return user_edit(request, request.user.get_profile().uuid)
+    return user_edit(request, request.user.profile.uuid)
 
 
 @login_required()

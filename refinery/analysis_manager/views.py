@@ -226,7 +226,7 @@ def run(request):
         analysis = Analysis(
             summary=summary_name,
             name=temp_name,
-            project=request.user.get_profile().catch_all_project,
+            project=request.user.profile.catch_all_project,
             data_set=data_set,
             workflow=curr_workflow,
             time_start=datetime.now()
@@ -313,7 +313,7 @@ def run(request):
         analysis = Analysis(
             summary=summary_name,
             name=temp_name,
-            project=request.user.get_profile().catch_all_project,
+            project=request.user.profile.catch_all_project,
             data_set=data_set,
             workflow=curr_workflow,
             time_start=datetime.now()
