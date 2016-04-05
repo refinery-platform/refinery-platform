@@ -79,7 +79,9 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
       url: apiUrl,
       data: {'csrfmiddlewaretoken': csrf_token, 'uuid': uuid}
     }).then(function (response) {
-      angular.copy(response.data, assayAttributeOrder);
+      var sortedResponse = sortArrayOfObj(response.data);
+      angular.copy(sortedResponse, assayAttributeOrder);
+      console.log(assayAttributeOrder);
     }, function (error) {
       console.log(error);
     });
@@ -122,6 +124,19 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
        }
     });
     return(attributeObj);
+  };
+
+  var sortArrayOfObj = function(arrayOfObjs) {
+    var copyArr = arrayOfObjs.sort(function (a, b) {
+      if (a.rank > b.rank) {
+        return 1;
+      }
+      if (a.rank < b.rank) {
+        return -1;
+      }
+      return 0;
+    });
+    return arrayOfObjs;
   };
 
   return{
