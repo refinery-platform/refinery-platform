@@ -3,6 +3,9 @@
 
 module.exports = function(config) {
   config.set({
+    // Dont start a background tasks. We don't watch for changes in tests and
+    // run them immediately
+    background: false,
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: './',
@@ -54,7 +57,7 @@ module.exports = function(config) {
 
 
     // web server port
-    port: 9876,
+    port: 9999,
 
 
     // enable / disable colors in the output (reporters and logs)
@@ -67,7 +70,7 @@ module.exports = function(config) {
 
 
     // enable / disable watching file and executing tests whenever any file changes
-    autoWatch: true,
+    autoWatch: false,
 
     // Which plugins to enable
     plugins: [
