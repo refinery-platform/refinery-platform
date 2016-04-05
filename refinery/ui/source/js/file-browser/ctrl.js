@@ -275,13 +275,24 @@ function FileBrowserCtrl(
     }
   };
 
-  //populates the  ui-grid columns variable
+  //populates the ui-grid columns variable
   vm.createColumnDefs = function(){
     vm.customColumnName = [];
+    var totalChars = vm.assayAttributes.reduce(function(previousValue, facetObj) {
+      return previousValue + String(facetObj.display_name).length;
+    }, 0);
+
     vm.assayAttributes.forEach(function(attribute){
+      var columnName = attribute.display_name;
+      var columnWidth = columnName.length / totalChars * 100;
+      if (columnWidth < 10) {  // make sure columns are wide enough
+        columnWidth = Math.round(columnWidth * 2);
+      }
+
       vm.customColumnName.push(
         {
-          'name': attribute.display_name,
+          'name': columnName,
+          'width': columnWidth + "%",
           'field': attribute.internal_name
         }
       );
