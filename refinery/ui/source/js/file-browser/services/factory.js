@@ -17,7 +17,7 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
   var assayAttributeOrder = [];
   var attributeFilter = {};
   var analysisFilter = {};
-
+  var assayFilesTotalItems = {};
 
   var getAssayFiles = function (params) {
     params = params || {};
@@ -31,13 +31,13 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
     assayFile.$promise.then(function (response) {
       angular.copy(response.attributes, assayAttributes);
       angular.copy(response.nodes, assayFiles);
+      assayFilesTotalItems.count = response.nodes_count;
       var filterObj = generateFilters(response.attributes, response.facet_field_counts);
       angular.copy(filterObj.attributeFilter, attributeFilter);
       angular.copy(filterObj.analysisFilter, analysisFilter);
     }, function (error) {
       console.log(error);
     });
-
     return assayFile.$promise;
   };
 
@@ -99,11 +99,11 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
 
   //Helper function encodes field array in an obj
   var encodeAttributeFields = function(attributeObj) {
-    for(var fieldArray in attributeObj){
-      for(var ind=0; ind < fieldArray.length; ind++){
+    angular.forEach(attributeObj, function(fieldArray){
+       for(var ind=0; ind < fieldArray.length; ind++){
         fieldArray[ind] = $window.encodeURIComponent(fieldArray[ind]);
-      }
-    }
+       }
+    });
     return(attributeObj);
   };
 
@@ -113,9 +113,10 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
     assayAttributeOrder: assayAttributeOrder,
     attributeFilter: attributeFilter,
     analysisFilter: analysisFilter,
+    assayFilesTotalItems: assayFilesTotalItems,
     getAssayFiles: getAssayFiles,
     getAssayAttributeOrder: getAssayAttributeOrder,
-    postAssayAttributeOrder: postAssayAttributeOrder,
+    postAssayAttributeOrder: postAssayAttributeOrder
   };
 
 }

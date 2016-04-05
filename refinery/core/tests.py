@@ -12,6 +12,7 @@ from core.models import (
     ExtendedGroup, DataSet, InvestigationLink, Project, Analysis, Workflow,
     WorkflowEngine, UserProfile, invalidate_cached_object,
     AnalysisNodeConnection, Node)
+from file_store.models import FileExtension
 import data_set_manager
 from galaxy_connector.models import Instance
 
@@ -769,6 +770,9 @@ class AnalysisResourceTest(ResourceTestCase):
         self.workflow = Workflow.objects.create(
             workflow_engine=self.workflow_engine
         )
+
+    def tearDown(self):
+        FileExtension.objects.all().delete()
 
     def get_credentials(self):
         """Authenticate as self.user"""
