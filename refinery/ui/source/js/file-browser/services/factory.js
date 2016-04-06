@@ -81,7 +81,6 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
     }).then(function (response) {
       var sortedResponse = sortArrayOfObj(response.data);
       angular.copy(sortedResponse, assayAttributeOrder);
-      console.log(assayAttributeOrder);
     }, function (error) {
       console.log(error);
     });
@@ -98,7 +97,6 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
       'is_facet': attributeParam.is_facet,
       'rank': attributeParam.rank
     };
-
     return $http({
       method: 'PUT',
       url: settings.appRoot + settings.refineryApiV2 +
@@ -127,7 +125,7 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
   };
 
   var sortArrayOfObj = function(arrayOfObjs) {
-    var copyArr = arrayOfObjs.sort(function (a, b) {
+    arrayOfObjs.sort(function (a, b) {
       if (a.rank > b.rank) {
         return 1;
       }
