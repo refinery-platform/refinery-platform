@@ -259,6 +259,9 @@
                           <!--<div class="tab-pane active fade in"
                           id="table-view-tab">-->
                           <div class="tab-pane active fade in">
+                            <button class="btn btn-default" rp-assay-files-util-modal ng-click="open()">
+                             Launch Analysis
+                          </button>
                             <rp-file-browser-assay-files>
                             </rp-file-browser-assay-files>
                           </div>
@@ -547,6 +550,10 @@
   <script type="text/javascript" src="{% static "js/provvis/provvis-motifs.js" %}"></script>
   <script type="text/javascript" src="{% static "js/provvis/provvis-render.js" %}"></script>
   <script type="text/javascript" src="{% static "js/provvis/provvis.js" %}"></script>
+
+  <script type="text/ng-template" id='assayfilesutilmodal.html'>
+    <rp-assay-files-util-modal-detail></rp-assay-files-util-modal-detail>
+   </script>
 
 
   <script type="application/javascript">
