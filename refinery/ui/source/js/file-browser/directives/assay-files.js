@@ -23,7 +23,6 @@ function rpFileBrowserAssayFiles() {
       ctrl.refreshAssayFiles().then(function(){
         ctrl.checkUrlQueryFilters();
       });
-      ctrl.refreshAssayAttributes();
     }
   };
 }
