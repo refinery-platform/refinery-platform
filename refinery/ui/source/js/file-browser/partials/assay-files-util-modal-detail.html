@@ -1,0 +1,82 @@
+<div class="modal-header">
+    Data Set Table Configuration
+  </div>
+  <div class="modal-body">
+     <div class="row">
+      <div class="col-xs-2 col-xs-offset-6">
+        <h5>Expose to User</h5>
+      </div>
+      <div class="col-xs-2">
+        <h5>Use as a Facet</h5>
+      </div>
+      <div class="col-xs-2">
+        <h5>Show by Default</h5>
+      </div>
+    </div>
+    <ul style="width:500px">
+      <li ng-repeat="attributeObj in AFUMCtrl.assayAttributeOrder"
+          track by solr_field>
+        <div class="row">
+           <div class="col-xs-1 col-xs-offset-1">
+             <h4>
+                {{ attributeObj.rank }}
+             </h4>
+          </div>
+          <div class="col-xs-4">
+            <h4>
+              {{ attributeObj.display_name }}
+            </h4>
+          </div>
+          <div class="col-xs-2">
+            <h4>
+              <div class="checkbox" id="util-{{solr_field}}-expose">
+              <label>
+                <input
+                  type="checkbox"
+                  name="utilsCheckboxes"
+                  ng-model= "attributeObj.is_exposed"
+                  ng-change="AFUMCtrl.updateAssayAttributes
+                  (attributeObj)"
+                  value="{{ attributeObj.is_exposed }}">
+              </label>
+              </div>
+            </h4>
+          </div>
+          <div class="col-xs-2" id="util-{{solr_field}}-facet">
+             <h4>
+               <div class="check">
+                <label>
+                  <input type="checkbox"
+                    ng-model="attributeObj.is_facet"
+                    ng-change="AFUMCtrl.updateAssayAttributes
+                    (attributeObj)"
+                    value={{ attributeObj.is_facet }}>
+                </label>
+              </div>
+             </h4>
+          </div>
+          <div class="col-xs-2">
+             <h4>
+               <div class="checkbox" id="util-{{solr_field}}-default">
+                <label>
+                  <input
+                    type="checkbox"
+                    ng-model="attributeObj.is_active"
+                    ng-change="AFUMCtrl.updateAssayAttributes
+                    (attributeObj)"
+                    value={{ attributeObj.is_active }}>
+                </label>
+              </div>
+             </h4>
+          </div>
+        </div>
+      </li>
+    </ul>
+
+
+  </div>
+  <div class="modal-footer">
+    Modal footer
+
+  </div>
+</div>
