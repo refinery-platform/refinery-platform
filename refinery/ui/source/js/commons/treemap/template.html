@@ -9,7 +9,13 @@
         <input
           id="f-visible-depth"
           type="number"
-          ng-model="treemap.visibleDepth">
+          ng-model="treemap.visibleDepth"
+          ng-disabled="treemap.loadingVisibleDepth"
+          focus-on="visibleDepthInput">
+        <div class="refinery-global-notifier"
+          ng-if="treemap.loadingVisibleDepth">
+          <div class="refinery-spinner"></div>
+        </div>
       </div>
     </div>
   </div>

@@ -42,7 +42,7 @@ function DataSetDataApiFactory ($q, _, dataSetService) {
             'total',
             Object.getOwnPropertyDescriptor(data.meta, 'total_count')
           );
-          delete data.meta['total_count'];
+          delete data.meta.total_count;
 
           // Rename `objects` into `data`.
           Object.defineProperty(
@@ -50,7 +50,14 @@ function DataSetDataApiFactory ($q, _, dataSetService) {
             'data',
             Object.getOwnPropertyDescriptor(data, 'objects')
           );
-          delete data['objects'];
+          delete data.objects;
+
+          for (var i = data.data.length; i--;) {
+            data.data[i].creationDate = new Date(data.data[i].creation_date);
+            delete data.data[i].creation_date;
+            data.data[i].modificationDate = new Date(data.data[i].modification_date);
+            delete data.data[i].modification_date;
+          }
 
           return data;
         });

@@ -826,31 +826,32 @@ a.analysis-header {
       font-size: 0.8em;
       color: @gray-light;
     }
+  }
 
-    .btn {
-      padding: 2px 10px 3px;
-      white-space: nowrap;
-      overflow: hidden;
-      color: #000;
-      text-overflow: ellipsis;
-      background: none;
-      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+  .refinery-header .btn,
+  .refinery-panel-header .btn {
+    padding: 2px 10px 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    color: #000;
+    text-overflow: ellipsis;
+    background: none;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
 
-      &:active,
-      &:focus {
-        outline: none;
-      }
+    &:active,
+    &:focus {
+      outline: none;
+    }
 
-      &:focus {
-        background-position: 0 0;
-        box-shadow: 0 0 4px 0 @blue-shadow;
-      }
+    &:focus {
+      background-position: 0 0;
+      box-shadow: 0 0 4px 0 @blue-shadow;
+    }
 
-      &.active {
-        text-shadow: none;
-        box-shadow: inset 0 1px 4px 0 rgba(0, 0, 0, 0.25);
-        background: darken(@gray-lighter, 5%);
-      }
+    &.active {
+      text-shadow: none;
+      box-shadow: inset 0 1px 4px 0 rgba(0, 0, 0, 0.25);
+      background: darken(@gray-lighter, 5%);
     }
   }
 
@@ -888,7 +889,9 @@ a.analysis-header {
       border-radius: 0;
       background-color: @white;
 
-      h4 {
+      .floatbox-max-left >* {
+        display: inline-block;
+        float: left;
         margin: 0;
         padding: 5px 0;
         color: @gray-light;
@@ -896,25 +899,36 @@ a.analysis-header {
         line-height: 1em;
       }
 
+      .separator {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+        color: @gray-lighter;
+      }
+
       button.icon-only {
         position: relative;
         margin: 0;
         padding: 5px 2px;
-        // background: radial-gradient(at bottom, red, white, white);
         transition: background @fast-transition-speed @ease-in-out-cubic;
 
-        &.showing {
-          color: @blue-active;
-          text-shadow: 0 0 3px fade(@blue-active, 33%), 0 0 6px fade(@blue-active, 10%);
+        &.disabled-default {
+          color: @gray-light;
+          cursor: default;
 
-          &:after {
-            background: radial-gradient(at bottom, fade(@blue-active, 66%), transparent, transparent);
+          &.enabled {
+            color: @blue;
+            cursor: pointer;
           }
         }
 
-        &.active {
+        &.showing,
+        &.enabled.showing {
           color: @yellow;
-          text-shadow: 0 0 3px fade(@yellow-shadow, 50%);
+          text-shadow: 0 0 3px fade(@yellow-shadow, 33%), 0 0 6px fade(@yellow-shadow, 10%);
+
+          &:after {
+            opacity: 1;
+          }
         }
 
         &:before {
@@ -925,12 +939,17 @@ a.analysis-header {
 
         &:after {
           position: absolute;
+          opacity: 0;
           z-index: 1;
           content: '';
-          bottom: -5px;
-          left: -1px;
-          width: 1.25em;
-          height: 1em;
+          bottom: -0.9em;
+          left: -0.625em;
+          width: 0;
+          height: 0;
+          border-left: 1.25em solid transparent;
+          border-right: 1.25em solid transparent;
+          border-bottom: 1.25em solid @gray-lighterish;
+          transition: opacity @fast-transition-speed @ease-in-out-cubic;
         }
       }
 
@@ -1068,29 +1087,67 @@ a.analysis-header {
 
     ul.results {
       position: relative;
-      background: @white;
 
-      li {
+      .title {
+        display: -webkit-box;
+        width: 100%;
+        color: #006f99;
+        font-size: 1.5rem;
+        line-height: 1.4em;
+        max-height: 2.8em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-line-clamp: 2; /* number of lines to show */
+        -webkit-box-orient: vertical;
+
+        &:hover {
+          color: inherit;
+        }
+
+        &:visited {
+          color: #4f38a6;
+          background: fade(lighten(#4f38a6, 25%), 15%);
+        }
+
+        &.one-line {
+          max-height: 1.4em;
+          -webkit-line-clamp: 1;
+        }
+
+        >em {
+          font-weight: bold;
+          font-style: normal;
+          background: fade(lighten(@blue-light, 25%), 15%);
+        }
+      }
+
+      .snippet {
+        margin: 2px 0 0 0;
+        color: @gray-rgba;
+        font-size: 1.3rem;
+        line-height: 1.4em;
+        max-height: 2.8em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-line-clamp: 2; /* number of lines to show */
+        -webkit-box-orient: vertical;
+
+        > em {
+          font-weight: bold;
+          font-style: normal;
+        }
+      }
+
+      >li {
         position: relative;
-        padding: 5px 3rem 5px 0;
-        border-top: 1px solid @gray-lighter;
+        padding: 5px 2.2rem 5px 0;
+        border-top: 1px solid @gray-lighter-rgba;
         transition: all @fast-transition-speed @ease-in-out-cubic;
-        box-shadow: inset .2rem 0 0 0 rgba(0, 0, 0, 0), inset .3rem 0 0 0 rgba(255, 255, 255, 0), inset .4rem 0 0 0 fadeout(@orange, 100%), inset .7rem 0 0 0 fadeout(@orange, 100%), 0 1px 0 0 #fff;
 
         // Hack because uiScroll adds another invisible first child to the list.
         &:first-child {
-          padding: 0;
-          border-top: none;
-          transition: none !important;
-        }
-
-        // Hack because uiScroll adds another invisible first child to the list.
-        &:first-child + li {
-          border-top: none;
-        }
-
-        // Hack because uiScroll adds another invisible last child to the list.
-        &:last-child {
+          padding-top: 0;
+          padding-bottom: 0;
           border-top: none;
         }
 
@@ -1100,44 +1157,67 @@ a.analysis-header {
           box-shadow: inset .2rem 0 0 0 #000;
 
           a {
-            color: @black;
+            color: @black !important;
           }
         }
 
-        .zoomOut {
+        .zoom-out,
+        .annotations-only {
           position: absolute;
           z-index: 1;
-          top: 0;
+          display: none;
           right: 20px;
-          bottom: 0;
-          display: block;
-          color: @gray-light;
+          min-width: 1.75em;
+          padding: 0;
+          color: @gray-light-rgba;
           border: none;
           background: rgba(255, 255, 255, 0.9);
           transition: all @fast-transition-speed @ease-in-out-cubic;
-          opacity: 0;
 
           &:hover {
-            color: #fff;
-            background: @orange;
-            box-shadow: 0 1px 0 0 @orange, 0 -1px 0 0 @orange;
+            color: @black;
+            background: rgba(229, 229, 229, 0.9);
           }
 
           &:active,
           &:focus {
             outline: none;
           }
+
+          &.active {
+            color: @white;
+            background: @orange;
+          }
         }
 
-        &:hover .zoomOut.active {
-          opacity: 1;
+        .zoom-out.active {
+          box-shadow: 0 -1px 0 0 @orange;
         }
 
-        &.locked .zoomOut {
+        .annotations-only.active {
+          box-shadow: 0 1px 0 0 @orange;
+        }
+
+        &:hover .zoom-out.activated,
+        &:hover .annotations-only.activated {
+          display: block;
+        }
+
+        .zoom-out {
+          top: 0;
+          bottom: 50%;
+        }
+
+        &.locked .zoom-out {
           background: fadeout(lighten(@orange, 100%, relative), 10%);
           &:hover {
             background: @orange;
           }
+        }
+
+        .annotations-only {
+          top: 50%;
+          bottom: 0;
         }
 
         &.locked {
@@ -1146,7 +1226,11 @@ a.analysis-header {
           padding-right: 2.4rem;
           color: @black;
           border-top-color: #fff;
-          box-shadow: inset .2rem 0 0 0 rgba(0, 0, 0, 0), inset .3rem 0 0 0 rgba(255, 255, 255, 0), inset .4rem 0 0 0 fadeout(@orange, 0%), inset .7rem 0 0 0 fadeout(@orange, 100%), 0 1px 0 0 #fff;
+          box-shadow: inset .2rem 0 0 0 rgba(0, 0, 0, 0),
+                      inset .3rem 0 0 0 rgba(255, 255, 255, 0),
+                      inset .4rem 0 0 0 fadeout(@orange, 0%),
+                      inset .7rem 0 0 0 fadeout(@orange, 100%),
+                      0 1px 0 0 #fff;
           background: lighten(@orange, 100%, relative);
 
           a {
@@ -1164,13 +1248,19 @@ a.analysis-header {
         &.locked.hovered {
           padding-left: .9rem;
           padding-right: 2.1rem;
-          box-shadow: inset .2rem 0 0 0 rgba(0, 0, 0, 1), inset .3rem 0 0 0 rgba(255, 255, 255, 1), inset .4rem 0 0 0 fadeout(@orange, 0%), inset .7rem 0 0 0 fadeout(@orange, 0%), 0 1px 0 0 #fff;
+          box-shadow: inset .2rem 0 0 0 rgba(0, 0, 0, 1),
+                      inset .3rem 0 0 0 rgba(255, 255, 255, 1),
+                      inset .4rem 0 0 0 fadeout(@orange, 0%),
+                      inset .7rem 0 0 0 fadeout(@orange, 0%),
+                      0 1px 0 0 #fff;
         }
 
         &.previewing {
           z-index: 2;
-          background: #f2f7f8;
-          box-shadow: 0 1px 0 0 @white, inset 0 1px 0 0 rgba(50, 97, 128, 0.1), inset 0 -1px 0 0 rgba(50, 97, 128, 0.1);
+          background: fade(@blue, 10%);
+          box-shadow: 0 1px 0 0 @white,
+                      inset 0 1px 0 0 fade(@blue, 10%),
+                      inset 0 -1px 0 0 fade(@blue, 10%);
           border-top-color: @white;
 
           .preview,
@@ -1188,14 +1278,14 @@ a.analysis-header {
           right: 0;
           bottom: 0;
           display: block;
-          color: @gray-lighter;
+          color: @gray-lighter-rgba;
           border: none;
           background: rgba(0, 0, 0, 0);
           transition: all @fast-transition-speed @ease-in-out-cubic;
 
           &:focus {
             color: @black;
-            background: rgba(0, 0, 0, 0.07);
+            background: @gray-lighter-rgba;
           }
 
           &:active,
@@ -1207,8 +1297,8 @@ a.analysis-header {
         &:hover {
 
           .preview {
-            color: @gray-light;
-            background: rgba(0, 0, 0, 0.07);
+            color: @gray-light-rgba;
+            background: @gray-lighter-rgba;
 
             &:hover {
               color: @black;
@@ -1219,6 +1309,23 @@ a.analysis-header {
             color: white;
             background: #326180;
           }
+        }
+      }
+
+      &.infinite-scrolling {
+        // Hack because uiScroll adds another invisible first child to the list.
+        >li:first-child {
+          transition: none !important;
+        }
+
+        // Hack because uiScroll adds another invisible first child to the list.
+        >li:first-child + li {
+          border-top: none;
+        }
+
+        // Hack because uiScroll adds another invisible last child to the list.
+        >li:last-child {
+          border-top: none;
         }
       }
     }
@@ -1349,6 +1456,8 @@ a.analysis-header {
           opacity: 1;
         }
 
+        .refinery-spinner,
+        .refinery-error,
         .refinery-notifier-icon {
           position: absolute;
           top: 50%;
@@ -1362,6 +1471,11 @@ a.analysis-header {
           margin: -10px 0 0 0;
           width: 100%;
         }
+      }
+
+      .refinery-error {
+        padding: 5px 0;
+        font-size: @base-font-size;
       }
 
       .bottom-half {
@@ -1417,23 +1531,16 @@ a.analysis-header {
           border-bottom: 1px solid rgba(0, 0, 0, 0);
         }
 
-        li:hover h6 {
-          font-weight: bold;
-        }
-
         .description {
           margin: 0;
           color: lighten(@text-color, 25%);
           transition: color @normal-transition-speed @ease-in-out-cubic;
         }
-
-        li:hover .description {
-          color: @text-color;
-          transition: color @fast-transition-speed @ease-in-out-cubic;
-        }
       }
 
       .references {
+        font-size: 1.6rem;
+
         li {
           margin-top: 10px;
 
@@ -1448,7 +1555,7 @@ a.analysis-header {
 
         .authors, .journal, .links, .abstract {
           color: @gray;
-          font-size: @font-size-small;
+          font-size: 1.3rem;
         }
 
         .links {
@@ -1462,14 +1569,32 @@ a.analysis-header {
         }
       }
 
+      .inline-container {
+        margin: 0.5rem 0;
+
+        &:first-child {
+          margin-top: 0;
+        }
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+
       .inline-container h6 {
-        margin-right: 0.25em;
+        display: block;
+        margin: 0 0 0.25rem 0;
         color: @gray-light;
         font-weight: bold;
       }
 
+      .inline-container p {
+        font-size: 1.6rem;
+        line-height: 1.5em;
+      }
+
       .badge {
-        padding: 0 5px;
+        padding: 2px 5px;
+        margin: 0 3px;
         font-size: @font-size-mini;
         font-weight: normal;
         vertical-align: top;
@@ -1477,35 +1602,7 @@ a.analysis-header {
     }
 
     ul.results.search {
-      a.title {
-        font-size: @base-font-size + 1;
-        color: #006f99;
-      }
 
-      a.title > em {
-        font-weight: bold;
-        font-style: normal;
-        background: fade(lighten(@blue-light, 25%), 15%);
-      }
-
-      a.title:hover {
-        color: inherit;
-      }
-
-      a.title:visited {
-        color: #4f38a6;
-        background: fade(lighten(#4f38a6, 25%), 15%);
-      }
-
-      p.snippet {
-        margin: 2px 0 0 0;
-        color: lighten(@gray, 10%);
-      }
-
-      p.snippet > em {
-        font-weight: bold;
-        font-style: normal;
-      }
     }
 
     ul.controls {
@@ -1734,7 +1831,6 @@ a.analysis-header {
   margin-top: 5px;
   margin-bottom: 2px;
 }
-
 .refinery-error,
 .refinery-info,
 .refinery-spinner {
@@ -1762,6 +1858,12 @@ a.analysis-header {
   background-color: @gray;
   -webkit-animation: refinery-pulseScaleOut @slow-transition-speed infinite @ease-in-out-cubic;
           animation: refinery-pulseScaleOut @slow-transition-speed infinite @ease-in-out-cubic;
+}
+
+.refinery-error {
+  color: @red;
+  font-size: 2em;
+  text-align: center;
 }
 
 .no-animation .refinery-spinner {
@@ -1909,11 +2011,6 @@ button.icon-only {
       trasition: background @normal-transition-speed @ease-in-out-cubic;
       border-radius: 1em;
     }
-
-    &:hover:before {
-      background: rgba(0, 0, 0, 0.1);
-      trasition: background @fast-transition-speed @ease-in-out-cubic;
-    }
   }
 }
 
@@ -1923,7 +2020,11 @@ button.icon-only {
 }
 
 .is-mirrored {
-  transform: rotate(180deg);
+  transform: scale(-1, 1);
+}
+
+.is-mirrored-text {
+  display: inline-block;
 }
 
 .inline-container {
@@ -2256,6 +2357,19 @@ ul.badge-list {
   top: 50%;
 }
 
+.is-glowing-yellow-text {
+  color: @yellow !important;
+  text-shadow: 0 0 3px fade(@yellow-shadow, 50%) !important;
+}
+
+.is-icon-text {
+  font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
 .CURRENT_COMMIT{
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2265,4 +2379,54 @@ ul.badge-list {
 }
 .CURRENT_COMMIT:hover{
   overflow: visible;
+}
+
+body.is-screenshot-ready {
+  background: #fff !important;
+  margin-top: 10px !important;
+
+  .refinery-base.navbar.navbar-default {
+    display: none;
+  }
+
+  .refinery-panel {
+    border: 2px solid #e5e5e5 !important;
+    border-radius: 5px !important;
+    box-shadow: none;
+  }
+
+  .refinery-header {
+    padding: 5px !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+    background-color: #e5e5e5 !important;
+
+    .btn {
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1) !important;
+
+      &.active {
+        color: darken(@orange, 33%);
+        background: @orange;
+        box-shadow: inset 0 0 0 1px #fff !important;
+      }
+    }
+
+    .refinery-header-right button.active {
+      display: none;
+    }
+  }
+
+  .navbar-search {
+    background-color: #e5e5e5 !important;
+    border-bottom-color: #e5e5e5 !important;
+
+    .search-query {
+      border: 0 !important;
+      box-shadow: none !important;
+    }
+  }
+
+  .refinery-panel-topbar {
+    background-color: #e5e5e5 !important;
+    border-bottom-color: #e5e5e5 !important;
+  }
 }
