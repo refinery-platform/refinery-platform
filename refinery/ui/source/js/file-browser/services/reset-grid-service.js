@@ -10,7 +10,6 @@ function resetGridService() {
   var resetGridFlag = false;
 
   vm.setResetGridFlag = function (state) {
-    console.log('in setResetGridFlag');
      vm.resetGridFlag = state;
   };
 
