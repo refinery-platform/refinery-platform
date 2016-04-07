@@ -5,6 +5,7 @@ angular.module('refineryFileBrowser')
       '$uibModalInstance',
       '$window',
       'fileBrowserFactory',
+      'resetGridService',
       AssayFilesUtilModalCtrl
     ]
 );
@@ -14,7 +15,8 @@ function AssayFilesUtilModalCtrl(
   $scope,
   $uibModalInstance,
   $window,
-  fileBrowserFactory
+  fileBrowserFactory,
+  resetGridService
 ){
 
   var vm = this;
@@ -32,17 +34,19 @@ function AssayFilesUtilModalCtrl(
 
   $scope.close = function () {
     //set up a watcher to reset grid
-    $scope.$broadcast('rf/assay-files-util-modal-close');
+    //$scope.$emit('rf/assay-files-util-modal-close');
+    console.log('in the close scope');
+    resetGridService.setResetGridFlag(true);
     $uibModalInstance.close('close');
   };
 
   vm.refreshAssayAttributes = function () {
-    console.log('in refresh');
+   // console.log('in refresh');
     var assay_uuid = $window.externalAssayUuid;
     return fileBrowserFactory.getAssayAttributeOrder(assay_uuid).then(function(){
       vm.assayAttributeOrder = fileBrowserFactory.assayAttributeOrder;
-      console.log('in the refresh promises');
-      console.log(vm.assayAttributeOrder);
+     // console.log('in the refresh promises');
+    //  console.log(vm.assayAttributeOrder);
     },function(error){
       console.log(error);
     });
