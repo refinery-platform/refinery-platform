@@ -6,6 +6,7 @@ angular
       '$location',
       'uiGridConstants',
       'fileBrowserFactory',
+      'resetGridService',
       '$window',
       '$timeout',
       '$q',
@@ -18,6 +19,7 @@ function FileBrowserCtrl(
   $location,
   uiGridConstants,
   fileBrowserFactory,
+  resetGridService,
   $window,
   $timeout,
   $q) {
@@ -72,21 +74,6 @@ function FileBrowserCtrl(
       promise.resolve();
     });
     return promise.promise;
-  };
-
-  vm.refreshAssayAttributes = function () {
-    var assay_uuid = $window.externalAssayUuid;
-    return fileBrowserFactory.getAssayAttributeOrder(assay_uuid).then(function(){
-      vm.assayAttributeOrder = fileBrowserFactory.assayAttributeOrder;
-    },function(error){
-      console.log(error);
-    });
-  };
-
-  vm.updateAssayAttributes = function(attributeParam){
-    fileBrowserFactory.postAssayAttributeOrder(attributeParam).then(function(){
-      vm.reset();
-    });
   };
 
   //checks url for params to update the filter
@@ -244,7 +231,9 @@ function FileBrowserCtrl(
     vm.lastPage = 0;
 
     // turn off the infinite scroll handling up and down - hopefully this won't be needed after @swalters scrolling changes
-    vm.gridApi.infiniteScroll.setScrollDirections( false, false );
+    if(typeof vm.gridApi.infiniteScroll.setScrollDirections !== 'undefined'){
+      vm.gridApi.infiniteScroll.setScrollDirections( false, false );
+    }
     vm.assayFiles = [];
 
     vm.refreshAssayFiles().then(function(){
@@ -253,6 +242,7 @@ function FileBrowserCtrl(
         vm.gridApi.infiniteScroll.resetScroll( vm.firstPage > 0, vm.lastPage < vm.totalPages );
       });
     });
+    resetGridService.setResetGridFlag(false);
   };
 
   //Generates param: sort for api call from ui-grid response
@@ -299,5 +289,15 @@ function FileBrowserCtrl(
     });
     vm.gridOptions.columnDefs = vm.customColumnName;
   };
+
+  $scope.$watch(
+    function () {
+      return resetGridService.resetGridFlag;
+    },
+    function(){
+      if(resetGridService.resetGridFlag){
+        vm.reset();
+      }
+  });
 
 }
