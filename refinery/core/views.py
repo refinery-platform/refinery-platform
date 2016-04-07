@@ -828,7 +828,7 @@ def doi(request, id):
     try:
         response = requests.get(url, headers=headers)
     except requests.exceptions.ConnectionError:
-        return HttpResponse('Service currently unavailbale', status=503)
+        return HttpResponse('Service currently unavailable', status=503)
 
     return HttpResponse(response, mimetype='application/json')
 
@@ -852,12 +852,12 @@ def pubmed_abstract(request, id):
     try:
         response = requests.get(url, params=params, headers=headers)
     except requests.exceptions.ConnectionError:
-        return HttpResponse('Service currently unavailbale', status=503)
+        return HttpResponse('Service currently unavailable', status=503)
 
     try:
         response_dict = xmltodict.parse(response.text)
     except ExpatError:
-        return HttpResponse('Service currently unavailbale', status=503)
+        return HttpResponse('Service currently unavailable', status=503)
 
     return HttpResponse(
         json.dumps(response_dict),
@@ -887,7 +887,7 @@ def pubmed_search(request, term):
     try:
         response = requests.get(url, params=params, headers=headers)
     except requests.exceptions.ConnectionError:
-        return HttpResponse('Service currently unavailbale', status=503)
+        return HttpResponse('Service currently unavailable', status=503)
 
     return HttpResponse(response, mimetype='application/json')
 
@@ -910,7 +910,7 @@ def pubmed_summary(request, id):
     try:
         response = requests.get(url, params=params, headers=headers)
     except requests.exceptions.ConnectionError:
-        return HttpResponse('Service currently unavailbale', status=503)
+        return HttpResponse('Service currently unavailable', status=503)
 
     return HttpResponse(response, mimetype='application/json')
 
