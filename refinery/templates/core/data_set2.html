@@ -226,42 +226,17 @@
                             </li>
                           </ul>
                         </div>
-
-                        <!-- Prepared for future use! Do not remove. -->
-                        <!--
-                        <div style="float:right; display: block;">
-                            <label style="dispaly: inline; float:left; margin-top: 3px; margin-right: 5px;">View </label>
-
-                            <div class="btn-group annotation-buttons" data-toggle="buttons-radio" >
-                                <button type="button" id="data-button" data-toggle="button" class="btn active"  rel="tooltip" data-placement="bottom" data-html="true" title="View (primary) data files<br>included in this data set.">Data</button>
-                                <button type="button" id="annotation-button" data-toggle="button" class="btn" rel="tooltip" data-placement="bottom" data-html="true" title="View annotation files<br>associated with this data set.">Annotation</button>
-                            </div>
-                            <a href="#" id="help-data-annotation-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 15px; position: relative; top: 5px;"></i></a>
-                        </div>
-                        -->
-
-                        <!--
-                                    {% if user.is_authenticated %}
-                                    <span id="p1p">
-                                        <span class="controls">
-                                            <label class="control-label" style="font-size: large; margin-left: 15px; margin-right: 5px; position: relative; top: 3px;">Workflow</label>
-                                            <span id="process_1" class=""></span>
-                                        </span>
-                                    </span>
-                                    {% endif %}
-                                    -->
                       </div>
                     </div>
 
                     <div class="row">
                       <div class="tabbable">
                         <div class="tab-content">
-                          <!--<div class="tab-pane active fade in"
-                          id="table-view-tab">-->
                           <div class="tab-pane active fade in">
-                            <button class="btn btn-default" rp-assay-files-util-modal ng-click="open()">
-                             Launch Analysis
-                          </button>
+                            <i class="fa fa-wrench fa-border"
+                              rp-assay-files-util-modal ng-click="open()">
+
+                            </i>
                             <rp-file-browser-assay-files>
                             </rp-file-browser-assay-files>
                           </div>
