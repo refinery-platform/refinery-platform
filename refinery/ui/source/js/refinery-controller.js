@@ -1,5 +1,6 @@
 function AppCtrl ($, $rootScope, $timeout, $window, _, pubSub, settings) {
   this.$window = $window;
+  this.jqWindow = $($window);
   this.$ = $;
   this._ = _;
   this.pubSub = pubSub;
@@ -9,7 +10,10 @@ function AppCtrl ($, $rootScope, $timeout, $window, _, pubSub, settings) {
     'resize orientationchange',
     this._.debounce(
       function () {
-        this.pubSub.trigger('resize');
+        this.pubSub.trigger('resize', {
+          width: this.jqWindow.width(),
+          height: this.jqWindow.height()
+        });
       }.bind(this),
       this.settings.debounceWindowResize
     )

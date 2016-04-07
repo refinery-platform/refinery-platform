@@ -130,5 +130,5 @@ function PubSub (_) {
 
 angular
   .module('pubSub', [])
-  .constant('_', window.lodash3)
+  .constant('_', window.lodashLatest)
   .service('pubSub', ['_', PubSub]);

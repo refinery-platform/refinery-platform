@@ -9,6 +9,7 @@ import time
 import urlparse
 import requests
 import json
+import urllib2
 
 from django.db.models import Q
 from django.utils.http import urlquote
@@ -575,6 +576,7 @@ def generate_solr_params(params, assay_uuid):
         solr_params = ''.join([solr_params, '&sort=', sort])
 
     if facet_filter:
+        facet_filter = urllib2.unquote(facet_filter)
         facet_filter = json.loads(facet_filter)
         facet_filter_str = create_facet_filter_query(facet_filter)
         solr_params = ''.join([solr_params, facet_filter_str])
@@ -608,7 +610,7 @@ def create_facet_filter_query(facet_filter_fields):
 
         field_str = escape_character_solr(field_str)
         field_str = field_str.replace('OR', ' OR ')
-        encoded_field_str = urlquote(field_str, safe='\\/=&:+ ')
+        encoded_field_str = urlquote(field_str, safe='\\/+-&|!(){}[]^~*?:"; ')
 
         query = ''.join([query, '&fq={!tag=', facet, '}',
                          facet, ':(', encoded_field_str, ')'])
@@ -718,11 +720,13 @@ def format_solr_response(solr_response):
     facet_field_counts = solr_response_json.get('facet_counts').get(
             'facet_fields')
     facet_field_docs = solr_response_json.get('response').get('docs')
+    facet_field_docs_count = solr_response_json.get('response').get('numFound')
     facet_field_counts_obj = objectify_facet_field_counts(facet_field_counts)
     solr_response_json['facet_field_counts'] = facet_field_counts_obj
     attributes = customize_attribute_response(order_facet_fields)
     solr_response_json["attributes"] = attributes
     solr_response_json["nodes"] = facet_field_docs
+    solr_response_json["nodes_count"] = facet_field_docs_count
 
     # Remove unused fields from solr response
     del solr_response_json['responseHeader']

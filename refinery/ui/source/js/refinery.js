@@ -18,6 +18,8 @@ angular
   'pubSub',
   'closeOnOuterClick',
   'colors',
+  'focusOn',
+  'replaceWhiteSpaceWithHyphen',
 
   /*
    * Refinery modules

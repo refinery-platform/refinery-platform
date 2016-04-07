@@ -1,1 +1,1 @@
-window.lodash3 = _.noConflict();
+window.lodashLatest = _.noConflict();

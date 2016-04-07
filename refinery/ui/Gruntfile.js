@@ -90,7 +90,7 @@ module.exports = function (grunt) {
   // Local testing, i.e. triggered on your host machine, starts all major
   // browsers and can be invoked with `--host`.
   var browsers = !!grunt.option('host') ?
-    ['PhantomJS', 'Chrome', 'Firefox', 'Safari'] : ['PhantomJS'];
+    ['Chrome', 'Firefox', 'Safari'] : ['PhantomJS'];
 
   var jsFilesByImportance = function (spec) {
     var files = [];
@@ -456,7 +456,7 @@ module.exports = function (grunt) {
       compile: {
         PHANTOMJS_BIN: function () {
           var localPhantomJS =
-            'node_modules/phantomjs/lib/phantom/bin/phantomjs';
+            'node_modules/phantomjs-prebuilt/lib/phantom/bin/phantomjs';
 
           // Look for a phantomjs binary of the VM by default when no `--host`
           // flag is passed to grunt
@@ -540,21 +540,13 @@ module.exports = function (grunt) {
               pattern: './karma.lodash.noConflict.js',
               watched: false
             }],
-            [{
-              pattern: 'node_modules/phantomjs-polyfill/bind-polyfill.js',
-              watched: false
-            }],
-            jsFilesByImportance(true)
+            'node_modules/phantomjs-polyfill/bind-polyfill.js',
+            jsFilesByImportance(true),
+            config.basePath.ui.src + '/**/*.html'
           ]
         )
       },
-      unit: {
-        port: 9019,
-        background: true
-      },
-      continuous: {
-        singleRun: true
-      }
+      unit: {}
     },
 
     /*

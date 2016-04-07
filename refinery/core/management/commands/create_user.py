@@ -23,8 +23,9 @@ class Command(BaseCommand):
     """
     def handle(self, username, password, email, first_name, last_name,
                affiliation, **options):
-        """create a user account for Refinery
+        """Create a user account for Refinery (user is inactive).
         """
+
         # delete if exists
         user_object = User.objects.filter(username__exact=username)
         if len(user_object) > 0:
@@ -34,18 +35,22 @@ class Command(BaseCommand):
             print error_msg
             logger.error(error_msg)
             return
+
         init_user(
-            username, password, email, first_name, last_name, affiliation)
+            username, password, email, first_name, last_name, affiliation,
+            is_active=False)
 
 
-def init_user(username, password, email, first_name, last_name, affiliation):
-    """Create a new User instance with specified values
+def init_user(username, password, email, first_name, last_name, affiliation,
+              is_active=True):
+    """Create a new User instance with specified values.
     """
     user_object = User.objects.create_user(
         username, email=email, password=password)
     user_object.first_name = first_name
     user_object.last_name = last_name
     user_object.get_profile().affiliation = affiliation
+    user_object.is_active = is_active
     user_object.save()
     user_object.get_profile().save()
 

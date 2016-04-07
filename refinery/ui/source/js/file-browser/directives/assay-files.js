@@ -1,5 +1,6 @@
-angular.module('refineryFileBrowser')
-    .directive("rpFileBrowserAssayFiles",
+angular
+  .module('refineryFileBrowser')
+  .directive("rpFileBrowserAssayFiles",
   [
     rpFileBrowserAssayFiles
   ]
@@ -17,11 +18,10 @@ function rpFileBrowserAssayFiles() {
        assayFiles: '@',
        assayAttributes: '@'
     },
-    link: function(scope){
-
-      scope.FBCtrl.updateAssayFiles().then(function(){
-        scope.FBCtrl.checkUrlQueryFilters();
-        scope.FBCtrl.createColumnDefs();
+    link: function(scope, element, attr, ctrl){
+      ctrl.updateAssayFiles().then(function(){
+        ctrl.checkUrlQueryFilters();
+        ctrl.createColumnDefs();
       });
 
     }

@@ -6,17 +6,82 @@ function refineryDashboardVisWrapper () {
     this.pubSub = pubSub;
 
     // Absolute root node: OWL:Thing
-    // Useful for:
-    // - EFO
-    this.roots = ['http://www.w3.org/2002/07/owl#Thing'];
+    // The absolute root node is used for pruning the graph as it acts as a
+    // single entry point.
+    this.absRoot = 'http://www.w3.org/2002/07/owl#Thing';
 
-    // Relative root node for Cell Ontology (CL):
-    // this.roots = ['http://purl.obolibrary.org/obo/CL_0000003'];
+    // Remix root nodes are a collection of nodes that act as meaningful entry
+    // points across different ontologies in regards to browsing.
+    this.remixRoots = [
+      'http://purl.obolibrary.org/obo/BTO_0002666',
+      'http://purl.obolibrary.org/obo/BTO_0000088',
+      'http://purl.obolibrary.org/obo/BTO_0000421',
+      'http://purl.obolibrary.org/obo/BTO_0000174',
+      'http://purl.obolibrary.org/obo/BTO_0000522',
+      'http://purl.obolibrary.org/obo/BTO_0000282',
+      'http://purl.obolibrary.org/obo/BTO_0000570',
+      'http://purl.obolibrary.org/obo/BTO_0005810',
+      'http://purl.obolibrary.org/obo/BTO_0000634',
+      'http://purl.obolibrary.org/obo/BTO_0001492',
+      'http://purl.obolibrary.org/obo/BTO_0001485',
+      'http://purl.obolibrary.org/obo/BTO_0001484',
+      'http://purl.obolibrary.org/obo/BTO_0000203',
+      'http://purl.obolibrary.org/obo/BTO_0000202',
+      'http://purl.obolibrary.org/obo/BTO_0001486',
+      'http://purl.obolibrary.org/obo/BTO_0001262',
+      'http://purl.obolibrary.org/obo/BTO_0001493',
+      'http://purl.obolibrary.org/obo/BTO_0003091',
+      'http://purl.obolibrary.org/obo/BTO_0001491',
+      'http://purl.obolibrary.org/obo/CL_0000003',
+      'http://www.ebi.ac.uk/efo/EFO_0001444',
+      'http://purl.obolibrary.org/obo/OBI_0000272',
+      'http://www.ebi.ac.uk/efo/EFO_0000322',
+      'http://www.ebi.ac.uk/efo/EFO_0000324',
+      'http://purl.obolibrary.org/obo/CHEBI_37577',
+      'http://purl.obolibrary.org/obo/OBI_0100026',
+      'http://www.ebi.ac.uk/efo/EFO_0000787',
+      'http://www.ebi.ac.uk/efo/EFO_0000408',
+      'http://www.ebi.ac.uk/efo/EFO_0000323',
+      'http://purl.org/sig/ont/fma/fma67513',
+      'http://purl.org/sig/ont/fma/fma67498',
+      'http://purl.org/sig/ont/fma/fma7149',
+      'http://purl.obolibrary.org/obo/GO_0008150',
+      'http://purl.obolibrary.org/obo/GO_0005575',
+      'http://purl.obolibrary.org/obo/GO_0003674',
+      'http://purl.obolibrary.org/obo/MA_0002433',
+      'http://purl.obolibrary.org/obo/MA_0003001',
+      'http://purl.obolibrary.org/obo/MA_0000003',
+      'http://purl.obolibrary.org/obo/MA_0003002',
+      'http://purl.bioontology.org/ontology/NCBITAXON/7742',
+      'http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C3262',
+      'http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C14282',
+      'http://purl.obolibrary.org/obo/OBI_0000070',
+      'http://purl.obolibrary.org/obo/PATO_0001241',
+      'http://purl.obolibrary.org/obo/UO_0000000'
+    ];
 
+    // Currently OWL2NEO4J doesn't extract the preferred label and even then we
+    // might want to rename certain nodes in case their label is confusing.
+    this.rename = [{
+      uri: 'http://www.w3.org/2002/07/owl#Thing',
+      label: 'Root'
+    }, {
+      uri: 'http://purl.obolibrary.org/obo/CHEBI_37577',
+      label: 'Chemical compound'
+    }];
+
+    // Name of the property that is used to assess the size of a term.
+    // E.g. if `Liver` is used to annotate 5 data sets then the size of `Liver`
+    // is 5. The property of the term object is `dataSets` in this case.
     this.propertyValue = 'dataSets';
 
     // Trigger preloading / precomputing of D3 data for exploration.
-    dashboardVisData.load(this.roots[0], this.propertyValue);
+    dashboardVisData.load(
+      this.absRoot,
+      this.propertyValue,
+      this.remixRoots,
+      this.rename
+    );
 
     var graph = this.$q.defer();
     this.graph = graph.promise;
@@ -29,7 +94,6 @@ function refineryDashboardVisWrapper () {
 
     dashboardVisData.data
       .then(function (results) {
-        this.roots = [results.root];
         graph.resolve({
           graph: results.graph,
           rootIds: [results.root]
@@ -44,7 +108,6 @@ function refineryDashboardVisWrapper () {
         } else {
           this.noData = true;
         }
-        console.log(error, this.error, this.noData);
       }.bind(this));
 
     this.loading = true;

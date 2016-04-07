@@ -9,10 +9,21 @@ $isa_tab_dir = "${project_root}/isa-tab"
 $media_root = "${project_root}/media"
 $django_settings_module = "config.settings.dev"
 $ui_app_root = "${django_root}/ui"
+$site_name = "Refinery"
+$site_url = "192.168.50.50:8000"
 
 # to make logs easier to read
 class { 'timezone':
   timezone => 'America/New_York',
+}
+
+# On Vagrant, it's okay to activate the 'guest' user.
+exec { "activate_user":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py activate_user guest",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+  require     => Exec['create_user'],
 }
 
 # See code in refinery-modules/refinery/...

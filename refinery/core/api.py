@@ -419,6 +419,7 @@ class UserProfileResource(ModelResource):
 
 
 class DataSetResource(ModelResource, SharableResourceAPIInterface):
+    id_regex = '[0-9]+'
     uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
@@ -547,6 +548,15 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
                 name='api_%s_get_assays' % (
                     self._meta.resource_name
                 )),
+            url(r'^(?P<resource_name>%s)/(?P<id>%s)%s$' % (
+                    self._meta.resource_name,
+                    self.id_regex,
+                    trailing_slash()
+                ),
+                self.wrap_view('get_by_db_id'),
+                name='api_%s_get_by_db_id' % (
+                    self._meta.resource_name)
+                ),
         ]
         return prepend_urls_list
 
@@ -572,6 +582,54 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
                 'ids': [data_set.id for data_set in data_sets]
             }
         )
+
+    def get_by_db_id(self, request, **kwargs):
+        return_obj = {}
+
+        try:
+            ds = DataSet.objects.get(id=kwargs['id'])
+        except DataSet.DoesNotExist:
+            return HttpNoContent()
+
+        groups = GroupObjectPermission.objects.filter(object_pk=ds.id)
+
+        is_public = False
+        for group in groups:
+            if group.group == ExtendedGroup.objects.public_group():
+                is_public = True
+
+        is_owner = request.user.has_perm(
+            'core.share_dataset', ds
+        )
+
+        try:
+            user_uuid = request.user.userprofile.uuid
+        except:
+            user_uuid = None
+
+        if ds and request.user.has_perm('core.read_dataset', ds):
+            return_obj['accession'] = ds.accession
+            return_obj['accession_source'] = ds.accession_source
+            return_obj['creation_date'] = ds.creation_date
+            return_obj['description'] = ds.description
+            return_obj['file_count'] = ds.file_count
+            return_obj['file_size'] = ds.file_size
+            return_obj['id'] = ds.id
+            return_obj['is_owner'] = is_owner
+            return_obj['is_shared'] = groups.count() > 0
+            return_obj['modification_date'] = ds.modification_date
+            return_obj['name'] = ds.name
+            return_obj['owner'] = user_uuid if is_owner else None
+            return_obj['public'] = is_public
+            return_obj['share_list'] = None
+            return_obj['slug'] = ds.slug
+            return_obj['summary'] = ds.summary
+            return_obj['title'] = ds.title
+            return_obj['uuid'] = ds.uuid
+        else:
+            return HttpForbidden()
+
+        return self.create_response(request, return_obj)
 
     def get_all_annotations(self, request, **kwargs):
         return self.create_response(request, get_data_sets_annotations())
