@@ -619,7 +619,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             return_obj['is_shared'] = groups.count() > 0
             return_obj['modification_date'] = ds.modification_date
             return_obj['name'] = ds.name
-            return_obj['owner'] = user_uuid if is_owner else 'Hurz'
+            return_obj['owner'] = user_uuid if is_owner else None
             return_obj['public'] = is_public
             return_obj['share_list'] = None
             return_obj['slug'] = ds.slug
