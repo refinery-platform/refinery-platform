@@ -9,6 +9,7 @@
     describe: false,
     it: false,
     inject: false,
+    jasmine: false,
     beforeEach: false,
     expect: false,
     spyOn: false
