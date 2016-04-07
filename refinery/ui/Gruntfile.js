@@ -92,6 +92,11 @@ module.exports = function (grunt) {
   var browsers = !!grunt.option('host') ?
     ['Chrome', 'Firefox', 'Safari'] : ['PhantomJS'];
 
+  // Specify file globbing, e.g. `--files 'source/js/commons/**/*.js'` would get
+  // all `.js` files from `source/js/commons/`. This is used for `esformatter`
+  // because we might not want to alter all js files at once.
+  var fileGlob = grunt.option('files') || '';
+
   var jsFilesByImportance = function (spec) {
     var files = [];
 
@@ -476,6 +481,13 @@ module.exports = function (grunt) {
           return 'phantomjs';
         }
       }
+    },
+
+    /*
+     * Autoformats JS code using esformatter.
+     */
+    esformatter: {
+      src: fileGlob
     },
 
     /*
