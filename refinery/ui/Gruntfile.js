@@ -546,11 +546,9 @@ module.exports = function(grunt) {
               pattern: './karma.lodash.noConflict.js',
               watched: false
             }],
-            [{
-              pattern: 'node_modules/phantomjs-polyfill/bind-polyfill.js',
-              watched: false
-            }],
-            jsFilesByImportance(true)
+            'node_modules/phantomjs-polyfill/bind-polyfill.js',
+            jsFilesByImportance(true),
+            config.basePath.ui.src + '/**/*.html'
           ]
         )
       },

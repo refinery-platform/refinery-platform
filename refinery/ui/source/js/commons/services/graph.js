@@ -318,6 +318,31 @@ function GraphFactory (_, Webworker) {
       if (graph[uris[i]].pruned) {
         graph[uris[i]] = undefined;
         delete graph[uris[i]];
+      } else if (!graph[uris[i]].meta) {
+        // Remove parent reference first
+        for (var ii = graph[uris[i]].children.length; ii--;) {
+          if (!graph[graph[uris[i]].children[ii]]) {
+            continue;
+          }
+
+          graph[graph[uris[i]].children[ii]].parents[uris[i]] = undefined;
+          delete graph[graph[uris[i]].children[ii]].parents[uris[i]];
+        }
+
+        // Remove reference to the node itself
+        graph[uris[i]] = undefined;
+        delete graph[uris[i]];
+      }
+
+      // Normalize labels
+      var noUnderScore = /_/gi;
+      if (graph[uris[i]]) {
+        graph[uris[i]].name = (
+          graph[uris[i]].label = (
+            graph[uris[i]].label.charAt(0).toUpperCase() +
+            graph[uris[i]].label.slice(1)
+          ).replace(noUnderScore, ' ')
+        );
       }
     }
 
@@ -445,7 +470,7 @@ function GraphFactory (_, Webworker) {
     for (var i = uris.length; i--;) {
       node = graph[uris[i]];
       for (var j = propLeng; j--;) {
-        if (node[properties[j]]) {
+        if (typeof node[properties[j]] !== 'undefined') {
           for (var k = node.data.bars.length; k--;) {
             if (node.data.bars[k].id === properties[j]) {
               node.data.bars[k].value = node[properties[j]];
@@ -584,7 +609,6 @@ function GraphFactory (_, Webworker) {
           counterKeep++;
         }
       }
-      // console.log('Kept: ' + counterKeep + ' | Deleted: ' + counterDelete);
     }
 
     copyNodes(graph, tree);
@@ -594,7 +618,7 @@ function GraphFactory (_, Webworker) {
     return tree[root];
   };
 
-  Graph.addPseudoRootAndSibling = function (graph, root, allDsIds) {
+  Graph.addPseudoSiblingToRoot = function (graph, root, allDsIds) {
     var dataSets = {},
         annotatedDsIds = Object.keys(graph[root].dataSets),
         notAnnotatedDsIds = {},
@@ -614,7 +638,7 @@ function GraphFactory (_, Webworker) {
       assertedDataSets: {},
       children: [],
       meta: {
-        originalDepth: 0,
+        originalDepth: 1,
         leaf: true
       },
       parents: {},
@@ -626,25 +650,10 @@ function GraphFactory (_, Webworker) {
       value: Object.keys(notAnnotatedDsIds).length,
     };
 
-    graph['_root'] = {
-      assertedDataSets: {},
-      children: [root, '_no_annotations'],
-      dataSets: allDsIdsObj,
-      name: 'Root',
-      meta: {
-        originalDepth: -1
-      },
-      numDataSets: Object.keys(allDsIdsObj).length,
-      ontId: '_root',
-      uri: '_root',
-      value: Object.keys(allDsIdsObj).length,
-    };
-
-    graph['_no_annotations'].parents['_root'] = graph['_root'];
+    graph['_no_annotations'].parents[root] = graph[root];
     graph[root].parents = {};
-    graph[root].parents['_root'] = graph['_root'];
-
-    return '_root';
+    graph[root].children.push('_no_annotations');
+    graph[root].meta.originalDepth = -1;
   };
 
   return Graph;
