@@ -32,7 +32,7 @@
     "FunctionExpression": 1,
     "IfStatement": 1,
     "MemberExpression": 1,
-    "MultipleVariableDeclaration": 1,
+    "MultipleVariableDeclaration": 2,
     "NewExpression": 1,
     "ObjectExpression": 1,
     "ObjectExpression.BinaryExpression": 1,
