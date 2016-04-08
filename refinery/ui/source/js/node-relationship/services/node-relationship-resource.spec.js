@@ -1,6 +1,6 @@
-describe('NodeRelationship.factory.NodeRelationshipResource: unit tests', function () {
-  'use strict';
+'use strict';
 
+describe('NodeRelationship.factory.NodeRelationshipResource: unit tests', function () {
   var Factory;
 
   beforeEach(function () {

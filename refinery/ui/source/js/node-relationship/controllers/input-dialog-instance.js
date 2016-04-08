@@ -1,3 +1,5 @@
+'use strict';
+
 function InputDialogInstanceCtrl ($scope, $uibModalInstance, config) {
   $scope.config = config;
   $scope.val = {
