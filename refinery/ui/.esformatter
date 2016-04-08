@@ -458,7 +458,8 @@
     "esformatter-quotes",
     "esformatter-remove-trailing-commas",
     "esformatter-semicolons",
-    "esformatter-use-strict"
+    "esformatter-use-strict",
+    "esformatter-var-each"
   ],
 
   "quotes": {
