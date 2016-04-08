@@ -1,25 +1,32 @@
-describe('Common.service.analysis: unit tests', function () {
-  'use strict';
+'use strict';
 
-  var $httpBackend,
-      $rootScope,
-    valid_uuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x',
-      params = '/?format=json&' +
-        'limit=0&' +
-        'order_by=-time_start&' +
-        'uuid='+ valid_uuid,
-      service,
-      fakeResponse  = {
-          meta: {
-          limit: 1000,
-          next: null,
-          offset: 0,
-          previous: null,
-          total_count: 0
-          },
-          objects:
-            [{test1:1},{test2:2},{test3:3},{test4:4}]
-      };
+describe('Common.service.analysis: unit tests', function () {
+  var $httpBackend;
+  var $rootScope;
+  var validUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+  var params = '/?format=json&' +
+    'limit=0&' +
+    'order_by=-time_start&' +
+    'uuid=' + validUuid;
+  var service;
+  var fakeResponse = {
+    meta: {
+      limit: 1000,
+      next: null,
+      offset: 0,
+      previous: null,
+      total_count: 0
+    },
+    objects: [{
+      test1: 1
+    }, {
+      test2: 2
+    }, {
+      test3: 3
+    }, {
+      test4: 4
+    }]
+  };
 
   beforeEach(function () {
     module('refineryApp');
@@ -30,17 +37,16 @@ describe('Common.service.analysis: unit tests', function () {
       $rootScope = $injector.get('$rootScope');
       service = $injector.get('analysisService');
 
-        $httpBackend
-         .expectGET(
-           settings.appRoot +
-           settings.refineryApi +
-           '/analysis' + params
-         ).respond(200, fakeResponse);
+      $httpBackend
+        .expectGET(
+          settings.appRoot +
+          settings.refineryApi +
+          '/analysis' + params
+      ).respond(200, fakeResponse);
     });
   });
 
   describe('Service', function () {
-
     it('should be defined', function () {
       expect(service).toBeDefined();
     });
@@ -51,9 +57,11 @@ describe('Common.service.analysis: unit tests', function () {
 
     it('should return a resolving promise', function () {
       var results;
-      var promise = service.get({uuid: valid_uuid})
-        .$promise.then(function (response) {
-          results = response;
+      var promise = service.get({
+        uuid: validUuid
+      })
+      .$promise.then(function (response) {
+        results = response;
       });
 
       expect(typeof promise.then).toEqual('function');
