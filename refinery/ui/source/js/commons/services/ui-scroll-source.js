@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * AngularJS factory wrapper
  *
@@ -80,8 +82,6 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
       throw new UiScrollSourceException('No or empty `id` given.');
     }
 
-    cacheCapacity = parseInt(cacheCapacity) || 0;
-
     /**
      * Angular's cache object, which we use to cache data sources.
      *
@@ -97,7 +97,7 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
      * @private
      */
     var cacheStore = $cacheFactory('uiScrollSource/' + id, {
-      capacity: cacheCapacity
+      capacity: parseInt(cacheCapacity, 10) || 0
     });
 
     /**
@@ -180,7 +180,7 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
 
           for (var i = offset, end = offset + limit; i < end; i++) {
             if (!this.items.hasOwnProperty(i)) {
-              return;
+              return undefined;
             }
             results.push(this.items[i]);
           }
@@ -197,11 +197,11 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
          * @author  Fritz Lekschas
          * @date    2015-08-11
          *
-         * @param   {String}  id  Identifier for the current data source.
-         * @return  {Object}      Self.
+         * @param   {String}  currentId  Identifier for the current data source.
+         * @return  {Object}             Self.
          */
-        initialize: function (id) {
-          this.id = id || this.defaultId;
+        initialize: function (currentId) {
+          this.id = currentId || this.defaultId;
           this.isEnabled = true;
           this.items = {};
           this.firstData = false;
@@ -268,7 +268,7 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
        * @type  {Object}
        */
       dataSource: {
-        get: function (limit, offset) {
+        get: function () {
           return $q.defer().promise;
         }
       },
@@ -323,29 +323,28 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
        * @return  {Boolean}
        */
       get: function (offset, limit, success) {
-        offset--;
+        var _offset = offset - 1;
 
-        if (offset < 0) {
+        if (_offset < 0) {
           // Avoid negative offset API calls.
-          if (offset + limit <= 0) {
+          if (_offset + limit <= 0) {
             success([]);
-            return;
+            return undefined;
           }
           // We start from zero if the total call includes positive items.
-          offset = 0;
+          _offset = 0;
         }
 
         // Avoid API calls when the total is reached.
-        if (offset >= this.total) {
+        if (_offset >= this.total) {
           success([]);
-          return;
+          return undefined;
         }
 
         if (this.cache.isEnabled) {
-          return this.cache.get(offset, limit, success);
-        } else {
-          return this.queryEndpoint(offset, limit, success);
+          return this.cache.get(_offset, limit, success);
         }
+        return this.queryEndpoint(_offset, limit, success);
       },
 
       /**
@@ -371,18 +370,18 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
        * @author  Fritz Lekschas
        * @date    2015-08-12
        *
-       * @param   {String}   id     Identifier for the data source.
+       * @param   {String}   srcId  Identifier for the data source.
        * @param   {Boolean}  reset  If `true` re-initializes the cache with
        *   id `id`.
        */
-      newOrCachedCache: function (id, reset) {
+      newOrCachedCache: function (srcId, reset) {
         // Reset the error to false to re-evaluate once a new search is
         // being triggered.
-        if (!id) {
+        if (!srcId) {
           this.error = false;
         }
 
-        id = id || this.cache.defaultId;
+        var _srcId = srcId || this.cache.defaultId;
 
         // Cache current cache store.
         // (Yes we cache the cache!)
@@ -397,11 +396,11 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
 
         // Reset cached instance
         if (reset) {
-          cacheStore.remove(id);
+          cacheStore.remove(_srcId);
         }
 
         // Get cached data or initialize data
-        var cached = cacheStore.get(id) || {
+        var cached = cacheStore.get(_srcId) || {
           firstData: false,
           initializedWithData: false,
           items: {},
@@ -413,7 +412,7 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
         // Restore former cache or reset cache.
         this.cache.items = cached.items;
         // Set new id
-        this.cache.id = id;
+        this.cache.id = _srcId;
         // Reset init
         this.initializedWithData = cached.initializedWithData;
         // Reset total
@@ -449,7 +448,7 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
             return response[this.dataProperty];
           }.bind(this))
           // Error
-          .catch(function (error) {
+          .catch(function () {
             this.error = true;
             success([]);
           }.bind(this));
@@ -464,12 +463,11 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
        *
        * @method  resetCache
        * @public
-       * @return  {String}  Cache identifier
+       * @param   {String}  cacheId  Identifier for the cache.
+       * @return  {String}           Cache identifier
        */
-      resetCache: function (id) {
-        id = id || this.cache.defaultId;
-
-        if (!id) {
+      resetCache: function (cacheId) {
+        if (!(cacheId || this.cache.defaultId)) {
           // Remove all cached caches
           cacheStore.removeAll();
         }
@@ -491,15 +489,15 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
        *
        * @method  set
        * @public
-       * @param   {Object}  dataSource  Object with a `get` function, which
-       *   accepts at least two parameters, offset and limit, and returns a
-       *   promise.
-       * @param   {String}  id          Identifier for the data source.
+       * @param   {Object}  currentDataSource  Object with a `get` function,
+       *   which accepts at least two parameters, offset and limit, and returns
+       *   a promise.
+       * @param   {String}  srcId               Identifier for the data source.
        */
-      set: function (dataSource, id) {
-        if (dataSource &&
-          typeof dataSource === 'function' &&
-          dataSource.length >= 2) {
+      set: function (currentDataSource, srcId) {
+        if (currentDataSource &&
+          typeof currentDataSource === 'function' &&
+          currentDataSource.length >= 2) {
           /**
            * The actual data source.
            *
@@ -510,8 +508,8 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
            *
            * @type  {Function}
            */
-          this.dataSource = dataSource;
-          this.newOrCachedCache(id);
+          this.dataSource = currentDataSource;
+          this.newOrCachedCache(srcId);
         } else {
           throw new UiScrollSourceException(
             'Data source doesn\'t have a `get` function, which accepts ' +
