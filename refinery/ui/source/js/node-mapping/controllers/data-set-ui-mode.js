@@ -1,16 +1,18 @@
+'use strict';
+
 function DataSetUiModeCtrl ($scope, $location, $rootScope) {
   $rootScope.mode = 'browse';
 
   $scope.$onRootScope(
     'workflowChangedEvent',
-    function(event, currentWorkflow) {
+    function (event, currentWorkflow) {
       $scope.currentWorkflow = currentWorkflow;
     }
   );
 
   $scope.$onRootScope(
     'nodeRelationshipChangedEvent',
-    function(event, currentNodeRelationship) {
+    function (event, currentNodeRelationship) {
       $scope.currentNodeRelationship = currentNodeRelationship;
     }
   );

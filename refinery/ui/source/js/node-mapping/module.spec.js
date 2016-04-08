@@ -1,6 +1,6 @@
-describe('RefineryNodeMapping.module: unit tests', function () {
-  'use strict';
+'use strict';
 
+describe('RefineryNodeMapping.module: unit tests', function () {
   var module;
 
   beforeEach(function () {
@@ -8,19 +8,16 @@ describe('RefineryNodeMapping.module: unit tests', function () {
   });
 
   describe('Module', function () {
-
     it('should be registered', function () {
       expect(!!module).toEqual(true);
     });
-
   });
 
   describe('Dependencies:', function () {
-
-    var deps,
-        hasModule = function (m) {
-          return deps.indexOf(m) >= 0;
-        };
+    var deps;
+    var hasModule = function (m) {
+      return deps.indexOf(m) >= 0;
+    };
 
     beforeEach(function () {
       deps = module.value('refineryNodeMapping').requires;
@@ -49,6 +46,5 @@ describe('RefineryNodeMapping.module: unit tests', function () {
     it('should have "ui.select2" as a dependency', function () {
       expect(hasModule('ui.select2')).toEqual(true);
     });
-
   });
 });

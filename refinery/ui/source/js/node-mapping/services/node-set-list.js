@@ -1,8 +1,10 @@
-function NodeSetListFacory ($resource) {
-  'use strict';
+'use strict';
 
+function NodeSetListFacory ($resource) {
   return $resource(
-    '/api/v1/nodesetlist/', {format: 'json'}
+    '/api/v1/nodesetlist/', {
+      format: 'json'
+    }
   );
 }
 
