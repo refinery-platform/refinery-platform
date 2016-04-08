@@ -1,3 +1,5 @@
+'use strict';
+
 angular
   .module('refineryApp')
   .factory('groupInviteService', ['$resource', 'settings',

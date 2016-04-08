@@ -1,12 +1,9 @@
-angular
-  .module('refineryApp')
-  .service('timeStamp', [timeStamp]);
+'use strict';
 
-
-function timeStamp(){
+function timeStamp () {
   var vm = this;
 
-  vm.getTimeStamp = function() {
+  vm.getTimeStamp = function () {
     var currentDate = new Date();
     var month = currentDate.getMonth() + 1;
     var day = currentDate.getDate();
@@ -16,16 +13,20 @@ function timeStamp(){
     var sec = currentDate.getSeconds();
 
     if (mins < 10) {
-      mins = "0" + mins;
+      mins = '0' + mins;
     }
 
     if (sec < 10) {
-      sec = "0" + sec;
+      sec = '0' + sec;
     }
 
-    var dateStr = year + "-" + month + "-" + day;
-    var timeStr = "@" + hour + ":" + mins + ":" + sec;
+    var dateStr = year + '-' + month + '-' + day;
+    var timeStr = '@' + hour + ':' + mins + ':' + sec;
 
     return (dateStr + timeStr);
   };
 }
+
+angular
+  .module('refineryApp')
+  .service('timeStamp', [timeStamp]);

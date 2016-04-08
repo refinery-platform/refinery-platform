@@ -1,3 +1,5 @@
+'use strict';
+
 angular
   .module('refineryApp')
   .factory('groupMemberService', ['$resource', 'settings',
@@ -11,7 +13,7 @@ angular
         },
         {
           query: {
-            method: 'GET',
+            method: 'GET'
           },
           add: {
             method: 'POST',

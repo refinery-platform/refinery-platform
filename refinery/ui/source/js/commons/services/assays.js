@@ -1,8 +1,9 @@
+'use strict';
+
 angular
   .module('refineryApp')
   .factory('assayService', ['$resource', 'settings',
     function ($resource, settings) {
-
       var assays = $resource(
         settings.appRoot + settings.refineryApi + '/data_sets/:uuid/assays',
         {
@@ -11,7 +12,7 @@ angular
         {
           query: {
             method: 'GET',
-            isArray: false,
+            isArray: false
           }
         }
       );

@@ -1,3 +1,5 @@
+'use strict';
+
 angular
   .module('refineryApp')
   .factory('groupService', ['$resource', 'settings',
@@ -5,11 +7,11 @@ angular
       return $resource(
         settings.appRoot + settings.refineryApi + '/extended_groups/',
         {
-          uuid: '@uuid',
+          uuid: '@uuid'
         },
         {
           create: {
-            method: 'POST',
+            method: 'POST'
           },
           delete: {
             method: 'DELETE',
