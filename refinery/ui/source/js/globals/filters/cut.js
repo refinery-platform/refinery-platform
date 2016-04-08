@@ -16,7 +16,7 @@ angular
 
       // Check if value is a string
       // From: http://stackoverflow.com/a/9436948/981933
-      if (!(typeof(value) === 'string' || value instanceof String)) {
+      if (!(typeof (value) === 'string' || value instanceof String)) {
         return '';
       }
 

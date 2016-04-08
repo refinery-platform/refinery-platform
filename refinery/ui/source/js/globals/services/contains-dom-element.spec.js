@@ -1,6 +1,6 @@
-describe('ContainsDomElement.service: unit tests', function () {
-  'use strict';
+'use strict';
 
+describe('ContainsDomElement.service: unit tests', function () {
   var containsDomElement;
   var html;
 
@@ -18,7 +18,7 @@ describe('ContainsDomElement.service: unit tests', function () {
         'http://www.w3.org/1999/xhtml',
         'html',
         null
-      )
+    )
       .createElement('body');
     html.innerHTML = '<div id="a"><div id="b"></div></div><div id="c"></div>';
   });

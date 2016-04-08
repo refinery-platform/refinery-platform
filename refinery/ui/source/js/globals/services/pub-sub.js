@@ -42,7 +42,8 @@ function PubSub (_) {
    *
    * @class
    */
-  function Event () {}
+  function Event () {
+  }
 
   /**
    * Trigger an event stack
@@ -118,10 +119,16 @@ function PubSub (_) {
     var stackTimes = _.isFinite(times) ? parseInt(times, 10) : Infinity;
 
     if (_.isArray(stack[event])) {
-      return stack[event].push({ callback: callback, times: stackTimes }) - 1;
+      return stack[event].push({
+        callback: callback,
+        times: stackTimes
+      }) - 1;
     }
 
-    stack[event] = [{ callback: callback, times: stackTimes }];
+    stack[event] = [{
+      callback: callback,
+      times: stackTimes
+    }];
     return 0;
   };
 

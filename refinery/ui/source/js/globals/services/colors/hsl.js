@@ -95,7 +95,7 @@ angular
       }
 
       if (this.saturation === 0) {
-        r = g = b = this.lightness; // achromatic
+        r = g = b = this.lightness;  // achromatic
       } else {
         var q = this.lightness < 0.5 ?
           this.lightness * (1 + this.saturation) :
