@@ -1,3 +1,5 @@
+'use strict';
+
 angular
   .module('refineryChart')
   .config([
@@ -12,7 +14,7 @@ angular
             controller: 'refineryChartCtrl as chart'
           },
           '/fastqc_viewer/'
-        )
+      )
         .state(
           'default',
           {
@@ -21,7 +23,7 @@ angular
             controller: 'refineryChartCtrl as chart'
           },
           '/fastqc_viewer/'
-        )
+      )
         .state(
           'full',
           {
@@ -30,7 +32,7 @@ angular
             controller: 'refineryChartCtrl as chart'
           },
           '/fastqc_viewer/'
-        );
+      );
     }
   ]
 );

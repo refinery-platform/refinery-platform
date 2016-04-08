@@ -97,8 +97,7 @@ describe('Common.service.assayFile: unit tests', function () {
         Author_Characteristics_6_3_s: 'Crocker',
         Year_Characteristics_6_3_s: '1971',
         REFINERY_SUBANALYSIS_6_3_s: '-1',
-        Title_Characteristics_6_3_s:
-          'Proposal for a Network Standard Format for a Data Stream to Control Graphics Display'
+        Title_Characteristics_6_3_s: 'Proposal for a Network Standard Format for a Data Stream to Control Graphics Display'
       }, {
         REFINERY_WORKFLOW_OUTPUT_6_3_s: 'N/A',
         REFINERY_ANALYSIS_UUID_6_3_s: 'N/A',
@@ -112,8 +111,7 @@ describe('Common.service.assayFile: unit tests', function () {
         Author_Characteristics_6_3_s: 'McConnell',
         Year_Characteristics_6_3_s: '1971',
         REFINERY_SUBANALYSIS_6_3_s: '-1',
-        Title_Characteristics_6_3_s:
-          'Response to RFC 86: Proposal for Network Standard Format for a Graphics Data Stream'
+        Title_Characteristics_6_3_s: 'Response to RFC 86: Proposal for Network Standard Format for a Graphics Data Stream'
       }, {
         REFINERY_WORKFLOW_OUTPUT_6_3_s: 'N/A',
         REFINERY_ANALYSIS_UUID_6_3_s: 'N/A',
@@ -181,7 +179,7 @@ describe('Common.service.assayFile: unit tests', function () {
       var promise = service.get({
         uuid: validUuid
       })
-      .$promise.then(function (response) {
+        .$promise.then(function (response) {
         results = response;
       });
 

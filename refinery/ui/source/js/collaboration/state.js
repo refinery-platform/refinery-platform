@@ -1,3 +1,5 @@
+'use strict';
+
 angular
   .module('refineryCollaboration')
   .config([
@@ -20,7 +22,7 @@ angular
             controller: 'refineryCollaborationCtrl as collab'
           },
           '/collaboration/'
-        );
+      );
     }
   ]
 );

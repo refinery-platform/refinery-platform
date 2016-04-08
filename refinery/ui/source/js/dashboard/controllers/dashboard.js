@@ -679,7 +679,7 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
   var sortBy = source + 'SortBy';
   var sortDesc = source + 'SortDesc';
   var reloadService = (
-    'dashboard' +
+  'dashboard' +
     source.charAt(0).toUpperCase() +
     source.slice(1) +
     'ReloadService'

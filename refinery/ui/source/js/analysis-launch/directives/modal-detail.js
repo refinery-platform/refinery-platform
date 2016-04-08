@@ -1,3 +1,5 @@
+'use strict';
+
 angular
   .module('refineryAnalysisLaunch')
   .directive(
@@ -5,12 +7,11 @@ angular
     [
       rpAnalysisLaunchModalDetail
     ]
-  );
+);
 
-function rpAnalysisLaunchModalDetail( ) {
-  "use strict";
-    return {
+function rpAnalysisLaunchModalDetail () {
+  return {
     restrict: 'AE',
-    templateUrl: '/static/partials/analysis-launch/partials/modal-detail.html',
-    };
+    templateUrl: '/static/partials/analysis-launch/partials/modal-detail.html'
+  };
 }

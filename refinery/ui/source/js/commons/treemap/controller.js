@@ -1114,9 +1114,9 @@ TreemapCtrl.prototype.fadeIn = function (selection, firstTime) {
     .duration(function () {
       if (firstTime) {
         return (
-          that.settings.treemapFadeInDuration +
-          Math.random() *
-          that.settings.treemapFadeInDuration
+        that.settings.treemapFadeInDuration +
+        Math.random() *
+        that.settings.treemapFadeInDuration
         );
       }
       return that.settings.treemapFadeInDuration;
@@ -1483,9 +1483,8 @@ TreemapCtrl.prototype.setBreadCrumb = function (node) {
     .removeClass('right')
     .removeAttr('style');
   this.treemap.breadCrumbWidth = 0;
-  this.treemap.breadCrumbContainerWidth =
-    this.treemap.breadCrumbContainerWidth ||
-    this.treemap.$grandParentContainer.width();
+  this.treemap.breadCrumbContainerWidth = this.treemap.breadCrumbContainerWidth ||
+  this.treemap.$grandParentContainer.width();
 
   var child = node;
   var parent = child.parent;

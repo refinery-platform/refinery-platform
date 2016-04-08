@@ -1,4 +1,6 @@
-function CollaborationCtrl($timeout, $state, $stateParams, $location, $uibModal, groupInviteService, groupDataService) {
+'use strict';
+
+function CollaborationCtrl ($timeout, $state, $stateParams, $location, $uibModal, groupInviteService, groupDataService) {
   var that = this;
   that.$state = $state;
   that.$stateParams = $stateParams;
@@ -63,11 +65,11 @@ CollaborationCtrl.prototype.resendInvitation = function (invite) {
   }).$promise.then(
     function (data) {
       that.updateGroupList();
-      bootbox.alert("Invitation successfully re-sent to " + invite.recipient_email);
+      bootbox.alert('Invitation successfully re-sent to ' + invite.recipient_email);
     }
   ).catch(function (error) {
     console.error(error);
-    bootbox.alert("Invitation sending failed");
+    bootbox.alert('Invitation sending failed');
   });
 };
 
@@ -79,11 +81,11 @@ CollaborationCtrl.prototype.revokeInvitation = function (invite) {
   }).$promise.then(
     function (data) {
       that.updateGroupList();
-      bootbox.alert("Invitation revoked from " + invite.recipient_email);
+      bootbox.alert('Invitation revoked from ' + invite.recipient_email);
     }
   ).catch(function (error) {
     console.error(error);
-    bootbox.alert("Invitation could not be revoked");
+    bootbox.alert('Invitation could not be revoked');
   });
 };
 
@@ -93,7 +95,7 @@ CollaborationCtrl.prototype.revokeInvitation = function (invite) {
 CollaborationCtrl.prototype.openAddGroup = function () {
   var modalInstance = this.$uibModal.open({
     templateUrl: '/static/partials/collaboration/partials/collaboration-addgroups-dialog.html',
-    controller: 'AddGroupCtrl as modal',
+    controller: 'AddGroupCtrl as modal'
   });
 };
 
@@ -124,7 +126,7 @@ CollaborationCtrl.prototype.openMemberEditor = function (member) {
 CollaborationCtrl.prototype.openEmailInvite = function () {
   var modalInstance = this.$uibModal.open({
     templateUrl: '/static/partials/collaboration/partials/collaboration-addmembers-dialog.html',
-    controller: 'EmailInviteCtrl as modal',
+    controller: 'EmailInviteCtrl as modal'
   });
 };
 

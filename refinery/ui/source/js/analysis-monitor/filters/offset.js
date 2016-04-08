@@ -1,8 +1,10 @@
-angular.module('refineryAnalysisMonitor')
-  .filter('analysisMonitorOffset',analysisMonitorOffset);
+'use strict';
 
-function analysisMonitorOffset(){
-  return function(input, start) {
+angular.module('refineryAnalysisMonitor')
+  .filter('analysisMonitorOffset', analysisMonitorOffset);
+
+function analysisMonitorOffset () {
+  return function (input, start) {
     start = parseInt(start, 10);
     return input.slice(start);
   };

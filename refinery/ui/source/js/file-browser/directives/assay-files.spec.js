@@ -1,19 +1,19 @@
-describe('rpAssayFiles directive unit test', function() {
+'use strict';
 
+describe('rpAssayFiles directive unit test', function () {
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryFileBrowser'));
 
-  var compile,
-      rootScope,
-      scope,
-      ctrl,
-      settings,
-      $controller,
-      valid_uuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+  var compile;
+  var rootScope;
+  var scope;
+  var ctrl;
+  var settings;
+  var $controller;
+  var valid_uuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
 
-  beforeEach(inject(function(_$compile_, _$rootScope_, _$controller_,
-                             _$httpBackend_, _settings_,  $templateCache) {
-
+  beforeEach(inject(function (_$compile_, _$rootScope_, _$controller_,
+    _$httpBackend_, _settings_, $templateCache) {
     $templateCache.put(
       '/static/partials/file-browser/partials/assay-files.html',
       '<div id="grid1"></div>'
@@ -24,11 +24,13 @@ describe('rpAssayFiles directive unit test', function() {
     $httpBackend = _$httpBackend_;
     scope = rootScope.$new();
     $controller = _$controller_;
-    ctrl = $controller('FileBrowserCtrl', {$scope: scope});
+    ctrl = $controller('FileBrowserCtrl', {
+      $scope: scope
+    });
 
   }));
 
-  it('generates the appropriate HTML', function() {
+  it('generates the appropriate HTML', function () {
     var template = '<rp-file-browser-assay-files></rp-file-browser-assay-files>';
     //Link makes an api call to update attribute filter
     $httpBackend.expectGET(

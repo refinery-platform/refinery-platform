@@ -137,8 +137,7 @@ function NodeRelationshipListCtrl (
     };
 
     var modalInstance = $uibModal.open({
-      templateUrl:
-        '/static/partials/node-relationship/dialogs/input-dialog.html',
+      templateUrl: '/static/partials/node-relationship/dialogs/input-dialog.html',
       controller: 'InputDialogInstanceCtrl',
       resolve: {
         config: function () {
@@ -170,8 +169,7 @@ function NodeRelationshipListCtrl (
     };
 
     var modalInstance = $uibModal.open({
-      templateUrl:
-        '/static/partials/node-relationship/dialogs/input-dialog.html',
+      templateUrl: '/static/partials/node-relationship/dialogs/input-dialog.html',
       controller: 'InputDialogInstanceCtrl',
       resolve: {
         config: function () {
@@ -203,8 +201,7 @@ function NodeRelationshipListCtrl (
     };
 
     var modalInstance = $uibModal.open({
-      templateUrl:
-      '/static/partials/node-relationship/dialogs/confirmation-dialog.html',
+      templateUrl: '/static/partials/node-relationship/dialogs/confirmation-dialog.html',
       controller: 'ConfirmationDialogInstanceCtrl',
       resolve: {
         config: function () {

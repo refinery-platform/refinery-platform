@@ -1,4 +1,6 @@
-function EmailInviteCtrl($uibModalInstance, groupInviteService, groupDataService) {
+'use strict';
+
+function EmailInviteCtrl ($uibModalInstance, groupInviteService, groupDataService) {
   var that = this;
   that.$uibModalInstance = $uibModalInstance;
   that.groupInviteService = groupInviteService;
@@ -13,12 +15,12 @@ EmailInviteCtrl.prototype.sendInvite = function (email) {
     group_id: that.groupDataService.activeGroup.id
   }).$promise.then(
     function (data) {
-      bootbox.alert("Invitation succesfully sent to " + email);
+      bootbox.alert('Invitation succesfully sent to ' + email);
       that.groupDataService.update();
       that.$uibModalInstance.dismiss();
     }
   ).catch(function (error) {
-    console.error(error);    
+    console.error(error);
   });
 };
 

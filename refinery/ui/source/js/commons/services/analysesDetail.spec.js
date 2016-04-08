@@ -46,7 +46,9 @@ describe('Common.service.analysisDetail: unit tests', function () {
           settings.appRoot +
           '/analysis_manager/' +
           validUuid + params,
-          { uuid: validUuid },
+          {
+            uuid: validUuid
+          },
           header
       ).respond(200, fakeResponse);
     });
@@ -66,7 +68,7 @@ describe('Common.service.analysisDetail: unit tests', function () {
       var promise = service.query({
         uuid: validUuid
       })
-      .$promise.then(function (response) {
+        .$promise.then(function (response) {
         results = response;
       });
 

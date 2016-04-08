@@ -1,45 +1,45 @@
+'use strict';
+
 angular
   .module('refineryAnalysisMonitor')
   .directive(
-  "rpAnalysisMonitorGlobalListStatusPopover",
-  ['$compile',
-    '$templateCache',
-    '$',
-    '$timeout',
-    '$rootScope',
-    rpAnalysisMonitorGlobalListStatusPopover
-  ]
+    'rpAnalysisMonitorGlobalListStatusPopover',
+    ['$compile',
+      '$templateCache',
+      '$',
+      '$timeout',
+      '$rootScope',
+      rpAnalysisMonitorGlobalListStatusPopover
+    ]
 );
 
-function rpAnalysisMonitorGlobalListStatusPopover(
+function rpAnalysisMonitorGlobalListStatusPopover (
   $compile, $templateCache, $, $timeout, $rootScope
 ) {
-  "use strict";
-
   return {
-    restrict: "AE",
+    restrict: 'AE',
     controller: 'AnalysisMonitorCtrl',
     controllerAs: 'PopAMCtrl',
     link: function (scope, element, attrs) {
       //The script is in the base.html template.
-      var template = $templateCache.get("analysesgloballist.html");
+      var template = $templateCache.get('analysesgloballist.html');
       var popOverContent = $compile(template)(scope);
       $rootScope.insidePopover = false;
       var options = {
         content: popOverContent,
-        placement: "left",
+        placement: 'left',
         html: true,
-        toggle: "popover",
+        toggle: 'popover'
       };
       $(element).popover(options);
 
       //catches all clicks, so popover will hide if you click anywhere other
       // than icon & popover
-      $("body").on('click', function (e) {
+      $('body').on('click', function (e) {
         //starts api calls if icon is clicked
-        if(e.target.id === 'global-analysis-status-run' ||
-           e.target.id === 'global-analysis-status' ||
-           e.target.id === 'global-analysis-status-run-div'){
+        if (e.target.id === 'global-analysis-status-run' ||
+          e.target.id === 'global-analysis-status' ||
+          e.target.id === 'global-analysis-status-run-div') {
           $('#global-analysis-status-run-div').tooltip('hide');
           $('#global-analysis-status').tooltip('hide');
           scope.PopAMCtrl.updateAnalysesGlobalList();
@@ -52,6 +52,6 @@ function rpAnalysisMonitorGlobalListStatusPopover(
           scope.PopAMCtrl.cancelTimerGlobalList();
         }
       });
-    },
+    }
   };
 }

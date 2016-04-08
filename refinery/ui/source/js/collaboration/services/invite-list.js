@@ -1,4 +1,6 @@
-function InviteListService(groupListService, groupInviteService) {
+'use strict';
+
+function InviteListService (groupListService, groupInviteService) {
   this.groupListService = groupListService;
   this.groupInviteService = groupInviteService;
 }
@@ -13,7 +15,7 @@ Object.defineProperty(
   }
 );
 
-function millisToTime(t) {
+function millisToTime (t) {
   return {
     d: Math.floor(t / 86400000),
     h: Math.floor((t % 86400000) / 3600000),
@@ -25,27 +27,26 @@ function millisToTime(t) {
 InviteListService.prototype.update = function () {
   if (this.groupListService.activeGroup) {
     return this.groupInviteService.query({
-        group_id: this.groupListService.activeGroup.id
-      }).$promise.then(function (data) {
-        this.list = data.objects.map(function (i) {
-          var offset = new Date().getTimezoneOffset() * 60000;
-          var createdDate = new Date(new Date(i.created).getTime() + offset);
-          var expiresDate = new Date(new Date(i.expires).getTime() + offset);
-          var expireTime = millisToTime(expiresDate.getTime() - createdDate.getTime());
-          i.created = humanize.date('M d @ h:m A', createdDate);
-          i.expires = humanize.date('M d @ h:m A', expiresDate);
-          i.expireDuration =
-            humanize.relativeTime(humanize.time() +
-            expireTime.d * 86400 +
-            expireTime.h * 3600 +
-            expireTime.m * 60 +
-            expireTime.s);
-          return i;
-        });
-      }.bind(this));
-    } else {
-      return null;
-    }
+      group_id: this.groupListService.activeGroup.id
+    }).$promise.then(function (data) {
+      this.list = data.objects.map(function (i) {
+        var offset = new Date().getTimezoneOffset() * 60000;
+        var createdDate = new Date(new Date(i.created).getTime() + offset);
+        var expiresDate = new Date(new Date(i.expires).getTime() + offset);
+        var expireTime = millisToTime(expiresDate.getTime() - createdDate.getTime());
+        i.created = humanize.date('M d @ h:m A', createdDate);
+        i.expires = humanize.date('M d @ h:m A', expiresDate);
+        i.expireDuration = humanize.relativeTime(humanize.time() +
+          expireTime.d * 86400 +
+          expireTime.h * 3600 +
+          expireTime.m * 60 +
+          expireTime.s);
+        return i;
+      });
+    }.bind(this));
+  } else {
+    return null;
+  }
 };
 
 angular

@@ -1,3 +1,5 @@
+'use strict';
+
 function AppCtrl ($, $rootScope, $timeout, $window, _, pubSub, settings) {
   this.$window = $window;
   this.jqWindow = $($window);
@@ -34,8 +36,8 @@ function AppCtrl ($, $rootScope, $timeout, $window, _, pubSub, settings) {
   $rootScope.$on('$reloadlessStateChangeSuccess', function (e, a) {
     $timeout(function () {
       if ($window.ga) {
-        var hash = $window.location.hash,
-            path = $window.location.pathname;
+        var hash = $window.location.hash;
+        var path = $window.location.pathname;
 
         if (hash.length > 2) {
           path = path + hash;

@@ -1,5 +1,7 @@
+'use strict';
+
 // Wraps groupListService and groupInviteService
-function GroupDataService(groupListService, inviteListService) {
+function GroupDataService (groupListService, inviteListService) {
   this.groupListService = groupListService;
   this.inviteListService = inviteListService;
 }

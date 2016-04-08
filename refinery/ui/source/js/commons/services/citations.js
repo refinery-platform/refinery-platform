@@ -125,13 +125,17 @@ angular
         if (reference >>> 0 === parseFloat(reference)) {
           // PubMed ID
           var summary = pubmedService
-            .get('summary', { id: reference })
+            .get('summary', {
+              id: reference
+            })
             .then(function (data) {
               return preparePubmedSummary(reference, data.result[reference]);
             });
 
           var abstract = pubmedService
-            .get('abstract', { id: reference })
+            .get('abstract', {
+              id: reference
+            })
             .then(function (data) {
               return preparePubmedAbstract(data);
             });
@@ -160,14 +164,18 @@ angular
 
           // Look for a PubMed entry
           var pubmed = pubmedService
-            .get('search', { term: doiService.escape(matches[3]) })
+            .get('search', {
+              term: doiService.escape(matches[3])
+            })
             .then(function (data) {
               return data.esearchresult.idlist[0];
             })
             .then(function (pubMedId) {
               if (pubMedId) {
                 return pubmedService
-                  .get('abstract', { id: pubMedId })
+                  .get('abstract', {
+                    id: pubMedId
+                  })
                   .then(function (data) {
                     return preparePubmedAbstract(data);
                   })

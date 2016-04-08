@@ -1,4 +1,6 @@
-function GroupEditorCtrl($uibModalInstance, groupService, groupMemberService, groupDataService, group) {
+'use strict';
+
+function GroupEditorCtrl ($uibModalInstance, groupService, groupMemberService, groupDataService, group) {
   var that = this;
   that.$uibModalInstance = $uibModalInstance;
   that.groupService = groupService;
@@ -20,7 +22,7 @@ GroupEditorCtrl.prototype.leaveGroup = function () {
     }
   ).catch(function (error) {
     console.error(error);
-    bootbox.alert("Are you the only member or manager left?");
+    bootbox.alert('Are you the only member or manager left?');
   });
 };
 
@@ -36,7 +38,7 @@ GroupEditorCtrl.prototype.deleteGroup = function () {
     }
   ).catch(function (error) {
     console.error(error);
-    bootbox.alert("Group could not be deleted");
+    bootbox.alert('Group could not be deleted');
   });
 };
 

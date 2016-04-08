@@ -1,5 +1,6 @@
-/* eslint no-use-before-define:0 */
 'use strict';
+
+/* eslint no-use-before-define:0 */
 
 function DataSetFactory (
   $q, _, settings, DataSetDataApi, DataSetDataDetailsApi, DataSetSearchApi,

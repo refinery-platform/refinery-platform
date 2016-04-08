@@ -1,3 +1,5 @@
+'use strict';
+
 angular
   .module('refineryDataSetNav')
   .controller(
@@ -7,11 +9,11 @@ angular
       '$timeout',
       '$window',
       '$',
-      function($rootScope, $timeout, $window, $) {
-        $rootScope.mode = "browse";
+      function ($rootScope, $timeout, $window, $) {
+        $rootScope.mode = 'browse';
         $rootScope.showCtrlTab = false;
-        $rootScope.mainTabSpanSize = "col-md-12 no-margin";
-        $rootScope.ctrlTabSpanSize = "";
+        $rootScope.mainTabSpanSize = 'col-md-12 no-margin';
+        $rootScope.ctrlTabSpanSize = '';
 
         // calls global resizing function implemented in base.html to rescale
         // height of scrollable elements timeout is needed to execute after DOM
@@ -23,7 +25,7 @@ angular
         $($window).trigger('refinery/floatThead/reflow');
       }
     ]
-  );
+);
 
 angular
   .module('refineryDataSetNav')
@@ -34,12 +36,12 @@ angular
       '$timeout',
       '$window',
       '$',
-      function($rootScope, $timeout, $window, $) {
+      function ($rootScope, $timeout, $window, $) {
         $('#filesTab').addClass('active');
-        $rootScope.mode = "browse";
+        $rootScope.mode = 'browse';
         $rootScope.showCtrlTab = false;
-        $rootScope.mainTabSpanSize = "col-md-12 no-margin";
-        $rootScope.ctrlTabSpanSize = "";
+        $rootScope.mainTabSpanSize = 'col-md-12 no-margin';
+        $rootScope.ctrlTabSpanSize = '';
 
         // calls global resizing function implemented in base.html to rescale
         // height of scrollable elements timeout is needed to execute after DOM
@@ -51,7 +53,7 @@ angular
         $($window).trigger('refinery/floatThead/reflow');
       }
     ]
-  );
+);
 
 angular
   .module('refineryDataSetNav')
@@ -62,12 +64,12 @@ angular
       '$timeout',
       '$window',
       '$',
-      function($rootScope, $timeout, $window, $) {
+      function ($rootScope, $timeout, $window, $) {
         $('#filesTab').addClass('active');
-        $rootScope.mode = "analyze";
+        $rootScope.mode = 'analyze';
         $rootScope.showCtrlTab = true;
-        $rootScope.mainTabSpanSize = "col-md-10";
-        $rootScope.ctrlTabSpanSize = "col-md-2";
+        $rootScope.mainTabSpanSize = 'col-md-10';
+        $rootScope.ctrlTabSpanSize = 'col-md-2';
 
         // calls global resizing function implemented in base.html to rescale
         // height of scrollable elements timeout is needed to execute after DOM
@@ -79,7 +81,7 @@ angular
         $($window).trigger('refinery/floatThead/reflow');
       }
     ]
-  );
+);
 
 angular
   .module('refineryDataSetNav')
@@ -90,12 +92,12 @@ angular
       '$timeout',
       '$window',
       '$',
-      function($rootScope, $timeout, $window, $) {
+      function ($rootScope, $timeout, $window, $) {
         $('#filesTab').addClass('active');
-        $rootScope.mode = "visualize";
+        $rootScope.mode = 'visualize';
         $rootScope.showCtrlTab = true;
-        $rootScope.mainTabSpanSize = "col-md-10";
-        $rootScope.ctrlTabSpanSize = "col-md-2";
+        $rootScope.mainTabSpanSize = 'col-md-10';
+        $rootScope.ctrlTabSpanSize = 'col-md-2';
 
         // calls global resizing function implemented in base.html to rescale
         // height of scrollable elements timeout is needed to execute after DOM
@@ -107,7 +109,7 @@ angular
         $($window).trigger('refinery/floatThead/reflow');
       }
     ]
-  );
+);
 
 // This is just a placeholder controller until we re-implement that tab's
 // content in Angular.
@@ -119,19 +121,18 @@ angular
       '$timeout',
       '$window',
       '$',
-      function($timeout, $window, $) {
+      function ($timeout, $window, $) {
         if ($window.sizing) {
           $timeout(sizing, 0);
         }
       }
     ]
-  );
+);
 
 angular
   .module('refineryDataSetNav')
   .config(['refineryStateProvider', 'refineryUrlRouterProvider',
     function (refineryStateProvider, refineryUrlRouterProvider) {
-
       refineryStateProvider
         .state(
           'files',
@@ -142,7 +143,7 @@ angular
           },
           '^\/data_sets\/.*\/$',
           true
-        )
+      )
         .state(
           'browse',
           {
@@ -152,7 +153,7 @@ angular
           },
           '^\/data_sets\/.*\/$',
           true
-        )
+      )
         .state(
           'analyze',
           {
@@ -162,17 +163,17 @@ angular
           },
           '^\/data_sets\/.*\/$',
           true
-          )
+      )
         .state(
           'visualize',
           {
-            templateUrl: "/static/partials/data-set-ui-mode-visualize.html",
+            templateUrl: '/static/partials/data-set-ui-mode-visualize.html',
             url: '/files/visualize/',
             controller: 'refineryDataSetNavVisualizeCtrl'
           },
           '^\/data_sets\/.*\/$',
           true
-        )
+      )
         .state(
           'analyses',
           {
@@ -182,7 +183,7 @@ angular
           },
           '^\/data_sets\/.*\/$',
           true
-        )
+      )
         .state(
           'attributes',
           {
@@ -191,7 +192,7 @@ angular
           },
           '^\/data_sets\/.*\/$',
           true
-        )
+      )
         .state(
           'details',
           {
@@ -200,7 +201,7 @@ angular
           },
           '^\/data_sets\/.*\/$',
           true
-        )
+      )
         .state(
           'sharing',
           {
@@ -209,8 +210,8 @@ angular
           },
           '^\/data_sets\/.*\/$',
           true
-        )
-                .state(
+      )
+        .state(
           'files',
           {
             url: '/files/',
@@ -219,7 +220,7 @@ angular
           },
           '^\/data_sets2\/.*\/$',
           true
-        )
+      )
         .state(
           'browse',
           {
@@ -229,7 +230,7 @@ angular
           },
           '^\/data_sets2\/.*\/$',
           true
-        )
+      )
         .state(
           'analyze',
           {
@@ -239,17 +240,17 @@ angular
           },
           '^\/data_sets2\/.*\/$',
           true
-          )
+      )
         .state(
           'visualize',
           {
-            templateUrl: "/static/partials/data-set-ui-mode-visualize.html",
+            templateUrl: '/static/partials/data-set-ui-mode-visualize.html',
             url: '/files/visualize/',
             controller: 'refineryDataSetNavVisualizeCtrl'
           },
           '^\/data_sets2\/.*\/$',
           true
-        )
+      )
         .state(
           'analyses',
           {
@@ -259,7 +260,7 @@ angular
           },
           '^\/data_sets2\/.*\/$',
           true
-        )
+      )
         .state(
           'details',
           {
@@ -268,19 +269,19 @@ angular
           },
           '^\/data_sets2\/.*\/$',
           true
-        );
+      );
 
       refineryUrlRouterProvider
         .otherwise(
           '/files/browse',
           '^\/data_sets\/.*\/$',
           true
-        )
+      )
         .otherwise(
           '/files/browse',
           '^\/data_sets2\/.*\/$',
           true
-        );
+      );
     }
   ]
 );

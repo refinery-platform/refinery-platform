@@ -1,51 +1,50 @@
+'use strict';
+
 angular
   .module('refineryFileBrowser')
-  .directive("rpFileBrowserAssayFilters",
-  [
-    '$timeout',
-    '$location',
-    rpFileBrowserAssayFilters
-  ]
+  .directive('rpFileBrowserAssayFilters',
+    [
+      '$timeout',
+      '$location',
+      rpFileBrowserAssayFilters
+    ]
 );
 
-function rpFileBrowserAssayFilters( $timeout, $location) {
-    "use strict";
-
+function rpFileBrowserAssayFilters ($timeout, $location) {
   return {
     restrict: 'E',
     templateUrl: '/static/partials/file-browser/partials/assay-filters.html',
     controller: 'FileBrowserCtrl',
     controllerAs: 'FBCtrl',
     bindToController: {
-       attributeFilter: '@',
-       analysisFilter: '@'
+      attributeFilter: '@',
+      analysisFilter: '@'
     },
-    link: function(scope, element, attr, ctrl){
-
+    link: function (scope, element, attr, ctrl) {
       //ng-click event for attribute filter panels
-      scope.dropAttributePanel = function(e, attributeName){
+      scope.dropAttributePanel = function (e, attributeName) {
         e.preventDefault();
         var escapeAttributeName = attributeName.replace(' ', '-');
         var attribute = angular.element(
           document.querySelector('#' + escapeAttributeName)
         );
-        if(attribute.hasClass('in')){
+        if (attribute.hasClass('in')) {
           attribute.removeClass('in');
-        }else{
+        } else {
           attribute.addClass('in');
         }
       };
 
       //Drop down windows when they are in the URL query
-      scope.$on('rf/attributeFilter-ready', function(){
+      scope.$on('rf/attributeFilter-ready', function () {
         scope.generateFilterDropSelection();
       });
 
-      scope.generateFilterDropSelection = function(){
+      scope.generateFilterDropSelection = function () {
         var queryFields = Object.keys($location.search());
         var allFilters = {};
         angular.copy(scope.FBCtrl.attributeFilter, allFilters);
-        allFilters['Analysis'] = scope.FBCtrl.analysisFilter['Analysis'];
+        allFilters.Analysis = scope.FBCtrl.analysisFilter.Analysis;
 
         angular.forEach(allFilters, function (attributeObj, attribute) {
           var allFields = Object.keys(attributeObj.facetObj);
@@ -57,9 +56,9 @@ function rpFileBrowserAssayFilters( $timeout, $location) {
       };
 
       //Loops through fields to find matching attributes and drops down panel
-      var updateDomDropdown = function(allFields, queryFields, attributeName){
-        for(var ind=0; ind<allFields.length; ind++){
-          if(queryFields.indexOf(allFields[ind]) > -1){
+      var updateDomDropdown = function (allFields, queryFields, attributeName) {
+        for (var ind = 0; ind < allFields.length; ind++) {
+          if (queryFields.indexOf(allFields[ind]) > -1) {
             var escapeAttributeName = attributeName.replace(' ', '-');
             angular.element(
               document.querySelector('#' + escapeAttributeName)

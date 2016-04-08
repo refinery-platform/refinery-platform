@@ -1,10 +1,11 @@
+'use strict';
+
 angular.module('refineryAnalysisMonitor')
-    .controller('AnalysisMonitorCtrl',
-    ['analysisMonitorFactory', 'analysisMonitorAlertService','$scope','$timeout', '$rootScope', AnalysisMonitorCtrl]);
+  .controller('AnalysisMonitorCtrl',
+    ['analysisMonitorFactory', 'analysisMonitorAlertService', '$scope', '$timeout', '$rootScope', AnalysisMonitorCtrl]);
 
 
-function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService, $scope, $timeout, $rootScope) {
-  "use strict";
+function AnalysisMonitorCtrl (analysisMonitorFactory, analysisMonitorAlertService, $scope, $timeout, $rootScope) {
   var vm = this;
   //Long list of analysis
   vm.analysesList = [];
@@ -23,8 +24,8 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
   //Used for UI displays
   vm.launchAnalysisFlag = false;
   vm.analysesRunningGlobalListCount = 0;
-  vm.analysesLoadingFlag = "LOADING";
-  vm.analysesGlobalLoadingFlag = "LOADING";
+  vm.analysesLoadingFlag = 'LOADING';
+  vm.analysesGlobalLoadingFlag = 'LOADING';
   vm.initializedFlag = {};
 
   // On data set browser analysis tab, method set timer and refreshes the
@@ -33,12 +34,12 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
     var param = {
       format: 'json',
       limit: 0,
-      'data_set__uuid': dataSetUuid,
+      'data_set__uuid': dataSetUuid
     };
 
-    vm.timerList =  $timeout(vm.updateAnalysesList, 15000);
+    vm.timerList = $timeout(vm.updateAnalysesList, 15000);
     //Cancels timer when away from analyses tab
-    $scope.$on('refinery/analyze-tab-inactive', function(){
+    $scope.$on('refinery/analyze-tab-inactive', function () {
       $timeout.cancel(vm.timerList);
     });
 
@@ -54,7 +55,7 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
   // analysis list and refreshes details for running analyses.
   vm.updateAnalysesGlobalList = function () {
     var params = {
-      format:'json',
+      format: 'json',
       limit: 10
     };
 
@@ -64,7 +65,7 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
       vm.refreshAnalysesGlobalDetail();
     });
 
-   vm.timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 30000);
+    vm.timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 30000);
   };
 
   // This method runs when user is in the data set browser. It triggers
@@ -85,7 +86,7 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
     vm.timerRunList = $timeout(vm.updateAnalysesRunningList, 10000);
 
     //Cancels when user is away from dataset browser
-    if(typeof dataSetUuid === 'undefined' || dataSetUuid === "None"){
+    if (typeof dataSetUuid === 'undefined' || dataSetUuid === 'None') {
       $timeout.cancel(vm.timerRunList);
     }
   };
@@ -93,7 +94,7 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
   //Method always runs to show running number on global analysis icon
   vm.updateAnalysesRunningGlobalList = function () {
     var params = {
-      format:'json',
+      format: 'json',
       limit: 0,
       status__in: 'RUNNING,UNKNOWN'
     };
@@ -105,7 +106,7 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
     });
     vm.timerRunGlobalList = $timeout(vm.updateAnalysesRunningGlobalList, 30000);
 
-    if(typeof dataSetUuid === 'undefined' || dataSetUuid === "None"){
+    if (typeof dataSetUuid === 'undefined' || dataSetUuid === 'None') {
       $timeout.cancel(vm.timerRunList);
     }
   };
@@ -114,51 +115,51 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
     vm.setCancelAnalysisFlag(true, uuid);
 
     analysisMonitorFactory.postCancelAnalysis(uuid)
-    .then(function (result) {
-      //Immediate refresh of analysis list
-      $timeout.cancel(vm.timerList);
+      .then(function (result) {
+        //Immediate refresh of analysis list
+        $timeout.cancel(vm.timerList);
 
-      vm.updateAnalysesList().then(function(response) {
-        $rootScope.$broadcast("rf/cancelAnalysis");
-        //Removes flag because list is updated
+        vm.updateAnalysesList().then(function (response) {
+          $rootScope.$broadcast('rf/cancelAnalysis');
+          //Removes flag because list is updated
+          vm.setCancelAnalysisFlag(false, uuid);
+        });
+      }, function (error) {
         vm.setCancelAnalysisFlag(false, uuid);
       });
-    }, function (error) {
-      vm.setCancelAnalysisFlag(false, uuid);
-    });
   };
 
   /** HELPER FUNCTIONS **/
-  vm.setAnalysesLoadingFlag = function(){
-    if(vm.analysesList.length === 0){
-        vm.analysesLoadingFlag = "EMPTY";
-      }else{
-        vm.analysesLoadingFlag = "DONE";
-      }
-  };
-
-  vm.setAnalysesGlobalLoadingFlag = function(){
-    if(vm.analysesGlobalList.length === 0){
-      vm.analysesGlobalLoadingFlag = "EMPTY";
-    }else{
-      vm.analysesGlobalLoadingFlag = "DONE";
+  vm.setAnalysesLoadingFlag = function () {
+    if (vm.analysesList.length === 0) {
+      vm.analysesLoadingFlag = 'EMPTY';
+    } else {
+      vm.analysesLoadingFlag = 'DONE';
     }
   };
 
-  vm.cancelTimerGlobalList = function(){
-    if(typeof vm.timerGlobalList !== "undefined") {
+  vm.setAnalysesGlobalLoadingFlag = function () {
+    if (vm.analysesGlobalList.length === 0) {
+      vm.analysesGlobalLoadingFlag = 'EMPTY';
+    } else {
+      vm.analysesGlobalLoadingFlag = 'DONE';
+    }
+  };
+
+  vm.cancelTimerGlobalList = function () {
+    if (typeof vm.timerGlobalList !== 'undefined') {
       $timeout.cancel(vm.timerGlobalList);
     }
   };
 
-  vm.cancelTimerRunningList = function(){
-    if(typeof vm.timerRunList !== "undefined") {
+  vm.cancelTimerRunningList = function () {
+    if (typeof vm.timerRunList !== 'undefined') {
       $timeout.cancel(vm.timerRunList);
     }
   };
 
-  vm.cancelTimerRunningGlobalList = function(){
-    if(typeof vm.timerRunGlobalList !== "undefined") {
+  vm.cancelTimerRunningGlobalList = function () {
+    if (typeof vm.timerRunGlobalList !== 'undefined') {
       $timeout.cancel(vm.timerRunGlobalList);
     }
   };
@@ -170,17 +171,17 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
     }
   };
 
-  vm.refreshAnalysesGlobalDetail = function(){
+  vm.refreshAnalysesGlobalDetail = function () {
     vm.analysesRunningGlobalList = analysisMonitorFactory.analysesRunningGlobalList;
     for (var i = 0; i < vm.analysesRunningGlobalList.length; i++) {
       vm.updateAnalysesGlobalDetail(i);
     }
   };
 
-//Analysis monitor details gets populated from service - tabular
+  //Analysis monitor details gets populated from service - tabular
   vm.updateAnalysesDetail = function (i) {
     (function (i) {
-      if(typeof vm.analysesRunningList[i] !== 'undefined') {
+      if (typeof vm.analysesRunningList[i] !== 'undefined') {
         var runningUuid = vm.analysesRunningList[i].uuid;
         analysisMonitorFactory.getAnalysesDetail(runningUuid).then(function (response) {
           vm.analysesDetail[runningUuid] = analysisMonitorFactory.analysesDetail[runningUuid];
@@ -189,10 +190,10 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
     })(i);
   };
 
-//Analysis monitor details gets populated from service - global
+  //Analysis monitor details gets populated from service - global
   vm.updateAnalysesGlobalDetail = function (i) {
     (function (i) {
-      if(typeof vm.analysesRunningGlobalList[i] !== 'undefined') {
+      if (typeof vm.analysesRunningGlobalList[i] !== 'undefined') {
         var runningUuid = vm.analysesRunningGlobalList[i].uuid;
         analysisMonitorFactory.getAnalysesDetail(runningUuid).then(function (response) {
           vm.analysesGlobalDetail[runningUuid] = analysisMonitorFactory.analysesDetail[runningUuid];
@@ -201,10 +202,10 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
     })(i);
   };
 
-  vm.setCancelAnalysisFlag = function(logic, uuid){
-    if(typeof vm.analysesDetail[uuid] !== 'undefined'){
+  vm.setCancelAnalysisFlag = function (logic, uuid) {
+    if (typeof vm.analysesDetail[uuid] !== 'undefined') {
       vm.analysesDetail[uuid].cancelingAnalyses = logic;
-    }else{
+    } else {
       vm.initializedFlag[uuid] = logic;
     }
   };
@@ -218,23 +219,23 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
   };
 
   vm.isAnalysesRunningGlobal = function () {
-    if(typeof vm.analysesRunningGlobalList !== 'undefined' && vm.analysesRunningGlobalList.length > 0) {
+    if (typeof vm.analysesRunningGlobalList !== 'undefined' && vm.analysesRunningGlobalList.length > 0) {
       return true;
     } else {
       return false;
     }
   };
 
-  vm.isEmptyAnalysesGlobalList = function(){
-    if(typeof vm.analysesRunningList !== 'undefined' && vm.analysesGlobalList.length > 0){
+  vm.isEmptyAnalysesGlobalList = function () {
+    if (typeof vm.analysesRunningList !== 'undefined' && vm.analysesGlobalList.length > 0) {
       return false;
-    }else{
+    } else {
       return true;
     }
   };
 
-  vm.isAnalysisDetailLoaded = function(uuid){
-    if(typeof vm.analysesDetail[uuid] !== "undefined"){
+  vm.isAnalysisDetailLoaded = function (uuid) {
+    if (typeof vm.analysesDetail[uuid] !== 'undefined') {
       return true;
     } else {
       return false;
@@ -252,7 +253,7 @@ function AnalysisMonitorCtrl(analysisMonitorFactory, analysisMonitorAlertService
   // with analyses alert msg.
   $scope.checkAnalysesViewFlag = function () {
     var flag;
-    if (typeof window.analysisUuid === 'undefined' || window.analysisUuid === "None") {
+    if (typeof window.analysisUuid === 'undefined' || window.analysisUuid === 'None') {
       flag = false;
     } else {
       flag = true;

@@ -1,4 +1,6 @@
-function MemberEditorCtrl($uibModalInstance, groupDataService, groupMemberService, member) {
+'use strict';
+
+function MemberEditorCtrl ($uibModalInstance, groupDataService, groupMemberService, member) {
   var that = this;
   that.$uibModalInstance = $uibModalInstance;
   that.groupDataService = groupDataService;
@@ -19,7 +21,7 @@ MemberEditorCtrl.prototype.promote = function () {
     }
   ).catch(function (error) {
     console.error(error);
-    bootbox.alert("Could not promote member");
+    bootbox.alert('Could not promote member');
   });
 };
 
@@ -36,7 +38,7 @@ MemberEditorCtrl.prototype.demote = function () {
     }
   ).catch(function (error) {
     console.error(error);
-    bootbox.alert("Are you the only member or manager left?");
+    bootbox.alert('Are you the only member or manager left?');
   });
 };
 
@@ -53,13 +55,13 @@ MemberEditorCtrl.prototype.remove = function () {
     }
   ).catch(function (error) {
     console.error(error);
-    bootbox.alert("Are you the only member or manager left?");
+    bootbox.alert('Are you the only member or manager left?');
   });
 };
 
 angular
   .module('refineryCollaboration')
-  .controller('MemberEditorCtrl',[
+  .controller('MemberEditorCtrl', [
     '$uibModalInstance',
     'groupDataService',
     'groupMemberService',

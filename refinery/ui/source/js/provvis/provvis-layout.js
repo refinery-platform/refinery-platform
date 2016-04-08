@@ -1,8 +1,9 @@
+'use strict';
+
 /**
  * Module for layout.
  */
 var provvisLayout = (function () {
-
   /**
    * Generic implementation for the linear time topology sort [Kahn 1962]
    * (http://en.wikipedia.org/wiki/Topological_sorting).
@@ -16,11 +17,10 @@ var provvisLayout = (function () {
 
     /* For each successor node. */
     var handleSuccessorNodes = function (curNode) {
-
       /* When the analysis layout is computed, links occur between Nodes or
        * analyses. */
       if (curNode instanceof provvisDecl.Node &&
-          parent instanceof provvisDecl.ProvGraph) {
+        parent instanceof provvisDecl.ProvGraph) {
         curNode = curNode.parent.parent;
       }
 
@@ -29,13 +29,12 @@ var provvisLayout = (function () {
         return s.parent === null || s.parent === parent;
       }).forEach(function (succNode) {
         if (succNode instanceof provvisDecl.Node &&
-            parent instanceof provvisDecl.ProvGraph) {
+          parent instanceof provvisDecl.ProvGraph) {
           succNode = succNode.parent.parent;
         }
 
         /* Mark edge as removed. */
         succNode.predLinks.values().forEach(function (predLink) {
-
           /* The source node directly is an analysis. */
           var predLinkNode = null;
           if (curNode instanceof provvisDecl.Analysis) {
@@ -56,8 +55,8 @@ var provvisLayout = (function () {
         /* When successor node has no other incoming edges,
          insert successor node into result set. */
         if (!succNode.predLinks.values().some(function (predLink) {
-          return !predLink.l.ts.removed;
-        }) && !succNode.l.ts.removed) {
+            return !predLink.l.ts.removed;
+          }) && !succNode.l.ts.removed) {
           startNodes.push(succNode);
           succNode.l.ts.removed = true;
         }
@@ -94,17 +93,16 @@ var provvisLayout = (function () {
    * @param parent The parent node.
    */
   var layerNodes = function (tsNodes, parent) {
-    var layer = 0,
-        preds = [];
+    var layer = 0;
+    var preds = [];
 
     tsNodes.forEach(function (n) {
-
       /* Get incoming predecessors. */
       n.preds.values().filter(function (p) {
         if (p.parent === parent) {
           preds.push(p);
         } else if (p instanceof provvisDecl.Node &&
-            parent instanceof provvisDecl.ProvGraph) {
+          parent instanceof provvisDecl.ProvGraph) {
           preds.push(p.parent.parent);
         }
       });
@@ -129,8 +127,8 @@ var provvisLayout = (function () {
    * @returns {Array} Layer grouped nodes.
    */
   var groupNodes = function (tsNodes) {
-    var layer = 0,
-        lgNodes = [];
+    var layer = 0;
+    var lgNodes = [];
 
     lgNodes.push([]);
 
@@ -157,19 +155,17 @@ var provvisLayout = (function () {
    * @param cell Width and height of a workflow node.
    */
   var reorderSubanalysisNodes = function (bclgNodes, cell) {
-
     /* Initializations. */
-    var degree = 1,
-        accCoords = 0,
-        usedCoords = [],
-        delta = 0,
-        colList = [];
+    var degree = 1;
+    var accCoords = 0;
+    var usedCoords = [];
+    var delta = 0;
+    var colList = [];
 
     bclgNodes.forEach(function (l) {
       l.forEach(function (an) {
         usedCoords = [];
         an.children.values().forEach(function (san, j) {
-
           degree = 1;
           accCoords = 0;
           delta = 0;
@@ -222,7 +218,6 @@ var provvisLayout = (function () {
 
     /* Reorder most left layer based on the second most left layer. */
     bclgNodes[0][0].children.values().forEach(function (san, j) {
-
       /* Only one column does exist in this view. */
       san.x = 0;
       san.y = j * cell.height;
@@ -234,11 +229,11 @@ var provvisLayout = (function () {
       san.succs.values().forEach(function (ssan) {
         ssan.inputs.values().forEach(function (ni) {
           if (ni.preds.values().some(function (pni) {
-            return pni.parent === san;
-          })) {
+              return pni.parent === san;
+            })) {
             /* Prioritize subanalysis ordering over workflow node ordering. */
             accCoords += ssan.parent.y + ssan.y +
-                ((ssan.y / cell.height) / 10) + ni.y;
+            ((ssan.y / cell.height) / 10) + ni.y;
             degree++;
           }
         });
@@ -285,13 +280,11 @@ var provvisLayout = (function () {
    * @param cell Width and height of a workflow node.
    */
   var dagreWorkflowLayout = function (graph, cell) {
-
-    graph.saNodes.forEach( function (san) {
-
+    graph.saNodes.forEach(function (san) {
       /* Init graph. */
       var g = new dagre.graphlib.Graph();
       g.setGraph({
-        rankdir: "LR",
+        rankdir: 'LR',
         nodesep: 0,
         edgesep: 0,
         ranksep: 0,
@@ -318,7 +311,7 @@ var provvisLayout = (function () {
           weight: 1,
           width: 0,
           height: 0,
-          labelpos: "r",
+          labelpos: 'r',
           labeloffset: 10
         });
       });
@@ -343,16 +336,16 @@ var provvisLayout = (function () {
    * @param cell Grid cell.
    */
   var dagreGraphLayout = function (graph, cell) {
-
     /* Init graph. */
     var g = new dagre.graphlib.Graph();
     g.setGraph({
-      rankdir: "LR",
+      rankdir: 'LR',
       nodesep: 0,
       edgesep: 0,
       ranksep: 0,
       marginx: 0,
-      marginy: 0});
+      marginy: 0
+    });
 
     g.setDefaultEdgeLabel(function () {
       return {};
@@ -374,7 +367,7 @@ var provvisLayout = (function () {
         weight: 1,
         width: 0,
         height: 0,
-        labelpos: "r",
+        labelpos: 'r',
         labeloffset: 10
       });
     });
@@ -385,11 +378,11 @@ var provvisLayout = (function () {
     var dlANodes = d3.entries(g._nodes);
     graph.aNodes.forEach(function (an) {
       an.x = parseInt(dlANodes.filter(function (d) {
-        return d.key === an.autoId.toString();
-      })[0].value.x - cell.width / 2, 10);
+          return d.key === an.autoId.toString();
+        })[0].value.x - cell.width / 2, 10);
       an.y = parseInt(dlANodes.filter(function (d) {
-        return d.key === an.autoId.toString();
-      })[0].value.y - cell.height / 2, 10);
+          return d.key === an.autoId.toString();
+        })[0].value.y - cell.height / 2, 10);
     });
   };
 
@@ -399,13 +392,12 @@ var provvisLayout = (function () {
    * @param cell Width and height of a workflow node.
    */
   var runLayoutPrivate = function (graph, cell) {
-
     /* Graph layout. */
     dagreGraphLayout(graph, cell);
 
     /* Workflow layout. */
     //graph.saNodes.forEach(function (san) {
-      dagreWorkflowLayout(graph, cell);
+    dagreWorkflowLayout(graph, cell);
     //});
 
     /* Analysis layout:
@@ -436,7 +428,7 @@ var provvisLayout = (function () {
       /* Analysis layout. */
       reorderSubanalysisNodes(bclgNodes, cell);
     } else {
-      throw "Graph is not acyclic.";
+      throw 'Graph is not acyclic.';
     }
     return bclgNodes;
   };

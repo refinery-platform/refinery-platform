@@ -1,5 +1,7 @@
+'use strict';
+
 angular.module('refineryAnalysisLaunch')
-    .controller('AnalysisLaunchModalCtrl',
+  .controller('AnalysisLaunchModalCtrl',
     [
       '$scope',
       '$uibModalInstance',
@@ -13,46 +15,46 @@ angular.module('refineryAnalysisLaunch')
 );
 
 
-function AnalysisLaunchModalCtrl(
+function AnalysisLaunchModalCtrl (
   $scope,
   $uibModalInstance,
   $window, timeStamp,
   workflow,
   analysisLaunchConfigService,
   analysisLaunchFactory
-){
+) {
   var nowTimeStamp = timeStamp.getTimeStamp();
   var workflowName = workflow.getName();
 
-  $scope.analysisLaunchFlag = "NOCALL";
+  $scope.analysisLaunchFlag = 'NOCALL';
   $scope.dataObj = {
-    "name":workflowName + " " + nowTimeStamp
+    'name': workflowName + ' ' + nowTimeStamp
   };
   analysisLaunchConfigService.setAnalysisConfig(
     {
       workflowUuid: workflow.getUuid()
-      }
+    }
   );
 
   $scope.ok = function () {
-    $scope.analysisLaunchFlag = "LOADING";
+    $scope.analysisLaunchFlag = 'LOADING';
 
-    if($scope.tempName !== null){
+    if ($scope.tempName !== null) {
 
       analysisLaunchConfigService.setAnalysisConfig(
         {
-          name:$scope.dataObj.name
+          name: $scope.dataObj.name
         }
       );
 
       var launchParams = analysisLaunchConfigService.getAnalysisConfig();
       analysisLaunchFactory.postLaunchAnalysis(launchParams)
-        .then(function(response){
-          $scope.analysisLaunchFlag = "SUCCESS";
-       }, function(error){
-         console.log(error);
-          $scope.analysisLaunchFlag = "FAILED";
-       });
+        .then(function (response) {
+          $scope.analysisLaunchFlag = 'SUCCESS';
+        }, function (error) {
+          console.log(error);
+          $scope.analysisLaunchFlag = 'FAILED';
+        });
     }
   };
 

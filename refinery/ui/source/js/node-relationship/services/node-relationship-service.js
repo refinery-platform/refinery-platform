@@ -1,6 +1,7 @@
+'use strict';
+
 /* eslint camelcase: 1 */
 
-'use strict';
 
 function nodeRelationshipService ($log, $window, NodeRelationshipResource) {
   var _createNodeRelationship = function (

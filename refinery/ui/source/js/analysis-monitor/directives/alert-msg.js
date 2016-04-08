@@ -1,18 +1,18 @@
+'use strict';
+
 angular.module('refineryAnalysisMonitor')
-  .directive("rpAnalysisMonitorAlertMsg", ["$location",rpAnalysisMonitorAlertMsg]);
+  .directive('rpAnalysisMonitorAlertMsg', ['$location', rpAnalysisMonitorAlertMsg]);
 
-function rpAnalysisMonitorAlertMsg($location) {
-  "use strict";
-
+function rpAnalysisMonitorAlertMsg ($location) {
   return {
     restrict: 'A',
     templateUrl: '/static/partials/analysis-monitor/partials/alert-msg.html',
     controller: 'AnalysisMonitorCtrl',
     controllerAs: 'AMCtrl',
     bindToController: {
-      analysesMsg: '@',
+      analysesMsg: '@'
     },
-    link: function(scope, element, attr){
+    link: function (scope, element, attr) {
       scope.AMCtrl.setAnalysesAlertMsg();
     }
   };

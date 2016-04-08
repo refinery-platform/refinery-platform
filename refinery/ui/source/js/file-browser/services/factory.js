@@ -1,6 +1,8 @@
+'use strict';
+
 angular
   .module('refineryFileBrowser')
-  .factory("fileBrowserFactory",
+  .factory('fileBrowserFactory',
     [
       '$http',
       'assayFileService',
@@ -8,10 +10,9 @@ angular
       '$window',
       fileBrowserFactory
     ]
-  );
+);
 
-function fileBrowserFactory($http, assayFileService, settings, $window) {
-  "use strict";
+function fileBrowserFactory ($http, assayFileService, settings, $window) {
   var assayFiles = [];
   var assayAttributes = [];
   var assayAttributeOrder = [];
@@ -23,7 +24,7 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
     params = params || {};
 
     //encodes all field names to avoid issues with escape characters.
-    if(typeof params.filter_attribute !== 'undefined'){
+    if (typeof params.filter_attribute !== 'undefined') {
       params.filter_attribute = encodeAttributeFields(params.filter_attribute);
     }
 
@@ -41,23 +42,23 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
     return assayFile.$promise;
   };
 
-  var generateFilters = function(attributes, facet_counts){
+  var generateFilters = function (attributes, facet_counts) {
     //resets the attribute filters, which can be changed by owners
     var outAttributeFilter = {};
     var outAnalysisFilter = {};
 
-    attributes.forEach(function(facetObj){
-      var facetObjCount =  facet_counts[facetObj.internal_name];
-       //for filtering out (only)attributes with only 1 field
+    attributes.forEach(function (facetObj) {
+      var facetObjCount = facet_counts[facetObj.internal_name];
+      //for filtering out (only)attributes with only 1 field
       var facetObjCountMinLen = Object.keys(facetObjCount).length > 1;
 
-      if(facetObjCountMinLen && facetObj.display_name !== 'Analysis'){
+      if (facetObjCountMinLen && facetObj.display_name !== 'Analysis') {
         outAttributeFilter[facetObj.display_name] = {
           'facetObj': facetObjCount,
           'internal_name': facetObj.internal_name
         };
-      }else if(facetObjCount && facetObj.display_name === 'Analysis'){
-        outAnalysisFilter[facetObj.display_name]= {
+      } else if (facetObjCount && facetObj.display_name === 'Analysis') {
+        outAnalysisFilter[facetObj.display_name] = {
           'facetObj': facetObjCount,
           'internal_name': facetObj.internal_name
         };
@@ -77,7 +78,10 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
     return $http({
       method: 'GET',
       url: apiUrl,
-      data: {'csrfmiddlewaretoken': csrf_token, 'uuid': uuid}
+      data: {
+        'csrfmiddlewaretoken': csrf_token,
+        'uuid': uuid
+      }
     }).then(function (response) {
       angular.copy(response.data, assayAttributeOrder);
     }, function (error) {
@@ -89,7 +93,10 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
     return $http({
       method: 'POST',
       url: settings.appRoot + settings.refineryApiV2 + '/assays/:uuid/attributes/',
-      data: {'csrfmiddlewaretoken': csrf_token, 'uuid': uuid}
+      data: {
+        'csrfmiddlewaretoken': csrf_token,
+        'uuid': uuid
+      }
     }).then(function (response) {
       console.log(response);
     }, function (error) {
@@ -98,16 +105,16 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
   };
 
   //Helper function encodes field array in an obj
-  var encodeAttributeFields = function(attributeObj) {
-    angular.forEach(attributeObj, function(fieldArray){
-       for(var ind=0; ind < fieldArray.length; ind++){
+  var encodeAttributeFields = function (attributeObj) {
+    angular.forEach(attributeObj, function (fieldArray) {
+      for (var ind = 0; ind < fieldArray.length; ind++) {
         fieldArray[ind] = $window.encodeURIComponent(fieldArray[ind]);
-       }
+      }
     });
-    return(attributeObj);
+    return (attributeObj);
   };
 
-  return{
+  return {
     assayFiles: assayFiles,
     assayAttributes: assayAttributes,
     assayAttributeOrder: assayAttributeOrder,
