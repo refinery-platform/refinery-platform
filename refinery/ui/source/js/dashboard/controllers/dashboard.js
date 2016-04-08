@@ -1,3 +1,5 @@
+'use strict';
+
 function DashboardCtrl (
   // Angular modules
   $q,
@@ -25,7 +27,8 @@ function DashboardCtrl (
   dashboardDataSetPreviewService,
   treemapContext,
   dashboardVisData,
-  dataCart) {
+  dataCart
+) {
   var that = this;
 
   // Construct Angular modules
@@ -89,9 +92,9 @@ function DashboardCtrl (
     1,
     function (limit, offset, extra) {
       var params = this._.merge(this._.cloneDeep(extra) || {}, {
-            limit: limit,
-            offset: offset
-          });
+        limit: limit,
+        offset: offset
+      });
 
       return this.analysisService.query(params).$promise;
     }.bind(this),
@@ -117,9 +120,9 @@ function DashboardCtrl (
     1,
     function (limit, offset, extra) {
       var params = this._.merge(this._.cloneDeep(extra) || {}, {
-            limit: limit,
-            offset: offset
-          });
+        limit: limit,
+        offset: offset
+      });
 
       return this.workflowService.query(params).$promise;
     }.bind(this),
@@ -353,7 +356,7 @@ DashboardCtrl.prototype.collectDataSetIds = function () {
   var deferred = this.$q.defer();
   var queryTermUris = Object.keys(this.queryTerms);
   var andOrNotTerms = this.collectAndOrNotTerms(queryTermUris);
-  var dataSets = {};
+  var i;
 
   // Collection exclusions of all _NOTs_
   var notUnion = [];
@@ -402,13 +405,14 @@ DashboardCtrl.prototype.collectDataSetIds = function () {
   }
 
   allDsIds.then(function (allIds) {
+    var allNormalizedIds = allIds;
     if (allIds.length && this._.isFinite(allIds[0])) {
-      allIds = this._.map(allIds, function (el) {
+      allNormalizedIds = this._.map(allIds, function (el) {
         return el.toString();
       });
     }
     if (notUnion.length) {
-      deferred.resolve(this._.difference(allIds, notUnion));
+      deferred.resolve(this._.difference(allNormalizedIds, notUnion));
     } else {
       deferred.resolve(allDsIds);
     }
@@ -418,7 +422,9 @@ DashboardCtrl.prototype.collectDataSetIds = function () {
 };
 
 DashboardCtrl.prototype.collectAndOrNotTerms = function (termUris) {
-  var andTerms = [], orTerms = [], notTerms = [];
+  var andTerms = [];
+  var orTerms = [];
+  var notTerms = [];
 
   for (var i = termUris.length; i--;) {
     if (this.queryTerms[termUris[i]].mode === 'and') {
@@ -433,7 +439,7 @@ DashboardCtrl.prototype.collectAndOrNotTerms = function (termUris) {
   return {
     andTerms: andTerms,
     orTerms: orTerms,
-    notTerms: notTerms,
+    notTerms: notTerms
   };
 };
 
@@ -453,7 +459,7 @@ Object.defineProperty(
     get: function () {
       return this.dataSetsAdapter.visibleItems('uuid');
     }
-});
+  });
 
 Object.defineProperty(
   DashboardCtrl.prototype,
@@ -461,7 +467,7 @@ Object.defineProperty(
     enumerable: true,
     value: false,
     writable: true
-});
+  });
 
 Object.defineProperty(
   DashboardCtrl.prototype,
@@ -470,7 +476,7 @@ Object.defineProperty(
     get: function () {
       return Object.keys(this.queryTerms).length;
     }
-});
+  });
 
 Object.defineProperty(
   DashboardCtrl.prototype,
@@ -482,7 +488,7 @@ Object.defineProperty(
       }
       return this._analysesIsFilterable;
     }
-});
+  });
 
 Object.defineProperty(
   DashboardCtrl.prototype,
@@ -495,7 +501,7 @@ Object.defineProperty(
       this._dataSetsFilterOwner = value;
       if (value) {
         this.dataSet.filter({
-          'is_owner': 'True'
+          is_owner: 'True'
         });
       } else {
         this.dataSet.all();
@@ -505,7 +511,7 @@ Object.defineProperty(
       this.checkDataSetsFilter();
       this.checkAllCurrentDataSetsInDataCart();
     }
-});
+  });
 
 Object.defineProperty(
   DashboardCtrl.prototype,
@@ -518,7 +524,7 @@ Object.defineProperty(
       this._dataSetsFilterPublic = value;
       if (value) {
         this.dataSet.filter({
-          'public': 'True'
+          public: 'True'
         });
       } else {
         this.dataSet.all();
@@ -528,7 +534,7 @@ Object.defineProperty(
       this.checkDataSetsFilter();
       this.checkAllCurrentDataSetsInDataCart();
     }
-});
+  });
 
 Object.defineProperty(
   DashboardCtrl.prototype,
@@ -545,7 +551,7 @@ Object.defineProperty(
       this.triggerSorting('dataSets');
       this.checkDataSetsSort();
     }
-});
+  });
 
 Object.defineProperty(
   DashboardCtrl.prototype,
@@ -558,15 +564,15 @@ Object.defineProperty(
       this.analysesFilterStatusCounter = 0;
       this._analysesFilterStatus = value;
       if (value) {
-        this.analyses.extraParameters['status'] = value;
+        this.analyses.extraParameters.status = value;
       } else {
-        delete this.analyses.extraParameters['status'];
+        delete this.analyses.extraParameters.status;
       }
       this.analyses.newOrCachedCache(undefined, true);
       this.dashboardAnalysesReloadService.reload();
       this.checkAnalysesFilterSort();
     }
-});
+  });
 
 Object.defineProperty(
   DashboardCtrl.prototype,
@@ -583,7 +589,7 @@ Object.defineProperty(
       this.triggerSorting('analyses');
       this.checkAnalysesFilterSort();
     }
-});
+  });
 
 Object.defineProperty(
   DashboardCtrl.prototype,
@@ -592,7 +598,7 @@ Object.defineProperty(
     get: function () {
       return this.settings.djangoApp.numOntologiesImported > 0;
     }
-});
+  });
 
 Object.defineProperty(
   DashboardCtrl.prototype,
@@ -609,7 +615,7 @@ Object.defineProperty(
       this.triggerSorting('workflows');
       this.checkWorkflowsFilterSort();
     }
-});
+  });
 
 Object.defineProperty(
   DashboardCtrl.prototype,
@@ -621,11 +627,11 @@ Object.defineProperty(
     set: function (value) {
       this.treemapContext.set('root', value);
     }
-});
+  });
 
 DashboardCtrl.prototype.toogleRadio = function () {
-  if (this['analysesFilterStatusCounter']++) {
-    this['analysesFilterStatus'] = undefined;
+  if (this.analysesFilterStatusCounter++) {
+    this.analysesFilterStatus = undefined;
   }
 };
 
@@ -654,7 +660,6 @@ DashboardCtrl.prototype.checkDataSetsFilter = function () {
 };
 
 DashboardCtrl.prototype.checkDataSetsSort = function () {
-
   if (this.dataSetsSortBy) {
     this.dataSetsSort = true;
     return;
@@ -671,9 +676,14 @@ DashboardCtrl.prototype.checkWorkflowsFilterSort = function () {
 };
 
 DashboardCtrl.prototype.triggerSorting = function (source) {
-  var sortBy = source + 'SortBy',
-      sortDesc = source + 'SortDesc',
-      reloadService = 'dashboard' + source.charAt(0).toUpperCase() + source.slice(1) + 'ReloadService';
+  var sortBy = source + 'SortBy';
+  var sortDesc = source + 'SortDesc';
+  var reloadService = (
+    'dashboard' +
+    source.charAt(0).toUpperCase() +
+    source.slice(1) +
+    'ReloadService'
+  );
 
   if (this[sortBy]) {
     var params = this[sortDesc] ? '-' + this[sortBy] : this[sortBy];
@@ -682,13 +692,13 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
     if (source === 'dataSets') {
       this.dataSet.order(params);
     } else {
-      this[source].extraParameters['order_by'] = params;
+      this[source].extraParameters.order_by = params;
     }
   } else {
     if (source === 'dataSets') {
       this.dataSet.all();
     } else {
-      delete this[source].extraParameters['order_by'];
+      delete this[source].extraParameters.order_by;
     }
   }
 
@@ -697,9 +707,9 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
 };
 
 DashboardCtrl.prototype.toggleSortOrder = function (source) {
-  var sortBy = source + 'SortBy',
-      sortDesc = source + 'SortDesc',
-      sortOrder = source + 'SortOrder';
+  var sortBy = source + 'SortBy';
+  var sortDesc = source + 'SortDesc';
+  var sortOrder = source + 'SortOrder';
 
   this[sortOrder] = (this[sortOrder] + 1) % 3;
 
@@ -736,7 +746,7 @@ DashboardCtrl.prototype.setDataSetSource = function (
     var stateChange = this.$state.go(
       '.',
       {
-        q: searchQuery ? searchQuery : null
+        q: searchQuery || null
       }
     );
 
@@ -765,7 +775,7 @@ DashboardCtrl.prototype.setDataSetSource = function (
       // Sometimes the `ui-scroll` didn't stop showing the loading spinner. It
       // seems like we need to wait for one digestion cycle before reloading the
       // directive.
-      this.$timeout(function() {
+      this.$timeout(function () {
         this.dashboardDataSetsReloadService.reload();
       }.bind(this), 0);
 
@@ -839,7 +849,7 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
   }
 };
 
-DashboardCtrl.prototype.collapseDataSetPreview = function (dataSet) {
+DashboardCtrl.prototype.collapseDataSetPreview = function () {
   if (this.dataSetExploration) {
     this.dataSetExplorationTempHidden = false;
     this.pubSub.trigger('vis.show');
@@ -916,7 +926,7 @@ DashboardCtrl.prototype.collapseDatasetExploration = function () {
   this.dataSet.highlight(this.treemapContext.get('highlightedDataSets'), true);
 };
 
-DashboardCtrl.prototype.findDataSet = function (uuid) {
+DashboardCtrl.prototype.findDataSet = function () {
   // Need to implement a method that can find an item in a ui-scroll resource.
 };
 
@@ -942,7 +952,7 @@ DashboardCtrl.prototype.selectDataSets = function (ids) {
   this.dataSets.newOrCachedCache(
     'selection.' + query
   );
-  this.$timeout(function() {
+  this.$timeout(function () {
     this.dashboardDataSetsReloadService.reload();
   }.bind(this), 0);
 
@@ -955,7 +965,7 @@ DashboardCtrl.prototype.selectDataSets = function (ids) {
 DashboardCtrl.prototype.deselectDataSets = function () {
   this.dataSet.deselect();
   this.dataSets.newOrCachedCache();
-  this.$timeout(function() {
+  this.$timeout(function () {
     this.dashboardDataSetsReloadService.reload();
   }.bind(this), 0);
 
@@ -987,10 +997,9 @@ DashboardCtrl.prototype.readibleDate = function (dataSet, property) {
     'Sep', 'Oct', 'Nov', 'Dec'];
 
   if (dataSet[property] && !dataSet[property + 'Readible']) {
-    dataSet[property + 'Readible'] =
-      months[dataSet[property].getMonth()] + ' ' +
-      dataSet[property].getDate() + ', ' +
-      dataSet[property].getFullYear();
+    dataSet[property + 'Readible'] = months[dataSet[property].getMonth()] + ' ' +
+    dataSet[property].getDate() + ', ' +
+    dataSet[property].getFullYear();
   }
 
   return dataSet[property + 'Readible'];
@@ -1078,11 +1087,11 @@ DashboardCtrl.prototype.clearDataCart = function () {
 
 DashboardCtrl.prototype.showNotification = function () {
   return (
-    this.dataSets.error ||
-    this.dataSets.total === 0 ||
-    this.searchQueryDataSets.length === 1 || (
-      this.searchQueryDataSets.length > 1 && this.dataSets.total === 0
-    )
+  this.dataSets.error ||
+  this.dataSets.total === 0 ||
+  this.searchQueryDataSets.length === 1 || (
+  this.searchQueryDataSets.length > 1 && this.dataSets.total === 0
+  )
   );
 };
 
