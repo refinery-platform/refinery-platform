@@ -1,4 +1,7 @@
-function LaunchPadCtrl () {}
+'use strict';
+
+function LaunchPadCtrl () {
+}
 
 angular
   .module('refineryDashboard')
