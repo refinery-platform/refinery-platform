@@ -1,11 +1,11 @@
+'use strict';
+
 angular
   .module('refineryApp')
   .factory('D3Colors', [
     'd3',
     'HEX',
-    'HSL',
-    'RGB',
-    function (d3, HEX, HSL, RGB) {
+    function (d3, HEX) {
       /**
        * D3Colors constructor object
        */
@@ -24,8 +24,8 @@ angular
       D3Colors.prototype.getScaledFadedColors = function (steps) {
         var fadedColors = [];
         for (var i = 0, len = this.colors.length; i < len; i++) {
-          var hsl = this.colors[i].toHsl(),
-              colors = hsl.brighten(steps - 1, true);
+          var hsl = this.colors[i].toHsl();
+          var colors = hsl.brighten(steps - 1, true);
 
           // Prepend original color
           colors.unshift(hsl);
@@ -44,10 +44,10 @@ angular
       };
 
       Object.defineProperty(D3Colors.prototype, 'colors', {
-        get: function() {
+        get: function () {
           return this._colors;
         },
-        set: function(colors) {
+        set: function (colors) {
           if (!(colors && colors.length)) {
             throw new Error('Colors needs to be an array.');
           }

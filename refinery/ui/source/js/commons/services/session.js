@@ -1,11 +1,13 @@
+'use strict';
+
 angular
   .module('refineryApp')
-  .factory('sessionService', ['$q', '$resource', 'settings',
-    function ($q, $resource, settings) {
-      var session = {},
-          sessionData = {
-            date: 0
-          };
+  .factory('sessionService', [
+    function () {
+      var session = {};
+      var sessionData = {
+        date: 0
+      };
 
       session.create = function (data) {
         var now = new Date().getTime();
@@ -19,7 +21,7 @@ angular
         if (sessionData.hasOwnProperty(prop)) {
           return sessionData[prop];
         }
-        return;
+        return undefined;
       };
 
       session.destroy = function () {
