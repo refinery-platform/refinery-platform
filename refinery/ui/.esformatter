@@ -40,7 +40,7 @@
     "ObjectExpression.UnaryExpression": 1,
     "ObjectPattern": 1,
     "ParameterList": 1,
-    "ReturnStatement": 1,
+    "ReturnStatement": 0,
     "SingleVariableDeclaration": 0,
     "SwitchCase": 1,
     "SwitchStatement": 1,
