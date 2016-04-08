@@ -1,6 +1,8 @@
-function LocationTest (currentPath, matchPath, regex) {
+'use strict';
+
+function locationTest (currentPath, matchPath, regex) {
   if ((regex && new RegExp(matchPath).test(currentPath)) ||
-      matchPath === currentPath) {
+    matchPath === currentPath) {
     return true;
   }
   return false;
@@ -8,4 +10,4 @@ function LocationTest (currentPath, matchPath, regex) {
 
 angular
   .module('refineryRouter')
-  .constant('locationTest', LocationTest);
+  .constant('locationTest', locationTest);
