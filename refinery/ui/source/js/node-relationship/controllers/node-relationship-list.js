@@ -1,14 +1,15 @@
+'use strict';
+
 function NodeRelationshipListCtrl (
   $scope,
   $rootScope,
   $element,
   $log,
+  $window,
   $uibModal,
   NodeRelationshipResource,
   nodeRelationshipService
 ) {
-  'use strict';
-
   $scope.$onRootScope(
     'workflowChangedEvent',
     function (event, currentWorkflow) {
@@ -40,20 +41,22 @@ function NodeRelationshipListCtrl (
 
     $scope.currentNodeRelationship = null;
     $scope.nodeRelationshipIndex = 0;
-    $scope.loadNodeRelationshipList(externalStudyUuid, externalAssayUuid);
+    $scope.loadNodeRelationshipList(
+      $window.externalStudyUuid, $window.externalAssayUuid
+    );
     // update the current node relationship (fires event)
     $scope.updateCurrentNodeRelationship();
   };
 
   var successCreate = function (response) {
     $scope.loadNodeRelationshipList(
-      externalStudyUuid, externalAssayUuid, response
+      $window.externalStudyUuid, $window.externalAssayUuid, response
     );
   };
 
   var successUpdate = function (response) {
     $scope.loadNodeRelationshipList(
-      externalStudyUuid, externalAssayUuid, response
+      $window.externalStudyUuid, $window.externalAssayUuid, response
     );
   };
 
@@ -61,10 +64,10 @@ function NodeRelationshipListCtrl (
     studyUuid, assayUuid, selectedNodeRelationship
   ) {
     return NodeRelationshipResource.get({
-        study__uuid: studyUuid,
-        assay__uuid: assayUuid,
-        order_by: [ '-is_current', 'name' ]
-      },
+      study__uuid: studyUuid,
+      assay__uuid: assayUuid,
+      order_by: ['-is_current', 'name']
+    },
       function (response) {
         // check if there is a 'current mapping' in the list (this would be the
         // first entry due to the ordering)
@@ -77,12 +80,12 @@ function NodeRelationshipListCtrl (
             '1-N',
             function () {
               $scope.loadNodeRelationshipList(
-                externalStudyUuid,
-                externalAssayUuid
+                $window.externalStudyUuid,
+                $window.externalAssayUuid
               );
             },
-            function (response) {
-              $log.error(response);
+            function (_response) {
+              $log.error(_response);
             });
         }
 
@@ -99,7 +102,7 @@ function NodeRelationshipListCtrl (
             $scope.updateCurrentNodeRelationship();
           }
         }
-    });
+      });
   };
 
   $scope.findNodeRelationshipListIndex = function (nodeRelationship) {
@@ -186,7 +189,6 @@ function NodeRelationshipListCtrl (
         function (error) {
           $log.error(error);
         });
-
     }, function () {
       $log.info('Modal dismissed at: ' + new Date());
     });
@@ -202,7 +204,7 @@ function NodeRelationshipListCtrl (
 
     var modalInstance = $uibModal.open({
       templateUrl:
-        '/static/partials/node-relationship/dialogs/confirmation-dialog.html',
+      '/static/partials/node-relationship/dialogs/confirmation-dialog.html',
       controller: 'ConfirmationDialogInstanceCtrl',
       resolve: {
         config: function () {
@@ -218,16 +220,11 @@ function NodeRelationshipListCtrl (
         function (error) {
           $log.error(error);
         }
-     );
+      );
     }, function () {
       $log.info('Modal dismissed at: ' + new Date());
     });
   };
-
-  var NodeRelationshipList =  $scope.loadNodeRelationshipList(
-    externalStudyUuid,
-    externalAssayUuid
-  );
 }
 
 angular
@@ -237,6 +234,7 @@ angular
     '$rootScope',
     '$element',
     '$log',
+    '$window',
     '$uibModal',
     'NodeRelationshipResource',
     'nodeRelationshipService',

@@ -1,18 +1,14 @@
-function nodeRelationshipService ($log, NodeRelationshipResource) {
-  var createCurrentNodeRelationship = function (name, type, success, error) {
-    _createNodeRelationship(name, type, '', true, success, error);
-  };
+/* eslint camelcase: 1 */
 
-  var createNodeRelationship = function (name, summary, type, success, error) {
-    _createNodeRelationship(name, summary, type, false, success, error);
-  };
+'use strict';
 
+function nodeRelationshipService ($log, $window, NodeRelationshipResource) {
   var _createNodeRelationship = function (
     name, summary, type, is_current, success, error
   ) {
     var resource = new NodeRelationshipResource({
-      study: '/api/v1/study/' + externalStudyUuid + '/',
-      assay: '/api/v1/assay/' + externalAssayUuid + '/',
+      study: '/api/v1/study/' + $window.externalStudyUuid + '/',
+      assay: '/api/v1/assay/' + $window.externalAssayUuid + '/',
       node_pairs: [],
       name: name,
       summary: summary,
@@ -20,6 +16,14 @@ function nodeRelationshipService ($log, NodeRelationshipResource) {
       is_current: is_current
     });
     resource.$save(success, error);
+  };
+
+  var createCurrentNodeRelationship = function (name, type, success, error) {
+    _createNodeRelationship(name, type, '', true, success, error);
+  };
+
+  var createNodeRelationship = function (name, summary, type, success, error) {
+    _createNodeRelationship(name, summary, type, false, success, error);
   };
 
   var deleteNodeRelationship = function (nodeRelationship, success, error) {
@@ -63,4 +67,6 @@ function nodeRelationshipService ($log, NodeRelationshipResource) {
 
 angular
   .module('refineryNodeRelationship')
-  .service('nodeRelationshipService', nodeRelationshipService);
+  .service('nodeRelationshipService', [
+    '$log', '$window', 'NodeRelationshipResource', nodeRelationshipService
+  ]);
