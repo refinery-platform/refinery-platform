@@ -1,6 +1,8 @@
 'use strict';
 
-function AddGroupCtrl (bootbox, $uibModalInstance, groupService, groupDataService) {
+function AddGroupCtrl (
+  bootbox, $uibModalInstance, groupService, groupDataService
+) {
   this.bootbox = bootbox;
   this.$uibModalInstance = $uibModalInstance;
   this.groupService = groupService;
@@ -28,9 +30,13 @@ AddGroupCtrl.prototype.createGroup = function (name) {
   })
   .catch(function () {
     if (isEmptyOrSpaces(groupName)) {
-      that.bootbox.alert('Group Name cannot be left blank - try a different name.');
+      that.bootbox.alert(
+        'Group Name cannot be left blank - try a different name.'
+      );
     } else {
-      that.bootbox.alert('This name probably already exists - try a different name.');
+      that.bootbox.alert(
+        'This name probably already exists - try a different name.'
+      );
     }
   });
 };
