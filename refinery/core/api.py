@@ -1461,7 +1461,7 @@ class GroupManagementResource(Resource):
 
             return self.process_get_list(request, group_obj_list, **kwargs)
         elif request.method == 'POST':
-            data = json.loads(request.raw_post_data)
+            data = json.loads(request.body)
             new_group = ExtendedGroup(name=data['name'])
             new_group.save()
             new_group.group_ptr.user_set.add(user)
@@ -1491,7 +1491,7 @@ class GroupManagementResource(Resource):
             if not self.user_authorized(user, group):
                 return HttpUnauthorized()
 
-            data = json.loads(request.raw_post_data)
+            data = json.loads(request.body)
             new_member_list = data['member_list']
 
             # Remove old members before updating.
@@ -1511,7 +1511,7 @@ class GroupManagementResource(Resource):
             if not self.user_authorized(user, group):
                 return HttpUnauthorized()
 
-            data = json.loads(request.raw_post_data)
+            data = json.loads(request.body)
             new_member = data['user_id']
             group.user_set.add(new_member)
 
@@ -1773,7 +1773,7 @@ class InvitationResource(ModelResource):
     def obj_create(self, bundle, **kwargs):
         self.update_db()
         request = bundle.request
-        data = json.loads(request.raw_post_data)
+        data = json.loads(request.body)
         user = request.user
         group = self.get_group(int(data['group_id']))
 
@@ -1901,7 +1901,7 @@ class ExtendedGroupResource(ModelResource):
 
     def obj_create(self, bundle, **kwargs):
         user = bundle.request.user
-        data = json.loads(bundle.request.raw_post_data)
+        data = json.loads(bundle.request.body)
         new_ext_group = ExtendedGroup(name=data['name'])
         new_ext_group.save()
         new_ext_group.user_set.add(user)
@@ -1944,7 +1944,7 @@ class ExtendedGroupResource(ModelResource):
             if not self.user_authorized(user, ext_group):
                 return HttpUnauthorized()
 
-            data = json.loads(request.raw_post_data)
+            data = json.loads(request.body)
             new_member_list = data['member_list']
 
             # Remove old members before updating.
@@ -1964,7 +1964,7 @@ class ExtendedGroupResource(ModelResource):
             if not self.user_authorized(user, ext_group):
                 return HttpUnauthorized()
 
-            data = json.loads(request.raw_post_data)
+            data = json.loads(request.body)
             new_member = data['user_id']
             ext_group.user_set.add(new_member)
 
