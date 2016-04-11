@@ -21,19 +21,22 @@ function AppCtrl ($, $rootScope, $timeout, $window, _, pubSub, settings) {
     )
   );
 
-  $rootScope.$on('$stateChangeSuccess', function (e, toState, toParams, fromState, fromParams) {
-    $timeout(function () {
-      if (fromState.url !== '^' && $window.ga) {
-        $window.ga(
-          'send',
-          'pageview',
-          $window.location.pathname + $window.location.hash
-        );
-      }
-    }, 0);
-  });
+  $rootScope.$on(
+    '$stateChangeSuccess',
+    function (e, toState, toParams, fromState) {
+      $timeout(function () {
+        if (fromState.url !== '^' && $window.ga) {
+          $window.ga(
+            'send',
+            'pageview',
+            $window.location.pathname + $window.location.hash
+          );
+        }
+      }, 0);
+    }
+  );
 
-  $rootScope.$on('$reloadlessStateChangeSuccess', function (e, a) {
+  $rootScope.$on('$reloadlessStateChangeSuccess', function () {
     $timeout(function () {
       if ($window.ga) {
         var hash = $window.location.hash;
