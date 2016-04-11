@@ -105,7 +105,7 @@ function refineryPanelDirective () {
 angular
   .module('refineryApp')
   .controller('RefineryPanelCtrl', [
-    '$element', '$timeout', '$window', 'pubSub', RefineryPanelCtrl
+    '$element', '$timeout', '$window', '$', 'pubSub', RefineryPanelCtrl
   ])
   .directive('refineryPanel', [
     refineryPanelDirective
