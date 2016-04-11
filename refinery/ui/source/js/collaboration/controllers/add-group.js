@@ -44,6 +44,7 @@ AddGroupCtrl.prototype.createGroup = function (name) {
 angular
   .module('refineryCollaboration')
   .controller('AddGroupCtrl', [
+    'bootbox',
     '$uibModalInstance',
     'groupService',
     'groupDataService',
