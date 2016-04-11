@@ -895,7 +895,7 @@ function DataSetFactory (
    *
    * @param   {Number}  limit   Number of data objects to be fetched.
    * @param   {Number}  offset  Starting point for retrieving data objects.
-   * @return  {Object}          Promise with data objects. HURZ
+   * @return  {Object}          Promise with data objects.
    */
   DataSet.prototype.fetchInclMeta = function (limit, offset) {
     return _fetch(limit, offset).then(function (data) {

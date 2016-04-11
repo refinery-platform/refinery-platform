@@ -34,7 +34,7 @@ function RefineryPanelCtrl (_$element_,  _$timeout_, _$window_, _pubSub_) {
     var refOffsetEl = ELEMENT_REF_OFFSET || ELEMENT;
 
     if (PARENT_REF_ELEMENT) {
-      refHeight = ARENT_REF_ELEMENT.offset().top +
+      refHeight = PARENT_REF_ELEMENT.offset().top +
         PARENT_REF_ELEMENT.height();
     } else if (!windowHeight) {
       refHeight = WINDOW.height();
