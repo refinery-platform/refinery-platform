@@ -45,9 +45,9 @@ GroupDataService.prototype.update = function (p) {
 
   // Make sure that the group list and active group are updated first.
   return this.groupListService.update(params)
-    .then(function (data) {
+    .then(function () {
       that.inviteListService.update();
-    }.bind(this));
+    });
 };
 
 angular
