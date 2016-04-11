@@ -1696,6 +1696,7 @@ class InvitationResource(ModelResource):
         queryset = Invitation.objects.all()
         resource_name = 'invitations'
         detail_uri_name = 'token_uuid'
+        allowed_methods = ['get', 'post', 'put', 'delete']
         # authentication = SessionAuthentication()
         authorization = Authorization()
         filtering = {
@@ -1807,7 +1808,7 @@ class InvitationResource(ModelResource):
         token_duration = datetime.timedelta(days=settings.TOKEN_DURATION)
         inv.expires = now + token_duration
         inv.save()
-        self.send_email(inv)
+        self.send_email(bundle.request, inv)
         return bundle
 
 
