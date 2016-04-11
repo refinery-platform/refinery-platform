@@ -1,13 +1,22 @@
 'use strict';
 
-function CollaborationCtrl ($timeout, $state, $stateParams, $location, $uibModal, groupInviteService, groupDataService) {
-  var that = this;
-  that.$state = $state;
-  that.$stateParams = $stateParams;
-  that.$location = $location;
-  that.$uibModal = $uibModal;
-  that.groupInviteService = groupInviteService;
-  that.groupDataService = groupDataService;
+function CollaborationCtrl (
+  $timeout,
+  $state,
+  $stateParams,
+  $location,
+  bootbox,
+  $uibModal,
+  groupInviteService,
+  groupDataService
+) {
+  this.$state = $state;
+  this.$stateParams = $stateParams;
+  this.$location = $location;
+  this.bootbox = bootbox;
+  this.$uibModal = $uibModal;
+  this.groupInviteService = groupInviteService;
+  this.groupDataService = groupDataService;
 
   this.groupDataService.update(this.$stateParams);
 
@@ -51,8 +60,6 @@ CollaborationCtrl.prototype.updateGroupList = function (params) {
   this.groupDataService.update(params);
 };
 
-////////////////////////
-
 CollaborationCtrl.prototype.setActiveGroup = function (group) {
   this.$location.url('/' + group.uuid + '/');
 };
@@ -62,14 +69,14 @@ CollaborationCtrl.prototype.resendInvitation = function (invite) {
 
   this.groupInviteService.resend({
     token: invite.token_uuid
-  }).$promise.then(
-    function (data) {
-      that.updateGroupList();
-      bootbox.alert('Invitation successfully re-sent to ' + invite.recipient_email);
-    }
-  ).catch(function (error) {
-    console.error(error);
-    bootbox.alert('Invitation sending failed');
+  }).$promise.then(function () {
+    that.updateGroupList();
+    that.bootbox.alert(
+      'Invitation successfully re-sent to ' + invite.recipient_email
+    );
+  })
+  .catch(function () {
+    that.bootbox.alert('Invitation sending failed');
   });
 };
 
@@ -78,14 +85,14 @@ CollaborationCtrl.prototype.revokeInvitation = function (invite) {
 
   this.groupInviteService.revoke({
     token: invite.token_uuid
-  }).$promise.then(
-    function (data) {
-      that.updateGroupList();
-      bootbox.alert('Invitation revoked from ' + invite.recipient_email);
-    }
-  ).catch(function (error) {
-    console.error(error);
-    bootbox.alert('Invitation could not be revoked');
+  })
+  .$promise
+  .then(function () {
+    that.updateGroupList();
+    that.bootbox.alert('Invitation revoked from ' + invite.recipient_email);
+  })
+  .catch(function () {
+    that.bootbox.alert('Invitation could not be revoked');
   });
 };
 
@@ -93,15 +100,17 @@ CollaborationCtrl.prototype.revokeInvitation = function (invite) {
 // Opening modals:
 
 CollaborationCtrl.prototype.openAddGroup = function () {
-  var modalInstance = this.$uibModal.open({
-    templateUrl: '/static/partials/collaboration/partials/collaboration-addgroups-dialog.html',
+  this.$uibModal.open({
+    templateUrl:
+      '/static/partials/collaboration/partials/collaboration-addgroups-dialog.html',
     controller: 'AddGroupCtrl as modal'
   });
 };
 
 CollaborationCtrl.prototype.openGroupEditor = function (group) {
-  var modalInstance = this.$uibModal.open({
-    templateUrl: '/static/partials/collaboration/partials/collaboration-groups-dialog.html',
+  this.$uibModal.open({
+    templateUrl:
+      '/static/partials/collaboration/partials/collaboration-groups-dialog.html',
     controller: 'GroupEditorCtrl as modal',
     resolve: {
       group: function () {
@@ -112,8 +121,9 @@ CollaborationCtrl.prototype.openGroupEditor = function (group) {
 };
 
 CollaborationCtrl.prototype.openMemberEditor = function (member) {
-  var modalInstance = this.$uibModal.open({
-    templateUrl: '/static/partials/collaboration/partials/collaboration-members-dialog.html',
+  this.$uibModal.open({
+    templateUrl:
+      '/static/partials/collaboration/partials/collaboration-members-dialog.html',
     controller: 'MemberEditorCtrl as modal',
     resolve: {
       member: function () {
@@ -124,8 +134,9 @@ CollaborationCtrl.prototype.openMemberEditor = function (member) {
 };
 
 CollaborationCtrl.prototype.openEmailInvite = function () {
-  var modalInstance = this.$uibModal.open({
-    templateUrl: '/static/partials/collaboration/partials/collaboration-addmembers-dialog.html',
+  this.$uibModal.open({
+    templateUrl:
+      '/static/partials/collaboration/partials/collaboration-addmembers-dialog.html',
     controller: 'EmailInviteCtrl as modal'
   });
 };
@@ -137,6 +148,7 @@ angular
     '$state',
     '$stateParams',
     '$location',
+    'bootbox',
     '$uibModal',
     'groupInviteService',
     'groupDataService',
