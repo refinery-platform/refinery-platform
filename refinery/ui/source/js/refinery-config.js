@@ -13,9 +13,7 @@ function refineryAppConfig ($logProvider, $urlRouterProvider, settings) {
       normalized += '/';
     }
 
-    if (path !== normalized) {
-      return normalized;
-    }
+    return normalized;
   });
 
   /*
