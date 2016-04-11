@@ -11,7 +11,6 @@ describe('RefineryApp.module: unit tests', function () {
     it('should be registered', function () {
       expect(!!module).toEqual(true);
     });
-
   });
 
   describe('Dependencies:', function () {
@@ -128,6 +127,5 @@ describe('RefineryApp.module: unit tests', function () {
     it('should NOT have "notExistingModule" as a dependency', function () {
       expect(hasModule('notExistingModule')).toEqual(false);
     });
-
   });
 });

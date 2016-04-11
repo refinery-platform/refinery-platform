@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('refineryServices', [])
-
+angular
+  .module('refineryServices', [])
   .factory('Workflow', function ($resource) {
     return $resource(
       '/api/v1/workflow/', {
