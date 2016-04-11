@@ -1,13 +1,22 @@
 'use strict';
 
-angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ui.grid', 'ui.grid.edit', 'ui.grid.resizeColumns'])
+var ConfirmationDialogInstanceCtrl = function ($scope, $uibModalInstance, config) {
+  $scope.config = config;
 
+  $scope.ok = function () {
+    $uibModalInstance.close();
+  };
+};
+
+angular
+  .module('refineryMetadataTableImport', [
+    'angularFileUpload', 'ui.grid', 'ui.grid.edit', 'ui.grid.resizeColumns'
+  ])
   .config(['$httpProvider', function ($httpProvider) {
     // use Django XSRF/CSRF lingo to enable communication with API
     $httpProvider.defaults.xsrfCookieName = 'csrftoken';
     $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
   }])
-
   .factory('fileSources', ['$http', function ($http) {
     return {
       check: function (fileData, successCallback, errorCallback) {
@@ -23,7 +32,6 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ui.grid', '
       }
     };
   }])
-
   .controller('MetadataTableImportCtrl',
     ['$scope', '$log', '$http', '$uibModal', 'fileSources',
       function ($scope, $log, $http, $uibModal, fileSources) {
@@ -50,7 +58,6 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ui.grid', '
               field: columnName,
               width: columnWidth + '%'
             });
-            console.log(columnWidth);
           });
           return columnDefs;
         }
@@ -59,7 +66,7 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ui.grid', '
           if (!$files[0]) {
             // clear existing content from screen if user didn't select a file
             $scope.$apply(function () {
-              //TODO: clear $files?
+              // TODO: clear $files?
               $scope.metadataSample = [];
               $scope.metadataHeader = [];
               $scope.columnDefs = [];
@@ -85,8 +92,8 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ui.grid', '
         $scope.checkFiles = function () {
           // check if the files listed in the dataFileColumn exist on the server
           var fileData = {
-            'base_path': $scope.basePath,
-            'list': []
+            base_path: $scope.basePath,
+            list: []
           };
           // get the list of file references
           if ($scope.dataFileColumn) {
@@ -108,7 +115,7 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ui.grid', '
                   items: response
                 };
               }
-              var modalInstance = $uibModal.open({
+              $uibModal.open({
                 templateUrl: '/static/partials/list-confirmation-dialog.html',
                 controller: ConfirmationDialogInstanceCtrl,
                 size: 'lg',
@@ -122,16 +129,7 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ui.grid', '
             function (response, status) {
               var errorMsg = 'Request failed: error ' + status;
               $log.error(errorMsg);
-              alert(errorMsg);
             }
           );
         };
       }]);
-
-var ConfirmationDialogInstanceCtrl = function ($scope, $uibModalInstance, config) {
-  $scope.config = config;
-
-  $scope.ok = function () {
-    $uibModalInstance.close();
-  };
-};
