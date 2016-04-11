@@ -7,4 +7,5 @@ angular
   .constant('d3', window.d3)
   .constant('c3', window.c3)
   .constant('humanize', window.humanize)
+  .constant('bootbox', window.bootbox)
   .constant('ListGraphVis', window.ListGraph);
