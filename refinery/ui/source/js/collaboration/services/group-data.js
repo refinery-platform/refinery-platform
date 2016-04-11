@@ -52,4 +52,6 @@ GroupDataService.prototype.update = function (p) {
 
 angular
   .module('refineryCollaboration')
-  .service('groupDataService', ['groupListService', 'inviteListService', GroupDataService]);
+  .service('groupDataService', [
+    'groupListService', 'inviteListService', GroupDataService
+  ]);
