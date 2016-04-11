@@ -1,7 +1,8 @@
 <div class="modal-header">
     Data Set Table Configuration
   </div>
-  <div class="modal-body">
+  <div class="modal-body fileUtilModal">
+
      <div class="row">
       <div class="col-xs-2 col-xs-offset-6">
         <h5>Expose to User</h5>
@@ -13,9 +14,17 @@
         <h5>Show by Default</h5>
       </div>
     </div>
-    <ul style="width:500px">
-      <li ng-repeat="attributeObj in AFUMCtrl.assayAttributeOrder"
-          track by solr_field>
+
+    <ul dnd-list="assayAttributeOrder"
+      style="width:500px; list-style-type: none;"
+    >
+      <li
+        ng-repeat="attributeObj in assayAttributeOrder"
+        track by solr_field
+        dnd-draggable="attributeObj"
+        dnd-moved="testMethod(attributeObj, $index)"
+        dnd-effectllowed="move"
+      >
         <div class="row">
            <div class="col-xs-1 col-xs-offset-1">
              <h4>
@@ -57,7 +66,8 @@
           </div>
           <div class="col-xs-2">
              <h4>
-               <div class="checkbox" id="util-{{solr_field}}-default">
+               <div class="checkbox"
+                 id="util-{{solr_field}}-default">
                 <label>
                   <input
                     type="checkbox"
@@ -72,7 +82,7 @@
         </div>
       </li>
     </ul>
-    <button class="btn btn-warning" ng-click="close()">Close</button>
+    <button class="btn btn-default" ng-click="close()">Close</button>
 
 
   </div>
