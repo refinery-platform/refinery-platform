@@ -1901,7 +1901,7 @@ class ExtendedGroupResource(ModelResource):
 
     def obj_create(self, bundle, **kwargs):
         user = bundle.request.user
-        data = json.loads(bundle.request.raw_post_data)
+        data = json.loads(bundle.request.body)
         new_ext_group = ExtendedGroup(name=data['name'])
         new_ext_group.save()
         new_ext_group.user_set.add(user)
