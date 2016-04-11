@@ -1,6 +1,7 @@
 'use strict';
 
-function InviteListService (groupListService, groupInviteService) {
+function InviteListService (humanize, groupListService, groupInviteService) {
+  this.humanize = humanize;
   this.groupListService = groupListService;
   this.groupInviteService = groupInviteService;
 }
@@ -34,9 +35,9 @@ InviteListService.prototype.update = function () {
         var createdDate = new Date(new Date(i.created).getTime() + offset);
         var expiresDate = new Date(new Date(i.expires).getTime() + offset);
         var expireTime = millisToTime(expiresDate.getTime() - createdDate.getTime());
-        i.created = humanize.date('M d @ h:m A', createdDate);
-        i.expires = humanize.date('M d @ h:m A', expiresDate);
-        i.expireDuration = humanize.relativeTime(humanize.time() +
+        i.created = this.humanize.date('M d @ h:m A', createdDate);
+        i.expires = this.humanize.date('M d @ h:m A', expiresDate);
+        i.expireDuration = this.humanize.relativeTime(this.humanize.time() +
           expireTime.d * 86400 +
           expireTime.h * 3600 +
           expireTime.m * 60 +
@@ -44,11 +45,12 @@ InviteListService.prototype.update = function () {
         return i;
       });
     }.bind(this));
-  } else {
-    return null;
   }
+  return null;
 };
 
 angular
   .module('refineryCollaboration')
-  .service('inviteListService', ['groupListService', 'groupInviteService', InviteListService]);
+  .service('inviteListService', [
+    'humanize', 'groupListService', 'groupInviteService', InviteListService
+  ]);
