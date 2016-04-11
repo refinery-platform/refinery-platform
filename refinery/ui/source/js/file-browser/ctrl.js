@@ -230,17 +230,20 @@ function FileBrowserCtrl(
     vm.firstPage = 0;
     vm.lastPage = 0;
 
-    // turn off the infinite scroll handling up and down - hopefully this won't be needed after @swalters scrolling changes
-    if(typeof vm.gridApi.infiniteScroll.setScrollDirections !== 'undefined'){
-      vm.gridApi.infiniteScroll.setScrollDirections( false, false );
-    }
+    // turn off the infinite scroll handling up and down
+
+    vm.gridApi.infiniteScroll.setScrollDirections( false, false );
+
     vm.assayFiles = [];
 
     vm.refreshAssayFiles().then(function(){
-      $timeout(function() {
-        // timeout needed to allow digest cycle to complete,and grid to finish ingesting the data
-        vm.gridApi.infiniteScroll.resetScroll( vm.firstPage > 0, vm.lastPage < vm.totalPages );
-      });
+
+        $timeout(function () {
+          // timeout needed to allow digest cycle to complete,and grid to finish ingesting the data
+          vm.gridApi.infiniteScroll.resetScroll(vm.firstPage > 0, vm.lastPage < vm.totalPages);
+        });
+
+
     });
     resetGridService.setResetGridFlag(false);
   };
