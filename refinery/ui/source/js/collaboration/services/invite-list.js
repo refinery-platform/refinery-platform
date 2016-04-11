@@ -26,25 +26,29 @@ function millisToTime (t) {
 }
 
 InviteListService.prototype.update = function () {
-  if (this.groupListService.activeGroup) {
-    return this.groupInviteService.query({
-      group_id: this.groupListService.activeGroup.id
-    }).$promise.then(function (data) {
-      this.list = data.objects.map(function (i) {
+  var that = this;
+
+  if (that.groupListService.activeGroup) {
+    return that.groupInviteService.query({
+      group_id: that.groupListService.activeGroup.id
+    })
+    .$promise
+    .then(function (data) {
+      that.list = data.objects.map(function (i) {
         var offset = new Date().getTimezoneOffset() * 60000;
         var createdDate = new Date(new Date(i.created).getTime() + offset);
         var expiresDate = new Date(new Date(i.expires).getTime() + offset);
         var expireTime = millisToTime(expiresDate.getTime() - createdDate.getTime());
-        i.created = this.humanize.date('M d @ h:m A', createdDate);
-        i.expires = this.humanize.date('M d @ h:m A', expiresDate);
-        i.expireDuration = this.humanize.relativeTime(this.humanize.time() +
+        i.created = that.humanize.date('M d @ h:m A', createdDate);
+        i.expires = that.humanize.date('M d @ h:m A', expiresDate);
+        i.expireDuration = that.humanize.relativeTime(that.humanize.time() +
           expireTime.d * 86400 +
           expireTime.h * 3600 +
           expireTime.m * 60 +
           expireTime.s);
         return i;
       });
-    }.bind(this));
+    });
   }
   return null;
 };
