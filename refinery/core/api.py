@@ -13,6 +13,7 @@ import uuid
 
 from django.conf import settings
 from django.conf.urls import url
+from django.utils import timezone
 from django.contrib.auth.models import User, Group
 from django.contrib.sites.models import get_current_site
 from django.contrib.contenttypes.models import ContentType
@@ -1718,7 +1719,9 @@ class InvitationResource(ModelResource):
         if token.expires is None:
             return True
 
-        return (datetime.datetime.now() - token.expires).total_seconds() >= 0
+        return (
+            datetime.datetime.now(timezone.utc) - token.expires
+        ).total_seconds() >= 0
 
     def update_db(self):
         for i in Invitation.objects.all():
@@ -1781,7 +1784,7 @@ class InvitationResource(ModelResource):
             raise ImmediateHttpResponse(HttpUnauthorized())
 
         inv = Invitation(token_uuid=uuid.uuid1(), group_id=group.id)
-        now = datetime.datetime.now()
+        now = datetime.datetime.now(timezone.utc)
         token_duration = datetime.timedelta(days=settings.TOKEN_DURATION)
         inv.expires = now + token_duration
         inv.sender = user
@@ -1800,7 +1803,7 @@ class InvitationResource(ModelResource):
             raise ImmediateHttpResponse(HttpNotFound('Not found or expired'))
 
         inv = inv_list[0]
-        now = datetime.datetime.now()
+        now = datetime.datetime.now(timezone.utc)
         token_duration = datetime.timedelta(days=settings.TOKEN_DURATION)
         inv.expires = now + token_duration
         inv.save()
