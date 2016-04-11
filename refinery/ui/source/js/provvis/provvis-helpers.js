@@ -1,3 +1,4 @@
+/* eslint no-unused-vars:0 */
 'use strict';
 
 /**
@@ -13,8 +14,8 @@ var hideChildNodes = function (n) {
     n.children.values().forEach(function (cn) {
       cn.hidden = true;
       d3.selectAll('#nodeId-' + cn.autoId).classed({
-        'selectedNode': false,
-        'hiddenNode': true
+        selectedNode: false,
+        hiddenNode: true
       });
       if (!cn.children.empty()) {
         hideChildNodes(cn);
@@ -88,9 +89,10 @@ var getLayerPredCount = function (ln) {
   return ln.children.values()
     .map(function (an) {
       return an.predLinks.size();
-    }).reduce(function (acc, pls) {
-    return acc + pls;
-  });
+    })
+    .reduce(function (acc, pls) {
+      return acc + pls;
+    });
 };
 
 /**
@@ -101,9 +103,10 @@ var getLayerSuccCount = function (ln) {
   return ln.children.values()
     .map(function (an) {
       return an.succLinks.size();
-    }).reduce(function (acc, pls) {
-    return acc + pls;
-  });
+    })
+    .reduce(function (acc, pls) {
+      return acc + pls;
+    });
 };
 
 /**
@@ -118,13 +121,13 @@ var bfs = function (dsn) {
   var getSuccs = function (n) {
     /* Add successor nodes to queue. */
     n.succs.values().forEach(function (s) {
-      if (s instanceof provvisDecl.Node &&
-        nset.indexOf(s.parent.parent) === -1) {
-        nset.push(s.parent.parent);
-        nqueue.push(s.parent.parent);
-      } else if (nset.indexOf(s) === -1) {
-        nset.push(s);
-        nqueue.push(s);
+      if (s instanceof window.provvisDecl.Node &&
+        window.nset.indexOf(s.parent.parent) === -1) {
+        window.nset.push(s.parent.parent);
+        window.nqueue.push(s.parent.parent);
+      } else if (window.nset.indexOf(s) === -1) {
+        window.nset.push(s);
+        window.nqueue.push(s);
       }
     });
   };

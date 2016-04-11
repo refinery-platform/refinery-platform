@@ -49,7 +49,7 @@ var provvisDecl = (function () {
       },
       factors: factors
     };
-  })();
+  }());
 
   /**
    * Constructor function representing the degree-of-interest (DOI)
@@ -61,7 +61,7 @@ var provvisDecl = (function () {
     this.node = node;
 
     /* API: General interest. */
-    /**************************/
+    /* ********************** */
 
     /* The latest execution time of a node is more important
      * than earlier executions.
@@ -96,7 +96,7 @@ var provvisDecl = (function () {
 
 
     /* UI: Interest derived from user actions. */
-    /*******************************************/
+    /* *************************************** */
 
     /* A node is in the result set of filter actions. */
     this.doiFiltered = 0;
@@ -109,7 +109,7 @@ var provvisDecl = (function () {
 
 
     /* Distance. */
-    /*************/
+    /* ********* */
 
     /* A node's neighborhood directly influences it's DOI value through
      * link weight and fallout function.
@@ -118,7 +118,7 @@ var provvisDecl = (function () {
 
 
     /* Computation. */
-    /****************/
+    /* ************ */
 
     /* A node's dominant component is represented by the minimum or maximum
      * value throughout all components.
@@ -389,7 +389,6 @@ var provvisDecl = (function () {
 
     this.motif = motif;
     this.wfName = '';
-
   };
 
   Layer.prototype = Object.create(BaseNode.prototype);
