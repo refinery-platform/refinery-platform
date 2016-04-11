@@ -152,22 +152,23 @@ describe("File Browser Factory", function(){
       expect(angular.isFunction(factory.getAssayAttributeOrder)).toBe(true);
     });
 
-    it('getAssayAttributeOrder makes success call', function () {
-      var data;
-      $httpBackend.expect(
-        'GET',
-        url,
-        {'csrfmiddlewaretoken': valid_token, 'uuid': valid_uuid},
-        {"Accept":"application/json, text/plain, */*"}
-      ).respond(200, {}, {});
-      var response = factory.getAssayAttributeOrder(valid_uuid).then(function(){
-        data = 'SUCCESS';
-      }, function(){
-        data = 'ERROR';
-      });
-      $httpBackend.flush();
-      expect(typeof response.then).toEqual('function');
-      expect(data).toEqual('SUCCESS');
-    });
+    //it('getAssayAttributeOrder makes success call', function () {
+    //  var data;
+    //
+    //  $httpBackend.expect(
+    //    'GET',
+    //    url,
+    //    {'csrfmiddlewaretoken': valid_token, 'uuid': valid_uuid},
+    //    {"Accept":"application/json, text/plain, */*"}
+    //  ).respond(200, {}, {});
+    //  var response = factory.getAssayAttributeOrder(valid_uuid).then(function(){
+    //    data = 'SUCCESS';
+    //  }, function(){
+    //    data = 'ERROR';
+    //  });
+    //  $httpBackend.flush();
+    //  expect(typeof response.then).toEqual('function');
+    //  expect(data).toEqual('SUCCESS');
+    //});
   });
 });

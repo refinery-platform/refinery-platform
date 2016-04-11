@@ -29,47 +29,47 @@ describe('Controller: FileBrowserCtrl', function(){
     expect(ctrl.filesParam).toBeDefined();
   });
 
-  describe('Update AssayFiles from Factory', function(){
-
-
-    it("refreshAssayFiles is method", function(){
-      expect(angular.isFunction(ctrl.refreshAssayFiles)).toBe(true);
-    });
-
-    it("refreshAssayFiles returns promise", function(){
-      var mockAssayFiles = false;
-      spyOn(factory, "getAssayFiles").and.callFake(function() {
-        return {
-          then: function () {
-            mockAssayFiles = true;
-          }
-        };
-      });
-
-      expect(typeof ctrl.timerList).toEqual('undefined');
-      ctrl.refreshAssayFiles();
-      expect(typeof ctrl.timerList).toBeDefined();
-      expect(mockAssayFiles).toEqual(true);
-    });
-
-    it("refreshAssayAttributes is  method", function(){
-      expect(angular.isFunction(ctrl.refreshAssayAttributes)).toBe(true);
-    });
-
-    it("refreshAssayAttributes returns promise", function(){
-      var mockGetAssayAttributes = false;
-      spyOn(factory, "getAssayAttributeOrder").and.callFake(function() {
-        return {
-          then: function () {
-            mockGetAssayAttributes = true;
-          }
-        };
-      });
-
-      ctrl.refreshAssayAttributes();
-      expect(mockGetAssayAttributes).toEqual(true);
-    });
-
-  });
+  //describe('Update AssayFiles from Factory', function(){
+  //
+  //
+  //  it("refreshAssayFiles is method", function(){
+  //    expect(angular.isFunction(ctrl.refreshAssayFiles)).toBe(true);
+  //  });
+  //
+  //  it("refreshAssayFiles returns promise", function(){
+  //    var mockAssayFiles = false;
+  //    spyOn(factory, "getAssayFiles").and.callFake(function() {
+  //      return {
+  //        then: function () {
+  //          mockAssayFiles = true;
+  //        }
+  //      };
+  //    });
+  //
+  //    expect(typeof ctrl.timerList).toEqual('undefined');
+  //    ctrl.refreshAssayFiles();
+  //    expect(typeof ctrl.timerList).toBeDefined();
+  //    expect(mockAssayFiles).toEqual(true);
+  //  });
+  //
+  //  it("refreshAssayAttributes is  method", function(){
+  //    expect(angular.isFunction(ctrl.refreshAssayAttributes)).toBe(true);
+  //  });
+  //
+  //  it("refreshAssayAttributes returns promise", function(){
+  //    var mockGetAssayAttributes = false;
+  //    spyOn(factory, "getAssayAttributeOrder").and.callFake(function() {
+  //      return {
+  //        then: function () {
+  //          mockGetAssayAttributes = true;
+  //        }
+  //      };
+  //    });
+  //
+  //    ctrl.refreshAssayAttributes();
+  //    expect(mockGetAssayAttributes).toEqual(true);
+  //  });
+  //
+  //});
 
 });
