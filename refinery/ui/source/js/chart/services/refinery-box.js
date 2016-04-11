@@ -44,26 +44,26 @@ RefineryBoxPlotService.prototype.generate = function (config) {
       };
     };
 
-    box = function (g) {
-      return g.each(function () {
+    box = function (selection) {
+      return selection.each(function () {
         var scaled;
         var six;
-        g = d3.select(this);
+        var d3El = d3.select(this);
         six = this.__data__;
         scaled = {};
 
         d3.keys(six).forEach(function (k) {
-          return scaled[k] = scale(six[k]);
+          return (scaled[k] = scale(six[k]));
         });
 
-        g.append('rect').attr({
+        d3El.append('rect').attr({
           width: width,
           height: Math.abs(scaled[plotKey.q3] - scaled[plotKey.q1]),
           x: 0,
           y: scaled[plotKey.q3]
         });
 
-        g.append('line').attr({
+        d3El.append('line').attr({
           x1: 0,
           x2: width,
           y1: scaled[plotKey.med],
@@ -71,7 +71,7 @@ RefineryBoxPlotService.prototype.generate = function (config) {
         });
 
         if (scaled[plotKey.mean]) {
-          g.append('line').attr({
+          d3El.append('line').attr({
             x1: 0,
             x2: width,
             y1: scaled[plotKey.mean],
@@ -80,8 +80,17 @@ RefineryBoxPlotService.prototype.generate = function (config) {
           });
         }
 
-        g.call(whisker([width / 2, scaled[plotKey.q1]], [width / 2, scaled[plotKey.min]]));
-        return g.call(whisker([width / 2, scaled[plotKey.q3]], [width / 2, scaled[plotKey.max]]));
+        d3El.call(
+          whisker(
+            [width / 2, scaled[plotKey.q1]], [width / 2, scaled[plotKey.min]]
+          )
+        );
+
+        return d3El.call(
+          whisker(
+            [width / 2, scaled[plotKey.q3]], [width / 2, scaled[plotKey.max]]
+          )
+        );
       });
     };
 
@@ -105,7 +114,7 @@ RefineryBoxPlotService.prototype.generate = function (config) {
 
     box.plotKey = function (_k) {
       if (!_k) {
-        return key;
+        return plotKey;
       }
 
       plotKey = _k;
@@ -130,28 +139,30 @@ RefineryBoxPlotService.prototype.generate = function (config) {
     var yDomain;
     var yScale;
 
-    if (option == null) {
-      option = {};
+    var _option = option;
+
+    if (!_option) {
+      _option = {};
     }
 
     var width = this.$(svg[0]).width();
     var height = this.$(svg[0]).height();
     svg.attr('viewBox', '0 0 ' + width + ' ' + height);
 
-    if (!option.yTickFormat) {
-      option.yTickFormat = function (y) {
+    if (!_option.yTickFormat) {
+      _option.yTickFormat = function (y) {
         return y;
       };
     }
 
-    if (!option.xTickFormat) {
-      option.xTickFormat = function (x) {
+    if (!_option.xTickFormat) {
+      _option.xTickFormat = function (x) {
         return x;
       };
     }
 
-    if (!option.plotKey) {
-      option.plotKey = {
+    if (!_option.plotKey) {
+      _option.plotKey = {
         min: 'min',
         q1: 'q1',
         med: 'med',
@@ -188,10 +199,10 @@ RefineryBoxPlotService.prototype.generate = function (config) {
     if (boxWidth > 30) {
       boxMargin = boxWidth - 25;
       boxWidth = 25;
-    } else if ( (30 >= boxWidth && boxWidth > 20) ) {
+    } else if (boxWidth <= 30 && boxWidth > 20) {
       boxMargin = boxWidth - 20;
       boxWidth = 20;
-    } else if ( (20 >= boxWidth && boxWidth > 10) ) {
+    } else if (boxWidth <= 20 && boxWidth > 10) {
       boxMargin = boxWidth - 10;
       boxWidth = 10;
     }
@@ -201,36 +212,39 @@ RefineryBoxPlotService.prototype.generate = function (config) {
     xScale = d3.scale.ordinal().domain(labels).rangePoints([0, w], 1);
     yScale = d3.scale.linear().domain([0, yDomain]).range([h, 0]);
     xAxis = d3.svg.axis().scale(xScale).tickFormat(option.xTickFromat);
-    yAxis = d3.svg.axis().scale(yScale).orient('left').tickSize(-w).ticks(7).tickFormat(option.yTickFormat);
+    yAxis = d3.svg.axis().scale(yScale).orient('left')
+      .tickSize(-w).ticks(7).tickFormat(option.yTickFormat);
 
-    main.append('g').classed('fastqc-box-x fastqc-box-axis', true).call(xAxis).attr({
-      transform: 'translate(0,' + h + ')'
-    });
+    main.append('g')
+      .classed('fastqc-box-x fastqc-box-axis', true)
+      .call(xAxis)
+      .attr('transform', 'translate(0,' + h + ')');
 
     main.append('g').classed('fastqc-box-y fastqc-box-axis', true).call(yAxis);
     box = d3.svg.box().scale(yScale).width(boxWidth).plotKey(option.plotKey);
 
-    return data.map(function (d, i) {
-      var kind;
-      kind = d.key;
+    return data.map(function (datum) {
+      var kind = datum.key;
 
-      data = d.values.map(function (v) {
-        return v.values[0];
-      });
-
-      return main.selectAll('g.' + kind).data(data).enter().append('g').classed('fastqc-box', true).attr({
-        transform: function (_d, _i) {
-          return 'translate(' + (_i * (box.width() + boxMargin) + boxMargin / 2) + ',0)';
-        }
-      })
+      return main.selectAll('g.' + kind)
+        .data(datum.values.map(function (value) {
+          return value.values[0];
+        }))
+        .enter()
+        .append('g')
+        .classed('fastqc-box', true)
+        .attr('transform', function (__data, __index) {
+          return (
+            'translate(' +
+            (__index * (box.width() + boxMargin) + boxMargin / 2) +
+            ',0)');
+        })
         .call(box);
     });
   }
 
-  refineryBoxPlot.plot = function (data, config) {
-    var w = config ? config.w || 500 : 500;
-    var h = config ? config.h || 300 : 300;
-    var b = config ? config.bindto || 'body' : 'body';
+  refineryBoxPlot.plot = function (data, _config) {
+    var bindTo = _config ? _config.bindto || 'body' : 'body';
 
     for (var i = 0; i < data.length; i++) {
       data[i].orderKey = i;
@@ -245,7 +259,7 @@ RefineryBoxPlotService.prototype.generate = function (config) {
     // alphanumerical string sorting, '120' < '118-119', not wanted.
     }).entries(data);
 
-    return boxPlot(d3.select(b).append('svg'), nest);
+    return boxPlot(d3.select(bindTo).append('svg'), nest);
   };
 
   // Actual plotting done here. Above is "library".
