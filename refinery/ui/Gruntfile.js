@@ -357,7 +357,7 @@ module.exports = function (grunt) {
       gruntfile: {
         files: 'Gruntfile.js',
         tasks: [
-          'eslint:gruntfile',
+          'lint:gruntfile',
           'build'
         ]
       },
@@ -382,7 +382,7 @@ module.exports = function (grunt) {
           '<%= cfg.basePath.ui.src %>/js/**/*.js'
         ],
         tasks: [
-          'newer:eslint:sourceCode',
+          'newer:lint:sourceCode',
           'newer:copy:uiBuildScripts',
           'concat-by-feature:build'
         ],
@@ -488,20 +488,6 @@ module.exports = function (grunt) {
      */
     esformatter: {
       src: fileGlob
-    },
-
-    /*
-     * Lint source JS files to find possible flaws that could lead to errors.
-     */
-    eslint: {
-      sourceCode: {
-        src: [
-          '<%= cfg.basePath.ui.src %>/js/**/*.js'
-        ]
-      },
-      gruntfile: {
-        src: 'Gruntfile.js'
-      }
     },
 
     /*
@@ -643,6 +629,23 @@ module.exports = function (grunt) {
     },
 
     /*
+     * Lint source JS files to find possible flaws that could lead to errors.
+     */
+    lint: {
+      custom: {
+        src: fileGlob || ''
+      },
+      sourceCode: {
+        src: [
+          '<%= cfg.basePath.ui.src %>/js/**/*.js'
+        ]
+      },
+      gruntfile: {
+        src: 'Gruntfile.js'
+      }
+    },
+
+    /*
      * `ng-annotate` annotates the sources before minifying. That is, it
      * provides a back up solution if we forgot about the array syntax. Still
      * we should not trust the plugin to cover all cases.
@@ -773,12 +776,19 @@ module.exports = function (grunt) {
   );
 
   // Event handling
-  if (!spawn) {
-    grunt.event.on('watch', function (action, filepath) {
-      // Update the config to only build the changed less file.
-      grunt.config(['eslint', 'src'], filepath);
-    });
-  }
+  // if (!spawn) {
+  //   grunt.event.on('watch', function (action, filepath) {
+  //     // Update the config to only build the changed less file.
+  //     grunt.config(['eslint', 'src'], filepath);
+  //   });
+  // }
+
+  //
+  grunt.renameTask('eslint', 'lint');
+  grunt.registerTask('eslint', [
+    'lint:sourceCode',
+    'lint:gruntfile'
+  ]);
 
   // Default task.
   grunt.registerTask('default', ['make', 'test']);
