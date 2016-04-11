@@ -5,17 +5,13 @@ angular
   .factory('groupService', ['$resource', 'settings',
     function ($resource, settings) {
       return $resource(
-        settings.appRoot + settings.refineryApi + '/extended_groups/',
+        settings.appRoot + settings.refineryApi + '/extended_groups/:uuid/',
         {
           uuid: '@uuid'
         },
         {
           create: {
             method: 'POST'
-          },
-          delete: {
-            method: 'DELETE',
-            url: settings.appRoot + settings.refineryApi + '/extended_groups/:uuid/'
           }
         }
       );
