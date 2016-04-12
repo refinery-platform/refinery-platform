@@ -103,7 +103,7 @@ var provvisLayout = (function () {
 
     tsNodes.forEach(function (n) {
       /* Get incoming predecessors. */
-      n.preds.values().filter(function (p) {
+      n.preds.values().forEach(function (p) {
         if (p.parent === parent) {
           preds.push(p);
         } else if (
