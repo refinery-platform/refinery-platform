@@ -175,7 +175,6 @@ INSTALLED_APPS = (
     'registration',
     'flatblocks',
     # RP: added for database migration between builds
-    'south',
     'chunked_upload',
     'rest_framework',
     'rest_framework_swagger',
