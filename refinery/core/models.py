@@ -1467,7 +1467,8 @@ class ExtendedGroupManager(models.Manager):
             return ExtendedGroup.objects.get(
                 id=settings.REFINERY_PUBLIC_GROUP_ID
             )
-        except:
+        except Exception as e:
+            logger.error("Could not fetch Public Group: %s" % e)
             return None
 
 
