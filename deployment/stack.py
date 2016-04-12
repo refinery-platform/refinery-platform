@@ -260,9 +260,9 @@ def save_s3_config(config):
     s3_uri = "s3://{}/{}".format(bucket_name, object_name)
     config['S3_CONFIG_URI'] = s3_uri
 
-    # Store config in S3 object.
+    # Store config as JSON in S3 object.
     s3_object = s3.Object(bucket_name, object_name)
-    s3_object.put(Body=yaml.dump(config, default_flow_style=False))
+    s3_object.put(Body=json.dumps(config, indent=2))
     return s3_uri
 
 
