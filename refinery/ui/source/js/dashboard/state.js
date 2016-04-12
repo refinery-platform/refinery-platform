@@ -15,7 +15,7 @@ angular
             controller: 'LaunchPadCtrl as launchPad'
           },
           '/'
-      )
+        )
         .state(
           'launchPad.exploration', {
             // `branchId` is an artifact of the treemap as some terms appear
@@ -25,19 +25,15 @@ angular
             reloadOnSearch: false
           },
           '/'
-      )
+        )
         .state(
           'launchPad.preview', {
             url: 'preview/{uuid}'
           },
           '/'
-      );
+        );
 
-      refineryUrlRouterProvider
-        .otherwise(
-          '/',
-          '/'
-      );
+      refineryUrlRouterProvider.otherwise('/', '/');
     }
   ]
 );
