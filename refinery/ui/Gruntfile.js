@@ -357,7 +357,7 @@ module.exports = function (grunt) {
       gruntfile: {
         files: 'Gruntfile.js',
         tasks: [
-          'lint:gruntfile',
+          'eslint:gruntfile',
           'build'
         ]
       },
@@ -382,7 +382,7 @@ module.exports = function (grunt) {
           '<%= cfg.basePath.ui.src %>/js/**/*.js'
         ],
         tasks: [
-          'newer:lint:sourceCode',
+          'newer:eslint:sourceCode',
           'newer:copy:uiBuildScripts',
           'concat-by-feature:build'
         ],
@@ -488,6 +488,23 @@ module.exports = function (grunt) {
      */
     esformatter: {
       src: fileGlob
+    },
+
+    /*
+     * Lint source JS files to find possible flaws that could lead to errors.
+     */
+    eslint: {
+      custom: {
+        src: fileGlob || ''
+      },
+      sourceCode: {
+        src: [
+          '<%= cfg.basePath.ui.src %>/js/**/*.js'
+        ]
+      },
+      gruntfile: {
+        src: 'Gruntfile.js'
+      }
     },
 
     /*
@@ -629,23 +646,6 @@ module.exports = function (grunt) {
     },
 
     /*
-     * Lint source JS files to find possible flaws that could lead to errors.
-     */
-    lint: {
-      custom: {
-        src: fileGlob || ''
-      },
-      sourceCode: {
-        src: [
-          '<%= cfg.basePath.ui.src %>/js/**/*.js'
-        ]
-      },
-      gruntfile: {
-        src: 'Gruntfile.js'
-      }
-    },
-
-    /*
      * `ng-annotate` annotates the sources before minifying. That is, it
      * provides a back up solution if we forgot about the array syntax. Still
      * we should not trust the plugin to cover all cases.
@@ -783,13 +783,6 @@ module.exports = function (grunt) {
   //   });
   // }
 
-  //
-  grunt.renameTask('eslint', 'lint');
-  grunt.registerTask('eslint', [
-    'lint:sourceCode',
-    'lint:gruntfile'
-  ]);
-
   // Default task.
   grunt.registerTask('default', ['make', 'test']);
 
@@ -802,7 +795,8 @@ module.exports = function (grunt) {
   // Do as little as possible to get Refineryrunning to keep grunt watch
   // responsive.
   grunt.registerTask('build', [
-    'newer:eslint',
+    'newer:eslint:sourceCode',
+    'newer:eslint:gruntfile',
     'clean:uiBuild',
     'clean:staticBuild',
     'newer:less:build',
@@ -817,7 +811,7 @@ module.exports = function (grunt) {
   // Do all the heavy lifting to get Refinery ready for production.
   grunt.registerTask('compile', [
     'env:compile',
-    'eslint',
+    'eslint:sourceCode',
     'clean:uiCompile',
     'clean:staticCompile',
     'less:compile',
