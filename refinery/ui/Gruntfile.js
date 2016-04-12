@@ -114,11 +114,11 @@ module.exports = function (grunt) {
     // Sort files
     files.sort(importanceSortJS);
 
-    if (spec) {// Get all files within a feature
+    if (spec) {  // Get all files within a feature
       grunt
         .file
         .expand([
-          config.basePath.ui.src + '/js/**/*.spec.js'
+          fileGlob || config.basePath.ui.src + '/js/**/*.spec.js'
         ])
         .forEach(function (file) {
           files.push(file);
