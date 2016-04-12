@@ -112,7 +112,7 @@ describe('Analysis Monitor Factory', function () {
         successData = responseData;
       });
       rootScope.$apply();
-      // expect(typeof response.then).toEqual('function');
+
       expect(successData).toEqual(analysesDetail);
     });
   });

@@ -190,13 +190,17 @@ function analysisMonitorFactory (
   };
 
   var getAnalysesDetail = function (uuid) {
-    return analysisDetailService.query({
+    var _analysesDetail = analysisDetailService.query({
       uuid: uuid
-    }).$promise.then(function (response) {
+    });
+
+    _analysesDetail.$promise.then(function (response) {
       processAnalysesGlobalDetail(response, uuid);
     }, function () {
       $log.error('Error accessing analysis monitoring API');
     });
+
+    return _analysesDetail.$promise;
   };
 
   return {
