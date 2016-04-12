@@ -475,30 +475,16 @@ CACHES = {
 
 # CURRENT_COMMIT retrieves the most recent commit used allowing for easier
 # debugging of a Refinery instance
-try:
-    repo_url = subprocess.check_output([
-        '/usr/bin/git',
-        '--git-dir', os.path.join(BASE_DIR, '.git'),
-        '--work-tree', BASE_DIR,
-        'config', '--get', 'remote.origin.url'
-    ])
-    repo_url = repo_url.replace(".git", "/")
-    repo_url = urljoin(repo_url, "commit/")
-
-except Exception as e:
-    logger.error("could not get repo url: %s", e)
 
 try:
     # TODO: use option -C (removed as a temp workaround for compatibility
     # with an old version of git)
-    commit = subprocess.check_output([
+    CURRENT_COMMIT = subprocess.check_output([
         '/usr/bin/git',
         '--git-dir', os.path.join(BASE_DIR, '.git'),
         '--work-tree', BASE_DIR,
         'rev-parse', 'HEAD'
     ])
-    CURRENT_COMMIT = urljoin(repo_url, commit)
-
 
 except (ValueError, subprocess.CalledProcessError) as exc:
     logger.debug("Error retrieving hash of the most recent commit: %s",
