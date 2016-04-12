@@ -14,7 +14,7 @@ function FileMappingCtrl (
   NodePairResource,
   NodeRelationshipResource,
   AttributeOrder,
-  solrFactory,
+  nodeAttributes,
   solrService
 ) {
   $scope.nodeDropzones = null;
@@ -375,19 +375,15 @@ function FileMappingCtrl (
     return false;
   };
 
-  $scope.loadNodeAttributes = function (uuid, attributeList, success, error) {
-    solrFactory.get(
-      {
-        nodeUuid: uuid,
-        attributeList: attributeList.join()
-      },
-      function (data) {
-        success(data);
-      },
-      function (data) {
-        error(data);
-      }
-    );
+  $scope.loadNodeAttributes = function (
+    nodeUuid, attributeList, success, error
+  ) {
+    nodeAttributes(
+      $window.externalStudyUuid,
+      $window.externalAssayUuid,
+      nodeUuid,
+      attributeList
+    ).then(success).catch(error);
   };
 }
 
@@ -402,12 +398,12 @@ angular
     '$rootScope',
     '$sce',
     '$http',
-    'window',
+    '$window',
     '_',
     'NodePairResource',
     'NodeRelationshipResource',
     'AttributeOrder',
-    'solrFactory',
+    'nodeAttributes',
     'solrService',
     FileMappingCtrl
   ]);
