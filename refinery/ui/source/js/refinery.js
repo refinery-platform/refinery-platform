@@ -30,7 +30,6 @@ angular
     'refineryWorkflows',
     'refineryNodeMapping',
     'refineryAnalysisLaunch',
-    'refinerySolr',
     'refineryNodeRelationship',
     'refineryIgv',
     'refineryStatistics',

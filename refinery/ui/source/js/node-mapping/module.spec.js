@@ -27,10 +27,6 @@ describe('RefineryNodeMapping.module: unit tests', function () {
       expect(hasModule('ngResource')).toEqual(true);
     });
 
-    it('should have "refinerySolr" as a dependency', function () {
-      expect(hasModule('refinerySolr')).toEqual(true);
-    });
-
     it('should have "refineryWorkflows" as a dependency', function () {
       expect(hasModule('refineryWorkflows')).toEqual(true);
     });

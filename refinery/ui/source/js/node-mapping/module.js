@@ -5,7 +5,6 @@ angular
     // Angular
     'ngResource',
     // Refinery
-    'refinerySolr',
     'refineryWorkflows',
     // Third-party
     'ui.bootstrap',

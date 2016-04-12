@@ -71,10 +71,6 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('refineryAnalysisLaunch')).toEqual(true);
     });
 
-    it('should have "refinerySolr" as a dependency', function () {
-      expect(hasModule('refinerySolr')).toEqual(true);
-    });
-
     it('should have "refineryNodeRelationship" as a dependency', function () {
       expect(hasModule('refineryNodeRelationship')).toEqual(true);
     });
