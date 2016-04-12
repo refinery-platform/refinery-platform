@@ -137,8 +137,8 @@ angular
     '_',
     'locationTest',
     function ($windowProvider, $urlRouterProvider, _, locationTest) {
-      var $window = $windowProvider.$get();
-
-      return new RefineryUrlRouterProvider($window, $urlRouterProvider, _, locationTest);
+      return new RefineryUrlRouterProvider(
+        $windowProvider.$get(), $urlRouterProvider, _, locationTest
+      );
     }
   ]);
