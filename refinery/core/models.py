@@ -83,7 +83,7 @@ class UserProfile (models.Model):
     -information-about-users
     """
     uuid = UUIDField(unique=True, auto=True)
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, related_name="profile")
     affiliation = models.CharField(max_length=100, blank=True)
     catch_all_project = models.ForeignKey('Project', blank=True, null=True)
 
