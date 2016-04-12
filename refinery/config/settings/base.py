@@ -41,6 +41,8 @@ ADMINS = tuple(map(lambda x: tuple(x), get_setting("ADMINS")))
 
 # For Django 1.7 compatability
 AUTH_USER_MODEL = 'auth.User'
+ANONYMOUS_USER_NAME = None
+
 # A tuple in the same format as ADMINS that specifies who should get broken
 # link notifications when BrokenLinkEmailsMiddleware is enabled
 MANAGERS = ADMINS
