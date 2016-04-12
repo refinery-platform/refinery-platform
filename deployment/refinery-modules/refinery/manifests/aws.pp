@@ -50,7 +50,7 @@ python::requirements { "/srv/refinery-platform/deployment/aws-requirements.txt":
 }
 
 exec { "overwrite_superuser_json":
-  command     => "ADMIN_PASSWORD=$(jq -r .ADMIN_PASSWORD /home/ubuntu/s3-config) ${virtualenv}/bin/python /srv/refinery-platform/deployment/bin/generate-superuser > /srv/refinery-platform/refinery/core/fixtures/superuser.json",
+  command     => "${virtualenv}/bin/python /srv/refinery-platform/deployment/bin/generate-superuser > /srv/refinery-platform/refinery/core/fixtures/superuser.json",
   environment => ["PYTHONPATH=/srv/refinery-platform/refinery",
                   "DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,

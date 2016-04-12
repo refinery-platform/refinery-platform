@@ -16,7 +16,9 @@ from django.contrib.auth.hashers import make_password
 def main():
 
     if 'ADMIN_PASSWORD' not in os.environ:
-        raise Exception("The ADMIN_PASSWORD environment variable must be set")
+        with open("/home/ubuntu/s3-config") as inp:
+            j = json.load(inp)
+            os.environ['ADMIN_PASSWORD'] = j['ADMIN_PASSWORD']
     password = os.environ['ADMIN_PASSWORD']
 
     with open(os.path.join(core_path, 'fixtures/superuser.json')) as j:
