@@ -35,6 +35,7 @@ python stack.py > web.json
 #   https://help.ubuntu.com/community/CloudInit
 
 import glob
+import json
 import os       # for os.popen
 import sys      # sys.stderr, sys.exit, and so on
 
