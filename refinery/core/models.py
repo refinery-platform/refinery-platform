@@ -1596,7 +1596,7 @@ def get_current_node_set(study_uuid, assay_uuid):
         return node_set
 
 
-@transaction.commit_manually()
+@transaction.atomic()
 def create_nodeset(name, study, assay, summary='', solr_query='',
                    solr_query_components=''):
     """Create a new NodeSet.
