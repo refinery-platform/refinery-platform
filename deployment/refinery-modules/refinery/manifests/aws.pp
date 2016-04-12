@@ -49,13 +49,20 @@ python::requirements { "/srv/refinery-platform/deployment/aws-requirements.txt":
   group      => $app_group,
 }
 
-exec { "overwrite_superuser_json":
-  command     => "${virtualenv}/bin/python /srv/refinery-platform/deployment/bin/generate-superuser > /srv/refinery-platform/refinery/core/fixtures/superuser.json",
+exec { "generate_superuser_json":
+  command     => "${virtualenv}/bin/python /srv/refinery-platform/deployment/bin/generate-superuser > /srv/refinery-platform/refinery/core/fixtures/superuser.json.new",
   environment => ["PYTHONPATH=/srv/refinery-platform/refinery",
                   "DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
   require     => Exec["syncdb"],
+  before      => Exec["create_superuser"],
+}
+->
+exec { "copy_superuser_json":
+  command     => "/bin/cp /srv/refinery-platform/refinery/core/fixtures/superuser.json.new /srv/refinery-platform/refinery/core/fixtures/superuser.json",
+  user        => $app_user,
+  group       => $app_group,
   before      => Exec["create_superuser"],
 }
 
