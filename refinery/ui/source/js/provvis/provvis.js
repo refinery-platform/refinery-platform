@@ -50,17 +50,17 @@ var provvis = (function () {
     var timelineContainer = d3.select('#' + divId);
 
     $('<p/>', {
-      'id': 'tlTitle',
-      'html': 'Analysis Timeline'
+      id: 'tlTitle',
+      html: 'Analysis Timeline'
     }).appendTo(timelineContainer);
 
     $('<p/>', {
-      'id': 'tlThresholdStart',
-      'class': 'tlThreshold'
+      id: 'tlThresholdStart',
+      class: 'tlThreshold'
     }).appendTo(timelineContainer);
 
     $('<p/>', {
-      'id': 'tlCanvas'
+      id: 'tlCanvas'
     }).appendTo(timelineContainer);
 
     d3.select('#tlCanvas').append('svg')
@@ -69,13 +69,13 @@ var provvis = (function () {
       .style({
         'margin-top': '0px',
         'margin-bottom': '0px',
-        'padding': '0px'
+        padding: '0px'
       })
       .attr('pointer-events', 'all');
 
     $('<p/>', {
-      'id': 'tlThresholdEnd',
-      'class': 'tlThreshold'
+      id: 'tlThresholdEnd',
+      class: 'tlThreshold'
     }).appendTo(timelineContainer);
   };
 
@@ -89,18 +89,18 @@ var provvis = (function () {
     var doiContainer = d3.select('#' + divId);
 
     $('<p/>', {
-      'id': 'doiTitle',
-      'html': 'Degree-Of-Interest'
+      id: 'doiTitle',
+      html: 'Degree-Of-Interest'
     }).appendTo(doiContainer);
 
     $('<div/>', {
-      'id': 'doiVis',
-      'style': 'width: 100%; height: 300px;'
+      id: 'doiVis',
+      style: 'width: 100%; height: 300px;'
     }).appendTo(doiContainer);
 
     $('<div/>', {
-      'id': 'doiCanvas',
-      'style': 'width: 70px; float: left;'
+      id: 'doiCanvas',
+      style: 'width: 70px; float: left;'
     }).appendTo('#doiVis');
 
     d3.select('#doiCanvas')
@@ -110,7 +110,7 @@ var provvis = (function () {
       .style({
         'margin-top': '0px',
         'margin-left': '0px',
-        'padding': '0px'
+        padding: '0px'
       })
       .attr('pointer-events', 'all')
       .append('g')
@@ -120,28 +120,28 @@ var provvis = (function () {
       }).append('g');
 
     $('<button/>', {
-      'id': 'prov-doi-view-apply',
-      'class': 'btn btn-primary',
-      'type': 'button',
-      'html': 'Apply',
-      'style': 'position: absolute; left: 0px; top: 340px;'
+      id: 'prov-doi-view-apply',
+      class: 'btn btn-primary',
+      type: 'button',
+      html: 'Apply',
+      style: 'position: absolute; left: 0px; top: 340px;'
     }).appendTo(doiContainer);
 
     $('<label/>', {
-      'id': 'prov-doi-trigger',
-      'class': 'prov-doi-view-show-checkbox',
-      'style': 'display: flex; position: absolute; left: 75px; top: 340px; ' +
+      id: 'prov-doi-trigger',
+      class: 'prov-doi-view-show-checkbox',
+      style: 'display: flex; position: absolute; left: 75px; top: 340px; ' +
         'margin-top: 5px;',
-      'html': '<input id="prov-doi-view-trigger-input" type="checkbox" ' +
+      html: '<input id="prov-doi-view-trigger-input" type="checkbox" ' +
         'style="margin-right: 3px;">Auto Update'
     }).appendTo(doiContainer);
 
     $('<label/>', {
-      'id': 'prov-doi-view-show',
-      'class': 'prov-doi-view-show-checkbox',
-      'style': 'display: flex; position: absolute; left: 180px; top: 340px; ' +
+      id: 'prov-doi-view-show',
+      class: 'prov-doi-view-show-checkbox',
+      style: 'display: flex; position: absolute; left: 180px; top: 340px; ' +
         'margin-top: 5px;',
-      'html': '<input id="prov-doi-view-show-input" type="checkbox" ' +
+      html: '<input id="prov-doi-view-show-input" type="checkbox" ' +
         'style="margin-right: 3px;">Show DOI'
     }).appendTo(doiContainer);
   };
@@ -155,30 +155,30 @@ var provvis = (function () {
     var layerContainer = d3.select('#' + divId);
 
     $('<p/>', {
-      'id': 'changeLayerTitle',
-      'html': 'Change Layering'
+      id: 'changeLayerTitle',
+      html: 'Change Layering'
     }).appendTo(layerContainer);
 
     $('<div/>', {
-      'id': 'prov-layering-method',
-      'class': 'btn-group',
+      id: 'prov-layering-method',
+      class: 'btn-group',
       'data-toggle': 'buttons-radio'
     }).appendTo(layerContainer);
 
     $('<button/>', {
-      'id': 'prov-layering-strict',
-      'class': 'btn btn-primary',
-      'type': 'button',
-      'value': 'strict',
-      'html': 'Hard'
+      id: 'prov-layering-strict',
+      class: 'btn btn-primary',
+      type: 'button',
+      value: 'strict',
+      html: 'Hard'
     }).appendTo('#prov-layering-method');
 
     $('<button/>', {
-      'id': 'prov-layering-weak',
-      'class': 'active btn btn-primary',
-      'type': 'button',
-      'value': 'weak',
-      'html': 'Soft'
+      id: 'prov-layering-weak',
+      class: 'active btn btn-primary',
+      type: 'button',
+      value: 'weak',
+      html: 'Soft'
     }).appendTo('#prov-layering-method');
   };
 
@@ -208,7 +208,6 @@ var provvis = (function () {
 
     /* Only allow one instance of ProvVis. */
     if (vis instanceof provvisDecl.ProvVis === false) {
-
       var url = '/api/v1/node?study__uuid=' + studyUuid +
         '&format=json&limit=0';
       var analysesData = studyAnalyses.filter(function (a) {
@@ -368,12 +367,8 @@ var provvis = (function () {
         /* Main canvas drawing area. */
         vis.canvas = d3.select('#provenance-canvas')
           .append('svg')
-          /*.attr("transform", "translate(" +
-           vis.margin.left + "," + vis.margin.top + ")")*/
           .attr('width', width)
           .attr('height', height)
-          /*.attr("viewBox", "0 0 " + (width) + " " + (height))*/
-          /*.attr("preserveAspectRatio", "xMinYMin meet")*/
           .attr('pointer-events', 'all')
           .classed('canvas', true)
           .append('g')
@@ -390,49 +385,44 @@ var provvis = (function () {
 
 
         /* Production mode exception handling. */
-          /* Exception handling. */
-          /*try {
-
-            /!* Extract graph data. *!/
-            vis.graph = provvisInit.run(data, analysesData, solrResponse);
-            try {
-
-              /!* Compute layout. *!/
-              vis.graph.bclgNodes = provvisLayout.run(vis.graph, vis.cell);
-              try {
-
-                /!* Discover and and inject motifs. *!/
-                provvisMotifs.run(vis.graph, layerMethod);
-                try {
-
-                  /!* Render graph. *!/
-                  provvisRender.run(vis);
-                }
-                catch (err) {
-                  $("#provenance-canvas > svg").remove();
-                  document.getElementById("provenance-canvas").innerHTML +=
-                      'Render Module Error: ' + err.message + '<br>';
-                }
-              }
-              catch (err) {
-                $("#provenance-canvas > svg").remove();
-                document.getElementById("provenance-canvas").innerHTML +=
-                    'Motif Module Error: ' + err.message + '<br>';
-              }
-            }
-            catch (err) {
-              $("#provenance-canvas > svg").remove();
-              document.getElementById("provenance-canvas").innerHTML +=
-                  'Layout Module Error: ' + err.message + '<br>';
-            }
-          }
-          catch (err) {
-            $("#provenance-canvas > svg").remove();
-            document.getElementById("provenance-canvas").innerHTML =
-                'Init Module Error: ' + err.message + '<br>';
-          } finally {
-            hideProvvisLoaderIcon();
-          }*/
+        // try {
+        //   /* Extract graph data. */
+        //   vis.graph = provvisInit.run(data, analysesData, solrResponse);
+        //   try {
+        //     /* Compute layout. */
+        //     vis.graph.bclgNodes = provvisLayout.run(vis.graph, vis.cell);
+        //     try {
+        //       /* Discover and and inject motifs. */
+        //       provvisMotifs.run(vis.graph, layerMethod);
+        //       try {
+        //         /* Render graph. */
+        //         provvisRender.run(vis);
+        //       }
+        //       catch (err) {
+        //         $('#provenance-canvas > svg').remove();
+        //         document.getElementById('provenance-canvas').innerHTML +=
+        //             'Render Module Error: ' + err.message + '<br>';
+        //       }
+        //     }
+        //     catch (err) {
+        //       $('#provenance-canvas > svg').remove();
+        //       document.getElementById('provenance-canvas').innerHTML +=
+        //           'Motif Module Error: ' + err.message + '<br>';
+        //     }
+        //   }
+        //   catch (err) {
+        //     $('#provenance-canvas > svg').remove();
+        //     document.getElementById('provenance-canvas').innerHTML +=
+        //         'Layout Module Error: ' + err.message + '<br>';
+        //   }
+        // }
+        // catch (err) {
+        //   $('#provenance-canvas > svg').remove();
+        //   document.getElementById('provenance-canvas').innerHTML =
+        //       'Init Module Error: ' + err.message + '<br>';
+        // } finally {
+        //   hideProvvisLoaderIcon();
+        // }
 
         /* Uncomment in development mode. */
         vis.graph = provvisInit.run(data, analysesData, solrResponse);
@@ -478,7 +468,8 @@ var provvis = (function () {
             hideProvvisLoaderIcon();
           });
         } catch (err) {
-          document.getElementById('provenance-canvas').innerHTML += 'Layering Error: ' + err.message + '<br>';
+          document.getElementById('provenance-canvas')
+            .innerHTML += 'Layering Error: ' + err.message + '<br>';
         }
       });
     }
