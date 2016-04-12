@@ -1,8 +1,5 @@
 'use strict';
 
-angular.module('refineryAnalysisMonitor')
-  .filter('analysisMonitorFormatMilliTime', analysisMonitorFormatMilliTime);
-
 function analysisMonitorFormatMilliTime () {
   var milliToReadStr = function (milliSec) {
     var days = Math.floor(milliSec / 86400000);
@@ -40,12 +37,17 @@ function analysisMonitorFormatMilliTime () {
         timeStr = timeStr.concat(secs + ' secs ');
       }
     }
-    return (timeStr);
+    return timeStr;
   };
 
   return function (param) {
     if (typeof param !== 'undefined' && param !== null) {
       return milliToReadStr(param);
     }
+    return undefined;
   };
 }
+
+angular
+  .module('refineryAnalysisMonitor')
+  .filter('analysisMonitorFormatMilliTime', [analysisMonitorFormatMilliTime]);

@@ -5,5 +5,4 @@ docs/**
 node_modules/**
 production/**
 
-source/js/analysis-monitor/**
 source/js/provvis/**

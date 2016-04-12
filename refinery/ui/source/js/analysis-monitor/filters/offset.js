@@ -1,11 +1,11 @@
 'use strict';
 
-angular.module('refineryAnalysisMonitor')
-  .filter('analysisMonitorOffset', analysisMonitorOffset);
-
 function analysisMonitorOffset () {
-  return function (input, start) {
-    start = parseInt(start, 10);
+  return function (input, _start_) {
+    var start = parseInt(_start_, 10);
     return input.slice(start);
   };
 }
+
+angular.module('refineryAnalysisMonitor')
+  .filter('analysisMonitorOffset', [analysisMonitorOffset]);

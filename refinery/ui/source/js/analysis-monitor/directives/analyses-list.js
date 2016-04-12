@@ -1,13 +1,5 @@
 'use strict';
 
-angular.module('refineryAnalysisMonitor')
-  .directive('analysisMonitorAnalysesList',
-    [
-      '$rootScope',
-      analysisMonitorAnalysesList
-    ]
-);
-
 function analysisMonitorAnalysesList () {
   return {
     restrict: 'E',
@@ -18,7 +10,7 @@ function analysisMonitorAnalysesList () {
       analysesList: '@',
       analysesDetail: '@'
     },
-    link: function (scope, element, attr) {
+    link: function (scope) {
       scope.stageTooltipInfo = {
         refineryImport: 'Downloading analysis input files into Refinery',
         galaxyImport: 'Uploading analysis input files into Galaxy',
@@ -32,7 +24,7 @@ function analysisMonitorAnalysesList () {
 
       scope.isCollapsed = false;
 
-      //Analyses view sorting
+      // Analyses view sorting
       scope.predicate = 'time_start';
       scope.reverse = true;
       scope.analysisIcon = 'fa fa-arrow-up';
@@ -46,7 +38,7 @@ function analysisMonitorAnalysesList () {
         }
       };
 
-      //Analyses view pagination
+      // Analyses view pagination
       scope.itemsPerPage = 20;
       scope.currentPage = 0;
 
@@ -69,9 +61,8 @@ function analysisMonitorAnalysesList () {
       scope.nextPageDisabled = function () {
         if (scope.currentPage === scope.pageCount()) {
           return 'disabled';
-        } else {
-          return '';
         }
+        return '';
       };
 
       scope.pageCount = function () {
@@ -95,7 +86,13 @@ function analysisMonitorAnalysesList () {
       scope.setPage = function (n) {
         scope.currentPage = n;
       };
-
     }
   };
 }
+
+angular
+  .module('refineryAnalysisMonitor')
+  .directive('analysisMonitorAnalysesList', [
+    '$rootScope',
+    analysisMonitorAnalysesList
+  ]);

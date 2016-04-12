@@ -1,9 +1,5 @@
 'use strict';
 
-angular.module('refineryAnalysisMonitor')
-  .directive('rpAnalysisMonitorGlobalListStatusPopoverDetails',
-    rpAnalysisMonitorGlobalListStatusPopoverDetails);
-
 function rpAnalysisMonitorGlobalListStatusPopoverDetails () {
   return {
     restrict: 'E',
@@ -15,3 +11,9 @@ function rpAnalysisMonitorGlobalListStatusPopoverDetails () {
     }
   };
 }
+
+angular
+  .module('refineryAnalysisMonitor')
+  .directive('rpAnalysisMonitorGlobalListStatusPopoverDetails', [
+    rpAnalysisMonitorGlobalListStatusPopoverDetails
+  ]);

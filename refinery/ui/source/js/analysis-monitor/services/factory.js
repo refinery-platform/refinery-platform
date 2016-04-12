@@ -1,9 +1,8 @@
 'use strict';
 
-angular.module('refineryAnalysisMonitor')
-  .factory('analysisMonitorFactory', ['$http', 'analysisService', 'analysisDetailService', analysisMonitorFactory]);
-
-function analysisMonitorFactory ($http, analysisService, analysisDetailService) {
+function analysisMonitorFactory (
+  $http, $log, $window, analysisService, analysisDetailService, settings
+) {
   var analysesList = [];
   var analysesRunningList = [];
   var analysesGlobalList = [];
@@ -12,96 +11,24 @@ function analysisMonitorFactory ($http, analysisService, analysisDetailService) 
 
   var initializeAnalysesDetail = function (uuid) {
     analysesDetail[uuid] = {
-      'refineryImport': {
+      refineryImport: {
         status: '',
         percent_done: 0
       },
-      'galaxyImport': {
+      galaxyImport: {
         status: '',
         percent_done: 0
       },
-      'galaxyAnalysis': {
+      galaxyAnalysis: {
         status: '',
         percent_done: 0
       },
-      'galaxyExport': {
+      galaxyExport: {
         status: '',
         percent_done: 0
       },
-      'cancelingAnalyses': false
+      cancelingAnalyses: false
     };
-  };
-
-  //Ajax calls, grabs the entire analysis list for a particular data set
-  var getAnalysesList = function (params) {
-    params = params || {};
-
-    var analysis = analysisService.query(params);
-    analysis.$promise.then(function (response) {
-      processAnalysesList(response.objects, params);
-    }, function (error) {
-      console.log(error);
-    });
-
-    return analysis.$promise;
-  };
-
-  //Copies and sorts analyses list
-  var processAnalysesList = function (data, params) {
-    if ('status__in' in params && 'data_set__uuid' in params) {
-      angular.copy(data, analysesRunningList);
-    } else if ('status__in' in params) {
-      angular.copy(data, analysesRunningGlobalList);
-    } else if ('limit' in params && 'data_set__uuid' in params) {
-      addElapseAndHumanTime(data);
-    } else {
-      angular.copy(data, analysesGlobalList);
-    }
-  };
-
-  var getAnalysesDetail = function (uuid) {
-    var analysesDetail = analysisDetailService.query({
-      uuid: uuid
-    });
-    analysesDetail.$promise.then(function (response) {
-      processAnalysesGlobalDetail(response, uuid);
-    }, function (error) {
-      console.error('Error accessing analysis monitoring API');
-    });
-    return analysesDetail.$promise;
-  };
-
-  var postCancelAnalysis = function (uuid) {
-    return $http({
-      method: 'POST',
-      url: '/analysis_manager/analysis_cancel/',
-      data: {
-        'csrfmiddlewaretoken': csrf_token,
-        'uuid': uuid
-      },
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    }).then(function (response) {
-      console.log(response);
-    }, function (error) {
-      console.log(error);
-
-    });
-  };
-
-  /*process responses from api*/
-  var addElapseAndHumanTime = function (data) {
-    angular.copy(data, analysesList);
-    for (var j = 0; j < analysesList.length; j++) {
-      analysesList[j].elapseTime = createElapseTime(analysesList[j]);
-      if (isObjExist(analysesList[j].time_start)) {
-        analysesList[j].humanizeStartTime = humanizeTimeObj(analysesList[j].time_start);
-      }
-      if (isObjExist(analysesList[j].time_end)) {
-        analysesList[j].humanizeEndTime = humanizeTimeObj(analysesList[j].time_end);
-      }
-    }
   };
 
   var humanizeTimeObj = function (param) {
@@ -111,17 +38,42 @@ function analysisMonitorFactory ($http, analysisService, analysisDetailService) 
     var offsetDate = testDate + curDate;
     var unixtime = offsetDate / 1000;
 
-    return (
-    humanize.relativeTime(unixtime)
-    );
+    return settings.humanize.relativeTime(unixtime);
   };
 
   var isObjExist = function (data) {
     if (typeof data !== 'undefined' && data !== null) {
       return true;
-    } else {
-      return false;
     }
+    return false;
+  };
+
+  var formatMilliTime = function (timeStr) {
+    var milliTime = Date.parse(timeStr);
+    return milliTime;
+  };
+
+  var isParamValid = function (data) {
+    if (typeof data !== 'undefined' && typeof data.time_start !== 'undefined' &&
+      typeof data.time_end !== 'undefined' && data.time_start !== null &&
+      data.time_end !== null) {
+      return 'complete';
+    } else if (typeof data !== 'undefined' && typeof data.time_start !== 'undefined' &&
+      data.time_start !== null) {
+      return 'running';
+    }
+    return 'false';
+  };
+
+  var averagePercentDone = function (numArr) {
+    var totalSum = 0;
+    for (var i = 0; i < numArr.length; i++) {
+      totalSum = totalSum + numArr[i];
+    }
+    if (totalSum > 0) {
+      return totalSum / numArr.length;
+    }
+    return totalSum;
   };
 
   var createElapseTime = function (timeObj) {
@@ -139,34 +91,61 @@ function analysisMonitorFactory ($http, analysisService, analysisDetailService) 
       startTime = formatMilliTime(timeObj.time_start);
       elapseMilliTime = curTime - startTime;
       return elapseMilliTime;
+    }
+    return null;
+  };
+
+  // process responses from api
+  var addElapseAndHumanTime = function (data) {
+    angular.copy(data, analysesList);
+    for (var j = 0; j < analysesList.length; j++) {
+      analysesList[j].elapseTime = createElapseTime(analysesList[j]);
+      if (isObjExist(analysesList[j].time_start)) {
+        analysesList[j].humanizeStartTime = humanizeTimeObj(analysesList[j].time_start);
+      }
+      if (isObjExist(analysesList[j].time_end)) {
+        analysesList[j].humanizeEndTime = humanizeTimeObj(analysesList[j].time_end);
+      }
+    }
+  };
+
+  // Copies and sorts analyses list
+  var processAnalysesList = function (data, params) {
+    if ('status__in' in params && 'data_set__uuid' in params) {
+      angular.copy(data, analysesRunningList);
+    } else if ('status__in' in params) {
+      angular.copy(data, analysesRunningGlobalList);
+    } else if ('limit' in params && 'data_set__uuid' in params) {
+      addElapseAndHumanTime(data);
     } else {
-      return null;
+      angular.copy(data, analysesGlobalList);
     }
   };
 
-  var formatMilliTime = function (timeStr) {
-    var milliTime = Date.parse(timeStr);
-    return milliTime;
+  // Ajax calls, grabs the entire analysis list for a particular data set
+  var getAnalysesList = function (_params_) {
+    var params = _params_ || {};
+
+    var analysis = analysisService.query(params);
+    analysis.$promise.then(function (response) {
+      processAnalysesList(response.objects, params);
+    });
+
+    return analysis.$promise;
   };
 
-  var isParamValid = function (data) {
-    if (typeof data !== 'undefined' && typeof data.time_start !== 'undefined' &&
-      typeof data.time_end !== 'undefined' && data.time_start !== null &&
-      data.time_end !== null) {
-      return 'complete';
-    } else if (typeof data !== 'undefined' && typeof data.time_start !== 'undefined' &&
-      data.time_start !== null) {
-      return 'running';
-    } else {
-      return 'false';
-    }
-  };
-
-  var processAnalysesGlobalDetail = function (data, uuid) {
-    if (!(analysesDetail.hasOwnProperty(uuid))) {
-      initializeAnalysesDetail(uuid);
-    }
-    setAnalysesStatus(data, uuid);
+  var postCancelAnalysis = function (uuid) {
+    return $http({
+      method: 'POST',
+      url: '/analysis_manager/analysis_cancel/',
+      data: {
+        csrfmiddlewaretoken: $window.csrf_token,
+        uuid: uuid
+      },
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
   };
 
   var setAnalysesStatus = function (data, uuid) {
@@ -183,18 +162,18 @@ function analysisMonitorFactory ($http, analysisService, analysisDetailService) 
         var avgPercentDone = averagePercentDone(tempArr);
         if (failureFlag) {
           analysesDetail[uuid][stage] = {
-            'state': 'FAILURE',
-            'percent_done': null
+            state: 'FAILURE',
+            percent_done: null
           };
-        } else if (avgPercentDone == 100) {
+        } else if (avgPercentDone === 100) {
           analysesDetail[uuid][stage] = {
-            'state': 'SUCCESS',
-            'percent_done': avgPercentDone
+            state: 'SUCCESS',
+            percent_done: avgPercentDone
           };
         } else {
           analysesDetail[uuid][stage] = {
-            'state': 'PROGRESS',
-            'percent_done': avgPercentDone
+            state: 'PROGRESS',
+            percent_done: avgPercentDone
           };
         }
       } else if (dataArr.length === 1) {
@@ -203,16 +182,21 @@ function analysisMonitorFactory ($http, analysisService, analysisDetailService) 
     });
   };
 
-  var averagePercentDone = function (numArr) {
-    var totalSum = 0;
-    for (var i = 0; i < numArr.length; i++) {
-      totalSum = totalSum + numArr[i];
+  var processAnalysesGlobalDetail = function (data, uuid) {
+    if (!(analysesDetail.hasOwnProperty(uuid))) {
+      initializeAnalysesDetail(uuid);
     }
-    if (totalSum > 0) {
-      return totalSum / numArr.length;
-    } else {
-      return totalSum;
-    }
+    setAnalysesStatus(data, uuid);
+  };
+
+  var getAnalysesDetail = function (uuid) {
+    return analysisDetailService.query({
+      uuid: uuid
+    }).$promise.then(function (response) {
+      processAnalysesGlobalDetail(response, uuid);
+    }, function () {
+      $log.error('Error accessing analysis monitoring API');
+    });
   };
 
   return {
@@ -227,3 +211,14 @@ function analysisMonitorFactory ($http, analysisService, analysisDetailService) 
   };
 }
 
+angular
+  .module('refineryAnalysisMonitor')
+  .factory('analysisMonitorFactory', [
+    '$http',
+    '$log',
+    '$window',
+    'analysisService',
+    'analysisDetailService',
+    'settings',
+    analysisMonitorFactory
+  ]);

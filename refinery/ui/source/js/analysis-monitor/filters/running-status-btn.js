@@ -1,9 +1,6 @@
 'use strict';
 
-angular.module('refineryAnalysisMonitor')
-  .filter('analysisMonitorRunningStatusBtn', analysisMonitorRunningStatusBtn);
-
-//stage icon for the global analysis
+// stage icon for the global analysis
 function analysisMonitorRunningStatusBtn () {
   return function (param) {
     if (typeof param !== 'undefined' && Object.keys(param).length > 0) {
@@ -15,12 +12,12 @@ function analysisMonitorRunningStatusBtn () {
         return 'fa fa-cog';
       } else if (param.galaxyExport.state !== 'SUCCESS') {
         return 'fa fa-arrow-circle-right';
-      } else {
-        return 'fa fa-question-circle';
       }
-    } else {
-      return 'refinery-spinner analyses-view';
+      return 'fa fa-question-circle';
     }
+    return 'refinery-spinner analyses-view';
   };
 }
 
+angular.module('refineryAnalysisMonitor')
+  .filter('analysisMonitorRunningStatusBtn', [analysisMonitorRunningStatusBtn]);

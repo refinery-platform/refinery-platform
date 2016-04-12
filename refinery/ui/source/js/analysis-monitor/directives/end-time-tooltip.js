@@ -1,16 +1,13 @@
 'use strict';
 
-angular.module('refineryAnalysisMonitor')
-  .directive('rpAnalysisMonitorEndTimeTooltip', ['$filter', rpAnalysisMonitorEndTimeTooltip]);
-
 function rpAnalysisMonitorEndTimeTooltip ($filter) {
   return {
     restrict: 'A',
-    link: function (scope, element, attrs) {
+    link: function (scope, element) {
       var endTime = scope.analysis.time_end;
-      var endTimeStr = ( $filter('date')(endTime, 'medium'));
+      var endTimeStr = ($filter('date')(endTime, 'medium'));
 
-      $(element)
+      element
         .attr('title', endTimeStr)
         .attr('data-container', 'body')
         .tooltip({
@@ -19,3 +16,9 @@ function rpAnalysisMonitorEndTimeTooltip ($filter) {
     }
   };
 }
+
+angular
+  .module('refineryAnalysisMonitor')
+  .directive('rpAnalysisMonitorEndTimeTooltip', [
+    '$filter', rpAnalysisMonitorEndTimeTooltip
+  ]);

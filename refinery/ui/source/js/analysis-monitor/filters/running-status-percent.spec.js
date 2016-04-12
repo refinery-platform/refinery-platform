@@ -17,87 +17,87 @@ describe('Filter: AnalysisMonitorRunningStatusPercent', function () {
 
   var emptyParam = {};
   var startedParam = {
-    'refineryImport': {
-      'state': 'RUNNING',
-      'percent_done': 50
+    refineryImport: {
+      state: 'RUNNING',
+      percent_done: 50
     },
-    'galaxyImport': {
-      'state': 'PENDING'
+    galaxyImport: {
+      state: 'PENDING'
     },
-    'galaxyAnalysis': {
-      'state': 'PENDING'
+    galaxyAnalysis: {
+      state: 'PENDING'
     },
-    'galaxyExport': {
-      'state': 'PENDING'
+    galaxyExport: {
+      state: 'PENDING'
     }
   };
   var partialParam1 = {
-    'refineryImport': {
-      'state': 'SUCCESS',
-      'percent_done': 100
+    refineryImport: {
+      state: 'SUCCESS',
+      percent_done: 100
     },
-    'galaxyImport': {
-      'state': 'PROGRESS',
-      'percent_done': 25
+    galaxyImport: {
+      state: 'PROGRESS',
+      percent_done: 25
     },
-    'galaxyAnalysis': {
-      'state': 'PENDING'
+    galaxyAnalysis: {
+      state: 'PENDING'
     },
-    'galaxyExport': {
-      'state': 'PENDING'
+    galaxyExport: {
+      state: 'PENDING'
     }
   };
   var partialParam2 = {
-    'refineryImport': {
-      'state': 'SUCCESS',
-      'percent_done': 100
+    refineryImport: {
+      state: 'SUCCESS',
+      percent_done: 100
     },
-    'galaxyImport': {
-      'state': 'SUCCESS',
-      'percent_done': 100
+    galaxyImport: {
+      state: 'SUCCESS',
+      percent_done: 100
     },
-    'galaxyAnalysis': {
-      'state': 'PROGRESS',
-      'percent_done': 35
+    galaxyAnalysis: {
+      state: 'PROGRESS',
+      percent_done: 35
     },
-    'galaxyExport': {
-      'state': 'PENDING'
+    galaxyExport: {
+      state: 'PENDING'
     }
   };
   var partialParam3 = {
-    'refineryImport': {
-      'state': 'SUCCESS',
-      'percent_done': 100
+    refineryImport: {
+      state: 'SUCCESS',
+      percent_done: 100
     },
-    'galaxyImport': {
-      'state': 'SUCCESS',
-      'percent_done': 100
+    galaxyImport: {
+      state: 'SUCCESS',
+      percent_done: 100
     },
-    'galaxyAnalysis': {
-      'state': 'SUCCESS',
-      'percent_done': 100
+    galaxyAnalysis: {
+      state: 'SUCCESS',
+      percent_done: 100
     },
-    'galaxyExport': {
-      'state': 'PROGRESS',
-      'percent_done': 78
+    galaxyExport: {
+      state: 'PROGRESS',
+      percent_done: 78
     }
   };
   var completedParam = {
-    'refineryImport': {
-      'state': 'SUCCESS',
-      'percent_done': 100
+    refineryImport: {
+      state: 'SUCCESS',
+      percent_done: 100
     },
-    'galaxyImport': {
-      'state': 'SUCCESS',
-      'percent_done': 100
+    galaxyImport: {
+      state: 'SUCCESS',
+      percent_done: 100
     },
-    'galaxyAnalysis': {
-      'state': 'SUCCESS',
-      'percent_done': 100
+    galaxyAnalysis: {
+      state: 'SUCCESS',
+      percent_done: 100
     },
-    'galaxyExport': {
-      'state': 'SUCCESS',
-      'percent_done': 100
+    galaxyExport: {
+      state: 'SUCCESS',
+      percent_done: 100
     }
   };
 

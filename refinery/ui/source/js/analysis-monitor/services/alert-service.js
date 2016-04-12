@@ -1,8 +1,5 @@
 'use strict';
 
-angular.module('refineryAnalysisMonitor')
-  .service('analysisMonitorAlertService', ['analysisMonitorFactory', 'analysisService', analysisMonitorAlertService]);
-
 function analysisMonitorAlertService (analysisMonitorFactory, analysisService) {
   var vm = this;
   var analysesMsg = {};
@@ -21,14 +18,18 @@ function analysisMonitorAlertService (analysisMonitorFactory, analysisService) {
     var analysis = analysisService.query({
       format: 'json',
       limit: 1,
-      'uuid': uuid
+      uuid: uuid
     });
 
     analysis.$promise.then(function (response) {
       analysesMsg.status = response.objects[0].status;
       analysesMsg.name = response.objects[0].name;
-    }, function (error) {
-      console.log(error);
     });
   };
 }
+
+angular
+  .module('refineryAnalysisMonitor')
+  .service('analysisMonitorAlertService', [
+    'analysisMonitorFactory', 'analysisService', analysisMonitorAlertService
+  ]);

@@ -1,21 +1,13 @@
 'use strict';
 
-angular.module('refineryAnalysisMonitor')
-  .directive('rpAnalysisMonitorStartTimeTooltip',
-    [
-      '$filter',
-      rpAnalysisMonitorStartTimeTooltip
-    ]
-);
-
 function rpAnalysisMonitorStartTimeTooltip ($filter) {
   return {
     restrict: 'A',
-    link: function (scope, element, attrs) {
+    link: function (scope, element) {
       var startTime = scope.analysis.time_start;
-      var startTimeStr = ( $filter('date')(startTime, 'medium'));
+      var startTimeStr = ($filter('date')(startTime, 'medium'));
 
-      $(element)
+      element
         .attr('title', startTimeStr)
         .attr('data-container', 'body')
         .tooltip({
@@ -24,3 +16,10 @@ function rpAnalysisMonitorStartTimeTooltip ($filter) {
     }
   };
 }
+
+angular
+  .module('refineryAnalysisMonitor')
+  .directive('rpAnalysisMonitorStartTimeTooltip', [
+    '$filter',
+    rpAnalysisMonitorStartTimeTooltip
+  ]);

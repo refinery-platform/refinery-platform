@@ -1,13 +1,5 @@
 'use strict';
 
-angular.module('refineryAnalysisMonitor')
-  .directive('rpAnalysisOwnerName',
-    [
-      'userService',
-      rpAnalysisOwnerName
-    ]
-);
-
 function rpAnalysisOwnerName (userService) {
   return {
     restrict: 'A',
@@ -23,9 +15,14 @@ function rpAnalysisOwnerName (userService) {
         } else {
           scope.ownerName = ownerObj.userName;
         }
-      }, function (error) {
-        console.log(error);
       });
     }
   };
 }
+
+angular
+  .module('refineryAnalysisMonitor')
+  .directive('rpAnalysisOwnerName', [
+    'userService',
+    rpAnalysisOwnerName
+  ]);

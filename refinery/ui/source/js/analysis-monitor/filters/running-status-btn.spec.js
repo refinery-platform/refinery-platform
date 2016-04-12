@@ -17,73 +17,73 @@ describe('Filter: RunningStatusBtn', function () {
 
   var emptyParam = {};
   var startedParam = {
-    'refineryImport': {
-      'state': 'PROGRESS'
+    refineryImport: {
+      state: 'PROGRESS'
     },
-    'galaxyImport': {
-      'state': 'PENDING'
+    galaxyImport: {
+      state: 'PENDING'
     },
-    'galaxyAnalysis': {
-      'state': 'PENDING'
+    galaxyAnalysis: {
+      state: 'PENDING'
     },
-    'galaxyExport': {
-      'state': 'PENDING'
+    galaxyExport: {
+      state: 'PENDING'
     }
   };
   var partialParam1 = {
-    'refineryImport': {
-      'state': 'SUCCESS'
+    refineryImport: {
+      state: 'SUCCESS'
     },
-    'galaxyImport': {
-      'state': 'PROGRESS'
+    galaxyImport: {
+      state: 'PROGRESS'
     },
-    'galaxyAnalysis': {
-      'state': 'PENDING'
+    galaxyAnalysis: {
+      state: 'PENDING'
     },
-    'galaxyExport': {
-      'state': 'PENDING'
+    galaxyExport: {
+      state: 'PENDING'
     }
   };
   var partialParam2 = {
-    'refineryImport': {
-      'state': 'SUCCESS'
+    refineryImport: {
+      state: 'SUCCESS'
     },
-    'galaxyImport': {
-      'state': 'SUCCESS'
+    galaxyImport: {
+      state: 'SUCCESS'
     },
-    'galaxyAnalysis': {
-      'state': 'PROGRESS'
+    galaxyAnalysis: {
+      state: 'PROGRESS'
     },
-    'galaxyExport': {
-      'state': 'PENDING'
+    galaxyExport: {
+      state: 'PENDING'
     }
   };
   var partialParam3 = {
-    'refineryImport': {
-      'state': 'SUCCESS'
+    refineryImport: {
+      state: 'SUCCESS'
     },
-    'galaxyImport': {
-      'state': 'SUCCESS'
+    galaxyImport: {
+      state: 'SUCCESS'
     },
-    'galaxyAnalysis': {
-      'state': 'SUCCESS'
+    galaxyAnalysis: {
+      state: 'SUCCESS'
     },
-    'galaxyExport': {
-      'state': 'PROGRESS'
+    galaxyExport: {
+      state: 'PROGRESS'
     }
   };
   var completedParam = {
-    'refineryImport': {
-      'state': 'SUCCESS'
+    refineryImport: {
+      state: 'SUCCESS'
     },
-    'galaxyImport': {
-      'state': 'SUCCESS'
+    galaxyImport: {
+      state: 'SUCCESS'
     },
-    'galaxyAnalysis': {
-      'state': 'SUCCESS'
+    galaxyAnalysis: {
+      state: 'SUCCESS'
     },
-    'galaxyExport': {
-      'state': 'SUCCESS'
+    galaxyExport: {
+      state: 'SUCCESS'
     }
   };
 

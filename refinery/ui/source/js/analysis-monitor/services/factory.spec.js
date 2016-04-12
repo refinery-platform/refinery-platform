@@ -1,22 +1,18 @@
 'use strict';
 
-//UNIT TESTING
-//Provide a global variable for factory.
-var csrf_token;
 describe('Analysis Monitor Factory', function () {
   // 'use strict';
   var factory;
-  var query;
   var deferred;
   var rootScope;
-  var valid_uuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
-  var valid_token = 'xxxx1';
+  var validUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+  var validToken = 'xxxx1';
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryAnalysisMonitor'));
-  beforeEach(inject(function (_analysisMonitorFactory_) {
+  beforeEach(inject(function (_analysisMonitorFactory_, $window) {
     factory = _analysisMonitorFactory_;
-    csrf_token = valid_token;
+    $window.csrf_token = validToken;
   }));
 
   it('factory and tools variables should exist', function () {
@@ -58,7 +54,7 @@ describe('Analysis Monitor Factory', function () {
     it('getAnalysesList returns a promise', function () {
       var successData;
       var response = factory.getAnalysesList({
-        uuid: valid_uuid
+        uuid: validUuid
       }).then(function (responseData) {
         successData = responseData;
       });
@@ -70,29 +66,28 @@ describe('Analysis Monitor Factory', function () {
   });
 
   describe('getAnalysesDetail', function () {
-    var response;
     var analysesDetail;
 
     beforeEach(inject(function ($q, $rootScope, analysisDetailService) {
       // Set up the mock http service responses
       analysesDetail = {
-        'refineryImport': [{
+        refineryImport: [{
           status: 'PROGRESS',
           percent_done: 30
         }],
-        'galaxyImport': [{
+        galaxyImport: [{
           status: '',
           percent_done: ''
         }],
-        'galaxyAnalysis': [{
+        galaxyAnalysis: [{
           status: '',
           percent_done: ''
         }],
-        'galaxyExport': [{
+        galaxyExport: [{
           status: '',
           percent_done: ''
         }],
-        'overrall': 'RUNNING'
+        overrall: 'RUNNING'
       };
 
       spyOn(analysisDetailService, 'query').and.callFake(function () {
@@ -111,8 +106,8 @@ describe('Analysis Monitor Factory', function () {
 
     it('getAnalysesDetail makes success call', function () {
       var successData;
-      var response = factory.getAnalysesDetail({
-        uuid: valid_uuid
+      factory.getAnalysesDetail({
+        uuid: validUuid
       }).then(function (responseData) {
         successData = responseData;
       });
@@ -136,19 +131,19 @@ describe('Analysis Monitor Factory', function () {
     it('postCancelAnalysis makes success call', function () {
       $httpBackend.expectPOST('/analysis_manager/analysis_cancel/',
         {
-          'csrfmiddlewaretoken': valid_token,
-          'uuid': valid_uuid
+          csrfmiddlewaretoken: validToken,
+          uuid: validUuid
         },
         {
           'X-Requested-With': 'XMLHttpRequest',
-          'Accept': 'application/json,' +
+          Accept: 'application/json,' +
             ' text/plain, */*',
           'Content-Type': 'application/json;' +
             'charset=utf-8'
         }
       ).respond(200, {}, {});
       var data;
-      var response = factory.postCancelAnalysis(valid_uuid).then(function () {
+      var response = factory.postCancelAnalysis(validUuid).then(function () {
         data = 'success';
       }, function () {
         data = 'error';

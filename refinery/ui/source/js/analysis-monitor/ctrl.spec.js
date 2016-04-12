@@ -1,30 +1,27 @@
 'use strict';
 
-/** Unit Tests **/
-
-//Global variable for both test and ctrl.
-var dataSetUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
-
 describe('Controller: AnalysisMonitorCtrl', function () {
   var ctrl;
   var scope;
   var factory;
-  var valid_uuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
-  var invalid_uuid = 'xxxxx';
+  var validUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+  var invalidUuid = 'xxxxx';
   var $timeout;
-  var response;
-  var $q;
   var $controller;
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryAnalysisMonitor'));
-  beforeEach(inject(function ($rootScope, _$controller_, _analysisMonitorFactory_) {
+  beforeEach(inject(function (
+    $rootScope, _$controller_, _analysisMonitorFactory_, _$timeout_, $window
+  ) {
     scope = $rootScope.$new();
     $controller = _$controller_;
     ctrl = $controller('AnalysisMonitorCtrl', {
       $scope: scope
     });
     factory = _analysisMonitorFactory_;
+    $timeout = _$timeout_;
+    $window.dataSetUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
   }));
 
   it('AnalysisMonitorCtrl ctrl should exist', function () {
@@ -46,13 +43,6 @@ describe('Controller: AnalysisMonitorCtrl', function () {
   });
 
   describe('Update Analyse Lists from Factory', function () {
-    var $timeout;
-
-    beforeEach(inject(function (_$timeout_, _$q_) {
-      $timeout = _$timeout_;
-      $q = _$q_;
-    }));
-
     afterEach(function () {
       $timeout.cancel(ctrl.timerList);
       $timeout.cancel(ctrl.timerGlobalList);
@@ -139,7 +129,6 @@ describe('Controller: AnalysisMonitorCtrl', function () {
       expect(typeof ctrl.timerRunGlobalList).toBeDefined();
       expect(mockAnalysesRunningGlobalFlag).toEqual(true);
     });
-
   });
 
   describe('Canceling Analyses', function () {
@@ -154,24 +143,24 @@ describe('Controller: AnalysisMonitorCtrl', function () {
         };
       });
 
-      ctrl.analysesDetail[valid_uuid] = {
-        'refineryImport': [{
+      ctrl.analysesDetail[validUuid] = {
+        refineryImport: [{
           status: 'PROGRESS',
           percent_done: 30
         }],
-        'galaxyImport': [{
+        galaxyImport: [{
           status: '',
           percent_done: ''
         }],
-        'galaxyAnalysis': [{
+        galaxyAnalysis: [{
           status: '',
           percent_done: ''
         }],
-        'galaxyExport': [{
+        galaxyExport: [{
           status: '',
           percent_done: ''
         }],
-        'overrall': 'RUNNING'
+        overrall: 'RUNNING'
       };
     }));
 
@@ -182,20 +171,19 @@ describe('Controller: AnalysisMonitorCtrl', function () {
 
     it('cancelAnalysis, check postCancelAnalysis is called', function () {
       expect(mockCancelFlag).toEqual(false);
-      ctrl.cancelAnalysis(valid_uuid);
+      ctrl.cancelAnalysis(validUuid);
       expect(mockCancelFlag).toEqual(true);
     });
 
     it('setCancelAnalysisFlag', function () {
-      response = ctrl.setCancelAnalysisFlag(true, invalid_uuid);
-      expect(ctrl.initializedFlag[invalid_uuid]).toEqual(true);
+      ctrl.setCancelAnalysisFlag(true, invalidUuid);
+      expect(ctrl.initializedFlag[invalidUuid]).toEqual(true);
 
-      response = ctrl.setCancelAnalysisFlag(false, valid_uuid);
-      expect(ctrl.analysesDetail[valid_uuid].cancelingAnalyses).toEqual(false);
+      ctrl.setCancelAnalysisFlag(false, validUuid);
+      expect(ctrl.analysesDetail[validUuid].cancelingAnalyses).toEqual(false);
 
-      response = ctrl.setCancelAnalysisFlag(true, valid_uuid);
-      expect(ctrl.analysesDetail[valid_uuid].cancelingAnalyses).toEqual(true);
-
+      ctrl.setCancelAnalysisFlag(true, validUuid);
+      expect(ctrl.analysesDetail[validUuid].cancelingAnalyses).toEqual(true);
     });
   });
 
@@ -204,24 +192,24 @@ describe('Controller: AnalysisMonitorCtrl', function () {
       scope = $rootScope.$new();
       $timeout = _$timeout_;
 
-      ctrl.analysesDetail[valid_uuid] = {
-        'refineryImport': [{
+      ctrl.analysesDetail[validUuid] = {
+        refineryImport: [{
           status: 'PROGRESS',
           percent_done: 30
         }],
-        'galaxyImport': [{
+        galaxyImport: [{
           status: '',
           percent_done: ''
         }],
-        'galaxyAnalysis': [{
+        galaxyAnalysis: [{
           status: '',
           percent_done: ''
         }],
-        'galaxyExport': [{
+        galaxyExport: [{
           status: '',
           percent_done: ''
         }],
-        'overrall': 'RUNNING'
+        overrall: 'RUNNING'
       };
     }));
 
@@ -317,7 +305,7 @@ describe('Controller: AnalysisMonitorCtrl', function () {
     });
 
     it('setAnalysesLoadingFlag responds correctly', function () {
-      //Default of analysesList should be 0.
+      // Default of analysesList should be 0.
       ctrl.setAnalysesLoadingFlag();
       expect(ctrl.analysesLoadingFlag).toEqual('EMPTY');
 
@@ -331,7 +319,7 @@ describe('Controller: AnalysisMonitorCtrl', function () {
     });
 
     it('setAnalysesGlobalLoadingFlag responds correctly', function () {
-      //Default of analysesList should be 0.
+      // Default of analysesList should be 0.
       ctrl.setAnalysesGlobalLoadingFlag();
       expect(ctrl.analysesGlobalLoadingFlag).toEqual('EMPTY');
 
@@ -346,12 +334,12 @@ describe('Controller: AnalysisMonitorCtrl', function () {
 
     it('isAnalysesRunning responds correctly', function () {
       ctrl.analysesRunningList = undefined;
-      var response_invalid = ctrl.isAnalysesRunning();
-      expect(response_invalid).toEqual(false);
+      var responseInvalid = ctrl.isAnalysesRunning();
+      expect(responseInvalid).toEqual(false);
 
       ctrl.analysesRunningList = [{}, {}, {}];
-      var response_valid = ctrl.isAnalysesRunning();
-      expect(response_valid).toEqual(true);
+      var responseValid = ctrl.isAnalysesRunning();
+      expect(responseValid).toEqual(true);
     });
 
     it('isAnalysesRunningGlobal method is function', function () {
@@ -360,12 +348,12 @@ describe('Controller: AnalysisMonitorCtrl', function () {
 
     it('isAnalysesRunningGlobal responds correctly', function () {
       ctrl.analysesRunningGlobalList = undefined;
-      var response_invalid = ctrl.isAnalysesRunningGlobal();
-      expect(response_invalid).toEqual(false);
+      var responseInvalid = ctrl.isAnalysesRunningGlobal();
+      expect(responseInvalid).toEqual(false);
 
       ctrl.analysesRunningGlobalList = [{}, {}, {}];
-      var response_valid = ctrl.isAnalysesRunningGlobal();
-      expect(response_valid).toEqual(true);
+      var responseValid = ctrl.isAnalysesRunningGlobal();
+      expect(responseValid).toEqual(true);
     });
 
     it('isEmptyAnalysesGlobalList method is function', function () {
@@ -374,13 +362,13 @@ describe('Controller: AnalysisMonitorCtrl', function () {
 
     it('isEmptyAnalysesGlobalList responds correctly', function () {
       ctrl.analysesRunningList = undefined;
-      var response_invalid = ctrl.isEmptyAnalysesGlobalList();
-      expect(response_invalid).toEqual(true);
+      var responseInvalid = ctrl.isEmptyAnalysesGlobalList();
+      expect(responseInvalid).toEqual(true);
 
       ctrl.analysesRunningList = [{}, {}, {}];
       ctrl.analysesGlobalList = [{}, {}, {}];
-      var response_valid = ctrl.isEmptyAnalysesGlobalList();
-      expect(response_valid).toEqual(false);
+      var responseValid = ctrl.isEmptyAnalysesGlobalList();
+      expect(responseValid).toEqual(false);
     });
 
     it('isAnalysisDetailLoaded method is function', function () {
@@ -388,12 +376,10 @@ describe('Controller: AnalysisMonitorCtrl', function () {
     });
 
     it('isAnalysisDetailLoaded responds correctly', function () {
-      var response_valid = ctrl.isAnalysisDetailLoaded(valid_uuid);
-      expect(response_valid).toEqual(true);
-      var response_invalid = ctrl.isAnalysisDetailLoaded(invalid_uuid);
-      expect(response_invalid).toEqual(false);
+      var responseValid = ctrl.isAnalysisDetailLoaded(validUuid);
+      expect(responseValid).toEqual(true);
+      var responseInvalid = ctrl.isAnalysisDetailLoaded(invalidUuid);
+      expect(responseInvalid).toEqual(false);
     });
-
   });
-
 });
