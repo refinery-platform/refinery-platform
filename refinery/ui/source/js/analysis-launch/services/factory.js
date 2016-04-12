@@ -1,8 +1,5 @@
 'use strict';
 
-angular.module('refineryAnalysisLaunch')
-  .factory('analysisLaunchFactory', ['$http', '$rootScope', '$log', analysesLaunchFactory]);
-
 function analysesLaunchFactory ($http, $rootScope, $log) {
   var postLaunchAnalysis = function (paramObj) {
     return (
@@ -13,7 +10,7 @@ function analysesLaunchFactory ($http, $rootScope, $log) {
         'X-Requested-With': 'XMLHttpRequest'
       },
       data: paramObj
-    }).success(function (response) {
+    }).success(function () {
       $log.debug('Launching analysis with config:');
       $log.debug('Workflow: ' + paramObj.workflowUuid);
       $log.debug('NodeSET: ' + paramObj.nodeSetUuid);
@@ -30,3 +27,8 @@ function analysesLaunchFactory ($http, $rootScope, $log) {
   };
 }
 
+angular
+  .module('refineryAnalysisLaunch')
+  .factory('analysisLaunchFactory', [
+    '$http', '$rootScope', '$log', analysesLaunchFactory
+  ]);

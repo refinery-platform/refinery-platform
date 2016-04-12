@@ -1,24 +1,11 @@
 'use strict';
 
-angular.module('refineryAnalysisLaunch')
-  .controller('AnalysisLaunchModalCtrl',
-    [
-      '$scope',
-      '$uibModalInstance',
-      '$window',
-      'timeStamp',
-      'workflow',
-      'analysisLaunchConfigService',
-      'analysisLaunchFactory',
-      AnalysisLaunchModalCtrl
-    ]
-);
-
-
 function AnalysisLaunchModalCtrl (
+  $log,
   $scope,
+  $window,
   $uibModalInstance,
-  $window, timeStamp,
+  timeStamp,
   workflow,
   analysisLaunchConfigService,
   analysisLaunchFactory
@@ -28,7 +15,7 @@ function AnalysisLaunchModalCtrl (
 
   $scope.analysisLaunchFlag = 'NOCALL';
   $scope.dataObj = {
-    'name': workflowName + ' ' + nowTimeStamp
+    name: workflowName + ' ' + nowTimeStamp
   };
   analysisLaunchConfigService.setAnalysisConfig(
     {
@@ -40,7 +27,6 @@ function AnalysisLaunchModalCtrl (
     $scope.analysisLaunchFlag = 'LOADING';
 
     if ($scope.tempName !== null) {
-
       analysisLaunchConfigService.setAnalysisConfig(
         {
           name: $scope.dataObj.name
@@ -49,10 +35,10 @@ function AnalysisLaunchModalCtrl (
 
       var launchParams = analysisLaunchConfigService.getAnalysisConfig();
       analysisLaunchFactory.postLaunchAnalysis(launchParams)
-        .then(function (response) {
+        .then(function () {
           $scope.analysisLaunchFlag = 'SUCCESS';
         }, function (error) {
-          console.log(error);
+          $log.log(error);
           $scope.analysisLaunchFlag = 'FAILED';
         });
     }
@@ -68,7 +54,20 @@ function AnalysisLaunchModalCtrl (
 
   $scope.view = function () {
     $uibModalInstance.close('view');
-    $window.location.href = '/data_sets/' + dataSetUuid + '/#/analyses';
+    $window.location.href = '/data_sets/' + $window.dataSetUuid + '/#/analyses';
   };
-
 }
+
+angular
+  .module('refineryAnalysisLaunch')
+  .controller('AnalysisLaunchModalCtrl', [
+    '$log',
+    '$scope',
+    '$window',
+    '$uibModalInstance',
+    'timeStamp',
+    'workflow',
+    'analysisLaunchConfigService',
+    'analysisLaunchFactory',
+    AnalysisLaunchModalCtrl
+  ]);

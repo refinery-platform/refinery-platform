@@ -1,12 +1,5 @@
 'use strict';
 
-angular.module('refineryAnalysisLaunch')
-  .service('analysisLaunchConfigService', [
-    '$window',
-    analysisLaunchConfigService
-  ]
-);
-
 function analysisLaunchConfigService ($window) {
   var vm = this;
 
@@ -27,8 +20,16 @@ function analysisLaunchConfigService ($window) {
   };
 
   vm.updateAnalysisConfig = function (paramObj) {
-    for (var prop in paramObj) {
-      analysisConfig[prop] = paramObj[prop];
+    var keys = Object.keys(paramObj);
+    for (var i = keys.length; i--;) {
+      analysisConfig[keys[i]] = paramObj[keys[i]];
     }
   };
 }
+
+angular
+  .module('refineryAnalysisLaunch')
+  .service('analysisLaunchConfigService', [
+    '$window',
+    analysisLaunchConfigService
+  ]);

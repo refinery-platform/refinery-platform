@@ -1,15 +1,5 @@
 'use strict';
 
-angular.module('refineryAnalysisLaunch')
-  .controller('AnalysisLaunchCtrl',
-    [
-      '$scope',
-      '$log',
-      'analysisLaunchConfigService',
-      AnalysisLaunchCtrl
-    ]
-);
-
 function AnalysisLaunchCtrl ($scope, $log, analysisLaunchConfigService) {
   $scope.$onRootScope('nodeSetChangedEvent', function (event, currentNodeSet) {
     analysisLaunchConfigService.setAnalysisConfig(
@@ -19,7 +9,9 @@ function AnalysisLaunchCtrl ($scope, $log, analysisLaunchConfigService) {
       });
   });
 
-  $scope.$onRootScope('nodeRelationshipChangedEvent', function (event, currentNodeRelationship) {
+  $scope.$onRootScope('nodeRelationshipChangedEvent', function (
+    event, currentNodeRelationship
+  ) {
     if (!currentNodeRelationship) {
       analysisLaunchConfigService.setAnalysisConfig(
         {
@@ -36,3 +28,12 @@ function AnalysisLaunchCtrl ($scope, $log, analysisLaunchConfigService) {
     }
   });
 }
+
+angular
+  .module('refineryAnalysisLaunch')
+  .controller('AnalysisLaunchCtrl', [
+    '$scope',
+    '$log',
+    'analysisLaunchConfigService',
+    AnalysisLaunchCtrl
+  ]);
