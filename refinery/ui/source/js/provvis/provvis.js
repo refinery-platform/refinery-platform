@@ -3,27 +3,20 @@
 /**
  * Angular module for the provenance visualization.
  */
-angular.module('refineryProvvis', [])
-
+angular
+  .module('refineryProvvis', [])
   .controller('provvisNavbarController', function ($scope) {
     $scope.name = 'Navbar';
-
-  /* TODO: */
   })
-
   .controller('provvisCanvasController', function ($scope) {
     $scope.name = 'Canvas';
-
-  /* TODO: */
   })
-
   .directive('provvisNavBar', function () {
     return {
       templateUrl: '/static/partials/provvis/partials/provvis-navbar.html',
       restrict: 'A'
     };
   })
-
   .directive('provvisCanvas', function () {
     return {
       templateUrl: '/static/partials/provvis/partials/provvis-canvas.html',
