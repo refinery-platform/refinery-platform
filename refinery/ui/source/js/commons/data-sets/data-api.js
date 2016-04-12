@@ -40,31 +40,31 @@ function DataSetDataApiFactory ($q, _, dataSetService) {
 
       var returnData = dataSetService
         .query(params).$promise.then(function (data) {
-        // Rename `meta.total_count` into `meta.total`.
-        Object.defineProperty(
-          data.meta,
-          'total',
-          Object.getOwnPropertyDescriptor(data.meta, 'total_count')
-        );
-        delete data.meta.total_count;
+          // Rename `meta.total_count` into `meta.total`.
+          Object.defineProperty(
+            data.meta,
+            'total',
+            Object.getOwnPropertyDescriptor(data.meta, 'total_count')
+          );
+          delete data.meta.total_count;
 
-        // Rename `objects` into `data`.
-        Object.defineProperty(
-          data,
-          'data',
-          Object.getOwnPropertyDescriptor(data, 'objects')
-        );
-        delete data.objects;
+          // Rename `objects` into `data`.
+          Object.defineProperty(
+            data,
+            'data',
+            Object.getOwnPropertyDescriptor(data, 'objects')
+          );
+          delete data.objects;
 
-        for (var i = data.data.length; i--;) {
-          data.data[i].creationDate = new Date(data.data[i].creation_date);
-          delete data.data[i].creation_date;
-          data.data[i].modificationDate = new Date(data.data[i].modification_date);
-          delete data.data[i].modification_date;
-        }
+          for (var i = data.data.length; i--;) {
+            data.data[i].creationDate = new Date(data.data[i].creation_date);
+            delete data.data[i].creation_date;
+            data.data[i].modificationDate = new Date(data.data[i].modification_date);
+            delete data.data[i].modification_date;
+          }
 
-        return data;
-      });
+          return data;
+        });
 
       var allIds = $q.when(false);
 

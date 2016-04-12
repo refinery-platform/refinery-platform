@@ -59,8 +59,7 @@ describe('Common.service.analysis: unit tests', function () {
       var results;
       var promise = service.get({
         uuid: validUuid
-      })
-        .$promise.then(function (response) {
+      }).$promise.then(function (response) {
         results = response;
       });
 

@@ -45,8 +45,7 @@ describe('Common.service.analysisDetail: unit tests', function () {
         .expectPOST(
           settings.appRoot +
           '/analysis_manager/' +
-          validUuid + params,
-          {
+          validUuid + params, {
             uuid: validUuid
           },
           header
@@ -67,8 +66,7 @@ describe('Common.service.analysisDetail: unit tests', function () {
       var results;
       var promise = service.query({
         uuid: validUuid
-      })
-        .$promise.then(function (response) {
+      }).$promise.then(function (response) {
         results = response;
       });
 
