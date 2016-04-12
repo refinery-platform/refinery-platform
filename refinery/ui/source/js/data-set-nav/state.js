@@ -3,8 +3,7 @@
 angular
   .module('refineryDataSetNav')
   .controller(
-    'refineryDataSetNavFilesCtrl',
-    [
+    'refineryDataSetNavFilesCtrl', [
       '$rootScope',
       '$timeout',
       '$window',
@@ -19,7 +18,7 @@ angular
         // height of scrollable elements timeout is needed to execute after DOM
         // changes
         if ($window.sizing) {
-          $timeout(sizing, 0);
+          $timeout($window.sizing, 0);
         }
 
         $($window).trigger('refinery/floatThead/reflow');
@@ -30,8 +29,7 @@ angular
 angular
   .module('refineryDataSetNav')
   .controller(
-    'refineryDataSetNavFilesBrowseCtrl',
-    [
+    'refineryDataSetNavFilesBrowseCtrl', [
       '$rootScope',
       '$timeout',
       '$window',
@@ -47,7 +45,7 @@ angular
         // height of scrollable elements timeout is needed to execute after DOM
         // changes
         if ($window.sizing) {
-          $timeout(sizing, 0);
+          $timeout($window.sizing, 0);
         }
 
         $($window).trigger('refinery/floatThead/reflow');
@@ -58,8 +56,7 @@ angular
 angular
   .module('refineryDataSetNav')
   .controller(
-    'refineryDataSetNavAnalyzeCtrl',
-    [
+    'refineryDataSetNavAnalyzeCtrl', [
       '$rootScope',
       '$timeout',
       '$window',
@@ -75,7 +72,7 @@ angular
         // height of scrollable elements timeout is needed to execute after DOM
         // changes
         if ($window.sizing) {
-          $timeout(sizing, 0);
+          $timeout($window.sizing, 0);
         }
 
         $($window).trigger('refinery/floatThead/reflow');
@@ -86,8 +83,7 @@ angular
 angular
   .module('refineryDataSetNav')
   .controller(
-    'refineryDataSetNavVisualizeCtrl',
-    [
+    'refineryDataSetNavVisualizeCtrl', [
       '$rootScope',
       '$timeout',
       '$window',
@@ -103,7 +99,7 @@ angular
         // height of scrollable elements timeout is needed to execute after DOM
         // changes
         if ($window.sizing) {
-          $timeout(sizing, 0);
+          $timeout($window.sizing, 0);
         }
 
         $($window).trigger('refinery/floatThead/reflow');
@@ -116,14 +112,13 @@ angular
 angular
   .module('refineryDataSetNav')
   .controller(
-    'refineryDataSetNavBlueprintCtrl',
-    [
+    'refineryDataSetNavBlueprintCtrl', [
       '$timeout',
       '$window',
       '$',
-      function ($timeout, $window, $) {
+      function ($timeout, $window) {
         if ($window.sizing) {
-          $timeout(sizing, 0);
+          $timeout($window.sizing, 0);
         }
       }
     ]
@@ -135,135 +130,121 @@ angular
     function (refineryStateProvider, refineryUrlRouterProvider) {
       refineryStateProvider
         .state(
-          'files',
-          {
+          'files', {
             url: '/files/',
             templateUrl: '/static/partials/data-set-ui-mode-browse.html',
             controller: 'refineryDataSetNavFilesCtrl'
           },
           '^\/data_sets\/.*\/$',
           true
-      )
+        )
         .state(
-          'browse',
-          {
+          'browse', {
             url: '/files/browse',
             templateUrl: '/static/partials/data-set-ui-mode-browse.html',
             controller: 'refineryDataSetNavFilesBrowseCtrl'
           },
           '^\/data_sets\/.*\/$',
           true
-      )
+        )
         .state(
-          'analyze',
-          {
+          'analyze', {
             url: '/files/analyze/',
             templateUrl: '/static/partials/data-set-ui-mode-analyze.html',
             controller: 'refineryDataSetNavAnalyzeCtrl'
           },
           '^\/data_sets\/.*\/$',
           true
-      )
+        )
         .state(
-          'visualize',
-          {
+          'visualize', {
             templateUrl: '/static/partials/data-set-ui-mode-visualize.html',
             url: '/files/visualize/',
             controller: 'refineryDataSetNavVisualizeCtrl'
           },
           '^\/data_sets\/.*\/$',
           true
-      )
+        )
         .state(
-          'analyses',
-          {
+          'analyses', {
             url: '/analyses/',
             templateUrl: '/static/partials/analysis-monitor/partials/analyses-list.html',
             controller: 'refineryDataSetNavBlueprintCtrl'
           },
           '^\/data_sets\/.*\/$',
           true
-      )
+        )
         .state(
-          'attributes',
-          {
+          'attributes', {
             url: '/attributes/',
             controller: 'refineryDataSetNavBlueprintCtrl'
           },
           '^\/data_sets\/.*\/$',
           true
-      )
+        )
         .state(
-          'details',
-          {
+          'details', {
             url: '/details/',
             controller: 'refineryDataSetNavBlueprintCtrl'
           },
           '^\/data_sets\/.*\/$',
           true
-      )
+        )
         .state(
-          'sharing',
-          {
+          'sharing', {
             url: '/sharing/',
             controller: 'refineryDataSetNavBlueprintCtrl'
           },
           '^\/data_sets\/.*\/$',
           true
-      )
+        )
         .state(
-          'files',
-          {
+          'files', {
             url: '/files/',
             templateUrl: '/static/partials/file-browser/partials/assay-files.html',
             controller: 'refineryDataSetNavFilesCtrl'
           },
           '^\/data_sets2\/.*\/$',
           true
-      )
+        )
         .state(
-          'browse',
-          {
+          'browse', {
             url: '/files/browse',
             templateUrl: '/static/partials/data-set-ui-mode-browse.html',
             controller: 'refineryDataSetNavFilesBrowseCtrl'
           },
           '^\/data_sets2\/.*\/$',
           true
-      )
+        )
         .state(
-          'analyze',
-          {
+          'analyze', {
             url: '/files/analyze/',
             templateUrl: '/static/partials/data-set-ui-mode-analyze.html',
             controller: 'refineryDataSetNavAnalyzeCtrl'
           },
           '^\/data_sets2\/.*\/$',
           true
-      )
+        )
         .state(
-          'visualize',
-          {
+          'visualize', {
             templateUrl: '/static/partials/data-set-ui-mode-visualize.html',
             url: '/files/visualize/',
             controller: 'refineryDataSetNavVisualizeCtrl'
           },
           '^\/data_sets2\/.*\/$',
           true
-      )
+        )
         .state(
-          'analyses',
-          {
+          'analyses', {
             url: '/analyses/',
             templateUrl: '/static/partials/analysis-monitor/partials/analyses-list.html',
             controller: 'refineryDataSetNavBlueprintCtrl'
           },
           '^\/data_sets2\/.*\/$',
           true
-      )
+        )
         .state(
-          'details',
-          {
+          'details', {
             url: '/details/',
             controller: 'refineryDataSetNavBlueprintCtrl'
           },
@@ -276,7 +257,7 @@ angular
           '/files/browse',
           '^\/data_sets\/.*\/$',
           true
-      )
+        )
         .otherwise(
           '/files/browse',
           '^\/data_sets2\/.*\/$',
