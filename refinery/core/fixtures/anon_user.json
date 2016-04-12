@@ -1,0 +1,18 @@
+[
+{
+  "pk": -1,
+  "model": "auth.user",
+  "fields": {
+    "username": "AnonymousUser",
+    "first_name": "",
+    "last_name": "",
+    "is_active": true,
+    "is_superuser": false,
+    "is_staff": false,
+    "groups": [],
+    "user_permissions": [],
+    "password": "",
+    "email": ""
+  }
+}
+]
