@@ -16,7 +16,9 @@ var provvisLayout = (function () {
     var sortedNodes = [];
 
     /* For each successor node. */
-    var handleSuccessorNodes = function (curNode) {
+    var handleSuccessorNodes = function (_curNode_) {
+      var curNode = _curNode_;
+
       /* When the analysis layout is computed, links occur between Nodes or
        * analyses. */
       if (curNode instanceof provvisDecl.Node &&
@@ -27,7 +29,9 @@ var provvisLayout = (function () {
       /* Get successors. */
       curNode.succs.values().filter(function (s) {
         return s.parent === null || s.parent === parent;
-      }).forEach(function (succNode) {
+      }).forEach(function (_succNode_) {
+        var succNode = _succNode_;
+
         if (succNode instanceof provvisDecl.Node &&
           parent instanceof provvisDecl.ProvGraph) {
           succNode = succNode.parent.parent;
@@ -54,9 +58,12 @@ var provvisLayout = (function () {
 
         /* When successor node has no other incoming edges,
          insert successor node into result set. */
-        if (!succNode.predLinks.values().some(function (predLink) {
+        if (
+          !succNode.predLinks.values().some(function (predLink) {
             return !predLink.l.ts.removed;
-          }) && !succNode.l.ts.removed) {
+          }) &&
+          !succNode.l.ts.removed
+        ) {
           startNodes.push(succNode);
           succNode.l.ts.removed = true;
         }
@@ -66,7 +73,6 @@ var provvisLayout = (function () {
     /* While the input set is not empty. */
     var i = 0;
     while (i < startNodes.length && i < nodesLength) {
-
       /* Remove first item. */
       var curNode = startNodes[i];
 
@@ -82,9 +88,8 @@ var provvisLayout = (function () {
     /* Handle cyclic graphs. */
     if (startNodes.length > nodesLength) {
       return null;
-    } else {
-      return sortedNodes;
     }
+    return sortedNodes;
   };
 
   /**
@@ -101,8 +106,10 @@ var provvisLayout = (function () {
       n.preds.values().filter(function (p) {
         if (p.parent === parent) {
           preds.push(p);
-        } else if (p instanceof provvisDecl.Node &&
-          parent instanceof provvisDecl.ProvGraph) {
+        } else if (
+          p instanceof provvisDecl.Node &&
+          parent instanceof provvisDecl.ProvGraph
+        ) {
           preds.push(p.parent.parent);
         }
       });
@@ -228,9 +235,11 @@ var provvisLayout = (function () {
        * Take analysis, subanalysis and workflow coordinates into account. */
       san.succs.values().forEach(function (ssan) {
         ssan.inputs.values().forEach(function (ni) {
-          if (ni.preds.values().some(function (pni) {
+          if (
+            ni.preds.values().some(function (pni) {
               return pni.parent === san;
-            })) {
+            })
+          ) {
             /* Prioritize subanalysis ordering over workflow node ordering. */
             accCoords += ssan.parent.y + ssan.y +
             ((ssan.y / cell.height) / 10) + ni.y;
@@ -378,11 +387,11 @@ var provvisLayout = (function () {
     var dlANodes = d3.entries(g._nodes);
     graph.aNodes.forEach(function (an) {
       an.x = parseInt(dlANodes.filter(function (d) {
-          return d.key === an.autoId.toString();
-        })[0].value.x - cell.width / 2, 10);
+        return d.key === an.autoId.toString();
+      })[0].value.x - cell.width / 2, 10);
       an.y = parseInt(dlANodes.filter(function (d) {
-          return d.key === an.autoId.toString();
-        })[0].value.y - cell.height / 2, 10);
+        return d.key === an.autoId.toString();
+      })[0].value.y - cell.height / 2, 10);
     });
   };
 
@@ -396,9 +405,7 @@ var provvisLayout = (function () {
     dagreGraphLayout(graph, cell);
 
     /* Workflow layout. */
-    //graph.saNodes.forEach(function (san) {
     dagreWorkflowLayout(graph, cell);
-    //});
 
     /* Analysis layout:
      * Topology sort first, followed by layering and the creation of a 2d-array.
@@ -428,7 +435,7 @@ var provvisLayout = (function () {
       /* Analysis layout. */
       reorderSubanalysisNodes(bclgNodes, cell);
     } else {
-      throw 'Graph is not acyclic.';
+      throw new Error('Graph is not acyclic.');
     }
     return bclgNodes;
   };
