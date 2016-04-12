@@ -23,6 +23,7 @@ from .utils import (update_attribute_order_ranks,
                     escape_character_solr)
 from .serializers import AttributeOrderSerializer
 from core.models import DataSet, InvestigationLink
+from core.management.commands.init_refinery import create_public_group
 
 
 class AssaysAPITests(APITestCase):
@@ -147,6 +148,7 @@ class AssaysAPITests(APITestCase):
 class AssaysAttributesAPITests(APITestCase):
 
     def setUp(self):
+        create_public_group()
         self.user1 = User.objects.create_user("ownerJane", '', 'test1234')
         self.user2 = User.objects.create_user("guestName", '', 'test1234')
         self.user1.save()
@@ -354,6 +356,7 @@ class AssaysAttributesAPITests(APITestCase):
 class UtilitiesTest(TestCase):
 
     def setUp(self):
+        create_public_group()
         self.user1 = User.objects.create_user("ownerJane", '', 'test1234')
         self.user1.save()
         investigation = Investigation.objects.create()
