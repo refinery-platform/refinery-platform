@@ -47,7 +47,7 @@ def init_user(username, password, email, first_name, last_name, affiliation):
     user_object.last_name = last_name
     user_object.profile.affiliation = affiliation
     user_object.save()
-    user_object.proifle.save()
+    user_object.profile.save()
 
     success_msg = "User {} created.".format(username)
     print(success_msg)
