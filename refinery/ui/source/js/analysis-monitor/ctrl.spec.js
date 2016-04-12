@@ -11,6 +11,10 @@ describe('Controller: AnalysisMonitorCtrl', function () {
   var factory;
   var valid_uuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
   var invalid_uuid = 'xxxxx';
+  var $timeout;
+  var response;
+  var $q;
+  var $controller;
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryAnalysisMonitor'));

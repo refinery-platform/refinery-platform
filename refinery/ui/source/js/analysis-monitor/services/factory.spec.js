@@ -147,6 +147,7 @@ describe('Analysis Monitor Factory', function () {
             'charset=utf-8'
         }
       ).respond(200, {}, {});
+      var data;
       var response = factory.postCancelAnalysis(valid_uuid).then(function () {
         data = 'success';
       }, function () {

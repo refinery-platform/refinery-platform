@@ -11,6 +11,7 @@ describe('rpAssayFiles directive unit test', function () {
   var settings;
   var $controller;
   var valid_uuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+  var $httpBackend;
 
   beforeEach(inject(function (_$compile_, _$rootScope_, _$controller_,
     _$httpBackend_, _settings_, $templateCache) {

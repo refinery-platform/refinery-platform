@@ -9,6 +9,7 @@ describe('Controller: FileBrowserCtrl', function () {
   var ctrl;
   var scope;
   var factory;
+  var $controller;
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryFileBrowser'));
