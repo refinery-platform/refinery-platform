@@ -34,7 +34,7 @@ describe('Dashboard.state:', function () {
     });
   });
 
-  describe('paths:', function () {
+  describe('state', function () {
     function goTo (url) {
       $location.url(url);
       $rootScope.$digest();
@@ -44,39 +44,32 @@ describe('Dashboard.state:', function () {
       mockTemplate('/static/partials/dashboard/views/launch-pad.html');
     });
 
-    describe('when empty', function () {
-      it('should go to the _launchPad_ state', function () {
-        goTo('');
-        expect($state.current.name).toEqual('launchPad');
-      });
+    it('should be "launchPad" when path is empty', function () {
+      goTo('');
+      expect($state.current.name).toEqual('launchPad');
     });
 
-    describe('/', function () {
-      it('should go to the _launchPad_ state', function () {
-        goTo('/');
-        expect($state.current.name).toEqual('launchPad');
-      });
+    it('should be "launchPad" when path is "/"', function () {
+      goTo('/');
+      expect($state.current.name).toEqual('launchPad');
     });
 
-    describe('/exploration', function () {
-      it('should go to the _launchPad.exploration_ state', function () {
+    it(
+      'should be "launchPad.exploration" when path is "/exploration"',
+      function () {
         goTo('/exploration');
         expect($state.current.name).toEqual('launchPad.exploration');
-      });
+      }
+    );
+
+    it('should be "launchPad.preview" when path is "/preview"', function () {
+      goTo('/preview');
+      expect($state.current.name).toEqual('launchPad.preview');
     });
 
-    describe('/preview', function () {
-      it('should go to the _launchPad.preview_ state', function () {
-        goTo('/preview');
-        expect($state.current.name).toEqual('launchPad.preview');
-      });
-    });
-
-    describe('otherwise', function () {
-      it('should go to the _launchPad_ state', function () {
-        goTo('/someNonExistentUrl');
-        expect($state.current.name).toEqual('launchPad');
-      });
+    it('should be "launchPad" when path is not existing', function () {
+      goTo('/someNonExistentUrl');
+      expect($state.current.name).toEqual('launchPad');
     });
   });
 });
