@@ -1,20 +1,5 @@
 'use strict';
 
-angular
-  .module('refineryFileBrowser')
-  .controller('FileBrowserCtrl',
-    [
-      '$scope',
-      '$location',
-      'uiGridConstants',
-      'fileBrowserFactory',
-      '$window',
-      '$timeout',
-      '$q',
-      FileBrowserCtrl
-    ]);
-
-
 function FileBrowserCtrl (
   $scope,
   $location,
@@ -22,17 +7,18 @@ function FileBrowserCtrl (
   fileBrowserFactory,
   $window,
   $timeout,
-  $q) {
+  $q
+) {
   var vm = this;
   vm.assayFiles = [];
   vm.assayAttributes = [];
   vm.attributeFilter = [];
   vm.analysisFilter = [];
   vm.filesParam = {
-    'uuid': $window.externalAssayUuid
+    uuid: $window.externalAssayUuid
   };
 
-  //Ui-grid parameters
+  // Ui-grid parameters
   vm.customColumnName = [];
   vm.queryKeys = Object.keys($location.search());
   vm.selectedField = {};
@@ -76,21 +62,19 @@ function FileBrowserCtrl (
   };
 
   vm.updateAssayAttributes = function () {
-    var assay_uuid = $window.externalAssayUuid;
-    return fileBrowserFactory.getAssayAttributeOrder(assay_uuid).then(function () {
+    var assayUuid = $window.externalAssayUuid;
+    return fileBrowserFactory.getAssayAttributeOrder(assayUuid).then(function () {
       vm.assayAttributeOrder = fileBrowserFactory.assayAttributeOrder;
-    }, function (error) {
-      console.log(error);
     });
   };
 
-  //checks url for params to update the filter
+  // checks url for params to update the filter
   vm.checkUrlQueryFilters = function () {
     var allFilters = {};
-    //Merge attribute and analysis filter data obj
+    // Merge attribute and analysis filter data obj
     angular.copy(vm.attributeFilter, allFilters);
     allFilters.Analysis = vm.analysisFilter.Analysis;
-    //for attribute filter directive, drop panels in query
+    // for attribute filter directive, drop panels in query
     $scope.$broadcast('rf/attributeFilter-ready');
     angular.forEach(allFilters, function (fieldObj, attribute) {
       vm.refreshSelectedFieldFromQuery(fieldObj, attribute);
@@ -106,24 +90,22 @@ function FileBrowserCtrl (
     });
   };
 
-  //Updates which attribute filters are selected and the ui-grid data
-  vm.attributeSelectionUpdate = function (internal_name, field) {
+  // Updates which attribute filters are selected and the ui-grid data
+  vm.attributeSelectionUpdate = function (internalName, field) {
     if (vm.selectedField[field] &&
-      typeof vm.selectedFieldList[internal_name] !== 'undefined') {
-      vm.selectedFieldList[internal_name].push(field);
+      typeof vm.selectedFieldList[internalName] !== 'undefined') {
+      vm.selectedFieldList[internalName].push(field);
       $location.search(field, vm.selectedField[field]);
-
     } else if (vm.selectedField[field]) {
-      vm.selectedFieldList[internal_name] = [field];
+      vm.selectedFieldList[internalName] = [field];
       $location.search(field, vm.selectedField[field]);
-
     } else {
-      var ind = vm.selectedFieldList[internal_name].indexOf(field);
+      var ind = vm.selectedFieldList[internalName].indexOf(field);
       if (ind > -1) {
-        vm.selectedFieldList[internal_name].splice(ind, 1);
+        vm.selectedFieldList[internalName].splice(ind, 1);
       }
-      if (vm.selectedFieldList[internal_name].length === 0) {
-        delete vm.selectedFieldList[internal_name];
+      if (vm.selectedFieldList[internalName].length === 0) {
+        delete vm.selectedFieldList[internalName];
       }
       $location.search(field, null);
     }
@@ -131,26 +113,26 @@ function FileBrowserCtrl (
     vm.reset();
   };
 
-  //Ui-grid methods for catching grid events
+  // Ui-grid methods for catching grid events
   vm.gridOptions.onRegisterApi = function (gridApi) {
-    //set gridApi on scope
+    // set gridApi on scope
 
-    //Infinite Grid Load
+    // Infinite Grid Load
     gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
     gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
 
     vm.gridApi = gridApi;
 
-    //Sort events
+    // Sort events
     vm.gridApi.core.on.sortChanged(null, vm.sortChanged);
     vm.sortChanged(vm.gridApi.grid, [vm.gridOptions.columnDefs[1]]);
 
-    //Checkbox selection events
-    vm.gridApi.selection.on.rowSelectionChanged(null, function (row) {
+    // Checkbox selection events
+    vm.gridApi.selection.on.rowSelectionChanged(null, function () {
       vm.selectNodes = gridApi.selection.getSelectedRows();
     });
 
-    vm.gridApi.selection.on.rowSelectionChangedBatch(null, function (rows) {
+    vm.gridApi.selection.on.rowSelectionChangedBatch(null, function () {
       vm.selectNodes = gridApi.selection.getSelectedRows();
     });
   };
@@ -160,7 +142,6 @@ function FileBrowserCtrl (
     vm.filesParam.offset = vm.lastPage * vm.rowCount;
     vm.filesParam.limit = vm.rowCount;
     var promise = $q.defer();
-    console.log(vm.filesParam);
     fileBrowserFactory.getAssayFiles(vm.filesParam)
       .then(function () {
         vm.assayFiles = vm.assayFiles.concat(fileBrowserFactory.assayFiles);
@@ -174,7 +155,7 @@ function FileBrowserCtrl (
           .then(function () {
             promise.resolve();
           });
-      }, function (error) {
+      }, function () {
         vm.gridApi.infiniteScroll.dataLoaded();
         promise.reject();
       });
@@ -187,7 +168,6 @@ function FileBrowserCtrl (
     }
     vm.filesParam.offset = vm.firstPage * vm.rowCount;
     vm.filesParam.limit = vm.rowCount;
-    console.log(vm.filesParam);
     var promise = $q.defer();
     fileBrowserFactory.getAssayFiles(vm.filesParam)
       .then(function () {
@@ -202,7 +182,7 @@ function FileBrowserCtrl (
           .then(function () {
             promise.resolve();
           });
-      }, function (error) {
+      }, function () {
         vm.gridApi.infiniteScroll.dataLoaded();
         promise.reject();
       });
@@ -210,7 +190,8 @@ function FileBrowserCtrl (
   };
 
   vm.checkDataLength = function (discardDirection) {
-    // work out whether we need to discard a page, if so discard from the direction passed in
+    // work out whether we need to discard a page, if so discard from the
+    // direction passed in
     if (vm.lastPage - vm.firstPage > vm.cachePages) {
       // we want to remove a page
       vm.gridApi.infiniteScroll.saveScrollPercentage();
@@ -220,14 +201,18 @@ function FileBrowserCtrl (
         vm.firstPage++;
         $timeout(function () {
           // wait for grid to ingest data changes
-          vm.gridApi.infiniteScroll.dataRemovedTop(vm.firstPage > 0, vm.lastPage < vm.totalPages);
+          vm.gridApi.infiniteScroll.dataRemovedTop(
+            vm.firstPage > 0, vm.lastPage < vm.totalPages
+          );
         });
       } else {
         vm.assayFiles = vm.assayFiles.slice(0, vm.rowCount * vm.cachePages);
         vm.lastPage--;
         $timeout(function () {
           // wait for grid to ingest data changes
-          vm.gridApi.infiniteScroll.dataRemovedBottom(vm.firstPage > 0, vm.lastPage < vm.totalPages);
+          vm.gridApi.infiniteScroll.dataRemovedBottom(
+            vm.firstPage > 0, vm.lastPage < vm.totalPages
+          );
         });
       }
     }
@@ -237,19 +222,23 @@ function FileBrowserCtrl (
     vm.firstPage = 0;
     vm.lastPage = 0;
 
-    // turn off the infinite scroll handling up and down - hopefully this won't be needed after @swalters scrolling changes
+    // turn off the infinite scroll handling up and down - hopefully this won't
+    // be needed after @swalters scrolling changes
     vm.gridApi.infiniteScroll.setScrollDirections(false, false);
     vm.assayFiles = [];
 
     vm.updateAssayFiles().then(function () {
       $timeout(function () {
-        // timeout needed to allow digest cycle to complete,and grid to finish ingesting the data
-        vm.gridApi.infiniteScroll.resetScroll(vm.firstPage > 0, vm.lastPage < vm.totalPages);
+        // timeout needed to allow digest cycle to complete,and grid to finish
+        // ingesting the data
+        vm.gridApi.infiniteScroll.resetScroll(
+          vm.firstPage > 0, vm.lastPage < vm.totalPages
+        );
       });
     });
   };
 
-  //Generates param: sort for api call from ui-grid response
+  // Generates param: sort for api call from ui-grid response
   vm.sortChanged = function (grid, sortColumns) {
     if (typeof sortColumns !== 'undefined' &&
       typeof sortColumns[0] !== 'undefined') {
@@ -262,24 +251,36 @@ function FileBrowserCtrl (
           vm.filesParam.sort = sortColumns[0].field + ' desc';
           vm.reset();
           break;
-        case undefined:
+        default:
           vm.reset();
           break;
       }
     }
   };
 
-  //populates the  ui-grid columns variable
+  // populates the  ui-grid columns variable
   vm.createColumnDefs = function () {
     vm.assayAttributes.forEach(function (attribute) {
       vm.customColumnName.push(
         {
-          'name': attribute.display_name,
-          'field': attribute.internal_name
+          name: attribute.display_name,
+          field: attribute.internal_name
         }
       );
     });
     vm.gridOptions.columnDefs = vm.customColumnName;
   };
-
 }
+
+angular
+  .module('refineryFileBrowser')
+  .controller('FileBrowserCtrl', [
+    '$scope',
+    '$location',
+    'uiGridConstants',
+    'fileBrowserFactory',
+    '$window',
+    '$timeout',
+    '$q',
+    FileBrowserCtrl
+  ]);

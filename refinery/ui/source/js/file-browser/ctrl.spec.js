@@ -1,10 +1,5 @@
 'use strict';
 
-/** Unit Tests **/
-
-//Global variable for both test and ctrl.
-var externalAssayUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
-
 describe('Controller: FileBrowserCtrl', function () {
   var ctrl;
   var scope;
@@ -13,13 +8,16 @@ describe('Controller: FileBrowserCtrl', function () {
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryFileBrowser'));
-  beforeEach(inject(function ($rootScope, _$controller_, _fileBrowserFactory_) {
+  beforeEach(inject(function (
+    $rootScope, _$controller_, _fileBrowserFactory_, $window
+  ) {
     scope = $rootScope.$new();
     $controller = _$controller_;
     ctrl = $controller('FileBrowserCtrl', {
       $scope: scope
     });
     factory = _fileBrowserFactory_;
+    $window.externalAssayUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
   }));
 
   it('FileBrowserCtrl ctrl should exist', function () {
@@ -72,7 +70,5 @@ describe('Controller: FileBrowserCtrl', function () {
       ctrl.updateAssayAttributes();
       expect(mockGetAssayAttributes).toEqual(true);
     });
-
   });
-
 });

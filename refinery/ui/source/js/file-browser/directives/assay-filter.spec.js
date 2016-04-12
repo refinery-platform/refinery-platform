@@ -7,16 +7,15 @@ describe('rpAssayFiles directive unit test', function () {
   var compile;
   var rootScope;
   var scope;
-  var ctrl;
-  var $controller;
   var template;
   var directiveElement;
+  var jQuery;
 
   beforeEach(inject(function (
     _$compile_,
     _$rootScope_,
-    _$controller_,
-    $templateCache
+    $templateCache,
+    _$_
   ) {
     $templateCache.put(
       '/static/partials/file-browser/partials/assay-filters.html',
@@ -27,10 +26,7 @@ describe('rpAssayFiles directive unit test', function () {
     compile = _$compile_;
     rootScope = _$rootScope_;
     scope = rootScope.$new();
-    $controller = _$controller_;
-    ctrl = $controller('FileBrowserCtrl', {
-      $scope: scope
-    });
+    jQuery = _$_;
     template = '<rp-file-browser-assay-filters></rp-file-browser-assay-filters>';
     directiveElement = compile(template)(scope);
     angular.element(document.body).append(directiveElement);
@@ -43,7 +39,7 @@ describe('rpAssayFiles directive unit test', function () {
   });
 
   it('dropAttributePanel test, add class name', function () {
-    var mockEvent = $.Event('click');
+    var mockEvent = jQuery.Event('click');  // eslint-disable-line new-cap
     spyOn(mockEvent, 'preventDefault');
     var domElement = angular.element(document.querySelector('#Analysis-Output'));
     expect(domElement.hasClass('in')).toEqual(false);

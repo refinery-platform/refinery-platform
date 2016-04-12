@@ -1,13 +1,5 @@
 'use strict';
 
-angular
-  .module('refineryFileBrowser')
-  .directive('rpFileBrowserAssayFiles',
-    [
-      rpFileBrowserAssayFiles
-    ]
-);
-
 function rpFileBrowserAssayFiles () {
   return {
     restrict: 'E',
@@ -23,7 +15,13 @@ function rpFileBrowserAssayFiles () {
         ctrl.checkUrlQueryFilters();
         ctrl.createColumnDefs();
       });
-
     }
   };
 }
+
+angular
+  .module('refineryFileBrowser')
+  .directive('rpFileBrowserAssayFiles', [
+    rpFileBrowserAssayFiles
+  ]
+);
