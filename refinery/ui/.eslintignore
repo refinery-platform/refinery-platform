@@ -5,4 +5,9 @@ docs/**
 node_modules/**
 production/**
 
+source/js/analysis-launch/**
+source/js/analysis-monitor/**
+source/js/data-set-import/**
+source/js/data-set-nav/**
+source/js/file-browser/**
 source/js/provvis/**
