@@ -3,7 +3,6 @@ import logging
 import os
 import djcelery
 import subprocess
-from urlparse import urljoin
 from django.core.exceptions import ImproperlyConfigured
 
 logger = logging.getLogger(__name__)
