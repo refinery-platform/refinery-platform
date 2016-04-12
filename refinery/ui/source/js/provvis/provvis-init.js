@@ -116,7 +116,6 @@ var provvisInit = (function () {
     nodes.forEach(function (n) {
       if (typeof n.uuid !== 'undefined') {
         if (typeof n.parents !== 'undefined') {
-
           /* For each parent entry. */
           n.parents.forEach(function (puuid) { /* n -> target; p -> source */
             if (typeof nodeMap.get(puuid) !== 'undefined') {
@@ -153,11 +152,9 @@ var provvisInit = (function () {
     /* Set input and output nodes. */
     nodes.forEach(function (n) {
       if (n.succs.empty()) {
-
         /* Set output nodes. */
         oNodes.push(n);
       } else if (n.preds.empty()) {
-
         /* Set input nodes. */
         iNodes.push(n);
       }
@@ -175,17 +172,18 @@ var provvisInit = (function () {
      * @param n Current node.
      * @param subanalysis Current subanalysis.
      */
-    var traverseBackSubanalysis = function (n, subanalysis) {
-      n.subanalysis = subanalysis;
+    var traverseBackSubanalysis = function (n, currentSubAnalysis) {
+      n.subanalysis = currentSubAnalysis;
       n.preds.values().forEach(function (pn) {
         if (pn.subanalysis === null) {
-          traverseBackSubanalysis(pn, subanalysis);
+          traverseBackSubanalysis(pn, currentSubAnalysis);
         }
       });
 
       n.succs.values().forEach(function (sn) {
         if (sn.subanalysis === null) {
-          traverseDataset(sn, subanalysis);
+          // Need to disable ESLint here because of a circular dependency
+          traverseDataset(sn, currentSubAnalysis);  // eslint-disable-line no-use-before-define
         }
       });
     };
@@ -195,13 +193,15 @@ var provvisInit = (function () {
      * @param n Current node.
      * @param subanalysis Current subanalysis.
      */
-    var traverseDataset = function (n, subanalysis) {
-      n.subanalysis = subanalysis;
+    var traverseDataset = function (n, _currentSubAnalysis_) {
+      var currentSubAnalysis = _currentSubAnalysis_;
+
+      n.subanalysis = currentSubAnalysis;
 
       if (n.preds.size() > 1) {
         n.preds.values().forEach(function (pn) {
           if (pn.subanalysis === null) {
-            traverseBackSubanalysis(pn, subanalysis);
+            traverseBackSubanalysis(pn, currentSubAnalysis);
           }
         });
       }
@@ -210,13 +210,13 @@ var provvisInit = (function () {
         if (sn.analysis !== 'dataset') {
           if (sn.subanalysis === null) {
             if (!sn.succs.empty()) {
-              subanalysis = sn.succs.values()[0].subanalysis;
+              currentSubAnalysis = sn.succs.values()[0].subanalysis;
             }
           } else {
-            subanalysis = sn.subanalysis;
+            currentSubAnalysis = sn.subanalysis;
           }
         }
-        traverseDataset(sn, subanalysis);
+        traverseDataset(sn, currentSubAnalysis);
       });
     };
 
@@ -224,7 +224,6 @@ var provvisInit = (function () {
     iNodes.forEach(function (n) {
       /* Processed nodes are set to "null" after parsing nodes. */
       if (n.subanalysis === null) {
-
         traverseDataset(n, subanalysis);
         subanalysis++;
       }
@@ -285,7 +284,7 @@ var provvisInit = (function () {
         /* Eliminate __xxxx__ parameters. */
         text = text.replace(/\"__(\S*)__\":\s{1}\d*(,\s{1})?/g, '');
         text = text.replace(/,\s{1}null/g, '');
-        text = text.replace(/null,/g, '');  //TODO: temp fix
+        text = text.replace(/null,/g, '');  // TODO: temp fix
         text = text.replace(/,\s{1}}/g, '}');
 
         return text;
@@ -468,8 +467,6 @@ var provvisInit = (function () {
         san.wfUuid = an.wfUuid;
       });
 
-
-
       /* Set workflow name. */
       var wfObj = workflowData.get(an.wfUuid);
       an.wfName = (typeof wfObj === 'undefined') ? 'dataset' : wfObj.name;
@@ -485,7 +482,6 @@ var provvisInit = (function () {
         an.wfName = an.wfName.substr(0, an.wfName.indexOf('-'));
       }
       an.wfCode = an.wfName;
-    /*}*/
     });
 
     aNodes.forEach(function (an) {
@@ -574,7 +570,6 @@ var provvisInit = (function () {
     /* Extract attributes. */
     if (solrResponse instanceof SolrResponse &&
       solrResponse.getDocumentList().length > 0) {
-
       var sampleNode = solrResponse.getDocumentList()[0];
       var rawAttrSet = d3.entries(sampleNode);
 
@@ -597,9 +592,9 @@ var provvisInit = (function () {
     /* Add to button dropdown list. */
     nodeAttributeList.forEach(function (na) {
       $('<li/>', {
-        'id': 'prov-ctrl-visible-attribute-list-' + na,
-        'style': 'padding-left: 5px',
-        'html': '<a href="#" class="field-name"><label class="radio" ' +
+        id: 'prov-ctrl-visible-attribute-list-' + na,
+        style: 'padding-left: 5px',
+        html: '<a href="#" class="field-name"><label class="radio" ' +
           'style="text-align: start;margin-top: 0px;margin-bottom: 0px;">' +
           '<input type="radio">' +
           na + '</label></a>'
