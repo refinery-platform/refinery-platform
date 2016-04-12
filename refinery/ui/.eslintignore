@@ -7,6 +7,5 @@ production/**
 
 source/js/analysis-launch/**
 source/js/analysis-monitor/**
-source/js/data-set-import/**
 source/js/file-browser/**
 source/js/provvis/**
