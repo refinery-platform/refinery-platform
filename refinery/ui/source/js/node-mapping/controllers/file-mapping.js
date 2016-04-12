@@ -385,6 +385,16 @@ function FileMappingCtrl (
       attributeList
     ).then(success).catch(error);
   };
+
+  AttributeOrder.get({
+    study__uuid: $window.externalStudyUuid,
+    assay__uuid: $window.externalAssayUuid
+  }, function (response) {
+    $scope.attributeOrderList = [];
+    for (var i = 0; i < response.objects.length; ++i) {
+      $scope.attributeOrderList.push(response.objects[i].solr_field);
+    }
+  });
 }
 
 angular
