@@ -723,6 +723,7 @@ def solr_igv(request):
         return HttpResponse(json.dumps(session_urls),
                             content_type='application/json')
 
+
 def get_solr_results(query, facets=False, jsonp=False, annotation=False,
                      only_uuids=False, selected_mode=True,
                      selected_nodes=None):
@@ -796,6 +797,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
 
     return results
 
+
 def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
     logger.debug("core.views.samples_solr called")
     data_set = get_object_or_404(DataSet, uuid=ds_uuid)
@@ -810,6 +812,7 @@ def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
                                'assay_uuid': assay_uuid,
                                'solr_url': solr_url},
                               context_instance=RequestContext(request))
+
 
 def doi(request, id):
     """Forwarding requests to DOI's API"""
@@ -828,6 +831,7 @@ def doi(request, id):
         return HttpResponse('Service currently unavailable', status=503)
 
     return HttpResponse(response, content_type='application/json')
+
 
 def pubmed_abstract(request, id):
     """Forwarding requests to PubMed's API
@@ -860,6 +864,7 @@ def pubmed_abstract(request, id):
         content_type='application/json'
     )
 
+
 def pubmed_search(request, term):
     """Forwarding requests to PubMed's API
     Example:
@@ -885,6 +890,7 @@ def pubmed_search(request, term):
         return HttpResponse('Service currently unavailable', status=503)
 
     return HttpResponse(response, content_type='application/json')
+
 
 def pubmed_summary(request, id):
     """Forwarding requests to PubMed's API
