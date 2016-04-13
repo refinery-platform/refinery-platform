@@ -17,7 +17,7 @@ import requests
 from analysis_manager.models import AnalysisStatus
 from core.models import Analysis, AnalysisResult, Workflow
 from data_set_manager.models import Node
-from file_store.models import FileStoreItem, FileExtension
+from file_store.models import FileStoreItem
 from file_store.tasks import import_file, create
 
 
