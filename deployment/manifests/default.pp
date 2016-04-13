@@ -17,6 +17,15 @@ class { 'timezone':
   timezone => 'America/New_York',
 }
 
+# On Vagrant, it's okay to activate the 'guest' user.
+exec { "activate_user":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py activate_user guest",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+  require     => Exec['create_user'],
+}
+
 # See code in refinery-modules/refinery/...
 include refinery
 include refinery::pg

@@ -34,6 +34,8 @@ from file_store.models import FileStoreItem
 from core.utils import get_data_sets_annotations
 from core.serializers import WorkflowSerializer
 
+from xml.parsers.expat import ExpatError
+
 from django.views.decorators.gzip import gzip_page
 
 logger = logging.getLogger(__name__)
@@ -721,7 +723,6 @@ def solr_igv(request):
         return HttpResponse(json.dumps(session_urls),
                             content_type='application/json')
 
-
 def get_solr_results(query, facets=False, jsonp=False, annotation=False,
                      only_uuids=False, selected_mode=True,
                      selected_nodes=None):
@@ -795,7 +796,6 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
 
     return results
 
-
 def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
     logger.debug("core.views.samples_solr called")
     data_set = get_object_or_404(DataSet, uuid=ds_uuid)
@@ -811,7 +811,6 @@ def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
                                'solr_url': solr_url},
                               context_instance=RequestContext(request))
 
-
 def doi(request, id):
     """Forwarding requests to DOI's API"""
     # Decode URL and replace dollar signs by forward slashes
@@ -822,9 +821,13 @@ def doi(request, id):
     id = id.replace('$', '/')
     url = "https://dx.doi.org/{id}".format(id=id)
     headers = {'Accept': 'application/json'}
-    response = requests.get(url, headers=headers)
-    return HttpResponse(response, content_type='application/json')
 
+    try:
+        response = requests.get(url, headers=headers)
+    except requests.exceptions.ConnectionError:
+        return HttpResponse('Service currently unavailable', status=503)
+
+    return HttpResponse(response, content_type='application/json')
 
 def pubmed_abstract(request, id):
     """Forwarding requests to PubMed's API
@@ -842,12 +845,20 @@ def pubmed_abstract(request, id):
         'Accept': 'text/xml'
     }
 
-    response = requests.get(url, params=params, headers=headers)
+    try:
+        response = requests.get(url, params=params, headers=headers)
+    except requests.exceptions.ConnectionError:
+        return HttpResponse('Service currently unavailable', status=503)
+
+    try:
+        response_dict = xmltodict.parse(response.text)
+    except ExpatError:
+        return HttpResponse('Service currently unavailable', status=503)
+
     return HttpResponse(
-        json.dumps(xmltodict.parse(response.text)),
+        json.dumps(response_dict),
         content_type='application/json'
     )
-
 
 def pubmed_search(request, term):
     """Forwarding requests to PubMed's API
@@ -868,9 +879,12 @@ def pubmed_search(request, term):
         'Accept': 'application/json'
     }
 
-    response = requests.get(url, params=params, headers=headers)
-    return HttpResponse(response, content_type='application/json')
+    try:
+        response = requests.get(url, params=params, headers=headers)
+    except requests.exceptions.ConnectionError:
+        return HttpResponse('Service currently unavailable', status=503)
 
+    return HttpResponse(response, content_type='application/json')
 
 def pubmed_summary(request, id):
     """Forwarding requests to PubMed's API
@@ -887,7 +901,11 @@ def pubmed_summary(request, id):
         'Accept': 'application/json'
     }
 
-    response = requests.get(url, params=params, headers=headers)
+    try:
+        response = requests.get(url, params=params, headers=headers)
+    except requests.exceptions.ConnectionError:
+        return HttpResponse('Service currently unavailable', status=503)
+
     return HttpResponse(response, content_type='application/json')
 
 

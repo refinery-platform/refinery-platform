@@ -4,14 +4,12 @@ function refineryExpansionPanel () {
   function ExpansionPanelCtrl (
     pubSub,
     dashboardWidthFixerService,
-    dashboardDataSetPreviewService,
-    dashboardExpandablePanelService) {
+    dashboardDataSetPreviewService) {
     var that = this;
 
     this.pubSub = pubSub;
     this.dashboardWidthFixerService = dashboardWidthFixerService;
     this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
-    this.dashboardExpandablePanelService = dashboardExpandablePanelService;
 
     this.dashboardWidthFixerService.fixer.push(function () {
       that.style = {
@@ -25,7 +23,6 @@ function refineryExpansionPanel () {
       'pubSub',
       'dashboardWidthFixerService',
       'dashboardDataSetPreviewService',
-      'dashboardExpandablePanelService',
       ExpansionPanelCtrl],
     controllerAs: 'expansionPanel',
     restrict: 'E',

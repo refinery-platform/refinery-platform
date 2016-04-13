@@ -3,7 +3,6 @@ import logging
 import os
 import djcelery
 import subprocess
-from urlparse import urljoin
 from django.core.exceptions import ImproperlyConfigured
 
 logger = logging.getLogger(__name__)
@@ -421,7 +420,7 @@ REFINERY_BANNER_ANONYMOUS_ONLY = get_setting("REFINERY_BANNER_ANONYMOUS_ONLY")
 # histories, and libraries in Galaxy or not.
 # Deletion options are ALWAYS, ON_SUCCESS, and NEVER
 REFINERY_GALAXY_ANALYSIS_CLEANUP = get_setting(
-    "REFINERY_GALAXY_ANALYSIS_CLEANUP")["ON_SUCCESS"]
+    "REFINERY_GALAXY_ANALYSIS_CLEANUP")
 # Subject and message body of the welcome email sent to new users
 REFINERY_WELCOME_EMAIL_SUBJECT = get_setting("REFINERY_WELCOME_EMAIL_SUBJECT")
 REFINERY_WELCOME_EMAIL_MESSAGE = get_setting("REFINERY_WELCOME_EMAIL_MESSAGE")
@@ -474,30 +473,16 @@ CACHES = {
 
 # CURRENT_COMMIT retrieves the most recent commit used allowing for easier
 # debugging of a Refinery instance
-try:
-    repo_url = subprocess.check_output([
-        '/usr/bin/git',
-        '--git-dir', os.path.join(BASE_DIR, '.git'),
-        '--work-tree', BASE_DIR,
-        'config', '--get', 'remote.origin.url'
-    ])
-    repo_url = repo_url.replace(".git", "/")
-    repo_url = urljoin(repo_url, "commit/")
-
-except Exception as e:
-    logger.error("could not get repo url: %s", e)
 
 try:
     # TODO: use option -C (removed as a temp workaround for compatibility
     # with an old version of git)
-    commit = subprocess.check_output([
+    CURRENT_COMMIT = subprocess.check_output([
         '/usr/bin/git',
         '--git-dir', os.path.join(BASE_DIR, '.git'),
         '--work-tree', BASE_DIR,
         'rev-parse', 'HEAD'
     ])
-    CURRENT_COMMIT = urljoin(repo_url, commit)
-
 
 except (ValueError, subprocess.CalledProcessError) as exc:
     logger.debug("Error retrieving hash of the most recent commit: %s",

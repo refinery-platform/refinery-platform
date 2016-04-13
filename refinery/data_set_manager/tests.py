@@ -754,6 +754,7 @@ class UtilitiesTest(TestCase):
                           'display_name': u'Year',
                           'file_ext': u's',
                           'internal_name': u'Year_Characteristics_6_3_s'}],
+                    'nodes_count': 1,
                     'nodes': [{
                          u'REFINERY_WORKFLOW_OUTPUT_6_3_s': u'N/A',
                          u'REFINERY_ANALYSIS_UUID_6_3_s': u'N/A',

@@ -1,4 +1,4 @@
-describe('errors: Errors (unit testing)', function () {
+describe('Errors.factory: unit tests', function () {
   'use strict';
 
   var errors,
@@ -14,7 +14,7 @@ describe('errors: Errors (unit testing)', function () {
     });
   });
 
-  it('should contain the errors service', function () {
+  it('should contain the errors factory', function () {
     expect(errors).not.toEqual(null);
   });
 

@@ -7,7 +7,6 @@ from urlparse import urljoin
 
 from django.conf import settings
 from django.test import SimpleTestCase
-from django.core.management import call_command
 
 from file_store.models import file_path, get_temp_dir, get_file_object, \
     FileStoreItem, FileExtension, FILE_STORE_TEMP_DIR, \
@@ -18,8 +17,6 @@ class FileStoreModuleTest(SimpleTestCase):
     """File store module functions test"""
 
     def setUp(self):
-        call_command("loaddata",
-                     "file_store/fixtures/file_store_data.json")
         self.filename = 'test_file.dat'
         self.sharename = 'labname'
 
@@ -92,8 +89,11 @@ class FileStoreItemTest(SimpleTestCase):
     """FileStoreItem methods test"""
 
     def setUp(self):
-        call_command("loaddata",
-                     "file_store/fixtures/file_store_data.json")
+        self.tdf_filetype = FileType.objects.create(
+            name="TDF", description="TDF file")
+        self.tdf_fileextension = FileExtension.objects.create(
+                name="tdf", filetype=self.tdf_filetype)
+
         self.filename = 'test_file.tdf'
         self.sharename = 'labname'
         self.path_source = os.path.join('/example/path', self.filename)
@@ -129,6 +129,11 @@ class FileStoreItemTest(SimpleTestCase):
 
     def test_get_file_type(self):
         """Check that the correct file type is returned"""
+        self.bigbed_filetype = FileType.objects.create(
+            name="BIGBED", description="BIGBED File")
+        self.bigbed_fileextension = FileExtension.objects.create(
+            name="bb", filetype=self.bigbed_filetype)
+
         filetype = FileExtension.objects.get(name='bb').filetype
         item_from_path = FileStoreItem.objects.create(source=self.url_source,
                                                       sharename=self.sharename,
@@ -141,6 +146,10 @@ class FileStoreItemTest(SimpleTestCase):
 
     def test_set_valid_file_type(self):
         """Check that a valid file type is set correctly"""
+        self.wig_filetype = FileType.objects.create(
+            name="WIG", description="WIG File")
+        self.wig_fileextension = FileExtension.objects.create(
+            name="wig", filetype=self.wig_filetype)
         item_from_path = FileStoreItem.objects.create(source=self.url_source,
                                                       sharename=self.sharename)
         item_from_url = FileStoreItem.objects.create(source=self.path_source,
@@ -157,11 +166,8 @@ class FileStoreItemTest(SimpleTestCase):
                                                      sharename=self.sharename)
         item_from_path = FileStoreItem.objects.create(source=self.url_source,
                                                       sharename=self.sharename)
-        filetype = FileExtension.objects.get(name='unknown').filetype
-        self.assertTrue(item_from_path.set_filetype(filetype))
-        self.assertNotEqual(item_from_path.filetype, filetype)
-        self.assertTrue(item_from_url.set_filetype(filetype))
-        self.assertNotEqual(item_from_url.filetype, filetype)
+        self.assertIsNone(item_from_url.filetype)
+        self.assertIsNone(item_from_path.filetype)
 
     def test_set_file_type_automatically(self):
         """Check that a file type is set automatically"""
@@ -181,8 +187,6 @@ class FileStoreItemManagerTest(SimpleTestCase):
     """FileStoreItemManager methods test"""
 
     def setUp(self):
-        call_command("loaddata",
-                     "file_store/fixtures/file_store_data.json")
         self.filename = 'test_file.tdf'
         self.sharename = 'labname'
         self.path_prefix = '/example/local/path/'
@@ -259,34 +263,3 @@ class FileSourceTranslationTest(SimpleTestCase):
         translate_file_source = generate_file_source_translator()
         with self.assertRaises(ValueError):
             translate_file_source(self.rel_path_source)
-
-
-class UnknownFileTypeTest(SimpleTestCase):
-    def setUp(self):
-        call_command("loaddata",
-                     "file_store/fixtures/file_store_data.json")
-        self.filetype = FileType.objects.get(name="UNKNOWN")
-
-    def tearDown(self):
-        FileType.objects.all().delete()
-        FileExtension.objects.all().delete()
-
-    def test_filetype_persistence_after_deletion(self):
-        self.filetype.delete()
-        self.assertIsNotNone(self.filetype)
-
-
-class UnknownFileExtensionTest(SimpleTestCase):
-    def setUp(self):
-        call_command("loaddata",
-                     "file_store/fixtures/file_store_data.json")
-        self.filetype = FileType.objects.get(name="UNKNOWN")
-        self.fileextension = FileExtension.objects.get(name="unknown")
-
-    def tearDown(self):
-        FileType.objects.all().delete()
-        FileExtension.objects.all().delete()
-
-    def test_file_extension_persistence_after_deletion(self):
-        self.fileextension.delete()
-        self.assertIsNotNone(self.fileextension)

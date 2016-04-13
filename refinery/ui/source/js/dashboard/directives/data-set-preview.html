@@ -51,10 +51,16 @@
       <h5 class="refinery-subheader">Summary</h5>
       <div class="inline-container">
         <h6>Description</h6>
-        <p>{{ preview.studies.description }}</p>
+        <p>{{ preview.studies.description | cut:true:preview.descLength }}</p>
+        <button
+          class="is-mirrorable icon-only"
+          ng-click="preview.toggleDescription()"
+          ng-class="{'is-mirrored': preview.descLength > preview.studies.description.length }">
+          <i class="fa fa-chevron-right"></i>
+        </button>
       </div>
       <div class="inline-container" ng-if="preview.numAssays > 0">
-        <h6>Technology &amp; Measurment</h6>
+        <h6>Technology &amp; Measurement</h6>
         <ul class="badge-list">
           <li ng-repeat="assay in preview.assays | limitTo: preview.maxBadges track by $index">
             {{ assay.technology }}
@@ -99,7 +105,7 @@
       </div>
       <div class="inline-container">
         <h6>Owner</h6>
-        <p ng-if="preview.dataSet.is_owner">You!</p>
+        <p ng-if="preview.dataSet.is_owner">You</p>
         <p ng-if="!preview.dataSet.is_owner">
           <a
             ng-if="preview.userName"
@@ -144,7 +150,7 @@
       </h5>
       <ul
         class="no-list-style references"
-        ng-if="preview.studies.publications.length">
+        ng-if="preview.studies.publications.length && !preview.citationError">
         <li ng-repeat="publication in preview.studies.publications track by $index">
           <span
             class="refinery-spinner"
@@ -188,6 +194,16 @@
           </div>
         </li>
       </ul>
+      <div class="refinery-error" ng-if="preview.citationError">
+        <i
+          class="fa fa-exclamation-triangle"
+          title="We're deeply sorry but unfortunately something went wrong."
+          refinery-tooltip
+          refinery-tooltip-container="body"
+          refinery-tooltip-placement="top"
+          refinery-tooltip-delay-show="750"
+          refinery-tooltip-delay-hide="150"></i>
+      </div>
       <h5 class="refinery-subheader">
         Protocols
         <span class="badge">{{ preview.studies.protocols.length }}</span>
