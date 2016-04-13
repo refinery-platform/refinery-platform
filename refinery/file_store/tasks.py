@@ -25,7 +25,7 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
     :type source: str.
     :param sharename: Group share name.
     :type sharename: str.
-    :param filetype: File type (must be one of the types declared in models.py)
+    :param filetype: File extension
     :type filetype: str.
     :param permanent: Flag indicating whether to add this instance to the cache
         or not.
