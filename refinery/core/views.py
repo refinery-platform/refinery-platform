@@ -139,7 +139,7 @@ def user(request, query):
 
 @login_required()
 def user_profile(request):
-    return user(request, request.user.get_profile().uuid)
+    return user(request, request.user.profile.uuid)
 
 
 @login_required()
@@ -169,7 +169,7 @@ def user_edit(request, uuid):
 
 @login_required()
 def user_profile_edit(request):
-    return user_edit(request, request.user.get_profile().uuid)
+    return user_edit(request, request.user.profile.uuid)
 
 
 @login_required()
@@ -663,7 +663,7 @@ def solr_core_search(request):
 
             response = json.dumps(response)
 
-    return HttpResponse(response, mimetype='application/json')
+    return HttpResponse(response, content_type='application/json')
 
 
 def solr_select(request, core):
@@ -675,7 +675,7 @@ def solr_select(request, core):
     data = request.GET.urlencode()
     fullResponse = requests.get(url, params=data)
     response = fullResponse.content
-    return HttpResponse(response, mimetype='application/json')
+    return HttpResponse(response, content_type='application/json')
 
 
 def solr_igv(request):
@@ -721,7 +721,7 @@ def solr_igv(request):
         logger.debug(json.dumps(session_urls, indent=4))
 
         return HttpResponse(json.dumps(session_urls),
-                            mimetype='application/json')
+                            content_type='application/json')
 
 
 def get_solr_results(query, facets=False, jsonp=False, annotation=False,
@@ -830,7 +830,7 @@ def doi(request, id):
     except requests.exceptions.ConnectionError:
         return HttpResponse('Service currently unavailable', status=503)
 
-    return HttpResponse(response, mimetype='application/json')
+    return HttpResponse(response, content_type='application/json')
 
 
 def pubmed_abstract(request, id):
@@ -861,7 +861,7 @@ def pubmed_abstract(request, id):
 
     return HttpResponse(
         json.dumps(response_dict),
-        mimetype='application/json'
+        content_type='application/json'
     )
 
 
@@ -889,7 +889,7 @@ def pubmed_search(request, term):
     except requests.exceptions.ConnectionError:
         return HttpResponse('Service currently unavailable', status=503)
 
-    return HttpResponse(response, mimetype='application/json')
+    return HttpResponse(response, content_type='application/json')
 
 
 def pubmed_summary(request, id):
@@ -912,7 +912,7 @@ def pubmed_summary(request, id):
     except requests.exceptions.ConnectionError:
         return HttpResponse('Service currently unavailable', status=503)
 
-    return HttpResponse(response, mimetype='application/json')
+    return HttpResponse(response, content_type='application/json')
 
 
 def fastqc_viewer(request):
@@ -952,11 +952,11 @@ def neo4j_dataset_annotations(request):
         logger.error(e)
         return HttpResponse(
             'Neo4J seems to be offline.',
-            mimetype='text/plain',
+            content_type='text/plain',
             status=503
         )
 
-    return HttpResponse(response, mimetype='application/json')
+    return HttpResponse(response, content_type='application/json')
 
 
 class WorkflowViewSet(viewsets.ModelViewSet):

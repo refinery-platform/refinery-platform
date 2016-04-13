@@ -40,7 +40,7 @@
 		<div class="refinery-subheader">
 			<h4>Affiliation</h4>
 		</div>
-		<p>{% if profile_user.get_profile.affiliation %} {{ profile_user.get_profile.affiliation }} {% else %} <i>None provided.</i>{% endif %}</p>
+		<p>{% if profile_user.profile.affiliation %} {{ profile_user.profile.affiliation }} {% else %} <i>None provided.</i>{% endif %}</p>
     {% if user == profile_user %}
       <div class="refinery-subheader">
         <h4>Password</h4>
@@ -72,7 +72,7 @@
 		<p>Joined on {{ profile_user.date_joined }} Last login on {{ profile_user.last_login }}</p>
     {% if user == profile_user %}
 		  <a class="refinery-base btn btn-default"
-        href="{% url 'user_edit' profile_user.get_profile.uuid %}">Edit</a>
+        href="{% url 'user_edit' profile_user.profile.uuid %}">Edit</a>
     {% endif %}
 	{% else %}
 	    <p>No valid user.</p>

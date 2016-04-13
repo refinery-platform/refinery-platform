@@ -1,9 +1,9 @@
 import json
 from django.contrib.auth.models import User, Group
-from django.utils import unittest
 from guardian.shortcuts import assign_perm
 import mockcache as memcache
-from tastypie.test import ResourceTestCase
+from django.test import TestCase
+from tastypie.test import ResourceTestCase, ResourceTestCaseMixin
 from core.api import AnalysisResource
 from core.management.commands.init_refinery import create_public_group
 from core.management.commands.create_user import init_user
@@ -16,10 +16,11 @@ from file_store.models import FileExtension
 import data_set_manager
 from galaxy_connector.models import Instance
 
+
 cache = memcache.Client(["127.0.0.1:11211"])
 
 
-class UserCreateTest(unittest.TestCase):
+class UserCreateTest(TestCase):
     """Test User instance creation"""
 
     def setUp(self):
@@ -53,7 +54,7 @@ class UserCreateTest(unittest.TestCase):
             new_user.groups.filter(name=self.public_group_name).count(), 1)
 
 
-class NodeSetTest(unittest.TestCase):
+class NodeSetTest(TestCase):
     """Test all NodeSet operations"""
 
     def setUp(self):
@@ -206,10 +207,11 @@ def make_api_uri(resource_name, resource_id=''):
         return '/'.join([base_url, resource_name]) + '/'
 
 
-class NodeSetResourceTest(ResourceTestCase):
+class NodeSetResourceTest(ResourceTestCaseMixin, TestCase):
     """Test NodeSet REST API operations"""
 
     def setUp(self):
+        create_public_group()
         super(NodeSetResourceTest, self).setUp()
         self.investigation = \
             data_set_manager.models.Investigation.objects.create()
@@ -247,6 +249,10 @@ class NodeSetResourceTest(ResourceTestCase):
         self.username2 = self.password2 = 'user2'
         self.user2 = User.objects.create_user(self.username2, '',
                                               self.password2)
+
+    def tearDown(self):
+        self.user.delete()
+        self.user2.delete()
 
     def get_credentials(self):
         """Authenticate as self.user"""
@@ -572,10 +578,11 @@ class NodeSetResourceTest(ResourceTestCase):
         self.assertEqual(NodeSet.objects.count(), 1)
 
 
-class NodeSetListResourceTest(ResourceTestCase):
+class NodeSetListResourceTest(ResourceTestCaseMixin, TestCase):
     """Test NodeSetListResource REST API operations"""
 
     def setUp(self):
+        create_public_group()
         super(NodeSetListResourceTest, self).setUp()
         self.investigation = \
             data_set_manager.models.Investigation.objects.create()
@@ -618,6 +625,10 @@ class NodeSetListResourceTest(ResourceTestCase):
         self.user2 = User.objects.create_user(self.username2, '',
                                               self.password2)
         self.nodeset_uri = make_api_uri('nodesetlist')
+
+    def tearDown(self):
+        self.user.delete()
+        self.user2.delete()
 
     def get_credentials(self):
         """Authenticate as self.user"""
@@ -748,6 +759,7 @@ class AnalysisResourceTest(ResourceTestCase):
 
     def setUp(self):
         super(AnalysisResourceTest, self).setUp()
+        create_public_group()
         self.username = self.password = 'user'
         self.user = User.objects.create_user(
             self.username, '', self.password
@@ -772,6 +784,8 @@ class AnalysisResourceTest(ResourceTestCase):
         )
 
     def tearDown(self):
+        self.user.delete()
+        self.user2.delete()
         FileExtension.objects.all().delete()
 
     def get_credentials(self):
@@ -1003,7 +1017,7 @@ class AnalysisResourceTest(ResourceTestCase):
         self.assertEqual(Analysis.objects.count(), 1)
 
 
-class BaseResourceSlugTest(unittest.TestCase):
+class BaseResourceSlugTest(TestCase):
     """Tests for BaseResource Slugs"""
 
     def setUp(self):
@@ -1054,11 +1068,12 @@ class BaseResourceSlugTest(unittest.TestCase):
         self.assertTrue(DataSet.objects.create(slug="TestSlug4"))
 
 
-class CachingTest(unittest.TestCase):
+class CachingTest(TestCase):
     """Testing the addition and deletion of cached objects"""
 
     def setUp(self):
         # make some data
+        create_public_group()
         self.username = self.password = 'Cool'
         self.user = User.objects.create_user(
             self.username, '', self.password
@@ -1067,7 +1082,6 @@ class CachingTest(unittest.TestCase):
         self.user1 = User.objects.create_user(
             self.username1, '', self.password1
         )
-        create_public_group()
         self.public_group_name = ExtendedGroup.objects.public_group().name
         for index, item in enumerate(range(0, 6)):
             DataSet.objects.create(slug="TestSlug%d" % index)
@@ -1149,10 +1163,11 @@ class CachingTest(unittest.TestCase):
         self.assertNotEqual(self.initial_cache, new_cache)
 
 
-class WorkflowDeletionTest(unittest.TestCase):
+class WorkflowDeletionTest(TestCase):
     """Testing for the deletion of Workflows"""
 
     def setUp(self):
+        create_public_group()
         self.username = self.password = 'user'
         self.user = User.objects.create_user(
             self.username, '', self.password
@@ -1167,7 +1182,7 @@ class WorkflowDeletionTest(unittest.TestCase):
         self.dataset = DataSet.objects.create()
 
     def tearDown(self):
-        User.objects.all().delete()
+        self.user.delete()
         Project.objects.all().delete()
         WorkflowEngine.objects.all().delete()
         Workflow.objects.all().delete()
@@ -1204,10 +1219,11 @@ class WorkflowDeletionTest(unittest.TestCase):
         self.assertEqual(self.workflow.delete(), None)
 
 
-class DataSetDeletionTest(unittest.TestCase):
+class DataSetDeletionTest(TestCase):
     """Testing for the deletion of Datasets"""
 
     def setUp(self):
+        create_public_group()
         self.username = self.password = 'user'
         self.user = User.objects.create_user(
             self.username, '', self.password
@@ -1255,10 +1271,11 @@ class DataSetDeletionTest(unittest.TestCase):
         self.assertNotEqual(self.dataset_with_analysis, None)
 
 
-class AnalysisDeletionTest(unittest.TestCase):
+class AnalysisDeletionTest(TestCase):
     """Testing for the deletion of Analyses"""
 
     def setUp(self):
+        create_public_group()
         # Create a user
         self.username = self.password = 'user'
         self.user = User.objects.create_user(

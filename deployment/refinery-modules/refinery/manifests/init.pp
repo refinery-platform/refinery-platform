@@ -86,8 +86,8 @@ file { "${django_root}/config/config.json":
   replace => false,
 }
 ->
-exec { "syncdb":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py syncdb --migrate --noinput",
+exec { "migrate":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate --noinput",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
@@ -97,6 +97,13 @@ exec { "syncdb":
   ],
 }
 ->
+exec { "init_refinery":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py init_refinery '${site_name}' '${site_url}'",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+}
+->
 exec { "create_superuser":
   command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata superuser.json",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
@@ -104,8 +111,8 @@ exec { "create_superuser":
   group       => $app_group,
 }
 ->
-exec { "init_refinery":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py init_refinery '${site_name}' '${site_url}'",
+exec { "create_anon_user":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata anon_user.json",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,

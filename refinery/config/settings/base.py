@@ -38,6 +38,10 @@ djcelery.setup_loader()
 # (convert JSON list of lists to tuple of tuples)
 ADMINS = tuple(map(lambda x: tuple(x), get_setting("ADMINS")))
 
+# For Django 1.7 compatability
+AUTH_USER_MODEL = 'auth.User'
+ANONYMOUS_USER_NAME = None
+
 # A tuple in the same format as ADMINS that specifies who should get broken
 # link notifications when BrokenLinkEmailsMiddleware is enabled
 MANAGERS = ADMINS
@@ -174,7 +178,6 @@ INSTALLED_APPS = (
     'registration',
     'flatblocks',
     # RP: added for database migration between builds
-    'south',
     'chunked_upload',
     'rest_framework',
     'rest_framework_swagger',
@@ -192,10 +195,6 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 # NG: added to support anonymous users through django-guardian
 # (id can be set to any value apparently)
 ANONYMOUS_USER_ID = -1
-
-# NG: added to enable user profiles
-# (recommended way to extend Django user model)
-AUTH_PROFILE_MODULE = 'core.UserProfile'
 
 LOGGING = {
     'version': 1,
