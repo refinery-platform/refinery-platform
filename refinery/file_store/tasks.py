@@ -34,6 +34,7 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
         doesn't provide file size in the HTTP headers.
     :type file_size: int.
     :returns: FileStoreItem UUID if success, None if failure.
+
     """
     # TODO: move to file_store/models.py since it's never used as a task
     logger.info("Creating FileStoreItem using source '%s'", source)

@@ -23,14 +23,6 @@ from file_store.tasks import import_file, create
 
 logger = logging.getLogger(__name__)
 
-# Fetch HTML and ZIP FileExtensions
-try:
-    HTML = FileExtension.objects.get(name="html")
-    ZIP = FileExtension.objects.get(name="zip")
-
-except FileExtension.DoesNotExist as e:
-    logger.error("Could not retrieve FileExtension: %s", e)
-
 
 class AnalysisHandlerTask(Task):
     abstract = True
@@ -360,7 +352,7 @@ def get_galaxy_download_tasks(analysis):
                 # Determining tag if galaxy results should be download through
                 # http or copying files directly to retrieve HTML files as zip
                 # archives via dataset URL
-                if galaxy_instance.local_download and file_type != HTML:
+                if galaxy_instance.local_download and file_type != 'html':
                     download_url = results['file_name']
                 else:
                     download_url = urlparse.urljoin(
@@ -369,8 +361,8 @@ def get_galaxy_download_tasks(analysis):
                                      'display?to_ext=txt']))
                 # workaround to set the correct file type for zip archives of
                 # FastQC HTML reports produced by Galaxy dynamically
-                if file_type == HTML:
-                    file_type = ZIP
+                if file_type == 'html':
+                    file_type = 'zip'
                 # TODO: when changing permanent=True, fix update of % download
                 # of file
                 filestore_uuid = create(
