@@ -222,6 +222,7 @@ def load_config():
     config.setdefault('RDS_NAME', 'rds-refinery')
     return config
 
+
 def save_s3_config(config):
     """
     Save the config as an S3 object in an S3 bucket.
@@ -257,7 +258,7 @@ def save_s3_config(config):
     bucket_name = config['S3_CONFIG_BUCKET']
 
     object_name = ("refinery-config-" +
-        datetime.datetime.utcnow().strftime("%Y%m%dT%H%M"))
+                   datetime.datetime.utcnow().strftime("%Y%m%dT%H%M"))
     s3_uri = "s3://{}/{}".format(bucket_name, object_name)
     config['S3_CONFIG_URI'] = s3_uri
 
@@ -278,7 +279,7 @@ def random_alnum(n):
 
     return ''.join(
         random.choice(string.ascii_lowercase + string.digits)
-                      for _ in range(n))
+        for _ in range(n))
 
 
 def derive_config(config):
