@@ -162,7 +162,7 @@ class FileType(models.Model):
 class FileExtension(models.Model):
     # file extension associated with the filename
     name = models.CharField(unique=True, max_length=50)
-    filetype = models.ForeignKey("FileType")
+    filetype = models.ForeignKey(FileType)
 
     def __unicode__(self):
         return self.name
@@ -247,7 +247,7 @@ class FileStoreItem(models.Model):
     # particular group
     sharename = models.CharField(max_length=20, blank=True)
     #: type of the file
-    filetype = models.ForeignKey("file_store.FileType", null=True)
+    filetype = models.ForeignKey(FileType, null=True)
     #: file import task ID
     import_task_id = UUIDField(blank=True)
     # Date created
@@ -321,22 +321,22 @@ class FileStoreItem(models.Model):
             return None
 
     def get_filetype(self):
-        '''Retrieve the type of the datafile.
+        """Retrieve the type of the datafile.
 
-        :returns: str -- type of the datafile.
+        :returns: FileType object.
 
-        '''
+        """
         return self.filetype
 
     def set_filetype(self, filetype=''):
-        '''Assign the type of the datafile.
+        """Assign the type of the datafile.
         Only existing types allowed as arguments.
 
         :param filetype: requested file type.
         :type filetype: str.
         :returns: True if success, False if failure.
 
-        '''
+        """
         # make sure the file type is valid before assigning it to model field
 
         all_known_extensions = [e.name for e in
