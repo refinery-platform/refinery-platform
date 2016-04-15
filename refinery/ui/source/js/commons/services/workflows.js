@@ -1,8 +1,9 @@
+'use strict';
+
 angular
   .module('refineryApp')
   .factory('workflowService', ['$resource', 'settings',
     function ($resource, settings) {
-
       var workflows = $resource(
         settings.appRoot + settings.refineryApi + '/workflow/',
         {
@@ -11,7 +12,7 @@ angular
         {
           query: {
             method: 'GET',
-            isArray: false,
+            isArray: false
           }
         }
       );

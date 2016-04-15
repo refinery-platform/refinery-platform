@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * List graph constructor.
  *
@@ -51,10 +53,14 @@ function ListGraphCtrl (
         sortBy: 'precision',
         nodeInfoContextMenu: [{
           label: 'ID',
-          property: function (data) { return data.ontId; }
+          property: function (_data) {
+            return _data.ontId;
+          }
         }, {
           label: 'URI',
-          property: function (data) { return data.uri; }
+          property: function (_data) {
+            return _data.uri;
+          }
         }]
       });
     }.bind(this));
@@ -126,7 +132,7 @@ function ListGraphCtrl (
           nodeUri: data.lock.id,
           dataSetIds: this.getAssociatedDataSetsIds(
             this.graph[data.lock.clone ? data.lock.clonedFromId : data.lock.id]
-          ),
+          )
         },
         unlock: {
           clone: data.unlock.clone,
@@ -135,8 +141,8 @@ function ListGraphCtrl (
           dataSetIds: this.getAssociatedDataSetsIds(
             this.graph[
               data.unlock.clone ? data.unlock.clonedFromId : data.unlock.id
-            ]
-          ),
+              ]
+          )
         },
         source: 'listGraph'
       }
@@ -180,7 +186,7 @@ function ListGraphCtrl (
         dataSetIds: this.getAssociatedDataSetsIds(
           this.graph[
             data.rooted.clone ? data.rooted.clonedFromId : data.rooted.id
-          ]
+            ]
         ),
         source: 'listGraph'
       }
@@ -227,7 +233,7 @@ function ListGraphCtrl (
         dataSetIds: this.getAssociatedDataSetsIds(
           this.graph[
             data[i].data.clone ? data[i].data.clonedFromId : data[i].data.id
-          ]
+            ]
         ),
         mode: data[i].data.mode,
         query: data[i].name === 'd3ListGraphNodeQuery'
@@ -364,7 +370,7 @@ function ListGraphCtrl (
     }
   }.bind(this));
 
-  this.$rootScope.$on('dashboardDsDeselected', function (event, data) {
+  this.$rootScope.$on('dashboardDsDeselected', function () {
     dataSet.ids.then(function (allIds) {
       this.updatePrecisionRecall(allIds);
       if (this.listGraph) {
@@ -410,28 +416,27 @@ ListGraphCtrl.prototype.getAssociatedDataSetsIds = function (term) {
    * @author  Fritz Lekschas
    * @date    2015-10-14
    *
-   * @param   {Object}  term        Data associated to the term.
-   * @param   {Object}  dataSetIds  Object of boolean keys representing the
-   *   dataset IDs.
+   * @param   {Object}  termData    Data associated to the term.
    */
-  function collectIds (term, dataSetIds) {
-    var i, keys;
+  function collectIds (_term) {
+    var i;
+    var keys;
 
-    if (term.dataSets) {
-      keys = Object.keys(term.dataSets);
+    if (_term.dataSets) {
+      keys = Object.keys(_term.dataSets);
       for (i = keys.length; i--;) {
         dataSetIds[keys[i]] = true;
       }
     }
 
-    if (term.childRefs) {
-      for (i = term.childRefs.length; i--;) {
-        collectIds(term.childRefs[i], dataSetIds);
+    if (_term.childRefs) {
+      for (i = _term.childRefs.length; i--;) {
+        collectIds(_term.childRefs[i]);
       }
     }
   }
 
-  collectIds(term, dataSetIds);
+  collectIds(term);
 
   return dataSetIds;
 };

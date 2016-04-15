@@ -1,3 +1,5 @@
+'use strict';
+
 function NodeDraggableCtrl ($element, $scope) {
   $element.on('dragstart', $scope.handleNodeDragStart);
   $element.on('dragend', $scope.handleNodeDragEnd);

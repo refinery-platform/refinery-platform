@@ -1,3 +1,5 @@
+'use strict';
+
 function NodeDroppableCtrl ($element, $scope) {
   $element.on('drop', $scope.handleNodeDrop);
   $element.on('dragover', $scope.handleNodeDragOver);

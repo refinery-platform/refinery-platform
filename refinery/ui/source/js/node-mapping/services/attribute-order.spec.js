@@ -1,6 +1,6 @@
-describe('NodeMapping.factory.attributeOrder: unit tests', function () {
-  'use strict';
+'use strict';
 
+describe('NodeMapping.factory.attributeOrder: unit tests', function () {
   var Factory;
 
   beforeEach(function () {

@@ -1,3 +1,5 @@
+'use strict';
+
 angular
   .module('errors', [])
   .factory('errors', ['$rootScope', function ($rootScope) {

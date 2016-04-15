@@ -1,6 +1,6 @@
-describe('NodeMapping.factory.nodeSetList: unit tests', function () {
-  'use strict';
+'use strict';
 
+describe('NodeMapping.factory.nodeSetList: unit tests', function () {
   var Factory;
 
   beforeEach(function () {

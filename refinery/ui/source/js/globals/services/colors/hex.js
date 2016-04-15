@@ -1,3 +1,5 @@
+'use strict';
+
 angular
   .module('colors')
   .factory('HEX', ['$injector', function ($injector) {
@@ -32,8 +34,8 @@ angular
      * @return  {Object}  RGB object.
      */
     HEX.prototype.toRgb = function () {
-      var RGB = $injector.get('RGB'),
-          result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(this.hex);
+      var RGB = $injector.get('RGB');
+      var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(this.hex);
 
       return new RGB(
         parseInt(result[1], 16),
@@ -52,20 +54,21 @@ angular
     };
 
     Object.defineProperty(HEX.prototype, 'hex', {
-      get: function() {
+      get: function () {
         return this._hex;
       },
-      set: function(hex) {
-        if (typeof hex === 'string') {
-          var match = hex.match(/^#?((?:[0-9a-fA-F]{3}){1,2})$/i);
+      set: function (hex) {
+        var _hex = hex;
+        if (typeof _hex === 'string') {
+          var match = _hex.match(/^#?((?:[0-9a-fA-F]{3}){1,2})$/i);
           if (!match) {
-            throw new Error('String "' + hex + '" is not a valid HEX color.');
+            throw new Error('String "' + _hex + '" is not a valid _hex color.');
           }
-          hex = match[1];
+          _hex = match[1];
         } else {
-          throw new Error('HEX must be a string. ' + typeof hex);
+          throw new Error('HEX must be a string. ' + typeof _hex);
         }
-        this._hex = hex;
+        this._hex = _hex;
       }
     });
 

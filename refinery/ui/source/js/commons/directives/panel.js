@@ -1,6 +1,9 @@
-function RefineryPanelCtrl (_$element_,  _$timeout_, _$window_, _pubSub_) {
+'use strict';
+
+function RefineryPanelCtrl (_$element_, _$timeout_, _$window_, _$_, _pubSub_) {
   var CTRL = this;
   var ELEMENT = _$element_;
+  var $ = _$_;
   var PARENT_REF_ELEMENT = (function () {
     var el = ELEMENT[0].parentNode;
     while (el.tagName.toLowerCase() !== 'body') {
@@ -9,6 +12,7 @@ function RefineryPanelCtrl (_$element_,  _$timeout_, _$window_, _pubSub_) {
       }
       el = el.parentNode;
     }
+    return undefined;
   }());
   var ELEMENT_REF_OFFSET = (function () {
     var el = ELEMENT[0].parentNode;
@@ -18,16 +22,17 @@ function RefineryPanelCtrl (_$element_,  _$timeout_, _$window_, _pubSub_) {
       }
       el = el.parentNode;
     }
+    return undefined;
   }());
   var PUB_SUB = _pubSub_;
-  var TIMEOUT = _$timeout_;
+  var $timeout = _$timeout_;
   // I honestly don't know why we have to wrap `$window` again in a jQuery
   // function. That should have been done by Angular already (like with
   // `$element`).
   var WINDOW = $(_$window_);
 
   var fullHeight;
-  var minHeight = parseInt(ELEMENT.css('min-height'));
+  var minHeight = parseInt(ELEMENT.css('min-height'), 10);
 
   function getFullHeight (windowHeight) {
     var refHeight = windowHeight;
@@ -35,7 +40,7 @@ function RefineryPanelCtrl (_$element_,  _$timeout_, _$window_, _pubSub_) {
 
     if (PARENT_REF_ELEMENT) {
       refHeight = PARENT_REF_ELEMENT.offset().top +
-        PARENT_REF_ELEMENT.height();
+      PARENT_REF_ELEMENT.height();
     } else if (!windowHeight) {
       refHeight = WINDOW.height();
     }
@@ -57,7 +62,7 @@ function RefineryPanelCtrl (_$element_,  _$timeout_, _$window_, _pubSub_) {
       this.refreshHeight(event.width, event.height);
     }.bind(this));
 
-    TIMEOUT(function () {
+    $timeout(function () {
       this.refreshHeight();
     }.bind(this), 0);
   }
@@ -79,7 +84,7 @@ function RefineryPanelCtrl (_$element_,  _$timeout_, _$window_, _pubSub_) {
   };
 
   RefineryPanel.prototype.refreshMinHeight = function () {
-    minHeight = parseInt(ELEMENT.css('min-height'));
+    minHeight = parseInt(ELEMENT.css('min-height'), 10);
   };
 
   return new RefineryPanel();
@@ -100,7 +105,7 @@ function refineryPanelDirective () {
 angular
   .module('refineryApp')
   .controller('RefineryPanelCtrl', [
-    '$element', '$timeout', '$window', 'pubSub', RefineryPanelCtrl
+    '$element', '$timeout', '$window', '$', 'pubSub', RefineryPanelCtrl
   ])
   .directive('refineryPanel', [
     refineryPanelDirective

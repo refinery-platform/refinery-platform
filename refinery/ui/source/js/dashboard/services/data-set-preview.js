@@ -1,9 +1,11 @@
+'use strict';
+
 angular
   .module('refineryDashboard')
-  .factory('dashboardDataSetPreviewService', ['_',
-    function (_) {
-
-      function PreviewService() {}
+  .factory('dashboardDataSetPreviewService', [
+    function () {
+      function PreviewService () {
+      }
 
       Object.defineProperty(
         PreviewService.prototype,
@@ -11,7 +13,7 @@ angular
           enumerable: true,
           configurable: false,
           writable: true
-      });
+        });
 
       Object.defineProperty(
         PreviewService.prototype,
@@ -20,7 +22,7 @@ angular
           configurable: false,
           value: false,
           writable: true
-      });
+        });
 
       PreviewService.prototype.close = function () {
         if (this.previewing) {

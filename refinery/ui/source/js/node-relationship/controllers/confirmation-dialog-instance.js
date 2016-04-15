@@ -1,3 +1,5 @@
+'use strict';
+
 function ConfirmationDialogInstanceCtrl ($scope, $uibModalInstance, config) {
   $scope.config = config;
 

@@ -1,8 +1,9 @@
+'use strict';
+
 angular
   .module('refineryApp')
   .factory('dataSetService', ['$resource', 'settings',
     function ($resource, settings) {
-
       var dataSets = $resource(
         settings.appRoot + settings.refineryApi + '/data_sets/:extra',
         {
@@ -13,7 +14,7 @@ angular
         {
           query: {
             method: 'GET',
-            isArray: false,
+            isArray: false
           }
         }
       );

@@ -1,3 +1,5 @@
+'use strict';
+
 angular
   .module('refineryDashboard')
   .factory('dashboardDataSetSearchService', [
@@ -9,48 +11,48 @@ angular
       return function (searchQuery) {
         return function (limit, offset) {
           var query = solrService.get({
-                // Extended DisMax
-                'defType': 'edismax',
-                // Alternative field for `title` when no highlights were
-                // found
-                'f.title.hl.alternateField': 'title',
-                // Alternative field for `description` when no highlights were
-                // found
-                'f.description.hl.alternateField': 'text',
-                // Fields that are returned
-                'fl': 'dbid,uuid,access',
-                // Limit search space to data sets only
-                'fq': 'django_ct:core.dataset',
-                // Highlighting enabled
-                'hl': true,
-                // Fields that are highlighted
-                'hl.fl': 'title,description',
-                // Limit the alternate fields to 128 characters at most.
-                // This could also be set on per field bases like so:
-                // `f.description.hl.maxAlternateFieldLength = 256`
-                'hl.maxAlternateFieldLength': '128',
-                // Highlighting prefix
-                'hl.simple.pre': '<em>',
-                // Highlighting suffix
-                'hl.simple.post': '</em>',
-                // Query
-                'q': searchQuery,
-                // Query fields
-                'qf': 'title^0.5 accession submitter text',
-                // # results returned
-                'rows': limit,
-                // Start of return
-                'start': offset
-              }, {
-                index: 'core'
-              });
+            // Extended DisMax
+            defType: 'edismax',
+            // Alternative field for `title` when no highlights were
+            // found
+            'f.title.hl.alternateField': 'title',
+            // Alternative field for `description` when no highlights were
+            // found
+            'f.description.hl.alternateField': 'text',
+            // Fields that are returned
+            fl: 'dbid,uuid,access',
+            // Limit search space to data sets only
+            fq: 'django_ct:core.dataset',
+            // Highlighting enabled
+            hl: true,
+            // Fields that are highlighted
+            'hl.fl': 'title,description',
+            // Limit the alternate fields to 128 characters at most.
+            // This could also be set on per field bases like so:
+            // `f.description.hl.maxAlternateFieldLength = 256`
+            'hl.maxAlternateFieldLength': '128',
+            // Highlighting prefix
+            'hl.simple.pre': '<em>',
+            // Highlighting suffix
+            'hl.simple.post': '</em>',
+            // Query
+            q: searchQuery,
+            // Query fields
+            qf: 'title^0.5 accession submitter text',
+            // # results returned
+            rows: limit,
+            // Start of return
+            start: offset
+          }, {
+            index: 'core'
+          });
 
           return query
             .$promise
             .then(function (data) {
-              var doc,
-                  id,
-                  userId = sessionService.get('userId');
+              var doc;
+              var id;
+              var userId = sessionService.get('userId');
 
               for (var i = 0, len = data.response.docs.length; i < len; i++) {
                 doc = data.response.docs[i];
@@ -63,7 +65,7 @@ angular
                     data.highlighting[id].title[0]
                   );
                 } else {
-                  doc.title = sce.trustAsHtml(
+                  doc.title = $sce.trustAsHtml(
                     '<span class="is-unknown">Unknown</span>'
                   );
                 }

@@ -67,14 +67,18 @@ def get_workflows(workflow_engine):
                          " - skipping ... (%s)", workflow.identifier,
                          workflow_engine.instance.base_url, exc)
 
-        workflow_issues = import_workflow(workflow, workflow_engine,
-                                          workflow_dictionary)
-        if len(workflow_issues) > 0:
-            msg = "\nUnable to import workflow '{}' " \
-                  "due to the following issues:"
-            msg = msg.format(workflow.name)
-            issues.append(msg)
-            issues += workflow_issues
+        if workflow_dictionary is not None:
+            workflow_issues = import_workflow(
+                workflow, workflow_engine, workflow_dictionary
+            )
+
+            if len(workflow_issues) > 0:
+                msg = "\nUnable to import workflow '{}' " \
+                      "due to the following issues:"
+                msg = msg.format(workflow.name)
+                issues.append(msg)
+                issues += workflow_issues
+
     return issues
 
 

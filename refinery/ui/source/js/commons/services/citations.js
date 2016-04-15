@@ -1,102 +1,14 @@
+'use strict';
+
 angular
   .module('refineryApp')
   .factory('citationService', [
+    '$log',
     '$q',
     '_',
     'doiService',
     'pubmedService',
-    function ($q, _, doiService, pubmedService) {
-      var deferred = $q.defer();
-
-      function get (reference) {
-
-        if (reference >>> 0 === parseFloat(reference)) {
-          // PubMed ID
-          var summary = pubmedService
-            .get(
-              'summary',
-              {
-                id: reference
-              }
-            )
-            .then(function (data) {
-              return preparePubmedSummary(reference, data.result[reference]);
-            });
-
-          var abstract = pubmedService
-            .get(
-              'abstract',
-              {
-                id: reference
-              }
-            )
-            .then(function (data) {
-              return preparePubmedAbstract(data);
-            });
-
-          return $q.all([summary, abstract])
-            .then(function (data) {
-              data[0].abstract = data[1];
-              return data[0];
-            });
-        }
-
-        // Check if DOI
-        var matches = reference.match(/^(http:\/\/dx\.doi\.org\/)?(doi:\s?)?(10\.[0-9]+\/[a-zA-Z0-9\.\/]+)$/);
-        if (matches !== null) {
-          // Query the DOI API
-          var doi = doiService
-            .get({
-              id: matches[3]
-            })
-            .$promise
-            .then(function (data) {
-              return prepareDoi(data);
-            });
-
-          // Look for a PubMed entry
-          var pubmed = pubmedService
-            .get(
-              'search',
-              {
-                term: doiService.escape(matches[3])
-              }
-            )
-            .then(function (data) {
-              return data.esearchresult.idlist[0];
-            })
-            .then(function (pubMedId) {
-              if (pubMedId) {
-                return pubmedService
-                  .get(
-                    'abstract',
-                    {
-                      id: pubMedId
-                    }
-                  )
-                  .then(function (data) {
-                    return preparePubmedAbstract(data);
-                  })
-                  .catch(function (error) {
-                    return error;
-                  });
-              }
-              return null;
-            });
-
-          return $q.all([doi, pubmed])
-            .then(mergeDoiPubmed)
-            .catch(function () {
-              // In case something failed we will return the DOI promise.
-              return doi;
-            });
-        }
-
-        return $q.reject(
-          'Reference ID "' + reference + '" is PubMed ID nor a DOI'
-        );
-      }
-
+    function ($log, $q, _, doiService, pubmedService) {
       function extractDois (data) {
         var dois = [];
         try {
@@ -106,28 +18,13 @@ angular
             }
           }
         } catch (e) {
-          console.error(e);
+          $log.error(e);
         }
       }
 
       function mergeDoiPubmed (data) {
         data[0].abstract = data[1];
         return data[0];
-      }
-
-      function prepareDoi (data) {
-        return {
-          authors: prepareDoiAuthors(data),
-          abstract: null,
-          doi: data.DOI,
-          issue: data.issue,
-          journal: data['container-title'],
-          pages: data.page,
-          pubmed: null,
-          title: data.title,
-          volume: data.volume,
-          year: data.issued['date-parts'][0]
-        };
       }
 
       function prepareDoiAuthors (data) {
@@ -150,6 +47,21 @@ angular
           }
         }
         return authors;
+      }
+
+      function prepareDoi (data) {
+        return {
+          authors: prepareDoiAuthors(data),
+          abstract: null,
+          doi: data.DOI,
+          issue: data.issue,
+          journal: data['container-title'],
+          pages: data.page,
+          pubmed: null,
+          title: data.title,
+          volume: data.volume,
+          year: data.issued['date-parts'][0]
+        };
       }
 
       function preparePubmedAuthors (data) {
@@ -177,11 +89,11 @@ angular
         try {
           var abstract = data
             .PubmedArticleSet
-              .PubmedArticle
-                .MedlineCitation
-                  .Article
-                    .Abstract
-                      .AbstractText;
+            .PubmedArticle
+            .MedlineCitation
+            .Article
+            .Abstract
+            .AbstractText;
 
           if (_.isString(abstract)) {
             return abstract;
@@ -189,7 +101,7 @@ angular
 
           return _.isString(abstract['#text']) ? abstract['#text'] : '';
         } catch (e) {
-          console.error(e);
+          $log.error(e);
           return null;
         }
       }
@@ -202,11 +114,89 @@ angular
           issue: data.issue,
           journal: data.source,
           pages: data.pages,
-          pubmed: parseInt(reference),
+          pubmed: parseInt(reference, 10),
           title: data.title,
           volume: data.volume,
-          year: parseInt(data.pubdate.substr(0, 4))
+          year: parseInt(data.pubdate.substr(0, 4), 10)
         };
+      }
+
+      function get (reference) {
+        if (reference >>> 0 === parseFloat(reference)) {
+          // PubMed ID
+          var summary = pubmedService
+            .get('summary', {
+              id: reference
+            })
+            .then(function (data) {
+              return preparePubmedSummary(reference, data.result[reference]);
+            });
+
+          var abstract = pubmedService
+            .get('abstract', {
+              id: reference
+            })
+            .then(function (data) {
+              return preparePubmedAbstract(data);
+            });
+
+          return $q.all([summary, abstract])
+            .then(function (data) {
+              data[0].abstract = data[1];
+              return data[0];
+            });
+        }
+
+        // Check if DOI
+        var matches = reference.match(
+          /^(http:\/\/dx\.doi\.org\/)?(doi:\s?)?(10\.[0-9]+\/[a-zA-Z0-9\.\/]+)$/
+        );
+        if (matches !== null) {
+          // Query the DOI API
+          var doi = doiService
+            .get({
+              id: matches[3]
+            })
+            .$promise
+            .then(function (data) {
+              return prepareDoi(data);
+            });
+
+          // Look for a PubMed entry
+          var pubmed = pubmedService
+            .get('search', {
+              term: doiService.escape(matches[3])
+            })
+            .then(function (data) {
+              return data.esearchresult.idlist[0];
+            })
+            .then(function (pubMedId) {
+              if (pubMedId) {
+                return pubmedService
+                  .get('abstract', {
+                    id: pubMedId
+                  })
+                  .then(function (data) {
+                    return preparePubmedAbstract(data);
+                  })
+                  .catch(function (error) {
+                    return error;
+                  });
+              }
+              return null;
+            });
+
+          return $q.all([doi, pubmed])
+            .then(mergeDoiPubmed)
+            .catch(function () {
+              // In case something failed we will return the DOI promise.
+              return doi;
+            });
+        }
+
+        return $q.reject(
+          'Reference ID "' + reference + '" is PubMed ID nor a DOI'
+        );
       }
 
       return {

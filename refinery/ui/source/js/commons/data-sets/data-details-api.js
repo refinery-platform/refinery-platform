@@ -1,3 +1,5 @@
+'use strict';
+
 function DataSetDataDetailsApiFactory ($q, _, dataSetService) {
   /**
    * Class constructor for querying the dataset data API.
@@ -27,7 +29,7 @@ function DataSetDataDetailsApiFactory ($q, _, dataSetService) {
 
     function objectifyResponse (results) {
       var obj = {};
-      for(var i = results.length; i--;) {
+      for (var i = results.length; i--;) {
         obj[results[i].uuid] = results[i];
       }
       return obj;
@@ -46,13 +48,14 @@ function DataSetDataDetailsApiFactory ($q, _, dataSetService) {
      */
     return function (ids) {
       var promises = [];
+      var arrIds = ids;
 
-      if (ids.constructor !== Array) {
-        ids = [ids];
+      if (arrIds.constructor !== Array) {
+        arrIds = [arrIds];
       }
 
-      for(var i = ids.length; i--;) {
-        params.extra = ids[i];
+      for (var i = arrIds.length; i--;) {
+        params.extra = arrIds[i];
         promises.push(dataSetService.query(params).$promise.then(adjustData));
       }
 

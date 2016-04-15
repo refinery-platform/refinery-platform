@@ -1,6 +1,6 @@
-describe('RefineryApp.module: unit tests', function () {
-  'use strict';
+'use strict';
 
+describe('RefineryApp.module: unit tests', function () {
   var module;
 
   beforeEach(function () {
@@ -8,19 +8,16 @@ describe('RefineryApp.module: unit tests', function () {
   });
 
   describe('Module', function () {
-
     it('should be registered', function () {
       expect(!!module).toEqual(true);
     });
-
   });
 
   describe('Dependencies:', function () {
-
-    var deps,
-        hasModule = function (m) {
-          return deps.indexOf(m) >= 0;
-        };
+    var deps;
+    var hasModule = function (m) {
+      return deps.indexOf(m) >= 0;
+    };
 
     beforeEach(function () {
       deps = module.value('refineryApp').requires;
@@ -72,10 +69,6 @@ describe('RefineryApp.module: unit tests', function () {
 
     it('should have "refineryAnalysisLaunch" as a dependency', function () {
       expect(hasModule('refineryAnalysisLaunch')).toEqual(true);
-    });
-
-    it('should have "refinerySolr" as a dependency', function () {
-      expect(hasModule('refinerySolr')).toEqual(true);
     });
 
     it('should have "refineryNodeRelationship" as a dependency', function () {
@@ -130,6 +123,5 @@ describe('RefineryApp.module: unit tests', function () {
     it('should NOT have "notExistingModule" as a dependency', function () {
       expect(hasModule('notExistingModule')).toEqual(false);
     });
-
   });
 });

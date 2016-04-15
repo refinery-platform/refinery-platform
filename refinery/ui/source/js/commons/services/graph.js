@@ -1,6 +1,8 @@
-function GraphFactory (_, Webworker) {
+'use strict';
 
-  function Graph () {}
+function GraphFactory (_) {
+  function Graph () {
+  }
 
   /**
    * Update a graph's annotations
@@ -15,7 +17,8 @@ function GraphFactory (_, Webworker) {
     // Note: Looping over the large graph unconditionally and looping again over
     // all annotations is **faster** than one conditional loop, which is
     // potentially due to the high number of comparisons.
-    var nodeKeys = Object.keys(graph), i;
+    var nodeKeys = Object.keys(graph);
+    var i;
 
     for (i = nodeKeys.length; i--;) {
       graph[nodeKeys[i]].numDataSets = 0;
@@ -29,99 +32,96 @@ function GraphFactory (_, Webworker) {
     }
   };
 
-  Graph.accumulateAndPruneNew = function (graph, root, valueProperty) {
-    var nodeIndex = {};
+  // TODO: Finish this rewrite of `accumulateAndPrune`
+  // Graph.accumulateAndPruneNew = function (graph, root) {
+  //   var nodeIndex = {};
 
-    function init () {
-      traverseDepthFirst(graph[root], 0, 0);
-    }
+  //   function processChild (parentNode, childNode) {
+  //     // Store a reference to the parent
+  //     if (!childNode.parents) {
+  //       childNode.parents = [];
+  //     }
+  //     childNode.parents.push(parentNode);
+  //   }
 
-    function processChild (parentNode, childNode) {
-      // Store a reference to the parent
-      if (!childNode.parents) {
-        childNode.parents = [];
-      }
-      childNode.parents.push(parentNode);
-    }
+  //   function processLeaf (node, childNo) {
+  //     if (node.value) {
+  //       child.meta.leaf = true;
+  //     } else {
+  //       if (node.parent) {
+  //         // Remove node from the parent's children array if parent exist.
+  //         node.parent.children.splice(childNo, 1);
+  //       }
+  //       node.deleted = true;
+  //     }
+  //   }
 
-    function processLeaf (node, childNo) {
-      if (node.value) {
-        child.meta.leaf = true;
-      } else {
-        if (node.parent) {
-          // Remove node from the parent's children array if parent exist.
-          node.parent.children.splice(childNo, 1);
-        }
-        node.deleted = true;
-      }
-    }
+  //   function processInnerNode (node) {
+  //     if (node.children.length === 1 && node.value === 0) {
 
-    function processInnerNode (node) {
-      if (node.children.length === 1 && node.value === 0) {
+  //     }
+  //   }
 
-      }
-    }
+  //   function processNode (node, childNo) {
+  //     // Set `value` property depending on the lenght of the actual value
+  //     node.value = Object.keys(node[valueProp]).length;
 
-    function processNode (node, childNo) {
-      // Set `value` property depending on the lenght of the actual value
-      node.value = Object.keys(node[valueProp]).length;
+  //     if (node.children.length) {
+  //       // Inner node
+  //       processInnerNode(node);
+  //     } else {
+  //       // Leaf
+  //       processLeaf(node, childNo);
+  //     }
+  //   }
 
-      if (node.children.length) {
-        // Inner node
-        processInnerNode(node);
-      } else {
-        // Leaf
-        processLeaf(node, childNo);
-      }
-    }
+  //   function traverseDepthFirst (node, depth, childNo) {
+  //     if (nodeIndex[node.uri]) {
+  //       // Skip node
+  //       return;
+  //     }
 
-    function traverseDepthFirst (node, depth, childNo) {
-      if (nodeIndex[node.uri]) {
-        // Skip node
-        return;
-      }
+  //     if (!node.meta) {
+  //       node.meta = {};
+  //     }
 
-      if (!node.meta) {
-        node.meta = {};
-      }
+  //     // Distance to `OWL:Thing`
+  //     node.meta.originalDepth = depth;
 
-      // Distance to `OWL:Thing`
-      node.meta.originalDepth = depth;
+  //     // Traverse over all children from the last to the first
+  //     for (var i = node.children.length; i--;) {
+  //       processChild(node, graph[node.children[i]]);
+  //       traverseDepthFirst(graph[node.children[i]], depth + 1, i);
+  //     }
 
-      // Traverse over all children from the last to the first
-      for (var i = node.children.length; i--;) {
-        processChild(node, graph[node.children[i]]);
-        traverseDepthFirst(graph[node.children[i]], depth + 1, i);
-      }
+  //     processNode(node, childNo);
+  //   }
 
-      processNode(node, childNo);
-    }
+  //   function init () {
+  //     traverseDepthFirst(graph[root], 0, 0);
+  //   }
 
-    init();
-  };
+  //   init();
+  // };
 
   /**
    * Prune graph and accumulate the value property.
    *
    * @method  accumulateAndPrune
    * @author  Fritz Lekschas
-   * @date    2015-12-21
+   * @date    2016-04-08
    *
-   * @param   {Object}  data        Original graph.
+   * @param   {Object}  graph       Original graph.
+   * @param   {Object}  rootUri     Root's Uri.
    * @param   {String}  valueProp   Name of the property holding the value to be
    *                                accumulated.
-   * @return  {Object}              Pruned graph.
+   * @return  {Object}              Pruned graph and root node.
    */
-  Graph.accumulateAndPrune = function (graph, root, valueProp) {
-    var node = graph[root];
+  Graph.accumulateAndPrune = function (graph, rootUri, valueProp) {
+    var rootNode = graph[rootUri];
     var nodeIndex = {};
-    var numChildren = node.children ? node.children.length : false;
 
-    node.meta = node.meta || {};
-
-    if (numChildren) {
-      accumulateAndPruneChildren(node, numChildren, valueProp, 0);
-    }
+    rootNode.meta = rootNode.meta || {};
 
     /**
      * Recursively accumulate `valueProp` values and prune _empty_ leafs.
@@ -135,18 +135,13 @@ function GraphFactory (_, Webworker) {
      *
      * @param   {Object}   node         D3 data object of the node.
      * @param   {Number}   numChildren  Number of children of `node.
-     * @param   {String}   valueProp    Name of the property that represents an
-     *   object of unique elements. The number of unique elements accounts for
-     *   the rectangle size of the tree map and length of the bar charts. The
-     *   property needs to be an object to easily assess unique IDs without
-     *   having to iterate over the array all the time.
      * @param   {Number}   depth        Original depth of the current node.
      * @param   {Boolean}  root         If node is the root.
      */
-    function accumulateAndPruneChildren (node, numChildren, valueProp, depth) {
+    function accumulateAndPruneChildren (node, numChildren, depth) {
       function compareValues (arrayOne, arrayTwo) {
-        var lenOne = arrayOne.length,
-            lenTwo = arrayTwo.length;
+        var lenOne = arrayOne.length;
+        var lenTwo = arrayTwo.length;
 
         if (lenOne !== lenTwo) {
           return false;
@@ -183,6 +178,7 @@ function GraphFactory (_, Webworker) {
       node.meta.originalDepth = depth;
       var i = numChildren;
       var j;
+      var len;
       var childValue;
       var parentsUri;
 
@@ -207,7 +203,8 @@ function GraphFactory (_, Webworker) {
         // that all children have been deleted meanwhile and the inner node became
         // a leaf as well.
         if (numChildChildren) {
-          var childChildValue = [], valueSame = false;
+          var childChildValue = [];
+          var valueSame = false;
           // When the child has only one child, check whether the childs
           // annotations and the child child's annotation are equal
           if (numChildChildren === 1) {
@@ -281,7 +278,6 @@ function GraphFactory (_, Webworker) {
           if (childValue.length === 0) {
             // Leaf was not used for annotation so we remove it.
             node.children.splice(i, 1);
-            numChildren--;
             child.pruned = true;
             continue;
           } else {
@@ -306,10 +302,19 @@ function GraphFactory (_, Webworker) {
       nodeIndex[node.uri] = true;
     }
 
+    if (rootNode.children && rootNode.children.length) {
+      accumulateAndPruneChildren(
+        rootNode,
+        rootNode.children.length,
+        valueProp,
+        0
+      );
+    }
+
     // Make sure that the root node has at least 2 children
-    if (node.children.length === 1) {
-      graph[root].pruned = true;
-      root = node.children[0];
+    if (rootNode.children.length === 1) {
+      graph[rootUri].pruned = true;
+      rootNode = graph[rootNode.children[0]];
     }
 
     // Clear pruned nodes
@@ -339,16 +344,16 @@ function GraphFactory (_, Webworker) {
       if (graph[uris[i]]) {
         graph[uris[i]].name = (
           graph[uris[i]].label = (
-            graph[uris[i]].label.charAt(0).toUpperCase() +
-            graph[uris[i]].label.slice(1)
-          ).replace(noUnderScore, ' ')
+          graph[uris[i]].label.charAt(0).toUpperCase() +
+          graph[uris[i]].label.slice(1)
+            ).replace(noUnderScore, ' ')
         );
       }
     }
 
     return {
       graph: graph,
-      root: root
+      root: rootNode.uri
     };
   };
 
@@ -371,13 +376,14 @@ function GraphFactory (_, Webworker) {
    * @param   {Array}  allIds      All data set IDs
    */
   Graph.calcPrecisionRecall = function (graph, valueProperty, allIds) {
-    var uris = Object.keys(graph), node;
+    var uris = Object.keys(graph);
+    var node;
     var numAnnoDataSets = allIds.length;
     var retrievedDataSetsId;
 
     // Convert to an array of ints.
-    allIds = _.map(allIds, function (el) {
-      return parseInt(el);
+    var allIntIds = _.map(allIds, function (el) {
+      return parseInt(el, 10);
     });
 
     for (var i = uris.length; i--;) {
@@ -385,11 +391,11 @@ function GraphFactory (_, Webworker) {
 
       if (!node.clone) {
         retrievedDataSetsId = Object.keys(Graph.getNodeRetrievedDataSet(
-          Object.keys(node[valueProperty]), allIds
+          Object.keys(node[valueProperty]), allIntIds
         )).length;
         node.precision = retrievedDataSetsId / numAnnoDataSets;
         node.recall = retrievedDataSetsId /
-          Object.keys(node[valueProperty]).length;
+        Object.keys(node[valueProperty]).length;
       }
     }
   };
@@ -398,7 +404,7 @@ function GraphFactory (_, Webworker) {
     var retrievedNodeDsIds = {};
 
     for (var i = dsIds.length; i--;) {
-      if (!!~retrievedIds.indexOf(parseInt(dsIds[i]))) {
+      if (!!~retrievedIds.indexOf(parseInt(dsIds[i], 10))) {
         retrievedNodeDsIds[dsIds[i]] = true;
       }
     }
@@ -443,12 +449,16 @@ function GraphFactory (_, Webworker) {
    * @param   {Array}   properties  List of properties to be copied.
    */
   Graph.propertyToBar = function (graph, properties) {
-    var uris = Object.keys(graph), node, propLeng = properties.length;
+    var uris = Object.keys(graph);
+    var node;
+    var propLeng = properties.length;
 
     for (var i = uris.length; i--;) {
       node = graph[uris[i]];
       if (!node.data) {
-        node.data = { bars: {} };
+        node.data = {
+          bars: {}
+        };
       } else {
         if (!node.data.bars) {
           node.data.bars = {};
@@ -465,7 +475,9 @@ function GraphFactory (_, Webworker) {
   };
 
   Graph.updatePropertyToBar = function (graph, properties) {
-    var uris = Object.keys(graph), node, propLeng = properties.length;
+    var uris = Object.keys(graph);
+    var node;
+    var propLeng = properties.length;
 
     for (var i = uris.length; i--;) {
       node = graph[uris[i]];
@@ -489,7 +501,9 @@ function GraphFactory (_, Webworker) {
   };
 
   Graph.propertyToData = function (graph, properties) {
-    var uris = Object.keys(graph), node, propLeng = properties.length;
+    var uris = Object.keys(graph);
+    var node;
+    var propLeng = properties.length;
 
     for (var i = uris.length; i--;) {
       node = graph[uris[i]];
@@ -504,10 +518,10 @@ function GraphFactory (_, Webworker) {
   };
 
   Graph.toTreemap = function (graph, root) {
-    var newGraph = _.cloneDeep(graph),
-        nodes = Object.keys(newGraph),
-        node,
-        uris;
+    var newGraph = _.cloneDeep(graph);
+    var nodes = Object.keys(newGraph);
+    var node;
+    var uris;
 
     for (var i = nodes.length; i--;) {
       node = newGraph[nodes[i]];
@@ -529,8 +543,8 @@ function GraphFactory (_, Webworker) {
   };
 
   Graph.toTree = function (graph, root) {
-    var nodeVisited = {},
-        tree = {};
+    var nodeVisited = {};
+    var tree = {};
 
     function duplicateNode (originalNode) {
       originalNode.meta.numClones++;
@@ -585,9 +599,9 @@ function GraphFactory (_, Webworker) {
       }
     }
 
-    function copyNodes(oldGraph, newGraph) {
-      var nodeIds = Object.keys(oldGraph),
-          properties;
+    function copyNodes (oldGraph, newGraph) {
+      var nodeIds = Object.keys(oldGraph);
+      var properties;
 
       for (var i = nodeIds.length; i--;) {
         newGraph[nodeIds[i]] = {};
@@ -599,7 +613,9 @@ function GraphFactory (_, Webworker) {
     }
 
     function removeUnusedNodes () {
-      var ids = Object.keys(tree), counterDelete = 0, counterKeep = 0;
+      var ids = Object.keys(tree);
+      var counterDelete = 0;
+      var counterKeep = 0;
       for (var k = ids.length; k--;) {
         if (!nodeVisited[ids[k]]) {
           counterDelete++;
@@ -619,10 +635,9 @@ function GraphFactory (_, Webworker) {
   };
 
   Graph.addPseudoSiblingToRoot = function (graph, root, allDsIds) {
-    var dataSets = {},
-        annotatedDsIds = Object.keys(graph[root].dataSets),
-        notAnnotatedDsIds = {},
-        allDsIdsObj = {};
+    var annotatedDsIds = Object.keys(graph[root].dataSets);
+    var notAnnotatedDsIds = {};
+    var allDsIdsObj = {};
 
     for (var i = allDsIds.length; i--;) {
       allDsIdsObj[allDsIds[i]] = true;
@@ -634,7 +649,7 @@ function GraphFactory (_, Webworker) {
       delete notAnnotatedDsIds[annotatedDsIds[j]];
     }
 
-    graph['_no_annotations'] = {
+    graph._no_annotations = {
       assertedDataSets: {},
       children: [],
       meta: {
@@ -647,10 +662,10 @@ function GraphFactory (_, Webworker) {
       numDataSets: Object.keys(notAnnotatedDsIds).length,
       ontId: '_no_annotations',
       uri: '_no_annotations',
-      value: Object.keys(notAnnotatedDsIds).length,
+      value: Object.keys(notAnnotatedDsIds).length
     };
 
-    graph['_no_annotations'].parents[root] = graph[root];
+    graph._no_annotations.parents[root] = graph[root];
     graph[root].parents = {};
     graph[root].children.push('_no_annotations');
     graph[root].meta.originalDepth = -1;
@@ -663,6 +678,5 @@ angular
   .module('refineryApp')
   .service('graph', [
     '_',
-    'Webworker',
     GraphFactory
   ]);

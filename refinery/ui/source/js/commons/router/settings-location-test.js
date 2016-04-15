@@ -1,6 +1,8 @@
-function LocationTest (currentPath, matchPath, regex) {
+'use strict';
+
+function locationTest (currentPath, matchPath, regex) {
   if ((regex && new RegExp(matchPath).test(currentPath)) ||
-      matchPath === currentPath) {
+    matchPath === currentPath) {
     return true;
   }
   return false;
@@ -8,4 +10,7 @@ function LocationTest (currentPath, matchPath, regex) {
 
 angular
   .module('refineryRouter')
-  .constant('locationTest', LocationTest);
+  // Normally we would use `service` but services can't be injected into a
+  // provider while constants can. This is weird but seems to be a limitation of
+  // Angular.
+  .constant('locationTest', locationTest);

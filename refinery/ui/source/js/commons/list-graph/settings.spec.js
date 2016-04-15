@@ -1,6 +1,6 @@
-describe('GraphList.settings: unit tests', function () {
-  'use strict';
+'use strict';
 
+describe('GraphList.settings: unit tests', function () {
   var settings;
 
   beforeEach(function () {
@@ -8,7 +8,6 @@ describe('GraphList.settings: unit tests', function () {
   });
 
   describe('constants', function () {
-
     // Module `listGraph` needs to be loaded **before** we can inject any
     // constant.
     beforeEach(function () {
@@ -31,6 +30,5 @@ describe('GraphList.settings: unit tests', function () {
         expect(typeof settings.iconPath).toBe('undefined');
       }
     });
-
   });
 });

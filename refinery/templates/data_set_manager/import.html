@@ -405,7 +405,7 @@
 </div>
 {% endblock %}
 
-{% block script %}
+{% block vendor_scripts %}
 <!-- for tabular archive upload -->
 <script src="{% static "vendor/d3/d3.min.js" %}"></script>
 <!-- end tabular file upload -->
@@ -424,6 +424,9 @@
 <!-- spinner -->
 <script language="javascript" type="text/javascript"
         src="{% static "js/spin/spin.min.js" %}"></script>
+{% endblock %}
+
+{% block script %}
 <script language="javascript" type="text/javascript">
   var opts = {
     lines: 13, // The number of lines to draw

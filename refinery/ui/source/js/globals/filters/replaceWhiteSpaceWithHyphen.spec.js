@@ -1,6 +1,6 @@
-describe('replaceWhiteSpaceWithHyphen.module: unit tests', function () {
-  'use strict';
+'use strict';
 
+describe('replaceWhiteSpaceWithHyphen.module: unit tests', function () {
   var module;
 
   beforeEach(function () {
@@ -8,14 +8,13 @@ describe('replaceWhiteSpaceWithHyphen.module: unit tests', function () {
   });
 
   describe('Module', function () {
-    it("should be registered", function() {
+    it('should be registered', function () {
       expect(module).not.toEqual(null);
     });
   });
 });
 
 describe('Filter: replaceWhiteSpaceWithHyphen', function () {
-
   var filter;
 
   beforeEach(function () {

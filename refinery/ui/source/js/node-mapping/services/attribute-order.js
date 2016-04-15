@@ -1,11 +1,11 @@
-function AttributeOrderFactory ($resource) {
-  'use strict';
+'use strict';
 
+function AttributeOrderFactory ($resource) {
   return $resource(
     '/api/v1/attributeorder/', {
       format: 'json',
       is_internal: 'false',
-      is_exposed: 'true',
+      is_exposed: 'true'
     }
   );
 }

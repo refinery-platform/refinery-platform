@@ -1,6 +1,6 @@
-function treemapDirective () {
-  'use strict';
+'use strict';
 
+function treemapDirective () {
   return {
     bindToController: {
       graph: '='

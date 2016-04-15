@@ -1,6 +1,6 @@
-describe('Tooltip.directive: unit tests', function () {
-  'use strict';
+'use strict';
 
+describe('Tooltip.directive: unit tests', function () {
   var $rootScope;
   var directiveEl;
   var TooltipCtrl;
@@ -35,7 +35,7 @@ describe('Tooltip.directive: unit tests', function () {
     tooltipEl = angular.element(directiveEl[0].querySelector('#tooltip-el'));
 
     TooltipCtrl = $controller('TooltipCtrl', {
-      $element: tooltipEl,
+      $element: tooltipEl
     }, {
       container: 'body',
       placement: 'left'
@@ -43,7 +43,6 @@ describe('Tooltip.directive: unit tests', function () {
   });
 
   describe('tooltip element', function () {
-
     it('should be found', function () {
       expect(tooltipEl).toBeTruthy();
     });
@@ -80,6 +79,5 @@ describe('Tooltip.directive: unit tests', function () {
       expect(timesOne).toBe(3);
       expect(times).toBe(timesOne + 1);
     });
-
   });
 });

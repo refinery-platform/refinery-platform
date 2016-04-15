@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * RefineryStateProvider Class
  *
@@ -146,8 +148,8 @@ angular
     '_',
     'locationTest',
     function ($windowProvider, $stateProvider, _, locationTest) {
-      var $window = $windowProvider.$get();
-
-      return new RefineryStateProvider($window, $stateProvider, _, locationTest);
+      return new RefineryStateProvider(
+        $windowProvider.$get(), $stateProvider, _, locationTest
+      );
     }
   ]);
