@@ -302,10 +302,10 @@ function GraphFactory (_) {
       nodeIndex[node.uri] = true;
     }
 
-    if (rootNode.children ? rootNode.children.length : false) {
+    if (rootNode.children && rootNode.children.length) {
       accumulateAndPruneChildren(
         rootNode,
-        rootNode.children,
+        rootNode.children.length,
         valueProp,
         0
       );
