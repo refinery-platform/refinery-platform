@@ -51,7 +51,6 @@ function refineryDataSetPreview () {
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'abstractLength', {
-      configurable: false,
       enumerable: true,
       value: 256,
       writable: true
@@ -60,7 +59,6 @@ function refineryDataSetPreview () {
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'analyses', {
-      configurable: false,
       enumerable: true,
       value: {},
       writable: true
@@ -69,7 +67,6 @@ function refineryDataSetPreview () {
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'dataSet', {
-      configurable: false,
       enumerable: true,
       get: function () {
         var ds = this.dashboardDataSetPreviewService.dataSet;
@@ -84,7 +81,6 @@ function refineryDataSetPreview () {
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'descDefaultLength', {
-      configurable: false,
       enumerable: true,
       value: 384,
       writable: true
@@ -93,7 +89,6 @@ function refineryDataSetPreview () {
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'editIsOpen', {
-      configurable: false,
       enumerable: true,
       value: true,
       writable: true
@@ -102,7 +97,6 @@ function refineryDataSetPreview () {
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'numAnalyses', {
-      configurable: false,
       enumerable: true,
       value: 0,
       writable: true
@@ -111,7 +105,6 @@ function refineryDataSetPreview () {
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'numStudies', {
-      configurable: false,
       enumerable: true,
       value: 0,
       writable: true
@@ -120,7 +113,6 @@ function refineryDataSetPreview () {
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'numAssays', {
-      configurable: false,
       enumerable: true,
       value: 0,
       writable: true
@@ -129,7 +121,6 @@ function refineryDataSetPreview () {
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'studies', {
-      configurable: false,
       enumerable: true,
       value: {},
       writable: true
@@ -138,7 +129,6 @@ function refineryDataSetPreview () {
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'assays', {
-      configurable: false,
       enumerable: true,
       value: {},
       writable: true
