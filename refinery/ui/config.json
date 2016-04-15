@@ -28,6 +28,7 @@
       "data-set-nav",
       "file-browser",
       "globals",
+      "metadata-table-import",
       "node-mapping",
       "node-relationship"
     ],
