@@ -26,7 +26,6 @@ from django.dispatch import receiver
 from django.db import models
 from django.db.models.signals import pre_delete
 from django_extensions.db.fields import UUIDField
-from django.contrib.sites.models import Site
 from django.core.files.storage import FileSystemStorage
 
 logger = logging.getLogger('file_store')
@@ -163,7 +162,7 @@ class FileType(models.Model):
 class FileExtension(models.Model):
     # file extension associated with the filename
     name = models.CharField(unique=True, max_length=50)
-    filetype = models.ForeignKey("FileType")
+    filetype = models.ForeignKey(FileType)
 
     def __unicode__(self):
         return self.name
@@ -248,7 +247,7 @@ class FileStoreItem(models.Model):
     # particular group
     sharename = models.CharField(max_length=20, blank=True)
     #: type of the file
-    filetype = models.ForeignKey("file_store.FileType", null=True)
+    filetype = models.ForeignKey(FileType, null=True)
     #: file import task ID
     import_task_id = UUIDField(blank=True)
     # Date created
@@ -322,22 +321,22 @@ class FileStoreItem(models.Model):
             return None
 
     def get_filetype(self):
-        '''Retrieve the type of the datafile.
+        """Retrieve the type of the datafile.
 
-        :returns: str -- type of the datafile.
+        :returns: FileType object.
 
-        '''
+        """
         return self.filetype
 
     def set_filetype(self, filetype=''):
-        '''Assign the type of the datafile.
+        """Assign the type of the datafile.
         Only existing types allowed as arguments.
 
         :param filetype: requested file type.
         :type filetype: str.
         :returns: True if success, False if failure.
 
-        '''
+        """
         # make sure the file type is valid before assigning it to model field
 
         all_known_extensions = [e.name for e in
@@ -502,16 +501,8 @@ class FileStoreItem(models.Model):
         :returns: str -- local URL or source if it's a remote file
         """
         if self.is_local():
-            try:
-                current_site = Site.objects.get_current()
-            except Site.DoesNotExist:
-                logger.error(
-                    "Cannot provide a full URL: no sites configured or "
-                    "SITE_ID is not set correctly")
-                return None
-            # FIXME: provide a URL without the domain portion
-            # visualization_manager.views may be expecting a full URL
-            return 'http://{}{}'.format(current_site.domain, self.datafile.url)
+
+            return self.datafile.url
         else:
             # data file doesn't exist on disk
             if os.path.isabs(self.source):
