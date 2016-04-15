@@ -31,7 +31,8 @@
       "metadata-table-import",
       "node-mapping",
       "node-relationship",
-      "statistics"
+      "statistics",
+      "workflows"
     ],
     "vendor": {
       "css": [
