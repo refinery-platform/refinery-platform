@@ -31,7 +31,7 @@ angular
     'refineryNodeMapping',
     'refineryAnalysisLaunch',
     'refineryNodeRelationship',
-    'refineryIgv',
+    'refineryDataSetExplorer',
     'refineryStatistics',
     'refineryMetadataTableImport',
     'refineryProvvis',
