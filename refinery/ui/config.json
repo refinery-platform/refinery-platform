@@ -30,7 +30,8 @@
       "globals",
       "metadata-table-import",
       "node-mapping",
-      "node-relationship"
+      "node-relationship",
+      "statistics"
     ],
     "vendor": {
       "css": [
