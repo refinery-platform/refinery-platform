@@ -22,7 +22,7 @@
         ng-repeat="attributeObj in assayAttributeOrder"
         track by solr_field
         dnd-draggable="attributeObj"
-        dnd-moved="testMethod(attributeObj, $index)"
+        dnd-moved="updateAttributeRank(attributeObj, $index)"
         dnd-effectllowed="move"
       >
         <div class="row">
@@ -82,12 +82,9 @@
         </div>
       </li>
     </ul>
-    <button class="btn btn-default" ng-click="close()">Close</button>
-
 
   </div>
   <div class="modal-footer">
-    Modal footer
-
+    <button class="btn btn-default" ng-click="close()">Close</button>
   </div>
 </div>

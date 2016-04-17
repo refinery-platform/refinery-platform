@@ -36,7 +36,8 @@ function AssayFilesUtilModalCtrl(
     $uibModalInstance.close('close');
   };
 
-  $scope.testMethod = function(attributeObj, index){
+  //update rank of item moved
+  $scope.updateAttributeRank = function(attributeObj, index){
     $scope.assayAttributeOrder.splice(index, 1);
     for(var i=0; i<$scope.assayAttributeOrder.length; i++){
       if($scope.assayAttributeOrder[i].solr_field === attributeObj.solr_field){
