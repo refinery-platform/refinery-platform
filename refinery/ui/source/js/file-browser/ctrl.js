@@ -133,7 +133,6 @@ function FileBrowserCtrl(
     //Infinite Grid Load
     gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
     gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
-
     vm.gridApi = gridApi;
 
     //Sort events
@@ -231,19 +230,14 @@ function FileBrowserCtrl(
     vm.lastPage = 0;
 
     // turn off the infinite scroll handling up and down
-
-    vm.gridApi.infiniteScroll.setScrollDirections( false, false );
-
+    vm.gridApi.infiniteScroll.setScrollDirections(false, false);
     vm.assayFiles = [];
 
     vm.refreshAssayFiles().then(function(){
-
-        $timeout(function () {
-          // timeout needed to allow digest cycle to complete,and grid to finish ingesting the data
+      $timeout(function () {
+        // timeout needed to allow digest cycle to complete,and grid to finish ingesting the data
           vm.gridApi.infiniteScroll.resetScroll(vm.firstPage > 0, vm.lastPage < vm.totalPages);
-        });
-
-
+      });
     });
     resetGridService.setResetGridFlag(false);
   };
@@ -251,7 +245,9 @@ function FileBrowserCtrl(
   //Generates param: sort for api call from ui-grid response
   vm.sortChanged = function ( grid, sortColumns ) {
     if (typeof sortColumns !== 'undefined' &&
-      typeof sortColumns[0] !== 'undefined') {
+        typeof sortColumns[0] !== 'undefined' &&
+        typeof sortColumns[0].sort !== 'undefined' ) {
+
       switch (sortColumns[0].sort.direction) {
         case uiGridConstants.ASC:
           vm.filesParam['sort'] = sortColumns[0].field + ' asc';
