@@ -230,16 +230,20 @@ function FileBrowserCtrl(
     vm.lastPage = 0;
 
     // turn off the infinite scroll handling up and down
-    vm.gridApi.infiniteScroll.setScrollDirections(false, false);
+    if(typeof vm.gridApi !== 'undefined') {
+      vm.gridApi.infiniteScroll.setScrollDirections(false, false);
+    }
     vm.assayFiles = [];
 
     vm.refreshAssayFiles().then(function(){
       $timeout(function () {
         // timeout needed to allow digest cycle to complete,and grid to finish ingesting the data
+        if(typeof vm.gridApi !== 'undefined') {
           vm.gridApi.infiniteScroll.resetScroll(vm.firstPage > 0, vm.lastPage < vm.totalPages);
+          resetGridService.setResetGridFlag(false);
+        }
       });
     });
-    resetGridService.setResetGridFlag(false);
   };
 
   //Generates param: sort for api call from ui-grid response
