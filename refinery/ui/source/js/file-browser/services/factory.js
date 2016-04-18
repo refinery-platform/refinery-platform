@@ -4,13 +4,20 @@ angular
     [
       '$http',
       'assayFileService',
+      'dataSetService',
       'settings',
       '$window',
       fileBrowserFactory
     ]
   );
 
-function fileBrowserFactory($http, assayFileService, settings, $window) {
+function fileBrowserFactory(
+  $http,
+  assayFileService,
+  dataSetService,
+  settings,
+  $window) {
+
   "use strict";
   var assayFiles = [];
   var assayAttributes = [];
@@ -18,6 +25,18 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
   var attributeFilter = {};
   var analysisFilter = {};
   var assayFilesTotalItems = {};
+  var is_owner = false;
+
+  var getDataSet = function (){
+   // console.log('in get data set');
+    var params = {uuid: $window.dataSetUuid};
+    var dataSet = dataSetService.query(params);
+    dataSet.$promise.then(function(response){
+    //  console.log(response.objects[0].is_owner);
+      is_owner = response.objects[0].is_owner;
+    });
+    return dataSet.$promise;
+  };
 
   var getAssayFiles = function (params) {
     params = params || {};
@@ -68,7 +87,6 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
       'analysisFilter': outAnalysisFilter
     };
   };
-
 
   var getAssayAttributeOrder = function (uuid) {
     var apiUrl = settings.appRoot + settings.refineryApiV2 +
@@ -138,12 +156,14 @@ function fileBrowserFactory($http, assayFileService, settings, $window) {
   };
 
   return{
+    is_owner: is_owner,
     assayFiles: assayFiles,
     assayAttributes: assayAttributes,
     assayAttributeOrder: assayAttributeOrder,
     attributeFilter: attributeFilter,
     analysisFilter: analysisFilter,
     assayFilesTotalItems: assayFilesTotalItems,
+    getDataSet: getDataSet,
     getAssayFiles: getAssayFiles,
     getAssayAttributeOrder: getAssayAttributeOrder,
     postAssayAttributeOrder: postAssayAttributeOrder
