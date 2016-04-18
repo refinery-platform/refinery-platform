@@ -1,3 +1,5 @@
+'use strict';
+
 var TooltipCtrl = function ($element) {
   var _element = $element;
 

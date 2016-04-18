@@ -1,6 +1,6 @@
-describe('refinerAnalysisMonitor.module: unit tests', function () {
-  'use strict';
+'use strict';
 
+describe('refinerAnalysisMonitor.module: unit tests', function () {
   var module;
 
   beforeEach(function () {
@@ -8,7 +8,7 @@ describe('refinerAnalysisMonitor.module: unit tests', function () {
   });
 
   describe('Module', function () {
-    it("should be registered", function() {
+    it('should be registered', function () {
       expect(module).not.toEqual(null);
     });
   });

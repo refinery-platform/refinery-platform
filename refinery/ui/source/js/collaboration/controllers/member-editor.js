@@ -1,25 +1,28 @@
-function MemberEditorCtrl($uibModalInstance, groupDataService, groupMemberService, member) {
-  var that = this;
-  that.$uibModalInstance = $uibModalInstance;
-  that.groupDataService = groupDataService;
-  that.groupMemberService = groupMemberService;
-  that.member = member;
+'use strict';
+
+function MemberEditorCtrl (
+  bootbox, $uibModalInstance, groupDataService, groupMemberService, member
+) {
+  this.bootbox = bootbox;
+  this.$uibModalInstance = $uibModalInstance;
+  this.groupDataService = groupDataService;
+  this.groupMemberService = groupMemberService;
+  this.member = member;
 }
 
 MemberEditorCtrl.prototype.promote = function () {
   var that = this;
 
-  this.groupMemberService.add({
+  that.groupMemberService.add({
     uuid: that.groupDataService.activeGroup.manager_group_uuid,
     user_id: that.member.user_id
   }).$promise.then(
-    function (data) {
+    function () {
       that.groupDataService.update();
       that.$uibModalInstance.dismiss();
     }
-  ).catch(function (error) {
-    console.error(error);
-    bootbox.alert("Could not promote member");
+  ).catch(function () {
+    that.bootbox.alert('Could not promote member');
   });
 };
 
@@ -30,13 +33,12 @@ MemberEditorCtrl.prototype.demote = function () {
     uuid: that.groupDataService.activeGroup.manager_group_uuid,
     userId: that.member.user_id
   }).$promise.then(
-    function (data) {
+    function () {
       that.groupDataService.update();
       that.$uibModalInstance.dismiss();
     }
-  ).catch(function (error) {
-    console.error(error);
-    bootbox.alert("Are you the only member or manager left?");
+  ).catch(function () {
+    that.bootbox.alert('Are you the only member or manager left?');
   });
 };
 
@@ -47,19 +49,19 @@ MemberEditorCtrl.prototype.remove = function () {
     uuid: that.groupDataService.activeGroup.uuid,
     userId: that.member.user_id
   }).$promise.then(
-    function (data) {
+    function () {
       that.groupDataService.update();
       that.$uibModalInstance.dismiss();
     }
-  ).catch(function (error) {
-    console.error(error);
-    bootbox.alert("Are you the only member or manager left?");
+  ).catch(function () {
+    that.bootbox.alert('Are you the only member or manager left?');
   });
 };
 
 angular
   .module('refineryCollaboration')
-  .controller('MemberEditorCtrl',[
+  .controller('MemberEditorCtrl', [
+    'bootbox',
     '$uibModalInstance',
     'groupDataService',
     'groupMemberService',

@@ -1,9 +1,9 @@
-function refineryWidthFixer ($, dashboardWidthFixerService) {
-  'use strict';
+'use strict';
 
+function refineryWidthFixer ($, dashboardWidthFixerService) {
   return {
     restrict: 'A',
-    link: function (scope, element, attrs) {
+    link: function (scope, element) {
       var $element = $(element);
 
       dashboardWidthFixerService.fixer.push(function () {

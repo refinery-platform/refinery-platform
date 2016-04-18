@@ -1,6 +1,6 @@
-function NodeSetListApiCtrl ($scope, $rootScope, $window, NodeSetList) {
-  'use strict';
+'use strict';
 
+function NodeSetListApiCtrl ($log, $scope, $rootScope, $window, NodeSetList) {
   $scope.updateCurrentNodeSet = function () {
     $scope.currentNodeSet = $scope.nodesetList[$scope.nodesetIndex];
     // FIXME: temp workaround - this should be handled through the event bus
@@ -11,23 +11,19 @@ function NodeSetListApiCtrl ($scope, $rootScope, $window, NodeSetList) {
 
   $scope.getCurrentNodeSet = function () {
     NodeSetList.get({
-      study__uuid: externalStudyUuid, assay__uuid: externalAssayUuid
+      study__uuid: $window.externalStudyUuid,
+      assay__uuid: $window.externalAssayUuid
     }).$promise
       .then(function (data) {
         $scope.nodesetList = data.objects;
         $scope.updateCurrentNodeSet();
       })
       .catch(function (error) {
-        console.log('Couldn\'t read node set list.');
         if ($window.sessionStorage) {
           var currentSelectionSessionKey = (
-            externalStudyUuid + '_' +
-            externalAssayUuid + '_' +
+          $window.externalStudyUuid + '_' +
+            $window.externalAssayUuid + '_' +
             'currentSelection'
-          );
-
-          console.log(
-            'Reading ' + currentSelectionSessionKey + ' from session storage'
           );
 
           $scope.nodesetList = [angular.fromJson(
@@ -36,7 +32,7 @@ function NodeSetListApiCtrl ($scope, $rootScope, $window, NodeSetList) {
 
           $scope.updateCurrentNodeSet();
         } else {
-          console.log(error);
+          $log.log(error);
         }
       });
   };
@@ -49,5 +45,5 @@ function NodeSetListApiCtrl ($scope, $rootScope, $window, NodeSetList) {
 angular
   .module('refineryNodeMapping')
   .controller('NodeSetListApiCtrl', [
-    '$scope', '$rootScope', '$window', 'NodeSetList', NodeSetListApiCtrl
+    '$log', '$scope', '$rootScope', '$window', 'NodeSetList', NodeSetListApiCtrl
   ]);

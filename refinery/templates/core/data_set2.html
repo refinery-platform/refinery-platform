@@ -457,7 +457,7 @@
 
 {% endblock %}
 
-{% block script %}
+{% block vendor_scripts %}
   <script type="text/javascript" src="{% static "js/d3/fisheye.js" %}"></script>
   <script type="text/javascript" src="{% static "js/underscore/underscore-min.js" %}"></script>
   <script type="text/javascript" src="{% static "js/backbone/backbone-min.js" %}"></script>
@@ -486,6 +486,10 @@
       left: 'top' // Left position relative to parent in px
     };
   </script>
+
+{% endblock %}
+
+{% block script %}
 
 
   <!-- Refinery libraries -->

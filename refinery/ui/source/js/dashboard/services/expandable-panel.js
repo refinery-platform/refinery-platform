@@ -1,11 +1,13 @@
+'use strict';
+
 angular
   .module('refineryDashboard')
   .factory('dashboardExpandablePanelService', ['_',
     function (_) {
       var listeners = {
-            expander: [],
-            collapser: []
-          };
+        expander: [],
+        collapser: []
+      };
 
       /**
        * Trigger a stack of listeners

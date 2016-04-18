@@ -1,0 +1,35 @@
+{
+  env: {
+    browser: true
+  },
+  extends: "airbnb/legacy",
+  globals: {
+    angular: false,
+    d3: false,
+    describe: false,
+    it: false,
+    inject: false,
+    jasmine: false,
+    afterEach: false,
+    beforeEach: false,
+    expect: false,
+    spyOn: false
+  },
+  rules: {
+    comma-dangle: [1, "never"],
+    func-names: 0,
+    indent: [
+      2, 2, { VariableDeclarator: { var: 2, let: 2, const: 3}, SwitchCase: 1 }
+    ],
+    no-console: 1,
+    no-new: 0,
+    no-param-reassign: [2, { props: false }],
+    no-unused-vars: [2, { vars: "all", "args": "after-used" }],
+    quotes: [2, "single", "avoid-escape"],
+    semi: [2, "always"],
+    space-before-function-paren: [2, "always"],
+    keyword-spacing: 2,
+    strict: [2, "safe"],
+    vars-on-top: 0
+  }
+}

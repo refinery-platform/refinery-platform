@@ -1,12 +1,14 @@
+'use strict';
+
 angular
   .module('refineryDashboard')
   .factory('dashboardWidthFixerService', ['_',
     function (_) {
-      var fixedWidth = 0,
-          listeners = {
-            fixer: [],
-            resetter: []
-          };
+      var fixedWidth = 0;
+      var listeners = {
+        fixer: [],
+        resetter: []
+      };
 
       /**
        * Trigger a stack of listeners

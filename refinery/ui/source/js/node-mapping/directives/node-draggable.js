@@ -1,3 +1,5 @@
+'use strict';
+
 // http://jsfiddle.net/jgoemat/CPRda/1/
 function nodeDraggableDirective () {
   return {

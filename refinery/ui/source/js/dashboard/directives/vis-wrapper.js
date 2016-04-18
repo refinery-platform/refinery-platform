@@ -1,7 +1,7 @@
-function refineryDashboardVisWrapper () {
-  'use strict';
+'use strict';
 
-  function VisWrapperCtrl ($q, pubSub, dashboardVisData, treemapContext) {
+function refineryDashboardVisWrapper () {
+  function VisWrapperCtrl ($q, pubSub, dashboardVisData) {
     this.$q = $q;
     this.pubSub = pubSub;
 
@@ -100,7 +100,7 @@ function refineryDashboardVisWrapper () {
         });
         treemap.resolve(results.treemap);
         annotations.resolve(results.annotations);
-      }.bind(this))
+      })
       .catch(function (error) {
         this.loading = false;
         if (error.number === 0) {
@@ -152,7 +152,6 @@ function refineryDashboardVisWrapper () {
       '$q',
       'pubSub',
       'dashboardVisData',
-      'treemapContext',
       VisWrapperCtrl
     ],
     controllerAs: 'visWrapper',

@@ -1,46 +1,50 @@
-function AddGroupCtrl($uibModalInstance, groupService, groupDataService) {
-  var that = this;
-  that.$uibModalInstance = $uibModalInstance;
-  that.groupService = groupService;
-  that.groupDataService = groupDataService;
+'use strict';
+
+function AddGroupCtrl (
+  bootbox, $uibModalInstance, groupService, groupDataService
+) {
+  this.bootbox = bootbox;
+  this.$uibModalInstance = $uibModalInstance;
+  this.groupService = groupService;
+  this.groupDataService = groupDataService;
 }
 
-function isEmptyOrSpaces(str){
-
+function isEmptyOrSpaces (str) {
   if (str.length === 0) {
     return true;
   }
-
+  return false;
 }
-
 
 AddGroupCtrl.prototype.createGroup = function (name) {
   var that = this;
-  if (name === undefined){
-    name = "";
-  }
-  this.groupService.create({name: name }).$promise.then(function (data) {
+  var groupName = name || '';
 
-      that.groupDataService.update();
-      that.$uibModalInstance.dismiss();
-
+  this.groupService.create({
+    name: groupName
+  })
+  .$promise
+  .then(function () {
+    that.groupDataService.update();
+    that.$uibModalInstance.dismiss();
+  })
+  .catch(function () {
+    if (isEmptyOrSpaces(groupName)) {
+      that.bootbox.alert(
+        'Group Name cannot be left blank - try a different name.'
+      );
+    } else {
+      that.bootbox.alert(
+        'This name probably already exists - try a different name.'
+      );
     }
-  ).catch(function (error) {
-
-    if(isEmptyOrSpaces(name)){
-      bootbox.alert("Group Name cannot be left blank - try a different name.");
-    }
-    else{
-      console.error(error);
-      bootbox.alert("This name probably already exists - try a different name.");
-    }
-
   });
 };
 
 angular
   .module('refineryCollaboration')
   .controller('AddGroupCtrl', [
+    'bootbox',
     '$uibModalInstance',
     'groupService',
     'groupDataService',

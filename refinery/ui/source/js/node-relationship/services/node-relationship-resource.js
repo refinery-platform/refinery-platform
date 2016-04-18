@@ -1,14 +1,18 @@
-function NodeRelationshipFactory ($resource) {
-  'use strict';
+'use strict';
 
+function NodeRelationshipFactory ($resource) {
   return $resource(
     '/api/v1/noderelationship/:uuid/', {
       uuid: '@uuid',
-      format: 'json',
+      format: 'json'
     },
     {
-      'update': { method:'PUT' },
-      'update_partial': { method:'PATCH' }
+      update: {
+        method: 'PUT'
+      },
+      update_partial: {
+        method: 'PATCH'
+      }
     }
   );
 }

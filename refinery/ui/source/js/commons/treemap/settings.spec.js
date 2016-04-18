@@ -1,6 +1,6 @@
-describe('Treemap.settings: unit tests', function () {
-  'use strict';
+'use strict';
 
+describe('Treemap.settings: unit tests', function () {
   var settings;
 
   beforeEach(function () {
@@ -8,7 +8,6 @@ describe('Treemap.settings: unit tests', function () {
   });
 
   describe('constants', function () {
-
     // Module `treemap` needs to be loaded **before** we can inject any
     // constant.
     beforeEach(function () {
@@ -56,6 +55,5 @@ describe('Treemap.settings: unit tests', function () {
         expect(typeof settings.highlightTextColor).toBe('undefined');
       }
     });
-
   });
 });

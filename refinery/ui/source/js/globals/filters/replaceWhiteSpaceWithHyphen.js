@@ -1,14 +1,12 @@
-angular
-  .module('replaceWhiteSpaceWithHyphen', [])
-  .filter('replaceWhiteSpaceWithHyphen',replaceWhiteSpaceWithHyphen);
+'use strict';
 
-//swap white spaces with hypens
-function replaceWhiteSpaceWithHyphen(){
-  return function(param){
-    if(typeof param !== 'undefined'){
-      //regex global search & replace
-      return (param.replace(/ /g, '-'));
-    }
+// swap white spaces with hypens
+function replaceWhiteSpaceWithHyphen () {
+  return function (param) {
+    return typeof param !== 'undefined' ? param.replace(/ /g, '-') : param;
   };
 }
 
+angular
+  .module('replaceWhiteSpaceWithHyphen', [])
+  .filter('replaceWhiteSpaceWithHyphen', replaceWhiteSpaceWithHyphen);

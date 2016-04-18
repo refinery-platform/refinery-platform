@@ -1,8 +1,9 @@
+'use strict';
+
 /**
  * Module for motif discovery and injection.
  */
 var provvisMotifs = (function () {
-
   /* TODO: May refine algorithm. */
   /**
    * Find and mark sequential and parallel analysis steps.
@@ -12,24 +13,22 @@ var provvisMotifs = (function () {
    * @returns {*} Layered nodes.
    */
   var createLayerNodes = function (graph, layerMethod) {
-
-    var layers = [],
-        lNodes = d3.map(),
-        layerId = 0;
+    var layers = [];
+    var lNodes = d3.map();
+    var layerId = 0;
 
     /* Iterate breath first search. */
     graph.bclgNodes.forEach(function (l, i) {
-
       var motifs = d3.map();
 
       /* For each depth-level. */
       l.sort(function (a, b) {
         return parseISOTimeFormat(a.start) - parseISOTimeFormat(b.start);
       }).forEach(function (an) {
-        var foundMotif = false,
-            thisMotif = null,
-            anPreds = d3.map(),
-            anSuccs = d3.map();
+        var foundMotif = false;
+        var thisMotif = null;
+        var anPreds = d3.map();
+        var anSuccs = d3.map();
 
         an.predLinks.values().forEach(function (pl) {
           anPreds.set(pl.source.autoId, pl.source);
@@ -40,17 +39,16 @@ var provvisMotifs = (function () {
 
         /* Check if the current analysis conforms to a motif already created. */
         motifs.values().forEach(function (m) {
-
           /* Strict or weak layering. */
-          if ((m.wfUuid === an.wfUuid && layerMethod === "weak") ||
-              (m.wfUuid === an.wfUuid && layerMethod === "strict" &&
-              m.numSubanalyses === an.children.size() &&
-              an.predLinks.size() === m.numIns &&
-              an.succLinks.size() === m.numOuts)) {
+          if ((m.wfUuid === an.wfUuid && layerMethod === 'weak') ||
+            (m.wfUuid === an.wfUuid && layerMethod === 'strict' &&
+            m.numSubanalyses === an.children.size() &&
+            an.predLinks.size() === m.numIns &&
+            an.succLinks.size() === m.numOuts)) {
 
-            if ((an.preds.values()[0].uuid === "dataset" &&
-                compareMaps(anPreds, m.preds)) ||
-                an.preds.values()[0].uuid !== "dataset") {
+            if ((an.preds.values()[0].uuid === 'dataset' &&
+              compareMaps(anPreds, m.preds)) ||
+              an.preds.values()[0].uuid !== 'dataset') {
               foundMotif = true;
               thisMotif = m;
             }
@@ -82,27 +80,26 @@ var provvisMotifs = (function () {
 
       /* Group the same motifs into a layer. */
       l.forEach(function (an) {
-
         var keyStr = an.preds.values().map(function (pan) {
-              return pan.motif.autoId;
-            }),
-            layer = Object.create(null);
+          return pan.motif.autoId;
+        });
+        var layer = Object.create(null);
 
         /* Check topology of pred motifs and actual motif. */
 
         /* Create new layer. */
-        if (!(layers[i].has(keyStr + "-" + an.motif.autoId))) {
+        if (!(layers[i].has(keyStr + '-' + an.motif.autoId))) {
           layer = new provvisDecl.Layer(layerId, an.motif, graph, false);
           layer.children.set(an.autoId, an);
           an.layer = layer;
           lNodes.set(layer.autoId, an.layer);
           layerId++;
 
-          layers[i].set(keyStr + "-" + an.motif.autoId, layer.autoId);
+          layers[i].set(keyStr + '-' + an.motif.autoId, layer.autoId);
 
-          /* Add to existing layer. */
+        /* Add to existing layer. */
         } else {
-          layer = lNodes.get(layers[i].get(keyStr + "-" + an.motif.autoId));
+          layer = lNodes.get(layers[i].get(keyStr + '-' + an.motif.autoId));
           layer.children.set(an.autoId, an);
           an.layer = layer;
         }
@@ -117,11 +114,9 @@ var provvisMotifs = (function () {
    * @param graph The provenance graph.
    */
   var createLayerAnalysisMapping = function (graph) {
-
     /* Layer children are set already. */
     graph.lNodes.values().forEach(function (ln) {
       ln.children.values().forEach(function (an) {
-
         /* Set analysis parent. */
         an.parent = an.layer;
 
@@ -136,8 +131,8 @@ var provvisMotifs = (function () {
       });
 
       /* Set workflow name. */
-      var wfName = "dataset";
-      if (typeof graph.workflowData.get(ln.motif.wfUuid) !== "undefined") {
+      var wfName = 'dataset';
+      if (typeof graph.workflowData.get(ln.motif.wfUuid) !== 'undefined') {
         wfName = graph.workflowData.get(ln.motif.wfUuid).name;
       }
       ln.wfName = wfName.toString();
@@ -165,7 +160,6 @@ var provvisMotifs = (function () {
     });
 
     graph.lNodes.values().forEach(function (ln) {
-
       /* Set predecessor layers. */
       ln.children.values().forEach(function (an) {
         an.preds.values().forEach(function (pan) {
@@ -199,7 +193,7 @@ var provvisMotifs = (function () {
     graph.lNodes.values().forEach(function (pl) {
       pl.succs.values().forEach(function (sl) {
         var layerLink = new provvisDecl.Link(linkId, pl, sl, pl.hidden ||
-            sl.hidden);
+          sl.hidden);
         graph.lLinks.set(layerLink.autoId, layerLink);
         pl.succLinks.set(layerLink.autoId, layerLink);
         sl.predLinks.set(layerLink.autoId, layerLink);
@@ -213,17 +207,15 @@ var provvisMotifs = (function () {
    * @param graph The provenance graph.
    */
   var computeAnalysisMotifDiff = function (graph) {
-
     /* Compute motif analysis change*/
     graph.aNodes.sort(function (a, b) {
       return parseISOTimeFormat(a.start) - parseISOTimeFormat(b.start);
     }).forEach(function (an) {
-
       /* TODO: Fix as some new layers with a single analysis may have the motif
        * of the last layer created. */
       if (an.parent.children.size() !== 1) {
         an.motifDiff.numSubanalyses = an.children.size() -
-            an.motif.numSubanalyses;
+        an.motif.numSubanalyses;
         an.motifDiff.numIns = an.predLinks.size() - an.motif.numIns;
         an.motifDiff.numOuts = an.succLinks.size() - an.motif.numOuts;
       }

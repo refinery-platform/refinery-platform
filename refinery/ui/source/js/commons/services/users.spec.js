@@ -1,35 +1,35 @@
-describe('Common.service.userService: unit tests', function () {
-  'use strict';
+'use strict';
 
-  var $httpBackend,
-      $rootScope,
-      fakeUuid = 123,
-      fakeResolve = {
-        affiliation: 'test',
-        email: 'test@test.de',
-        firstName: 'test',
-        fullName: 'test test',
-        lastName: 'test',
-        userId: 0,
-        userName: 'AnonymousUser',
-        userProfileUuid: '123'
-      },
-      fakeResponse = {
-          "affiliation": "test",
-          "id": 1,
-          "resource_uri": "/api/v1/users/123/",
-          "user": {
-              "email": "test@test.de",
-              "first_name": "test",
-              "id": 0,
-              "last_name": "test",
-              "resource_uri": "",
-              "username": "AnonymousUser"
-          },
-          "uuid": "123"
-      },
-      params = '?format=json',
-      service;
+describe('Common.service.userService: unit tests', function () {
+  var $httpBackend;
+  var $rootScope;
+  var fakeUuid = 123;
+  var fakeResolve = {
+    affiliation: 'test',
+    email: 'test@test.de',
+    firstName: 'test',
+    fullName: 'test test',
+    lastName: 'test',
+    userId: 0,
+    userName: 'AnonymousUser',
+    userProfileUuid: '123'
+  };
+  var fakeResponse = {
+    affiliation: 'test',
+    id: 1,
+    resource_uri: '/api/v1/users/123/',
+    user: {
+      email: 'test@test.de',
+      first_name: 'test',
+      id: 0,
+      last_name: 'test',
+      resource_uri: '',
+      username: 'AnonymousUser'
+    },
+    uuid: '123'
+  };
+  var params = '?format=json';
+  var service;
 
   beforeEach(function () {
     module('refineryApp');
@@ -48,13 +48,12 @@ describe('Common.service.userService: unit tests', function () {
           '/users/' +
           fakeUuid +
           params
-        )
+      )
         .respond(200, fakeResponse);
     });
   });
 
   describe('Service', function () {
-
     it('should be available', function () {
       expect(!!service).toEqual(true);
     });
@@ -64,8 +63,8 @@ describe('Common.service.userService: unit tests', function () {
     });
 
     it('should get a value', function () {
-      var user,
-          promise = service.get(fakeUuid);
+      var user;
+      var promise = service.get(fakeUuid);
 
       expect(typeof promise.then).toEqual('function');
 
@@ -79,6 +78,5 @@ describe('Common.service.userService: unit tests', function () {
 
       expect(user).toEqual(fakeResolve);
     });
-
   });
 });

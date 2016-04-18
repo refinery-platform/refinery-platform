@@ -1,5 +1,6 @@
-var Neo4jToGraphService = (function () {
+'use strict';
 
+var Neo4jToGraphService = (function () {
   /* -------------------------------- Private ------------------------------- */
 
   /**
@@ -95,8 +96,8 @@ var Neo4jToGraphService = (function () {
     }
 
     this.neo4j.query({
-        res: 'annotations'
-      })
+      res: 'annotations'
+    })
       .$promise
       .then(function (response) {
         var numNodes = 0;
@@ -110,7 +111,7 @@ var Neo4jToGraphService = (function () {
         } else {
           rejectNoData();
         }
-      }.bind(this))
+      })
       .catch(function (error) {
         neo4jData.reject({
           number: 1,
@@ -120,7 +121,7 @@ var Neo4jToGraphService = (function () {
 
     return neo4jData.promise.then(function (data) {
       return prepareGraph(data);
-    }.bind(this));
+    });
   };
 
   return Neo4jToGraph;

@@ -1,3 +1,5 @@
+'use strict';
+
 function diffAttributeListDirective () {
   return {
     bindToController: {

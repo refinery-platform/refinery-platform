@@ -1,6 +1,6 @@
-function listGraphDirective () {
-  'use strict';
+'use strict';
 
+function listGraphDirective () {
   return {
     bindToController: {
       graphData: '=graph',

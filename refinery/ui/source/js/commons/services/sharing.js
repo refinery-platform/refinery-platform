@@ -1,8 +1,9 @@
+'use strict';
+
 angular
   .module('refineryApp')
   .factory('sharingService', ['$resource', 'settings',
     function ($resource, settings) {
-
       var sharing = $resource(
         settings.appRoot + settings.refineryApi + '/:model/:uuid/sharing',
         {
@@ -13,7 +14,7 @@ angular
         {
           query: {
             method: 'GET',
-            isArray: false,
+            isArray: false
           },
           update: {
             method: 'PUT'

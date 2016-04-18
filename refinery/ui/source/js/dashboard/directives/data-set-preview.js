@@ -1,7 +1,8 @@
-function refineryDataSetPreview () {
-  'use strict';
+'use strict';
 
+function refineryDataSetPreview () {
   function DataSetPreviewCtrl (
+    $log,
     $q,
     _,
     $uibModal,
@@ -15,9 +16,9 @@ function refineryDataSetPreview () {
     citationService,
     analysisService,
     dashboardDataSetPreviewService,
-    dashboardExpandablePanelService) {
-    var that = this;
-
+    dashboardExpandablePanelService
+  ) {
+    this.$log = $log;
     this.$q = $q;
     this._ = _;
     this.$uibModal = $uibModal;
@@ -50,27 +51,24 @@ function refineryDataSetPreview () {
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'abstractLength', {
-      configurable: false,
       enumerable: true,
       value: 256,
       writable: true
-  });
+    });
 
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'analyses', {
-      configurable: false,
       enumerable: true,
       value: {},
       writable: true
-  });
+    });
 
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'dataSet', {
-      configurable: false,
       enumerable: true,
-      get: function() {
+      get: function () {
         var ds = this.dashboardDataSetPreviewService.dataSet;
         if (ds && ds.uuid && this._currentDataset !== ds.id) {
           this._currentDataset = ds.id;
@@ -78,70 +76,63 @@ function refineryDataSetPreview () {
         }
         return ds;
       }
-  });
+    });
 
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'descDefaultLength', {
-      configurable: false,
       enumerable: true,
       value: 384,
       writable: true
-  });
+    });
 
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'editIsOpen', {
-      configurable: false,
       enumerable: true,
       value: true,
       writable: true
-  });
+    });
 
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'numAnalyses', {
-      configurable: false,
       enumerable: true,
       value: 0,
       writable: true
-  });
+    });
 
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'numStudies', {
-      configurable: false,
       enumerable: true,
       value: 0,
       writable: true
-  });
+    });
 
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'numAssays', {
-      configurable: false,
       enumerable: true,
       value: 0,
       writable: true
-  });
+    });
 
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'studies', {
-      configurable: false,
       enumerable: true,
       value: {},
       writable: true
-  });
+    });
 
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
     'assays', {
-      configurable: false,
       enumerable: true,
       value: {},
       writable: true
-  });
+    });
 
   DataSetPreviewCtrl.prototype.getAnalysis = function (uuid) {
     return this.analysisService
@@ -149,19 +140,18 @@ function refineryDataSetPreview () {
         data_set__uuid: uuid
       })
       .$promise
-        .then(function (data) {
-          this.numAnalyses = data.meta.total_count;
-          this.analyses = data.objects;
-        }.bind(this))
-        .catch(function (error) {
-          console.error(error);
-        });
+      .then(function (data) {
+        this.numAnalyses = data.meta.total_count;
+        this.analyses = data.objects;
+      }.bind(this))
+      .catch(function (error) {
+        this.$log.error(error);
+      });
   };
 
   DataSetPreviewCtrl.prototype.getCitations = function (publications) {
     for (var i = 0, len = publications.length; i < len; i++) {
-      var index = i,
-          id = publications[i].pubmed_id | publications[i].doi;
+      var id = publications[i].pubmed_id | publications[i].doi;
 
       if (id) {
         this.loadCitation(publications, i, id);
@@ -191,15 +181,15 @@ function refineryDataSetPreview () {
         uuid: uuid
       })
       .$promise
-        .then(function (data) {
-          this.numStudies = data.meta.total_count;
-          if (this.numStudies === 1) {
-            this.studies = data.objects[0];
-            this.getCitations(this.studies.publications);
-          } else {
-            this.studies = data.objects;
-          }
-        }.bind(this));
+      .then(function (data) {
+        this.numStudies = data.meta.total_count;
+        if (this.numStudies === 1) {
+          this.studies = data.objects[0];
+          this.getCitations(this.studies.publications);
+        } else {
+          this.studies = data.objects;
+        }
+      }.bind(this));
   };
 
   DataSetPreviewCtrl.prototype.getAssay = function (uuid) {
@@ -208,10 +198,10 @@ function refineryDataSetPreview () {
         uuid: uuid
       })
       .$promise
-        .then(function (data) {
-          this.numAssays = data.meta.total_count;
-          this.assays = data.objects;
-        }.bind(this));
+      .then(function (data) {
+        this.numAssays = data.meta.total_count;
+        this.assays = data.objects;
+      }.bind(this));
   };
 
   /**
@@ -225,24 +215,24 @@ function refineryDataSetPreview () {
    * @return  {Object}         Angular promise.
    */
   DataSetPreviewCtrl.prototype.getPermissions = function (uuid) {
-    return promise = this.sharingService.get({
-        model: 'data_sets',
-        uuid: uuid
-      }).$promise
-        .then(function (data) {
-          groups = [];
-          for (var i = 0, len = data.share_list.length; i < len; i++) {
-            groups.push({
-              id: data.share_list[i].group_id,
-              name: data.share_list[i].group_name,
-              permission: this.getPermissionLevel(data.share_list[i].perms)
-            });
-          }
-          this.permissions = {
-            isOwner: data.is_owner,
-            groups: groups
-          };
-        }.bind(this));
+    return this.sharingService.get({
+      model: 'data_sets',
+      uuid: uuid
+    }).$promise
+      .then(function (data) {
+        var groups = [];
+        for (var i = 0, len = data.share_list.length; i < len; i++) {
+          groups.push({
+            id: data.share_list[i].group_id,
+            name: data.share_list[i].group_name,
+            permission: this.getPermissionLevel(data.share_list[i].perms)
+          });
+        }
+        this.permissions = {
+          isOwner: data.is_owner,
+          groups: groups
+        };
+      }.bind(this));
   };
 
   /**
@@ -282,7 +272,7 @@ function refineryDataSetPreview () {
           data
         );
       }.bind(this))
-      .catch(function (error) {
+      .catch(function () {
         this.citationError = true;
       }.bind(this));
   };
@@ -301,29 +291,29 @@ function refineryDataSetPreview () {
     this.permissionsLoading = true;
     this.userName = undefined;
 
-    var studies = this.getStudies(dataset.uuid),
-        assays = this.getAssay(dataset.uuid),
-        analyses = this.getAnalysis(dataset.uuid),
-        user = this.getUser(dataset.owner),
-        permissions;
+    var studies = this.getStudies(dataset.uuid);
+    var assays = this.getAssay(dataset.uuid);
+    var analyses = this.getAnalysis(dataset.uuid);
+    var permissions;
 
     permissions = this.user.isAuthenticated()
       .then(function (authenticated) {
         if (authenticated) {
           return this.getPermissions(dataset.uuid);
         }
+        return false;
       }.bind(this));
 
     this
       .$q
       .all([studies, analyses, assays])
-        .then(function () {
-          this.loading = false;
-        }.bind(this))
-        .catch(function (e) {
-          // Should disable an error if both failed
-          this.loading = false;
-        }.bind(this));
+      .then(function () {
+        this.loading = false;
+      }.bind(this))
+      .catch(function () {
+        // Should disable an error if both failed
+        this.loading = false;
+      }.bind(this));
 
     permissions
       .finally(function () {
@@ -415,6 +405,7 @@ function refineryDataSetPreview () {
       active: '='
     },
     controller: [
+      '$log',
       '$q',
       '_',
       '$uibModal',

@@ -1,13 +1,15 @@
+'use strict';
+
 function DiffAttributeListCtrl ($log, $scope) {
   this.log = $log;
 
   function checkIfUpdateDiff (oldVal, newVal) {
-    if(oldVal && !newVal) {
-      this.log.debug("Attribute setA initialized");
+    if (oldVal && !newVal) {
+      this.log.debug('Attribute setA initialized');
       this.updateDiff();
     }
-    if(newVal) {
-      this.log.debug("Attribute setA changed");
+    if (newVal) {
+      this.log.debug('Attribute setA changed');
       this.updateDiff();
     }
   }
@@ -26,10 +28,10 @@ DiffAttributeListCtrl.prototype.updateDiff = function () {
 
   var i = 0;
 
-  this.log.debug("Updating diff lists ...");
+  this.log.debug('Updating diff lists ...');
 
   if (this.setA.attributes === null && this.setB.attributes === null) {
-    this.log.debug("Both sets empty");
+    this.log.debug('Both sets empty');
     return;
   }
 
@@ -41,8 +43,7 @@ DiffAttributeListCtrl.prototype.updateDiff = function () {
             name: this.setA.attributes[i].name,
             value: this.setA.attributes[i].value
           });
-        }
-        else {
+        } else {
           this.diffAttributes.push({
             name: this.setA.attributes[i].name,
             valueSetA: this.setA.attributes[i].value,

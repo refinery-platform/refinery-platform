@@ -1,8 +1,9 @@
+'use strict';
+
 angular
   .module('refineryApp')
   .factory('pubmedService', ['$q', '$http', '$resource', 'settings',
     function ($q, $http, $resource, settings) {
-
       /*
        * Search
        */

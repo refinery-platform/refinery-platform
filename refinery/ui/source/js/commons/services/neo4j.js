@@ -1,3 +1,5 @@
+'use strict';
+
 function Neo4J ($resource, settings) {
   return $resource(
     settings.appRoot + settings.neo4jApi + '/:res/',
@@ -7,7 +9,7 @@ function Neo4J ($resource, settings) {
     {
       query: {
         method: 'GET',
-        isArray: false,
+        isArray: false
       }
     }
   );

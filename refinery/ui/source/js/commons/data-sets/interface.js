@@ -1,7 +1,10 @@
+'use strict';
+
+/* eslint no-use-before-define:0 */
+
 function DataSetFactory (
   $q, _, settings, DataSetDataApi, DataSetDataDetailsApi, DataSetSearchApi,
   DataSetStore, DataSetAnnotations) {
-
   /*
    * ------------------------------- Private -----------------------------------
    */
@@ -68,6 +71,8 @@ function DataSetFactory (
    * @type  {Array}
    */
   var _orderCache = [];
+
+  var _search;
 
   /**
    * Promise that resolves to the distinct search result annotations and their
@@ -236,8 +241,8 @@ function DataSetFactory (
     var realLimit = Math.max(limit, settings.treemap.singleRequestLimit);
     return _fetchDataFromOrderCache(realLimit, _selectionCacheLastIndex)
       .then(function (data) {
-        var dataLen = data.length,
-            selectionCacheLen;
+        var dataLen = data.length;
+        var selectionCacheLen;
         for (var i = 0; i < dataLen; i++) {
           if (!!_selection[data[i].id]) {
             selectionCacheLen = _selectionCache.push(data[i]);
@@ -444,9 +449,8 @@ function DataSetFactory (
     if (type) {
       return (last >= 0 && _browsePath[last].type === type) ?
         _browsePath[last] : undefined;
-    } else {
-      return _browsePath[last];
     }
+    return _browsePath[last];
   }
 
   /**
@@ -483,17 +487,15 @@ function DataSetFactory (
    * @author  Fritz Lekschas
    * @date    2016-03-10
    * @param   {String}   id     Data set identifier.
-   * @param   {Boolean}  isUid  If `true` the identifier is a UUID.
    * @return  {Object}          Promise resolving to the data set.
    */
-  function _get (id, isUuid) {
+  function _get (id) {
     if (_dataStore.get(id)) {
       return $q.when(_dataStore.get(id));
-    } else {
-      return _sourceDetails(id).then(function (dataSet) {
-        _dataStore.add(dataSet.id, dataSet, true);
-      });
     }
+    return _sourceDetails(id).then(function (dataSet) {
+      _dataStore.add(dataSet.id, dataSet, true);
+    });
   }
 
   /**
@@ -504,11 +506,11 @@ function DataSetFactory (
    * @date    2015-12-18
    */
   function _calculatePrecisionRecall () {
-    var annotations,
-        dataSet,
-        uniqueSearchResAnno = {};
+    var annotations;
+    var dataSet;
+    var uniqueSearchResAnno = {};
 
-    _annotations.load().then(function (data) {
+    _annotations.load().then(function () {
       // Get annotations used and the total number of their usage in relation to
       // the current search results.
       for (var i = _currentDsIds.length; i--;) {
@@ -759,7 +761,7 @@ function DataSetFactory (
     _allDsIds = $q.defer();
 
     if (_browsePath.length &&
-        _browsePath[_browsePath.length - 1].type === 'search') {
+      _browsePath[_browsePath.length - 1].type === 'search') {
       _browsePath.pop();
     }
 
@@ -799,7 +801,7 @@ function DataSetFactory (
    */
   DataSet.prototype.deselect = function () {
     if (_browsePath.length &&
-        _browsePath[_browsePath.length - 1].type === 'select') {
+      _browsePath[_browsePath.length - 1].type === 'select') {
       _browsePath.pop();
     }
 
@@ -865,9 +867,8 @@ function DataSetFactory (
       return _searchResultAnnotations.promise.then(function (annotations) {
         return _annotations.get(annotations);
       });
-    } else {
-      return _annotations.get();
     }
+    return _annotations.get();
   };
 
   /**
@@ -924,19 +925,20 @@ function DataSetFactory (
    * @return  {Object}               Instance itself to enable chaining.
    */
   DataSet.prototype.highlight = function (dataSetIds, reset, mode) {
-    var dataSet,
-        keys = Object.keys(dataSetIds || {});
+    var keys = Object.keys(dataSetIds || {});
 
     // Invert boolean representation so that the default behavior is
     // highlighting.
-    reset = !!!reset;
-
     for (var i = keys.length; i--;) {
       if (mode === 'hover') {
-        _dataStore.set(keys[i], { hovered: reset });
+        _dataStore.set(keys[i], {
+          hovered: !!!reset
+        });
       }
       if (mode === 'lock') {
-        _dataStore.set(keys[i], { locked: reset });
+        _dataStore.set(keys[i], {
+          locked: !!!reset
+        });
       }
     }
 
@@ -971,7 +973,7 @@ function DataSetFactory (
     _browsePath = [];
     _clearOrderCache();
     _source = new DataSetDataApi({
-      'order_by': order
+      order_by: order
     });
 
     return this;

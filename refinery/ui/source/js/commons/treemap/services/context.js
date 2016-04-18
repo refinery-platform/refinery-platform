@@ -1,4 +1,6 @@
-function TreemapContext ($timeout) {
+'use strict';
+
+function TreemapContext () {
   /**
    * Private data store.
    *
@@ -25,7 +27,8 @@ function TreemapContext ($timeout) {
    *
    * @class
    */
-  function Context () {}
+  function Context () {
+  }
 
   Context.prototype.constructor = Context;
 
@@ -55,10 +58,9 @@ function TreemapContext ($timeout) {
   Context.prototype.on = function (key, callback) {
     if (key in stack) {
       return stack[key].push(callback);
-    } else {
-      stack[key] = [callback];
-      return 0;
     }
+    stack[key] = [callback];
+    return 0;
   };
 
   /**
@@ -77,7 +79,7 @@ function TreemapContext ($timeout) {
     if (old !== value || force === true) {
       if (!!stack[key]) {
         for (var i = stack[key].length; i--;) {
-          if (typeof stack[key][i] === "function") {
+          if (typeof stack[key][i] === 'function') {
             stack[key][i](value);
           }
         }
@@ -91,4 +93,4 @@ function TreemapContext ($timeout) {
 
 angular
   .module('treemap')
-  .factory('treemapContext', ['$timeout', TreemapContext]);
+  .factory('treemapContext', [TreemapContext]);

@@ -1,3 +1,5 @@
+'use strict';
+
 function DataSetDataApiFactory ($q, _, dataSetService) {
   /**
    * Class constructor for querying the dataset data API.
@@ -16,7 +18,9 @@ function DataSetDataApiFactory ($q, _, dataSetService) {
     }
 
     if (onlyIds) {
-      return dataSetService.query({extra:'ids'}).$promise;
+      return dataSetService.query({
+        extra: 'ids'
+      }).$promise;
     }
 
     /**
@@ -34,7 +38,7 @@ function DataSetDataApiFactory ($q, _, dataSetService) {
       params.limit = limit;
       params.offset = offset;
 
-      var data = dataSetService
+      var returnData = dataSetService
         .query(params).$promise.then(function (data) {
           // Rename `meta.total_count` into `meta.total`.
           Object.defineProperty(
@@ -65,11 +69,13 @@ function DataSetDataApiFactory ($q, _, dataSetService) {
       var allIds = $q.when(false);
 
       if (firstTimeAllIds) {
-        allIds = dataSetService.query({extra:'ids'}).$promise;
-        firstTimeAllIds = false;
+        allIds = dataSetService.query({
+          extra: 'ids'
+        }).$promise;
+        firstTimeAllIds = false;  // eslint-disable-line no-param-reassign
       }
 
-      return $q.all([data, allIds]).then(function (results) {
+      return $q.all([returnData, allIds]).then(function (results) {
         if (results[1]) {
           results[0].allIds = results[1].ids;
         }

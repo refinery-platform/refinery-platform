@@ -1,3 +1,5 @@
+'use strict';
+
 angular
   .module('refineryApp')
   .factory('groupMemberService', ['$resource', 'settings',
@@ -11,15 +13,23 @@ angular
         },
         {
           query: {
-            method: 'GET',
+            method: 'GET'
           },
           add: {
             method: 'POST',
-            url: settings.appRoot + settings.refineryApi + '/extended_groups/:uuid/members/'
+            url: (
+              settings.appRoot +
+              settings.refineryApi +
+              '/extended_groups/:uuid/members/'
+            )
           },
           remove: {
             method: 'DELETE',
-            url: settings.appRoot + settings.refineryApi + '/extended_groups/:uuid/members/:userId/'
+            url: (
+              settings.appRoot +
+              settings.refineryApi +
+              '/extended_groups/:uuid/members/:userId/'
+            )
           }
         }
       );

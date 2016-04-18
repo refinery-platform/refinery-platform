@@ -1,12 +1,12 @@
-describe('PubSub.service: unit tests', function () {
-  'use strict';
+'use strict';
 
+describe('PubSub.service: unit tests', function () {
   var pubSub;
 
   beforeEach(function () {
     module('pubSub');
 
-    inject(function (_pubSub_, $injector) {
+    inject(function (_pubSub_) {
       pubSub = _pubSub_;
     });
   });
