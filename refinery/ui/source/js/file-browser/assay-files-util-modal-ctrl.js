@@ -21,6 +21,7 @@ function AssayFilesUtilModalCtrl(
 
   var vm = this;
   vm.assayAttributeOrder = [];
+  vm.is_owner = false;
   $scope.assayAttributeOrder = [];
   $scope.selected = null;
 
@@ -57,13 +58,27 @@ function AssayFilesUtilModalCtrl(
     });
   };
 
-  vm.updateAssayAttributes = function(attributeParam){
-    fileBrowserFactory.postAssayAttributeOrder(attributeParam).then(function(){
-      vm.refreshAssayAttributes();
+  vm.checkDataSetOwnership = function(){
+   // console.log('hereIam');
+    var promise = $q.defer();
+    fileBrowserFactory.getDataSet().then(function(){
+    //  console.log('in the getDataSet then');
+      vm.is_owner = fileBrowserFactory.is_owner;
+      promise.resolve();
     });
+    return promise.promise;
+  };
+
+  vm.updateAssayAttributes = function(attributeParam){
+    if(vm.is_owner) {
+      fileBrowserFactory.postAssayAttributeOrder(attributeParam).then(function () {
+        vm.refreshAssayAttributes();
+      });
+    }
   };
 
   vm.refreshAssayAttributes();
+  vm.checkDataSetOwnership();
   //$scope.view = function () {
   //  $uibModalInstance.close('view');
   //  $window.location.href = '/data_sets/' + dataSetUuid + '/#/analyses';
