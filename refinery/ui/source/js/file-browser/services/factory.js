@@ -4,7 +4,6 @@ angular
     [
       '$http',
       'assayFileService',
-      'dataSetService',
       'settings',
       '$window',
       fileBrowserFactory
@@ -14,7 +13,6 @@ angular
 function fileBrowserFactory(
   $http,
   assayFileService,
-  dataSetService,
   settings,
   $window) {
 
@@ -25,18 +23,6 @@ function fileBrowserFactory(
   var attributeFilter = {};
   var analysisFilter = {};
   var assayFilesTotalItems = {};
-  var is_owner = false;
-
-  var getDataSet = function (){
-   // console.log('in get data set');
-    var params = {uuid: $window.dataSetUuid};
-    var dataSet = dataSetService.query(params);
-    dataSet.$promise.then(function(response){
-    //  console.log(response.objects[0].is_owner);
-      is_owner = response.objects[0].is_owner;
-    });
-    return dataSet.$promise;
-  };
 
   var getAssayFiles = function (params) {
     params = params || {};
@@ -156,14 +142,12 @@ function fileBrowserFactory(
   };
 
   return{
-    is_owner: is_owner,
     assayFiles: assayFiles,
     assayAttributes: assayAttributes,
     assayAttributeOrder: assayAttributeOrder,
     attributeFilter: attributeFilter,
     analysisFilter: analysisFilter,
     assayFilesTotalItems: assayFilesTotalItems,
-    getDataSet: getDataSet,
     getAssayFiles: getAssayFiles,
     getAssayAttributeOrder: getAssayAttributeOrder,
     postAssayAttributeOrder: postAssayAttributeOrder

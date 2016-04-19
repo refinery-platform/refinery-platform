@@ -6,6 +6,7 @@ angular.module('refineryFileBrowser')
       '$window',
       'fileBrowserFactory',
       'resetGridService',
+      'isOwnerService',
       AssayFilesUtilModalCtrl
     ]
 );
@@ -16,7 +17,8 @@ function AssayFilesUtilModalCtrl(
   $uibModalInstance,
   $window,
   fileBrowserFactory,
-  resetGridService
+  resetGridService,
+  isOwnerService
 ){
 
   var vm = this;
@@ -24,13 +26,6 @@ function AssayFilesUtilModalCtrl(
   vm.is_owner = false;
   $scope.assayAttributeOrder = [];
   $scope.selected = null;
-
-  $scope.ok = function () {
-  };
-
-  $scope.cancel = function () {
-    $uibModalInstance.dismiss('cancel');
-  };
 
   $scope.close = function () {
     resetGridService.setResetGridFlag(true);
@@ -60,10 +55,8 @@ function AssayFilesUtilModalCtrl(
   };
 
   vm.checkDataSetOwnership = function(){
-   // console.log('hereIam');
-    fileBrowserFactory.getDataSet().then(function(){
-    //  console.log('in the getDataSet then');
-      vm.is_owner = fileBrowserFactory.is_owner;
+    isOwnerService.refreshDataSetOwner().then(function(){
+      vm.is_owner = isOwnerService.is_owner;
     });
   };
 
@@ -73,16 +66,10 @@ function AssayFilesUtilModalCtrl(
         vm.refreshAssayAttributes();
       });
     } else {
-      console.log('you are a guest');
       console.log(attributeParam);
     }
   };
 
   vm.refreshAssayAttributes();
   vm.checkDataSetOwnership();
-  //$scope.view = function () {
-  //  $uibModalInstance.close('view');
-  //  $window.location.href = '/data_sets/' + dataSetUuid + '/#/analyses';
-  //};
-
 }
