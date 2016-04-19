@@ -6,8 +6,7 @@ angular.module('refineryFileBrowser')
 
 function resetGridService() {
   var vm = this;
-
-  var resetGridFlag = false;
+  vm.resetGridFlag = false;
 
   vm.setResetGridFlag = function (state) {
      vm.resetGridFlag = state;
