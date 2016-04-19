@@ -537,7 +537,7 @@ class AssaysAttributes(APIView):
         # add a display name to the attribute object
         if owner == request_user:
             attributes = serializer.data
-        # for non-owners, hide non-exposed attributes and reorder the ranks
+        # for non-owners, hide non-exposed attributes
         else:
             attributes = []
             for attribute in serializer.data:
@@ -553,6 +553,7 @@ class AssaysAttributes(APIView):
                         [attributes[ind].get('solr_field')])[0].get(
                         'display_name')
 
+        # for non-owners need to reorder the ranks
         if owner != request_user:
             for ind in range(0, len(attributes)):
                 attributes[ind]['rank'] = ind + 1
