@@ -6,7 +6,6 @@ angular.module('refineryFileBrowser')
       '$window',
       'fileBrowserFactory',
       'resetGridService',
-      'isOwnerService',
       AssayFilesUtilModalCtrl
     ]
 );
@@ -17,13 +16,11 @@ function AssayFilesUtilModalCtrl(
   $uibModalInstance,
   $window,
   fileBrowserFactory,
-  resetGridService,
-  isOwnerService
+  resetGridService
 ){
 
   var vm = this;
   vm.assayAttributeOrder = [];
-  vm.is_owner = false;
   $scope.assayAttributeOrder = [];
   $scope.selected = null;
 
@@ -54,12 +51,6 @@ function AssayFilesUtilModalCtrl(
     });
   };
 
-  vm.checkDataSetOwnership = function(){
-    isOwnerService.refreshDataSetOwner().then(function(){
-      vm.is_owner = isOwnerService.is_owner;
-    });
-  };
-
   vm.updateAssayAttributes = function(attributeParam){
     if(vm.is_owner) {
       fileBrowserFactory.postAssayAttributeOrder(attributeParam).then(function () {
@@ -71,5 +62,4 @@ function AssayFilesUtilModalCtrl(
   };
 
   vm.refreshAssayAttributes();
-  vm.checkDataSetOwnership();
 }
