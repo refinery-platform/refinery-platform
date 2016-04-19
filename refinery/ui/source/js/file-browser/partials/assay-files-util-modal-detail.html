@@ -15,13 +15,13 @@
     </div>
   </div>
 
-  <ul dnd-list="assayAttributeOrder"
+  <ul dnd-list="AFUMCtrl.assayAttributeOrder"
     style="width:500px; list-style-type: none;">
     <li
-      ng-repeat="attributeObj in assayAttributeOrder"
+      ng-repeat="attributeObj in AFUMCtrl.assayAttributeOrder"
       track by solr_field
       dnd-draggable="attributeObj"
-      dnd-moved="updateAttributeRank(attributeObj, $index)"
+      dnd-moved="AFUMCtrl.updateAttributeRank(attributeObj, $index)"
       dnd-effectllowed="move">
       <div class="row">
         <div class="col-xs-1 col-xs-offset-1">
