@@ -531,9 +531,19 @@ class AssaysAttributes(APIView):
     def get(self, request, uuid, format=None):
         attribute_order = self.get_objects(uuid)
         serializer = AttributeOrderSerializer(attribute_order, many=True)
+        owner = get_owner_from_assay(uuid)
+        request_user = request.user
 
         # add a display name to the attribute object
-        attributes = serializer.data
+        if owner == request_user:
+            attributes = serializer.data
+        # for non-owners, hide non-exposed attributes and reorder the ranks
+        else:
+            attributes = []
+            for attribute in serializer.data:
+                if attribute.get('is_exposed'):
+                    attributes.append(attribute)
+
         # Reverse check, so can remove objects from the end
         for ind in range(len(attributes)-1, -1, -1):
             if is_field_in_hidden_list(attributes[ind].get('solr_field')):
@@ -542,6 +552,10 @@ class AssaysAttributes(APIView):
                 attributes[ind]['display_name'] = customize_attribute_response(
                         [attributes[ind].get('solr_field')])[0].get(
                         'display_name')
+
+        if owner != request_user:
+            for ind in range(0, len(attributes)):
+                attributes[ind]['rank'] = ind + 1
 
         return Response(attributes)
 
