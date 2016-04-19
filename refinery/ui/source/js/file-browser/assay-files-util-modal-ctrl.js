@@ -40,11 +40,12 @@ function AssayFilesUtilModalCtrl(
   //update rank of item moved
   $scope.updateAttributeRank = function(attributeObj, index){
     $scope.assayAttributeOrder.splice(index, 1);
+
     for(var i=0; i<$scope.assayAttributeOrder.length; i++){
+      //locally update all ranks
+      $scope.assayAttributeOrder[i].rank = i + 1;
       if($scope.assayAttributeOrder[i].solr_field === attributeObj.solr_field){
-        $scope.assayAttributeOrder[i].rank = i + 1;
         vm.updateAssayAttributes($scope.assayAttributeOrder[i]);
-        break;
       }
     }
   };
@@ -60,13 +61,10 @@ function AssayFilesUtilModalCtrl(
 
   vm.checkDataSetOwnership = function(){
    // console.log('hereIam');
-    var promise = $q.defer();
     fileBrowserFactory.getDataSet().then(function(){
     //  console.log('in the getDataSet then');
       vm.is_owner = fileBrowserFactory.is_owner;
-      promise.resolve();
     });
-    return promise.promise;
   };
 
   vm.updateAssayAttributes = function(attributeParam){
@@ -74,6 +72,9 @@ function AssayFilesUtilModalCtrl(
       fileBrowserFactory.postAssayAttributeOrder(attributeParam).then(function () {
         vm.refreshAssayAttributes();
       });
+    } else {
+      console.log('you are a guest');
+      console.log(attributeParam);
     }
   };
 
