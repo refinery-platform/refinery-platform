@@ -40,6 +40,20 @@ file { '/data/isa-tab':
   group => "$app_user",
   mode => "0755",
 }
+->
+file { "$solr_data_set_manager_data":
+  ensure => directory,
+  owner => "$app_user",
+  group => "$app_user",
+  mode => "0755",
+}
+->
+file { "$solr_core_data":
+  ensure => directory,
+  owner => "$app_user",
+  group => "$app_user",
+  mode => "0755",
+}
 
 
 python::requirements { "/srv/refinery-platform/deployment/aws-requirements.txt":
