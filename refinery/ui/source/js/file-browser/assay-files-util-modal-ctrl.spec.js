@@ -10,62 +10,65 @@ describe('Controller: Assay Files Util Modal Ctrl', function(){
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryFileBrowser'));
-  beforeEach(inject(function($rootScope, _$controller_, _fileBrowserFactory_) {
+  beforeEach(inject(function( $rootScope, _$controller_, _fileBrowserFactory_) {
     scope = $rootScope.$new();
+    //Create mock version of dependency
+    var $uibModalInstance = { close: function() {} };
     $controller = _$controller_;
-    ctrl = $controller('FileBrowserCtrl', {$scope: scope});
+    ctrl = $controller(
+      'AssayFilesUtilModalCtrl',
+      {
+        $scope: scope,
+        $uibModalInstance: $uibModalInstance
+      });
     factory = _fileBrowserFactory_;
   }));
 
-  it('FileBrowserCtrl ctrl should exist', function() {
+  it('AssayFilesUtilModalCtrl ctrl should exist', function() {
     expect(ctrl).toBeDefined();
   });
 
   it('Data & UI displays variables should exist for views', function() {
-    expect(ctrl.assayFiles).toEqual([]);
-    expect(ctrl.assayAttributes).toEqual([]);
-    expect(ctrl.attributeFilter).toEqual([]);
-    expect(ctrl.analysisFilter).toEqual([]);
-    expect(ctrl.filesParam).toBeDefined();
+    expect(ctrl.assayAttributeOrder ).toEqual([]);
   });
 
-  describe('Update AssayFiles from Factory', function(){
+  describe('Update AssayFilter from Factory', function(){
 
 
-    it("refreshAssayFiles is method", function(){
-      expect(angular.isFunction(ctrl.refreshAssayFiles)).toBe(true);
+    it("refreshAssayFilter is method", function(){
+      expect(angular.isFunction(ctrl.refreshAssayAttributes)).toBe(true);
     });
 
     it("refreshAssayFiles returns promise", function(){
       var mockAssayFiles = false;
-      spyOn(factory, "getAssayFiles").and.callFake(function() {
-        return {
-          then: function () {
-            mockAssayFiles = true;
-          }
-        };
-      });
-
-      ctrl.refreshAssayFiles();
-      expect(mockAssayFiles).toEqual(true);
-    });
-
-    it("refreshAssayAttributes is  method", function(){
-      expect(angular.isFunction(ctrl.refreshAssayAttributes)).toBe(true);
-    });
-
-    it("refreshAssayAttributes returns promise", function(){
-      var mockGetAssayAttributes = false;
       spyOn(factory, "getAssayAttributeOrder").and.callFake(function() {
         return {
           then: function () {
-            mockGetAssayAttributes = true;
+            mockAssayAttributes = true;
           }
         };
       });
 
       ctrl.refreshAssayAttributes();
-      expect(mockGetAssayAttributes).toEqual(true);
+      expect(mockAssayAttributes).toEqual(true);
+    });
+
+    it("updateAssayAttributes is  method", function(){
+      expect(angular.isFunction(ctrl.updateAssayAttributes)).toBe(true);
+    });
+
+    it("updateAssayAttributes returns promise", function(){
+      var mockGetAssayAttributes = false;
+      spyOn(factory, "postAssayAttributeOrder").and.callFake(function() {
+        return {
+          then: function () {
+            mockPostAssayAttributes = true;
+          }
+        };
+      });
+
+      ctrl.updateAssayAttributes();
+      expect(mockPostAssayAttributes).toEqual(true);
     });
 
   });
