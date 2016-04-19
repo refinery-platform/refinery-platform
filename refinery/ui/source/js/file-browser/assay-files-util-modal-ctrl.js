@@ -51,14 +51,10 @@ function AssayFilesUtilModalCtrl(
     });
   };
 
+  //Update ranks and attributes for owners
   vm.updateAssayAttributes = function(attributeParam){
-    if(vm.is_owner) {
-      fileBrowserFactory.postAssayAttributeOrder(attributeParam).then(function () {
-        vm.refreshAssayAttributes();
-      });
-    } else {
-      console.log(attributeParam);
-    }
+    fileBrowserFactory.postAssayAttributeOrder(attributeParam).then(function () {
+    });
   };
 
   vm.refreshAssayAttributes();
