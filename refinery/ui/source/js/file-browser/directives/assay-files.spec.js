@@ -30,6 +30,12 @@ describe('rpAssayFiles directive unit test', function() {
 
   it('generates the appropriate HTML', function() {
     var template = '<rp-file-browser-assay-files></rp-file-browser-assay-files>';
+    $httpBackend.expectGET(
+      settings.appRoot +
+      settings.refineryApi + '/data_sets?format=json&order_by=-modification_date' +
+      '&uuid='+ valid_uuid
+    ).respond(200, {});
+
     //Link makes an api call to update attribute filter
     $httpBackend.expectGET(
       settings.appRoot +

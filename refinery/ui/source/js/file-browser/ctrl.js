@@ -312,6 +312,4 @@ function FileBrowserCtrl(
       }
   });
 
-  vm.checkDataSetOwnership();
-
 }
