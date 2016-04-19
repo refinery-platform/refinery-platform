@@ -3,7 +3,7 @@
 //Global variable for both test and ctrl.
 var externalAssayUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
 
-describe('Controller: FileBrowserCtrl', function(){
+describe('Controller: Assay Files Util Modal Ctrl', function(){
   var ctrl,
       scope,
       factory;
@@ -48,6 +48,24 @@ describe('Controller: FileBrowserCtrl', function(){
 
       ctrl.refreshAssayFiles();
       expect(mockAssayFiles).toEqual(true);
+    });
+
+    it("refreshAssayAttributes is  method", function(){
+      expect(angular.isFunction(ctrl.refreshAssayAttributes)).toBe(true);
+    });
+
+    it("refreshAssayAttributes returns promise", function(){
+      var mockGetAssayAttributes = false;
+      spyOn(factory, "getAssayAttributeOrder").and.callFake(function() {
+        return {
+          then: function () {
+            mockGetAssayAttributes = true;
+          }
+        };
+      });
+
+      ctrl.refreshAssayAttributes();
+      expect(mockGetAssayAttributes).toEqual(true);
     });
 
   });
