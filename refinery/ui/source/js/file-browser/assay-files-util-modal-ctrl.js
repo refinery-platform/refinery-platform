@@ -1,5 +1,6 @@
-angular.module('refineryFileBrowser')
-    .controller('AssayFilesUtilModalCtrl',
+angular
+  .module('refineryFileBrowser')
+  .controller('AssayFilesUtilModalCtrl',
     [
       '$scope',
       '$uibModalInstance',
@@ -8,7 +9,7 @@ angular.module('refineryFileBrowser')
       'resetGridService',
       AssayFilesUtilModalCtrl
     ]
-);
+  );
 
 
 function AssayFilesUtilModalCtrl(
@@ -16,8 +17,7 @@ function AssayFilesUtilModalCtrl(
   $uibModalInstance,
   $window,
   fileBrowserFactory,
-  resetGridService
-){
+  resetGridService) {
 
   var vm = this;
   vm.assayAttributeOrder = [];
