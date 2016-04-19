@@ -7,6 +7,7 @@ angular
       'uiGridConstants',
       'fileBrowserFactory',
       'resetGridService',
+      'isOwnerService',
       '$window',
       '$timeout',
       '$q',
@@ -20,6 +21,7 @@ function FileBrowserCtrl(
   uiGridConstants,
   fileBrowserFactory,
   resetGridService,
+  isOwnerService,
   $window,
   $timeout,
   $q) {
@@ -59,6 +61,7 @@ function FileBrowserCtrl(
   vm.cachePages = 2;
 
   vm.refreshAssayFiles = function () {
+
     vm.filesParam['offset'] = vm.lastPage * vm.rowCount;
     vm.filesParam['limit'] = vm.rowCount;
     var promise = $q.defer();
@@ -292,6 +295,13 @@ function FileBrowserCtrl(
     vm.gridOptions.columnDefs = vm.customColumnName;
   };
 
+
+  vm.checkDataSetOwnership = function(){
+    isOwnerService.refreshDataSetOwner().then(function(){
+      vm.is_owner = isOwnerService.is_owner;
+    });
+  };
+
   $scope.$watch(
     function () {
       return resetGridService.resetGridFlag;
@@ -301,5 +311,7 @@ function FileBrowserCtrl(
         vm.reset();
       }
   });
+
+  vm.checkDataSetOwnership();
 
 }
