@@ -1,4 +1,4 @@
-describe('rpAssayFiles directive unit test', function() {
+describe('rpAssayFilesUtilModalDetail directive unit test', function() {
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryFileBrowser'));
@@ -28,7 +28,7 @@ describe('rpAssayFiles directive unit test', function() {
     var directiveElement = compile(template)(scope);
 
     scope.$digest();
-    expect(directiveElement.html()).toContain('modal-body fileUtilModal');
-    expect(directiveElement.html()).toContain('<div class="modal-header>');
+    expect(directiveElement.html()).toContain('fileUtilModal');
+    expect(directiveElement.html()).toContain('modal-body');
   });
 });
