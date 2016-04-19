@@ -2435,6 +2435,12 @@ body.is-screenshot-ready {
  * For the correct positioning of the placeholder element, the dnd-list and
  * it's children must have position: relative
  */
+
+.fileUtilModal ul{
+  list-style-type: none;
+  border: none;
+}
+
 .fileUtilModal ul[dnd-list],
 .fileUtilModal ul[dnd-list] > li {
 	position: relative;
@@ -2447,6 +2453,7 @@ body.is-screenshot-ready {
 .fileUtilModal ul[dnd-list] {
     min-height: 42px;
     padding-left: 0px;
+    width: 100%;
 }
 
 /**
