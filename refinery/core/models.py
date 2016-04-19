@@ -48,8 +48,7 @@ from data_set_manager.models import (Investigation, Node, Study, Assay,
                                      NodeCollection)
 from data_set_manager.utils import (add_annotated_nodes_selection,
                                     index_annotated_nodes_selection)
-from file_store.models import get_file_size, FileStoreItem, FileType, \
-    FileExtension
+from file_store.models import get_file_size, FileStoreItem, FileType
 from file_store.tasks import rename
 from galaxy_connector.galaxy_workflow import (create_expanded_workflow_graph,
                                               countWorkflowSteps,
@@ -1200,28 +1199,22 @@ class Analysis(OwnableResource):
         """Rename files in file_store after download"""
         logger.debug("Renaming analysis results")
         # rename file_store items to new name updated from galaxy file_ids
-        analysis_results = AnalysisResult.objects.filter(
-            analysis_uuid=self.uuid)
-        for result in analysis_results:
+        for result in AnalysisResult.objects.filter(analysis_uuid=self.uuid):
             # new name to load
             new_file_name = result.file_name
             # workaround for FastQC reports downloaded from Galaxy as zip
             # archives
             (root, ext) = os.path.splitext(new_file_name)
             item = FileStoreItem.objects.get_item(uuid=result.file_store_uuid)
-            # TODO: update for use with the new file type model
-            # Fetch HTML and ZIP FileExtensions
-            try:
-                HTML = FileExtension.objects.get(name="html")
-                ZIP = FileType.objects.get(name="zip")
-
-            except (FileType.DoesNotExist, FileExtension.DoesNotExist) as e:
-                logger.error("Could not retrieve FileType/FileExtension: "
-                             "%s", e)
-
-            if ext.replace(".", "") == HTML and item.get_filetype() == ZIP:
-                new_file_name = root + '.zip'
-
+            if ext == '.html':
+                try:
+                    zipfile = FileType.objects.get(name="ZIP")
+                except (FileType.DoesNotExist,
+                        FileType.MultipleObjectsReturned) as exc:
+                    logger.error("Error renaming HTML to zip: %s", exc)
+                else:
+                    if item.get_filetype() == zipfile:
+                        new_file_name = ''.join([root, '.zip'])
             rename(result.file_store_uuid, new_file_name)
 
     def get_config(self):
