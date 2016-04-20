@@ -2013,11 +2013,13 @@ def deletion_checks(instance):
         Takes a Model instance and runs the appropriate deletion checking
         method based on the instance.__class__.__name__
     '''
-    return {
-        "DataSet": dataset_deletion_check,
-        "Workflow": workflow_deletion_check,
-        "Analysis": analysis_deletion_check
-    }[instance.__class__.__name__](instance)
+    if instance.__class__.__name__ == "DataSet":
+        return dataset_deletion_check(instance)
+    if instance.__class__.__name__ == "Workflow":
+        return workflow_deletion_check(instance)
+    if instance.__class__.__name__ == "Analysis":
+        return analysis_deletion_check(instance)
+    return True
 
 
 def workflow_deletion_check(instance):
