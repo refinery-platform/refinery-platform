@@ -663,10 +663,8 @@ def generate_filtered_facet_fields(attributes):
 
     for field in filtered_attributes:
         if field.get('is_exposed'):
-            # field_limit_list.append(field.get('solr_field'))
             weighted_facet_list.append((int(field['rank']), field))
             if field.get('is_facet'):
-                # weighted_facet_list.append((int(field['rank']), field))
                 facet_field.append(field.get('solr_field'))
 
     weighted_facet_list.sort()
