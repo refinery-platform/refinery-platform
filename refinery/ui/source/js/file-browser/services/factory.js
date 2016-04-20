@@ -1,34 +1,60 @@
-angular
-  .module('refineryFileBrowser')
-  .factory("fileBrowserFactory",
-    [
-      '$http',
-      'assayFileService',
-      'settings',
-      '$window',
-      fileBrowserFactory
-    ]
-  );
+'use strict';
 
-function fileBrowserFactory(
+function fileBrowserFactory (
   $http,
   assayFileService,
   settings,
   $window) {
 
-  "use strict";
   var assayFiles = [];
   var assayAttributes = [];
   var assayAttributeOrder = [];
   var attributeFilter = {};
   var analysisFilter = {};
   var assayFilesTotalItems = {};
+  // Helper function encodes field array in an obj
+  var encodeAttributeFields = function (attributeObj) {
+    angular.forEach(attributeObj, function (fieldArray) {
+      for (var ind = 0; ind < fieldArray.length; ind++) {
+        fieldArray[ind] = $window.encodeURIComponent(fieldArray[ind]);
+      }
+    });
+    return (attributeObj);
+  };
 
-  var getAssayFiles = function (params) {
-    params = params || {};
+  var generateFilters = function (attributes, facetCounts) {
+    // resets the attribute filters, which can be changed by owners
+    var outAttributeFilter = {};
+    var outAnalysisFilter = {};
 
-    //encodes all field names to avoid issues with escape characters.
-    if(typeof params.filter_attribute !== 'undefined'){
+    attributes.forEach(function (facetObj) {
+      var facetObjCount = facetCounts[facetObj.internal_name];
+      // for filtering out (only)attributes with only 1 field
+      var facetObjCountMinLen = Object.keys(facetObjCount).length > 1;
+
+      if (facetObjCountMinLen && facetObj.display_name !== 'Analysis') {
+        outAttributeFilter[facetObj.display_name] = {
+          facetObj: facetObjCount,
+          internal_name: facetObj.internal_name
+        };
+      } else if (facetObjCount && facetObj.display_name === 'Analysis') {
+        outAnalysisFilter[facetObj.display_name] = {
+          facetObj: facetObjCount,
+          internal_name: facetObj.internal_name
+        };
+      }
+    });
+    return {
+      attributeFilter: outAttributeFilter,
+      analysisFilter: outAnalysisFilter
+    };
+  };
+
+  var getAssayFiles = function (_params_) {
+    var params = _params_ || {};
+
+    // encodes all field names to avoid issues with escape characters.
+    if (typeof params.filter_attribute !== 'undefined') {
       params.filter_attribute = encodeAttributeFields(params.filter_attribute);
     }
 
@@ -40,38 +66,21 @@ function fileBrowserFactory(
       var filterObj = generateFilters(response.attributes, response.facet_field_counts);
       angular.copy(filterObj.attributeFilter, attributeFilter);
       angular.copy(filterObj.analysisFilter, analysisFilter);
-    }, function (error) {
-      console.log(error);
     });
     return assayFile.$promise;
   };
 
-  var generateFilters = function(attributes, facet_counts){
-    //resets the attribute filters, which can be changed by owners
-    var outAttributeFilter = {};
-    var outAnalysisFilter = {};
-
-    attributes.forEach(function(facetObj){
-      var facetObjCount =  facet_counts[facetObj.internal_name];
-       //for filtering out (only)attributes with only 1 field
-      var facetObjCountMinLen = Object.keys(facetObjCount).length > 1;
-
-      if(facetObjCountMinLen && facetObj.display_name !== 'Analysis'){
-        outAttributeFilter[facetObj.display_name] = {
-          'facetObj': facetObjCount,
-          'internal_name': facetObj.internal_name
-        };
-      }else if(facetObjCount && facetObj.display_name === 'Analysis'){
-        outAnalysisFilter[facetObj.display_name]= {
-          'facetObj': facetObjCount,
-          'internal_name': facetObj.internal_name
-        };
+  var sortArrayOfObj = function(arrayOfObjs) {
+    arrayOfObjs.sort(function (a, b) {
+      if (a.rank > b.rank) {
+        return 1;
       }
+      if (a.rank < b.rank) {
+        return -1;
+      }
+      return 0;
     });
-    return {
-      'attributeFilter': outAttributeFilter,
-      'analysisFilter': outAnalysisFilter
-    };
+    return arrayOfObjs;
   };
 
   var getAssayAttributeOrder = function (uuid) {
@@ -81,7 +90,10 @@ function fileBrowserFactory(
     return $http({
       method: 'GET',
       url: apiUrl,
-      data: {'csrfmiddlewaretoken': csrf_token, 'uuid': uuid}
+      data: {
+        csrfmiddlewaretoken: $window.csrf_token,
+        uuid: uuid
+      }
     }).then(function (response) {
       var sortedResponse = sortArrayOfObj(response.data);
       angular.copy(sortedResponse, assayAttributeOrder);
@@ -125,20 +137,6 @@ function fileBrowserFactory(
         fieldArray[ind] = $window.encodeURIComponent(fieldArray[ind]);
        }
     });
-    return(attributeObj);
-  };
-
-  var sortArrayOfObj = function(arrayOfObjs) {
-    arrayOfObjs.sort(function (a, b) {
-      if (a.rank > b.rank) {
-        return 1;
-      }
-      if (a.rank < b.rank) {
-        return -1;
-      }
-      return 0;
-    });
-    return arrayOfObjs;
   };
 
   return{
@@ -152,5 +150,15 @@ function fileBrowserFactory(
     getAssayAttributeOrder: getAssayAttributeOrder,
     postAssayAttributeOrder: postAssayAttributeOrder
   };
-
 }
+
+angular
+  .module('refineryFileBrowser')
+  .factory('fileBrowserFactory', [
+    '$http',
+    'assayFileService',
+    'settings',
+    '$window',
+    fileBrowserFactory
+  ]
+);

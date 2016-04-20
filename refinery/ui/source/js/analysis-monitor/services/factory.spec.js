@@ -1,23 +1,21 @@
-//UNIT TESTING
-//Provide a global variable for factory.
-var csrf_token;
-describe("Analysis Monitor Factory", function(){
- // 'use strict';
-  var factory,
-      query,
-      deferred,
-      rootScope,
-      valid_uuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x',
-      valid_token = 'xxxx1';
+'use strict';
+
+describe('Analysis Monitor Factory', function () {
+  // 'use strict';
+  var factory;
+  var deferred;
+  var rootScope;
+  var validUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+  var validToken = 'xxxx1';
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryAnalysisMonitor'));
-  beforeEach(inject( function(_analysisMonitorFactory_){
+  beforeEach(inject(function (_analysisMonitorFactory_, $window) {
     factory = _analysisMonitorFactory_;
-    csrf_token = valid_token;
+    $window.csrf_token = validToken;
   }));
 
-  it('factory and tools variables should exist', function(){
+  it('factory and tools variables should exist', function () {
     expect(factory).toBeDefined();
     expect(factory.analysesList).toEqual([]);
     expect(factory.analysesRunningList).toEqual([]);
@@ -26,15 +24,25 @@ describe("Analysis Monitor Factory", function(){
     expect(factory.analysesDetail).toEqual({});
   });
 
-  describe("getAnalysesList", function() {
+  describe('getAnalysesList', function () {
     var analysisListObj;
 
-    beforeEach(inject( function(analysisService, $q, $rootScope){
-      analysisListObj = [{test1:1},{test2:2},{test3:3},{test4:4}];
-      spyOn(analysisService, "query").and.callFake(function() {
+    beforeEach(inject(function (analysisService, $q, $rootScope) {
+      analysisListObj = [{
+        test1: 1
+      }, {
+        test2: 2
+      }, {
+        test3: 3
+      }, {
+        test4: 4
+      }];
+      spyOn(analysisService, 'query').and.callFake(function () {
         deferred = $q.defer();
         deferred.resolve(analysisListObj);
-        return {$promise : deferred.promise};
+        return {
+          $promise: deferred.promise
+        };
       });
       rootScope = $rootScope;
     }));
@@ -45,7 +53,9 @@ describe("Analysis Monitor Factory", function(){
 
     it('getAnalysesList returns a promise', function () {
       var successData;
-      var response = factory.getAnalysesList({uuid: valid_uuid}).then(function (responseData) {
+      var response = factory.getAnalysesList({
+        uuid: validUuid
+      }).then(function (responseData) {
         successData = responseData;
       });
       rootScope.$apply();
@@ -55,23 +65,37 @@ describe("Analysis Monitor Factory", function(){
     });
   });
 
-  describe("getAnalysesDetail", function() {
-    var response, analysesDetail;
+  describe('getAnalysesDetail', function () {
+    var analysesDetail;
 
-    beforeEach(inject(function($q, $rootScope, analysisDetailService) {
+    beforeEach(inject(function ($q, $rootScope, analysisDetailService) {
       // Set up the mock http service responses
       analysesDetail = {
-            "refineryImport": [{status: "PROGRESS", percent_done: 30}],
-            "galaxyImport": [{status: "", percent_done: ""}],
-            "galaxyAnalysis": [{status: "", percent_done:""}],
-            "galaxyExport": [{status: "", percent_done: ""}],
-            "overrall": "RUNNING"
-          };
+        refineryImport: [{
+          status: 'PROGRESS',
+          percent_done: 30
+        }],
+        galaxyImport: [{
+          status: '',
+          percent_done: ''
+        }],
+        galaxyAnalysis: [{
+          status: '',
+          percent_done: ''
+        }],
+        galaxyExport: [{
+          status: '',
+          percent_done: ''
+        }],
+        overrall: 'RUNNING'
+      };
 
-      spyOn(analysisDetailService, "query").and.callFake(function() {
+      spyOn(analysisDetailService, 'query').and.callFake(function () {
         deferred = $q.defer();
         deferred.resolve(analysesDetail);
-        return {$promise : deferred.promise};
+        return {
+          $promise: deferred.promise
+        };
       });
       rootScope = $rootScope;
     }));
@@ -82,21 +106,23 @@ describe("Analysis Monitor Factory", function(){
 
     it('getAnalysesDetail makes success call', function () {
       var successData;
-      var response = factory.getAnalysesDetail({uuid: valid_uuid}).then(function (responseData) {
+      factory.getAnalysesDetail({
+        uuid: validUuid
+      }).then(function (responseData) {
         successData = responseData;
       });
       rootScope.$apply();
-     // expect(typeof response.then).toEqual('function');
+
       expect(successData).toEqual(analysesDetail);
     });
   });
 
-  describe("postCancelAnalysis", function() {
+  describe('postCancelAnalysis', function () {
     var $httpBackend;
 
-     beforeEach(inject(function(_$httpBackend_) {
+    beforeEach(inject(function (_$httpBackend_) {
       $httpBackend = _$httpBackend_;
-     }));
+    }));
 
     it('postCancelAnalysis is a method', function () {
       expect(angular.isFunction(factory.postCancelAnalysis)).toBe(true);
@@ -104,16 +130,22 @@ describe("Analysis Monitor Factory", function(){
 
     it('postCancelAnalysis makes success call', function () {
       $httpBackend.expectPOST('/analysis_manager/analysis_cancel/',
-          {'csrfmiddlewaretoken': valid_token, 'uuid': valid_uuid},
-          {"X-Requested-With": 'XMLHttpRequest',
-          "Accept":"application/json," +
-          " text/plain, */*",
-          "Content-Type":"application/json;" +
-          "charset=utf-8"}
-          ).respond(200, {},{});
-      var response = factory.postCancelAnalysis(valid_uuid).then(function(){
+        {
+          csrfmiddlewaretoken: validToken,
+          uuid: validUuid
+        },
+        {
+          'X-Requested-With': 'XMLHttpRequest',
+          Accept: 'application/json,' +
+            ' text/plain, */*',
+          'Content-Type': 'application/json;' +
+            'charset=utf-8'
+        }
+      ).respond(200, {}, {});
+      var data;
+      var response = factory.postCancelAnalysis(validUuid).then(function () {
         data = 'success';
-      }, function(){
+      }, function () {
         data = 'error';
       });
       $httpBackend.flush();

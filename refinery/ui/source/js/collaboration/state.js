@@ -1,3 +1,5 @@
+'use strict';
+
 angular
   .module('refineryCollaboration')
   .config([
@@ -5,22 +7,20 @@ angular
     function (refineryStateProvider) {
       refineryStateProvider
         .state(
-          'selectedGroup',
-          {
+          'selectedGroup', {
             url: '/{uuid}/',
             templateUrl: '/static/partials/collaboration/partials/collaboration-main.html',
             controller: 'refineryCollaborationCtrl as collab'
           },
           '/collaboration/')
         .state(
-          'defaultGroup',
-          {
+          'defaultGroup', {
             url: '/',
             templateUrl: '/static/partials/collaboration/partials/collaboration-main.html',
             controller: 'refineryCollaborationCtrl as collab'
           },
           '/collaboration/'
-        );
+      );
     }
   ]
 );

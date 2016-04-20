@@ -1,7 +1,8 @@
-describe('DataSet.store: unit tests', function () {
-  'use strict';
+'use strict';
 
-  var Factory, service;
+describe('DataSet.store: unit tests', function () {
+  var Factory;
+  var service;
 
   beforeEach(function () {
     module('refineryApp');
@@ -14,15 +15,12 @@ describe('DataSet.store: unit tests', function () {
   });
 
   describe('Factory', function () {
-
     it('should be available', function () {
       expect(!!Factory).toEqual(true);
     });
-
   });
 
   describe('Service', function () {
-
     it('should be available', function () {
       expect(!!service).toEqual(true);
     });
@@ -44,8 +42,8 @@ describe('DataSet.store: unit tests', function () {
     });
 
     it('should set and get a value', function () {
-      var key = 'test',
-          value = 'test';
+      var key = 'test';
+      var value = 'test';
 
       service.add(key, value);
 
@@ -53,8 +51,8 @@ describe('DataSet.store: unit tests', function () {
     });
 
     it('should be able to remove a value', function () {
-      var key = 'test',
-          value = 'test';
+      var key = 'test';
+      var value = 'test';
 
       service.add(key, value);
 
@@ -62,6 +60,5 @@ describe('DataSet.store: unit tests', function () {
 
       expect(service.get(key)).toEqual(void 0);
     });
-
   });
 });

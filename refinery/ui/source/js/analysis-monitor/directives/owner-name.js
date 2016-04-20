@@ -1,31 +1,28 @@
-angular.module('refineryAnalysisMonitor')
-  .directive("rpAnalysisOwnerName",
-  [
-    "userService",
-    rpAnalysisOwnerName
-  ]
-);
+'use strict';
 
-function rpAnalysisOwnerName(userService) {
-  "use strict";
-
+function rpAnalysisOwnerName (userService) {
   return {
     restrict: 'A',
     link: function (scope) {
       var ownerUuid = scope.analysis.owner;
       var ownerObj = {};
-      scope.ownerName = "";
+      scope.ownerName = '';
 
       userService.get(ownerUuid).then(function (response) {
         ownerObj = response;
-        if(ownerObj.firstName !== "" || ownerObj.lastName !== ""){
-          scope.ownerName = ownerObj.firstName + " " + ownerObj.lastName;
-         }else{
+        if (ownerObj.firstName !== '' || ownerObj.lastName !== '') {
+          scope.ownerName = ownerObj.firstName + ' ' + ownerObj.lastName;
+        } else {
           scope.ownerName = ownerObj.userName;
         }
-      }, function (error) {
-        console.log(error);
       });
     }
   };
 }
+
+angular
+  .module('refineryAnalysisMonitor')
+  .directive('rpAnalysisOwnerName', [
+    'userService',
+    rpAnalysisOwnerName
+  ]);

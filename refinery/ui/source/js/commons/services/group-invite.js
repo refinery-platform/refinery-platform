@@ -1,9 +1,11 @@
+'use strict';
+
 angular
   .module('refineryApp')
   .factory('groupInviteService', ['$resource', 'settings',
     function ($resource, settings) {
       return $resource(
-        settings.appRoot + settings.refineryApi + '/invitations/',
+        settings.appRoot + settings.refineryApi + '/invitations/:token/',
         {
           token: '@token',
           format: 'json'
@@ -16,12 +18,10 @@ angular
             method: 'POST'
           },
           resend: {
-            method: 'PUT',
-            url: settings.appRoot + settings.refineryApi + '/invitations/:token/'
+            method: 'PUT'
           },
           revoke: {
-            method: 'DELETE',
-            url: settings.appRoot + settings.refineryApi + '/invitations/:token/'
+            method: 'DELETE'
           }
         }
       );

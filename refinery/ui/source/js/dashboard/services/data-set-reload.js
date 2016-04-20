@@ -1,7 +1,9 @@
+'use strict';
+
 angular
   .module('refineryDashboard')
-  .factory('dashboardDataSetsReloadService', ['$q',
-    function ($q) {
+  .factory('dashboardDataSetsReloadService', [
+    function () {
       return {
         /**
          * Interface for the getter

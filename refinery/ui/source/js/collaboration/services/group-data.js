@@ -1,5 +1,7 @@
+'use strict';
+
 // Wraps groupListService and groupInviteService
-function GroupDataService(groupListService, inviteListService) {
+function GroupDataService (groupListService, inviteListService) {
   this.groupListService = groupListService;
   this.inviteListService = inviteListService;
 }
@@ -43,11 +45,13 @@ GroupDataService.prototype.update = function (p) {
 
   // Make sure that the group list and active group are updated first.
   return this.groupListService.update(params)
-    .then(function (data) {
+    .then(function () {
       that.inviteListService.update();
-    }.bind(this));
+    });
 };
 
 angular
   .module('refineryCollaboration')
-  .service('groupDataService', ['groupListService', 'inviteListService', GroupDataService]);
+  .service('groupDataService', [
+    'groupListService', 'inviteListService', GroupDataService
+  ]);

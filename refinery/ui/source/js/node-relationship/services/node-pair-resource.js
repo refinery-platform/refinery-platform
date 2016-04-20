@@ -1,13 +1,15 @@
-function NodePairFactory ($resource, $http) {
-  'use strict';
+'use strict';
 
+function NodePairFactory ($resource) {
   return $resource(
-    '/api/v1/nodepair/:uuid/',{
+    '/api/v1/nodepair/:uuid/', {
       uuid: '@uuid',
-      format: 'json',
+      format: 'json'
     },
     {
-      'update': { method: 'PUT' }
+      update: {
+        method: 'PUT'
+      }
     }
   );
 }

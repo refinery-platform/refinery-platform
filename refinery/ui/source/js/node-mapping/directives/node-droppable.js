@@ -1,3 +1,5 @@
+'use strict';
+
 function nodeDroppableDirective () {
   return {
     controller: 'NodeDroppableCtrl',

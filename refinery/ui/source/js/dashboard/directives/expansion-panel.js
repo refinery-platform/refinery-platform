@@ -1,6 +1,6 @@
-function refineryExpansionPanel () {
-  'use strict';
+'use strict';
 
+function refineryExpansionPanel () {
   function ExpansionPanelCtrl (
     pubSub,
     dashboardWidthFixerService,

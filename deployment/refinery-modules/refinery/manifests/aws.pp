@@ -40,6 +40,28 @@ file { '/data/isa-tab':
   group => "$app_user",
   mode => "0755",
 }
+->
+file { "/data/solr":
+  ensure => directory,
+  owner => "$app_user",
+  group => "$app_user",
+  mode => "0755",
+  before => Exec["solr_install"],
+}
+->
+file { "$solr_data_set_manager_data":
+  ensure => directory,
+  owner => "$app_user",
+  group => "$app_user",
+  mode => "0755",
+}
+->
+file { "$solr_core_data":
+  ensure => directory,
+  owner => "$app_user",
+  group => "$app_user",
+  mode => "0755",
+}
 
 
 python::requirements { "/srv/refinery-platform/deployment/aws-requirements.txt":
@@ -47,6 +69,23 @@ python::requirements { "/srv/refinery-platform/deployment/aws-requirements.txt":
   virtualenv => $virtualenv,
   owner      => $app_user,
   group      => $app_group,
+}
+
+exec { "generate_superuser_json":
+  command     => "${virtualenv}/bin/python /srv/refinery-platform/deployment/bin/generate-superuser > /srv/refinery-platform/refinery/core/fixtures/superuser.json.new",
+  environment => ["PYTHONPATH=/srv/refinery-platform/refinery",
+                  "DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+  require     => Exec["syncdb"],
+  before      => Exec["create_superuser"],
+}
+->
+exec { "copy_superuser_json":
+  command     => "/bin/cp /srv/refinery-platform/refinery/core/fixtures/superuser.json.new /srv/refinery-platform/refinery/core/fixtures/superuser.json",
+  user        => $app_user,
+  group       => $app_group,
+  before      => Exec["create_superuser"],
 }
 
 }

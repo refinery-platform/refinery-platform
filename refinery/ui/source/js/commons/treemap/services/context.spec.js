@@ -1,6 +1,6 @@
-describe('Treemap.services.context: unit tests', function () {
-  'use strict';
+'use strict';
 
+describe('Treemap.services.context: unit tests', function () {
   var service;
 
   beforeEach(function () {
@@ -13,7 +13,6 @@ describe('Treemap.services.context: unit tests', function () {
   });
 
   describe('Service', function () {
-
     it('should be available', function () {
       expect(!!service).toEqual(true);
     });
@@ -31,8 +30,8 @@ describe('Treemap.services.context: unit tests', function () {
     });
 
     it('should set and get a value', function () {
-      var key = 'test',
-          value = 'test';
+      var key = 'test';
+      var value = 'test';
 
       service.set(key, value);
 
@@ -40,9 +39,9 @@ describe('Treemap.services.context: unit tests', function () {
     });
 
     it('should trigger listener when a value is set', function () {
-      var key = 'test',
-          value = 'test',
-          spy = jasmine.createSpy('spy');
+      var key = 'test';
+      var value = 'test';
+      var spy = jasmine.createSpy('spy');
 
       service.on(key, spy);
 
@@ -52,9 +51,9 @@ describe('Treemap.services.context: unit tests', function () {
     });
 
     it('should NOT trigger listener when the same value is set', function () {
-      var key = 'test',
-          value = 'test',
-          spy = jasmine.createSpy('spy');
+      var key = 'test';
+      var value = 'test';
+      var spy = jasmine.createSpy('spy');
 
       service.set(key, value);
 
@@ -66,9 +65,9 @@ describe('Treemap.services.context: unit tests', function () {
     });
 
     it('should always trigger listener when `force` is `true`.', function () {
-      var key = 'test',
-          value = 'test',
-          spy = jasmine.createSpy('spy');
+      var key = 'test';
+      var value = 'test';
+      var spy = jasmine.createSpy('spy');
 
       service.set(key, value);
 
@@ -78,6 +77,5 @@ describe('Treemap.services.context: unit tests', function () {
 
       expect(spy).toHaveBeenCalled();
     });
-
   });
 });

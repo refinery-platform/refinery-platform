@@ -1,3 +1,5 @@
+'use strict';
+
 function DataSetAnnotationsFactory ($q, _, dataSetAnnotationService) {
   /**
    * Stores the dataset annotations.
@@ -66,7 +68,7 @@ function DataSetAnnotationsFactory ($q, _, dataSetAnnotationService) {
 
     for (var i = uris.length; i--;) {
       _annotations[uris[i]].precision = _annotations[uris[i]].total /
-        _dataSets.length;
+      _dataSets.length;
       _annotations[uris[i]].precisionTotal = _annotations[uris[i]].precision;
       _annotations[uris[i]].recall = 1;
     }
@@ -95,7 +97,7 @@ function DataSetAnnotationsFactory ($q, _, dataSetAnnotationService) {
       get: function () {
         return Object.keys(this.dataSets).length;
       }
-  });
+    });
 
   /**
    * Link dataset to annotation term.
@@ -193,22 +195,21 @@ function DataSetAnnotationsFactory ($q, _, dataSetAnnotationService) {
     if (!_loading) {
       _loading = $q.defer();
 
-      dataSetAnnotationService
-        .query().$promise.then(function (annotations) {
-          var dataSetIds = Object.keys(annotations);
+      dataSetAnnotationService.query().$promise.then(function (annotations) {
+        var dataSetIds = Object.keys(annotations);
 
-          for (var i = dataSetIds.length; i--;) {
-            _addAnnotationsToDataSet(dataSetIds[i], annotations[dataSetIds[i]]);
+        for (var i = dataSetIds.length; i--;) {
+          _addAnnotationsToDataSet(dataSetIds[i], annotations[dataSetIds[i]]);
 
-            for (var j = annotations[dataSetIds[i]].length; j--;) {
-              this.add(annotations[dataSetIds[i]][j].term, dataSetIds[i]);
-            }
+          for (var j = annotations[dataSetIds[i]].length; j--;) {
+            this.add(annotations[dataSetIds[i]][j].term, dataSetIds[i]);
           }
+        }
 
-          _initPR();
+        _initPR();
 
-          _loading.resolve(true);
-        }.bind(this));
+        _loading.resolve(true);
+      }.bind(this));
     }
 
     return _loading.promise;
@@ -231,8 +232,7 @@ function DataSetAnnotationsFactory ($q, _, dataSetAnnotationService) {
 
     for (var i = uris.length; i--;) {
       _annotations[uris[i]].precision = annotations[uris[i]] / numDataSets;
-      _annotations[uris[i]].recall =
-        annotations[uris[i]] / _annotations[uris[i]].total;
+      _annotations[uris[i]].recall = annotations[uris[i]] / _annotations[uris[i]].total;
     }
   };
 

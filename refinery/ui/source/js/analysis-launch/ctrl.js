@@ -1,17 +1,7 @@
-angular.module('refineryAnalysisLaunch')
-  .controller('AnalysisLaunchCtrl',
-  [
-    '$scope',
-    '$log',
-    'analysisLaunchConfigService',
-    AnalysisLaunchCtrl
-  ]
-);
+'use strict';
 
-function AnalysisLaunchCtrl($scope, $log, analysisLaunchConfigService ) {
-    "use strict";
-
-  $scope.$onRootScope('nodeSetChangedEvent', function(event, currentNodeSet) {
+function AnalysisLaunchCtrl ($scope, $log, analysisLaunchConfigService) {
+  $scope.$onRootScope('nodeSetChangedEvent', function (event, currentNodeSet) {
     analysisLaunchConfigService.setAnalysisConfig(
       {
         nodeSetUuid: currentNodeSet.uuid,
@@ -19,21 +9,31 @@ function AnalysisLaunchCtrl($scope, $log, analysisLaunchConfigService ) {
       });
   });
 
-  $scope.$onRootScope('nodeRelationshipChangedEvent', function(event, currentNodeRelationship) {
+  $scope.$onRootScope('nodeRelationshipChangedEvent', function (
+    event, currentNodeRelationship
+  ) {
     if (!currentNodeRelationship) {
       analysisLaunchConfigService.setAnalysisConfig(
-      {
-        nodeSetUuid: null,
-        nodeRelationshipUuid: null
-      });
-      $log.debug("new noderel undefined");
-    }
-    else {
+        {
+          nodeSetUuid: null,
+          nodeRelationshipUuid: null
+        });
+      $log.debug('new noderel undefined');
+    } else {
       analysisLaunchConfigService.setAnalysisConfig(
-      {
-        nodeSetUuid: null,
-        nodeRelationshipUuid: currentNodeRelationship.uuid
-      });
+        {
+          nodeSetUuid: null,
+          nodeRelationshipUuid: currentNodeRelationship.uuid
+        });
     }
   });
 }
+
+angular
+  .module('refineryAnalysisLaunch')
+  .controller('AnalysisLaunchCtrl', [
+    '$scope',
+    '$log',
+    'analysisLaunchConfigService',
+    AnalysisLaunchCtrl
+  ]);

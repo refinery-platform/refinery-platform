@@ -1,58 +1,46 @@
-angular.module('refineryAnalysisLaunch')
-    .controller('AnalysisLaunchModalCtrl',
-    [
-      '$scope',
-      '$uibModalInstance',
-      '$window',
-      'timeStamp',
-      'workflow',
-      'analysisLaunchConfigService',
-      'analysisLaunchFactory',
-      AnalysisLaunchModalCtrl
-    ]
-);
+'use strict';
 
-
-function AnalysisLaunchModalCtrl(
+function AnalysisLaunchModalCtrl (
+  $log,
   $scope,
+  $window,
   $uibModalInstance,
-  $window, timeStamp,
+  timeStamp,
   workflow,
   analysisLaunchConfigService,
   analysisLaunchFactory
-){
+) {
   var nowTimeStamp = timeStamp.getTimeStamp();
   var workflowName = workflow.getName();
 
-  $scope.analysisLaunchFlag = "NOCALL";
+  $scope.analysisLaunchFlag = 'NOCALL';
   $scope.dataObj = {
-    "name":workflowName + " " + nowTimeStamp
+    name: workflowName + ' ' + nowTimeStamp
   };
   analysisLaunchConfigService.setAnalysisConfig(
     {
       workflowUuid: workflow.getUuid()
-      }
+    }
   );
 
   $scope.ok = function () {
-    $scope.analysisLaunchFlag = "LOADING";
+    $scope.analysisLaunchFlag = 'LOADING';
 
-    if($scope.tempName !== null){
-
+    if ($scope.tempName !== null) {
       analysisLaunchConfigService.setAnalysisConfig(
         {
-          name:$scope.dataObj.name
+          name: $scope.dataObj.name
         }
       );
 
       var launchParams = analysisLaunchConfigService.getAnalysisConfig();
       analysisLaunchFactory.postLaunchAnalysis(launchParams)
-        .then(function(response){
-          $scope.analysisLaunchFlag = "SUCCESS";
-       }, function(error){
-         console.log(error);
-          $scope.analysisLaunchFlag = "FAILED";
-       });
+        .then(function () {
+          $scope.analysisLaunchFlag = 'SUCCESS';
+        }, function (error) {
+          $log.log(error);
+          $scope.analysisLaunchFlag = 'FAILED';
+        });
     }
   };
 
@@ -66,7 +54,20 @@ function AnalysisLaunchModalCtrl(
 
   $scope.view = function () {
     $uibModalInstance.close('view');
-    $window.location.href = '/data_sets/' + dataSetUuid + '/#/analyses';
+    $window.location.href = '/data_sets/' + $window.dataSetUuid + '/#/analyses';
   };
-
 }
+
+angular
+  .module('refineryAnalysisLaunch')
+  .controller('AnalysisLaunchModalCtrl', [
+    '$log',
+    '$scope',
+    '$window',
+    '$uibModalInstance',
+    'timeStamp',
+    'workflow',
+    'analysisLaunchConfigService',
+    'analysisLaunchFactory',
+    AnalysisLaunchModalCtrl
+  ]);

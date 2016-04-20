@@ -1,28 +1,62 @@
-function ChartCtrl($, $stateParams, fastqcDataService, refineryBoxPlotService) {
+'use strict';
+
+function isValidUUID (uuid) {
+  var isStr = typeof uuid === 'string' || uuid instanceof (String);
+
+  if (!isStr) {
+    return false;
+  }
+
+  if (uuid.length !== 36) {
+    return false;
+  }
+
+  var split = uuid.split('-');
+
+  if (split.length !== 5 &&
+    split[0].length !== 8 &&
+    split[1].length !== 4 &&
+    split[2].length !== 4 &&
+    split[3].length !== 4 &&
+    split[4].length !== 12) {
+    return false;
+  }
+
+  return true;
+}
+
+function ChartCtrl (
+  $log, $, c3, $stateParams, fastqcDataService, refineryBoxPlotService
+) {
   var that = this;
+
+  that.$log = $log;
   that.$ = $;
+  that.c3 = c3;
   that.$stateParams = $stateParams;
   that.fastqcDataService = fastqcDataService;
   that.refineryBoxPlotService = refineryBoxPlotService;
-  that.uuid = this.$stateParams.uuid && isValidUUID(this.$stateParams.uuid) ?
-    this.$stateParams.uuid : '';
-  that.mode = this.$stateParams.mode || 'basic_statistics';
+  that.uuid = that.$stateParams.uuid && isValidUUID(that.$stateParams.uuid) ?
+    that.$stateParams.uuid : '';
+  that.mode = that.$stateParams.mode || 'basic_statistics';
 
-  if (this.$stateParams &&
-      this.$stateParams.uuid &&
-      isValidUUID(this.$stateParams.uuid)) {
-    this.fastqcDataService.get({
-      uuid: that.$stateParams.uuid
-    }).$promise.then(function (data) {
+  if (that.$stateParams &&
+    that.$stateParams.uuid &&
+    isValidUUID(that.$stateParams.uuid)) {
+    that.fastqcDataService
+      .get({
+        uuid: that.$stateParams.uuid
+      })
+      .$promise
+      .then(function (data) {
         that.data = data.data;
         that.dataKeys = Object.keys(that.data.summary);
         that.plot(that.data, that.$stateParams.mode);
-      }).catch(function (error) {
+      })
+      .catch(function () {
         that.errorMessage = 'Unable to display visualization for data. ' +
           'Only FastQC data formats can be displayed.';
-        console.error(error);
-      }
-    );
+      });
   } else {
     that.errorMessage = 'Incompatible or no analysis selected.';
   }
@@ -62,134 +96,98 @@ Object.defineProperty(
   }
 );
 
-function isValidUUID(uuid) {
-  var isStr = typeof uuid === 'string' || uuid instanceof (String);
-
-  if (!isStr) {
-    return false;
-  }
-
-  if (uuid.length !== 36) {
-    return false;
-  }
-
-  var split = uuid.split('-');
-
-  if (split.length !== 5 &&
-      split[0].length !== 8 &&
-      split[1].length !== 4 &&
-      split[2].length !== 4 &&
-      split[3].length !== 4 &&
-      split[4].length !== 12) {
-    return false;
-  }
-
-  return true;
-}
-
-function make_array(size) {
-  return Array.apply(null, new Array(size)).map(function (a, i) {
-    return i + 1;
-  });
-}
-
 ChartCtrl.prototype.plot = function (data, mode) {
-  var that = this;
-  mode = mode && this.modeList.indexOf(mode) > -1 ?
+  var _mode = mode && this.modeList.indexOf(mode) > -1 ?
     mode : 'basic_statistics';
 
-  if (!data[mode] && !(data[mode] instanceof (Array))) {
-    console.error("Invalid data type returned");
+  if (!data[_mode] && !(data[_mode] instanceof (Array))) {
+    this.$log.error('Invalid data type returned');
     return;
   }
 
-  if (mode === 'per_base_sequence_quality') {
-    this.draw_per_base_sequence_quality(data[mode]);
-  } else if (mode === 'basic_statistics') {
-    this.draw_basic_statistics_table(data[mode]);
-  } else if (mode === 'per_sequence_quality_scores') {
-    this.draw_generic_line(data[mode]);
-  } else if (mode === 'per_base_sequence_content') {
-    this.draw_generic_line(data[mode], {ymin: 0, ymax: 0});
-  } else if (mode === 'per_sequence_gc_content') {
-    this.draw_generic_line(data[mode]);
-  } else if (mode === 'per_base_n_content') {
-    this.draw_generic_line(data[mode]);
-  } else if (mode === 'sequence_length_distribution') {
-    this.draw_generic_line(data[mode]);
-  } else if (mode === 'sequence_duplication_levels') {
-    this.draw_generic_line(data[mode].slice(1));
-  } else if (mode === 'overrepresented_sequences') {
-    this.draw_generic_table(data[mode]);
-  } else if (mode === 'adapter_content') {
-    this.draw_generic_line(data[mode]);
-  } else if (mode === 'kmer_content') {
-    this.draw_generic_table(data[mode]);
+  if (_mode === 'per_base_sequence_quality') {
+    this.draw_per_base_sequence_quality(data[_mode]);
+  } else if (_mode === 'basic_statistics') {
+    this.draw_basic_statistics_table(data[_mode]);
+  } else if (_mode === 'per_sequence_quality_scores') {
+    this.draw_generic_line(data[_mode]);
+  } else if (_mode === 'per_base_sequence_content') {
+    this.draw_generic_line(data[_mode], {
+      ymin: 0,
+      ymax: 0
+    });
+  } else if (_mode === 'per_sequence_gc_content') {
+    this.draw_generic_line(data[_mode]);
+  } else if (_mode === 'per_base_n_content') {
+    this.draw_generic_line(data[_mode]);
+  } else if (_mode === 'sequence_length_distribution') {
+    this.draw_generic_line(data[_mode]);
+  } else if (_mode === 'sequence_duplication_levels') {
+    this.draw_generic_line(data[_mode].slice(1));
+  } else if (_mode === 'overrepresented_sequences') {
+    this.draw_generic_table(data[_mode]);
+  } else if (_mode === 'adapter_content') {
+    this.draw_generic_line(data[_mode]);
+  } else if (_mode === 'kmer_content') {
+    this.draw_generic_table(data[_mode]);
   } else {
-    this.draw_basic_statistics_table(data['basic_statistics']);
+    this.draw_basic_statistics_table(data.basic_statistics);
   }
 };
 
-ChartCtrl.prototype.draw_generic_bar = function (data, config) {
-  config = config || {};
-};
+ChartCtrl.prototype.draw_generic_bar = function () {};
 
-ChartCtrl.prototype.draw_generic_table = function (data, config) {
-  config = config || {};
-
-  if ( data.length === 0 ) {
-
-
+ChartCtrl.prototype.draw_generic_table = function (data) {
+  if (data.length === 0) {
     var message = '<div class="alert alert-warning">No data available for plotting.</div>';
-
-    $(this.bindto).html(message);
-  }
-  else {
+    this.$(this.bindto).html(message);
+  } else {
     var tableHTML = '' +
-      '<table class="table">'+
-        '<thead>' +
-          '<tr>' + data[0].map(function (d) { return '<th>' + d + '</th>'; }).join('') + '</tr>' +
-        '</thead>' +
-        '<tbody>' +
-          data.slice(1).map(function (d) {
-            return '<tr>' + d.map(function (f) { return '<td>' + f + '</td>'; }).join('') + '</tr>';
-          }).join('') +
-        '</tbody>' +
-      '</table>';
-
-    console.log( tableHTML);
-    $(this.bindto).html(tableHTML);
-  }
-};
-
-ChartCtrl.prototype.draw_basic_statistics_table = function (data, config) {
-  config = config || {};
-
-  var tableHTML = '' +
-    '<table class="table">'+
+      '<table class="table">' +
       '<thead>' +
-        '<tr>' +
-          '<th>Measure</th>' +
-          '<th>Value</th>' +
-        '</tr>' +
+      '<tr>' + data[0].map(function (d) {
+        return '<th>' + d + '</th>';
+      }).join('') + '</tr>' +
       '</thead>' +
       '<tbody>' +
-        Object.keys(data).map(function (k) {
-          return '' +
-            '<tr>'+
-              '<td>' + k + '</td>' + '<td>' + data[k] + '</td>' +
-            '</tr>';
-        }).join('') +
+      data.slice(1).map(function (d) {
+        return '<tr>' + d.map(function (f) {
+          return '<td>' + f + '</td>';
+        }).join('') + '</tr>';
+      }).join('') +
       '</tbody>' +
-    '</table>';
+      '</table>';
 
-  $(this.bindto).html(tableHTML);
+    this.$(this.bindto).html(tableHTML);
+  }
 };
 
-ChartCtrl.prototype.draw_generic_line = function (data, config) {
-  config = config || {};
+ChartCtrl.prototype.draw_basic_statistics_table = function (data) {
+  var tableHTML = '' +
+    '<table class="table">' +
+    '<thead>' +
+    '<tr>' +
+    '<th>Measure</th>' +
+    '<th>Value</th>' +
+    '</tr>' +
+    '</thead>' +
+    '<tbody>' +
+    Object.keys(data).map(function (k) {
+      return '' +
+      '<tr>' +
+      '<td>' + k + '</td>' + '<td>' + data[k] + '</td>' +
+      '</tr>';
+    }).join('') +
+    '</tbody>' +
+    '</table>';
 
-  var chart = c3.generate({
+  this.$(this.bindto).html(tableHTML);
+};
+
+ChartCtrl.prototype.draw_generic_line = function (data, _config_) {
+  var config = _config_ || {};
+
+  this.c3.generate({
     bindto: this.bindto,
     data: {
       x: data[0][0],
@@ -215,7 +213,7 @@ ChartCtrl.prototype.draw_generic_line = function (data, config) {
 };
 
 ChartCtrl.prototype.draw_per_base_sequence_quality = function (data) {
-  var chart = this.refineryBoxPlotService.generate({
+  this.refineryBoxPlotService.generate({
     data: data.slice(1).map(function (d) {
       return {
         kind: 'A',
@@ -236,8 +234,10 @@ ChartCtrl.prototype.draw_per_base_sequence_quality = function (data) {
 
 angular
   .module('refineryChart')
-  .controller("refineryChartCtrl", [
+  .controller('refineryChartCtrl', [
+    '$log',
     '$',
+    'c3',
     '$stateParams',
     'fastqcDataService',
     'refineryBoxPlotService',

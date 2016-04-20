@@ -1,8 +1,6 @@
-function dataCartFactory (_$q_, _$resource_, _settings_) {
-  var Q = _$q_;
-  var RESOURCE = _$resource_;
-  var SETTINGS = _settings_;
+'use strict';
 
+function dataCartFactory () {
   var card = {};
   var stack = [];
 
@@ -35,7 +33,8 @@ function dataCartFactory (_$q_, _$resource_, _settings_) {
     }
   }
 
-  function DataCart () {}
+  function DataCart () {
+  }
 
   Object.defineProperty(
     DataCart.prototype,
@@ -102,7 +101,7 @@ function dataCartFactory (_$q_, _$resource_, _settings_) {
   };
 
   DataCart.prototype.get = function (offset, limit, success) {
-    success(stack.slice(Math.max(offset--, 0), limit));
+    success(stack.slice(Math.max(offset - 1, 0), limit));
   };
 
   DataCart.prototype.remove = function (dataSets, idOnly) {
@@ -123,13 +122,11 @@ function dataCartFactory (_$q_, _$resource_, _settings_) {
     return this;
   };
 
-  DataCart.prototype.toDataCollection = function () {
-
-  };
+  DataCart.prototype.toDataCollection = function () {};
 
   return new DataCart();
 }
 
 angular
   .module('refineryApp')
-  .factory('dataCart', ['$q', '$resource', 'settings', dataCartFactory]);
+  .factory('dataCart', [dataCartFactory]);

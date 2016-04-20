@@ -145,6 +145,16 @@ class solr {
     path    => "/bin",
   }
   ->
+  file { "${django_root}/solr/core/conf/solrconfig.xml":
+    ensure  => file,
+    content => template("${django_root}/solr/core/conf/solrconfig.xml.erb"),
+  }
+  ->
+  file { "${django_root}/solr/data_set_manager/conf/solrconfig.xml":
+    ensure  => file,
+    content => template("${django_root}/solr/data_set_manager/conf/solrconfig.xml.erb"),
+  }
+  ->
   exec { "solr_install":  # also starts the service
     command => "sudo bash ./install_solr_service.sh ${solr_archive} -u ${app_user}",
     cwd     => "/usr/local/src",

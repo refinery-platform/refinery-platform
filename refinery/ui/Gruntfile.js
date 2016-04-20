@@ -1,5 +1,7 @@
-var fs           = require('fs');
-var hasbin       = require('hasbin');
+'use strict';
+
+var fs = require('fs');
+var hasbin = require('hasbin');
 var isBinaryFile = require('isbinaryfile');
 
 /*
@@ -52,9 +54,7 @@ var importanceSortJS = function (a, b) {
   return objs[0] - objs[1];
 };
 
-module.exports = function(grunt) {
-  'use strict';
-
+module.exports = function (grunt) {
   // Auto-load all packages
   require('load-grunt-tasks')(grunt);
 
@@ -92,6 +92,11 @@ module.exports = function(grunt) {
   var browsers = !!grunt.option('host') ?
     ['Chrome', 'Firefox', 'Safari'] : ['PhantomJS'];
 
+  // Specify file globbing, e.g. `--files 'source/js/commons/**/*.js'` would get
+  // all `.js` files from `source/js/commons/`. This is used for `esformatter`
+  // because we might not want to alter all js files at once.
+  var fileGlob = grunt.option('files') || '';
+
   var jsFilesByImportance = function (spec) {
     var files = [];
 
@@ -109,11 +114,11 @@ module.exports = function(grunt) {
     // Sort files
     files.sort(importanceSortJS);
 
-    if (spec) {// Get all files within a feature
+    if (spec) {  // Get all files within a feature
       grunt
         .file
         .expand([
-          config.basePath.ui.src + '/js/**/*.spec.js'
+          fileGlob || config.basePath.ui.src + '/js/**/*.spec.js'
         ])
         .forEach(function (file) {
           files.push(file);
@@ -352,7 +357,7 @@ module.exports = function(grunt) {
       gruntfile: {
         files: 'Gruntfile.js',
         tasks: [
-          'jshint:gruntfile',
+          'eslint:gruntfile',
           'build'
         ]
       },
@@ -377,7 +382,7 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.ui.src %>/js/**/*.js'
         ],
         tasks: [
-          'newer:jshint:sourceCode',
+          'newer:eslint:sourceCode',
           'newer:copy:uiBuildScripts',
           'concat-by-feature:build'
         ],
@@ -446,7 +451,7 @@ module.exports = function(grunt) {
         files: [
           '<%= cfg.basePath.djangoTemplates %>/**/*'
         ]
-      },
+      }
     },
 
     /*
@@ -454,7 +459,7 @@ module.exports = function(grunt) {
      */
     env: {
       compile: {
-        PHANTOMJS_BIN: function() {
+        PHANTOMJS_BIN: function () {
           var localPhantomJS =
             'node_modules/phantomjs-prebuilt/lib/phantom/bin/phantomjs';
 
@@ -479,27 +484,19 @@ module.exports = function(grunt) {
     },
 
     /*
-     * Generate documentation
+     * Autoformats JS code using esformatter.
      */
-    jsdoc : {
-      dist : {
-        src: [
-          '<%= cfg.basePath.ui.src %>/**/!(*spec).js'
-        ],
-        options: {
-          // Doesn't seem to work right now, so we have to specify the right
-          // location manually
-          //destination: '<%= cfg.basePath.ui.docs %>'
-          destination: 'docs'
-        }
-      }
+    esformatter: {
+      src: fileGlob
     },
 
     /*
      * Lint source JS files to find possible flaws that could lead to errors.
-     * Custom code
      */
-    jshint: {
+    eslint: {
+      custom: {
+        src: fileGlob || ''
+      },
       sourceCode: {
         src: [
           '<%= cfg.basePath.ui.src %>/js/**/*.js'
@@ -507,11 +504,23 @@ module.exports = function(grunt) {
       },
       gruntfile: {
         src: 'Gruntfile.js'
-      },
-      options: {
-        // All jsHint configs are located in `.jshintrc`. This is useful as
-        // editor plugins can pick up this file as well.
-        jshintrc: './.jshintrc'
+      }
+    },
+
+    /*
+     * Generate documentation
+     */
+    jsdoc: {
+      dist: {
+        src: [
+          '<%= cfg.basePath.ui.src %>/**/!(*spec).js'
+        ],
+        options: {
+          // Doesn't seem to work right now, so we have to specify the right
+          // location manually
+          // destination: '<%= cfg.basePath.ui.docs %>'
+          destination: 'docs'
+        }
       }
     },
 
@@ -563,7 +572,7 @@ module.exports = function(grunt) {
         options: {
           paths: [
             '<%= cfg.basePath.ui.src %>/styles',
-            '<%= cfg.basePath.bower_components %>/bootstrap/less',
+            '<%= cfg.basePath.bower_components %>/bootstrap/less'
           ],
           plugins: lessPlugins
         },
@@ -587,7 +596,7 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.ui.build %>/styles/dashboard.css':
             '<%= cfg.basePath.ui.src %>/styles/dashboard.less',
           '<%= cfg.basePath.ui.build %>/styles/provenance-visualization.css':
-            '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less',
+            '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less'
         }
       },
       compile: {
@@ -631,7 +640,7 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.ui.compile %>/styles/dashboard.css':
             '<%= cfg.basePath.ui.src %>/styles/dashboard.less',
           '<%= cfg.basePath.ui.compile %>/styles/provenance-visualization.css':
-            '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less',
+            '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less'
         }
       }
     },
@@ -654,7 +663,7 @@ module.exports = function(grunt) {
             dest: '<%= cfg.basePath.ui.tmp %>/js'
           }
         ]
-      },
+      }
     },
 
     /*
@@ -695,15 +704,15 @@ module.exports = function(grunt) {
   grunt.registerTask(
     'concat-by-feature',
     'Concat files by features excluding `spec` files',
-    function(mode) {
+    function (mode) {
       // Read config
-      var cfg = grunt.file.readJSON('config.json'),
-          concat = grunt.config.get('concat') || {},
-          destination = mode === 'build' ?
-            cfg.basePath.ui.build : cfg.basePath.ui.tmp,
-          features = cfg.files.features,
-          files,
-          ngAnnotate = grunt.config.get('ngAnnotate') || {};
+      var cfg = grunt.file.readJSON('config.json');
+      var concat = grunt.config.get('concat') || {};
+      var destination = mode === 'build' ?
+            cfg.basePath.ui.build : cfg.basePath.ui.tmp;
+      var features = cfg.files.features;
+      var files;
+      var ngAnnotate = grunt.config.get('ngAnnotate') || {};
 
       // Loop over all features
       features.forEach(function (feature) {
@@ -729,13 +738,13 @@ module.exports = function(grunt) {
         concat[feature] = {
           options: {
             // Remove all 'use strict' statements
-            process: function(src, filepath) {
+            process: function (src, filepath) {
               return '// Source: ' + filepath + '\n' +
                 src.replace(
                   /(^|\n)[ \t]*('use strict'|"use strict");?\s*/g,
                   '$1'
                 );
-            },
+            }
           },
           src: files,
           dest: destination + '/js/' + feature.replace('/', '.') + '.js'
@@ -767,12 +776,12 @@ module.exports = function(grunt) {
   );
 
   // Event handling
-  if (!spawn) {
-    grunt.event.on('watch', function(action, filepath){
-      // Update the config to only build the changed less file.
-      grunt.config(['jshint', 'src'], filepath);
-    });
-  }
+  // if (!spawn) {
+  //   grunt.event.on('watch', function (action, filepath) {
+  //     // Update the config to only build the changed less file.
+  //     grunt.config(['eslint', 'src'], filepath);
+  //   });
+  // }
 
   // Default task.
   grunt.registerTask('default', ['make', 'test']);
@@ -786,7 +795,8 @@ module.exports = function(grunt) {
   // Do as little as possible to get Refineryrunning to keep grunt watch
   // responsive.
   grunt.registerTask('build', [
-    'newer:jshint',
+    'newer:eslint:sourceCode',
+    'newer:eslint:gruntfile',
     'clean:uiBuild',
     'clean:staticBuild',
     'newer:less:build',
@@ -801,7 +811,7 @@ module.exports = function(grunt) {
   // Do all the heavy lifting to get Refinery ready for production.
   grunt.registerTask('compile', [
     'env:compile',
-    'jshint',
+    'eslint:sourceCode',
     'clean:uiCompile',
     'clean:staticCompile',
     'less:compile',

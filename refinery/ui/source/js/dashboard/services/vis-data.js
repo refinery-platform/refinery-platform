@@ -1,10 +1,13 @@
-function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
-  var graphData = $q.defer(),
-      treemapData = $q.defer(),
-      annotations = $q.defer(),
-      finalRootNode = $q.defer();
+'use strict';
 
-  function Data () {}
+function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
+  var graphData = $q.defer();
+  var treemapData = $q.defer();
+  var annotations = $q.defer();
+  var finalRootNode = $q.defer();
+
+  function Data () {
+  }
 
   /**
    * Load data required by the visualization tools.
@@ -25,15 +28,15 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
     // Make sure that all globally user-accessible data set IDs are loaded.
     dataSet.loadAllIds();
 
-    var allDsIds = dataSet.allIds;
-    var neo4jToGraphData = neo4jToGraph.get();
+    var _root = root || settings.ontRoot;
 
-    $q.all([allDsIds, neo4jToGraphData])
+    var allDsIdsPromise = dataSet.allIds;
+    var neo4jToGraphDataPromise = neo4jToGraph.get();
+
+    $q.all([allDsIdsPromise, neo4jToGraphDataPromise])
       .then(function (results) {
         var allDsIds = results[0];
         var data = results[1];
-
-        root = root || settings.ontRoot;
 
         if (remixRoots) {
           // Check existance of remix roots
@@ -46,11 +49,11 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
           }
 
           // Replace original root nodes with the existing remix roots
-          data[root].children = checkedRemixRoots;
+          data[_root].children = checkedRemixRoots;
         }
 
         // Prune graph and accumulate the dataset annotations
-        var prunedData = graph.accumulateAndPrune(data, root, valueProperty);
+        var prunedData = graph.accumulateAndPrune(data, _root, valueProperty);
 
         // Add pseudo-parent and pseudo-sibling for data sets without any
         // annotation.
@@ -68,11 +71,11 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
         }
 
         // Init precision and recall
-        dataSet.ids.then(function (allDsIds) {
+        dataSet.ids.then(function (currentAllDsIds) {
           graph.calcPrecisionRecall(
             data,
             valueProperty,
-            allDsIds
+            currentAllDsIds
           );
 
           // Make precision and recall available as bars
@@ -83,12 +86,12 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
 
           // Convert graph into hierarchy for D3
           // treemapData.resolve(graph.toTree(data, prunedData.root));
-          treemapData.resolve(graph.toTreemap(data, root));
+          treemapData.resolve(graph.toTreemap(data, _root));
 
           graphData.resolve(data);
 
-          finalRootNode.resolve(root);
-        }.bind(this));
+          finalRootNode.resolve(_root);
+        });
       })
       .catch(function (e) {
         graphData.reject(e);
@@ -103,8 +106,8 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
       });
   };
 
-  Data.prototype.updateGraph = function (annotations) {
-    $q.all([graphData.promise, annotations]).then(function (results) {
+  Data.prototype.updateGraph = function (newAnnotations) {
+    $q.all([graphData.promise, newAnnotations]).then(function (results) {
       graph.updateAnnotations(results[0], results[1]);
     });
   };
@@ -122,7 +125,7 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
     Data.prototype,
     'data',
     {
-      get: function() {
+      get: function () {
         return $q.all([
           graphData.promise, treemapData.promise, finalRootNode.promise
         ]).then(function (results) {

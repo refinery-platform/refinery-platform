@@ -15,7 +15,7 @@ angular
     ]);
 
 
-function FileBrowserCtrl(
+function FileBrowserCtrl (
   $scope,
   $location,
   uiGridConstants,
@@ -24,17 +24,20 @@ function FileBrowserCtrl(
   isOwnerService,
   $window,
   $timeout,
-  $q) {
+  $q
+  ) {
+  'use strict';
 
-  "use strict";
   var vm = this;
   vm.assayFiles = [];
   vm.assayAttributes = [];
   vm.attributeFilter = [];
   vm.analysisFilter = [];
-  vm.filesParam = {'uuid': $window.externalAssayUuid};
+  vm.filesParam = {
+    uuid: $window.externalAssayUuid
+  };
 
-  //Ui-grid parameters
+  // Ui-grid parameters
   vm.customColumnName = [];
   vm.queryKeys = Object.keys($location.search());
   vm.selectedField = {};
@@ -49,7 +52,7 @@ function FileBrowserCtrl(
     enableSelectAll: true,
     selectionRowHeaderWidth: 35,
     rowHeight: 35,
-    showGridFooter:false,
+    showGridFooter: false,
     enableSelectionBatchEvent: true,
     multiSelect: true
   };
@@ -60,16 +63,18 @@ function FileBrowserCtrl(
   vm.totalPages = 1;
   vm.cachePages = 2;
 
+
   vm.refreshAssayFiles = function () {
 
     vm.filesParam['offset'] = vm.lastPage * vm.rowCount;
     vm.filesParam['limit'] = vm.rowCount;
+
     var promise = $q.defer();
     fileBrowserFactory.getAssayFiles(vm.filesParam).then(function () {
       vm.assayFiles = vm.assayFiles.concat(fileBrowserFactory.assayFiles);
       vm.gridOptions.data = vm.assayFiles;
       vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
-      vm.totalPages = Math.floor(vm.assayFilesTotal/vm.rowCount);
+      vm.totalPages = Math.floor(vm.assayFilesTotal / vm.rowCount);
       vm.assayAttributes = fileBrowserFactory.assayAttributes;
       vm.attributeFilter = fileBrowserFactory.attributeFilter;
       vm.analysisFilter = fileBrowserFactory.analysisFilter;
@@ -79,156 +84,168 @@ function FileBrowserCtrl(
     return promise.promise;
   };
 
-  //checks url for params to update the filter
-  vm.checkUrlQueryFilters = function(){
+
+  // checks url for params to update the filter
+  vm.checkUrlQueryFilters = function () {
     var allFilters = {};
-    //Merge attribute and analysis filter data obj
+    // Merge attribute and analysis filter data obj
     angular.copy(vm.attributeFilter, allFilters);
+
     if(typeof vm.analysisFilter['Analysis'] !== 'undefined'){
       allFilters['Analysis'] = vm.analysisFilter['Analysis'];
     }
 
     //for attribute filter directive, drop panels in query
     $scope.$broadcast('rf/attributeFilter-ready');
-    angular.forEach(allFilters, function(fieldObj, attribute) {
+    angular.forEach(allFilters, function (fieldObj, attribute) {
       vm.refreshSelectedFieldFromQuery(fieldObj, attribute);
     });
   };
 
-  vm.refreshSelectedFieldFromQuery = function(fieldObj, attribute){
+
+  vm.refreshSelectedFieldFromQuery = function (fieldObj, attribute) {
     angular.forEach(fieldObj.facetObj, function (value, field) {
-      if(vm.queryKeys.indexOf(field) > -1){
-        vm.selectedField[field]=true;
+      if (vm.queryKeys.indexOf(field) > -1) {
+        vm.selectedField[field] = true;
         vm.attributeSelectionUpdate(fieldObj.internal_name, field, attribute);
       }
     });
   };
 
-  //Updates which attribute filters are selected and the ui-grid data
-  vm.attributeSelectionUpdate = function(internal_name, field){
-    if(vm.selectedField[field] &&
-      typeof vm.selectedFieldList[internal_name] !== 'undefined'){
-      vm.selectedFieldList[internal_name].push(field);
-      $location.search(field, vm.selectedField[field]);
 
-    }else if(vm.selectedField[field]){
-      vm.selectedFieldList[internal_name]=[field];
+  // Updates which attribute filters are selected and the ui-grid data
+  vm.attributeSelectionUpdate = function (internalName, field) {
+    if (vm.selectedField[field] &&
+      typeof vm.selectedFieldList[internalName] !== 'undefined') {
+      vm.selectedFieldList[internalName].push(field);
       $location.search(field, vm.selectedField[field]);
-
-    }else{
-      var ind = vm.selectedFieldList[internal_name].indexOf(field);
-      if(ind > -1){
-        vm.selectedFieldList[internal_name].splice(ind, 1);
+    } else if (vm.selectedField[field]) {
+      vm.selectedFieldList[internalName] = [field];
+      $location.search(field, vm.selectedField[field]);
+    } else {
+      var ind = vm.selectedFieldList[internalName].indexOf(field);
+      if (ind > -1) {
+        vm.selectedFieldList[internalName].splice(ind, 1);
       }
-      if(vm.selectedFieldList[internal_name].length === 0){
-        delete vm.selectedFieldList[internal_name];
+      if (vm.selectedFieldList[internalName].length === 0) {
+        delete vm.selectedFieldList[internalName];
       }
       $location.search(field, null);
     }
-    vm.filesParam['filter_attribute'] = vm.selectedFieldList;
+    vm.filesParam.filter_attribute = vm.selectedFieldList;
     vm.reset();
   };
 
-  //Ui-grid methods for catching grid events
-  vm.gridOptions.onRegisterApi = function(gridApi) {
-    //set gridApi on scope
 
-    //Infinite Grid Load
+  // Ui-grid methods for catching grid events
+  vm.gridOptions.onRegisterApi = function (gridApi) {
+    // set gridApi on scope
+
+    // Infinite Grid Load
     gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
     gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
     vm.gridApi = gridApi;
 
-    //Sort events
-    vm.gridApi.core.on.sortChanged( null, vm.sortChanged );
-    vm.sortChanged(vm.gridApi.grid, [ vm.gridOptions.columnDefs[1] ] );
+    // Sort events
+    vm.gridApi.core.on.sortChanged(null, vm.sortChanged);
+    vm.sortChanged(vm.gridApi.grid, [vm.gridOptions.columnDefs[1]]);
 
-    //Checkbox selection events
-    vm.gridApi.selection.on.rowSelectionChanged(null, function (row) {
-       vm.selectNodes = gridApi.selection.getSelectedRows();
+    // Checkbox selection events
+    vm.gridApi.selection.on.rowSelectionChanged(null, function () {
+      vm.selectNodes = gridApi.selection.getSelectedRows();
     });
 
-    vm.gridApi.selection.on.rowSelectionChangedBatch(null, function (rows) {
+    vm.gridApi.selection.on.rowSelectionChangedBatch(null, function () {
       vm.selectNodes = gridApi.selection.getSelectedRows();
     });
   };
 
-  vm.getDataDown = function() {
+
+  vm.getDataDown = function () {
     vm.lastPage++;
-    vm.filesParam['offset'] = vm.lastPage * vm.rowCount;
-    vm.filesParam['limit'] = vm.rowCount;
+    vm.filesParam.offset = vm.lastPage * vm.rowCount;
+    vm.filesParam.limit = vm.rowCount;
     var promise = $q.defer();
     fileBrowserFactory.getAssayFiles(vm.filesParam)
-    .then(function() {
-      vm.assayFiles = vm.assayFiles.concat(fileBrowserFactory.assayFiles);
-      vm.gridApi.infiniteScroll.saveScrollPercentage();
-      vm.gridOptions.data = vm.assayFiles;
-      vm.gridApi.infiniteScroll
-        .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
-        .then(function(){
-          vm.checkDataLength('up');
-        })
-        .then(function(){
-          promise.resolve();
-        });
-    }, function(error) {
+      .then(function () {
+        vm.assayFiles = vm.assayFiles.concat(fileBrowserFactory.assayFiles);
+        vm.gridApi.infiniteScroll.saveScrollPercentage();
+        vm.gridOptions.data = vm.assayFiles;
+        vm.gridApi.infiniteScroll
+          .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
+          .then(function () {
+            vm.checkDataLength('up');
+          })
+          .then(function () {
+            promise.resolve();
+          });
+      }, function () {
         vm.gridApi.infiniteScroll.dataLoaded();
         promise.reject();
-    });
+      });
     return promise.promise;
   };
 
-  vm.getDataUp = function() {
-    if(vm.firstPage > 0){
+
+  vm.getDataUp = function () {
+    if (vm.firstPage > 0) {
       vm.firstPage--;
     }
+
     vm.filesParam['offset'] = vm.firstPage * vm.rowCount;
     vm.filesParam['limit'] = vm.rowCount;
     var promise = $q.defer();
     fileBrowserFactory.getAssayFiles(vm.filesParam)
-    .then(function() {
-      vm.assayFiles = fileBrowserFactory.assayFiles.concat(vm.assayFiles);
-      vm.gridApi.infiniteScroll.saveScrollPercentage();
-      vm.gridOptions.data = vm.assayFiles;
-      vm.gridApi.infiniteScroll
-        .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
-        .then(function(){
-          vm.checkDataLength('down');
-        })
-        .then(function(){
-          promise.resolve();
-        });
-    }, function(error) {
-      vm.gridApi.infiniteScroll.dataLoaded();
-      promise.reject();
-    });
+      .then(function () {
+        vm.assayFiles = fileBrowserFactory.assayFiles.concat(vm.assayFiles);
+        vm.gridApi.infiniteScroll.saveScrollPercentage();
+        vm.gridOptions.data = vm.assayFiles;
+        vm.gridApi.infiniteScroll
+          .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
+          .then(function () {
+            vm.checkDataLength('down');
+          })
+          .then(function () {
+            promise.resolve();
+          });
+      }, function () {
+        vm.gridApi.infiniteScroll.dataLoaded();
+        promise.reject();
+      });
     return promise.promise;
   };
 
-  vm.checkDataLength = function( discardDirection) {
-    // work out whether we need to discard a page, if so discard from the direction passed in
-    if( vm.lastPage - vm.firstPage > vm.cachePages ){
+
+  vm.checkDataLength = function (discardDirection) {
+    // work out whether we need to discard a page, if so discard from the
+    // direction passed in
+    if (vm.lastPage - vm.firstPage > vm.cachePages) {
       // we want to remove a page
       vm.gridApi.infiniteScroll.saveScrollPercentage();
 
-      if( discardDirection === 'up' ){
+      if (discardDirection === 'up') {
         vm.assayFiles = vm.assayFiles.slice(vm.rowCount);
         vm.firstPage++;
-        $timeout(function() {
+        $timeout(function () {
           // wait for grid to ingest data changes
-          vm.gridApi.infiniteScroll.dataRemovedTop(vm.firstPage > 0, vm.lastPage < vm.totalPages);
+          vm.gridApi.infiniteScroll.dataRemovedTop(
+            vm.firstPage > 0, vm.lastPage < vm.totalPages
+          );
         });
       } else {
-        vm.assayFiles = vm.assayFiles.slice(0, vm.rowCount*vm.cachePages);
+        vm.assayFiles = vm.assayFiles.slice(0, vm.rowCount * vm.cachePages);
         vm.lastPage--;
-        $timeout(function() {
+        $timeout(function () {
           // wait for grid to ingest data changes
-          vm.gridApi.infiniteScroll.dataRemovedBottom(vm.firstPage > 0, vm.lastPage < vm.totalPages);
+          vm.gridApi.infiniteScroll.dataRemovedBottom(
+            vm.firstPage > 0, vm.lastPage < vm.totalPages
+          );
         });
       }
     }
   };
 
-  vm.reset = function() {
+  vm.reset = function () {
     vm.firstPage = 0;
     vm.lastPage = 0;
 
@@ -248,27 +265,29 @@ function FileBrowserCtrl(
     }
   };
 
-  //Generates param: sort for api call from ui-grid response
-  vm.sortChanged = function ( grid, sortColumns ) {
+
+  // Generates param: sort for api call from ui-grid response
+  vm.sortChanged = function (grid, sortColumns) {
     if (typeof sortColumns !== 'undefined' &&
         typeof sortColumns[0] !== 'undefined' &&
         typeof sortColumns[0].sort !== 'undefined' ) {
 
       switch (sortColumns[0].sort.direction) {
         case uiGridConstants.ASC:
-          vm.filesParam['sort'] = sortColumns[0].field + ' asc';
+          vm.filesParam.sort = sortColumns[0].field + ' asc';
           vm.reset();
           break;
         case uiGridConstants.DESC:
-          vm.filesParam['sort'] = sortColumns[0].field + ' desc';
+          vm.filesParam.sort = sortColumns[0].field + ' desc';
           vm.reset();
           break;
-        case undefined:
+        default:
           vm.reset();
           break;
       }
     }
   };
+
 
   //populates the ui-grid columns variable
   vm.createColumnDefs = function(){
@@ -313,3 +332,4 @@ function FileBrowserCtrl(
   });
 
 }
+

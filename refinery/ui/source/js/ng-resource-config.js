@@ -1,11 +1,12 @@
+'use strict';
+
 // Angular monkey patch to address removal of trailing slashes by $resource:
 // https://github.com/angular/angular.js/issues/992
 angular
   .module('ngResource')
-  .config(['$provide', '$httpProvider', function($provide, $httpProvider) {
+  .config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
     $provide.decorator('$resource', function ($delegate) {
       return function () {
-        'use strict';
         if (arguments.length > 0) {  // URL
           arguments[0] = arguments[0].replace(/\/$/, '\\/');
         }

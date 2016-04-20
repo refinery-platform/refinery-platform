@@ -1,0 +1,9 @@
+bower_components/**
+coverage/**
+development/**
+docs/**
+node_modules/**
+production/**
+
+source/js/provvis/**
+source/js/file-browser/**

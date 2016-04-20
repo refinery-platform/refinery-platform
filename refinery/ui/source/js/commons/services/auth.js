@@ -1,9 +1,10 @@
+'use strict';
+
 angular
   .module('refineryApp')
   .factory('authService', ['$q', '$resource', 'settings', 'sessionService',
     function ($q, $resource, settings, sessionService) {
-      var auth = {},
-          authLastCheck = 0;
+      var auth = {};
 
       /**
        * Check whether a user is authenticated or not.
@@ -16,17 +17,17 @@ angular
        */
       function checkUserStatus () {
         var query = $resource(
-              settings.appRoot + settings.refineryApi + '/user_authentication/',
-              {
-                format: 'json'
-              },
-              {
-                query: {
-                  method: 'GET',
-                  isArray: false,
-                }
-              }
-            ).query();
+          settings.appRoot + settings.refineryApi + '/user_authentication/',
+          {
+            format: 'json'
+          },
+          {
+            query: {
+              method: 'GET',
+              isArray: false
+            }
+          }
+        ).query();
 
         return query.$promise;
       }
@@ -47,7 +48,7 @@ angular
           .then(function (response) {
             sessionService.create({
               userId: response.id,
-              isAdmin: response.is_admin,
+              isAdmin: response.is_admin
             });
           });
       }
@@ -62,8 +63,8 @@ angular
        * @return  {Boolean}  `true` if the current user is an adminitrator.
        */
       auth.isAdmin = function () {
-        var now = new Date().getTime(),
-            session;
+        var now = new Date().getTime();
+        var session;
 
         if (now - sessionService.get('date') > settings.authThrottling) {
           session = createSession();
@@ -87,8 +88,8 @@ angular
        *   is authenticaed.
        */
       auth.isAuthenticated = function () {
-        var now = new Date().getTime(),
-            session;
+        var now = new Date().getTime();
+        var session;
 
         if (now - sessionService.get('date') > settings.authThrottling) {
           session = createSession();

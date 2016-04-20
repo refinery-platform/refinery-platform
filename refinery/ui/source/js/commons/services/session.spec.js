@@ -1,6 +1,6 @@
-describe('Common.service.sessionService: unit tests', function () {
-  'use strict';
+'use strict';
 
+describe('Common.service.sessionService: unit tests', function () {
   var service;
 
   beforeEach(function () {
@@ -12,7 +12,6 @@ describe('Common.service.sessionService: unit tests', function () {
   });
 
   describe('Service', function () {
-
     it('should be available', function () {
       expect(!!service).toEqual(true);
     });
@@ -41,6 +40,5 @@ describe('Common.service.sessionService: unit tests', function () {
 
       expect(service.get('userId')).toEqual(fakeData.userId);
     });
-
   });
 });

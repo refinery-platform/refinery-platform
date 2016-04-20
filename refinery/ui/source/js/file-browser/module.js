@@ -1,5 +1,7 @@
+'use strict';
+
 angular
-  .module( 'refineryFileBrowser', [
+  .module('refineryFileBrowser', [
     'ui.grid',
     'ui.grid.selection',
     'ui.grid.infiniteScroll',

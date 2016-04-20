@@ -4,6 +4,7 @@ import tempfile
 from xml.dom.minidom import Document
 
 from django.shortcuts import redirect
+from django.contrib.sites.models import Site
 
 from annotation_server.models import taxon_id_to_genome_build, \
     genome_build_to_species
@@ -172,15 +173,27 @@ def igv_multi_species(solr_results, solr_annot=None):
     # http://igv.broadinstitute.org/data/hg18/tcga/gbm/gbmsubtypes/sampleTable.txt.gz
     # 4. generate igv files for each species, including phenotype data + paths
     # generated from uuid's
+
+    try:
+        current_site = Site.objects.get_current()
+    except Site.DoesNotExist:
+        logger.error(
+            "Cannot provide a full URL: no sites configured or "
+            "SITE_ID is not set correctly")
+        return None
+
     ui_results = {'species_count': unique_species_num, 'species': {}}
+
     for k, v in unique_species.items():
         if solr_annot is not None and solr_annot["response"]["numFound"] > 0:
-            sampleFile = addIGVSamples(fields, unique_species[k]['solr'],
-                                       unique_annot[k]['solr'])
+            sample_file = addIGVSamples(fields, unique_species[k]['solr'],
+                                        unique_annot[k]['solr'])
         else:
-            sampleFile = addIGVSamples(fields, unique_species[k]['solr'])
+            sample_file = addIGVSamples(fields, unique_species[k]['solr'])
 
-        logger.debug('Sample File: ' + sampleFile)
+        sample_file = 'http://{}{}'.format(current_site.domain, sample_file)
+
+        logger.debug('Sample File: ' + sample_file)
 
         # if node_uuids generated for given species
         # generate igv session file
@@ -192,16 +205,16 @@ def igv_multi_species(solr_results, solr_annot=None):
                 species_id = species_id[0][0] + '. ' + species_id[1]
 
             # if annotation contains species
-            if (solr_annot is not None and
-                    solr_annot["response"]["numFound"] > 0):
+            if (solr_annot is not None and solr_annot["response"][
+                                           "numFound"] > 0):
                 if k in unique_annot:
                     temp_url = createIGVsessionAnnot(
                         k, unique_species[k], annot_uuids=unique_annot[k],
-                        samp_file=sampleFile)
+                        samp_file=sample_file)
             else:
                 temp_url = createIGVsessionAnnot(k, unique_species[k],
                                                  annot_uuids=None,
-                                                 samp_file=sampleFile)
+                                                 samp_file=sample_file)
 
             if species_id:
                 ui_results['species'][species_id + ' (' + k + ')'] = temp_url
@@ -363,17 +376,14 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
     temp_name = temp_name[len(temp_name) - 1] + '.xml'
 
     # rename file by way of file_store
-    filestore_item = rename(filestore_uuid, temp_name)
+    rename(filestore_uuid, temp_name)
 
     # delete temp file
     os.unlink(tempfilename.name)
 
-    # Url for session file
-    fs_url = filestore_item.get_full_url()
-
     # IGV url for automatic launch of Java Webstart
     igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php" \
-              "?sessionURL=" + fs_url
+              "?sessionURL=" + samp_file
 
     return igv_url
 

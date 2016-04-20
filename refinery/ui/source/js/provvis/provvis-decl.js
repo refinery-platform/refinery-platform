@@ -1,33 +1,33 @@
+'use strict';
+
 /**
  * Module for constructor function declaration.
  */
 var provvisDecl = (function () {
-
   var DoiFactors = (function () {
-
     var factors = {
       filtered: {
-        label: "filtered",
+        label: 'filtered',
         value: 0.2,
         masked: true
       },
       selected: {
-        label: "selected",
+        label: 'selected',
         value: 0.2,
         masked: true
       },
       highlighted: {
-        label: "highlighted",
+        label: 'highlighted',
         value: 0.2,
         masked: true
       },
       time: {
-        label: "time",
+        label: 'time',
         value: 0.2,
         masked: true
       },
       diff: {
-        label: "diff",
+        label: 'diff',
         value: 0.2,
         masked: true
       }
@@ -49,7 +49,7 @@ var provvisDecl = (function () {
       },
       factors: factors
     };
-  })();
+  }());
 
   /**
    * Constructor function representing the degree-of-interest (DOI)
@@ -58,11 +58,10 @@ var provvisDecl = (function () {
    * @constructor
    */
   var DoiComponents = function (node) {
-
     this.node = node;
 
     /* API: General interest. */
-    /**************************/
+    /* ********************** */
 
     /* The latest execution time of a node is more important
      * than earlier executions.
@@ -80,17 +79,24 @@ var provvisDecl = (function () {
     /* For layered nodes: Workflow parameters, files or topology changes over
      * time.
      */
-    this.change = {wfParams: d3.map(), files: d3.map(), topology: d3.map()};
+    this.change = {
+      wfParams: d3.map(),
+      files: d3.map(),
+      topology: d3.map()
+    };
 
     /* Corresponds to the node type: Node, subanalysis, analysis.*/
     this.relationship = 0;
 
     /* The overall graph width and height influences node appearances.*/
-    this.graphMetrics = {width: -1, height: -1};
+    this.graphMetrics = {
+      width: -1,
+      height: -1
+    };
 
 
     /* UI: Interest derived from user actions. */
-    /*******************************************/
+    /* *************************************** */
 
     /* A node is in the result set of filter actions. */
     this.doiFiltered = 0;
@@ -103,7 +109,7 @@ var provvisDecl = (function () {
 
 
     /* Distance. */
-    /*************/
+    /* ********* */
 
     /* A node's neighborhood directly influences it's DOI value through
      * link weight and fallout function.
@@ -112,7 +118,7 @@ var provvisDecl = (function () {
 
 
     /* Computation. */
-    /****************/
+    /* ************ */
 
     /* A node's dominant component is represented by the minimum or maximum
      * value throughout all components.
@@ -183,12 +189,12 @@ var provvisDecl = (function () {
    */
   DoiComponents.prototype.computeWeightedSum = function () {
     this.doiWeightedSum = (
-        this.doiFiltered * provvisDecl.DoiFactors.factors.filtered.value +
-        this.doiSelected * provvisDecl.DoiFactors.factors.selected.value +
-        this.doiHighlighted * provvisDecl.DoiFactors.factors.highlighted.value +
-        this.doiTime * provvisDecl.DoiFactors.factors.time.value +
-        this.doiLayerDiff * provvisDecl.DoiFactors.factors.diff.value
-    ).toFixed(2);
+    this.doiFiltered * provvisDecl.DoiFactors.factors.filtered.value +
+    this.doiSelected * provvisDecl.DoiFactors.factors.selected.value +
+    this.doiHighlighted * provvisDecl.DoiFactors.factors.highlighted.value +
+    this.doiTime * provvisDecl.DoiFactors.factors.time.value +
+    this.doiLayerDiff * provvisDecl.DoiFactors.factors.diff.value
+      ).toFixed(2);
   };
 
   /**
@@ -219,7 +225,9 @@ var provvisDecl = (function () {
     this.l = {
 
       /* Top sort markings [Kahn 1962]. */
-      ts: {removed: false},
+      ts: {
+        removed: false
+      },
 
       /* Graph attributes. */
       width: 0,
@@ -255,11 +263,11 @@ var provvisDecl = (function () {
    * @constructor
    */
   var Node = function (id, nodeType, parent, hidden, name, fileType, study,
-                       assay, parents, analysis, subanalysis, uuid, fileUrl) {
+    assay, parents, analysis, subanalysis, uuid, fileUrl) {
     BaseNode.call(this, id, nodeType, parent, hidden);
 
     this.name = name;
-    this.label ="";
+    this.label = '';
     this.fileType = fileType;
     this.study = study;
     this.assay = assay;
@@ -290,8 +298,8 @@ var provvisDecl = (function () {
    * @constructor
    */
   var Analysis = function (id, parent, hidden, uuid, wfUuid, analysis, start,
-                           end, created) {
-    BaseNode.call(this, id, "analysis", parent, hidden);
+    end, created) {
+    BaseNode.call(this, id, 'analysis', parent, hidden);
 
     this.uuid = uuid;
     this.wfUuid = wfUuid;
@@ -304,11 +312,11 @@ var provvisDecl = (function () {
     this.outputs = d3.map();
     this.links = d3.map();
 
-    this.wfName = "";
-    this.wfCode = "";
+    this.wfName = '';
+    this.wfCode = '';
 
-    this.layer = "";
-    this.motif = "";
+    this.layer = '';
+    this.motif = '';
 
     this.exaggerated = false;
 
@@ -333,11 +341,11 @@ var provvisDecl = (function () {
    * @constructor
    */
   var Subanalysis = function (id, parent, hidden, subanalysis) {
-    BaseNode.call(this, id, "subanalysis", parent, hidden);
+    BaseNode.call(this, id, 'subanalysis', parent, hidden);
 
     this.subanalysis = subanalysis;
 
-    this.wfUuid = "";
+    this.wfUuid = '';
     this.inputs = d3.map();
     this.outputs = d3.map();
     this.links = d3.map();
@@ -356,9 +364,9 @@ var provvisDecl = (function () {
     this.succs = d3.map();
     this.numIns = 0;
     this.numOuts = 0;
-    this.wfUuid = "";
+    this.wfUuid = '';
     this.numSubanalyses = 0;
-    this.file = "";
+    this.file = '';
 
     Motif.numInstances = (Motif.numInstances || 0) + 1;
     this.autoId = Motif.numInstances;
@@ -373,15 +381,14 @@ var provvisDecl = (function () {
    * @constructor
    */
   var Layer = function (id, motif, parent, hidden) {
-    BaseNode.call(this, id, "layer", parent, hidden);
+    BaseNode.call(this, id, 'layer', parent, hidden);
 
     this.inputs = d3.map();
     this.outputs = d3.map();
     this.links = d3.map();
 
     this.motif = motif;
-    this.wfName = "";
-
+    this.wfName = '';
   };
 
   Layer.prototype = Object.create(BaseNode.prototype);
@@ -408,7 +415,9 @@ var provvisDecl = (function () {
     this.l = {
 
       /* Top sort markings [Kahn 1962]. */
-      ts: {removed: false}
+      ts: {
+        removed: false
+      }
     };
 
     Link.numInstances = (Link.numInstances || 0) + 1;
@@ -435,8 +444,8 @@ var provvisDecl = (function () {
    * @constructor
    */
   var ProvVis = function (parentDiv, zoom, data, url, canvas, rect, margin,
-                          width, height, radius, color, graph, cell,
-                          layerMethod) {
+    width, height, radius, color, graph, cell,
+    layerMethod) {
     this._parentDiv = parentDiv;
     this.zoom = zoom;
     this._data = data;
@@ -473,9 +482,9 @@ var provvisDecl = (function () {
    * @constructor
    */
   var ProvGraph = function (dataset, nodes, links, aLinks, iNodes, oNodes,
-                            aNodes, saNodes, analysisWorkflowMap, nodeMap,
-                            analysisData, workflowData,
-                            nodeData) {
+    aNodes, saNodes, analysisWorkflowMap, nodeMap,
+    analysisData, workflowData,
+    nodeData) {
     this.dataset = dataset;
     this.nodes = nodes;
     this.links = links;
