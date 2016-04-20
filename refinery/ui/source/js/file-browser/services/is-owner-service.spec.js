@@ -20,7 +20,7 @@ describe('Is Owner Service', function () {
 
   describe('getAssayFiles', function () {
     beforeEach(inject(function (dataSetService, $q, $rootScope) {
-      var responseData = { objects: [{ isOwner: true }] };
+      var responseData = { objects: [{ is_owner: true }] };
       spyOn(dataSetService, 'query').and.callFake(function () {
         deferred = $q.defer();
         deferred.resolve(responseData);
