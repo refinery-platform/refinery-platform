@@ -85,11 +85,8 @@ describe('Controller: Assay Files Util Modal Ctrl', function () {
         { solr_field: 'Character', rank: 2 }
       ];
       spyOn(ctrl, 'updateAssayAttributes').and.callFake(function () {
-        return {
-          then: function () {
-            mockPostAssayAttributes = true;
-          }
-        };
+        mockPostAssayAttributes = true;
+        return mockPostAssayAttributes;
       });
 
       ctrl.updateAttributeRank({ solr_field: 'Character', rank: 2 }, 1);
