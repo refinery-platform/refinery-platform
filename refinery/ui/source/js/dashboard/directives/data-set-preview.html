@@ -37,7 +37,11 @@
         </div>
       </div>
       <div class="floatbox-max-left">
-        <h4 ng-bind-html="preview.dataSet.title"></h4>
+        <a
+          class="btn btn-important"
+          ng-href="data_sets/{{ preview.dataSet.uuid }}">
+          Open in data set explorer
+        </a>
       </div>
     </div>
   </div>
@@ -49,6 +53,10 @@
       class="singleStudy"
       ng-if="preview.numStudies === 1">
       <h5 class="refinery-subheader">Summary</h5>
+      <div class="inline-container">
+        <h6>Title</h6>
+        <p class="title"><strong>{{ preview.dataSet.title }}</strong></p>
+      </div>
       <div class="inline-container">
         <h6>Description</h6>
         <p>{{ preview.studies.description | cut:true:preview.descLength }}</p>
