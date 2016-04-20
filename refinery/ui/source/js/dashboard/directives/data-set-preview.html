@@ -55,7 +55,7 @@
       <h5 class="refinery-subheader">Summary</h5>
       <div class="inline-container">
         <h6>Title</h6>
-        <p class="title"><strong>{{ preview.dataSet.title }}</strong></p>
+        <p class="stronger" ng-bind-html="preview.dataSet.title"></p>
       </div>
       <div class="inline-container">
         <h6>Description</h6>
@@ -134,7 +134,7 @@
       <ol
         class="no-list-style"
         ng-if="preview.numAnalyses">
-        <li ng-repeat="analysis in preview.analyses">
+        <li ng-repeat="analysis in preview.analyses | limitTo:preview.maxAnalyses">
           <i
             class="analyses-status {{ analysis.status | analysisStatusIcon }}"
             title="{{ analysis.status | analysisStatusTitle }}"

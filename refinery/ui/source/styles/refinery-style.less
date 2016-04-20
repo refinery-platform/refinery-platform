@@ -1605,6 +1605,14 @@ a.analysis-header {
       .inline-container p {
         font-size: 1.6rem;
         line-height: 1.5em;
+
+        &.stronger {
+          font-weight: bold;
+
+          em {
+            background: fade(lighten(@blue-light, 25%), 15%);
+          }
+        }
       }
 
       .badge {
