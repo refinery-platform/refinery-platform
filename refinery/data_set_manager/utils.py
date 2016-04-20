@@ -724,7 +724,7 @@ def format_solr_response(solr_response):
 
     # Reorganizes solr response into easier to digest objects.
     order_facet_fields = solr_response_json.get('responseHeader').get(
-            'params').get('facet.field')
+            'params').get('fl').split(',')
     facet_field_counts = solr_response_json.get('facet_counts').get(
             'facet_fields')
     facet_field_docs = solr_response_json.get('response').get('docs')
