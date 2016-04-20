@@ -1,36 +1,24 @@
-angular
-  .module('refineryFileBrowser')
-  .directive(
-    'rpAssayFilesUtilModal',
-    [
-      '$compile',
-      '$templateCache',
-      '$uibModal',
-      'resetGridService',
-      rpAssayFilesUtilModal
-    ]
-  );
+'use strict';
 
-function rpAssayFilesUtilModal(
+function rpAssayFilesUtilModal (
   $compile,
   $templateCache,
   $uibModal,
   resetGridService
 ) {
-  "use strict";
   return {
     restrict: 'AE',
     controller: 'FileBrowserCtrl',
     controllerAs: 'FBCtrl',
-    link: function(scope, element, attr, ctrl) {
+    link: function (scope, element) {
       var modalInstance;
 
-      element.bind("click", function(e) {
-        var template = $templateCache.get("assayfilesutilmodal.html");
+      element.bind('click', function () {
+        var template = $templateCache.get('assayfilesutilmodal.html');
         var modalContent = $compile(template)(scope);
 
-        modalInstance =  $uibModal.open({
-          template:modalContent,
+        modalInstance = $uibModal.open({
+          template: modalContent,
           controller: 'AssayFilesUtilModalCtrl',
           controllerAs: 'AFUMCtrl'
         });
@@ -40,9 +28,20 @@ function rpAssayFilesUtilModal(
         }, function () {
           resetGridService.setResetGridFlag(true);
         });
-
       });
-
     }
   };
 }
+
+angular
+  .module('refineryFileBrowser')
+  .directive(
+  'rpAssayFilesUtilModal',
+  [
+    '$compile',
+    '$templateCache',
+    '$uibModal',
+    'resetGridService',
+    rpAssayFilesUtilModal
+  ]
+  );
