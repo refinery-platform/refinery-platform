@@ -7,7 +7,6 @@ angular
     authThrottling: 60000,
     dashboard: {
       preview: {
-        alwaysShowRunningAnalyses: true,
         defaultLengthAbstract: 256,
         defaultLengthDescription: 384,
         maxAnalyses: 3,
