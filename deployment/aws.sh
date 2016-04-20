@@ -25,6 +25,12 @@ sudo su -c '
 
 cd /srv/refinery-platform/deployment
 
+# Set by inline cloudinit script.
+export S3_CONFIG_URI
+# Write s3-config to /home/ubuntu/s3-config
+(cd /home/ubuntu &&
+ /srv/refinery-platform/deployment/bin/get-s3-config)
+
 # Discover IP endpoint for our PostgreSQL RDS, and place it in
 # environment variables for puppet/facter to use
 : ${RDS_NAME?RDS_NAME must be set}

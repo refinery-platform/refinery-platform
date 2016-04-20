@@ -16,6 +16,10 @@ $ui_app_root = "${django_root}/ui"
 # $site_name set by Facter
 # $site_url set by Facter
 
+# solr is in the /data volume on AWS:
+$solr_data_set_manager_data = "/data/solr/data_set_manager"
+$solr_core_data = "/data/solr/core"
+
 # See code in refinery-modules/refinery/...
 include refinery
 include refinery::pg
