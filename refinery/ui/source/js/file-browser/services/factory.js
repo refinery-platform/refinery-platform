@@ -5,7 +5,6 @@ function fileBrowserFactory (
   assayFileService,
   settings,
   $window) {
-
   var assayFiles = [];
   var assayAttributes = [];
   var assayAttributeOrder = [];
@@ -70,7 +69,7 @@ function fileBrowserFactory (
     return assayFile.$promise;
   };
 
-  var sortArrayOfObj = function(arrayOfObjs) {
+  var sortArrayOfObj = function (arrayOfObjs) {
     arrayOfObjs.sort(function (a, b) {
       if (a.rank > b.rank) {
         return 1;
@@ -105,13 +104,13 @@ function fileBrowserFactory (
   var postAssayAttributeOrder = function (attributeParam) {
     var assayUuid = $window.externalAssayUuid;
     var dataObj = {
-      'csrfmiddlewaretoken': csrf_token,
-      'uuid': assayUuid,
-      'solr_field':attributeParam.solr_field,
-      'is_exposed': attributeParam.is_exposed,
-      'is_active': attributeParam.is_active,
-      'is_facet': attributeParam.is_facet,
-      'rank': attributeParam.rank
+      csrfmiddlewaretoken: csrf_token,
+      uuid: assayUuid,
+      solr_field: attributeParam.solr_field,
+      is_exposed: attributeParam.is_exposed,
+      is_active: attributeParam.is_active,
+      is_facet: attributeParam.is_facet,
+      rank: attributeParam.rank
     };
     return $http({
       method: 'PUT',
@@ -119,8 +118,8 @@ function fileBrowserFactory (
           '/assays/' + assayUuid + '/attributes/',
       data: dataObj
     }).then(function (response) {
-      for (var ind = 0; ind < assayAttributeOrder.length; ind++){
-        if(assayAttributeOrder[ind].solr_field === response.data.solr_field){
+      for (var ind = 0; ind < assayAttributeOrder.length; ind++) {
+        if (assayAttributeOrder[ind].solr_field === response.data.solr_field) {
           angular.copy(response.data, assayAttributeOrder[ind]);
           break;
         }
@@ -130,16 +129,7 @@ function fileBrowserFactory (
     });
   };
 
-  //Helper function encodes field array in an obj
-  var encodeAttributeFields = function(attributeObj) {
-    angular.forEach(attributeObj, function(fieldArray){
-       for(var ind=0; ind < fieldArray.length; ind++){
-        fieldArray[ind] = $window.encodeURIComponent(fieldArray[ind]);
-       }
-    });
-  };
-
-  return{
+  return {
     assayFiles: assayFiles,
     assayAttributes: assayAttributes,
     assayAttributeOrder: assayAttributeOrder,
