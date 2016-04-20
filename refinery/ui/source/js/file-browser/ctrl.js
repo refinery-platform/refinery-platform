@@ -298,7 +298,7 @@ function FileBrowserCtrl (
 
   vm.checkDataSetOwnership = function () {
     isOwnerService.refreshDataSetOwner().then(function () {
-      vm.is_owner = isOwnerService.is_owner;
+      vm.isOwner = isOwnerService.isOwner;
     });
   };
 
