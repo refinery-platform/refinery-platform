@@ -1,12 +1,4 @@
 'use strict';
-angular
-  .module('refineryFileBrowser')
-  .directive('rpFileBrowserAssayFilters', [
-    '$timeout',
-    '$location',
-    rpFileBrowserAssayFilters
-  ]
-);
 
 function rpFileBrowserAssayFilters ($timeout, $location) {
   return {
@@ -38,7 +30,6 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
         scope.generateFilterDropSelection();
       });
 
-
       // Loops through fields to find matching attributes and drops down panel
       var updateDomDropdown = function (allFields, queryFields, attributeName) {
         for (var ind = 0; ind < allFields.length; ind++) {
@@ -52,14 +43,13 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
         }
       };
 
-
       scope.generateFilterDropSelection = function () {
         var queryFields = Object.keys($location.search());
         var allFilters = {};
         angular.copy(scope.FBCtrl.attributeFilter, allFilters);
 
-        if(typeof scope.FBCtrl.analysisFilter['Analysis'] !== 'undefined'){
-          allFilters['Analysis'] = scope.FBCtrl.analysisFilter['Analysis'];
+        if (typeof scope.FBCtrl.analysisFilter.Analysis !== 'undefined') {
+          allFilters.Analysis = scope.FBCtrl.analysisFilter.Analysis;
         }
 
         angular.forEach(allFilters, function (attributeObj, attribute) {
@@ -73,3 +63,12 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
     }
   };
 }
+
+angular
+  .module('refineryFileBrowser')
+  .directive('rpFileBrowserAssayFilters', [
+    '$timeout',
+    '$location',
+    rpFileBrowserAssayFilters
+  ]
+);
