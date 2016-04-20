@@ -12,7 +12,7 @@ function rpFileBrowserAssayFiles () {
     },
     link: function (scope, element, attr, ctrl) {
       ctrl.checkDataSetOwnership();
-      ctrl.refreshAssayFiles().then( function() {
+      ctrl.refreshAssayFiles().then(function () {
         ctrl.checkUrlQueryFilters();
       });
     }
