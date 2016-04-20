@@ -129,7 +129,16 @@
       </div>
       <h5 class="refinery-subheader">
         Analyses
-        <span class="badge">{{ preview.numAnalyses }}</span>
+        <span
+          class="badge"
+          title="Total number"
+          refinery-tooltip
+          refinery-tooltip-container="body"
+          refinery-tooltip-placement="top"
+          refinery-tooltip-delay-show="750"
+          refinery-tooltip-delay-hide="150">
+          {{ preview.numAnalyses }}
+        </span>
       </h5>
       <ol
         class="no-list-style"
@@ -146,15 +155,27 @@
             {{ analysis.name }}
           </span>
           <span ng-if="analysis.status !== 'UNKNOWN'">
-            <a ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
+            <a ng-href="/data_sets/{{ analysis.data_set__uuid }}/analysis/{{ analysis.uuid }}">
               {{ analysis.name }}
             </a>
           </span>
         </li>
+        <li ng-if="preview.numAnalyses > preview.maxAnalyses">
+          <a ng-href="/data_sets/{{ preview.dataSet.uuid }}/#/analyses/">View all analyses</a>
+        </li>
       </ol>
       <h5 class="refinery-subheader">
         References
-        <span class="badge">{{ preview.studies.publications.length }}</span>
+        <span
+          class="badge"
+          title="Total number"
+          refinery-tooltip
+          refinery-tooltip-container="body"
+          refinery-tooltip-placement="top"
+          refinery-tooltip-delay-show="750"
+          refinery-tooltip-delay-hide="150">
+          {{ preview.studies.publications.length }}
+        </span>
       </h5>
       <ul
         class="no-list-style references"
@@ -214,7 +235,16 @@
       </div>
       <h5 class="refinery-subheader">
         Protocols
-        <span class="badge">{{ preview.studies.protocols.length }}</span>
+        <span
+          class="badge"
+          title="Total number of steps"
+          refinery-tooltip
+          refinery-tooltip-container="body"
+          refinery-tooltip-placement="top"
+          refinery-tooltip-delay-show="750"
+          refinery-tooltip-delay-hide="150">
+          {{ preview.studies.protocols.length }}
+        </span>
       </h5>
       <ol
         class="numbered-list protocols"
