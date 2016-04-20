@@ -105,39 +105,41 @@ describe('File Browser Factory', function () {
     });
   });
 
-  describe('getAssayAttributeOrder', function () {
-    var $httpBackend;
-    var settings;
-    var url;
-
-    beforeEach(inject(function (_$httpBackend_, _settings_) {
-      $httpBackend = _$httpBackend_;
-      settings = _settings_;
-      url = settings.appRoot + settings.refineryApiV2 + '/assays/' +
-        validUuid + '/attributes/';
-    }));
-
-    it('getAssayAttributeOrder is a method', function () {
-      expect(angular.isFunction(factory.getAssayAttributeOrder)).toBe(true);
-    });
-
-    //it('getAssayAttributeOrder makes success call', function () {
-    //  var data;
-    //
-    //  $httpBackend.expect(
-    //    'GET',
-    //    url,
-    //    {'csrfmiddlewaretoken': valid_token, 'uuid': valid_uuid},
-    //    {"Accept":"application/json, text/plain, */*"}
-    //  ).respond(200, {}, {});
-    //  var response = factory.getAssayAttributeOrder(valid_uuid).then(function(){
-    //    data = 'SUCCESS';
-    //  }, function(){
-    //    data = 'ERROR';
-    //  });
-    //  $httpBackend.flush();
-    //  expect(typeof response.then).toEqual('function');
-    //  expect(data).toEqual('SUCCESS');
-    //});
-  });
+  // describe('getAssayAttributeOrder', function () {
+  //  var $httpBackend;
+  //  var settings;
+  //  var url;
+  //
+  //  beforeEach(inject(function (_$httpBackend_, _settings_) {
+  //    $httpBackend = _$httpBackend_;
+  //    settings = _settings_;
+  //    url = settings.appRoot + settings.refineryApiV2 + '/assays/' +
+  //      validUuid + '/attributes/';
+  //  }));
+  //
+  //  it('getAssayAttributeOrder is a method', function () {
+  //    expect(angular.isFunction(factory.getAssayAttributeOrder)).toBe(true);
+  //  });
+  //
+  //  it('getAssayAttributeOrder makes success call', function () {
+  //    var data;
+  //    var testing;
+  //
+  //    $httpBackend.expect(
+  //      'GET',
+  //      url,
+  //      { 'csrfmiddlewaretoken': validToken, 'uuid': validUuid },
+  //      { "Accept":"application/json, text/plain, */*" }
+  //    ).respond(200, {}, {});
+  //    var response = factory.getAssayAttributeOrder(validUuid)
+  //      .then(function () {
+  //        data = 'SUCCESS';
+  //      }, function(){
+  //        data = 'ERROR';
+  //      });
+  //    $httpBackend.flush();
+  //    expect(typeof response.then).toEqual('function');
+  //    expect(data).toEqual('SUCCESS');
+  //  });
+  // });
 });
