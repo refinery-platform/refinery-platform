@@ -26,24 +26,26 @@ function fileBrowserFactory (
     // resets the attribute filters, which can be changed by owners
     var outAttributeFilter = {};
     var outAnalysisFilter = {};
-
     attributes.forEach(function (facetObj) {
-      var facetObjCount = facetCounts[facetObj.internal_name];
-      // for filtering out (only)attributes with only 1 field
-      var facetObjCountMinLen = Object.keys(facetObjCount).length > 1;
+      if (typeof facetCounts[facetObj.internal_name] !== 'undefined') {
+        var facetObjCount = facetCounts[facetObj.internal_name];
+        // for filtering out (only) attributes with only 1 field
+        var facetObjCountMinLen = Object.keys(facetObjCount).length > 1;
 
-      if (facetObjCountMinLen && facetObj.display_name !== 'Analysis') {
-        outAttributeFilter[facetObj.display_name] = {
-          facetObj: facetObjCount,
-          internal_name: facetObj.internal_name
-        };
-      } else if (facetObjCount && facetObj.display_name === 'Analysis') {
-        outAnalysisFilter[facetObj.display_name] = {
-          facetObj: facetObjCount,
-          internal_name: facetObj.internal_name
-        };
+        if (facetObjCountMinLen && facetObj.display_name !== 'Analysis') {
+          outAttributeFilter[facetObj.display_name] = {
+            facetObj: facetObjCount,
+            internal_name: facetObj.internal_name
+          };
+        } else if (facetObjCount && facetObj.display_name === 'Analysis') {
+          outAnalysisFilter[facetObj.display_name] = {
+            facetObj: facetObjCount,
+            internal_name: facetObj.internal_name
+          };
+        }
       }
     });
+
     return {
       attributeFilter: outAttributeFilter,
       analysisFilter: outAnalysisFilter
