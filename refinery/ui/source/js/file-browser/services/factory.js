@@ -11,6 +11,7 @@ function fileBrowserFactory (
   var attributeFilter = {};
   var analysisFilter = {};
   var assayFilesTotalItems = {};
+  var csrfToken = $window.csrf_token;
   // Helper function encodes field array in an obj
   var encodeAttributeFields = function (attributeObj) {
     angular.forEach(attributeObj, function (fieldArray) {
@@ -90,7 +91,7 @@ function fileBrowserFactory (
       method: 'GET',
       url: apiUrl,
       data: {
-        csrfmiddlewaretoken: $window.csrf_token,
+        csrfmiddlewaretoken: csrfToken,
         uuid: uuid
       }
     }).then(function (response) {
@@ -104,7 +105,7 @@ function fileBrowserFactory (
   var postAssayAttributeOrder = function (attributeParam) {
     var assayUuid = $window.externalAssayUuid;
     var dataObj = {
-      csrfmiddlewaretoken: csrf_token,
+      csrfmiddlewaretoken: csrfToken,
       uuid: assayUuid,
       solr_field: attributeParam.solr_field,
       is_exposed: attributeParam.is_exposed,
