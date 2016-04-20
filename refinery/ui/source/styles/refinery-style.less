@@ -1102,6 +1102,7 @@ a.analysis-header {
 
         &:hover {
           color: inherit;
+          cursor: pointer;
         }
 
         &:visited {
@@ -1140,7 +1141,7 @@ a.analysis-header {
 
       >li {
         position: relative;
-        padding: 5px 2.2rem 5px 0;
+        padding: 5px 2.5rem 5px 0;
         border-top: 1px solid @gray-lighter-rgba;
         transition: all @fast-transition-speed @ease-in-out-cubic;
 
@@ -1277,11 +1278,16 @@ a.analysis-header {
           top: 0;
           right: 0;
           bottom: 0;
-          display: block;
+          display: flex;
+          justify-content: center; /* align horizontal */
+          align-items: center; /* align vertical */
+          padding: 0 0.5em;
+          font-size: 1.2em;
           color: @gray-lighter-rgba;
           border: none;
           background: rgba(0, 0, 0, 0);
           transition: all @fast-transition-speed @ease-in-out-cubic;
+          text-decoration: none;
 
           &:focus {
             color: @black;
@@ -1362,6 +1368,15 @@ a.analysis-header {
         &:active,
         &:focus {
           outline: none;
+        }
+
+        &.btn-important {
+          color: @white;
+          background: @blue;
+
+          &:hover {
+            background: lighten(@blue, 10%);
+          }
         }
       }
 
@@ -1582,7 +1597,7 @@ a.analysis-header {
 
       .inline-container h6 {
         display: block;
-        margin: 0 0 0.25rem 0;
+        margin: 1rem 0 0.25rem 0;
         color: @gray-light;
         font-weight: bold;
       }
