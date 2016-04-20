@@ -33,12 +33,12 @@ describe('Controller: FileBrowserCtrl', function () {
   });
 
 
-  describe('Update AssayFiles from Factory', function () {
-    it('updateAssayFiles is method', function () {
-      expect(angular.isFunction(ctrl.updateAssayFiles)).toBe(true);
+  describe('Refresh AssayFiles from Factory', function () {
+    it('refreshAssayFiles is method', function () {
+      expect(angular.isFunction(ctrl.refreshAssayFiles)).toBe(true);
     });
 
-    it('updateAssayFiles returns promise', function () {
+    it('refreshAssayFiles returns promise', function () {
       var mockAssayFiles = false;
       spyOn(factory, 'getAssayFiles').and.callFake(function () {
         return {
