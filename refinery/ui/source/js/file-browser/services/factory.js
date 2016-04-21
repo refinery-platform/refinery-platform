@@ -11,6 +11,7 @@ function fileBrowserFactory (
   var attributeFilter = {};
   var analysisFilter = {};
   var assayFilesTotalItems = {};
+ // var nodeDetail = {};
   var csrfToken = $window.csrf_token;
   // Helper function encodes field array in an obj
   var encodeAttributeFields = function (attributeObj) {
@@ -71,6 +72,26 @@ function fileBrowserFactory (
     });
     return assayFile.$promise;
   };
+
+  // var getNodeDetails = function (node_uuid){
+  //  var params = {
+  //    uuid: node_uuid
+  //  };
+  //
+  //  var nodeFile = nodeService.query(params);
+  //  nodeFile.$promise.then(function (response) {
+  //   console.log(response);
+  //    angular.copy(response, nodeDetail);
+  //  });
+  //  return assayFiles.$promise;
+  // };
+  //
+  // var addNodeDetailtoAssayFiles = function(){
+  //  angular.forEach(assayFiles, function (facetObj, key){
+  //    console.log('in here');
+  //  })
+  // };
+
 
   var sortArrayOfObj = function (arrayOfObjs) {
     arrayOfObjs.sort(function (a, b) {
