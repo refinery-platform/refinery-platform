@@ -84,6 +84,7 @@ def main():
     user_data_script = functions.join(
         "",
         "#!/bin/sh\n",
+        "AWS_DEFAULT_REGION=", functions.ref("AWS::Region"), "\n",
         "RDS_NAME=", config['RDS_NAME'], "\n",
         "RDS_SUPERUSER_PASSWORD=", config['RDS_SUPERUSER_PASSWORD'], "\n",
         "RDS_ROLE=", config['RDS_ROLE'], "\n",
