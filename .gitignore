@@ -56,7 +56,7 @@ codekit-config.json
 /deployment/Puppetfile.lock
 /refinery/celerybeat-schedule*
 /refinery/config/config.json
-/refinery/solr/**/*.solrconfig.xml
+/refinery/solr/**/conf/solrconfig.xml
 /refinery/static/production/
 /refinery/static/development/
 /refinery/ui/production/
