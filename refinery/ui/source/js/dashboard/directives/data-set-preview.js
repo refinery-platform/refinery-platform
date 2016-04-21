@@ -45,16 +45,10 @@ function refineryDataSetPreview () {
       this.animationFinished = false;
     }.bind(this));
 
-    this.descLength = this.descDefaultLength;
-  }
+    this.descLength = this.settings.dashboard.preview.defaultLengthDescription;
 
-  Object.defineProperty(
-    DataSetPreviewCtrl.prototype,
-    'abstractLength', {
-      enumerable: true,
-      value: 256,
-      writable: true
-    });
+    this.maxAnalyses = this.settings.dashboard.preview.maxAnalyses;
+  }
 
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
@@ -76,14 +70,6 @@ function refineryDataSetPreview () {
         }
         return ds;
       }
-    });
-
-  Object.defineProperty(
-    DataSetPreviewCtrl.prototype,
-    'descDefaultLength', {
-      enumerable: true,
-      value: 384,
-      writable: true
     });
 
   Object.defineProperty(
@@ -267,7 +253,7 @@ function refineryDataSetPreview () {
         publications[index].citation = this._.merge(
           {
             isLoading: false,
-            abstractLength: this.abstractLength
+            abstractLength: this.settings.dashboard.preview.defaultLengthAbstract
           },
           data
         );
@@ -363,7 +349,7 @@ function refineryDataSetPreview () {
     if (citation.abstractLength < Number.POSITIVE_INFINITY) {
       citation.abstractLength = Number.POSITIVE_INFINITY;
     } else {
-      citation.abstractLength = this.abstractLength;
+      citation.abstractLength = this.settings.dashboard.preview.defaultLengthAbstract;
     }
   };
 
@@ -395,7 +381,7 @@ function refineryDataSetPreview () {
     if (this.descLength < Number.POSITIVE_INFINITY) {
       this.descLength = Number.POSITIVE_INFINITY;
     } else {
-      this.descLength = this.descDefaultLength;
+      this.descLength = this.settings.dashboard.preview.defaultLengthDescription;
     }
   };
 

@@ -23,10 +23,7 @@
 
 Rdsname=${1?RDS Name}
 
-Region=$(
-  curl --silent http://169.254.169.254/latest/dynamic/instance-identity/document |
-  jq -r .region
-)
+Region=$(cat /home/ubuntu/region)
 
 # To find the connection details for a db instance with a known name
 aws --region "$Region" rds describe-db-instances |

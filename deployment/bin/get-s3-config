@@ -6,9 +6,6 @@
 
 : ${S3_CONFIG_URI?S3_CONFIG_URI should be set}
 
-Region=$(
-  curl --silent http://169.254.169.254/latest/dynamic/instance-identity/document |
-  jq -r .region
-)
+Region=$(cat /home/ubuntu/region)
 
 aws s3 --region "$Region" cp "$S3_CONFIG_URI" s3-config

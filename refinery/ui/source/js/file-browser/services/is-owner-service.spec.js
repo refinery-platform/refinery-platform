@@ -5,7 +5,7 @@ describe('Is Owner Service', function () {
   var deferred;
   var rootScope;
   var service;
-  var validUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+  var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryFileBrowser'));
@@ -36,7 +36,7 @@ describe('Is Owner Service', function () {
     it('refreshDataSetOwner returns a promise', function () {
       var successData;
       var response = service
-        .refreshDataSetOwner({ uuid: validUuid })
+        .refreshDataSetOwner({ uuid: fakeUuid })
         .then(function (responseData) {
           successData = responseData.objects[0].is_owner;
         });

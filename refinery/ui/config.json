@@ -23,12 +23,16 @@
       "collaboration",
       "commons",
       "dashboard",
+      "data-set-explorer",
       "data-set-import",
       "data-set-nav",
       "file-browser",
       "globals",
+      "metadata-table-import",
       "node-mapping",
-      "node-relationship"
+      "node-relationship",
+      "statistics",
+      "workflows"
     ],
     "vendor": {
       "css": [

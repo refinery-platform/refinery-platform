@@ -7,6 +7,9 @@ angular
     authThrottling: 60000,
     dashboard: {
       preview: {
+        defaultLengthAbstract: 256,
+        defaultLengthDescription: 384,
+        maxAnalyses: 3,
         maxBadges: 20
       },
       analysesSorting: [

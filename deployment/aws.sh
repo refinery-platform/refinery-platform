@@ -1,4 +1,5 @@
 #!/bin/sh
+# aws.sh
 
 set -x
 
@@ -24,6 +25,13 @@ sudo su -c '
 ' ubuntu
 
 cd /srv/refinery-platform/deployment
+
+# Write AWS region to file (for later use).
+export AWS_DEFAULT_REGION       # Set by inline cloudinit script.
+if [ ! -z "$AWS_DEFAULT_REGION" ]
+then
+    printf '%s\n' "$AWS_DEFAULT_REGION" > /home/ubuntu/region
+fi
 
 # Set by inline cloudinit script.
 export S3_CONFIG_URI

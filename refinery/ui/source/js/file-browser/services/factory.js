@@ -4,7 +4,8 @@ function fileBrowserFactory (
   $http,
   assayFileService,
   settings,
-  $window) {
+  $window,
+  $log) {
   var assayFiles = [];
   var assayAttributes = [];
   var assayAttributeOrder = [];
@@ -28,7 +29,7 @@ function fileBrowserFactory (
     var outAttributeFilter = {};
     var outAnalysisFilter = {};
     attributes.forEach(function (facetObj) {
-      if (typeof facetCounts[facetObj.internal_name] !== 'undefined') {
+      if (facetCounts[facetObj.internal_name] !== undefined) {
         var facetObjCount = facetCounts[facetObj.internal_name];
         // for filtering out (only) attributes with only 1 field
         var facetObjCountMinLen = Object.keys(facetObjCount).length > 1;
@@ -121,7 +122,7 @@ function fileBrowserFactory (
       var sortedResponse = sortArrayOfObj(response.data);
       angular.copy(sortedResponse, assayAttributeOrder);
     }, function (error) {
-      console.log(error);
+      $log.error(error);
     });
   };
 
@@ -149,7 +150,7 @@ function fileBrowserFactory (
         }
       }
     }, function (error) {
-      console.log(error);
+      $log.error(error);
     });
   };
 
@@ -173,6 +174,7 @@ angular
     'assayFileService',
     'settings',
     '$window',
+    '$log',
     fileBrowserFactory
   ]
 );

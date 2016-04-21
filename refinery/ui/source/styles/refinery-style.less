@@ -19,21 +19,6 @@
   display: none !important;
 }
 
-/*From data_set2.html, double c*/
-.facet-value-list td {
-  padding: 2px;
-}
-
-.facet-value-list tr {
-  padding: 2px;
-}
-
-.grid {
-  width: 100%;
-  height: 100vh;
-}
-/*From data_set2.html*/
-
 .attribute-header{
   cursor: text;
 }
@@ -1102,6 +1087,7 @@ a.analysis-header {
 
         &:hover {
           color: inherit;
+          cursor: pointer;
         }
 
         &:visited {
@@ -1140,7 +1126,7 @@ a.analysis-header {
 
       >li {
         position: relative;
-        padding: 5px 2.2rem 5px 0;
+        padding: 5px 2.5rem 5px 0;
         border-top: 1px solid @gray-lighter-rgba;
         transition: all @fast-transition-speed @ease-in-out-cubic;
 
@@ -1277,11 +1263,16 @@ a.analysis-header {
           top: 0;
           right: 0;
           bottom: 0;
-          display: block;
+          display: flex;
+          justify-content: center; /* align horizontal */
+          align-items: center; /* align vertical */
+          padding: 0 0.5em;
+          font-size: 1.2em;
           color: @gray-lighter-rgba;
           border: none;
           background: rgba(0, 0, 0, 0);
           transition: all @fast-transition-speed @ease-in-out-cubic;
+          text-decoration: none;
 
           &:focus {
             color: @black;
@@ -1362,6 +1353,15 @@ a.analysis-header {
         &:active,
         &:focus {
           outline: none;
+        }
+
+        &.btn-important {
+          color: @white;
+          background: @blue;
+
+          &:hover {
+            background: lighten(@blue, 10%);
+          }
         }
       }
 
@@ -1582,7 +1582,7 @@ a.analysis-header {
 
       .inline-container h6 {
         display: block;
-        margin: 0 0 0.25rem 0;
+        margin: 1rem 0 0.25rem 0;
         color: @gray-light;
         font-weight: bold;
       }
@@ -1590,6 +1590,14 @@ a.analysis-header {
       .inline-container p {
         font-size: 1.6rem;
         line-height: 1.5em;
+
+        &.stronger {
+          font-weight: bold;
+
+          em {
+            background: fade(lighten(@blue-light, 25%), 15%);
+          }
+        }
       }
 
       .badge {
@@ -2429,75 +2437,4 @@ body.is-screenshot-ready {
     background-color: #e5e5e5 !important;
     border-bottom-color: #e5e5e5 !important;
   }
-}
-
-/**
- * For the correct positioning of the placeholder element, the dnd-list and
- * it's children must have position: relative
- */
-
-.fileUtilModal ul{
-  list-style-type: none;
-  border: none;
-}
-
-.fileUtilModal ul[dnd-list],
-.fileUtilModal ul[dnd-list] > li {
-	position: relative;
-}
-
-/**
- * The dnd-list should always have a min-height,
- * otherwise you can't drop to it once it's empty
- */
-.fileUtilModal ul[dnd-list] {
-    min-height: 42px;
-    padding-left: 0px;
-    width: 100%;
-}
-
-/**
- * The dndDraggingSource class will be applied to
- * the source element of a drag operation. It makes
- * sense to hide it to give the user the feeling
- * that he's actually moving it.
- */
-.fileUtilModal ul[dnd-list] .dndDraggingSource {
-    display: none;
-}
-
-/**
- * An element with .dndPlaceholder class will be
- * added to the dnd-list while the user is dragging
- * over it.
- */
-.fileUtilModal ul[dnd-list] .dndPlaceholder {
-    display: block;
-    background-color: #ddd;
-    min-height: 42px;
-}
-
-/**
- * The dnd-lists's child elements currently MUST have
- * position: relative. Otherwise we can not determine
- * whether the mouse pointer is in the upper or lower
- * half of the element we are dragging over. In other
- * browsers we can use event.offsetY for this.
- */
-.fileUtilModal ul[dnd-list] li {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-top-right-radius: 4px;
-    border-top-left-radius: 4px;
-    display: block;
-    padding: 10px 15px;
-    margin-bottom: -1px;
-}
-
-/**
- * Show selected elements in green
- */
-.fileUtilModal ul[dnd-list] li.selected {
-    background-color: #dff0d8;
-    color: #3c763d;
 }
