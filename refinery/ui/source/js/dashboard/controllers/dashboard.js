@@ -62,6 +62,8 @@ function DashboardCtrl (
 
   this.searchQueryDataSets = '';
 
+  this.repoMode = !!this.settings.djangoApp.repositoryMode;
+
   // Construct class variables
   this.dataSetServiceLoading = false;
   this.expandedDataSetPanelBorder = false;
