@@ -597,8 +597,8 @@ module.exports = function (grunt) {
             '<%= cfg.basePath.ui.src %>/styles/dashboard.less',
           '<%= cfg.basePath.ui.build %>/styles/provenance-visualization.css':
             '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less',
-          '<%= cfg.basePath.ui.build %>/styles/data-set-util.css':
-            '<%= cfg.basePath.ui.src %>/styles/data-set-util.less'
+          '<%= cfg.basePath.ui.build %>/styles/file-browser-util.css':
+            '<%= cfg.basePath.ui.src %>/styles/file-browser-util.less'
         }
       },
       compile: {
