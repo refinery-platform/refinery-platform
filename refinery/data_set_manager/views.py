@@ -27,15 +27,15 @@ from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
 
 from core.models import os, get_user_import_dir
-from data_set_manager.single_file_column_parser import process_metadata_table
-from data_set_manager.tasks import parse_isatab
-from data_set_manager.utils import (generate_solr_params, search_solr,
-                                    format_solr_response, get_owner_from_assay,
-                                    update_attribute_order_ranks)
+from .single_file_column_parser import process_metadata_table
+from .tasks import parse_isatab
 from file_store.tasks import download_file, DownloadError
 from file_store.models import get_temp_dir, generate_file_source_translator
-from .serializers import AttributeOrderSerializer, AssaySerializer
 from .models import AttributeOrder, Assay
+from .serializers import AttributeOrderSerializer, AssaySerializer
+from .utils import (generate_solr_params, search_solr, format_solr_response,
+                    get_owner_from_assay, update_attribute_order_ranks,
+                    is_field_in_hidden_list, customize_attribute_response)
 
 
 logger = logging.getLogger(__name__)
@@ -531,7 +531,34 @@ class AssaysAttributes(APIView):
     def get(self, request, uuid, format=None):
         attribute_order = self.get_objects(uuid)
         serializer = AttributeOrderSerializer(attribute_order, many=True)
-        return Response(serializer.data)
+        owner = get_owner_from_assay(uuid)
+        request_user = request.user
+
+        # add a display name to the attribute object
+        if owner == request_user:
+            attributes = serializer.data
+        # for non-owners, hide non-exposed attributes
+        else:
+            attributes = []
+            for attribute in serializer.data:
+                if attribute.get('is_exposed'):
+                    attributes.append(attribute)
+
+        # Reverse check, so can remove objects from the end
+        for ind in range(len(attributes)-1, -1, -1):
+            if is_field_in_hidden_list(attributes[ind].get('solr_field')):
+                del attributes[ind]
+            else:
+                attributes[ind]['display_name'] = customize_attribute_response(
+                        [attributes[ind].get('solr_field')])[0].get(
+                        'display_name')
+
+        # for non-owners need to reorder the ranks
+        if owner != request_user:
+            for ind in range(0, len(attributes)):
+                attributes[ind]['rank'] = ind + 1
+
+        return Response(attributes)
 
     def put(self, request, uuid, format=None):
         owner = get_owner_from_assay(uuid)
@@ -565,8 +592,13 @@ class AssaysAttributes(APIView):
                                                   partial=True)
             if serializer.is_valid():
                 serializer.save()
+                attributes = serializer.data
+                attributes['display_name'] = customize_attribute_response(
+                        [attributes.get('solr_field')])[0].get(
+                        'display_name')
+
                 return Response(
-                        serializer.data,
+                        attributes,
                         status=status.HTTP_202_ACCEPTED
                 )
             return Response(

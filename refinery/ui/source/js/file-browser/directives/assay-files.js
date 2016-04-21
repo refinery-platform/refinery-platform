@@ -11,9 +11,9 @@ function rpFileBrowserAssayFiles () {
       assayAttributes: '@'
     },
     link: function (scope, element, attr, ctrl) {
-      ctrl.updateAssayFiles().then(function () {
+      ctrl.checkDataSetOwnership();
+      ctrl.refreshAssayFiles().then(function () {
         ctrl.checkUrlQueryFilters();
-        ctrl.createColumnDefs();
       });
     }
   };

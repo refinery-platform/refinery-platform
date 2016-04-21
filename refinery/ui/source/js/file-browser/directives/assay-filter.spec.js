@@ -1,3 +1,4 @@
+// Unit test for assay filter
 'use strict';
 
 describe('rpAssayFiles directive unit test', function () {

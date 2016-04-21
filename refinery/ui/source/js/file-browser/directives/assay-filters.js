@@ -47,7 +47,10 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
         var queryFields = Object.keys($location.search());
         var allFilters = {};
         angular.copy(scope.FBCtrl.attributeFilter, allFilters);
-        allFilters.Analysis = scope.FBCtrl.analysisFilter.Analysis;
+
+        if (typeof scope.FBCtrl.analysisFilter.Analysis !== 'undefined') {
+          allFilters.Analysis = scope.FBCtrl.analysisFilter.Analysis;
+        }
 
         angular.forEach(allFilters, function (attributeObj, attribute) {
           var allFields = Object.keys(attributeObj.facetObj);

@@ -9,17 +9,16 @@ import time
 import urlparse
 import requests
 import json
-import urllib2
 
 from django.db.models import Q
-from django.utils.http import urlquote
+from django.utils.http import (urlquote, urlunquote)
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
 import core
 from .search_indexes import NodeIndex
-from .models import AttributeOrder, Study, Node, Attribute, AnnotatedNode, \
-    Assay, AnnotatedNodeRegistry
+from .models import (AttributeOrder, Study, Node, Attribute, AnnotatedNode,
+                     Assay, AnnotatedNodeRegistry)
 from .serializers import AttributeOrderSerializer
 
 
@@ -576,7 +575,7 @@ def generate_solr_params(params, assay_uuid):
         solr_params = ''.join([solr_params, '&sort=', sort])
 
     if facet_filter:
-        facet_filter = urllib2.unquote(facet_filter)
+        facet_filter = urlunquote(facet_filter)
         facet_filter = json.loads(facet_filter)
         facet_filter_str = create_facet_filter_query(facet_filter)
         solr_params = ''.join([solr_params, facet_filter_str])
@@ -632,17 +631,25 @@ def escape_character_solr(field):
 
 def hide_fields_from_list(facet_obj):
     """Returns a filtered facet field list from a weighted facet object."""
-    hidden_fields = ['uuid', 'id', 'django_id', 'file_uuid', 'study_uuid',
-                     'assay_uuid', 'type', 'is_annotation', 'species',
-                     'genome_build', 'name', 'django_ct']
 
     filtered_facet_list = []
     for field in facet_obj:
         solr_field = field.get('solr_field')
-        if solr_field not in hidden_fields:
+        if not is_field_in_hidden_list(solr_field):
             filtered_facet_list.append(field)
 
     return filtered_facet_list
+
+
+def is_field_in_hidden_list(field):
+    hidden_fields = ['uuid', 'id', 'django_id', 'file_uuid', 'study_uuid',
+                     'assay_uuid', 'type', 'is_annotation', 'species',
+                     'genome_build', 'name', 'django_ct']
+
+    if field in hidden_fields:
+        return True
+    else:
+        return False
 
 
 def generate_filtered_facet_fields(attributes):
@@ -655,13 +662,13 @@ def generate_filtered_facet_fields(attributes):
 
     for field in filtered_attributes:
         if field.get('is_exposed'):
-            field_limit_list.append(field.get('solr_field'))
+            weighted_facet_list.append((int(field['rank']), field))
             if field.get('is_facet'):
-                weighted_facet_list.append((int(field['rank']), field))
+                facet_field.append(field.get('solr_field'))
 
     weighted_facet_list.sort()
     for (rank, field) in weighted_facet_list:
-        facet_field.append(field.get("solr_field"))
+        field_limit_list.append(field.get("solr_field"))
 
     return {'facet_field': facet_field,
             'field_limit': field_limit_list}
@@ -716,7 +723,7 @@ def format_solr_response(solr_response):
 
     # Reorganizes solr response into easier to digest objects.
     order_facet_fields = solr_response_json.get('responseHeader').get(
-            'params').get('facet.field')
+            'params').get('fl').split(',')
     facet_field_counts = solr_response_json.get('facet_counts').get(
             'facet_fields')
     facet_field_docs = solr_response_json.get('response').get('docs')

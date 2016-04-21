@@ -5,14 +5,14 @@ describe('Analysis Monitor Factory', function () {
   var factory;
   var deferred;
   var rootScope;
-  var validUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
-  var validToken = 'xxxx1';
+  var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+  var fakeToken = 'xxxx1';
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryAnalysisMonitor'));
   beforeEach(inject(function (_analysisMonitorFactory_, $window) {
     factory = _analysisMonitorFactory_;
-    $window.csrf_token = validToken;
+    $window.csrf_token = fakeToken;
   }));
 
   it('factory and tools variables should exist', function () {
@@ -54,7 +54,7 @@ describe('Analysis Monitor Factory', function () {
     it('getAnalysesList returns a promise', function () {
       var successData;
       var response = factory.getAnalysesList({
-        uuid: validUuid
+        uuid: fakeUuid
       }).then(function (responseData) {
         successData = responseData;
       });
@@ -107,7 +107,7 @@ describe('Analysis Monitor Factory', function () {
     it('getAnalysesDetail makes success call', function () {
       var successData;
       factory.getAnalysesDetail({
-        uuid: validUuid
+        uuid: fakeUuid
       }).then(function (responseData) {
         successData = responseData;
       });
@@ -131,8 +131,8 @@ describe('Analysis Monitor Factory', function () {
     it('postCancelAnalysis makes success call', function () {
       $httpBackend.expectPOST('/analysis_manager/analysis_cancel/',
         {
-          csrfmiddlewaretoken: validToken,
-          uuid: validUuid
+          csrfmiddlewaretoken: fakeToken,
+          uuid: fakeUuid
         },
         {
           'X-Requested-With': 'XMLHttpRequest',
@@ -143,7 +143,7 @@ describe('Analysis Monitor Factory', function () {
         }
       ).respond(200, {}, {});
       var data;
-      var response = factory.postCancelAnalysis(validUuid).then(function () {
+      var response = factory.postCancelAnalysis(fakeUuid).then(function () {
         data = 'success';
       }, function () {
         data = 'error';

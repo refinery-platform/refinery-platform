@@ -135,7 +135,15 @@ function refineryDataSetNavConfig (
       },
       '^\/data_sets2\/.*\/$',
       true
-  );
+    )
+    .state(
+      'sharing', {
+        url: '/sharing/',
+        controller: 'refineryDataSetNavBlueprintCtrl'
+      },
+      '^\/data_sets2\/.*\/$',
+      true
+    );
 
   refineryUrlRouterProvider
     .otherwise(
