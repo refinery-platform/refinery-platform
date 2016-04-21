@@ -4,7 +4,7 @@ describe('Controller: AnalysisMonitorCtrl', function () {
   var ctrl;
   var scope;
   var factory;
-  var validUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+  var validUuid = 'c508e83e-f9ee-4740-b9c7-a7b0e631280f';
   var invalidUuid = 'xxxxx';
   var $timeout;
   var $controller;
@@ -21,7 +21,7 @@ describe('Controller: AnalysisMonitorCtrl', function () {
     });
     factory = _analysisMonitorFactory_;
     $timeout = _$timeout_;
-    $window.dataSetUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+    $window.dataSetUuid = 'c508e83e-f9ee-4740-b9c7-a7b0e631280f';
   }));
 
   it('AnalysisMonitorCtrl ctrl should exist', function () {

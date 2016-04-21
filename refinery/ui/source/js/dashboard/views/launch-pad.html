@@ -256,10 +256,10 @@
                 ng-class="{'hovered': dataSet.hovered, 'locked': dataSet.locked, 'previewing': dataSet.preview}"
                 ng-mouseenter="dashboard.dataSetMouseEnter(dataSet)"
                 ng-mouseleave="dashboard.dataSetMouseLeave(dataSet)">
-                <button
+                <a
                   class="preview"
-                  title="Preview the data set"
-                  ng-click="dashboard.expandDataSetPreview(dataSet, $index)"
+                  title="Open directly in data set explorer"
+                  ng-href="data_sets/{{ dataSet.uuid }}"
                   refinery-tooltip
                   refinery-tooltip-container="body"
                   refinery-tooltip-placement="right"
@@ -269,7 +269,7 @@
                   <i
                     class="fa fa-angle-double-right is-mirrorable"
                     ng-class="{'is-mirrored': dataSet.preview}"></i>
-                </button>
+                </a>
                 <button
                   class="zoom-out"
                   title="Zoom out to show all annotations in the list graph to the right"
@@ -298,7 +298,7 @@
                 </button>
                 <a
                   class="title one-line"
-                  ng-href="data_sets/{{ dataSet.uuid }}"
+                  ng-click="dashboard.expandDataSetPreview(dataSet, $index)"
                   ng-bind-html="dataSet.title"></a>
                 <div class="flex-box indicators">
                   <ul class="flex-item-two flex-left no-list-style">
@@ -385,20 +385,18 @@
               ng-class="{'hovered': dataSet.hovered, 'locked': dataSet.locked, 'previewing': dataSet.preview}"
               ng-mouseenter="dashboard.dataSetMouseEnter(dataSet)"
               ng-mouseleave="dashboard.dataSetMouseLeave(dataSet)">
-              <button
+              <a
                 class="preview"
-                title="Preview the data set"
-                ng-click="dashboard.expandDataSetPreview(dataSet, $index)"
+                title="Open directly in data set explorer"
+                ng-href="data_sets/{{ dataSet.uuid }}"
                 refinery-tooltip
                 refinery-tooltip-container="body"
                 refinery-tooltip-placement="right"
                 refinery-tooltip-delay-show="750"
                 refinery-tooltip-delay-hide="150"
                 refinery-tooltip-hide-on-click="true">
-                <i
-                  class="fa fa-angle-double-right is-mirrorable"
-                  ng-class="{'is-mirrored': dataSet.preview}"></i>
-              </button>
+                <i class="fa fa-angle-double-right is-mirrorable"></i>
+              </a>
               <button
                 class="zoom-out"
                 title="Zoom out to show all annotations in the list graph to the right"
@@ -427,7 +425,7 @@
               </button>
               <a
                 class="title"
-                ng-href="data_sets/{{ dataSet.uuid }}"
+                ng-click="dashboard.expandDataSetPreview(dataSet, $index)"
                 ng-bind-html="dataSet.title"></a>
               <div class="flex-box indicators">
                 <ul class="flex-item-two flex-left no-list-style">
