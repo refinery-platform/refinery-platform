@@ -4,7 +4,8 @@ function fileBrowserFactory (
   $http,
   assayFileService,
   settings,
-  $window) {
+  $window,
+  $log) {
   var assayFiles = [];
   var assayAttributes = [];
   var assayAttributeOrder = [];
@@ -26,12 +27,10 @@ function fileBrowserFactory (
     // resets the attribute filters, which can be changed by owners
     var outAttributeFilter = {};
     var outAnalysisFilter = {};
-
     attributes.forEach(function (facetObj) {
-      var facetObjCount = facetCounts[facetObj.internal_name];
-      // for filtering out (only)attributes with only 1 field
-
-      if (facetObjCount !== undefined) {
+      if (facetCounts[facetObj.internal_name] !== undefined) {
+        var facetObjCount = facetCounts[facetObj.internal_name];
+        // for filtering out (only) attributes with only 1 field
         var facetObjCountMinLen = Object.keys(facetObjCount).length > 1;
 
         if (facetObjCountMinLen && facetObj.display_name !== 'Analysis') {
@@ -47,6 +46,7 @@ function fileBrowserFactory (
         }
       }
     });
+
     return {
       attributeFilter: outAttributeFilter,
       analysisFilter: outAnalysisFilter
@@ -101,7 +101,7 @@ function fileBrowserFactory (
       var sortedResponse = sortArrayOfObj(response.data);
       angular.copy(sortedResponse, assayAttributeOrder);
     }, function (error) {
-      console.log(error);
+      $log.error(error);
     });
   };
 
@@ -129,7 +129,7 @@ function fileBrowserFactory (
         }
       }
     }, function (error) {
-      console.log(error);
+      $log.error(error);
     });
   };
 
@@ -153,6 +153,7 @@ angular
     'assayFileService',
     'settings',
     '$window',
+    '$log',
     fileBrowserFactory
   ]
 );

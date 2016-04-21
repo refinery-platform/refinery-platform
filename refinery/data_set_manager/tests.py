@@ -762,6 +762,13 @@ class UtilitiesTest(TestCase):
                         '"REFINERY_ANALYSIS_UUID_6_3_s",'\
                         '"Author_Characteristics_6_3_s",'\
                         '"Year_Characteristics_6_3_s"],'\
+                        '"fl":'\
+                        '"REFINERY_TYPE_6_3_s,'\
+                        'REFINERY_SUBANALYSIS_6_3_s,'\
+                        'REFINERY_WORKFLOW_OUTPUT_6_3_s,'\
+                        'REFINERY_ANALYSIS_UUID_6_3_s,'\
+                        'Author_Characteristics_6_3_s,'\
+                        'Year_Characteristics_6_3_s",'\
                         '"wt": "json", "rows": "20"}},'\
                         '"response": {'\
                         '"numFound": 1, "offset": 0,'\

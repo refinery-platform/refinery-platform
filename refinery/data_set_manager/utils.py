@@ -662,13 +662,13 @@ def generate_filtered_facet_fields(attributes):
 
     for field in filtered_attributes:
         if field.get('is_exposed'):
-            field_limit_list.append(field.get('solr_field'))
+            weighted_facet_list.append((int(field['rank']), field))
             if field.get('is_facet'):
-                weighted_facet_list.append((int(field['rank']), field))
+                facet_field.append(field.get('solr_field'))
 
     weighted_facet_list.sort()
     for (rank, field) in weighted_facet_list:
-        facet_field.append(field.get("solr_field"))
+        field_limit_list.append(field.get("solr_field"))
 
     return {'facet_field': facet_field,
             'field_limit': field_limit_list}
@@ -723,7 +723,7 @@ def format_solr_response(solr_response):
 
     # Reorganizes solr response into easier to digest objects.
     order_facet_fields = solr_response_json.get('responseHeader').get(
-            'params').get('facet.field')
+            'params').get('fl').split(',')
     facet_field_counts = solr_response_json.get('facet_counts').get(
             'facet_fields')
     facet_field_docs = solr_response_json.get('response').get('docs')
