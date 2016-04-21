@@ -8,7 +8,7 @@ function AppCtrl ($, $rootScope, $timeout, $window, _, pubSub, settings) {
   this.pubSub = pubSub;
   this.settings = settings;
 
-  this.$(this.$window).on(
+  this.jqWindow.on(
     'resize orientationchange',
     this._.debounce(
       function () {
