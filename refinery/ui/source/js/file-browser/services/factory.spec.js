@@ -4,15 +4,15 @@ describe('File Browser Factory', function () {
   var factory;
   var deferred;
   var rootScope;
-  var validUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
-  var validToken = 'xxxx1';
+  var validUuid = 'c508e83e-f9ee-4740-b9c7-a7b0e631280f';
+  var fakeToken = 'xxxx1';
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryFileBrowser'));
   beforeEach(inject(function (_fileBrowserFactory_, $window) {
     factory = _fileBrowserFactory_;
 
-    $window.csrf_token = validToken;
+    $window.csrf_token = fakeToken;
   }));
 
   it('factory and tools variables should exist', function () {
@@ -128,7 +128,7 @@ describe('File Browser Factory', function () {
   //    $httpBackend.expect(
   //      'GET',
   //      url,
-  //      { 'csrfmiddlewaretoken': validToken, 'uuid': validUuid },
+  //      { 'csrfmiddlewaretoken': fakeToken, 'uuid': validUuid },
   //      { "Accept":"application/json, text/plain, */*" }
   //    ).respond(200, {}, {});
   //    var response = factory.getAssayAttributeOrder(validUuid)

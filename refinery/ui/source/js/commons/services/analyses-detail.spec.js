@@ -4,7 +4,7 @@ describe('Common.service.analysisDetail: unit tests', function () {
   var $httpBackend;
   var $rootScope;
   var params = '/?format=json';
-  var validUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+  var validUuid = 'c508e83e-f9ee-4740-b9c7-a7b0e631280f';
   var service;
   var header = {
     'X-Requested-With': 'XMLHttpRequest',

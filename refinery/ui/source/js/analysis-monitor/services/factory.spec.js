@@ -5,14 +5,14 @@ describe('Analysis Monitor Factory', function () {
   var factory;
   var deferred;
   var rootScope;
-  var validUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
-  var validToken = 'xxxx1';
+  var validUuid = 'c508e83e-f9ee-4740-b9c7-a7b0e631280f';
+  var fakeToken = 'xxxx1';
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryAnalysisMonitor'));
   beforeEach(inject(function (_analysisMonitorFactory_, $window) {
     factory = _analysisMonitorFactory_;
-    $window.csrf_token = validToken;
+    $window.csrf_token = fakeToken;
   }));
 
   it('factory and tools variables should exist', function () {
@@ -131,7 +131,7 @@ describe('Analysis Monitor Factory', function () {
     it('postCancelAnalysis makes success call', function () {
       $httpBackend.expectPOST('/analysis_manager/analysis_cancel/',
         {
-          csrfmiddlewaretoken: validToken,
+          csrfmiddlewaretoken: fakeToken,
           uuid: validUuid
         },
         {
