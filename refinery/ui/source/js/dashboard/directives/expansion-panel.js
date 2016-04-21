@@ -1,7 +1,7 @@
 'use strict';
 
 function refineryExpansionPanel () {
-  function ExpansionPanelCtrl (dashboardWidthFixerService) {
+  function ExpansionPanelCtrl (settings, dashboardWidthFixerService) {
     var that = this;
 
     dashboardWidthFixerService.fixer.push(function () {
@@ -9,12 +9,18 @@ function refineryExpansionPanel () {
         left: this.fixedWidth + 1
       };
     });
+
+    if (settings.djangoApp.repositoryMode) {
+      dashboardWidthFixerService.trigger('fixer');
+    }
   }
 
   return {
     controller: [
+      'settings',
       'dashboardWidthFixerService',
-      ExpansionPanelCtrl],
+      ExpansionPanelCtrl
+    ],
     controllerAs: 'expansionPanel',
     restrict: 'E',
     replace: true,
