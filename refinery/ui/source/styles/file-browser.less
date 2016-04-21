@@ -1,3 +1,5 @@
+@import "variables.less";
+
 /*From data_set2.html, double c*/
 .facet-value-list td {
   padding: 2px;
@@ -55,7 +57,7 @@
  */
 .fileUtilModal ul[dnd-list] .dndPlaceholder {
     display: block;
-    background-color: #ddd;
+    background-color: @white;
     min-height: 42px;
 }
 
@@ -67,19 +69,11 @@
  * browsers we can use event.offsetY for this.
  */
 .fileUtilModal ul[dnd-list] li {
-    background-color: #fff;
-    border: 1px solid #ddd;
+    background-color: @white;
+    border: 1px solid @gray-lighter;
     border-top-right-radius: 4px;
     border-top-left-radius: 4px;
     display: block;
     padding: 10px 15px;
     margin-bottom: -1px;
-}
-
-/**
- * Show selected elements in green
- */
-.fileUtilModal ul[dnd-list] li.selected {
-    background-color: #dff0d8;
-    color: #3c763d;
 }
