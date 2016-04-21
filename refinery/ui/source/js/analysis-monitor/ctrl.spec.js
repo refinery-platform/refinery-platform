@@ -4,8 +4,8 @@ describe('Controller: AnalysisMonitorCtrl', function () {
   var ctrl;
   var scope;
   var factory;
-  var validUuid = 'c508e83e-f9ee-4740-b9c7-a7b0e631280f';
-  var invalidUuid = 'xxxxx';
+  var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+  var fakeInvalidUuid = 'xxxxx';
   var $timeout;
   var $controller;
 
@@ -21,7 +21,7 @@ describe('Controller: AnalysisMonitorCtrl', function () {
     });
     factory = _analysisMonitorFactory_;
     $timeout = _$timeout_;
-    $window.dataSetUuid = 'c508e83e-f9ee-4740-b9c7-a7b0e631280f';
+    $window.dataSetUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
   }));
 
   it('AnalysisMonitorCtrl ctrl should exist', function () {
@@ -143,7 +143,7 @@ describe('Controller: AnalysisMonitorCtrl', function () {
         };
       });
 
-      ctrl.analysesDetail[validUuid] = {
+      ctrl.analysesDetail[fakeUuid] = {
         refineryImport: [{
           status: 'PROGRESS',
           percent_done: 30
@@ -171,19 +171,19 @@ describe('Controller: AnalysisMonitorCtrl', function () {
 
     it('cancelAnalysis, check postCancelAnalysis is called', function () {
       expect(mockCancelFlag).toEqual(false);
-      ctrl.cancelAnalysis(validUuid);
+      ctrl.cancelAnalysis(fakeUuid);
       expect(mockCancelFlag).toEqual(true);
     });
 
     it('setCancelAnalysisFlag', function () {
-      ctrl.setCancelAnalysisFlag(true, invalidUuid);
-      expect(ctrl.initializedFlag[invalidUuid]).toEqual(true);
+      ctrl.setCancelAnalysisFlag(true, fakeInvalidUuid);
+      expect(ctrl.initializedFlag[fakeInvalidUuid]).toEqual(true);
 
-      ctrl.setCancelAnalysisFlag(false, validUuid);
-      expect(ctrl.analysesDetail[validUuid].cancelingAnalyses).toEqual(false);
+      ctrl.setCancelAnalysisFlag(false, fakeUuid);
+      expect(ctrl.analysesDetail[fakeUuid].cancelingAnalyses).toEqual(false);
 
-      ctrl.setCancelAnalysisFlag(true, validUuid);
-      expect(ctrl.analysesDetail[validUuid].cancelingAnalyses).toEqual(true);
+      ctrl.setCancelAnalysisFlag(true, fakeUuid);
+      expect(ctrl.analysesDetail[fakeUuid].cancelingAnalyses).toEqual(true);
     });
   });
 
@@ -192,7 +192,7 @@ describe('Controller: AnalysisMonitorCtrl', function () {
       scope = $rootScope.$new();
       $timeout = _$timeout_;
 
-      ctrl.analysesDetail[validUuid] = {
+      ctrl.analysesDetail[fakeUuid] = {
         refineryImport: [{
           status: 'PROGRESS',
           percent_done: 30
@@ -376,9 +376,9 @@ describe('Controller: AnalysisMonitorCtrl', function () {
     });
 
     it('isAnalysisDetailLoaded responds correctly', function () {
-      var responseValid = ctrl.isAnalysisDetailLoaded(validUuid);
+      var responseValid = ctrl.isAnalysisDetailLoaded(fakeUuid);
       expect(responseValid).toEqual(true);
-      var responseInvalid = ctrl.isAnalysisDetailLoaded(invalidUuid);
+      var responseInvalid = ctrl.isAnalysisDetailLoaded(fakeInvalidUuid);
       expect(responseInvalid).toEqual(false);
     });
   });
