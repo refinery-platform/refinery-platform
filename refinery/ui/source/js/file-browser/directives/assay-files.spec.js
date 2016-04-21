@@ -9,7 +9,7 @@ describe('rpAssayFiles directive unit test', function () {
   var scope;
   var settings;
   var $httpBackend;
-  var validUuid = 'c508e83e-f9ee-4740-b9c7-a7b0e631280f';
+  var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
 
   beforeEach(inject(function (
     _$compile_,
@@ -35,14 +35,14 @@ describe('rpAssayFiles directive unit test', function () {
     $httpBackend.expectGET(
       settings.appRoot +
       settings.refineryApi + '/data_sets?format=json&order_by=-modification_date'
-      + '&uuid=' + validUuid
+      + '&uuid=' + fakeUuid
     ).respond(200, {});
 
     // Link makes an api call to update attribute filter
     $httpBackend.expectGET(
       settings.appRoot +
       settings.refineryApiV2 +
-      '/assays/' + validUuid + '/files/?limit=100&offset=0'
+      '/assays/' + fakeUuid + '/files/?limit=100&offset=0'
     ).respond(200, {});
     var directiveElement = compile(template)(scope);
 

@@ -3,11 +3,11 @@
 describe('Common.service.analysis: unit tests', function () {
   var $httpBackend;
   var $rootScope;
-  var validUuid = 'c508e83e-f9ee-4740-b9c7-a7b0e631280f';
+  var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
   var params = '/?format=json&' +
     'limit=0&' +
     'order_by=-time_start&' +
-    'uuid=' + validUuid;
+    'uuid=' + fakeUuid;
   var service;
   var fakeResponse = {
     meta: {
@@ -58,7 +58,7 @@ describe('Common.service.analysis: unit tests', function () {
     it('should return a resolving promise', function () {
       var results;
       var promise = service.get({
-        uuid: validUuid
+        uuid: fakeUuid
       }).$promise.then(function (response) {
         results = response;
       });

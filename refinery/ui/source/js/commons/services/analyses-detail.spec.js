@@ -4,7 +4,7 @@ describe('Common.service.analysisDetail: unit tests', function () {
   var $httpBackend;
   var $rootScope;
   var params = '/?format=json';
-  var validUuid = 'c508e83e-f9ee-4740-b9c7-a7b0e631280f';
+  var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
   var service;
   var header = {
     'X-Requested-With': 'XMLHttpRequest',
@@ -45,8 +45,8 @@ describe('Common.service.analysisDetail: unit tests', function () {
         .expectPOST(
           settings.appRoot +
           '/analysis_manager/' +
-          validUuid + params, {
-            uuid: validUuid
+          fakeUuid + params, {
+            uuid: fakeUuid
           },
           header
       ).respond(200, fakeResponse);
@@ -65,7 +65,7 @@ describe('Common.service.analysisDetail: unit tests', function () {
     it('should return a resolving promise', function () {
       var results;
       var promise = service.query({
-        uuid: validUuid
+        uuid: fakeUuid
       }).$promise.then(function (response) {
         results = response;
       });
