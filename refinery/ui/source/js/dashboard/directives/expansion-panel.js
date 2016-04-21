@@ -1,15 +1,11 @@
 'use strict';
 
 function refineryExpansionPanel () {
-  function ExpansionPanelCtrl (
-    pubSub,
-    dashboardWidthFixerService,
-    dashboardDataSetPreviewService) {
+  function ExpansionPanelCtrl (pubSub, dashboardWidthFixerService) {
     var that = this;
 
     this.pubSub = pubSub;
     this.dashboardWidthFixerService = dashboardWidthFixerService;
-    this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
 
     this.dashboardWidthFixerService.fixer.push(function () {
       that.style = {
@@ -22,7 +18,6 @@ function refineryExpansionPanel () {
     controller: [
       'pubSub',
       'dashboardWidthFixerService',
-      'dashboardDataSetPreviewService',
       ExpansionPanelCtrl],
     controllerAs: 'expansionPanel',
     restrict: 'E',
