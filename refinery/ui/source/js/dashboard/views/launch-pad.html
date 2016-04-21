@@ -526,7 +526,8 @@
 
 <div
   class="col-md-4 pushable"
-  ng-class="{'pushed': dashboard.expandDataSetPanel}">
+  ng-class="{'pushed': dashboard.expandDataSetPanel}"
+  ng-if="!dashboard.repoMode">
   <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
@@ -731,7 +732,8 @@
 
 <div
   class="col-md-4 pushable"
-  ng-class="{'pushed': dashboard.expandDataSetPanel}">
+  ng-class="{'pushed': dashboard.expandDataSetPanel}"
+  ng-if="!dashboard.repoMode">
   <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
