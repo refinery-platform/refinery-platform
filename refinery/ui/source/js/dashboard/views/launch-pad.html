@@ -513,6 +513,25 @@
         active="dashboard.dataSetExploration"
         ng-if="dashboard.explorationEnabled">
       </refinery-dashboard-vis-wrapper>
+      <div
+        ng-class="{ 'hidden': dashboard.dataSetExploration || dashboard.dataSetPreview }"
+        ng-if="dashboard.repoMode">
+        <div class="content-container">
+          <div class="refinery-panel-topbar"></div>
+          <div class="full-without-topbar">
+            <div class="refinery-global-notifier">
+              <div class="refinery-repo-mode">
+                <svg class="icon-refinery">
+                  <use
+                    xmlns:xlink="http://www.w3.org/1999/xlink"
+                    xlink:href="/static/images/icons.svg#refinery"></use>
+                </svg><br/>
+                Repository Mode
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </refinery-expansion-panel>
   </div>
 </div>
