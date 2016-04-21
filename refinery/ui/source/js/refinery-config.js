@@ -1,6 +1,8 @@
 'use strict';
 
-function refineryAppConfig ($logProvider, $urlRouterProvider, settings) {
+function refineryAppConfig (
+  $httpProvider, $logProvider, $urlRouterProvider, settings
+) {
   /*
    * Force URLs to be caseinsensitive.
    * Append a trailing slash if there is none.
@@ -24,10 +26,20 @@ function refineryAppConfig ($logProvider, $urlRouterProvider, settings) {
    * Set debug logger
    */
   $logProvider.debugEnabled(settings.djangoApp.debug);
+
+  /*
+   * Use Django XSRF/CSRF lingo to enable communication with API.
+   */
+  $httpProvider.defaults.xsrfCookieName = 'csrftoken';
+  $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
 }
 
 angular
   .module('refineryApp')
   .config([
-    '$logProvider', '$urlRouterProvider', 'settings', refineryAppConfig
+    '$httpProvider',
+    '$logProvider',
+    '$urlRouterProvider',
+    'settings',
+    refineryAppConfig
   ]);

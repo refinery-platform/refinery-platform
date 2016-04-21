@@ -34,8 +34,9 @@ python stack.py > web.json
 # CloudInit
 #   https://help.ubuntu.com/community/CloudInit
 
+import datetime
 import glob
-import json
+import json     # for json.dumps
 import os       # for os.popen
 import sys      # sys.stderr, sys.exit, and so on
 
@@ -63,6 +64,8 @@ def main():
     # the availability zone of the existing EBS.
     derive_config(config)
 
+    unique_suffix = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M")
+
     # We discover the current git branch/commit
     # so that the deployment script can use it
     # to clone the same commit.
@@ -71,7 +74,7 @@ def main():
 
     assert "'" not in config['SITE_NAME']
 
-    config_uri = save_s3_config(config)
+    config_uri = save_s3_config(config, unique_suffix)
     sys.stderr.write("Configuration saved to {}\n".format(config_uri))
 
     # The userdata script is executed via CloudInit.
@@ -81,6 +84,7 @@ def main():
     user_data_script = functions.join(
         "",
         "#!/bin/sh\n",
+        "AWS_DEFAULT_REGION=", functions.ref("AWS::Region"), "\n",
         "RDS_NAME=", config['RDS_NAME'], "\n",
         "RDS_SUPERUSER_PASSWORD=", config['RDS_SUPERUSER_PASSWORD'], "\n",
         "RDS_ROLE=", config['RDS_ROLE'], "\n",
@@ -99,6 +103,11 @@ def main():
 
     cft = core.CloudFormationTemplate(description="refinery platform.")
 
+    instance_tags = tags.load()
+    # Set the `Name` as it appears on the EC2 web UI.
+    instance_tags.append({'Key': 'Name',
+                         'Value': "refinery-web-" + unique_suffix})
+
     cft.resources.ec2_instance = core.Resource(
         'WebInstance', 'AWS::EC2::Instance',
         core.Properties({
@@ -108,7 +117,7 @@ def main():
             'UserData': functions.base64(user_data_script),
             'KeyName': 'id_rsa',
             'IamInstanceProfile': functions.ref('WebInstanceProfile'),
-            'Tags': tags.load(),
+            'Tags': instance_tags,
         })
     )
 
@@ -223,7 +232,7 @@ def load_config():
     return config
 
 
-def save_s3_config(config):
+def save_s3_config(config, suffix):
     """
     Save the config as an S3 object in an S3 bucket.
     If the config has an 'S3_CONFIG_BUCKET' key,
@@ -235,8 +244,6 @@ def save_s3_config(config):
     A URI in the form s3://bucket/key is returned;
     this URI refers to the S3 object that is created.
     """
-
-    import datetime
 
     # http://boto3.readthedocs.org/en/latest/guide/migrations3.html
     s3 = boto3.resource('s3')
@@ -257,8 +264,8 @@ def save_s3_config(config):
 
     bucket_name = config['S3_CONFIG_BUCKET']
 
-    object_name = ("refinery-config-" +
-                   datetime.datetime.utcnow().strftime("%Y%m%dT%H%M"))
+    object_name = ("refinery-config-" + suffix)
+
     s3_uri = "s3://{}/{}".format(bucket_name, object_name)
     config['S3_CONFIG_URI'] = s3_uri
 
