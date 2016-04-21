@@ -32,12 +32,13 @@ describe('Controller: FileBrowserCtrl', function () {
     expect(ctrl.filesParam).toBeDefined();
   });
 
-  describe('Update AssayFiles from Factory', function () {
-    it('updateAssayFiles is method', function () {
-      expect(angular.isFunction(ctrl.updateAssayFiles)).toBe(true);
+
+  describe('Refresh AssayFiles from Factory', function () {
+    it('refreshAssayFiles is method', function () {
+      expect(angular.isFunction(ctrl.refreshAssayFiles)).toBe(true);
     });
 
-    it('updateAssayFiles returns promise', function () {
+    it('refreshAssayFiles returns promise', function () {
       var mockAssayFiles = false;
       spyOn(factory, 'getAssayFiles').and.callFake(function () {
         return {
@@ -47,28 +48,8 @@ describe('Controller: FileBrowserCtrl', function () {
         };
       });
 
-      expect(typeof ctrl.timerList).toEqual('undefined');
-      ctrl.updateAssayFiles();
-      expect(typeof ctrl.timerList).toBeDefined();
+      ctrl.refreshAssayFiles();
       expect(mockAssayFiles).toEqual(true);
-    });
-
-    it('updateAssayAttributes is  method', function () {
-      expect(angular.isFunction(ctrl.updateAssayAttributes)).toBe(true);
-    });
-
-    it('updateAssayAttributes returns promise', function () {
-      var mockGetAssayAttributes = false;
-      spyOn(factory, 'getAssayAttributeOrder').and.callFake(function () {
-        return {
-          then: function () {
-            mockGetAssayAttributes = true;
-          }
-        };
-      });
-
-      ctrl.updateAssayAttributes();
-      expect(mockGetAssayAttributes).toEqual(true);
     });
   });
 });

@@ -5,10 +5,12 @@ function FileBrowserCtrl (
   $location,
   uiGridConstants,
   fileBrowserFactory,
+  resetGridService,
+  isOwnerService,
   $window,
   $timeout,
   $q
-) {
+  ) {
   var vm = this;
   vm.assayFiles = [];
   vm.assayAttributes = [];
@@ -44,9 +46,11 @@ function FileBrowserCtrl (
   vm.totalPages = 1;
   vm.cachePages = 2;
 
-  vm.updateAssayFiles = function () {
+
+  vm.refreshAssayFiles = function () {
     vm.filesParam.offset = vm.lastPage * vm.rowCount;
     vm.filesParam.limit = vm.rowCount;
+
     var promise = $q.defer();
     fileBrowserFactory.getAssayFiles(vm.filesParam).then(function () {
       vm.assayFiles = vm.assayFiles.concat(fileBrowserFactory.assayFiles);
@@ -56,30 +60,30 @@ function FileBrowserCtrl (
       vm.assayAttributes = fileBrowserFactory.assayAttributes;
       vm.attributeFilter = fileBrowserFactory.attributeFilter;
       vm.analysisFilter = fileBrowserFactory.analysisFilter;
+      vm.createColumnDefs();
       promise.resolve();
     });
     return promise.promise;
   };
 
-  vm.updateAssayAttributes = function () {
-    var assayUuid = $window.externalAssayUuid;
-    return fileBrowserFactory.getAssayAttributeOrder(assayUuid).then(function () {
-      vm.assayAttributeOrder = fileBrowserFactory.assayAttributeOrder;
-    });
-  };
 
   // checks url for params to update the filter
   vm.checkUrlQueryFilters = function () {
     var allFilters = {};
     // Merge attribute and analysis filter data obj
     angular.copy(vm.attributeFilter, allFilters);
-    allFilters.Analysis = vm.analysisFilter.Analysis;
+
+    if (typeof vm.analysisFilter.Analysis !== 'undefined') {
+      allFilters.Analysis = vm.analysisFilter.Analysis;
+    }
+
     // for attribute filter directive, drop panels in query
     $scope.$broadcast('rf/attributeFilter-ready');
     angular.forEach(allFilters, function (fieldObj, attribute) {
       vm.refreshSelectedFieldFromQuery(fieldObj, attribute);
     });
   };
+
 
   vm.refreshSelectedFieldFromQuery = function (fieldObj, attribute) {
     angular.forEach(fieldObj.facetObj, function (value, field) {
@@ -89,6 +93,7 @@ function FileBrowserCtrl (
       }
     });
   };
+
 
   // Updates which attribute filters are selected and the ui-grid data
   vm.attributeSelectionUpdate = function (internalName, field) {
@@ -113,6 +118,7 @@ function FileBrowserCtrl (
     vm.reset();
   };
 
+
   // Ui-grid methods for catching grid events
   vm.gridOptions.onRegisterApi = function (gridApi) {
     // set gridApi on scope
@@ -120,7 +126,6 @@ function FileBrowserCtrl (
     // Infinite Grid Load
     gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
     gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
-
     vm.gridApi = gridApi;
 
     // Sort events
@@ -136,6 +141,7 @@ function FileBrowserCtrl (
       vm.selectNodes = gridApi.selection.getSelectedRows();
     });
   };
+
 
   vm.getDataDown = function () {
     vm.lastPage++;
@@ -162,10 +168,12 @@ function FileBrowserCtrl (
     return promise.promise;
   };
 
+
   vm.getDataUp = function () {
     if (vm.firstPage > 0) {
       vm.firstPage--;
     }
+
     vm.filesParam.offset = vm.firstPage * vm.rowCount;
     vm.filesParam.limit = vm.rowCount;
     var promise = $q.defer();
@@ -188,6 +196,7 @@ function FileBrowserCtrl (
       });
     return promise.promise;
   };
+
 
   vm.checkDataLength = function (discardDirection) {
     // work out whether we need to discard a page, if so discard from the
@@ -222,26 +231,28 @@ function FileBrowserCtrl (
     vm.firstPage = 0;
     vm.lastPage = 0;
 
-    // turn off the infinite scroll handling up and down - hopefully this won't
-    // be needed after @swalters scrolling changes
-    vm.gridApi.infiniteScroll.setScrollDirections(false, false);
-    vm.assayFiles = [];
+    // turn off the infinite scroll handling up and down
+    if (typeof vm.gridApi !== 'undefined') {
+      vm.gridApi.infiniteScroll.setScrollDirections(false, false);
 
-    vm.updateAssayFiles().then(function () {
-      $timeout(function () {
-        // timeout needed to allow digest cycle to complete,and grid to finish
-        // ingesting the data
-        vm.gridApi.infiniteScroll.resetScroll(
-          vm.firstPage > 0, vm.lastPage < vm.totalPages
-        );
+      vm.assayFiles = [];
+
+      vm.refreshAssayFiles().then(function () {
+        $timeout(function () {
+        // timeout needed to allow digest cycle to complete,and grid to finish ingesting the data
+          vm.gridApi.infiniteScroll.resetScroll(vm.firstPage > 0, vm.lastPage < vm.totalPages);
+          resetGridService.setResetGridFlag(false);
+        });
       });
-    });
+    }
   };
+
 
   // Generates param: sort for api call from ui-grid response
   vm.sortChanged = function (grid, sortColumns) {
     if (typeof sortColumns !== 'undefined' &&
-      typeof sortColumns[0] !== 'undefined') {
+        typeof sortColumns[0] !== 'undefined' &&
+        typeof sortColumns[0].sort !== 'undefined') {
       switch (sortColumns[0].sort.direction) {
         case uiGridConstants.ASC:
           vm.filesParam.sort = sortColumns[0].field + ' asc';
@@ -258,29 +269,65 @@ function FileBrowserCtrl (
     }
   };
 
-  // populates the  ui-grid columns variable
+
+  // populates the ui-grid columns variable
   vm.createColumnDefs = function () {
+    vm.customColumnName = [];
+    var totalChars = vm.assayAttributes.reduce(function (previousValue, facetObj) {
+      return previousValue + String(facetObj.display_name).length;
+    }, 0);
+
     vm.assayAttributes.forEach(function (attribute) {
+      var columnName = attribute.display_name;
+      var columnWidth = columnName.length / totalChars * 100;
+      if (columnWidth < 10) {  // make sure columns are wide enough
+        columnWidth = Math.round(columnWidth * 2);
+      }
+
       vm.customColumnName.push(
         {
-          name: attribute.display_name,
+          name: columnName,
+          width: columnWidth + '%',
           field: attribute.internal_name
         }
       );
     });
     vm.gridOptions.columnDefs = vm.customColumnName;
   };
+
+
+  vm.checkDataSetOwnership = function () {
+    isOwnerService.refreshDataSetOwner().then(function () {
+      vm.isOwner = isOwnerService.isOwner;
+    });
+  };
+
+  $scope.$watch(
+    function () {
+      return resetGridService.resetGridFlag;
+    },
+    function () {
+      if (resetGridService.resetGridFlag) {
+        vm.reset();
+      }
+    }
+  );
 }
+
 
 angular
   .module('refineryFileBrowser')
-  .controller('FileBrowserCtrl', [
+  .controller('FileBrowserCtrl',
+  [
     '$scope',
     '$location',
     'uiGridConstants',
     'fileBrowserFactory',
+    'resetGridService',
+    'isOwnerService',
     '$window',
     '$timeout',
     '$q',
     FileBrowserCtrl
   ]);
+

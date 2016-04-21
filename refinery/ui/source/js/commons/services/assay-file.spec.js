@@ -3,7 +3,7 @@
 describe('Common.service.assayFile: unit tests', function () {
   var $httpBackend;
   var $rootScope;
-  var validUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+  var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
   var service;
   var fakeResponse = {
     facet_field_counts: {
@@ -166,7 +166,7 @@ describe('Common.service.assayFile: unit tests', function () {
         .expectGET(
           settings.appRoot +
           settings.refineryApiV2 +
-          '/assays/' + validUuid + '/files/'
+          '/assays/' + fakeUuid + '/files/'
       ).respond(200, fakeResponse);
     });
   });
@@ -183,7 +183,7 @@ describe('Common.service.assayFile: unit tests', function () {
     it('should return a resolving promise', function () {
       var results;
       var promise = service.get({
-        uuid: validUuid
+        uuid: fakeUuid
       }).$promise.then(function (response) {
         results = response;
       });

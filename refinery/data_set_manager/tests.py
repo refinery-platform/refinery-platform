@@ -17,7 +17,8 @@ from .views import Assays, AssaysAttributes
 from .utils import (update_attribute_order_ranks,
                     customize_attribute_response, format_solr_response,
                     get_owner_from_assay, generate_facet_fields_query,
-                    hide_fields_from_list, generate_filtered_facet_fields,
+                    hide_fields_from_list, is_field_in_hidden_list,
+                    generate_filtered_facet_fields,
                     insert_facet_field_filter, create_facet_filter_query,
                     generate_solr_params, objectify_facet_field_counts,
                     escape_character_solr)
@@ -179,7 +180,7 @@ class AssaysAttributesAPITests(APITestCase):
             {
                 'study': study,
                 'assay': assay,
-                'solr_field': 'Character_Title',
+                'solr_field': 'Character_Title_6_3_s',
                 'rank': 1,
                 'is_exposed': True,
                 'is_facet': True,
@@ -188,7 +189,7 @@ class AssaysAttributesAPITests(APITestCase):
             }, {
                 'study': study,
                 'assay': assay,
-                'solr_field': 'Specimen',
+                'solr_field': 'Specimen_6_3_s',
                 'rank': 2,
                 'is_exposed': True,
                 'is_facet': True,
@@ -197,7 +198,7 @@ class AssaysAttributesAPITests(APITestCase):
             }, {
                 'study': study,
                 'assay': assay,
-                'solr_field': 'Cell Type',
+                'solr_field': 'Cell_Type_6_3_s',
                 'rank': 3,
                 'is_exposed': True,
                 'is_facet': True,
@@ -206,7 +207,7 @@ class AssaysAttributesAPITests(APITestCase):
             }, {
                 'study': study,
                 'assay': assay,
-                'solr_field': 'Analysis',
+                'solr_field': 'Analysis_6_3_s',
                 'rank': 4,
                 'is_exposed': True,
                 'is_facet': True,
@@ -214,13 +215,61 @@ class AssaysAttributesAPITests(APITestCase):
                 'is_internal': False
             }]
 
+        self.attribute_order_response = [
+            {
+                'study': study,
+                'assay': assay,
+                'solr_field': 'Character_Title_6_3_s',
+                'rank': 1,
+                'is_exposed': True,
+                'is_facet': True,
+                'is_active': True,
+                'is_internal': False,
+                'display_name': 'Character Title'
+            }, {
+                'study': study,
+                'assay': assay,
+                'solr_field': 'Specimen_6_3_s',
+                'rank': 2,
+                'is_exposed': True,
+                'is_facet': True,
+                'is_active': True,
+                'is_internal': False,
+                'display_name': 'Specimen'
+            }, {
+                'study': study,
+                'assay': assay,
+                'solr_field': 'Cell_Type_6_3_s',
+                'rank': 3,
+                'is_exposed': True,
+                'is_facet': True,
+                'is_active': True,
+                'is_internal': False,
+                'display_name': 'Cell Type'
+            }, {
+                'study': study,
+                'assay': assay,
+                'solr_field': 'Analysis_6_3_s',
+                'rank': 4,
+                'is_exposed': True,
+                'is_facet': True,
+                'is_active': True,
+                'is_internal': False,
+                'display_name': 'Analysis'
+            }]
+
+        index = 0
         for attribute in self.attribute_order_array:
             response = AttributeOrder.objects.create(**attribute)
             attribute['id'] = response.id
             attribute['assay'] = response.assay.id
             attribute['study'] = response.study.id
+            self.attribute_order_response[index]['id'] = response.id
+            self.attribute_order_response[index]['assay'] = response.assay.id
+            self.attribute_order_response[index]['study'] = response.study.id
+            index = index + 1
 
-        list.sort(self.attribute_order_array)
+        list.sort(self.attribute_order_response)
         self.valid_uuid = assay.uuid
         self.url_root = '/api/v2/assays'
         self.view = AssaysAttributes.as_view()
@@ -242,14 +291,17 @@ class AssaysAttributesAPITests(APITestCase):
         request = self.factory.get('%s/%s/attributes/' % (self.url_root, uuid))
         response = self.view(request, uuid)
         self.assertEqual(response.status_code, 200)
+
         list.sort(response.data)
+
         ind = 0
         for attributes in response.data:
             self.assertItemsEqual(
-                    attributes.keys(), self.attribute_order_array[ind].keys())
+                    self.attribute_order_response[ind].keys(),
+                    attributes.keys())
             self.assertItemsEqual(
-                    attributes.values(),
-                    self.attribute_order_array[ind].values())
+                    self.attribute_order_response[ind].values(),
+                    attributes.values())
             ind = ind + 1
 
     def test_get_invalid_uuid(self):
@@ -273,7 +325,7 @@ class AssaysAttributesAPITests(APITestCase):
     def test_put_valid_uuid(self):
         # valid_uuid
         self.client.login(username='ownerJane', password='test1234')
-        updated_attribute_1 = {'solr_field': 'Character_Title',
+        updated_attribute_1 = {'solr_field': 'Character_Title_6_3_s',
                                'rank': 3,
                                'is_exposed': False,
                                'is_facet': False,
@@ -385,7 +437,7 @@ class UtilitiesTest(TestCase):
             'is_exposed': True,
             'is_facet': False,
             'is_active': True,
-            'is_internal': False
+            'is_internal': False,
         }, {
             'study': study,
             'assay': self.assay,
@@ -595,6 +647,20 @@ class UtilitiesTest(TestCase):
 
         filtered_list = hide_fields_from_list(weighted_list)
         self.assertListEqual(filtered_list, [{'solr_field': 'SubAnalysis'}])
+
+    def test_is_field_in_hidden_list(self):
+        list_of_hidden_field = ['uuid', 'id', 'django_id', 'file_uuid',
+                                'study_uuid', 'assay_uuid', 'type',
+                                'is_annotation', 'species', 'genome_build',
+                                'name', 'django_ct']
+        list_not_hidden_field = ['Analysis', 'Cell Type', '', 'Cell Line',
+                                 'Group Name', 'Character Title']
+
+        for field in list_of_hidden_field:
+            self.assertEqual(is_field_in_hidden_list(field), True)
+
+        for field in list_not_hidden_field:
+            self.assertEqual(is_field_in_hidden_list(field), False)
 
     def test_generate_solr_params(self):
         # empty params
