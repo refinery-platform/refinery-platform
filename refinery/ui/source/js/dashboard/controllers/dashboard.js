@@ -352,6 +352,16 @@ function DashboardCtrl (
       }
     );
   }.bind(this));
+
+  this.$timeout(function () {
+    // Expand panel to full with
+    if (this.repoMode) {
+      this.expandDataSetPanel = true;
+      this.expandedDataSetPanelBorder = true;
+      this.dashboardWidthFixerService.trigger('fixer');
+      this.dashboardExpandablePanelService.trigger('lockFullWith');
+    }
+  }.bind(this), 0);
 }
 
 DashboardCtrl.prototype.collectDataSetIds = function () {
@@ -852,25 +862,29 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
 };
 
 DashboardCtrl.prototype.collapseDataSetPreview = function () {
-  if (this.dataSetExploration) {
-    this.dataSetExplorationTempHidden = false;
-    this.pubSub.trigger('vis.show');
-  } else {
-    this.$state.transitionTo(
-      'launchPad',
-      {},
-      {
-        inherit: true,
-        notify: false
+  if (this.dataSetPreview) {
+    if (this.dataSetExploration) {
+      this.dataSetExplorationTempHidden = false;
+      this.pubSub.trigger('vis.show');
+    } else {
+      this.$state.transitionTo(
+        'launchPad',
+        {},
+        {
+          inherit: true,
+          notify: false
+        }
+      );
+
+      if (!this.repoMode) {
+        this.expandDataSetPanel = false;
+        this.dashboardExpandablePanelService.trigger('collapser');
       }
-    );
+    }
 
-    this.expandDataSetPanel = false;
-    this.dashboardExpandablePanelService.trigger('collapser');
+    this.dataSetPreview = false;
+    this.dashboardDataSetPreviewService.close();
   }
-
-  this.dataSetPreview = false;
-  this.dashboardDataSetPreviewService.close();
 };
 
 DashboardCtrl.prototype.toggleDataSetsExploration = function () {
@@ -911,21 +925,26 @@ DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
 };
 
 DashboardCtrl.prototype.collapseDatasetExploration = function () {
-  this.$state.transitionTo(
-    'launchPad',
-    {},
-    {
-      inherit: true,
-      notify: false
+  if (this.dataSetExploration) {
+    this.$state.transitionTo(
+      'launchPad',
+      {},
+      {
+        inherit: true,
+        notify: false
+      }
+    );
+
+    this.dataSetExploration = false;
+    this.deselectDataSets();
+
+    if (!this.repoMode) {
+      this.expandDataSetPanel = false;
+      this.dashboardExpandablePanelService.trigger('collapser');
     }
-  );
 
-  this.dataSetExploration = false;
-  this.expandDataSetPanel = false;
-  this.deselectDataSets();
-  this.dashboardExpandablePanelService.trigger('collapser');
-
-  this.dataSet.highlight(this.treemapContext.get('highlightedDataSets'), true);
+    this.dataSet.highlight(this.treemapContext.get('highlightedDataSets'), true);
+  }
 };
 
 DashboardCtrl.prototype.findDataSet = function () {
