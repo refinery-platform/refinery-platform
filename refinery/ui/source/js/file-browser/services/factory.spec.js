@@ -5,6 +5,7 @@ describe('File Browser Factory', function () {
   var deferred;
   var rootScope;
   var $q;
+  var assayAttribute;
   var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
   var fakeToken = 'xxxx1';
 
@@ -116,46 +117,57 @@ describe('File Browser Factory', function () {
       });
       rootScope.$apply();
       expect(typeof response.then).toEqual('function');
-      expect(angular.isFunction(factory.getAssayFiles)).toBe(true);
       expect(successData).toEqual(assayFiles);
     });
   });
 
-  // describe('getAssayAttributeOrder', function () {
-  //  var $httpBackend;
-  //  var settings;
-  //  var url;
-  //
-  //  beforeEach(inject(function (_$httpBackend_, _settings_) {
-  //    $httpBackend = _$httpBackend_;
-  //    settings = _settings_;
-  //    url = settings.appRoot + settings.refineryApiV2 + '/assays/' +
-  //      fakeUuid + '/attributes/';
-  //  }));
-  //
-  //  it('getAssayAttributeOrder is a method', function () {
-  //    expect(angular.isFunction(factory.getAssayAttributeOrder)).toBe(true);
-  //  });
-  //
-  //  it('getAssayAttributeOrder makes success call', function () {
-  //    var data;
-  //    var testing;
-  //
-  //    $httpBackend.expect(
-  //      'GET',
-  //      url,
-  //      { 'csrfmiddlewaretoken': fakeToken, 'uuid': fakeUuid },
-  //      { "Accept":"application/json, text/plain, */*" }
-  //    ).respond(200, {}, {});
-  //    var response = factory.getAssayAttributeOrder(fakeUuid)
-  //      .then(function () {
-  //        data = 'SUCCESS';
-  //      }, function(){
-  //        data = 'ERROR';
-  //      });
-  //    $httpBackend.flush();
-  //    expect(typeof response.then).toEqual('function');
-  //    expect(data).toEqual('SUCCESS');
-  //  });
-  // });
+  describe('getAssayAttributeOrder', function () {
+    beforeEach(inject(function (
+      _$rootScope_,
+      _$q_,
+      assayAttributeService
+    ) {
+      rootScope = _$rootScope_;
+      $q = _$q_;
+      assayAttribute = [
+        {
+          assay: 3,
+          study: 6,
+          solr_field: 'REFINERY_SUBANALYSIS_6_3_s',
+          rank: 5,
+          is_exposed: true,
+          is_facet: true,
+          is_active: true,
+          is_internal: false,
+          id: 41,
+          display_name: 'Analysis Group'
+        }
+      ];
+      spyOn(assayAttributeService, 'query').and.callFake(function () {
+        deferred = $q.defer();
+        deferred.resolve(assayAttribute);
+        return {
+          $promise: deferred.promise
+        };
+      });
+    }));
+
+    it('getAssayAttributeOrder is a method', function () {
+      expect(angular.isFunction(factory.getAssayAttributeOrder)).toBe(true);
+    });
+
+    it('getAssayAttributeOrder makes assay attribute service call', function () {
+      var data;
+
+      var _response = factory.getAssayAttributeOrder(fakeUuid)
+        .then(function (response) {
+          data = response;
+        }, function () {
+          data = 'ERROR';
+        });
+      rootScope.$apply();
+      expect(typeof _response.then).toEqual('function');
+      expect(data.solr_field).toEqual(assayAttribute.solr_field);
+    });
+  });
 });
