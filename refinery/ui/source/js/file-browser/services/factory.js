@@ -4,6 +4,7 @@ function fileBrowserFactory (
   $http,
   assayFileService,
   nodeService,
+  assayAttributeService,
   settings,
   $window,
   $log) {
@@ -131,25 +132,18 @@ function fileBrowserFactory (
     return assayFile.$promise;
   };
 
-
   var getAssayAttributeOrder = function (uuid) {
-    var apiUrl = settings.appRoot + settings.refineryApiV2 +
-      '/assays/' + uuid + '/attributes/';
+    var params = {
+      uuid: uuid
+    };
 
-    return $http({
-      method: 'GET',
-      url: apiUrl,
-      data: {
-        csrfmiddlewaretoken: csrfToken,
-        uuid: uuid
-      }
-    }).then(function (response) {
-      var culledResponseData = hideUuidAttribute(response.data);
+    var assayAttribute = assayAttributeService.query(params);
+    assayAttribute.$promise.then(function (response) {
+      var culledResponseData = hideUuidAttribute(response);
       var sortedResponse = sortArrayOfObj(culledResponseData);
       angular.copy(sortedResponse, assayAttributeOrder);
-    }, function (error) {
-      $log.error(error);
     });
+    return assayAttribute.$promise;
   };
 
   var postAssayAttributeOrder = function (attributeParam) {
@@ -199,6 +193,7 @@ angular
     '$http',
     'assayFileService',
     'nodeService',
+    'assayAttributeService',
     'settings',
     '$window',
     '$log',
