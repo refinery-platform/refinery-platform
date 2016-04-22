@@ -25,6 +25,9 @@ function fileBrowserFactory (
     return (attributeObj);
   };
 
+  /** Configures the attribute and analysis filter data by adding the display
+   * name from the assay files attributes display_name. The attributes returns
+   * all fields, while the counts will return only the faceted fields. **/
   var generateFilters = function (attributes, facetCounts) {
     // resets the attribute filters, which can be changed by owners
     var outAttributeFilter = {};
@@ -67,6 +70,7 @@ function fileBrowserFactory (
     return nodeFile.$promise;
   };
 
+  // Adds the file_url to the assay files array
   var addNodeDetailtoAssayFiles = function () {
     angular.forEach(assayFiles, function (facetObj) {
       getNodeDetails(facetObj.uuid).then(function () {
@@ -75,6 +79,7 @@ function fileBrowserFactory (
     });
   };
 
+  // In an array of objects, removes an object with a display_name of 'uuid'
   var hideUuidAttribute = function (arrayOfObjs) {
     for (var i = arrayOfObjs.length - 1; i >= 0; i--) {
       if (arrayOfObjs[i].display_name === 'uuid') {
@@ -85,8 +90,9 @@ function fileBrowserFactory (
     return arrayOfObjs;
   };
 
-  var sortArrayOfObj = function (arrayOfObjs) {
-    arrayOfObjs.sort(function (a, b) {
+  // Method sorts and array of objects based on a rank field.
+  var sortArrayOfObj = function (_arrayOfObjs) {
+    _arrayOfObjs.sort(function (a, b) {
       if (a.rank > b.rank) {
         return 1;
       }
@@ -95,7 +101,7 @@ function fileBrowserFactory (
       }
       return 0;
     });
-    return arrayOfObjs;
+    return _arrayOfObjs;
   };
 
   var getAssayFiles = function (_params_) {
@@ -108,9 +114,13 @@ function fileBrowserFactory (
 
     var assayFile = assayFileService.query(params);
     assayFile.$promise.then(function (response) {
+      /** Api returns uuid field, which is needed to retrieve the
+       *  download file_url for nodeset api. It should be hidden in the data
+       *  table first **/
       var culledAttributes = hideUuidAttribute(response.attributes);
       angular.copy(culledAttributes, assayAttributes);
-      assayAttributes.push({ display_name: 'Url', internal_name: 'Url' });
+      // Add file_download column first
+      assayAttributes.unshift({ display_name: 'Url', internal_name: 'Url' });
       angular.copy(response.nodes, assayFiles);
       addNodeDetailtoAssayFiles();
       assayFilesTotalItems.count = response.nodes_count;
