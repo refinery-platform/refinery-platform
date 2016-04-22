@@ -646,15 +646,17 @@ class UtilitiesTest(TestCase):
                          {'solr_field': 'SubAnalysis'}]
 
         filtered_list = hide_fields_from_list(weighted_list)
-        self.assertListEqual(filtered_list, [{'solr_field': 'SubAnalysis'}])
+        self.assertListEqual(filtered_list, [
+            {'solr_field': 'uuid'},
+            {'solr_field': 'SubAnalysis'}])
 
     def test_is_field_in_hidden_list(self):
-        list_of_hidden_field = ['uuid', 'id', 'django_id', 'file_uuid',
+        list_of_hidden_field = ['id', 'django_id', 'file_uuid',
                                 'study_uuid', 'assay_uuid', 'type',
                                 'is_annotation', 'species', 'genome_build',
                                 'name', 'django_ct']
-        list_not_hidden_field = ['Analysis', 'Cell Type', '', 'Cell Line',
-                                 'Group Name', 'Character Title']
+        list_not_hidden_field = ['uuid', 'Analysis', 'Cell Type', '',
+                                 'Cell Line', 'Group Name', 'Character Title']
 
         for field in list_of_hidden_field:
             self.assertEqual(is_field_in_hidden_list(field), True)
