@@ -153,23 +153,40 @@ def main():
                 'arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess'
             ],
             'Path': '/',
-            'Policies': [{
-                'PolicyName': "CreateAccessKey",
-                'PolicyDocument': {
-                    "Version": "2012-10-17",
-                    "Statement": [
-                        {
-                            "Effect": "Allow",
-                            "Action": [
-                                "iam:CreateAccessKey"
-                            ],
-                            "Resource": [
-                                "*"
-                            ]
-                        }
-                    ]
+            'Policies': [
+                {
+                    'PolicyName': "CreateAccessKey",
+                    'PolicyDocument': {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "iam:CreateAccessKey"
+                                ],
+                                "Resource": [
+                                    "*"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                {
+                    'PolicyName': "CreateTags",
+                    'PolicyDocument': {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "ec2:CreateTags"
+                                ],
+                                "Resource": "*"
+                            }
+                        ]
+                    }
                 }
-            }]
+            ]
         })
     )
 
