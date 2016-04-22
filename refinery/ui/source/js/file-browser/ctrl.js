@@ -284,33 +284,42 @@ function FileBrowserCtrl (
         columnWidth = Math.round(columnWidth * 2);
       }
 
-      vm.customColumnName.push(
-        {
-          name: columnName,
-          width: columnWidth + '%',
-          field: attribute.internal_name,
-          cellTooltip: true
-        }
-      );
-      // disable sorting based on url. Not a solr_field
+
       if (columnName === 'Url') {
-        var cellTemplate = '<div class="ngCellText"' +
-          ' ng-class="col.colIndex()" style="text-align:center">' +
-          '<a href="{{COL_FIELD}}">' +
-          '<i class = "fa fa-arrow-circle-o-down"></i></a>' +
-          '</div>';
-        var lastIndex = vm.customColumnName.length - 1;
-        vm.customColumnName[lastIndex].width = 4 + '%';
-        vm.customColumnName[lastIndex].displayName = '';
-        vm.customColumnName[lastIndex].enableFiltering = false;
-        vm.customColumnName[lastIndex].enableSorting = false;
-        vm.customColumnName[lastIndex].enableColumnMenu = false;
-        vm.customColumnName[lastIndex].cellTemplate = cellTemplate;
+        vm.customColumnName.push(vm.setCustomUrlColumnDef(columnName));
+      } else {
+        vm.customColumnName.push(
+          {
+            name: columnName,
+            width: columnWidth + '%',
+            field: attribute.internal_name,
+            cellTooltip: true
+          }
+        );
       }
     });
     vm.gridOptions.columnDefs = vm.customColumnName;
   };
+  // File download column require unique template and fields.
+  vm.setCustomUrlColumnDef = function (_columnName) {
+    var cellTemplate = '<div class="ngCellText"' +
+          ' ng-class="col.colIndex()" style="text-align:center">' +
+          '<a href="{{COL_FIELD}}">' +
+          '<i class = "fa fa-arrow-circle-o-down"></i></a>' +
+          '</div>';
 
+    return {
+      name: _columnName,
+      field: _columnName,
+      cellTooltip: true,
+      width: 4 + '%',
+      displayName: '',
+      enableFiltering: false,
+      enableSorting: false,
+      enableColumnMenu: false,
+      cellTemplate: cellTemplate
+    };
+  };
 
   vm.checkDataSetOwnership = function () {
     isOwnerService.refreshDataSetOwner().then(function () {
