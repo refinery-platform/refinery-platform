@@ -62,7 +62,7 @@ function fileBrowserFactory (
 
     var nodeFile = nodeService.query(params);
     nodeFile.$promise.then(function (response) {
-      nodeUrl = response.url;
+      nodeUrl = response.file_url;
     });
     return nodeFile.$promise;
   };
@@ -70,30 +70,19 @@ function fileBrowserFactory (
   var addNodeDetailtoAssayFiles = function () {
     angular.forEach(assayFiles, function (facetObj) {
       getNodeDetails(facetObj.uuid).then(function () {
-        facetObj.url = nodeUrl;
+        facetObj.Url = nodeUrl;
       });
     });
   };
 
-  var getAssayFiles = function (_params_) {
-    var params = _params_ || {};
-
-    // encodes all field names to avoid issues with escape characters.
-    if (typeof params.filter_attribute !== 'undefined') {
-      params.filter_attribute = encodeAttributeFields(params.filter_attribute);
+  var hideUuidAttribute = function (arrayOfObjs) {
+    for (var i = arrayOfObjs.length - 1; i >= 0; i--) {
+      if (arrayOfObjs[i].display_name === 'uuid') {
+        arrayOfObjs.splice(i, 1);
+        break;
+      }
     }
-
-    var assayFile = assayFileService.query(params);
-    assayFile.$promise.then(function (response) {
-      angular.copy(response.attributes, assayAttributes);
-      angular.copy(response.nodes, assayFiles);
-      addNodeDetailtoAssayFiles();
-      assayFilesTotalItems.count = response.nodes_count;
-      var filterObj = generateFilters(response.attributes, response.facet_field_counts);
-      angular.copy(filterObj.attributeFilter, attributeFilter);
-      angular.copy(filterObj.analysisFilter, analysisFilter);
-    });
-    return assayFile.$promise;
+    return arrayOfObjs;
   };
 
   var sortArrayOfObj = function (arrayOfObjs) {
@@ -109,15 +98,29 @@ function fileBrowserFactory (
     return arrayOfObjs;
   };
 
-  var hideUuidField = function (arrayOfObjs) {
-    for (var i = arrayOfObjs.length - 1; i >= 0; i--) {
-      if (arrayOfObjs[i].display_name === 'uuid') {
-        arrayOfObjs.splice(i, 1);
-        break;
-      }
+  var getAssayFiles = function (_params_) {
+    var params = _params_ || {};
+
+    // encodes all field names to avoid issues with escape characters.
+    if (typeof params.filter_attribute !== 'undefined') {
+      params.filter_attribute = encodeAttributeFields(params.filter_attribute);
     }
-    return arrayOfObjs;
+
+    var assayFile = assayFileService.query(params);
+    assayFile.$promise.then(function (response) {
+      var culledAttributes = hideUuidAttribute(response.attributes);
+      angular.copy(culledAttributes, assayAttributes);
+      assayAttributes.push({ display_name: 'Url', internal_name: 'Url' });
+      angular.copy(response.nodes, assayFiles);
+      addNodeDetailtoAssayFiles();
+      assayFilesTotalItems.count = response.nodes_count;
+      var filterObj = generateFilters(response.attributes, response.facet_field_counts);
+      angular.copy(filterObj.attributeFilter, attributeFilter);
+      angular.copy(filterObj.analysisFilter, analysisFilter);
+    });
+    return assayFile.$promise;
   };
+
 
   var getAssayAttributeOrder = function (uuid) {
     var apiUrl = settings.appRoot + settings.refineryApiV2 +
@@ -131,7 +134,7 @@ function fileBrowserFactory (
         uuid: uuid
       }
     }).then(function (response) {
-      var culledResponseData = hideUuidField(response.data);
+      var culledResponseData = hideUuidAttribute(response.data);
       var sortedResponse = sortArrayOfObj(culledResponseData);
       angular.copy(sortedResponse, assayAttributeOrder);
     }, function (error) {
