@@ -39,6 +39,9 @@ export S3_CONFIG_URI
 (cd /home/ubuntu &&
  /srv/refinery-platform/deployment/bin/get-s3-config)
 
+# Tag the attached root volume
+sh /srv/refinery-platform/deployment/bin/fix-untagged-volumes
+
 # Discover IP endpoint for our PostgreSQL RDS, and place it in
 # environment variables for puppet/facter to use
 : ${RDS_NAME?RDS_NAME must be set}
