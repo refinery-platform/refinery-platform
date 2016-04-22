@@ -21,15 +21,11 @@ function AssayFilesUtilModalCtrl (
   vm.refreshAssayAttributes = function () {
     var assayUuid = $window.externalAssayUuid;
 
-    var promise = $q.defer();
     fileBrowserFactory.getAssayAttributeOrder(assayUuid).then(function () {
       vm.assayAttributeOrder = fileBrowserFactory.assayAttributeOrder;
-      promise.resolve();
     }, function (error) {
       $log.error(error);
     });
-
-    return promise.promise;
   };
 
   // Update ranks and attributes for owners
