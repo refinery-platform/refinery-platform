@@ -1153,6 +1153,16 @@ DashboardCtrl.prototype.toggleListUnrelatedNodes = function (dataSet) {
   }
 };
 
+DashboardCtrl.prototype.showUploadButton = function () {
+  if (!this.userIsAuthenticated) {
+    return false;
+  }
+  if (this.repoMode && !this.userIsAdmin) {
+    return false;
+  }
+  return true;
+};
+
 angular
   .module('refineryDashboard')
   .controller('DashboardCtrl', [
