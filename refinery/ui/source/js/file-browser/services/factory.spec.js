@@ -4,6 +4,7 @@ describe('File Browser Factory', function () {
   var factory;
   var deferred;
   var rootScope;
+  var $q;
   var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
   var fakeToken = 'xxxx1';
 
@@ -24,7 +25,13 @@ describe('File Browser Factory', function () {
   describe('getAssayFiles', function () {
     var assayFiles;
 
-    beforeEach(inject(function (assayFileService, $q, $rootScope) {
+    beforeEach(inject(function (
+      assayFileService,
+      nodeService,
+      _$q_,
+      _$rootScope_
+    ) {
+      $q = _$q_;
       assayFiles = {
         nodes: [
           {
@@ -84,7 +91,16 @@ describe('File Browser Factory', function () {
           $promise: deferred.promise
         };
       });
-      rootScope = $rootScope;
+
+      spyOn(nodeService, 'query').and.callFake(function () {
+        deferred = $q.defer();
+        deferred.resolve(assayFiles);
+        return {
+          $promise: deferred.promise
+        };
+      });
+
+      rootScope = _$rootScope_;
     }));
 
     it('getAssayFiles is a method', function () {
