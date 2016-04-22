@@ -128,6 +128,8 @@ function fileBrowserFactory (
       var filterObj = generateFilters(response.attributes, response.facet_field_counts);
       angular.copy(filterObj.attributeFilter, attributeFilter);
       angular.copy(filterObj.analysisFilter, analysisFilter);
+    }, function (error) {
+      $log.error(error);
     });
     return assayFile.$promise;
   };
@@ -142,6 +144,8 @@ function fileBrowserFactory (
       var culledResponseData = hideUuidAttribute(response);
       var sortedResponse = sortArrayOfObj(culledResponseData);
       angular.copy(sortedResponse, assayAttributeOrder);
+    }, function (error) {
+      $log.error(error);
     });
     return assayAttribute.$promise;
   };
