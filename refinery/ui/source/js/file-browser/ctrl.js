@@ -294,7 +294,6 @@ function FileBrowserCtrl (
       );
       // disable sorting based on url. Not a solr_field
       if (columnName === 'Url') {
-        console.log(columnWidth);
         var cellTemplate = '<div class="ngCellText"' +
           ' ng-class="col.colIndex()" style="text-align:center">' +
           '<a href="{{COL_FIELD}}">' +
@@ -305,6 +304,7 @@ function FileBrowserCtrl (
         vm.customColumnName[lastIndex].displayName = '';
         vm.customColumnName[lastIndex].enableFiltering = false;
         vm.customColumnName[lastIndex].enableSorting = false;
+        vm.customColumnName[lastIndex].enableColumnMenu = false;
         vm.customColumnName[lastIndex].cellTemplate = cellTemplate;
       }
     });
