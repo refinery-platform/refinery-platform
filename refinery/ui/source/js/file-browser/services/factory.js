@@ -68,15 +68,11 @@ function fileBrowserFactory (
   };
 
   var addNodeDetailtoAssayFiles = function () {
-    angular.forEach(assayFiles, function (facetObj, key) {
-      console.log(key);
-      console.log('in addNodeDetailtoAssayFiles');
-      console.log(facetObj);
+    angular.forEach(assayFiles, function (facetObj) {
       getNodeDetails(facetObj.uuid).then(function () {
         facetObj.url = nodeUrl;
       });
     });
-    console.log(assayFiles);
   };
 
   var getAssayFiles = function (_params_) {
@@ -91,11 +87,11 @@ function fileBrowserFactory (
     assayFile.$promise.then(function (response) {
       angular.copy(response.attributes, assayAttributes);
       angular.copy(response.nodes, assayFiles);
+      addNodeDetailtoAssayFiles();
       assayFilesTotalItems.count = response.nodes_count;
       var filterObj = generateFilters(response.attributes, response.facet_field_counts);
       angular.copy(filterObj.attributeFilter, attributeFilter);
       angular.copy(filterObj.analysisFilter, analysisFilter);
-      addNodeDetailtoAssayFiles();
     });
     return assayFile.$promise;
   };
@@ -113,6 +109,17 @@ function fileBrowserFactory (
     return arrayOfObjs;
   };
 
+  var hideUuidField = function (arrayOfObjs) {
+    for (var i = arrayOfObjs.length - 1; i >= 0; i--) {
+      if (arrayOfObjs[i].display_name === 'uuid') {
+        arrayOfObjs.splice(i, 1);
+        break;
+      }
+    }
+    console.log(arrayOfObjs);
+    return arrayOfObjs;
+  };
+
   var getAssayAttributeOrder = function (uuid) {
     var apiUrl = settings.appRoot + settings.refineryApiV2 +
       '/assays/' + uuid + '/attributes/';
@@ -125,7 +132,8 @@ function fileBrowserFactory (
         uuid: uuid
       }
     }).then(function (response) {
-      var sortedResponse = sortArrayOfObj(response.data);
+      var culledResponseData = hideUuidField(response.data);
+      var sortedResponse = sortArrayOfObj(culledResponseData);
       angular.copy(sortedResponse, assayAttributeOrder);
     }, function (error) {
       $log.error(error);
