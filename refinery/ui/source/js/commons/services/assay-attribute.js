@@ -14,6 +14,11 @@ angular
             method: 'GET',
             isArray: true
           }
+        },
+        {
+          update: {
+            method: 'PUT'
+          }
         }
       );
       return assayAttribute;
