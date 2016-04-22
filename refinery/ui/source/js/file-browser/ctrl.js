@@ -288,9 +288,14 @@ function FileBrowserCtrl (
         {
           name: columnName,
           width: columnWidth + '%',
-          field: attribute.internal_name
+          field: attribute.internal_name,
+          cellTooltip: true
         }
       );
+      if (columnName === 'uuid') {
+        var lastIndex = vm.customColumnName.length - 1;
+        vm.customColumnName[lastIndex].visible = false;
+      }
     });
     vm.gridOptions.columnDefs = vm.customColumnName;
   };
