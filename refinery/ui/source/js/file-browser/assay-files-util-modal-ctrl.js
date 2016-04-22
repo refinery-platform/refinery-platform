@@ -4,6 +4,7 @@ function AssayFilesUtilModalCtrl (
   $scope,
   $uibModalInstance,
   $window,
+  $q,
   $log,
   fileBrowserFactory,
   resetGridService) {
@@ -19,11 +20,16 @@ function AssayFilesUtilModalCtrl (
   // Refresh attribute lists when modal opens
   vm.refreshAssayAttributes = function () {
     var assayUuid = $window.externalAssayUuid;
-    return fileBrowserFactory.getAssayAttributeOrder(assayUuid).then(function () {
+
+    var promise = $q.defer();
+    fileBrowserFactory.getAssayAttributeOrder(assayUuid).then(function () {
       vm.assayAttributeOrder = fileBrowserFactory.assayAttributeOrder;
+      promise.resolve();
     }, function (error) {
-      console.error(error);
+      $log.error(error);
     });
+
+    return promise.promise;
   };
 
   // Update ranks and attributes for owners
@@ -58,6 +64,7 @@ angular
     '$scope',
     '$uibModalInstance',
     '$window',
+    '$q',
     '$log',
     'fileBrowserFactory',
     'resetGridService',
