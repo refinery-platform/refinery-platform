@@ -292,9 +292,11 @@ function FileBrowserCtrl (
           cellTooltip: true
         }
       );
-      if (columnName === 'uuid') {
+      // disable sorting based on url. Not a solr_field
+      if (columnName === 'Url') {
         var lastIndex = vm.customColumnName.length - 1;
-        vm.customColumnName[lastIndex].visible = false;
+        vm.customColumnName[lastIndex].enableFiltering = false;
+        vm.customColumnName[lastIndex].enableSorting = false;
       }
     });
     vm.gridOptions.columnDefs = vm.customColumnName;
