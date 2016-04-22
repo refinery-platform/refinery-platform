@@ -3,6 +3,7 @@
 function fileBrowserFactory (
   $http,
   assayFileService,
+  nodeService,
   settings,
   $window,
   $log) {
@@ -12,7 +13,7 @@ function fileBrowserFactory (
   var attributeFilter = {};
   var analysisFilter = {};
   var assayFilesTotalItems = {};
- // var nodeDetail = {};
+  var nodeUrl = {};
   var csrfToken = $window.csrf_token;
   // Helper function encodes field array in an obj
   var encodeAttributeFields = function (attributeObj) {
@@ -54,6 +55,30 @@ function fileBrowserFactory (
     };
   };
 
+  var getNodeDetails = function (nodeUuid) {
+    var params = {
+      uuid: nodeUuid
+    };
+
+    var nodeFile = nodeService.query(params);
+    nodeFile.$promise.then(function (response) {
+      nodeUrl = response.file_url;
+    });
+    return nodeFile.$promise;
+  };
+
+  var addNodeDetailtoAssayFiles = function () {
+    angular.forEach(assayFiles, function (facetObj, key) {
+      console.log(key);
+      console.log('in addNodeDetailtoAssayFiles');
+      console.log(facetObj);
+      getNodeDetails(facetObj.uuid).then(function () {
+        facetObj.url = nodeUrl;
+      });
+    });
+    console.log(assayFiles);
+  };
+
   var getAssayFiles = function (_params_) {
     var params = _params_ || {};
 
@@ -70,29 +95,10 @@ function fileBrowserFactory (
       var filterObj = generateFilters(response.attributes, response.facet_field_counts);
       angular.copy(filterObj.attributeFilter, attributeFilter);
       angular.copy(filterObj.analysisFilter, analysisFilter);
+      addNodeDetailtoAssayFiles();
     });
     return assayFile.$promise;
   };
-
-  // var getNodeDetails = function (node_uuid){
-  //  var params = {
-  //    uuid: node_uuid
-  //  };
-  //
-  //  var nodeFile = nodeService.query(params);
-  //  nodeFile.$promise.then(function (response) {
-  //   console.log(response);
-  //    angular.copy(response, nodeDetail);
-  //  });
-  //  return assayFiles.$promise;
-  // };
-  //
-  // var addNodeDetailtoAssayFiles = function(){
-  //  angular.forEach(assayFiles, function (facetObj, key){
-  //    console.log('in here');
-  //  })
-  // };
-
 
   var sortArrayOfObj = function (arrayOfObjs) {
     arrayOfObjs.sort(function (a, b) {
@@ -172,6 +178,7 @@ angular
   .factory('fileBrowserFactory', [
     '$http',
     'assayFileService',
+    'nodeService',
     'settings',
     '$window',
     '$log',
