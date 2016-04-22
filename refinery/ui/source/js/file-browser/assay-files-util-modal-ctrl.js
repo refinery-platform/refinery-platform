@@ -4,6 +4,7 @@ function AssayFilesUtilModalCtrl (
   $scope,
   $uibModalInstance,
   $window,
+  $log,
   fileBrowserFactory,
   resetGridService) {
   var vm = this;
@@ -57,6 +58,7 @@ angular
     '$scope',
     '$uibModalInstance',
     '$window',
+    '$log',
     'fileBrowserFactory',
     'resetGridService',
     AssayFilesUtilModalCtrl
