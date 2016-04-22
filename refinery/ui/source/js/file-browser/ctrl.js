@@ -294,9 +294,15 @@ function FileBrowserCtrl (
       );
       // disable sorting based on url. Not a solr_field
       if (columnName === 'Url') {
+        var cellTemplate = '<div class="ngCellText"' +
+          ' ng-class="col.colIndex()">' +
+          '<a href="{{COL_FIELD}}">' +
+          '<i class = "fa fa-arrow-circle-o-down"></i></a>' +
+          '</div>';
         var lastIndex = vm.customColumnName.length - 1;
         vm.customColumnName[lastIndex].enableFiltering = false;
         vm.customColumnName[lastIndex].enableSorting = false;
+        vm.customColumnName[lastIndex].cellTemplate = cellTemplate;
       }
     });
     vm.gridOptions.columnDefs = vm.customColumnName;
