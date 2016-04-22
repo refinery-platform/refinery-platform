@@ -62,7 +62,7 @@ function fileBrowserFactory (
 
     var nodeFile = nodeService.query(params);
     nodeFile.$promise.then(function (response) {
-      nodeUrl = response.file_url;
+      nodeUrl = response.url;
     });
     return nodeFile.$promise;
   };
@@ -116,7 +116,6 @@ function fileBrowserFactory (
         break;
       }
     }
-    console.log(arrayOfObjs);
     return arrayOfObjs;
   };
 
