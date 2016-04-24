@@ -182,7 +182,7 @@ describe('Common.service.assayFile: unit tests', function () {
 
     it('should return a resolving promise', function () {
       var results;
-      var promise = service.get({
+      var promise = service.query({
         uuid: fakeUuid
       }).$promise.then(function (response) {
         results = response;
