@@ -161,21 +161,19 @@ function fileBrowserFactory (
       is_facet: attributeParam.is_facet,
       rank: attributeParam.rank
     };
-    return $http({
-      method: 'PUT',
-      url: settings.appRoot + settings.refineryApiV2 +
-          '/assays/' + assayUuid + '/attributes/',
-      data: dataObj
-    }).then(function (response) {
+
+    var assayAttributeUpdate = assayAttributeService.update(dataObj);
+    assayAttributeUpdate.$promise.then(function (response) {
       for (var ind = 0; ind < assayAttributeOrder.length; ind++) {
-        if (assayAttributeOrder[ind].solr_field === response.data.solr_field) {
-          angular.copy(response.data, assayAttributeOrder[ind]);
+        if (assayAttributeOrder[ind].solr_field === response.solr_field) {
+          angular.copy(response, assayAttributeOrder[ind]);
           break;
         }
       }
     }, function (error) {
       $log.error(error);
     });
+    return assayAttributeUpdate.$promise;
   };
 
   return {
