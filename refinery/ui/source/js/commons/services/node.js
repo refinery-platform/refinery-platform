@@ -8,7 +8,7 @@ angular
         settings.appRoot + settings.refineryApi + '/node/:uuid/',
         {
           uuid: 'uuid',
-          format: 'json',
+          format: 'json'
         },
         {
           query: {
@@ -21,5 +21,3 @@ angular
       return node;
     }
   ]);
-
-// http://192.168.50.50:8000/api/v1/node/0c2778e8-eed5-4981-9ccb-5f1ff75571d5/?format=json
