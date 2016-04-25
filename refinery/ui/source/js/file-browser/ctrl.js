@@ -324,6 +324,7 @@ function FileBrowserCtrl (
       enableFiltering: false,
       enableSorting: false,
       enableColumnMenu: false,
+      enableColumnResizing: false,
       cellTemplate: cellTemplate
     };
   };

@@ -5,5 +5,6 @@ angular
     'ui.grid',
     'ui.grid.selection',
     'ui.grid.infiniteScroll',
+    'ui.grid.resizeColumns',
     'dndLists'
   ]);
