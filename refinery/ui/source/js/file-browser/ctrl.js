@@ -310,7 +310,7 @@ function FileBrowserCtrl (
           '<i class="fa fa-arrow-circle-o-down"></i></a>' +
           '</div>' +
           '<div ng-if="!COL_FIELD"' +
-            'title="File has not been imported back into refinery.">' +
+            'title="File not available for download">' +
           '<i class="fa fa-bolt"></i>' +
           '</div>' +
           '</div>';
