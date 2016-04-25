@@ -22,8 +22,8 @@ describe('refinerFileBrowser.module: unit tests', function () {
         deps = module.value('refineryApp').requires;
       });
 
-      it('should have "ui-grid" as a dependency', function () {
-        expect(hasModule('ui-grid')).toEqual(true);
+      it('should have "ui.grid" as a dependency', function () {
+        expect(hasModule('ui.grid')).toEqual(true);
       });
 
       it('should have "ui.grid.selection" as a dependency', function () {
