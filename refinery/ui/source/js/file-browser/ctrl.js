@@ -304,8 +304,13 @@ function FileBrowserCtrl (
   vm.setCustomUrlColumnDef = function (_columnName) {
     var cellTemplate = '<div class="ngCellText"' +
           ' ng-class="col.colIndex()" style="text-align:center">' +
+          '<div ng-if="COL_FIELD">' +
           '<a href="{{COL_FIELD}}">' +
           '<i class = "fa fa-arrow-circle-o-down"></i></a>' +
+          '</div>' +
+          '<div ng-if="!COL_FIELD">' +
+          '<i class = "fa fa-bolt"></i>' +
+          '</div>' +
           '</div>';
 
     return {
