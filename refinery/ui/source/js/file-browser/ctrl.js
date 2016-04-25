@@ -305,19 +305,13 @@ function FileBrowserCtrl (
     var cellTemplate = '<div class="ngCellText"' +
           ' ng-class="col.colIndex()" style="text-align:center">' +
           '<div ng-if="COL_FIELD"' +
-            'refinery-tooltip' +
-            'refinery-tooltip-container="body"' +
-            'refinery-tooltip-placement="bottom"' +
-            'title="Download File>' +
+            'title="Download File">' +
           '<a href="{{COL_FIELD}}">' +
-          '<i class = "fa fa-arrow-circle-o-down"></i></a>' +
+          '<i class="fa fa-arrow-circle-o-down"></i></a>' +
           '</div>' +
           '<div ng-if="!COL_FIELD"' +
-            'refinery-tooltip' +
-            'refinery-tooltip-container="body"' +
-            'refinery-tooltip-placement="bottom"' +
-            'title="File not available for download>' +
-          '<i class = "fa fa-bolt"></i>' +
+            'title="File has not been imported back into refinery.">' +
+          '<i class="fa fa-bolt"></i>' +
           '</div>' +
           '</div>';
 
