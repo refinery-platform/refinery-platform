@@ -1,6 +1,6 @@
 'use strict';
 
-function NodeSetListFacory ($resource) {
+function NodeSetListFactory ($resource) {
   return $resource(
     '/api/v1/nodesetlist/', {
       format: 'json'
@@ -10,4 +10,4 @@ function NodeSetListFacory ($resource) {
 
 angular
   .module('refineryNodeMapping')
-  .factory('NodeSetList', NodeSetListFacory);
+  .factory('NodeSetList', NodeSetListFactory);
