@@ -4,6 +4,8 @@ function AssayFilesUtilModalCtrl (
   $scope,
   $uibModalInstance,
   $window,
+  $q,
+  $log,
   fileBrowserFactory,
   resetGridService) {
   var vm = this;
@@ -18,10 +20,11 @@ function AssayFilesUtilModalCtrl (
   // Refresh attribute lists when modal opens
   vm.refreshAssayAttributes = function () {
     var assayUuid = $window.externalAssayUuid;
-    return fileBrowserFactory.getAssayAttributeOrder(assayUuid).then(function () {
+
+    fileBrowserFactory.getAssayAttributeOrder(assayUuid).then(function () {
       vm.assayAttributeOrder = fileBrowserFactory.assayAttributeOrder;
     }, function (error) {
-      console.error(error);
+      $log.error(error);
     });
   };
 
@@ -57,6 +60,8 @@ angular
     '$scope',
     '$uibModalInstance',
     '$window',
+    '$q',
+    '$log',
     'fileBrowserFactory',
     'resetGridService',
     AssayFilesUtilModalCtrl

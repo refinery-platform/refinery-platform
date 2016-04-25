@@ -642,7 +642,7 @@ def hide_fields_from_list(facet_obj):
 
 
 def is_field_in_hidden_list(field):
-    hidden_fields = ['uuid', 'id', 'django_id', 'file_uuid', 'study_uuid',
+    hidden_fields = ['id', 'django_id', 'file_uuid', 'study_uuid',
                      'assay_uuid', 'type', 'is_annotation', 'species',
                      'genome_build', 'name', 'django_ct']
 
@@ -773,7 +773,9 @@ def customize_attribute_response(facet_fields):
         customized_field = {'internal_name': field}
 
         field_name = field.split('_')
-        customized_field['file_ext'] = field_name[-1]
+        # For uuid fields
+        if len(field_name) > 1:
+            customized_field['file_ext'] = field_name[-1]
 
         if 'REFINERY_SUBANALYSIS' in field:
             customized_field['display_name'] = 'Analysis Group'
@@ -802,6 +804,10 @@ def customize_attribute_response(facet_fields):
             field_name = ' '.join(field_name[0:index])
             customized_field['display_name'] = field_name.title()
             customized_field['attribute_type'] = 'Characteristics'
+        # For uuid fields
+        elif len(field_name) == 1:
+            customized_field['display_name'] = \
+                customized_field['internal_name']
         else:
             customized_field['display_name'] = ' '.join(
                     field_name[0:-3]).title()

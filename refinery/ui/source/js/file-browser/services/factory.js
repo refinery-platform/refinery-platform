@@ -3,6 +3,8 @@
 function fileBrowserFactory (
   $http,
   assayFileService,
+  nodeService,
+  assayAttributeService,
   settings,
   $window,
   $log) {
@@ -12,6 +14,7 @@ function fileBrowserFactory (
   var attributeFilter = {};
   var analysisFilter = {};
   var assayFilesTotalItems = {};
+  var nodeUrl = {};
   var csrfToken = $window.csrf_token;
   // Helper function encodes field array in an obj
   var encodeAttributeFields = function (attributeObj) {
@@ -23,6 +26,9 @@ function fileBrowserFactory (
     return (attributeObj);
   };
 
+  /** Configures the attribute and analysis filter data by adding the display
+   * name from the assay files attributes display_name. The attributes returns
+   * all fields, while the counts will return only the faceted fields. **/
   var generateFilters = function (attributes, facetCounts) {
     // resets the attribute filters, which can be changed by owners
     var outAttributeFilter = {};
@@ -53,6 +59,52 @@ function fileBrowserFactory (
     };
   };
 
+  var getNodeDetails = function (nodeUuid) {
+    var params = {
+      uuid: nodeUuid
+    };
+
+    var nodeFile = nodeService.query(params);
+    nodeFile.$promise.then(function (response) {
+      nodeUrl = response.file_url;
+    });
+    return nodeFile.$promise;
+  };
+
+  // Adds the file_url to the assay files array
+  var addNodeDetailtoAssayFiles = function () {
+    angular.forEach(assayFiles, function (facetObj) {
+      getNodeDetails(facetObj.uuid).then(function () {
+        facetObj.Url = nodeUrl;
+      });
+    });
+  };
+
+  // In an array of objects, removes an object with a display_name of 'uuid'
+  var hideUuidAttribute = function (arrayOfObjs) {
+    for (var i = arrayOfObjs.length - 1; i >= 0; i--) {
+      if (arrayOfObjs[i].display_name === 'uuid') {
+        arrayOfObjs.splice(i, 1);
+        break;
+      }
+    }
+    return arrayOfObjs;
+  };
+
+  // Method sorts and array of objects based on a rank field.
+  var sortArrayOfObj = function (_arrayOfObjs) {
+    _arrayOfObjs.sort(function (a, b) {
+      if (a.rank > b.rank) {
+        return 1;
+      }
+      if (a.rank < b.rank) {
+        return -1;
+      }
+      return 0;
+    });
+    return _arrayOfObjs;
+  };
+
   var getAssayFiles = function (_params_) {
     var params = _params_ || {};
 
@@ -63,46 +115,39 @@ function fileBrowserFactory (
 
     var assayFile = assayFileService.query(params);
     assayFile.$promise.then(function (response) {
-      angular.copy(response.attributes, assayAttributes);
+      /** Api returns uuid field, which is needed to retrieve the
+       *  download file_url for nodeset api. It should be hidden in the data
+       *  table first **/
+      var culledAttributes = hideUuidAttribute(response.attributes);
+      angular.copy(culledAttributes, assayAttributes);
+      // Add file_download column first
+      assayAttributes.unshift({ display_name: 'Url', internal_name: 'Url' });
       angular.copy(response.nodes, assayFiles);
+      addNodeDetailtoAssayFiles();
       assayFilesTotalItems.count = response.nodes_count;
       var filterObj = generateFilters(response.attributes, response.facet_field_counts);
       angular.copy(filterObj.attributeFilter, attributeFilter);
       angular.copy(filterObj.analysisFilter, analysisFilter);
+    }, function (error) {
+      $log.error(error);
     });
     return assayFile.$promise;
   };
 
-  var sortArrayOfObj = function (arrayOfObjs) {
-    arrayOfObjs.sort(function (a, b) {
-      if (a.rank > b.rank) {
-        return 1;
-      }
-      if (a.rank < b.rank) {
-        return -1;
-      }
-      return 0;
-    });
-    return arrayOfObjs;
-  };
-
   var getAssayAttributeOrder = function (uuid) {
-    var apiUrl = settings.appRoot + settings.refineryApiV2 +
-      '/assays/' + uuid + '/attributes/';
+    var params = {
+      uuid: uuid
+    };
 
-    return $http({
-      method: 'GET',
-      url: apiUrl,
-      data: {
-        csrfmiddlewaretoken: csrfToken,
-        uuid: uuid
-      }
-    }).then(function (response) {
-      var sortedResponse = sortArrayOfObj(response.data);
+    var assayAttribute = assayAttributeService.query(params);
+    assayAttribute.$promise.then(function (response) {
+      var culledResponseData = hideUuidAttribute(response);
+      var sortedResponse = sortArrayOfObj(culledResponseData);
       angular.copy(sortedResponse, assayAttributeOrder);
     }, function (error) {
       $log.error(error);
     });
+    return assayAttribute.$promise;
   };
 
   var postAssayAttributeOrder = function (attributeParam) {
@@ -116,21 +161,19 @@ function fileBrowserFactory (
       is_facet: attributeParam.is_facet,
       rank: attributeParam.rank
     };
-    return $http({
-      method: 'PUT',
-      url: settings.appRoot + settings.refineryApiV2 +
-          '/assays/' + assayUuid + '/attributes/',
-      data: dataObj
-    }).then(function (response) {
+
+    var assayAttributeUpdate = assayAttributeService.update(dataObj);
+    assayAttributeUpdate.$promise.then(function (response) {
       for (var ind = 0; ind < assayAttributeOrder.length; ind++) {
-        if (assayAttributeOrder[ind].solr_field === response.data.solr_field) {
-          angular.copy(response.data, assayAttributeOrder[ind]);
+        if (assayAttributeOrder[ind].solr_field === response.solr_field) {
+          angular.copy(response, assayAttributeOrder[ind]);
           break;
         }
       }
     }, function (error) {
       $log.error(error);
     });
+    return assayAttributeUpdate.$promise;
   };
 
   return {
@@ -151,6 +194,8 @@ angular
   .factory('fileBrowserFactory', [
     '$http',
     'assayFileService',
+    'nodeService',
+    'assayAttributeService',
     'settings',
     '$window',
     '$log',

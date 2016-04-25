@@ -284,17 +284,42 @@ function FileBrowserCtrl (
         columnWidth = Math.round(columnWidth * 2);
       }
 
-      vm.customColumnName.push(
-        {
-          name: columnName,
-          width: columnWidth + '%',
-          field: attribute.internal_name
-        }
-      );
+
+      if (columnName === 'Url') {
+        vm.customColumnName.push(vm.setCustomUrlColumnDef(columnName));
+      } else {
+        vm.customColumnName.push(
+          {
+            name: columnName,
+            width: columnWidth + '%',
+            field: attribute.internal_name,
+            cellTooltip: true
+          }
+        );
+      }
     });
     vm.gridOptions.columnDefs = vm.customColumnName;
   };
+  // File download column require unique template and fields.
+  vm.setCustomUrlColumnDef = function (_columnName) {
+    var cellTemplate = '<div class="ngCellText"' +
+          ' ng-class="col.colIndex()" style="text-align:center">' +
+          '<a href="{{COL_FIELD}}">' +
+          '<i class = "fa fa-arrow-circle-o-down"></i></a>' +
+          '</div>';
 
+    return {
+      name: _columnName,
+      field: _columnName,
+      cellTooltip: true,
+      width: 4 + '%',
+      displayName: '',
+      enableFiltering: false,
+      enableSorting: false,
+      enableColumnMenu: false,
+      cellTemplate: cellTemplate
+    };
+  };
 
   vm.checkDataSetOwnership = function () {
     isOwnerService.refreshDataSetOwner().then(function () {
