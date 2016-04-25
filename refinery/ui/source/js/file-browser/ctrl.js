@@ -304,8 +304,15 @@ function FileBrowserCtrl (
   vm.setCustomUrlColumnDef = function (_columnName) {
     var cellTemplate = '<div class="ngCellText"' +
           ' ng-class="col.colIndex()" style="text-align:center">' +
+          '<div ng-if="COL_FIELD"' +
+            'title="Download File \'{{COL_FIELD}}\'">' +
           '<a href="{{COL_FIELD}}">' +
-          '<i class = "fa fa-arrow-circle-o-down"></i></a>' +
+          '<i class="fa fa-arrow-circle-o-down"></i></a>' +
+          '</div>' +
+          '<div ng-if="!COL_FIELD"' +
+            'title="File not available for download">' +
+          '<i class="fa fa-bolt"></i>' +
+          '</div>' +
           '</div>';
 
     return {
@@ -317,6 +324,7 @@ function FileBrowserCtrl (
       enableFiltering: false,
       enableSorting: false,
       enableColumnMenu: false,
+      enableColumnResizing: false,
       cellTemplate: cellTemplate
     };
   };
