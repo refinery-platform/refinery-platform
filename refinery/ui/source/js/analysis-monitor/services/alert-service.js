@@ -1,6 +1,6 @@
 'use strict';
 
-function analysisMonitorAlertService (analysisMonitorFactory, analysisService) {
+function analysisMonitorAlertService (analysisService) {
   var vm = this;
   var analysesMsg = {};
   analysesMsg.status = '';
@@ -31,5 +31,6 @@ function analysisMonitorAlertService (analysisMonitorFactory, analysisService) {
 angular
   .module('refineryAnalysisMonitor')
   .service('analysisMonitorAlertService', [
-    'analysisMonitorFactory', 'analysisService', analysisMonitorAlertService
+    'analysisService',
+    analysisMonitorAlertService
   ]);

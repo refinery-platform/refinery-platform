@@ -20,9 +20,9 @@ describe('Alert Service', function () {
   });
 
   describe('refreshAnalysesAlertStatusFiles', function () {
-    beforeEach(inject(function (dataSetService, $q, $rootScope) {
-      var responseData = { objects: [{ is_owner: true }] };
-      spyOn(dataSetService, 'query').and.callFake(function () {
+    beforeEach(inject(function (analysisService, $q, $rootScope) {
+      var responseData = [{ test1: 1 }, { test2: 2 }, { test3: 3 }];
+      spyOn(analysisService, 'query').and.callFake(function () {
         deferred = $q.defer();
         deferred.resolve(responseData);
         return { $promise: deferred.promise };
@@ -30,8 +30,10 @@ describe('Alert Service', function () {
       rootScope = $rootScope;
     }));
 
-    it('refreshDataSetOwner is a method', function () {
-      expect(angular.isFunction(service.refreshDataSetOwner)).toBe(true);
+    it('methods exists', function () {
+      expect(angular.isFunction(service.setAnalysesMsg)).toBe(true);
+      expect(angular.isFunction(service.getAnalysesMsg)).toBe(true);
+      expect(angular.isFunction(service.refreshAnalysesAlertStatus)).toBe(true);
     });
 
     it('refreshDataSetOwner returns a promise', function () {
