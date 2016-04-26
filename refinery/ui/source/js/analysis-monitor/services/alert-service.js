@@ -7,14 +7,14 @@ function analysisMonitorAlertService (analysisMonitorFactory, analysisService) {
   analysesMsg.name = '';
 
   vm.setAnalysesMsg = function (uuid) {
-    vm.updateAnalysesAlertStatus(uuid);
+    vm.refreshAnalysesAlertStatus(uuid);
   };
 
   vm.getAnalysesMsg = function () {
     return analysesMsg;
   };
 
-  vm.updateAnalysesAlertStatus = function (uuid) {
+  vm.refreshAnalysesAlertStatus = function (uuid) {
     var analysis = analysisService.query({
       format: 'json',
       limit: 1,
