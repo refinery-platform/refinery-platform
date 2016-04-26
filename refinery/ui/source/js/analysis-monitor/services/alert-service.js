@@ -25,6 +25,7 @@ function analysisMonitorAlertService (analysisService) {
       analysesMsg.status = response.objects[0].status;
       analysesMsg.name = response.objects[0].name;
     });
+    return analysis.$promise;
   };
 }
 
