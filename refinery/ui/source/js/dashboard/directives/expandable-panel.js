@@ -20,6 +20,10 @@ function refineryExpandablePanel (
 
       el.addClass('expandable');
 
+      dashboardExpandablePanelService.lockFullWith.push(function () {
+        el.addClass('full-width');
+      });
+
       dashboardExpandablePanelService.expander.push(function () {
         var animator = $animateCss(element, {
           duration: transitionSpeed,

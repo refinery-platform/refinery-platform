@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# Typically the root volume is not tagged by CloudFormation;
+# we would like it tagged;
+# this script finds _all_ untagged volumes
+# attached to this instance
+# and tags them.
+
+# refers:
+# http://stackoverflow.com/questions/24026425/is-there-a-way-to-tag-a-root-volume-when-initializing-from-the-cloudformation-te
+# (but note, syntax change in tools from above)
+
+Region=$(cat /home/ubuntu/region)
+
+InstanceID=$(curl --silent http://169.254.169.254/latest/meta-data/instance-id)
+
+volumes_ids () {
+  aws --region "$Region" ec2 describe-volumes --filter Name=attachment.instance-id,Values=${InstanceID} |
+    jq -r '.Volumes[] | select(.Tags|not) | .VolumeId'
+}
+
+Tags=$(jq .tags /home/ubuntu/s3-config)
+
+aws ec2 create-tags --region "$Region" --resources $(volumes_ids) --tags "$Tags"

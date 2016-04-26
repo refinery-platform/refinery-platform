@@ -74,6 +74,13 @@ def main():
 
     assert "'" not in config['SITE_NAME']
 
+    instance_tags = tags.load()
+    # Set the `Name` as it appears on the EC2 web UI.
+    instance_tags.append({'Key': 'Name',
+                         'Value': "refinery-web-" + unique_suffix})
+
+    config['tags'] = instance_tags
+
     config_uri = save_s3_config(config, unique_suffix)
     sys.stderr.write("Configuration saved to {}\n".format(config_uri))
 
@@ -102,11 +109,6 @@ def main():
         open('aws.sh').read())
 
     cft = core.CloudFormationTemplate(description="refinery platform.")
-
-    instance_tags = tags.load()
-    # Set the `Name` as it appears on the EC2 web UI.
-    instance_tags.append({'Key': 'Name',
-                         'Value': "refinery-web-" + unique_suffix})
 
     cft.resources.ec2_instance = core.Resource(
         'WebInstance', 'AWS::EC2::Instance',
@@ -151,23 +153,40 @@ def main():
                 'arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess'
             ],
             'Path': '/',
-            'Policies': [{
-                'PolicyName': "CreateAccessKey",
-                'PolicyDocument': {
-                    "Version": "2012-10-17",
-                    "Statement": [
-                        {
-                            "Effect": "Allow",
-                            "Action": [
-                                "iam:CreateAccessKey"
-                            ],
-                            "Resource": [
-                                "*"
-                            ]
-                        }
-                    ]
+            'Policies': [
+                {
+                    'PolicyName': "CreateAccessKey",
+                    'PolicyDocument': {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "iam:CreateAccessKey"
+                                ],
+                                "Resource": [
+                                    "*"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                {
+                    'PolicyName': "CreateTags",
+                    'PolicyDocument': {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "ec2:CreateTags"
+                                ],
+                                "Resource": "*"
+                            }
+                        ]
+                    }
                 }
-            }]
+            ]
         })
     )
 

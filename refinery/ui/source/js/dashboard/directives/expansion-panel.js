@@ -1,29 +1,26 @@
 'use strict';
 
 function refineryExpansionPanel () {
-  function ExpansionPanelCtrl (
-    pubSub,
-    dashboardWidthFixerService,
-    dashboardDataSetPreviewService) {
+  function ExpansionPanelCtrl (settings, dashboardWidthFixerService) {
     var that = this;
 
-    this.pubSub = pubSub;
-    this.dashboardWidthFixerService = dashboardWidthFixerService;
-    this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
-
-    this.dashboardWidthFixerService.fixer.push(function () {
+    dashboardWidthFixerService.fixer.push(function () {
       that.style = {
         left: this.fixedWidth + 1
       };
     });
+
+    if (settings.djangoApp.repositoryMode) {
+      dashboardWidthFixerService.trigger('fixer');
+    }
   }
 
   return {
     controller: [
-      'pubSub',
+      'settings',
       'dashboardWidthFixerService',
-      'dashboardDataSetPreviewService',
-      ExpansionPanelCtrl],
+      ExpansionPanelCtrl
+    ],
     controllerAs: 'expansionPanel',
     restrict: 'E',
     replace: true,
