@@ -1,7 +1,7 @@
 'use strict';
 
 function analysisMonitorFactory (
-  $http, $log, $window, analysisService, analysisDetailService, settings
+  $http, $log, $window, analysisService, analysisDetailService, humanize
 ) {
   var analysesList = [];
   var analysesRunningList = [];
@@ -38,7 +38,7 @@ function analysisMonitorFactory (
     var offsetDate = testDate + curDate;
     var unixtime = offsetDate / 1000;
 
-    return settings.humanize.relativeTime(unixtime);
+    return humanize.relativeTime(unixtime);
   };
 
   var isObjExist = function (data) {
@@ -223,6 +223,6 @@ angular
     '$window',
     'analysisService',
     'analysisDetailService',
-    'settings',
+    'humanize',
     analysisMonitorFactory
   ]);
