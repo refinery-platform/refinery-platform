@@ -42,7 +42,7 @@ function analysisMonitorFactory (
   };
 
   var isObjExist = function (data) {
-    if (typeof data !== 'undefined' && data !== null) {
+    if (data !== 'undefined' && data !== null) {
       return true;
     }
     return false;
@@ -54,12 +54,11 @@ function analysisMonitorFactory (
   };
 
   var isParamValid = function (data) {
-    if (typeof data !== 'undefined' && typeof data.time_start !== 'undefined' &&
-      typeof data.time_end !== 'undefined' && data.time_start !== null &&
-      data.time_end !== null) {
+    if (data !== 'undefined' && isObjExist(data.time_start) &&
+       isObjExist(data.time_end)
+    ) {
       return 'complete';
-    } else if (typeof data !== 'undefined' && typeof data.time_start !== 'undefined' &&
-      data.time_start !== null) {
+    } else if (data !== 'undefined' && isObjExist(data.time_start)) {
       return 'running';
     }
     return 'false';
@@ -152,7 +151,7 @@ function analysisMonitorFactory (
     angular.forEach(data, function (dataArr, stage) {
       var tempArr = [];
       var failureFlag = false;
-      if (typeof stage !== 'undefined' && dataArr.length > 1) {
+      if (stage !== 'undefined' && dataArr.length > 1) {
         for (var i = 0; i < dataArr.length; i++) {
           tempArr.push(dataArr[i].percent_done);
           if (dataArr[i].state === 'FAILURE') {
