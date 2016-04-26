@@ -1,7 +1,12 @@
 'use strict';
 
 function analysisMonitorFactory (
-  $http, $log, $window, analysisService, analysisDetailService, humanize
+  $http,
+  $log,
+  $window,
+  analysisService,
+  analysisDetailService,
+  humanize
 ) {
   var analysesList = [];
   var analysesRunningList = [];
@@ -40,9 +45,9 @@ function analysisMonitorFactory (
 
     return humanize.relativeTime(unixtime);
   };
-
-  var isObjExist = function (data) {
-    if (data !== 'undefined' && data !== null) {
+  // Helper method checking if object is defined
+  var isObjDefined = function (data) {
+    if (data !== undefined && data !== null) {
       return true;
     }
     return false;
@@ -54,11 +59,11 @@ function analysisMonitorFactory (
   };
 
   var isParamValid = function (data) {
-    if (data !== 'undefined' && isObjExist(data.time_start) &&
-       isObjExist(data.time_end)
+    if (data !== undefined && isObjDefined(data.time_start) &&
+       isObjDefined(data.time_end)
     ) {
       return 'complete';
-    } else if (data !== 'undefined' && isObjExist(data.time_start)) {
+    } else if (data !== undefined && isObjDefined(data.time_start)) {
       return 'running';
     }
     return 'false';
@@ -99,10 +104,10 @@ function analysisMonitorFactory (
     angular.copy(data, analysesList);
     for (var j = 0; j < analysesList.length; j++) {
       analysesList[j].elapseTime = createElapseTime(analysesList[j]);
-      if (isObjExist(analysesList[j].time_start)) {
+      if (isObjDefined(analysesList[j].time_start)) {
         analysesList[j].humanizeStartTime = humanizeTimeObj(analysesList[j].time_start);
       }
-      if (isObjExist(analysesList[j].time_end)) {
+      if (isObjDefined(analysesList[j].time_end)) {
         analysesList[j].humanizeEndTime = humanizeTimeObj(analysesList[j].time_end);
       }
     }
@@ -151,7 +156,7 @@ function analysisMonitorFactory (
     angular.forEach(data, function (dataArr, stage) {
       var tempArr = [];
       var failureFlag = false;
-      if (stage !== 'undefined' && dataArr.length > 1) {
+      if (stage !== undefined && dataArr.length > 1) {
         for (var i = 0; i < dataArr.length; i++) {
           tempArr.push(dataArr[i].percent_done);
           if (dataArr[i].state === 'FAILURE') {
