@@ -410,10 +410,6 @@ function refineryDataSetPreview () {
     controllerAs: 'preview',
     restrict: 'E',
     replace: true,
-    scope: {
-      close: '&',
-      active: '='
-    },
     templateUrl: '/static/partials/dashboard/directives/data-set-preview.html',
     transclude: true
   };

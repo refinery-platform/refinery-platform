@@ -34,6 +34,7 @@
 {% endblock %}
 
 {% block content %}
+{% if not REFINERY_REPOSITORY_MODE or request.user.is_staff %}
 <!-- Tab names -->
 <div class="refinery-panel-tabs">
   <div class="row">
@@ -403,6 +404,9 @@
     <!-- end data upload -->
   </div>
 </div>
+{% else %}
+Sorry! Not allowed in repository mode. Cheers.
+{% endif %}
 {% endblock %}
 
 {% block vendor_scripts %}

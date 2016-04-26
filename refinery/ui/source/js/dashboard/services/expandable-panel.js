@@ -6,7 +6,8 @@ angular
     function (_) {
       var listeners = {
         expander: [],
-        collapser: []
+        collapser: [],
+        lockFullWith: []
       };
 
       /**
@@ -27,7 +28,8 @@ angular
       return {
         trigger: trigger,
         expander: listeners.expander,
-        collapser: listeners.collapser
+        collapser: listeners.collapser,
+        lockFullWith: listeners.lockFullWith
       };
     }
   ]);
