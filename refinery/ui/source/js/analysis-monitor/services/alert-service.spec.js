@@ -5,27 +5,28 @@ describe('Alert Service', function () {
   var deferred;
   var rootScope;
   var service;
+  var response;
   var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
 
   beforeEach(module('refineryApp'));
-  beforeEach(module('refineryFileBrowser'));
+  beforeEach(module('refineryAnalysisMonitor'));
   beforeEach(inject(function (analysisMonitorAlertService) {
     service = analysisMonitorAlertService;
   }));
 
   it('service and variables should exist', function () {
     expect(service).toBeDefined();
-    expect(service.analysesMsg.status).toEqual('');
-    expect(service.analysesMsg.name).toEqual('');
   });
 
   describe('refreshAnalysesAlertStatusFiles', function () {
     beforeEach(inject(function (analysisService, $q, $rootScope) {
-      var responseData = [{ test1: 1 }, { test2: 2 }, { test3: 3 }];
+      response = { objects: [{ name: 'TestName', status: 'PROGRESS' }] };
       spyOn(analysisService, 'query').and.callFake(function () {
         deferred = $q.defer();
-        deferred.resolve(responseData);
-        return { $promise: deferred.promise };
+        deferred.resolve(response);
+        return {
+          $promise: deferred.promise
+        };
       });
       rootScope = $rootScope;
     }));
@@ -36,17 +37,29 @@ describe('Alert Service', function () {
       expect(angular.isFunction(service.refreshAnalysesAlertStatus)).toBe(true);
     });
 
-    it('refreshDataSetOwner returns a promise', function () {
-      var successData;
-      var response = service
-        .refreshDataSetOwner({ uuid: fakeUuid })
-        .then(function (responseData) {
-          successData = responseData.objects[0].is_owner;
+    it('set and get AnalysisMsg', function () {
+      spyOn(service, 'refreshAnalysesAlertStatus');
+      expect(service.refreshAnalysesAlertStatus).not.toHaveBeenCalled();
+      service.setAnalysesMsg(fakeUuid);
+      expect(service.refreshAnalysesAlertStatus).toHaveBeenCalled();
+      var msgResponse = service.getAnalysesMsg(fakeUuid);
+      expect(msgResponse.status).toEqual('');
+      expect(msgResponse.name).toEqual('');
+    });
+
+    it('refreshAnalysesAlertStatus returns a promise', function () {
+      var name;
+      var status;
+      var _promise = service
+        .refreshAnalysesAlertStatus(fakeUuid)
+        .then(function (_data) {
+          status = _data.objects[0].status;
+          name = _data.objects[0].name;
         });
       rootScope.$apply();
-      expect(typeof response.then).toEqual('function');
-      expect(successData).toEqual(true);
-      expect(service.isOwner).toEqual(true);
+      expect(typeof _promise.then).toEqual('function');
+      expect(status).toEqual(response.objects[0].status);
+      expect(name).toEqual(response.objects[0].name);
     });
   });
 });
