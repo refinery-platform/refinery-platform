@@ -17,10 +17,10 @@
 	<select
     class="form-control"
     ng-show="speciesList.length > 1"
-    ng-model="selectedspecies"
+    ng-model="selectedSpecies"
     style="width:100%"
     ng-options="species as species.name for species in speciesList">
-		<option value="" selected disabled>Choose a species</option>
+		<option value="">Choose a species</option>
     <!-- required for showing placeholder text -->
 	</select>
     <p></p>
