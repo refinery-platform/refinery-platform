@@ -951,7 +951,7 @@ class NodeResource(ModelResource):
             bundle.data['file_url'] = None
             bundle.data['file_import_status'] = None
         else:
-            bundle.data['file_url'] = file_item.get_full_url()
+            bundle.data['file_url'] = file_item.get_datafile_url()
             bundle.data['file_import_status'] = file_item.get_import_status()
         return bundle
 

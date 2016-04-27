@@ -110,7 +110,8 @@ class FileStoreItemTest(SimpleTestCase):
         # create FileStoreItem instances without any disk operations
         item_from_url = FileStoreItem.objects.create(source=self.url_source,
                                                      sharename=self.sharename)
-        self.assertEqual(item_from_url.get_full_url(), item_from_url.source)
+        self.assertEqual(item_from_url.get_datafile_url(),
+                         item_from_url.source)
 
     def test_get_file_extension(self):
         """Check that the correct file extension is returned"""
