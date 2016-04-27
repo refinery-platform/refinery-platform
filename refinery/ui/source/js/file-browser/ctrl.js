@@ -293,7 +293,8 @@ function FileBrowserCtrl (
             name: columnName,
             width: columnWidth + '%',
             field: attribute.internal_name,
-            cellTooltip: true
+            cellTooltip: true,
+            enableHiding: false
           }
         );
       }
