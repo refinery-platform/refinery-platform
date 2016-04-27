@@ -464,7 +464,7 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
     curr_fs = FileStoreItem.objects.get(uuid=filestore_uuid)
 
     # full path to selected UUID File
-    curr_url = curr_fs.get_datafile_url()
+    curr_url = curr_fs.get_datafile_url(full_url=True)
 
     # delete temp file
     os.unlink(tempsampname.name)
@@ -496,7 +496,7 @@ def get_file_name(nodeuuid, sampFile=None, is_file_uuid=False):
     temp_name = temp_name[len(temp_name) - 1]
 
     # full path to selected UUID File
-    temp_url = temp_fs.get_datafile_url()
+    temp_url = temp_fs.get_datafile_url(full_url=True)
 
     # IGV SEG FILE HACK
     if sampFile:
