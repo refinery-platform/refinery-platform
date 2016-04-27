@@ -11,7 +11,7 @@ function IgvCtrl (
   };
 
   $scope.speciesList = [];
-  $scope.speciesIndex = -1;
+  $scope.selectedSpecies = $scope.speciesList[0];
   $scope.message = null;
   $scope.messageType = 'info';
   $scope.isLoadingSpecies = false;
@@ -20,7 +20,7 @@ function IgvCtrl (
     // reset
     $scope.message = null;
     $scope.messageType = 'info';
-    $scope.speciesIndex = -1;
+    $scope.selectedSpecies = $scope.speciesList[0];
 
     // detect species
     $scope.detectSpecies();
@@ -104,7 +104,7 @@ function IgvCtrl (
           'Please select the correct genome and launch IGV.';
       } else if (response.species_count === 1) {
         $scope.message = null;
-        $scope.speciesIndex = 0;
+        $scope.selectedSpecies = $scope.speciesList[0];
       } else {
         $scope.message = 'Multiple species detected. Please select a ' +
           'genome and launch IGV. You may repeat this step multiple times.';
@@ -130,7 +130,7 @@ function IgvCtrl (
   };
 
   $scope.launchIgv = function () {
-    $window.open($scope.speciesList[$scope.speciesIndex].url);
+    $window.open($scope.selectedSpecies.url);
   };
 }
 
