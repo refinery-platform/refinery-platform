@@ -1,7 +1,7 @@
 'use strict';
 
 function IgvCtrl (
-  $scope, $rootScope, $http, $window, $log, $timeout, $resource
+  $scope, $http, $window, $log, $resource
 ) {
   $scope.igvConfig = {
     query: null,
@@ -138,11 +138,9 @@ angular
   .module('refineryDataSetExplorer')
   .controller('IgvCtrl', [
     '$scope',
-    '$rootScope',
     '$http',
     '$window',
     '$log',
-    '$timeout',
     '$resource',
     IgvCtrl
   ]);
