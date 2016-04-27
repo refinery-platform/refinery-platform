@@ -305,7 +305,7 @@ function FileBrowserCtrl (
     var cellTemplate = '<div class="ngCellText"' +
           ' ng-class="col.colIndex()" style="text-align:center">' +
           '<div ng-if="COL_FIELD"' +
-            'title="Download File \'{{COL_FIELD}}\'">' +
+            'title="Download File \{{COL_FIELD}}\">' +
           '<a href="{{COL_FIELD}}">' +
           '<i class="fa fa-arrow-circle-o-down"></i></a>' +
           '</div>' +
