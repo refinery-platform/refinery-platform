@@ -1,7 +1,12 @@
 <div ng-controller="NodeSetListApiCtrl">
-  <select ui-select2 ng-model="nodesetIndex" ng-change="updateCurrentNodeSet()" style="width:100%" data-placeholder="Choose a file set">
-    <option value=""></option>  <!-- required for showing placeholder text -->
-    <option ng-repeat="nodeset in nodesetList" value="{{$index}}">{{nodeset.name}}</option>
+  <select
+    class="form-control"
+    ng-model="nodesetIndex"
+    ng-change="updateCurrentNodeSet()">
+    <option value="" selected disabled>Choose a file set</option>
+    <option ng-repeat="nodeset in nodesetList" value="{{$index}}">
+      {{nodeset.name}}
+    </option>
   </select>
   <div>
     <p></p>
@@ -14,13 +19,13 @@
   		<i class="fa fa-refresh fa-spin" style="padding: 2px"></i> Detecting
       species ...
   	</p>
+    <!-- ngOptions for binding non-strings. -->
 	<select
     class="form-control"
     ng-show="speciesList.length > 1"
     ng-model="selectedSpecies"
     ng-options="species as species.name for species in speciesList">
-		<option value="">Choose a species</option>
-    <!-- required for showing placeholder text -->
+		<option value="" selected disabled>Choose a species</option>
 	</select>
     <p></p>
     <button class="btn btn-warning" ng-click="launchIgv()"
