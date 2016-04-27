@@ -1,7 +1,12 @@
 <div ng-controller="WorkflowListApiCtrl">
-  <select ui-select2 ng-model="workflowIndex" ng-change="updateCurrentWorkflow()" style="width:100%" data-placeholder="Select a workflow">
-    <option value=""></option>  <!-- required for showing placeholder text -->
-    <option ng-repeat="workflow in workflowList" value="{{$index}}">{{workflow.name}}</option>
+  <select
+    class="form-control"
+    ng-model="workflowIndex"
+    ng-change="updateCurrentWorkflow()">
+    <option value="">Select a workflow</option>
+    <option ng-repeat="workflow in workflowList" value="{{$index}}">
+      {{workflow.name}}
+    </option>
   </select>
 
   <div ng-show="currentWorkflow.isAvailable()">
@@ -35,9 +40,14 @@
     </div>
 
     <div ng-controller="NodeSetListApiCtrl" ng-if="currentWorkflow.isSingleInput()">
-      <select ui-select2 ng-model="nodesetIndex" ng-change="updateCurrentNodeSet()" style="width:100%" data-placeholder="Choose a file set">
-        <option value=""></option>  <!-- required for showing placeholder text -->
-        <option ng-repeat="nodeset in nodesetList" value="{{$index}}">{{nodeset.name}}</option>
+      <select
+        class="form-control"
+        ng-model="nodesetIndex"
+        ng-change="updateCurrentNodeSet()">
+        <option value="">Choose a file set</option>  <!-- required for showing placeholder text -->
+        <option ng-repeat="nodeset in nodesetList" value="{{$index}}">
+          {{nodeset.name}}
+        </option>
       </select>
       <div>
         <p></p>
@@ -50,9 +60,15 @@
 
 
     <div ng-controller="NodeRelationshipListCtrl" ng-if="!currentWorkflow.isSingleInput()">
-      <select ui-select2 ng-model="nodeRelationshipIndex" ng-change="updateCurrentNodeRelationship()" style="width:100%" data-placeholder="Choose a file mapping">
-        <option value=""></option>  <!-- required for showing placeholder text -->
-        <option ng-repeat="nodeRelationship in nodeRelationshipList" value="{{$index}}">{{nodeRelationship.name}}</option>
+      <select
+        ng-model="nodeRelationshipIndex"
+        ng-change="updateCurrentNodeRelationship()">
+        <option value="">
+          Choose a file mapping
+        </option>
+        <option ng-repeat="nodeRelationship in nodeRelationshipList" value="{{$index}}">
+          {{nodeRelationship.name}}
+        </option>
       </select>
 
       <a class="btn btn-xs" ng-click="openNewMappingDialog()">New ...</a>
