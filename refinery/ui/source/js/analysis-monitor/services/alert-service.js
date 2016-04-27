@@ -1,20 +1,20 @@
 'use strict';
 
-function analysisMonitorAlertService (analysisMonitorFactory, analysisService) {
+function analysisMonitorAlertService (analysisService) {
   var vm = this;
   var analysesMsg = {};
   analysesMsg.status = '';
   analysesMsg.name = '';
 
   vm.setAnalysesMsg = function (uuid) {
-    vm.updateAnalysesAlertStatus(uuid);
+    vm.refreshAnalysesAlertStatus(uuid);
   };
 
   vm.getAnalysesMsg = function () {
     return analysesMsg;
   };
 
-  vm.updateAnalysesAlertStatus = function (uuid) {
+  vm.refreshAnalysesAlertStatus = function (uuid) {
     var analysis = analysisService.query({
       format: 'json',
       limit: 1,
@@ -25,11 +25,13 @@ function analysisMonitorAlertService (analysisMonitorFactory, analysisService) {
       analysesMsg.status = response.objects[0].status;
       analysesMsg.name = response.objects[0].name;
     });
+    return analysis.$promise;
   };
 }
 
 angular
   .module('refineryAnalysisMonitor')
   .service('analysisMonitorAlertService', [
-    'analysisMonitorFactory', 'analysisService', analysisMonitorAlertService
+    'analysisService',
+    analysisMonitorAlertService
   ]);

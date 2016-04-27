@@ -1,7 +1,12 @@
 'use strict';
 
 function analysisMonitorFactory (
-  $http, $log, $window, analysisService, analysisDetailService, settings
+  $http,
+  $log,
+  $window,
+  analysisService,
+  analysisDetailService,
+  humanize
 ) {
   var analysesList = [];
   var analysesRunningList = [];
@@ -38,11 +43,11 @@ function analysisMonitorFactory (
     var offsetDate = testDate + curDate;
     var unixtime = offsetDate / 1000;
 
-    return settings.humanize.relativeTime(unixtime);
+    return humanize.relativeTime(unixtime);
   };
-
-  var isObjExist = function (data) {
-    if (typeof data !== 'undefined' && data !== null) {
+  // Helper method checking if object is defined
+  var isObjDefined = function (data) {
+    if (data !== undefined && data !== null) {
       return true;
     }
     return false;
@@ -54,12 +59,11 @@ function analysisMonitorFactory (
   };
 
   var isParamValid = function (data) {
-    if (typeof data !== 'undefined' && typeof data.time_start !== 'undefined' &&
-      typeof data.time_end !== 'undefined' && data.time_start !== null &&
-      data.time_end !== null) {
+    if (data !== undefined && isObjDefined(data.time_start) &&
+       isObjDefined(data.time_end)
+    ) {
       return 'complete';
-    } else if (typeof data !== 'undefined' && typeof data.time_start !== 'undefined' &&
-      data.time_start !== null) {
+    } else if (data !== undefined && isObjDefined(data.time_start)) {
       return 'running';
     }
     return 'false';
@@ -100,10 +104,10 @@ function analysisMonitorFactory (
     angular.copy(data, analysesList);
     for (var j = 0; j < analysesList.length; j++) {
       analysesList[j].elapseTime = createElapseTime(analysesList[j]);
-      if (isObjExist(analysesList[j].time_start)) {
+      if (isObjDefined(analysesList[j].time_start)) {
         analysesList[j].humanizeStartTime = humanizeTimeObj(analysesList[j].time_start);
       }
-      if (isObjExist(analysesList[j].time_end)) {
+      if (isObjDefined(analysesList[j].time_end)) {
         analysesList[j].humanizeEndTime = humanizeTimeObj(analysesList[j].time_end);
       }
     }
@@ -152,7 +156,7 @@ function analysisMonitorFactory (
     angular.forEach(data, function (dataArr, stage) {
       var tempArr = [];
       var failureFlag = false;
-      if (typeof stage !== 'undefined' && dataArr.length > 1) {
+      if (stage !== undefined && dataArr.length > 1) {
         for (var i = 0; i < dataArr.length; i++) {
           tempArr.push(dataArr[i].percent_done);
           if (dataArr[i].state === 'FAILURE') {
@@ -223,6 +227,6 @@ angular
     '$window',
     'analysisService',
     'analysisDetailService',
-    'settings',
+    'humanize',
     analysisMonitorFactory
   ]);
