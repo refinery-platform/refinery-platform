@@ -122,7 +122,7 @@ def createIGVsession(genome, uuids, is_file_uuid=False):
     # delete temp file
     os.unlink(tempfilename.name)
     # Url for session file
-    fs_url = filestore_item.get_full_url()
+    fs_url = filestore_item.get_datafile_url(full_url=True)
     # IGV url for automatic launch of Java Webstart
     igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php" \
               "?sessionURL=" + fs_url
