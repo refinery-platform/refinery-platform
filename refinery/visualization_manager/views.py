@@ -4,7 +4,6 @@ import tempfile
 from xml.dom.minidom import Document
 
 from django.shortcuts import redirect
-from django.contrib.sites.models import Site
 
 from annotation_server.models import taxon_id_to_genome_build, \
     genome_build_to_species
@@ -174,14 +173,6 @@ def igv_multi_species(solr_results, solr_annot=None):
     # 4. generate igv files for each species, including phenotype data + paths
     # generated from uuid's
 
-    try:
-        current_site = Site.objects.get_current()
-    except Site.DoesNotExist:
-        logger.error(
-            "Cannot provide a full URL: no sites configured or "
-            "SITE_ID is not set correctly")
-        return None
-
     ui_results = {'species_count': unique_species_num, 'species': {}}
 
     for k, v in unique_species.items():
@@ -190,8 +181,6 @@ def igv_multi_species(solr_results, solr_annot=None):
                                         unique_annot[k]['solr'])
         else:
             sample_file = addIGVSamples(fields, unique_species[k]['solr'])
-
-        sample_file = 'http://{}{}'.format(current_site.domain, sample_file)
 
         logger.debug('Sample File: ' + sample_file)
 
