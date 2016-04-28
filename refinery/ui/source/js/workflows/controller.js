@@ -4,7 +4,8 @@ function WorkflowListApiCtrl (
   $scope, $rootScope, $log, workflowService, workflow
 ) {
   $scope.workflowList = [];
-  $scope.selectedWorkflow = { select: $scope.workflowList };
+  $scope.selectedWorkflow = { select: $scope.workflowList[0] };
+
   $scope.getWorkflowList = function () {
     var Workflows = workflowService.get(function () {
       angular.copy(Workflows.objects, $scope.workflowList);
