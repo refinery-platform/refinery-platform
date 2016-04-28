@@ -110,45 +110,31 @@ def main():
 
     cft = core.CloudFormationTemplate(description="refinery platform.")
 
-    """
-    # Equivalent to: aws rds create-db-instance
-    --db-instance-identifier rds-refinery-user
-    --allocated-storage 5
-    --availability-zone us-east-1d
-    --db-instance-class db.t2.small
-    --engine postgres
-    --master-username root
-    --master-user-password mypassword
-    --backup-retention-period 0
-    --port 5432
-    --engine-version 9.3.10
-    --no-multi-az
-    --no-publicly-accessible
-    --storage-type gp2
+    rds_properties = {
+        "AllocatedStorage": "5",
+        "AvailabilityZone": "us-east-1d",       # todo:?
+        "BackupRetentionPeriod": "0",
+        "DBInstanceClass": "db.t2.small",       # todo:?
+        "DBInstanceIdentifier": config['RDS_NAME'],
+        "Engine": "postgres",
+        "EngineVersion": "9.3.10",
+        # "KmsKeyId" ?
+        "MasterUsername": "root",
+        "MasterUserPassword": "mypassword",
+        "MultiAZ": False,
+        "Port": "5432",
+        "PubliclyAccessible": False,
+        "StorageType": "gp2",
+        "Tags": instance_tags,  # todo: Should be different?
+    }
 
-    --copy-tags-to-snapshot
-    """
     if 'RDS_SNAPSHOT' in config:
-        cft.resources.rds_instance = core.Resource(
-            'RDSInstance', 'AWS::RDS::DBInstance',
-            core.Properties({
-                "AllocatedStorage": "5",
-                "AvailabilityZone": "us-east-1d",       # todo:?
-                "BackupRetentionPeriod": "0",
-                "DBInstanceClass": "db.t2.small",       # todo:?
-                "DBInstanceIdentifier": config['RDS_NAME'],
-                'DBSnapshotIdentifier': config['RDS_SNAPSHOT'],
-                "Engine": "postgres",
-                "EngineVersion": "9.3.10",
-                # "KmsKeyId" ?
-                "MasterUsername": "root",
-                "MasterUserPassword": "mypassword",
-                "MultiAZ": False,
-                "Port": "5432",
-                "PubliclyAccessible": False,
-                "StorageType": "gp2",
-                "Tags": instance_tags,  # todo: Should be different?
-            })
+        rds_properties['DBSnapshotIdentifier'] = config['RDS_SNAPSHOT']
+
+    cft.resources.rds_instance = core.Resource(
+        'RDSInstance', 'AWS::RDS::DBInstance',
+        core.Properties(rds_properties),
+        core.DeletionPolicy("Snapshot"),
         )
 
     cft.resources.ec2_instance = core.Resource(
