@@ -1,4 +1,4 @@
 'use strict';
 
 angular
-  .module('refineryWorkflows', []);
+  .module('refineryWorkflows', ['ui.select', 'ngSanitize']);
