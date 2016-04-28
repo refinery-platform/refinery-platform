@@ -19,6 +19,13 @@ function NodeSetListApiCtrl ($log, $scope, $rootScope, $window, NodeSetList) {
     }).$promise
       .then(function (data) {
         angular.copy(data.objects, $scope.nodesetList);
+        for (var i = 0; i < $scope.nodesetList.length; i++) {
+          if ($scope.selectedNodeset.select &&
+            $scope.nodesetList[i].uuid === $scope.selectedNodeset.select.uuid) {
+            $scope.selectedNodeset.select = $scope.nodesetList[i];
+            break;
+          }
+        }
         $scope.updateCurrentNodeSet();
       })
       .catch(function (error) {
