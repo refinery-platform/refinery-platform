@@ -3,6 +3,7 @@ import os
 import tempfile
 from xml.dom.minidom import Document
 
+from django.contrib.sites.models import Site
 from django.shortcuts import redirect
 
 from annotation_server.models import taxon_id_to_genome_build, \
@@ -52,6 +53,22 @@ def profile_viewer_session(request):
     uuid = query["uuid"]
     return profile_viewer(request, uuid=uuid, start_location=1,
                           end_location=200000000, sequence_name="chr1")
+
+
+def get_full_url(filestore_item):
+    """ return the full url (including hostname) of a FileStoreItem
+    :param filestore_item: FileStoreItem to get url for
+    :type  filestore_item: FileStoreItem instance.
+    """
+    try:
+        current_site = Site.objects.get_current()
+    except Site.DoesNotExist:
+        logger.error(
+            "Cannot provide a full URL: no sites configured or "
+            "SITE_ID is not set correctly")
+        return None
+    return 'http://{}{}'.format(current_site.domain,
+                                filestore_item.datafile.url)
 
 
 def createIGVsession(genome, uuids, is_file_uuid=False):
@@ -122,7 +139,7 @@ def createIGVsession(genome, uuids, is_file_uuid=False):
     # delete temp file
     os.unlink(tempfilename.name)
     # Url for session file
-    fs_url = filestore_item.get_datafile_url(full_url=True)
+    fs_url = get_full_url(filestore_item)
     # IGV url for automatic launch of Java Webstart
     igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php" \
               "?sessionURL=" + fs_url
@@ -371,7 +388,7 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
     os.unlink(tempfilename.name)
 
     # Url for session file
-    sessionfile_url = filestore_item.get_datafile_url(full_url=True)
+    sessionfile_url = get_full_url(filestore_item)
 
     # IGV url for automatic launch of Java Webstart
     igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php" \
@@ -462,7 +479,7 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
     curr_fs = FileStoreItem.objects.get(uuid=filestore_uuid)
 
     # full path to selected UUID File
-    curr_url = curr_fs.get_datafile_url(full_url=True)
+    curr_url = get_full_url(curr_fs)
 
     # delete temp file
     os.unlink(tempsampname.name)
@@ -494,7 +511,7 @@ def get_file_name(nodeuuid, sampFile=None, is_file_uuid=False):
     temp_name = temp_name[len(temp_name) - 1]
 
     # full path to selected UUID File
-    temp_url = temp_fs.get_datafile_url(full_url=True)
+    temp_url = get_full_url(temp_fs)
 
     # IGV SEG FILE HACK
     if sampFile:
