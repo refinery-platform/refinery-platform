@@ -1,13 +1,15 @@
 <div ng-controller="NodeSetListApiCtrl">
-  <select
-    class="form-control"
-    ng-model="nodesetIndex"
-    ng-change="updateCurrentNodeSet()">
-    <option value="" selected disabled>Choose a file set</option>
-    <option ng-repeat="nodeset in nodesetList" value="{{$index}}">
-      {{nodeset.name}}
-    </option>
-  </select>
+  <ui-select
+    append-to-body="true"
+    ng-model="selectedNodeset.select"
+    on-select="updateCurrentNodeSet()">
+    <ui-select-match placeholder="Select or type file set">
+        <span ng-bind="$select.selected.name"></span>
+    </ui-select-match>
+    <ui-select-choices repeat="nodeset in (nodesetList | filter: $select.search)">
+        <span ng-bind="nodeset.name"></span>
+    </ui-select-choices>
+	</ui-select>
   <div>
     <p></p>
   </div>
@@ -22,7 +24,7 @@
 	<ui-select
     ng-show="speciesList.length > 1"
     append-to-body="true"
-    ng-model="selectedSpecies">
+    ng-model="selectedSpecies.select">
     <ui-select-match placeholder="Select or type species">
         <span ng-bind="$select.selected.name"></span>
     </ui-select-match>
