@@ -3,9 +3,11 @@
 function WorkflowListApiCtrl (
   $scope, $rootScope, $log, workflowService, workflow
 ) {
+  $scope.workflowList = [];
+  $scope.selectedWorkflow = { select: $scope.workflowList };
   $scope.getWorkflowList = function () {
     var Workflows = workflowService.get(function () {
-      $scope.workflowList = Workflows.objects;
+      angular.copy(Workflows.objects, $scope.workflowList);
     });
   };
 
@@ -14,7 +16,7 @@ function WorkflowListApiCtrl (
   $scope.currentWorkflow = workflow;
 
   $scope.updateCurrentWorkflow = function () {
-    workflow.set($scope.workflowList[$scope.workflowIndex]);
+    workflow.set($scope.selectedWorkflow.select);
 
     if (workflow.isAvailable()) {
       $rootScope.$emit('workflowChangedEvent', workflow.get());
