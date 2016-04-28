@@ -10,6 +10,9 @@ function NodeRelationshipListCtrl (
   NodeRelationshipResource,
   nodeRelationshipService
 ) {
+  $scope.nodeRelationshipList = [];
+  $scope.selectedNodeRelationship = { select: $scope.nodeRelationshipList[0] };
+
   $scope.$onRootScope(
     'workflowChangedEvent',
     function (event, currentWorkflow) {
@@ -28,8 +31,8 @@ function NodeRelationshipListCtrl (
   $scope.$onRootScope(
     'nodeRelationshipChangedEvent',
     function (event, currentNodeRelationship, index) {
-      $scope.nodeRelationshipIndex = index;
-
+    //  $scope.nodeRelationshipIndex = index;
+      $log.debug($scope.selectedNodeRelationship);
       $log.debug(index);
       $log.debug($scope.nodeRelationshipList);
     }
@@ -40,7 +43,7 @@ function NodeRelationshipListCtrl (
     $log.debug('Successfully deleted ' + response.name);
 
     $scope.currentNodeRelationship = null;
-    $scope.nodeRelationshipIndex = 0;
+    $scope.nodeRelationshipChangedEvent = 0;
     $scope.loadNodeRelationshipList(
       $window.externalStudyUuid, $window.externalAssayUuid
     );
@@ -93,9 +96,7 @@ function NodeRelationshipListCtrl (
 
         // if a node relationship should be selected: find its index
         if (selectedNodeRelationship) {
-          $scope.nodeRelationshipIndex = $scope.findNodeRelationshipListIndex(
-            selectedNodeRelationship
-          );
+          $scope.selectedNodeRelationship.select = selectedNodeRelationship;
 
           // if node relationship was found in list: fire update
           if (selectedNodeRelationship >= 0) {
@@ -116,14 +117,13 @@ function NodeRelationshipListCtrl (
   };
 
   $scope.updateCurrentNodeRelationship = function () {
-    $scope.currentNodeRelationship = $scope.nodeRelationshipList[
-      $scope.nodeRelationshipIndex
-    ];
+    $scope.currentNodeRelationship = $scope.selectedNodeRelationship.select;
+
     if ($scope.currentNodeRelationship) {
       $rootScope.$emit(
         'nodeRelationshipChangedEvent',
         $scope.currentNodeRelationship,
-        $scope.nodeRelationshipIndex
+        $scope.selectedNodeRelationship.select
       );
     }
   };

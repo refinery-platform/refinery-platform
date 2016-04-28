@@ -43,7 +43,6 @@
 
     <div ng-controller="NodeSetListApiCtrl" ng-if="currentWorkflow.isSingleInput()">
       <ui-select
-        class="form-control"
         ng-model="selectedNodeset.select"
         on-select="updateCurrentNodeSet()">
          <ui-select-match placeholder="Select or type file set">
@@ -53,7 +52,6 @@
           <span ng-bind="nodeset.name"></span>
         </ui-select-choices>
 	    </ui-select>
-  <div>
       <div>
         <p></p>
       </div>
@@ -65,16 +63,17 @@
 
 
     <div ng-controller="NodeRelationshipListCtrl" ng-if="!currentWorkflow.isSingleInput()">
-      <select
-        ng-model="nodeRelationshipIndex"
-        ng-change="updateCurrentNodeRelationship()">
-        <option value="">
-          Choose a file mapping
-        </option>
-        <option ng-repeat="nodeRelationship in nodeRelationshipList" value="{{$index}}">
-          {{nodeRelationship.name}}
-        </option>
-      </select>
+      <ui-select
+        append-to-body="true"
+        ng-model="selectedNodeRelationship.select"
+        on-select="updateCurrentNodeRelationship()">
+        <ui-select-match placeholder="Select or type file mapping">
+          <span ng-bind="$select.selected.name"></span>
+        </ui-select-match>
+        <ui-select-choices repeat="nodeRelationship in (nodeRelationshipList | filter: $select.search)">
+            <span ng-bind="nodeRelationship.name"></span>
+        </ui-select-choices>
+      </ui-select>
 
       <a class="btn btn-xs" ng-click="openNewMappingDialog()">New ...</a>
       <button class="btn btn-xs" ng-disabled="!(currentNodeRelationship &&
