@@ -2,7 +2,9 @@
   <ui-select
     append-to-body="true"
     ng-model="selectedNodeset.select"
-    on-select="updateCurrentNodeSet()">
+    on-select="updateCurrentNodeSet()"
+    theme="select2"
+    class="ui-select-drop">
     <ui-select-match placeholder="Select or type file set">
         <span ng-bind="$select.selected.name"></span>
     </ui-select-match>
@@ -24,7 +26,9 @@
 	<ui-select
     ng-show="speciesList.length > 1"
     append-to-body="true"
-    ng-model="selectedSpecies.select">
+    ng-model="selectedSpecies.select"
+    theme="select2"
+    class="ui-select-drop">
     <ui-select-match placeholder="Select or type species">
         <span ng-bind="$select.selected.name"></span>
     </ui-select-match>

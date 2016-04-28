@@ -2,10 +2,12 @@
   <ui-select
     append-to-body="true"
     ng-model="selectedWorkflow.select"
-    on-select="updateCurrentWorkflow()">
-    <ui-select-match placeholder="Select or type workflow">
-      <span ng-bind="$select.selected.name"></span>
-    </ui-select-match>
+    on-select="updateCurrentWorkflow()"
+    theme="select2"
+    class="ui-select-drop">
+     <ui-select-match placeholder="Select a workflow">
+       <span ng-bind="$select.selected.name"></span>
+     </ui-select-match>
     <ui-select-choices repeat="workflow in (workflowList | filter: $select.search)">
       <span ng-bind="workflow.name"></span>
     </ui-select-choices>
@@ -44,11 +46,15 @@
     <div ng-controller="NodeSetListApiCtrl" ng-if="currentWorkflow.isSingleInput()">
       <ui-select
         ng-model="selectedNodeset.select"
-        on-select="updateCurrentNodeSet()">
-         <ui-select-match placeholder="Select or type file set">
+        on-select="updateCurrentNodeSet()"
+        theme="select2"
+        class="ui-select-drop">
+         <ui-select-match placeholder="Select a file set">
             <span ng-bind="$select.selected.name"></span>
          </ui-select-match>
-        <ui-select-choices repeat="nodeset in (nodesetList | filter: $select.search)">
+        <ui-select-choices
+          repeat="nodeset in (nodesetList | filter: $select.search)
+          track by $index">
           <span ng-bind="nodeset.name"></span>
         </ui-select-choices>
 	    </ui-select>
@@ -66,8 +72,10 @@
       <ui-select
         append-to-body="true"
         ng-model="selectedNodeRelationship.select"
-        on-select="updateCurrentNodeRelationship()">
-        <ui-select-match placeholder="Select or type file mapping">
+        on-select="updateCurrentNodeRelationship()"
+        theme="select2"
+        class="ui-select-drop">
+        <ui-select-match placeholder="Select a file mapping">
           <span ng-bind="$select.selected.name"></span>
         </ui-select-match>
         <ui-select-choices repeat="nodeRelationship in (nodeRelationshipList | filter: $select.search)">
