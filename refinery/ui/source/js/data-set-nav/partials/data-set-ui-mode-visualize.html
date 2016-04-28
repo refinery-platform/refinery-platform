@@ -5,7 +5,7 @@
     on-select="updateCurrentNodeSet()"
     theme="select2"
     class="ui-select-drop">
-    <ui-select-match placeholder="Select or type file set">
+    <ui-select-match placeholder="Select a file set">
         <span ng-bind="$select.selected.name"></span>
     </ui-select-match>
     <ui-select-choices repeat="nodeset in (nodesetList | filter: $select.search)">
@@ -30,7 +30,7 @@
     ng-model="selectedSpecies.select"
     theme="select2"
     class="ui-select-drop">
-    <ui-select-match placeholder="Select or type species">
+    <ui-select-match placeholder="Select a species">
         <span ng-bind="$select.selected.name"></span>
     </ui-select-match>
     <ui-select-choices repeat="species in (speciesList | filter: $select.search)">
