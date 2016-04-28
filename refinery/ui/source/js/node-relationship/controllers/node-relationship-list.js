@@ -31,7 +31,6 @@ function NodeRelationshipListCtrl (
   $scope.$onRootScope(
     'nodeRelationshipChangedEvent',
     function (event, currentNodeRelationship, index) {
-    //  $scope.nodeRelationshipIndex = index;
       $log.debug($scope.selectedNodeRelationship);
       $log.debug(index);
       $log.debug($scope.nodeRelationshipList);
@@ -43,7 +42,7 @@ function NodeRelationshipListCtrl (
     $log.debug('Successfully deleted ' + response.name);
 
     $scope.currentNodeRelationship = null;
-    $scope.nodeRelationshipChangedEvent = 0;
+    $scope.selectedNodeRelationship.select = $scope.nodeRelationshipList[0];
     $scope.loadNodeRelationshipList(
       $window.externalStudyUuid, $window.externalAssayUuid
     );
