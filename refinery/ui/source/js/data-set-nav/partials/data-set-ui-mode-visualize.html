@@ -19,17 +19,21 @@
   		<i class="fa fa-refresh fa-spin" style="padding: 2px"></i> Detecting
       species ...
   	</p>
-    <!-- ngOptions for binding non-strings. -->
-	<select
-    class="form-control"
+	<ui-select
     ng-show="speciesList.length > 1"
-    ng-model="selectedSpecies"
-    ng-options="species as species.name for species in speciesList">
-		<option value="" selected disabled>Choose a species</option>
-	</select>
-    <p></p>
+    append-to-body="true"
+    ng-model="selectedSpecies">
+    <ui-select-match placeholder="Select or type species">
+        <span ng-bind="$select.selected.name"></span>
+    </ui-select-match>
+    <ui-select-choices repeat="species in (speciesList | filter: $select.search)">
+        <span ng-bind="species.name"></span>
+    </ui-select-choices>
+	</ui-select>
+    <br>
     <button class="btn btn-warning" ng-click="launchIgv()"
       ng-disabled="speciesList.length == 0" style="width: 100%"><i
       class="fa fa-bar-chart-o"></i>&nbsp;&nbsp;Launch IGV</button>
   </div>
 </div>
+
