@@ -4,7 +4,6 @@ import tempfile
 from xml.dom.minidom import Document
 
 from django.shortcuts import redirect
-from django.contrib.sites.models import Site
 
 from annotation_server.models import taxon_id_to_genome_build, \
     genome_build_to_species
@@ -123,7 +122,7 @@ def createIGVsession(genome, uuids, is_file_uuid=False):
     # delete temp file
     os.unlink(tempfilename.name)
     # Url for session file
-    fs_url = filestore_item.get_full_url()
+    fs_url = filestore_item.get_datafile_url(full_url=True)
     # IGV url for automatic launch of Java Webstart
     igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php" \
               "?sessionURL=" + fs_url
@@ -174,14 +173,6 @@ def igv_multi_species(solr_results, solr_annot=None):
     # 4. generate igv files for each species, including phenotype data + paths
     # generated from uuid's
 
-    try:
-        current_site = Site.objects.get_current()
-    except Site.DoesNotExist:
-        logger.error(
-            "Cannot provide a full URL: no sites configured or "
-            "SITE_ID is not set correctly")
-        return None
-
     ui_results = {'species_count': unique_species_num, 'species': {}}
 
     for k, v in unique_species.items():
@@ -190,8 +181,6 @@ def igv_multi_species(solr_results, solr_annot=None):
                                         unique_annot[k]['solr'])
         else:
             sample_file = addIGVSamples(fields, unique_species[k]['solr'])
-
-        sample_file = 'http://{}{}'.format(current_site.domain, sample_file)
 
         logger.debug('Sample File: ' + sample_file)
 
@@ -376,14 +365,17 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
     temp_name = temp_name[len(temp_name) - 1] + '.xml'
 
     # rename file by way of file_store
-    rename(filestore_uuid, temp_name)
+    filestore_item = rename(filestore_uuid, temp_name)
 
     # delete temp file
     os.unlink(tempfilename.name)
 
+    # Url for session file
+    sessionfile_url = filestore_item.get_datafile_url(full_url=True)
+
     # IGV url for automatic launch of Java Webstart
     igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php" \
-              "?sessionURL=" + samp_file
+              "?sessionURL=" + sessionfile_url
 
     return igv_url
 
@@ -470,7 +462,7 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
     curr_fs = FileStoreItem.objects.get(uuid=filestore_uuid)
 
     # full path to selected UUID File
-    curr_url = curr_fs.get_full_url()
+    curr_url = curr_fs.get_datafile_url(full_url=True)
 
     # delete temp file
     os.unlink(tempsampname.name)
@@ -502,7 +494,7 @@ def get_file_name(nodeuuid, sampFile=None, is_file_uuid=False):
     temp_name = temp_name[len(temp_name) - 1]
 
     # full path to selected UUID File
-    temp_url = temp_fs.get_full_url()
+    temp_url = temp_fs.get_datafile_url(full_url=True)
 
     # IGV SEG FILE HACK
     if sampFile:

@@ -222,6 +222,11 @@ function NodeRelationshipListCtrl (
       $log.info('Modal dismissed at: ' + new Date());
     });
   };
+
+  // initialize list of node relationships
+  $scope.loadNodeRelationshipList(
+    $window.externalStudyUuid, $window.externalAssayUuid
+  );
 }
 
 angular
