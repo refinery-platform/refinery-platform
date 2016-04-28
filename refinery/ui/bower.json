@@ -43,7 +43,8 @@
     "spectrum": "1.7.0",
     "tipsy": "0.1.7",
     "d3-list-graph": "flekschas/d3-list-graph#v0.16.0",
-    "angular-drag-and-drop-lists": "^1.4.0"
+    "angular-drag-and-drop-lists": "^1.4.0",
+    "ui-select": "angular-ui-select#^0.16.1"
   },
   "resolutions": {
     "d3": "~3.5.6"
