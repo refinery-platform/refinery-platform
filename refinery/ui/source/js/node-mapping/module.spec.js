@@ -38,5 +38,9 @@ describe('RefineryNodeMapping.module: unit tests', function () {
     it('should have "ui.router" as a dependency', function () {
       expect(hasModule('ui.router')).toEqual(true);
     });
+
+    it('should have "ui.select" as a dependency', function () {
+      expect(hasModule('ui.select')).toEqual(true);
+    });
   });
 });
