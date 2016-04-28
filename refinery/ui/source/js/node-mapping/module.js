@@ -9,5 +9,4 @@ angular
     // Third-party
     'ui.bootstrap',
     'ui.router',
-    'ui.select2'
   ]);

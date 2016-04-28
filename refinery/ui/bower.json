@@ -22,7 +22,6 @@
     "angular-ui-grid": "3.0.7",
     "angular-ui-router": "0.2.18",
     "angular-ui-scroll": "flekschas/ui-scroll#visible-items",
-    "angular-ui-select2": "0.0.5",
     "bootstrap": "3.3.6",
     "c3": "0.4.11-rc4",
     "d3": "3.5.6",
