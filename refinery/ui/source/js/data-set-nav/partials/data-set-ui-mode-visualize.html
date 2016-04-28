@@ -29,7 +29,7 @@
     append-to-body="true"
     ng-model="selectedSpecies.select"
     theme="select2"
-    class="ui-select-drop">
+    class="ui-select-drop p-b-1-2">
     <ui-select-match placeholder="Select a species">
         {{$select.selected.name}}
     </ui-select-match>
@@ -38,7 +38,6 @@
         {{species.name}}
     </ui-select-choices>
 	</ui-select>
-    <br>
     <button
       class="btn btn-warning ui-select-drop"
       ng-click="launchIgv()"
