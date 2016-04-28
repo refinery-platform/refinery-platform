@@ -12,6 +12,17 @@ function NodeSetListApiCtrl ($log, $scope, $rootScope, $window, NodeSetList) {
     }
   };
 
+  // helper method to refresh the selectedNodeSet from api refreshed nodesetList
+  var refreshSelectedNodeSet = function () {
+    for (var i = 0; i < $scope.nodesetList.length; i++) {
+      if ($scope.selectedNodeset.select &&
+        $scope.nodesetList[i].uuid === $scope.selectedNodeset.select.uuid) {
+        $scope.selectedNodeset.select = $scope.nodesetList[i];
+        break;
+      }
+    }
+  };
+
   $scope.getCurrentNodeSet = function () {
     NodeSetList.get({
       study__uuid: $window.externalStudyUuid,
@@ -19,13 +30,7 @@ function NodeSetListApiCtrl ($log, $scope, $rootScope, $window, NodeSetList) {
     }).$promise
       .then(function (data) {
         angular.copy(data.objects, $scope.nodesetList);
-        for (var i = 0; i < $scope.nodesetList.length; i++) {
-          if ($scope.selectedNodeset.select &&
-            $scope.nodesetList[i].uuid === $scope.selectedNodeset.select.uuid) {
-            $scope.selectedNodeset.select = $scope.nodesetList[i];
-            break;
-          }
-        }
+        refreshSelectedNodeSet();
         $scope.updateCurrentNodeSet();
       })
       .catch(function (error) {
