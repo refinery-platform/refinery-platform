@@ -1,13 +1,15 @@
 <div ng-controller="WorkflowListApiCtrl">
-  <select
-    class="form-control"
-    ng-model="workflowIndex"
-    ng-change="updateCurrentWorkflow()">
-    <option value="">Select a workflow</option>
-    <option ng-repeat="workflow in workflowList" value="{{$index}}">
-      {{workflow.name}}
-    </option>
-  </select>
+  <ui-select
+    append-to-body="true"
+    ng-model="selectedWorkflow.select"
+    on-select="updateCurrentWorkflow()">
+    <ui-select-match placeholder="Select or type workflow">
+      <span ng-bind="$select.selected.name"></span>
+    </ui-select-match>
+    <ui-select-choices repeat="workflow in (workflowList | filter: $select.search)">
+      <span ng-bind="workflow.name"></span>
+    </ui-select-choices>
+	</ui-select>
 
   <div ng-show="currentWorkflow.isAvailable()">
 
