@@ -20,7 +20,8 @@
   		<div class="alert alert-{{ messageType }}">{{message}}</div>
   	</div>
   	<p ng-if="isLoadingSpecies">
-  		<i class="fa fa-refresh fa-spin" style="padding: 2px"></i> Detecting
+  		<i class="fa fa-refresh fa-spin p-a-1-5"></i>
+      Detecting
       species ...
   	</p>
 	<ui-select
@@ -37,8 +38,8 @@
     </ui-select-choices>
 	</ui-select>
     <br>
-    <button class="btn btn-warning" ng-click="launchIgv()"
-      ng-disabled="speciesList.length == 0" style="width: 100%"><i
+    <button class="btn btn-warning ui-select-drop" ng-click="launchIgv()"
+      ng-disabled="speciesList.length == 0"><i
       class="fa fa-bar-chart-o"></i>&nbsp;&nbsp;Launch IGV</button>
   </div>
 </div>
