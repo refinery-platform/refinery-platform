@@ -42,15 +42,18 @@
     </div>
 
     <div ng-controller="NodeSetListApiCtrl" ng-if="currentWorkflow.isSingleInput()">
-      <select
+      <ui-select
         class="form-control"
-        ng-model="nodesetIndex"
-        ng-change="updateCurrentNodeSet()">
-        <option value="">Choose a file set</option>  <!-- required for showing placeholder text -->
-        <option ng-repeat="nodeset in nodesetList" value="{{$index}}">
-          {{nodeset.name}}
-        </option>
-      </select>
+        ng-model="selectedNodeset.select"
+        on-select="updateCurrentNodeSet()">
+         <ui-select-match placeholder="Select or type file set">
+            <span ng-bind="$select.selected.name"></span>
+         </ui-select-match>
+        <ui-select-choices repeat="nodeset in (nodesetList | filter: $select.search)">
+          <span ng-bind="nodeset.name"></span>
+        </ui-select-choices>
+	    </ui-select>
+  <div>
       <div>
         <p></p>
       </div>
