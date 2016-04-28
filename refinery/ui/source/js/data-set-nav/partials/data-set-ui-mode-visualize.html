@@ -6,10 +6,11 @@
     theme="select2"
     class="ui-select-drop">
     <ui-select-match placeholder="Select a file set">
-        <span ng-bind="$select.selected.name"></span>
+        {{$select.selected.name}}
     </ui-select-match>
-    <ui-select-choices repeat="nodeset in (nodesetList | filter: $select.search)">
-        <span ng-bind="nodeset.name"></span>
+    <ui-select-choices
+      repeat="nodeset in (nodesetList | filter: $select.search)">
+        {{nodeset.name}}
     </ui-select-choices>
 	</ui-select>
   <div>
@@ -21,8 +22,7 @@
   	</div>
   	<p ng-if="isLoadingSpecies">
   		<i class="fa fa-refresh fa-spin p-a-1-5"></i>
-      Detecting
-      species ...
+      Detecting species ...
   	</p>
 	<ui-select
     ng-show="speciesList.length > 1"
@@ -31,16 +31,21 @@
     theme="select2"
     class="ui-select-drop">
     <ui-select-match placeholder="Select a species">
-        <span ng-bind="$select.selected.name"></span>
+        {{$select.selected.name}}
     </ui-select-match>
-    <ui-select-choices repeat="species in (speciesList | filter: $select.search)">
-        <span ng-bind="species.name"></span>
+    <ui-select-choices
+      repeat="species in (speciesList | filter: $select.search)">
+        {{species.name}}
     </ui-select-choices>
 	</ui-select>
     <br>
-    <button class="btn btn-warning ui-select-drop" ng-click="launchIgv()"
-      ng-disabled="speciesList.length == 0"><i
-      class="fa fa-bar-chart-o"></i>&nbsp;&nbsp;Launch IGV</button>
+    <button
+      class="btn btn-warning ui-select-drop"
+      ng-click="launchIgv()"
+      ng-disabled="speciesList.length == 0">
+      <i class="fa fa-bar-chart-o"></i>
+      &nbsp;&nbsp;Launch IGV
+    </button>
   </div>
 </div>
 
