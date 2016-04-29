@@ -1,4 +1,4 @@
 'use strict';
 
 angular
-  .module('refineryNodeRelationship', ['ngResource']);
+  .module('refineryNodeRelationship', ['ngResource', 'ui.select', 'ngSanitize']);

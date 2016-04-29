@@ -44,7 +44,8 @@
         "select2/select2.css",
         "spectrum/spectrum.css",
         "tipsy/src/stylesheets/tipsy.css",
-        "d3-list-graph/dist/listGraph.min.css"
+        "d3-list-graph/dist/listGraph.min.css",
+        "ui-select/dist/select.min.css"
       ],
       "images": [
         "jquery-file-upload/img/loading.gif",
@@ -60,7 +61,7 @@
         "angular/angular.min.js",
         "select2/select2.min.js",
         "bootstrap/dist/js/bootstrap.min.js",
-        "angular-ui-select2/dist/select2.min.js",
+        "ui-select/dist/select.min.js",
         "angular-animate/angular-animate.min.js",
         "angular-bootstrap/ui-bootstrap-tpls.min.js",
         "angular-bootstrap/ui-bootstrap.min.js",
@@ -101,7 +102,6 @@
         "angular-animate/angular-animate.min.js.map",
         "angular-resource/angular-resource.min.js.map",
         "angular-sanitize/angular-sanitize.min.js.map",
-        "angular-ui-select2/release/select2.min.js.map",
         "fontawesome/css/font-awesome.css.map",
         "jquery/dist/jquery.min.map",
         "d3-list-graph/dist/d3.layout.listGraph.min.js.map",

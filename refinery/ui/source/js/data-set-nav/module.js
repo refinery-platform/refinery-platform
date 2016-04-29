@@ -1,4 +1,4 @@
 'use strict';
 
 angular
-  .module('refineryDataSetNav', []);
+  .module('refineryDataSetNav', ['ui.select', 'ngSanitize']);
