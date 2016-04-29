@@ -64,11 +64,23 @@ def get_full_url(filestore_item):
         current_site = Site.objects.get_current()
     except Site.DoesNotExist:
         logger.error(
-            "Cannot provide a full URL: no sites configured or "
+            "Cannot provide a full URL: no Sites configured or "
             "SITE_ID is not set correctly")
         return None
-    return 'http://{}{}'.format(current_site.domain,
-                                filestore_item.datafile.url)
+
+    if filestore_item.is_local():
+        return 'http://{}{}'.format(current_site.domain,
+                                    filestore_item.datafile.url)
+    else:
+        # data file doesn't exist on disk
+        if os.path.isabs(filestore_item.source):
+            # source is a file system path
+            logger.error("File not found at '%s'",
+                         filestore_item.datafile.name)
+            return None
+        else:
+            # source is a URL
+            return filestore_item.source
 
 
 def createIGVsession(genome, uuids, is_file_uuid=False):
