@@ -697,8 +697,6 @@ module.exports = function (grunt) {
       vendorAssets: {
         files: [
           {
-            './bower_components/angular-ui-select2/dist/select2.min.js':
-            ['./bower_components/angular-ui-select2/src/select2.js']
           }
         ]
       }

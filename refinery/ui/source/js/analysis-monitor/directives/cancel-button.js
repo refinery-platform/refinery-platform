@@ -1,7 +1,7 @@
 'use strict';
 
 
-function rpAnalysisMonitorCancelConfirm (settings) {
+function rpAnalysisMonitorCancelConfirm (bootbox) {
   return {
     controller: 'AnalysisMonitorCtrl',
     link: function (scope, element, attr) {
@@ -9,7 +9,7 @@ function rpAnalysisMonitorCancelConfirm (settings) {
         ' cancel this analysis?</p>';
       var clickAction = attr.confirmedClick;
       element.bind('click', function () {
-        settings.bootbox.confirm(msg, function (result) {
+        bootbox.confirm(msg, function (result) {
           if (result) {
             scope.$eval(clickAction);
           }
@@ -22,6 +22,6 @@ function rpAnalysisMonitorCancelConfirm (settings) {
 angular
   .module('refineryAnalysisMonitor')
   .directive('rpAnalysisMonitorCancelConfirm', [
-    'settings',
+    'bootbox',
     rpAnalysisMonitorCancelConfirm
   ]);

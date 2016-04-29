@@ -172,7 +172,7 @@
                   <div ng-repeat="(stage, value) in AMCtrl.analysesDetail[analysis.uuid]">
                     <div ng-if="!(stage=='cancelingAnalyses' || stage=='overall')">
                       <li class="analysisRunningListItem">
-                        {{ stage }}
+                        {{ stage | camelCaseToTitle}}
                         <span refinery-tooltip
                               refinery-tooltip-container="body"
                               refinery-tooltip-placement="bottom"

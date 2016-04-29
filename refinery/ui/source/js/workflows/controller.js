@@ -1,8 +1,11 @@
 'use strict';
 
 function WorkflowListApiCtrl (
-  $scope, $rootScope, $log, workflowService, workflow
+  $scope, $rootScope, workflowService, workflow
 ) {
+  $scope.workflowList = [];
+  $scope.selectedWorkflow = { select: $scope.workflowList[0] };
+
   $scope.getWorkflowList = function () {
     var Workflows = workflowService.get(function () {
       $scope.workflowList = Workflows.objects;
@@ -14,7 +17,7 @@ function WorkflowListApiCtrl (
   $scope.currentWorkflow = workflow;
 
   $scope.updateCurrentWorkflow = function () {
-    workflow.set($scope.workflowList[$scope.workflowIndex]);
+    workflow.set($scope.selectedWorkflow.select);
 
     if (workflow.isAvailable()) {
       $rootScope.$emit('workflowChangedEvent', workflow.get());
@@ -27,7 +30,6 @@ angular
   .controller('WorkflowListApiCtrl', [
     '$scope',
     '$rootScope',
-    '$log',
     'workflowService',
     'workflow',
     WorkflowListApiCtrl

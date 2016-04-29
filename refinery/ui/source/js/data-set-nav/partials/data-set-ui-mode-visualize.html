@@ -1,26 +1,47 @@
 <div ng-controller="NodeSetListApiCtrl">
-  <select ui-select2 ng-model="nodesetIndex" ng-change="updateCurrentNodeSet()" style="width:100%" data-placeholder="Choose a file set">
-    <option value=""></option>  <!-- required for showing placeholder text -->
-    <option ng-repeat="nodeset in nodesetList" value="{{$index}}">{{nodeset.name}}</option>
-  </select>
-  <div>
-    <p></p>
-  </div>
+  <ui-select
+    append-to-body="true"
+    ng-model="selectedNodeset.select"
+    on-select="updateCurrentNodeSet()"
+    theme="select2"
+    class="ui-select-drop p-b-1-2">
+    <ui-select-match placeholder="Select a file set">
+        {{$select.selected.name}}
+    </ui-select-match>
+    <ui-select-choices
+      repeat="nodeset in (nodesetList | filter: $select.search)">
+        {{nodeset.name}}
+    </ui-select-choices>
+	</ui-select>
   <div ng-controller="IgvCtrl">
   	<div ng-if="message">
   		<div class="alert alert-{{ messageType }}">{{message}}</div>
   	</div>
   	<p ng-if="isLoadingSpecies">
-  		<i class="fa fa-refresh fa-spin" style="padding: 2px"></i> Detecting
-      species ...
+  		<i class="fa fa-refresh fa-spin p-a-1-5"></i>
+      Detecting species ...
   	</p>
-	<select ui-select2 ng-show="speciesList.length > 1" ng-model="speciesIndex" style="width:100%" data-placeholder="Choose a species">
-		<option value=""></option>  <!-- required for showing placeholder text -->
-		<option ng-repeat="species in speciesList" value="{{$index}}">{{species.name}}</option>
-	</select>
-    <p></p>
-    <button class="btn btn-warning" ng-click="launchIgv()"
-      ng-disabled="speciesIndex < 0" style="width: 100%"><i
-      class="fa fa-bar-chart-o"></i>&nbsp;&nbsp;Launch IGV</button>
+	<ui-select
+    ng-show="speciesList.length > 1"
+    append-to-body="true"
+    ng-model="selectedSpecies.select"
+    theme="select2"
+    class="ui-select-drop p-b-1-2">
+    <ui-select-match placeholder="Select a species">
+        {{$select.selected.name}}
+    </ui-select-match>
+    <ui-select-choices
+      repeat="species in (speciesList | filter: $select.search)">
+        {{species.name}}
+    </ui-select-choices>
+	</ui-select>
+    <button
+      class="btn btn-warning ui-select-drop"
+      ng-click="launchIgv()"
+      ng-disabled="speciesList.length == 0">
+      <i class="fa fa-bar-chart-o"></i>
+      &nbsp;&nbsp;Launch IGV
+    </button>
   </div>
 </div>
+
