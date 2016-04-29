@@ -117,7 +117,7 @@ def main():
             'ImageId': 'ami-d05e75b8',
             'InstanceType': 'm3.medium',
             'UserData': functions.base64(user_data_script),
-            'KeyName': 'id_rsa',
+            'KeyName': 'ngehlenborg-test_rsa',
             'IamInstanceProfile': functions.ref('WebInstanceProfile'),
             'Tags': instance_tags,
         })
