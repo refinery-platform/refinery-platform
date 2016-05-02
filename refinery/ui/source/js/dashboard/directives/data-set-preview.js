@@ -131,7 +131,7 @@ function refineryDataSetPreview () {
     'totalFileSize', {
       enumerable: true,
       get: function () {
-        if (this.dataSetDetails.file_size) {
+        if (this.dataSetDetails && this.dataSetDetails.file_size) {
           return this.filesize(this.dataSetDetails.file_size);
         }
         return 'Unknown';
