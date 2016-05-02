@@ -337,13 +337,13 @@
             <!-- The global progress bar -->
             <div
               class="progress"
-              ng-class="{ 'progress-striped active': !allUploaded }"
+              ng-class="{ 'progress-striped': !allUploaded, 'active': uploadInProgress }"
               file-upload-progress="progress()">
               <div
                 class="progress-bar"
                 ng-class="{ 'progress-bar-success': allUploaded }"
-                ng-style="{ 'width': num + '%' }">
-                <span ng-show="num > 0">{{ num + '%' }}</span>
+                ng-style="{ 'width': globalReadableProgress(num) + '%' }">
+                <span ng-show="num > 0">{{ globalReadableProgress(num) + '%' }}</span>
               </div>
             </div>
             <!-- The extended global progress state -->

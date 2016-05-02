@@ -12,7 +12,11 @@ function RefineryFileUploadCtrl (
   var csrf = '';
   var formData = [];
   var md5 = {};
+  var totalNumFilesQueued = 0;
+  var totalNumFilesUploaded = 0;
+  var globalProgress = 0;
 
+  $scope.uploadInProgress = true;
   $scope.loadingFiles = false;
 
   if ($('input[name=\'csrfmiddlewaretoken\']')[0]) {
@@ -39,9 +43,9 @@ function RefineryFileUploadCtrl (
         var reader = new FileReader();
         // We have to disable eslint here because this is a circular dependency
         reader.onload = onload;   // eslint-disable-line no-use-before-define
-        var start = currentChunk * options.chunkSize;
-        var end = Math.min(start + options.chunkSize, file.size);
-        reader.readAsArrayBuffer(slice.call(file, start, end));
+        var startIndex = currentChunk * options.chunkSize;
+        var end = Math.min(startIndex + options.chunkSize, file.size);
+        reader.readAsArrayBuffer(slice.call(file, startIndex, end));
       }
 
       function onload (e) {
@@ -73,18 +77,28 @@ function RefineryFileUploadCtrl (
       },
       dataType: 'json',
       success: function () {
+        totalNumFilesUploaded++;
+        globalProgress = totalNumFilesUploaded / totalNumFilesQueued;
+
         file.uploaded = true;
-        // The number of active uploads decreases as file uploads finish. The
-        // last active upload is _1_.
-        if ($element.fileupload('active') === 1) {
-          $scope.allUploaded = true;
-          $timeout(function () {
-            // Fritz: I am not sure why we need to wait 100ms instead of 0ms
-            // (i.e. one digestion) but this solves the issues with the last
-            // progress bar not being changed into success mode.
-            $scope.$apply();
-          }, 100);
+
+        if ($element.fileupload('active') > 0) {
+          $scope.uploadInProgress = true;
+        } else {
+          $scope.uploadInProgress = false;
         }
+
+        if (totalNumFilesUploaded === totalNumFilesQueued) {
+          $scope.allUploaded = true;
+          $scope.uploadInProgress = false;
+        }
+
+        $timeout(function () {
+          // Fritz: I am not sure why we need to wait 100ms instead of 0ms
+          // (i.e. one digestion) but this solves the issues with the last
+          // progress bar not being changed into success mode.
+          $scope.$apply();
+        }, 100);
       },
       error: function (jqXHR, textStatus, errorThrown) {
         $log.error('Error uploading file:', textStatus, '-', errorThrown);
@@ -113,12 +127,20 @@ function RefineryFileUploadCtrl (
     formData.splice(1);  // clear upload_id for the next upload
   };
 
+  $element.on('fileuploadadd', function add () {
+    totalNumFilesQueued++;
+  });
+
+  $scope.globalReadableProgress = function (progress) {
+    return Math.round(progress * globalProgress);
+  };
+
   $scope.options = {
-    formData: getFormData,
+    always: uploadAlways,
     chunkdone: chunkDone,
     chunkfail: chunkFail,
     done: uploadDone,
-    always: uploadAlways
+    formData: getFormData
   };
 }
 
