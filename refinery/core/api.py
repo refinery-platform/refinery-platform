@@ -427,6 +427,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
     owner = fields.CharField(attribute='owner', null=True)
     is_shared = fields.BooleanField(attribute='is_shared', null=True)
+    file_size = fields.IntegerField(attribute='file_size')
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, DataSet)
