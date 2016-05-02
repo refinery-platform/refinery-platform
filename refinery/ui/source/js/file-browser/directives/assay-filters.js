@@ -11,16 +11,35 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
       analysisFilter: '@'
     },
     link: function (scope) {
+      var toggleUnselectedFields = function (fieldList, internalName) {
+        console.log(fieldList);
+        var selectedValues = scope.FBCtrl.selectedFieldList[internalName];
+        angular.forEach(fieldList, function (value, key) {
+          if (selectedValues.indexOf(key) === -1) {
+            var keyElement = angular.element(
+            document.querySelector('#attribute-filter-' + key));
+            keyElement.toggle();
+          }
+        });
+      };
+
       // ng-click event for attribute filter panels
-      scope.dropAttributePanel = function (e, attributeName) {
+      scope.dropAttributePanel = function (e, attributeName, value) {
         e.preventDefault();
         var escapeAttributeName = attributeName.replace(' ', '-');
         var attribute = angular.element(
           document.querySelector('#' + escapeAttributeName)
         );
-        if (attribute.hasClass('in')) {
+        var selectedKeys = Object.keys(scope.FBCtrl.selectedFieldList);
+        var selectedAttributeIndex = selectedKeys.indexOf(value.internal_name);
+
+        if (attribute.hasClass('in') && selectedAttributeIndex === -1) {
+          // minimize the panel if it does not have a selected field
           attribute.removeClass('in');
+        } else if (attribute.hasClass('in')) {
+          toggleUnselectedFields(value.facetObj, value.internal_name);
         } else {
+          // expand the panel
           attribute.addClass('in');
         }
       };
