@@ -12,6 +12,7 @@ function refineryDataSetPreview () {
     authService,
     studyService,
     assayService,
+    dataSetService,
     sharingService,
     citationService,
     analysisService,
@@ -28,6 +29,7 @@ function refineryDataSetPreview () {
     this.userService = userService;
     this.studyService = studyService;
     this.assayService = assayService;
+    this.dataSetService = dataSetService;
     this.sharingService = sharingService;
     this.citationService = citationService;
     this.analysisService = analysisService;
@@ -66,8 +68,9 @@ function refineryDataSetPreview () {
         var ds = this.dashboardDataSetPreviewService.dataSet;
         if (ds && ds.uuid && this._currentDataset !== ds.id) {
           this._currentDataset = ds.id;
-          this.loadData(ds);
-          this.getUser(ds.owner);
+          this.loadData(ds).then(function () {
+            this.getUser(this.dataSetDetails.owner);
+          }.bind(this));
         }
         return ds;
       }
@@ -157,6 +160,10 @@ function refineryDataSetPreview () {
    * @return  {Object}        Angular object returning `true` or an error.
    */
   DataSetPreviewCtrl.prototype.getUser = function (uuid) {
+    if (!uuid) {
+      return this.$q.reject('No UUID');
+    }
+
     return this.userService.get(uuid).then(function (user) {
       this.userName = user.fullName ? user.fullName : user.userName;
     }.bind(this));
@@ -188,6 +195,17 @@ function refineryDataSetPreview () {
       .then(function (data) {
         this.numAssays = data.meta.total_count;
         this.assays = data.objects;
+      }.bind(this));
+  };
+
+  DataSetPreviewCtrl.prototype.getDataSetDetails = function (uuid) {
+    return this.dataSetService
+      .get({
+        uuid: uuid
+      })
+      .$promise
+      .then(function (data) {
+        this.dataSetDetails = data.objects[0];
       }.bind(this));
   };
 
@@ -278,6 +296,7 @@ function refineryDataSetPreview () {
     this.permissionsLoading = true;
     this.userName = undefined;
 
+    var dataSetDetails = this.getDataSetDetails(dataset.uuid);
     var studies = this.getStudies(dataset.uuid);
     var assays = this.getAssay(dataset.uuid);
     var analyses = this.getAnalysis(dataset.uuid);
@@ -291,20 +310,20 @@ function refineryDataSetPreview () {
         return false;
       }.bind(this));
 
-    this
+    permissions
+      .finally(function () {
+        this.permissionsLoading = false;
+      }.bind(this));
+
+    return this
       .$q
-      .all([studies, analyses, assays])
+      .all([dataSetDetails, studies, analyses, assays])
       .then(function () {
         this.loading = false;
       }.bind(this))
       .catch(function () {
         // Should disable an error if both failed
         this.loading = false;
-      }.bind(this));
-
-    permissions
-      .finally(function () {
-        this.permissionsLoading = false;
       }.bind(this));
   };
 
@@ -402,6 +421,7 @@ function refineryDataSetPreview () {
       'authService',
       'studyService',
       'assayService',
+      'dataSetService',
       'sharingService',
       'citationService',
       'analysisService',
