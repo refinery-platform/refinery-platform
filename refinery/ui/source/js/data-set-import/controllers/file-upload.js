@@ -1,8 +1,10 @@
 'use strict';
 
 function RefineryFileUploadCtrl (
+  $element,
   $log,
   $scope,
+  $timeout,
   $,
   SparkMD5,
   dataSetImportSettings
@@ -57,6 +59,7 @@ function RefineryFileUploadCtrl (
       return dfd.promise();
     }
   };
+
   var uploadDone = function (e, data) {
     var file = data.files[0];
 
@@ -69,8 +72,19 @@ function RefineryFileUploadCtrl (
         md5: md5[file.name]
       },
       dataType: 'json',
-      success: function (response) {
-        $log.info(response.message);
+      success: function () {
+        file.uploaded = true;
+        // The number of active uploads decreases as file uploads finish. The
+        // last active upload is _1_.
+        if ($element.fileupload('active') === 1) {
+          $scope.allUploaded = true;
+          $timeout(function () {
+            // Fritz: I am not sure why we need to wait 100ms instead of 0ms
+            // (i.e. one digestion) but this solves the issues with the last
+            // progress bar not being changed into success mode.
+            $scope.$apply();
+          }, 100);
+        }
       },
       error: function (jqXHR, textStatus, errorThrown) {
         $log.error('Error uploading file:', textStatus, '-', errorThrown);
@@ -111,8 +125,10 @@ function RefineryFileUploadCtrl (
 angular
   .module('refineryDataSetImport')
   .controller('RefineryFileUploadCtrl', [
+    '$element',
     '$log',
     '$scope',
+    '$timeout',
     '$',
     'SparkMD5',
     'dataSetImportSettings',

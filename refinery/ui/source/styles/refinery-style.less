@@ -1563,3 +1563,31 @@ body.is-screenshot-ready {
     border-bottom-color: #e5e5e5 !important;
   }
 }
+
+.fa.success {
+  color: @green;
+}
+
+.bordered-row {
+  padding: 0.5em 0;
+  border-top: 1px solid @gray-lightest;
+
+  &:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  &:last-child {
+    padding-bottom: 0;
+  }
+}
+
+.row.v-centered-row > div {
+  height: 2.5em;
+}
+
+.v-center {
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
