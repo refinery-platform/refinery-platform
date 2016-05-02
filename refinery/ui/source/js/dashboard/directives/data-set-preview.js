@@ -67,6 +67,7 @@ function refineryDataSetPreview () {
         if (ds && ds.uuid && this._currentDataset !== ds.id) {
           this._currentDataset = ds.id;
           this.loadData(ds);
+          this.getUser(ds.owner);
         }
         return ds;
       }
