@@ -62,6 +62,7 @@
         <p>{{ preview.studies.description | cut:true:preview.descLength }}</p>
         <button
           class="is-mirrorable icon-only"
+          ng-if="preview.studies.description.length > preview.settings.dashboard.preview.defaultLengthDescription"
           ng-click="preview.toggleDescription()"
           ng-class="{'is-mirrored': preview.descLength > preview.studies.description.length }">
           <i class="fa fa-chevron-right"></i>
@@ -215,8 +216,9 @@
               <p>{{ publication.citation.abstract | cut:true:publication.citation.abstractLength }}</p>
               <button
                 class="is-mirrorable icon-only"
+                ng-if="publication.citation.abstract.length > preview.settings.dashboard.preview.defaultLengthAbstract"
                 ng-click="preview.toggleAbstract(publication.citation)"
-                ng-class="{'is-mirrored': publication.citation.abstractLength > preview.abstractLength}">
+                ng-class="{'is-mirrored': publication.citation.abstractLength > preview.settings.dashboard.preview.defaultLengthAbstract}">
                 <i class="fa fa-chevron-right"></i>
               </button>
             </span>
