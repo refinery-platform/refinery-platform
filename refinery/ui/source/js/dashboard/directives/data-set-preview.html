@@ -13,28 +13,6 @@
           <i class="fa fa-angle-double-left"></i>
           Close
         </button>
-        <div class="btn-group dropdown" ng-if="preview.user.isAuthenticated">
-          <button
-            type="button"
-            class="btn dropdown-toggle"
-            data-toggle="dropdown"
-            aria-haspopup="true"
-            aria-expanded="true">
-            <i class="fa fa-pencil-square-o"></i> Edit <span
-            class="caret"></span>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-right">
-            <li>
-              <a
-                class="clickable spinnable"
-                ng-class="{'disabled':!preview.permissions}"
-                ng-click="preview.openPermissionEditor()">
-                <div class="refinery-spinner" ng-if="preview.permissionsLoading !== false"></div>
-                Permissions
-              </a>
-            </li>
-          </ul>
-        </div>
       </div>
       <div class="floatbox-max-left">
         <a
@@ -42,6 +20,19 @@
           ng-href="data_sets/{{ preview.dataSet.uuid }}">
           <i class="fa fa-table"></i>
           View content in File Browser
+        </a>
+        <span class="separator">&middot;</span>
+        <a
+          class="btn clickable spinnable"
+          ng-class="{'disabled':!preview.permissions}"
+          ng-click="preview.openPermissionEditor()">
+          <div
+            class="refinery-spinner-bg"
+            ng-if="preview.permissionsLoading !== false">
+            <div class="refinery-spinner"></div>
+          </div>
+          <i class="fa fa-share-square-o"></i>
+          Share
         </a>
       </div>
     </div>
