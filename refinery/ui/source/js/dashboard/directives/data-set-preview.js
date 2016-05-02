@@ -17,7 +17,8 @@ function refineryDataSetPreview () {
     citationService,
     analysisService,
     dashboardDataSetPreviewService,
-    dashboardExpandablePanelService
+    dashboardExpandablePanelService,
+    filesize
   ) {
     this.$log = $log;
     this.$q = $q;
@@ -35,6 +36,7 @@ function refineryDataSetPreview () {
     this.analysisService = analysisService;
     this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
     this.dashboardExpandablePanelService = dashboardExpandablePanelService;
+    this.filesize = filesize;
 
     this.maxBadges = this.settings.dashboard.preview.maxBadges;
     this.infinity = Number.POSITIVE_INFINITY;
@@ -122,6 +124,18 @@ function refineryDataSetPreview () {
       enumerable: true,
       value: {},
       writable: true
+    });
+
+  Object.defineProperty(
+    DataSetPreviewCtrl.prototype,
+    'totalFileSize', {
+      enumerable: true,
+      get: function () {
+        if (this.dataSetDetails.file_size) {
+          return this.filesize(this.dataSetDetails.file_size);
+        }
+        return 'Unknown';
+      }
     });
 
   DataSetPreviewCtrl.prototype.getAnalysis = function (uuid) {
@@ -427,6 +441,7 @@ function refineryDataSetPreview () {
       'analysisService',
       'dashboardDataSetPreviewService',
       'dashboardExpandablePanelService',
+      'filesize',
       DataSetPreviewCtrl],
     controllerAs: 'preview',
     restrict: 'E',
