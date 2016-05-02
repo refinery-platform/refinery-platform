@@ -11,33 +11,33 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
       analysisFilter: '@'
     },
     link: function (scope) {
+      // toggles views for fields when some fields are selected
       var toggleUnselectedFields = function (fieldList, internalName) {
-        console.log(fieldList);
         var selectedValues = scope.FBCtrl.selectedFieldList[internalName];
         angular.forEach(fieldList, function (value, key) {
           if (selectedValues.indexOf(key) === -1) {
-            var keyElement = angular.element(
-            document.querySelector('#attribute-filter-' + key));
-            keyElement.toggle();
+            angular.element(
+            document.querySelector('#attribute-filter-' + key)).toggle();
           }
         });
       };
 
       // ng-click event for attribute filter panels
-      scope.dropAttributePanel = function (e, attributeName, value) {
+      scope.dropAttributePanel = function (e, attributeName, attributeObj) {
         e.preventDefault();
         var escapeAttributeName = attributeName.replace(' ', '-');
         var attribute = angular.element(
           document.querySelector('#' + escapeAttributeName)
         );
-        var selectedKeys = Object.keys(scope.FBCtrl.selectedFieldList);
-        var selectedAttributeIndex = selectedKeys.indexOf(value.internal_name);
 
+        var selectedKeys = Object.keys(scope.FBCtrl.selectedFieldList);
+        var selectedAttributeIndex = selectedKeys.indexOf(attributeObj.internal_name);
         if (attribute.hasClass('in') && selectedAttributeIndex === -1) {
           // minimize the panel if it does not have a selected field
           attribute.removeClass('in');
         } else if (attribute.hasClass('in')) {
-          toggleUnselectedFields(value.facetObj, value.internal_name);
+          // toggles fields if some fields are selected
+          toggleUnselectedFields(attributeObj.facetObj, attributeObj.internal_name);
         } else {
           // expand the panel
           attribute.addClass('in');
