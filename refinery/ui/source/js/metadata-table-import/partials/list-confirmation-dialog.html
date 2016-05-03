@@ -4,7 +4,7 @@
 <div class="modal-body">
   <p>
   	<ul>
-  		<li ng-repeat="item in modal.config.items">{{ item }}</li>
+  		<li ng-repeat="item in modal.config.items track by $index">{{ ::item }}</li>
 	</ul>
   </p>
 </div>
