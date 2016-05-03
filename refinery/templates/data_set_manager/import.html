@@ -346,7 +346,7 @@
                 ng-class="{ 'progress-bar-success': allUploaded }"
                 ng-style="{ 'width': globalReadableProgress(num) + '%' }">
                 <span ng-if="globalReadableProgress(num) > 0 && globalReadableProgress(num) < 100">{{ globalReadableProgress(num) + '%' }}</span>
-                <span ng-if="globalReadableProgress(num) === 100"><strong>All uploads done!</strong></span>
+                <span ng-if="globalReadableProgress(num) >= 100"><strong>All uploads done!</strong></span>
               </div>
             </div>
             <!-- The extended global progress state -->
