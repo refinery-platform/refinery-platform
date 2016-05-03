@@ -154,6 +154,7 @@ def run_analysis(analysis_uuid):
             analysis_status.galaxy_history_progress = percent_complete
             analysis_status.save()
         if percent_complete < 100:
+            analysis_status.set_galaxy_history_state(AnalysisStatus.PROGRESS)
             run_analysis.retry(countdown=RETRY_INTERVAL)
         else:
             analysis_status.set_galaxy_history_state(AnalysisStatus.OK)
