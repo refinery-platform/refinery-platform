@@ -204,6 +204,11 @@ def run_analysis(analysis_uuid):
     galaxy_import.delete()
     galaxy_export.delete()
 
+    # Update file count and file size of the corresponding data set
+    analysis.data_set.file_count = analysis.data_set.get_file_count()
+    analysis.data_set.file_size = analysis.data_set.get_file_size()
+    analysis.data_set.save()
+
 
 def import_analysis_in_galaxy(ret_list, library_id, connection):
     """Take workflow configuration and import files into galaxy

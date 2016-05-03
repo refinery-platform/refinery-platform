@@ -118,14 +118,7 @@ urlpatterns = patterns(
     # url(r"^admin/core/test_data/$", admin.site.admin_view(admin_test_data)),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^djangular/', include('djangular.urls')),
-    url(
-        r'^accounts/password/reset/confirm/' +
-        '(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$',
-        'django.contrib.auth.views.password_reset_confirm',
-        {
-            'post_reset_redirect': '/accounts/login/?next=/'
-        }
-    ),
+    url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^accounts/profile/$',
         'core.views.user_profile',
         name='user_profile'),
