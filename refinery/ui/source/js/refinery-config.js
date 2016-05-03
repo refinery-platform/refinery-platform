@@ -1,7 +1,12 @@
 'use strict';
 
 function refineryAppConfig (
-  $compileProvider, $httpProvider, $logProvider, $urlRouterProvider, settings
+  $compileProvider,
+  $httpProvider,
+  $logProvider,
+  $provide,
+  $urlRouterProvider,
+  settings
 ) {
   /*
    * Force URLs to be caseinsensitive.
@@ -38,6 +43,18 @@ function refineryAppConfig (
    */
   $compileProvider.debugInfoEnabled(settings.djangoApp.debug);
   $httpProvider.useApplyAsync(true);
+
+  // http://stackoverflow.com/q/11252780
+  $provide.decorator('$rootScope', ['$delegate', function ($delegate) {
+    Object.defineProperty($delegate.constructor.prototype, '$onRootScope', {
+      value: function (name, listener) {
+        var unsubscribe = $delegate.$on(name, listener);
+        this.$on('$destroy', unsubscribe);
+      },
+      enumerable: false
+    });
+    return $delegate;
+  }]);
 }
 
 angular
