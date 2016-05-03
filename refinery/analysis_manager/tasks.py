@@ -234,19 +234,18 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
                             connection.libraries.upload_file_from_local_path(
                                 library_id, file_path)[0]['id']
                     except (galaxy.client.ConnectionError, IOError) as exc:
-                        logger.error("Failed adding file '%s' to Galaxy "
-                                     "library '%s': %s",
-                                     curr_file_uuid, library_id, exc)
-                        raise
+                        raise RuntimeError(
+                            "Failed to add file '{}' to Galaxy library '{}': "
+                            "{}".format(curr_file_uuid, library_id, exc))
                     cur_item["id"] = file_id
                 else:
-                    error_msg = "Input file with UUID '{}' is not available"
-                    error_msg = error_msg.format(curr_file_uuid)
-                    raise RuntimeError(error_msg)
+                    raise RuntimeError(
+                        "Input file with UUID '{}' is not available".format(
+                            curr_file_uuid))
             else:
-                error_msg = "Input file with UUID '{}' is not available"
-                error_msg = error_msg.format(curr_file_uuid)
-                raise RuntimeError(error_msg)
+                raise RuntimeError(
+                    "Input file with UUID '{}' is not available".format(
+                        curr_file_uuid))
     return ret_list
 
 
