@@ -1,7 +1,7 @@
 'use strict';
 
 function refineryAppConfig (
-  $httpProvider, $logProvider, $urlRouterProvider, settings
+  $compileProvider, $httpProvider, $logProvider, $urlRouterProvider, settings
 ) {
   /*
    * Force URLs to be caseinsensitive.
@@ -32,11 +32,18 @@ function refineryAppConfig (
    */
   $httpProvider.defaults.xsrfCookieName = 'csrftoken';
   $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
+
+  /*
+   * Performance enhancement
+   */
+  $compileProvider.debugInfoEnabled(settings.djangoApp.debug);
+  $httpProvider.useApplyAsync(true);
 }
 
 angular
   .module('refineryApp')
   .config([
+    '$compileProvider',
     '$httpProvider',
     '$logProvider',
     '$urlRouterProvider',
