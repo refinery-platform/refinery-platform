@@ -28,6 +28,8 @@ from django.db.models.signals import pre_delete
 from django_extensions.db.fields import UUIDField
 from django.core.files.storage import FileSystemStorage
 
+from file_store.utils import get_url_for_filestore_item
+
 logger = logging.getLogger('file_store')
 
 
@@ -496,20 +498,8 @@ class FileStoreItem(models.Model):
             return False
 
     def get_datafile_url(self):
-        """Return the relative URL for a datafile.
-        :returns: str -- local URL or source if it's a remote file
-        """
-        if self.is_local():
-            return self.datafile.url
-        else:
-            # data file doesn't exist on disk
-            if os.path.isabs(self.source):
-                # source is a file system path
-                logger.error("File not found at '%s'", self.datafile.name)
-                return None
-            else:
-                # source is a URL
-                return self.source
+        """Return url for the FileStoreItem"""
+        return get_url_for_filestore_item(self)
 
     def get_import_status(self):
         """Return file import task state"""

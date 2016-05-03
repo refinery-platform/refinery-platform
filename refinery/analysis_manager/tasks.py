@@ -19,6 +19,7 @@ from core.models import Analysis, AnalysisResult, Workflow
 from data_set_manager.models import Node
 from file_store.models import FileStoreItem
 from file_store.tasks import import_file, create
+from file_store.utils import get_url_for_filestore_item
 
 
 logger = logging.getLogger(__name__)
@@ -219,34 +220,37 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
     logger.debug("Uploading analysis input files to Galaxy")
     for fileset in ret_list:
         for k, v in fileset.iteritems():
+
             cur_item = fileset[k]
+
             # getting the current file_uuid from the given node_uuid
-            curr_file_uuid = Node.objects.get(
-                uuid=cur_item['node_uuid']).file_uuid
-            curr_filestore = FileStoreItem.objects.get_item(
-                uuid=curr_file_uuid)
-            if curr_filestore:
-                file_path = curr_filestore.get_absolute_path()
-                if file_path:
-                    cur_item["filepath"] = file_path
-                    try:
-                        file_id =\
-                            connection.libraries.upload_file_from_local_path(
-                                library_id, file_path)[0]['id']
-                    except (galaxy.client.ConnectionError, IOError) as exc:
-                        logger.error("Failed adding file '%s' to Galaxy "
-                                     "library '%s': %s",
-                                     curr_file_uuid, library_id, exc)
-                        raise
-                    cur_item["id"] = file_id
-                else:
-                    error_msg = "Input file with UUID '{}' is not available"
-                    error_msg = error_msg.format(curr_file_uuid)
-                    raise RuntimeError(error_msg)
-            else:
-                error_msg = "Input file with UUID '{}' is not available"
-                error_msg = error_msg.format(curr_file_uuid)
-                raise RuntimeError(error_msg)
+            try:
+                curr_file_uuid = Node.objects.get(
+                    uuid=cur_item['node_uuid']).file_uuid
+            except Node.DoesNotExist:
+                logger.error("Couldn't fetch Node!")
+                return None
+
+            try:
+                current_filestore_item = FileStoreItem.objects.get_item(
+                    uuid=curr_file_uuid)
+            except FileStoreItem.DoesNotExist:
+                logger.error("Couldn't fetch FileStoreItem!")
+                return None
+
+            file_url = get_url_for_filestore_item(current_filestore_item)
+
+            try:
+                file_id = connection.libraries.upload_file_from_url(
+                        library_id, file_url)[0]['id']
+            except (galaxy.client.ConnectionError, IOError) as exc:
+                logger.error("Failed adding file '%s' to Galaxy "
+                             "library '%s': %s",
+                             curr_file_uuid, library_id, exc)
+                raise
+
+            cur_item["id"] = file_id
+
     return ret_list
 
 

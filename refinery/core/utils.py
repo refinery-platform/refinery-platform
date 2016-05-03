@@ -1,11 +1,14 @@
 from __future__ import absolute_import
 import logging
+
+
 import py2neo
 import core
 import datetime
 import urlparse
 
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.contrib.auth.models import User
 from django.db import connection
@@ -643,3 +646,37 @@ def invalidate_cached_object(instance, is_test=False):
         from mockcache import Client
         mc = Client()
         return mc
+
+
+def get_full_url(relative_url):
+    """ Creates a full url (including hostname) from a given relative url
+    :param relative_url: Relative url to build a full url from
+    :type  relative_url: String.
+    :returns A fully constructed url from the Site model's domain, the Django
+    setting: REFINERY_URL_SCHEME, and the passed in relative url or None if
+    something breaks
+    """
+
+    # Being defensive is good
+    try:
+        current_site = Site.objects.get_current()
+    except Site.DoesNotExist:
+        logger.error(
+            "Cannot provide a full URL: no Sites configured or "
+            "SITE_ID is not set correctly")
+        return None
+
+    try:
+        url_scheme = settings.REFINERY_URL_SCHEME
+    except AttributeError:
+        logger.error(
+            "Couldnt fetch the 'REFINERY_URL_SCHEME' Django setting. Is it "
+            "set properly???")
+        return None
+
+    # Construct the url
+    full_url = '{}://{}{}'.format(
+        url_scheme, current_site.domain, relative_url
+    )
+
+    return full_url
