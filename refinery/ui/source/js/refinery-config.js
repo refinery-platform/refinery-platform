@@ -1,7 +1,12 @@
 'use strict';
 
 function refineryAppConfig (
-  $httpProvider, $logProvider, $urlRouterProvider, settings
+  $compileProvider,
+  $httpProvider,
+  $logProvider,
+  $provide,
+  $urlRouterProvider,
+  settings
 ) {
   /*
    * Force URLs to be caseinsensitive.
@@ -32,11 +37,30 @@ function refineryAppConfig (
    */
   $httpProvider.defaults.xsrfCookieName = 'csrftoken';
   $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
+
+  /*
+   * Performance enhancement
+   */
+  $compileProvider.debugInfoEnabled(settings.djangoApp.debug);
+  $httpProvider.useApplyAsync(true);
+
+  // http://stackoverflow.com/q/11252780
+  $provide.decorator('$rootScope', ['$delegate', function ($delegate) {
+    Object.defineProperty($delegate.constructor.prototype, '$onRootScope', {
+      value: function (name, listener) {
+        var unsubscribe = $delegate.$on(name, listener);
+        this.$on('$destroy', unsubscribe);
+      },
+      enumerable: false
+    });
+    return $delegate;
+  }]);
 }
 
 angular
   .module('refineryApp')
   .config([
+    '$compileProvider',
     '$httpProvider',
     '$logProvider',
     '$urlRouterProvider',

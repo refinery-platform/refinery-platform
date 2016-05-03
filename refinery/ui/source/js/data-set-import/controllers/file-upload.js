@@ -1,8 +1,10 @@
 'use strict';
 
 function RefineryFileUploadCtrl (
+  $element,
   $log,
   $scope,
+  $timeout,
   $,
   SparkMD5,
   dataSetImportSettings
@@ -10,7 +12,15 @@ function RefineryFileUploadCtrl (
   var csrf = '';
   var formData = [];
   var md5 = {};
+  var totalNumFilesQueued = 0;
+  var totalNumFilesUploaded = 0;
+  var globalProgress = 0;
 
+  // This is set to true by default because this var is used to apply an
+  // _active_ class to the progress bar so that it displays the moving stripes.
+  // Setting it to false by default leads to an ugly flickering while the bar
+  // progresses but the stripes are not displayed
+  $scope.uploadActive = true;
   $scope.loadingFiles = false;
 
   if ($('input[name=\'csrfmiddlewaretoken\']')[0]) {
@@ -37,9 +47,9 @@ function RefineryFileUploadCtrl (
         var reader = new FileReader();
         // We have to disable eslint here because this is a circular dependency
         reader.onload = onload;   // eslint-disable-line no-use-before-define
-        var start = currentChunk * options.chunkSize;
-        var end = Math.min(start + options.chunkSize, file.size);
-        reader.readAsArrayBuffer(slice.call(file, start, end));
+        var startIndex = currentChunk * options.chunkSize;
+        var end = Math.min(startIndex + options.chunkSize, file.size);
+        reader.readAsArrayBuffer(slice.call(file, startIndex, end));
       }
 
       function onload (e) {
@@ -57,6 +67,7 @@ function RefineryFileUploadCtrl (
       return dfd.promise();
     }
   };
+
   var uploadDone = function (e, data) {
     var file = data.files[0];
 
@@ -69,8 +80,32 @@ function RefineryFileUploadCtrl (
         md5: md5[file.name]
       },
       dataType: 'json',
-      success: function (response) {
-        $log.info(response.message);
+      success: function () {
+        totalNumFilesUploaded++;
+        globalProgress = totalNumFilesUploaded / totalNumFilesQueued;
+
+        file.uploaded = true;
+
+        if ($element.fileupload('active') > 0) {
+          $scope.uploadActive = true;
+          $scope.uploadInProgress = true;
+        } else {
+          $scope.uploadActive = false;
+          $scope.uploadInProgress = false;
+        }
+
+        if (totalNumFilesUploaded === totalNumFilesQueued) {
+          $scope.allUploaded = true;
+          $scope.uploadActive = false;
+          $scope.uploadInProgress = false;
+        }
+
+        $timeout(function () {
+          // Fritz: I am not sure why we need to wait 100ms instead of 0ms
+          // (i.e. one digestion) but this solves the issues with the last
+          // progress bar not being changed into success mode.
+          $scope.$apply();
+        }, 100);
       },
       error: function (jqXHR, textStatus, errorThrown) {
         $log.error('Error uploading file:', textStatus, '-', errorThrown);
@@ -99,20 +134,47 @@ function RefineryFileUploadCtrl (
     formData.splice(1);  // clear upload_id for the next upload
   };
 
+  $element.on('fileuploadadd', function add () {
+    totalNumFilesQueued++;
+    globalProgress = totalNumFilesUploaded / totalNumFilesQueued;
+  });
+
+  $element.on('fileuploadfail', function submit () {
+    totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
+  });
+
+  $element.on('fileuploadsubmit', function submit (event, data) {
+    if (data.files[0].uploaded) {
+      // don't upload again
+      return false;
+    }
+    return true;
+  });
+
+  $scope.globalReadableProgress = function (progress) {
+    return Math.round(progress * globalProgress);
+  };
+
+  $scope.numUnfinishedUploads = function () {
+    return totalNumFilesQueued - totalNumFilesUploaded;
+  };
+
   $scope.options = {
-    formData: getFormData,
+    always: uploadAlways,
     chunkdone: chunkDone,
     chunkfail: chunkFail,
     done: uploadDone,
-    always: uploadAlways
+    formData: getFormData
   };
 }
 
 angular
   .module('refineryDataSetImport')
   .controller('RefineryFileUploadCtrl', [
+    '$element',
     '$log',
     '$scope',
+    '$timeout',
     '$',
     'SparkMD5',
     'dataSetImportSettings',

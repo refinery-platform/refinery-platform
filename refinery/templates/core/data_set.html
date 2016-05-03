@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="{% static "styles/provenance-visualization.css" %}" />
   <link rel="stylesheet" href="{% static "vendor/tipsy/src/stylesheets/tipsy.css" %}" />
   <link rel="stylesheet" href="{% static "vendor/select2/select2.css" %}" />
+  <link rel="stylesheet" href="{% static "vendor/ui-select/dist/select.min.css" %}" />
 
   <style type="text/css">
     /*svg {
@@ -564,10 +565,10 @@
             {% if isatab_archive or pre_isatab_archive %}
               {% load core_extras %}
               {% if isatab_archive %}
-                <p><a href="{{isatab_archive.get_full_url}}">{{isatab_archive.uuid|simple_name}}</a> ({{isatab_archive.get_file_size|filesizeformat}})</p>
+                <p><a href="{{isatab_archive.get_datafile_url}}">{{isatab_archive.uuid|simple_name}}</a> ({{isatab_archive.get_file_size|filesizeformat}})</p>
               {% endif %}
               {% if pre_isatab_archive %}
-                <p><a href="{{pre_isatab_archive.get_full_url}}">{{pre_isatab_archive.uuid|simple_name}}</a> ({{pre_isatab_archive.get_file_size|filesizeformat}})</p>
+                <p><a href="{{pre_isatab_archive.get_datafile_url}}">{{pre_isatab_archive.uuid|simple_name}}</a> ({{pre_isatab_archive.get_file_size|filesizeformat}})</p>
               {% endif %}
             {% else %}
               <p><i>Not available.</i></p>

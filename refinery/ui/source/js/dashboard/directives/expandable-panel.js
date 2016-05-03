@@ -73,7 +73,7 @@ function refineryExpandablePanel (
           .then(function () {
             el.removeClass('full-width');
             element.removeAttr('style');
-            pubSub.trigger('collapsFinished');
+            pubSub.trigger('collapseFinished');
             dashboardWidthFixerService.trigger('resetter');
           })
           .catch(function (e) {

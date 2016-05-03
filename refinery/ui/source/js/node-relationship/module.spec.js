@@ -26,5 +26,13 @@ describe('RefineryNodeRelationship.module: unit tests', function () {
     it('should have "ngResource" as a dependency', function () {
       expect(hasModule('ngResource')).toEqual(true);
     });
+
+    it('should have "ui-select" as a dependency', function () {
+      expect(hasModule('ui.select')).toEqual(true);
+    });
+
+    it('should have "ngSanitize" as a dependency', function () {
+      expect(hasModule('ngSanitize')).toEqual(true);
+    });
   });
 });

@@ -96,13 +96,13 @@
           </div>
           <div class="col-md-5 analysis-name">
             <span ng-switch on="analysis.status">
-              <span ng-switch-when="UNKNOWN">
-                {{ analysis.name }}
-              </span>
-              <span ng-switch-default>
+              <span ng-switch-when="SUCCESS">
                 <a ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
                   {{ analysis.name }}
                 </a>
+              </span>
+              <span ng-switch-default>
+                  {{ analysis.name }}
               </span>
             </span>
             <span ng-show="analysis.status=='RUNNING' ||
@@ -172,7 +172,7 @@
                   <div ng-repeat="(stage, value) in AMCtrl.analysesDetail[analysis.uuid]">
                     <div ng-if="!(stage=='cancelingAnalyses' || stage=='overall')">
                       <li class="analysisRunningListItem">
-                        {{ stage }}
+                        {{ stage | camelCaseToTitle}}
                         <span refinery-tooltip
                               refinery-tooltip-container="body"
                               refinery-tooltip-placement="bottom"

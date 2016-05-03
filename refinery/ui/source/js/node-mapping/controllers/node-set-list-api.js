@@ -1,11 +1,25 @@
 'use strict';
 
 function NodeSetListApiCtrl ($log, $scope, $rootScope, $window, NodeSetList) {
+  $scope.nodesetList = [];
+  $scope.selectedNodeset = { select: $scope.nodesetList[0] };
+
   $scope.updateCurrentNodeSet = function () {
-    $scope.currentNodeSet = $scope.nodesetList[$scope.nodesetIndex];
+    $scope.currentNodeSet = $scope.selectedNodeset.select;
     // FIXME: temp workaround - this should be handled through the event bus
     if ($scope.currentNodeSet) {
       $rootScope.$emit('nodeSetChangedEvent', $scope.currentNodeSet);
+    }
+  };
+
+  // helper method to refresh the selectedNodeSet from api refreshed nodesetList
+  var refreshSelectedNodeSet = function () {
+    for (var i = 0; i < $scope.nodesetList.length; i++) {
+      if ($scope.selectedNodeset.select &&
+        $scope.nodesetList[i].uuid === $scope.selectedNodeset.select.uuid) {
+        $scope.selectedNodeset.select = $scope.nodesetList[i];
+        break;
+      }
     }
   };
 
@@ -15,7 +29,8 @@ function NodeSetListApiCtrl ($log, $scope, $rootScope, $window, NodeSetList) {
       assay__uuid: $window.externalAssayUuid
     }).$promise
       .then(function (data) {
-        $scope.nodesetList = data.objects;
+        angular.copy(data.objects, $scope.nodesetList);
+        refreshSelectedNodeSet();
         $scope.updateCurrentNodeSet();
       })
       .catch(function (error) {

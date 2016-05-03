@@ -362,6 +362,10 @@ function DashboardCtrl (
       this.dashboardExpandablePanelService.trigger('lockFullWith');
     }
   }.bind(this), 0);
+
+  this.pubSub.on('collapseFinished', function () {
+    this.collapsing = false;
+  }.bind(this));
 }
 
 DashboardCtrl.prototype.collectDataSetIds = function () {
@@ -843,7 +847,7 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
     }
   }
 
-  if (!this.dashboardDataSetPreviewService.previewing) {
+  function startExpansion () {
     if (!this.expandDataSetPanel) {
       this.expandDataSetPanel = true;
       this.expandedDataSetPanelBorder = true;
@@ -852,6 +856,19 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
     }
     this.dashboardDataSetPreviewService.preview(dataSet);
     this.dataSetPreview = true;
+  }
+
+  if (!this.dashboardDataSetPreviewService.previewing) {
+    if (this.collapsing) {
+      // Panel is currently being collapsed so we need to wait until the
+      // animation is done because the width fixer needs to capture the
+      // collapsed panel's width.
+      this.pubSub.on('collapseFinished', function () {
+        this.$timeout(startExpansion.bind(this), 0);
+      }.bind(this), 1);
+    } else {
+      startExpansion.apply(this);
+    }
   } else {
     if (dataSet.preview) {
       this.collapseDataSetPreview(dataSet);
@@ -878,6 +895,7 @@ DashboardCtrl.prototype.collapseDataSetPreview = function () {
 
       if (!this.repoMode) {
         this.expandDataSetPanel = false;
+        this.collapsing = true;
         this.dashboardExpandablePanelService.trigger('collapser');
       }
     }

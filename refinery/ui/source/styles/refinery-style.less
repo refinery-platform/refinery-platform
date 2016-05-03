@@ -1394,6 +1394,15 @@ ul.badge-list {
   padding-top: 0;
 }
 
+.ui-select-drop {
+  width: 100%;
+  // default hover washes selected text
+  ul>li>div.select2-result-label:hover {
+  background: #3875d7 !important;
+  color: white !important;
+}
+}
+
 .active-group {
   background-color: darken(@gray-lighter, 5%);
 }
@@ -1553,4 +1562,32 @@ body.is-screenshot-ready {
     background-color: #e5e5e5 !important;
     border-bottom-color: #e5e5e5 !important;
   }
+}
+
+.fa.success {
+  color: @green;
+}
+
+.bordered-row {
+  padding: 0.5em 0;
+  border-top: 1px solid @gray-lightest;
+
+  &:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  &:last-child {
+    padding-bottom: 0;
+  }
+}
+
+.row.v-centered-row > div {
+  height: 2.5em;
+}
+
+.v-center {
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
 }
