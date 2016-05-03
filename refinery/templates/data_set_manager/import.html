@@ -23,7 +23,9 @@
 <!-- end data file upload -->
 {% endblock head_html %}
 
-{% block title %}data file upload{% endblock %}
+{% block title %}
+{{ block.super }} - Data File Upload
+{% endblock %}
 
 {% block subheader %}
 <div class="page-header">
