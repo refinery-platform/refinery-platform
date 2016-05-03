@@ -16,7 +16,11 @@ function RefineryFileUploadCtrl (
   var totalNumFilesUploaded = 0;
   var globalProgress = 0;
 
-  $scope.uploadInProgress = true;
+  // This is set to true by default because this var is used to apply an
+  // _active_ class to the progress bar so that it displays the moving stripes.
+  // Setting it to false by default leads to an ugly flickering while the bar
+  // progresses but the stripes are not displayed
+  $scope.uploadActive = true;
   $scope.loadingFiles = false;
 
   if ($('input[name=\'csrfmiddlewaretoken\']')[0]) {
@@ -83,13 +87,16 @@ function RefineryFileUploadCtrl (
         file.uploaded = true;
 
         if ($element.fileupload('active') > 0) {
+          $scope.uploadActive = true;
           $scope.uploadInProgress = true;
         } else {
+          $scope.uploadActive = false;
           $scope.uploadInProgress = false;
         }
 
         if (totalNumFilesUploaded === totalNumFilesQueued) {
           $scope.allUploaded = true;
+          $scope.uploadActive = false;
           $scope.uploadInProgress = false;
         }
 
@@ -131,8 +138,16 @@ function RefineryFileUploadCtrl (
     totalNumFilesQueued++;
   });
 
+  $element.on('fileuploadfail', function submit () {
+    totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
+  });
+
   $scope.globalReadableProgress = function (progress) {
     return Math.round(progress * globalProgress);
+  };
+
+  $scope.numUnfinishedUploads = function () {
+    return totalNumFilesQueued - totalNumFilesUploaded;
   };
 
   $scope.options = {
