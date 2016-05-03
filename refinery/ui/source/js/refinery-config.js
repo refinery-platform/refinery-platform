@@ -63,6 +63,7 @@ angular
     '$compileProvider',
     '$httpProvider',
     '$logProvider',
+    '$provide',
     '$urlRouterProvider',
     'settings',
     refineryAppConfig
