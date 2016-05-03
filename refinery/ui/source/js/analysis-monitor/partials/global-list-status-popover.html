@@ -54,12 +54,12 @@
             &nbsp;
             </div>
             <div class="analyses-global-text">
-              <span ng-if="analysis.status == 'SUCCESS'">
+              <span ng-if="analysis.status === 'SUCCESS'">
                 <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
                   {{ analysis.name }}
                 </a>
               </span>
-              <span ng-if="analysis.status != 'SUCCESS'">
+              <span ng-if="analysis.status !== 'SUCCESS'">
                 {{ analysis.name }}
               </span>
               </div>
