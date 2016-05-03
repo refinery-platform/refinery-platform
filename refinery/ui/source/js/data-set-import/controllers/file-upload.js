@@ -136,6 +136,7 @@ function RefineryFileUploadCtrl (
 
   $element.on('fileuploadadd', function add () {
     totalNumFilesQueued++;
+    globalProgress = totalNumFilesUploaded / totalNumFilesQueued;
   });
 
   $element.on('fileuploadfail', function submit () {
