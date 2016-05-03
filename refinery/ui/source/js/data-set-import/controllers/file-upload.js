@@ -143,6 +143,14 @@ function RefineryFileUploadCtrl (
     totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
   });
 
+  $element.on('fileuploadsubmit', function submit (event, data) {
+    if (data.files[0].uploaded) {
+      // don't upload again
+      return false;
+    }
+    return true;
+  });
+
   $scope.globalReadableProgress = function (progress) {
     return Math.round(progress * globalProgress);
   };
