@@ -122,9 +122,11 @@
               <tr>
                 <td><strong>Data File Column</strong></td>
                 <td>
-                  <select ng-model="dataFileColumn" name="data_file_column"
-                          required
-                          ng-options="heading for (id, heading) in metadataHeader track by id">
+                  <select
+                    name="data_file_column"
+                    required
+                    ng-model="data.dataFileColumn"
+                    ng-options="heading for (id, heading) in metadataHeader track by id">
                     <!-- needed to make required option to work properly -->
                     <option></option>
                   </select>
@@ -226,7 +228,7 @@
             <input style="float: left;" class="refinery-base btn btn-default"
               type="button"
                    ng-click="checkFiles()" value="Check Files"
-                   ng-disabled="!(dataFileColumn)"/>
+                   ng-disabled="!data.dataFileColumn"/>
             <input style="float: left;" class="refinery-base btn btn-default"
               id="tabular-import-button"
                    type="submit" value="Import"
