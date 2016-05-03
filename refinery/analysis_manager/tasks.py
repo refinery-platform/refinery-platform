@@ -238,6 +238,8 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
                 logger.error("Couldn't fetch FileStoreItem!")
                 return None
 
+            # Create url based on filestore_item's location (local file or
+            # external file)
             file_url = get_url_for_filestore_item(current_filestore_item)
 
             try:
