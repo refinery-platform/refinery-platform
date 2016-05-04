@@ -408,30 +408,27 @@
                   <strong>{{ file.name }}</strong>
                   ({{ file.size | formatFileSize }})
                 </p>
-                <strong class="error text-danger" ng-if="file.error">
-                  <i class="fa fa-exclamation-triangle"></i>
-                  {{file.error}}
-                </strong>
               </div>
             </div>
             <div class="col-xs-4">
               <div class="v-center">
                 <div
                   class="progress progress-striped active"
-                  ng-class="{ 'progress-striped active': !file.uploaded }"
+                  ng-class="{ 'progress-striped active': !file.uploaded && !file.error }"
                   file-upload-progress="file.$progress()">
                   <div
                     class="progress-bar"
                     role="progressbar"
-                    ng-class="{ 'progress-bar-success': file.uploaded }"
+                    ng-class="{ 'progress-bar-success': file.uploaded, 'progress-bar-danger': file.error }"
                     ng-style="{ width: num + '%' }">
-                    <span ng-show="num > 0">{{ num + '%' }}</span>
+                    <span ng-show="num > 0" ng-if="!file.error">{{ num + '%' }}</span>
+                    <i class="fa fa-exclamation-triangle" ng-if="file.error"></i>
                   </div>
                 </div>
               </div>
             </div>
             <div class="col-xs-4">
-              <div ng-if="!file.uploaded">
+              <div ng-if="!file.uploaded && !file.error">
                 <button
                   class="btn btn-primary start"
                   ng-click="file.$submit()"
@@ -459,6 +456,13 @@
               <div class="v-center" ng-if="file.uploaded">
                 <i class="fa fa-check-circle success"></i>
                 <strong>Uploaded</strong>
+              </div>
+              <div class="v-center" ng-if="file.error">
+                <strong
+                  class="error text-danger"
+                  ng-if="file.error"
+                  ng-bind="file.error">
+                </strong>
               </div>
             </div>
           </div>
