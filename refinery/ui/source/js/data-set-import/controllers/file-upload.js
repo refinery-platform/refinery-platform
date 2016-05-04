@@ -47,22 +47,21 @@ function RefineryFileUploadCtrl (
 
       function readNextChunk () {
         var reader = new FileReader();
-        // We have to disable eslint here because this is a circular dependency
-        reader.onload = onload;   // eslint-disable-line no-use-before-define
+
+        reader.onload = function onload (event) {
+          spark.append(event.target.result);  // append chunk
+          currentChunk++;
+          if (currentChunk < chunks) {
+            readNextChunk();
+          } else {
+            md5[file.name] = spark.end();
+            dfd.resolveWith(that, [data]);
+          }
+        };
+
         var startIndex = currentChunk * options.chunkSize;
         var end = Math.min(startIndex + options.chunkSize, file.size);
         reader.readAsArrayBuffer(slice.call(file, startIndex, end));
-      }
-
-      function onload (e) {
-        spark.append(e.target.result);  // append chunk
-        currentChunk++;
-        if (currentChunk < chunks) {
-          readNextChunk();
-        } else {
-          md5[file.name] = spark.end();
-          dfd.resolveWith(that, [data]);
-        }
       }
 
       readNextChunk();
