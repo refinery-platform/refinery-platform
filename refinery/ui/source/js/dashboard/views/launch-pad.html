@@ -192,7 +192,7 @@
             id="filterDataSetByGroup"
             name="filterDataSetByGroup"
             ng-model="dashboard.dataSetsFilterGroup"
-            ng-options="group.group_id as group.group_name for group in dashboard.membership track by group">
+            ng-options="group as group.group_name for group in dashboard.membership track by group.group_id">
             <option value="">---</option>
           </select>
         </div>

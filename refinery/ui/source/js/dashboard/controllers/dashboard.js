@@ -542,10 +542,12 @@ Object.defineProperty(
       return this._dataSetsFilterGroup;
     },
     set: function (value) {
+      var groupId = value && value.group_id ? value.group_id : undefined;
+
       this._dataSetsFilterGroup = value;
-      if (value) {
+      if (typeof groupId === 'number') {
         this.dataSet.filter({
-          group: this._dataSetsFilterGroup
+          group: groupId
         });
       } else {
         this.dataSet.all();
