@@ -503,11 +503,9 @@ class FileStoreItem(models.Model):
         :type self: A FileStoreItem instance
         :returns: A url for the given FileStoreItem or None
         """
-        from core.utils import get_full_url
 
         if self.is_local():
-            # Call get_full_url with relative url of the filestore_item
-            return get_full_url(self.datafile.url)
+            return self.datafile.url
         else:
             # data file doesn't exist on disk
             if os.path.isabs(self.source):
