@@ -340,8 +340,8 @@
         </noscript>
         {% verbatim %}
         <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
-        <div class="row fileupload-buttonbar">
-          <div class="col-lg-7">
+        <div class="row fileupload-buttonbar v-centered-row">
+          <div class="col-lg-4">
             <!-- The fileinput-button span is used to style the file input field as button -->
             <span
               class="btn btn-success fileinput-button"
@@ -370,34 +370,42 @@
               <span>Cancel upload</span>
             </button>
             <!-- The global file processing state -->
-            <span class="fileupload-process"></span>
+            <!-- <span class="fileupload-process"></span> -->
+          </div>
+          <div class="col-lg-4">
+            <div class="v-center" ng-if="processing() || loadingFiles">
+              <span>Calculating MD5:</span>
+              <div class="refinery-spinner refinery-spinner-inline"></div>
+            </div>
           </div>
           <!-- The global progress state -->
           <div
-            class="col-lg-5"
+            class="col-lg-4"
             ng-show="queue.length">
-            <!-- The global progress bar -->
-            <div
-              class="progress"
-              ng-class="{ 'progress-striped': !allUploaded, 'active': uploadActive }"
-              file-upload-progress="progress()">
+            <div class="v-center">
+              <!-- The global progress bar -->
               <div
-                class="progress-bar"
-                ng-repeat="file in queuedFiles track by file.name"
-                ng-class="{ 'progress-bar-success': file.uploaded && !file.error, 'progress-bar-danger': file.error }"
-                ng-style="{ 'width': globalToIndividualProgress(num, $index) + '%' }">
-                <span
-                  ng-if="globalReadableProgress(num, $index) > 0 && globalReadableProgress(num, $index) < 100">
-                  {{ globalToIndividualProgress(num, $index) + '%' }}
-                </span>
-                <i
-                  class="fa fa-check text-success"
-                  aria-hidden="true"
-                  ng-if="globalReadableProgress(num, $index) >= 100 && !file.error"></i>
-                <i
-                  class="fa fa-exclamation-triangle text-danger"
-                  aria-hidden="true"
-                  ng-if="file.error"></i>
+                class="progress"
+                ng-class="{ 'progress-striped': !allUploaded, 'active': uploadActive }"
+                file-upload-progress="progress()">
+                <div
+                  class="progress-bar"
+                  ng-repeat="file in queuedFiles track by file.name"
+                  ng-class="{ 'progress-bar-success': file.uploaded && !file.error, 'progress-bar-danger': file.error }"
+                  ng-style="{ 'width': globalToIndividualProgress(num, $index) + '%' }">
+                  <span
+                    ng-if="globalReadableProgress(num, $index) > 0 && globalReadableProgress(num, $index) < 100">
+                    {{ globalToIndividualProgress(num, $index) + '%' }}
+                  </span>
+                  <i
+                    class="fa fa-check text-success"
+                    aria-hidden="true"
+                    ng-if="globalReadableProgress(num, $index) >= 100 && !file.error"></i>
+                  <i
+                    class="fa fa-exclamation-triangle text-danger"
+                    aria-hidden="true"
+                    ng-if="file.error"></i>
+                </div>
               </div>
             </div>
           </div>
