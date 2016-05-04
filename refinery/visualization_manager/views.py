@@ -8,6 +8,7 @@ from django.shortcuts import redirect
 from annotation_server.models import taxon_id_to_genome_build, \
     genome_build_to_species
 from annotation_server.utils import SUPPORTED_GENOMES
+from core.utils import get_full_url
 from data_set_manager.models import Node
 from file_server.views import profile_viewer
 from file_server.models import get_aux_file_item
@@ -122,7 +123,7 @@ def createIGVsession(genome, uuids, is_file_uuid=False):
     # delete temp file
     os.unlink(tempfilename.name)
     # Url for session file
-    fs_url = filestore_item.get_datafile_url()
+    fs_url = get_full_url(filestore_item.get_datafile_url())
     # IGV url for automatic launch of Java Webstart
     igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php" \
               "?sessionURL=" + fs_url
@@ -371,7 +372,7 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
     os.unlink(tempfilename.name)
 
     # Url for session file
-    sessionfile_url = filestore_item.get_datafile_url()
+    sessionfile_url = get_full_url(filestore_item.get_datafile_url())
 
     # IGV url for automatic launch of Java Webstart
     igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php" \
@@ -462,7 +463,7 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
     curr_fs = FileStoreItem.objects.get(uuid=filestore_uuid)
 
     # full path to selected UUID File
-    curr_url = curr_fs.get_datafile_url()
+    curr_url = get_full_url(curr_fs.get_datafile_url())
 
     # delete temp file
     os.unlink(tempsampname.name)
@@ -494,7 +495,7 @@ def get_file_name(nodeuuid, sampFile=None, is_file_uuid=False):
     temp_name = temp_name[len(temp_name) - 1]
 
     # full path to selected UUID File
-    temp_url = temp_fs.get_datafile_url()
+    temp_url = get_full_url(temp_fs.get_datafile_url())
 
     # IGV SEG FILE HACK
     if sampFile:
