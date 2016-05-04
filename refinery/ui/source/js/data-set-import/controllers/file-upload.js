@@ -7,7 +7,8 @@ function RefineryFileUploadCtrl (
   $timeout,
   $,
   SparkMD5,
-  dataSetImportSettings
+  dataSetImportSettings,
+  $uibModal
 ) {
   var csrf = '';
   var formData = [];
@@ -181,6 +182,14 @@ function RefineryFileUploadCtrl (
     return totalNumFilesQueued - totalNumFilesUploaded;
   };
 
+  $scope.openHelpMd5 = function () {
+    $uibModal.open({
+      templateUrl:
+        '/static/partials/data-set-import/partials/dialog-help-md5.html',
+      controller: 'RefineryFileUploadMD5HelpCtrl as modal'
+    });
+  };
+
   $scope.options = {
     always: uploadAlways,
     chunkdone: chunkDone,
@@ -200,5 +209,6 @@ angular
     '$',
     'SparkMD5',
     'dataSetImportSettings',
+    '$uibModal',
     RefineryFileUploadCtrl
   ]);
