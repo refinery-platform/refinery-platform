@@ -393,15 +393,13 @@
                 <i
                   class="fa fa-check text-success"
                   aria-hidden="true"
-                  ng-if="globalReadableProgress(num, $index) === 100 && !file.error"></i>
+                  ng-if="globalReadableProgress(num, $index) >= 100 && !file.error"></i>
                 <i
                   class="fa fa-exclamation-triangle text-danger"
                   aria-hidden="true"
                   ng-if="file.error"></i>
               </div>
             </div>
-            <!-- The extended global progress state -->
-            <div class="progress-extended">&nbsp;</div>
           </div>
         </div>
         <!-- The table listing the files available for upload/download -->
