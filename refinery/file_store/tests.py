@@ -101,13 +101,15 @@ class FileStoreItemTest(SimpleTestCase):
         self.sharename = 'labname'
         self.path_source = os.path.join('/example/path', self.filename)
         self.url_source = urljoin('http://example.org/', self.filename)
-        self.test_file = File(open("/tmp/test_file.txt", "w+"),
+        self.test_file_path = "/tmp/test_file.txt"
+        self.test_file = File(open(self.test_file_path, "w+"),
                               "This is just a test.")
 
     def tearDown(self):
         FileType.objects.all().delete()
         FileExtension.objects.all().delete()
         FileStoreItem.objects.all().delete()
+        os.remove(self.test_file_path)
 
     def test_get_full_url_local_file(self):
         """Check if the full URL is properly returned for files that exist
