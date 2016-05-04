@@ -16,6 +16,7 @@ import requests
 
 from analysis_manager.models import AnalysisStatus
 from core.models import Analysis, AnalysisResult, Workflow
+from core.utils import get_full_url
 from data_set_manager.models import Node
 from file_store.models import FileStoreItem
 from file_store.tasks import import_file, create
@@ -239,7 +240,7 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
 
             # Create url based on filestore_item's location (local file or
             # external file)
-            file_url = current_filestore_item.get_datafile_url()
+            file_url = get_full_url(current_filestore_item.get_datafile_url())
 
             try:
                 file_id = connection.libraries.upload_file_from_url(
