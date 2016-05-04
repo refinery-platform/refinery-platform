@@ -19,7 +19,6 @@ from core.models import Analysis, AnalysisResult, Workflow
 from data_set_manager.models import Node
 from file_store.models import FileStoreItem
 from file_store.tasks import import_file, create
-from file_store.utils import get_url_for_filestore_item
 
 
 logger = logging.getLogger(__name__)
@@ -240,7 +239,7 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
 
             # Create url based on filestore_item's location (local file or
             # external file)
-            file_url = get_url_for_filestore_item(current_filestore_item)
+            file_url = current_filestore_item.get_datafile_url()
 
             try:
                 file_id = connection.libraries.upload_file_from_url(

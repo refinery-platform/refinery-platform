@@ -13,7 +13,6 @@ from file_server.views import profile_viewer
 from file_server.models import get_aux_file_item
 from file_store.models import FileStoreItem
 from file_store.tasks import import_file, create, rename
-from file_store.utils import get_url_for_filestore_item
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +122,7 @@ def createIGVsession(genome, uuids, is_file_uuid=False):
     # delete temp file
     os.unlink(tempfilename.name)
     # Url for session file
-    fs_url = get_url_for_filestore_item(filestore_item)
+    fs_url = filestore_item.get_datafile_url()
     # IGV url for automatic launch of Java Webstart
     igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php" \
               "?sessionURL=" + fs_url
@@ -372,7 +371,7 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
     os.unlink(tempfilename.name)
 
     # Url for session file
-    sessionfile_url = get_url_for_filestore_item(filestore_item)
+    sessionfile_url = filestore_item.get_datafile_url()
 
     # IGV url for automatic launch of Java Webstart
     igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php" \
@@ -463,7 +462,7 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
     curr_fs = FileStoreItem.objects.get(uuid=filestore_uuid)
 
     # full path to selected UUID File
-    curr_url = get_url_for_filestore_item(curr_fs)
+    curr_url = curr_fs.get_datafile_url()
 
     # delete temp file
     os.unlink(tempsampname.name)
@@ -495,7 +494,7 @@ def get_file_name(nodeuuid, sampFile=None, is_file_uuid=False):
     temp_name = temp_name[len(temp_name) - 1]
 
     # full path to selected UUID File
-    temp_url = get_url_for_filestore_item(temp_fs)
+    temp_url = temp_fs.get_datafile_url()
 
     # IGV SEG FILE HACK
     if sampFile:

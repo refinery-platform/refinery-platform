@@ -40,7 +40,6 @@ from core.models import Project, NodeSet, NodeRelationship, NodePair, \
     Workflow, WorkflowInputRelationships, Analysis, DataSet, \
     ResourceStatistics, GroupManagement, ExtendedGroup, \
     UserAuthentication, Invitation, UserProfile, FastQC
-from file_store.utils import get_url_for_filestore_item
 from data_set_manager.api import StudyResource, AssayResource, \
     InvestigationResource
 from data_set_manager.models import Node, Study, Attribute
@@ -953,7 +952,7 @@ class NodeResource(ModelResource):
             bundle.data['file_url'] = None
             bundle.data['file_import_status'] = None
         else:
-            bundle.data['file_url'] = get_url_for_filestore_item(file_item)
+            bundle.data['file_url'] = file_item.get_datafile_url()
             bundle.data['file_import_status'] = file_item.get_import_status()
         return bundle
 
