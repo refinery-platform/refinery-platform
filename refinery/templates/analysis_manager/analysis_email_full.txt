@@ -9,6 +9,7 @@ Unfortunately, your analysis failed.  Please forward this email to your admin at
 
 Project: {{project}}
 Analysis: {{name}}
+Analysis Uuid: {{uuid}}
 Dataset used: {{dataset}}
 Workflow used: {{workflow}}
 Start time: {{start}} 

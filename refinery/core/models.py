@@ -1130,7 +1130,8 @@ class Analysis(OwnableResource):
                         'username': user.username,
                         'site_name': site_name,
                         'site_domain': site_domain,
-                        'success': self.successful()
+                        'success': self.successful(),
+                        'uuid': self.uuid
                         }
         if self.successful():
             email_subj = "[{}] Archive ready for download: {}".format(
