@@ -27,7 +27,6 @@ from django.contrib.messages import info
 from django.contrib.sites.models import Site
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.mail import mail_admins, send_mail
-from django.core.urlresolvers import reverse
 from django.db import models, transaction
 from django.db.models import Max
 from django.db.models.fields import IntegerField
@@ -1122,6 +1121,7 @@ class Analysis(OwnableResource):
         site_name = Site.objects.get_current().name
         site_domain = Site.objects.get_current().domain
         status = self.status
+        data_set_uuid = self.data_set.uuid
         # check status and change text slightly based on that
         # set context for things needed in all emails
         context_dict = {'name': name,
@@ -1139,7 +1139,7 @@ class Analysis(OwnableResource):
             # TODO: avoid hardcoding URL protocol
             context_dict['url'] = urljoin(
                     "http://" + site_domain,
-                    reverse('core.views.analysis', args=(self.uuid,)))
+                    "data_sets/" + data_set_uuid + "/analysis/" + self.uuid)
         else:
             email_subj = "[{}] Archive creation failed: {}".format(
                     site_name, name)
