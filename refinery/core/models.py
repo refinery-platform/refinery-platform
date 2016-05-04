@@ -13,6 +13,7 @@ import os
 import smtplib
 import socket
 import pysolr
+import pytz
 from urlparse import urljoin
 
 from django import forms
@@ -1114,8 +1115,10 @@ class Analysis(OwnableResource):
     def send_email(self):
         """Sends an email when the analysis is finished"""
         # don't mail the user if analysis was canceled
-        if self.cancel:
-            return
+
+        # if self.cancel:
+        #   return
+
         # get basic information
         user = self.get_owner()
         name = self.name
@@ -1153,7 +1156,9 @@ class Analysis(OwnableResource):
 
             # get information needed to calculate the duration
             start = self.time_start
-            end = self.time_end
+            # add timezone, so start and end are aware
+            end = self.time_end.replace(tzinfo=pytz.utc)
+
             duration = end - start
             hours, remainder = divmod(duration.total_seconds(), 3600)
             minutes, seconds = divmod(remainder, 60)
