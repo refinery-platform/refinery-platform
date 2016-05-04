@@ -2,7 +2,7 @@
 
 angular
   .module('refineryApp')
-  .factory('groupService', ['$resource', 'settings',
+  .factory('groupExtendedService', ['$resource', 'settings',
     function ($resource, settings) {
       return $resource(
         settings.appRoot + settings.refineryApi + '/extended_groups/:uuid/',
