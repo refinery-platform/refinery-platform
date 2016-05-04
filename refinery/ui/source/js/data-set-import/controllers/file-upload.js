@@ -6,6 +6,7 @@ function RefineryFileUploadCtrl (
   $scope,
   $timeout,
   $,
+  settings,
   SparkMD5,
   dataSetImportSettings,
   $uibModal
@@ -35,6 +36,70 @@ function RefineryFileUploadCtrl (
     $log.error('CSRF middleware token was not found in the upload form');
   }
 
+  var worker = false;
+
+  function workerCode () {
+    // Default setting
+    var chunkSize = 2097152;
+
+    function calcMD5 (file) {
+      var slice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
+      var chunks = Math.ceil(file.size / chunkSize);
+      var spark = new SparkMD5.ArrayBuffer();
+      var currentChunk = 0;
+
+      var reader = new FileReader();
+
+      function readNextChunk () {
+        reader.onload = function onload (event) {
+          spark.append(event.target.result);  // append chunk
+          currentChunk++;
+          if (currentChunk < chunks) {
+            readNextChunk();
+          } else {
+            postMessage({
+              name: file.name,
+              md5: spark.end()
+            });
+          }
+        };
+
+        reader.onerror = function (event) {
+          postMessage({ name: file.name, error: event.message });
+        };
+
+        var startIndex = currentChunk * chunkSize;
+        var end = Math.min(startIndex + chunkSize, file.size);
+        reader.readAsArrayBuffer(slice.call(file, startIndex, end));
+      }
+
+      readNextChunk();
+    }
+
+    onmessage = function (event) {  // eslint-disable-line no-undef
+      // importScripts only works with absolute URLs when the worker is
+      // created inline. Find out more here:
+      // http://www.html5rocks.com/en/tutorials/workers/basics/
+      importScripts(  // eslint-disable-line no-undef
+        event.data[0] +
+        '/static/vendor/spark-md5/spark-md5.min.js'
+      );
+
+      chunkSize = event.data[2];
+
+      calcMD5(event.data[1]);
+    };
+  }
+
+  if (window.Worker) {
+    var code = workerCode.toString();
+    code = code.substring(code.indexOf('{') + 1, code.lastIndexOf('}'));
+
+    var blob = new Blob([code], { type: 'application/javascript' });
+
+    worker = new Worker(URL.createObjectURL(blob));
+  }
+
   $.blueimp.fileupload.prototype.processActions = {
     calculate_checksum: function (data, options) {
       var that = this;
@@ -54,7 +119,7 @@ function RefineryFileUploadCtrl (
           if (currentChunk < chunks) {
             readNextChunk();
           } else {
-            md5[file.name] = spark.end();
+            md5[file.name] = spark.end();  // This piece calculates the MD5 hash
             dfd.resolveWith(that, [data]);
           }
         };
@@ -64,7 +129,21 @@ function RefineryFileUploadCtrl (
         reader.readAsArrayBuffer(slice.call(file, startIndex, end));
       }
 
-      readNextChunk();
+      if (worker) {
+        worker.postMessage([
+          settings.appRoot,
+          file,
+          options.chunkSize
+        ]);
+
+        worker.onmessage = function (event) {
+          md5[file.name] = event.data.md5;
+          dfd.resolveWith(that, [data]);
+        };
+      } else {
+        readNextChunk();
+      }
+
       return dfd.promise();
     }
   };
@@ -206,6 +285,7 @@ angular
     '$scope',
     '$timeout',
     '$',
+    'settings',
     'SparkMD5',
     'dataSetImportSettings',
     '$uibModal',
