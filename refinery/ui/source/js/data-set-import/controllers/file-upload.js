@@ -14,8 +14,9 @@ function RefineryFileUploadCtrl (
   var md5 = {};
   var totalNumFilesQueued = 0;
   var totalNumFilesUploaded = 0;
-  var globalProgress = 0;
+  var currentUploadFile = -1;
 
+  $scope.queuedFiles = [];
   // This is set to true by default because this var is used to apply an
   // _active_ class to the progress bar so that it displays the moving stripes.
   // Setting it to false by default leads to an ugly flickering while the bar
@@ -82,7 +83,6 @@ function RefineryFileUploadCtrl (
       dataType: 'json',
       success: function () {
         totalNumFilesUploaded++;
-        globalProgress = totalNumFilesUploaded / totalNumFilesQueued;
 
         file.uploaded = true;
 
@@ -134,12 +134,17 @@ function RefineryFileUploadCtrl (
     formData.splice(1);  // clear upload_id for the next upload
   };
 
-  $element.on('fileuploadadd', function add () {
+  $element.on('fileuploadadd', function add (e, data) {
     totalNumFilesQueued++;
-    globalProgress = totalNumFilesUploaded / totalNumFilesQueued;
+    $scope.queuedFiles.push(data.files[0]);
   });
 
-  $element.on('fileuploadfail', function submit () {
+  $element.on('fileuploadfail', function submit (e, data) {
+    for (var i = $scope.queuedFiles.length; i--;) {
+      if ($scope.queuedFiles[i].name === data.files[0].name) {
+        $scope.queuedFiles.splice(i, 1);
+      }
+    }
     totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
   });
 
@@ -148,11 +153,28 @@ function RefineryFileUploadCtrl (
       // don't upload again
       return false;
     }
+    currentUploadFile++;
     return true;
   });
 
-  $scope.globalReadableProgress = function (progress) {
-    return Math.round(progress * globalProgress);
+  $scope.globalReadableProgress = function (progress, index) {
+    if (index < currentUploadFile) {
+      return 100;
+    }
+    if (index === currentUploadFile) {
+      return (progress || 0).toFixed(3);
+    }
+    return 0;
+  };
+
+  $scope.globalToIndividualProgress = function (progress, index) {
+    if (index < currentUploadFile) {
+      return +(100 / totalNumFilesQueued).toFixed(3);
+    }
+    if (index === currentUploadFile) {
+      return +(progress / totalNumFilesQueued).toFixed(3);
+    }
+    return 0;
   };
 
   $scope.numUnfinishedUploads = function () {

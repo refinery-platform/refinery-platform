@@ -383,10 +383,21 @@
               file-upload-progress="progress()">
               <div
                 class="progress-bar"
-                ng-class="{ 'progress-bar-success': allUploaded }"
-                ng-style="{ 'width': globalReadableProgress(num) + '%' }">
-                <span ng-if="globalReadableProgress(num) > 0 && globalReadableProgress(num) < 100">{{ globalReadableProgress(num) + '%' }}</span>
-                <span ng-if="globalReadableProgress(num) >= 100"><strong>All uploads done!</strong></span>
+                ng-repeat="file in queuedFiles track by file.name"
+                ng-class="{ 'progress-bar-success': file.uploaded && !file.error, 'progress-bar-danger': file.error }"
+                ng-style="{ 'width': globalToIndividualProgress(num, $index) + '%' }">
+                <span
+                  ng-if="globalReadableProgress(num, $index) > 0 && globalReadableProgress(num, $index) < 100">
+                  {{ globalToIndividualProgress(num, $index) + '%' }}
+                </span>
+                <i
+                  class="fa fa-check text-success"
+                  aria-hidden="true"
+                  ng-if="globalReadableProgress(num, $index) === 100 && !file.error"></i>
+                <i
+                  class="fa fa-exclamation-triangle text-danger"
+                  aria-hidden="true"
+                  ng-if="file.error"></i>
               </div>
             </div>
             <!-- The extended global progress state -->
