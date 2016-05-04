@@ -282,7 +282,7 @@ def load_config():
                 config.update(y)
 
     # Collect and report list of missing keys.
-    required = ['SITE_NAME', 'SITE_URL', 'VOLUME', 'ADMIN_PASSWORD']
+    required = ['SITE_NAME', 'SITE_URL', 'ADMIN_PASSWORD']
     bad = []
     for key in required:
         if key not in config:
