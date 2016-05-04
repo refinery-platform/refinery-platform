@@ -1116,9 +1116,6 @@ class Analysis(OwnableResource):
         """Sends an email when the analysis is finished"""
         # don't mail the user if analysis was canceled
 
-        # if self.cancel:
-        #   return
-
         # get basic information
         user = self.get_owner()
         name = self.name
