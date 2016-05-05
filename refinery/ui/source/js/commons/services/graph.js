@@ -635,7 +635,7 @@ function GraphFactory (_) {
    * @date    2016-05-05
    * @param   {Object}  graph  Reference-based annotation term graph.
    * @param   {String}  root   URI of root node.
-   * @return  {Object}           [description]
+   * @return  {Object}         Tree.
    */
   Graph.toTree = function (graph, root) {
     var nodeVisited = {};
@@ -760,7 +760,6 @@ function GraphFactory (_) {
           counterKeep++;
         }
       }
-      console.log(counterDelete + ' vs ' + counterKeep);
     }
 
     copyNodes(graph, tree);
@@ -784,7 +783,7 @@ function GraphFactory (_) {
    * @date    2016-05-05
    * @param   {Object}  graph     Annotation term graph.
    * @param   {String}  root      Root node URI.
-   * @param   {Array}   allDsIds  [description]
+   * @param   {Array}   allDsIds  Array of all data set IDs.
    */
   Graph.addPseudoSiblingToRoot = function (graph, root, allDsIds) {
     var annotatedDsIds = Object.keys(graph[root].dataSets);
