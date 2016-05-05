@@ -751,11 +751,12 @@ def objectify_facet_field_counts(facet_fields):
 
         for index in range(0, len(count_array), 2):
             count_obj_array.append(
-                    {count_array[index]: count_array[index + 1]}
-            )
+                    {'name': count_array[index],
+                     'count': count_array[index + 1]
+                     })
 
         # sort fields depending on count
-        count_obj_array.sort(key=lambda x: x.values(), reverse=True)
+        count_obj_array.sort(key=lambda x: x['count'], reverse=True)
         facet_fields[field] = count_obj_array
 
     return facet_fields
