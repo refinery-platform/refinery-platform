@@ -1229,6 +1229,17 @@ DashboardCtrl.prototype.triggerShowDataSetsFilter = function () {
             tmp.push(response.objects[i]);
           }
         }
+        tmp.sort(function sortByName (a, b) {
+          var aName = a.group_name.toLowerCase();
+          var bName = b.group_name.toLowerCase();
+          if (aName < bName) {
+            return -1;
+          }
+          if (aName > bName) {
+            return 1;
+          }
+          return 0;
+        });
         this.membership = tmp;
       }.bind(this))
       .finally(function () {
