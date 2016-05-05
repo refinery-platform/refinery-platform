@@ -28,8 +28,9 @@
         role="tabpanel"
         aria-labelledby="{{ attribute }}">
         <div class="panel-body">
-          <div ng-repeat="(field, value) in fields.facetObj">
-            <div class="checkbox">
+          <div ng-repeat="(field, value) in fields.facetObj track by $index">
+            <div class="checkbox"
+              ng-show="showField(field, fields.internal_name, attributeIndex)">
               <label>
                 <input
                   type="checkbox"
