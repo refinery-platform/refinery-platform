@@ -96,13 +96,13 @@
           </div>
           <div class="col-md-5 analysis-name">
             <span ng-switch on="analysis.status">
-              <span ng-switch-when="SUCCESS">
+              <span ng-switch-when="UNKNOWN">
+                {{ analysis.name }}
+              </span>
+              <span ng-switch-default>
                 <a ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
                   {{ analysis.name }}
                 </a>
-              </span>
-              <span ng-switch-default>
-                  {{ analysis.name }}
               </span>
             </span>
             <span ng-show="analysis.status=='RUNNING' ||

@@ -77,10 +77,7 @@ def get_task_group_state(task_group_id):
         if task.state == celery.states.SUCCESS:
             percent_done = 100
         elif task.info:
-            try:
-                percent_done = task.info.get('percent_done') or 0
-            except AttributeError:
-                logger.error("Task %s failed: %s", task, task.info)
+            percent_done = task.info.get('percent_done') or 0
         task_group_state.append({
             'state': task.state,
             'percent_done': percent_done,

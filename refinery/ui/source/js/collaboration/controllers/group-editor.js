@@ -3,7 +3,7 @@
 function GroupEditorCtrl (
   bootbox,
   $uibModalInstance,
-  groupExtendedService,
+  groupService,
   groupMemberService,
   groupDataService,
   group,
@@ -12,7 +12,7 @@ function GroupEditorCtrl (
 ) {
   this.bootbox = bootbox;
   this.$uibModalInstance = $uibModalInstance;
-  this.groupExtendedService = groupExtendedService;
+  this.groupService = groupService;
   this.groupMemberService = groupMemberService;
   this.groupDataService = groupDataService;
   this.group = group;
@@ -50,7 +50,7 @@ GroupEditorCtrl.prototype.leaveGroup = function () {
 GroupEditorCtrl.prototype.deleteGroup = function () {
   var that = this;
 
-  that.groupExtendedService.delete({
+  that.groupService.delete({
     uuid: that.group.uuid
   })
   .$promise
@@ -68,7 +68,7 @@ angular
   .controller('GroupEditorCtrl', [
     'bootbox',
     '$uibModalInstance',
-    'groupExtendedService',
+    'groupService',
     'groupMemberService',
     'groupDataService',
     'group',

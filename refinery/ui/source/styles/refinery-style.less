@@ -962,11 +962,6 @@ a.analysis-header {
   margin: 0 auto;
 }
 
-.refinery-spinner-inline {
-  display: inline-block;
-  margin: 0 0.5em;
-}
-
 .refinery-error,
 .refinery-info {
   text-align: center;
@@ -1578,7 +1573,12 @@ body.is-screenshot-ready {
   border-top: 1px solid @gray-lightest;
 
   &:first-child {
+    padding-top: 0;
     border-top: 0;
+  }
+
+  &:last-child {
+    padding-bottom: 0;
   }
 }
 

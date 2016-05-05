@@ -562,22 +562,6 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         ]
         return prepend_urls_list
 
-    def filter_by_group(self, request, obj_list):
-        if 'group' in request.GET:
-            try:
-                group = ExtendedGroup.objects.get(
-                    id=request.GET['group']
-                )
-            except Exception:
-                group = None
-
-            if group:
-                obj_list = list(get_objects_for_group(
-                    group, 'core.read_dataset'
-                ))
-
-        return obj_list
-
     def obj_get(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
 
@@ -587,7 +571,6 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
     def get_object_list(self, request):
         obj_list = SharableResourceAPIInterface.get_object_list(self, request)
-        obj_list = self.filter_by_group(request, obj_list)
         return obj_list
 
     def obj_create(self, bundle, **kwargs):

@@ -15,7 +15,6 @@ function DashboardCtrl (
   settings,
   dataSet,
   authService,
-  groupService,
   projectService,
   analysisService,
   workflowService,
@@ -48,7 +47,6 @@ function DashboardCtrl (
   this.settings = settings;
   this.dataSet = dataSet;
   this.authService = authService;
-  this.groupService = groupService;
   this.projectService = projectService;
   this.analysisService = analysisService;
   this.workflowService = workflowService;
@@ -105,9 +103,6 @@ function DashboardCtrl (
     'objects',
     'total_count'
   );
-
-  this._dataSetsFilterGroup = null;
-  this.membership = [];
 
   // Set up projects for `uiScroll`
   // this.projects = new UiScrollSource(
@@ -536,31 +531,6 @@ Object.defineProperty(
 
 Object.defineProperty(
   DashboardCtrl.prototype,
-  'dataSetsFilterGroup', {
-    enumerable: true,
-    get: function () {
-      return this._dataSetsFilterGroup;
-    },
-    set: function (value) {
-      var groupId = value && value.group_id ? value.group_id : undefined;
-
-      this._dataSetsFilterGroup = value;
-      if (typeof groupId === 'number') {
-        this.dataSet.filter({
-          group: groupId
-        });
-      } else {
-        this.dataSet.all();
-      }
-      this.dataSets.newOrCachedCache(undefined, true);
-      this.dashboardDataSetsReloadService.reload();
-      this.checkDataSetsFilter();
-      this.checkAllCurrentDataSetsInDataCart();
-    }
-  });
-
-Object.defineProperty(
-  DashboardCtrl.prototype,
   'dataSetsFilterPublic', {
     enumerable: true,
     get: function () {
@@ -699,10 +669,6 @@ DashboardCtrl.prototype.checkDataSetsFilter = function () {
     return;
   }
   if (this.dataSetsFilterPublic) {
-    this.dataSetsFilter = true;
-    return;
-  }
-  if (this.dataSetsFilterGroup) {
     this.dataSetsFilter = true;
     return;
   }
@@ -1215,23 +1181,6 @@ DashboardCtrl.prototype.showUploadButton = function () {
   return true;
 };
 
-DashboardCtrl.prototype.triggerShowDataSetsFilter = function () {
-  this.showDataSetsFilter = !!!this.showDataSetsFilter;
-  if (!this.membership.length) {
-    this.groupService.query().$promise.then(function (response) {
-      var tmp = [];
-      // This extra loop is necessary because we don't want to provide two
-      // filter options to only show public data.
-      for (var i = response.objects.length; i--;) {
-        if (response.objects[i].group_id !== 100) {
-          tmp.push(response.objects[i]);
-        }
-      }
-      this.membership = tmp;
-    }.bind(this));
-  }
-};
-
 angular
   .module('refineryDashboard')
   .controller('DashboardCtrl', [
@@ -1246,7 +1195,6 @@ angular
     'settings',
     'dataSet',
     'authService',
-    'groupService',
     'projectService',
     'analysisService',
     'workflowService',

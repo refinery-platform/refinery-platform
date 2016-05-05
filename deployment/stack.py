@@ -38,7 +38,6 @@ import datetime
 import glob
 import json     # for json.dumps
 import os       # for os.popen
-import random
 import sys      # sys.stderr, sys.exit, and so on
 
 # https://pypi.python.org/pypi/boto3
@@ -110,51 +109,6 @@ def main():
         open('aws.sh').read())
 
     cft = core.CloudFormationTemplate(description="refinery platform.")
-
-    rds_properties = {
-        "AllocatedStorage": "5",
-        "AvailabilityZone": config['AVAILABILITY_ZONE'],
-        "BackupRetentionPeriod": "0",
-        "DBInstanceClass": "db.t2.small",       # todo:?
-        "DBInstanceIdentifier": config['RDS_NAME'],
-        "Engine": "postgres",
-        "EngineVersion": "9.3.10",
-        # "KmsKeyId" ?
-        "MasterUsername": "root",
-        "MasterUserPassword": "mypassword",
-        "MultiAZ": False,
-        "Port": "5432",
-        "PubliclyAccessible": False,
-        "StorageType": "gp2",
-        "Tags": instance_tags,  # todo: Should be different?
-    }
-
-    if 'RDS_SNAPSHOT' in config:
-        rds_properties['DBSnapshotIdentifier'] = config['RDS_SNAPSHOT']
-
-    cft.resources.rds_instance = core.Resource(
-        'RDSInstance', 'AWS::RDS::DBInstance',
-        core.Properties(rds_properties),
-        core.DeletionPolicy("Snapshot"),
-        )
-
-    volume_properties = {
-        'AvailabilityZone': config['AVAILABILITY_ZONE'],
-        'Encrypted': True,
-        'Size': 100,
-        'Tags': tags.load(),
-        'VolumeType': 'gp2'
-    }
-
-    if 'DATA_SNAPSHOT' in config:
-        volume_properties['SnapshotId'] = config['DATA_SNAPSHOT']
-
-    # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-ebs-volume.html
-    cft.resources.ebs = core.Resource(
-        'RefineryData', 'AWS::EC2::Volume',
-        core.Properties(volume_properties),
-        core.DeletionPolicy("Snapshot"),
-    )
 
     cft.resources.ec2_instance = core.Resource(
         'WebInstance', 'AWS::EC2::Instance',
@@ -258,7 +212,7 @@ def main():
         core.Properties({
             'Device': '/dev/xvdr',
             'InstanceId': functions.ref('WebInstance'),
-            'VolumeId': functions.ref('RefineryData'),
+            'VolumeId': config['VOLUME']
         })
     )
 
@@ -282,7 +236,7 @@ def load_config():
                 config.update(y)
 
     # Collect and report list of missing keys.
-    required = ['SITE_NAME', 'SITE_URL', 'ADMIN_PASSWORD']
+    required = ['SITE_NAME', 'SITE_URL', 'VOLUME', 'ADMIN_PASSWORD']
     bad = []
     for key in required:
         if key not in config:
@@ -292,21 +246,8 @@ def load_config():
             config_dir, bad))
         raise ConfigError()
 
-    # These keys were previously used, so might be set from old
-    # config files or documentation. We warn if we see them.
-    ignored = ['VOLUME']
-    bad = []
-    for key in ignored:
-        if key in config:
-            bad.append(key)
-    if bad:
-        sys.stderr.write("{:s} no longer used, ignoring\n".format(
-            bad))
-
     config.setdefault('RDS_SUPERUSER_PASSWORD', 'mypassword')
-    if 'RDS_NAME' not in config:
-        config['RDS_NAME'] = "rds-refinery-" + random_alnum(7)
-
+    config.setdefault('RDS_NAME', 'rds-refinery')
     return config
 
 
@@ -359,6 +300,7 @@ def random_alnum(n):
     of length `n`.
     """
 
+    import random
     import string
 
     return ''.join(
@@ -371,35 +313,23 @@ def derive_config(config):
     Modify `config` so that extra, derived, configuration is
     added to it.
 
-    The only case at the moment is that
-    (unless already supplied)
-    an availability zone is selected
-    (at random).
+    The only case at the moment is that the availability zone of
+    the VOLUME is added so that the instance can share the same
+    availability zone.
     """
 
-    if 'AVAILABILITY_ZONE' not in config:
-        az = choose_availability_zone()
-        config['AVAILABILITY_ZONE'] = az
+    # Discover the Availability Zone for the volume,
+    # and add it to the config.
+    ec2 = boto3.resource('ec2')
+    volume = ec2.Volume(config['VOLUME'])
+    # http://boto3.readthedocs.org/en/latest/reference/services/ec2.html#volume
+    az = volume.availability_zone
 
+    # If AVAILABILITY_ZONE is already set, it must match.
+    if 'AVAILABILITY_ZONE' in config:
+        assert config['AVAILABILITY_ZONE'] == az
 
-def choose_availability_zone():
-    """
-    Choose, at random, an availability zone from amongst the
-    zones available to this AWS account
-    (the list of zones varies from account to account).
-    """
-
-    # http://boto3.readthedocs.org/en/latest/
-    import boto3
-
-    ec2 = boto3.client('ec2')
-
-    # http://boto3.readthedocs.org/en/latest/reference/services/ec2.html#EC2.Client.describe_availability_zones
-    res = ec2.describe_availability_zones()
-
-    zones = res['AvailabilityZones']
-    zoneids = [z['ZoneName'] for z in zones]
-    return random.choice(zoneids)
+    config['AVAILABILITY_ZONE'] = az
 
 
 if __name__ == '__main__':
