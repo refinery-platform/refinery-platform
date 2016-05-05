@@ -187,14 +187,15 @@
         </div>
         <div class="separator"></div>
         <div class="entry" ng-if="dashboard.userIsAuthenticated">
-          <label for="filterDataSetByGroup" class="select-label">Filter by group</label>
-          <select
-            id="filterDataSetByGroup"
-            name="filterDataSetByGroup"
-            ng-model="dashboard.dataSetsFilterGroup"
-            ng-options="group as group.group_name for group in dashboard.membership track by group.group_id">
-            <option value="">---</option>
-          </select>
+          <label class="select">
+            <select
+              name="filterDataSetByGroup"
+              ng-model="dashboard.dataSetsFilterGroup"
+              ng-options="group as group.group_name for group in dashboard.membership track by group.group_id">
+              <option value="">---</option>
+            </select>
+            <span class="label-text">Group</span>
+          </label>
         </div>
       </div>
       <div
