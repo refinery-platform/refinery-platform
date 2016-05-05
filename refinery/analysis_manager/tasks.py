@@ -97,6 +97,7 @@ def run_analysis(analysis_uuid):
     elif not refinery_import.successful():
         logger.error("Analysis '%s' failed during file import", analysis)
         analysis.set_status(Analysis.FAILURE_STATUS)
+        analysis.send_email()
         refinery_import.delete()
         return
 
@@ -110,6 +111,7 @@ def run_analysis(analysis_uuid):
             logger.error("Analysis '%s' failed during preparation in Galaxy",
                          analysis)
             analysis.set_status(Analysis.FAILURE_STATUS)
+            analysis.send_email()
             refinery_import.delete()
             return
         galaxy_import_tasks = [
@@ -132,6 +134,7 @@ def run_analysis(analysis_uuid):
         logger.error("Analysis '%s' failed in Galaxy", analysis)
         analysis.set_status(Analysis.FAILURE_STATUS)
         analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
+        analysis.send_email()
         refinery_import.delete()
         galaxy_import.delete()
         analysis.galaxy_cleanup()
@@ -142,6 +145,7 @@ def run_analysis(analysis_uuid):
         percent_complete = analysis.galaxy_progress()
     except RuntimeError:
         analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
+        analysis.send_email()
         refinery_import.delete()
         galaxy_import.delete()
         analysis.galaxy_cleanup()
@@ -182,6 +186,7 @@ def run_analysis(analysis_uuid):
         logger.error("Analysis '%s' failed while downloading results from "
                      "Galaxy", analysis)
         analysis.set_status(Analysis.FAILURE_STATUS)
+        analysis.send_email()
         refinery_import.delete()
         galaxy_import.delete()
         galaxy_export.delete()

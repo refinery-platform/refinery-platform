@@ -6,16 +6,19 @@ function RefineryFileUploadCtrl (
   $scope,
   $timeout,
   $,
+  settings,
   SparkMD5,
-  dataSetImportSettings
+  dataSetImportSettings,
+  $uibModal
 ) {
   var csrf = '';
   var formData = [];
   var md5 = {};
   var totalNumFilesQueued = 0;
   var totalNumFilesUploaded = 0;
-  var globalProgress = 0;
+  var currentUploadFile = -1;
 
+  $scope.queuedFiles = [];
   // This is set to true by default because this var is used to apply an
   // _active_ class to the progress bar so that it displays the moving stripes.
   // Setting it to false by default leads to an ugly flickering while the bar
@@ -33,6 +36,70 @@ function RefineryFileUploadCtrl (
     $log.error('CSRF middleware token was not found in the upload form');
   }
 
+  var worker = false;
+
+  function workerCode () {
+    // Default setting
+    var chunkSize = 2097152;
+
+    function calcMD5 (file) {
+      var slice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
+      var chunks = Math.ceil(file.size / chunkSize);
+      var spark = new SparkMD5.ArrayBuffer();
+      var currentChunk = 0;
+
+      var reader = new FileReader();
+
+      function readNextChunk () {
+        reader.onload = function onload (event) {
+          spark.append(event.target.result);  // append chunk
+          currentChunk++;
+          if (currentChunk < chunks) {
+            readNextChunk();
+          } else {
+            postMessage({
+              name: file.name,
+              md5: spark.end()
+            });
+          }
+        };
+
+        reader.onerror = function (event) {
+          postMessage({ name: file.name, error: event.message });
+        };
+
+        var startIndex = currentChunk * chunkSize;
+        var end = Math.min(startIndex + chunkSize, file.size);
+        reader.readAsArrayBuffer(slice.call(file, startIndex, end));
+      }
+
+      readNextChunk();
+    }
+
+    onmessage = function (event) {  // eslint-disable-line no-undef
+      // importScripts only works with absolute URLs when the worker is
+      // created inline. Find out more here:
+      // http://www.html5rocks.com/en/tutorials/workers/basics/
+      importScripts(  // eslint-disable-line no-undef
+        event.data[0] +
+        '/static/vendor/spark-md5/spark-md5.min.js'
+      );
+
+      chunkSize = event.data[2];
+
+      calcMD5(event.data[1]);
+    };
+  }
+
+  if (window.Worker) {
+    var code = workerCode.toString();
+    code = code.substring(code.indexOf('{') + 1, code.lastIndexOf('}'));
+
+    var blob = new Blob([code], { type: 'application/javascript' });
+
+    worker = new Worker(URL.createObjectURL(blob));
+  }
+
   $.blueimp.fileupload.prototype.processActions = {
     calculate_checksum: function (data, options) {
       var that = this;
@@ -45,25 +112,38 @@ function RefineryFileUploadCtrl (
 
       function readNextChunk () {
         var reader = new FileReader();
-        // We have to disable eslint here because this is a circular dependency
-        reader.onload = onload;   // eslint-disable-line no-use-before-define
+
+        reader.onload = function onload (event) {
+          spark.append(event.target.result);  // append chunk
+          currentChunk++;
+          if (currentChunk < chunks) {
+            readNextChunk();
+          } else {
+            md5[file.name] = spark.end();  // This piece calculates the MD5 hash
+            dfd.resolveWith(that, [data]);
+          }
+        };
+
         var startIndex = currentChunk * options.chunkSize;
         var end = Math.min(startIndex + options.chunkSize, file.size);
         reader.readAsArrayBuffer(slice.call(file, startIndex, end));
       }
 
-      function onload (e) {
-        spark.append(e.target.result);  // append chunk
-        currentChunk++;
-        if (currentChunk < chunks) {
-          readNextChunk();
-        } else {
-          md5[file.name] = spark.end();
+      if (worker) {
+        worker.postMessage([
+          settings.appRoot,
+          file,
+          options.chunkSize
+        ]);
+
+        worker.onmessage = function (event) {
+          md5[file.name] = event.data.md5;
           dfd.resolveWith(that, [data]);
-        }
+        };
+      } else {
+        readNextChunk();
       }
 
-      readNextChunk();
       return dfd.promise();
     }
   };
@@ -82,7 +162,6 @@ function RefineryFileUploadCtrl (
       dataType: 'json',
       success: function () {
         totalNumFilesUploaded++;
-        globalProgress = totalNumFilesUploaded / totalNumFilesQueued;
 
         file.uploaded = true;
 
@@ -134,12 +213,17 @@ function RefineryFileUploadCtrl (
     formData.splice(1);  // clear upload_id for the next upload
   };
 
-  $element.on('fileuploadadd', function add () {
+  $element.on('fileuploadadd', function add (e, data) {
     totalNumFilesQueued++;
-    globalProgress = totalNumFilesUploaded / totalNumFilesQueued;
+    $scope.queuedFiles.push(data.files[0]);
   });
 
-  $element.on('fileuploadfail', function submit () {
+  $element.on('fileuploadfail', function submit (e, data) {
+    for (var i = $scope.queuedFiles.length; i--;) {
+      if ($scope.queuedFiles[i].name === data.files[0].name) {
+        $scope.queuedFiles.splice(i, 1);
+      }
+    }
     totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
   });
 
@@ -148,15 +232,40 @@ function RefineryFileUploadCtrl (
       // don't upload again
       return false;
     }
+    currentUploadFile++;
     return true;
   });
 
-  $scope.globalReadableProgress = function (progress) {
-    return Math.round(progress * globalProgress);
+  $scope.globalReadableProgress = function (progress, index) {
+    if (index < currentUploadFile) {
+      return 100;
+    }
+    if (index === currentUploadFile) {
+      return (progress || 0).toFixed(3);
+    }
+    return 0;
+  };
+
+  $scope.globalToIndividualProgress = function (progress, index) {
+    if (index < currentUploadFile) {
+      return +(100 / totalNumFilesQueued).toFixed(3);
+    }
+    if (index === currentUploadFile) {
+      return +(progress / totalNumFilesQueued).toFixed(3);
+    }
+    return 0;
   };
 
   $scope.numUnfinishedUploads = function () {
     return totalNumFilesQueued - totalNumFilesUploaded;
+  };
+
+  $scope.openHelpMd5 = function () {
+    $uibModal.open({
+      templateUrl:
+        '/static/partials/data-set-import/partials/dialog-help-md5.html',
+      controller: 'RefineryFileUploadMD5HelpCtrl as modal'
+    });
   };
 
   $scope.options = {
@@ -176,7 +285,9 @@ angular
     '$scope',
     '$timeout',
     '$',
+    'settings',
     'SparkMD5',
     'dataSetImportSettings',
+    '$uibModal',
     RefineryFileUploadCtrl
   ]);
