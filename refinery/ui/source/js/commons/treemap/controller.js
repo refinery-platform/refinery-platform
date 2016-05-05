@@ -341,7 +341,7 @@ TreemapCtrl.prototype.addEventListeners = function () {
        * this = the clicked DOM element
        * data = data
        */
-      var $this = this.$(this);
+      var $this = that.$(this);
 
       if ($this.parent().attr('class') === 'leaf-node') {
         return;
