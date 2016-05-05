@@ -400,6 +400,20 @@ function GraphFactory (_) {
     }
   };
 
+  /**
+   * Helper method to match two arrays of IDs
+   *
+   * @description
+   * This method is used to check how many of the IDs in `dsIds` are present in
+   * `retrievedIds`.
+   *
+   * @method  getNodeRetrievedDataSet
+   * @author  Fritz Lekschas
+   * @date    2016-05-05
+   * @param   {Array}   dsIds         Array of integer or string-based IDs.
+   * @param   {Array}   retrievedIds  Array of integer-based IDs.
+   * @return  {Object}                Object list of matched IDs.
+   */
   Graph.getNodeRetrievedDataSet = function (dsIds, retrievedIds) {
     var retrievedNodeDsIds = {};
 
