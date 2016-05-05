@@ -1,6 +1,6 @@
 'use strict';
 
-function rpFileBrowserAssayFilters ($timeout, $location) {
+function rpFileBrowserAssayFilters ($timeout, $location, $window) {
   return {
     restrict: 'E',
     templateUrl: '/static/partials/file-browser/partials/assay-filters.html',
@@ -39,14 +39,16 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
         );
         console.log(attribute);
 
-      //  var selectedKeys = Object.keys(scope.FBCtrl.selectedFieldList);
-      //  var selectedAttributeIndex =
-        // selectedKeys.indexOf(attributeObj.internal_name);
+        var selectedKeys = Object.keys(scope.FBCtrl.selectedFieldList);
+        var selectedAttributeIndex = selectedKeys.indexOf(attributeObj.internal_name);
         if (attributeTitle.hasClass('fa-caret-right')) {
           // minimize the panel if it does not have a selected field
           attributeTitle.removeClass('fa-caret-right');
           attributeTitle.addClass('fa-caret-down');
           attribute.addClass('in');
+        } else if (selectedAttributeIndex > -1) {
+          attributeTitle.removeClass('fa-caret-down');
+          attributeTitle.addClass('fa-caret-right');
         } else {
           // expand the panel
           attributeTitle.removeClass('fa-caret-down');
@@ -55,10 +57,39 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
         }
       };
 
+      var isCollapsed = function (index) {
+        var attributeTitle = angular.element(
+          document.querySelector('#attribute-panel-' + index)
+        );
+        console.log(attributeTitle);
+        return attributeTitle.hasClass('fa-caret-right');
+      };
+
       // Drop down windows when they are in the URL query
       scope.$on('rf/attributeFilter-ready', function () {
         scope.generateFilterDropSelection();
       });
+
+      scope.showField = function (field, internalName, attributeIndex) {
+        console.log('in show field');
+        console.log(field);
+        console.log(internalName);
+        console.log(scope.FBCtrl.selectedFieldList);
+        var selectedIndex = -1;
+        if (scope.FBCtrl.selectedFieldList[internalName] !== undefined) {
+          var encodedField = $window.encodeURIComponent(field);
+          selectedIndex = scope.FBCtrl.selectedFieldList[internalName].indexOf(encodedField);
+        }
+
+        if (!isCollapsed(attributeIndex)) {
+          return true;
+        } else if (selectedIndex > -1 &&
+          isCollapsed(attributeIndex)) {
+          return true;
+        }
+
+        return false;
+      };
 
       // Loops through fields to find matching attributes and drops down panel
       var updateDomDropdown = function (allFields, queryFields, attributeName) {
@@ -99,6 +130,7 @@ angular
   .directive('rpFileBrowserAssayFilters', [
     '$timeout',
     '$location',
+    '$window',
     rpFileBrowserAssayFilters
   ]
 );
