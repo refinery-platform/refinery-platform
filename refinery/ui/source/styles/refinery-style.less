@@ -962,6 +962,11 @@ a.analysis-header {
   margin: 0 auto;
 }
 
+.refinery-spinner-inline {
+  display: inline-block;
+  margin: 0 0.5em;
+}
+
 .refinery-error,
 .refinery-info {
   text-align: center;
@@ -1562,4 +1567,27 @@ body.is-screenshot-ready {
     background-color: #e5e5e5 !important;
     border-bottom-color: #e5e5e5 !important;
   }
+}
+
+.fa.success {
+  color: @green;
+}
+
+.bordered-row {
+  padding: 0.5em 0;
+  border-top: 1px solid @gray-lightest;
+
+  &:first-child {
+    border-top: 0;
+  }
+}
+
+.row.v-centered-row > div {
+  height: 2.5em;
+}
+
+.v-center {
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
 }

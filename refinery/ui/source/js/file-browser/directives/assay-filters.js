@@ -22,6 +22,7 @@ function rpFileBrowserAssayFilters ($timeout, $location, $window) {
         var attribute = angular.element(
           document.querySelector('#' + escapeAttributeName)
         );
+
         var selectedKeys = Object.keys(scope.FBCtrl.selectedFieldList);
         var selectedAttributeIndex = selectedKeys.indexOf(attributeObj.internal_name);
         if (attributeTitle.hasClass('fa-caret-right')) {

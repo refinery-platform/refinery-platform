@@ -739,7 +739,7 @@
 
     .refinery-filter-sort {
       position: absolute;
-      z-index: 2;
+      z-index: 3;
       right: 10px;
       left: 10px;
       padding: 5px;
@@ -787,6 +787,14 @@
           margin: 0;
           padding-left: 20px;
           font-weight: normal;
+
+          &.select {
+            padding-left: 0;
+
+            .label-text {
+              padding-left: 10px;
+            }
+          }
         }
 
         .radio-button-hide input[type=radio] {
@@ -1103,9 +1111,11 @@
       }
 
       .btn {
+        position: relative;
         padding: 2px 10px 3px;
         white-space: nowrap;
         overflow: hidden;
+        color: @text-color;
         text-overflow: ellipsis;
         background: none;
         box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
@@ -1120,7 +1130,25 @@
           background: @blue;
 
           &:hover {
-            background: lighten(@blue, 10%);
+            background: lighten(@blue, 15%);
+          }
+        }
+
+        .refinery-spinner-bg {
+          position: absolute;
+          top: 1px;
+          right: 1px;
+          bottom: 1px;
+          left: 1px;
+          border-radius: 5px;
+          background: fadeout(@gray-lighter, 10%);
+
+          .refinery-spinner {
+            position: absolute;
+            top: 2px;
+            right: 0;
+            bottom: 0;
+            left: 0;
           }
         }
       }
@@ -1131,6 +1159,11 @@
         h4 em {
           font-weight: bold;
           font-style: normal;
+        }
+
+        .separator {
+          color: @gray-light;
+          padding: 0 0.25em;
         }
 
         ul.help {

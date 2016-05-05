@@ -96,6 +96,7 @@ def run_analysis(analysis_uuid):
     elif not refinery_import.successful():
         logger.error("Analysis '%s' failed during file import", analysis)
         analysis.set_status(Analysis.FAILURE_STATUS)
+        analysis.send_email()
         refinery_import.delete()
         return
 
@@ -109,6 +110,7 @@ def run_analysis(analysis_uuid):
             logger.error("Analysis '%s' failed during preparation in Galaxy",
                          analysis)
             analysis.set_status(Analysis.FAILURE_STATUS)
+            analysis.send_email()
             refinery_import.delete()
             return
         galaxy_import_tasks = [
@@ -131,6 +133,7 @@ def run_analysis(analysis_uuid):
         logger.error("Analysis '%s' failed in Galaxy", analysis)
         analysis.set_status(Analysis.FAILURE_STATUS)
         analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
+        analysis.send_email()
         refinery_import.delete()
         galaxy_import.delete()
         analysis.galaxy_cleanup()
@@ -141,6 +144,7 @@ def run_analysis(analysis_uuid):
         percent_complete = analysis.galaxy_progress()
     except RuntimeError:
         analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
+        analysis.send_email()
         refinery_import.delete()
         galaxy_import.delete()
         analysis.galaxy_cleanup()
@@ -154,6 +158,7 @@ def run_analysis(analysis_uuid):
             analysis_status.galaxy_history_progress = percent_complete
             analysis_status.save()
         if percent_complete < 100:
+            analysis_status.set_galaxy_history_state(AnalysisStatus.PROGRESS)
             run_analysis.retry(countdown=RETRY_INTERVAL)
         else:
             analysis_status.set_galaxy_history_state(AnalysisStatus.OK)
@@ -180,6 +185,7 @@ def run_analysis(analysis_uuid):
         logger.error("Analysis '%s' failed while downloading results from "
                      "Galaxy", analysis)
         analysis.set_status(Analysis.FAILURE_STATUS)
+        analysis.send_email()
         refinery_import.delete()
         galaxy_import.delete()
         galaxy_export.delete()
@@ -203,6 +209,11 @@ def run_analysis(analysis_uuid):
     refinery_import.delete()
     galaxy_import.delete()
     galaxy_export.delete()
+
+    # Update file count and file size of the corresponding data set
+    analysis.data_set.file_count = analysis.data_set.get_file_count()
+    analysis.data_set.file_size = analysis.data_set.get_file_size()
+    analysis.data_set.save()
 
 
 def import_analysis_in_galaxy(ret_list, library_id, connection):
@@ -228,19 +239,18 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
                             connection.libraries.upload_file_from_local_path(
                                 library_id, file_path)[0]['id']
                     except (galaxy.client.ConnectionError, IOError) as exc:
-                        logger.error("Failed adding file '%s' to Galaxy "
-                                     "library '%s': %s",
-                                     curr_file_uuid, library_id, exc)
-                        raise
+                        raise RuntimeError(
+                            "Failed to add file '{}' to Galaxy library '{}': "
+                            "{}".format(curr_file_uuid, library_id, exc))
                     cur_item["id"] = file_id
                 else:
-                    error_msg = "Input file with UUID '{}' is not available"
-                    error_msg = error_msg.format(curr_file_uuid)
-                    raise RuntimeError(error_msg)
+                    raise RuntimeError(
+                        "Input file with UUID '{}' is not available".format(
+                            curr_file_uuid))
             else:
-                error_msg = "Input file with UUID '{}' is not available"
-                error_msg = error_msg.format(curr_file_uuid)
-                raise RuntimeError(error_msg)
+                raise RuntimeError(
+                    "Input file with UUID '{}' is not available".format(
+                        curr_file_uuid))
     return ret_list
 
 

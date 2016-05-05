@@ -15,6 +15,7 @@ function DashboardCtrl (
   settings,
   dataSet,
   authService,
+  groupService,
   projectService,
   analysisService,
   workflowService,
@@ -47,6 +48,7 @@ function DashboardCtrl (
   this.settings = settings;
   this.dataSet = dataSet;
   this.authService = authService;
+  this.groupService = groupService;
   this.projectService = projectService;
   this.analysisService = analysisService;
   this.workflowService = workflowService;
@@ -103,6 +105,9 @@ function DashboardCtrl (
     'objects',
     'total_count'
   );
+
+  this._dataSetsFilterGroup = null;
+  this.membership = [];
 
   // Set up projects for `uiScroll`
   // this.projects = new UiScrollSource(
@@ -362,6 +367,10 @@ function DashboardCtrl (
       this.dashboardExpandablePanelService.trigger('lockFullWith');
     }
   }.bind(this), 0);
+
+  this.pubSub.on('collapseFinished', function () {
+    this.collapsing = false;
+  }.bind(this));
 }
 
 DashboardCtrl.prototype.collectDataSetIds = function () {
@@ -527,6 +536,31 @@ Object.defineProperty(
 
 Object.defineProperty(
   DashboardCtrl.prototype,
+  'dataSetsFilterGroup', {
+    enumerable: true,
+    get: function () {
+      return this._dataSetsFilterGroup;
+    },
+    set: function (value) {
+      var groupId = value && value.group_id ? value.group_id : undefined;
+
+      this._dataSetsFilterGroup = value;
+      if (typeof groupId === 'number') {
+        this.dataSet.filter({
+          group: groupId
+        });
+      } else {
+        this.dataSet.all();
+      }
+      this.dataSets.newOrCachedCache(undefined, true);
+      this.dashboardDataSetsReloadService.reload();
+      this.checkDataSetsFilter();
+      this.checkAllCurrentDataSetsInDataCart();
+    }
+  });
+
+Object.defineProperty(
+  DashboardCtrl.prototype,
   'dataSetsFilterPublic', {
     enumerable: true,
     get: function () {
@@ -665,6 +699,10 @@ DashboardCtrl.prototype.checkDataSetsFilter = function () {
     return;
   }
   if (this.dataSetsFilterPublic) {
+    this.dataSetsFilter = true;
+    return;
+  }
+  if (this.dataSetsFilterGroup) {
     this.dataSetsFilter = true;
     return;
   }
@@ -843,7 +881,7 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
     }
   }
 
-  if (!this.dashboardDataSetPreviewService.previewing) {
+  function startExpansion () {
     if (!this.expandDataSetPanel) {
       this.expandDataSetPanel = true;
       this.expandedDataSetPanelBorder = true;
@@ -852,6 +890,19 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
     }
     this.dashboardDataSetPreviewService.preview(dataSet);
     this.dataSetPreview = true;
+  }
+
+  if (!this.dashboardDataSetPreviewService.previewing) {
+    if (this.collapsing) {
+      // Panel is currently being collapsed so we need to wait until the
+      // animation is done because the width fixer needs to capture the
+      // collapsed panel's width.
+      this.pubSub.on('collapseFinished', function () {
+        this.$timeout(startExpansion.bind(this), 0);
+      }.bind(this), 1);
+    } else {
+      startExpansion.apply(this);
+    }
   } else {
     if (dataSet.preview) {
       this.collapseDataSetPreview(dataSet);
@@ -878,6 +929,7 @@ DashboardCtrl.prototype.collapseDataSetPreview = function () {
 
       if (!this.repoMode) {
         this.expandDataSetPanel = false;
+        this.collapsing = true;
         this.dashboardExpandablePanelService.trigger('collapser');
       }
     }
@@ -1163,6 +1215,39 @@ DashboardCtrl.prototype.showUploadButton = function () {
   return true;
 };
 
+DashboardCtrl.prototype.triggerShowDataSetsFilter = function () {
+  this.showDataSetsFilter = !!!this.showDataSetsFilter;
+  if (!this.membershipLoaded) {
+    this.groupService.query()
+      .$promise
+      .then(function (response) {
+        var tmp = [];
+        // This extra loop is necessary because we don't want to provide two
+        // filter options to only show public data.
+        for (var i = response.objects.length; i--;) {
+          if (response.objects[i].group_id !== 100) {
+            tmp.push(response.objects[i]);
+          }
+        }
+        tmp.sort(function sortByName (a, b) {
+          var aName = a.group_name.toLowerCase();
+          var bName = b.group_name.toLowerCase();
+          if (aName < bName) {
+            return -1;
+          }
+          if (aName > bName) {
+            return 1;
+          }
+          return 0;
+        });
+        this.membership = tmp;
+      }.bind(this))
+      .finally(function () {
+        this.membershipLoaded = true;
+      }.bind(this));
+  }
+};
+
 angular
   .module('refineryDashboard')
   .controller('DashboardCtrl', [
@@ -1177,6 +1262,7 @@ angular
     'settings',
     'dataSet',
     'authService',
+    'groupService',
     'projectService',
     'analysisService',
     'workflowService',

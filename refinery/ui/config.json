@@ -81,6 +81,7 @@
         "c3/c3.min.js",
         "graphlib/dist/graphlib.core.min.js",
         "dagre/dist/dagre.core.min.js",
+        "filesize/lib/filesize.min.js",
         "floatThead/dist/jquery.floatThead.min.js",
         "humanize/humanize.js",
         "ng-file-upload/angular-file-upload.min.js",
@@ -93,7 +94,7 @@
         "lodash/lodash.min.js",
         "lodash-migrate/dist/lodash-migrate.min.js",
         "angular-ui-grid/ui-grid.min.js",
-        "spark-md5/spark-md5.js",
+        "spark-md5/spark-md5.min.js",
         "spectrum/spectrum.js",
         "tipsy/src/javascripts/jquery.tipsy.js"
       ],
