@@ -12,35 +12,46 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
     },
     link: function (scope) {
       // toggles views for fields when some fields are selected
-      var toggleUnselectedFields = function (fieldList, internalName) {
-        var selectedValues = scope.FBCtrl.selectedFieldList[internalName];
-        angular.forEach(fieldList, function (value, key) {
-          if (selectedValues.indexOf(key) === -1) {
-            angular.element(
-            document.querySelector('#attribute-filter-' + key)).toggle();
-          }
-        });
-      };
+      // var toggleUnselectedFields = function (fieldList, internalName) {
+      //  var selectedValues = scope.FBCtrl.selectedFieldList[internalName];
+      //  console.log(selectedValues);
+      //  var domFields = angular.element('.' + internalName).children();
+      //  console.log(domFields);
+      //  angular.forEach(fieldList, function (value, key) {
+      //    if (selectedValues.indexOf(key) === -1) {
+      //      angular.element(
+      //      document.querySelector('#attribute-filter-' + key)).toggle();
+      //    }
+      //  });
+      // };
 
       // ng-click event for attribute filter panels
-      scope.dropAttributePanel = function (e, attributeName, attributeObj) {
+      scope.dropAttributePanel = function (e, attributeName, attributeObj,
+                                           attributeIndex) {
         e.preventDefault();
+    //    var escapeAttributeName = attributeName.replace(' ', '-');
+        var attributeTitle = angular.element(
+          document.querySelector('#attribute-panel-' + attributeIndex)
+        );
         var escapeAttributeName = attributeName.replace(' ', '-');
         var attribute = angular.element(
           document.querySelector('#' + escapeAttributeName)
         );
+        console.log(attribute);
 
-        var selectedKeys = Object.keys(scope.FBCtrl.selectedFieldList);
-        var selectedAttributeIndex = selectedKeys.indexOf(attributeObj.internal_name);
-        if (attribute.hasClass('in') && selectedAttributeIndex === -1) {
+      //  var selectedKeys = Object.keys(scope.FBCtrl.selectedFieldList);
+      //  var selectedAttributeIndex =
+        // selectedKeys.indexOf(attributeObj.internal_name);
+        if (attributeTitle.hasClass('fa-caret-right')) {
           // minimize the panel if it does not have a selected field
-          attribute.removeClass('in');
-        } else if (attribute.hasClass('in')) {
-          // toggles fields if some fields are selected
-          toggleUnselectedFields(attributeObj.facetObj, attributeObj.internal_name);
+          attributeTitle.removeClass('fa-caret-right');
+          attributeTitle.addClass('fa-caret-down');
+          attribute.addClass('in');
         } else {
           // expand the panel
-          attribute.addClass('in');
+          attributeTitle.removeClass('fa-caret-down');
+          attributeTitle.addClass('fa-caret-right');
+          attribute.removeClass('in');
         }
       };
 

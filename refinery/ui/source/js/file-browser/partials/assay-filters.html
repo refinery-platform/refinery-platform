@@ -8,11 +8,15 @@
       <div class="panel panel-default">
         <div class="panel-heading" role="tab">
           <h4 class="panel-title">
+            <i class="fa fa-caret-down fa-pull-left"
+              id="attribute-panel-{{attributeIndex}}"
+              aria-hidden="true"></i>
           <div
             role="button"
             data-toggle="collapse"
             data-parent="#attribute-filter"
-            ng-click="dropAttributePanel($event, attribute, fields)"
+            ng-click="dropAttributePanel($event, attribute, fields,
+            attributeIndex)"
             aria-expanded="true"
             aria-controls="{{ attribute }}">
              {{ attribute }}
@@ -20,20 +24,19 @@
           </h4>
         </div>
       <div id="{{attribute | replaceWhiteSpaceWithHyphen}}"
-        class="panel-collapse collapse"
+        class="panel-collapse collapse in"
         role="tabpanel"
         aria-labelledby="{{ attribute }}">
         <div class="panel-body">
           <div ng-repeat="(field, value) in fields.facetObj">
-            <div class="checkbox" id="attribute-filter-{{ field }}">
+            <div class="checkbox">
               <label>
                 <input
                   type="checkbox"
                   name="optionsCheckboxes"
                   ng-model="FBCtrl.selectedField[field]"
                   ng-change="FBCtrl.attributeSelectionUpdate(
-                  fields.internal_name, field)"
-                  value="{{ value }}">
+                  fields.internal_name, field)">
                   {{ field }}: {{ value }}
               </label>
             </div>
@@ -49,7 +52,7 @@
     aria-multiselectable="true">
     <h4>Analysis Filter</h4>
     <div ng-repeat="(analysis, fields) in FBCtrl.analysisFilter">
-      <div class="panel panel-default">
+      <div class="panel panel-default" ng-show="attributeFilterCollapse">
         <div class="panel-heading" role="tab">
           <h4 class="panel-title">
           <div
