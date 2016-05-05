@@ -28,6 +28,7 @@ from django.db.models.signals import pre_delete
 from django_extensions.db.fields import UUIDField
 from django.core.files.storage import FileSystemStorage
 
+import core
 
 logger = logging.getLogger('file_store')
 
@@ -105,11 +106,6 @@ def file_path(instance, filename):
     return os.path.join(instance.sharename, dir1, dir2, filename)
 
 
-def is_url(string):
-    """Check if a given string is a URL"""
-    return urlparse(string).scheme != ""
-
-
 def map_source(source):
     """convert URLs to file system paths by applying file source map"""
     for pattern, replacement in \
@@ -134,7 +130,7 @@ def generate_file_source_translator(username='', base_path=''):
         """
         source = map_source(source.strip())
         # ignore URLs and absolute file paths
-        if is_url(source) or os.path.isabs(source):
+        if core.utils.is_url(source) or os.path.isabs(source):
             return source
         # process relative path
         if base_path:

@@ -5,7 +5,7 @@ import logging
 import py2neo
 import core
 import datetime
-import urlparse
+from urlparse import urlparse, urljoin
 
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -45,7 +45,7 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
         '(id: %s)', dataset_uuid, user_id
     )
 
-    graph = py2neo.Graph(urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data'))
+    graph = py2neo.Graph(urljoin(settings.NEO4J_BASE_URL, 'db/data'))
 
     # Get annotations of the data_set
     annotations = get_data_set_annotations(dataset_uuid)
@@ -134,7 +134,7 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
         user_ids, dataset_uuids
     )
 
-    graph = py2neo.Graph(urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data'))
+    graph = py2neo.Graph(urljoin(settings.NEO4J_BASE_URL, 'db/data'))
 
     statement = (
         "MATCH (ds:DataSet {uuid:{dataset_uuid}}) "
@@ -176,7 +176,7 @@ def remove_read_access_in_neo4j(dataset_uuids, user_ids):
         user_ids, dataset_uuids
     )
 
-    graph = py2neo.Graph(urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data'))
+    graph = py2neo.Graph(urljoin(settings.NEO4J_BASE_URL, 'db/data'))
 
     statement = (
         "MATCH (ds:DataSet {uuid:{dataset_uuid}}), (u:User {id:{user_id}}) "
@@ -230,7 +230,7 @@ def delete_data_set_neo4j(dataset_uuid):
 
     logger.debug('Deleted data set (uuid: %s) in Neo4J', dataset_uuid)
 
-    graph = py2neo.Graph(urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data'))
+    graph = py2neo.Graph(urljoin(settings.NEO4J_BASE_URL, 'db/data'))
 
     statement = (
         "MATCH (ds:DataSet {uuid:{dataset_uuid}}) "
@@ -265,7 +265,7 @@ def delete_ontology_from_neo4j(acronym):
 
     logger.debug('Deleting ontology (acronym: %s) from Neo4J', acronym)
 
-    graph = py2neo.Graph(urlparse.urljoin(settings.NEO4J_BASE_URL, 'db/data'))
+    graph = py2neo.Graph(urljoin(settings.NEO4J_BASE_URL, 'db/data'))
 
     # Only matches class nodes that exclusively belong to an ontology.
     # Note: Using an ordinary string replacement in addition to a parameterized
@@ -657,6 +657,10 @@ def get_full_url(relative_url):
     something breaks
     """
 
+    # If url passed in is already a full url, simply return that
+    if is_url(relative_url):
+        return relative_url
+
     # Being defensive is good
     try:
         current_site = Site.objects.get_current()
@@ -680,3 +684,8 @@ def get_full_url(relative_url):
     )
 
     return full_url
+
+
+def is_url(string):
+    """Check if a given string is a URL"""
+    return urlparse(string).scheme != ""
