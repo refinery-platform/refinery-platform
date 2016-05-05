@@ -1217,18 +1217,23 @@ DashboardCtrl.prototype.showUploadButton = function () {
 
 DashboardCtrl.prototype.triggerShowDataSetsFilter = function () {
   this.showDataSetsFilter = !!!this.showDataSetsFilter;
-  if (!this.membership.length) {
-    this.groupService.query().$promise.then(function (response) {
-      var tmp = [];
-      // This extra loop is necessary because we don't want to provide two
-      // filter options to only show public data.
-      for (var i = response.objects.length; i--;) {
-        if (response.objects[i].group_id !== 100) {
-          tmp.push(response.objects[i]);
+  if (!this.membershipLoaded) {
+    this.groupService.query()
+      .$promise
+      .then(function (response) {
+        var tmp = [];
+        // This extra loop is necessary because we don't want to provide two
+        // filter options to only show public data.
+        for (var i = response.objects.length; i--;) {
+          if (response.objects[i].group_id !== 100) {
+            tmp.push(response.objects[i]);
+          }
         }
-      }
-      this.membership = tmp;
-    }.bind(this));
+        this.membership = tmp;
+      }.bind(this))
+      .finally(function () {
+        this.membershipLoaded = true;
+      }.bind(this));
   }
 };
 
