@@ -11,25 +11,10 @@ function rpFileBrowserAssayFilters ($timeout, $location, $window) {
       analysisFilter: '@'
     },
     link: function (scope) {
-      // toggles views for fields when some fields are selected
-      // var toggleUnselectedFields = function (fieldList, internalName) {
-      //  var selectedValues = scope.FBCtrl.selectedFieldList[internalName];
-      //  console.log(selectedValues);
-      //  var domFields = angular.element('.' + internalName).children();
-      //  console.log(domFields);
-      //  angular.forEach(fieldList, function (value, key) {
-      //    if (selectedValues.indexOf(key) === -1) {
-      //      angular.element(
-      //      document.querySelector('#attribute-filter-' + key)).toggle();
-      //    }
-      //  });
-      // };
-
       // ng-click event for attribute filter panels
       scope.dropAttributePanel = function (e, attributeName, attributeObj,
                                            attributeIndex) {
         e.preventDefault();
-    //    var escapeAttributeName = attributeName.replace(' ', '-');
         var attributeTitle = angular.element(
           document.querySelector('#attribute-panel-' + attributeIndex)
         );
@@ -37,31 +22,31 @@ function rpFileBrowserAssayFilters ($timeout, $location, $window) {
         var attribute = angular.element(
           document.querySelector('#' + escapeAttributeName)
         );
-        console.log(attribute);
-
         var selectedKeys = Object.keys(scope.FBCtrl.selectedFieldList);
         var selectedAttributeIndex = selectedKeys.indexOf(attributeObj.internal_name);
         if (attributeTitle.hasClass('fa-caret-right')) {
-          // minimize the panel if it does not have a selected field
+          // open panel
           attributeTitle.removeClass('fa-caret-right');
           attributeTitle.addClass('fa-caret-down');
           attribute.addClass('in');
         } else if (selectedAttributeIndex > -1) {
+          // keep panel open when some fields are selected showFields method
+          // will hide any non-selected fields
           attributeTitle.removeClass('fa-caret-down');
           attributeTitle.addClass('fa-caret-right');
         } else {
-          // expand the panel
+          // collapse entire panel when none are selected
           attributeTitle.removeClass('fa-caret-down');
           attributeTitle.addClass('fa-caret-right');
           attribute.removeClass('in');
         }
       };
 
-      var isCollapsed = function (index) {
+      // Checks to see if panel is minimized based on caret
+      var isMinimized = function (index) {
         var attributeTitle = angular.element(
           document.querySelector('#attribute-panel-' + index)
         );
-        console.log(attributeTitle);
         return attributeTitle.hasClass('fa-caret-right');
       };
 
@@ -70,24 +55,19 @@ function rpFileBrowserAssayFilters ($timeout, $location, $window) {
         scope.generateFilterDropSelection();
       });
 
+      // When panel is minimized, selected fields continue to show
       scope.showField = function (field, internalName, attributeIndex) {
-        console.log('in show field');
-        console.log(field);
-        console.log(internalName);
-        console.log(scope.FBCtrl.selectedFieldList);
         var selectedIndex = -1;
         if (scope.FBCtrl.selectedFieldList[internalName] !== undefined) {
           var encodedField = $window.encodeURIComponent(field);
           selectedIndex = scope.FBCtrl.selectedFieldList[internalName].indexOf(encodedField);
         }
 
-        if (!isCollapsed(attributeIndex)) {
+        if (!isMinimized(attributeIndex)) {
           return true;
-        } else if (selectedIndex > -1 &&
-          isCollapsed(attributeIndex)) {
+        } else if (selectedIndex > -1 && isMinimized(attributeIndex)) {
           return true;
         }
-
         return false;
       };
 
