@@ -1,11 +1,9 @@
 'use strict';
 
 function fileBrowserFactory (
-  $http,
   assayFileService,
   nodeService,
   assayAttributeService,
-  settings,
   $window,
   $log) {
   var assayFiles = [];
@@ -192,11 +190,9 @@ function fileBrowserFactory (
 angular
   .module('refineryFileBrowser')
   .factory('fileBrowserFactory', [
-    '$http',
     'assayFileService',
     'nodeService',
     'assayAttributeService',
-    'settings',
     '$window',
     '$log',
     fileBrowserFactory
