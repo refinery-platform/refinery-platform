@@ -1,11 +1,11 @@
 'use strict';
 
 function AddGroupCtrl (
-  bootbox, $uibModalInstance, groupService, groupDataService
+  bootbox, $uibModalInstance, groupExtendedService, groupDataService
 ) {
   this.bootbox = bootbox;
   this.$uibModalInstance = $uibModalInstance;
-  this.groupService = groupService;
+  this.groupExtendedService = groupExtendedService;
   this.groupDataService = groupDataService;
 }
 
@@ -20,7 +20,7 @@ AddGroupCtrl.prototype.createGroup = function (name) {
   var that = this;
   var groupName = name || '';
 
-  this.groupService.create({
+  this.groupExtendedService.create({
     name: groupName
   })
   .$promise
@@ -46,7 +46,7 @@ angular
   .controller('AddGroupCtrl', [
     'bootbox',
     '$uibModalInstance',
-    'groupService',
+    'groupExtendedService',
     'groupDataService',
     AddGroupCtrl
   ]);
