@@ -543,8 +543,7 @@ def generate_solr_params(params, assay_uuid):
                   'rows=%s' % row,
                   'q=django_ct:data_set_manager.node&wt=json',
                   'facet=%s' % facet_count,
-                  'facet.limit=-1',
-                  'facet.mincount=1'
+                  'facet.limit=-1'
                   ])
 
     solr_params = ''.join(['fq=assay_uuid:', assay_uuid])
