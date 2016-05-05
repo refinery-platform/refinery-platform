@@ -17,6 +17,8 @@ function RefineryFileUploadCtrl (
   var totalNumFilesQueued = 0;
   var totalNumFilesUploaded = 0;
   var currentUploadFile = -1;
+  // Caches file names to avoid uploading multiple times the same file.
+  var fileCache = {};
 
   $scope.queuedFiles = [];
   // This is set to true by default because this var is used to apply an
@@ -213,11 +215,22 @@ function RefineryFileUploadCtrl (
     formData.splice(1);  // clear upload_id for the next upload
   };
 
+  // Tiggered when a new file is uploaded
   $element.on('fileuploadadd', function add (e, data) {
+    if (fileCache[data.files[0].name]) {
+      $log.error(
+        'We currently do not support uploading multiple files with the same ' +
+        'file name.'
+      );
+      return false;
+    }
     totalNumFilesQueued++;
     $scope.queuedFiles.push(data.files[0]);
+    fileCache[data.files[0].name] = true;
+    return true;
   });
 
+  // Triggered either when an upload failed or the user cancelled
   $element.on('fileuploadfail', function submit (e, data) {
     for (var i = $scope.queuedFiles.length; i--;) {
       if ($scope.queuedFiles[i].name === data.files[0].name) {
@@ -225,6 +238,8 @@ function RefineryFileUploadCtrl (
       }
     }
     totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
+    fileCache[data.files[0].name] = undefined;
+    delete fileCache[data.files[0].name];
   });
 
   $element.on('fileuploadsubmit', function submit (event, data) {
