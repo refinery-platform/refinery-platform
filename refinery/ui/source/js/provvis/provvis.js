@@ -5,24 +5,24 @@
  */
 angular
   .module('refineryProvvis', [])
-  .controller('provvisNavbarController', ['$scope', function ($scope) {
+  .controller('provvisNavbarController', function ($scope) {
     $scope.name = 'Navbar';
-  }])
-  .controller('provvisCanvasController', ['$scope', function ($scope) {
+  })
+  .controller('provvisCanvasController', function ($scope) {
     $scope.name = 'Canvas';
-  }])
-  .directive('provvisNavBar', [function () {
+  })
+  .directive('provvisNavBar', function () {
     return {
       templateUrl: '/static/partials/provvis/partials/provvis-navbar.html',
       restrict: 'A'
     };
-  }])
-  .directive('provvisCanvas', [function () {
+  })
+  .directive('provvisCanvas', function () {
     return {
       templateUrl: '/static/partials/provvis/partials/provvis-canvas.html',
       restrict: 'A'
     };
-  }]);
+  });
 
 /**
  * The refinery provenance graph visualization.
@@ -30,9 +30,7 @@ angular
  * @author sluger Stefan Luger https://github.com/sluger
  * @exports runProvVis The published function to run the visualization.
  */
-var provvis = (function (  // eslint-disable-line no-unused-vars
-  $, provvisDecl, provvisInit, provvisLayout, provvisMotifs, provvisRender
-) {
+var provvis = (function () {
   var vis = Object.create(null);
 
   /* TODO: Rewrite in angular template. */
@@ -501,11 +499,4 @@ var provvis = (function (  // eslint-disable-line no-unused-vars
       return getProvVisPrivate();
     }
   };
-}(
-  window.$,
-  window.provvisDecl,
-  window.provvisInit,
-  window.provvisLayout,
-  window.provvisMotifs,
-  window.provvisRender
-));
+}());
