@@ -65,7 +65,8 @@
   ng-app="{% block ng_app %}refineryApp{% endblock %}"
   ng-controller="AppCtrl as app"
   ng-class="{ 'repo-mode': app.repoMode }"
-  ng-click="app.globalClick($event)">
+  ng-click="app.globalClick($event)"
+  ng-strict-di>
   <!-- header navigation bar -->
 
   <nav class="refinery-base navbar navbar-default navbar-fixed-top">

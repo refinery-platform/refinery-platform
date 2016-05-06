@@ -10,4 +10,4 @@ function NodeSetListFactory ($resource) {
 
 angular
   .module('refineryNodeMapping')
-  .factory('NodeSetList', NodeSetListFactory);
+  .factory('NodeSetList', ['$resource', NodeSetListFactory]);
