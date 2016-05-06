@@ -277,7 +277,6 @@ function FileBrowserCtrl (
   // populates the ui-grid columns variable
   vm.createColumnDefs = function () {
     vm.customColumnName = [];
-    console.log(vm.assayAttributes);
 
     // some attributes will be duplicate in different fields, duplicate
     // column names will throw an error. This prevents duplicates
@@ -285,7 +284,6 @@ function FileBrowserCtrl (
       function (attributeObj) {
         return attributeObj.display_name;
       });
-    console.log(uniqAssayAttributes);
     var totalChars = vm.assayAttributes.reduce(function (previousValue, facetObj) {
       return previousValue + String(facetObj.display_name).length;
     }, 0);
