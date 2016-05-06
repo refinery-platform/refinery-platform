@@ -739,7 +739,7 @@
 
     .refinery-filter-sort {
       position: absolute;
-      z-index: 2;
+      z-index: 3;
       right: 10px;
       left: 10px;
       padding: 5px;
@@ -787,6 +787,14 @@
           margin: 0;
           padding-left: 20px;
           font-weight: normal;
+
+          &.select {
+            padding-left: 0;
+
+            .label-text {
+              padding-left: 10px;
+            }
+          }
         }
 
         .radio-button-hide input[type=radio] {
