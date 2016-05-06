@@ -48,13 +48,7 @@ def dev():
     """Set config for deployment on development VM"""
     setup()
     env.hosts = [env.dev_host]
-
-
-@task
-def stage():
-    """Set config for deployment on staging VM"""
-    setup()
-    env.hosts = [env.stage_host]
+    env.branch = "develop"
 
 
 @task
@@ -63,6 +57,7 @@ def prod():
     # TODO: add a warning message/confirmation about updating production VM?
     setup()
     env.hosts = [env.prod_host]
+    env.branch = "master"
 
 
 @task
@@ -113,7 +108,7 @@ def update_refinery():
         # versions running on different VMs
         # https://raw.githubusercontent.com/gitster/git/master/Documentation/RelNotes/1.7.10.txt
         with shell_env(GIT_MERGE_AUTOEDIT='no'):
-            run("git pull")
+            run("git pull origin {branch}".format(**env))
     with cd(env.refinery_ui_dir):
         run("npm prune && npm update")
         run("rm -rf bower_components")
