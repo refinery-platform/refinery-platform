@@ -514,6 +514,15 @@ TreemapCtrl.prototype.addEventListeners = function () {
   }.bind(this));
 };
 
+/**
+ * Find nodes (i.e. rectangles) by URI and highlight them
+ *
+ * @method  findNodesToHighlight
+ * @author  Fritz Lekschas
+ * @date    2016-05-06
+ * @param   {String}   uri          URI of the node of interest.
+ * @param   {Boolean}  dehighlight  If `true` removes highlighting.
+ */
 TreemapCtrl.prototype.findNodesToHighlight = function (uri, dehighlight) {
   var node = this.getD3NodeByUri(uri);
 
@@ -544,11 +553,35 @@ TreemapCtrl.prototype.findNodesToHighlight = function (uri, dehighlight) {
   }
 };
 
+/**
+ * Visually lock a node (i.e. rectangle)
+ *
+ * @description
+ * This means filling the node in orange and displayed a locked _lock_ icon.
+ *
+ * @method  lockNode
+ * @author  Fritz Lekschas
+ * @date    2016-05-06
+ * @param   {Object}    element         DOM element.
+ * @param   {Object}    data            The D3 data object associated to
+ *   `element`.
+ * @param   {Boolean}   noNotification  If `true` no events will be emmited.
+ */
 TreemapCtrl.prototype.lockNode = function (element, data, noNotification) {
   this.highlightByTerm(data, undefined, undefined, undefined, noNotification);
   this.lockHighlightEl(element);
 };
 
+/**
+ * Programmatic way to add the `hovering` class to D3 selection.
+ *
+ * @method  hoverRectangle
+ * @author  Fritz Lekschas
+ * @date    2016-05-06
+ * @param   {Object}   selection  D3 selection.
+ * @param   {Boolean}  enter      If `true` the _hovering_ class will be added.
+ *   Otherwise the class will be removed.
+ */
 TreemapCtrl.prototype.hoverRectangle = function (selection, enter) {
   selection.classed('hovering', enter);
 };
@@ -570,8 +603,23 @@ TreemapCtrl.prototype.getD3NodeByUri = function (uri) {
   });
 };
 
+/**
+ * Find the parent of a term at on a certain level
+ *
+ * @description
+ * Since only a certain level is visible at the time and another visualization
+ * might highlighted a term in a lower level we often have to traverse up to the
+ * root and see if we can find a parent there.
+ *
+ * @method  getParentAtLevel
+ * @author  Fritz Lekschas
+ * @date    2016-05-06
+ * @param   {Object}            node   Node to start traversing from.
+ * @param   {Number}            level  Level to look at.
+ * @return  {Object|Undefined}         Parental node of `node` or `undefined`.
+ */
 TreemapCtrl.prototype.getParentAtLevel = function (node, level) {
-  // The parent's level must be lower than the node's level, hence if level is
+  // The parent's level must be lower than the node's level, hence if `level` is
   // greater we can stop here directly.
   if (level > node.meta.level) {
     return undefined;
@@ -586,6 +634,14 @@ TreemapCtrl.prototype.getParentAtLevel = function (node, level) {
   return parent;
 };
 
+/**
+ * Visually focus (i.e. highlight) a node (i.e. rectangle)
+ *
+ * @method  focusNode
+ * @author  Fritz Lekschas
+ * @date    2016-05-06
+ * @param   {Array}  termIds  List of term IDs.
+ */
 TreemapCtrl.prototype.focusNode = function (termIds) {
   var visibleNodes = {};
   var nodes;
@@ -628,6 +684,14 @@ TreemapCtrl.prototype.focusNode = function (termIds) {
   this.currentlyFocusedNodes = nodes;
 };
 
+/**
+ * Blur visually highlighted nodes (i.e. rectangles)
+ *
+ * @method  blurNode
+ * @author  Fritz Lekschas
+ * @date    2016-05-06
+ * @param   {Array}  termIds  Array of term IDs.
+ */
 TreemapCtrl.prototype.blurNode = function (termIds) {
   var nodes = this.currentlyFocusedNodes;
 
@@ -729,6 +793,14 @@ TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
   return innerNodes;
 };
 
+/**
+ * Add a centered lock and unlock icon to an element.
+ *
+ * @method  setUpNodeCenterIcon
+ * @author  Fritz Lekschas
+ * @date    2016-05-06
+ * @param   {Object}  selection  D3 selection the two icons should be added to.
+ */
 TreemapCtrl.prototype.setUpNodeCenterIcon = function (selection) {
   var that = this;
 
@@ -806,6 +878,14 @@ TreemapCtrl.prototype.addLabel = function (el, attr, level) {
     });
 };
 
+/**
+ * Assess the readability of all currently drawn labels and shrink them in size
+ * or hide them in case not enough space is available to avoid clutter.
+ *
+ * @method  checkLabelReadbility
+ * @author  Fritz Lekschas
+ * @date    2016-05-06
+ */
 TreemapCtrl.prototype.checkLabelReadbility = function () {
   var el;
 
@@ -1749,6 +1829,17 @@ Object.defineProperty(
     writable: true
   });
 
+/**
+ * Set a new root node and communicate the change by setting `treemapContext`
+ * and emitting events on `$rootScope`.
+ *
+ * @method  setRootNode
+ * @author  Fritz Lekschas
+ * @date    2016-05-06
+ * @param   {Object}   root            Object containing `ontId`, `uri`, and
+ *   `branchNo` of the node to be set as root.
+ * @param   {Boolean}  noNotification  If `true` no events will be emitted.
+ */
 TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
   var prevRoot = this.treemapContext.get('root');
   var prevRootUri;
