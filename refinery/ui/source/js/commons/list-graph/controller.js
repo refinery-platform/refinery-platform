@@ -5,13 +5,15 @@
  *
  * @method  ListGraphCtrl
  * @author  Fritz Lekschas
- * @date    2016-02-11
+ * @date    2016-05-06
  *
  * @param   {Object}  $element           Directive's root element.
+ * @param   {Object}  $rootScope         Angular's root scope.
  * @param   {Object}  graph              Graph library.
  * @param   {Object}  listGraphSettings  Settings.
  * @param   {Object}  dataSet            DataSet service.
  * @param   {Object}  pubSub             PubSub service.
+ * @param   {Object}  ListGraphVis       The list graph visualization.
  */
 function ListGraphCtrl (
   $element, $rootScope, graph, listGraphSettings, dataSet, pubSub, ListGraphVis
