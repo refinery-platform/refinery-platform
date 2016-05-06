@@ -735,17 +735,22 @@
               refinery-tooltip
               refinery-tooltip-container="body"
               refinery-tooltip-placement="top"></i>
-            <span ng-if="analysis.status === 'RUNNING' || analysis.status === 'UNKNOWN'">
-              <a
+            <span ng-switch on="analysis.status">
+              <span ng-switch-when="SUCCESS">
+                <a
                 ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}/#/analyses">
                 {{ analysis.name }}
               </a>
-            </span>
-            <span ng-if="analysis.status !== 'RUNNING' && analysis.status !== 'UNKNOWN'">
-              <a
-                ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}/">
+              </span>
+              <span ng-switch-when="RUNNING">
+                <a
+                ng-href="/data_sets/{{analysis.data_set__uuid}}/#/analyses">
                 {{ analysis.name }}
               </a>
+              </span>
+              <span ng-switch-default>
+                {{ analysis.name }}
+              </span>
             </span>
           </li>
           <li ng-if="dashboard.analysesAdapter.isLoading">
