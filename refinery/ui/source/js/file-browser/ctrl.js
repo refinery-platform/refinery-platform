@@ -99,13 +99,16 @@ function FileBrowserCtrl (
   vm.attributeSelectionUpdate = function (internalName, field) {
     if (vm.selectedField[field] &&
       typeof vm.selectedFieldList[internalName] !== 'undefined') {
+      // add field url query and selectedList
       vm.selectedFieldList[internalName].push(field);
       $location.search(field, vm.selectedField[field]);
     } else if (vm.selectedField[field]) {
+      // add field url query and selectedList
       vm.selectedFieldList[internalName] = [field];
       $location.search(field, vm.selectedField[field]);
     } else {
-      var ind = vm.selectedFieldList[internalName].indexOf(field);
+      var encodedField = $window.encodeURIComponent(field);
+      var ind = vm.selectedFieldList[internalName].indexOf(encodedField);
       if (ind > -1) {
         vm.selectedFieldList[internalName].splice(ind, 1);
       }
