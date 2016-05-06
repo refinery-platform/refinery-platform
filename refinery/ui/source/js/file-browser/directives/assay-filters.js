@@ -12,13 +12,12 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
     },
     link: function (scope) {
       // ng-click event for attribute filter panels
-      scope.dropAttributePanel = function (e, attributeName, attributeObj,
-                                           attributeIndex) {
+      scope.dropAttributePanel = function (e, attributeName, attributeObj) {
         e.preventDefault();
-        var attributeTitle = angular.element(
-          document.querySelector('#attribute-panel-' + attributeIndex)
-        );
         var escapeAttributeName = attributeName.replace(' ', '-');
+        var attributeTitle = angular.element(
+          document.querySelector('#attribute-panel-' + escapeAttributeName)
+        );
         var attribute = angular.element(
           document.querySelector('#' + escapeAttributeName)
         );
@@ -57,28 +56,41 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
       });
 
       // When panel is minimized, selected fields continue to show
-      scope.showField = function (field, internalName, attributeIndex) {
+      scope.showField = function (field, internalName, attributeName) {
+        var escapedAttributeName = attributeName.replace(' ', '-');
         var selectedIndex = -1;
         if (scope.FBCtrl.selectedFieldList[internalName] !== undefined) {
           selectedIndex = scope.FBCtrl.selectedFieldList[internalName].indexOf(field);
         }
-        if (!isMinimized(attributeIndex)) {
+        if (!isMinimized(escapedAttributeName)) {
           return true;
-        } else if (selectedIndex > -1 && isMinimized(attributeIndex)) {
+        } else if (selectedIndex > -1 && isMinimized(escapedAttributeName)) {
           return true;
         }
         return false;
       };
 
       // Loops through fields to find matching attributes and drops down panel
-      var updateDomDropdown = function (allFields, queryFields, attributeName) {
+      var updateDomDropdown = function (allFields, queryFields, attributeName,
+                                        attributeInternalName) {
         for (var ind = 0; ind < allFields.length; ind++) {
           if (queryFields.indexOf(allFields[ind]) > -1) {
             var escapeAttributeName = attributeName.replace(' ', '-');
-            angular.element(
-              document.querySelector('#' + escapeAttributeName)
-            ).addClass('in');
-            break;
+            var attributeTitle = angular.element(
+            document.querySelector('#attribute-panel-' + escapeAttributeName)
+            );
+            // mark checkbox for selected item
+            scope.FBCtrl.selectedField[allFields[ind]] = true;
+
+            if (attributeTitle.hasClass('fa-caret-right')) {
+              angular.element(
+              document.querySelector('#' + escapeAttributeName)).addClass('in');
+              attributeTitle.removeClass('fa-caret-right');
+              attributeTitle.addClass('fa-caret-down');
+              scope.FBCtrl.selectedFieldList[attributeInternalName] = [allFields[ind]];
+            } else {
+              scope.FBCtrl.selectedFieldList[attributeInternalName].push(allFields[ind]);
+            }
           }
         }
       };
@@ -91,12 +103,15 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
         if (typeof scope.FBCtrl.analysisFilter.Analysis !== 'undefined') {
           allFilters.Analysis = scope.FBCtrl.analysisFilter.Analysis;
         }
+        angular.forEach(allFilters, function (attributeObj, attributeName) {
+          var allFields = [];
+          angular.forEach(attributeObj.facetObj, function (fieldObj) {
+            allFields.push(fieldObj.name);
+          });
 
-        angular.forEach(allFilters, function (attributeObj, attribute) {
-          var allFields = Object.keys(attributeObj.facetObj);
           // time out allows the dom to load
           $timeout(function () {
-            updateDomDropdown(allFields, queryFields, attribute);
+            updateDomDropdown(allFields, queryFields, attributeName, attributeObj.internal_name);
           }, 0);
         });
       };
