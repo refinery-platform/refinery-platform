@@ -9,7 +9,8 @@ function FileBrowserCtrl (
   isOwnerService,
   $window,
   $timeout,
-  $q
+  $q,
+  _
   ) {
   var vm = this;
   vm.assayFiles = [];
@@ -276,11 +277,20 @@ function FileBrowserCtrl (
   // populates the ui-grid columns variable
   vm.createColumnDefs = function () {
     vm.customColumnName = [];
+    console.log(vm.assayAttributes);
+
+    // some attributes will be duplicate in different fields, duplicate
+    // column names will throw an error. This prevents duplicates
+    var uniqAssayAttributes = _.uniq(vm.assayAttributes, true,
+      function (attributeObj) {
+        return attributeObj.display_name;
+      });
+    console.log(uniqAssayAttributes);
     var totalChars = vm.assayAttributes.reduce(function (previousValue, facetObj) {
       return previousValue + String(facetObj.display_name).length;
     }, 0);
 
-    vm.assayAttributes.forEach(function (attribute) {
+    uniqAssayAttributes.forEach(function (attribute) {
       var columnName = attribute.display_name;
       var columnWidth = columnName.length / totalChars * 100;
       if (columnWidth < 10) {  // make sure columns are wide enough
@@ -365,6 +375,7 @@ angular
     '$window',
     '$timeout',
     '$q',
+    '_',
     FileBrowserCtrl
   ]);
 
