@@ -7,9 +7,9 @@ function FileBrowserCtrl (
   fileBrowserFactory,
   resetGridService,
   isOwnerService,
-  $window,
   $timeout,
   $q,
+  $window,
   _
   ) {
   var vm = this;
@@ -108,8 +108,7 @@ function FileBrowserCtrl (
       vm.selectedFieldList[internalName] = [field];
       $location.search(field, vm.selectedField[field]);
     } else {
-      var encodedField = $window.encodeURIComponent(field);
-      var ind = vm.selectedFieldList[internalName].indexOf(encodedField);
+      var ind = vm.selectedFieldList[internalName].indexOf(field);
       if (ind > -1) {
         vm.selectedFieldList[internalName].splice(ind, 1);
       }
@@ -370,9 +369,9 @@ angular
     'fileBrowserFactory',
     'resetGridService',
     'isOwnerService',
-    '$window',
     '$timeout',
     '$q',
+    '$window',
     '_',
     FileBrowserCtrl
   ]);
