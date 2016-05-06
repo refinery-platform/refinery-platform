@@ -794,54 +794,6 @@ TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
 };
 
 /**
- * Add a centered lock and unlock icon to an element.
- *
- * @method  setUpNodeCenterIcon
- * @author  Fritz Lekschas
- * @date    2016-05-06
- * @param   {Object}  selection  D3 selection the two icons should be added to.
- */
-TreemapCtrl.prototype.setUpNodeCenterIcon = function (selection) {
-  var that = this;
-
-  selection
-    .attr('width', function (data) {
-      if (data.cache.width < 20 || data.cache.height < 20) {
-        data.cache.iconLockSmall = true;
-        return 8;
-      }
-      data.cache.iconLockSmall = false;
-      return 16;
-    })
-    .attr('height', function (data) {
-      if (data.cache.iconLockSmall) {
-        return 8;
-      }
-      return 16;
-    })
-    .attr('x', function (data) {
-      return that.treemap.x(data.x) +
-      (data.cache.width / 2) - (data.cache.iconLockSmall ? 4 : 8);
-    })
-    .attr('y', function (data) {
-      return that.treemap.y(data.y) +
-      (data.cache.height / 2) - (data.cache.iconLockSmall ? 4 : 8);
-    })
-    .classed('hidden', function (data) {
-      if (data.cache.width < 10) {
-        data.lockIconHidden = true;
-        return true;
-      }
-      if (data.cache.height < 10) {
-        data.lockIconHidden = true;
-        return true;
-      }
-      data.lockIconHidden = false;
-      return false;
-    });
-};
-
-/**
  * Appends a `foreignObject` into SVG holding a `DIV`
  *
  * @method  addLabel
@@ -876,53 +828,6 @@ TreemapCtrl.prototype.addLabel = function (el, attr, level) {
     .text(function (data) {
       return data[attr];
     });
-};
-
-/**
- * Assess the readability of all currently drawn labels and shrink them in size
- * or hide them in case not enough space is available to avoid clutter.
- *
- * @method  checkLabelReadbility
- * @author  Fritz Lekschas
- * @date    2016-05-06
- */
-TreemapCtrl.prototype.checkLabelReadbility = function () {
-  var el;
-
-  this.treemap.element.selectAll('.label').each(function () {
-    el = d3.select(this);
-    el.classed({
-      visible: false,
-      hidden: false
-    });
-
-    var visible = false;
-    var hidden = false;
-    var smaller = false;
-
-    var rectBox = this.getBoundingClientRect();
-    var labelBox = this.children[0].getBoundingClientRect();
-
-    if (rectBox.height / labelBox.height < 1) {
-      if (rectBox.height / labelBox.height > 0.5) {
-        smaller = true;
-      } else {
-        hidden = true;
-      }
-    }
-
-    if (rectBox.width * 1.5 < labelBox.width) {
-      hidden = true;
-    }
-
-    visible = !hidden;
-
-    el.classed({
-      hidden: hidden,
-      smaller: smaller,
-      visible: visible
-    });
-  });
 };
 
 /**
@@ -988,6 +893,53 @@ TreemapCtrl.prototype.adjustLevelDepth = function (oldVisibleDepth) {
     this.checkLabelReadbility();
     return true;
   }.bind(this));
+};
+
+/**
+ * Assess the readability of all currently drawn labels and shrink them in size
+ * or hide them in case not enough space is available to avoid clutter.
+ *
+ * @method  checkLabelReadbility
+ * @author  Fritz Lekschas
+ * @date    2016-05-06
+ */
+TreemapCtrl.prototype.checkLabelReadbility = function () {
+  var el;
+
+  this.treemap.element.selectAll('.label').each(function () {
+    el = d3.select(this);
+    el.classed({
+      visible: false,
+      hidden: false
+    });
+
+    var visible = false;
+    var hidden = false;
+    var smaller = false;
+
+    var rectBox = this.getBoundingClientRect();
+    var labelBox = this.children[0].getBoundingClientRect();
+
+    if (rectBox.height / labelBox.height < 1) {
+      if (rectBox.height / labelBox.height > 0.5) {
+        smaller = true;
+      } else {
+        hidden = true;
+      }
+    }
+
+    if (rectBox.width * 1.5 < labelBox.width) {
+      hidden = true;
+    }
+
+    visible = !hidden;
+
+    el.classed({
+      hidden: hidden,
+      smaller: smaller,
+      visible: visible
+    });
+  });
 };
 
 /**
@@ -1062,6 +1014,24 @@ TreemapCtrl.prototype.colorEl = function (element, attribute, color) {
 };
 
 /**
+ * Copy `children` to `_children`.
+ *
+ * @method  copyChildren
+ * @author  Fritz Lekschas
+ * @date    2015-12-22
+ * @param   {Object}  node  Node object.
+ */
+TreemapCtrl.prototype.copyChildren = function (node) {
+  node._children = node.children;
+
+  var i = node.children.length;
+
+  while (i--) {
+    this.copyChildren(node.children[i]);
+  }
+};
+
+/**
  * Display the data.
  *
  * @param   {Object}  node  D3 data object of the node.
@@ -1089,24 +1059,6 @@ TreemapCtrl.prototype.display = function (node, firstTime) {
   this.children[1] = [children[0]];
 
   return children;
-};
-
-/**
- * Copy `children` to `_children`.
- *
- * @method  copyChildren
- * @author  Fritz Lekschas
- * @date    2015-12-22
- * @param   {Object}  node  Node object.
- */
-TreemapCtrl.prototype.copyChildren = function (node) {
-  node._children = node.children;
-
-  var i = node.children.length;
-
-  while (i--) {
-    this.copyChildren(node.children[i]);
-  }
 };
 
 /**
@@ -1216,24 +1168,6 @@ TreemapCtrl.prototype.fadeIn = function (selection, firstTime) {
 };
 
 /**
- * Initialize the root node. This would usually be computed by `treemap()`.
- *
- * @method  initialize
- * @author  Fritz Lekschas
- * @date    2015-08-03
- * @param   {Object}  data  D3 data object.
- */
-TreemapCtrl.prototype.initialize = function (data) {
-  data.x = data.y = 0;
-  data.dx = this.treemap.width;
-  data.dy = this.treemap.height;
-  data.depth = 0;
-  data.meta = {
-    branchNo: []
-  };
-};
-
-/**
  * Highlight datasets associated to a term.
  *
  * @method  highlightByTerm
@@ -1318,6 +1252,38 @@ TreemapCtrl.prototype.highlightByTerm = function (
 };
 
 /**
+ * Highlight a rectangle visually.
+ *
+ * @method  highlightEl
+ * @author  Fritz Lekschas
+ * @date    2015-11-02
+ *
+ * @param   {Object}  element  DOM element.
+ */
+TreemapCtrl.prototype.highlightEl = function (element) {
+  this.colorEl(element, 'fill', this.settings.highlightBGColor);
+  this.colorEl(element, 'color', this.settings.highlightTextColor);
+};
+
+/**
+ * Initialize the root node. This would usually be computed by `treemap()`.
+ *
+ * @method  initialize
+ * @author  Fritz Lekschas
+ * @date    2015-08-03
+ * @param   {Object}  data  D3 data object.
+ */
+TreemapCtrl.prototype.initialize = function (data) {
+  data.x = data.y = 0;
+  data.dx = this.treemap.width;
+  data.dy = this.treemap.height;
+  data.depth = 0;
+  data.meta = {
+    branchNo: []
+  };
+};
+
+/**
  * Highlight locked state of a rectangle.
  *
  * @method  highlightEl
@@ -1355,20 +1321,6 @@ TreemapCtrl.prototype.lockHighlightEl = function (element) {
 
     this.currentlyLockedNode = d3El;
   }
-};
-
-/**
- * Highlight a rectangle visually.
- *
- * @method  highlightEl
- * @author  Fritz Lekschas
- * @date    2015-11-02
- *
- * @param   {Object}  element  DOM element.
- */
-TreemapCtrl.prototype.highlightEl = function (element) {
-  this.colorEl(element, 'fill', this.settings.highlightBGColor);
-  this.colorEl(element, 'color', this.settings.highlightTextColor);
 };
 
 /**
@@ -1626,6 +1578,136 @@ TreemapCtrl.prototype.setBreadCrumb = function (node) {
 };
 
 /**
+ * Set a new root node and communicate the change by setting `treemapContext`
+ * and emitting events on `$rootScope`.
+ *
+ * @method  setRootNode
+ * @author  Fritz Lekschas
+ * @date    2016-05-06
+ * @param   {Object}   root            Object containing `ontId`, `uri`, and
+ *   `branchNo` of the node to be set as root.
+ * @param   {Boolean}  noNotification  If `true` no events will be emitted.
+ */
+TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
+  var prevRoot = this.treemapContext.get('root');
+  var prevRootUri;
+  if (prevRoot) {
+    prevRootUri = prevRoot.uri;
+    if (!prevRootUri) {
+      prevRootUri = this.cacheTerms[prevRoot.ontId][0].uri;
+    }
+  }
+
+  if (prevRootUri === root.uri) {
+    return;
+  }
+
+  if (root.uri !== this.absRootNode.uri) {
+    if (!noNotification) {
+      this.$rootScope.$emit(
+        'dashboardVisNodeRoot',
+        {
+          nodeUri: root.uri,
+          source: 'treeMap'
+        });
+    }
+  } else {
+    if (!noNotification && this.treemapContext.get('root')) {
+      this.$rootScope.$emit(
+        'dashboardVisNodeUnroot',
+        {
+          nodeUri: prevRootUri,
+          source: 'treeMap'
+        }
+      );
+    }
+  }
+
+  var terms = [
+    {
+      nodeUri: root.uri,
+      dataSetIds: getAssociatedDataSets(
+        this.cacheTerms[root.ontId][root.branchId]
+      ),
+      mode: 'and',
+      query: true
+    }
+  ];
+
+  if (prevRoot) {
+    terms.push({
+      nodeUri: prevRootUri,
+      dataSetIds: getAssociatedDataSets(
+        this.cacheTerms[prevRoot.ontId][prevRoot.branchId]
+      )
+    });
+  }
+
+  if (!noNotification) {
+    this.$rootScope.$emit('dashboardVisNodeToggleQuery', {
+      terms: terms,
+      source: 'treeMap'
+    });
+  }
+
+  this.treemapContext.set('root', {
+    ontId: root.ontId,
+    uri: root.uri,
+    branchId: root.branchId || 0
+  });
+
+  this.transition(this.cacheTerms[root.ontId][root.branchId], true);
+};
+
+/**
+ * Add a centered lock and unlock icon to an element.
+ *
+ * @method  setUpNodeCenterIcon
+ * @author  Fritz Lekschas
+ * @date    2016-05-06
+ * @param   {Object}  selection  D3 selection the two icons should be added to.
+ */
+TreemapCtrl.prototype.setUpNodeCenterIcon = function (selection) {
+  var that = this;
+
+  selection
+    .attr('width', function (data) {
+      if (data.cache.width < 20 || data.cache.height < 20) {
+        data.cache.iconLockSmall = true;
+        return 8;
+      }
+      data.cache.iconLockSmall = false;
+      return 16;
+    })
+    .attr('height', function (data) {
+      if (data.cache.iconLockSmall) {
+        return 8;
+      }
+      return 16;
+    })
+    .attr('x', function (data) {
+      return that.treemap.x(data.x) +
+      (data.cache.width / 2) - (data.cache.iconLockSmall ? 4 : 8);
+    })
+    .attr('y', function (data) {
+      return that.treemap.y(data.y) +
+      (data.cache.height / 2) - (data.cache.iconLockSmall ? 4 : 8);
+    })
+    .classed('hidden', function (data) {
+      if (data.cache.width < 10) {
+        data.lockIconHidden = true;
+        return true;
+      }
+      if (data.cache.height < 10) {
+        data.lockIconHidden = true;
+        return true;
+      }
+      data.lockIconHidden = false;
+      return false;
+    });
+};
+
+/**
  * Transition between parent and child branches of the treemap.
  *
  * @method  transition
@@ -1828,88 +1910,6 @@ Object.defineProperty(
     value: [],
     writable: true
   });
-
-/**
- * Set a new root node and communicate the change by setting `treemapContext`
- * and emitting events on `$rootScope`.
- *
- * @method  setRootNode
- * @author  Fritz Lekschas
- * @date    2016-05-06
- * @param   {Object}   root            Object containing `ontId`, `uri`, and
- *   `branchNo` of the node to be set as root.
- * @param   {Boolean}  noNotification  If `true` no events will be emitted.
- */
-TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
-  var prevRoot = this.treemapContext.get('root');
-  var prevRootUri;
-  if (prevRoot) {
-    prevRootUri = prevRoot.uri;
-    if (!prevRootUri) {
-      prevRootUri = this.cacheTerms[prevRoot.ontId][0].uri;
-    }
-  }
-
-  if (prevRootUri === root.uri) {
-    return;
-  }
-
-  if (root.uri !== this.absRootNode.uri) {
-    if (!noNotification) {
-      this.$rootScope.$emit(
-        'dashboardVisNodeRoot',
-        {
-          nodeUri: root.uri,
-          source: 'treeMap'
-        });
-    }
-  } else {
-    if (!noNotification && this.treemapContext.get('root')) {
-      this.$rootScope.$emit(
-        'dashboardVisNodeUnroot',
-        {
-          nodeUri: prevRootUri,
-          source: 'treeMap'
-        }
-      );
-    }
-  }
-
-  var terms = [
-    {
-      nodeUri: root.uri,
-      dataSetIds: getAssociatedDataSets(
-        this.cacheTerms[root.ontId][root.branchId]
-      ),
-      mode: 'and',
-      query: true
-    }
-  ];
-
-  if (prevRoot) {
-    terms.push({
-      nodeUri: prevRootUri,
-      dataSetIds: getAssociatedDataSets(
-        this.cacheTerms[prevRoot.ontId][prevRoot.branchId]
-      )
-    });
-  }
-
-  if (!noNotification) {
-    this.$rootScope.$emit('dashboardVisNodeToggleQuery', {
-      terms: terms,
-      source: 'treeMap'
-    });
-  }
-
-  this.treemapContext.set('root', {
-    ontId: root.ontId,
-    uri: root.uri,
-    branchId: root.branchId || 0
-  });
-
-  this.transition(this.cacheTerms[root.ontId][root.branchId], true);
-};
 
 /**
  * Current root node.
