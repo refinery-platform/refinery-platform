@@ -9,14 +9,13 @@
         <div class="panel-heading" role="tab">
           <h4 class="panel-title">
             <i class="fa fa-caret-right fa-pull-left"
-              id="attribute-panel-{{attributeIndex}}"
+              id="attribute-panel-{{attribute | replaceWhiteSpaceWithHyphen}}"
               aria-hidden="true"></i>
           <div
             role="button"
             data-toggle="collapse"
             data-parent="#attribute-filter"
-            ng-click="dropAttributePanel($event, attribute, fields,
-            attributeIndex)"
+            ng-click="dropAttributePanel($event, attribute, fields)"
             aria-expanded="true"
             aria-controls="{{ attribute }}">
              {{ attribute }}
@@ -31,7 +30,7 @@
           <div ng-repeat="field in fields.facetObj track by $index">
               <div class="checkbox"
                 ng-show="showField(field.name, fields.internal_name,
-                attributeIndex)">
+                attribute)">
                 <label>
                   <input
                     type="checkbox"
