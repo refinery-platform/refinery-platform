@@ -659,7 +659,10 @@ function GraphFactory (_) {
         children: [],
         childrenIds: [],
         cloneId: originalNode.meta.numClones,
-        uri: newId,
+        dataSets: originalNode.dataSets,
+        assertedDataSets: originalNode.assertedDataSets,
+        uri: originalNode.uri,
+        ontId: originalNode.ontId,
         meta: originalNode.meta,
         name: originalNode.name,
         value: originalNode.value
@@ -709,6 +712,7 @@ function GraphFactory (_) {
           node.childrenIds[i] = child.uri;
           node.children.push(child);
         }
+
         traverse(child);
       }
     }
@@ -727,12 +731,39 @@ function GraphFactory (_) {
       var nodeIds = Object.keys(oldGraph);
       var properties;
 
+      function deepCloneObj (sourceNode, targetNode, property) {
+        targetNode[property] = _.cloneDeep(sourceNode[property]);
+      }
+
       for (var i = nodeIds.length; i--;) {
         newGraph[nodeIds[i]] = {};
         properties = Object.keys(oldGraph[nodeIds[i]]);
+
         for (var j = properties.length; j--;) {
-          newGraph[nodeIds[i]][properties[j]] =
-            oldGraph[nodeIds[i]][properties[j]];
+          switch (properties[j]) {
+            // Skip the following properties
+            case 'parents':
+              continue;
+            case 'children':
+              // Initialize new array
+              newGraph[nodeIds[i]].children =
+                oldGraph[nodeIds[i]].children.slice();
+              break;
+            // Deep copy the following properties
+            case 'data':
+            case 'meta':
+              deepCloneObj(
+                oldGraph[nodeIds[i]],
+                newGraph[nodeIds[i]],
+                properties[j]
+              );
+              break;
+            // Normal copy by default
+            default:
+              newGraph[nodeIds[i]][properties[j]] =
+                oldGraph[nodeIds[i]][properties[j]];
+              break;
+          }
         }
       }
     }
@@ -741,7 +772,7 @@ function GraphFactory (_) {
      * Remove all unvisited nodes of the tree.
      *
      * @description
-     * An inline method to remove unvisited nodes of the tree
+     * An in-line method to remove unvisited nodes of the tree
      *
      * @method  removeUnusedNodes
      * @author  Fritz Lekschas
@@ -749,15 +780,10 @@ function GraphFactory (_) {
      */
     function removeUnusedNodes () {
       var ids = Object.keys(tree);
-      var counterDelete = 0;
-      var counterKeep = 0;
       for (var k = ids.length; k--;) {
         if (!nodeVisited[ids[k]]) {
-          counterDelete++;
           delete tree[ids[k]];
           tree[ids[k]] = undefined;
-        } else {
-          counterKeep++;
         }
       }
     }
