@@ -13,7 +13,7 @@ Requirements:
 """
 
 import os
-from fabric.api import env, run, sudo, execute
+from fabric.api import env, run, sudo, execute, local
 from fabric.context_managers import prefix, cd, shell_env
 from fabric.contrib.files import sed
 from fabric.decorators import task, with_settings
@@ -39,6 +39,7 @@ def vm():
     env.project_user = "vagrant"    # since it's used as arg for decorators
     env.refinery_project_dir = "/vagrant"
     env.refinery_virtual_env_name = "refinery-platform"
+    env.branch = local('git rev-parse --abbrev-ref HEAD', capture=True)
     setup()
     execute(vagrant)
 
