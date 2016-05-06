@@ -143,13 +143,13 @@
             refinery-tooltip-container="body"
             refinery-tooltip-placement="left">
           </i>
-          <span ng-if="analysis.status === 'SUCCESS'">
-             <a ng-href="/data_sets/{{ analysis.data_set__uuid }}/analysis/{{ analysis.uuid }}">
-              {{ analysis.name }}
-             </a>
+          <span ng-if="analysis.status === 'UNKNOWN'">
+            {{ analysis.name }}
           </span>
-          <span ng-if="analysis.status !== 'SUCCESS'">
+          <span ng-if="analysis.status !== 'UNKNOWN'">
+            <a ng-href="/data_sets/{{ analysis.data_set__uuid }}/analysis/{{ analysis.uuid }}">
               {{ analysis.name }}
+            </a>
           </span>
         </li>
         <li ng-if="preview.numAnalyses > preview.maxAnalyses">

@@ -57,10 +57,6 @@ function MetadataTableImportCtrl (
     reader.readAsText($scope.selectedFile);
   };
 
-  $scope.data = {
-    dataFileColumn: null
-  };
-
   $scope.checkFiles = function () {
     // check if the files listed in the dataFileColumn exist on the server
     var fileData = {
@@ -68,9 +64,9 @@ function MetadataTableImportCtrl (
       list: []
     };
     // get the list of file references
-    if ($scope.data.dataFileColumn) {
+    if ($scope.dataFileColumn) {
       $scope.metadata.forEach(function (row) {
-        fileData.list.push(row[$scope.data.dataFileColumn]);
+        fileData.list.push(row[$scope.dataFileColumn]);
       });
     }
     fileSources.check(fileData,

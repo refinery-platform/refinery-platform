@@ -4,7 +4,6 @@ Your analysis {{logic}}.  View your results here: {{url}}
 
 Project: {{project}}
 Analysis: {{name}}
-Analysis Uuid: {{uuid}}
 Dataset used: {{dataset}}
 Workflow used: {{workflow}}
 Start time: {{start}} 

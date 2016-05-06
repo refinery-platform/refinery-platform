@@ -16,6 +16,7 @@ import requests
 
 from analysis_manager.models import AnalysisStatus
 from core.models import Analysis, AnalysisResult, Workflow
+from core.utils import get_full_url
 from data_set_manager.models import Node
 from file_store.models import FileStoreItem
 from file_store.tasks import import_file, create
@@ -96,7 +97,6 @@ def run_analysis(analysis_uuid):
     elif not refinery_import.successful():
         logger.error("Analysis '%s' failed during file import", analysis)
         analysis.set_status(Analysis.FAILURE_STATUS)
-        analysis.send_email()
         refinery_import.delete()
         return
 
@@ -110,7 +110,6 @@ def run_analysis(analysis_uuid):
             logger.error("Analysis '%s' failed during preparation in Galaxy",
                          analysis)
             analysis.set_status(Analysis.FAILURE_STATUS)
-            analysis.send_email()
             refinery_import.delete()
             return
         galaxy_import_tasks = [
@@ -133,7 +132,6 @@ def run_analysis(analysis_uuid):
         logger.error("Analysis '%s' failed in Galaxy", analysis)
         analysis.set_status(Analysis.FAILURE_STATUS)
         analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
-        analysis.send_email()
         refinery_import.delete()
         galaxy_import.delete()
         analysis.galaxy_cleanup()
@@ -144,7 +142,6 @@ def run_analysis(analysis_uuid):
         percent_complete = analysis.galaxy_progress()
     except RuntimeError:
         analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
-        analysis.send_email()
         refinery_import.delete()
         galaxy_import.delete()
         analysis.galaxy_cleanup()
@@ -185,7 +182,6 @@ def run_analysis(analysis_uuid):
         logger.error("Analysis '%s' failed while downloading results from "
                      "Galaxy", analysis)
         analysis.set_status(Analysis.FAILURE_STATUS)
-        analysis.send_email()
         refinery_import.delete()
         galaxy_import.delete()
         galaxy_export.delete()
@@ -224,33 +220,39 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
     logger.debug("Uploading analysis input files to Galaxy")
     for fileset in ret_list:
         for k, v in fileset.iteritems():
+
             cur_item = fileset[k]
+
             # getting the current file_uuid from the given node_uuid
-            curr_file_uuid = Node.objects.get(
-                uuid=cur_item['node_uuid']).file_uuid
-            curr_filestore = FileStoreItem.objects.get_item(
-                uuid=curr_file_uuid)
-            if curr_filestore:
-                file_path = curr_filestore.get_absolute_path()
-                if file_path:
-                    cur_item["filepath"] = file_path
-                    try:
-                        file_id =\
-                            connection.libraries.upload_file_from_local_path(
-                                library_id, file_path)[0]['id']
-                    except (galaxy.client.ConnectionError, IOError) as exc:
-                        raise RuntimeError(
-                            "Failed to add file '{}' to Galaxy library '{}': "
-                            "{}".format(curr_file_uuid, library_id, exc))
-                    cur_item["id"] = file_id
-                else:
-                    raise RuntimeError(
-                        "Input file with UUID '{}' is not available".format(
-                            curr_file_uuid))
-            else:
-                raise RuntimeError(
-                    "Input file with UUID '{}' is not available".format(
-                        curr_file_uuid))
+            try:
+                curr_file_uuid = Node.objects.get(
+                    uuid=cur_item['node_uuid']).file_uuid
+            except Node.DoesNotExist:
+                logger.error("Couldn't fetch Node!")
+                return None
+
+            try:
+                current_filestore_item = FileStoreItem.objects.get_item(
+                    uuid=curr_file_uuid)
+            except FileStoreItem.DoesNotExist:
+                logger.error("Couldn't fetch FileStoreItem!")
+                return None
+
+            # Create url based on filestore_item's location (local file or
+            # external file)
+            file_url = get_full_url(current_filestore_item.get_datafile_url())
+
+            try:
+                file_id = connection.libraries.upload_file_from_url(
+                        library_id, file_url)[0]['id']
+            except (galaxy.client.ConnectionError, IOError) as exc:
+                logger.error("Failed adding file '%s' to Galaxy "
+                             "library '%s': %s",
+                             curr_file_uuid, library_id, exc)
+                raise
+
+            cur_item["id"] = file_id
+
     return ret_list
 
 

@@ -5,7 +5,7 @@
 angular
   .module('ngResource')
   .config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
-    $provide.decorator('$resource', ['$delegate', function ($delegate) {
+    $provide.decorator('$resource', function ($delegate) {
       return function () {
         if (arguments.length > 0) {  // URL
           arguments[0] = arguments[0].replace(/\/$/, '\\/');
@@ -21,7 +21,7 @@ angular
 
         return $delegate.apply($delegate, arguments);
       };
-    }]);
+    });
 
     $provide.factory('resourceEnforceSlashInterceptor', function () {
       return {

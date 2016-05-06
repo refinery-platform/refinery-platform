@@ -3,9 +3,9 @@
 var ConfirmationDialogInstanceCtrl = function (
   $scope, $uibModalInstance, config
 ) {
-  this.config = config;
+  $scope.config = config;
 
-  this.ok = function () {
+  $scope.ok = function () {
     $uibModalInstance.close();
   };
 };

@@ -6,8 +6,11 @@ import mock
 from urlparse import urljoin
 
 from django.conf import settings
+from django.contrib.sites.models import Site
+from django.core.files import File
 from django.test import SimpleTestCase
 
+from core.utils import get_full_url
 from file_store.models import file_path, get_temp_dir, get_file_object, \
     FileStoreItem, FileExtension, FILE_STORE_TEMP_DIR, \
     generate_file_source_translator, FileType
@@ -98,10 +101,36 @@ class FileStoreItemTest(SimpleTestCase):
         self.sharename = 'labname'
         self.path_source = os.path.join('/example/path', self.filename)
         self.url_source = urljoin('http://example.org/', self.filename)
+        self.test_file_path = "/tmp/test_file.txt"
+        self.test_file = File(open(self.test_file_path, "w+"),
+                              "This is just a test.")
 
     def tearDown(self):
         FileType.objects.all().delete()
         FileExtension.objects.all().delete()
+        FileStoreItem.objects.all().delete()
+        os.remove(self.test_file_path)
+
+    def test_get_full_url_local_file(self):
+        """Check if the full URL is properly returned for files that exist
+        in Refinery
+        """
+        # create FileStoreItem instances without any disk operations
+        local_file = FileStoreItem.objects.create(source=self.path_source,
+                                                  sharename=self.sharename)
+
+        local_file.datafile = self.test_file
+
+        local_file.save()
+
+        self.assertEqual(
+            get_full_url(local_file.get_datafile_url()),
+            '{}://{}{}'.format(
+                            settings.REFINERY_URL_SCHEME,
+                            Site.objects.get_current().domain,
+                            local_file.datafile.url
+                         )
+        )
 
     def test_get_full_url_remote_file(self):
         """Check if the source URL is returned for files that have not been
@@ -110,7 +139,7 @@ class FileStoreItemTest(SimpleTestCase):
         # create FileStoreItem instances without any disk operations
         item_from_url = FileStoreItem.objects.create(source=self.url_source,
                                                      sharename=self.sharename)
-        self.assertEqual(item_from_url.get_datafile_url(),
+        self.assertEqual(get_full_url(item_from_url.get_datafile_url()),
                          item_from_url.source)
 
     def test_get_file_extension(self):
