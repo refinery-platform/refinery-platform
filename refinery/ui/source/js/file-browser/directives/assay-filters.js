@@ -1,6 +1,6 @@
 'use strict';
 
-function rpFileBrowserAssayFilters ($timeout, $location, $window) {
+function rpFileBrowserAssayFilters ($timeout, $location) {
   return {
     restrict: 'E',
     templateUrl: '/static/partials/file-browser/partials/assay-filters.html',
@@ -60,10 +60,8 @@ function rpFileBrowserAssayFilters ($timeout, $location, $window) {
       scope.showField = function (field, internalName, attributeIndex) {
         var selectedIndex = -1;
         if (scope.FBCtrl.selectedFieldList[internalName] !== undefined) {
-          var encodedField = $window.encodeURIComponent(field);
-          selectedIndex = scope.FBCtrl.selectedFieldList[internalName].indexOf(encodedField);
+          selectedIndex = scope.FBCtrl.selectedFieldList[internalName].indexOf(field);
         }
-
         if (!isMinimized(attributeIndex)) {
           return true;
         } else if (selectedIndex > -1 && isMinimized(attributeIndex)) {
@@ -111,7 +109,6 @@ angular
   .directive('rpFileBrowserAssayFilters', [
     '$timeout',
     '$location',
-    '$window',
     rpFileBrowserAssayFilters
   ]
 );
