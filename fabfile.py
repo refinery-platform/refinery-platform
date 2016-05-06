@@ -13,7 +13,7 @@ Requirements:
 """
 
 import os
-from fabric.api import env, run, sudo, execute
+from fabric.api import env, run, sudo, execute, local
 from fabric.context_managers import prefix, cd, shell_env
 from fabric.contrib.files import sed
 from fabric.decorators import task, with_settings
@@ -39,6 +39,7 @@ def vm():
     env.project_user = "vagrant"    # since it's used as arg for decorators
     env.refinery_project_dir = "/vagrant"
     env.refinery_virtual_env_name = "refinery-platform"
+    env.branch = local('git rev-parse --abbrev-ref HEAD', capture=True)
     setup()
     execute(vagrant)
 
@@ -48,13 +49,7 @@ def dev():
     """Set config for deployment on development VM"""
     setup()
     env.hosts = [env.dev_host]
-
-
-@task
-def stage():
-    """Set config for deployment on staging VM"""
-    setup()
-    env.hosts = [env.stage_host]
+    env.branch = "develop"
 
 
 @task
@@ -63,6 +58,7 @@ def prod():
     # TODO: add a warning message/confirmation about updating production VM?
     setup()
     env.hosts = [env.prod_host]
+    env.branch = "master"
 
 
 @task
@@ -113,7 +109,7 @@ def update_refinery():
         # versions running on different VMs
         # https://raw.githubusercontent.com/gitster/git/master/Documentation/RelNotes/1.7.10.txt
         with shell_env(GIT_MERGE_AUTOEDIT='no'):
-            run("git pull")
+            run("git pull origin {branch}".format(**env))
     with cd(env.refinery_ui_dir):
         run("npm prune && npm update")
         run("rm -rf bower_components")
