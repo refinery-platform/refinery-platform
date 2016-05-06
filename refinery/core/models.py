@@ -603,14 +603,13 @@ class DataSet(SharableResource):
         """Returns the disk space in bytes used by all files in the data set"""
         investigation = self.get_investigation()
         file_size = 0
-        include_symlinks = True
 
         for study in investigation.study_set.all():
             files = Node.objects.filter(
                 study=study.id, file_uuid__isnull=False).values("file_uuid")
             for file in files:
                 size = get_file_size(
-                    file["file_uuid"], report_symlinks=include_symlinks)
+                    file["file_uuid"], report_symlinks=True)
                 file_size += size
 
         return file_size
@@ -1184,6 +1183,9 @@ class Analysis(OwnableResource):
         context = Context(context_dict)
         try:
             user.email_user(email_subj, temp_loader.render(context))
+        except smtplib.SMTPException as exc:
+            logger.error("Error sending email to '%s' for analysis '%s': %s",
+                         user.email, name, exc)
         except socket.error:
             logger.error(
                 "Email server error: status '%s' to '%s' for analysis '%s' "
@@ -1783,15 +1785,15 @@ class RefineryLDAPBackend(LDAPBackend):
                 send_mail(settings.REFINERY_WELCOME_EMAIL_SUBJECT,
                           settings.REFINERY_WELCOME_EMAIL_MESSAGE,
                           settings.DEFAULT_FROM_EMAIL, email_address_list)
-            except smtplib.SMTPException:
+            except smtplib.SMTPException as exc:
                 logger.error(
-                    "Cannot send welcome email to: %s: SMTP server error",
-                    email_address_list
+                    "Cannot send welcome email to: %s: SMTP server error: %s",
+                    email_address_list, exc
                 )
-            except socket.error as e:
+            except socket.error as exc:
                 logger.error(
                     "Cannot send welcome email to: %s: %s",
-                    email_address_list, e
+                    email_address_list, exc
                 )
         return user, created
 

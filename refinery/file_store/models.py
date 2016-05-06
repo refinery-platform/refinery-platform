@@ -30,7 +30,8 @@ from django.core.files.storage import FileSystemStorage
 
 import core
 
-logger = logging.getLogger('file_store')
+
+logger = logging.getLogger(__name__)
 
 
 def _mkdir(path):
