@@ -12,4 +12,4 @@ function AttributeOrderFactory ($resource) {
 
 angular
   .module('refineryNodeMapping')
-  .factory('AttributeOrder', AttributeOrderFactory);
+  .factory('AttributeOrder', ['$resource', AttributeOrderFactory]);

@@ -94,7 +94,7 @@
         "lodash/lodash.min.js",
         "lodash-migrate/dist/lodash-migrate.min.js",
         "angular-ui-grid/ui-grid.min.js",
-        "spark-md5/spark-md5.js",
+        "spark-md5/spark-md5.min.js",
         "spectrum/spectrum.js",
         "tipsy/src/javascripts/jquery.tipsy.js"
       ],

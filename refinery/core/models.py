@@ -13,6 +13,7 @@ import os
 import smtplib
 import socket
 import pysolr
+import pytz
 from urlparse import urljoin
 
 from django import forms
@@ -26,7 +27,6 @@ from django.contrib.messages import info
 from django.contrib.sites.models import Site
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.mail import mail_admins, send_mail
-from django.core.urlresolvers import reverse
 from django.db import models, transaction
 from django.db.models import Max
 from django.db.models.fields import IntegerField
@@ -1113,14 +1113,14 @@ class Analysis(OwnableResource):
     def send_email(self):
         """Sends an email when the analysis is finished"""
         # don't mail the user if analysis was canceled
-        if self.cancel:
-            return
+
         # get basic information
         user = self.get_owner()
         name = self.name
         site_name = Site.objects.get_current().name
         site_domain = Site.objects.get_current().domain
         status = self.status
+        data_set_uuid = self.data_set.uuid
         # check status and change text slightly based on that
         # set context for things needed in all emails
         context_dict = {'name': name,
@@ -1129,7 +1129,8 @@ class Analysis(OwnableResource):
                         'username': user.username,
                         'site_name': site_name,
                         'site_domain': site_domain,
-                        'success': self.successful()
+                        'success': self.successful(),
+                        'uuid': self.uuid
                         }
         if self.successful():
             email_subj = "[{}] Archive ready for download: {}".format(
@@ -1137,7 +1138,7 @@ class Analysis(OwnableResource):
             # TODO: avoid hardcoding URL protocol
             context_dict['url'] = urljoin(
                     "http://" + site_domain,
-                    reverse('core.views.analysis', args=(self.uuid,)))
+                    "data_sets/" + data_set_uuid + "/analysis/" + self.uuid)
         else:
             email_subj = "[{}] Archive creation failed: {}".format(
                     site_name, name)
@@ -1152,7 +1153,9 @@ class Analysis(OwnableResource):
 
             # get information needed to calculate the duration
             start = self.time_start
-            end = self.time_end
+            # add timezone, so start and end are aware
+            end = self.time_end.replace(tzinfo=pytz.utc)
+
             duration = end - start
             hours, remainder = divmod(duration.total_seconds(), 3600)
             minutes, seconds = divmod(remainder, 60)
