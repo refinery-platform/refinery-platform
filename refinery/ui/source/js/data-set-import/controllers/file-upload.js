@@ -47,7 +47,7 @@ function RefineryFileUploadCtrl (
     function calcMD5 (file) {
       var slice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
       var chunks = Math.ceil(file.size / chunkSize);
-      var spark = new SparkMD5.ArrayBuffer();
+      var spark = new self.SparkMD5.ArrayBuffer();
       var currentChunk = 0;
 
       var reader = new FileReader();
