@@ -18,7 +18,7 @@
             ng-click="dropAttributePanel($event, attribute, fields)"
             aria-expanded="true"
             aria-controls="{{ attribute }}">
-             {{ attribute }}
+             {{ attribute }} &nbsp; ({{ fields.facetObj.length }})
           </div>
           </h4>
         </div>
@@ -28,18 +28,32 @@
         aria-labelledby="{{ attribute }}">
         <div class="panel-body">
           <div ng-repeat="field in fields.facetObj track by $index">
-              <div class="checkbox"
+              <div class="checkbox container"
                 ng-show="showField(field.name, fields.internal_name,
                 attribute)">
-                <label>
-                  <input
-                    type="checkbox"
-                    name="optionsCheckboxes"
-                    ng-model="FBCtrl.selectedField[field.name]"
-                    ng-change="FBCtrl.attributeSelectionUpdate(
-                    fields.internal_name, field.name)">
-                    {{ field.name }}: {{ field.count }}
-                </label>
+                <div class="row">
+                  <div class="col-xs-1">
+                  <label>
+                      <input
+                        type="checkbox"
+                        name="optionsCheckboxes"
+                        ng-model="FBCtrl.selectedField[field.name]"
+                        ng-change="FBCtrl.attributeSelectionUpdate(
+                        fields.internal_name, field.name)">
+                      </div>
+                        <div class="col-xs-8">
+                          <span>
+                            {{ field.name }}
+                          </span>
+                        </div>
+                        <div class="col-xs-3">
+                          <span class="text-right pull-right">
+                            {{ field.count }}
+                          </span>
+                        </div>
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
         </div>
