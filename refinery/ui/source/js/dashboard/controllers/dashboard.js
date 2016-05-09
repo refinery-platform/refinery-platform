@@ -1077,14 +1077,6 @@ DashboardCtrl.prototype.getDataCartPanelHeight = function () {
   return this.dataCartPanelHeight;
 };
 
-DashboardCtrl.prototype.getDataSetOptions = function () {
-  this.dataSets
-    .get(1, 1, function () {})
-    .then(function (data) {
-      this.dataSetOptions = Object.keys(data[0]);
-    }.bind(this));
-};
-
 /**
  * Two-way data-binding data set panel height method.
  *
