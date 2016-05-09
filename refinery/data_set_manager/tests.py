@@ -574,7 +574,6 @@ class UtilitiesTest(TestCase):
                                       'Raw Data File', 9]}
 
         facet_field_obj = objectify_facet_field_counts(facet_field_array)
-        print(facet_field_obj)
         self.assertDictEqual(facet_field_obj,
                              {'WORKFLOW': [
                                       {'name': 'output_file', 'count': 60},
@@ -788,7 +787,6 @@ class UtilitiesTest(TestCase):
                         '"facet_intervals": {}, "facet_heatmaps": {}}}'
 
         formatted_response = format_solr_response(solr_response)
-        print(formatted_response)
         self.assertDictEqual(
                 formatted_response,
                 {
