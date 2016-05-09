@@ -22,7 +22,8 @@ SITE_NAME: Refinery
 SITE_URL: "192.168.50.50:8000"
 
 # The name of the EC2 key pair to use for SSH.
-# FIXED to "id_rsa".
+# (this key pair is required to already exist in the AWS account)
+# KEY_NAME: "id_rsa"
 
 # The AMI image for the EC2 instance
 # FIXED to "ami-d05e75b8"

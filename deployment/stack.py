@@ -163,7 +163,7 @@ def main():
             'ImageId': 'ami-d05e75b8',
             'InstanceType': 'm3.medium',
             'UserData': functions.base64(user_data_script),
-            'KeyName': 'ngehlenborg-test_rsa',
+            'KeyName': config['KEY_NAME'],
             'IamInstanceProfile': functions.ref('WebInstanceProfile'),
             'Tags': instance_tags,
         })
@@ -306,6 +306,9 @@ def load_config():
     config.setdefault('RDS_SUPERUSER_PASSWORD', 'mypassword')
     if 'RDS_NAME' not in config:
         config['RDS_NAME'] = "rds-refinery-" + random_alnum(7)
+
+    if 'KEY_NAME' not in config:
+        config['KEY_NAME'] = 'id_rsa'
 
     return config
 
