@@ -105,6 +105,15 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
       });
   };
 
+  /**
+   * Update annotation graph.
+   *
+   * @method  updateGraph
+   * @author  Fritz Lekschas
+   * @date    2016-05-09
+   * @param   {Object}  newAnnotations  Promise resolving to array of new
+   *   annotations.
+   */
   Data.prototype.updateGraph = function (newAnnotations) {
     $q.all([graphData.promise, newAnnotations]).then(function (results) {
       graph.updateAnnotations(results[0], results[1]);
