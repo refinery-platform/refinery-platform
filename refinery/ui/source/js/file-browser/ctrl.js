@@ -80,17 +80,17 @@ function FileBrowserCtrl (
 
     // for attribute filter directive, drop panels in query
     $scope.$broadcast('rf/attributeFilter-ready');
-    angular.forEach(allFilters, function (fieldObj, attribute) {
-      vm.refreshSelectedFieldFromQuery(fieldObj, attribute);
+    angular.forEach(allFilters, function (attributeObj, attributeName) {
+      vm.refreshSelectedFieldFromQuery(attributeObj, attributeName);
     });
   };
 
 
-  vm.refreshSelectedFieldFromQuery = function (fieldObj, attribute) {
-    angular.forEach(fieldObj.facetObj, function (value, field) {
-      if (vm.queryKeys.indexOf(field) > -1) {
-        vm.selectedField[field] = true;
-        vm.attributeSelectionUpdate(fieldObj.internal_name, field, attribute);
+  vm.refreshSelectedFieldFromQuery = function (_attributeObj, _attributeName) {
+    angular.forEach(_attributeObj.facetObj, function (fieldObj) {
+      if (vm.queryKeys.indexOf(fieldObj.name) > -1) {
+        vm.selectedField[fieldObj.name] = true;
+        vm.attributeSelectionUpdate(_attributeObj.internal_name, fieldObj.name, _attributeName);
       }
     });
   };
