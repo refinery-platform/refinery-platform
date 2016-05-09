@@ -32,7 +32,35 @@ describe('Controller: FileBrowserCtrl', function () {
     expect(ctrl.filesParam).toBeDefined();
   });
 
-  it('RefreshSelectedFieldFromQuery', function () {
+  it('Test checkUrlQueryFilters', function () {
+    ctrl.analysisFilter.Analysis = undefined;
+    ctrl.attributeFilter = {
+      Title: { facet_obj: [
+        {
+          count: 129,
+          name: 'Device independent graphical display description'
+        }, {
+          count: 18,
+          name: 'Graphics Facilities at Ames Research Center'
+        }],
+          internal_name: 'Title_Characteristics_92_46_s' } };
+    ctrl.selectedFieldList = {
+      REFINERY_ANALYSIS_UUID_92_46_s: ['N/A', 'Test Workflow', '3']
+    };
+    spyOn(scope, '$broadcast');
+    spyOn(ctrl, 'refreshSelectedFieldFromQuery');
+    spyOn(ctrl, 'reset');
+    expect(ctrl.refreshSelectedFieldFromQuery).not.toHaveBeenCalled();
+    expect(scope.$broadcast).not.toHaveBeenCalled();
+    expect(ctrl.reset).not.toHaveBeenCalled();
+    ctrl.checkUrlQueryFilters();
+    expect(ctrl.selectedFieldList).toEqual(ctrl.filesParam.filter_attribute);
+    expect(ctrl.refreshSelectedFieldFromQuery).toHaveBeenCalled();
+    expect(scope.$broadcast).toHaveBeenCalled();
+    expect(ctrl.reset).toHaveBeenCalled();
+  });
+
+  it('Test RefreshSelectedFieldFromQuery', function () {
     var attributeObj = {
       facetObj: [
         {
@@ -47,13 +75,14 @@ describe('Controller: FileBrowserCtrl', function () {
       internal_name: 'Month_Characteristics_92_46_s'
     };
     ctrl.queryKeys = ['March', 'April', 'Conner'];
+    expect(ctrl.selectedFieldList.Month_Characteristics_92_46_s)
+      .not.toBeDefined();
+    expect(ctrl.selectedField.March).not.toBeDefined();
     ctrl.refreshSelectedFieldFromQuery(attributeObj);
     expect(ctrl.selectedField.March).toEqual(true);
     expect(ctrl.selectedField.June).not.toBeDefined();
-    expect(ctrl.updateSelectionList.Month_Characteristics_92_46_s)
-      .toEqual('March');
-    expect(ctrl.updateSelectionList.Month_Characteristics_92_46_s)
-      .not.toEqual('April');
+    expect(ctrl.selectedFieldList.Month_Characteristics_92_46_s)
+      .toEqual(['March', 'April']);
   });
 
   describe('Refresh AssayFiles from Factory', function () {

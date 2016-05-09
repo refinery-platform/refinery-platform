@@ -47,7 +47,6 @@ function FileBrowserCtrl (
   vm.totalPages = 1;
   vm.cachePages = 2;
 
-
   vm.refreshAssayFiles = function () {
     vm.filesParam.offset = vm.lastPage * vm.rowCount;
     vm.filesParam.limit = vm.rowCount;
@@ -66,7 +65,6 @@ function FileBrowserCtrl (
     });
     return promise.promise;
   };
-
 
   // checks url for params to update the filter
   vm.checkUrlQueryFilters = function () {
