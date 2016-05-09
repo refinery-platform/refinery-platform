@@ -13,14 +13,12 @@ describe('Dashboard.directive.widthFixer: unit tests', function () {
     var $rootScope;
 
     inject(function (
+      $injector,
       _$compile_,
       _$rootScope_
     ) {
       $compile = _$compile_;
       $rootScope = _$rootScope_;
-    });
-
-    inject(function ($injector) {
       dashboardWidthFixerService = $injector.get('dashboardWidthFixerService');
     });
 
