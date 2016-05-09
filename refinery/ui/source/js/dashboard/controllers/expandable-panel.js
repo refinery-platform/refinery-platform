@@ -13,7 +13,6 @@ function ExpandablePanelCtrl (
 ) {
   var transitionSpeed = 0.25;
 
-  var element = $element[0];
   var jqElement = $($element);
   var jqParent = jqElement.parent();
 
@@ -24,7 +23,7 @@ function ExpandablePanelCtrl (
   });
 
   dashboardExpandablePanelService.expander.push(function () {
-    var animator = $animateCss(element, {
+    var animator = $animateCss($element, {
       duration: transitionSpeed,
       easing: 'cubic-bezier(0.3, 0.1, 0.6, 1)',
       from: {
@@ -42,8 +41,9 @@ function ExpandablePanelCtrl (
     animator
       .start()
       .then(function () {
-        $element.addClass('full-width');
-        element.removeAttr('style');
+        $element
+          .addClass('full-width')
+          .removeAttr('style');
         pubSub.trigger('expandFinished');
       })
       .catch(function (e) {
@@ -53,7 +53,7 @@ function ExpandablePanelCtrl (
 
   dashboardExpandablePanelService.collapser.push(function () {
     var parentWidth = jqParent.width();
-    var animator = $animateCss(element, {
+    var animator = $animateCss($element, {
       duration: transitionSpeed,
       easing: 'cubic-bezier(0.3, 0.1, 0.6, 1)',
       from: {
@@ -70,8 +70,9 @@ function ExpandablePanelCtrl (
     animator
       .start()
       .then(function () {
-        $element.removeClass('full-width');
-        element.removeAttr('style');
+        $element
+          .removeClass('full-width')
+          .removeAttr('style');
         pubSub.trigger('collapseFinished');
         dashboardWidthFixerService.trigger('resetter');
       })
