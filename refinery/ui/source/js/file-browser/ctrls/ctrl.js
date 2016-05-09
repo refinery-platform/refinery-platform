@@ -87,7 +87,7 @@ function FileBrowserCtrl (
     vm.reset();
   };
 
-
+  // upon refresh/load add fields to select data objs from query
   vm.refreshSelectedFieldFromQuery = function (_attributeObj) {
     angular.forEach(_attributeObj.facetObj, function (fieldObj) {
       if (vm.queryKeys.indexOf(fieldObj.name) > -1) {

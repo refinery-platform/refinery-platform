@@ -32,6 +32,30 @@ describe('Controller: FileBrowserCtrl', function () {
     expect(ctrl.filesParam).toBeDefined();
   });
 
+  it('RefreshSelectedFieldFromQuery', function () {
+    var attributeObj = {
+      facetObj: [
+        {
+          count: 133,
+          name: 'March'
+        },
+        {
+          count: 24,
+          name: 'April'
+        }
+      ],
+      internal_name: 'Month_Characteristics_92_46_s'
+    };
+    ctrl.queryKeys = ['March', 'April', 'Conner'];
+    ctrl.refreshSelectedFieldFromQuery(attributeObj);
+    expect(ctrl.selectedField.March).toEqual(true);
+    expect(ctrl.selectedField.June).not.toBeDefined();
+    expect(ctrl.updateSelectionList.Month_Characteristics_92_46_s)
+      .toEqual('March');
+    expect(ctrl.updateSelectionList.Month_Characteristics_92_46_s)
+      .not.toEqual('April');
+  });
+
 
   describe('Refresh AssayFiles from Factory', function () {
     it('refreshAssayFiles is method', function () {
