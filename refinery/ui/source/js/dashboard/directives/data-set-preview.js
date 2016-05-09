@@ -10,8 +10,7 @@ function refineryDataSetPreview () {
     controllerAs: 'preview',
     restrict: 'E',
     replace: true,
-    templateUrl: '/static/partials/dashboard/directives/data-set-preview.html',
-    transclude: true
+    templateUrl: '/static/partials/dashboard/directives/data-set-preview.html'
   };
 }
 
