@@ -373,101 +373,6 @@ function DashboardCtrl (
   }.bind(this));
 }
 
-DashboardCtrl.prototype.collectDataSetIds = function () {
-  var deferred = this.$q.defer();
-  var queryTermUris = Object.keys(this.queryTerms);
-  var andOrNotTerms = this.collectAndOrNotTerms(queryTermUris);
-  var i;
-
-  // Collection exclusions of all _NOTs_
-  var notUnion = [];
-  for (i = andOrNotTerms.notTerms.length; i--;) {
-    notUnion = this._.union(
-      notUnion,
-      Object.keys(andOrNotTerms.notTerms[i].dataSetIds)
-    );
-  }
-
-  // Collection intersection of all _ANDs_
-  var andIntersection = [];
-  for (i = andOrNotTerms.andTerms.length; i--;) {
-    if (i === andOrNotTerms.andTerms.length - 1) {
-      andIntersection = Object.keys(andOrNotTerms.andTerms[i].dataSetIds);
-    } else {
-      andIntersection = this._.intersection(
-        andIntersection,
-        Object.keys(andOrNotTerms.andTerms[i].dataSetIds)
-      );
-    }
-  }
-
-  // Collection union of all _ORs_
-  var orUnion = [];
-  for (i = andOrNotTerms.orTerms.length; i--;) {
-    orUnion = this._.union(
-      orUnion,
-      Object.keys(andOrNotTerms.orTerms[i].dataSetIds)
-    );
-  }
-  // Final intersection of intersection of _ANDs_ with union of all _ORs_
-  var allDsIds = orUnion;
-  if (andIntersection.length && !orUnion.length) {
-    allDsIds = andIntersection;
-  }
-  if (andIntersection.length && orUnion.length) {
-    allDsIds = this._.intersection(allDsIds, andIntersection);
-  }
-
-  // In case only **nots** are available
-  if (!andIntersection.length && !orUnion.length) {
-    allDsIds = this.dataSet.allIds;
-  } else {
-    allDsIds = this.$q.when(allDsIds);
-  }
-
-  allDsIds.then(function (allIds) {
-    var allNormalizedIds = allIds;
-    if (allIds.length && this._.isFinite(allIds[0])) {
-      allNormalizedIds = this._.map(allIds, function (el) {
-        return el.toString();
-      });
-    }
-    if (notUnion.length) {
-      deferred.resolve(this._.difference(allNormalizedIds, notUnion));
-    } else {
-      deferred.resolve(allDsIds);
-    }
-  }.bind(this));
-
-  return deferred.promise;
-};
-
-DashboardCtrl.prototype.collectAndOrNotTerms = function (termUris) {
-  var andTerms = [];
-  var orTerms = [];
-  var notTerms = [];
-
-  for (var i = termUris.length; i--;) {
-    if (this.queryTerms[termUris[i]].mode === 'and') {
-      andTerms.push(this.queryTerms[termUris[i]]);
-    } else if (this.queryTerms[termUris[i]].mode === 'or') {
-      orTerms.push(this.queryTerms[termUris[i]]);
-    } else {
-      notTerms.push(this.queryTerms[termUris[i]]);
-    }
-  }
-
-  return {
-    andTerms: andTerms,
-    orTerms: orTerms,
-    notTerms: notTerms
-  };
-};
-
-DashboardCtrl.prototype.getOriginalUri = function (eventData) {
-  return eventData.clone ? eventData.clonedFromUri : eventData.nodeUri;
-};
-
 /*
  * -----------------------------------------------------------------------------
  * Properties
@@ -810,6 +715,97 @@ DashboardCtrl.prototype.collapseDataSetPreview = function () {
   }
 };
 
+DashboardCtrl.prototype.collectAndOrNotTerms = function (termUris) {
+  var andTerms = [];
+  var orTerms = [];
+  var notTerms = [];
+
+  for (var i = termUris.length; i--;) {
+    if (this.queryTerms[termUris[i]].mode === 'and') {
+      andTerms.push(this.queryTerms[termUris[i]]);
+    } else if (this.queryTerms[termUris[i]].mode === 'or') {
+      orTerms.push(this.queryTerms[termUris[i]]);
+    } else {
+      notTerms.push(this.queryTerms[termUris[i]]);
+    }
+  }
+
+  return {
+    andTerms: andTerms,
+    orTerms: orTerms,
+    notTerms: notTerms
+  };
+};
+
+DashboardCtrl.prototype.collectDataSetIds = function () {
+  var deferred = this.$q.defer();
+  var queryTermUris = Object.keys(this.queryTerms);
+  var andOrNotTerms = this.collectAndOrNotTerms(queryTermUris);
+  var i;
+
+  // Collection exclusions of all _NOTs_
+  var notUnion = [];
+  for (i = andOrNotTerms.notTerms.length; i--;) {
+    notUnion = this._.union(
+      notUnion,
+      Object.keys(andOrNotTerms.notTerms[i].dataSetIds)
+    );
+  }
+
+  // Collection intersection of all _ANDs_
+  var andIntersection = [];
+  for (i = andOrNotTerms.andTerms.length; i--;) {
+    if (i === andOrNotTerms.andTerms.length - 1) {
+      andIntersection = Object.keys(andOrNotTerms.andTerms[i].dataSetIds);
+    } else {
+      andIntersection = this._.intersection(
+        andIntersection,
+        Object.keys(andOrNotTerms.andTerms[i].dataSetIds)
+      );
+    }
+  }
+
+  // Collection union of all _ORs_
+  var orUnion = [];
+  for (i = andOrNotTerms.orTerms.length; i--;) {
+    orUnion = this._.union(
+      orUnion,
+      Object.keys(andOrNotTerms.orTerms[i].dataSetIds)
+    );
+  }
+  // Final intersection of intersection of _ANDs_ with union of all _ORs_
+  var allDsIds = orUnion;
+  if (andIntersection.length && !orUnion.length) {
+    allDsIds = andIntersection;
+  }
+  if (andIntersection.length && orUnion.length) {
+    allDsIds = this._.intersection(allDsIds, andIntersection);
+  }
+
+  // In case only **nots** are available
+  if (!andIntersection.length && !orUnion.length) {
+    allDsIds = this.dataSet.allIds;
+  } else {
+    allDsIds = this.$q.when(allDsIds);
+  }
+
+  allDsIds.then(function (allIds) {
+    var allNormalizedIds = allIds;
+    if (allIds.length && this._.isFinite(allIds[0])) {
+      allNormalizedIds = this._.map(allIds, function (el) {
+        return el.toString();
+      });
+    }
+    if (notUnion.length) {
+      deferred.resolve(this._.difference(allNormalizedIds, notUnion));
+    } else {
+      deferred.resolve(allDsIds);
+    }
+  }.bind(this));
+
+  return deferred.promise;
+};
+
 /* ----------------------------------- D ------------------------------------ */
 
 DashboardCtrl.prototype.dataSetMouseEnter = function (dataSet) {
@@ -945,6 +941,10 @@ DashboardCtrl.prototype.getDataSetOptions = function () {
 // This is a hack as Angular doesn't like two-way data binding for primitives
 DashboardCtrl.prototype.getDataSetsPanelHeight = function () {
   return this.dataSetsPanelHeight;
+};
+
+DashboardCtrl.prototype.getOriginalUri = function (eventData) {
+  return eventData.clone ? eventData.clonedFromUri : eventData.nodeUri;
 };
 
 /* ----------------------------------- R ------------------------------------ */
