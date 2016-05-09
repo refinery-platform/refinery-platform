@@ -63,7 +63,7 @@ function GraphFactory (_) {
   //   }
 
   //   function processNode (node, childNo) {
-  //     // Set `value` property depending on the lenght of the actual value
+  //     // Set `value` property depending on the length of the actual value
   //     node.value = Object.keys(node[valueProp]).length;
 
   //     if (node.children.length) {
@@ -205,7 +205,7 @@ function GraphFactory (_) {
         if (numChildChildren) {
           var childChildValue = [];
           var valueSame = false;
-          // When the child has only one child, check whether the childs
+          // When the child has only one child, check whether the children
           // annotations and the child child's annotation are equal
           if (numChildChildren === 1) {
             childChildValue = Object.keys(graph[child.children[0]][valueProp]);
@@ -381,7 +381,7 @@ function GraphFactory (_) {
     var numAnnoDataSets = allIds.length;
     var retrievedDataSetsId;
 
-    // Convert to an array of ints.
+    // Convert to an array of strings to an array of integers.
     var allIntIds = _.map(allIds, function (el) {
       return parseInt(el, 10);
     });
