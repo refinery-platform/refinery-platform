@@ -162,7 +162,6 @@ function DataSetStoreFactory () {
     'length',
     {
       enumerable: true,
-      configurable: false,
       get: function () {
         return Object.keys(_store).length;
       }
