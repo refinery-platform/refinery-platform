@@ -50,5 +50,13 @@ describe('Dashboard.services.widthFixer: unit tests', function () {
 
       expect(a + b).toEqual(2);
     });
+
+    it('should store a _fixedWidth_ property', function () {
+      var test = {};
+
+      service.fixedWidth = test;
+
+      expect(service.fixedWidth).toEqual(test);
+    });
   });
 });
