@@ -476,27 +476,22 @@ DashboardCtrl.prototype.getOriginalUri = function (eventData) {
 
 Object.defineProperty(
   DashboardCtrl.prototype,
-  'visibleDataSets', {
+  'analysesFilterStatus', {
     enumerable: true,
     get: function () {
-      return this.dataSetsAdapter.visibleItems('uuid');
-    }
-  });
-
-Object.defineProperty(
-  DashboardCtrl.prototype,
-  'expandDataSetPanel', {
-    enumerable: true,
-    value: false,
-    writable: true
-  });
-
-Object.defineProperty(
-  DashboardCtrl.prototype,
-  'numQueryTerms', {
-    enumerable: true,
-    get: function () {
-      return Object.keys(this.queryTerms).length;
+      return this._analysesFilterStatus;
+    },
+    set: function (value) {
+      this.analysesFilterStatusCounter = 0;
+      this._analysesFilterStatus = value;
+      if (value) {
+        this.analyses.extraParameters.status = value;
+      } else {
+        delete this.analyses.extraParameters.status;
+      }
+      this.analyses.newOrCachedCache(undefined, true);
+      this.dashboardAnalysesReloadService.reload();
+      this.checkAnalysesFilterSort();
     }
   });
 
@@ -514,24 +509,18 @@ Object.defineProperty(
 
 Object.defineProperty(
   DashboardCtrl.prototype,
-  'dataSetsFilterOwner', {
+  'analysesSortBy', {
     enumerable: true,
     get: function () {
-      return this._dataSetsFilterOwner;
+      return this._analysesSortBy;
     },
     set: function (value) {
-      this._dataSetsFilterOwner = value;
-      if (value) {
-        this.dataSet.filter({
-          is_owner: 'True'
-        });
-      } else {
-        this.dataSet.all();
-      }
-      this.dataSets.newOrCachedCache(undefined, true);
-      this.dashboardDataSetsReloadService.reload();
-      this.checkDataSetsFilter();
-      this.checkAllCurrentDataSetsInDataCart();
+      this._analysesSortBy = value;
+      this.analysesSortOrder = 0;
+      this.analysesSortDesc = false;
+
+      this.triggerSorting('analyses');
+      this.checkAnalysesFilterSort();
     }
   });
 
@@ -549,6 +538,29 @@ Object.defineProperty(
       if (typeof groupId === 'number') {
         this.dataSet.filter({
           group: groupId
+        });
+      } else {
+        this.dataSet.all();
+      }
+      this.dataSets.newOrCachedCache(undefined, true);
+      this.dashboardDataSetsReloadService.reload();
+      this.checkDataSetsFilter();
+      this.checkAllCurrentDataSetsInDataCart();
+    }
+  });
+
+Object.defineProperty(
+  DashboardCtrl.prototype,
+  'dataSetsFilterOwner', {
+    enumerable: true,
+    get: function () {
+      return this._dataSetsFilterOwner;
+    },
+    set: function (value) {
+      this._dataSetsFilterOwner = value;
+      if (value) {
+        this.dataSet.filter({
+          is_owner: 'True'
         });
       } else {
         this.dataSet.all();
@@ -602,40 +614,10 @@ Object.defineProperty(
 
 Object.defineProperty(
   DashboardCtrl.prototype,
-  'analysesFilterStatus', {
+  'expandDataSetPanel', {
     enumerable: true,
-    get: function () {
-      return this._analysesFilterStatus;
-    },
-    set: function (value) {
-      this.analysesFilterStatusCounter = 0;
-      this._analysesFilterStatus = value;
-      if (value) {
-        this.analyses.extraParameters.status = value;
-      } else {
-        delete this.analyses.extraParameters.status;
-      }
-      this.analyses.newOrCachedCache(undefined, true);
-      this.dashboardAnalysesReloadService.reload();
-      this.checkAnalysesFilterSort();
-    }
-  });
-
-Object.defineProperty(
-  DashboardCtrl.prototype,
-  'analysesSortBy', {
-    enumerable: true,
-    get: function () {
-      return this._analysesSortBy;
-    },
-    set: function (value) {
-      this._analysesSortBy = value;
-      this.analysesSortOrder = 0;
-      this.analysesSortDesc = false;
-
-      this.triggerSorting('analyses');
-      this.checkAnalysesFilterSort();
-    }
+    value: false,
+    writable: true
   });
 
 Object.defineProperty(
@@ -644,6 +626,36 @@ Object.defineProperty(
     enumerable: true,
     get: function () {
       return this.settings.djangoApp.numOntologiesImported > 0;
+    }
+  });
+
+Object.defineProperty(
+  DashboardCtrl.prototype,
+  'numQueryTerms', {
+    enumerable: true,
+    get: function () {
+      return Object.keys(this.queryTerms).length;
+    }
+  });
+
+Object.defineProperty(
+  DashboardCtrl.prototype,
+  'treemapRoot', {
+    enumerable: true,
+    get: function () {
+      return this.treemapContext.get('root');
+    },
+    set: function (value) {
+      this.treemapContext.set('root', value);
+    }
+  });
+
+Object.defineProperty(
+  DashboardCtrl.prototype,
+  'visibleDataSets', {
+    enumerable: true,
+    get: function () {
+      return this.dataSetsAdapter.visibleItems('uuid');
     }
   });
 
@@ -661,18 +673,6 @@ Object.defineProperty(
 
       this.triggerSorting('workflows');
       this.checkWorkflowsFilterSort();
-    }
-  });
-
-Object.defineProperty(
-  DashboardCtrl.prototype,
-  'treemapRoot', {
-    enumerable: true,
-    get: function () {
-      return this.treemapContext.get('root');
-    },
-    set: function (value) {
-      this.treemapContext.set('root', value);
     }
   });
 
