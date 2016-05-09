@@ -1836,7 +1836,6 @@ Object.defineProperty(
   TreemapCtrl.prototype,
   'cacheTerms',
   {
-    configurable: false,
     enumerable: true,
     value: {},
     writable: true
@@ -1853,7 +1852,6 @@ Object.defineProperty(
   TreemapCtrl.prototype,
   'children',
   {
-    configurable: false,
     enumerable: true,
     value: [],
     writable: true
@@ -1871,7 +1869,6 @@ Object.defineProperty(
   TreemapCtrl.prototype,
   'data',
   {
-    configurable: false,
     enumerable: true,
     value: {},
     writable: true
@@ -1888,7 +1885,6 @@ Object.defineProperty(
   TreemapCtrl.prototype,
   'depth',
   {
-    configurable: false,
     enumerable: true,
     value: 0,
     writable: true
@@ -1905,7 +1901,6 @@ Object.defineProperty(
   TreemapCtrl.prototype,
   'highlightedEls',
   {
-    configurable: false,
     enumerable: true,
     value: [],
     writable: true
@@ -1925,7 +1920,6 @@ Object.defineProperty(
   TreemapCtrl.prototype,
   'rootNode',
   {
-    configurable: false,
     enumerable: true,
     get: function () {
       return this.treemapContext.get('root');
@@ -1943,7 +1937,6 @@ Object.defineProperty(
   TreemapCtrl.prototype,
   'treemap',
   {
-    configurable: false,
     enumerable: true,
     value: {},
     writable: true
@@ -1960,7 +1953,6 @@ Object.defineProperty(
   TreemapCtrl.prototype,
   'visibleDepth',
   {
-    configurable: false,
     enumerable: true,
     get: function () {
       return this._visibleDepth;
