@@ -65,8 +65,8 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
       };
 
       // Loops through fields to find matching attributes and drops down panel
-      var updateDomDropdown = function (allFields, queryFields, attributeName,
-                                        attributeInternalName) {
+      var updateDomDropdown = function (allFields, attributeName, attributeInternalName) {
+        var queryFields = Object.keys($location.search());
         for (var ind = 0; ind < allFields.length; ind++) {
           if (queryFields.indexOf(allFields[ind]) > -1) {
             var escapeAttributeName = attributeName.replace(' ', '-');
@@ -90,7 +90,6 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
       };
 
       scope.generateFilterDropSelection = function () {
-        var queryFields = Object.keys($location.search());
         var allFilters = {};
         angular.copy(scope.FBCtrl.attributeFilter, allFilters);
 
@@ -105,7 +104,7 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
 
           // time out allows the dom to load
           $timeout(function () {
-            updateDomDropdown(allFields, queryFields, attributeName, attributeObj.internal_name);
+            updateDomDropdown(allFields, attributeName, attributeObj.internal_name);
           }, 0);
         });
       };
