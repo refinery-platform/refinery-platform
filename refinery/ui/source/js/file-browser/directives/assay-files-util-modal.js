@@ -8,8 +8,6 @@ function rpAssayFilesUtilModal (
 ) {
   return {
     restrict: 'AE',
-    controller: 'FileBrowserCtrl',
-    controllerAs: 'FBCtrl',
     link: function (scope, element) {
       var modalInstance;
 

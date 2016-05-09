@@ -73,31 +73,32 @@ function FileBrowserCtrl (
     var allFilters = {};
     // Merge attribute and analysis filter data obj
     angular.copy(vm.attributeFilter, allFilters);
-
     if (typeof vm.analysisFilter.Analysis !== 'undefined') {
       allFilters.Analysis = vm.analysisFilter.Analysis;
     }
 
     // for attribute filter directive, drop panels in query
     $scope.$broadcast('rf/attributeFilter-ready');
-    angular.forEach(allFilters, function (attributeObj, attributeName) {
-      vm.refreshSelectedFieldFromQuery(attributeObj, attributeName);
+    angular.forEach(allFilters, function (attributeObj) {
+      vm.refreshSelectedFieldFromQuery(attributeObj);
     });
+    vm.filesParam.filter_attribute = {};
+    angular.copy(vm.selectedFieldList, vm.filesParam.filter_attribute);
+    vm.reset();
   };
 
 
-  vm.refreshSelectedFieldFromQuery = function (_attributeObj, _attributeName) {
+  vm.refreshSelectedFieldFromQuery = function (_attributeObj) {
     angular.forEach(_attributeObj.facetObj, function (fieldObj) {
       if (vm.queryKeys.indexOf(fieldObj.name) > -1) {
         vm.selectedField[fieldObj.name] = true;
-        vm.attributeSelectionUpdate(_attributeObj.internal_name, fieldObj.name, _attributeName);
+        vm.updateSelectionList(_attributeObj.internal_name, fieldObj.name);
       }
     });
   };
 
-
-  // Updates which attribute filters are selected and the ui-grid data
-  vm.attributeSelectionUpdate = function (internalName, field) {
+  // Updates selection field list and url
+  vm.updateSelectionList = function (internalName, field) {
     if (vm.selectedField[field] &&
       typeof vm.selectedFieldList[internalName] !== 'undefined') {
       // add field url query and selectedList
@@ -117,7 +118,14 @@ function FileBrowserCtrl (
       }
       $location.search(field, null);
     }
-    vm.filesParam.filter_attribute = vm.selectedFieldList;
+  };
+
+
+  // Updates which attribute filters are selected and the ui-grid data
+  vm.attributeSelectionUpdate = function (_internalName, _field) {
+    vm.updateSelectionList(_internalName, _field);
+    vm.filesParam.filter_attribute = {};
+    angular.copy(vm.selectedFieldList, vm.filesParam.filter_attribute);
     vm.reset();
   };
 
