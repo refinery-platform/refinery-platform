@@ -163,7 +163,7 @@ DataSetPreviewCtrl.prototype.getCitations = function (publications) {
 };
 
 /**
- * Load user data
+ * Load user data.
  *
  * @method  getUser
  * @author  Fritz Lekschas
@@ -341,7 +341,7 @@ DataSetPreviewCtrl.prototype.loadData = function (dataSetUuid) {
 };
 
 /**
- * Open the permission modal
+ * Open the permission modal.
  *
  * @method  openPermissionEditor
  * @author  Fritz Lekschas
@@ -370,13 +370,13 @@ DataSetPreviewCtrl.prototype.openPermissionEditor = function () {
 };
 
 /**
- * Toggle abstract length
+ * Toggle abstract length.
  *
  * @method  toggleAbstract
  * @author  Fritz Lekschas
- * @date    2015-08-21
+ * @date    2016-05-09
  *
- * @param   {Object  citation  Citation object.
+ * @param   {Object}  citation  Citation object.
  */
 DataSetPreviewCtrl.prototype.toggleAbstract = function (citation) {
   if (citation.abstractLength < Number.POSITIVE_INFINITY) {
@@ -402,13 +402,11 @@ DataSetPreviewCtrl.prototype.toggleBadges = function () {
 };
 
 /**
- * Toggle abstract length
+ * Toggle length of description.
  *
- * @method  toggleAbstract
+ * @method  toggleDescription
  * @author  Fritz Lekschas
- * @date    2015-08-21
- *
- * @param   {Object  citation  Citation object.
+ * @date    2016-05-09
  */
 DataSetPreviewCtrl.prototype.toggleDescription = function () {
   if (this.descLength < Number.POSITIVE_INFINITY) {
