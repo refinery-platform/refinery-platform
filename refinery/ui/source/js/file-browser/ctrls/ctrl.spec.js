@@ -56,7 +56,6 @@ describe('Controller: FileBrowserCtrl', function () {
       .not.toEqual('April');
   });
 
-
   describe('Refresh AssayFiles from Factory', function () {
     it('refreshAssayFiles is method', function () {
       expect(angular.isFunction(ctrl.refreshAssayFiles)).toBe(true);
