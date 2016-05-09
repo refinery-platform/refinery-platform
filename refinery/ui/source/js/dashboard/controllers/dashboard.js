@@ -1114,24 +1114,24 @@ DashboardCtrl.prototype.getOriginalUri = function (eventData) {
 /**
  * Turns an unreadable date into a readable date string.
  *
- * @method  readibleDate
+ * @method  readableDate
  * @author  Fritz Lekschas
  * @date    2016-05-09
  * @param   {Object}  dataSet   Data set object of interest.
  * @param   {String}  property  Name of the date property to be made readable.
  * @return  {String}            Readable date string.
  */
-DashboardCtrl.prototype.readibleDate = function (dataSet, property) {
+DashboardCtrl.prototype.readableDate = function (dataSet, property) {
   var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
     'Sep', 'Oct', 'Nov', 'Dec'];
 
-  if (dataSet[property] && !dataSet[property + 'Readible']) {
-    dataSet[property + 'Readible'] = months[dataSet[property].getMonth()] + ' ' +
+  if (dataSet[property] && !dataSet[property + 'Readable']) {
+    dataSet[property + 'Readable'] = months[dataSet[property].getMonth()] + ' ' +
     dataSet[property].getDate() + ', ' +
     dataSet[property].getFullYear();
   }
 
-  return dataSet[property + 'Readible'];
+  return dataSet[property + 'Readable'];
 };
 
 /**
