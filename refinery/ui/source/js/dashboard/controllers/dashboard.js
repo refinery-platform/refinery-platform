@@ -1379,6 +1379,46 @@ DashboardCtrl.prototype.toggleDataCart = function (forceClose) {
 };
 
 /**
+ * Toggle visibility of the data set filter panel.
+ *
+ * @method  toggleDataSetsFilter
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ */
+DashboardCtrl.prototype.toggleDataSetsFilter = function () {
+  this.showDataSetsFilter = !!!this.showDataSetsFilter;
+  if (!this.membershipLoaded) {
+    this.groupService.query()
+      .$promise
+      .then(function (response) {
+        var tmp = [];
+        // This extra loop is necessary because we don't want to provide two
+        // filter options to only show public data.
+        for (var i = response.objects.length; i--;) {
+          if (response.objects[i].group_id !== 100) {
+            tmp.push(response.objects[i]);
+          }
+        }
+        tmp.sort(function sortByName (a, b) {
+          var aName = a.group_name.toLowerCase();
+          var bName = b.group_name.toLowerCase();
+          if (aName < bName) {
+            return -1;
+          }
+          if (aName > bName) {
+            return 1;
+          }
+          return 0;
+        });
+        this.membership = tmp;
+      }.bind(this))
+      .finally(function () {
+        this.membershipLoaded = true;
+      }.bind(this));
+  }
+};
+
+/**
  * Toggles the visibility of the data set exploration view.
  *
  * @method  toggleDataSetsExploration
@@ -1486,46 +1526,6 @@ DashboardCtrl.prototype.toggleSortOrder = function (source) {
   if (this[sortOrder] === 2) {
     this[sortDesc] = true;
     this.triggerSorting(source);
-  }
-};
-
-/**
- * Toggle visibility of the data set filter panel.
- *
- * @method  triggerShowDataSetsFilter
- * @author  Fritz Lekschas
- * @date    2016-05-09
- */
-DashboardCtrl.prototype.triggerShowDataSetsFilter = function () {
-  this.showDataSetsFilter = !!!this.showDataSetsFilter;
-  if (!this.membershipLoaded) {
-    this.groupService.query()
-      .$promise
-      .then(function (response) {
-        var tmp = [];
-        // This extra loop is necessary because we don't want to provide two
-        // filter options to only show public data.
-        for (var i = response.objects.length; i--;) {
-          if (response.objects[i].group_id !== 100) {
-            tmp.push(response.objects[i]);
-          }
-        }
-        tmp.sort(function sortByName (a, b) {
-          var aName = a.group_name.toLowerCase();
-          var bName = b.group_name.toLowerCase();
-          if (aName < bName) {
-            return -1;
-          }
-          if (aName > bName) {
-            return 1;
-          }
-          return 0;
-        });
-        this.membership = tmp;
-      }.bind(this))
-      .finally(function () {
-        this.membershipLoaded = true;
-      }.bind(this));
   }
 };
 
