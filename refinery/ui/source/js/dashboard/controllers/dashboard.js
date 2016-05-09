@@ -1315,11 +1315,11 @@ DashboardCtrl.prototype.setDataSetSource = function (
  */
 DashboardCtrl.prototype.showNotification = function () {
   return (
-  this.dataSets.error ||
-  this.dataSets.total === 0 ||
-  this.searchQueryDataSets.length === 1 || (
-  this.searchQueryDataSets.length > 1 && this.dataSets.total === 0
-  )
+    this.dataSets.error ||
+    this.dataSets.total === 0 ||
+    this.searchQueryDataSets.length === 1 || (
+      this.searchQueryDataSets.length > 1 && this.dataSets.total === 0
+    )
   );
 };
 
