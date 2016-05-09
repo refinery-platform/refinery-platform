@@ -26,20 +26,19 @@ angular
 
       PreviewService.prototype.close = function () {
         if (this.previewing) {
-          this.dataSet.preview = false;
+          this.dataSetUuid = undefined;
         }
         this.previewing = false;
       };
 
-      PreviewService.prototype.preview = function (dataSet) {
+      PreviewService.prototype.preview = function (dataSetUuid) {
         // Unset old preview
         if (this.previewing) {
-          this.dataSet.preview = false;
+          this.dataSetUuid = undefined;
         }
 
         // Store data set that's to be previewed
-        this.dataSet = dataSet;
-        this.dataSet.preview = true;
+        this.dataSetUuid = dataSetUuid;
         this.previewing = true;
       };
 

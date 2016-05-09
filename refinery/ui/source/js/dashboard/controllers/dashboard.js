@@ -187,16 +187,16 @@ function DashboardCtrl (
         this.searchQueryDataSets = toParams.q;
         this.setDataSetSource(toParams.q, true);
       }
-      // Need to implement a method for finding a dataset by uuid first. The
+      // Need to implement a method for finding a dataset by UUID first. The
       // reason why is that we need to link to the specific dataset object
       // which originates form the ui-scroll resource service.
-      // if (toState.name === 'launchPad.preview') {
-      //   // Need to wait another digestion cycle to ensure the layout is set
-      //   // properly.
-      //   $timeout(function () {
-      //     this.expandDataSetPreview(this.findDataSet(toParams.uuid), true);
-      //   }.bind(this), 0);
-      // }
+      if (toState.name === 'launchPad.preview') {
+        // Need to wait another digestion cycle to ensure the layout is set
+        // properly.
+        $timeout(function () {
+          this.expandDataSetPreview(toParams.uuid, true);
+        }.bind(this), 0);
+      }
       if (toState.name === 'launchPad') {
         if (this.expandDataSetPanel) {
           $timeout(function () {
@@ -898,6 +898,19 @@ DashboardCtrl.prototype.collectDataSetIds = function () {
 /* ----------------------------------- D ------------------------------------ */
 
 /**
+ * Checks whether the current data set is previewed by UUID.
+ *
+ * @method  dataSetIsPreviewed
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @param   {String}   uuid  Data set UUID to be checked
+ * @return  {Boolean}        If `true` the data set is currently previewed.
+ */
+DashboardCtrl.prototype.dataSetIsPreviewed = function (uuid) {
+  return this.dashboardDataSetPreviewService.dataSetUuid === uuid;
+};
+
+/**
  * Mouse enter exploration related user interaction helper method.
  *
  * @method  dataSetMouseEnter
@@ -992,11 +1005,11 @@ DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
  * @method  expandDataSetPreview
  * @author  Fritz Lekschas
  * @date    2016-05-09
- * @param   {Object}  dataSet         Data set to be previewed.
+ * @param   {String}  dataSetUuid     Data set UUID to be previewed.
  * @param   {Object}  fromStateEvent  UI-router previous state object.
  */
 DashboardCtrl.prototype.expandDataSetPreview = function (
-  dataSet, fromStateEvent
+  dataSetUuid, fromStateEvent
 ) {
   if (this.dataSetExploration) {
     this.dataSetExplorationTempHidden = true;
@@ -1006,7 +1019,7 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
       this.$state.transitionTo(
         'launchPad.preview',
         {
-          uuid: dataSet.uuid
+          uuid: dataSetUuid
         },
         {
           inherit: true,
@@ -1023,7 +1036,7 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
       this.dashboardWidthFixerService.trigger('fixer');
       this.dashboardExpandablePanelService.trigger('expander');
     }
-    this.dashboardDataSetPreviewService.preview(dataSet.uuid);
+    this.dashboardDataSetPreviewService.preview(dataSetUuid);
     this.dataSetPreview = true;
   }
 
@@ -1039,18 +1052,12 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
       startExpansion.apply(this);
     }
   } else {
-    if (dataSet.preview) {
-      this.collapseDataSetPreview(dataSet);
+    if (this.dataSetIsPreviewed(dataSetUuid)) {
+      this.collapseDataSetPreview();
     } else {
-      this.dashboardDataSetPreviewService.preview(dataSet.uuid);
+      this.dashboardDataSetPreviewService.preview(dataSetUuid);
     }
   }
-};
-
-/* ----------------------------------- F ------------------------------------ */
-
-DashboardCtrl.prototype.findDataSet = function () {
-  // Need to implement a method that can find an item in a ui-scroll resource.
 };
 
 /* ----------------------------------- G ------------------------------------ */

@@ -265,7 +265,7 @@
               <li
                 ng-repeat="dataSet in dashboard.dataCart.dataSets | orderBy : $index : true"
                 adapter="dashboard.dataCartAdapter"
-                ng-class="{'hovered': dataSet.hovered, 'locked': dataSet.locked, 'previewing': dataSet.preview}"
+                ng-class="{'hovered': dataSet.hovered, 'locked': dataSet.locked, 'previewing': dashboard.dataSetIsPreviewed(dataSet.uuid)}"
                 ng-mouseenter="dashboard.dataSetMouseEnter(dataSet)"
                 ng-mouseleave="dashboard.dataSetMouseLeave(dataSet)">
                 <a
@@ -308,7 +308,7 @@
                 </button>
                 <a
                   class="title one-line"
-                  ng-click="dashboard.expandDataSetPreview(dataSet, $index)"
+                  ng-click="dashboard.expandDataSetPreview(dataSet.uuid)"
                   ng-bind-html="dataSet.title"></a>
                 <div class="flex-box indicators">
                   <ul class="flex-item-two flex-left no-list-style">
@@ -392,7 +392,7 @@
               ui-scroll="dataSet in dashboard.dataSets"
               buffer-size="50"
               adapter="dashboard.dataSetsAdapter"
-              ng-class="{'hovered': dataSet.hovered, 'locked': dataSet.locked, 'previewing': dataSet.preview}"
+              ng-class="{'hovered': dataSet.hovered, 'locked': dataSet.locked, 'previewing': dashboard.dataSetIsPreviewed(dataSet.uuid)}"
               ng-mouseenter="dashboard.dataSetMouseEnter(dataSet)"
               ng-mouseleave="dashboard.dataSetMouseLeave(dataSet)">
               <a
@@ -435,7 +435,7 @@
               </button>
               <a
                 class="title"
-                ng-click="dashboard.expandDataSetPreview(dataSet, $index)"
+                ng-click="dashboard.expandDataSetPreview(dataSet.uuid)"
                 ng-bind-html="dataSet.title"></a>
               <div class="flex-box indicators">
                 <ul class="flex-item-two flex-left no-list-style">

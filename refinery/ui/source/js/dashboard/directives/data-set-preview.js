@@ -67,7 +67,7 @@ function refineryDataSetPreview () {
     'dataSetUuid', {
       enumerable: true,
       get: function () {
-        var uuid = this.dashboardDataSetPreviewService.dataSet;
+        var uuid = this.dashboardDataSetPreviewService.dataSetUuid;
         if (uuid && this._currentUuid !== uuid) {
           this._currentUuid = uuid;
           this.loadData(uuid).then(function () {
