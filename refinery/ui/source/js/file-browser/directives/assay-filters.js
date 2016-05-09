@@ -64,7 +64,8 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
         return false;
       };
 
-      // Loops through fields to find matching attributes and drops down panel
+      // Helper method, oops through fields to find matching attributes and
+      // drops down panel from url query
       var updateDomDropdown = function (allFields, attributeName, attributeInternalName) {
         var queryFields = Object.keys($location.search());
         for (var ind = 0; ind < allFields.length; ind++) {
@@ -89,6 +90,7 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
         }
       };
 
+      // On the initial page load, consolidates filters obj & updates dom
       scope.generateFilterDropSelection = function () {
         var allFilters = {};
         angular.copy(scope.FBCtrl.attributeFilter, allFilters);
@@ -107,6 +109,7 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
             updateDomDropdown(allFields, attributeName, attributeObj.internal_name);
           }, 0);
         });
+        return allFilters;
       };
 
       // Drop down windows when they are in the URL query
