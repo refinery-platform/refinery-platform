@@ -76,6 +76,32 @@ describe('rpAssayFiles directive unit test', function () {
     expect(domElementPanel.hasClass('fa-caret-right')).toEqual(true);
   });
 
+  it('test showFields', function () {
+    scope.FBCtrl.selectedFieldList = {
+      REFINERY_ANALYSIS_UUID_92_46_s: ['N/A', 'Test Workflow', '3']
+    };
+    // Test default, panel is closed and not selected
+    var response = scope.showField(
+      'notSelectedAnalysis', 'REFINERY_ANALYSIS_UUID_92_46_s', 'Analysis'
+    );
+    expect(response).toEqual(false);
+
+    // Panel is closed and item is selected
+    response = scope.showField(
+      'Test Workflow', 'REFINERY_ANALYSIS_UUID_92_46_s', 'Analysis');
+    expect(response).toEqual(true);
+
+    // Panel is open
+    angular.element(document.querySelector('#attribute-panel-Analysis'))
+      .removeClass('fa-caret-right');
+    angular.element(document.querySelector('#attribute-panel-Analysis'))
+      .addClass('fa-caret-down');
+    // Test default, panel is open
+    response = scope.showField(
+      'notSelectedAnalysis', 'REFINERY_ANALYSIS_UUID_92_46_s', 'Analysis');
+    expect(response).toEqual(true);
+  });
+
   it('test broadcast triggers watcher', function () {
     spyOn(scope, 'generateFilterDropSelection');
     scope.$broadcast('rf/attributeFilter-ready');

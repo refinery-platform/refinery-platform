@@ -49,11 +49,6 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
         return attributeTitle.hasClass('fa-caret-right');
       };
 
-      // Drop down windows when they are in the URL query
-      scope.$on('rf/attributeFilter-ready', function () {
-        scope.generateFilterDropSelection();
-      });
-
       // When panel is minimized, selected fields continue to show
       scope.showField = function (field, internalName, attributeName) {
         var escapedAttributeName = attributeName.replace(' ', '-');
@@ -114,6 +109,11 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
           }, 0);
         });
       };
+
+      // Drop down windows when they are in the URL query
+      scope.$on('rf/attributeFilter-ready', function () {
+        scope.generateFilterDropSelection();
+      });
     }
   };
 }
