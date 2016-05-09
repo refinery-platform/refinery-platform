@@ -6,7 +6,7 @@ Object.defineProperty(
   PreviewService.prototype,
   'dataSet', {
     enumerable: true,
-    configurable: false,
+    value: null,
     writable: true
   });
 
@@ -14,7 +14,6 @@ Object.defineProperty(
   PreviewService.prototype,
   'previewing', {
     enumerable: true,
-    configurable: false,
     value: false,
     writable: true
   });
