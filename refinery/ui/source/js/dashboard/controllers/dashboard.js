@@ -748,7 +748,9 @@ DashboardCtrl.prototype.collapseDatasetExploration = function () {
       this.dashboardExpandablePanelService.trigger('collapser');
     }
 
-    this.dataSet.highlight(this.treemapContext.get('highlightedDataSets'), true);
+    this.dataSet.highlight(
+      this.treemapContext.get('highlightedDataSets'), true
+    );
   }
 };
 
@@ -1123,9 +1125,10 @@ DashboardCtrl.prototype.readableDate = function (dataSet, property) {
     'Sep', 'Oct', 'Nov', 'Dec'];
 
   if (dataSet[property] && !dataSet[property + 'Readable']) {
-    dataSet[property + 'Readable'] = months[dataSet[property].getMonth()] + ' ' +
-    dataSet[property].getDate() + ', ' +
-    dataSet[property].getFullYear();
+    dataSet[property + 'Readable'] =
+      months[dataSet[property].getMonth()] + ' ' +
+      dataSet[property].getDate() + ', ' +
+      dataSet[property].getFullYear();
   }
 
   return dataSet[property + 'Readable'];
@@ -1252,7 +1255,9 @@ DashboardCtrl.prototype.setDataSetSource = function (
       // will be refreshed, which causes an ugly usability bug in which the
       // search input is deselected for a short moment and preventing from
       // typing further...
-      this.$rootScope.$emit('$reloadlessStateChangeSuccess', this.$state.current);
+      this.$rootScope.$emit(
+        '$reloadlessStateChangeSuccess', this.$state.current
+      );
     }.bind(this));
   }
 
@@ -1263,7 +1268,9 @@ DashboardCtrl.prototype.setDataSetSource = function (
       }
 
       this.searchDataSet = true;
-      var annotations = this.dataSet.search(searchQuery).getCurrentAnnotations();
+      var annotations = this.dataSet
+        .search(searchQuery)
+        .getCurrentAnnotations();
       this.dataSets.newOrCachedCache(searchQuery);
       // Sometimes the `ui-scroll` didn't stop showing the loading spinner. It
       // seems like we need to wait for one digestion cycle before reloading the
@@ -1466,7 +1473,8 @@ DashboardCtrl.prototype.toggleListGraphZoom = function (dataSet) {
  * @method  toggleListUnrelatedNodes
  * @author  Fritz Lekschas
  * @date    2016-05-09
- * @param   {Object}  dataSet  Data set of interest, which is currently interacted with.
+ * @param   {Object}  dataSet  Data set of interest, which is currently
+ *   interacted with.
  */
 DashboardCtrl.prototype.toggleListUnrelatedNodes = function (dataSet) {
   if (this.listGraphHideUnrelatedNodes === dataSet.id) {
