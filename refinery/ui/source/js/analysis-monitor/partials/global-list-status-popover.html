@@ -60,7 +60,9 @@
                 </a>
               </span>
               <span ng-if="analysis.status !== 'SUCCESS'">
-                {{ analysis.name }}
+                <a id="analyses-popover-links" ng-href="/data_sets/{{ analysis.data_set__uuid }}/#/analyses/">
+                  {{ analysis.name }}
+                </a>
               </span>
               </div>
           </span>
