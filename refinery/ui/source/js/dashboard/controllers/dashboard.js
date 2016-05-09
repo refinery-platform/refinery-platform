@@ -589,11 +589,26 @@ Object.defineProperty(
 
 /* ----------------------------------- A ------------------------------------ */
 
+/**
+ * Add a data set object to the data cart.
+ *
+ * @method  addToDataCart
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @param   {Object}  dataSet  Data set to be added
+ */
 DashboardCtrl.prototype.addToDataCart = function (dataSet) {
   this.dataCart.add(dataSet);
   this.checkAllCurrentDataSetsInDataCart();
 };
 
+/**
+ * Add all currently viewed data sets to the data cart.
+ *
+ * @method  addAllCurrentToDataCart
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ */
 DashboardCtrl.prototype.addAllCurrentToDataCart = function () {
   this.dataSet.allIds.then(function (allIds) {
     var promisedDataSets = [];
@@ -609,12 +624,27 @@ DashboardCtrl.prototype.addAllCurrentToDataCart = function () {
 
 /* ----------------------------------- C ------------------------------------ */
 
+/**
+ * Check all currently viewed data sets whether they have been added to the
+ * data cart.
+ *
+ * @method  checkAllCurrentDataSetsInDataCart
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ */
 DashboardCtrl.prototype.checkAllCurrentDataSetsInDataCart = function () {
   this.dataSet.allIds.then(function (allIds) {
     this.allCurrentDataSetsInDataCart = this.dataCart.added(allIds);
   }.bind(this));
 };
 
+/**
+ * Check whether analyses are filtered or sorted.
+ *
+ * @method  checkAnalysesFilterSort
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ */
 DashboardCtrl.prototype.checkAnalysesFilterSort = function () {
   if (this.analysesFilterStatus) {
     this.analysesFilterSort = true;
@@ -627,6 +657,13 @@ DashboardCtrl.prototype.checkAnalysesFilterSort = function () {
   this.analysesFilterSort = false;
 };
 
+/**
+ * Check whether data sets are filtered.
+ *
+ * @method  checkDataSetsFilter
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ */
 DashboardCtrl.prototype.checkDataSetsFilter = function () {
   if (this.dataSetsFilterOwner) {
     this.dataSetsFilter = true;
@@ -643,6 +680,13 @@ DashboardCtrl.prototype.checkDataSetsFilter = function () {
   this.dataSetsFilter = false;
 };
 
+/**
+ * Check whether data sets are sorted.
+ *
+ * @method  checkDataSetsSort
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ */
 DashboardCtrl.prototype.checkDataSetsSort = function () {
   if (this.dataSetsSortBy) {
     this.dataSetsSort = true;
@@ -651,6 +695,13 @@ DashboardCtrl.prototype.checkDataSetsSort = function () {
   this.dataSetsSort = false;
 };
 
+/**
+ * Check whether workflows are filtered or sorted.
+ *
+ * @method  checkWorkflowsFilterSort
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ */
 DashboardCtrl.prototype.checkWorkflowsFilterSort = function () {
   if (this.workflowsSortBy) {
     this.workflowsFilterSort = true;
@@ -659,12 +710,27 @@ DashboardCtrl.prototype.checkWorkflowsFilterSort = function () {
   this.workflowsFilterSort = false;
 };
 
+/**
+ * Remove all data sets from the data cart and close the data cart if it is
+ * opened.
+ *
+ * @method  clearDataCart
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ */
 DashboardCtrl.prototype.clearDataCart = function () {
   this.dataCart.clear();
   this.allCurrentDataSetsInDataCart = 0;
   this.toggleDataCart(true);
 };
 
+/**
+ * Close the data set exploration view.
+ *
+ * @method  collapseDatasetExploration
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ */
 DashboardCtrl.prototype.collapseDatasetExploration = function () {
   if (this.dataSetExploration) {
     this.$state.transitionTo(
@@ -688,6 +754,13 @@ DashboardCtrl.prototype.collapseDatasetExploration = function () {
   }
 };
 
+/**
+ * Close the data set metadata preview view.
+ *
+ * @method  collapseDataSetPreview
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ */
 DashboardCtrl.prototype.collapseDataSetPreview = function () {
   if (this.dataSetPreview) {
     if (this.dataSetExploration) {
@@ -715,7 +788,16 @@ DashboardCtrl.prototype.collapseDataSetPreview = function () {
   }
 };
 
-DashboardCtrl.prototype.collectAndOrNotTerms = function (termUris) {
+/**
+ * Spread query terms by their query mode.
+ *
+ * @method  collectAndOrNotTerms
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @return  {Object}  Object of _and, _or_, and _not_ arrays of query terms.
+ */
+DashboardCtrl.prototype.collectAndOrNotTerms = function () {
+  var termUris = Object.keys(this.queryTerms);
   var andTerms = [];
   var orTerms = [];
   var notTerms = [];
@@ -737,10 +819,17 @@ DashboardCtrl.prototype.collectAndOrNotTerms = function (termUris) {
   };
 };
 
+/**
+ * Collect all data set IDs depending on the current ontology term querying.
+ *
+ * @method  collectDataSetIds
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @return  {Object}  Promise resolving to an array of data set IDs.
+ */
 DashboardCtrl.prototype.collectDataSetIds = function () {
   var deferred = this.$q.defer();
-  var queryTermUris = Object.keys(this.queryTerms);
-  var andOrNotTerms = this.collectAndOrNotTerms(queryTermUris);
+  var andOrNotTerms = this.collectAndOrNotTerms();
   var i;
 
   // Collection exclusions of all _NOTs_
@@ -808,6 +897,14 @@ DashboardCtrl.prototype.collectDataSetIds = function () {
 
 /* ----------------------------------- D ------------------------------------ */
 
+/**
+ * Mouse enter exploration related user interaction helper method.
+ *
+ * @method  dataSetMouseEnter
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @param   {Object}  dataSet  Data set being hovered.
+ */
 DashboardCtrl.prototype.dataSetMouseEnter = function (dataSet) {
   this.$rootScope.$emit('dashboardVisNodeFocus', {
     terms: dataSet.annotations,
@@ -818,6 +915,14 @@ DashboardCtrl.prototype.dataSetMouseEnter = function (dataSet) {
   }
 };
 
+/**
+ * Mouse leave exploration related user interaction helper method.
+ *
+ * @method  dataSetMouseLeave
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @param   {Object}  dataSet  Data set being left.
+ */
 DashboardCtrl.prototype.dataSetMouseLeave = function (dataSet) {
   this.$rootScope.$emit('dashboardVisNodeBlur', {
     terms: dataSet.annotations,
@@ -827,6 +932,13 @@ DashboardCtrl.prototype.dataSetMouseLeave = function (dataSet) {
   this.listGraphZoomedOut = false;
 };
 
+/**
+ * Deselect currently selected data sets.
+ *
+ * @method  deselectDataSets
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ */
 DashboardCtrl.prototype.deselectDataSets = function () {
   this.dataSet.deselect();
   this.dataSets.newOrCachedCache();
@@ -840,6 +952,14 @@ DashboardCtrl.prototype.deselectDataSets = function () {
 
 /* ----------------------------------- E ------------------------------------ */
 
+/**
+ * Open the data set exploration view.
+ *
+ * @method  expandDatasetExploration
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @param   {Object}  fromStateEvent  UI-router previous state object.
+ */
 DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
   if (!fromStateEvent) {
     this.$state.transitionTo(
@@ -865,6 +985,16 @@ DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
     }.bind(this), 0);
   }
 };
+
+/**
+ * Open data set metadata preview view.
+ *
+ * @method  expandDataSetPreview
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @param   {Object}  dataSet         Data set to be previewed.
+ * @param   {Object}  fromStateEvent  UI-router previous state object.
+ */
 DashboardCtrl.prototype.expandDataSetPreview = function (
   dataSet, fromStateEvent
 ) {
@@ -925,7 +1055,17 @@ DashboardCtrl.prototype.findDataSet = function () {
 
 /* ----------------------------------- G ------------------------------------ */
 
-// This is a hack as Angular doesn't like two-way data binding for primitives
+/**
+ * Two-way data-binding data cart panel height method.
+ *
+ * @description
+ * This is a hack as Angular doesn't like two-way data binding for primitives
+ *
+ * @method  getDataCartPanelHeight
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @return  {Number}  Data cart panel height in pixel.
+ */
 DashboardCtrl.prototype.getDataCartPanelHeight = function () {
   return this.dataCartPanelHeight;
 };
@@ -938,17 +1078,49 @@ DashboardCtrl.prototype.getDataSetOptions = function () {
     }.bind(this));
 };
 
-// This is a hack as Angular doesn't like two-way data binding for primitives
+/**
+ * Two-way data-binding data set panel height method.
+ *
+ * @description
+ * This is a hack as Angular doesn't like two-way data binding for primitives
+ *
+ * @method  getDataSetsPanelHeight
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @return  {Number}  Data set panel height in pixel.
+ */
 DashboardCtrl.prototype.getDataSetsPanelHeight = function () {
   return this.dataSetsPanelHeight;
 };
 
+/**
+ * Get the original URI of a term.
+ *
+ * @description
+ * Normalizes across different clones.
+ *
+ * @method  getOriginalUri
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @param   {Object}  eventData  Event data.
+ * @return  {String}             Original URI.
+ */
 DashboardCtrl.prototype.getOriginalUri = function (eventData) {
   return eventData.clone ? eventData.clonedFromUri : eventData.nodeUri;
 };
 
 /* ----------------------------------- R ------------------------------------ */
 
+/**
+ * Turns an unreadable date into a readable date string.
+ *
+ * @method  readibleDate
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @param   {Object}  dataSet   Data set object of interest.
+ * @param   {String}  property  Name of the date property to be made readable.
+ * @return  {String}            Readable date string.
+ */
 DashboardCtrl.prototype.readibleDate = function (dataSet, property) {
   var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
     'Sep', 'Oct', 'Nov', 'Dec'];
@@ -962,6 +1134,13 @@ DashboardCtrl.prototype.readibleDate = function (dataSet, property) {
   return dataSet[property + 'Readible'];
 };
 
+/**
+ * Remove all currently viewed data sets from the data cart
+ *
+ * @method  removeAllCurrentToDataCart
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ */
 DashboardCtrl.prototype.removeAllCurrentToDataCart = function () {
   this.dataSet.allIds.then(function (allIds) {
     this.dataCart.remove(allIds, true);
@@ -969,11 +1148,26 @@ DashboardCtrl.prototype.removeAllCurrentToDataCart = function () {
   }.bind(this));
 };
 
+/**
+ * Wrapper method to remove a data set from the data cart.
+ *
+ * @method  removeFromDataCart
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @param   {Object}  dataSet  Data set to be removed.
+ */
 DashboardCtrl.prototype.removeFromDataCart = function (dataSet) {
   this.dataCart.remove(dataSet);
   this.checkAllCurrentDataSetsInDataCart();
 };
 
+/**
+ * Unset current data set search query.
+ *
+ * @method  resetDataSetSearch
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ */
 DashboardCtrl.prototype.resetDataSetSearch = function () {
   this.searchQueryDataSets = '';
   this.setDataSetSource();
@@ -981,6 +1175,19 @@ DashboardCtrl.prototype.resetDataSetSearch = function () {
 
 /* ----------------------------------- S ------------------------------------ */
 
+/**
+ * Select a number of data sets.
+ *
+ * @description
+ * Selecting a data set means filtering out all unselected data sets from the
+ * currently viewed list of data set.
+ *
+ * @method  selectDataSets
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @param   {Object|Array}  ids  Object-list or array of data set IDs to be
+ *   selected.
+ */
 DashboardCtrl.prototype.selectDataSets = function (ids) {
   var queryTermUris = Object.keys(this.queryTerms);
   var query = this.treemapRoot.ontId;
@@ -1013,6 +1220,18 @@ DashboardCtrl.prototype.selectDataSets = function (ids) {
   this.checkAllCurrentDataSetsInDataCart();
 };
 
+/**
+ * Sets a new data source for the infinite scroll directive.
+ *
+ * @description
+ * This method triggers the data set search.
+ *
+ * @method  setDataSetSource
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @param   {String}  searchQuery     Search string.
+ * @param   {Object}  fromStateEvent  UI-router previous state object.
+ */
 DashboardCtrl.prototype.setDataSetSource = function (
   searchQuery,
   fromStateEvent
@@ -1087,6 +1306,13 @@ DashboardCtrl.prototype.setDataSetSource = function (
   this.checkAllCurrentDataSetsInDataCart();
 };
 
+/**
+ * Checks whether a data set notification should be shown.
+ *
+ * @method  showNotification
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ */
 DashboardCtrl.prototype.showNotification = function () {
   return (
   this.dataSets.error ||
@@ -1097,6 +1323,13 @@ DashboardCtrl.prototype.showNotification = function () {
   );
 };
 
+/**
+ * Checks whether the upload button should be shown.
+ *
+ * @method  showUploadButton
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ */
 DashboardCtrl.prototype.showUploadButton = function () {
   if (!this.userIsAuthenticated) {
     return false;
@@ -1109,6 +1342,14 @@ DashboardCtrl.prototype.showUploadButton = function () {
 
 /* ----------------------------------- T ------------------------------------ */
 
+/**
+ * Toggle visibility of the data cart.
+ *
+ * @method  toggleDataCart
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @param   {Boolean}  forceClose  If `true` force closes the data cart.
+ */
 DashboardCtrl.prototype.toggleDataCart = function (forceClose) {
   if (this.dataCart.length || forceClose) {
     if (this.showDataCart || forceClose) {
@@ -1137,6 +1378,13 @@ DashboardCtrl.prototype.toggleDataCart = function (forceClose) {
   }
 };
 
+/**
+ * Toggles the visibility of the data set exploration view.
+ *
+ * @method  toggleDataSetsExploration
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ */
 DashboardCtrl.prototype.toggleDataSetsExploration = function () {
   this.dataSetPreview = false;
   this.dashboardDataSetPreviewService.close();
@@ -1148,6 +1396,15 @@ DashboardCtrl.prototype.toggleDataSetsExploration = function () {
   }
 };
 
+/**
+ * Toggles through zoomed in or zoomed out state of the list graph view.
+ *
+ * @method  toggleListGraphZoom
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @param   {Object}  dataSet  Data set that is currently being interacted with
+ *   in the data set list that triggered this action.
+ */
 DashboardCtrl.prototype.toggleListGraphZoom = function (dataSet) {
   if (this.listGraphZoomedOut) {
     this.$rootScope.$emit('dashboardVisNodeFocus', {
@@ -1166,6 +1423,14 @@ DashboardCtrl.prototype.toggleListGraphZoom = function (dataSet) {
   this.listGraphZoomedOut = !!!this.listGraphZoomedOut;
 };
 
+/**
+ * Toggle the visibility of unrelated annotation terms given a certain data set.
+ *
+ * @method  toggleListUnrelatedNodes
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @param   {Object}  dataSet  Data set of interest, which is currently interacted with.
+ */
 DashboardCtrl.prototype.toggleListUnrelatedNodes = function (dataSet) {
   if (this.listGraphHideUnrelatedNodes === dataSet.id) {
     this.$rootScope.$emit('dashboardVisNodeFocus', {
@@ -1185,12 +1450,28 @@ DashboardCtrl.prototype.toggleListUnrelatedNodes = function (dataSet) {
   }
 };
 
+/**
+ * Toggle analyses filter radio button.
+ *
+ * @method  toogleRadio
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ */
 DashboardCtrl.prototype.toogleRadio = function () {
   if (this.analysesFilterStatusCounter++) {
     this.analysesFilterStatus = undefined;
   }
 };
 
+/**
+ * Toggle through the sort order.
+ *
+ * @method  toggleSortOrder
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @param   {String}  source  Source that this relates to, e.g. 'dataSets',
+ *   'analyses', or 'workflows'.
+ */
 DashboardCtrl.prototype.toggleSortOrder = function (source) {
   var sortBy = source + 'SortBy';
   var sortDesc = source + 'SortDesc';
@@ -1208,6 +1489,13 @@ DashboardCtrl.prototype.toggleSortOrder = function (source) {
   }
 };
 
+/**
+ * Toggle visibility of the data set filter panel.
+ *
+ * @method  triggerShowDataSetsFilter
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ */
 DashboardCtrl.prototype.triggerShowDataSetsFilter = function () {
   this.showDataSetsFilter = !!!this.showDataSetsFilter;
   if (!this.membershipLoaded) {
@@ -1241,6 +1529,15 @@ DashboardCtrl.prototype.triggerShowDataSetsFilter = function () {
   }
 };
 
+/**
+ * Trigger sorting of data sets, analyses, or workflows.
+ *
+ * @method  triggerSorting
+ * @author  Fritz Lekschas
+ * @date    2016-05-09
+ * @param   {String}  source  Name of the source, e.g. 'dataSets', 'analyses',
+ *   or 'workflows'.
+ */
 DashboardCtrl.prototype.triggerSorting = function (source) {
   var sortBy = source + 'SortBy';
   var sortDesc = source + 'SortDesc';
