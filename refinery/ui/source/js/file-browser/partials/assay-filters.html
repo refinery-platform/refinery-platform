@@ -94,21 +94,33 @@
           role="tabpanel"
           aria-labelledby="{{ analysis }}">
           <div class="panel-body">
-            <div ng-repeat="(field, value) in fields.facetObj |
-            orderBy:'-value'">
-              <div class="checkbox"
-                ng-show="showField(field, fields.internal_name, 'Analysis')">
-                <label>
-                  <input
-                    type="checkbox"
-                    name="optionsCheckboxes"
-                    ng-model="FBCtrl.selectedField[field]"
-                    ng-change="FBCtrl.attributeSelectionUpdate(
-                    fields.internal_name, field)"
-                    id="analysis-filter-{{ field }}"
-                    value="{{ value }}">
-                    {{ field }}: {{ value }}
-                </label>
+            <div ng-repeat="fieldObj in fields.facetObj track by $index">
+              <div class="checkbox container"
+                ng-show="showField(fieldObj, fields.internal_name, 'Analysis')">
+                <div class="row">
+                  <div class="col-xs-1">
+                    <input
+                      type="checkbox"
+                      name="optionsCheckboxes"
+                      ng-model="FBCtrl.selectedField[fieldObj]"
+                      ng-change="FBCtrl.attributeSelectionUpdate(
+                      fields.internal_name, field)"
+                      id="analysis-filter-{{ $index }}">
+                  </div>
+                  <div class="col-xs-8">
+                    <label for="analysis-filter-{{ $index }}">
+                      <span>
+                        {{ fieldObj.name }}
+                      </span>
+                    </label>
+                  </div>
+                  <div class="col-xs-3">
+                    <label for="analysis-filter-{{ $index }}">
+                      <span class="text-right pull-right">
+                        {{ fieldObj.count }}
+                      </span>
+                    </label>
+                 </div>
               </div>
             </div>
           </div>
