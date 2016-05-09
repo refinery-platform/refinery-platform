@@ -20,7 +20,6 @@ function DashboardCtrl (
   analysisService,
   workflowService,
   UiScrollSource,
-  dashboardDataSetListService,
   dashboardDataSetSearchService,
   dashboardDataSetsReloadService,
   dashboardWidthFixerService,
@@ -52,7 +51,6 @@ function DashboardCtrl (
   this.projectService = projectService;
   this.analysisService = analysisService;
   this.workflowService = workflowService;
-  this.dashboardDataSetListService = dashboardDataSetListService;
   this.dashboardDataSetSearchService = dashboardDataSetSearchService;
   this.dashboardDataSetsReloadService = dashboardDataSetsReloadService;
   this.dashboardWidthFixerService = dashboardWidthFixerService;
@@ -1587,7 +1585,6 @@ angular
     'analysisService',
     'workflowService',
     'UiScrollSource',
-    'dashboardDataSetListService',
     'dashboardDataSetSearchService',
     'dashboardDataSetsReloadService',
     'dashboardWidthFixerService',
