@@ -21,7 +21,6 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
         var attribute = angular.element(
           document.querySelector('#' + escapeAttributeName)
         );
-
         var selectedKeys = Object.keys(scope.FBCtrl.selectedFieldList);
         var selectedAttributeIndex = selectedKeys.indexOf(attributeObj.internal_name);
         if (attributeTitle.hasClass('fa-caret-right')) {
@@ -42,7 +41,7 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
         }
       };
 
-      // Checks to see if panel is minimized based on caret
+      // Helper method Checks to see if panel is minimized based on caret
       var isMinimized = function (index) {
         var attributeTitle = angular.element(
           document.querySelector('#attribute-panel-' + index)

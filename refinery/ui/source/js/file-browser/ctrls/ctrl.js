@@ -364,7 +364,6 @@ function FileBrowserCtrl (
       }
     }
   );
-  console.log('in filebrowser ctrl');
 }
 
 

@@ -21,7 +21,9 @@ describe('rpAssayFiles directive unit test', function () {
     $templateCache.put(
       '/static/partials/file-browser/partials/assay-filters.html',
       '<div id="attribute-filter">' +
-      '<div id="Analysis-Output" class="collapse"></div>' +
+      '<div id="Analysis" class="collapse">' +
+      '<div id="attribute-panel-Analysis" class="fa fa-caret-right"></div>' +
+      '</div>' +
       '</div>'
     );
     compile = _$compile_;
@@ -36,16 +38,42 @@ describe('rpAssayFiles directive unit test', function () {
 
   it('generates the appropriate HTML', function () {
     expect(directiveElement.html()).toContain('attribute-filter');
+    expect(directiveElement.html()).toContain('attribute-panel-Analysis');
     expect(directiveElement.html()).toContain('</div>');
   });
 
-  it('dropAttributePanel test, add class name', function () {
+  it('dropAttributePanel test, add the correct class name', function () {
+    var attributeObj = {
+      facetObj: [{ name: '1', count: '5' },
+       { name: 'Test Work', count: '8' }],
+      internal_name: 'Analysis' };
+
     var mockEvent = jQuery.Event('click');  // eslint-disable-line new-cap
     spyOn(mockEvent, 'preventDefault');
-    var domElement = angular.element(document.querySelector('#Analysis-Output'));
+    var domElement = angular.element(document.querySelector('#Analysis'));
+    var domElementPanel = angular.element(document.querySelector('#attribute-panel-Analysis'));
+    // start condition
     expect(domElement.hasClass('in')).toEqual(false);
-    scope.dropAttributePanel(mockEvent, 'Analysis Output');
+    expect(domElementPanel.hasClass('fa-caret-right')).toEqual(true);
+
+    // if condition, opening panel (nothing is selected)
+    scope.dropAttributePanel(
+        mockEvent,
+        'Analysis',
+        attributeObj
+      );
     expect(domElement.hasClass('in')).toEqual(true);
+    expect(domElementPanel.hasClass('fa-caret-down')).toEqual(true);
+
+    // else condition, closing panel (nothing is selected)
+    scope.dropAttributePanel(
+        mockEvent,
+        'Analysis',
+        attributeObj
+      );
+    expect(domElement.hasClass('in')).toEqual(false);
+    expect(domElementPanel.hasClass('fa-caret-down')).toEqual(false);
+    expect(domElementPanel.hasClass('fa-caret-right')).toEqual(true);
   });
 
   it('test broadcast triggers watcher', function () {
