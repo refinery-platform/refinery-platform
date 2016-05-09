@@ -33,7 +33,7 @@ describe('Treemap.directive: unit tests', function () {
 
   describe('DOM', function () {
     it('should replace custom element with template', function () {
-      expect(directiveEl.hasClass('visWrapper')).toBe(true);
+      expect(directiveEl.hasClass('vis-wrapper')).toBe(true);
     });
   });
 });
