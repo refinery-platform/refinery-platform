@@ -1023,7 +1023,7 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
       this.dashboardWidthFixerService.trigger('fixer');
       this.dashboardExpandablePanelService.trigger('expander');
     }
-    this.dashboardDataSetPreviewService.preview(dataSet);
+    this.dashboardDataSetPreviewService.preview(dataSet.uuid);
     this.dataSetPreview = true;
   }
 
@@ -1042,7 +1042,7 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
     if (dataSet.preview) {
       this.collapseDataSetPreview(dataSet);
     } else {
-      this.dashboardDataSetPreviewService.preview(dataSet);
+      this.dashboardDataSetPreviewService.preview(dataSet.uuid);
     }
   }
 };

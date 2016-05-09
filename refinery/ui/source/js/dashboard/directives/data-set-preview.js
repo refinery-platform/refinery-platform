@@ -64,17 +64,17 @@ function refineryDataSetPreview () {
 
   Object.defineProperty(
     DataSetPreviewCtrl.prototype,
-    'dataSet', {
+    'dataSetUuid', {
       enumerable: true,
       get: function () {
-        var ds = this.dashboardDataSetPreviewService.dataSet;
-        if (ds && ds.uuid && this._currentDataset !== ds.id) {
-          this._currentDataset = ds.id;
-          this.loadData(ds).then(function () {
+        var uuid = this.dashboardDataSetPreviewService.dataSet;
+        if (uuid && this._currentUuid !== uuid) {
+          this._currentUuid = uuid;
+          this.loadData(uuid).then(function () {
             this.getUser(this.dataSetDetails.owner);
           }.bind(this));
         }
-        return ds;
+        return uuid;
       }
     });
 
@@ -301,25 +301,25 @@ function refineryDataSetPreview () {
    *
    * @method  loadData
    * @author  Fritz Lekschas
-   * @date    2015-10-21
+   * @date    2016-05-09
    *
-   * @param   {Object}  Dataset to be previewed.
+   * @param   {String}  dataSetUuid  UUID if data set to be previewed.
    */
-  DataSetPreviewCtrl.prototype.loadData = function (dataset) {
+  DataSetPreviewCtrl.prototype.loadData = function (dataSetUuid) {
     this.loading = true;
     this.permissionsLoading = true;
     this.userName = undefined;
 
-    var dataSetDetails = this.getDataSetDetails(dataset.uuid);
-    var studies = this.getStudies(dataset.uuid);
-    var assays = this.getAssay(dataset.uuid);
-    var analyses = this.getAnalysis(dataset.uuid);
+    var dataSetDetails = this.getDataSetDetails(dataSetUuid);
+    var studies = this.getStudies(dataSetUuid);
+    var assays = this.getAssay(dataSetUuid);
+    var analyses = this.getAnalysis(dataSetUuid);
     var permissions;
 
     permissions = this.user.isAuthenticated()
       .then(function (authenticated) {
         if (authenticated) {
-          return this.getPermissions(dataset.uuid);
+          return this.getPermissions(dataSetUuid);
         }
         return false;
       }.bind(this));

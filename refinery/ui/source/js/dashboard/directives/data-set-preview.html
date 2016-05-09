@@ -17,7 +17,7 @@
       <div class="floatbox-max-left">
         <a
           class="btn btn-important"
-          ng-href="data_sets/{{ preview.dataSet.uuid }}">
+          ng-href="data_sets/{{ preview.dataSetUuid }}">
           <i class="fa fa-table"></i>
           View content in File Browser
         </a>
@@ -46,7 +46,7 @@
       ng-if="preview.numStudies === 1">
       <h5 class="refinery-subheader">Summary</h5>
       <div class="inline-container">
-        <p class="stronger" ng-bind-html="preview.dataSet.title"></p>
+        <p class="stronger" ng-bind-html="preview.dataSetDetails.title"></p>
       </div>
       <div class="inline-container">
         <h6>Description</h6>
@@ -153,7 +153,7 @@
           </span>
         </li>
         <li ng-if="preview.numAnalyses > preview.maxAnalyses">
-          <a ng-href="/data_sets/{{ preview.dataSet.uuid }}/#/analyses/">View all analyses</a>
+          <a ng-href="/data_sets/{{ preview.dataSetUuid }}/#/analyses/">View all analyses</a>
         </li>
       </ol>
       <h5 class="refinery-subheader">
