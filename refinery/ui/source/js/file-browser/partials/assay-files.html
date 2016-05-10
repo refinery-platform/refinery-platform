@@ -4,8 +4,10 @@
      uib-popover=" The number of files currently selected. Use facet
      attribute filters and individual file selection check boxes to modify
      the current selection."
-     popover-title="Current File Selection">
-       <i class="fa fa-question-circle"></i>
+     popover-title="Current File Selection"
+     popover-trigger="focus"
+     tabindex="0">
+       <i class="fa fa-question-circle fa-lg"></i>
     </a>
 
 <div ng-if="FBCtrl.isOwner">
