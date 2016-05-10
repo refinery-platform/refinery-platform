@@ -114,7 +114,7 @@ def analysis_cancel(request):
             request.user == analysis.workflow.workflow_engine.get_owner() or
                 request.user.is_superuser):
             try:
-                analysis.cancel()
+                analysis.canceled()
             except RuntimeError as exc:
                 logger.error(error_msg)
                 return HttpResponse(status=503)  # service unavailable
