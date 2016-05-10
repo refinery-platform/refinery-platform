@@ -1,26 +1,30 @@
 // UNIT TESTING
 'use strict';
 
-describe('Alert Service', function () {
+describe('AnalysisMonitor.service.AlertService: unit tests', function () {
+  var $rootScope;
   var deferred;
-  var rootScope;
   var service;
-  var response;
   var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
 
-  beforeEach(module('refineryApp'));
-  beforeEach(module('refineryAnalysisMonitor'));
-  beforeEach(inject(function (analysisMonitorAlertService) {
-    service = analysisMonitorAlertService;
-  }));
+  beforeEach(function () {
+    module('refineryApp');
+    module('refineryAnalysisMonitor');
+
+    inject(function ($injector) {
+      service = $injector.get('analysisMonitorAlertService');
+    });
+  });
 
   it('service and variables should exist', function () {
     expect(service).toBeDefined();
   });
 
   describe('refreshAnalysesAlertStatusFiles', function () {
-    beforeEach(inject(function (analysisService, $q, $rootScope) {
-      response = { objects: [{ name: 'TestName', status: 'PROGRESS' }] };
+    var $q;
+    var analysisService;
+
+    function initSpy (response) {
       spyOn(analysisService, 'query').and.callFake(function () {
         deferred = $q.defer();
         deferred.resolve(response);
@@ -28,7 +32,13 @@ describe('Alert Service', function () {
           $promise: deferred.promise
         };
       });
-      rootScope = $rootScope;
+    }
+
+    beforeEach(inject(function ($injector, _$q_, _$rootScope_) {
+      $q = _$q_;
+      $rootScope = _$rootScope_;
+
+      analysisService = $injector.get('analysisService');
     }));
 
     it('methods exists', function () {
@@ -48,18 +58,71 @@ describe('Alert Service', function () {
     });
 
     it('refreshAnalysesAlertStatus returns a promise', function () {
-      var name;
-      var status;
-      var _promise = service
-        .refreshAnalysesAlertStatus(fakeUuid)
-        .then(function (_data) {
-          status = _data.objects[0].status;
-          name = _data.objects[0].name;
-        });
-      rootScope.$apply();
+      initSpy();
+
+      var _promise = service.refreshAnalysesAlertStatus(fakeUuid);
+
+      $rootScope.$apply();
+
       expect(typeof _promise.then).toEqual('function');
-      expect(status).toEqual(response.objects[0].status);
-      expect(name).toEqual(response.objects[0].name);
     });
+
+    it(
+      'should resolve promise on successful API call',
+      function () {
+        var testName = 'testName';
+        var testStatus = 'testStatus';
+
+        initSpy({
+          limit: 1,
+          next: null,
+          offset: 0,
+          previous: null,
+          total_count: 1,
+          objects: [{ name: testName, status: testStatus }]
+        });
+
+        var name;
+        var status;
+
+        service
+          .refreshAnalysesAlertStatus(fakeUuid)
+          .then(function (data) {
+            status = data.objects[0].status;
+            name = data.objects[0].name;
+          });
+
+        $rootScope.$apply();
+
+        expect(status).toEqual(testStatus);
+        expect(name).toEqual(testName);
+      }
+    );
+
+    it(
+      'should rejects promise on failed API call',
+      function () {
+        initSpy({
+          limit: 1,
+          next: null,
+          offset: 0,
+          previous: null,
+          total_count: 0,
+          objects: []
+        });
+
+        var error = false;
+
+        service
+          .refreshAnalysesAlertStatus(fakeUuid)
+          .catch(function () {
+            error = true;
+          });
+
+        $rootScope.$apply();
+
+        expect(error).toEqual(true);
+      }
+    );
   });
 });

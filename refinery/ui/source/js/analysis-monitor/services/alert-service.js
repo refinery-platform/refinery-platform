@@ -23,10 +23,10 @@ function analysisMonitorAlertService ($q, analysisService) {
     });
 
     analysis.$promise.then(function (response) {
-      if (response.total_count > 0) {
+      if (response && response.total_count > 0) {
         analysesMsg.status = response.objects[0].status;
         analysesMsg.name = response.objects[0].name;
-        deferred.resolve();
+        deferred.resolve(response);
       } else {
         deferred.reject(
           'Analyses seems to be broken. The API does not know it.'
