@@ -136,7 +136,6 @@
                     <div ng-include="'/static/partials/data-set-nav/partials/data-set-ui-node-mapping.html'">
                     </div>
                     <div ui-view="data-set-ui-mapping-controls"></div>
-                    <!-- <div ui-view></div> -->
                   </div>
 
                   <div class="row">
@@ -178,16 +177,7 @@
                   {% endverbatim %}
 
                     <div class="row" style="margin-bottom: 5px;">
-                      <div class="col-md-3">
-                        <span class="control-label"
-                          id="solr-document-count-view" style="float: left;
-                          margin-top: 3px;"></span>
-                        <a href="#" id="help-selection-button" style="height:
-                         20px; width: 20px;"><i class="fa fa-question-circle"
-                          style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
-                      </div>
-
-                      <div class="col-md-9">
+                      <div class="col-md-12">
 
                         {% if REFINERY_REPOSITORY_MODE %}
                           <!-- CHECK BOXES FOR SELECTING SAMPLES -->
@@ -604,15 +594,6 @@
             "<h3>Select File Display Mode</h3>" +
             "<p>" +
             "The collection of files in this data set can be displayed using different representations." +
-            "</p>"
-        );
-      });
-
-      $("#help-selection-button").click( function(event) {
-        bootbox.alert(
-            "<h3>Current File Selection</h3>" +
-            "<p>" +
-            "The number of files currently selected. Use facet attribute filters and individual file selection check boxes to modify the current selection." +
             "</p>"
         );
       });

@@ -17,6 +17,7 @@ function FileBrowserCtrl (
   vm.assayAttributes = [];
   vm.attributeFilter = [];
   vm.analysisFilter = [];
+  vm.nodeCount = 0;
   vm.filesParam = {
     uuid: $window.externalAssayUuid
   };
@@ -26,6 +27,7 @@ function FileBrowserCtrl (
   vm.queryKeys = Object.keys($location.search());
   vm.selectedField = {};
   vm.selectedFieldList = {};
+  vm.selectNodes = [];
   vm.gridOptions = {
     appScopeProvider: vm,
     infiniteScrollRowsFromEnd: 40,
@@ -53,6 +55,7 @@ function FileBrowserCtrl (
 
     var promise = $q.defer();
     fileBrowserFactory.getAssayFiles(vm.filesParam).then(function () {
+      vm.nodeCount = fileBrowserFactory.nodeCount.value;
       vm.assayFiles = vm.assayFiles.concat(fileBrowserFactory.assayFiles);
       vm.gridOptions.data = vm.assayFiles;
       vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
@@ -277,7 +280,6 @@ function FileBrowserCtrl (
       }
     }
   };
-
 
   // populates the ui-grid columns variable
   vm.createColumnDefs = function () {
