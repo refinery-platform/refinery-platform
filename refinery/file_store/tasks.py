@@ -83,6 +83,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=0):
         if refresh:
             item.delete_datafile()
         else:
+            logger.info("File already exists: '%s'", item.get_absolute_path())
             return item
 
     # if source is an absolute file system path then copy,
