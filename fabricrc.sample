@@ -1,7 +1,6 @@
 # Copy to ~/.fabricrc and customize to match your environment
 
 project_user=ubuntu
-project_group=ubuntu
 refinery_project_dir=/srv/refinery-platform
 refinery_virtualenv_name=refinery-platform
 

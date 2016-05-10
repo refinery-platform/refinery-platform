@@ -562,12 +562,7 @@ class UtilitiesTest(TestCase):
                              'ANALYSIS': ['5dd6d3c3', 5,
                                           '08fc3964', 2,
                                           '0907a312', 1,
-                                          '276adefd', 3,
-                                          '2d761e26', 1,
-                                          'b624d225', 5,
-                                          '7ce99c97', 1,
-                                          'bcc1644a', 5,
-                                          '5499cc41', 5],
+                                          '276adefd', 3],
                              'Author': ['Vezza', 10,
                                         'Harslem/Heafner', 4,
                                         'McConnell', 5,
@@ -580,27 +575,27 @@ class UtilitiesTest(TestCase):
 
         facet_field_obj = objectify_facet_field_counts(facet_field_array)
         self.assertDictEqual(facet_field_obj,
-                             {'WORKFLOW': {'1_test_04': 1,
-                                           'output_file': 60,
-                                           '1_test_02': 1},
-                              'ANALYSIS': {'5dd6d3c3': 5,
-                                           '08fc3964': 2,
-                                           '0907a312': 1,
-                                           '276adefd': 3,
-                                           '2d761e26': 1,
-                                           'b624d225': 5,
-                                           '7ce99c97': 1,
-                                           'bcc1644a': 5,
-                                           '5499cc41': 5},
-                              'Author': {'Vezza': 10,
-                                         'Harslem/Heafner': 4,
-                                         'McConnell': 5,
-                                         'Vezza + Crocker': 2,
-                                         'Crocker': 28},
-                              'Year': {'1971': 54},
-                              'SUBANALYSIS': {'1': 8, '2': 2, '-1': 9},
-                              'TYPE': {'Derived Data File': 105,
-                                       'Raw Data File': 9}})
+                             {'WORKFLOW': [
+                                      {'name': 'output_file', 'count': 60},
+                                      {'name': '1_test_04', 'count': 1},
+                                      {'name': '1_test_02', 'count': 1}],
+                              'ANALYSIS': [{'name': '5dd6d3c3', 'count': 5},
+                                           {'name': '276adefd', 'count': 3},
+                                           {'name': '08fc3964', 'count': 2},
+                                           {'name': '0907a312', 'count': 1}],
+                              'Author': [
+                                  {'name': 'Crocker', 'count': 28},
+                                  {'name': 'Vezza', 'count': 10},
+                                  {'name': 'McConnell', 'count': 5},
+                                  {'name': 'Harslem/Heafner', 'count': 4},
+                                  {'name': 'Vezza + Crocker', 'count': 2}],
+                              'Year': [{'name': '1971', 'count': 54}],
+                              'SUBANALYSIS': [{'name': '-1', 'count': 9},
+                                              {'name': '1', 'count': 8},
+                                              {'name': '2', 'count': 2}],
+                              'TYPE': [
+                                  {'name': 'Derived Data File', 'count': 105},
+                                  {'name': 'Raw Data File', 'count': 9}]})
 
     def test_escape_character_solr(self):
         field = "(mouse){index}[dog]^~*?:;/ +-&|"
@@ -682,7 +677,7 @@ class UtilitiesTest(TestCase):
                          'Data Matrix File%22%29&fq=is_annotation%3A'
                          'false&start=0&rows=20&q=django_ct%3A'
                          'data_set_manager.node&wt=json&facet=true&'
-                         'facet.limit=-1&facet.mincount=1'.format(
+                         'facet.limit=-1'.format(
                                  self.valid_uuid))
         # added parameter
         parameter_dict = {'limit': 7, 'offset': 2,
@@ -707,7 +702,7 @@ class UtilitiesTest(TestCase):
                          'Data Matrix File%22%29&fq=is_annotation%3A'
                          'true&start=2&rows=7&q=django_ct%3A'
                          'data_set_manager.node&wt=json&facet=true&'
-                         'facet.limit=-1&facet.mincount=1'.format(
+                         'facet.limit=-1'.format(
                                  self.valid_uuid))
 
     def test_generate_filtered_facet_fields(self):
@@ -797,10 +792,14 @@ class UtilitiesTest(TestCase):
                 {
                     'facet_field_counts':
                         {u'REFINERY_SUBANALYSIS_6_3_s':
-                            {u'1': 8, u'0': 95, u'2': 2, u'-1': 9},
+                            [{'name': u'0', 'count': 95},
+                             {'name': u'-1', 'count': 9},
+                             {'name': u'1', 'count': 8},
+                             {'name': u'2', 'count': 2}
+                             ],
                          u'REFINERY_TYPE_6_3_s':
-                            {u'Derived Data File': 105,
-                             u'Raw Data File': 9}},
+                            [{'name': u'Derived Data File', 'count': 105},
+                             {'name': u'Raw Data File', 'count': 9}]},
                     'attributes': [{
                          'attribute_type': 'Internal',
                          'display_name': u'Type',

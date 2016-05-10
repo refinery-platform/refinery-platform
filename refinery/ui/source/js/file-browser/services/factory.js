@@ -1,11 +1,9 @@
 'use strict';
 
 function fileBrowserFactory (
-  $http,
   assayFileService,
   nodeService,
   assayAttributeService,
-  settings,
   $window,
   $log) {
   var assayFiles = [];
@@ -14,6 +12,7 @@ function fileBrowserFactory (
   var attributeFilter = {};
   var analysisFilter = {};
   var assayFilesTotalItems = {};
+  var nodeCount = { value: 0 };
   var nodeUrl = {};
   var csrfToken = $window.csrf_token;
   // Helper function encodes field array in an obj
@@ -105,8 +104,9 @@ function fileBrowserFactory (
     return _arrayOfObjs;
   };
 
-  var getAssayFiles = function (_params_) {
-    var params = _params_ || {};
+  var getAssayFiles = function (unencodeParams) {
+    var params = {};
+    angular.copy(unencodeParams, params);
 
     // encodes all field names to avoid issues with escape characters.
     if (typeof params.filter_attribute !== 'undefined') {
@@ -118,6 +118,7 @@ function fileBrowserFactory (
       /** Api returns uuid field, which is needed to retrieve the
        *  download file_url for nodeset api. It should be hidden in the data
        *  table first **/
+      nodeCount.value = response.nodes_count;
       var culledAttributes = hideUuidAttribute(response.attributes);
       angular.copy(culledAttributes, assayAttributes);
       // Add file_download column first
@@ -183,6 +184,7 @@ function fileBrowserFactory (
     attributeFilter: attributeFilter,
     analysisFilter: analysisFilter,
     assayFilesTotalItems: assayFilesTotalItems,
+    nodeCount: nodeCount,
     getAssayFiles: getAssayFiles,
     getAssayAttributeOrder: getAssayAttributeOrder,
     postAssayAttributeOrder: postAssayAttributeOrder
@@ -192,11 +194,9 @@ function fileBrowserFactory (
 angular
   .module('refineryFileBrowser')
   .factory('fileBrowserFactory', [
-    '$http',
     'assayFileService',
     'nodeService',
     'assayAttributeService',
-    'settings',
     '$window',
     '$log',
     fileBrowserFactory
