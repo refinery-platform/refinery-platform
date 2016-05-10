@@ -77,7 +77,7 @@ exec { "generate_superuser_json":
                   "DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
-  require     => Exec["syncdb"],
+  require     => Exec["syncdb_initial"],
   before      => Exec["create_superuser"],
 }
 ->
