@@ -736,20 +736,17 @@
               refinery-tooltip-container="body"
               refinery-tooltip-placement="top"></i>
             <span ng-switch on="analysis.status">
-              <span ng-switch-when="SUCCESS">
+              <span ng-if="SUCCESS">
                 <a
-                ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}/#/analyses">
+                ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
                 {{ analysis.name }}
               </a>
               </span>
-              <span ng-switch-when="RUNNING">
+              <span ng-if="!SUCCESS">
                 <a
                 ng-href="/data_sets/{{analysis.data_set__uuid}}/#/analyses">
                 {{ analysis.name }}
               </a>
-              </span>
-              <span ng-switch-default>
-                {{ analysis.name }}
               </span>
             </span>
           </li>
