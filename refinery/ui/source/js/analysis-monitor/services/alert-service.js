@@ -1,6 +1,6 @@
 'use strict';
 
-function analysisMonitorAlertService (analysisService) {
+function analysisMonitorAlertService ($q, analysisService) {
   var vm = this;
   var analysesMsg = {};
   analysesMsg.status = '';
@@ -15,6 +15,7 @@ function analysisMonitorAlertService (analysisService) {
   };
 
   vm.refreshAnalysesAlertStatus = function (uuid) {
+    var deferred = $q.defer();
     var analysis = analysisService.query({
       format: 'json',
       limit: 1,
@@ -22,16 +23,25 @@ function analysisMonitorAlertService (analysisService) {
     });
 
     analysis.$promise.then(function (response) {
-      analysesMsg.status = response.objects[0].status;
-      analysesMsg.name = response.objects[0].name;
+      if (response.total_count > 0) {
+        analysesMsg.status = response.objects[0].status;
+        analysesMsg.name = response.objects[0].name;
+        deferred.resolve();
+      } else {
+        deferred.reject(
+          'Analyses seems to be broken. The API does not know it.'
+        );
+      }
     });
-    return analysis.$promise;
+
+    return deferred.promise;
   };
 }
 
 angular
   .module('refineryAnalysisMonitor')
   .service('analysisMonitorAlertService', [
+    '$q',
     'analysisService',
     analysisMonitorAlertService
   ]);
