@@ -86,8 +86,8 @@ file { "${django_root}/config/config.json":
   replace => false,
 }
 ->
-exec { "syncdb":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py syncdb --migrate --noinput",
+exec { "syncdb_initial":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py syncdb --noinput",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
@@ -97,8 +97,8 @@ exec { "syncdb":
   ],
 }
 ->
-exec { "create_superuser":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata superuser.json",
+exec { "migrate_core":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate core",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
@@ -111,8 +111,29 @@ exec { "init_refinery":
   group       => $app_group,
 }
 ->
+exec { "migrate_guardian":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate guardian",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+}
+->
+exec { "create_superuser":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata superuser.json",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+}
+->
 exec { "create_user":
   command     => "${virtualenv}/bin/python ${django_root}/manage.py create_user 'guest' 'guest' 'guest@example.com' 'Guest' '' ''",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+}
+->
+exec { "syncdb_final":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py syncdb --migrate --noinput",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
