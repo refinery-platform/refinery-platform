@@ -213,9 +213,7 @@ def run_analysis(analysis_uuid):
 
     # Update file count and file size of the corresponding data set
     analysis.data_set.file_count = analysis.data_set.get_file_count()
-    # FIXME: line below is commented out due to
-    # https://github.com/parklab/refinery-platform/issues/1094
-    # analysis.data_set.file_size = analysis.data_set.get_file_size()
+    analysis.data_set.file_size = analysis.data_set.get_file_size()
     analysis.data_set.save()
 
 
