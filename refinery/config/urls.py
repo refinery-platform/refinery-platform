@@ -30,6 +30,8 @@ from data_set_manager.api import AttributeOrderResource, StudyResource,\
     ProtocolReferenceResource, ProtocolReferenceParameterResource, \
     PublicationResource, AttributeResource
 
+from registration.forms import RegistrationFormUniqueEmail
+
 
 logger = logging.getLogger(__name__)
 
@@ -140,7 +142,7 @@ urlpatterns = patterns(
 
     url(
         r'^accounts/register/$',
-        RegistrationView.as_view(),
+        RegistrationView.as_view(form_class=RegistrationFormUniqueEmail),
         name='registration.views.register'
     ),
 
