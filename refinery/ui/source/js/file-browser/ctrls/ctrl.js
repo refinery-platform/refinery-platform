@@ -7,9 +7,10 @@ function FileBrowserCtrl (
   fileBrowserFactory,
   resetGridService,
   isOwnerService,
-  $window,
   $timeout,
-  $q
+  $q,
+  $window,
+  _
   ) {
   var vm = this;
   vm.assayFiles = [];
@@ -46,7 +47,6 @@ function FileBrowserCtrl (
   vm.totalPages = 1;
   vm.cachePages = 2;
 
-
   vm.refreshAssayFiles = function () {
     vm.filesParam.offset = vm.lastPage * vm.rowCount;
     vm.filesParam.limit = vm.rowCount;
@@ -66,42 +66,44 @@ function FileBrowserCtrl (
     return promise.promise;
   };
 
-
   // checks url for params to update the filter
   vm.checkUrlQueryFilters = function () {
     var allFilters = {};
     // Merge attribute and analysis filter data obj
     angular.copy(vm.attributeFilter, allFilters);
-
     if (typeof vm.analysisFilter.Analysis !== 'undefined') {
       allFilters.Analysis = vm.analysisFilter.Analysis;
     }
 
     // for attribute filter directive, drop panels in query
     $scope.$broadcast('rf/attributeFilter-ready');
-    angular.forEach(allFilters, function (fieldObj, attribute) {
-      vm.refreshSelectedFieldFromQuery(fieldObj, attribute);
+    angular.forEach(allFilters, function (attributeObj) {
+      vm.refreshSelectedFieldFromQuery(attributeObj);
     });
+    vm.filesParam.filter_attribute = {};
+    angular.copy(vm.selectedFieldList, vm.filesParam.filter_attribute);
+    vm.reset();
   };
 
-
-  vm.refreshSelectedFieldFromQuery = function (fieldObj, attribute) {
-    angular.forEach(fieldObj.facetObj, function (value, field) {
-      if (vm.queryKeys.indexOf(field) > -1) {
-        vm.selectedField[field] = true;
-        vm.attributeSelectionUpdate(fieldObj.internal_name, field, attribute);
+  // helper method, upon refresh/load add fields to select data objs from query
+  vm.refreshSelectedFieldFromQuery = function (_attributeObj) {
+    angular.forEach(_attributeObj.facetObj, function (fieldObj) {
+      if (vm.queryKeys.indexOf(fieldObj.name) > -1) {
+        vm.selectedField[fieldObj.name] = true;
+        vm.updateSelectionList(_attributeObj.internal_name, fieldObj.name);
       }
     });
   };
 
-
-  // Updates which attribute filters are selected and the ui-grid data
-  vm.attributeSelectionUpdate = function (internalName, field) {
+  // Updates selection field list and url
+  vm.updateSelectionList = function (internalName, field) {
     if (vm.selectedField[field] &&
       typeof vm.selectedFieldList[internalName] !== 'undefined') {
+      // add field url query and selectedList
       vm.selectedFieldList[internalName].push(field);
       $location.search(field, vm.selectedField[field]);
     } else if (vm.selectedField[field]) {
+      // add field url query and selectedList
       vm.selectedFieldList[internalName] = [field];
       $location.search(field, vm.selectedField[field]);
     } else {
@@ -114,7 +116,14 @@ function FileBrowserCtrl (
       }
       $location.search(field, null);
     }
-    vm.filesParam.filter_attribute = vm.selectedFieldList;
+  };
+
+
+  // Updates which attribute filters are selected and the ui-grid data
+  vm.attributeSelectionUpdate = function (_internalName, _field) {
+    vm.updateSelectionList(_internalName, _field);
+    vm.filesParam.filter_attribute = {};
+    angular.copy(vm.selectedFieldList, vm.filesParam.filter_attribute);
     vm.reset();
   };
 
@@ -273,11 +282,18 @@ function FileBrowserCtrl (
   // populates the ui-grid columns variable
   vm.createColumnDefs = function () {
     vm.customColumnName = [];
+
+    // some attributes will be duplicate in different fields, duplicate
+    // column names will throw an error. This prevents duplicates
+    var uniqAssayAttributes = _.uniq(vm.assayAttributes, true,
+      function (attributeObj) {
+        return attributeObj.display_name;
+      });
     var totalChars = vm.assayAttributes.reduce(function (previousValue, facetObj) {
       return previousValue + String(facetObj.display_name).length;
     }, 0);
 
-    vm.assayAttributes.forEach(function (attribute) {
+    uniqAssayAttributes.forEach(function (attribute) {
       var columnName = attribute.display_name;
       var columnWidth = columnName.length / totalChars * 100;
       if (columnWidth < 10) {  // make sure columns are wide enough
@@ -359,9 +375,10 @@ angular
     'fileBrowserFactory',
     'resetGridService',
     'isOwnerService',
-    '$window',
     '$timeout',
     '$q',
+    '$window',
+    '_',
     FileBrowserCtrl
   ]);
 

@@ -1,11 +1,9 @@
 'use strict';
 
 function fileBrowserFactory (
-  $http,
   assayFileService,
   nodeService,
   assayAttributeService,
-  settings,
   $window,
   $log) {
   var assayFiles = [];
@@ -105,8 +103,9 @@ function fileBrowserFactory (
     return _arrayOfObjs;
   };
 
-  var getAssayFiles = function (_params_) {
-    var params = _params_ || {};
+  var getAssayFiles = function (unencodeParams) {
+    var params = {};
+    angular.copy(unencodeParams, params);
 
     // encodes all field names to avoid issues with escape characters.
     if (typeof params.filter_attribute !== 'undefined') {
@@ -192,11 +191,9 @@ function fileBrowserFactory (
 angular
   .module('refineryFileBrowser')
   .factory('fileBrowserFactory', [
-    '$http',
     'assayFileService',
     'nodeService',
     'assayAttributeService',
-    'settings',
     '$window',
     '$log',
     fileBrowserFactory

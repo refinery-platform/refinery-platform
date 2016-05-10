@@ -543,8 +543,7 @@ def generate_solr_params(params, assay_uuid):
                   'rows=%s' % row,
                   'q=django_ct:data_set_manager.node&wt=json',
                   'facet=%s' % facet_count,
-                  'facet.limit=-1',
-                  'facet.mincount=1'
+                  'facet.limit=-1'
                   ])
 
     solr_params = ''.join(['fq=assay_uuid:', assay_uuid])
@@ -744,15 +743,21 @@ def format_solr_response(solr_response):
 
 
 def objectify_facet_field_counts(facet_fields):
-    # Returns an object with facet_field_count corrected. Solr returns an
-    # array with key and value. count_array = [key1,value1,key2,value2...]
+    # Returns an array of objects with facet_field_count corrected. Solr
+    # returns an array with key and value.
+    # count_array = [key1,value1,key2,value2...]
     for field, count_array in facet_fields.iteritems():
-        count_obj = {}
+        count_obj_array = []
 
         for index in range(0, len(count_array), 2):
-            count_obj[count_array[index]] = count_array[index + 1]
+            count_obj_array.append(
+                    {'name': count_array[index],
+                     'count': count_array[index + 1]
+                     })
 
-        facet_fields[field] = count_obj
+        # sort fields depending on count
+        count_obj_array.sort(key=lambda x: x['count'], reverse=True)
+        facet_fields[field] = count_obj_array
 
     return facet_fields
 
