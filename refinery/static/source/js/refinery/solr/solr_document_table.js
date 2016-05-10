@@ -326,11 +326,18 @@ SolrDocumentTable.prototype._generateTableBody = function(solrResponse) {
               s += '<i class="fa fa-refresh fa-spin" style="padding: 2px"></i>';
               s += "</td>";
             }
-          }else if(self._isFilePath(entry)){
+          }else if(self._isFilePath(entry)) {
             s += "<td title=\"" + document[entry] + "\">";
             s += self._trimFilePathEntry(document[entry], 25);
             s += "</td>";
-          }else {
+          } else if (entry.indexOf("REFINERY_SUBANALYSIS_") === 0){
+            // filter -1 entries with N/A
+            var filteredEntry = self._trimDocumentEntry(document[entry], 25);
+            filteredEntry === '-1' ? filteredEntry = 'N/A' : filteredEntry;
+            s += "<td title=\"" + document[entry] + "\">";
+            s += filteredEntry;
+            s += "</td>";
+          } else {
             s += "<td title=\"" + document[entry] + "\">";
             s += self._trimDocumentEntry(document[entry], 25);
             s += "</td>";
