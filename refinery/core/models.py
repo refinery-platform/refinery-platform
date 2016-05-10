@@ -77,9 +77,9 @@ NR_TYPES = (
 
 
 class UserProfile (models.Model):
-    """Extends Django user model:
-    https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional
-    -information-about-users
+    """Extend Django user model:
+    https://docs.djangoproject.com/en/1.7/topics/auth/customizing/#extending-the-existing-user-model
+
     """
     uuid = UUIDField(unique=True, auto=True)
     user = models.OneToOneField(User)
