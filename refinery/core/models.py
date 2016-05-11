@@ -1094,7 +1094,7 @@ class Analysis(OwnableResource):
                 except galaxy.client.ConnectionError as e:
                     logger.error(error_msg, 'history', self.name, e.message)
 
-    def cancel(self):
+    def canceled(self):
         """Mark analysis as cancelled"""
         self.cancel = True
         self.set_status(Analysis.FAILURE_STATUS, "Cancelled at user's request")
@@ -1113,6 +1113,8 @@ class Analysis(OwnableResource):
     def send_email(self):
         """Sends an email when the analysis is finished"""
         # don't mail the user if analysis was canceled
+        if self.cancel:
+            return
 
         # get basic information
         user = self.get_owner()
