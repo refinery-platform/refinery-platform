@@ -26,20 +26,21 @@ from django.http import Http404
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
 
-from core.models import os, get_user_import_dir
+from core.models import os, get_user_import_dir, InvestigationLink
 from core.utils import get_full_url
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
 from file_store.tasks import download_file, DownloadError
-from file_store.models import get_temp_dir, generate_file_source_translator
+from file_store.models import get_temp_dir, generate_file_source_translator, \
+    FileStoreItem
 from .models import AttributeOrder, Assay
 from .serializers import AttributeOrderSerializer, AssaySerializer
 from .utils import (generate_solr_params, search_solr, format_solr_response,
                     get_owner_from_assay, update_attribute_order_ranks,
                     is_field_in_hidden_list, customize_attribute_response)
 
-
 logger = logging.getLogger(__name__)
+
 
 # Data set import
 
@@ -80,16 +81,27 @@ class TakeOwnershipOfPublicDatasetView(View):
     """
 
     def post(self, request, *args, **kwargs):
-        try:
+
+        if 'isa_tab_url' in request.POST:
             relative_isa_tab_url = get_full_url(request.POST['isa_tab_url'])
-        except KeyError:
-            logger.error("ISA archive URL was not provided")
-            return HttpResponseBadRequest("Please provide an ISA archive URL")
         else:
-            # set cookie and redirect to process_isa_tab view
-            response = HttpResponseRedirect(reverse('process_isa_tab'))
-            response.set_cookie('isa_tab_url', relative_isa_tab_url)
-            return response
+            try:
+                body = json.loads(request.body)
+                relative_isa_tab_url = get_full_url(FileStoreItem.objects.get(
+                    uuid=InvestigationLink.objects.get(
+                        data_set__uuid=body["data_set_uuid"]
+                    ).investigation.isarchive_file).get_datafile_url())
+
+            except Exception as e:
+                logger.error("Request body not readable!: %s" % e)
+                return HttpResponseBadRequest(
+                    "Request body not readable!")
+
+        # set cookie and redirect to process_isa_tab view
+        response = HttpResponseRedirect(reverse('process_isa_tab'))
+        response.set_cookie('isa_tab_url', relative_isa_tab_url)
+
+        return response
 
 
 class ImportISATabFileForm(forms.Form):
@@ -258,13 +270,15 @@ class ProcessMetadataTableView(View):
             title = request.POST['title']
             data_file_column = request.POST['data_file_column']
         except (KeyError, ValueError):
-            error = {'error_message':
-                     'Import failed because required parameters are missing'}
+            error = {
+                'error_message':
+                'Import failed because required parameters are missing'}
             return render(request, self.template_name, error)
         source_column_index = request.POST.getlist('source_column_index')
         if not source_column_index:
-            error = {'error_message':
-                     'Import failed because no source columns were selected'}
+            error = {
+                'error_message':
+                'Import failed because no source columns were selected'}
             return render(request, self.template_name, error)
         # workaround for breaking change in Angular
         # https://github.com/angular/angular.js/commit/7fda214c4f65a6a06b25cf5d5aff013a364e9cef
