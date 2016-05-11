@@ -27,6 +27,7 @@ from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
 
 from core.models import os, get_user_import_dir
+from core.utils import get_full_url
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
 from file_store.tasks import download_file, DownloadError
@@ -70,6 +71,24 @@ class ImportISATabView(View):
             # set cookie and redirect to process_isa_tab view
             response = HttpResponseRedirect(reverse('process_isa_tab'))
             response.set_cookie('isa_tab_url', isa_tab_url)
+            return response
+
+
+class TakeOwnershipOfPublicDatasetView(View):
+    """Capture relative ISA archive URL from POST requests submitted from
+    external sites and formulates full url to
+    """
+
+    def post(self, request, *args, **kwargs):
+        try:
+            relative_isa_tab_url = get_full_url(request.POST['isa_tab_url'])
+        except KeyError:
+            logger.error("ISA archive URL was not provided")
+            return HttpResponseBadRequest("Please provide an ISA archive URL")
+        else:
+            # set cookie and redirect to process_isa_tab view
+            response = HttpResponseRedirect(reverse('process_isa_tab'))
+            response.set_cookie('isa_tab_url', relative_isa_tab_url)
             return response
 
 
@@ -545,13 +564,13 @@ class AssaysAttributes(APIView):
                     attributes.append(attribute)
 
         # Reverse check, so can remove objects from the end
-        for ind in range(len(attributes)-1, -1, -1):
+        for ind in range(len(attributes) - 1, -1, -1):
             if is_field_in_hidden_list(attributes[ind].get('solr_field')):
                 del attributes[ind]
             else:
                 attributes[ind]['display_name'] = customize_attribute_response(
-                        [attributes[ind].get('solr_field')])[0].get(
-                        'display_name')
+                    [attributes[ind].get('solr_field')])[0].get(
+                    'display_name')
 
         # for non-owners need to reorder the ranks
         if owner != request_user:
@@ -571,14 +590,14 @@ class AssaysAttributes(APIView):
 
             if id:
                 attribute_order = AttributeOrder.objects.get(
-                        assay__uuid=uuid, id=id)
+                    assay__uuid=uuid, id=id)
             elif solr_field:
                 attribute_order = AttributeOrder.objects.get(
-                        assay__uuid=uuid, solr_field=solr_field)
+                    assay__uuid=uuid, solr_field=solr_field)
             else:
                 return Response(
-                        'Requires attribute id or solr_field name.',
-                        status=status.HTTP_400_BAD_REQUEST)
+                    'Requires attribute id or solr_field name.',
+                    status=status.HTTP_400_BAD_REQUEST)
 
             # updates all ranks in assay's attribute order
             if new_rank and new_rank != attribute_order.rank:
@@ -594,17 +613,17 @@ class AssaysAttributes(APIView):
                 serializer.save()
                 attributes = serializer.data
                 attributes['display_name'] = customize_attribute_response(
-                        [attributes.get('solr_field')])[0].get(
-                        'display_name')
+                    [attributes.get('solr_field')])[0].get(
+                    'display_name')
 
                 return Response(
-                        attributes,
-                        status=status.HTTP_202_ACCEPTED
+                    attributes,
+                    status=status.HTTP_202_ACCEPTED
                 )
             return Response(
-                        serializer.errors,
-                        status=status.HTTP_400_BAD_REQUEST
-                )
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
         else:
             message = 'Only owner may edit attribute order.'
             return Response(message, status=status.HTTP_401_UNAUTHORIZED)
