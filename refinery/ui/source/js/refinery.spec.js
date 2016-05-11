@@ -31,6 +31,10 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('ui.router')).toEqual(true);
     });
 
+    it('should have "file-model" as a dependency', function () {
+      expect(hasModule('file-model')).toEqual(true);
+    });
+
     it('should have "ngWebworker" as a dependency', function () {
       expect(hasModule('ngWebworker')).toEqual(true);
     });

@@ -12,6 +12,7 @@ angular
      */
     'ui.router',
     'ngWebworker',
+    'file-model',
 
     /*
      * Angular App globals
