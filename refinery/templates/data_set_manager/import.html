@@ -64,24 +64,23 @@ Sorry! Not allowed in repository mode. Cheers.
 {% endblock %}
 
 {% block vendor_scripts %}
-<!-- for tabular archive upload -->
-<script src="{% static "vendor/d3/d3.min.js" %}"></script>
-<!-- end tabular file upload -->
-<!-- for data file upload -->
 <!-- The jQuery UI widget factory, can be omitted if jQuery UI is already included -->
 <script src="{% static "vendor/jquery-file-upload/js/vendor/jquery.ui.widget.js" %}"></script>
+
 <!-- The Iframe Transport is required for browsers without support for XHR file uploads -->
 <script src="{% static "vendor/jquery-file-upload/js/jquery.iframe-transport.js" %}"></script>
+
 <!-- The basic File Upload plugin -->
 <script src="{% static "vendor/jquery-file-upload/js/jquery.fileupload.js" %}"></script>
+
 <!-- The File Upload processing plugin -->
 <script src="{% static "vendor/jquery-file-upload/js/jquery.fileupload-process.js" %}"></script>
+
 <!-- Calculate md5 -->
 <script src="{% static "vendor/spark-md5/spark-md5.min.js" %}"></script>
-<!-- end data file upload -->
+
 <!-- spinner -->
-<script language="javascript" type="text/javascript"
-        src="{% static "js/spin/spin.min.js" %}"></script>
+<script src="{% static "js/spin/spin.min.js" %}"></script>
 {% endblock %}
 
 {% block script %}
