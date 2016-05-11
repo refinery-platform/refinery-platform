@@ -24,7 +24,7 @@ var TooltipCtrl = function ($element) {
   if (this.hideOnClick) {
     this.$element.on('click', function () {
       this.$element.tooltip('hide');
-    });
+    }.bind(this));
   }
 };
 
