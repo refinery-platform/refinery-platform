@@ -1096,7 +1096,7 @@ class Analysis(OwnableResource):
 
     def cancel(self):
         """Mark analysis as cancelled"""
-        self.cancel = True
+        self.canceled = True
         self.set_status(Analysis.FAILURE_STATUS, "Cancelled at user's request")
         # jobs in a running workflow are stopped by deleting its history
         self.galaxy_cleanup()
