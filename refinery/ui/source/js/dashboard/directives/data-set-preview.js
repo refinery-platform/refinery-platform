@@ -19,6 +19,7 @@ function refineryDataSetPreview () {
     dashboardDataSetPreviewService,
     dashboardExpandablePanelService,
     dataSetTakeOwnershipService,
+    dashboardDataSetsReloadService,
     filesize
   ) {
     this.$log = $log;
@@ -36,6 +37,7 @@ function refineryDataSetPreview () {
     this.citationService = citationService;
     this.analysisService = analysisService;
     this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
+    this.dashboardDataSetsReloadService = dashboardDataSetsReloadService;
     this.dashboardExpandablePanelService = dashboardExpandablePanelService;
     this.dataSetTakeOwnershipService = dataSetTakeOwnershipService;
     this.filesize = filesize;
@@ -278,6 +280,7 @@ function refineryDataSetPreview () {
         .$promise
         .then(function () {
           self.isDataSetReImportSuccess = true;
+          self.dashboardDataSetsReloadService.reload(true);
         })
         .catch(function (error) {
           self.isDataSetReImportFail = true;
@@ -473,6 +476,7 @@ function refineryDataSetPreview () {
       'dashboardDataSetPreviewService',
       'dashboardExpandablePanelService',
       'dataSetTakeOwnershipService',
+      'dashboardDataSetsReloadService',
       'filesize',
       DataSetPreviewCtrl],
     controllerAs: 'preview',
