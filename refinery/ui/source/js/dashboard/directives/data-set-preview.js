@@ -217,11 +217,11 @@ function refineryDataSetPreview () {
   DataSetPreviewCtrl.prototype.getDataSetDetails = function (uuid) {
     return this.dataSetService
       .get({
-        uuid: uuid
+        extra: uuid
       })
       .$promise
       .then(function (data) {
-        this.dataSetDetails = data.objects[0];
+        this.dataSetDetails = data;
       }.bind(this));
   };
 
