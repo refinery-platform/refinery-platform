@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from data_set_manager.views import (
     DataSetImportView, ImportISATabView, ProcessISATabView,
     ProcessMetadataTableView, CheckDataFilesView, ChunkedFileUploadView,
-    ChunkedFileUploadCompleteView)
+    ChunkedFileUploadCompleteView, TakeOwnershipOfPublicDatasetView)
 
 
 urlpatterns = patterns(
@@ -34,4 +34,8 @@ urlpatterns = patterns(
     url(r'^import/chunked-upload-complete/$',
         login_required(ChunkedFileUploadCompleteView.as_view()),
         name='api_chunked_upload_complete'),
+    url(r'^import/take_ownership/$', csrf_exempt(
+        TakeOwnershipOfPublicDatasetView.as_view()),
+        name='take_ownership_of_public_dataset'),
+
 )
