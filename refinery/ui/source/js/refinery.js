@@ -18,6 +18,7 @@ angular
      */
     'errors',
     'pubSub',
+    'getCookie',
     'closeOnOuterClick',
     'colors',
     'focusOn',
