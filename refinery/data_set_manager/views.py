@@ -85,17 +85,37 @@ class TakeOwnershipOfPublicDatasetView(View):
         if 'isa_tab_url' in request.POST:
             relative_isa_tab_url = get_full_url(request.POST['isa_tab_url'])
         else:
-            try:
-                body = json.loads(request.body)
-                relative_isa_tab_url = get_full_url(FileStoreItem.objects.get(
-                    uuid=InvestigationLink.objects.get(
-                        data_set__uuid=body["data_set_uuid"]
-                    ).investigation.isarchive_file).get_datafile_url())
+            request_body = request.body
+            if not request_body:
+                err_msg = "Neither form data nor a request body has been sent."
+                logger.error(err_msg)
+                return HttpResponseBadRequest(err_msg)
 
+            try:
+                body = json.loads(request_body)
             except Exception as e:
-                logger.error("Request body not readable!: %s" % e)
-                return HttpResponseBadRequest(
-                    "Request body not readable!")
+                err_msg = "Request body is no valid JSON"
+                logger.error("%s: %s" % (err_msg, e))
+                return HttpResponseBadRequest("%s." % err_msg)
+
+            if "data_set_uuid" in body:
+                data_set_uuid = body["data_set_uuid"]
+            else:
+                err_msg = "Request body doesn't contain data_set_uuid."
+                logger.error(err_msg)
+                return HttpResponseBadRequest(err_msg)
+
+            try:
+                relative_isa_tab_url = get_full_url(
+                    FileStoreItem.objects.get(
+                        uuid=InvestigationLink.objects.get(
+                            data_set__uuid=data_set_uuid
+                        ).investigation.isarchive_file).get_datafile_url()
+                )
+            except Exception as e:
+                err_msg = "Something went wrong"
+                logger.error("%s: %s" % (err_msg, e))
+                return HttpResponseBadRequest("%s." % err_msg)
 
         # set cookie and redirect to process_isa_tab view
         response = HttpResponseRedirect(reverse('process_isa_tab'))
