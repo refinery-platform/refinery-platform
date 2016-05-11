@@ -89,7 +89,7 @@ function MetadataTableImportCtrl (
         }
         $uibModal.open({
           templateUrl:
-            '/static/partials/metadata-table-import/partials/list-confirmation-dialog.html',
+            '/static/partials/data-set-import/partials/dialog-list-confirmation.html',
           controller: 'ConfirmationDialogInstanceCtrl as modal',
           size: 'lg',
           resolve: {
