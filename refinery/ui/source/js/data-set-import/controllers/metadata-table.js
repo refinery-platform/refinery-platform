@@ -108,7 +108,7 @@ function MetadataTableImportCtrl (
 }
 
 angular
-  .module('refineryMetadataTableImport')
+  .module('refineryDataSetImport')
   .controller('MetadataTableImportCtrl', [
     '$scope',
     '$log',

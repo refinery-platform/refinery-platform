@@ -17,5 +17,5 @@ function fileSources ($http) {
 }
 
 angular
-  .module('refineryMetadataTableImport')
+  .module('refineryDataSetImport')
   .factory('fileSources', ['$http', fileSources]);
