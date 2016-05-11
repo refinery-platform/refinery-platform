@@ -83,10 +83,6 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('refineryStatistics')).toEqual(true);
     });
 
-    it('should have "refineryMetadataTableImport" as a dependency', function () {
-      expect(hasModule('refineryMetadataTableImport')).toEqual(true);
-    });
-
     it('should have "refineryProvvis" as a dependency', function () {
       expect(hasModule('refineryProvvis')).toEqual(true);
     });

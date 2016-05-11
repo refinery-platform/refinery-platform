@@ -34,7 +34,6 @@ angular
     'refineryNodeRelationship',
     'refineryDataSetExplorer',
     'refineryStatistics',
-    'refineryMetadataTableImport',
     'refineryProvvis',
     'refineryDataSetImport',
     'refineryDataSetNav',
