@@ -367,11 +367,7 @@ function refineryDataSetPreview () {
     return this
       .$q
       .all([dataSetDetails, studies, analyses, assays])
-      .then(function () {
-        this.loading = false;
-      }.bind(this))
-      .catch(function () {
-        // Should disable an error if both failed
+      .finally(function () {
         this.loading = false;
       }.bind(this));
   };
