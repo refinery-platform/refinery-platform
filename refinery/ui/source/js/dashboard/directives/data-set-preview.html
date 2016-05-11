@@ -64,9 +64,9 @@
           <i class="fa fa-check" aria-hidden="true"></i>
           Imported
         </button>
-        <a
+        <button
           class="btn clickable spinnable"
-          ng-class="{'disabled':!preview.permissions}"
+          ng-class="{ 'disabled':!preview.permissions }"
           ng-click="preview.openPermissionEditor()">
           <div
             class="refinery-spinner-bg"
@@ -75,7 +75,7 @@
           </div>
           <i class="fa fa-share-square-o"></i>
           Share
-        </a>
+        </button>
            <!-- FRITZ CHANGE THIS PLEASE AND THANKS :)
         <span class="separator">&middot;</span>
         {% if data_set.is_public and data_set.get_owner_username != user.username %}
