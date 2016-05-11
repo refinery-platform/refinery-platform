@@ -3,8 +3,7 @@
 function metadataTableDirective () {
   return {
     bindToController: {
-      graphData: '=graph',
-      valuePropertyName: '=valuePropertyName'
+      importOption: '='
     },
     controller: 'MetadataTableImportCtrl',
     controllerAs: 'metadataTable',
@@ -15,7 +14,7 @@ function metadataTableDirective () {
 }
 
 angular
-  .module('listGraph')
-  .directive('listGraph', [
+  .module('refineryDataSetImport')
+  .directive('metadataTable', [
     metadataTableDirective
   ]);
