@@ -18,6 +18,7 @@ function refineryDataSetPreview () {
     analysisService,
     dashboardDataSetPreviewService,
     dashboardExpandablePanelService,
+    dataSetTakeOwnershipService,
     filesize
   ) {
     this.$log = $log;
@@ -36,6 +37,7 @@ function refineryDataSetPreview () {
     this.analysisService = analysisService;
     this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
     this.dashboardExpandablePanelService = dashboardExpandablePanelService;
+    this.dataSetTakeOwnershipService = dataSetTakeOwnershipService;
     this.filesize = filesize;
 
     this.maxBadges = this.settings.dashboard.preview.maxBadges;
@@ -255,6 +257,39 @@ function refineryDataSetPreview () {
   };
 
   /**
+   * Import data set from public into private space.
+   *
+   * @method  importDataSet
+   * @author  Fritz Lekschas
+   * @date    2016-05-11
+   */
+  DataSetPreviewCtrl.prototype.importDataSet = function () {
+    var self = this;
+
+    // Only allow the user to click on the button once per page load.
+    this.importDataSetStarted = true;
+
+    if (!this.isDataSetReImporting) {
+      this.isDataSetReImporting = true;
+      this.dataSetTakeOwnershipService
+        .save({
+          data_set_uuid: this.dataSetDetails.uuid
+        })
+        .$promise
+        .then(function () {
+          self.isDataSetReImportSuccess = true;
+        })
+        .catch(function (error) {
+          self.isDataSetReImportFail = true;
+          self.$log.error(error);
+        })
+        .finally(function () {
+          self.isDataSetReImporting = false;
+        });
+    }
+  };
+
+  /**
    * Turns permission object into a simple string.
    *
    * @method  getPermissions
@@ -441,6 +476,7 @@ function refineryDataSetPreview () {
       'analysisService',
       'dashboardDataSetPreviewService',
       'dashboardExpandablePanelService',
+      'dataSetTakeOwnershipService',
       'filesize',
       DataSetPreviewCtrl],
     controllerAs: 'preview',
