@@ -897,7 +897,7 @@ class Analysis(OwnableResource):
                               choices=STATUS_CHOICES, blank=True, null=True)
     status_detail = models.TextField(blank=True, null=True)
     # indicates if a user requested cancellation of this analysis
-    cancel = models.BooleanField(default=False)
+    canceled = models.BooleanField(default=False)
     # possibly replace results
     # output_nodes = models.ManyToManyField(Nodes, blank=True)
     # protocol = i.e. protocol node created when the analysis is created
