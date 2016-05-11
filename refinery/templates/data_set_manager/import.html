@@ -3,24 +3,18 @@
 {% load static %}
 
 {% block head_html %}
-<!-- for tabular file upload -->
-<link rel="stylesheet" type="text/css"
-      href="{% static "vendor/angular-ui-grid/ui-grid.min.css" %}"
-      xmlns="http://www.w3.org/1999/html"/>
-<!-- end tabular file upload -->
-<!-- for data file upload -->
-<!-- CSS to style the file input field as button and adjust the Bootstrap progress bars -->
-<link rel="stylesheet"
-      href="{% static "vendor/jquery-file-upload/css/jquery.fileupload.css" %}"/>
-<link rel="stylesheet"
-      href="{% static "vendor/jquery-file-upload/css/jquery.fileupload-ui.css" %}"/>
-<style>
-  /* Hide Angular JS elements before initializing */
-  .ng-cloak {
-    display: none;
-  }
-</style>
-<!-- end data file upload -->
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="{% static "vendor/angular-ui-grid/ui-grid.min.css" %}">
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="{% static "vendor/jquery-file-upload/css/jquery.fileupload.css" %}">
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="{% static "vendor/jquery-file-upload/css/jquery.fileupload-ui.css" %}">
 {% endblock head_html %}
 
 {% block title %}
