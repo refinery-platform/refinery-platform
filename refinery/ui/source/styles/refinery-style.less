@@ -1591,3 +1591,17 @@ body.is-screenshot-ready {
   top: 50%;
   transform: translateY(-50%);
 }
+
+.fade-out-able.disabled {
+  position: relative;
+
+  &.disabled:before {
+    position: absolute;
+    content: '';
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.75);
+  }
+}
