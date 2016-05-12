@@ -899,7 +899,7 @@ class Analysis(OwnableResource):
                               choices=STATUS_CHOICES, blank=True, null=True)
     status_detail = models.TextField(blank=True, null=True)
     # indicates if a user requested cancellation of this analysis
-    cancel = models.BooleanField(default=False)
+    canceled = models.BooleanField(default=False)
     # possibly replace results
     # output_nodes = models.ManyToManyField(Nodes, blank=True)
     # protocol = i.e. protocol node created when the analysis is created
@@ -1098,7 +1098,7 @@ class Analysis(OwnableResource):
 
     def cancel(self):
         """Mark analysis as cancelled"""
-        self.cancel = True
+        self.canceled = True
         self.set_status(Analysis.FAILURE_STATUS, "Cancelled at user's request")
         # jobs in a running workflow are stopped by deleting its history
         self.galaxy_cleanup()
@@ -1115,6 +1115,8 @@ class Analysis(OwnableResource):
     def send_email(self):
         """Sends an email when the analysis is finished"""
         # don't mail the user if analysis was canceled
+        if self.canceled:
+            return
 
         # get basic information
         user = self.get_owner()
