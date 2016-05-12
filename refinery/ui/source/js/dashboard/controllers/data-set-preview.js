@@ -358,7 +358,7 @@ DataSetPreviewCtrl.prototype.openPermissionEditor = function () {
         config: function () {
           return {
             model: 'data_sets',
-            uuid: that.dataSet.uuid
+            uuid: that._currentUuid
           };
         },
         permissions: function () {
