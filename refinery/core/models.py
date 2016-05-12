@@ -13,7 +13,6 @@ import os
 import smtplib
 import socket
 import pysolr
-import pytz
 from urlparse import urljoin
 
 from django import forms
@@ -1156,8 +1155,7 @@ class Analysis(OwnableResource):
 
             # get information needed to calculate the duration
             start = self.time_start
-            # add timezone, so start and end are aware
-            end = self.time_end.replace(tzinfo=pytz.utc)
+            end = self.time_end
 
             duration = end - start
             hours, remainder = divmod(duration.total_seconds(), 3600)
