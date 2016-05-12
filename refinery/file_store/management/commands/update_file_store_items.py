@@ -6,10 +6,12 @@ Created on Oct 30, 2015
 
 import logging
 import time
+from datetime import timedelta
+
 from file_store.models import FileType, FileStoreItem
 from django.core.management.base import BaseCommand
 from django.core import management
-from datetime import datetime, timedelta
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +52,8 @@ class Command(BaseCommand):
         try:
             days_ago = args[0]
             file_store_query = FileStoreItem.objects.filter(
-                created__gt=datetime.now() - timedelta(days=int(days_ago)))
+                created__gt=timezone.localtime(timezone.now()) - timedelta(
+                    days=int(days_ago)))
         except Exception:
             file_store_query = FileStoreItem.objects.all()
 

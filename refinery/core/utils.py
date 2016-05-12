@@ -4,7 +4,6 @@ import logging
 
 import py2neo
 import core
-import datetime
 from urlparse import urlparse, urljoin
 
 from django.conf import settings
@@ -12,6 +11,7 @@ from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.contrib.auth.models import User
 from django.db import connection
+from django.utils import timezone
 
 from .search_indexes import DataSetIndex
 from data_set_manager.search_indexes import NodeIndex
@@ -600,7 +600,7 @@ def create_update_ontology(name, acronym, uri, version, owl2neo4j_version):
         ontology.name = name
         ontology.uri = uri
         ontology.version = version
-        ontology.import_date = datetime.datetime.now()
+        ontology.import_date = timezone.localtime(timezone.now())
         ontology.owl2neo4j_version = owl2neo4j_version
         ontology.save()
         logger.info('Updated %s', ontology)

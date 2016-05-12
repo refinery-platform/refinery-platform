@@ -1,5 +1,4 @@
 import copy
-from datetime import datetime
 import json
 import logging
 from urlparse import urlparse
@@ -14,6 +13,7 @@ from django.http import (
 )
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.utils import timezone
 
 from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import run_analysis
@@ -217,8 +217,8 @@ def run(request):
         # ANALYSIS MODEL
         # How to create a simple analysis object
         if not custom_name:
-            temp_name = curr_workflow.name + " " + datetime.now().strftime(
-                "%Y-%m-%d @ %H:%M:%S")
+            temp_name = curr_workflow.name + " " + timezone.localtime(
+                timezone.now()).strftime("%Y-%m-%d @ %H:%M:%S")
         else:
             temp_name = custom_name
 
@@ -229,7 +229,7 @@ def run(request):
             project=request.user.get_profile().catch_all_project,
             data_set=data_set,
             workflow=curr_workflow,
-            time_start=datetime.now()
+            time_start=timezone.localtime(timezone.now())
         )
         analysis.save()
         analysis.set_owner(request.user)
@@ -303,8 +303,8 @@ def run(request):
         # ANALYSIS MODEL
         # How to create a simple analysis object
         if not custom_name:
-            temp_name = curr_workflow.name + " " + datetime.now().strftime(
-                "%Y-%m-%d @ %H:%M:%S")
+            temp_name = curr_workflow.name + " " + timezone.localtime(
+                timezone.now()).strftime("%Y-%m-%d @ %H:%M:%S")
         else:
             temp_name = custom_name
 
@@ -316,7 +316,7 @@ def run(request):
             project=request.user.get_profile().catch_all_project,
             data_set=data_set,
             workflow=curr_workflow,
-            time_start=datetime.now()
+            time_start=timezone.localtime(timezone.now())
         )
         analysis.save()
         analysis.set_owner(request.user)
@@ -410,11 +410,13 @@ def create_noderelationship(request):
         # TODO: need to include names, descriptions, summary
         if nr_name.strip() == '':
             nr_name = "{} - {} {}".format(
-                curr_node_set1.name, curr_node_set2.name, str(datetime.now())
+                curr_node_set1.name, curr_node_set2.name, str(
+                    timezone.localtime(timezone.now()))
             )
         if nr_description.strip() == '':
             nr_description = "{} - {} {}".format(
-                curr_node_set1.name, curr_node_set2.name, str(datetime.now())
+                curr_node_set1.name, curr_node_set2.name, str(
+                    timezone.localtime(timezone.now()))
             )
         new_relationship = NodeRelationship(node_set_1=curr_node_set1,
                                             node_set_2=curr_node_set2,

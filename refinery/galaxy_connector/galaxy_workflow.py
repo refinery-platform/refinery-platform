@@ -7,10 +7,11 @@ Created on Jan 11, 2012
 import ast
 import uuid
 import copy
-from datetime import datetime
 import logging
 import networkx as nx
 import json
+
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ def createBaseWorkflow(workflow_name):
         "a_galaxy_workflow": "true",
         "annotation": "",
         "format-version": "0.1",
-        "name": workflow_name + "-" + str(datetime.now()),
+        "name": workflow_name + "-" + str(timezone.localtime(timezone.now())),
         "steps": {},
     }
 

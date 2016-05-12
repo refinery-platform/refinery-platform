@@ -17,7 +17,6 @@ Example: FILE_STORE_DIR = 'files'
 import os
 import re
 import logging
-from datetime import datetime
 from urlparse import urlparse, urljoin
 from celery.result import AsyncResult
 
@@ -27,6 +26,7 @@ from django.db import models
 from django.db.models.signals import pre_delete
 from django_extensions.db.fields import UUIDField
 from django.core.files.storage import FileSystemStorage
+from django.utils import timezone
 
 import core
 
@@ -249,10 +249,12 @@ class FileStoreItem(models.Model):
     #: file import task ID
     import_task_id = UUIDField(blank=True)
     # Date created
-    created = models.DateTimeField(auto_now_add=True, default=datetime.now,
+    created = models.DateTimeField(auto_now_add=True,
+                                   default=timezone.localtime(timezone.now()),
                                    blank=True)
     # Date updated
-    updated = models.DateTimeField(auto_now=True, default=datetime.now,
+    updated = models.DateTimeField(auto_now=True,
+                                   default=timezone.localtime(timezone.now()),
                                    blank=True)
 
     objects = _FileStoreItemManager()

@@ -1739,7 +1739,7 @@ class InvitationResource(ModelResource):
             return True
 
         return (
-            datetime.datetime.now(timezone.utc) - token.expires
+            timezone.now() - token.expires
         ).total_seconds() >= 0
 
     def update_db(self):
@@ -1803,7 +1803,7 @@ class InvitationResource(ModelResource):
             raise ImmediateHttpResponse(HttpUnauthorized())
 
         inv = Invitation(token_uuid=uuid.uuid1(), group_id=group.id)
-        now = datetime.datetime.now(timezone.utc)
+        now = timezone.now()
         token_duration = datetime.timedelta(days=settings.TOKEN_DURATION)
         inv.expires = now + token_duration
         inv.sender = user
@@ -1822,8 +1822,8 @@ class InvitationResource(ModelResource):
             raise ImmediateHttpResponse(HttpNotFound('Not found or expired'))
 
         inv = inv_list[0]
-        now = datetime.datetime.now(timezone.utc)
-        token_duration = datetime.timedelta(days=settings.TOKEN_DURATION)
+        now = timezone.now()
+        token_duration = timezone.timedelta(days=settings.TOKEN_DURATION)
         inv.expires = now + token_duration
         inv.save()
         self.send_email(bundle.request, inv)
