@@ -297,9 +297,10 @@ DataSetPreviewCtrl.prototype.importDataSet = function () {
         data_set_uuid: this.dataSetDetails.uuid
       })
       .$promise
-      .then(function () {
+      .then(function (data) {
         self.isDataSetReImportSuccess = true;
         self.dashboardDataSetsReloadService.reload(true);
+        self.dashboardDataSetPreviewService.preview(data.new_data_set_uuid);
       })
       .catch(function (error) {
         self.isDataSetReImportFail = true;
