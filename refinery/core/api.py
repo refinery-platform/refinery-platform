@@ -4,7 +4,7 @@ Created on May 4, 2012
 @author: nils
 '''
 
-import datetime
+from datetime import timedelta
 import json
 import logging
 import re
@@ -1804,7 +1804,7 @@ class InvitationResource(ModelResource):
 
         inv = Invitation(token_uuid=uuid.uuid1(), group_id=group.id)
         now = timezone.now()
-        token_duration = datetime.timedelta(days=settings.TOKEN_DURATION)
+        token_duration = timedelta(days=settings.TOKEN_DURATION)
         inv.expires = now + token_duration
         inv.sender = user
         inv.recipient_email = data['email']
@@ -1823,7 +1823,7 @@ class InvitationResource(ModelResource):
 
         inv = inv_list[0]
         now = timezone.now()
-        token_duration = timezone.timedelta(days=settings.TOKEN_DURATION)
+        token_duration = timedelta(days=settings.TOKEN_DURATION)
         inv.expires = now + token_duration
         inv.save()
         self.send_email(bundle.request, inv)
