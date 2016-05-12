@@ -19,13 +19,14 @@ from urlparse import urljoin
 from django import forms
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages
 from django.contrib.messages import info
 from django.contrib.sites.models import Site
-from django.core.exceptions import MultipleObjectsReturned
+from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from django.core.mail import mail_admins, send_mail
 from django.db import models, transaction
 from django.db.models import Max
@@ -33,6 +34,7 @@ from django.db.models.fields import IntegerField
 from django.db.models.signals import post_save, pre_delete, post_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
+from django.forms import ValidationError
 from django.template import loader, Context
 
 from bioblend import galaxy
@@ -2171,3 +2173,26 @@ def analysis_deletion_check(instance):
             except Exception as e:
                 logger.debug("Could not delete Node %s:" % node, e)
         return True
+
+
+class AuthenticationFormUsernameOrEmail(AuthenticationForm):
+    def clean_username(self):
+        username = self.data['username']
+        if '@' in username:
+            try:
+                username = User.objects.get(email=username).username
+            except ObjectDoesNotExist:
+                raise ValidationError(
+                    self.error_messages['invalid_login'],
+                    code='invalid_login',
+                    params={'username': self.username_field.verbose_name},
+                )
+            except MultipleObjectsReturned:
+                raise ValidationError(
+                    'You have registered twice with the same email. Hence, ' +
+                    'we don\'t know under which user you want to log in. ' +
+                    'Please specify your username.',
+                    code='invalid_login',
+                    params={'username': self.username_field.verbose_name},
+                )
+        return username
