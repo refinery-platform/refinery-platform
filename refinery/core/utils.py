@@ -600,7 +600,7 @@ def create_update_ontology(name, acronym, uri, version, owl2neo4j_version):
         ontology.name = name
         ontology.uri = uri
         ontology.version = version
-        ontology.import_date = timezone.localtime(timezone.now())
+        ontology.import_date = get_aware_local_time()
         ontology.owl2neo4j_version = owl2neo4j_version
         ontology.save()
         logger.info('Updated %s', ontology)
@@ -689,3 +689,8 @@ def get_full_url(relative_url):
 def is_url(string):
     """Check if a given string is a URL"""
     return urlparse(string).scheme != ""
+
+
+def get_aware_local_time():
+    # Returns the local time, model field default helper
+    return timezone.localtime(timezone.now())

@@ -57,7 +57,8 @@ from galaxy_connector.models import Instance
 from .utils import (update_data_set_index, delete_data_set_index,
                     add_read_access_in_neo4j, remove_read_access_in_neo4j,
                     delete_data_set_neo4j, delete_ontology_from_neo4j,
-                    delete_analysis_index, invalidate_cached_object)
+                    delete_analysis_index, invalidate_cached_object,
+                    get_aware_local_time)
 
 
 logger = logging.getLogger(__name__)
@@ -132,11 +133,11 @@ def create_user_profile_registered(sender, user, request, **kwargs):
 
     logger.info(
         "user profile for user %s has been created after registration %s",
-        user, datetime.now()
+        user, get_aware_local_time()
     )
     mail_admins(
         'New User Registered', 'User %s registered at %s'
-        % (user, datetime.now())
+        % (user, get_aware_local_time())
     )
     logger.info(
         "email has been sent to admins informing of registration of user %s",
@@ -927,7 +928,7 @@ class Analysis(OwnableResource):
         self.status = status
         self.status_detail = message
         if status == self.FAILURE_STATUS or status == self.SUCCESS_STATUS:
-            self.time_end = datetime.now()
+            self.time_end = get_aware_local_time()
         self.save()
 
     def successful(self):
@@ -949,7 +950,8 @@ class Analysis(OwnableResource):
 
         # creates new library in galaxy
         library_name = "{} Analysis - {} ({})".format(
-            Site.objects.get_current().name, self.uuid, datetime.now())
+            Site.objects.get_current().name, self.uuid,
+            get_aware_local_time())
         try:
             library = connection.libraries.create_library(library_name)
         except galaxy.client.ConnectionError as exc:
@@ -1016,7 +1018,8 @@ class Analysis(OwnableResource):
 
         # creates new history in galaxy
         history_name = "{} Analysis - {} ({})".format(
-            Site.objects.get_current().name, self.uuid, datetime.now())
+            Site.objects.get_current().name, self.uuid,
+            get_aware_local_time())
         try:
             history = connection.histories.create_history(history_name)
         except galaxy.client.ConnectionError as e:
@@ -1863,7 +1866,7 @@ class Invitation(models.Model):
 
     def save(self, *arg, **kwargs):
         if not self.id:
-            self.created = datetime.now()
+            self.created = get_aware_local_time()
         return super(Invitation, self).save(*arg, **kwargs)
 
 
@@ -1893,7 +1896,7 @@ class Ontology (models.Model):
     # Stores the most recent import date, i.e. this will be overwritten when a
     # ontology is re-imported.
     import_date = models.DateTimeField(
-        default=datetime.now,
+        default=get_aware_local_time,
         editable=False,
         auto_now=False
     )
