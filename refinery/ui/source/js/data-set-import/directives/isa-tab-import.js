@@ -9,7 +9,8 @@ function isaTabImportDirective () {
     controllerAs: 'isaTabImport',
     restrict: 'E',
     replace: true,
-    templateUrl: '/static/partials/data-set-import/directives/isa-tab-import.html'
+    templateUrl:
+      '/static/partials/data-set-import/directives/isa-tab-import.html'
   };
 }
 
