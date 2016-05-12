@@ -34,8 +34,8 @@ urlpatterns = patterns(
     url(r'^import/chunked-upload-complete/$',
         login_required(ChunkedFileUploadCompleteView.as_view()),
         name='api_chunked_upload_complete'),
-    url(r'^import/take_ownership/$', csrf_exempt(
-        TakeOwnershipOfPublicDatasetView.as_view()),
+    url(r'^import/take_ownership/$',
+        TakeOwnershipOfPublicDatasetView.as_view(),
         name='take_ownership_of_public_dataset'),
 
 )
