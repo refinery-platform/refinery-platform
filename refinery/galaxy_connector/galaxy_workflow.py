@@ -11,7 +11,7 @@ import logging
 import networkx as nx
 import json
 
-from django.utils import timezone
+from core.utils import get_aware_local_time
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ def createBaseWorkflow(workflow_name):
         "a_galaxy_workflow": "true",
         "annotation": "",
         "format-version": "0.1",
-        "name": workflow_name + "-" + str(timezone.localtime(timezone.now())),
+        "name": workflow_name + "-" + str(get_aware_local_time()),
         "steps": {},
     }
 
