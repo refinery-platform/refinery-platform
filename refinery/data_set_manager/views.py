@@ -118,7 +118,9 @@ class TakeOwnershipOfPublicDatasetView(View):
                 return HttpResponseBadRequest("%s." % err_msg)
 
         # set cookie and redirect to process_isa_tab view
-        response = HttpResponseRedirect(reverse('process_isa_tab'))
+        response = HttpResponseRedirect(
+            reverse('process_isa_tab', args=['ajax'])
+        )
         response.set_cookie('isa_tab_url', relative_isa_tab_url)
 
         return response
@@ -187,11 +189,16 @@ class ProcessISATabView(View):
         # TODO: exception handling
         os.unlink(temp_file_path)
         if dataset_uuid:
-            # TODO: redirect to the list of analysis samples for the given UUID
-            response = HttpResponseRedirect(
-                reverse(self.success_view_name, args=(dataset_uuid,)))
-            response.delete_cookie(self.isa_tab_cookie_name)
-            return response
+            if 'ajax' in kwargs and kwargs['ajax']:
+                return HttpResponse(
+                    json.dumps({'new_data_set_uuid': dataset_uuid}),
+                    'application/json'
+                )
+            else:
+                response = HttpResponseRedirect(
+                    reverse(self.success_view_name, args=(dataset_uuid,)))
+                response.delete_cookie(self.isa_tab_cookie_name)
+                return response
         else:
             error = "Problem parsing ISA-Tab file"
             context = RequestContext(request, {'form': form, 'error': error})
@@ -246,8 +253,6 @@ class ProcessISATabView(View):
             # TODO: exception handling (OSError)
             os.unlink(temp_file_path)
             if dataset_uuid:
-                # TODO: redirect to the list of analysis samples for the given
-                # UUID
                 return HttpResponseRedirect(
                     reverse(self.success_view_name, args=(dataset_uuid,)))
             else:

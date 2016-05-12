@@ -21,7 +21,11 @@ urlpatterns = patterns(
     # csrf_exempt required for POST requests from external sites
     url(r'^import/isa-tab/$', csrf_exempt(ImportISATabView.as_view()),
         name='import_isa_tab'),
-    url(r'^import/isa-tab-form/$', login_required(ProcessISATabView.as_view()),
+    url(r'^import/isa-tab-form/$',
+        login_required(ProcessISATabView.as_view()),
+        name='process_isa_tab'),
+    url(r'^import/isa-tab-form/(?P<ajax>.+)/$',
+        login_required(ProcessISATabView.as_view()),
         name='process_isa_tab'),
     url(r'^import/metadata-table-form/$',
         login_required(ProcessMetadataTableView.as_view()),
