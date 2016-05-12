@@ -23,28 +23,43 @@
 			<div class="refinery-panel refinery-panel-content">
 				<form method="post" action="{% url "django.contrib.auth.views.login" %}">
 					{% csrf_token %}
-					{% if form.errors %}
-					<p>Your username and password didn't match. Please try again.</p>
-					{% endif %}
+
+          {% if form.errors %}
+          <ul class="text-danger no-list-style">
+            {% for field in form %}
+              {% for error in field.errors %}
+                <li>
+                  <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+                  <strong>{{ error|escape }}</strong>
+                </li>
+              {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+              <li>
+                <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+                <strong>{{ error|escape }}</strong>
+              </li>
+            {% endfor %}
+          </ul>
+          {% endif %}
 
 					<div class="refinery-subheader">
-						<h4>Username</h4>
-					</div>		
+						<h4>Username or E-Mail</h4>
+					</div>
 					<p>{{ form.username }}</p>
-					
+
 					<div class="refinery-subheader">
 						<h4>Password</h4>
 					</div>
 					<p>{{ form.password }}</p>
-					
-                    <p>
-                        <input class="refinery-base btn btn-default"
-                          type="submit" value="Login" />
-                        <input type="hidden" name="next" value="{{ next }}" />
-                        {% if not REFINERY_EXTERNAL_AUTH %}
-                            &nbsp;<a href="/accounts/password/reset">Forgot password?</a>
-                        {% endif %}
-                    </p>
+          <p>
+            <input class="refinery-base btn btn-default"
+              type="submit" value="Login" />
+            <input type="hidden" name="next" value="{{ next }}" />
+            {% if not REFINERY_EXTERNAL_AUTH %}
+              &nbsp;<a href="/accounts/password/reset">Forgot password?</a>
+            {% endif %}
+          </p>
 				</form>
 				<p>
 				{% if REGISTRATION_OPEN %}

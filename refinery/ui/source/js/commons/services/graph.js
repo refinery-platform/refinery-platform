@@ -63,7 +63,7 @@ function GraphFactory (_) {
   //   }
 
   //   function processNode (node, childNo) {
-  //     // Set `value` property depending on the lenght of the actual value
+  //     // Set `value` property depending on the length of the actual value
   //     node.value = Object.keys(node[valueProp]).length;
 
   //     if (node.children.length) {
@@ -205,7 +205,7 @@ function GraphFactory (_) {
         if (numChildChildren) {
           var childChildValue = [];
           var valueSame = false;
-          // When the child has only one child, check whether the childs
+          // When the child has only one child, check whether the children
           // annotations and the child child's annotation are equal
           if (numChildChildren === 1) {
             childChildValue = Object.keys(graph[child.children[0]][valueProp]);
@@ -381,7 +381,7 @@ function GraphFactory (_) {
     var numAnnoDataSets = allIds.length;
     var retrievedDataSetsId;
 
-    // Convert to an array of ints.
+    // Convert to an array of strings to an array of integers.
     var allIntIds = _.map(allIds, function (el) {
       return parseInt(el, 10);
     });
@@ -400,6 +400,20 @@ function GraphFactory (_) {
     }
   };
 
+  /**
+   * Helper method to match two arrays of IDs
+   *
+   * @description
+   * This method is used to check how many of the IDs in `dsIds` are present in
+   * `retrievedIds`.
+   *
+   * @method  getNodeRetrievedDataSet
+   * @author  Fritz Lekschas
+   * @date    2016-05-05
+   * @param   {Array}   dsIds         Array of integer or string-based IDs.
+   * @param   {Array}   retrievedIds  Array of integer-based IDs.
+   * @return  {Object}                Object list of matched IDs.
+   */
   Graph.getNodeRetrievedDataSet = function (dsIds, retrievedIds) {
     var retrievedNodeDsIds = {};
 
@@ -474,21 +488,36 @@ function GraphFactory (_) {
     }
   };
 
+  /**
+   * Helper method to copy root properties onto the corresponding bar value
+   * property.
+   *
+   * @method  updatePropertyToBar
+   * @author  Fritz Lekschas
+   * @date    2016-05-05
+   * @param   {Object}  graph       Annotation term graph.
+   * @param   {Array}   properties  Array of properties (strings).
+   */
   Graph.updatePropertyToBar = function (graph, properties) {
     var uris = Object.keys(graph);
     var node;
     var propLeng = properties.length;
 
+    // For every node in the graph...
     for (var i = uris.length; i--;) {
       node = graph[uris[i]];
       for (var j = propLeng; j--;) {
+        // ...if the property is actually available
         if (typeof node[properties[j]] !== 'undefined') {
+          // ...we look at every bar
           for (var k = node.data.bars.length; k--;) {
+            // ...and if the property name matches the bar ID
             if (node.data.bars[k].id === properties[j]) {
+              // ...we copy the property from the root to the bar object.
               node.data.bars[k].value = node[properties[j]];
             }
           }
-          // Update helper bar references as well
+          // ...finally we update the helper bar references as well
           if (
             node.data.barRefs &&
             typeof node.data.barRefs[properties[j]] !== 'undefined'
@@ -500,52 +529,58 @@ function GraphFactory (_) {
     }
   };
 
+  /**
+   * Helper method to copy root properties of nodes onto the data property.
+   *
+   * @method  propertyToData
+   * @author  Fritz Lekschas
+   * @date    2016-05-05
+   * @param   {Object}  graph       Annotation term graph.
+   * @param   {Array}   properties  Array of properties (strings).
+   */
   Graph.propertyToData = function (graph, properties) {
     var uris = Object.keys(graph);
     var node;
     var propLeng = properties.length;
 
+    // For every node in the graph...
     for (var i = uris.length; i--;) {
       node = graph[uris[i]];
+      // ...we initialize a data property if it does not exist
       if (!node.data) {
         node.data = {};
       }
 
+      // ...and copy every property onto the data property object
       for (var j = propLeng; j--;) {
         node.data[properties[j]] = node[properties[j]];
       }
     }
   };
 
-  Graph.toTreemap = function (graph, root) {
-    var newGraph = _.cloneDeep(graph);
-    var nodes = Object.keys(newGraph);
-    var node;
-    var uris;
-
-    for (var i = nodes.length; i--;) {
-      node = newGraph[nodes[i]];
-      // Remove parent reference
-      node.parents = undefined;
-      delete node.parents;
-      // Copy URIs temporarily
-      uris = node.children.slice();
-      // Initialize new array
-      node.children = [];
-      // Push node references into `children`
-      for (var j = uris.length; j--;) {
-        node.children.push(newGraph[uris[j]]);
-      }
-    }
-
-    // Deep clone object to be usable by D3's tree map layout.
-    return JSON.parse(JSON.stringify(newGraph[root]));
-  };
-
+  /**
+   * [toTree description]
+   *
+   * @method  toTree
+   * @author  Fritz Lekschas
+   * @date    2016-05-05
+   * @param   {Object}  graph  Reference-based annotation term graph.
+   * @param   {String}  root   URI of root node.
+   * @return  {Object}         Tree.
+   */
   Graph.toTree = function (graph, root) {
     var nodeVisited = {};
     var tree = {};
 
+    /**
+     * Duplicate a node
+     *
+     * @method  duplicateNode
+     * @author  Fritz Lekschas
+     * @date    2016-05-05
+     * @param   {Object}  originalNode  Original node.
+     * @return  {Object}                Cloned node.
+     */
     function duplicateNode (originalNode) {
       originalNode.meta.numClones++;
 
@@ -555,22 +590,35 @@ function GraphFactory (_) {
         children: [],
         childrenIds: [],
         cloneId: originalNode.meta.numClones,
-        uri: newId,
+        dataSets: originalNode.dataSets,
+        assertedDataSets: originalNode.assertedDataSets,
+        uri: originalNode.uri,
+        ontId: originalNode.ontId,
         meta: originalNode.meta,
         name: originalNode.name,
         value: originalNode.value
       };
 
-      for (var j = 0, jLen = originalNode.childrenIds.length; j < jLen; j++) {
-        tree[newId].childrenIds.push(originalNode.childrenIds[j]);
-      }
+      // Copy the `childrenIds` property
+      // `slice` creates a shallow copy which is all we need since `childrenIds`
+      // only contains URIs.
+      tree[newId].childrenIds = originalNode.childrenIds.slice();
 
       return tree[newId];
     }
 
+    /**
+     * Traverse the graph in a depth-first-search fashion and prepare nodes.
+     *
+     * @method  traverse
+     * @author  Fritz Lekschas
+     * @date    2016-05-05
+     * @param   {Object}  node  Node to be prepared and traversed.
+     */
     function traverse (node) {
       var child;
 
+      // Keep track of visited nodes
       nodeVisited[node.uri] = true;
 
       if (!node.meta) {
@@ -595,34 +643,78 @@ function GraphFactory (_) {
           node.childrenIds[i] = child.uri;
           node.children.push(child);
         }
+
         traverse(child);
       }
     }
 
+    /**
+     * Copy / clone nodes from the original graph (i.e. `oldGraph`) to the
+     * tree (i.e. `newGraph`).
+     *
+     * @method  copyNodes
+     * @author  Fritz Lekschas
+     * @date    2016-05-05
+     * @param   {Object}  oldGraph  Original graph.
+     * @param   {Object}  newGraph  New tree.
+     */
     function copyNodes (oldGraph, newGraph) {
       var nodeIds = Object.keys(oldGraph);
       var properties;
 
+      function deepCloneObj (sourceNode, targetNode, property) {
+        targetNode[property] = _.cloneDeep(sourceNode[property]);
+      }
+
       for (var i = nodeIds.length; i--;) {
         newGraph[nodeIds[i]] = {};
         properties = Object.keys(oldGraph[nodeIds[i]]);
+
         for (var j = properties.length; j--;) {
-          newGraph[nodeIds[i]][properties[j]] = oldGraph[nodeIds[i]][properties[j]];
+          switch (properties[j]) {
+            // Skip the following properties
+            case 'parents':
+              continue;
+            case 'children':
+              // Initialize new array
+              newGraph[nodeIds[i]].children =
+                oldGraph[nodeIds[i]].children.slice();
+              break;
+            // Deep copy the following properties
+            case 'data':
+            case 'meta':
+              deepCloneObj(
+                oldGraph[nodeIds[i]],
+                newGraph[nodeIds[i]],
+                properties[j]
+              );
+              break;
+            // Normal copy by default
+            default:
+              newGraph[nodeIds[i]][properties[j]] =
+                oldGraph[nodeIds[i]][properties[j]];
+              break;
+          }
         }
       }
     }
 
+    /**
+     * Remove all unvisited nodes of the tree.
+     *
+     * @description
+     * An in-line method to remove unvisited nodes of the tree
+     *
+     * @method  removeUnusedNodes
+     * @author  Fritz Lekschas
+     * @date    2016-05-05
+     */
     function removeUnusedNodes () {
       var ids = Object.keys(tree);
-      var counterDelete = 0;
-      var counterKeep = 0;
       for (var k = ids.length; k--;) {
         if (!nodeVisited[ids[k]]) {
-          counterDelete++;
           delete tree[ids[k]];
           tree[ids[k]] = undefined;
-        } else {
-          counterKeep++;
         }
       }
     }
@@ -634,6 +726,22 @@ function GraphFactory (_) {
     return tree[root];
   };
 
+  /**
+   * Helper method to add a pseudo sibling representing _no annotations_ to the
+   * root node.
+   *
+   * @description
+   * Technically this node does not correspond to an ontology class but it is
+   * needed to visually represent the collection of data set that have not been
+   * annotated with any ontology term.
+   *
+   * @method  addPseudoSiblingToRoot
+   * @author  Fritz Lekschas
+   * @date    2016-05-05
+   * @param   {Object}  graph     Annotation term graph.
+   * @param   {String}  root      Root node URI.
+   * @param   {Array}   allDsIds  Array of all data set IDs.
+   */
   Graph.addPseudoSiblingToRoot = function (graph, root, allDsIds) {
     var annotatedDsIds = Object.keys(graph[root].dataSets);
     var notAnnotatedDsIds = {};

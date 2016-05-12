@@ -125,7 +125,7 @@ describe('DataSet.search-api: unit tests', function () {
               offset,
               0
             )
-        )
+          )
           .respond(200, fakeQueryResponse);
 
         $httpBackend.flush();
@@ -155,7 +155,7 @@ describe('DataSet.search-api: unit tests', function () {
               offset,
               1
             )
-        )
+          )
           .respond(200, fakeQueryResponse);
 
         $httpBackend.flush();
@@ -170,7 +170,7 @@ describe('DataSet.search-api: unit tests', function () {
               offset,
               0
             )
-        )
+          )
           .respond(200, fakeQueryResponse);
 
         $httpBackend.flush();
@@ -202,7 +202,7 @@ describe('DataSet.search-api: unit tests', function () {
               1,
               true
             )
-        )
+          )
           .respond(200, fakeQueryResponse);
 
         $httpBackend.flush();
