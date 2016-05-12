@@ -27,7 +27,7 @@ from django.db.models.signals import pre_delete
 from django_extensions.db.fields import UUIDField
 from django.core.files.storage import FileSystemStorage
 
-import core
+from core.utils import is_url, get_aware_local_time
 
 
 logger = logging.getLogger(__name__)
@@ -130,7 +130,7 @@ def generate_file_source_translator(username='', base_path=''):
         """
         source = map_source(source.strip())
         # ignore URLs and absolute file paths
-        if core.utils.is_url(source) or os.path.isabs(source):
+        if is_url(source) or os.path.isabs(source):
             return source
         # process relative path
         if base_path:
@@ -249,11 +249,11 @@ class FileStoreItem(models.Model):
     import_task_id = UUIDField(blank=True)
     # Date created
     created = models.DateTimeField(auto_now_add=True,
-                                   default=core.utils.get_aware_local_time,
+                                   default=get_aware_local_time,
                                    blank=True)
     # Date updated
     updated = models.DateTimeField(auto_now=True,
-                                   default=core.utils.get_aware_local_time,
+                                   default=get_aware_local_time,
                                    blank=True)
 
     objects = _FileStoreItemManager()
