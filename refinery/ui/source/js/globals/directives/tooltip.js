@@ -1,38 +1,47 @@
 'use strict';
 
 var TooltipCtrl = function ($element) {
-  var _element = $element;
+  this.$element = $element;
 
-  // This is the actual controller, which still has access to `_element` but
-  // `_element` is hidden from the public
-  var tooltip = function () {
-    _element
-      .attr('data-container', this.container)
-      .one('mouseenter', function () {
-        // Initialize the tool tip plugin when the element is hovered the
-        // first time by the mouse cursor. This ensures that Angular has
-        // successfully rendered the title and avoids performance issues.
-        _element.tooltip({
-          placement: this.placement,
-          delay: {
-            hide: this.delayHide || 0,
-            show: this.delayShow || 0
-          }
-        });
-        // After initializing the plugin we need to trigger the `mouseover`
-        // event again to immediately show the tool tip.
-        _element.trigger('mouseenter', _element);
-      }.bind(this));
-
-    if (this.hideOnClick) {
-      _element.on('click', function () {
-        _element.tooltip('hide');
+  this.$element
+    .attr('data-container', this.container)
+    .one('mouseenter', function () {
+      // Initialize the tool tip plugin when the element is hovered the
+      // first time by the mouse cursor. This ensures that Angular has
+      // successfully rendered the title and avoids performance issues.
+      this.$element.tooltip({
+        placement: this.placement,
+        delay: {
+          hide: this.delayHide || 0,
+          show: this.delayShow || 0
+        }
       });
-    }
-  };
+      // After initializing the plugin we need to trigger the `mouseover`
+      // event again to immediately show the tool tip.
+      this.$element.trigger('mouseenter', this.$element);
+    }.bind(this));
 
-  return tooltip.apply(this);
+  if (this.hideOnClick) {
+    this.$element.on('click', function () {
+      this.$element.tooltip('hide');
+    }.bind(this));
+  }
 };
+
+Object.defineProperty(
+  TooltipCtrl.prototype,
+  'hideWhen', {
+    enumerable: true,
+    get: function () {
+      return this._hideWhen;
+    },
+    set: function (value) {
+      this._hideWhen = value;
+      if (value) {
+        this.$element.tooltip('hide');
+      }
+    }
+  });
 
 var tooltipDirective = function () {
   return {
@@ -40,6 +49,7 @@ var tooltipDirective = function () {
       delayHide: '@refineryTooltipDelayHide',
       delayShow: '@refineryTooltipDelayShow',
       hideOnClick: '@refineryTooltipHideOnClick',
+      hideWhen: '=refineryTooltipHideWhen',
       container: '@refineryTooltipContainer',
       placement: '@refineryTooltipPlacement'
     },

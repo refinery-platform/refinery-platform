@@ -1,5 +1,4 @@
 import copy
-from datetime import datetime
 import json
 import logging
 from urlparse import urlparse
@@ -22,6 +21,7 @@ from core.models import (
     InvestigationLink, NodeSet, NodeRelationship, NodePair
 )
 from core.views import get_solr_results, custom_error_page
+from core.utils import get_aware_local_time
 from data_set_manager.models import Study, Assay, Node
 from workflow_manager.tasks import get_workflows
 
@@ -217,8 +217,8 @@ def run(request):
         # ANALYSIS MODEL
         # How to create a simple analysis object
         if not custom_name:
-            temp_name = curr_workflow.name + " " + datetime.now().strftime(
-                "%Y-%m-%d @ %H:%M:%S")
+            temp_name = curr_workflow.name + " " + get_aware_local_time()\
+                .strftime("%Y-%m-%d @ %H:%M:%S")
         else:
             temp_name = custom_name
 
@@ -229,7 +229,7 @@ def run(request):
             project=request.user.get_profile().catch_all_project,
             data_set=data_set,
             workflow=curr_workflow,
-            time_start=datetime.now()
+            time_start=get_aware_local_time()
         )
         analysis.save()
         analysis.set_owner(request.user)
@@ -303,8 +303,8 @@ def run(request):
         # ANALYSIS MODEL
         # How to create a simple analysis object
         if not custom_name:
-            temp_name = curr_workflow.name + " " + datetime.now().strftime(
-                "%Y-%m-%d @ %H:%M:%S")
+            temp_name = curr_workflow.name + " " + get_aware_local_time()\
+                .strftime("%Y-%m-%d @ %H:%M:%S")
         else:
             temp_name = custom_name
 
@@ -316,7 +316,7 @@ def run(request):
             project=request.user.get_profile().catch_all_project,
             data_set=data_set,
             workflow=curr_workflow,
-            time_start=datetime.now()
+            time_start=get_aware_local_time()
         )
         analysis.save()
         analysis.set_owner(request.user)
@@ -410,11 +410,13 @@ def create_noderelationship(request):
         # TODO: need to include names, descriptions, summary
         if nr_name.strip() == '':
             nr_name = "{} - {} {}".format(
-                curr_node_set1.name, curr_node_set2.name, str(datetime.now())
+                curr_node_set1.name, curr_node_set2.name, str(
+                    get_aware_local_time())
             )
         if nr_description.strip() == '':
             nr_description = "{} - {} {}".format(
-                curr_node_set1.name, curr_node_set2.name, str(datetime.now())
+                curr_node_set1.name, curr_node_set2.name, str(
+                    get_aware_local_time())
             )
         new_relationship = NodeRelationship(node_set_1=curr_node_set1,
                                             node_set_2=curr_node_set2,

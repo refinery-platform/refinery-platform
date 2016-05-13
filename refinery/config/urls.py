@@ -18,7 +18,7 @@ from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     StatisticsResource, GroupManagementResource, \
     UserAuthenticationResource, InvitationResource, FastQCResource,  \
     UserProfileResource
-from core.models import DataSet
+from core.models import DataSet, AuthenticationFormUsernameOrEmail
 
 from core.views import WorkflowViewSet
 from file_store.views import FileStoreItemViewSet
@@ -29,6 +29,8 @@ from data_set_manager.api import AttributeOrderResource, StudyResource,\
     AssayResource, InvestigationResource, ProtocolResource, \
     ProtocolReferenceResource, ProtocolReferenceParameterResource, \
     PublicationResource, AttributeResource
+
+from registration.forms import RegistrationFormUniqueEmail
 
 
 logger = logging.getLogger(__name__)
@@ -118,6 +120,16 @@ urlpatterns = patterns(
     # url(r"^admin/core/test_data/$", admin.site.admin_view(admin_test_data)),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^djangular/', include('djangular.urls')),
+    # Needs to be defined before all default URL patterns are included because
+    # in Django the first matched URL pattern wins
+    url(
+        r'^accounts/login/$',
+        'django.contrib.auth.views.login',
+        {
+            'authentication_form': AuthenticationFormUsernameOrEmail
+        },
+        name='login'
+    ),
     url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^accounts/profile/$',
         'core.views.user_profile',
@@ -130,7 +142,7 @@ urlpatterns = patterns(
 
     url(
         r'^accounts/register/$',
-        RegistrationView.as_view(),
+        RegistrationView.as_view(form_class=RegistrationFormUniqueEmail),
         name='registration.views.register'
     ),
 

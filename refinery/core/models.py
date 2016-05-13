@@ -13,19 +13,19 @@ import os
 import smtplib
 import socket
 import pysolr
-import pytz
 from urlparse import urljoin
 
 from django import forms
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages
 from django.contrib.messages import info
 from django.contrib.sites.models import Site
-from django.core.exceptions import MultipleObjectsReturned
+from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from django.core.mail import mail_admins, send_mail
 from django.db import models, transaction
 from django.db.models import Max
@@ -33,6 +33,7 @@ from django.db.models.fields import IntegerField
 from django.db.models.signals import post_save, pre_delete, post_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
+from django.forms import ValidationError
 from django.template import loader, Context
 
 from bioblend import galaxy
@@ -57,7 +58,8 @@ from galaxy_connector.models import Instance
 from .utils import (update_data_set_index, delete_data_set_index,
                     add_read_access_in_neo4j, remove_read_access_in_neo4j,
                     delete_data_set_neo4j, delete_ontology_from_neo4j,
-                    delete_analysis_index, invalidate_cached_object)
+                    delete_analysis_index, invalidate_cached_object,
+                    get_aware_local_time)
 
 
 logger = logging.getLogger(__name__)
@@ -132,11 +134,11 @@ def create_user_profile_registered(sender, user, request, **kwargs):
 
     logger.info(
         "user profile for user %s has been created after registration %s",
-        user, datetime.now()
+        user, get_aware_local_time()
     )
     mail_admins(
         'New User Registered', 'User %s registered at %s'
-        % (user, datetime.now())
+        % (user, get_aware_local_time())
     )
     logger.info(
         "email has been sent to admins informing of registration of user %s",
@@ -614,6 +616,22 @@ class DataSet(SharableResource):
 
         return file_size
 
+    def get_isa_archive(self):
+        """Returns the isa_archive that was used to create the DataSet"""
+        try:
+            isa_archive = FileStoreItem.objects.get(
+                uuid=InvestigationLink.objects.get(
+                    data_set__uuid=self.uuid).investigation.isarchive_file)
+            return isa_archive
+
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned,
+                InvestigationLink.DoesNotExist,
+                InvestigationLink.MultipleObjectsReturned) as e:
+            logger.error("Error while fetching FileStoreItem or "
+                         "InvestigationLink: %s" % e)
+        return None
+
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
         update_data_set_index(self)
@@ -897,7 +915,7 @@ class Analysis(OwnableResource):
                               choices=STATUS_CHOICES, blank=True, null=True)
     status_detail = models.TextField(blank=True, null=True)
     # indicates if a user requested cancellation of this analysis
-    cancel = models.BooleanField(default=False)
+    canceled = models.BooleanField(default=False)
     # possibly replace results
     # output_nodes = models.ManyToManyField(Nodes, blank=True)
     # protocol = i.e. protocol node created when the analysis is created
@@ -927,7 +945,7 @@ class Analysis(OwnableResource):
         self.status = status
         self.status_detail = message
         if status == self.FAILURE_STATUS or status == self.SUCCESS_STATUS:
-            self.time_end = datetime.now()
+            self.time_end = get_aware_local_time()
         self.save()
 
     def successful(self):
@@ -949,7 +967,8 @@ class Analysis(OwnableResource):
 
         # creates new library in galaxy
         library_name = "{} Analysis - {} ({})".format(
-            Site.objects.get_current().name, self.uuid, datetime.now())
+            Site.objects.get_current().name, self.uuid,
+            get_aware_local_time())
         try:
             library = connection.libraries.create_library(library_name)
         except galaxy.client.ConnectionError as exc:
@@ -1016,7 +1035,8 @@ class Analysis(OwnableResource):
 
         # creates new history in galaxy
         history_name = "{} Analysis - {} ({})".format(
-            Site.objects.get_current().name, self.uuid, datetime.now())
+            Site.objects.get_current().name, self.uuid,
+            get_aware_local_time())
         try:
             history = connection.histories.create_history(history_name)
         except galaxy.client.ConnectionError as e:
@@ -1096,7 +1116,7 @@ class Analysis(OwnableResource):
 
     def cancel(self):
         """Mark analysis as cancelled"""
-        self.cancel = True
+        self.canceled = True
         self.set_status(Analysis.FAILURE_STATUS, "Cancelled at user's request")
         # jobs in a running workflow are stopped by deleting its history
         self.galaxy_cleanup()
@@ -1113,6 +1133,8 @@ class Analysis(OwnableResource):
     def send_email(self):
         """Sends an email when the analysis is finished"""
         # don't mail the user if analysis was canceled
+        if self.canceled:
+            return
 
         # get basic information
         user = self.get_owner()
@@ -1153,8 +1175,7 @@ class Analysis(OwnableResource):
 
             # get information needed to calculate the duration
             start = self.time_start
-            # add timezone, so start and end are aware
-            end = self.time_end.replace(tzinfo=pytz.utc)
+            end = self.time_end
 
             duration = end - start
             hours, remainder = divmod(duration.total_seconds(), 3600)
@@ -1863,7 +1884,7 @@ class Invitation(models.Model):
 
     def save(self, *arg, **kwargs):
         if not self.id:
-            self.created = datetime.now()
+            self.created = get_aware_local_time()
         return super(Invitation, self).save(*arg, **kwargs)
 
 
@@ -1893,7 +1914,7 @@ class Ontology (models.Model):
     # Stores the most recent import date, i.e. this will be overwritten when a
     # ontology is re-imported.
     import_date = models.DateTimeField(
-        default=datetime.now,
+        default=get_aware_local_time,
         editable=False,
         auto_now=False
     )
@@ -2171,3 +2192,26 @@ def analysis_deletion_check(instance):
             except Exception as e:
                 logger.debug("Could not delete Node %s:" % node, e)
         return True
+
+
+class AuthenticationFormUsernameOrEmail(AuthenticationForm):
+    def clean_username(self):
+        username = self.data['username']
+        if '@' in username:
+            try:
+                username = User.objects.get(email=username).username
+            except ObjectDoesNotExist:
+                raise ValidationError(
+                    self.error_messages['invalid_login'],
+                    code='invalid_login',
+                    params={'username': self.username_field.verbose_name},
+                )
+            except MultipleObjectsReturned:
+                raise ValidationError(
+                    'You have registered twice with the same email. Hence, ' +
+                    'we don\'t know under which user you want to log in. ' +
+                    'Please specify your username.',
+                    code='invalid_login',
+                    params={'username': self.username_field.verbose_name},
+                )
+        return username

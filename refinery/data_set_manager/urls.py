@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from data_set_manager.views import (
     DataSetImportView, ImportISATabView, ProcessISATabView,
     ProcessMetadataTableView, CheckDataFilesView, ChunkedFileUploadView,
-    ChunkedFileUploadCompleteView)
+    ChunkedFileUploadCompleteView, TakeOwnershipOfPublicDatasetView)
 
 
 urlpatterns = patterns(
@@ -21,7 +21,11 @@ urlpatterns = patterns(
     # csrf_exempt required for POST requests from external sites
     url(r'^import/isa-tab/$', csrf_exempt(ImportISATabView.as_view()),
         name='import_isa_tab'),
-    url(r'^import/isa-tab-form/$', login_required(ProcessISATabView.as_view()),
+    url(r'^import/isa-tab-form/$',
+        login_required(ProcessISATabView.as_view()),
+        name='process_isa_tab'),
+    url(r'^import/isa-tab-form/(?P<ajax>.+)/$',
+        login_required(ProcessISATabView.as_view()),
         name='process_isa_tab'),
     url(r'^import/metadata-table-form/$',
         login_required(ProcessMetadataTableView.as_view()),
@@ -34,4 +38,8 @@ urlpatterns = patterns(
     url(r'^import/chunked-upload-complete/$',
         login_required(ChunkedFileUploadCompleteView.as_view()),
         name='api_chunked_upload_complete'),
+    url(r'^import/take_ownership/$',
+        TakeOwnershipOfPublicDatasetView.as_view(),
+        name='take_ownership_of_public_dataset'),
+
 )

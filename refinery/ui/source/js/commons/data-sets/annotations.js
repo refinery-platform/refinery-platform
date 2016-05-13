@@ -93,7 +93,6 @@ function DataSetAnnotationsFactory ($q, _, dataSetAnnotationService) {
     DataSetAnnotation.prototype,
     'total', {
       enumerable: true,
-      configurable: false,
       get: function () {
         return Object.keys(this.dataSets).length;
       }

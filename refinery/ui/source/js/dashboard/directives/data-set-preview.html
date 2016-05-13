@@ -17,14 +17,56 @@
       <div class="floatbox-max-left">
         <a
           class="btn btn-important"
-          ng-href="data_sets/{{ preview.dataSet.uuid }}">
+          ng-href="data_sets/{{ preview.dataSetUuid }}">
           <i class="fa fa-table"></i>
           View content in File Browser
         </a>
         <span class="separator">&middot;</span>
-        <a
+        <button
           class="btn clickable spinnable"
-          ng-class="{'disabled':!preview.permissions}"
+          title="Import this shared data set into your own space to run analyses"
+          ng-if="!preview.dataSetDetails.is_owner"
+          ng-class="{
+            'disabled': preview.isDataSetReImporting,
+            'btn-success': preview.isDataSetReImportSuccess,
+            'btn-danger': preview.isDataSetReImportFail
+          }"
+          ng-disabled="preview.importDataSetStarted"
+          ng-click="preview.importDataSet()"
+          refinery-tooltip
+          refinery-tooltip-container="body"
+          refinery-tooltip-placement="top"
+          refinery-tooltip-delay-show="750"
+          refinery-tooltip-delay-hide="150"
+          refinery-tooltip-hide-when="preview.importDataSetStarted">
+          <div
+            class="refinery-spinner-bg"
+            ng-if="preview.isDataSetReImporting">
+            <div class="refinery-spinner"></div>
+          </div>
+          <span ng-if="!preview.isDataSetReImportSuccess && !preview.isDataSetReImportFail">
+            <i class="fa fa-cloud-download" aria-hidden="true"></i>
+            Import into Own Space
+          </span>
+          <span ng-if="preview.isDataSetReImportSuccess">
+            <i class="fa fa-check" aria-hidden="true"></i>
+            Import successful!
+          </span>
+          <span ng-if="preview.isDataSetReImportFail">
+            <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+            Import failed!
+          </span>
+        </button>
+        <button
+          class="btn"
+          disabled="disabled"
+          ng-if="preview.dataSetDetails.is_owner">
+          <i class="fa fa-check" aria-hidden="true"></i>
+          Imported
+        </button>
+        <button
+          class="btn clickable spinnable"
+          ng-class="{ 'disabled':!preview.permissions }"
           ng-click="preview.openPermissionEditor()">
           <div
             class="refinery-spinner-bg"
@@ -33,7 +75,7 @@
           </div>
           <i class="fa fa-share-square-o"></i>
           Share
-        </a>
+        </button>
       </div>
     </div>
   </div>
@@ -46,7 +88,7 @@
       ng-if="preview.numStudies === 1">
       <h5 class="refinery-subheader">Summary</h5>
       <div class="inline-container">
-        <p class="stronger" ng-bind-html="preview.dataSet.title"></p>
+        <p class="stronger" ng-bind-html="preview.dataSetDetails.title"></p>
       </div>
       <div class="inline-container">
         <h6>Description</h6>
@@ -155,7 +197,7 @@
           </span>
         </li>
         <li ng-if="preview.numAnalyses > preview.maxAnalyses">
-          <a ng-href="/data_sets/{{ preview.dataSet.uuid }}/#/analyses/">View all analyses</a>
+          <a ng-href="/data_sets/{{ preview.dataSetUuid }}/#/analyses/">View all analyses</a>
         </li>
       </ol>
       <h5 class="refinery-subheader">

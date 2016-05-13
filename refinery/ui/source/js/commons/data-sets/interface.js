@@ -626,7 +626,6 @@ function DataSetFactory (
     'allIds',
     {
       enumerable: true,
-      configurable: false,
       get: function () {
         if (_selectionLen()) {
           return $q.when(_objListToArray(_selection));
@@ -657,7 +656,6 @@ function DataSetFactory (
     'ids',
     {
       enumerable: true,
-      configurable: false,
       get: function () {
         return _allDsIds.promise;
       }
@@ -677,7 +675,6 @@ function DataSetFactory (
     'selection',
     {
       enumerable: true,
-      configurable: false,
       get: function () {
         return _selection;
       }
@@ -697,7 +694,6 @@ function DataSetFactory (
     'selectionActive',
     {
       enumerable: true,
-      configurable: false,
       get: function () {
         return !!_selectionLen();
       }
@@ -717,7 +713,6 @@ function DataSetFactory (
     'selectionPath',
     {
       enumerable: true,
-      configurable: false,
       get: function () {
         return _browsePath;
       }
@@ -737,7 +732,6 @@ function DataSetFactory (
     'total',
     {
       enumerable: true,
-      configurable: false,
       get: function () {
         return _total;
       }

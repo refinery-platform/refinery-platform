@@ -13,7 +13,7 @@ from django.conf import settings
 from haystack import indexes
 
 from data_set_manager.models import Node, AnnotatedNode
-import file_store.tasks as file_store_tasks
+import file_store
 
 
 logger = logging.getLogger(__name__)
@@ -131,7 +131,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             data[NodeIndex.WORKFLOW_OUTPUT_PREFIX + "_" + uuid + "_s"] = "N/A"
         # add file type as facet value
-        file_store_item = file_store_tasks.read(object.file_uuid)
+        file_store_item = file_store.tasks.read(object.file_uuid)
         if file_store_item:
             data[NodeIndex.FILETYPE_PREFIX + "_" + uuid + "_s"] =\
                 file_store_item.get_filetype()
