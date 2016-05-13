@@ -37,14 +37,20 @@
     </label>
 
     <div ng-if="metadataTable.file">
+      <div class="refinery-subheader">
+        <h4>Preview (5 rows):</h4>
+      </div>
       <div
         class="gridStyle"
         ui-grid="metadataTable.gridOptions"
         ui-grid-resize-columns>
       </div>
 
+      <div class="refinery-subheader m-t-1">
+        <h4>Metadata import configurations:</h4>
+      </div>
       <p>
-        Please provide the following values (fields marked in
+        Please complete the following form (fields marked in
         <strong>bold</strong> are required):
       </p>
 
