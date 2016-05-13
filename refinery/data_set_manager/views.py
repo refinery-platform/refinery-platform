@@ -26,13 +26,12 @@ from django.http import Http404
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
 
-from core.models import os, get_user_import_dir, InvestigationLink
+from core.models import os, get_user_import_dir, DataSet
 from core.utils import get_full_url
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
 from file_store.tasks import download_file, DownloadError
-from file_store.models import get_temp_dir, generate_file_source_translator, \
-    FileStoreItem
+from file_store.models import get_temp_dir, generate_file_source_translator
 from .models import AttributeOrder, Assay
 from .serializers import AttributeOrderSerializer, AssaySerializer
 from .utils import (generate_solr_params, search_solr, format_solr_response,
@@ -82,8 +81,11 @@ class TakeOwnershipOfPublicDatasetView(View):
 
     def post(self, request, *args, **kwargs):
 
+        from_old_template = False
+
         if 'isa_tab_url' in request.POST:
-            relative_isa_tab_url = get_full_url(request.POST['isa_tab_url'])
+            full_isa_tab_url = get_full_url(request.POST['isa_tab_url'])
+            from_old_template = True
         else:
             request_body = request.body
             if not request_body:
@@ -106,22 +108,28 @@ class TakeOwnershipOfPublicDatasetView(View):
                 return HttpResponseBadRequest(err_msg)
 
             try:
-                relative_isa_tab_url = get_full_url(
-                    FileStoreItem.objects.get(
-                        uuid=InvestigationLink.objects.get(
-                            data_set__uuid=data_set_uuid
-                        ).investigation.isarchive_file).get_datafile_url()
-                )
-            except Exception as e:
+                full_isa_tab_url = get_full_url(DataSet.objects.get(
+                    uuid=data_set_uuid).get_isa_archive().get_datafile_url())
+            except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned,
+                    Exception) as e:
                 err_msg = "Something went wrong"
                 logger.error("%s: %s" % (err_msg, e))
                 return HttpResponseBadRequest("%s." % err_msg)
 
-        # set cookie and redirect to process_isa_tab view
-        response = HttpResponseRedirect(
-            reverse('process_isa_tab', args=['ajax'])
-        )
-        response.set_cookie('isa_tab_url', relative_isa_tab_url)
+        if from_old_template:
+            # Redirect to process_isa_tab view
+            response = HttpResponseRedirect(
+                reverse('process_isa_tab')
+            )
+        else:
+            # Redirect to process_isa_tab view with arg 'ajax' if request is
+            #  not coming from old Django Template
+            response = HttpResponseRedirect(
+                reverse('process_isa_tab', args=['ajax'])
+            )
+
+        # set cookie
+        response.set_cookie('isa_tab_url', full_isa_tab_url)
 
         return response
 
@@ -297,13 +305,13 @@ class ProcessMetadataTableView(View):
         except (KeyError, ValueError):
             error = {
                 'error_message':
-                'Import failed because required parameters are missing'}
+                    'Import failed because required parameters are missing'}
             return render(request, self.template_name, error)
         source_column_index = request.POST.getlist('source_column_index')
         if not source_column_index:
             error = {
                 'error_message':
-                'Import failed because no source columns were selected'}
+                    'Import failed because no source columns were selected'}
             return render(request, self.template_name, error)
         # workaround for breaking change in Angular
         # https://github.com/angular/angular.js/commit/7fda214c4f65a6a06b25cf5d5aff013a364e9cef
