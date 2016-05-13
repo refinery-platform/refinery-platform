@@ -1,7 +1,10 @@
 'use strict';
 
-function IsaTabImportCtrl ($log, $timeout, $window, isaTabImportApi) {
+function IsaTabImportCtrl (
+  $log, $rootScope, $timeout, $window, isaTabImportApi
+) {
   this.$log = $log;
+  this.$rootScope = $rootScope;
   this.$timeout = $timeout;
   this.$window = $window;
   this.isaTabImportApi = isaTabImportApi;
@@ -47,6 +50,10 @@ IsaTabImportCtrl.prototype.checkImportOption = function () {
   return !this.importOption || this.importOption === 'isaTab';
 };
 
+IsaTabImportCtrl.prototype.clearFile = function () {
+  this.$rootScope.$broadcast('clearFileInput', 'isaTabFile');
+};
+
 IsaTabImportCtrl.prototype.startImport = function () {
   var self = this;
 
@@ -78,6 +85,7 @@ angular
   .module('refineryDataSetImport')
   .controller('IsaTabImportCtrl', [
     '$log',
+    '$rootScope',
     '$timeout',
     '$window',
     'isaTabImportApi',

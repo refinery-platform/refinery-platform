@@ -1655,11 +1655,20 @@ body.is-screenshot-ready {
 
   .label-text {
     font-weight: bold;
+
+    &+ * {
+      float: left;
+    }
   }
 
   &.label-text-left .label-text {
     float: left;
     margin-right: 1em;
+  }
+
+  .icon-only {
+    margin-top: 0;
+    margin-bottom: 0;
   }
 }
 

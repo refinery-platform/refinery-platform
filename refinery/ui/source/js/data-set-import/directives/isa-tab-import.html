@@ -30,7 +30,15 @@
         name="isa_tab_file"
         type="file"
         ng-disabled="!!isaTabImport.urlToFile"
-        file-model="isaTabImport.file">
+        file-model="isaTabImport.file"
+        clear-file-input="isaTabFile"
+        clear-file-input-model="isaTabImport.file">
+      <button
+        class="icon-only"
+        ng-if="isaTabImport.file"
+        ng-click="isaTabImport.clearFile()">
+        <i class="fa fa-times-circle" aria-hidden="true"></i>
+      </button>
     </label>
 
     <div class="text-muted m-t-1-2 m-b-1-2">or</div>
