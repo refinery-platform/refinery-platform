@@ -33,7 +33,7 @@ var clearFileInputDirective = function () {
       model: '=clearFileInputModel'
     },
     controller: 'ClearFileInputCtrl',
-    controllerAs: 'tooltip',
+    controllerAs: 'clearFileInput',
     restrict: 'A'
   };
 };
