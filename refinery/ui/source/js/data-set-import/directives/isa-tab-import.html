@@ -1,4 +1,4 @@
-<div>
+<div id="isa-tab-import-form">
   <p>
     Please provide a ZIP archive containing an investigation, study, and assay
     files.
@@ -6,10 +6,20 @@
 
   <div class="relative">
     <div
-      class="refinery-spinner-max refinery-spinner-bg"
+      class="refinery-max refinery-spinner-bg"
       ng-if="isaTabImport.isImporting">
       <div class="refinery-spinner-center">
         <div class="refinery-spinner"></div>
+      </div>
+    </div>
+
+    <div
+      class="refinery-max refinery-bg-success text-success"
+      ng-if="isaTabImport.isSuccessfullyImported">
+      <div class="text-centered">
+        <i class="fa fa-check" aria-hidden="true"></i>
+        Data set has been successfully imported. You will be redirected sortly.
+        Otherwise click <a ng-href="/data_sets/{{ isaTabImport.importedDataSetUuid }}">here</a>.
       </div>
     </div>
 
@@ -38,7 +48,11 @@
       id="isa-import-button"
       class="refinery-base btn btn-default"
       ng-click="isaTabImport.startImport()"
-      ng-disabled="!isaTabImport.file && !isaTabImport.urlToFile">
+      ng-disabled="
+        !isaTabImport.file &&
+        !isaTabImport.urlToFile &&
+        !isaTabImport.isSuccessfullyImported
+      ">
       Start Import
     </button>
   </div>

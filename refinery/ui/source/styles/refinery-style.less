@@ -980,7 +980,7 @@ a.analysis-header {
   color: @gray;
 }
 
-.refinery-spinner-max {
+.refinery-max {
   position: absolute;
   top: 0;
   left: 0;
@@ -1611,6 +1611,13 @@ body.is-screenshot-ready {
   transform: translateY(-50%);
 }
 
+.text-centered {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .fade-out-able.disabled {
   position: relative;
 
@@ -1627,4 +1634,12 @@ body.is-screenshot-ready {
 
 .relative {
   position: relative;
+}
+
+.refinery-bg-success {
+  background: fadeout(lighten(@green, 50%), 10%);
+}
+
+#isa-tab-import-form .refinery-bg-success {
+  z-index: 1;
 }
