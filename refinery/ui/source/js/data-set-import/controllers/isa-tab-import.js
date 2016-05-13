@@ -1,8 +1,8 @@
 'use strict';
 
-function IsaTabImportCtrl ($log, isaTabImportFormService) {
+function IsaTabImportCtrl ($log, isaTabImportApi) {
   this.$log = $log;
-  this.isaTabImportFormService = isaTabImportFormService;
+  this.isaTabImportApi = isaTabImportApi;
 }
 
 Object.defineProperty(
@@ -50,10 +50,15 @@ IsaTabImportCtrl.prototype.startImport = function () {
 
   this.isImporting = true;
 
-  return this.isaTabImportFormService.save({})
-    .$promise
-    .then(function () {
+  var formData = new FormData();
+  formData.append('isa_tab_file', this.file);
+  formData.append('isa_tab_url', this.urlToFile);
 
+  return this.isaTabImportApi
+    .create({}, formData)
+    .$promise
+    .then(function (data) {
+      self.$log.info('Yeah! Success', data);
     })
     .catch(function (error) {
       self.$log.error(error);
@@ -67,6 +72,6 @@ angular
   .module('refineryDataSetImport')
   .controller('IsaTabImportCtrl', [
     '$log',
-    'isaTabImportFormService',
+    'isaTabImportApi',
     IsaTabImportCtrl
   ]);
