@@ -49,9 +49,11 @@
       class="refinery-base btn btn-default"
       ng-click="isaTabImport.startImport()"
       ng-disabled="
-        !isaTabImport.file &&
-        !isaTabImport.urlToFile &&
-        !isaTabImport.isSuccessfullyImported
+        (
+          !isaTabImport.file &&
+          !isaTabImport.urlToFile
+        ) ||
+        isaTabImport.isSuccessfullyImported
       ">
       Start Import
     </button>
