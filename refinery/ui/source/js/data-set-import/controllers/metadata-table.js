@@ -1,8 +1,10 @@
 'use strict';
 
 function MetadataTableImportCtrl (
-  $scope, $log, $http, $uibModal, fileSources
+  $scope, $log, $http, $rootScope, $uibModal, fileSources
 ) {
+  this.$rootScope = $rootScope;
+
   $scope.gridOptions = {
     data: 'metadataSample',
     resizeable: true
@@ -107,12 +109,39 @@ function MetadataTableImportCtrl (
   };
 }
 
+Object.defineProperty(
+  MetadataTableImportCtrl.prototype,
+  'file', {
+    enumerable: true,
+    get: function () {
+      return this._file;
+    },
+    set: function (value) {
+      this._file = value;
+      this.setImportOption(value);
+    }
+  }
+);
+
+MetadataTableImportCtrl.prototype.setImportOption = function (value) {
+  if (value) {
+    this.importOption = 'tabularFile';
+  } else {
+    this.importOption = undefined;
+  }
+};
+
+MetadataTableImportCtrl.prototype.clearFile = function () {
+  this.$rootScope.$broadcast('clearFileInput', 'metadataTable');
+};
+
 angular
   .module('refineryDataSetImport')
   .controller('MetadataTableImportCtrl', [
     '$scope',
     '$log',
     '$http',
+    '$rootScope',
     '$uibModal',
     'fileSources',
     MetadataTableImportCtrl
