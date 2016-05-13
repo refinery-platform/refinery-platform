@@ -344,6 +344,7 @@ DataSetPreviewCtrl.prototype.loadCitation = function (
  * @param   {String}  dataSetUuid  UUID if data set to be previewed.
  */
 DataSetPreviewCtrl.prototype.loadData = function (dataSetUuid) {
+  this.importDataSetStarted = false;
   this.loading = true;
   this.permissionsLoading = true;
   this.userName = undefined;
