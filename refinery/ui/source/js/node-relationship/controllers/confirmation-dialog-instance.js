@@ -1,10 +1,13 @@
 'use strict';
 
-function ConfirmationDialogInstanceCtrl ($scope, $uibModalInstance, config) {
+function NRConfirmationDialogInstanceCtrl ($scope, $uibModalInstance, config) {
   $scope.config = config;
+  $scope.val = {
+    val: $scope.config.val
+  };
 
   $scope.ok = function () {
-    $uibModalInstance.close();
+    $uibModalInstance.close($scope.config.val);
   };
 
   $scope.cancel = function () {
@@ -12,9 +15,8 @@ function ConfirmationDialogInstanceCtrl ($scope, $uibModalInstance, config) {
   };
 }
 
-
 angular
   .module('refineryNodeRelationship')
-  .controller('ConfirmationDialogInstanceCtrl', [
-    '$scope', '$uibModalInstance', 'config', ConfirmationDialogInstanceCtrl
+  .controller('NRConfirmationDialogInstanceCtrl', [
+    '$scope', '$uibModalInstance', 'config', NRConfirmationDialogInstanceCtrl
   ]);
