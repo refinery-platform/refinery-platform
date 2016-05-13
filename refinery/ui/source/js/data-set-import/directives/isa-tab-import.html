@@ -3,14 +3,14 @@
     Please provide a ZIP archive containing an investigation, study, and assay
     files.
   </p>
-  <form
-    id="isaTabImportForm"
-    enctype="multipart/form-data"
-    action="{% url "process_isa_tab" %}"
-    method="post">
 
-<!--     <p>{{ form.non_field_errors }}</p>
-    <p>{{ error }}</p> -->
+  <div class="relative">
+    <div
+      class="refinery-spinner-max refinery-spinner-bg">
+      <div class="refinery-spinner-center">
+        <div class="refinery-spinner"></div>
+      </div>
+    </div>
 
     <div class="refinery-subheader">
       <h4>Option A. Upload from local computer</h4>
@@ -21,10 +21,6 @@
       type="file"
       ng-disabled="!!isaTabImport.urlToFile"
       file-model="isaTabImport.file">
-<!--     <p>
-      {{ form.isa_tab_file.errors}}
-      {{ form.isa_tab_file }}
-    </p> -->
 
     <div class="refinery-subheader">
       <h4>Option B. Provide a URL</h4>
@@ -36,10 +32,6 @@
       type="text"
       ng-model="isaTabImport.urlToFile"
       ng-disabled="!!isaTabImport.file">
-<!--     <p>
-      {{ form.isa_tab_url.errors }}
-      {{ form.isa_tab_url }}
-    </p> -->
 
     <button
       type="submit"
@@ -48,10 +40,5 @@
       ng-disabled="!isaTabImport.file && !isaTabImport.urlToFile">
       Start Import
     </button>
-
-    <div style="margin-left: 15px; padding: 15px; float: left;
-                display: block; height: 22px; width: 22px;"
-         id="isa-spinner">
-    </div>
-  </form>
+  </div>
 </div>

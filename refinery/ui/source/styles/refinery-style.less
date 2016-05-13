@@ -980,6 +980,25 @@ a.analysis-header {
   color: @gray;
 }
 
+.refinery-spinner-max {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+
+  &.refinery-spinner-bg {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  .refinery-spinner-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
+
 .refinery-spinner {
   width: 20px;
   height: 20px;
@@ -1604,4 +1623,8 @@ body.is-screenshot-ready {
     bottom: 0;
     background: rgba(255, 255, 255, 0.75);
   }
+}
+
+.relative {
+  position: relative;
 }
