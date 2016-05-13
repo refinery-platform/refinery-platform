@@ -17,7 +17,7 @@ Object.defineProperty(
   'isDisabledIsaTabImport', {
     enumerable: true,
     get: function () {
-      return this.option === 'tabular';
+      return this.option === 'tabularFile';
     }
   }
 );
