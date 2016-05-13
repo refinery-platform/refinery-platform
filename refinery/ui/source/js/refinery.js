@@ -23,6 +23,7 @@ angular
     'closeOnOuterClick',
     'colors',
     'focusOn',
+    'clearFileInput',
     'replaceWhiteSpaceWithHyphen',
 
     /*
