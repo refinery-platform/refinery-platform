@@ -51,12 +51,9 @@
       id="isa-import-button"
       class="block refinery-base btn btn-default"
       ng-click="isaTabImport.startImport()"
+      ng-if="isaTabImport.file || isaTabImport.urlToFile"
       ng-disabled="
-        (
-          !isaTabImport.file &&
-          !isaTabImport.urlToFile
-        ) ||
-        isaTabImport.isSuccessfullyImported
+        isaTabImport.isSuccessfullyImported || !isaTabImport.checkImportOption
       ">
       Start Import
     </button>
