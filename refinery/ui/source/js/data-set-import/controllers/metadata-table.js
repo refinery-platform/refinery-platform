@@ -1,9 +1,11 @@
 'use strict';
 
 function MetadataTableImportCtrl (
-  $scope, $log, $http, $rootScope, $uibModal, fileSources
+  $scope, $log, $http, $rootScope, $timeout, $uibModal, fileSources
 ) {
+  this.$log = $log;
   this.$rootScope = $rootScope;
+  this.$timeout = $timeout;
 
   $scope.gridOptions = {
     data: 'metadataSample',
@@ -135,6 +137,37 @@ MetadataTableImportCtrl.prototype.clearFile = function () {
   this.$rootScope.$broadcast('clearFileInput', 'metadataTable');
 };
 
+MetadataTableImportCtrl.prototype.startImport = function () {
+  var self = this;
+
+  self.isImporting = true;
+
+  // self.$timeout(function () {
+  //   self.isSuccessfullyImported = true;
+  // }, 2500);
+
+  // var formData = new FormData();
+  // formData.append('isa_tab_file', this.file);
+  // formData.append('isa_tab_url', this.urlToFile);
+
+  // return this.isaTabImportApi
+  //   .create({}, formData)
+  //   .$promise
+  //   .then(function (response) {
+  //     self.importedDataSetUuid = response.data.new_data_set_uuid;
+  //     self.isSuccessfullyImported = true;
+  //     self.$timeout(function () {
+  //       self.$window.location.href = '/data_sets/' + self.importedDataSetUuid;
+  //     }, 2500);
+  //   })
+  //   .catch(function (error) {
+  //     self.$log.error(error);
+  //   })
+  //   .finally(function () {
+  //     self.isImporting = false;
+  //   });
+};
+
 angular
   .module('refineryDataSetImport')
   .controller('MetadataTableImportCtrl', [
@@ -142,6 +175,7 @@ angular
     '$log',
     '$http',
     '$rootScope',
+    '$timeout',
     '$uibModal',
     'fileSources',
     MetadataTableImportCtrl

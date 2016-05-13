@@ -1,213 +1,234 @@
 <div id="metadata-table-form">
   <p>Please select a file containing a metadata table in tab-delimited format.</p>
 
-  <label class="block label-block label-text-left">
-    <span class="label-text label-left min-width-200">Select tabular file:</span>
-    <input
-      name="tabular_file"
-      type="file"
-      file-model="metadataTable.file"
-      clear-file-input="metadataTable"
-      clear-file-input-model="metadataTable.file">
-    <button
-      class="icon-only"
-      ng-if="metadataTable.file"
-      ng-click="metadataTable.clearFile()">
-      <i class="fa fa-times-circle" aria-hidden="true"></i>
-    </button>
-  </label>
+  <div class="relative">
+    <div
+      class="refinery-max refinery-spinner-bg"
+      ng-if="metadataTable.isImporting">
+      <div class="refinery-spinner-center">
+        <div class="refinery-spinner"></div>
+      </div>
+    </div>
 
-  <div ng-if="metadataTable.file">
-    <div class="gridStyle" ui-grid="gridOptions" ui-grid-resize-columns></div>
+    <div
+      class="refinery-max z-1 refinery-bg-success text-success"
+      ng-if="metadataTable.isSuccessfullyImported">
+      <div class="text-centered">
+        <i class="fa fa-check" aria-hidden="true"></i>
+        Data set has been successfully imported. You will be redirected sortly.
+        Otherwise click <a ng-href="/data_sets/{{ metadataTable.importedDataSetUuid }}">here</a>.
+      </div>
+    </div>
 
-    <p>
-      Please provide the following values (fields marked in
-      <strong>bold</strong> are required):
-    </p>
+    <label class="block label-block label-text-left">
+      <span class="label-text label-left min-width-200">Select tabular file:</span>
+      <input
+        name="tabular_file"
+        type="file"
+        file-model="metadataTable.file"
+        clear-file-input="metadataTable"
+        clear-file-input-model="metadataTable.file">
+      <button
+        class="icon-only"
+        ng-if="metadataTable.file"
+        ng-click="metadataTable.clearFile()">
+        <i class="fa fa-times-circle" aria-hidden="true"></i>
+      </button>
+    </label>
 
-    <table>
-      <colgroup>
-        <col style="width: 12%"/>
-      </colgroup>
+    <div ng-if="metadataTable.file">
+      <div class="gridStyle" ui-grid="gridOptions" ui-grid-resize-columns></div>
 
-      <tr>
-        <td><strong>Title</strong></td>
-        <td>
-          <input
-            type="text"
-            class="refinery-base"
-            name="title"
-            required
-            ng-model="metadataTable.title"/>
-        </td>
-        <td>name of this data set</td>
-      </tr>
+      <p>
+        Please provide the following values (fields marked in
+        <strong>bold</strong> are required):
+      </p>
 
-      <tr>
-        <td><strong>Source Column Index</strong></td>
-        <td>
-          {% verbatim %}
-          <select
-            class="select-height"
-            name="source_column_index"
-            required
-            multiple
-            size="{{ metadataTable.metadataHeader.length || 10 }}"
-            ng-model="metadataTable.sourceColumnIndex"
-            ng-options="id as heading for (id, heading) in metadataTable.metadataHeader">
-          </select>
-          {% endverbatim %}
-        </td>
-        <td>
-          columns to be used for source grouping. Values in the columns
-          indicated by the list of columns provided for the Source
-          ColumnIndex will be concatenated to create an identifier for
-          the "source" of the sample.
-        </td>
-      </tr>
+      <table>
+        <colgroup>
+          <col style="width: 12%"/>
+        </colgroup>
 
-      <tr>
-        <td><strong>Data File Column</strong></td>
-        <td>
-          <select
-            name="data_file_column"
-            required
-            ng-model="metadataTable.data.dataFileColumn"
-            ng-options="heading for (id, heading) in metadataTable.metadataHeader track by id">
-            <!-- needed to make required option to work properly -->
-            <option value=""></option>
-          </select>
-        </td>
-        <td>
-          column that contains the path to or the URL of the file
-          associated with this sample
-        </td>
-      </tr>
+        <tr>
+          <td><strong>Title</strong></td>
+          <td>
+            <input
+              type="text"
+              class="refinery-base"
+              name="title"
+              required
+              ng-model="metadataTable.title"/>
+          </td>
+          <td>name of this data set</td>
+        </tr>
 
-      <tr>
-        <td>Auxiliary File Column</td>
-        <td>
+        <tr>
+          <td><strong>Source Column Index</strong></td>
+          <td>
+            {% verbatim %}
             <select
-              name="aux_file_column"
-              ng-model="metadataTable.auxFileColumn"
+              class="select-height"
+              name="source_column_index"
+              required
+              multiple
+              size="{{ metadataTable.metadataHeader.length || 10 }}"
+              ng-model="metadataTable.sourceColumnIndex"
+              ng-options="id as heading for (id, heading) in metadataTable.metadataHeader">
+            </select>
+            {% endverbatim %}
+          </td>
+          <td>
+            columns to be used for source grouping. Values in the columns
+            indicated by the list of columns provided for the Source
+            ColumnIndex will be concatenated to create an identifier for
+            the "source" of the sample.
+          </td>
+        </tr>
+
+        <tr>
+          <td><strong>Data File Column</strong></td>
+          <td>
+            <select
+              name="data_file_column"
+              required
+              ng-model="metadataTable.data.dataFileColumn"
+              ng-options="heading for (id, heading) in metadataTable.metadataHeader track by id">
+              <!-- needed to make required option to work properly -->
+              <option value=""></option>
+            </select>
+          </td>
+          <td>
+            column that contains the path to or the URL of the file
+            associated with this sample
+          </td>
+        </tr>
+
+        <tr>
+          <td>Auxiliary File Column</td>
+          <td>
+              <select
+                name="aux_file_column"
+                ng-model="metadataTable.auxFileColumn"
+                ng-options="heading for heading in metadataTable.metadataHeader">
+              </select>
+          </td>
+          <td>
+            Column that contains the path to an auxiliary file (e.g. for
+            visualization) associated with the input file
+          </td>
+        </tr>
+
+        <tr>
+          <td>Species Column</td>
+          <td>
+            <select
+              name="species_column"
+              ng-model="metadataTable.speciesColumn"
               ng-options="heading for heading in metadataTable.metadataHeader">
             </select>
-        </td>
-        <td>
-          Column that contains the path to an auxiliary file (e.g. for
-          visualization) associated with the input file
-        </td>
-      </tr>
+          </td>
+          <td>column containing species names or IDs</td>
+        </tr>
 
-      <tr>
-        <td>Species Column</td>
-        <td>
-          <select
-            name="species_column"
-            ng-model="metadataTable.speciesColumn"
-            ng-options="heading for heading in metadataTable.metadataHeader">
-          </select>
-        </td>
-        <td>column containing species names or IDs</td>
-      </tr>
+        <tr>
+          <td>Base path</td>
+          <td>
+            <input
+              type="text"
+              class="refinery-base"
+              name="base_path"
+              ng-model="metadataTable.basePath">
+          </td>
+          <td>
+            base path of your data file paths if using relative locations
+          </td>
+        </tr>
 
-      <tr>
-        <td>Base path</td>
-        <td>
-          <input
-            type="text"
-            class="refinery-base"
-            name="base_path"
-            ng-model="metadataTable.basePath">
-        </td>
-        <td>
-          base path of your data file paths if using relative locations
-        </td>
-      </tr>
+        <tr>
+          <td>Annotation column</td>
+          <td>
+            <select
+              name="annotation_column"
+              ng-model="metadataTable.annotationColumn"
+              ng-options="heading for heading in metadataTable.metadataHeader">
+            </select>
+          </td>
+          <td>
+            column containing boolean flag to indicate whether the data
+            file in this row should be treated as an annotation file
+          </td>
+        </tr>
 
-      <tr>
-        <td>Annotation column</td>
-        <td>
-          <select
-            name="annotation_column"
-            ng-model="metadataTable.annotationColumn"
-            ng-options="heading for heading in metadataTable.metadataHeader">
-          </select>
-        </td>
-        <td>
-          column containing boolean flag to indicate whether the data
-          file in this row should be treated as an annotation file
-        </td>
-      </tr>
+        <tr>
+          <td>Genome build column</td>
+          <td>
+            <select
+              name="genome_build_column"
+              ng-model="metadataTable.genomeBuildColumn"
+              ng-options="heading for heading in metadataTable.metadataHeader">
+            </select>
+          </td>
+          <td>column containing genome build IDs</td>
+        </tr>
 
-      <tr>
-        <td>Genome build column</td>
-        <td>
-          <select
-            name="genome_build_column"
-            ng-model="metadataTable.genomeBuildColumn"
-            ng-options="heading for heading in metadataTable.metadataHeader">
-          </select>
-        </td>
-        <td>column containing genome build IDs</td>
-      </tr>
+        <tr>
+          <td>Slug</td>
+          <td>
+            <input
+              type="text"
+              class="refinery-base"
+              name="slug"
+              ng-model="metadataTable.slug">
+          </td>
+          <td>
+            shortcut name for dataset URL; can only contain alpha-numeric
+            characters and _
+          </td>
+        </tr>
+        <tr>
 
-      <tr>
-        <td>Slug</td>
-        <td>
-          <input
-            type="text"
-            class="refinery-base"
-            name="slug"
-            ng-model="metadataTable.slug">
-        </td>
-        <td>
-          shortcut name for dataset URL; can only contain alpha-numeric
-          characters and _
-        </td>
-      </tr>
-      <tr>
+        <tr>
+          <td>Data file permanent</td>
+          <td>
+            <input
+              type="checkbox"
+              name="data_file_permanent"
+              ng-model="metadataTable.dataFilePermanent"/>
+          </td>
+          <td>
+            flag for whether data files should be permanently on the system
+            or cached
+          </td>
+        </tr>
 
-      <tr>
-        <td>Data file permanent</td>
-        <td>
-          <input
-            type="checkbox"
-            name="data_file_permanent"
-            ng-model="metadataTable.dataFilePermanent"/>
-        </td>
-        <td>
-          flag for whether data files should be permanently on the system
-          or cached
-        </td>
-      </tr>
+        <tr>
+          <td>Is public</td>
+          <td>
+            <input
+              type="checkbox"
+              name="is_public"
+              ng-model="metadataTable.isPublic"/>
+          </td>
+          <td>
+            flag for whether this data set will be visible to the public
+          </td>
+        </tr>
+      </table>
 
-      <tr>
-        <td>Is public</td>
-        <td>
-          <input
-            type="checkbox"
-            name="is_public"
-            ng-model="metadataTable.isPublic"/>
-        </td>
-        <td>
-          flag for whether this data set will be visible to the public
-        </td>
-      </tr>
-    </table>
-
-    <input
-      class="refinery-base btn btn-default"
-      type="button"
-      value="Check Files"
-      ng-click="metadataTable.checkFiles()"
-      ng-disabled="!metadataTable.data.dataFileColumn"/>
-    <input
-      class="refinery-base btn btn-default"
-      id="tabular-import-button"
-      type="submit"
-      value="Import"
-      ng-disabled="metadataTable.importMetadataTableForm.$invalid"/>
-    <div id="tabular-spinner"></div>
+      <div>
+        <button
+          class="btn btn-default"
+          ng-click="metadataTable.checkFiles()"
+          ng-disabled="!metadataTable.data.dataFileColumn">
+          Check Availability of Data File
+        </button>
+        <button
+          class="btn btn-primary"
+          ng-click="metadataTable.startImport()"
+          ng-disabled="metadataTable.importMetadataTableForm.$invalid">
+          Start Import
+        </button>
+      </div>
+    </div>
   </div>
 </div>
