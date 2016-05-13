@@ -83,7 +83,6 @@ class ImportISATabFileForm(forms.Form):
         cleaned_data = super(ImportISATabFileForm, self).clean()
         f = cleaned_data.get("isa_tab_file")
         url = cleaned_data.get("isa_tab_url")
-        # either a file or a URL must be provided
         if f or url:
             return cleaned_data
         else:
@@ -151,64 +150,167 @@ class ProcessISATabView(View):
 
     def post(self, request, *args, **kwargs):
         form = ImportISATabFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            f = form.cleaned_data['isa_tab_file']
-            url = form.cleaned_data['isa_tab_url']
-            logger.debug("ISA-Tab URL: %s", url)
-            context = RequestContext(request, {'form': form})
+
+        if form.is_valid() or request.is_ajax():
+            try:
+                f = form.cleaned_data['isa_tab_file']
+            except KeyError:
+                f = None
+
+            try:
+                url = form.cleaned_data['isa_tab_url']
+            except KeyError:
+                url = None
+
             if url:
-                # TODO: replace with chain
-                # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks
-                u = urlparse.urlparse(url)
-                file_name = u.path.split('/')[-1]
-                temp_file_path = os.path.join(get_temp_dir(), file_name)
-                try:
-                    # TODO: refactor download_file to take file handle instead
-                    # of path
-                    download_file(url, temp_file_path)
-                except DownloadError as e:
-                    logger.error("Problem downloading ISA-Tab file. %s", e)
-                    error = "Problem downloading ISA-Tab file from: " + url
-                    context = RequestContext(request,
-                                             {'form': form, 'error': error})
-                    return render_to_response(self.template_name,
-                                              context_instance=context)
+                response = self.import_by_url(url)
+                if not response['success']:
+                    if request.is_ajax():
+                        return HttpResponse(
+                            json.dumps({
+                                'error': response.message
+                            }),
+                            'application/json'
+                        )
+
+                    return render_to_response(
+                        self.template_name,
+                        context_instance=RequestContext(
+                            request,
+                            {
+                                'form': form,
+                                'error': response.message
+                            }
+                        )
+                    )
             else:
-                temp_file_path = os.path.join(get_temp_dir(), f.name)
-                try:
-                    handle_uploaded_file(f, temp_file_path)
-                except IOError as e:
-                    error_msg = "Error writing ISA-Tab file to disk."
-                    error_msg += " IOError: %s, file name: %s, error: %s"
-                    logger.error(error_msg, e.errno, e.filename, e.strerror)
-                    error = "Error writing ISA-Tab file to disk"
-                    context = RequestContext(request,
-                                             {'form': form, 'error': error})
-                    return render_to_response(self.template_name,
-                                              context_instance=context)
-            logger.debug("Temp file name: '%s'", temp_file_path)
+                response = self.import_by_file(f)
+                if not response['success']:
+                    if request.is_ajax():
+                        return HttpResponse(
+                            json.dumps({
+                                'error': response.message
+                            }),
+                            'application/json'
+                        )
+
+                    return render_to_response(
+                        self.template_name,
+                        context_instance=RequestContext(
+                            request,
+                            {
+                                'form': form,
+                                'error': response.message
+                            }
+                        )
+                    )
+
+            logger.debug(
+                "Temp file name: '%s'", response['data']['temp_file_path']
+            )
+
             dataset_uuid = (parse_isatab.delay(
                 request.user.username,
                 False,
-                temp_file_path
+                response['data']['temp_file_path']
             ).get())[0]
+
             # TODO: exception handling (OSError)
-            os.unlink(temp_file_path)
+            os.unlink(response['data']['temp_file_path'])
             if dataset_uuid:
-                # TODO: redirect to the list of analysis samples for the given
-                # UUID
+                if request.is_ajax():
+                    return HttpResponse(
+                        json.dumps({
+                            'success': 'Data set imported',
+                            'data': {
+                                'new_data_set_uuid': dataset_uuid
+                            }
+                        }),
+                        'application/json'
+                    )
+
                 return HttpResponseRedirect(
-                    reverse(self.success_view_name, args=(dataset_uuid,)))
+                    reverse(self.success_view_name, args=[dataset_uuid])
+                )
             else:
                 error = 'Problem parsing ISA-Tab file'
-                context = RequestContext(request,
-                                         {'form': form, 'error': error})
-                return render_to_response(self.template_name,
-                                          context_instance=context)
+                if request.is_ajax():
+                    return HttpResponse(
+                        json.dumps({
+                            'error': error
+                        }),
+                        'application/json'
+                    )
+
+                context = RequestContext(
+                    request,
+                    {
+                        'form': form,
+                        'error': error
+                    }
+                )
+                return render_to_response(
+                    self.template_name,
+                    context_instance=context
+                )
         else:  # submitted form is not valid
             context = RequestContext(request, {'form': form})
-            return render_to_response(self.template_name,
-                                      context_instance=context)
+            return render_to_response(
+                self.template_name,
+                context_instance=context
+            )
+
+    def import_by_file(self, file):
+        temp_file_path = os.path.join(get_temp_dir(), file.name)
+        try:
+            handle_uploaded_file(file, temp_file_path)
+        except IOError as e:
+            error_msg = "Error writing ISA-Tab file to disk"
+            logger.error(
+                "%s. IOError: %s, file name: %s, error: %s.",
+                error_msg,
+                e.errno,
+                e.filename,
+                e.strerror
+            )
+            return {
+                "success": False,
+                "message": error_msg
+            }
+
+        return {
+            "success": True,
+            "message": "File imported.",
+            "data": {
+                "temp_file_path": temp_file_path
+            }
+        }
+
+    def import_by_url(self, url):
+        # TODO: replace with chain
+        # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks
+        parsed_url = urlparse.urlparse(url)
+        file_name = parsed_url.path.split('/')[-1]
+        temp_file_path = os.path.join(get_temp_dir(), file_name)
+        try:
+            # TODO: refactor download_file to take file handle instead
+            # of path
+            download_file(url, temp_file_path)
+        except DownloadError as e:
+            error_msg = "Problem downloading ISA-Tab file from: " + url
+            logger.error("%s. %s", (error_msg, e))
+            return {
+                "success": False,
+                "message": error_msg
+            }
+
+        return {
+            "success": True,
+            "message": "File imported.",
+            "data": {
+                "temp_file_path": temp_file_path
+            }
+        }
 
 
 def handle_uploaded_file(source_file, target_path):
