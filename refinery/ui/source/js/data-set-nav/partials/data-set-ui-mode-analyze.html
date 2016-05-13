@@ -61,7 +61,10 @@
       <div>
         <br>
       </div>
-      <button class="btn btn-warning" rp-analysis-launch-modal ng-click="open()"
+      <button
+        class="btn btn-warning"
+        rp-analysis-launch-modal
+        ng-click="open()"
         ng-disabled="!(currentNodeSet && currentNodeSet.node_count > 0)">
         Launch Analysis
       </button>
@@ -78,28 +81,37 @@
         <ui-select-match placeholder="Select a file mapping">
           <span ng-bind="$select.selected.name"></span>
         </ui-select-match>
-        <ui-select-choices repeat="nodeRelationship in (nodeRelationshipList | filter: $select.search)">
+        <ui-select-choices
+          repeat="nodeRelationship in (nodeRelationshipList | filter: $select.search)">
             <span ng-bind="nodeRelationship.name"></span>
         </ui-select-choices>
       </ui-select>
 
-      <button class="btn btn-default btn-xs" ng-click="openNewMappingDialog()
-      ">New ..
+      <button
+        class="btn btn-default btn-xs"
+        ng-click="openNewMappingDialog()">New ..
         .</button>
-      <button class="btn btn-default btn-xs" ng-disabled="!(currentNodeRelationship &&
-      !currentNodeRelationship.is_current)" ng-click="openRenameMappingDialog
-      (currentNodeRelationship)">Rename</button>
-      <button class="btn btn-default btn-xs" ng-disabled="!
-      (currentNodeRelationship &&
-      !currentNodeRelationship.is_current)" ng-click='openDeleteMappingDialog
-      (currentNodeRelationship)'>Delete</button>
+      <button
+        class="btn btn-default btn-xs"
+        ng-disabled="!(currentNodeRelationship && !currentNodeRelationship.is_current)"
+        ng-click="openRenameMappingDialog(currentNodeRelationship)">
+        Rename
+      </button>
+      <button
+        class="btn btn-default btn-xs"
+        ng-disabled="!(currentNodeRelationship && !currentNodeRelationship.is_current)"
+        ng-click='openDeleteMappingDialog(currentNodeRelationship)'>
+        Delete
+      </button>
       <div>
        <br>
       </div>
 
-      <button class="btn btn-warning" rp-analysis-launch-modal ng-click="open()"
-        ng-disabled="!(currentNodeRelationship && currentNodeRelationship
-      .node_pairs.length > 0)">
+      <button
+        class="btn btn-warning"
+        rp-analysis-launch-modal
+        ng-click="open()"
+        ng-disabled="!(currentNodeRelationship && currentNodeRelationship.node_pairs.length > 0)">
         Launch Analysis
       </button>
     </div>
