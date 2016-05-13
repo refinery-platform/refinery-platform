@@ -11,7 +11,10 @@ function IsaTabImportApiFactory (
       create: {
         method: 'POST',
         transformRequest: angular.identity,
-        headers: { 'Content-Type': undefined }
+        headers: {
+          'Content-Type': undefined,
+          'X-Requested-With': 'XMLHttpRequest'
+        }
       }
     }
   );
