@@ -201,7 +201,7 @@ function NodeRelationshipListCtrl (
 
     var modalInstance = $uibModal.open({
       templateUrl: '/static/partials/node-relationship/dialogs/confirmation-dialog.html',
-      controller: 'ConfirmationDialogInstanceCtrl',
+      controller: 'NRConfirmationDialogInstanceCtrl',
       resolve: {
         config: function () {
           return $scope.newDeleteMappingDialogConfig;
