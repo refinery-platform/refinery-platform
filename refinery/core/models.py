@@ -616,6 +616,22 @@ class DataSet(SharableResource):
 
         return file_size
 
+    def get_isa_archive(self):
+        """Returns the isa_archive that was used to create the DataSet"""
+        try:
+            isa_archive = FileStoreItem.objects.get(
+                uuid=InvestigationLink.objects.get(
+                    data_set__uuid=self.uuid).investigation.isarchive_file)
+            return isa_archive
+
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned,
+                InvestigationLink.DoesNotExist,
+                InvestigationLink.MultipleObjectsReturned) as e:
+            logger.error("Error while fetching FileStoreItem or "
+                         "InvestigationLink: %s" % e)
+        return None
+
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
         update_data_set_index(self)
