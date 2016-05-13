@@ -21,7 +21,7 @@
     </div>
 
     <label class="block label-block label-text-left">
-      <span class="label-text label-left min-width-200">Select tabular file:</span>
+      <span class="label-text label-left min-width-200">Select a tabular file:</span>
       <input
         name="tabular_file"
         type="file"
@@ -37,7 +37,11 @@
     </label>
 
     <div ng-if="metadataTable.file">
-      <div class="gridStyle" ui-grid="gridOptions" ui-grid-resize-columns></div>
+      <div
+        class="gridStyle"
+        ui-grid="metadataTable.gridOptions"
+        ui-grid-resize-columns>
+      </div>
 
       <p>
         Please provide the following values (fields marked in
@@ -65,7 +69,6 @@
         <tr>
           <td><strong>Source Column Index</strong></td>
           <td>
-            {% verbatim %}
             <select
               class="select-height"
               name="source_column_index"
@@ -75,7 +78,6 @@
               ng-model="metadataTable.sourceColumnIndex"
               ng-options="id as heading for (id, heading) in metadataTable.metadataHeader">
             </select>
-            {% endverbatim %}
           </td>
           <td>
             columns to be used for source grouping. Values in the columns
