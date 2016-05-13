@@ -83,11 +83,14 @@
         </ui-select-choices>
       </ui-select>
 
-      <a class="btn btn-xs" ng-click="openNewMappingDialog()">New ...</a>
-      <button class="btn btn-xs" ng-disabled="!(currentNodeRelationship &&
+      <button class="btn btn-default btn-xs" ng-click="openNewMappingDialog()
+      ">New ..
+        .</button>
+      <button class="btn btn-default btn-xs" ng-disabled="!(currentNodeRelationship &&
       !currentNodeRelationship.is_current)" ng-click="openRenameMappingDialog
       (currentNodeRelationship)">Rename</button>
-      <button class="btn btn-xs" ng-disabled="!(currentNodeRelationship &&
+      <button class="btn btn-default btn-xs" ng-disabled="!
+      (currentNodeRelationship &&
       !currentNodeRelationship.is_current)" ng-click='openDeleteMappingDialog
       (currentNodeRelationship)'>Delete</button>
       <div>
