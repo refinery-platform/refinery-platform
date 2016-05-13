@@ -6,7 +6,8 @@
 
   <div class="relative">
     <div
-      class="refinery-spinner-max refinery-spinner-bg">
+      class="refinery-spinner-max refinery-spinner-bg"
+      ng-if="isaTabImport.isImporting">
       <div class="refinery-spinner-center">
         <div class="refinery-spinner"></div>
       </div>
@@ -34,7 +35,6 @@
       ng-disabled="!!isaTabImport.file">
 
     <button
-      type="submit"
       id="isa-import-button"
       class="refinery-base btn btn-default"
       ng-disabled="!isaTabImport.file && !isaTabImport.urlToFile">
