@@ -1,7 +1,7 @@
 <div id="isa-tab-import-form">
   <p>
     Please provide a ZIP archive containing an investigation, study, and assay
-    files.
+    file.
   </p>
 
   <div class="relative">
@@ -23,30 +23,33 @@
       </div>
     </div>
 
-    <div class="refinery-subheader">
-      <h4>Option A. Upload from local computer</h4>
-    </div>
-    <input
-      id="id_isa_tab_file"
-      name="isa_tab_file"
-      type="file"
-      ng-disabled="!!isaTabImport.urlToFile"
-      file-model="isaTabImport.file">
+    <label class="block label-block label-text-left">
+      <span class="label-text label-left min-width-200">Select local ISA-Tab archive:</span>
+      <input
+        id="id_isa_tab_file"
+        name="isa_tab_file"
+        type="file"
+        ng-disabled="!!isaTabImport.urlToFile"
+        file-model="isaTabImport.file">
+    </label>
 
-    <div class="refinery-subheader">
-      <h4>Option B. Provide a URL</h4>
-    </div>
-    <input
-      id="id_isa_tab_url"
-      name="isa_tab_url"
-      size="37"
-      type="text"
-      ng-model="isaTabImport.urlToFile"
-      ng-disabled="!!isaTabImport.file">
+    <div class="text-muted m-t-1-2 m-b-1-2">or</div>
+
+    <label class="block label-block label-text-left">
+      <span class="label-text min-width-200">URL to remote ISA-Tab archive:</span>
+      <input
+        id="id_isa_tab_url"
+        name="isa_tab_url"
+        size="37"
+        type="text"
+        placeholder="e.g. http://example.com/isa-tab.zip"
+        ng-model="isaTabImport.urlToFile"
+        ng-disabled="!!isaTabImport.file">
+    </label>
 
     <button
       id="isa-import-button"
-      class="refinery-base btn btn-default"
+      class="block refinery-base btn btn-default"
       ng-click="isaTabImport.startImport()"
       ng-disabled="
         (
