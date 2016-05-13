@@ -17,6 +17,8 @@ function DataSetPreviewCtrl (
   analysisService,
   dashboardDataSetPreviewService,
   dashboardExpandablePanelService,
+  dataSetTakeOwnershipService,
+  dashboardDataSetsReloadService,
   filesize
 ) {
   this.$log = $log;
@@ -35,6 +37,8 @@ function DataSetPreviewCtrl (
   this.analysisService = analysisService;
   this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
   this.dashboardExpandablePanelService = dashboardExpandablePanelService;
+  this.dataSetTakeOwnershipService = dataSetTakeOwnershipService;
+  this.dashboardDataSetsReloadService = dashboardDataSetsReloadService;
   this.filesize = filesize;
 
   this.maxBadges = this.settings.dashboard.preview.maxBadges;
@@ -273,6 +277,41 @@ DataSetPreviewCtrl.prototype.getPermissionLevel = function (perms) {
   return 'read';
 };
 
+/**
+ * Import data set from public into private space.
+ *
+ * @method  importDataSet
+ * @author  Fritz Lekschas
+ * @date    2016-05-11
+ */
+DataSetPreviewCtrl.prototype.importDataSet = function () {
+  var self = this;
+
+  // Only allow the user to click on the button once per page load.
+  this.importDataSetStarted = true;
+
+  if (!this.isDataSetReImporting) {
+    this.isDataSetReImporting = true;
+    this.dataSetTakeOwnershipService
+      .save({
+        data_set_uuid: this.dataSetDetails.uuid
+      })
+      .$promise
+      .then(function (data) {
+        self.isDataSetReImportSuccess = true;
+        self.dashboardDataSetsReloadService.reload(true);
+        self.dashboardDataSetPreviewService.preview(data.new_data_set_uuid);
+      })
+      .catch(function (error) {
+        self.isDataSetReImportFail = true;
+        self.$log.error(error);
+      })
+      .finally(function () {
+        self.isDataSetReImporting = false;
+      });
+  }
+};
+
 DataSetPreviewCtrl.prototype.loadCitation = function (
   publications, index, id) {
   this.studies.publications[index].citation = {
@@ -305,6 +344,7 @@ DataSetPreviewCtrl.prototype.loadCitation = function (
  * @param   {String}  dataSetUuid  UUID if data set to be previewed.
  */
 DataSetPreviewCtrl.prototype.loadData = function (dataSetUuid) {
+  this.importDataSetStarted = false;
   this.loading = true;
   this.permissionsLoading = true;
   this.userName = undefined;
@@ -435,6 +475,8 @@ angular
     'analysisService',
     'dashboardDataSetPreviewService',
     'dashboardExpandablePanelService',
+    'dataSetTakeOwnershipService',
+    'dashboardDataSetsReloadService',
     'filesize',
     DataSetPreviewCtrl
   ]);

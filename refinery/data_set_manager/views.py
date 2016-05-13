@@ -26,7 +26,8 @@ from django.http import Http404
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
 
-from core.models import os, get_user_import_dir
+from core.models import os, get_user_import_dir, DataSet
+from core.utils import get_full_url
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
 from file_store.tasks import download_file, DownloadError
@@ -37,8 +38,8 @@ from .utils import (generate_solr_params, search_solr, format_solr_response,
                     get_owner_from_assay, update_attribute_order_ranks,
                     is_field_in_hidden_list, customize_attribute_response)
 
-
 logger = logging.getLogger(__name__)
+
 
 # Data set import
 
@@ -71,6 +72,66 @@ class ImportISATabView(View):
             response = HttpResponseRedirect(reverse('process_isa_tab'))
             response.set_cookie('isa_tab_url', isa_tab_url)
             return response
+
+
+class TakeOwnershipOfPublicDatasetView(View):
+    """Capture relative ISA archive URL from POST requests submitted from
+    external sites and formulates full url to
+    """
+
+    def post(self, request, *args, **kwargs):
+
+        from_old_template = False
+
+        if 'isa_tab_url' in request.POST:
+            full_isa_tab_url = get_full_url(request.POST['isa_tab_url'])
+            from_old_template = True
+        else:
+            request_body = request.body
+            if not request_body:
+                err_msg = "Neither form data nor a request body has been sent."
+                logger.error(err_msg)
+                return HttpResponseBadRequest(err_msg)
+
+            try:
+                body = json.loads(request_body)
+            except Exception as e:
+                err_msg = "Request body is no valid JSON"
+                logger.error("%s: %s" % (err_msg, e))
+                return HttpResponseBadRequest("%s." % err_msg)
+
+            if "data_set_uuid" in body:
+                data_set_uuid = body["data_set_uuid"]
+            else:
+                err_msg = "Request body doesn't contain data_set_uuid."
+                logger.error(err_msg)
+                return HttpResponseBadRequest(err_msg)
+
+            try:
+                full_isa_tab_url = get_full_url(DataSet.objects.get(
+                    uuid=data_set_uuid).get_isa_archive().get_datafile_url())
+            except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned,
+                    Exception) as e:
+                err_msg = "Something went wrong"
+                logger.error("%s: %s" % (err_msg, e))
+                return HttpResponseBadRequest("%s." % err_msg)
+
+        if from_old_template:
+            # Redirect to process_isa_tab view
+            response = HttpResponseRedirect(
+                reverse('process_isa_tab')
+            )
+        else:
+            # Redirect to process_isa_tab view with arg 'ajax' if request is
+            #  not coming from old Django Template
+            response = HttpResponseRedirect(
+                reverse('process_isa_tab', args=['ajax'])
+            )
+
+        # set cookie
+        response.set_cookie('isa_tab_url', full_isa_tab_url)
+
+        return response
 
 
 class ImportISATabFileForm(forms.Form):
@@ -136,11 +197,16 @@ class ProcessISATabView(View):
         # TODO: exception handling
         os.unlink(temp_file_path)
         if dataset_uuid:
-            # TODO: redirect to the list of analysis samples for the given UUID
-            response = HttpResponseRedirect(
-                reverse(self.success_view_name, args=(dataset_uuid,)))
-            response.delete_cookie(self.isa_tab_cookie_name)
-            return response
+            if 'ajax' in kwargs and kwargs['ajax']:
+                return HttpResponse(
+                    json.dumps({'new_data_set_uuid': dataset_uuid}),
+                    'application/json'
+                )
+            else:
+                response = HttpResponseRedirect(
+                    reverse(self.success_view_name, args=(dataset_uuid,)))
+                response.delete_cookie(self.isa_tab_cookie_name)
+                return response
         else:
             error = "Problem parsing ISA-Tab file"
             context = RequestContext(request, {'form': form, 'error': error})
@@ -195,8 +261,6 @@ class ProcessISATabView(View):
             # TODO: exception handling (OSError)
             os.unlink(temp_file_path)
             if dataset_uuid:
-                # TODO: redirect to the list of analysis samples for the given
-                # UUID
                 return HttpResponseRedirect(
                     reverse(self.success_view_name, args=(dataset_uuid,)))
             else:
@@ -239,13 +303,15 @@ class ProcessMetadataTableView(View):
             title = request.POST['title']
             data_file_column = request.POST['data_file_column']
         except (KeyError, ValueError):
-            error = {'error_message':
-                     'Import failed because required parameters are missing'}
+            error = {
+                'error_message':
+                    'Import failed because required parameters are missing'}
             return render(request, self.template_name, error)
         source_column_index = request.POST.getlist('source_column_index')
         if not source_column_index:
-            error = {'error_message':
-                     'Import failed because no source columns were selected'}
+            error = {
+                'error_message':
+                    'Import failed because no source columns were selected'}
             return render(request, self.template_name, error)
         # workaround for breaking change in Angular
         # https://github.com/angular/angular.js/commit/7fda214c4f65a6a06b25cf5d5aff013a364e9cef
@@ -545,13 +611,13 @@ class AssaysAttributes(APIView):
                     attributes.append(attribute)
 
         # Reverse check, so can remove objects from the end
-        for ind in range(len(attributes)-1, -1, -1):
+        for ind in range(len(attributes) - 1, -1, -1):
             if is_field_in_hidden_list(attributes[ind].get('solr_field')):
                 del attributes[ind]
             else:
                 attributes[ind]['display_name'] = customize_attribute_response(
-                        [attributes[ind].get('solr_field')])[0].get(
-                        'display_name')
+                    [attributes[ind].get('solr_field')])[0].get(
+                    'display_name')
 
         # for non-owners need to reorder the ranks
         if owner != request_user:
@@ -571,14 +637,14 @@ class AssaysAttributes(APIView):
 
             if id:
                 attribute_order = AttributeOrder.objects.get(
-                        assay__uuid=uuid, id=id)
+                    assay__uuid=uuid, id=id)
             elif solr_field:
                 attribute_order = AttributeOrder.objects.get(
-                        assay__uuid=uuid, solr_field=solr_field)
+                    assay__uuid=uuid, solr_field=solr_field)
             else:
                 return Response(
-                        'Requires attribute id or solr_field name.',
-                        status=status.HTTP_400_BAD_REQUEST)
+                    'Requires attribute id or solr_field name.',
+                    status=status.HTTP_400_BAD_REQUEST)
 
             # updates all ranks in assay's attribute order
             if new_rank and new_rank != attribute_order.rank:
@@ -594,17 +660,17 @@ class AssaysAttributes(APIView):
                 serializer.save()
                 attributes = serializer.data
                 attributes['display_name'] = customize_attribute_response(
-                        [attributes.get('solr_field')])[0].get(
-                        'display_name')
+                    [attributes.get('solr_field')])[0].get(
+                    'display_name')
 
                 return Response(
-                        attributes,
-                        status=status.HTTP_202_ACCEPTED
+                    attributes,
+                    status=status.HTTP_202_ACCEPTED
                 )
             return Response(
-                        serializer.errors,
-                        status=status.HTTP_400_BAD_REQUEST
-                )
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
         else:
             message = 'Only owner may edit attribute order.'
             return Response(message, status=status.HTTP_401_UNAUTHORIZED)
