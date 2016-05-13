@@ -1,7 +1,9 @@
 'use strict';
 
-function IsaTabImportCtrl ($log, isaTabImportApi) {
+function IsaTabImportCtrl ($log, $timeout, $window, isaTabImportApi) {
   this.$log = $log;
+  this.$timeout = $timeout;
+  this.$window = $window;
   this.isaTabImportApi = isaTabImportApi;
 }
 
@@ -57,8 +59,12 @@ IsaTabImportCtrl.prototype.startImport = function () {
   return this.isaTabImportApi
     .create({}, formData)
     .$promise
-    .then(function (data) {
-      self.$log.info('Yeah! Success', data);
+    .then(function (response) {
+      self.importedDataSetUuid = response.data.new_data_set_uuid;
+      self.isSuccessfullyImported = true;
+      self.$timeout(function () {
+        self.$window.location.href = '/data_sets/' + self.importedDataSetUuid;
+      }, 2500);
     })
     .catch(function (error) {
       self.$log.error(error);
@@ -72,6 +78,8 @@ angular
   .module('refineryDataSetImport')
   .controller('IsaTabImportCtrl', [
     '$log',
+    '$timeout',
+    '$window',
     'isaTabImportApi',
     IsaTabImportCtrl
   ]);
