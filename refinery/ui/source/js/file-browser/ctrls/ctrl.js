@@ -325,7 +325,7 @@ function FileBrowserCtrl (
           ' ng-class="col.colIndex()" style="text-align:center">' +
           '<div ng-if="COL_FIELD"' +
             'title="Download File \{{COL_FIELD}}\">' +
-          '<a href="{{COL_FIELD}}">' +
+          '<a href="{{COL_FIELD}}" target="_blank">' +
           '<i class="fa fa-arrow-circle-o-down"></i></a>' +
           '</div>' +
           '<div ng-if="!COL_FIELD"' +
