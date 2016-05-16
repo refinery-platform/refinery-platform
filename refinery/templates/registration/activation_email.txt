@@ -1,6 +1,11 @@
 {% load humanize %}
-Someone, hopefully you, signed up for a new account at {{site.domain}} using this email address. If it was you, and you'd like to activate and use your account, click the link below or copy and paste it into your web browser's address bar:
+Dear Admin,
+{{ registered_user_username }} signed up for a new account at {{site}} using this email address: {{ registered_user_email }}
 
-http://{{site.domain}}{% url 'registration.views.activate' activation_key %}
+If the meet the proper requirements, please activate their account by
+clicking this link below.
 
-If you didn't request this, you don't need to do anything; you won't receive any more email from us, and the account will expire automatically in {{ expiration_days }} days.
+http://{{ site }}{% url 'registration.views.activate' activation_key %}
+
+If you don't take any action, the account in question will expire
+automatically in {{ expiration_days }} days.
