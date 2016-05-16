@@ -3,19 +3,17 @@ Created on Apr 15, 2012
 
 @author: nils
 '''
-
+from django import forms
 from django.contrib.auth.models import User
 from django.forms import ModelForm, ValidationError
+from django.utils.translation import ugettext_lazy as _
 
-from registration.forms import (
-    RegistrationFormUniqueEmail, RegistrationFormTermsOfService
-)
+from registration.forms import (RegistrationFormUniqueEmail, RegistrationForm)
 
 from core.models import Project, UserProfile, Workflow, DataSet
 
 
 class ProjectForm(ModelForm):
-
     def __init__(self, *args, **kwargs):
         super(ProjectForm, self).__init__(*args, **kwargs)
         self.fields['slug'].label = "Shortcut Name"
@@ -25,8 +23,33 @@ class ProjectForm(ModelForm):
         fields = ["name", "slug", "summary", "description"]
 
 
-class RegistrationFormTermsOfServiceUniqueEmail(
-        RegistrationFormTermsOfService, RegistrationFormUniqueEmail):
+class RegistrationFormCustomFields(RegistrationForm):
+    """
+    Subclass of ``RegistrationForm`` which adds three custom fields required
+    for User registration: first_name, last_name, and affiliation
+
+    """
+    first_name = forms.CharField(
+        widget=forms.TextInput,
+        error_messages={'required': _("You must provide a First Name")},
+        label=_("First Name")
+    )
+    last_name = forms.CharField(
+        widget=forms.TextInput,
+        error_messages={'required': _("You must provide a Last Name")},
+        label=_("Last Name")
+    )
+    affiliation = forms.CharField(
+        widget=forms.TextInput,
+        error_messages={'required': _("You must provide an Affiliation")},
+        label=_("Affiliation")
+    )
+
+
+class RegistrationFormWithCustomFields(
+    RegistrationFormUniqueEmail,
+    RegistrationFormCustomFields
+):
     pass
 
 
