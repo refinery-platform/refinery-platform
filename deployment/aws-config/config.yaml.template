@@ -12,6 +12,16 @@
 # Typically this file, `config.yaml.template`,
 # is copied to `config.yaml` and edited.
 
+# RDS_SNAPSHOT and DATA_SNAPSHOT are only used when
+# you are restoring a Refinery Platform Instance from
+# the snapshots of a previously created Refinery stack.
+# The first time you create a Refinery stack
+# you will not need to specify these;
+# fresh RDS instances and data volumes are created.
+# RDS_SNAPSHOT: refinery-web-XXX
+# DATA_SNAPSHOT: snap-XXX
+
+
 # Name and URL for the site.
 # You will need to change these.
 SITE_NAME: Refinery
