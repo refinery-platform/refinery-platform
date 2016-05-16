@@ -35,7 +35,6 @@ python stack.py > web.json
 #   https://help.ubuntu.com/community/CloudInit
 
 import datetime
-import glob
 import json     # for json.dumps
 import os       # for os.popen, os.urandom
 import random
@@ -286,7 +285,7 @@ def load_config():
         auto_config = {}
 
     duplicated_keys = (set(manual_config.keys()) &
-      set(auto_config.keys()))
+                       set(auto_config.keys()))
 
     for k in duplicated_keys:
         sys.stderr.write(
@@ -313,9 +312,7 @@ def load_config():
         auto_config['ADMIN_PASSWORD'] = random_password(8)
 
     if 'S3_CONFIG_BUCKET' not in config:
-        # Name and create a bucket.
-        bucket_name = 'refinery-' + random_alnum(13)
-        s3.create_bucket(Bucket=bucket_name)
+        bucket_name = create_random_s3_bucket()
 
         auto_config['S3_CONFIG_BUCKET'] = bucket_name
 
@@ -338,6 +335,7 @@ def load_config():
 
     return config
 
+
 def _load_config_file(filename):
     """
     Load a single file.
@@ -353,6 +351,19 @@ def _load_config_file(filename):
 
     # Convert "null" to empty dict()
     return {}
+
+
+def create_random_s3_bucket():
+    """
+    Choose a random bucket name and create the S3 bucket.
+    """
+
+    # http://boto3.readthedocs.org/en/latest/guide/migrations3.html
+    s3 = boto3.resource('s3')
+
+    bucket_name = 'refinery-' + random_alnum(13)
+    s3.create_bucket(Bucket=bucket_name)
+    return bucket_name
 
 
 def save_s3_config(config, suffix):
@@ -386,15 +397,16 @@ def report_missing_keys(config):
     Collect and report list of missing keys.
     """
 
-    required = ['KEY_NAME', 'RDS_SUPERUSER_PASSWORD',
-      'SITE_NAME', 'SITE_URL', 'ADMIN_PASSWORD']
+    required = [
+        'KEY_NAME', 'RDS_SUPERUSER_PASSWORD',
+        'SITE_NAME', 'SITE_URL', 'ADMIN_PASSWORD']
     bad = []
     for key in required:
         if key not in config:
             bad.append(key)
     if bad:
-        sys.stderr.write("{:s} must have values for:\n{!r}\n".format(
-            config_dir, bad))
+        sys.stderr.write("aws-config\ must have values for:\n{!r}\n".format(
+            bad))
         raise ConfigError()
     return True
 
@@ -410,6 +422,7 @@ def random_alnum(n):
     return ''.join(
         random.choice(string.ascii_lowercase + string.digits)
         for _ in range(n))
+
 
 def random_password(n):
     """
