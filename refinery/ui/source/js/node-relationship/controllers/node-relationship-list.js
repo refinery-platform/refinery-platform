@@ -96,11 +96,7 @@ function NodeRelationshipListCtrl (
         // if a node relationship should be selected: find its index
         if (selectedNodeRelationship) {
           $scope.selectedNodeRelationship.select = selectedNodeRelationship;
-
-          // if node relationship was found in list: fire update
-          if (selectedNodeRelationship >= 0) {
-            $scope.updateCurrentNodeRelationship();
-          }
+          $scope.updateCurrentNodeRelationship();
         }
       });
   };
