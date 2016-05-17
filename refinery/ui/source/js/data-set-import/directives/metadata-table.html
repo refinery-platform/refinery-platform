@@ -32,7 +32,17 @@
         class="icon-only"
         ng-if="metadataTable.file"
         ng-click="metadataTable.clearFile()">
-        <i class="fa fa-times-circle" aria-hidden="true"></i>
+        <i
+          class="fa fa-times-circle"
+          aria-hidden="true"
+          title="Clear selected file"
+          refinery-tooltip
+          refinery-tooltip-container="body"
+          refinery-tooltip-placement="top"
+          refinery-tooltip-delay-show="750"
+          refinery-tooltip-delay-hide="150"
+          refinery-tooltip-hide-on-click="true">
+        </i>
       </button>
     </label>
 
