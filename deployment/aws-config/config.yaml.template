@@ -39,6 +39,9 @@ ADMIN: "refinery-registration@example.org"
 DEFAULT_FROM_EMAIL: "refinery-registration@example.org"
 SERVER_EMAIL: "refinery-registration@example.org"
 
+# Size, in Gigabytes, of the Data volume.
+DATA_VOLUME_SIZE: 100
+
 # The name of the EC2 key pair to use for SSH.
 # (this key pair is required to already exist in the AWS account)
 KEY_NAME: "id_rsa"

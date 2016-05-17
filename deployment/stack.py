@@ -140,7 +140,7 @@ def main():
     volume_properties = {
         'AvailabilityZone': config['AVAILABILITY_ZONE'],
         'Encrypted': True,
-        'Size': 100,
+        'Size': config['DATA_VOLUME_SIZE'],
         'Tags': tags.load(),
         'VolumeType': 'gp2'
     }
