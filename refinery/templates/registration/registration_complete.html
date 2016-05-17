@@ -6,7 +6,7 @@
 
 {% block subheader %}
 <div class="page-header">
-	<h1>Registration complete</h1>	
+	<h1>Registration complete</h1>
 </div>
 {% endblock %}
 
@@ -15,25 +15,25 @@
 	<div class="row">
 		<div class="refinery-header">
 			<span class="refinery-header-left">
-				<h3>Check your email</h3>
+				<h3>Thank you for registering!</h3>
 			</span>
 		</div>
 		<p>
-			An activation link has been sent to the email address you supplied, along 
-			with instructions for activating your account.
+			Your account is currently pending approval. An activation link has
+            been sent to the Administrator.
 		</p>
-			
+
 		{% if EMAIL_BACKEND == "django.core.mail.backends.filebased.EmailBackend" %}
 				<div class="alert alert-warning">
 				Since no mail server has been configured yet, a copy of the email was saved to <i>{{ EMAIL_FILE_PATH }}.</i>
 				</div>
-		{% endif %} 
+		{% endif %}
 
 		{% if EMAIL_BACKEND == "django.core.mail.backends.console.EmailBackend" %}
 				<div class="alert alert-warning">
 				Since no mail server has been configured yet, a copy of the email was written to the console.</i>
 				</div>
-		{% endif %} 
+		{% endif %}
 
 	</div>
 </div>

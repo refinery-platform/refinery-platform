@@ -26,7 +26,7 @@ from django.contrib.messages import get_messages
 from django.contrib.messages import info
 from django.contrib.sites.models import Site
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
-from django.core.mail import mail_admins, send_mail
+from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.models import Max
 from django.db.models.fields import IntegerField
@@ -37,12 +37,14 @@ from django.forms import ValidationError
 from django.template import loader, Context
 
 from bioblend import galaxy
+from django.template.loader import render_to_string
 from django_extensions.db.fields import UUIDField
 from django_auth_ldap.backend import LDAPBackend
 from guardian.models import UserObjectPermission
 from guardian.shortcuts import (get_users_with_perms,
                                 get_groups_with_perms, assign_perm,
                                 remove_perm, get_objects_for_group)
+from registration.models import RegistrationProfile, RegistrationManager
 from registration.signals import user_registered, user_activated
 
 from data_set_manager.models import (Investigation, Node, Study, Assay,
@@ -59,8 +61,7 @@ from .utils import (update_data_set_index, delete_data_set_index,
                     add_read_access_in_neo4j, remove_read_access_in_neo4j,
                     delete_data_set_neo4j, delete_ontology_from_neo4j,
                     delete_analysis_index, invalidate_cached_object,
-                    get_aware_local_time)
-
+                    get_aware_local_time, email_admin)
 
 logger = logging.getLogger(__name__)
 
@@ -136,14 +137,7 @@ def create_user_profile_registered(sender, user, request, **kwargs):
         "user profile for user %s has been created after registration %s",
         user, get_aware_local_time()
     )
-    mail_admins(
-        'New User Registered', 'User %s registered at %s'
-        % (user, get_aware_local_time())
-    )
-    logger.info(
-        "email has been sent to admins informing of registration of user %s",
-        user
-    )
+
 
 user_registered.connect(
     create_user_profile_registered,
@@ -159,8 +153,10 @@ def messages_dedup(request, msg):
 
 
 def register_handler(request, sender, user, **kwargs):
-    messages_dedup(request, 'Thank you!  Your account has been activated.')
-    messages.success(request, 'Thank you!  Your account has been activated.')
+    # Send email to user once an Admin activates their account
+    user.email_user(settings.REFINERY_WELCOME_EMAIL_SUBJECT,
+                    settings.REFINERY_WELCOME_EMAIL_MESSAGE,
+                    settings.DEFAULT_FROM_EMAIL)
 
 
 user_activated.connect(register_handler, dispatch_uid='activated')
@@ -2215,3 +2211,107 @@ class AuthenticationFormUsernameOrEmail(AuthenticationForm):
                     params={'username': self.username_field.verbose_name},
                 )
         return username
+
+
+class CustomRegistrationManager(RegistrationManager):
+    def custom_create_inactive_user(self, username, email, password,
+                                    site, first_name, last_name,
+                                    affiliation, send_email=True):
+        """
+        Create a new, inactive ``User``, generate a
+        ``CustomRegistrationProfile`` and email its activation key to the
+        "Admin" User, returning the new ``User``.
+
+        By default, an activation email will be sent to the Admin. To disable
+        this, pass ``send_email=False``.
+
+        """
+        new_user = User.objects.create_user(username, email, password)
+        new_user.is_active = False
+
+        # Adding custom fields
+        new_user.first_name = first_name
+        new_user.last_name = last_name
+        new_user.affiliation = affiliation
+        new_user.save()
+
+        registration_profile = self.create_profile(new_user)
+
+        if send_email:
+            registration_profile.custom_send_activation_email(site)
+
+        return new_user
+
+    create_inactive_user = transaction.commit_on_success(
+        custom_create_inactive_user)
+
+
+class CustomRegistrationProfile(RegistrationProfile):
+    objects = CustomRegistrationManager()
+
+    def custom_send_activation_email(self, site):
+        """
+        Send a custom activation email to the "Admin" user.
+
+        The activation email will make use of two templates:
+
+        ``registration/activation_email_subject.txt``
+            This template will be used for the subject line of the
+            email. Because it is used as the subject line of an email,
+            this template's output **must** be only a single line of
+            text; output longer than one line will be forcibly joined
+            into only a single line.
+
+        ``registration/activation_email.txt``
+            This template will be used for the body of the email.
+
+        These templates will each receive the following context
+        variables:
+
+        ``activation_key``
+            The activation key for the new account.
+
+        ``expiration_days``
+            The number of days remaining during which the account may
+            be activated.
+
+        ``site``
+            An object representing the site on which the user
+            registered; depending on whether ``django.contrib.sites``
+            is installed, this may be an instance of either
+            ``django.contrib.sites.models.Site`` (if the sites
+            application is installed) or
+            ``django.contrib.sites.models.RequestSite`` (if
+            not). Consult the documentation for the Django sites
+            framework for details regarding these objects' interfaces.
+
+
+        ``registered_user_email``
+            The email address of the User who jsut registered
+
+        ``registered_user_username``
+            The username of the User who just registered
+
+
+        """
+        ctx_dict = {'activation_key': self.activation_key,
+                    'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
+                    'site': site.domain,
+                    'registered_user_email': self.user.email,
+                    'registered_user_username': self.user.username
+                    }
+        subject = render_to_string('registration/activation_email_subject.txt',
+                                   ctx_dict)
+        # Email subject *must not* contain newlines
+        subject = ''.join(subject.splitlines())
+
+        message = render_to_string('registration/activation_email.txt',
+                                   ctx_dict)
+
+        # Email the admin of this instance
+        email_admin(subject, message)
+
+        logger.info(
+            "An email has been sent to admins informing of registration of  "
+            "user %s", self.user
+        )

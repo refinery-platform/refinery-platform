@@ -3,6 +3,8 @@ import logging
 
 
 import py2neo
+from django.core.mail import send_mail
+
 import core
 from urlparse import urlparse, urljoin
 
@@ -694,3 +696,11 @@ def is_url(string):
 def get_aware_local_time():
     # Returns the local time, model field default helper
     return timezone.localtime(timezone.now())
+
+
+def email_admin(subject, message):
+        """
+        Sends an email to the admin email configured in our Django Settings
+        """
+        send_mail(subject, message, settings.SERVER_EMAIL,
+                  [settings.ADMINS[0][1]])

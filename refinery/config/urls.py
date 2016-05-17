@@ -7,7 +7,6 @@ from haystack.forms import FacetedSearchForm
 from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
 from registration.backends.default.views import ActivationView
-from registration.backends.default.views import RegistrationView
 from tastypie.api import Api
 from rest_framework import routers
 
@@ -20,7 +19,7 @@ from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     UserProfileResource
 from core.models import DataSet, AuthenticationFormUsernameOrEmail
 
-from core.views import WorkflowViewSet
+from core.views import WorkflowViewSet, CustomRegistrationView
 from file_store.views import FileStoreItemViewSet
 
 from data_set_manager.views import Assays, AssaysFiles, AssaysAttributes
@@ -30,8 +29,7 @@ from data_set_manager.api import AttributeOrderResource, StudyResource,\
     ProtocolReferenceResource, ProtocolReferenceParameterResource, \
     PublicationResource, AttributeResource
 
-from registration.forms import RegistrationFormUniqueEmail
-
+from core.forms import RegistrationFormWithCustomFields
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +140,8 @@ urlpatterns = patterns(
 
     url(
         r'^accounts/register/$',
-        RegistrationView.as_view(form_class=RegistrationFormUniqueEmail),
+        CustomRegistrationView.as_view(
+            form_class=RegistrationFormWithCustomFields),
         name='registration.views.register'
     ),
 

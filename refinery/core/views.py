@@ -9,13 +9,16 @@ from urlparse import urljoin
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.sites.models import get_current_site
+from django.contrib.sites.models import get_current_site, Site
+from django.contrib.sites.models import RequestSite
 from django.core.urlresolvers import reverse
 from django.http import (
     HttpResponse, HttpResponseForbidden, HttpResponseRedirect)
 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext, loader
+from registration.views import RegistrationView
+from registration import signals
 
 from guardian.shortcuts import get_perms
 import requests
@@ -26,8 +29,8 @@ from core.forms import (
 )
 from core.models import (
     ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
-    Analysis, Invitation, Ontology
-)
+    Analysis, Invitation, Ontology,
+    CustomRegistrationProfile)
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
@@ -965,3 +968,62 @@ class WorkflowViewSet(viewsets.ModelViewSet):
     """
     queryset = Workflow.objects.all()
     serializer_class = WorkflowSerializer
+
+
+class CustomRegistrationView(RegistrationView):
+
+    def register(self, request, **cleaned_data):
+        """
+        Given a username, email address, password, first name, last name,
+        and affiliation, register a new user account, which will initially
+        be inactive.
+
+        Along with the new ``User`` object, a new
+        ``core.models.CustomRegistrationProfile`` will be created,
+        tied to that ``User``, containing the activation key which
+        will be used for this account.
+
+        An email will be sent to the administrator email address; this
+        email should contain an activation link. The email will be
+        rendered using two templates. See the documentation for
+        ``CustomRegistrationProfile.custom_send_activation_email()`` for
+        information about these templates and the contexts provided to
+        them.
+
+        After the ``User`` and ``CustomRegistrationProfile`` are created and
+        the activation email is sent, the signal
+        ``registration.signals.user_registered`` will be sent, with
+        the new ``User`` as the keyword argument ``user`` and the
+        class of this backend as the sender.
+
+        """
+        username = cleaned_data['username']
+        email = cleaned_data['email']
+        password = cleaned_data['password1']
+        first_name = cleaned_data['first_name']
+        last_name = cleaned_data['last_name']
+        affiliation = cleaned_data['affiliation']
+
+        if Site._meta.installed:
+            site = Site.objects.get_current()
+        else:
+            site = RequestSite(request)
+
+        # Create a new inactive User with the extra custom fields
+        new_user = CustomRegistrationProfile.objects \
+            .custom_create_inactive_user(
+                username, email, password, site,
+                first_name, last_name, affiliation)
+
+        signals.user_registered.send(sender=self.__class__,
+                                     user=new_user,
+                                     request=request)
+        return new_user
+
+    def get_success_url(self, request, user):
+        """
+        Return the name of the URL to redirect to after successful
+        user registration.
+
+        """
+        return ('registration_complete', (), {})
