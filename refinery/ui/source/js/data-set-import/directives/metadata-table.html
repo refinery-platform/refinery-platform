@@ -46,6 +46,43 @@
       </button>
     </label>
 
+    <label class="block label-block label-text-left">
+      <span class="label-text label-left min-width-200">Comma separation:</span>
+      <input
+        type="radio"
+        value="comma"
+        ng-model="metadataTable.separator"
+        ng-change="metadataTable.setParser()"
+        ng-disabled="!!metadataTable.importOption">
+    </label>
+
+    <label class="block label-block label-text-left">
+      <span class="label-text label-left min-width-200">Tab separation:</span>
+      <input
+        type="radio"
+        value="tab"
+        ng-model="metadataTable.separator"
+        ng-change="metadataTable.setParser()"
+        ng-disabled="!!metadataTable.importOption">
+    </label>
+
+    <label class="block label-block label-text-left">
+      <span class="label-text label-left min-width-200">Custom separation:</span>
+      <input
+        type="radio"
+        value="custom"
+        ng-model="metadataTable.separator"
+        ng-change="metadataTable.setParser()"
+        ng-disabled="!!metadataTable.importOption">
+      <input
+        type="text"
+        class="m-l-1"
+        placeholder="E.g. ';'"
+        ng-model="metadataTable.customSeparator"
+        ng-change="metadataTable.setParser()"
+        ng-disabled="!!metadataTable.importOption">
+    </label>
+
     <div ng-if="metadataTable.file">
       <div class="refinery-subheader">
         <h4>Preview (5 rows):</h4>

@@ -15,6 +15,9 @@ function MetadataTableImportCtrl (
   };
   this.badFileList = [];
   this.dataFileColumn = null;
+
+  this.separator = 'comma';
+  this.customSeparator = null;
 }
 
 Object.defineProperty(
@@ -55,6 +58,25 @@ MetadataTableImportCtrl.prototype.clearTable = function () {
   this.columnDefs = [];
 };
 
+MetadataTableImportCtrl.prototype.setParser = function () {
+  var self = this;
+
+  switch (self.separator) {
+    case 'tab':
+      self.parser = self.d3.tsv.parse;
+      break;
+    case 'custom':
+      if (self.customSeparator) {
+        self.parser = self.d3.dsv(self.customSeparator, 'text/plain').parse;
+      }
+      break;
+    default:
+      // Comma separation is assumed by default.
+      self.parser = self.d3.csv.parse;
+      break;
+  }
+};
+
 MetadataTableImportCtrl.prototype.renderTable = function () {
   var self = this;
 
@@ -64,7 +86,7 @@ MetadataTableImportCtrl.prototype.renderTable = function () {
   var reader = new FileReader();
   reader.onload = function (event) {
     self.$rootScope.$apply(function () {
-      self.metadata = self.d3.tsv.parse(event.target.result);
+      self.metadata = self.parser(event.target.result);
       // Get 5 lines to display on screen
       self.metadataSample = self.metadata.slice(0, 5);
       self.metadataHeader = Object.keys(self.metadataSample[0]);
