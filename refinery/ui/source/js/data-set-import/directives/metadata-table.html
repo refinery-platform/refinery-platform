@@ -106,14 +106,14 @@
         <strong>bold</strong> are required):
       </p>
 
-      <div class="row v-centered-row">
+      <div class="row m-t-1-4 m-b-1-4">
         <div class="col-sm-6 col-md-3 col-lg-2">
           <strong>Title</strong>
         </div>
         <div class="col-sm-6 col-md-3 col-lg-2">
           <input
             type="text"
-            class="refinery-base"
+            class="width-95"
             name="title"
             required
             ng-model="metadataTable.title"/>
@@ -123,13 +123,13 @@
         </div>
       </div>
 
-      <div class="row v-centered-row">
+      <div class="row m-t-1-4 m-b-1-4">
         <div class="col-sm-6 col-md-3 col-lg-2">
           <strong>Source Index Column</strong>
         </div>
         <div class="col-sm-6 col-md-3 col-lg-2">
           <select
-            class="select-height"
+            class="select-height refinery-base width-95"
             name="source_column_index"
             required
             multiple
@@ -146,13 +146,14 @@
         </div>
       </div>
 
-      <div class="row v-centered-row">
+      <div class="row m-t-1-4 m-b-1-4">
         <div class="col-sm-6 col-md-3 col-lg-2">
           <strong>Data File Column</strong>
         </div>
         <div class="col-sm-6 col-md-3 col-lg-2">
           <select
             name="data_file_column"
+            class="width-95"
             required
             ng-model="metadataTable.data.dataFileColumn"
             ng-options="heading for (id, heading) in metadataTable.metadataHeader track by id">
@@ -165,13 +166,14 @@
         </div>
       </div>
 
-      <div class="row v-centered-row">
+      <div class="row m-t-1-4 m-b-1-4">
         <div class="col-sm-6 col-md-3 col-lg-2">
           Auxiliary File Column
         </div>
         <div class="col-sm-6 col-md-3 col-lg-2">
           <select
             name="aux_file_column"
+            class="width-95"
             ng-model="metadataTable.auxFileColumn"
             ng-options="heading for heading in metadataTable.metadataHeader">
             <option value=""></option>
@@ -183,13 +185,14 @@
         </div>
       </div>
 
-      <div class="row v-centered-row">
+      <div class="row m-t-1-4 m-b-1-4">
         <div class="col-sm-6 col-md-3 col-lg-2">
           Species Column
         </div>
         <div class="col-sm-6 col-md-3 col-lg-2">
           <select
             name="species_column"
+            class="width-95"
             ng-model="metadataTable.speciesColumn"
             ng-options="heading for heading in metadataTable.metadataHeader">
             <option value=""></option>
@@ -200,14 +203,14 @@
         </div>
       </div>
 
-      <div class="row v-centered-row">
+      <div class="row m-t-1-4 m-b-1-4">
         <div class="col-sm-6 col-md-3 col-lg-2">
           Base Path
         </div>
         <div class="col-sm-6 col-md-3 col-lg-2">
           <input
             type="text"
-            class="refinery-base"
+            class="width-95"
             name="base_path"
             ng-model="metadataTable.basePath">
         </div>
@@ -216,13 +219,14 @@
         </div>
       </div>
 
-      <div class="row v-centered-row">
+      <div class="row m-t-1-4 m-b-1-4">
         <div class="col-sm-6 col-md-3 col-lg-2">
           Annotation Column
         </div>
         <div class="col-sm-6 col-md-3 col-lg-2">
           <select
             name="annotation_column"
+            class="width-95"
             ng-model="metadataTable.annotationColumn"
             ng-options="heading for heading in metadataTable.metadataHeader">
             <option value=""></option>
@@ -234,13 +238,14 @@
         </div>
       </div>
 
-      <div class="row v-centered-row">
+      <div class="row m-t-1-4 m-b-1-4">
         <div class="col-sm-6 col-md-3 col-lg-2">
           Genome Build Column
         </div>
         <div class="col-sm-6 col-md-3 col-lg-2">
           <select
             name="genome_build_column"
+            class="width-95"
             ng-model="metadataTable.genomeBuildColumn"
             ng-options="heading for heading in metadataTable.metadataHeader">
             <option value=""></option>
@@ -251,14 +256,14 @@
         </div>
       </div>
 
-      <div class="row v-centered-row">
+      <div class="row m-t-1-4 m-b-1-4">
         <div class="col-sm-6 col-md-3 col-lg-2">
           Abbreviation / ID
         </div>
         <div class="col-sm-6 col-md-3 col-lg-2">
           <input
             type="text"
-            class="refinery-base"
+            class="width-95"
             name="slug"
             ng-model="metadataTable.slug">
         </div>
@@ -268,7 +273,7 @@
         </div>
       </div>
 
-      <div class="row v-centered-row">
+      <div class="row m-t-1-4 m-b-1-4">
         <div class="col-sm-6 col-md-3 col-lg-2">
           Data File Permanent
         </div>
@@ -284,7 +289,7 @@
         </div>
       </div>
 
-      <div class="row v-centered-row">
+      <div class="row m-t-1-4 m-b-1-4">
         <div class="col-sm-6 col-md-3 col-lg-2">
           Make Public
         </div>

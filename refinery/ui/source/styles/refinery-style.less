@@ -127,7 +127,6 @@ input[type='file'] .refinery-base {
 }
 
 input[type='text'] .refinery-base {
-
   select {
   display: inline-block;
   height: 20px;
@@ -141,7 +140,10 @@ input[type='text'] .refinery-base {
   border: 1px solid #ccc;
   background-color: #fff;
   }
+}
 
+select[multiple].refinery-base {
+  border-color: @gray-lighterish;
 }
 
 select.select-height {
@@ -1678,4 +1680,8 @@ body.is-screenshot-ready {
 
 .z-1 {
   z-index: 1;
+}
+
+.width-95 {
+  width: 95%;
 }
