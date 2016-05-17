@@ -142,7 +142,7 @@ def main():
         'Encrypted': True,
         'Size': config['DATA_VOLUME_SIZE'],
         'Tags': tags.load(),
-        'VolumeType': 'gp2'
+        'VolumeType': config['DATA_VOLUME_TYPE'],
     }
 
     if 'DATA_SNAPSHOT' in config:
