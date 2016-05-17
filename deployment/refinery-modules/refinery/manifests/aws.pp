@@ -34,6 +34,13 @@ file { '/data/media':
   mode => "0755",
 }
 ->
+file { '/data/import':
+  ensure => directory,
+  owner => "$app_user",
+  group => "$app_user",
+  mode => "0755",
+}
+->
 file { '/data/isa-tab':
   ensure => directory,
   owner => "$app_user",
