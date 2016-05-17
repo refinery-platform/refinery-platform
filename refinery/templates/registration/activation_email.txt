@@ -2,10 +2,8 @@
 Dear Admin,
 {{ registered_user_username }} signed up for a new account at {{site}} using this email address: {{ registered_user_email }}
 
-If the meet the proper requirements, please activate their account by
-clicking this link below.
+If they meet the proper requirements, please activate their account by clicking this link below.
 
 http://{{ site }}{% url 'registration.views.activate' activation_key %}
 
-If you don't take any action, the account in question will expire
-automatically in {{ expiration_days }} days.
+If you don't take any action, the account in question will expire automatically in {{ expiration_days }} days.
