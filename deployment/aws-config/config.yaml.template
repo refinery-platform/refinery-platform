@@ -21,6 +21,11 @@
 # RDS_SNAPSHOT: refinery-web-XXX
 # DATA_SNAPSHOT: snap-XXX
 
+# The password for the Django admin account.
+# If not set, an automatically generated one will be placed
+# in `auto-config.yaml`.
+# ADMIN_PASSWORD: "refinery"
+
 
 # Name and URL for the site.
 # You will need to change these.
