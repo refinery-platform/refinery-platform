@@ -49,10 +49,10 @@
     <td><b>{{ attribute.valueSetA }}</b></td>
     <td><b>{{ attribute.valueSetB }}</b></td>
   </tr>
-  <tr ng-if="commonAttributes.length > 0">
+  <tr ng-if="diffAttributeList.commonAttributes.length > 0">
     <td>Shared</td>
     <td colspan="2">
-      <span ng-repeat="attribute in commonAttributes">
+      <span ng-repeat="attribute in diffAttributeList.commonAttributes">
         {{ attribute.name }}: <b>{{ attribute.value }}</b>,&nbsp;
       </span>
     </td>
