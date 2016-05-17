@@ -26,7 +26,7 @@ from django.contrib.messages import get_messages
 from django.contrib.messages import info
 from django.contrib.sites.models import Site
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
-from django.core.mail import mail_admins, send_mail
+from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.models import Max
 from django.db.models.fields import IntegerField
@@ -137,14 +137,7 @@ def create_user_profile_registered(sender, user, request, **kwargs):
         "user profile for user %s has been created after registration %s",
         user, get_aware_local_time()
     )
-    mail_admins(
-        'New User Registered', 'User %s registered at %s'
-        % (user, get_aware_local_time())
-    )
-    logger.info(
-        "email has been sent to admins informing of registration of user %s",
-        user
-    )
+
 
 user_registered.connect(
     create_user_profile_registered,
@@ -160,8 +153,10 @@ def messages_dedup(request, msg):
 
 
 def register_handler(request, sender, user, **kwargs):
-    messages_dedup(request, 'Thank you!  Your account has been activated.')
-    messages.success(request, 'Thank you!  Your account has been activated.')
+    # Send email to user once an Admin activates their account
+    user.email_user(settings.REFINERY_WELCOME_EMAIL_SUBJECT,
+                    settings.REFINERY_WELCOME_EMAIL_MESSAGE,
+                    settings.DEFAULT_FROM_EMAIL)
 
 
 user_activated.connect(register_handler, dispatch_uid='activated')
