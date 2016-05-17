@@ -21,6 +21,7 @@ function MetadataTableImportCtrl (
   // This is only false when `this.separator` is `custom` but
   // `this.customSeparator` is an empty String.
   this.isSeparatorOk = true;
+  this.setParser();
 }
 
 Object.defineProperty(
