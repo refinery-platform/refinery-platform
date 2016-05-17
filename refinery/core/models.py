@@ -61,8 +61,7 @@ from .utils import (update_data_set_index, delete_data_set_index,
                     add_read_access_in_neo4j, remove_read_access_in_neo4j,
                     delete_data_set_neo4j, delete_ontology_from_neo4j,
                     delete_analysis_index, invalidate_cached_object,
-                    get_aware_local_time)
-
+                    get_aware_local_time, email_admin)
 
 logger = logging.getLogger(__name__)
 
@@ -2253,8 +2252,6 @@ class CustomRegistrationManager(RegistrationManager):
 
 
 class CustomRegistrationProfile(RegistrationProfile):
-    admin = User.objects.get(username="admin")
-
     objects = CustomRegistrationManager()
 
     def custom_send_activation_email(self, site):
@@ -2316,4 +2313,10 @@ class CustomRegistrationProfile(RegistrationProfile):
         message = render_to_string('registration/activation_email.txt',
                                    ctx_dict)
 
-        self.admin.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
+        # Email the admin of this instance
+        email_admin(subject, message)
+
+        logger.info(
+            "An email has been sent to admins informing of registration of  "
+            "user %s", self.user
+        )
