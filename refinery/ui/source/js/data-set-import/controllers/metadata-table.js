@@ -18,6 +18,9 @@ function MetadataTableImportCtrl (
 
   this.separator = 'comma';
   this.customSeparator = null;
+  // This is only false when `this.separator` is `custom` but
+  // `this.customSeparator` is an empty String.
+  this.isSeparatorOk = true;
 }
 
 Object.defineProperty(
@@ -64,15 +67,20 @@ MetadataTableImportCtrl.prototype.setParser = function () {
   switch (self.separator) {
     case 'tab':
       self.parser = self.d3.tsv.parse;
+      self.isSeparatorOk = true;
       break;
     case 'custom':
       if (self.customSeparator) {
         self.parser = self.d3.dsv(self.customSeparator, 'text/plain').parse;
+        self.isSeparatorOk = true;
+      } else {
+        self.isSeparatorOk = false;
       }
       break;
     default:
       // Comma separation is assumed by default.
       self.parser = self.d3.csv.parse;
+      self.isSeparatorOk = true;
       break;
   }
 };

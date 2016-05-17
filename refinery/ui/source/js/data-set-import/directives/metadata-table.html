@@ -25,6 +25,7 @@
       <input
         name="tabular_file"
         type="file"
+        ng-disabled="!metadataTable.isSeparatorOk"
         file-model="metadataTable.file"
         clear-file-input="metadataTable"
         clear-file-input-model="metadataTable.file">
@@ -44,6 +45,10 @@
           refinery-tooltip-hide-on-click="true">
         </i>
       </button>
+      <span class="text-warning" ng-if="!metadataTable.isSeparatorOk && !metadataTable.file">
+        <i class="fa fa-warning" aria-hidden="true"></i>
+        Please specify the custom separator <strong>prior</strong> to file selection.
+      </span>
     </label>
 
     <label class="block label-block label-text-left">
