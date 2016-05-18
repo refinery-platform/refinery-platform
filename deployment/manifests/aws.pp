@@ -8,6 +8,9 @@ $requirements = "${project_root}/requirements.txt"
 $isa_tab_dir = "/data/isa-tab"
 $media_root = "/data/media"
 $import_dir = "/data/import"
+$solr_custom_synonyms_file =
+  "${django_root}/solr/core/conf/custom-synonyms.txt"
+$solr_lib_dir = "${django_root}/solr/lib"
 $email_host = "email-smtp.us-east-1.amazonaws.com"
 # $email_host_user set by Facter
 # $email_host_password set by Facter

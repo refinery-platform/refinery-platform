@@ -21,6 +21,11 @@
 		<p>
 			Your account is currently pending approval. An activation link has
             been sent to the Administrator.
+            <br><br>
+            We generally attempt to approve accounts within 2 business days.
+            If you do not hear from us within that time frame, please
+            contact the Administrator: <a href="mailto:{{ ADMINS }}?Subject=Regarding my account activation" target="_top">{{ ADMINS }}</a> mentioning your
+            username.
 		</p>
 
 		{% if EMAIL_BACKEND == "django.core.mail.backends.filebased.EmailBackend" %}
