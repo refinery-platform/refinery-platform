@@ -2298,7 +2298,11 @@ class CustomRegistrationProfile(RegistrationProfile):
                     'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
                     'site': site.domain,
                     'registered_user_email': self.user.email,
-                    'registered_user_username': self.user.username
+                    'registered_user_username': self.user.username,
+                    'registered_user_full_name': "{} {}".format(
+                        self.user.first_name, self.user.last_name),
+                    'registered_user_affiliation': self.user.affiliation
+
                     }
         subject = render_to_string('registration/activation_email_subject.txt',
                                    ctx_dict)
