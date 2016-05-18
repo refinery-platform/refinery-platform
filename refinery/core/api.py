@@ -453,6 +453,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
                 bundle.data['owner'] = owner.userprofile.uuid
             except:
                 pass
+
+        bundle.data["isa_archive"] = bundle.obj.get_isa_archive()
+
         return bundle
 
     def apply_sorting(self, obj_list, options=None):
