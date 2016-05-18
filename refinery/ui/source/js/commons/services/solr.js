@@ -5,7 +5,7 @@ angular
   .factory('solrService', ['$resource', 'settings',
     function ($resource, settings) {
       var query = $resource(
-        settings.appRoot + settings.solrApi + '/:index/select',
+        settings.appRoot + settings.solrApi + '/:index/select/',
         {
           index: '@index',
           wt: 'json'

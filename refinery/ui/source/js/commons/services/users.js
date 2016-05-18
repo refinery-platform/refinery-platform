@@ -3,7 +3,7 @@
 function userFactory ($q, $resource, settings) {
   var userService = {};
   var userResource = $resource(
-    settings.appRoot + settings.refineryApi + '/users/:uuid',
+    settings.appRoot + settings.refineryApi + '/users/:uuid/',
     {
       format: 'json'
     },
