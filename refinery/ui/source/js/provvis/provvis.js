@@ -203,7 +203,7 @@ var provvis = (function (  // eslint-disable-line no-unused-vars
 
     /* Only allow one instance of ProvVis. */
     if (vis instanceof provvisDecl.ProvVis === false) {
-      var url = '/api/v1/node?study__uuid=' + studyUuid +
+      var url = '/api/v1/node/?study__uuid=' + studyUuid +
         '&format=json&limit=0';
       var analysesData = studyAnalyses.filter(function (a) {
         return a.status === 'SUCCESS';
