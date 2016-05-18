@@ -586,8 +586,7 @@
             </div>
             <p>Current version <i>{{ data_set.get_version_details.version }}</i> created <i>{{ data_set.get_version_details.date }}</i>.
               Data set created <i>{{ data_set.creation_date }}</i>. Last modified <i>{{ data_set.modification_date }}</i>.</p>
-          </div>
-          <span>
+            <span>
               {% if data_set.is_public and data_set.get_owner_username != user.username %}
                 <form id="isaTabImportForm" enctype="multipart/form-data" action="{% url "take_ownership_of_public_dataset" %}" method="post">
                   {% csrf_token %}
@@ -599,6 +598,8 @@
                 </form>
               {% endif %}
           </span>
+          </div>
+
 
           <div class="dataSetTabContent ng-cloak" id="sharing">
             <div class="refinery-header">
