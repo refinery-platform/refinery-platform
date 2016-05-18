@@ -1,9 +1,9 @@
 'use strict';
 
-function fileSources ($resource, settings) {
+function fileSources ($resource, settings, dataSetImportSettings) {
   return $resource(
     settings.appRoot +
-    '/data_set_manager/import/check_files/',
+    dataSetImportSettings.checkFiles,
     {},
     {
       check: {
@@ -18,4 +18,9 @@ function fileSources ($resource, settings) {
 
 angular
   .module('refineryDataSetImport')
-  .factory('fileSources', ['$resource', 'settings', fileSources]);
+  .factory('fileSources', [
+    '$resource',
+    'settings',
+    'dataSetImportSettings',
+    fileSources
+  ]);

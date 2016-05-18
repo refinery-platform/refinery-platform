@@ -3,6 +3,7 @@
 angular
   .module('refineryDataSetImport')
   .constant('dataSetImportSettings', {
+    checkFiles: '/data_set_manager/import/check_files/',
     isaTabImportUrl: '/data_set_manager/import/isa-tab-form/',
     uploadUrl: '/data_set_manager/import/chunked-upload/',
     uploadCompleteUrl: '/data_set_manager/import/chunked-upload-complete/',
