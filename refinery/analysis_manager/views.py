@@ -80,7 +80,7 @@ def analysis_status(request, uuid):
             'overall': analysis.get_status(),
         }
         logger.debug("Analysis status for '%s': %s",
-                     analysis.name, json.dumps(ret_json, indent=4))
+                     analysis.name, json.dumps(ret_json))
         return HttpResponse(json.dumps(ret_json, indent=4),
                             mimetype='application/javascript')
     else:
