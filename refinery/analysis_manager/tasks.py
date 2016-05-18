@@ -213,8 +213,8 @@ def run_analysis(analysis_uuid):
 
     # Update file count and file size of the corresponding data set
     analysis.data_set.file_count = analysis.data_set.get_file_count()
-    #FIXME: line below is causing analyses to be marked as failed
-    #analysis.data_set.file_size = analysis.data_set.get_file_size()
+    # FIXME: line below is causing analyses to be marked as failed
+    # analysis.data_set.file_size = analysis.data_set.get_file_size()
     analysis.data_set.save()
 
 
