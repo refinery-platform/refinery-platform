@@ -152,10 +152,9 @@
         </div>
         <div class="col-sm-6 col-md-3 col-lg-2">
           <select
-            name="data_file_column"
             class="width-95"
             required
-            ng-model="metadataTable.data.dataFileColumn"
+            ng-model="metadataTable.dataFileColumn"
             ng-options="heading for (id, heading) in metadataTable.metadataHeader track by id">
             <option value=""></option>
           </select>
@@ -252,13 +251,13 @@
           </select>
         </div>
         <div class="col-sm-12 col-md-6 col-lg-8">
-          Column containing genome build IDs
+          Column containing genome build IDs. E.g. HG-19.
         </div>
       </div>
 
       <div class="row m-t-1-4 m-b-1-4">
         <div class="col-sm-6 col-md-3 col-lg-2">
-          Abbreviation / ID
+          Abbreviation
         </div>
         <div class="col-sm-6 col-md-3 col-lg-2">
           <input
@@ -269,7 +268,9 @@
         </div>
         <div class="col-sm-12 col-md-6 col-lg-8">
           Shortcut name to access the data set to be imported by URL. Can only
-          contain alpha-numeric characters and <em>_</em>.
+          contain alpha-numeric characters and <em>_</em>. (E.g. A data set with
+          the shortcut <em>abbr</em> would be accessible under
+          <em>http://example.com/data_sets/abbr</em>.)
         </div>
       </div>
 
@@ -297,7 +298,7 @@
           <input
             type="checkbox"
             name="is_public"
-            ng-model="metadataTable.isPublic"/>
+            ng-model="metadataTable.makePublic"/>
         </div>
         <div class="col-sm-12 col-md-6 col-lg-8">
           If selected the data set to be imported will be made publicely
@@ -309,7 +310,7 @@
         <button
           class="refinery-base btn btn-default"
           ng-click="metadataTable.checkFiles()"
-          ng-disabled="!metadataTable.data.dataFileColumn">
+          ng-disabled="!metadataTable.dataFileColumn">
           Check Availability of Data File
         </button>
         <button
