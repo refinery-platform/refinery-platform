@@ -34,7 +34,7 @@ describe('rpAssayFiles directive unit test', function () {
 
     $httpBackend.expectGET(
       settings.appRoot +
-      settings.refineryApi + '/data_sets?format=json&order_by=-modification_date'
+      settings.refineryApi + '/data_sets/?format=json&order_by=-modification_date'
       + '&uuid=' + fakeUuid
     ).respond(200, {});
 
