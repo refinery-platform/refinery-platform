@@ -1,21 +1,21 @@
 'use strict';
 
-function fileSources ($http) {
-  return {
-    check: function (fileData, successCallback, errorCallback) {
-      var req = {
+function fileSources ($resource, settings) {
+  return $resource(
+    settings.appRoot +
+    '/data_set_manager/import/check_files/',
+    {},
+    {
+      check: {
         method: 'POST',
-        url: '/data_set_manager/import/check_files/',
         headers: {
           'X-Requested-With': 'XMLHttpRequest'
-        },
-        data: fileData
-      };
-      $http(req).success(successCallback).error(errorCallback);
+        }
+      }
     }
-  };
+  );
 }
 
 angular
   .module('refineryDataSetImport')
-  .factory('fileSources', ['$http', fileSources]);
+  .factory('fileSources', ['$resource', 'settings', fileSources]);
