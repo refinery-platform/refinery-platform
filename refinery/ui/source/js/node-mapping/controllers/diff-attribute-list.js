@@ -22,42 +22,35 @@ function DiffAttributeListCtrl ($log, $scope) {
   }.bind(this), checkIfUpdateDiff.bind(this));
 
 
-   // helper method for updating diff
-   // var addCommonAttributes = function (attributesA, attributesB) {
-   // for (var i = 0; i < setAttributes.length; ++i) {
-   //   this.commonAttributes.push({
-   //     name: setAttributes[i].name,
-   //     value: setAttributes[i].value
-   //   });
-   // }
-   // };
+  // helper method for updating diff @params: obj {name: '', value: ''}
+  var seperateCommonAndDiffAttributes = function (attributeA, attributeB) {
+    if (attributeA.name === attributeB.name) {
+      if (attributeA.value === attributeB.value) {
+        this.commonAttributes.push({
+          name: attributeA.name,
+          value: attributeA.value
+        });
+      } else {
+        this.diffAttributes.push({
+          name: attributeA.name,
+          valueSetA: attributeA.value,
+          valueSetB: attributeB.value
+        });
+      }
+    }
+  };
 
   this.updateDiff = function () {
     this.diffAttributes = [];
     this.commonAttributes = [];
-
-    var i = 0;
-
     this.log.debug('Updating diff lists ...');
+
 
     if (this.setA.attributes === null && this.setB.attributes === null) {
       this.log.debug('Both sets empty');
     } else if (this.setB.attributes !== null && this.setA.attributes !== null) {
-      for (i = 0; i < this.setA.attributes.length; ++i) {
-        if (this.setA.attributes[i].name === this.setB.attributes[i].name) {
-          if (this.setA.attributes[i].value === this.setB.attributes[i].value) {
-            this.commonAttributes.push({
-              name: this.setA.attributes[i].name,
-              value: this.setA.attributes[i].value
-            });
-          } else {
-            this.diffAttributes.push({
-              name: this.setA.attributes[i].name,
-              valueSetA: this.setA.attributes[i].value,
-              valueSetB: this.setB.attributes[i].value
-            });
-          }
-        }
+      for (var i = 0; i < this.setA.attributes.length; ++i) {
+        seperateCommonAndDiffAttributes(this.setA.attributes, this.setB.attributes);
       }
     } else if (this.setA.attributes === null) {
       angular.copy(this.setB.attributes, this.commonAttributes);
