@@ -23,7 +23,7 @@ function DiffAttributeListCtrl ($log, $scope) {
 
 
   // helper method for updating diff @params: obj {name: '', value: ''}
-  var seperateCommonAndDiffAttributes = function (attributeA, attributeB) {
+  this.seperateCommonAndDiffAttributes = function (attributeA, attributeB) {
     if (attributeA.name === attributeB.name) {
       if (attributeA.value === attributeB.value) {
         this.commonAttributes.push({
@@ -45,12 +45,11 @@ function DiffAttributeListCtrl ($log, $scope) {
     this.commonAttributes = [];
     this.log.debug('Updating diff lists ...');
 
-
     if (this.setA.attributes === null && this.setB.attributes === null) {
       this.log.debug('Both sets empty');
     } else if (this.setB.attributes !== null && this.setA.attributes !== null) {
       for (var i = 0; i < this.setA.attributes.length; ++i) {
-        seperateCommonAndDiffAttributes(this.setA.attributes, this.setB.attributes);
+        this.seperateCommonAndDiffAttributes(this.setA.attributes, this.setB.attributes);
       }
     } else if (this.setA.attributes === null) {
       angular.copy(this.setB.attributes, this.commonAttributes);
