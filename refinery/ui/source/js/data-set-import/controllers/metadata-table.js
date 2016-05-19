@@ -145,15 +145,17 @@ MetadataTableImportCtrl.prototype.checkFiles = function () {
     list: []
   };
 
-  // get the list of file references
+  // Get the list of file references
   if (self.dataFileColumn) {
     self.metadata.forEach(function (row) {
       fileData.list.push(row[self.dataFileColumn]);
     });
   }
-  self.fileSources.check(
-    fileData,
-    function (response) {
+
+  self.fileSources
+    .check({}, fileData)
+    .$promise
+    .then(function (response) {
       var checkFilesDialogConfig;
 
       if (response.length > 0) {
@@ -179,12 +181,11 @@ MetadataTableImportCtrl.prototype.checkFiles = function () {
           }
         }
       });
-    },
-    function (response, status) {
+    })
+    .catch(function (response, status) {
       var errorMsg = 'Request failed: error ' + status;
       self.$log.error(errorMsg);
-    }
-  );
+    });
 };
 
 MetadataTableImportCtrl.prototype.startImport = function () {
