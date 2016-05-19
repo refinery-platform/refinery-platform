@@ -398,6 +398,7 @@ def report_missing_keys(config):
     """
 
     required = [
+        'DJANGO_SETTINGS_MODULE',
         'KEY_NAME', 'RDS_SUPERUSER_PASSWORD',
         'SITE_NAME', 'SITE_URL', 'ADMIN_PASSWORD']
     bad = []
