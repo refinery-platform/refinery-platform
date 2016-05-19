@@ -1,6 +1,6 @@
 'use strict';
 
-function DiffAttributeListCtrl (analysisNameService, $log, $scope) {
+function DiffAttributeListCtrl (analysisService, $log, $scope) {
   var vm = this;
 
   function checkIfUpdateDiff (oldVal, newVal) {
@@ -55,32 +55,38 @@ function DiffAttributeListCtrl (analysisNameService, $log, $scope) {
     if (vm.commonAttributes.length > 0) {
       var commIndex = vm.findAnalysisIndex(vm.commonAttributes);
       if (commIndex >= 0 && vm.commonAttributes[commIndex].value !== 'N/A') {
-        analysisNameService.getAnalysisName(vm.commonAttributes[commIndex].value)
-          .then(function (response) {
-            if (response.objects[0] && response.objects[0].name) {
-              vm.commonAttributes[commIndex].value = response.objects[0].name;
-            }
-          });
+        analysisService.query({ uuid: vm.commonAttributes[commIndex].value })
+        .$promise.then(function (response) {
+          if (response.objects[0] && response.objects[0].name) {
+            vm.commonAttributes[commIndex].value = response.objects[0].name;
+          }
+        }, function () {
+          $log.error('Error returning analysis name');
+        });
       }
     }
 
     if (vm.diffAttributes.length > 0) {
       var diffIndex = vm.findAnalysisIndex(vm.diffAttributes);
       if (diffIndex >= 0 && vm.diffAttributes[diffIndex].valueSetA !== 'N/A') {
-        analysisNameService.getAnalysisName(vm.diffAttributes[diffIndex].valueSetA)
-          .then(function (response) {
-            if (response.objects[0] && response.objects[0].name) {
-              vm.diffAttributes[diffIndex].valueSetA = response.objects[0].name;
-            }
-          });
+        analysisService.query({ uuid: vm.diffAttributes[diffIndex].valueSetA })
+        .$promise.then(function (response) {
+          if (response.objects[0] && response.objects[0].name) {
+            vm.diffAttributes[diffIndex].valueSetA = response.objects[0].name;
+          }
+        }, function () {
+          $log.error('Error returning analysis name');
+        });
       }
       if (diffIndex >= 0 && vm.diffAttributes[diffIndex].valueSetB !== 'N/A') {
-        analysisNameService.getAnalysisName(vm.diffAttributes[diffIndex].valueSetB)
-          .then(function (response) {
-            if (response.objects[0] && response.objects[0].name) {
-              vm.diffAttributes[diffIndex].valueSetB = response.objects[0].name;
-            }
-          });
+        analysisService.query({ uuid: vm.diffAttributes[diffIndex].valueSetB })
+        .$promise.then(function (response) {
+          if (response.objects[0] && response.objects[0].name) {
+            vm.diffAttributes[diffIndex].valueSetB = response.objects[0].name;
+          }
+        }, function () {
+          $log.error('Error returning analysis name');
+        });
       }
     }
   };
@@ -109,7 +115,7 @@ function DiffAttributeListCtrl (analysisNameService, $log, $scope) {
 angular
   .module('refineryNodeMapping')
   .controller('DiffAttributeListCtrl', [
-    'analysisNameService',
+    'analysisService',
     '$log',
     '$scope',
     DiffAttributeListCtrl
