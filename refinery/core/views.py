@@ -931,7 +931,7 @@ def neo4j_dataset_annotations(request):
     if request.user.username:
         user_name = request.user.username
     else:
-        user_name = 'anonymous'
+        user_name = User.objects.get(id=-1).username
 
     url = urljoin(
         settings.NEO4J_BASE_URL,
