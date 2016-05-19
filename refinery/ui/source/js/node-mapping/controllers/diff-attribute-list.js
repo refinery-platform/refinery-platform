@@ -1,37 +1,37 @@
 'use strict';
 
 function DiffAttributeListCtrl (analysisNameService, $log, $scope) {
-  this.log = $log;
+  var vm = this;
 
   function checkIfUpdateDiff (oldVal, newVal) {
     if (oldVal && !newVal) {
-      this.log.debug('Attribute setA initialized');
-      this.updateDiff();
+      $log.debug('Attribute setA initialized');
+      vm.updateDiff();
     }
     if (newVal) {
-      this.log.debug('Attribute setA changed');
-      this.updateDiff();
+      $log.debug('Attribute setA changed');
+      vm.updateDiff();
     }
   }
 
   $scope.$watch(function () {
-    return this.setA.attributes;
-  }.bind(this), checkIfUpdateDiff.bind(this));
+    return vm.setA.attributes;
+  }, checkIfUpdateDiff.bind(this));
   $scope.$watch(function () {
-    return this.setB.attributes;
-  }.bind(this), checkIfUpdateDiff.bind(this));
+    return vm.setB.attributes;
+  }, checkIfUpdateDiff.bind(this));
 
 
-  // helper method for updating diff @params: obj {name: '', value: ''}
-  this.seperateCommonAndDiffAttributes = function (attributeA, attributeB) {
+  // helper method for updating attributes @params: obj {name: '', value: ''}
+  vm.seperateCommonAndDiffAttributes = function (attributeA, attributeB) {
     if (attributeA.name === attributeB.name) {
       if (attributeA.value === attributeB.value) {
-        this.commonAttributes.push({
+        vm.commonAttributes.push({
           name: attributeA.name,
           value: attributeA.value
         });
       } else {
-        this.diffAttributes.push({
+        vm.diffAttributes.push({
           name: attributeA.name,
           valueSetA: attributeA.value,
           valueSetB: attributeB.value
@@ -40,10 +40,8 @@ function DiffAttributeListCtrl (analysisNameService, $log, $scope) {
     }
   };
 
-  this.findAnalysisIndex = function (arrOfObj) {
+  vm.findAnalysisIndex = function (arrOfObj) {
     var index = -1;
-    console.log('in the find analysis index');
-    console.log(arrOfObj);
     for (var i = 0; i < arrOfObj.length; i++) {
       if (arrOfObj[i].name === 'Analysis') {
         index = i;
@@ -53,43 +51,58 @@ function DiffAttributeListCtrl (analysisNameService, $log, $scope) {
     return index;
   };
 
-  this.replaceAnalysisName = function () {
-    if (this.commonAttributes.length > 0) {
-      console.log('inthe common');
-      var index = this.findAnalysisIndex(this.commonAttributes);
-      console.log(this.commonAttributes);
-      console.log(index);
-      var that = this;
-      if (index >= 0 && this.commonAttributes[index].value !== 'N/A') {
-        analysisNameService.getAnalysisName(this.commonAttributes[index].value)
+  vm.replaceAnalysisName = function () {
+    if (vm.commonAttributes.length > 0) {
+      var commIndex = vm.findAnalysisIndex(vm.commonAttributes);
+      if (commIndex >= 0 && vm.commonAttributes[commIndex].value !== 'N/A') {
+        analysisNameService.getAnalysisName(vm.commonAttributes[commIndex].value)
           .then(function (response) {
-            that.commonAttributes[index].value = response.objects[0].name;
+            if (response.objects[0] && response.objects[0].name) {
+              vm.commonAttributes[commIndex].value = response.objects[0].name;
+            }
           });
       }
     }
-    if (this.diffAttributes.length > 0) {
-      console.log('inthediff');
+
+    if (vm.diffAttributes.length > 0) {
+      var diffIndex = vm.findAnalysisIndex(vm.diffAttributes);
+      if (diffIndex >= 0 && vm.diffAttributes[diffIndex].valueSetA !== 'N/A') {
+        analysisNameService.getAnalysisName(vm.diffAttributes[diffIndex].valueSetA)
+          .then(function (response) {
+            if (response.objects[0] && response.objects[0].name) {
+              vm.diffAttributes[diffIndex].valueSetA = response.objects[0].name;
+            }
+          });
+      }
+      if (diffIndex >= 0 && vm.diffAttributes[diffIndex].valueSetB !== 'N/A') {
+        analysisNameService.getAnalysisName(vm.diffAttributes[diffIndex].valueSetB)
+          .then(function (response) {
+            if (response.objects[0] && response.objects[0].name) {
+              vm.diffAttributes[diffIndex].valueSetB = response.objects[0].name;
+            }
+          });
+      }
     }
   };
 
-  this.updateDiff = function () {
-    this.diffAttributes = [];
-    this.commonAttributes = [];
-    this.log.debug('Updating diff lists ...');
+  vm.updateDiff = function () {
+    vm.diffAttributes = [];
+    vm.commonAttributes = [];
+    $log.debug('Updating diff lists ...');
 
-    if (this.setA.attributes === null && this.setB.attributes === null) {
-      this.log.debug('Both sets empty');
-    } else if (this.setB.attributes !== null && this.setA.attributes !== null) {
-      for (var i = 0; i < this.setA.attributes.length; ++i) {
-        this.seperateCommonAndDiffAttributes(this.setA.attributes, this.setB.attributes);
+    if (vm.setA.attributes === null && vm.setB.attributes === null) {
+      $log.debug('Both sets empty');
+    } else if (vm.setB.attributes !== null && vm.setA.attributes !== null) {
+      for (var i = 0; i < vm.setA.attributes.length; ++i) {
+        vm.seperateCommonAndDiffAttributes(vm.setA.attributes[i], vm.setB.attributes[i]);
       }
-    } else if (this.setA.attributes === null) {
-      angular.copy(this.setB.attributes, this.commonAttributes);
+    } else if (vm.setA.attributes === null) {
+      angular.copy(vm.setB.attributes, vm.commonAttributes);
     } else {
-      // ( expect this.setB.attributes === null)
-      angular.copy(this.setA.attributes, this.commonAttributes);
+      // ( expect vm.setB.attributes === null)
+      angular.copy(vm.setA.attributes, vm.commonAttributes);
     }
-    this.replaceAnalysisName();
+    vm.replaceAnalysisName();
   };
 }
 
