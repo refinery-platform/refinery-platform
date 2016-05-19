@@ -23,14 +23,14 @@ function DiffAttributeListCtrl ($log, $scope) {
 
 
   // helper method for updating diff
-  var addCommonAttributes = function (setAttributes) {
-    for (var i = 0; i < setAttributes.length; ++i) {
-      this.commonAttributes.push({
-        name: setAttributes[i].name,
-        value: setAttributes[i].value
-      });
-    }
-  };
+  // var addCommonAttributes = function (setAttributes) {
+  //  for (var i = 0; i < setAttributes.length; ++i) {
+  //    this.commonAttributes.push({
+  //      name: setAttributes[i].name,
+  //      value: setAttributes[i].value
+  //    });
+  //  }
+  // };
 
   this.updateDiff = function () {
     this.diffAttributes = [];
@@ -65,12 +65,14 @@ function DiffAttributeListCtrl ($log, $scope) {
       return;
     }
 
+    console.log('hum');
+    // when only one node is selected
     if (this.setA.attributes === null) {
-      addCommonAttributes(this.setA.attributes);
+      angular.copy(this.setB.attributes, this.commonAttributes);
+      return;
     }
-
     if (this.setB.attributes === null) {
-      addCommonAttributes(this.setB.attributes);
+      angular.copy(this.setA.attributes, this.commonAttributes);
     }
   };
 }
