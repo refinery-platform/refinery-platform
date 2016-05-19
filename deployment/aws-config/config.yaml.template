@@ -53,7 +53,7 @@ DATA_VOLUME_TYPE: "gp2"
 # Which Python module in `refinery/config/settings` to
 # import for the Django settings.
 # (For example, can switch between `dev` and `prod`)
-DJANGO_SETTINGS_MODULE: "aws"
+DJANGO_SETTINGS_MODULE: "config.settings.aws"
 
 
 # The name of the EC2 key pair to use for SSH.
