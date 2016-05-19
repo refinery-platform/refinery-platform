@@ -1,6 +1,6 @@
 'use strict';
 
-function DiffAttributeListCtrl ($log, $scope) {
+function DiffAttributeListCtrl (analysisNameService, $log, $scope) {
   this.log = $log;
 
   function checkIfUpdateDiff (oldVal, newVal) {
@@ -40,6 +40,38 @@ function DiffAttributeListCtrl ($log, $scope) {
     }
   };
 
+  this.findAnalysisIndex = function (arrOfObj) {
+    var index = -1;
+    console.log('in the find analysis index');
+    console.log(arrOfObj);
+    for (var i = 0; i < arrOfObj.length; i++) {
+      if (arrOfObj[i].name === 'Analysis') {
+        index = i;
+        break;
+      }
+    }
+    return index;
+  };
+
+  this.replaceAnalysisName = function () {
+    if (this.commonAttributes.length > 0) {
+      console.log('inthe common');
+      var index = this.findAnalysisIndex(this.commonAttributes);
+      console.log(this.commonAttributes);
+      console.log(index);
+      var that = this;
+      if (index >= 0 && this.commonAttributes[index].value !== 'N/A') {
+        analysisNameService.getAnalysisName(this.commonAttributes[index].value)
+          .then(function (response) {
+            that.commonAttributes[index].value = response.objects[0].name;
+          });
+      }
+    }
+    if (this.diffAttributes.length > 0) {
+      console.log('inthediff');
+    }
+  };
+
   this.updateDiff = function () {
     this.diffAttributes = [];
     this.commonAttributes = [];
@@ -57,11 +89,15 @@ function DiffAttributeListCtrl ($log, $scope) {
       // ( expect this.setB.attributes === null)
       angular.copy(this.setA.attributes, this.commonAttributes);
     }
+    this.replaceAnalysisName();
   };
 }
 
 angular
   .module('refineryNodeMapping')
   .controller('DiffAttributeListCtrl', [
-    '$log', '$scope', DiffAttributeListCtrl
+    'analysisNameService',
+    '$log',
+    '$scope',
+    DiffAttributeListCtrl
   ]);
