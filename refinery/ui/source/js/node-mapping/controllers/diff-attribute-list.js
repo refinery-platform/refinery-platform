@@ -3,6 +3,7 @@
 function DiffAttributeListCtrl (analysisService, $log, $scope) {
   var vm = this;
 
+  // Logs and called update node pair properities
   function checkIfUpdateDiff (oldVal, newVal) {
     if (oldVal && !newVal) {
       $log.debug('Attribute setA initialized');
@@ -14,6 +15,7 @@ function DiffAttributeListCtrl (analysisService, $log, $scope) {
     }
   }
 
+  // Watch for any changes in the drag/drop paired analysis
   $scope.$watch(function () {
     return vm.setA.attributes;
   }, checkIfUpdateDiff.bind(this));
@@ -40,6 +42,8 @@ function DiffAttributeListCtrl (analysisService, $log, $scope) {
     }
   };
 
+  // helper method, in an array of object, returns the index for the FIRST
+  // name: Analysis
   vm.findAnalysisIndex = function (arrOfObj) {
     var index = -1;
     for (var i = 0; i < arrOfObj.length; i++) {
@@ -51,6 +55,7 @@ function DiffAttributeListCtrl (analysisService, $log, $scope) {
     return index;
   };
 
+  // helper method, makes the api call and update name
   vm.getAndUpdateAnalysisName = function (index, attributeObj, uuid) {
     analysisService.query({ uuid: uuid })
     .$promise.then(function (response) {
@@ -66,7 +71,8 @@ function DiffAttributeListCtrl (analysisService, $log, $scope) {
     });
   };
 
-  vm.replaceAnalysisName = function () {
+  // main method to replace the analysis uuid with name
+  vm.replaceAnalysisUuidWithName = function () {
     var analysisUuid = '';
     if (vm.commonAttributes.length > 0) {
       var commIndex = vm.findAnalysisIndex(vm.commonAttributes);
@@ -88,6 +94,8 @@ function DiffAttributeListCtrl (analysisService, $log, $scope) {
     }
   };
 
+ // view method for updating selected pair node analysis properities in the
+  // drag/drop
   vm.updateDiff = function () {
     vm.diffAttributes = [];
     vm.commonAttributes = [];
@@ -105,7 +113,7 @@ function DiffAttributeListCtrl (analysisService, $log, $scope) {
       // ( expect vm.setB.attributes === null)
       angular.copy(vm.setA.attributes, vm.commonAttributes);
     }
-    vm.replaceAnalysisName();
+    vm.replaceAnalysisUuidWithName();
   };
 }
 
