@@ -56,15 +56,16 @@ function DiffAttributeListCtrl (analysisService, $log, $scope) {
   };
 
   // helper method, makes the api call and update name
-  vm.getAndUpdateAnalysisName = function (index, attributeObj, uuid) {
+  vm.getAndReplaceAnalysisName = function (index, attributeObj, uuid) {
     analysisService.query({ uuid: uuid })
     .$promise.then(function (response) {
+      var analysisName = response.objects[0].name;
       if (attributeObj[index].value) {
-        attributeObj[index].value = response.objects[0].name;
+        attributeObj[index].value = analysisName;
       } else if (attributeObj[index].valueSetA === uuid) {
-        attributeObj[index].valueSetA = response.objects[0].name;
+        attributeObj[index].valueSetA = analysisName;
       } else if (attributeObj[index].valueSetB === uuid) {
-        attributeObj[index].valueSetB = response.objects[0].name;
+        attributeObj[index].valueSetB = analysisName;
       }
     }, function () {
       $log.error('Error returning analysis name');
@@ -78,18 +79,18 @@ function DiffAttributeListCtrl (analysisService, $log, $scope) {
       var commIndex = vm.findAnalysisIndex(vm.commonAttributes);
       if (commIndex >= 0 && vm.commonAttributes[commIndex].value !== 'N/A') {
         analysisUuid = vm.commonAttributes[commIndex].value;
-        vm.getAndUpdateAnalysisName(commIndex, vm.commonAttributes, analysisUuid);
+        vm.getAndReplaceAnalysisName(commIndex, vm.commonAttributes, analysisUuid);
       }
     }
     if (vm.diffAttributes.length > 0) {
       var diffIndex = vm.findAnalysisIndex(vm.diffAttributes);
       if (diffIndex >= 0 && vm.diffAttributes[diffIndex].valueSetA !== 'N/A') {
         analysisUuid = vm.diffAttributes[diffIndex].valueSetA;
-        vm.getAndUpdateAnalysisName(diffIndex, vm.diffAttributes, analysisUuid);
+        vm.getAndReplaceAnalysisName(diffIndex, vm.diffAttributes, analysisUuid);
       }
       if (diffIndex >= 0 && vm.diffAttributes[diffIndex].valueSetB !== 'N/A') {
         analysisUuid = vm.diffAttributes[diffIndex].valueSetB;
-        vm.getAndUpdateAnalysisName(diffIndex, vm.diffAttributes, analysisUuid);
+        vm.getAndReplaceAnalysisName(diffIndex, vm.diffAttributes, analysisUuid);
       }
     }
   };
