@@ -57,6 +57,9 @@ export FACTER_RDS_ROLE="$RDS_ROLE"
 # place them in (facter) environment variables.
 . bin/create-smtp-credentials
 
+export FACTER_DJANGO_SETTINGS_MODULE=$(
+  jq -r .DJANGO_SETTINGS_MODULE /home/ubuntu/s3-config)
+
 export FACTER_ADMIN="$ADMIN"
 export FACTER_DEFAULT_FROM_EMAIL="$DEFAULT_FROM_EMAIL"
 export FACTER_SERVER_EMAIL="$DEFAULT_FROM_EMAIL"
