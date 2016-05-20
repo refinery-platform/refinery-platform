@@ -15,7 +15,7 @@ $email_host = "email-smtp.us-east-1.amazonaws.com"
 # $email_host_user set by Facter
 # $email_host_password set by Facter
 $email_use_tls = "true"
-$django_settings_module = "config.settings.aws"
+# $django_settings_module set by Facter
 $ui_app_root = "${django_root}/ui"
 # $site_name set by Facter
 # $site_url set by Facter
