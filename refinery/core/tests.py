@@ -12,7 +12,7 @@ from core.models import (
     ExtendedGroup, DataSet, InvestigationLink, Project, Analysis, Workflow,
     WorkflowEngine, UserProfile, invalidate_cached_object,
     AnalysisNodeConnection, Node)
-from file_store.models import FileExtension
+from file_store.models import FileExtension, FileStoreItem
 import data_set_manager
 from galaxy_connector.models import Instance
 
@@ -1214,13 +1214,21 @@ class DataSetDeletionTest(unittest.TestCase):
         )
         self.project = Project.objects.create()
         self.galaxy_instance = Instance.objects.create()
+        self.isa_archive_file = FileStoreItem.objects.create()
+        self.investigation = \
+            data_set_manager.models.Investigation.objects.create(
+                isarchive_file=self.isa_archive_file.uuid)
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
         self.workflow = Workflow.objects.create(
             name="Workflow1", workflow_engine=self.workflow_engine)
         self.dataset_with_analysis = DataSet.objects.create()
-        self.dataset_without_analysis = DataSet.objects.create()
+        self.dataset_without_analysis = \
+            DataSet.objects.create(name="cool_dataSet")
+        self.investigation_link = InvestigationLink.objects.create(
+            investigation=self.investigation,
+            data_set=self.dataset_without_analysis)
         self.analysis = Analysis.objects.create(
             name='bla',
             summary='keks',
@@ -1241,6 +1249,7 @@ class DataSetDeletionTest(unittest.TestCase):
         Analysis.objects.all().delete()
         UserProfile.objects.all().delete()
         Node.objects.all().delete()
+        FileStoreItem.objects.all().delete()
         data_set_manager.models.Study.objects.all().delete()
         data_set_manager.models.Assay.objects.all().delete()
         data_set_manager.models.Investigation.objects.all().delete()
@@ -1253,6 +1262,12 @@ class DataSetDeletionTest(unittest.TestCase):
     def test_verify_no_dataset_deletion_if_analysis_run_upon_it(self):
         self.dataset_with_analysis.delete()
         self.assertNotEqual(self.dataset_with_analysis, None)
+
+    def test_isa_archive_deletion(self):
+        isa_archive = self.dataset_without_analysis.get_isa_archive()
+        self.assertIsNotNone(isa_archive)
+        isa_archive.delete()
+        self.assertIsNone(self.dataset_without_analysis.get_isa_archive())
 
 
 class AnalysisDeletionTest(unittest.TestCase):
