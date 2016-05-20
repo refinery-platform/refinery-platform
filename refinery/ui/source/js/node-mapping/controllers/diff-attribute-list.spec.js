@@ -164,7 +164,7 @@ describe('Controller: Diff Attribute List Ctrl', function () {
   });
 
   describe('Test Helper Method, getAndReplaceAnalysisName', function () {
-    it('Makes an service/API call', function () {
+    it('Makes an service/API call and updates a common attribute obj', function () {
       var mockResponse = '';
       var fakeCommonAttributes = [
          { name: 'Analysis Group', value: '-1' },
@@ -193,6 +193,50 @@ describe('Controller: Diff Attribute List Ctrl', function () {
       expect(mockResponse).toEqual('Analysis Fake Name');
       // updates the analysis name in object passed
       expect(fakeCommonAttributes[0].value).toEqual('Analysis Fake Name');
+    });
+
+    it('Makes an service/API call and updates a diff attribute obj', function () {
+      var mockResponse = '';
+      var fakeDiffAttributes = [
+        {
+          name: 'Analysis Group',
+          valueSetA: '-1',
+          valueSetB: '0'
+        }, {
+          name: 'Analysis',
+          valueSetA: 'N/A',
+          valueSetB: '6da2e5a4-aff6-4656-a261-867a0e56e0fc'
+        }, {
+          name: 'Title',
+          valueSetA: 'Character',
+          valueSetB: 'Response to RFC 86'
+        }, {
+          name: 'Month',
+          valueSetA: 'March',
+          valueSetB: 'April'
+        }
+      ];
+      spyOn(service, 'query').and.callFake(function () {
+        var deferred = $q.defer();
+        deferred.resolve({ objects: [{ name: 'Analysis Fake Name' }] });
+        return {
+          $promise: deferred.promise
+        };
+      });
+
+      expect(mockResponse).toEqual('');
+      var serviceResponse = ctrl.getAndReplaceAnalysisName(
+          1,
+          fakeDiffAttributes,
+          '6da2e5a4-aff6-4656-a261-867a0e56e0fc'
+      ).then(function (response) {
+        mockResponse = response.objects[0].name;
+      });
+      scope.$apply();
+      expect(typeof serviceResponse.then).toEqual('function');
+      expect(mockResponse).toEqual('Analysis Fake Name');
+      // updates the analysis name in object passed
+      expect(fakeDiffAttributes[1].valueSetB).toEqual('Analysis Fake Name');
     });
   });
 });
