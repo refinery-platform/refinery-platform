@@ -51,42 +51,39 @@ function DiffAttributeListCtrl (analysisService, $log, $scope) {
     return index;
   };
 
+  vm.getAndUpdateAnalysisName = function (index, attributeObj, uuid) {
+    analysisService.query({ uuid: uuid })
+    .$promise.then(function (response) {
+      if (attributeObj[index].value) {
+        attributeObj[index].value = response.objects[0].name;
+      } else if (attributeObj[index].valueSetA === uuid) {
+        attributeObj[index].valueSetA = response.objects[0].name;
+      } else if (attributeObj[index].valueSetB === uuid) {
+        attributeObj[index].valueSetB = response.objects[0].name;
+      }
+    }, function () {
+      $log.error('Error returning analysis name');
+    });
+  };
+
   vm.replaceAnalysisName = function () {
+    var analysisUuid = '';
     if (vm.commonAttributes.length > 0) {
       var commIndex = vm.findAnalysisIndex(vm.commonAttributes);
       if (commIndex >= 0 && vm.commonAttributes[commIndex].value !== 'N/A') {
-        analysisService.query({ uuid: vm.commonAttributes[commIndex].value })
-        .$promise.then(function (response) {
-          if (response.objects[0] && response.objects[0].name) {
-            vm.commonAttributes[commIndex].value = response.objects[0].name;
-          }
-        }, function () {
-          $log.error('Error returning analysis name');
-        });
+        analysisUuid = vm.commonAttributes[commIndex].value;
+        vm.getAndUpdateAnalysisName(commIndex, vm.commonAttributes, analysisUuid);
       }
     }
-
     if (vm.diffAttributes.length > 0) {
       var diffIndex = vm.findAnalysisIndex(vm.diffAttributes);
       if (diffIndex >= 0 && vm.diffAttributes[diffIndex].valueSetA !== 'N/A') {
-        analysisService.query({ uuid: vm.diffAttributes[diffIndex].valueSetA })
-        .$promise.then(function (response) {
-          if (response.objects[0] && response.objects[0].name) {
-            vm.diffAttributes[diffIndex].valueSetA = response.objects[0].name;
-          }
-        }, function () {
-          $log.error('Error returning analysis name');
-        });
+        analysisUuid = vm.diffAttributes[diffIndex].valueSetA;
+        vm.getAndUpdateAnalysisName(diffIndex, vm.diffAttributes, analysisUuid);
       }
       if (diffIndex >= 0 && vm.diffAttributes[diffIndex].valueSetB !== 'N/A') {
-        analysisService.query({ uuid: vm.diffAttributes[diffIndex].valueSetB })
-        .$promise.then(function (response) {
-          if (response.objects[0] && response.objects[0].name) {
-            vm.diffAttributes[diffIndex].valueSetB = response.objects[0].name;
-          }
-        }, function () {
-          $log.error('Error returning analysis name');
-        });
+        analysisUuid = vm.diffAttributes[diffIndex].valueSetB;
+        vm.getAndUpdateAnalysisName(diffIndex, vm.diffAttributes, analysisUuid);
       }
     }
   };
