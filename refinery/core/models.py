@@ -613,7 +613,8 @@ class DataSet(SharableResource):
         return file_size
 
     def get_isa_archive(self):
-        """Returns the isa_archive that was used to create the DataSet"""
+        """Returns the isa_archive (FileStoreItem) that was used to create the
+        DataSet"""
         try:
             isa_archive = FileStoreItem.objects.get(
                 uuid=InvestigationLink.objects.get(
