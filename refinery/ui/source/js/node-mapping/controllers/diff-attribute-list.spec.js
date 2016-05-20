@@ -5,6 +5,7 @@ describe('Controller: Diff Attribute List Ctrl', function () {
   var service;
   var $controller;
   var $q;
+  var mockAnalysisUuid = '6da2e5a4-aff6-4656-a261-867a0e56e0fc';
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryNodeMapping'));
@@ -43,7 +44,7 @@ describe('Controller: Diff Attribute List Ctrl', function () {
         }, {
           name: 'Analysis',
           valueSetA: 'N/A',
-          valueSetB: '6da2e5a4-aff6-4656-a261-867a0e56e0fc'
+          valueSetB: mockAnalysisUuid
         }, {
           name: 'Title',
           valueSetA: 'Character',
@@ -64,7 +65,7 @@ describe('Controller: Diff Attribute List Ctrl', function () {
       ];
       setAttributeB = [
         { name: 'Analysis Group', value: '0' },
-        { name: 'Analysis', value: '6da2e5a4-aff6-4656-a261-867a0e56e0fc' },
+        { name: 'Analysis', value: mockAnalysisUuid },
         { name: 'Title', value: 'Response to RFC 86' },
         { name: 'File Type', value: 'Text file' },
         { name: 'Year', value: '1971' },
@@ -108,7 +109,7 @@ describe('Controller: Diff Attribute List Ctrl', function () {
         {
           name: 'Analysis',
           valueSetA: 'N/A',
-          valueSetB: '6da2e5a4-aff6-4656-a261-867a0e56e0fc'
+          valueSetB: mockAnalysisUuid
         }, {
           name: 'Title',
           valueSetA: 'Character',
@@ -129,7 +130,7 @@ describe('Controller: Diff Attribute List Ctrl', function () {
       ];
       setAttributeB = [
         { name: 'Analysis Group', value: '0' },
-        { name: 'Analysis', value: '6da2e5a4-aff6-4656-a261-867a0e56e0fc' },
+        { name: 'Analysis', value: mockAnalysisUuid },
         { name: 'Title', value: 'Response to RFC 86' },
         { name: 'File Type', value: 'Text file' },
         { name: 'Year', value: '1971' },
@@ -168,7 +169,7 @@ describe('Controller: Diff Attribute List Ctrl', function () {
       var mockResponse = '';
       var fakeCommonAttributes = [
          { name: 'Analysis Group', value: '-1' },
-         { name: 'Analysis', value: '6da2e5a4-aff6-4656-a261-867a0e56e0fc' },
+         { name: 'Analysis', value: mockAnalysisUuid },
          { name: 'File Type', value: 'Text file' },
          { name: 'Year', value: '1971' }
       ];
@@ -184,7 +185,7 @@ describe('Controller: Diff Attribute List Ctrl', function () {
       var serviceResponse = ctrl.getAndReplaceAnalysisName(
           1,
           fakeCommonAttributes,
-          '6da2e5a4-aff6-4656-a261-867a0e56e0fc'
+          mockAnalysisUuid
       ).then(function (response) {
         mockResponse = response.objects[0].name;
       });
@@ -192,7 +193,7 @@ describe('Controller: Diff Attribute List Ctrl', function () {
       expect(typeof serviceResponse.then).toEqual('function');
       expect(mockResponse).toEqual('Analysis Fake Name');
       // updates the analysis name in object passed
-      expect(fakeCommonAttributes[0].value).toEqual('Analysis Fake Name');
+      expect(fakeCommonAttributes[1].value).toEqual('Analysis Fake Name');
     });
 
     it('Makes an service/API call and updates a diff attribute obj', function () {
@@ -205,7 +206,7 @@ describe('Controller: Diff Attribute List Ctrl', function () {
         }, {
           name: 'Analysis',
           valueSetA: 'N/A',
-          valueSetB: '6da2e5a4-aff6-4656-a261-867a0e56e0fc'
+          valueSetB: mockAnalysisUuid
         }, {
           name: 'Title',
           valueSetA: 'Character',
@@ -228,7 +229,7 @@ describe('Controller: Diff Attribute List Ctrl', function () {
       var serviceResponse = ctrl.getAndReplaceAnalysisName(
           1,
           fakeDiffAttributes,
-          '6da2e5a4-aff6-4656-a261-867a0e56e0fc'
+          mockAnalysisUuid
       ).then(function (response) {
         mockResponse = response.objects[0].name;
       });
@@ -237,6 +238,53 @@ describe('Controller: Diff Attribute List Ctrl', function () {
       expect(mockResponse).toEqual('Analysis Fake Name');
       // updates the analysis name in object passed
       expect(fakeDiffAttributes[1].valueSetB).toEqual('Analysis Fake Name');
+    });
+  });
+
+  describe('Test Main Method, replaceAnalysisUuidWithName', function () {
+    beforeEach(inject(function () {
+      spyOn(ctrl, 'getAndReplaceAnalysisName');
+      spyOn(ctrl, 'findAnalysisIndex').and.returnValue(0);
+    }));
+
+    it('Get and Replace Method is NOT called when Analysis === N/A', function () {
+      ctrl.diffAttributes = [
+        {
+          name: 'Analysis',
+          valueSetA: 'N/A',
+          valueSetB: 'N/A'
+        },
+        { name: 'File Type', valueSetA: 'N/A', valueSetB: 'Text file' },
+        { name: 'Month', valueSetA: 'March', valueSetB: 'April' }
+      ];
+
+      ctrl.commonAttributes = [
+         { name: 'Analysis', value: 'N/A' },
+         { name: 'File Type', value: 'Text file' },
+         { name: 'Year', value: '1971' }
+      ];
+      ctrl.replaceAnalysisUuidWithName();
+      expect(ctrl.getAndReplaceAnalysisName).not.toHaveBeenCalled();
+    });
+
+    it('Get and Replace Method is called when Analysis !== N/A', function () {
+      ctrl.commonAttributes[0] = { name: 'Analysis', value: mockAnalysisUuid };
+      ctrl.replaceAnalysisUuidWithName();
+      expect(ctrl.getAndReplaceAnalysisName.calls.count()).toEqual(1);
+      ctrl.diffAttributes[0] = {
+        name: 'Analysis',
+        valueSetA: mockAnalysisUuid,
+        valueSetB: 'N/A'
+      };
+      ctrl.replaceAnalysisUuidWithName();
+      expect(ctrl.getAndReplaceAnalysisName.calls.count()).toEqual(3);
+      ctrl.diffAttributes[0] = {
+        name: 'Analysis',
+        valueSetA: mockAnalysisUuid,
+        valueSetB: mockAnalysisUuid
+      };
+      ctrl.replaceAnalysisUuidWithName();
+      expect(ctrl.getAndReplaceAnalysisName.calls.count()).toEqual(6);
     });
   });
 });
