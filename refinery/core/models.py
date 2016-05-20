@@ -2085,6 +2085,13 @@ def dataset_deletion_check(instance):
         addition to the related objects detected by Django
     '''
 
+    try:
+        # Attempt to delete the isa_archive associated with the DataSet
+        instance.get_isa_archive().delete()
+
+    except Exception as e:
+        logger.error("Couldn't delete DataSet's isa_archive: %s" % e)
+
     related_investigation_links = InvestigationLink.objects.filter(
         data_set=instance)
     if related_investigation_links:
