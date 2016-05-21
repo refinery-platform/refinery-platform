@@ -45,15 +45,28 @@
   <tr
     ng-if="diffAttributeList.diffAttributes.length > 0"
     ng-repeat="attribute in diffAttributeList.diffAttributes">
-    <td>{{ attribute.name }}</td>
-    <td><b>{{ attribute.valueSetA }}</b></td>
-    <td><b>{{ attribute.valueSetB }}</b></td>
+    <div ng-if="attribute.name != 'Analysis Group">
+      <td>{{ attribute.name }}</td>
+      <td><b>{{ attribute.valueSetA }}</b></td>
+      <td><b>{{ attribute.valueSetB }}</b></td>
+    </div>
+    <div ng-if="attribute.name == 'Analysis Group">
+      <td>{{ attribute.name }}</td>
+      <td><b>{{ attribute.valueSetA | negativeOneWithNotAvailable }}</b></td>
+      <td><b>{{ attribute.valueSetB | negativeOneWithNotAvailable }}</b></td>
+    </div>
   </tr>
   <tr ng-if="diffAttributeList.commonAttributes.length > 0">
     <td>Shared</td>
     <td colspan="2">
       <span ng-repeat="attribute in diffAttributeList.commonAttributes">
-        {{ attribute.name }}: <b>{{ attribute.value }}</b>,&nbsp;
+        <div ng-if="attribute.name != 'Analysis Group">
+          {{ attribute.name }}: <b>{{ attribute.value }}</b>,&nbsp;
+        </div>
+         <div ng-if="attribute.name == 'Analysis Group">
+          {{ attribute.name }}:
+           <b>{{ attribute.value | negativeOneWithNotAvailable }}</b>,&nbsp;
+        </div>
       </span>
     </td>
   </tr>
