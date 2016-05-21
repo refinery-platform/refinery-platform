@@ -522,7 +522,7 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function (parentElem
       listItems.push("<li>" + visibleItems[i] + "</li>");
     }
 
-    $("#" + parentElementId).append(listHeader + '<ul id="' + listId + '"  style="max-height: 300px;  overflow: hidden; overflow-y: auto;" class="dropdown-menu" role="menu" aria-labelledby="dLabel">' + listItems.join("\n") + '</ul>');
+    $("#" + parentElementId).append(listHeader + '<ul id="' + listId + '"  style="max-height: 300px;  overflow: hidden; overflow-y: auto;" class="dropdown-menu p-a-1" role="menu" aria-labelledby="dLabel">' + listItems.join("\n") + '</ul>');
   }
 
   // configure columns
