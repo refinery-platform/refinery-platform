@@ -510,7 +510,7 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function (parentElem
   }
 
   $("#" + parentElementId).html("");
-  var listHeader = '<a href="#" class="dropdown-toggle refinery-base' +
+  var listHeader = '<a href="#" class="dropdown-toggle refinery-base ' +
     'btn btn-xs btn-default" ' +
       'data-toggle="dropdown"><i class="fa fa-wrench"></i>&nbsp;Columns&nbsp;' +
       '<i class="fa fa-caret-down"></i></a>';
