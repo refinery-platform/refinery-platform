@@ -6,7 +6,7 @@ describe('Filter: Negative One With Not Available Spec', function () {
   beforeEach(function () {
     module('refineryApp');
     inject(function ($filter) {
-      filter = $filter('negativeOneWithNotAvailable');
+      filter = $filter('analysisGroupNegativeOneWithNotAvailable');
     });
   });
 
@@ -22,5 +22,6 @@ describe('Filter: Negative One With Not Available Spec', function () {
 
   it('should return N/A with param === -1', function () {
     expect(filter(-1)).toBe('N/A');
+    expect(filter('-1')).toBe('N/A');
   });
 });
