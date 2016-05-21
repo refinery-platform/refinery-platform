@@ -55,21 +55,27 @@ function DiffAttributeListCtrl (analysisService, $log, $scope) {
     return index;
   };
 
-  // helper method, makes the api call and update name
-  vm.getAndReplaceAnalysisName = function (index, attributeObj, uuid) {
-    analysisService.query({ uuid: uuid })
-    .$promise.then(function (response) {
+  /* helper method, makes the api call and updates analysis name
+   @params:
+   index: location of analysis object
+   attributeObj: either common attributes or diff attributes is passed in
+   to be updated
+   uuid: analysis object value should be uuid */
+  vm.getAndReplaceAnalysisName = function (index, attributeArr, uuid) {
+    var analysis = analysisService.query({ uuid: uuid });
+    analysis.$promise.then(function (response) {
       var analysisName = response.objects[0].name;
-      if (attributeObj[index].value) {
-        attributeObj[index].value = analysisName;
-      } else if (attributeObj[index].valueSetA === uuid) {
-        attributeObj[index].valueSetA = analysisName;
-      } else if (attributeObj[index].valueSetB === uuid) {
-        attributeObj[index].valueSetB = analysisName;
+      if (attributeArr[index].value) {
+        attributeArr[index].value = analysisName;
+      } else if (attributeArr[index].valueSetA === uuid) {
+        attributeArr[index].valueSetA = analysisName;
+      } else if (attributeArr[index].valueSetB === uuid) {
+        attributeArr[index].valueSetB = analysisName;
       }
     }, function () {
       $log.error('Error returning analysis name');
     });
+    return analysis.$promise;
   };
 
   // main method to replace the analysis uuid with name
