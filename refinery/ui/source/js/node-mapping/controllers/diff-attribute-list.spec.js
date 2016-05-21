@@ -16,8 +16,8 @@ describe('Controller: Diff Attribute List Ctrl', function () {
     ctrl = $controller('DiffAttributeListCtrl', { $scope: scope });
     ctrl.diffAttributes = [];
     ctrl.commonAttributes = [];
-    ctrl.setA = { attributes: [] };
-    ctrl.setB = { attributes: [] };
+    ctrl.setA = { attributes: null };
+    ctrl.setB = { attributes: null };
     service = _analysisService_;
   }));
 
@@ -285,6 +285,40 @@ describe('Controller: Diff Attribute List Ctrl', function () {
       };
       ctrl.replaceAnalysisUuidWithName();
       expect(ctrl.getAndReplaceAnalysisName.calls.count()).toEqual(6);
+    });
+  });
+
+  describe('Test Main Method, update diff', function () {
+    beforeEach(inject(function () {
+      spyOn(ctrl, 'seperateCommonAndDiffAttributes');
+      spyOn(ctrl, 'replaceAnalysisUuidWithName');
+    }));
+
+    it('set attributes are empty', function () {
+      ctrl.updateDiff();
+      expect(ctrl.seperateCommonAndDiffAttributes).not.toHaveBeenCalled();
+      expect(ctrl.replaceAnalysisUuidWithName).toHaveBeenCalled();
+    });
+    it('setA is populated', function () {
+      ctrl.setA.attributes = [{ name: 'Title', value: 'Charater' }];
+      ctrl.updateDiff();
+      expect(ctrl.seperateCommonAndDiffAttributes).not.toHaveBeenCalled();
+      expect(ctrl.setA.attributes).toEqual(ctrl.commonAttributes);
+      expect(ctrl.replaceAnalysisUuidWithName).toHaveBeenCalled();
+    });
+    it('setB is populated', function () {
+      ctrl.setB = { attributes: [{ name: 'Title', value: 'Charater' }] };
+      ctrl.updateDiff();
+      expect(ctrl.seperateCommonAndDiffAttributes).not.toHaveBeenCalled();
+      expect(ctrl.setB.attributes).toEqual(ctrl.commonAttributes);
+      expect(ctrl.replaceAnalysisUuidWithName).toHaveBeenCalled();
+    });
+    it('setA & B are populated', function () {
+      ctrl.setB = { attributes: [{ name: 'Title', value: 'Charater' }] };
+      ctrl.setA = { attributes: [{ name: 'Title', value: 'File Type' }] };
+      ctrl.updateDiff();
+      expect(ctrl.seperateCommonAndDiffAttributes).toHaveBeenCalled();
+      expect(ctrl.replaceAnalysisUuidWithName).toHaveBeenCalled();
     });
   });
 });
