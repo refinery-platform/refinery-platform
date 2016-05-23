@@ -6,7 +6,6 @@ Created on May 10, 2012
 
 from datetime import datetime
 import logging
-import simplejson
 import requests
 
 from django.conf import settings

@@ -1,0 +1,13 @@
+<div class="modal-header">
+  <h3>{{ modal.config.title }}</h3>
+</div>
+<div class="modal-body">
+  <p>
+  	<ul>
+  		<li ng-repeat="item in modal.config.items track by $index">{{ ::item }}</li>
+	</ul>
+  </p>
+</div>
+<div class="modal-footer">
+  <button class="btn btn-primary" ng-click="modal.ok()">OK</button>
+</div>

@@ -1,24 +1,27 @@
+import json
 from django.contrib.auth.models import User, Group
-from django.utils import unittest, simplejson
-from django.core.cache import cache
-
+from django.utils import unittest
 from guardian.shortcuts import assign_perm
+import mockcache as memcache
 from tastypie.test import ResourceTestCase
-
 from core.api import AnalysisResource
 from core.management.commands.init_refinery import create_public_group
 from core.management.commands.create_user import init_user
 from core.models import (
     NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,
     ExtendedGroup, DataSet, InvestigationLink, Project, Analysis, Workflow,
-    WorkflowEngine, UserProfile, invalidate_cached_object
-)
+    WorkflowEngine, UserProfile, invalidate_cached_object,
+    AnalysisNodeConnection, Node)
+from file_store.models import FileExtension
 import data_set_manager
 from galaxy_connector.models import Instance
+
+cache = memcache.Client(["127.0.0.1:11211"])
 
 
 class UserCreateTest(unittest.TestCase):
     """Test User instance creation"""
+
     def setUp(self):
         self.username = "testuser"
         self.password = "password"
@@ -52,6 +55,7 @@ class UserCreateTest(unittest.TestCase):
 
 class NodeSetTest(unittest.TestCase):
     """Test all NodeSet operations"""
+
     def setUp(self):
         self.investigation = \
             data_set_manager.models.Investigation.objects.create()
@@ -59,7 +63,7 @@ class NodeSetTest(unittest.TestCase):
             investigation=self.investigation)
         self.assay = data_set_manager.models.Assay.objects.create(
             study=self.study)
-        self.query = simplejson.dumps({
+        self.query = json.dumps({
             "facets": {
                 "platform_Characteristics_10_5_s": [],
                 "cell_or_tissue_Characteristics_10_5_s": [],
@@ -74,7 +78,7 @@ class NodeSetTest(unittest.TestCase):
                 "antibody_Characteristics_10_5_s": [],
                 "data_type_Characteristics_10_5_s": [],
                 "lab_Characteristics_10_5_s": []
-                },
+            },
             "nodeSelection": [],
             "nodeSelectionBlacklistMode": True
         })
@@ -204,6 +208,7 @@ def make_api_uri(resource_name, resource_id=''):
 
 class NodeSetResourceTest(ResourceTestCase):
     """Test NodeSet REST API operations"""
+
     def setUp(self):
         super(NodeSetResourceTest, self).setUp()
         self.investigation = \
@@ -258,8 +263,7 @@ class NodeSetResourceTest(ResourceTestCase):
             name='ns',
             study=self.study,
             assay=self.assay,
-            solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm("read_%s" % nodeset._meta.module_name, self.user, nodeset)
         nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
         response = self.api_client.get(
@@ -282,7 +286,7 @@ class NodeSetResourceTest(ResourceTestCase):
     #         name='ns1',
     #         study=self.study,
     #         assay=self.assay,
-    #         solr_query=simplejson.dumps(self.query)
+    #         solr_query=json.dumps(self.query)
     #     )
     #     # nodeset1.set_owner(self.user)
     #     assign_perm(
@@ -294,7 +298,7 @@ class NodeSetResourceTest(ResourceTestCase):
     #         name='ns2',
     #         study=self.study,
     #         assay=self.assay,
-    #         solr_query=simplejson.dumps(self.query)
+    #         solr_query=json.dumps(self.query)
     #     )
     #     # nodeset2.set_owner(self.user2)
     #     assign_perm(
@@ -318,15 +322,13 @@ class NodeSetResourceTest(ResourceTestCase):
         """Test retrieving a list of NodeSets for given study and assay"""
         nodeset1 = NodeSet.objects.create(
             name='ns1', study=self.study, assay=self.assay,
-            solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
         )
         nodeset2 = NodeSet.objects.create(
             name='ns2', study=self.study2, assay=self.assay2,
-            solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset2._meta.module_name, self.user2, nodeset2
         )
@@ -346,15 +348,13 @@ class NodeSetResourceTest(ResourceTestCase):
         """
         nodeset1 = NodeSet.objects.create(
             name='ns1', study=self.study, assay=self.assay,
-            solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
         )
         nodeset2 = NodeSet.objects.create(
             name='ns2', study=self.study2, assay=self.assay2,
-            solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset2._meta.module_name, self.user, nodeset2
         )
@@ -380,8 +380,7 @@ class NodeSetResourceTest(ResourceTestCase):
         """Test retrieving an existing NodeSet without logging in"""
         nodeset = NodeSet.objects.create(
             name='ns', study=self.study, assay=self.assay,
-            solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm("read_%s" % nodeset._meta.module_name, self.user, nodeset)
         nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
         response = self.api_client.get(nodeset_uri, format='json')
@@ -391,14 +390,12 @@ class NodeSetResourceTest(ResourceTestCase):
         """Test retrieving a list of NodeSets without logging in"""
         nodeset1 = NodeSet.objects.create(
             name='ns1', study=self.study, assay=self.assay,
-            solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
         nodeset2 = NodeSet.objects.create(
             name='ns2', study=self.study, assay=self.assay,
-            solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset2._meta.module_name, self.user2, nodeset2
         )
@@ -414,7 +411,7 @@ class NodeSetResourceTest(ResourceTestCase):
     #         name='nodeset',
     #         study=self.study,
     #         assay=self.assay,
-    #         solr_query=simplejson.dumps(self.query)
+    #         solr_query=json.dumps(self.query)
     #     )
     #     nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
     #     response = self.api_client.get(
@@ -433,7 +430,7 @@ class NodeSetResourceTest(ResourceTestCase):
     #         name='nodeset',
     #         study=self.study,
     #         assay=self.assay,
-    #         solr_query=simplejson.dumps(self.query)
+    #         solr_query=json.dumps(self.query)
     #     )
     #     assign_perm(
     #         "read_%s" % nodeset._meta.module_name, self.user2, nodeset
@@ -450,8 +447,7 @@ class NodeSetResourceTest(ResourceTestCase):
         """Test retrieving a NodeSet instance that doesn't exist"""
         nodeset = NodeSet.objects.create(
             name='nodeset', study=self.study, assay=self.assay,
-            solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm("read_%s" % nodeset._meta.module_name, self.user, nodeset)
         nodeset_uri = make_api_uri('nodeset', 'Invalid UUID')
         response = self.api_client.get(nodeset_uri, format='json',
@@ -578,6 +574,7 @@ class NodeSetResourceTest(ResourceTestCase):
 
 class NodeSetListResourceTest(ResourceTestCase):
     """Test NodeSetListResource REST API operations"""
+
     def setUp(self):
         super(NodeSetListResourceTest, self).setUp()
         self.investigation = \
@@ -640,7 +637,7 @@ class NodeSetListResourceTest(ResourceTestCase):
     #         assay=self.assay,
     #         node_count=1,
     #         is_implicit=True,
-    #         solr_query=simplejson.dumps(self.query)
+    #         solr_query=json.dumps(self.query)
     #     )
     #     assign_perm(
     #         "read_%s" % nodeset1._meta.module_name,
@@ -653,7 +650,7 @@ class NodeSetListResourceTest(ResourceTestCase):
     #         assay=self.assay2,
     #         node_count=1,
     #         is_implicit=True,
-    #         solr_query=simplejson.dumps(self.query)
+    #         solr_query=json.dumps(self.query)
     #     )
     #     assign_perm(
     #         "read_%s" % nodeset2._meta.module_name,
@@ -676,15 +673,13 @@ class NodeSetListResourceTest(ResourceTestCase):
         """
         nodeset1 = NodeSet.objects.create(
             name='ns1', study=self.study, assay=self.assay, node_count=1,
-            is_implicit=True, solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
         )
         nodeset2 = NodeSet.objects.create(
             name='ns2', study=self.study2, assay=self.assay2, node_count=1,
-            is_implicit=True, solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset2._meta.module_name, self.user, nodeset2
         )
@@ -700,15 +695,13 @@ class NodeSetListResourceTest(ResourceTestCase):
         """Test retrieving a list of NodeSets for given study and assay"""
         nodeset1 = NodeSet.objects.create(
             name='ns1', study=self.study, assay=self.assay, node_count=1,
-            is_implicit=True, solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
         )
         nodeset2 = NodeSet.objects.create(
             name='ns2', study=self.study2, assay=self.assay2, node_count=1,
-            is_implicit=True, solr_query=simplejson.dumps(self.query)
-        )
+            solr_query=json.dumps(self.query))
         assign_perm(
             "read_%s" % nodeset2._meta.module_name, self.user2, nodeset2
         )
@@ -737,8 +730,7 @@ class NodeSetListResourceTest(ResourceTestCase):
     def test_delete_nodeset_list(self):
         """Test deleting a list of NodeSets"""
         nodeset = NodeSet.objects.create(
-            name='nodeset', study=self.study, assay=self.assay
-        )
+            name='nodeset', study=self.study, assay=self.assay)
         self.assertEqual(NodeSet.objects.count(), 1)
         assign_perm(
             "delete_%s" % nodeset._meta.module_name, self.user, nodeset
@@ -753,6 +745,7 @@ class NodeSetListResourceTest(ResourceTestCase):
 
 class AnalysisResourceTest(ResourceTestCase):
     """Test Analysis REST API operations"""
+
     def setUp(self):
         super(AnalysisResourceTest, self).setUp()
         self.username = self.password = 'user'
@@ -777,6 +770,9 @@ class AnalysisResourceTest(ResourceTestCase):
         self.workflow = Workflow.objects.create(
             workflow_engine=self.workflow_engine
         )
+
+    def tearDown(self):
+        FileExtension.objects.all().delete()
 
     def get_credentials(self):
         """Authenticate as self.user"""
@@ -1008,74 +1004,53 @@ class AnalysisResourceTest(ResourceTestCase):
 
 
 class BaseResourceSlugTest(unittest.TestCase):
-    def setUp(self):
-        self.investigation = \
-            data_set_manager.models.Investigation.objects.create()
-        self.study = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation)
-        self.assay = data_set_manager.models.Assay.objects.create(
-            study=self.study)
-        self.query = simplejson.dumps({
-            "facets": {
-                "platform_Characteristics_10_5_s": [],
-                "cell_or_tissue_Characteristics_10_5_s": [],
-                "REFINERY_TYPE_10_5_s": [],
-                "species_Characteristics_10_5_s": [],
-                "treatment_Characteristics_10_5_s": [],
-                "factor_Characteristics_10_5_s": [],
-                "factor_function_Characteristics_10_5_s": [],
-                "data_source_Characteristics_10_5_s": [],
-                "genome_build_Characteristics_10_5_s": [],
-                "REFINERY_FILETYPE_10_5_s": [],
-                "antibody_Characteristics_10_5_s": [],
-                "data_type_Characteristics_10_5_s": [],
-                "lab_Characteristics_10_5_s": []
-                },
-            "nodeSelection": [],
-            "nodeSelectionBlacklistMode": True
-        })
-
     """Tests for BaseResource Slugs"""
-    def test_duplicate_slugs(self):
-        DataSet.objects.create(slug="TestSlug")
-        DataSet.objects.create(slug="TestSlug")
 
-        self.assertEqual(DataSet.objects.filter(slug="TestSlug")
+    def setUp(self):
+        # make some data
+        for index, item in enumerate(range(0, 10)):
+            DataSet.objects.create(slug="TestSlug%d" % index)
+        Project.objects.create(name="project")
+
+    def tearDown(self):
+        DataSet.objects.all().delete()
+        Project.objects.all().delete()
+
+    def test_duplicate_slugs(self):
+        DataSet.objects.create(slug="TestSlug1")
+        self.assertEqual(DataSet.objects.filter(slug="TestSlug1")
                          .count(), 1)
 
     def test_empty_slug(self):
         self.assertTrue(DataSet.objects.create(slug=""))
 
     def test_edit_existing_slug(self):
-        DataSet.objects.create(slug="TestSlug1")
         instance = DataSet.objects.get(slug="TestSlug1")
-        instance.summary = "This is a summmary"
+        instance.summary = "Edited Summary"
         instance.save()
-        instance.summary = "Different summary"
-        instance.save()
-        self.assertTrue(DataSet.objects.get(summary="Different summary"))
+
+        self.assertTrue(DataSet.objects.get(summary="Edited Summary"))
 
     def test_save_slug_no_change(self):
-        DataSet.objects.create(slug="TestSlug2")
-        instance = DataSet.objects.get(slug="TestSlug2")
-        instance.save()
-        instance_again = DataSet.objects.get(slug="TestSlug2")
+        instance = DataSet.objects.get(slug="TestSlug1")
+        instance_again = DataSet.objects.get(slug="TestSlug1")
+        instance_again.save()
+
         self.assertEqual(instance, instance_again)
 
     def test_save_slug_with_change(self):
-        DataSet.objects.create(slug="TestSlug3")
-        instance = DataSet.objects.get(slug="TestSlug3")
-        instance_again = DataSet.objects.get(slug="TestSlug3")
+        instance = DataSet.objects.get(slug="TestSlug1")
+        instance_again = DataSet.objects.get(slug="TestSlug1")
         instance_again.slug = "CHANGED"
         instance_again.save()
+
         self.assertNotEqual(instance.slug, instance_again.slug)
 
     def test_save_slug_when_another_model_with_same_slug_exists(self):
-        name = 'nodeset'
-        create_nodeset(name=name, study=self.study, assay=self.assay)
-        nodeset_instance = NodeSet.objects.get(name="nodeset")
-        nodeset_instance.slug = "TestSlug4"
-        nodeset_instance.save()
+        project_instance = Project.objects.get(name="project")
+        project_instance.slug = "TestSlug4"
+        project_instance.save()
+
         self.assertTrue(DataSet.objects.create(slug="TestSlug4"))
 
 
@@ -1084,56 +1059,322 @@ class CachingTest(unittest.TestCase):
 
     def setUp(self):
         # make some data
-        for index, item in enumerate(range(0, 10)):
+        self.username = self.password = 'Cool'
+        self.user = User.objects.create_user(
+            self.username, '', self.password
+        )
+        self.username1 = self.password1 = 'Cool1'
+        self.user1 = User.objects.create_user(
+            self.username1, '', self.password1
+        )
+        create_public_group()
+        self.public_group_name = ExtendedGroup.objects.public_group().name
+        for index, item in enumerate(range(0, 6)):
             DataSet.objects.create(slug="TestSlug%d" % index)
         # Adding to cache
-        cache.add("DataSet", DataSet.objects.all())
+        cache.add("{}-DataSet".format(self.user.id), DataSet.objects.all())
+
         # Initial data that is cached, to test against later
-        self.initial_cache = cache.get("DataSet")
+        self.initial_cache = cache.get("{}-DataSet".format(self.user.id))
 
     def tearDown(self):
-        cache.clear()
+        self.cache = invalidate_cached_object(DataSet.objects.get(
+            slug="TestSlug1"), True)
+        DataSet.objects.all().delete()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+        ExtendedGroup.objects.all().delete()
 
-    def verify_data_after_save(self):
+    def test_verify_cache_invalidation(self):
+        # Grab a DataSet and see if we can invalidate the cache
+        ds = DataSet.objects.get(slug="TestSlug5")
+        self.cache = invalidate_cached_object(ds, True)
+        self.assertIsNone(self.cache.get("{}-DataSet".format(self.user.id)))
+
+    def test_verify_data_after_save(self):
         # Grab, alter, and save an object being cached
         ds = DataSet.objects.get(slug="TestSlug5")
         ds.slug = "NewSlug"
         ds.save()
-        # Check if cache can be invalidated
-        invalidate_cached_object(ds)
-        self.assertFalse(cache.get("DataSet"))
+
+        # Invalidate cache
+        self.cache = invalidate_cached_object(ds, True)
+
         # Adding to cache again
-        cache.add("DataSet", DataSet.objects.all())
-        new_cache = cache.get("DataSet")
+        self.cache.add("{}-DataSet".format(self.user.id),
+                       DataSet.objects.all())
+        new_cache = self.cache.get("{}-DataSet".format(self.user.id))
+
         self.assertTrue(new_cache)
         # Make sure new cache represents the altered data
         self.assertNotEqual(self.initial_cache, new_cache)
         self.assertTrue(DataSet.objects.get(slug="NewSlug"))
 
-    def verify_data_after_delete(self):
+    def test_verify_data_after_delete(self):
         # Grab and delete an object being cached
         ds = DataSet.objects.get(slug="TestSlug5")
         ds.delete()
-        # Check if cache can be invalidated
-        invalidate_cached_object(DataSet.objects.get(slug="TestSlug1"))
-        self.assertFalse(cache.get("DataSet"))
+
+        # Invalidate cache
+        self.cache = invalidate_cached_object(DataSet.objects.get(
+            slug="TestSlug1"), True)
+
+        self.assertFalse(self.cache.get("{}-DataSet".format(self.user.id)))
         # Adding to cache again
-        cache.add("DataSet", DataSet.objects.all())
-        new_cache = cache.get("DataSet")
+        self.cache.add("{}-DataSet".format(self.user.id),
+                       DataSet.objects.all())
+        new_cache = self.cache.get("{}-DataSet".format(self.user.id))
+
         self.assertTrue(new_cache)
         # Make sure new cache represents the altered data
         self.assertNotEqual(self.initial_cache, new_cache)
 
-    def verify_data_after_perms_change(self):
+    def test_verify_data_after_perms_change(self):
         # Grab and change sharing an object being cached
         ds = DataSet.objects.get(slug="TestSlug5")
-        ds.share(group="Public")
-        # Check if cache can be invalidated
-        invalidate_cached_object(DataSet.objects.get(slug="TestSlug1"))
-        self.assertFalse(cache.get("DataSet"))
+        ds.share(group=Group.objects.get(name="Public"))
+
+        # Invalidate cache
+        self.cache = invalidate_cached_object(DataSet.objects.get(
+            slug="TestSlug1"), True)
+
+        self.assertFalse(self.cache.get("{}-DataSet".format(self.user.id)))
         # Adding to cache again
-        cache.add("DataSet", DataSet.objects.all())
-        new_cache = cache.get("DataSet")
+        self.cache.add("{}-DataSet".format(self.user.id),
+                       DataSet.objects.all())
+        new_cache = self.cache.get("{}-DataSet".format(self.user.id))
+
         self.assertTrue(new_cache)
         # Make sure new cache represents the altered data
         self.assertNotEqual(self.initial_cache, new_cache)
+
+
+class WorkflowDeletionTest(unittest.TestCase):
+    """Testing for the deletion of Workflows"""
+
+    def setUp(self):
+        self.username = self.password = 'user'
+        self.user = User.objects.create_user(
+            self.username, '', self.password
+        )
+        self.project = Project.objects.create()
+        self.galaxy_instance = Instance.objects.create()
+        self.workflow_engine = WorkflowEngine.objects.create(
+            instance=self.galaxy_instance
+        )
+        self.workflow = Workflow.objects.create(
+            name="Workflow1", workflow_engine=self.workflow_engine)
+        self.dataset = DataSet.objects.create()
+
+    def tearDown(self):
+        User.objects.all().delete()
+        Project.objects.all().delete()
+        WorkflowEngine.objects.all().delete()
+        Workflow.objects.all().delete()
+        DataSet.objects.all().delete()
+        Instance.objects.all().delete()
+        Analysis.objects.all().delete()
+
+    def test_verify_workflow_used_by_analysis(self):
+        analysis = Analysis.objects.create(
+            name='bla',
+            summary='keks',
+            project=self.project,
+            data_set=self.dataset,
+            workflow=self.workflow,
+            status="SUCCESS"
+        )
+        analysis.set_owner(self.user)
+        self.assertEqual(analysis.workflow.name, "Workflow1")
+
+    def test_verify_no_deletion_if_workflow_used_in_analysis(self):
+        analysis = Analysis.objects.create(
+            name='bla',
+            summary='keks',
+            project=self.project,
+            data_set=self.dataset,
+            workflow=self.workflow,
+            status="SUCCESS"
+        )
+        analysis.set_owner(self.user)
+        self.workflow.delete()
+        self.assertFalse(self.workflow.is_active)
+
+    def test_verify_deletion_if_workflow_not_used_in_analysis(self):
+        self.assertEqual(self.workflow.delete(), None)
+
+
+class DataSetDeletionTest(unittest.TestCase):
+    """Testing for the deletion of Datasets"""
+
+    def setUp(self):
+        self.username = self.password = 'user'
+        self.user = User.objects.create_user(
+            self.username, '', self.password
+        )
+        self.project = Project.objects.create()
+        self.galaxy_instance = Instance.objects.create()
+        self.workflow_engine = WorkflowEngine.objects.create(
+            instance=self.galaxy_instance
+        )
+        self.workflow = Workflow.objects.create(
+            name="Workflow1", workflow_engine=self.workflow_engine)
+        self.dataset_with_analysis = DataSet.objects.create()
+        self.dataset_without_analysis = DataSet.objects.create()
+        self.analysis = Analysis.objects.create(
+            name='bla',
+            summary='keks',
+            project=self.project,
+            data_set=self.dataset_with_analysis,
+            workflow=self.workflow,
+            status="SUCCESS"
+        )
+        self.analysis.set_owner(self.user)
+
+    def tearDown(self):
+        User.objects.all().delete()
+        Project.objects.all().delete()
+        WorkflowEngine.objects.all().delete()
+        Workflow.objects.all().delete()
+        DataSet.objects.all().delete()
+        Instance.objects.all().delete()
+        Analysis.objects.all().delete()
+        UserProfile.objects.all().delete()
+        Node.objects.all().delete()
+        data_set_manager.models.Study.objects.all().delete()
+        data_set_manager.models.Assay.objects.all().delete()
+        data_set_manager.models.Investigation.objects.all().delete()
+        AnalysisNodeConnection.objects.all().delete()
+        InvestigationLink.objects.all().delete()
+
+    def test_verify_dataset_deletion_if_no_analysis_run_upon_it(self):
+        self.assertEqual(self.dataset_without_analysis.delete(), None)
+
+    def test_verify_no_dataset_deletion_if_analysis_run_upon_it(self):
+        self.dataset_with_analysis.delete()
+        self.assertNotEqual(self.dataset_with_analysis, None)
+
+
+class AnalysisDeletionTest(unittest.TestCase):
+    """Testing for the deletion of Analyses"""
+
+    def setUp(self):
+        # Create a user
+        self.username = self.password = 'user'
+        self.user = User.objects.create_user(
+            self.username, '', self.password
+        )
+
+        # Create a Project
+        self.project = Project.objects.create()
+        self.project1 = Project.objects.create()
+
+        # Creae a galaxy Instance
+        self.galaxy_instance = Instance.objects.create()
+
+        # Create a WorkflowEngine
+        self.workflow_engine = WorkflowEngine.objects.create(
+            instance=self.galaxy_instance
+        )
+
+        # Create a Workflow
+        self.workflow = Workflow.objects.create(
+            name="Workflow1", workflow_engine=self.workflow_engine)
+        self.workflow1 = Workflow.objects.create(
+            name="Workflow1", workflow_engine=self.workflow_engine)
+
+        # Create some DataSets that will have an analysis run upon them
+        self.dataset_with_analysis = DataSet.objects.create()
+        self.dataset_with_analysis1 = DataSet.objects.create()
+
+        # Create a DataSet that won't have an analysis run upon it
+        self.dataset_without_analysis = DataSet.objects.create()
+
+        # Create two Analyses using the two DataSets made earlier
+        self.analysis = Analysis.objects.create(
+            name='analysis_without_node_analyzed_further',
+            summary='This is a summary',
+            project=self.project,
+            data_set=self.dataset_with_analysis,
+            workflow=self.workflow,
+            status="SUCCESS"
+        )
+        self.analysis_with_node_analyzed_further = Analysis.objects.create(
+            name='analysis_with_node_analyzed_further',
+            summary='This is a summary',
+            project=self.project1,
+            data_set=self.dataset_with_analysis1,
+            workflow=self.workflow1,
+            status="SUCCESS"
+        )
+        # Set Ownership
+        self.analysis.set_owner(self.user)
+        self.analysis_with_node_analyzed_further.set_owner(self.user)
+
+        # Create Investigation/InvestigationLinks for the DataSets
+        self.investigation = \
+            data_set_manager.models.Investigation.objects.create()
+        self.investigation_link = InvestigationLink.objects.create(
+            investigation=self.investigation,
+            data_set=self.dataset_with_analysis)
+        self.investigation1 = \
+            data_set_manager.models.Investigation.objects.create()
+        self.investigation_link1 = InvestigationLink.objects.create(
+            investigation=self.investigation1,
+            data_set=self.dataset_with_analysis1)
+
+        # Create Studys and Assays
+        self.study = data_set_manager.models.Study.objects.create(
+            investigation=self.investigation)
+        self.assay = data_set_manager.models.Assay.objects.create(
+            study=self.study)
+        self.study1 = data_set_manager.models.Study.objects.create(
+            investigation=self.investigation1)
+        self.assay1 = data_set_manager.models.Assay.objects.create(
+            study=self.study1)
+
+        # Create Nodes
+        self.node = Node.objects.create(assay=self.assay, study=self.study,
+                                        analysis_uuid=self.analysis.uuid)
+
+        self.node2 = Node.objects.create(assay=self.assay1, study=self.study1,
+                                         analysis_uuid=self.
+                                         analysis_with_node_analyzed_further
+                                         .uuid)
+        # Create AnalysisNodeConnections
+        self.analysis_node_connection = \
+            AnalysisNodeConnection.objects.create(analysis=self.analysis,
+                                                  node=self.node, step=1,
+                                                  direction="out")
+        self.analysis_node_connection_with_node_analyzed_further = \
+            AnalysisNodeConnection.objects.create(
+                analysis=self.analysis_with_node_analyzed_further,
+                node=self.node2, step=2,
+                direction="in")
+
+    def tearDown(self):
+        User.objects.all().delete()
+        Project.objects.all().delete()
+        WorkflowEngine.objects.all().delete()
+        Workflow.objects.all().delete()
+        DataSet.objects.all().delete()
+        Instance.objects.all().delete()
+        Analysis.objects.all().delete()
+        UserProfile.objects.all().delete()
+        Node.objects.all().delete()
+        data_set_manager.models.Study.objects.all().delete()
+        data_set_manager.models.Assay.objects.all().delete()
+        data_set_manager.models.Investigation.objects.all().delete()
+        AnalysisNodeConnection.objects.all().delete()
+        InvestigationLink.objects.all().delete()
+
+    def test_verify_analysis_deletion_if_nodes_not_analyzed_further(self):
+        # Try to delete Analysis with a Node that has an
+        # AnalysisNodeConnection with direction == 'out'
+        self.assertEqual(self.analysis.delete(), None)
+
+    def test_verify_analysis_remains_if_nodes_analyzed_further(self):
+        # Try to delete Analysis with a Node that has an
+        # AnalysisNodeConnection with direction == 'in'
+        self.analysis_with_node_analyzed_further.delete()
+        self.assertNotEqual(self.analysis_with_node_analyzed_further, None)

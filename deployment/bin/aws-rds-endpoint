@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# Given the name of an AWS RDS, outputs the JSON for the
+# endpoint details.
+#
+# Example:
+#
+# Running
+#
+# $ bin/aws-rds-endpoint db20160111
+#
+# Outputs
+#
+# {
+#   "Address": "db20160111.cxbxs51vavna.us-east-1.rds.amazonaws.com",
+#   "Port": 5432
+# }
+#
+# Dependencies:
+# - awscli
+# - jq
+
+
+Rdsname=${1?RDS Name}
+
+Region=$(cat /home/ubuntu/region)
+
+# To find the connection details for a db instance with a known name
+aws --region "$Region" rds describe-db-instances |
+jq -r '.[][] |
+select(.DBInstanceIdentifier == "'"$Rdsname"'") | .Endpoint'

@@ -1,4 +1,6 @@
-function DataSetStoreFactory (_) {
+'use strict';
+
+function DataSetStoreFactory () {
   /**
    * Stores the data objects.
    *
@@ -17,7 +19,8 @@ function DataSetStoreFactory (_) {
    *
    * @class
    */
-  function DataSetStore () {}
+  function DataSetStore () {
+  }
 
   /**
    * Add a data object to the store.
@@ -159,7 +162,6 @@ function DataSetStoreFactory (_) {
     'length',
     {
       enumerable: true,
-      configurable: false,
       get: function () {
         return Object.keys(_store).length;
       }

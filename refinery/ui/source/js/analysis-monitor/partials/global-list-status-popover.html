@@ -31,7 +31,7 @@
             <div ng-if="(PopAMCtrl.isAnalysesRunningGlobal())"
               class="analysis-running-percentage">
               {{ PopAMCtrl.analysesGlobalDetail[analysis.uuid]|
-                analysisMonitorRunningStatusPercent }}
+                analysisMonitorRunningStatusPercent }}%
             </div>
             <div class="analyses-global-text-icon">
                <i class="{{PopAMCtrl.analysesGlobalDetail[analysis
@@ -54,9 +54,16 @@
             &nbsp;
             </div>
             <div class="analyses-global-text">
-            <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
-              {{ analysis.name }}
-            </a>
+              <span ng-if="analysis.status === 'SUCCESS'">
+                <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
+                  {{ analysis.name }}
+                </a>
+              </span>
+              <span ng-if="analysis.status !== 'SUCCESS'">
+                <a id="analyses-popover-links" ng-href="/data_sets/{{ analysis.data_set__uuid }}/#/analyses/">
+                  {{ analysis.name }}
+                </a>
+              </span>
               </div>
           </span>
         </span>

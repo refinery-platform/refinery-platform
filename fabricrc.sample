@@ -1,10 +1,9 @@
 # Copy to ~/.fabricrc and customize to match your environment
 
-project_user=vagrant
-refinery_project_dir=/vagrant
+project_user=ubuntu
+refinery_project_dir=/srv/refinery-platform
 refinery_virtualenv_name=refinery-platform
 
 # deployment hosts (not used if only deploying locally with Vagrant)
 dev_host=refinery-dev.example.org
-stage_host=refinery-stage.example.org
 prod_host=refinery-prod.example.org

@@ -1,3 +1,5 @@
+'use strict';
+
 function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
   function DataSetSearchApi (searchQuery, firstTimeAllIds) {
     return function (limit, offset) {
@@ -5,9 +7,11 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
         {
           // Query for all dataset IDs and annotations. This is needed for some
           // visualization tools.
-          'allIds': firstTimeAllIds ? 1 : 0,
-          // Extended DisMax
-          'defType': 'edismax',
+          allIds: firstTimeAllIds ? 1 : 0,
+          // Synonym eDisMax Query Parser
+          // https://github.com/healthonnet/hon-lucene-synonyms
+          defType: settings.djangoApp.solrSynonymSearch ?
+            'synonym_edismax' : 'edismax',
           // Alternative field for `title` when no highlights were
           // found
           'f.title.hl.alternateField': 'title',
@@ -15,11 +19,11 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
           // found
           'f.description.hl.alternateField': 'description',
           // Fields that are returned
-          'fl': 'dbid,uuid,access',
+          fl: 'dbid,uuid,access',
           // Limit search space to data sets only
-          'fq': 'django_ct:core.dataset',
+          fq: 'django_ct:core.dataset',
           // Highlighting enabled
-          'hl': true,
+          hl: true,
           // Fields that are highlighted
           'hl.fl': 'title,description',
           // Limit the alternate fields to 128 characters at most.
@@ -31,27 +35,31 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
           // Highlighting suffix
           'hl.simple.post': '</em>',
           // Query
-          'q': searchQuery,
+          q: searchQuery,
           // Query fields
-          'qf': 'title^0.5 accession submitter text',
+          qf: 'title^0.5 accession submitter text',
           // # results returned
-          'rows': limit,
+          rows: limit,
           // Start of return
-          'start': offset
+          start: offset,
+          // Enable synonym search
+          synonyms: !!settings.djangoApp.solrSynonymSearch
         },
         {
           index: 'core'
         }
       );
 
-      firstTimeAllIds = false;
+      // In this case we explicitly want to reassign the parameter to make sure
+      // that all IDs are truly only retrieved once!
+      firstTimeAllIds = false;  // eslint-disable-line no-param-reassign
 
       return query
         .$promise
         .then(function (data) {
-          var doc,
-              id,
-              userId = sessionService.get('userId');
+          var doc;
+          var id;
+          var userId = sessionService.get('userId');
 
           for (var i = 0, len = data.response.docs.length; i < len; i++) {
             doc = data.response.docs[i];
@@ -64,7 +72,7 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
                 data.highlighting[id].title[0]
               );
             } else {
-              doc.title = sce.trustAsHtml(
+              doc.title = $sce.trustAsHtml(
                 '<span class="is-unknown">Unknown</span>'
               );
             }

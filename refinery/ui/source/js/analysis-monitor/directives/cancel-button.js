@@ -1,17 +1,15 @@
-angular.module('refineryAnalysisMonitor')
-  .directive("rpAnalysisMonitorCancelConfirm", rpAnalysisMonitorCancelConfirm);
+'use strict';
 
 
-function rpAnalysisMonitorCancelConfirm() {
-  "use strict";
+function rpAnalysisMonitorCancelConfirm (bootbox) {
   return {
     controller: 'AnalysisMonitorCtrl',
     link: function (scope, element, attr) {
-      var msg = "<h3>Cancel Analysis?</h3><p>Are you sure you want to" +
-        " cancel this analysis?</p>";
+      var msg = '<h3>Cancel Analysis?</h3><p>Are you sure you want to' +
+        ' cancel this analysis?</p>';
       var clickAction = attr.confirmedClick;
-      element.bind('click', function (event) {
-        bootbox.confirm( msg, function(result) {
+      element.bind('click', function () {
+        bootbox.confirm(msg, function (result) {
           if (result) {
             scope.$eval(clickAction);
           }
@@ -20,3 +18,10 @@ function rpAnalysisMonitorCancelConfirm() {
     }
   };
 }
+
+angular
+  .module('refineryAnalysisMonitor')
+  .directive('rpAnalysisMonitorCancelConfirm', [
+    'bootbox',
+    rpAnalysisMonitorCancelConfirm
+  ]);

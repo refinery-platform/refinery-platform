@@ -1,7 +1,9 @@
+'use strict';
+
 angular
   .module('refineryApp')
   .filter('analysisStatusTitle', function () {
-    return function(param){
+    return function (param) {
       switch (param) {
         case 'SUCCESS':
           return 'Analysis successful.';

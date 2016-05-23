@@ -1,19 +1,27 @@
+'use strict';
+
 angular
   .module('refineryDashboard')
-  .factory('dashboardDataSetsReloadService', ['$q',
-    function ($q) {
+  .factory('dashboardDataSetsReloadService', [
+    function () {
       return {
         /**
-         * Interface for the getter
-         * @param  {number}   offset  First item returned by the API.
-         * @param  {number}   limit   Number of items returned by the API.
-         * @return {object}           Angular promise.
+         * Placeholder method. Will be set by `setReload`.
+         *
+         * @method  reload
+         * @author  Fritz Lekschas
+         * @date    2016-05-09
          */
         reload: function () {},
         /**
          * Switch getter with a custom function.
-         * @param {function} sourceFunction The actualy source function, e.g.
          *
+         * @method  setReload
+         * @author  Fritz Lekschas
+         * @date    2016-05-09
+         *
+         * @param   {Function}  sourceFunction  The function to be set as
+         *   `reload`.
          */
         setReload: function (sourceFunction) {
           this.reload = sourceFunction;

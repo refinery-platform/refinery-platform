@@ -5,11 +5,13 @@ Created on Jan 11, 2012
 '''
 
 import ast
+import uuid
 import copy
-from datetime import datetime
 import logging
 import networkx as nx
-import simplejson
+import json
+
+from core.utils import get_aware_local_time
 
 logger = logging.getLogger(__name__)
 
@@ -40,13 +42,13 @@ class GalaxyWorkflowInput(object):
 # Helper functions
 def createBaseWorkflow(workflow_name):
     """Creates base template workflow"""
-    base_dict = {}
-    base_dict["a_galaxy_workflow"] = "true"
-    base_dict["annotation"] = ""
-    base_dict["format-version"] = "0.1"
-    base_dict["name"] = workflow_name + "-" + str(datetime.now())
-    base_dict["steps"] = {}
-    return base_dict
+    return {
+        "a_galaxy_workflow": "true",
+        "annotation": "",
+        "format-version": "0.1",
+        "name": workflow_name + "-" + str(get_aware_local_time()),
+        "steps": {},
+    }
 
 
 def workflowMap(workflow):
@@ -91,7 +93,7 @@ def createStepsAnnot(file_list, workflow):
     """Replicates an input dictionary:
     "X" number of times depending on value of repeat_num
     """
-    logger.debug("galaxy_workflow.createStepsAnnot called")
+    logger.debug("Creating workflow steps annotation")
     updated_dict = {}
     temp_steps = workflow["steps"]
     repeat_num = len(file_list)
@@ -108,7 +110,6 @@ def createStepsAnnot(file_list, workflow):
             curr_workflow_step["id"] = int(curr_id)
             # 2. Update any connecting input_ids
             input_dict = curr_workflow_step["input_connections"]
-            num_inputs = len(input_dict)
             if input_dict:
                 for key in input_dict.keys():
                     if input_dict[key]['id'] is not None:
@@ -120,13 +121,11 @@ def createStepsAnnot(file_list, workflow):
             pos_dict = curr_workflow_step["position"]
             if pos_dict:
                 top_pos = pos_dict["top"]
-                left_pos = pos_dict["left"]
                 # TODO: find a better way of defining positions
                 pos_dict["top"] = top_pos * (i + 1)
             # 4. Updating post job actions for renaming datasets
             input_type = map[int(curr_step)]
             if len(curr_workflow_step['inputs']) == 0:
-                tool_name = parse_tool_name(curr_workflow_step["tool_id"])
                 # getting current filename for workflow
                 curr_filename = ''
                 if input_type in file_list[i].keys():
@@ -149,7 +148,6 @@ def createStepsAnnot(file_list, workflow):
                 # workflow
                 # parsing annotation field in galaxy workflows to parse output
                 # files to keep: "keep=output_file, keep=output_file2" etc..
-                step_annot = curr_workflow_step['annotation']
                 keep_files = {}
                 # Update with added JSON to define description and new names
                 # of files
@@ -175,8 +173,6 @@ def createStepsAnnot(file_list, workflow):
                         # galaxy output file type
                         otype = str(ofiles['type'])
                         temp_key = 'RenameDatasetAction' + oname
-                        new_output_name = curr_filename + "," + tool_name + \
-                            ',' + input_type + ',' + oname
                         new_tool_name = str(curr_id) + "_" + oname
                         # store information about the output files of this
                         # tools
@@ -267,6 +263,13 @@ def createStepsAnnot(file_list, workflow):
                          'is_refinery_file': True})
                     # Adds updated module
             updated_dict[curr_id] = curr_workflow_step
+
+            # Assign a uuid that is unique to each step (allow multiple
+            # inputs for a workflow)
+            for item in updated_dict:
+                updated_dict[item]['uuid'] = unicode(str(
+                    uuid.uuid4()))
+
     return updated_dict, history_download, connections
 
 
@@ -277,7 +280,6 @@ def createStepsCompact(file_list, workflow):
     logger.debug("galaxy_workflow.createStepsCompact called")
     updated_dict = {}
     temp_steps = workflow["steps"]
-    repeat_num = len(file_list)
     history_download = []
     map = workflowMap(workflow)
     lookup_edges = {}
@@ -353,21 +355,21 @@ def createStepsCompact(file_list, workflow):
                 # store information about this output file
                 connections.append(analysis_node_connection)
                 # if rename dataset action already exists for this tool output
-                if temp_key in pja_dict:
-                    # renaming output files according with step_id of workflow
-                    # FIXME: assignment from an undefined variable
-                    # new_output_name
-                    pja_dict[temp_key]['action_arguments']['newname'] = \
-                        new_output_name
+                # if False and temp_key in pja_dict:
+                # renaming output files according with step_id of workflow
+                # FIXME: assignment from an undefined variable
+                # new_output_name
+                # pja_dict[temp_key]['action_arguments']['newname'] = \
+                #     new_output_name
                 # whether post_job_action,RenameDatasetAction exists or not
-                else:
-                    # renaming output files according with step_id of workflow
-                    new_rename_action = \
-                        '{ "action_arguments": { "newname": "%s" }, ' \
-                        '"action_type": "RenameDatasetAction", ' \
-                        '"output_name": "%s"}' % (new_tool_name, oname)
-                    new_rename_dict = ast.literal_eval(new_rename_action)
-                    pja_dict[temp_key] = new_rename_dict
+                # else:
+                # renaming output files according with step_id of workflow
+                new_rename_action = \
+                    '{ "action_arguments": { "newname": "%s" }, ' \
+                    '"action_type": "RenameDatasetAction", ' \
+                    '"output_name": "%s"}' % (new_tool_name, oname)
+                new_rename_dict = ast.literal_eval(new_rename_action)
+                pja_dict[temp_key] = new_rename_dict
         # checking to see if repeat_for tag exists for current tool
         if "repeat_for" in keep_files:
             check_step = keep_files["repeat_for"]
@@ -443,7 +445,7 @@ def createStepsCompact(file_list, workflow):
             temp[key_tool_state] = key_tool_val
             # dump the dictionary as string before putting it back into
             # workflow
-            curr_workflow_step['tool_state'] = simplejson.dumps(temp)
+            curr_workflow_step['tool_state'] = json.dumps(temp)
             # add updated connections back to galaxy workflow step
             curr_workflow_step['input_connections'] = new_connections
             curr_workflow_step['id'] = counter
@@ -496,7 +498,7 @@ def countWorkflowSteps(workflow):
     workflow. Number of steps in workflow is not reflective of the actual
     number of workflows created by galaxy when run
     """
-    logger.debug("galaxy_connector.galaxy_workflow countWorkflowSteps called")
+    logger.debug("Counting workflow steps")
     workflow_steps = workflow["steps"]
     total_steps = 0
     for j in range(0, len(workflow["steps"])):
@@ -510,12 +512,10 @@ def countWorkflowSteps(workflow):
             if 'post_job_actions' in curr_step.keys():
                 pja_step = curr_step['post_job_actions']
                 pja_hide_count = 0
-                pja_hide = False
                 # if using HideDatasetActions from older versions of galaxy
                 for k, v in pja_step.iteritems():
                     if (k.find('HideDatasetActionoutput_') > -1):
                         pja_hide_count += 1
-                        pja_hide = True
                 diff_count = output_num - pja_hide_count
                 # add one step if HideDatasetActionoutput_ = outputs for file
                 if diff_count == 0:
@@ -528,6 +528,42 @@ def countWorkflowSteps(workflow):
         elif curr_step['type'] == 'data_input':
             total_steps += 1
     return total_steps
+
+
+def configure_workflow(workflow_dict, ret_list):
+    """Takes a workflow and associated data input map
+    Returns an expanded workflow from core.models.workflow and
+    workflow_data_input_map
+    """
+    logger.debug("Configuring Galaxy workflow")
+    # creating base workflow to replicate input workflow
+    new_workflow = createBaseWorkflow(workflow_dict["name"])
+    # checking to see what kind of workflow exists:
+    # does it have  "annotation": "type=COMPACT", in the workflow annotation
+    # field
+    work_type = getStepOptions(workflow_dict["annotation"])
+    COMPACT_WORKFLOW = False
+
+    for k, v in work_type.iteritems():
+        if k.upper() == 'TYPE':
+            try:
+                if v[0].upper() == 'COMPACT':
+                    COMPACT_WORKFLOW = True
+            except:
+                logger.exception("Malformed workflow tag, cannot parse: %s",
+                                 work_type)
+                return
+    # if workflow is tagged w/ type=COMPACT tag,
+    if COMPACT_WORKFLOW:
+        logger.debug("Workflow processing: COMPACT")
+        new_workflow["steps"], history_download, analysis_node_connections = \
+            createStepsCompact(ret_list, workflow_dict)
+    else:
+        logger.debug("Workflow processing: EXPANSION")
+        # Updating steps in imported workflow X number of times
+        new_workflow["steps"], history_download, analysis_node_connections = \
+            createStepsAnnot(ret_list, workflow_dict)
+    return new_workflow, history_download, analysis_node_connections
 
 
 def parse_tool_name(toolname):

@@ -8,11 +8,12 @@ from django.shortcuts import redirect
 from annotation_server.models import taxon_id_to_genome_build, \
     genome_build_to_species
 from annotation_server.utils import SUPPORTED_GENOMES
+from core.utils import get_full_url
 from data_set_manager.models import Node
 from file_server.views import profile_viewer
+from file_server.models import get_aux_file_item
 from file_store.models import FileStoreItem
 from file_store.tasks import import_file, create, rename
-from file_server.models import get_aux_file_item
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +123,7 @@ def createIGVsession(genome, uuids, is_file_uuid=False):
     # delete temp file
     os.unlink(tempfilename.name)
     # Url for session file
-    fs_url = filestore_item.get_full_url()
+    fs_url = get_full_url(filestore_item.get_datafile_url())
     # IGV url for automatic launch of Java Webstart
     igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php" \
               "?sessionURL=" + fs_url
@@ -157,7 +158,6 @@ def igv_multi_species(solr_results, solr_annot=None):
 
     unique_annot = None
 
-    results = solr_results["response"]["docs"]
     fields = str(solr_results["responseHeader"]["params"]["fl"]).split(',')
 
     unique_species, unique_species_num = get_unique_species(solr_results)
@@ -173,15 +173,17 @@ def igv_multi_species(solr_results, solr_annot=None):
     # http://igv.broadinstitute.org/data/hg18/tcga/gbm/gbmsubtypes/sampleTable.txt.gz
     # 4. generate igv files for each species, including phenotype data + paths
     # generated from uuid's
+
     ui_results = {'species_count': unique_species_num, 'species': {}}
+
     for k, v in unique_species.items():
         if solr_annot is not None and solr_annot["response"]["numFound"] > 0:
-            sampleFile = addIGVSamples(fields, unique_species[k]['solr'],
-                                       unique_annot[k]['solr'])
+            sample_file = addIGVSamples(fields, unique_species[k]['solr'],
+                                        unique_annot[k]['solr'])
         else:
-            sampleFile = addIGVSamples(fields, unique_species[k]['solr'])
+            sample_file = addIGVSamples(fields, unique_species[k]['solr'])
 
-        logger.debug('Sample File: ' + sampleFile)
+        logger.debug('Sample File: ' + sample_file)
 
         # if node_uuids generated for given species
         # generate igv session file
@@ -193,16 +195,16 @@ def igv_multi_species(solr_results, solr_annot=None):
                 species_id = species_id[0][0] + '. ' + species_id[1]
 
             # if annotation contains species
-            if (solr_annot is not None and
-                    solr_annot["response"]["numFound"] > 0):
+            if (solr_annot is not None and solr_annot["response"][
+                                           "numFound"] > 0):
                 if k in unique_annot:
                     temp_url = createIGVsessionAnnot(
                         k, unique_species[k], annot_uuids=unique_annot[k],
-                        samp_file=sampleFile)
+                        samp_file=sample_file)
             else:
                 temp_url = createIGVsessionAnnot(k, unique_species[k],
                                                  annot_uuids=None,
-                                                 samp_file=sampleFile)
+                                                 samp_file=sample_file)
 
             if species_id:
                 ui_results['species'][species_id + ' (' + k + ')'] = temp_url
@@ -370,11 +372,11 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
     os.unlink(tempfilename.name)
 
     # Url for session file
-    fs_url = filestore_item.get_full_url()
+    sessionfile_url = get_full_url(filestore_item.get_datafile_url())
 
     # IGV url for automatic launch of Java Webstart
     igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php" \
-              "?sessionURL=" + fs_url
+              "?sessionURL=" + sessionfile_url
 
     return igv_url
 
@@ -459,10 +461,9 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
 
     # getting file information based on file_uuids
     curr_fs = FileStoreItem.objects.get(uuid=filestore_uuid)
-    curr_name = curr_fs.datafile.name
 
     # full path to selected UUID File
-    curr_url = curr_fs.get_full_url()
+    curr_url = get_full_url(curr_fs.get_datafile_url())
 
     # delete temp file
     os.unlink(tempsampname.name)
@@ -494,7 +495,7 @@ def get_file_name(nodeuuid, sampFile=None, is_file_uuid=False):
     temp_name = temp_name[len(temp_name) - 1]
 
     # full path to selected UUID File
-    temp_url = temp_fs.get_full_url()
+    temp_url = get_full_url(temp_fs.get_datafile_url())
 
     # IGV SEG FILE HACK
     if sampFile:

@@ -23,7 +23,9 @@
 <!-- end data file upload -->
 {% endblock head_html %}
 
-{% block title %}data file upload{% endblock %}
+{% block title %}
+{{ block.super }} - Data File Upload
+{% endblock %}
 
 {% block subheader %}
 <div class="page-header">
@@ -34,6 +36,7 @@
 {% endblock %}
 
 {% block content %}
+{% if not REFINERY_REPOSITORY_MODE or request.user.is_staff %}
 <!-- Tab names -->
 <div class="refinery-panel-tabs">
   <div class="row">
@@ -90,9 +93,12 @@
               <tr>
                 <td><strong>Title</strong></td>
                 <td>
-                  <input type="text" class="refinery-base" ng-model="title"
-                  name="title"
-                    required/>
+                  <input
+                    type="text"
+                    class="refinery-base"
+                    name="title"
+                    required
+                    ng-model="title"/>
                 </td>
                 <td>name of this data set</td>
               </tr>
@@ -101,12 +107,14 @@
                 <td><strong>Source Column Index</strong></td>
                 <td>
                   {% verbatim %}
-                  <select class="select-height"
+                  <select
+                    class="select-height"
+                    name="source_column_index"
+                    required
+                    multiple
+                    size="{{ metadataHeader.length || 10 }}"
                     ng-model="sourceColumnIndex"
-                          name="source_column_index"
-                          required multiple
-                          size="{{ metadataHeader.length || 10 }}"
-                          ng-options="id as heading for (id, heading) in metadataHeader">
+                    ng-options="id as heading for (id, heading) in metadataHeader">
                   </select>
                   {% endverbatim %}
                 </td>
@@ -121,9 +129,11 @@
               <tr>
                 <td><strong>Data File Column</strong></td>
                 <td>
-                  <select ng-model="dataFileColumn" name="data_file_column"
-                          required
-                          ng-options="heading for (id, heading) in metadataHeader track by id">
+                  <select
+                    name="data_file_column"
+                    required
+                    ng-model="data.dataFileColumn"
+                    ng-options="heading for (id, heading) in metadataHeader track by id">
                     <!-- needed to make required option to work properly -->
                     <option></option>
                   </select>
@@ -137,8 +147,10 @@
               <tr>
                 <td>Auxiliary File Column</td>
                 <td>
-                    <select ng-model="auxFileColumn" name="aux_file_column"
-                            ng-options="heading for heading in metadataHeader">
+                    <select
+                      name="aux_file_column"
+                      ng-model="auxFileColumn"
+                      ng-options="heading for heading in metadataHeader">
                     </select>
                 </td>
                 <td>
@@ -150,17 +162,24 @@
               <tr>
                 <td>Species Column</td>
                 <td>
-                    <select ng-model="speciesColumn" name="species_column"
-                            ng-options="heading for heading in metadataHeader">
-                    </select>
+                  <select
+                    name="species_column"
+                    ng-model="speciesColumn"
+                    ng-options="heading for heading in metadataHeader">
+                  </select>
                 </td>
                 <td>column containing species names or IDs</td>
               </tr>
 
               <tr>
                 <td>Base path</td>
-                <td><input type="text" class="refinery-base" ng-model="basePath"
-                  name="base_path"></td>
+                <td>
+                  <input
+                    type="text"
+                    class="refinery-base"
+                    name="base_path"
+                    ng-model="basePath">
+                </td>
                 <td>
                   base path of your data file paths if using relative locations
                 </td>
@@ -169,8 +188,10 @@
               <tr>
                 <td>Annotation column</td>
                 <td>
-                  <select ng-model="annotationColumn" name="annotation_column"
-                          ng-options="heading for heading in metadataHeader">
+                  <select
+                    name="annotation_column"
+                    ng-model="annotationColumn"
+                    ng-options="heading for heading in metadataHeader">
                   </select>
                 </td>
                 <td>
@@ -182,8 +203,10 @@
               <tr>
                 <td>Genome build column</td>
                 <td>
-                  <select ng-model="genomeBuildColumn" name="genome_build_column"
-                          ng-options="heading for heading in metadataHeader">
+                  <select
+                    name="genome_build_column"
+                    ng-model="genomeBuildColumn"
+                    ng-options="heading for heading in metadataHeader">
                   </select>
                 </td>
                 <td>column containing genome build IDs</td>
@@ -191,7 +214,13 @@
 
               <tr>
                 <td>Slug</td>
-                <td><input type="text" class="refinery-base" ng-model="slug" name="slug"></td>
+                <td>
+                  <input
+                    type="text"
+                    class="refinery-base"
+                    name="slug"
+                    ng-model="slug">
+                </td>
                 <td>
                   shortcut name for dataset URL; can only contain alpha-numeric
                   characters and _
@@ -202,8 +231,10 @@
               <tr>
                 <td>Data file permanent</td>
                 <td>
-                  <input type="checkbox" ng-model="dataFilePermanent"
-                         name="data_file_permanent"/>
+                  <input
+                    type="checkbox"
+                    name="data_file_permanent"
+                    ng-model="dataFilePermanent"/>
                 </td>
                 <td>
                   flag for whether data files should be permanently on the system
@@ -214,7 +245,10 @@
               <tr>
                 <td>Is public</td>
                 <td>
-                  <input type="checkbox" ng-model="isPublic" name="is_public"/>
+                  <input
+                    type="checkbox"
+                    name="is_public"
+                    ng-model="isPublic"/>
                 </td>
                 <td>
                   flag for whether this data set will be visible to the public
@@ -222,17 +256,24 @@
               </tr>
             </table>
 
-            <input style="float: left;" class="refinery-base btn btn-default"
+            <input
+              style="float: left;"
+              class="refinery-base btn btn-default"
               type="button"
-                   ng-click="checkFiles()" value="Check Files"
-                   ng-disabled="!(dataFileColumn)"/>
-            <input style="float: left;" class="refinery-base btn btn-default"
+              value="Check Files"
+              ng-click="checkFiles()"
+              ng-disabled="!data.dataFileColumn"/>
+            <input
+              style="float: left;"
+              class="refinery-base btn btn-default"
               id="tabular-import-button"
-                   type="submit" value="Import"
-                   ng-disabled="importMetadataTableForm.$invalid"/>
-            <div style="margin-left: 15px; padding: 15px; float: left;
+              type="submit"
+              value="Import"
+              ng-disabled="importMetadataTableForm.$invalid"/>
+            <div
+              style="margin-left: 15px; padding: 15px; float: left;
                         display: block; height: 22px; width: 22px;"
-                 id="tabular-spinner">
+              id="tabular-spinner">
             </div>
           </div>
         </form>
@@ -297,115 +338,170 @@
         <noscript>
           <input type="hidden" name="redirect" value="/">
         </noscript>
+        {% verbatim %}
         <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
-        <div class="row fileupload-buttonbar">
-          <div class="col-lg-7">
+        <div class="row fileupload-buttonbar v-centered-row">
+          <div class="col-lg-4">
             <!-- The fileinput-button span is used to style the file input field as button -->
-          <span class="btn btn-success fileinput-button"
-                ng-class="{disabled: disabled}">
-            <i class="fa fa-plus"></i>
-            <span>Add files...</span>
-            <input type="file" class="refinery-base" name="files[]" multiple
-              ng-disabled="disabled">
-          </span>
-            <button type="button" class="btn btn-primary start"
-                    data-ng-click="submit()">
+            <span
+              class="btn btn-success fileinput-button"
+              ng-class="{ 'disabled': disabled }">
+              <i class="fa fa-plus"></i>
+              <span>Add files &hellip;</span>
+              <input
+                type="file"
+                class="refinery-base"
+                name="files[]"
+                multiple
+                ng-disabled="disabled">
+            </span>
+            <button
+              class="btn btn-primary start"
+              ng-click="submit()"
+              ng-disabled="numUnfinishedUploads() === 0">
               <i class="fa fa-upload"></i>
               <span>Start upload</span>
             </button>
-            <button type="button" class="btn btn-warning cancel"
-                    data-ng-click="cancel()">
+            <button
+              class="btn btn-warning cancel"
+              ng-click="cancel()"
+              ng-disabled="numUnfinishedUploads() === 0">
               <i class="fa fa-ban"></i>
               <span>Cancel upload</span>
             </button>
             <!-- The global file processing state -->
-            <span class="fileupload-process"></span>
+            <!-- <span class="fileupload-process"></span> -->
+          </div>
+          <div class="col-lg-4">
+            <div class="v-center" ng-if="processing() || loadingFiles">
+              <span>Calculating MD5</span>
+              <button class="icon-only" ng-click="openHelpMd5()">
+                <i class="fa fa-question-circle" aria-hidden="true"></i>
+              </button>
+              <span>:</span>
+              <div class="refinery-spinner refinery-spinner-inline"></div>
+            </div>
           </div>
           <!-- The global progress state -->
-          <div class="col-lg-5 fade" data-ng-class="{in: active()}">
-            <!-- The global progress bar -->
-            <div class="progress progress-striped active"
-                 data-file-upload-progress="progress()">
-              <div class="bar progress-bar-success"
-                   data-ng-style="{width: num + '%'}"></div>
+          <div
+            class="col-lg-4"
+            ng-show="queue.length">
+            <div class="v-center">
+              <!-- The global progress bar -->
+              <div
+                class="progress"
+                ng-class="{ 'progress-striped': !allUploaded, 'active': uploadActive }"
+                file-upload-progress="progress()">
+                <div
+                  class="progress-bar"
+                  ng-repeat="file in queuedFiles track by file.name"
+                  ng-class="{ 'progress-bar-success': file.uploaded && !file.error, 'progress-bar-danger': file.error }"
+                  ng-style="{ 'width': globalToIndividualProgress(num, $index) + '%' }">
+                  <span ng-if="queuedFiles.length <= 20">
+                    <span
+                      ng-if="globalReadableProgress(num, $index) > 0 && globalReadableProgress(num, $index) < 100">
+                      {{ globalToIndividualProgress(num, $index) + '%' }}
+                    </span>
+                    <i
+                      class="fa fa-check text-success"
+                      aria-hidden="true"
+                      ng-if="globalReadableProgress(num, $index) >= 100 && !file.error"></i>
+                    <i
+                      class="fa fa-exclamation-triangle text-danger"
+                      aria-hidden="true"
+                      ng-if="file.error"></i>
+                  </span>
+                </div>
+              </div>
             </div>
-            <!-- The extended global progress state -->
-            <div class="progress-extended">&nbsp;</div>
           </div>
         </div>
         <!-- The table listing the files available for upload/download -->
-        {% verbatim %}
-        <table class="table table-striped files ng-cloak">
-          <tr data-ng-repeat="file in queue"
-              data-ng-class="{'processing': file.$processing()}">
-            <td data-ng-switch data-on="!!file.thumbnailUrl">
-              <div class="preview" data-ng-switch-when="true">
-                <a data-ng-href="{{file.url}}" title="{{file.name}}"
-                   download="{{file.name}}" data-gallery><img
-                    data-ng-src="{{file.thumbnailUrl}}" alt=""></a>
+        <div class="container-fluid">
+          <div
+            class="row bordered-row v-centered-row"
+            ng-repeat="file in queue"
+            ng-class="{
+              'processing': file.$processing(),
+              'bg-danger': file.error
+            }">
+            <div class="col-xs-4">
+              <div class="v-center">
+                <p class="name">
+                  <strong>{{ file.name }}</strong>
+                  ({{ file.size | formatFileSize }})
+                </p>
               </div>
-              <div class="preview" data-ng-switch-default
-                   data-file-upload-preview="file"></div>
-            </td>
-            <td>
-              <p class="name" data-ng-switch data-on="!!file.url">
-              <span data-ng-switch-when="true" data-ng-switch
-                    data-on="!!file.thumbnailUrl">
-                <a data-ng-switch-when="true"
-                   data-ng-href="{{file.url}}" title="{{file.name}}"
-                   download="{{file.name}}" data-gallery>{{file.name}}</a>
-                <a data-ng-switch-default
-                   data-ng-href="{{file.url}}" title="{{file.name}}"
-                   download="{{file.name}}">{{file.name}}</a>
-              </span>
-                <span data-ng-switch-default>{{file.name}}</span>
-              </p>
-              <strong data-ng-show="file.error" class="error text-danger">
-                {{file.error}}
-              </strong>
-            </td>
-            <td>
-              <p class="size">{{file.size | formatFileSize}}</p>
-
-              <div class="progress progress-striped active fade"
-                   data-ng-class="{pending: 'in'}[file.$state()]"
-                   data-file-upload-progress="file.$progress()">
-                <div class="bar progress-bar-success"
-                     data-ng-style="{width: num + '%'}"></div>
+            </div>
+            <div class="col-xs-4">
+              <div class="v-center">
+                <div
+                  class="progress progress-striped active"
+                  ng-class="{ 'progress-striped active': !file.uploaded && !file.error }"
+                  file-upload-progress="file.$progress()">
+                  <div
+                    class="progress-bar"
+                    role="progressbar"
+                    ng-class="{ 'progress-bar-success': file.uploaded, 'progress-bar-danger': file.error }"
+                    ng-style="{ width: num + '%' }">
+                    <span ng-show="num > 0" ng-if="!file.error">{{ num + '%' }}</span>
+                    <i class="fa fa-exclamation-triangle" ng-if="file.error"></i>
+                  </div>
+                </div>
               </div>
-            </td>
-            <td>
-              <button type="button" class="btn btn-primary start"
-                      data-ng-click="file.$submit()"
-                      data-ng-hide="!file.$submit || options.autoUpload"
-                      data-ng-disabled="file.$state() == 'pending' || file.$state() == 'rejected'">
-                <i class="fa fa-upload"></i>
-                <span>Start</span>
-              </button>
-              <button type="button" class="btn btn-warning cancel"
-                      data-ng-click="file.$cancel()" data-ng-hide="!file.$cancel">
-                <i class="fa fa-ban"></i>
-                <span>Cancel</span>
-              </button>
-              <button data-ng-controller="RefineryFileDestroyCtrl" type="button"
-                      class="btn btn-danger destroy"
-                      data-ng-click="file.$destroy()"
-                      data-ng-hide="!file.$destroy">
-                <i class="fa fa-trash"></i>
-                <span>Delete</span>
-              </button>
-            </td>
-          </tr>
-        </table>
+            </div>
+            <div class="col-xs-4">
+              <div ng-if="!file.uploaded && !file.error">
+                <button
+                  class="btn btn-primary start"
+                  ng-click="file.$submit()"
+                  ng-hide="!file.$submit || options.autoUpload"
+                  ng-disabled="file.$state() == 'pending' || file.$state() == 'rejected'">
+                  <i class="fa fa-upload"></i>
+                  <span>Start</span>
+                </button>
+                <button
+                  class="btn btn-warning cancel"
+                  ng-click="file.$cancel()"
+                  ng-hide="!file.$cancel">
+                  <i class="fa fa-ban"></i>
+                  <span>Cancel</span>
+                </button>
+                <button
+                  class="btn btn-danger destroy"
+                  ng-controller="RefineryFileDestroyCtrl"
+                  ng-click="file.$destroy()"
+                  ng-hide="!file.$destroy">
+                  <i class="fa fa-trash"></i>
+                  <span>Delete</span>
+                </button>
+              </div>
+              <div class="v-center" ng-if="file.uploaded">
+                <i class="fa fa-check-circle success"></i>
+                <strong>Uploaded</strong>
+              </div>
+              <div class="v-center" ng-if="file.error">
+                <strong
+                  class="error text-danger"
+                  ng-if="file.error"
+                  ng-bind="file.error">
+                </strong>
+              </div>
+            </div>
+          </div>
+        </div>
         {% endverbatim %}
       </form>
     </div>
     <!-- end data upload -->
   </div>
 </div>
+{% else %}
+Sorry! Not allowed in repository mode. Cheers.
+{% endif %}
 {% endblock %}
 
-{% block script %}
+{% block vendor_scripts %}
 <!-- for tabular archive upload -->
 <script src="{% static "vendor/d3/d3.min.js" %}"></script>
 <!-- end tabular file upload -->
@@ -419,11 +515,14 @@
 <!-- The File Upload processing plugin -->
 <script src="{% static "vendor/jquery-file-upload/js/jquery.fileupload-process.js" %}"></script>
 <!-- Calculate md5 -->
-<script src="{% static "vendor/spark-md5/spark-md5.js" %}"></script>
+<script src="{% static "vendor/spark-md5/spark-md5.min.js" %}"></script>
 <!-- end data file upload -->
 <!-- spinner -->
 <script language="javascript" type="text/javascript"
         src="{% static "js/spin/spin.min.js" %}"></script>
+{% endblock %}
+
+{% block script %}
 <script language="javascript" type="text/javascript">
   var opts = {
     lines: 13, // The number of lines to draw

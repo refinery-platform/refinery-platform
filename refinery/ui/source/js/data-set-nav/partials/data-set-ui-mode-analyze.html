@@ -1,0 +1,119 @@
+<div ng-controller="WorkflowListApiCtrl">
+  <ui-select
+    append-to-body="true"
+    ng-model="selectedWorkflow.select"
+    on-select="updateCurrentWorkflow()"
+    theme="select2"
+    class="ui-select-drop">
+     <ui-select-match placeholder="Select a workflow">
+       <span ng-bind="$select.selected.name"></span>
+     </ui-select-match>
+    <ui-select-choices repeat="workflow in (workflowList | filter: $select.search)">
+      <span ng-bind="workflow.name"></span>
+    </ui-select-choices>
+	</ui-select>
+
+  <div ng-show="currentWorkflow.isAvailable()">
+
+    <div class="refinery-subheader">
+      <h4>Name</h4>
+    </div>
+    <p>{{currentWorkflow.getName()}}</p>
+
+    <div ng-show="currentWorkflow.getSummary()">
+      <div class="refinery-subheader">
+        <h4>Summary</h4>
+      </div>
+      <p>{{currentWorkflow.getSummary()}}</p>
+    </div>
+ 
+    <div class="refinery-subheader">
+      <h4>Inputs ({{currentWorkflow.getCategory()}})</h4>
+    </div>
+    <div>
+      <span style="color: #6A41AE;">
+        <b><i>
+        {{currentWorkflow.getInputSet(1)}}
+        <br/></i></b>
+      </span>
+      <span style="color: #278F63;" ng-hide="currentWorkflow.isSingleInput()">
+        <b><i>
+          {{currentWorkflow.getInputSet(2)}}
+          <br/></i></b>
+      </span>
+    </div>
+
+    <div ng-controller="NodeSetListApiCtrl" ng-if="currentWorkflow.isSingleInput()">
+      <ui-select
+        ng-model="selectedNodeset.select"
+        on-select="updateCurrentNodeSet()"
+        theme="select2"
+        class="ui-select-drop">
+         <ui-select-match placeholder="Select a file set">
+            <span ng-bind="$select.selected.name"></span>
+         </ui-select-match>
+        <ui-select-choices
+          repeat="nodeset in (nodesetList | filter: $select.search)
+          track by $index">
+          <span ng-bind="nodeset.name"></span>
+        </ui-select-choices>
+	    </ui-select>
+      <div>
+        <br>
+      </div>
+      <button
+        class="btn btn-warning"
+        rp-analysis-launch-modal
+        ng-click="open()"
+        ng-disabled="!(currentNodeSet && currentNodeSet.node_count > 0)">
+        Launch Analysis
+      </button>
+    </div>
+
+
+    <div ng-controller="NodeRelationshipListCtrl" ng-if="!currentWorkflow.isSingleInput()">
+      <ui-select
+        append-to-body="true"
+        ng-model="selectedNodeRelationship.select"
+        on-select="updateCurrentNodeRelationship()"
+        theme="select2"
+        class="ui-select-drop">
+        <ui-select-match placeholder="Select a file mapping">
+          <span ng-bind="$select.selected.name"></span>
+        </ui-select-match>
+        <ui-select-choices
+          repeat="nodeRelationship in (nodeRelationshipList | filter: $select.search)">
+            <span ng-bind="nodeRelationship.name"></span>
+        </ui-select-choices>
+      </ui-select>
+
+      <button
+        class="btn btn-default btn-xs"
+        ng-click="openNewMappingDialog()">New ..
+        .</button>
+      <button
+        class="btn btn-default btn-xs"
+        ng-disabled="!(currentNodeRelationship && !currentNodeRelationship.is_current)"
+        ng-click="openRenameMappingDialog(currentNodeRelationship)">
+        Rename
+      </button>
+      <button
+        class="btn btn-default btn-xs"
+        ng-disabled="!(currentNodeRelationship && !currentNodeRelationship.is_current)"
+        ng-click='openDeleteMappingDialog(currentNodeRelationship)'>
+        Delete
+      </button>
+      <div>
+       <br>
+      </div>
+
+      <button
+        class="btn btn-warning"
+        rp-analysis-launch-modal
+        ng-click="open()"
+        ng-disabled="!(currentNodeRelationship && currentNodeRelationship.node_pairs.length > 0)">
+        Launch Analysis
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,8 +1,9 @@
+'use strict';
+
 angular
   .module('refineryApp')
   .factory('projectService', ['$resource', 'settings',
     function ($resource, settings) {
-
       var projects = $resource(
         settings.appRoot + settings.refineryApi + '/projects/',
         {
@@ -11,7 +12,7 @@ angular
         {
           query: {
             method: 'GET',
-            isArray: false,
+            isArray: false
           }
         }
       );

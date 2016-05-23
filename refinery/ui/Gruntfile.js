@@ -1,5 +1,7 @@
-var fs           = require('fs');
-var hasbin       = require('hasbin');
+'use strict';
+
+var fs = require('fs');
+var hasbin = require('hasbin');
 var isBinaryFile = require('isbinaryfile');
 
 /*
@@ -52,9 +54,7 @@ var importanceSortJS = function (a, b) {
   return objs[0] - objs[1];
 };
 
-module.exports = function(grunt) {
-  'use strict';
-
+module.exports = function (grunt) {
   // Auto-load all packages
   require('load-grunt-tasks')(grunt);
 
@@ -90,7 +90,12 @@ module.exports = function(grunt) {
   // Local testing, i.e. triggered on your host machine, starts all major
   // browsers and can be invoked with `--host`.
   var browsers = !!grunt.option('host') ?
-    ['PhantomJS', 'Chrome', 'Firefox', 'Safari'] : ['PhantomJS'];
+    ['Chrome', 'Firefox', 'Safari'] : ['PhantomJS'];
+
+  // Specify file globbing, e.g. `--files 'source/js/commons/**/*.js'` would get
+  // all `.js` files from `source/js/commons/`. This is used for `esformatter`
+  // because we might not want to alter all js files at once.
+  var fileGlob = grunt.option('files') || '';
 
   var jsFilesByImportance = function (spec) {
     var files = [];
@@ -109,11 +114,11 @@ module.exports = function(grunt) {
     // Sort files
     files.sort(importanceSortJS);
 
-    if (spec) {// Get all files within a feature
+    if (spec) {  // Get all files within a feature
       grunt
         .file
         .expand([
-          config.basePath.ui.src + '/js/**/*.spec.js'
+          fileGlob || config.basePath.ui.src + '/js/**/*.spec.js'
         ])
         .forEach(function (file) {
           files.push(file);
@@ -352,7 +357,7 @@ module.exports = function(grunt) {
       gruntfile: {
         files: 'Gruntfile.js',
         tasks: [
-          'jshint:gruntfile',
+          'eslint:gruntfile',
           'build'
         ]
       },
@@ -365,7 +370,7 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.ui.src %>/images/**/*'
         ],
         tasks: [
-          'copy:uiBuildImages'
+          'newer:copy:uiBuildImages'
         ]
       },
 
@@ -377,8 +382,8 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.ui.src %>/js/**/*.js'
         ],
         tasks: [
-          'jshint:src',
-          'copy:uiBuildScripts',
+          'newer:eslint:sourceCode',
+          'newer:copy:uiBuildScripts',
           'concat-by-feature:build'
         ],
         options: {
@@ -394,7 +399,7 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.ui.src %>/styles/**/*.less'
         ],
         tasks: [
-          'less:build'
+          'newer:less:build'
         ]
       },
 
@@ -406,7 +411,7 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.ui.src %>/**/*.html'
         ],
         tasks: [
-          'copy:uiBuildTemplates'
+          'newer:copy:uiBuildTemplates'
         ]
       },
 
@@ -435,7 +440,7 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.static.src %>/js/**/*.js'
         ],
         tasks: [
-          'copy:staticBuild'
+          'newer:copy:staticBuild'
         ]
       },
 
@@ -446,7 +451,7 @@ module.exports = function(grunt) {
         files: [
           '<%= cfg.basePath.djangoTemplates %>/**/*'
         ]
-      },
+      }
     },
 
     /*
@@ -454,8 +459,9 @@ module.exports = function(grunt) {
      */
     env: {
       compile: {
-        PHANTOMJS_BIN: function() {
-          var localPhantomJS = 'node_modules/phantomjs/lib/phantom/bin/phantomjs';
+        PHANTOMJS_BIN: function () {
+          var localPhantomJS =
+            'node_modules/phantomjs-prebuilt/lib/phantom/bin/phantomjs';
 
           // Look for a phantomjs binary of the VM by default when no `--host`
           // flag is passed to grunt
@@ -478,35 +484,43 @@ module.exports = function(grunt) {
     },
 
     /*
+     * Autoformats JS code using esformatter.
+     */
+    esformatter: {
+      src: fileGlob
+    },
+
+    /*
+     * Lint source JS files to find possible flaws that could lead to errors.
+     */
+    eslint: {
+      custom: {
+        src: fileGlob || ''
+      },
+      sourceCode: {
+        src: [
+          '<%= cfg.basePath.ui.src %>/js/**/*.js'
+        ]
+      },
+      gruntfile: {
+        src: 'Gruntfile.js'
+      }
+    },
+
+    /*
      * Generate documentation
      */
-    jsdoc : {
-      dist : {
+    jsdoc: {
+      dist: {
         src: [
           '<%= cfg.basePath.ui.src %>/**/!(*spec).js'
         ],
         options: {
           // Doesn't seem to work right now, so we have to specify the right
           // location manually
-          //destination: '<%= cfg.basePath.ui.docs %>'
+          // destination: '<%= cfg.basePath.ui.docs %>'
           destination: 'docs'
         }
-      }
-    },
-
-    /*
-     * Lint source JS files to find possible flaws that could lead to errors.
-     * Custom code
-     */
-    jshint: {
-      src: [
-        '<%= cfg.basePath.ui.src %>/js/**/*.js'
-      ],
-      gruntfile: 'Gruntfile.js',
-      options: {
-        // All jsHint configs are located in `.jshintrc`. This is useful as
-        // editor plugins can pick up this file as well.
-        jshintrc: './.jshintrc'
       }
     },
 
@@ -522,7 +536,9 @@ module.exports = function(grunt) {
           [
             config.files.vendor.js.map(function (script) {
               var include = true;
-              if (script.indexOf('graphlib') >= 0 || script.indexOf('dagre') >= 0) {
+              if (
+                script.indexOf('graphlib') >= 0 || script.indexOf('dagre') >= 0
+              ) {
                 include = false;
               }
               return {
@@ -539,17 +555,13 @@ module.exports = function(grunt) {
               pattern: './karma.lodash.noConflict.js',
               watched: false
             }],
-            jsFilesByImportance(true)
+            'node_modules/phantomjs-polyfill/bind-polyfill.js',
+            jsFilesByImportance(true),
+            config.basePath.ui.src + '/**/*.html'
           ]
         )
       },
-      unit: {
-        port: 9019,
-        background: true
-      },
-      continuous: {
-        singleRun: true
-      }
+      unit: {}
     },
 
     /*
@@ -560,22 +572,33 @@ module.exports = function(grunt) {
         options: {
           paths: [
             '<%= cfg.basePath.ui.src %>/styles',
-            '<%= cfg.basePath.bower_components %>/bootstrap/less',
+            '<%= cfg.basePath.bower_components %>/bootstrap/less'
           ],
           plugins: lessPlugins
         },
         files: {
-          '<%= cfg.basePath.ui.build %>/styles/galaxy-connector.css': '<%= cfg.basePath.ui.src %>/styles/galaxy-connector.less',
-          '<%= cfg.basePath.ui.build %>/styles/refinery-style-bootstrap-responsive.css': '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap-responsive.less',
-          '<%= cfg.basePath.ui.build %>/styles/refinery-style-bootstrap.css': '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap.less',
-          '<%= cfg.basePath.ui.build %>/styles/refinery-style.css': '<%= cfg.basePath.ui.src %>/styles/refinery-style.less',
-          '<%= cfg.basePath.ui.build %>/styles/variables.css': '<%= cfg.basePath.ui.src %>/styles/variables.less',
-          '<%= cfg.basePath.ui.build %>/styles/workflow-visualization.css': '<%= cfg.basePath.ui.src %>/styles/workflow-visualization.less',
-          '<%= cfg.basePath.ui.build %>/styles/animate.css': '<%= cfg.basePath.ui.src %>/styles/animate.less',
-          '<%= cfg.basePath.ui.build %>/styles/treemap.css': '<%= cfg.basePath.ui.src %>/styles/treemap.less',
-          '<%= cfg.basePath.ui.build %>/styles/list-graph.css': '<%= cfg.basePath.ui.src %>/styles/list-graph.less',
-          '<%= cfg.basePath.ui.build %>/styles/dashboard.css': '<%= cfg.basePath.ui.src %>/styles/dashboard.less',
-          '<%= cfg.basePath.ui.build %>/styles/provenance-visualization.css': '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less',
+          '<%= cfg.basePath.ui.build %>/styles/galaxy-connector.css':
+            '<%= cfg.basePath.ui.src %>/styles/galaxy-connector.less',
+          '<%= cfg.basePath.ui.build %>/styles/refinery-style-bootstrap-responsive.css':
+            '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap-responsive.less',
+          '<%= cfg.basePath.ui.build %>/styles/refinery-style-bootstrap.css':
+            '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap.less',
+          '<%= cfg.basePath.ui.build %>/styles/refinery-style.css':
+            '<%= cfg.basePath.ui.src %>/styles/refinery-style.less',
+          '<%= cfg.basePath.ui.build %>/styles/variables.css':
+            '<%= cfg.basePath.ui.src %>/styles/variables.less',
+          '<%= cfg.basePath.ui.build %>/styles/workflow-visualization.css':
+            '<%= cfg.basePath.ui.src %>/styles/workflow-visualization.less',
+          '<%= cfg.basePath.ui.build %>/styles/animate.css':
+            '<%= cfg.basePath.ui.src %>/styles/animate.less',
+          '<%= cfg.basePath.ui.build %>/styles/treemap.css':
+            '<%= cfg.basePath.ui.src %>/styles/treemap.less',
+          '<%= cfg.basePath.ui.build %>/styles/dashboard.css':
+            '<%= cfg.basePath.ui.src %>/styles/dashboard.less',
+          '<%= cfg.basePath.ui.build %>/styles/provenance-visualization.css':
+            '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less',
+          '<%= cfg.basePath.ui.build %>/styles/file-browser.css':
+            '<%= cfg.basePath.ui.src %>/styles/file-browser.less'
         }
       },
       compile: {
@@ -600,17 +623,28 @@ module.exports = function(grunt) {
           ]
         },
         files: {
-          '<%= cfg.basePath.ui.compile %>/styles/galaxy-connector.css': '<%= cfg.basePath.ui.src %>/styles/galaxy-connector.less',
-          '<%= cfg.basePath.ui.compile %>/styles/refinery-style-bootstrap-responsive.css': '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap-responsive.less',
-          '<%= cfg.basePath.ui.compile %>/styles/refinery-style-bootstrap.css': '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap.less',
-          '<%= cfg.basePath.ui.compile %>/styles/refinery-style.css': '<%= cfg.basePath.ui.src %>/styles/refinery-style.less',
-          '<%= cfg.basePath.ui.compile %>/styles/variables.css': '<%= cfg.basePath.ui.src %>/styles/variables.less',
-          '<%= cfg.basePath.ui.compile %>/styles/workflow-visualization.css': '<%= cfg.basePath.ui.src %>/styles/workflow-visualization.less',
-          '<%= cfg.basePath.ui.compile %>/styles/animate.css': '<%= cfg.basePath.ui.src %>/styles/animate.less',
-          '<%= cfg.basePath.ui.compile %>/styles/treemap.css': '<%= cfg.basePath.ui.src %>/styles/treemap.less',
-          '<%= cfg.basePath.ui.compile %>/styles/list-graph.css': '<%= cfg.basePath.ui.src %>/styles/list-graph.less',
-          '<%= cfg.basePath.ui.compile %>/styles/dashboard.css': '<%= cfg.basePath.ui.src %>/styles/dashboard.less',
-          '<%= cfg.basePath.ui.compile %>/styles/provenance-visualization.css': '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less',
+          '<%= cfg.basePath.ui.compile %>/styles/galaxy-connector.css':
+            '<%= cfg.basePath.ui.src %>/styles/galaxy-connector.less',
+          '<%= cfg.basePath.ui.compile %>/styles/refinery-style-bootstrap-responsive.css':
+            '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap-responsive.less',
+          '<%= cfg.basePath.ui.compile %>/styles/refinery-style-bootstrap.css':
+            '<%= cfg.basePath.ui.src %>/styles/refinery-style-bootstrap.less',
+          '<%= cfg.basePath.ui.compile %>/styles/refinery-style.css':
+            '<%= cfg.basePath.ui.src %>/styles/refinery-style.less',
+          '<%= cfg.basePath.ui.compile %>/styles/variables.css':
+            '<%= cfg.basePath.ui.src %>/styles/variables.less',
+          '<%= cfg.basePath.ui.compile %>/styles/workflow-visualization.css':
+            '<%= cfg.basePath.ui.src %>/styles/workflow-visualization.less',
+          '<%= cfg.basePath.ui.compile %>/styles/animate.css':
+            '<%= cfg.basePath.ui.src %>/styles/animate.less',
+          '<%= cfg.basePath.ui.compile %>/styles/treemap.css':
+            '<%= cfg.basePath.ui.src %>/styles/treemap.less',
+          '<%= cfg.basePath.ui.compile %>/styles/dashboard.css':
+            '<%= cfg.basePath.ui.src %>/styles/dashboard.less',
+          '<%= cfg.basePath.ui.compile %>/styles/provenance-visualization.css':
+            '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less',
+          '<%= cfg.basePath.ui.compile %>/styles/file-browser.css':
+            '<%= cfg.basePath.ui.src %>/styles/file-browser.less'
         }
       }
     },
@@ -633,7 +667,7 @@ module.exports = function(grunt) {
             dest: '<%= cfg.basePath.ui.tmp %>/js'
           }
         ]
-      },
+      }
     },
 
     /*
@@ -647,7 +681,8 @@ module.exports = function(grunt) {
     uglify: {
       ui: {
         options: {
-          banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
+          banner: '/*! <%= pkg.name %> ' +
+            '<%= grunt.template.today("yyyy-mm-dd") %> */\n',
           sourceMap: true
         },
         files: [
@@ -659,11 +694,9 @@ module.exports = function(grunt) {
           }
         ]
       },
-      vendor_assets: {
+      vendorAssets: {
         files: [
           {
-            './bower_components/angular-ui-select2/dist/select2.min.js':
-            ['./bower_components/angular-ui-select2/src/select2.js']
           }
         ]
       }
@@ -673,14 +706,15 @@ module.exports = function(grunt) {
   grunt.registerTask(
     'concat-by-feature',
     'Concat files by features excluding `spec` files',
-    function(mode) {
+    function (mode) {
       // Read config
-      var cfg = grunt.file.readJSON('config.json'),
-          concat = grunt.config.get('concat') || {},
-          destination = mode === 'build' ? cfg.basePath.ui.build : cfg.basePath.ui.tmp,
-          features = cfg.files.features,
-          files,
-          ngAnnotate = grunt.config.get('ngAnnotate') || {};
+      var cfg = grunt.file.readJSON('config.json');
+      var concat = grunt.config.get('concat') || {};
+      var destination = mode === 'build' ?
+            cfg.basePath.ui.build : cfg.basePath.ui.tmp;
+      var features = cfg.files.features;
+      var files;
+      var ngAnnotate = grunt.config.get('ngAnnotate') || {};
 
       // Loop over all features
       features.forEach(function (feature) {
@@ -706,10 +740,13 @@ module.exports = function(grunt) {
         concat[feature] = {
           options: {
             // Remove all 'use strict' statements
-            process: function(src, filepath) {
+            process: function (src, filepath) {
               return '// Source: ' + filepath + '\n' +
-                src.replace(/(^|\n)[ \t]*('use strict'|"use strict");?\s*/g, '$1');
-            },
+                src.replace(
+                  /(^|\n)[ \t]*('use strict'|"use strict");?\s*/g,
+                  '$1'
+                );
+            }
           },
           src: files,
           dest: destination + '/js/' + feature.replace('/', '.') + '.js'
@@ -741,38 +778,42 @@ module.exports = function(grunt) {
   );
 
   // Event handling
-  if (!spawn) {
-    grunt.event.on('watch', function(action, filepath){
-      // Update the config to only build the changed less file.
-      grunt.config(['jshint', 'src'], filepath);
-    });
-  }
+  // if (!spawn) {
+  //   grunt.event.on('watch', function (action, filepath) {
+  //     // Update the config to only build the changed less file.
+  //     grunt.config(['eslint', 'src'], filepath);
+  //   });
+  // }
 
   // Default task.
-  grunt.registerTask('default', ['build', 'compile', 'test']);
+  grunt.registerTask('default', ['make', 'test']);
 
   // Task for running unit tests
   grunt.registerTask('test', ['env:compile', 'karma']);
 
-  // Do as little as possible to get Refinery running to keep grunt watch
+  // Complete build
+  grunt.registerTask('make', ['uglify:vendorAssets', 'build', 'compile']);
+
+  // Do as little as possible to get Refineryrunning to keep grunt watch
   // responsive.
   grunt.registerTask('build', [
-    'jshint',
+    'newer:eslint:sourceCode',
+    'newer:eslint:gruntfile',
     'clean:uiBuild',
     'clean:staticBuild',
-    'less:build',
-    'copy:uiBuildImages',
-    'copy:uiBuildScripts',
-    'copy:uiBuildTemplates',
-    'copy:uiBuildVendor',
-    'copy:staticBuild',
+    'newer:less:build',
+    'newer:copy:uiBuildImages',
+    'newer:copy:uiBuildScripts',
+    'newer:copy:uiBuildTemplates',
+    'newer:copy:uiBuildVendor',
+    'newer:copy:staticBuild',
     'concat-by-feature:build'
   ]);
 
   // Do all the heavy lifting to get Refinery ready for production.
   grunt.registerTask('compile', [
     'env:compile',
-    'jshint',
+    'eslint:sourceCode',
     'clean:uiCompile',
     'clean:staticCompile',
     'less:compile',
@@ -782,7 +823,7 @@ module.exports = function(grunt) {
     // it adds features to the `ngAnnotate` task.
     'concat-by-feature:compile',
     'ngAnnotate',
-    'uglify',
+    'uglify:ui',
     'copy:uiCompileImages',
     'copy:uiCompileTemplates',
     'copy:uiCompileVendor',

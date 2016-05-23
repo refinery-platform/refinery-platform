@@ -1,0 +1,100 @@
+; Sample config file for managing Celery, Solr and Django dev server processes
+; using Supervisor.
+; Copy to refinery-platform/refinery/supervisord.conf and customize to match
+; your environment.
+
+[supervisord]
+logfile = %(here)s/log/supervisord.log
+logfile_maxbytes = 5MB
+logfile_backups = 4
+pidfile = /tmp/supervisord.pid
+nocleanup = true
+
+[inet_http_server]         ; inet (TCP) server disabled by default
+port = *:9001        ; (ip_address:port specifier, *:port for all iface)
+
+[supervisorctl]
+;serverurl = unix:///tmp/supervisor.sock ; use a unix:// URL  for a unix socket
+serverurl = http://localhost:9001 ; use an http:// url to specify an inet socket
+
+; the below section must remain in the config file for RPC
+; (supervisorctl/web interface) to work, additional interfaces may be
+; added by defining them in separate rpcinterface: sections
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+[group:celeryd]
+programs = worker1,worker2
+priority = 995
+
+[program:worker1]
+; minimum of four processes required to avoid problems with monitoring tasks
+command = python %(here)s/manage.py celeryd -c 4 -Q celery --events
+environment = PATH="<%= @virtualenv %>/bin"
+stdout_logfile = %(here)s/log/celeryd-w1.log
+stdout_logfile_maxbytes = 5MB
+stdout_logfile_backups = 4
+redirect_stderr = true
+autostart = true
+autorestart = true
+startsecs = 5
+stopasgroup = true
+killasgroup = true
+; Need to wait for currently executing tasks to finish at shutdown.
+; Increase this if you have very long running tasks.
+;stopwaitsecs = 60
+priority = 995
+
+[program:worker2]
+; limits concurrency of file imports to one to avoid overloading system IO
+command = python %(here)s/manage.py celeryd -c 1 -Q file_import --events
+environment = PATH="<%= @virtualenv %>/bin"
+stdout_logfile = %(here)s/log/celeryd-w2.log
+stdout_logfile_maxbytes = 5MB
+stdout_logfile_backups = 4
+redirect_stderr = true
+autostart = true
+autorestart = true
+startsecs = 5
+stopasgroup = true
+killasgroup = true
+; Need to wait for currently executing tasks to finish at shutdown.
+; Increase this if you have very long running tasks.
+;stopwaitsecs = 60
+priority = 995
+
+[program:celerycam]
+command = python %(here)s/manage.py celerycam
+environment = PATH="<%= @virtualenv %>/bin"
+stdout_logfile = %(here)s/log/celerycam.log
+stdout_logfile_maxbytes = 5MB
+stdout_logfile_backups = 4
+redirect_stderr = true
+autostart = true
+autorestart = true
+startsecs = 3
+priority= 994
+
+[program:celerybeat]
+command = python %(here)s/manage.py celerybeat
+environment = PATH="<%= @virtualenv %>/bin"
+stdout_logfile = %(here)s/log/celerybeat.log
+stdout_logfile_maxbytes = 5MB
+stdout_logfile_backups = 4
+redirect_stderr = true
+autostart = true
+autorestart = true
+startsecs = 3
+priority= 996
+
+[program:runserver]
+command = python %(here)s/manage.py runserver 0.0.0.0:8000 --noreload
+environment = PATH="<%= @virtualenv %>/bin"
+stdout_logfile = %(here)s/log/refinery.log
+stdout_logfile_maxbytes = 5MB
+stdout_logfile_backups = 4
+redirect_stderr = true
+autostart = true
+autorestart = true
+startsecs = 3
+priority = 999

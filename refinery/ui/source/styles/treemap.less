@@ -19,8 +19,11 @@
   }
 
   .inner-border {
+    fill: transparent;
     stroke: #000;
     stroke-width: 2;
+    stroke-opacity: 0.33;
+    transition: stroke-opacity @fast-transition-speed @ease-in-out-cubic;
   }
 
   .outer-border {
@@ -30,19 +33,21 @@
   }
 
   .inner-node {
-    &:hover {
+    &:hover,
+    &.hovering {
       cursor: pointer;
 
       .label {
         color: #fff;
 
         span {
-          background: rgba(0, 0, 0, 0.66);
+          background: rgba(0, 0, 0, 1);
         }
       }
 
       .inner-border {
-        stroke-width: 4;
+        stroke-width: 6;
+        stroke-opacity: 1;
       }
     }
   }
@@ -50,6 +55,28 @@
   .leaf {
     stroke: #fff;
     stroke-width: 2;
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  .inner-node,
+  .leaf {
+    &.focus,
+    &.locked {
+      .label {
+        color: #000;
+        font-weight: bold;
+      }
+
+      &:hover,
+      &.hovering {
+        .label {
+          color: #fff;
+        }
+      }
+    }
   }
 
   .label {
@@ -59,7 +86,7 @@
     line-height: 1.15em;
     color: #000;
     width: 100%;
-    height: 2.3em;
+    height: 2.6em;
     max-height: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -67,15 +94,53 @@
     background: none;
     padding: 0;
     font-weight: normal;
+    white-space: nowrap;
+    opacity: 0;
+    transition: all @fast-transition-speed @ease-in-out-cubic;
 
     &.label-bright {
       color: #fff;
     }
 
+    &.smaller {
+      font-size: 0.6875em;
+    }
+
     span {
       display: inline-block;
-      padding: 0.1em 0.25em 0.1em 0.1em;
+      padding: 0.15em 0.25em 0.15em 0.15em;
       border-radius: 0 0 0.25em 0;
+      white-space: normal;
     }
+
+    &.visible {
+      opacity: 1;
+    }
+  }
+
+  .node .icon-locked,
+  .node .icon-unlocked {
+    transition: opacity @fast-transition-speed @ease-in-out-cubic;
+    shape-rendering: auto;
+  }
+
+  .node.locked .icon-locked {
+    display: block;
+    color: rgba(0, 0, 0, 0.33);
+  }
+
+  .node .icon-locked,
+  .node.locked .icon-unlocked {
+    display: none;
+  }
+
+  .node .icon-unlocked {
+    display: block;
+    color: rgba(0, 0, 0, 0);
+  }
+
+  .node:hover .icon-unlocked,
+  .node.hovering .icon-unlocked {
+    color: rgba(0, 0, 0, 0.2);
   }
 }

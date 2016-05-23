@@ -1,39 +1,45 @@
-import json
 import os
 import re
 import urllib
 import xmltodict
-import py2neo
-import urlparse
+import logging
+import json
+from urlparse import urljoin
 
-from django.utils import simplejson
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.sites.models import get_current_site
+from django.contrib.sites.models import get_current_site, Site
+from django.contrib.sites.models import RequestSite
 from django.core.urlresolvers import reverse
 from django.http import (
-    HttpResponse, HttpResponseForbidden, HttpResponseRedirect
-)
+    HttpResponse, HttpResponseForbidden, HttpResponseRedirect)
+
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext, loader
+from registration.views import RegistrationView
+from registration import signals
 
 from guardian.shortcuts import get_perms
 import requests
-
-from data_set_manager.models import *
+from rest_framework import viewsets
+from data_set_manager.models import Node
 from core.forms import (
     ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 )
 from core.models import (
     ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
-    Analysis, Invitation, Ontology
-)
+    Analysis, Invitation, Ontology,
+    CustomRegistrationProfile)
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
 from core.utils import get_data_sets_annotations
+from core.serializers import WorkflowSerializer
 
+from xml.parsers.expat import ExpatError
+
+from django.views.decorators.gzip import gzip_page
 
 logger = logging.getLogger(__name__)
 
@@ -323,9 +329,73 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
         context_instance=RequestContext(request))
 
 
+def data_set2(request, data_set_uuid, analysis_uuid=None):
+    data_set = get_object_or_404(DataSet, uuid=data_set_uuid)
+    public_group = ExtendedGroup.objects.public_group()
+
+    if not request.user.has_perm('core.read_dataset', data_set):
+        if 'read_dataset' not in get_perms(public_group, data_set):
+            if request.user.is_authenticated():
+                return HttpResponseForbidden(
+                    custom_error_page(request, '403.html',
+                                      {user: request.user,
+                                       'msg': "view this data set"}))
+            else:
+                return HttpResponse(
+                    custom_error_page(request, '401.html',
+                                      {'msg': "view this data set"}),
+                    status='401')
+    # get studies
+    investigation = data_set.get_investigation()
+    studies = investigation.study_set.all()
+    # If repository mode, only return workflows tagged for the repository
+    if (settings.REFINERY_REPOSITORY_MODE):
+        workflows = Workflow.objects.filter(show_in_repository_mode=True)
+    else:
+        workflows = Workflow.objects.all()
+
+    study_uuid = studies[0].uuid
+    # used for solr field postfixes: FIELDNAME_STUDYID_ASSAY_ID_FIELDTYPE
+    study_id = studies[0].id
+    assay_uuid = studies[0].assay_set.all()[0].uuid
+    # used for solr field postfixes: FIELDNAME_STUDYID_ASSAY_ID_FIELDTYPE
+    assay_id = studies[0].assay_set.all()[0].id
+    # TODO: catch errors
+    isatab_archive = None
+    pre_isatab_archive = None
+    try:
+        if investigation.isarchive_file is not None:
+            isatab_archive = FileStoreItem.objects.get(
+                uuid=investigation.isarchive_file)
+    except:
+        pass
+    try:
+        if investigation.pre_isarchive_file is not None:
+            pre_isatab_archive = FileStoreItem.objects.get(
+                uuid=investigation.pre_isarchive_file)
+    except:
+        pass
+    return render_to_response(
+        'core/data_set2.html',
+        {
+            "data_set": data_set,
+            "analysis_uuid": analysis_uuid,
+            "studies": studies,
+            "study_uuid": study_uuid,
+            "study_id": study_id,
+            "assay_uuid": assay_uuid,
+            "assay_id": assay_id,
+            "has_change_dataset_permission": 'change_dataset' in get_perms(
+                request.user, data_set),
+            "workflows": workflows,
+            "isatab_archive": isatab_archive,
+            "pre_isatab_archive": pre_isatab_archive,
+        },
+        context_instance=RequestContext(request))
+
+
 def data_set_edit(request, uuid):
     data_set = get_object_or_404(DataSet, uuid=uuid)
-    public_group = ExtendedGroup.objects.public_group()
 
     if not request.user.has_perm('core.change_dataset', data_set):
         if request.user.is_authenticated():
@@ -594,7 +664,7 @@ def solr_core_search(request):
             if annotations:
                 response['response']['annotations'] = annotation_data
 
-            response = simplejson.dumps(response)
+            response = json.dumps(response)
 
     return HttpResponse(response, mimetype='application/json')
 
@@ -621,9 +691,9 @@ def solr_igv(request):
 
     # copy querydict to make it editable
     if request.is_ajax():
-        igv_config = simplejson.loads(request.body)
+        igv_config = json.loads(request.body)
 
-        logger.debug(simplejson.dumps(igv_config, indent=4))
+        logger.debug(json.dumps(igv_config, indent=4))
 
         logger.debug('IGV data query: ' + str(igv_config['query']))
         logger.debug('IGV annotation query: ' + str(igv_config['annotation']))
@@ -651,9 +721,9 @@ def solr_igv(request):
                 session_urls = "Couldn't find the provided genome build."
 
         logger.debug("session_urls")
-        logger.debug(simplejson.dumps(session_urls, indent=4))
+        logger.debug(json.dumps(session_urls, indent=4))
 
-        return HttpResponse(simplejson.dumps(session_urls),
+        return HttpResponse(json.dumps(session_urls),
                             mimetype='application/json')
 
 
@@ -698,7 +768,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
     results = requests.get(query, stream=True).raw.read()
 
     # converting results into json for python
-    results = simplejson.loads(results)
+    results = json.loads(results)
 
     # IF list of nodes to remove from query exists
     if selected_nodes:
@@ -757,7 +827,12 @@ def doi(request, id):
     id = id.replace('$', '/')
     url = "https://dx.doi.org/{id}".format(id=id)
     headers = {'Accept': 'application/json'}
-    response = requests.get(url, headers=headers)
+
+    try:
+        response = requests.get(url, headers=headers)
+    except requests.exceptions.ConnectionError:
+        return HttpResponse('Service currently unavailable', status=503)
+
     return HttpResponse(response, mimetype='application/json')
 
 
@@ -777,9 +852,18 @@ def pubmed_abstract(request, id):
         'Accept': 'text/xml'
     }
 
-    response = requests.get(url, params=params, headers=headers)
+    try:
+        response = requests.get(url, params=params, headers=headers)
+    except requests.exceptions.ConnectionError:
+        return HttpResponse('Service currently unavailable', status=503)
+
+    try:
+        response_dict = xmltodict.parse(response.text)
+    except ExpatError:
+        return HttpResponse('Service currently unavailable', status=503)
+
     return HttpResponse(
-        simplejson.dumps(xmltodict.parse(response.text)),
+        json.dumps(response_dict),
         mimetype='application/json'
     )
 
@@ -803,7 +887,11 @@ def pubmed_search(request, term):
         'Accept': 'application/json'
     }
 
-    response = requests.get(url, params=params, headers=headers)
+    try:
+        response = requests.get(url, params=params, headers=headers)
+    except requests.exceptions.ConnectionError:
+        return HttpResponse('Service currently unavailable', status=503)
+
     return HttpResponse(response, mimetype='application/json')
 
 
@@ -822,7 +910,11 @@ def pubmed_summary(request, id):
         'Accept': 'application/json'
     }
 
-    response = requests.get(url, params=params, headers=headers)
+    try:
+        response = requests.get(url, params=params, headers=headers)
+    except requests.exceptions.ConnectionError:
+        return HttpResponse('Service currently unavailable', status=503)
+
     return HttpResponse(response, mimetype='application/json')
 
 
@@ -831,56 +923,107 @@ def fastqc_viewer(request):
                               context_instance=RequestContext(request))
 
 
+@gzip_page
 def neo4j_dataset_annotations(request):
     """Query Neo4J for dataset annotations per user
     """
 
-    user_id = -1 if request.user.id is None else request.user.id
+    if request.user.username:
+        user_name = request.user.username
+    else:
+        user_name = 'anonymous'
 
-    url = '{}/db/data/transaction/commit'.format(settings.NEO4J_BASE_URL)
+    url = urljoin(
+        settings.NEO4J_BASE_URL,
+        'ontology/unmanaged/annotations/{}'.format(user_name)
+    )
 
     headers = {
         'Accept': 'application/json; charset=UTF-8',
+        'Accept-Encoding': 'gzip,deflate',
         'Content-type': 'application/json'
     }
 
-    # sub = sub class
-    # sup = super class
-    # ds = dataset
-    #
-    # Note: this returns the while subclass hierarchy tree but only adds
-    # associates dataset annotations the user has read access to.
-    cql = (
-        'MATCH (sup:CL:Class)<-[:`RDFS:subClassOf`]-(sub) ' +
-        'OPTIONAL MATCH (ds:DataSet), ' +
-        '               (u:User {id:%s}), ' +
-        '               (ds)-[:`annotated_with`]->(sub), ' +
-        '               (u)-[:`read_access`]->(ds) ' +
-        'RETURN sup, sub, ds'
-    ) % user_id
-
-    stmt = {
-        'statements': [{
-            'statement': cql
-        }]
+    params = {
+        'objectification': 2
     }
 
     try:
-        response = requests.post(url, json=stmt, headers=headers)
+        response = requests.get(url, params=params, headers=headers)
     except requests.exceptions.ConnectionError as e:
         logger.error('Neo4J seems to be offline.')
         logger.error(e)
         return HttpResponse(
             'Neo4J seems to be offline.',
-            mimetype='application/json',
+            mimetype='text/plain',
             status=503
-        )
-    except requests.exceptions.RequestException as e:
-        logger.error(e)
-        return HttpResponse(
-            'Request failed.',
-            mimetype='application/json',
-            status=500
         )
 
     return HttpResponse(response, mimetype='application/json')
+
+
+class WorkflowViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows Workflows to be viewed
+    """
+    queryset = Workflow.objects.all()
+    serializer_class = WorkflowSerializer
+
+
+class CustomRegistrationView(RegistrationView):
+
+    def register(self, request, **cleaned_data):
+        """
+        Given a username, email address, password, first name, last name,
+        and affiliation, register a new user account, which will initially
+        be inactive.
+
+        Along with the new ``User`` object, a new
+        ``core.models.CustomRegistrationProfile`` will be created,
+        tied to that ``User``, containing the activation key which
+        will be used for this account.
+
+        An email will be sent to the administrator email address; this
+        email should contain an activation link. The email will be
+        rendered using two templates. See the documentation for
+        ``CustomRegistrationProfile.custom_send_activation_email()`` for
+        information about these templates and the contexts provided to
+        them.
+
+        After the ``User`` and ``CustomRegistrationProfile`` are created and
+        the activation email is sent, the signal
+        ``registration.signals.user_registered`` will be sent, with
+        the new ``User`` as the keyword argument ``user`` and the
+        class of this backend as the sender.
+
+        """
+        username = cleaned_data['username']
+        email = cleaned_data['email']
+        password = cleaned_data['password1']
+        first_name = cleaned_data['first_name']
+        last_name = cleaned_data['last_name']
+        affiliation = cleaned_data['affiliation']
+
+        if Site._meta.installed:
+            site = Site.objects.get_current()
+        else:
+            site = RequestSite(request)
+
+        # Create a new inactive User with the extra custom fields
+        new_user = CustomRegistrationProfile.objects \
+            .custom_create_inactive_user(
+                username, email, password, site,
+                first_name, last_name, affiliation)
+
+        signals.user_registered.send(sender=self.__class__,
+                                     user=new_user,
+                                     request=request)
+        return new_user
+
+    def get_success_url(self, request, user):
+        """
+        Return the name of the URL to redirect to after successful
+        user registration.
+
+        """
+        return ('registration_complete', (), {})

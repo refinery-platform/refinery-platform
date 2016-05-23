@@ -9,7 +9,7 @@ svg {
 	padding: 5px;
 	margin-top: 15px;
 	margin-bottom: 15px;
-}    
+}
 .background {
   fill: #777;
 }
@@ -34,30 +34,30 @@ rect.active {
 		background-color: #f00;
 	}
 
-    
+
  	.facet-title {
- 		cursor:pointer; 		
- 	} 	
+ 		cursor:pointer;
+ 	}
 
  	.facet-value {
- 		cursor:pointer; 		
+ 		cursor:pointer;
  	}
 
  	tr th {
  		cursor:pointer;
  	}
- 	 
+
  	.field-name {
  		cursor:pointer;
- 	} 
- 	 	
+ 	}
+
  	#facet-view .active {
- 		cursor:pointer; 
+ 		cursor:pointer;
  		background-color: #3A87AD;
  		color: #fff;
  		font-weight: bold;
- 	} 	
- 	
+ 	}
+
  	#pager-view {
  		text-align:right;
  	}
@@ -70,15 +70,15 @@ rect.active {
  	}
 
  	.facet-value-list td {
- 		padding: 2px; 		
+ 		padding: 2px;
  	}
  	.facet-value-list tr {
- 		padding: 2px; 		
+ 		padding: 2px;
  	}
- 	
+
  	.facet-value-list.selected {
  	}
- 	
+
  	.facet-title {
  		margin-top: 10px;
  	}
@@ -102,27 +102,27 @@ rect.active {
 
 				<form id="sampleForm" method="post" class="form-inline">
     			{% csrf_token %}
-    			
+
     			<!-- pass study information into the receiving view when posting -->
     			<input type="hidden" name="study_uuid" value="{{ study_uuid }}"/>
- 
+
 <div class="row">
  	<div class="col-md-10">
- 	
+
  			<div class="row">
-			<div> 				
+			<div>
 				<select class="combobox" name="workflow_choice" id="workflow_choice">
 					<option></option>
 					{% for work in workflows %}
 						<option value="{{work.uuid}}">{{work.name}}</option>
 					{% endfor %}
-				</select>			
-					
+				</select>
+
 				<!-- <button class="btn btn-primary" id="submitSamplesBtn"><i class="icon-road"></i>Run</button> -->
 				<a href="#" class="refinery-base btn btn-default"
           id="submitSamplesBtn">Apply</a>
         &nbsp;
-				
+
 				<!-- <a href="{% url 'igv_session' %}">IGV</a> -->
 				<span class="label" style="margin-left: 50px;">View in</span>
 				<a class="refinery-base btn btn-default" id="igv-session-link"
@@ -140,27 +140,27 @@ rect.active {
               class="refinery-base btn btn-default active">Data</button>
 				  	<button type="button" id="annotation-button" data-toggle="button"
               class="refinery-base btn btn-default">Annotation</button>
-				</div>				
+				</div>
 			</div>
 
-    	</div>	
- 	</div>	
+    	</div>
+ 	</div>
  	<div class="col-md-2">
-		<div id="statistics-view"></div> 		
- 	</div>	
+		<div id="statistics-view"></div>
+ 	</div>
 </div>
 
 <div class="row">
- 	
+
  	<div class="col-md-2">
 			<ul class="nav nav-pills" id="navigation-tabs">
 			  <li class="active"><a href="#facet-view" data-toggle="pill">Facets</a></li>
-			</ul> 		
+			</ul>
 			<div id="facet-view" class="panel-group"></div>
- 	</div>	
- 	
+ 	</div>
+
  	<div class="col-md-10">
-		
+
 		<div class="row">
 		<div class="tabbable">
 			<ul class="nav nav-pills" id="navigation-tabs">
@@ -172,27 +172,27 @@ rect.active {
 			  <div class="tab-pane active fade in" id="table-view-tab">
 				<div id="table-view"></div>
 				<div id="pager-view"></div>
-				<div id="field-view"></div>  	
+				<div id="field-view"></div>
 			  </div>
 			  <div class="tab-pane fade in" id="pivot-view-tab">
-			  	<div id="pivot-view">			  		
-			  	</div>			  	
+			  	<div id="pivot-view">
+			  	</div>
 			  	<div id="pivot-matrix">
 			  		<!-- the matrix -->
 			  	</div>
 			  </div>
 			</div>
-		</div>			
 		</div>
-		
+		</div>
+
 	</div>
-	
+
 </div>
 
 <div class="row">
  	<div class="col-md-12">
 	 	<div id="url-view"></div>
- 	</div>		 
+ 	</div>
 </div>
 </form>
 </div>
@@ -201,17 +201,21 @@ rect.active {
 
 {% endblock %}
 
-{% block script %}
+{% block vendor_scripts %}
     <script type="text/javascript" src="{% static "js/d3/d3.v3.min.js" %}"></script>
     <script type="text/javascript" src="{% static "js/d3/fisheye.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/bootbox/bootbox.min.js" %}"></script>
+
+{% endblock %}
+
+{% block script %}
 
 	<!-- Refinery libraries -->
 	<script type="text/javascript">
 		var SOLR_BASE_URL = "{{ REFINERY_SOLR_BASE_URL }}"
-	</script>	
+	</script>
     <script type="text/javascript" src="{% static "js/refinery/viewers/pivot-matrix.js" %}"></script>
 	<script type="text/javascript" src="{% static "js/refinery/contents_workflow.js" %}"></script>
     <script type="text/javascript" src="{% static "js/refinery/contents.js" %}"></script>
-    <script type="text/javascript" src="{% static "js/bootbox/bootbox.min.js" %}"></script>
-			    			        
-{% endblock %}    
+
+{% endblock %}

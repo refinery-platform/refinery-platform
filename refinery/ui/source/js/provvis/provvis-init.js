@@ -1,26 +1,24 @@
+'use strict';
+
 /**
  * Module for init.
  */
 var provvisInit = (function () {
-
   /* Initialize node-link arrays. */
-  var dataset = Object.create(null),
-      nodes = [],
-      links = [],
-      aLinks = [],
-      iNodes = [],
-      oNodes = [],
-      aNodes = [],
-      saNodes = [],
-
-      nodeMap = d3.map(),
-
-      analysisWorkflowMap = d3.map(),
-      workflowData = d3.map(),
-      analysisData = d3.map(),
-      nodeData = d3.map(),
-
-      nodeAttributeList = [];
+  var dataset = Object.create(null);
+  var nodes = [];
+  var links = [];
+  var aLinks = [];
+  var iNodes = [];
+  var oNodes = [];
+  var aNodes = [];
+  var saNodes = [];
+  var nodeMap = d3.map();
+  var analysisWorkflowMap = d3.map();
+  var workflowData = d3.map();
+  var analysisData = d3.map();
+  var nodeData = d3.map();
+  var nodeAttributeList = [];
 
   /**
    * Assign node types.
@@ -28,22 +26,22 @@ var provvisInit = (function () {
    * @returns {string} The CSS class corresponding to the type of the node.
    */
   var assignNodeType = function (n) {
-    var nodeType = "";
+    var nodeType = '';
 
     switch (n.type) {
-      case "Source Name":
-      case "Sample Name":
-      case "Assay Name":
-        nodeType = "special";
+      case 'Source Name':
+      case 'Sample Name':
+      case 'Assay Name':
+        nodeType = 'special';
         break;
-      case "Data Transformation Name":
-        nodeType = "dt";
+      case 'Data Transformation Name':
+        nodeType = 'dt';
         break;
       default:
         if (n.file_url === null) {
-          nodeType = "intermediate";
+          nodeType = 'intermediate';
         } else {
-          nodeType = "stored";
+          nodeType = 'stored';
         }
         break;
     }
@@ -58,24 +56,24 @@ var provvisInit = (function () {
    * @returns {provvisDecl.Node} New Node object.
    */
   var createNode = function (n, type, id) {
-    var study = (n.study !== null) ? n.study.replace(/\/api\/v1\/study\//g, "")
-            .replace(/\//g, "") : "",
-        assay = (n.assay !== null) ? n.assay.replace(/\/api\/v1\/assay\//g, "")
-            .replace(/\//g, "") : "",
-        parents = n.parents.map(function (y) {
-          return y.replace(/\/api\/v1\/node\//g, "").replace(/\//g, "");
-        }),
-        analysis = (n.analysis_uuid !== null) ? n.analysis_uuid : "dataset";
+    var study = (n.study !== null) ? n.study.replace(/\/api\/v1\/study\//g, '')
+      .replace(/\//g, '') : '';
+    var assay = (n.assay !== null) ? n.assay.replace(/\/api\/v1\/assay\//g, '')
+      .replace(/\//g, '') : '';
+    var parents = n.parents.map(function (y) {
+      return y.replace(/\/api\/v1\/node\//g, '').replace(/\//g, '');
+    });
+    var analysis = (n.analysis_uuid !== null) ? n.analysis_uuid : 'dataset';
 
     /* Fix for datasets which nodes might not contain a name attribute. */
-    var nodeName = "undefined";
-    if (typeof n.name !== "undefined") {
+    var nodeName = 'undefined';
+    if (typeof n.name !== 'undefined') {
       nodeName = n.name;
     }
 
     return new provvisDecl.Node(id, type, Object.create(null), true, nodeName,
-        n.type, study, assay, parents, analysis, n.subanalysis, n.uuid,
-        n.file_url);
+      n.type, study, assay, parents, analysis, n.subanalysis, n.uuid,
+      n.file_url);
   };
 
   /**
@@ -84,7 +82,6 @@ var provvisInit = (function () {
    */
   var extractNodes = function (datasetJsonObj) {
     d3.values(datasetJsonObj.value).forEach(function (n, i) {
-
       /* Assign class string for node types. */
       var nodeType = assignNodeType(n);
 
@@ -117,26 +114,25 @@ var provvisInit = (function () {
     var lId = 0;
 
     nodes.forEach(function (n) {
-      if (typeof n.uuid !== "undefined") {
-        if (typeof n.parents !== "undefined") {
-
+      if (typeof n.uuid !== 'undefined') {
+        if (typeof n.parents !== 'undefined') {
           /* For each parent entry. */
           n.parents.forEach(function (puuid) { /* n -> target; p -> source */
-            if (typeof nodeMap.get(puuid) !== "undefined") {
+            if (typeof nodeMap.get(puuid) !== 'undefined') {
               /* ExtractLinkProperties. */
               links.push(createLink(lId, nodeMap.get(puuid), n));
               lId++;
             } else {
-              console.log("ERROR: Dataset might be corrupt - parent: " + puuid +
-                  " of node with uuid: " + n.uuid + " does not exist.");
+              console.log('ERROR: Dataset might be corrupt - parent: ' + puuid +
+                ' of node with uuid: ' + n.uuid + ' does not exist.');
             }
           });
         } else {
-          console.log("Error: Parents array of node with uuid: " + n.uuid +
-              " is undefined!");
+          console.log('Error: Parents array of node with uuid: ' + n.uuid +
+            ' is undefined!');
         }
       } else {
-        console.log("Error: Node uuid is undefined!");
+        console.log('Error: Node uuid is undefined!');
       }
     });
   };
@@ -156,11 +152,9 @@ var provvisInit = (function () {
     /* Set input and output nodes. */
     nodes.forEach(function (n) {
       if (n.succs.empty()) {
-
         /* Set output nodes. */
         oNodes.push(n);
       } else if (n.preds.empty()) {
-
         /* Set input nodes. */
         iNodes.push(n);
       }
@@ -178,17 +172,18 @@ var provvisInit = (function () {
      * @param n Current node.
      * @param subanalysis Current subanalysis.
      */
-    var traverseBackSubanalysis = function (n, subanalysis) {
-      n.subanalysis = subanalysis;
+    var traverseBackSubanalysis = function (n, currentSubAnalysis) {
+      n.subanalysis = currentSubAnalysis;
       n.preds.values().forEach(function (pn) {
         if (pn.subanalysis === null) {
-          traverseBackSubanalysis(pn, subanalysis);
+          traverseBackSubanalysis(pn, currentSubAnalysis);
         }
       });
 
       n.succs.values().forEach(function (sn) {
         if (sn.subanalysis === null) {
-          traverseDataset(sn, subanalysis);
+          // Need to disable ESLint here because of a circular dependency
+          traverseDataset(sn, currentSubAnalysis);  // eslint-disable-line no-use-before-define
         }
       });
     };
@@ -198,28 +193,30 @@ var provvisInit = (function () {
      * @param n Current node.
      * @param subanalysis Current subanalysis.
      */
-    var traverseDataset = function (n, subanalysis) {
-      n.subanalysis = subanalysis;
+    var traverseDataset = function (n, _currentSubAnalysis_) {
+      var currentSubAnalysis = _currentSubAnalysis_;
+
+      n.subanalysis = currentSubAnalysis;
 
       if (n.preds.size() > 1) {
         n.preds.values().forEach(function (pn) {
           if (pn.subanalysis === null) {
-            traverseBackSubanalysis(pn, subanalysis);
+            traverseBackSubanalysis(pn, currentSubAnalysis);
           }
         });
       }
 
       n.succs.values().forEach(function (sn) {
-        if (sn.analysis !== "dataset") {
+        if (sn.analysis !== 'dataset') {
           if (sn.subanalysis === null) {
             if (!sn.succs.empty()) {
-              subanalysis = sn.succs.values()[0].subanalysis;
+              currentSubAnalysis = sn.succs.values()[0].subanalysis;
             }
           } else {
-            subanalysis = sn.subanalysis;
+            currentSubAnalysis = sn.subanalysis;
           }
         }
-        traverseDataset(sn, subanalysis);
+        traverseDataset(sn, currentSubAnalysis);
       });
     };
 
@@ -227,7 +224,6 @@ var provvisInit = (function () {
     iNodes.forEach(function (n) {
       /* Processed nodes are set to "null" after parsing nodes. */
       if (n.subanalysis === null) {
-
         traverseDataset(n, subanalysis);
         subanalysis++;
       }
@@ -242,29 +238,29 @@ var provvisInit = (function () {
    */
   var createAnalysisNode = function (a, i) {
     var initTime = {
-      start : a.time_start,
-      end : a.time_end,
-      created : a.creation_date
+      start: a.time_start,
+      end: a.time_end,
+      created: a.creation_date
     };
 
     if (initTime.start.length === 19) {
-      initTime.start = initTime.start.concat(".000");
+      initTime.start = initTime.start.concat('.000');
     } else if (initTime.start.length === 26) {
       initTime.start = initTime.start.substr(0, initTime.start.length - 3);
     }
     if (initTime.end.length === 19) {
-      initTime.end = initTime.end.concat(".000");
+      initTime.end = initTime.end.concat('.000');
     } else if (initTime.end.length === 26) {
       initTime.end = initTime.end.substr(0, initTime.end.length - 3);
     }
     if (initTime.created.length === 19) {
-      initTime.created = initTime.created = initTime.created.concat(".000");
+      initTime.created = initTime.created = initTime.created.concat('.000');
     } else if (initTime.created.length === 26) {
       initTime.created = initTime.created.substr(0, initTime.created.length - 3);
     }
 
     return new provvisDecl.Analysis(i, Object.create(null), true, a.uuid,
-        a.workflow__uuid, i, initTime.start, initTime.end, initTime.created);
+      a.workflow__uuid, i, initTime.start, initTime.end, initTime.created);
   };
 
   /**
@@ -273,25 +269,23 @@ var provvisInit = (function () {
    * variable.
    */
   var extractWorkflows = function (analysesData) {
-
     analysesData.forEach(function (a) {
-
       /* Prepare for json format. */
       var prepareJSON = function (wfCpy) {
-        var text = wfCpy.replace(/u'/g, "\"");
-        text = text.replace(/\'/g, "\"");
-        text = text.replace(/\sNone/g, " \"None\"");
-        text = text.replace(/\\n/g, "");
-        text = text.replace(/\\/g, "");
-        text = text.replace(/\"{\"/g, "{\"");
-        text = text.replace(/}\"/g, "}");
-        text = text.replace(/\"\"(\S+)\"\"/g, "\"$1\"");
+        var text = wfCpy.replace(/u'/g, '"');
+        text = text.replace(/\'/g, '"');
+        text = text.replace(/\sNone/g, ' "None"');
+        text = text.replace(/\\n/g, '');
+        text = text.replace(/\\/g, '');
+        text = text.replace(/\"{\"/g, '{"');
+        text = text.replace(/}\"/g, '}');
+        text = text.replace(/\"\"(\S+)\"\"/g, '"$1"');
 
         /* Eliminate __xxxx__ parameters. */
-        text = text.replace(/\"__(\S*)__\":\s{1}\d*(,\s{1})?/g, "");
-        text = text.replace(/,\s{1}null/g, "");
-        text = text.replace(/null,/g, "");  //TODO: temp fix
-        text = text.replace(/,\s{1}}/g, "}");
+        text = text.replace(/\"__(\S*)__\":\s{1}\d*(,\s{1})?/g, '');
+        text = text.replace(/,\s{1}null/g, '');
+        text = text.replace(/null,/g, '');  // TODO: temp fix
+        text = text.replace(/,\s{1}}/g, '}');
 
         return text;
       };
@@ -311,7 +305,6 @@ var provvisInit = (function () {
    * variable.
    */
   var extractAnalyses = function (analysesData) {
-
     /* Datasets have no date information. */
     var initDate = d3.time.format.iso(new Date(0));
     if (analysesData.length > 0) {
@@ -326,10 +319,10 @@ var provvisInit = (function () {
     initDate = initDate.substr(0, initDate.length - 1);
 
     /* Create analysis for dataset. */
-    dataset = new provvisDecl.Analysis(0, Object.create(null), true, "dataset",
-        "dataset", 0, initDate, initDate, initDate);
+    dataset = new provvisDecl.Analysis(0, Object.create(null), true, 'dataset',
+      'dataset', 0, initDate, initDate, initDate);
     aNodes.push(dataset);
-    analysisWorkflowMap.set("dataset", "dataset");
+    analysisWorkflowMap.set('dataset', 'dataset');
 
     /* Create remaining analyses. */
     analysesData.forEach(function (a, i) {
@@ -355,7 +348,6 @@ var provvisInit = (function () {
    * output nodes are mapped to it.
    */
   var createAnalysisNodeMapping = function () {
-
     /* Subanalysis. */
 
     /* Create subanalysis node. */
@@ -374,11 +366,10 @@ var provvisInit = (function () {
     });
 
     saNodes.forEach(function (san) {
-
       /* Set child nodes for subanalysis. */
       nodes.filter(function (n) {
         return san.parent.uuid === n.analysis &&
-            n.subanalysis === san.subanalysis;
+        n.subanalysis === san.subanalysis;
       }).forEach(function (cn) {
         san.children.set(cn.autoId, cn);
       });
@@ -391,9 +382,9 @@ var provvisInit = (function () {
       /* Set input nodes for subanalysis. */
       san.children.values().filter(function (n) {
         return n.preds.values().some(function (p) {
-              return p.analysis !== san.parent.uuid;
-            }) || n.preds.empty();
-        /* If no src analyses exists. */
+          return p.analysis !== san.parent.uuid;
+        }) || n.preds.empty();
+      /* If no src analyses exists. */
       }).forEach(function (inn) {
         san.inputs.set(inn.autoId, inn);
       });
@@ -401,8 +392,8 @@ var provvisInit = (function () {
       /* Set output nodes for subanalysis. */
       san.children.values().filter(function (n) {
         return n.succs.empty() || n.succs.values().some(function (s) {
-              return s.analysis !== san.parent.uuid;
-            });
+          return s.analysis !== san.parent.uuid;
+        });
       }).forEach(function (onn) {
         san.outputs.set(onn.autoId, onn);
       });
@@ -447,7 +438,7 @@ var provvisInit = (function () {
     saNodes.forEach(function (san) {
       links.filter(function (l) {
         return l !== null && san.parent.uuid === l.source.analysis &&
-            l.source.subanalysis === san.subanalysis;
+        l.source.subanalysis === san.subanalysis;
       }).forEach(function (ll) {
         if (san.parent.uuid === ll.target.analysis) {
           san.links.set(ll.autoId, ll);
@@ -460,7 +451,6 @@ var provvisInit = (function () {
 
     /* Analysis. */
     aNodes.forEach(function (an) {
-
       /* Children are set already. */
       an.children.values().forEach(function (san) {
         /* Set input nodes. */
@@ -477,28 +467,24 @@ var provvisInit = (function () {
         san.wfUuid = an.wfUuid;
       });
 
-
-
       /* Set workflow name. */
       var wfObj = workflowData.get(an.wfUuid);
-      an.wfName = (typeof wfObj === "undefined") ? "dataset" : wfObj.name;
+      an.wfName = (typeof wfObj === 'undefined') ? 'dataset' : wfObj.name;
 
       /*  TODO: Temporary workflow abbreviation. */
-        if(an.wfName.substr(0, 15) === "Test workflow: ") {
-          an.wfName = an.wfName.substr(15, an.wfName.length - 15);
-        }
-        if (an.wfName.indexOf("(") > 0) {
-          an.wfName = an.wfName.substr(0, an.wfName.indexOf("("));
-        }
-        if (an.wfName.indexOf("-") > 0) {
-          an.wfName = an.wfName.substr(0, an.wfName.indexOf("-"));
-        }
-        an.wfCode = an.wfName;
-      /*}*/
+      if (an.wfName.substr(0, 15) === 'Test workflow: ') {
+        an.wfName = an.wfName.substr(15, an.wfName.length - 15);
+      }
+      if (an.wfName.indexOf('(') > 0) {
+        an.wfName = an.wfName.substr(0, an.wfName.indexOf('('));
+      }
+      if (an.wfName.indexOf('-') > 0) {
+        an.wfName = an.wfName.substr(0, an.wfName.indexOf('-'));
+      }
+      an.wfCode = an.wfName;
     });
 
     aNodes.forEach(function (an) {
-
       /* Set predecessor analyses. */
       an.children.values().forEach(function (san) {
         san.preds.values().forEach(function (psan) {
@@ -552,20 +538,19 @@ var provvisInit = (function () {
   var extractFacetNodeAttributesPrivate = function (solrResponse) {
     if (solrResponse instanceof SolrResponse) {
       solrResponse.getDocumentList().forEach(function (d) {
-
         /* Set facet attributes to all nodes for the subanalysis of the selected
          * node.
          */
-        var selNode = nodeMap.get(d.uuid),
-            rawFacetAttributes = d3.entries(d);
+        var selNode = nodeMap.get(d.uuid);
+        var rawFacetAttributes = d3.entries(d);
 
         rawFacetAttributes.forEach(function (fa) {
-          var attrNameEndIndex = fa.key.indexOf("_Characteristics_"),
-              attrName = "";
+          var attrNameEndIndex = fa.key.indexOf('_Characteristics_');
+          var attrName = '';
 
           if (attrNameEndIndex === -1) {
-            attrName = fa.key.replace(/REFINERY_/g, "");
-            attrName = attrName.replace(/_([0-9])+_([0-9])+_s/g, "");
+            attrName = fa.key.replace(/REFINERY_/g, '');
+            attrName = attrName.replace(/_([0-9])+_([0-9])+_s/g, '');
             attrName = attrName.toLowerCase();
           } else {
             attrName = fa.key.substr(0, attrNameEndIndex);
@@ -582,21 +567,19 @@ var provvisInit = (function () {
    * @param solrResponse Facet filter information on node attributes.
    */
   var createFacetNodeAttributeList = function (solrResponse) {
-
     /* Extract attributes. */
     if (solrResponse instanceof SolrResponse &&
-        solrResponse.getDocumentList().length > 0) {
-
+      solrResponse.getDocumentList().length > 0) {
       var sampleNode = solrResponse.getDocumentList()[0];
       var rawAttrSet = d3.entries(sampleNode);
 
       rawAttrSet.forEach(function (fa) {
-        var attrNameEndIndex = fa.key.indexOf("_Characteristics_"),
-            attrName = "";
+        var attrNameEndIndex = fa.key.indexOf('_Characteristics_');
+        var attrName = '';
 
         if (attrNameEndIndex === -1) {
-          attrName = fa.key.replace(/REFINERY_/g, "");
-          attrName = attrName.replace(/_([0-9])+_([0-9])+_s/g, "");
+          attrName = fa.key.replace(/REFINERY_/g, '');
+          attrName = attrName.replace(/_([0-9])+_([0-9])+_s/g, '');
           attrName = attrName.toLowerCase();
         } else {
           attrName = fa.key.substr(0, attrNameEndIndex);
@@ -608,19 +591,19 @@ var provvisInit = (function () {
 
     /* Add to button dropdown list. */
     nodeAttributeList.forEach(function (na) {
-      $("<li/>", {
-        "id": "prov-ctrl-visible-attribute-list-" + na,
-        "style": "padding-left: 5px",
-        "html": '<a href="#" class="field-name"><label class="radio" ' +
-        'style="text-align: start;margin-top: 0px;margin-bottom: 0px;">' +
-        '<input type="radio">' +
-        na + '</label></a>'
-      }).appendTo("#prov-ctrl-visible-attribute-list");
+      $('<li/>', {
+        id: 'prov-ctrl-visible-attribute-list-' + na,
+        style: 'padding-left: 5px',
+        html: '<a href="#" class="field-name"><label class="radio" ' +
+          'style="text-align: start;margin-top: 0px;margin-bottom: 0px;">' +
+          '<input type="radio">' +
+          na + '</label></a>'
+      }).appendTo('#prov-ctrl-visible-attribute-list');
     });
 
     /* Initially set name attribute checked. */
-    $("#prov-ctrl-visible-attribute-list-name")
-        .find("input").prop("checked", true);
+    $('#prov-ctrl-visible-attribute-list-name')
+      .find('input').prop('checked', true);
   };
 
   /**
@@ -675,8 +658,8 @@ var provvisInit = (function () {
 
     /* Create graph. */
     var graph = new provvisDecl.ProvGraph(dataset, nodes, links, aLinks, iNodes,
-        oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData,
-        workflowData, nodeData);
+      oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData,
+      workflowData, nodeData);
 
     /* Set parent objects for analysis nodes. */
     setAnalysisParent(graph);

@@ -1,52 +1,42 @@
-describe('Common.dataSet.DataSetDataApi: unit tests', function () {
-  'use strict';
+'use strict';
 
-  var $httpBackend,
-      $rootScope,
-      Factory,
-      fakeResolve = {
-        affiliation: 'test',
-        email: 'test@test.de',
-        firstName: 'test',
-        fullName: 'test test',
-        lastName: 'test',
-        userId: 0,
-        userName: 'AnonymousUser',
-        userProfileUuid: '123'
-      },
-      fakeResponse = {
-        meta: {
-          limit: 1,
-          next: "/api/v1/data_sets/?format=json&limit=1&offset=1",
-          offset: 0,
-          previous: null,
-          total_count: 6
-        },
-        objects: [
-          {
-            accession: "14995",
-            accession_source: null,
-            creation_date: "2015-07-21T18:30:26.430374",
-            description: "",
-            file_count: 8,
-            file_size: "0",
-            id: 348,
-            is_owner: false,
-            is_shared: null,
-            modification_date: "2015-08-17T19:48:27.437821",
-            name: "14995: E14.5 mouse cortical neurospheres in response to Fezf2 over-expression",
-            public: true,
-            resource_uri: "/api/v1/data_sets/a1417684-99e9-43ff-8ce6-676ce9cc398f/",
-            share_list: null,
-            slug: null,
-            summary: "",
-            title: "E14.5 mouse cortical neurospheres in response to Fezf2 over-expression",
-            uuid: "a1417684-99e9-43ff-8ce6-676ce9cc398f"
-          }
-        ]
-      },
-      params = '?format=json&limit=1&offset=0&order_by=-modification_date',
-      service;
+describe('Common.dataSet.DataSetDataApi: unit tests', function () {
+  var $httpBackend;
+  var $rootScope;
+  var Factory;
+  var fakeResponse = {
+    meta: {
+      limit: 1,
+      next: '/api/v1/data_sets/?format=json&limit=1&offset=1',
+      offset: 0,
+      previous: null,
+      total_count: 6
+    },
+    objects: [
+      {
+        accession: '14995',
+        accession_source: null,
+        creation_date: '2015-07-21T18:30:26.430374',
+        description: '',
+        file_count: 8,
+        file_size: '0',
+        id: 348,
+        is_owner: false,
+        is_shared: null,
+        modification_date: '2015-08-17T19:48:27.437821',
+        name: '14995: E14.5 mouse cortical neurospheres in response to Fezf2 over-expression',
+        public: true,
+        resource_uri: '/api/v1/data_sets/a1417684-99e9-43ff-8ce6-676ce9cc398f/',
+        share_list: null,
+        slug: null,
+        summary: '',
+        title: 'E14.5 mouse cortical neurospheres in response to Fezf2 over-expression',
+        uuid: 'a1417684-99e9-43ff-8ce6-676ce9cc398f'
+      }
+    ]
+  };
+  var params = '?format=json&limit=1&offset=0&order_by=-modification_date';
+  var service;
 
   beforeEach(function () {
     module('refineryApp');
@@ -63,15 +53,14 @@ describe('Common.dataSet.DataSetDataApi: unit tests', function () {
         .expectGET(
           settings.appRoot +
           settings.refineryApi +
-          '/data_sets' +
+          '/data_sets/' +
           params
-        )
+      )
         .respond(200, fakeResponse);
     });
   });
 
   describe('Service', function () {
-
     it('should be available', function () {
       expect(!!service).toEqual(true);
     });
@@ -81,8 +70,8 @@ describe('Common.dataSet.DataSetDataApi: unit tests', function () {
     });
 
     it('should return a resolving promise', function () {
-      var promise = service(1, 0),
-          results;
+      var promise = service(1, 0);
+      var results;
 
       expect(typeof promise.then).toEqual('function');
 
@@ -97,6 +86,5 @@ describe('Common.dataSet.DataSetDataApi: unit tests', function () {
       expect(results.meta.total).toEqual(6);
       expect(results.data.length).toEqual(1);
     });
-
   });
 });

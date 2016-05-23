@@ -45,6 +45,8 @@ setup_refinery.sh
 .pydevproject
 /refinery/*.pid
 /refinery/solr/*/data
+/refinery/solr/lib/
+/refinery/solr/*/conf/custom-synonyms.txt
 /refinery/fabric/
 supervisord.conf
 codekit-config.json
@@ -54,6 +56,7 @@ codekit-config.json
 /deployment/Puppetfile.lock
 /refinery/celerybeat-schedule*
 /refinery/config/config.json
+/refinery/solr/**/conf/solrconfig.xml
 /refinery/static/production/
 /refinery/static/development/
 /refinery/ui/production/

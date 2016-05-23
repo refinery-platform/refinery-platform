@@ -1,6 +1,6 @@
-describe('Dashboard.module: unit tests', function () {
-  'use strict';
+'use strict';
 
+describe('Dashboard.module: unit tests', function () {
   var module;
 
   beforeEach(function () {
@@ -8,19 +8,16 @@ describe('Dashboard.module: unit tests', function () {
   });
 
   describe('Module', function () {
-
     it('should be registered', function () {
       expect(!!module).toEqual(true);
     });
-
   });
 
   describe('Dependencies:', function () {
-
-    var deps,
-        hasModule = function (m) {
-          return deps.indexOf(m) >= 0;
-        };
+    var deps;
+    var hasModule = function (m) {
+      return deps.indexOf(m) >= 0;
+    };
 
     beforeEach(function () {
       deps = module.value('refineryDashboard').requires;
@@ -42,8 +39,8 @@ describe('Dashboard.module: unit tests', function () {
       expect(hasModule('cut')).toEqual(true);
     });
 
-    it('should have "toolTip" as a dependency', function () {
-      expect(hasModule('toolTip')).toEqual(true);
+    it('should have "tooltip" as a dependency', function () {
+      expect(hasModule('tooltip')).toEqual(true);
     });
 
     it('should have "treemap" as a dependency', function () {
@@ -57,6 +54,5 @@ describe('Dashboard.module: unit tests', function () {
     it('should have "listGraph" as a dependency', function () {
       expect(hasModule('listGraph')).toEqual(true);
     });
-
   });
 });

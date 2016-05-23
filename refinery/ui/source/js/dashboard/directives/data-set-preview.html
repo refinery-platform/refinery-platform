@@ -13,36 +13,74 @@
           <i class="fa fa-angle-double-left"></i>
           Close
         </button>
-        <div class="btn-group dropdown" ng-if="preview.user.isAuthenticated">
-          <button
-            type="button"
-            class="btn dropdown-toggle"
-            data-toggle="dropdown"
-            aria-haspopup="true"
-            aria-expanded="true">
-            <i class="fa fa-pencil-square-o"></i> Edit <span
-            class="caret"></span>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-right">
-            <li>
-              <a
-                class="clickable spinnable"
-                ng-class="{'disabled':!preview.permissions}"
-                ng-click="preview.openPermissionEditor()">
-                <div class="refinery-spinner" ng-if="preview.permissionsLoading !== false"></div>
-                Permissions
-              </a>
-            </li>
-          </ul>
-        </div>
       </div>
       <div class="floatbox-max-left">
-        <h4 ng-bind-html="preview.dataSet.title"></h4>
+        <a
+          class="btn btn-important"
+          ng-href="data_sets/{{ preview.dataSetUuid }}">
+          <i class="fa fa-table"></i>
+          View content in File Browser
+        </a>
+        <span class="separator">&middot;</span>
+        <button
+          class="btn clickable spinnable"
+          title="Import this shared data set into your own space to run analyses"
+          ng-if="!preview.dataSetDetails.is_owner"
+          ng-class="{
+            'disabled': preview.isDataSetReImporting,
+            'btn-success': preview.isDataSetReImportSuccess,
+            'btn-danger': preview.isDataSetReImportFail
+          }"
+          ng-disabled="preview.importDataSetStarted"
+          ng-click="preview.importDataSet()"
+          refinery-tooltip
+          refinery-tooltip-container="body"
+          refinery-tooltip-placement="top"
+          refinery-tooltip-delay-show="750"
+          refinery-tooltip-delay-hide="150"
+          refinery-tooltip-hide-when="preview.importDataSetStarted">
+          <div
+            class="refinery-spinner-bg"
+            ng-if="preview.isDataSetReImporting">
+            <div class="refinery-spinner"></div>
+          </div>
+          <span ng-if="!preview.isDataSetReImportSuccess && !preview.isDataSetReImportFail">
+            <i class="fa fa-cloud-download" aria-hidden="true"></i>
+            Import into Own Space
+          </span>
+          <span ng-if="preview.isDataSetReImportSuccess">
+            <i class="fa fa-check" aria-hidden="true"></i>
+            Import successful!
+          </span>
+          <span ng-if="preview.isDataSetReImportFail">
+            <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+            Import failed!
+          </span>
+        </button>
+        <button
+          class="btn"
+          disabled="disabled"
+          ng-if="preview.dataSetDetails.is_owner">
+          <i class="fa fa-check" aria-hidden="true"></i>
+          Imported
+        </button>
+        <button
+          class="btn clickable spinnable"
+          ng-class="{ 'disabled':!preview.permissions }"
+          ng-click="preview.openPermissionEditor()">
+          <div
+            class="refinery-spinner-bg"
+            ng-if="preview.permissionsLoading !== false">
+            <div class="refinery-spinner"></div>
+          </div>
+          <i class="fa fa-share-square-o"></i>
+          Share
+        </button>
       </div>
     </div>
   </div>
-  <div class="refinery-global-spinner" ng-if="preview.loading !== false">
-    <div class="refinery-spinner"></div>
+  <div class="refinery-global-notifier" ng-if="preview.loading !== false">
+    <div class="refinery-notifier-icon refinery-spinner"></div>
   </div>
   <div class="content scrollable">
     <div
@@ -50,13 +88,43 @@
       ng-if="preview.numStudies === 1">
       <h5 class="refinery-subheader">Summary</h5>
       <div class="inline-container">
+        <p class="stronger" ng-bind-html="preview.dataSetDetails.title"></p>
+      </div>
+      <div class="inline-container">
         <h6>Description</h6>
-        <p>{{ preview.studies.description }}</p>
+        <p>{{ preview.studies.description | cut:true:preview.descLength }}</p>
+        <button
+          class="is-mirrorable icon-only"
+          ng-if="preview.studies.description.length > preview.settings.dashboard.preview.defaultLengthDescription"
+          ng-click="preview.toggleDescription()"
+          ng-class="{'is-mirrored': preview.descLength > preview.studies.description.length }">
+          <i class="fa fa-chevron-right"></i>
+        </button>
+      </div>
+      <div class="inline-container" ng-if="preview.numAssays > 0">
+        <h6>Technology &amp; Measurement</h6>
+        <ul class="badge-list">
+          <li ng-repeat="assay in preview.assays | limitTo: preview.maxBadges track by $index">
+            {{ assay.technology }}
+            <span
+              class="badge-characteristic"
+              ng-if="assay.measurement.length > 0">
+              {{ assay.measurement }}
+            </span>
+          </li>
+        </ul>
+        <button
+          class="is-mirrorable icon-only"
+          ng-if="preview.maxBadges < this.infinity && preview.maxBadges < preview.studies.sources.length"
+          ng-click="preview.toggleBadges()"
+          ng-class="{'is-mirrored': preview.maxBadges > preview.studies.sources.length}">
+          <i class="fa fa-chevron-right"></i>
+        </button>
       </div>
       <div class="inline-container" ng-if="preview.studies.sources.length">
         <h6>Sources</h6>
         <ul class="badge-list">
-          <li ng-repeat="source in preview.studies.sources | limitTo: preview.maxBadges track by $index ">
+          <li ng-repeat="source in preview.studies.sources | limitTo: preview.maxBadges track by $index">
             {{ source.name }}
             <span
               class="badge-characteristic"
@@ -74,71 +142,80 @@
         </button>
       </div>
       <div class="inline-container">
-        <h6>Number of files</h6>
-        <p>{{ preview.dataSet.file_count }}</p>
+        <h6>Number of files (total file size)</h6>
+        <p>{{ preview.dataSetDetails.file_count }} ({{ preview.totalFileSize }})</p>
       </div>
       <div class="inline-container">
         <h6>Owner</h6>
-        <p ng-if="preview.dataSet.is_owner">You!</p>
-        <p ng-if="!preview.dataSet.is_owner">
+        <p ng-if="preview.dataSetDetails.is_owner">You</p>
+        <p ng-if="!preview.dataSetDetails.is_owner">
           <a
             ng-if="preview.userName"
-            ng-href="/users/{{ preview.dataSet.owner }}/">
+            ng-href="/users/{{ preview.dataSetDetails.owner }}/">
             {{ preview.userName }}
           </a>
           <a
             ng-if="!preview.userName"
-            ng-href="/users/{{ preview.dataSet.owner }}/">
-            {{ preview.dataSet.owner }}
+            ng-href="/users/{{ preview.dataSetDetails.owner }}/">
+            {{ preview.dataSetDetails.owner }}
           </a>
         </p>
       </div>
       <h5 class="refinery-subheader">
         Analyses
-        <span class="badge">{{ preview.numAnalyses }}</span>
+        <span
+          class="badge"
+          title="Total number"
+          refinery-tooltip
+          refinery-tooltip-container="body"
+          refinery-tooltip-placement="top"
+          refinery-tooltip-delay-show="750"
+          refinery-tooltip-delay-hide="150">
+          {{ preview.numAnalyses }}
+        </span>
       </h5>
       <ol
         class="no-list-style"
         ng-if="preview.numAnalyses">
-        <li ng-repeat="analysis in preview.analyses">
+        <li ng-repeat="analysis in preview.analyses | limitTo:preview.maxAnalyses">
           <i
             class="analyses-status {{ analysis.status | analysisStatusIcon }}"
             title="{{ analysis.status | analysisStatusTitle }}"
-            tool-tip
-            tool-tip-container="body"
-            tool-tip-placement="left">
+            refinery-tooltip
+            refinery-tooltip-container="body"
+            refinery-tooltip-placement="left">
           </i>
-          <span ng-if="analysis.status === 'UNKNOWN'">
-            {{ analysis.name }}
+          <span ng-if="analysis.status === 'SUCCESS'">
+             <a ng-href="/data_sets/{{ analysis.data_set__uuid }}/analysis/{{ analysis.uuid }}">
+              {{ analysis.name }}
+             </a>
           </span>
-          <span ng-if="analysis.status !== 'UNKNOWN'">
-            <a ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
+          <span ng-if="analysis.status !== 'SUCCESS'">
+            <a ng-href="/data_sets/{{ analysis.data_set__uuid }}/#/analyses">
               {{ analysis.name }}
             </a>
           </span>
         </li>
-      </ol>
-      <h5 class="refinery-subheader">
-        Protocols
-        <span class="badge">{{ preview.studies.protocols.length }}</span>
-      </h5>
-      <ol
-        class="numbered-list protocols"
-        ng-if="preview.studies.protocols.length">
-        <li ng-repeat="protocol in preview.studies.protocols track by $index">
-          <h6>{{ protocol.name }}</h6>
-          <p class="description" ng-if="protocol.description.length">
-            {{ protocol.description }}
-          </p>
+        <li ng-if="preview.numAnalyses > preview.maxAnalyses">
+          <a ng-href="/data_sets/{{ preview.dataSetUuid }}/#/analyses/">View all analyses</a>
         </li>
       </ol>
       <h5 class="refinery-subheader">
         References
-        <span class="badge">{{ preview.studies.publications.length }}</span>
+        <span
+          class="badge"
+          title="Total number"
+          refinery-tooltip
+          refinery-tooltip-container="body"
+          refinery-tooltip-placement="top"
+          refinery-tooltip-delay-show="750"
+          refinery-tooltip-delay-hide="150">
+          {{ preview.studies.publications.length }}
+        </span>
       </h5>
       <ul
         class="no-list-style references"
-        ng-if="preview.studies.publications.length">
+        ng-if="preview.studies.publications.length && !preview.citationError">
         <li ng-repeat="publication in preview.studies.publications track by $index">
           <span
             class="refinery-spinner"
@@ -174,14 +251,48 @@
               <p>{{ publication.citation.abstract | cut:true:publication.citation.abstractLength }}</p>
               <button
                 class="is-mirrorable icon-only"
+                ng-if="publication.citation.abstract.length > preview.settings.dashboard.preview.defaultLengthAbstract"
                 ng-click="preview.toggleAbstract(publication.citation)"
-                ng-class="{'is-mirrored': publication.citation.abstractLength > preview.abstractLength}">
+                ng-class="{'is-mirrored': publication.citation.abstractLength > preview.settings.dashboard.preview.defaultLengthAbstract}">
                 <i class="fa fa-chevron-right"></i>
               </button>
             </span>
           </div>
         </li>
       </ul>
+      <div class="refinery-error" ng-if="preview.citationError">
+        <i
+          class="fa fa-exclamation-triangle"
+          title="We're deeply sorry but unfortunately something went wrong."
+          refinery-tooltip
+          refinery-tooltip-container="body"
+          refinery-tooltip-placement="top"
+          refinery-tooltip-delay-show="750"
+          refinery-tooltip-delay-hide="150"></i>
+      </div>
+      <h5 class="refinery-subheader">
+        Protocols
+        <span
+          class="badge"
+          title="Total number of steps"
+          refinery-tooltip
+          refinery-tooltip-container="body"
+          refinery-tooltip-placement="top"
+          refinery-tooltip-delay-show="750"
+          refinery-tooltip-delay-hide="150">
+          {{ preview.studies.protocols.length }}
+        </span>
+      </h5>
+      <ol
+        class="numbered-list protocols"
+        ng-if="preview.studies.protocols.length">
+        <li ng-repeat="protocol in preview.studies.protocols track by $index">
+          <h6>{{ protocol.name }}</h6>
+          <p class="description" ng-if="protocol.description.length">
+            {{ protocol.description }}
+          </p>
+        </li>
+      </ol>
     </div>
     <div
       class="multiStudies"

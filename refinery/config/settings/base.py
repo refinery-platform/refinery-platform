@@ -2,9 +2,8 @@ import json
 import logging
 import os
 import djcelery
-from subprocess import check_output
+import subprocess
 from django.core.exceptions import ImproperlyConfigured
-
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +31,7 @@ def get_setting(name, settings=local_settings):
         raise ImproperlyConfigured("Missing setting '{0}'".format(name))
 
 
+# TODO: remove after switching to the new Celery API
 djcelery.setup_loader()
 
 # a tuple that lists people who get code error notifications
@@ -60,6 +60,9 @@ USE_I18N = get_setting("USE_I18N")
 # If you set this to False, Django will not format dates, numbers and
 # calendars according to the current locale
 USE_L10N = get_setting("USE_L10N")
+
+# stores date and time information in UTC in the database
+USE_TZ = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
@@ -150,7 +153,7 @@ INSTALLED_APPS = (
     'django.contrib.admindocs',
     # NG: added for that human touch ...
     'django.contrib.humanize',
-    'django.contrib.markup',
+    'django_markwhat',
     # NG: added for search and faceting (Solr support)
     'haystack',
     # NG: added for celery (task queue)
@@ -174,6 +177,7 @@ INSTALLED_APPS = (
     'south',
     'chunked_upload',
     'rest_framework',
+    'rest_framework_swagger',
 )
 
 # NG: added for django-guardian
@@ -309,6 +313,10 @@ CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
 
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
 
+SOUTH_MIGRATION_MODULES = {
+    'djcelery': 'djcelery.south_migrations',
+}
+
 # === Refinery Settings ===
 
 # for registration module
@@ -409,6 +417,11 @@ REFINERY_BANNER = get_setting("REFINERY_BANNER")
 # Display REFINERY_BANNER to anonymous users only
 REFINERY_BANNER_ANONYMOUS_ONLY = get_setting("REFINERY_BANNER_ANONYMOUS_ONLY")
 
+# Setting to allow users to select if they want to keep workflows,
+# histories, and libraries in Galaxy or not.
+# Deletion options are ALWAYS, ON_SUCCESS, and NEVER
+REFINERY_GALAXY_ANALYSIS_CLEANUP = get_setting(
+    "REFINERY_GALAXY_ANALYSIS_CLEANUP")
 # Subject and message body of the welcome email sent to new users
 REFINERY_WELCOME_EMAIL_SUBJECT = get_setting("REFINERY_WELCOME_EMAIL_SUBJECT")
 REFINERY_WELCOME_EMAIL_MESSAGE = get_setting("REFINERY_WELCOME_EMAIL_MESSAGE")
@@ -435,7 +448,6 @@ JAVA_ENTITY_EXPANSION_LIMIT = get_setting("JAVA_ENTITY_EXPANSION_LIMIT")
 if REFINERY_EXTERNAL_AUTH:
     # enable LDAP authentication
     try:
-        import ldap
         from django_auth_ldap.config import LDAPSearch
     except ImportError:
         logger.info("Failed to configure LDAP authentication")
@@ -464,10 +476,19 @@ CACHES = {
 # debugging of a Refinery instance
 
 try:
-    CURRENT_COMMIT = check_output(['/usr/bin/git', 'rev-parse', "HEAD"])
-except Exception as e:
-    logger.debug("Error Retrieving Most Recent Commit: ", e)
-    CURRENT_COMMIT = "Error Retrieving Most Recent Commit: " + str(e)
+    # TODO: use option -C (removed as a temp workaround for compatibility
+    # with an old version of git)
+    CURRENT_COMMIT = subprocess.check_output([
+        '/usr/bin/git',
+        '--git-dir', os.path.join(BASE_DIR, '.git'),
+        '--work-tree', BASE_DIR,
+        'rev-parse', 'HEAD'
+    ])
+
+except (ValueError, subprocess.CalledProcessError) as exc:
+    logger.debug("Error retrieving hash of the most recent commit: %s",
+                 exc)
+    CURRENT_COMMIT = ""
 
 # Neo4J Settings
 NEO4J_BASE_URL = "http://localhost:7474"
@@ -517,3 +538,9 @@ NEO4J_CONSTRAINTS = [
         ]
     }
 ]
+
+SOLR_SYNONYMS = get_setting("SOLR_SYNONYMS")
+SOLR_LIB_DIR = get_setting("SOLR_LIB_DIR")
+SOLR_CUSTOM_SYNONYMS_FILE = get_setting("SOLR_CUSTOM_SYNONYMS_FILE")
+
+REFINERY_URL_SCHEME = get_setting("REFINERY_URL_SCHEME")

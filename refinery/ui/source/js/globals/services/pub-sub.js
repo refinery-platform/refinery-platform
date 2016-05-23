@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * PubSub class
  *
@@ -40,7 +42,8 @@ function PubSub (_) {
    *
    * @class
    */
-  function Event () {}
+  function Event () {
+  }
 
   /**
    * Trigger an event stack
@@ -67,9 +70,8 @@ function PubSub (_) {
         }
       }
       return true;
-    } else {
-      return false;
     }
+    return false;
   };
 
   /**
@@ -114,18 +116,20 @@ function PubSub (_) {
       return false;
     }
 
-    if (_.isFinite(times)) {
-      times = parseInt(times);
-    } else {
-      times = Infinity;
-    }
+    var stackTimes = _.isFinite(times) ? parseInt(times, 10) : Infinity;
 
     if (_.isArray(stack[event])) {
-      return stack[event].push({callback: callback, times: times}) - 1;
-    } else {
-      stack[event] = [{callback: callback, times: times}];
-      return 0;
+      return stack[event].push({
+        callback: callback,
+        times: stackTimes
+      }) - 1;
     }
+
+    stack[event] = [{
+      callback: callback,
+      times: stackTimes
+    }];
+    return 0;
   };
 
   return new Event();
@@ -133,5 +137,5 @@ function PubSub (_) {
 
 angular
   .module('pubSub', [])
-  .constant('_', window.lodash3)
+  .constant('_', window.lodashLatest)
   .service('pubSub', ['_', PubSub]);

@@ -1,0 +1,84 @@
+# Refinery Platform Configuration
+
+# aws-config is a directory
+# containing the configuration of
+# a refinery-platform stack.
+# The configuration is stored in two files:
+# config.yaml and,
+# auto-config.yaml
+#
+# Neither of these files exist to begin with,
+# but `config.yaml` is required.
+# Typically this file, `config.yaml.template`,
+# is copied to `config.yaml` and edited.
+
+# RDS_SNAPSHOT and DATA_SNAPSHOT are only used when
+# you are restoring a Refinery Platform Instance from
+# the snapshots of a previously created Refinery stack.
+# The first time you create a Refinery stack
+# you will not need to specify these;
+# fresh RDS instances and data volumes are created.
+# RDS_SNAPSHOT: refinery-web-XXX
+# DATA_SNAPSHOT: snap-XXX
+
+# The password for the Django admin account.
+# If not set, an automatically generated one will be placed
+# in `auto-config.yaml`.
+# ADMIN_PASSWORD: "refinery"
+
+
+# Name and URL for the site.
+# You will need to change these.
+SITE_NAME: Refinery
+SITE_URL: "192.168.50.50:8000"
+
+# Email addresses. It's usual to make these all the same.
+# The stack will launch correctly
+# even when these are set to nonsense values.
+# To successfully send email the email addresses here
+# must be verified for Amazon SES
+# (see http://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-addresses-and-domains.html?tag=duckduckgo-d-20)
+# and the AWS account should be out of the sandbox
+# 
+ADMIN: "refinery-registration@example.org"
+DEFAULT_FROM_EMAIL: "refinery-registration@example.org"
+SERVER_EMAIL: "refinery-registration@example.org"
+
+# Size, in Gigabytes, of the Data volume.
+DATA_VOLUME_SIZE: 100
+# Type of the Data volume.
+# See http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html
+DATA_VOLUME_TYPE: "gp2"
+
+
+# The name of the EC2 key pair to use for SSH.
+# (this key pair is required to already exist in the AWS account)
+KEY_NAME: "id_rsa"
+
+# The name of the RDS instance that is created.
+# (This is not required,
+# a random name of the form rds-refinery-XXXXXXX
+# will be generated and used,
+# and that is generally preferable,
+# as it avoids clashes in the same AWS account).
+# RDS_NAME: rds-refinery-default
+
+# == Rarely changed ==
+
+# The password for the RDS superuser account.
+# (Not exposed to the public,
+# so it is not required to be secure).
+RDS_SUPERUSER_PASSWORD: "mypassword"
+
+# The name of the PostgreSQL role to create.
+RDS_ROLE: "refinery"
+
+# == Not changeable ==
+
+# These things that might become configurable later.
+
+# The AMI image for the EC2 instance
+# FIXED to "ami-d05e75b8"
+
+# The instance type for the EC2 instance
+# FIXED to "m3.medium"

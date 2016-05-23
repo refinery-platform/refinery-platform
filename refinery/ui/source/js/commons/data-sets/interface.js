@@ -1,14 +1,17 @@
-function DataSetFactory (
-  $q, _, settings, DataSetDataApi, DataSetSearchApi, DataSetStore,
-  DataSetAnnotations) {
+'use strict';
 
+/* eslint no-use-before-define:0 */
+
+function DataSetFactory (
+  $q, _, settings, DataSetDataApi, DataSetDataDetailsApi, DataSetSearchApi,
+  DataSetStore, DataSetAnnotations) {
   /*
    * ------------------------------- Private -----------------------------------
    */
 
   /* ------------------------------ Variables ------------------------------- */
 
-  var _allDsIds;
+  var _allDsIds = $q.defer();
 
   /**
    * Indicates whether the total number of data objects is just an
@@ -31,6 +34,16 @@ function DataSetFactory (
    * @type  {Array}
    */
   var _browsePath = [];
+
+  /**
+   * Stores all dataset IDs corresponding to the current base selection.
+   *
+   * @author  Fritz Lekschas
+   * @date    2015-12-10
+   *
+   * @type  {Array}
+   */
+  var _currentDsIds = $q.defer();
 
   /**
    * Caches the data objects in a central place.
@@ -59,15 +72,7 @@ function DataSetFactory (
    */
   var _orderCache = [];
 
-  /**
-   * Stores all dataset IDs corresponding to a search.
-   *
-   * @author  Fritz Lekschas
-   * @date    2015-12-10
-   *
-   * @type  {Array}
-   */
-  var _searchResultDsIds = [];
+  var _search;
 
   /**
    * Promise that resolves to the distinct search result annotations and their
@@ -137,6 +142,8 @@ function DataSetFactory (
    * @type  {Function}
    */
   var _source;
+
+  var _sourceDetails = new DataSetDataDetailsApi();
 
   /**
    * Total number of currently returned data objects.
@@ -232,10 +239,10 @@ function DataSetFactory (
     // enough datasets that fall within the selection. For that reason it makes
     // sense to increase the limit.
     var realLimit = Math.max(limit, settings.treemap.singleRequestLimit);
-    return _getDataFromOrderCache(realLimit, _selectionCacheLastIndex)
+    return _fetchDataFromOrderCache(realLimit, _selectionCacheLastIndex)
       .then(function (data) {
-        var dataLen = data.length,
-            selectionCacheLen;
+        var dataLen = data.length;
+        var selectionCacheLen;
         for (var i = 0; i < dataLen; i++) {
           if (!!_selection[data[i].id]) {
             selectionCacheLen = _selectionCache.push(data[i]);
@@ -261,9 +268,6 @@ function DataSetFactory (
           return _buildSelection(limit, offset, selection);
         }
         return selection;
-      })
-      .catch(function (e) {
-        deferred.reject(e);
       });
   }
 
@@ -327,7 +331,7 @@ function DataSetFactory (
   /**
    * Request a set of data objects.
    *
-   * @method  _get
+   * @method  _fetch
    * @author  Fritz Lekschas
    * @date    2015-10-08
    *
@@ -335,7 +339,7 @@ function DataSetFactory (
    * @param   {Number}  offset  Starting point for retrieving data objects.
    * @return  {Object}          Promise with data objects.
    */
-  function _get (limit, offset) {
+  function _fetch (limit, offset) {
     var data;
 
     if (_selectionLen()) {
@@ -347,7 +351,7 @@ function DataSetFactory (
         data = _getSelection(limit, offset);
       }
     } else {
-      data = _getDataFromOrderCache(limit, offset);
+      data = _fetchDataFromOrderCache(limit, offset);
     }
 
     return $q.when(data);
@@ -356,7 +360,7 @@ function DataSetFactory (
   /**
    * Get cached data from `_orderCache`.
    *
-   * @method  _getDataFromOrderCache
+   * @method  _fetchDataFromOrderCache
    * @author  Fritz Lekschas
    * @date    2015-10-08
    *
@@ -364,10 +368,10 @@ function DataSetFactory (
    * @param   {Number}  offset  Starting point for retrieving data objects.
    * @return  {Object}          Promise of list of references to the data.
    */
-  function _getDataFromOrderCache (limit, offset) {
+  function _fetchDataFromOrderCache (limit, offset) {
     var data = _orderCache.slice(offset, limit + offset);
     if (data.length < limit && data.length < (_totalSelection || _totalSource)) {
-      data = _getDataFromSource(limit, offset);
+      data = _fetchDataFromSource(limit, offset);
     }
 
     return $q.when(data);
@@ -391,7 +395,7 @@ function DataSetFactory (
    * ```
    * It's okay if the object has further properties.
    *
-   * @method  _getDataFromSource
+   * @method  _fetchDataFromSource
    * @author  Fritz Lekschas
    * @date    2015-10-08
    *
@@ -400,7 +404,7 @@ function DataSetFactory (
    * @return  {Object}          Promise of list of references to the data.
    *   objects.
    */
-  function _getDataFromSource (limit, offset) {
+  function _fetchDataFromSource (limit, offset) {
     return _source(limit, offset).then(function (response) {
       for (var i = response.data.length; i--;) {
         _dataStore.add(response.data[i].id, response.data[i], true);
@@ -410,10 +414,10 @@ function DataSetFactory (
       // The first time a search is issued all dataset IDs will be returned
       if (response.allIds && response.allIds.length) {
         if (_search) {
-          _searchResultDsIds = response.allIds;
+          _currentDsIds.resolve(response.allIds);
           _calculatePrecisionRecall();
         } else {
-          _allDsIds = response.allIds;
+          _allDsIds.resolve(response.allIds);
         }
       }
 
@@ -445,9 +449,8 @@ function DataSetFactory (
     if (type) {
       return (last >= 0 && _browsePath[last].type === type) ?
         _browsePath[last] : undefined;
-    } else {
-      return _browsePath[last];
     }
+    return _browsePath[last];
   }
 
   /**
@@ -478,6 +481,24 @@ function DataSetFactory (
   }
 
   /**
+   * Get or load a single data set
+   *
+   * @method  _get
+   * @author  Fritz Lekschas
+   * @date    2016-03-10
+   * @param   {String}   id     Data set identifier.
+   * @return  {Object}          Promise resolving to the data set.
+   */
+  function _get (id) {
+    if (_dataStore.get(id)) {
+      return $q.when(_dataStore.get(id));
+    }
+    return _sourceDetails(id).then(function (dataSet) {
+      _dataStore.add(dataSet.id, dataSet, true);
+    });
+  }
+
+  /**
    * Hepler method which will trigger the calculation of precision and recall.
    *
    * @method  _calculatePrecisionRecall
@@ -485,15 +506,15 @@ function DataSetFactory (
    * @date    2015-12-18
    */
   function _calculatePrecisionRecall () {
-    var annotations,
-        dataSet,
-        uniqueSearchResAnno = {};
+    var annotations;
+    var dataSet;
+    var uniqueSearchResAnno = {};
 
-    _annotations.load().then(function (data) {
+    _annotations.load().then(function () {
       // Get annotations used and the total number of their usage in relation to
       // the current search results.
-      for (var i = _searchResultDsIds.length; i--;) {
-        dataSet = _dataStore.get(_searchResultDsIds[i]);
+      for (var i = _currentDsIds.length; i--;) {
+        dataSet = _dataStore.get(_currentDsIds[i]);
 
         if (dataSet) {
           annotations = dataSet.annotations;
@@ -513,7 +534,7 @@ function DataSetFactory (
       // Trigger the actual calculation of precision and recall
       _annotations.calcPR(
         uniqueSearchResAnno,
-        _searchResultDsIds.length
+        _currentDsIds.length
       );
 
       _searchResultAnnotations.resolve(uniqueSearchResAnno);
@@ -547,13 +568,13 @@ function DataSetFactory (
   function _setSelection (set) {
     var selection = {};
 
-    if (_.isObject(set)) {
+    if (_.isObject(set) && !_.isArray(set)) {
       selection = set;
     }
 
     if (_.isArray(set)) {
       for (var i = set.length; i--;) {
-        selection[i] = true;
+        selection[set[i]] = true;
       }
     }
 
@@ -562,6 +583,15 @@ function DataSetFactory (
     _selection = selection;
     _totalSelection = _selectionLen();
     _total = _totalSelection;
+  }
+
+  function _objListToArray (objList) {
+    var arr = [];
+    var ids = Object.keys(objList);
+    for (var i = ids.length; i--;) {
+      arr.push(ids[i]);
+    }
+    return arr;
   }
 
   /*
@@ -584,6 +614,55 @@ function DataSetFactory (
   /* ------------------------------ Variables ------------------------------- */
 
   /**
+   * Promise resolving to all IDs.
+   *
+   * @author  Fritz Lekschas
+   * @date    2016-02-11
+   *
+   * @type    {Object}
+   */
+  Object.defineProperty(
+    DataSet.prototype,
+    'allIds',
+    {
+      enumerable: true,
+      get: function () {
+        if (_selectionLen()) {
+          return $q.when(_objListToArray(_selection));
+        }
+        if (_search) {
+          return _currentDsIds.promise;
+        }
+        return _allDsIds.promise;
+      }
+    }
+  );
+
+  /**
+   * Promise resolving to all currently selected data set IDs.
+   *
+   * @description
+   * In contrast to `allIds` this can either be all IDs when `DataSet.all()` has
+   * been selected or all data set IDs of the current base selection, i.e.
+   * filter or search. Selections based on `select` are not included.
+   *
+   * @author  Fritz Lekschas
+   * @date    2016-02-11
+   *
+   * @type    {Object}
+   */
+  Object.defineProperty(
+    DataSet.prototype,
+    'ids',
+    {
+      enumerable: true,
+      get: function () {
+        return _allDsIds.promise;
+      }
+    }
+  );
+
+  /**
    * Current selection.
    *
    * @author  Fritz Lekschas
@@ -596,7 +675,6 @@ function DataSetFactory (
     'selection',
     {
       enumerable: true,
-      configurable: false,
       get: function () {
         return _selection;
       }
@@ -616,7 +694,6 @@ function DataSetFactory (
     'selectionActive',
     {
       enumerable: true,
-      configurable: false,
       get: function () {
         return !!_selectionLen();
       }
@@ -636,7 +713,6 @@ function DataSetFactory (
     'selectionPath',
     {
       enumerable: true,
-      configurable: false,
       get: function () {
         return _browsePath;
       }
@@ -656,7 +732,6 @@ function DataSetFactory (
     'total',
     {
       enumerable: true,
-      configurable: false,
       get: function () {
         return _total;
       }
@@ -677,8 +752,10 @@ function DataSetFactory (
   DataSet.prototype.all = function () {
     _search = false;
 
+    _allDsIds = $q.defer();
+
     if (_browsePath.length &&
-        _browsePath[_browsePath.length - 1].type === 'search') {
+      _browsePath[_browsePath.length - 1].type === 'search') {
       _browsePath.pop();
     }
 
@@ -686,6 +763,25 @@ function DataSetFactory (
     _source = new DataSetDataApi(undefined, true);
 
     return this;
+  };
+
+  /**
+   * Helper method to load all data set IDs that the user has access to
+   *
+   * @method  loadAllIds
+   * @author  Fritz Lekschas
+   * @date    2016-02-11
+   *
+   * @return  {Object}  Promise of the HTTP call made.
+   */
+  DataSet.prototype.loadAllIds = function () {
+    var allDsApiCall = new DataSetDataApi(undefined, true, true);
+
+    allDsApiCall.then(function (allDs) {
+      _allDsIds.resolve(allDs.ids);
+    });
+
+    return allDsApiCall;
   };
 
   /**
@@ -699,11 +795,11 @@ function DataSetFactory (
    */
   DataSet.prototype.deselect = function () {
     if (_browsePath.length &&
-        _browsePath[_browsePath.length - 1].type === 'select') {
+      _browsePath[_browsePath.length - 1].type === 'select') {
       _browsePath.pop();
     }
 
-    _selection = [];
+    _selection = {};
     _clearSelectionCache(true);
 
     return this;
@@ -731,7 +827,16 @@ function DataSetFactory (
   };
 
   /**
-   * Request a set of data objects.
+   * Fetch a set of data objects.
+   *
+   * @method  fetch
+   * @author  Fritz Lekschas
+   * @date    2016-03-10
+   */
+  DataSet.prototype.fetch = _fetch;
+
+  /**
+   * Get a single data set.
    *
    * @method  get
    * @author  Fritz Lekschas
@@ -756,9 +861,8 @@ function DataSetFactory (
       return _searchResultAnnotations.promise.then(function (annotations) {
         return _annotations.get(annotations);
       });
-    } else {
-      return _annotations.get();
     }
+    return _annotations.get();
   };
 
   /**
@@ -780,7 +884,7 @@ function DataSetFactory (
    * @description
    * This is needed for some services like `UiScollSource`.
    *
-   * @method  getInclMeta
+   * @method  fetchInclMeta
    * @author  Fritz Lekschas
    * @date    2015-10-09
    *
@@ -788,8 +892,8 @@ function DataSetFactory (
    * @param   {Number}  offset  Starting point for retrieving data objects.
    * @return  {Object}          Promise with data objects.
    */
-  DataSet.prototype.getInclMeta = function (limit, offset) {
-    return _get(limit, offset).then(function (data) {
+  DataSet.prototype.fetchInclMeta = function (limit, offset) {
+    return _fetch(limit, offset).then(function (data) {
       return {
         meta: {
           total: _total,
@@ -810,21 +914,26 @@ function DataSetFactory (
    *
    * @param   {Object}   dataSetIds  Object of with dataset IDs as attributes.
    * @param   {Boolean}  reset       If `true` then highlight will be `false`.
+   * @param   {String}   mode        Determines the highlight mode, e.g. `hover`
+   *   or `lock`.
    * @return  {Object}               Instance itself to enable chaining.
    */
-  DataSet.prototype.highlight = function (dataSetIds, reset, soft) {
-    var dataSet,
-        keys = Object.keys(dataSetIds);
+  DataSet.prototype.highlight = function (dataSetIds, reset, mode) {
+    var keys = Object.keys(dataSetIds || {});
 
     // Invert boolean representation so that the default behavior is
     // highlighting.
-    reset = !!!reset;
-
     for (var i = keys.length; i--;) {
-      _dataStore.set(keys[i], {
-        highlight: soft ? false : reset,
-        softHighlight: soft ? reset : false,
-      });
+      if (mode === 'hover') {
+        _dataStore.set(keys[i], {
+          hovered: !!!reset
+        });
+      }
+      if (mode === 'lock') {
+        _dataStore.set(keys[i], {
+          locked: !!!reset
+        });
+      }
     }
 
     return this;
@@ -858,7 +967,7 @@ function DataSetFactory (
     _browsePath = [];
     _clearOrderCache();
     _source = new DataSetDataApi({
-      'order_by': order
+      order_by: order
     });
 
     return this;
@@ -881,6 +990,8 @@ function DataSetFactory (
 
     // Reset search result annotation promise.
     _searchResultAnnotations = $q.defer();
+
+    _currentDsIds = $q.defer();
 
     if (!!_getLastBrowseStep('select')) {
       _clearOrderCache(true);
@@ -928,6 +1039,7 @@ angular
     '_',
     'settings',
     'DataSetDataApi',
+    'DataSetDataDetailsApi',
     'DataSetSearchApi',
     'DataSetStore',
     'DataSetAnnotations',

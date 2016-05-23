@@ -1,0 +1,47 @@
+<div ng-controller="NodeSetListApiCtrl">
+  <ui-select
+    append-to-body="true"
+    ng-model="selectedNodeset.select"
+    on-select="updateCurrentNodeSet()"
+    theme="select2"
+    class="ui-select-drop p-b-1-2">
+    <ui-select-match placeholder="Select a file set">
+        {{$select.selected.name}}
+    </ui-select-match>
+    <ui-select-choices
+      repeat="nodeset in (nodesetList | filter: $select.search)">
+        {{nodeset.name}}
+    </ui-select-choices>
+	</ui-select>
+  <div ng-controller="IgvCtrl">
+  	<div ng-if="message">
+  		<div class="alert alert-{{ messageType }}">{{message}}</div>
+  	</div>
+  	<p ng-if="isLoadingSpecies">
+  		<i class="fa fa-refresh fa-spin p-a-1-5"></i>
+      Detecting species ...
+  	</p>
+	<ui-select
+    ng-show="speciesList.length > 1"
+    append-to-body="true"
+    ng-model="selectedSpecies.select"
+    theme="select2"
+    class="ui-select-drop p-b-1-2">
+    <ui-select-match placeholder="Select a species">
+        {{$select.selected.name}}
+    </ui-select-match>
+    <ui-select-choices
+      repeat="species in (speciesList | filter: $select.search)">
+        {{species.name}}
+    </ui-select-choices>
+	</ui-select>
+    <button
+      class="btn btn-warning ui-select-drop"
+      ng-click="launchIgv()"
+      ng-disabled="speciesList.length == 0">
+      <i class="fa fa-bar-chart-o"></i>
+      &nbsp;&nbsp;Launch IGV
+    </button>
+  </div>
+</div>
+

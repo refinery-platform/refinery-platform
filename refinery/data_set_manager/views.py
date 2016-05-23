@@ -6,30 +6,40 @@ Created on May 11, 2012
 
 import logging
 import shutil
-from urlparse import urlparse
+import urlparse
+import json
 
 from django import forms
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect, HttpResponse, \
-    HttpResponseBadRequest
+from django.http import (HttpResponseRedirect, HttpResponse,
+                         HttpResponseBadRequest)
 from django.shortcuts import render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.http import Http404
+
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
-from haystack.query import SearchQuerySet
-import simplejson as json
 
-from core.models import *
-from data_set_manager.single_file_column_parser import process_metadata_table
-from data_set_manager.tasks import create_dataset, parse_isatab
-from data_set_manager.utils import *
+from core.models import os, get_user_import_dir, DataSet
+from core.utils import get_full_url
+from .single_file_column_parser import process_metadata_table
+from .tasks import parse_isatab
 from file_store.tasks import download_file, DownloadError
 from file_store.models import get_temp_dir, generate_file_source_translator
+from .models import AttributeOrder, Assay
+from .serializers import AttributeOrderSerializer, AssaySerializer
+from .utils import (generate_solr_params, search_solr, format_solr_response,
+                    get_owner_from_assay, update_attribute_order_ranks,
+                    is_field_in_hidden_list, customize_attribute_response)
 
 logger = logging.getLogger(__name__)
+
 
 # Data set import
 
@@ -62,6 +72,66 @@ class ImportISATabView(View):
             response = HttpResponseRedirect(reverse('process_isa_tab'))
             response.set_cookie('isa_tab_url', isa_tab_url)
             return response
+
+
+class TakeOwnershipOfPublicDatasetView(View):
+    """Capture relative ISA archive URL from POST requests submitted from
+    external sites and formulates full url to
+    """
+
+    def post(self, request, *args, **kwargs):
+
+        from_old_template = False
+
+        if 'isa_tab_url' in request.POST:
+            full_isa_tab_url = get_full_url(request.POST['isa_tab_url'])
+            from_old_template = True
+        else:
+            request_body = request.body
+            if not request_body:
+                err_msg = "Neither form data nor a request body has been sent."
+                logger.error(err_msg)
+                return HttpResponseBadRequest(err_msg)
+
+            try:
+                body = json.loads(request_body)
+            except Exception as e:
+                err_msg = "Request body is no valid JSON"
+                logger.error("%s: %s" % (err_msg, e))
+                return HttpResponseBadRequest("%s." % err_msg)
+
+            if "data_set_uuid" in body:
+                data_set_uuid = body["data_set_uuid"]
+            else:
+                err_msg = "Request body doesn't contain data_set_uuid."
+                logger.error(err_msg)
+                return HttpResponseBadRequest(err_msg)
+
+            try:
+                full_isa_tab_url = get_full_url(DataSet.objects.get(
+                    uuid=data_set_uuid).get_isa_archive().get_datafile_url())
+            except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned,
+                    Exception) as e:
+                err_msg = "Something went wrong"
+                logger.error("%s: %s" % (err_msg, e))
+                return HttpResponseBadRequest("%s." % err_msg)
+
+        if from_old_template:
+            # Redirect to process_isa_tab view
+            response = HttpResponseRedirect(
+                reverse('process_isa_tab')
+            )
+        else:
+            # Redirect to process_isa_tab view with arg 'ajax' if request is
+            #  not coming from old Django Template
+            response = HttpResponseRedirect(
+                reverse('process_isa_tab', args=['ajax'])
+            )
+
+        # set cookie
+        response.set_cookie('isa_tab_url', full_isa_tab_url)
+
+        return response
 
 
 class ImportISATabFileForm(forms.Form):
@@ -107,7 +177,7 @@ class ProcessISATabView(View):
                                           context_instance=context)
             response.delete_cookie(self.isa_tab_cookie_name)
             return response
-        u = urlparse(url)
+        u = urlparse.urlparse(url)
         file_name = u.path.split('/')[-1]
         temp_file_path = os.path.join(get_temp_dir(), file_name)
         try:
@@ -127,11 +197,16 @@ class ProcessISATabView(View):
         # TODO: exception handling
         os.unlink(temp_file_path)
         if dataset_uuid:
-            # TODO: redirect to the list of analysis samples for the given UUID
-            response = HttpResponseRedirect(
-                reverse(self.success_view_name, args=(dataset_uuid,)))
-            response.delete_cookie(self.isa_tab_cookie_name)
-            return response
+            if 'ajax' in kwargs and kwargs['ajax']:
+                return HttpResponse(
+                    json.dumps({'new_data_set_uuid': dataset_uuid}),
+                    'application/json'
+                )
+            else:
+                response = HttpResponseRedirect(
+                    reverse(self.success_view_name, args=(dataset_uuid,)))
+                response.delete_cookie(self.isa_tab_cookie_name)
+                return response
         else:
             error = "Problem parsing ISA-Tab file"
             context = RequestContext(request, {'form': form, 'error': error})
@@ -150,7 +225,7 @@ class ProcessISATabView(View):
             if url:
                 # TODO: replace with chain
                 # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks
-                u = urlparse(url)
+                u = urlparse.urlparse(url)
                 file_name = u.path.split('/')[-1]
                 temp_file_path = os.path.join(get_temp_dir(), file_name)
                 try:
@@ -186,8 +261,6 @@ class ProcessISATabView(View):
             # TODO: exception handling (OSError)
             os.unlink(temp_file_path)
             if dataset_uuid:
-                # TODO: redirect to the list of analysis samples for the given
-                # UUID
                 return HttpResponseRedirect(
                     reverse(self.success_view_name, args=(dataset_uuid,)))
             else:
@@ -230,13 +303,15 @@ class ProcessMetadataTableView(View):
             title = request.POST['title']
             data_file_column = request.POST['data_file_column']
         except (KeyError, ValueError):
-            error = {'error_message':
-                     'Import failed because required parameters are missing'}
+            error = {
+                'error_message':
+                    'Import failed because required parameters are missing'}
             return render(request, self.template_name, error)
         source_column_index = request.POST.getlist('source_column_index')
         if not source_column_index:
-            error = {'error_message':
-                     'Import failed because no source columns were selected'}
+            error = {
+                'error_message':
+                    'Import failed because no source columns were selected'}
             return render(request, self.template_name, error)
         # workaround for breaking change in Angular
         # https://github.com/angular/angular.js/commit/7fda214c4f65a6a06b25cf5d5aff013a364e9cef
@@ -345,3 +420,257 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
         message = "You have successfully uploaded {}".format(
             chunked_upload.filename)
         return {"message": message}
+
+
+class Assays(APIView):
+    """
+    Return assay object
+
+    ---
+    #YAML
+
+    GET:
+        serializer: AssaySerializer
+        omit_serializer: false
+
+        parameters:
+            - name: uuid
+              description: Assay uuid
+              type: string
+              paramType: path
+              required: true
+
+    ...
+    """
+
+    def get_object(self, uuid):
+        try:
+            return Assay.objects.get(uuid=uuid)
+        except Assay.DoesNotExist:
+            raise Http404
+
+    def get(self, request, uuid, format=None):
+        assay = self.get_object(uuid)
+        serializer = AssaySerializer(assay)
+        return Response(serializer.data)
+
+
+class AssaysFiles(APIView):
+
+    """
+    Return solr response. Query requires assay_uuid.
+
+    ---
+    #YAML
+
+    GET:
+        parameters_strategy:
+            form: replace
+            query: merge
+
+        parameters:
+            - name: uuid
+              description: Assay uuid
+              type: string
+              required: true
+              paramType: path
+            - name: is_annotation
+              description: Metadata
+              type: boolean
+              paramType: query
+            - name: filter_attribute
+              description: Filters for attributes fields
+              type: string
+              paramType: query
+            - name: include_facet_count
+              description: Enables facet counts in query response
+              type: boolean
+              paramType: query
+            - name: offset
+              description: Paginate offset response
+              type: integer
+              paramType: query
+            - name: limit
+              description: Maximum number of documents returned
+              type: integer
+              paramType: query
+            - name: attributes
+              description: Set of attributes to return separated by a comma
+              type: string
+              paramType: query
+            - name: facets
+              description: Specify facet fields separated by a comma
+              type: string
+              paramType: query
+            - name: pivots
+              description: List of fields to pivot separated by a comma
+              type: string
+              paramType: query
+            - name: sort
+              description: Order node response with field name asc/desc
+              type: string
+              paramType: query
+    ...
+    """
+
+    def get(self, request, uuid, format=None):
+
+        params = request.query_params
+
+        solr_params = generate_solr_params(params, uuid)
+        solr_response = search_solr(solr_params, 'data_set_manager')
+        solr_response_json = format_solr_response(solr_response)
+
+        return Response(solr_response_json)
+
+
+class AssaysAttributes(APIView):
+    """
+    AttributeOrder Resource.
+    Returns/Updates AttributeOrder model queries. Requires assay_uuid.
+    The model is dynamically created, so users will not create new
+    attribute_orders.
+
+    Updates attribute_model
+
+    ---
+    #YAML
+
+    GET:
+        serializer: AttributeOrderSerializer
+        omit_serializer: false
+
+        parameters:
+            - name: uuid
+              description: Assay uuid
+              type: string
+              paramType: path
+              required: true
+
+    PUT:
+        parameters_strategy:
+        form: replace
+        query: merge
+
+        parameters:
+            - name: uuid
+              description: Assay uuid used as an identifier
+              type: string
+              paramType: path
+              required: true
+            - name: solr_field
+              description: Title of solr field used as an identifier
+              type: string
+              paramType: form
+              required: false
+            - name: rank
+              description: Position of the attribute in facet list and table
+              type: int
+              paramType: form
+              required: false
+            - name: is_exposed
+              description: Show to non-owner users
+              type: boolean
+              paramType: form
+            - name: is_facet
+              description: Attribute used as facet
+              type: boolean
+              paramType: form
+            - name: is_active
+              description: Shown in table by default
+              type: boolean
+              paramType: form
+            - name: id
+              description: Attribute ID used as an identifier
+              type: integer
+              paramType: form
+    ...
+    """
+
+    def get_objects(self, uuid):
+        attributes = AttributeOrder.objects.filter(assay__uuid=uuid)
+        if len(attributes):
+            return attributes
+        else:
+            raise Http404
+
+    def get(self, request, uuid, format=None):
+        attribute_order = self.get_objects(uuid)
+        serializer = AttributeOrderSerializer(attribute_order, many=True)
+        owner = get_owner_from_assay(uuid)
+        request_user = request.user
+
+        # add a display name to the attribute object
+        if owner == request_user:
+            attributes = serializer.data
+        # for non-owners, hide non-exposed attributes
+        else:
+            attributes = []
+            for attribute in serializer.data:
+                if attribute.get('is_exposed'):
+                    attributes.append(attribute)
+
+        # Reverse check, so can remove objects from the end
+        for ind in range(len(attributes) - 1, -1, -1):
+            if is_field_in_hidden_list(attributes[ind].get('solr_field')):
+                del attributes[ind]
+            else:
+                attributes[ind]['display_name'] = customize_attribute_response(
+                    [attributes[ind].get('solr_field')])[0].get(
+                    'display_name')
+
+        # for non-owners need to reorder the ranks
+        if owner != request_user:
+            for ind in range(0, len(attributes)):
+                attributes[ind]['rank'] = ind + 1
+
+        return Response(attributes)
+
+    def put(self, request, uuid, format=None):
+        owner = get_owner_from_assay(uuid)
+        request_user = request.user
+
+        if owner == request_user:
+            solr_field = request.data.get('solr_field', None)
+            id = request.data.get('id', None)
+            new_rank = request.data.get('rank', None)
+
+            if id:
+                attribute_order = AttributeOrder.objects.get(
+                    assay__uuid=uuid, id=id)
+            elif solr_field:
+                attribute_order = AttributeOrder.objects.get(
+                    assay__uuid=uuid, solr_field=solr_field)
+            else:
+                return Response(
+                    'Requires attribute id or solr_field name.',
+                    status=status.HTTP_400_BAD_REQUEST)
+
+            # updates all ranks in assay's attribute order
+            if new_rank and new_rank != attribute_order.rank:
+                try:
+                    update_attribute_order_ranks(attribute_order, new_rank)
+                except Exception as e:
+                    return e
+
+            serializer = AttributeOrderSerializer(attribute_order,
+                                                  data=request.data,
+                                                  partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                attributes = serializer.data
+                attributes['display_name'] = customize_attribute_response(
+                    [attributes.get('solr_field')])[0].get(
+                    'display_name')
+
+                return Response(
+                    attributes,
+                    status=status.HTTP_202_ACCEPTED
+                )
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        else:
+            message = 'Only owner may edit attribute order.'
+            return Response(message, status=status.HTTP_401_UNAUTHORIZED)

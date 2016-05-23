@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Visibly toggable directive, which should be closed on an outer click.
  *
@@ -27,8 +29,6 @@
  * @return  {Object}                      Angular directive object.
  */
 function closeOnOuterClick (pubSub, containsDomElement) {
-  'use strict';
-
   /**
    * Controller class
    *
@@ -50,7 +50,7 @@ function closeOnOuterClick (pubSub, containsDomElement) {
    * @author  Fritz Lekschas
    * @date    2015-08-13
    */
-  Ctrl.prototype.off = function() {
+  Ctrl.prototype.off = function () {
     pubSub.off('globalClick', this.eventId);
   };
 
@@ -61,7 +61,7 @@ function closeOnOuterClick (pubSub, containsDomElement) {
    * @author  Fritz Lekschas
    * @date    2015-08-13
    */
-  Ctrl.prototype.on = function() {
+  Ctrl.prototype.on = function () {
     this.eventId = pubSub.on('globalClick', function (e) {
       var trigger = angular.element(e.toElement || e.target)
         .attr('close-on-outer-click-external-trigger');
@@ -99,7 +99,8 @@ function closeOnOuterClick (pubSub, containsDomElement) {
         }
         this._closeOnOuterClick = value;
       }
-  });
+    }
+  );
 
   return {
     bindToController: {

@@ -1,12 +1,13 @@
-describe('Filter: AnalysisStatusTitle', function () {
+'use strict';
 
+describe('Filter: AnalysisStatusTitle', function () {
   var filter;
   var statusObj = {
-    'SUCCESS': 'Analysis successful.',
-    'FAILURE': 'Analysis failed.',
-    'RUNNING': 'Analysis is running.',
-    'INITIALIZED': 'Analysis is initializing.',
-    'UNKNOWN': 'Analysis status unknown.'
+    SUCCESS: 'Analysis successful.',
+    FAILURE: 'Analysis failed.',
+    RUNNING: 'Analysis is running.',
+    INITIALIZED: 'Analysis is initializing.',
+    UNKNOWN: 'Analysis status unknown.'
   };
 
   beforeEach(function () {
@@ -22,8 +23,9 @@ describe('Filter: AnalysisStatusTitle', function () {
   });
 
   it('should return correct status depending on state', function () {
-    for ( var status in statusObj ){
-      expect(filter(status)).toBe(statusObj[status]);
+    var keys = Object.keys(statusObj);
+    for (var i = keys.length; i--;) {
+      expect(filter(keys[i])).toBe(statusObj[keys[i]]);
     }
     expect(filter('')).toBe('Analysis status unknown.');
   });

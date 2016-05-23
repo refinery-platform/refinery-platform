@@ -1,67 +1,85 @@
+'use strict';
+
 describe('DataSet.search-api: unit tests', function () {
-  'use strict';
+  var $httpBackend;
+  var $rootScope;
+  var Factory;
+  var factoryInstance;
+  var limit = 1;
+  var offset = 0;
+  var query = 'test';
+  var settings;
+  var fakeQueryResponse = '' +
+    '{' +
+    '  "responseHeader": {' +
+    '    "status": 0,' +
+    '    "QTime": 139,' +
+    '    "params": {' +
+    '      "f.description.hl.alternateField": "description",' +
+    '      "fl": "id,uuid,access",' +
+    '      "start": "0",' +
+    '      "f.content_auto.hl.alternateField": "title",' +
+    '      "hl.maxAlternateFieldLength": "128",' +
+    '      "q": "zebra",' +
+    '      "qf": "content_auto^0.5 submitter text",' +
+    '      "hl.simple.pre": "<em>",' +
+    '      "hl.simple.post": "</em>",' +
+    '      "hl.fl": "content_auto,description",' +
+    '      "wt": "json",' +
+    '      "hl": "true",' +
+    '      "fq": "django_ct:core.dataset",' +
+    '      "rows": "50",' +
+    '      "defType": "edismax"' +
+    '    }' +
+    '  },' +
+    '  "response": {' +
+    '    "numFound": 1,' +
+    '    "start": 0,' +
+    '    "docs": [' +
+    '      {' +
+    '        "access": [' +
+    '          "u_3"' +
+    '        ],' +
+    '        "uuid": "3f27bef3-028b-4c6a-b483-d55935ee908a",' +
+    '        "dbid": "205"' +
+    '      }' +
+    '    ]' +
+    '  },' +
+    '  "highlighting": {' +
+    '    "core.dataset.205": {' +
+    '      "title": [' +
+    '        "lmo2 <em>zebra</em>fish"' +
+    '      ]' +
+    '    }' +
+    '  }' +
+    '}';
 
-  var $httpBackend,
-      $rootScope,
-      Factory,
-      factoryInstance,
-      limit = 1,
-      offset = 0,
-      query = 'test',
-      settings,
-      fakeQueryResponse = '' +
-      '{' +
-      '  "responseHeader": {' +
-      '    "status": 0,' +
-      '    "QTime": 139,' +
-      '    "params": {' +
-      '      "f.description.hl.alternateField": "description",' +
-      '      "fl": "id,uuid,access",' +
-      '      "start": "0",' +
-      '      "f.content_auto.hl.alternateField": "title",' +
-      '      "hl.maxAlternateFieldLength": "128",' +
-      '      "q": "zebra",' +
-      '      "qf": "content_auto^0.5 submitter text",' +
-      '      "hl.simple.pre": "<em>",' +
-      '      "hl.simple.post": "</em>",' +
-      '      "hl.fl": "content_auto,description",' +
-      '      "wt": "json",' +
-      '      "hl": "true",' +
-      '      "fq": "django_ct:core.dataset",' +
-      '      "rows": "50",' +
-      '      "defType": "edismax"' +
-      '    }' +
-      '  },' +
-      '  "response": {' +
-      '    "numFound": 1,' +
-      '    "start": 0,' +
-      '    "docs": [' +
-      '      {' +
-      '        "access": [' +
-      '          "u_3"' +
-      '        ],' +
-      '        "uuid": "3f27bef3-028b-4c6a-b483-d55935ee908a",' +
-      '        "dbid": "205"' +
-      '      }' +
-      '    ]' +
-      '  },' +
-      '  "highlighting": {' +
-      '    "core.dataset.205": {' +
-      '      "title": [' +
-      '        "lmo2 <em>zebra</em>fish"' +
-      '      ]' +
-      '    }' +
-      '  }' +
-      '}';
-
-  function params (query, limit, offset, allIds) {
-    return '?allIds=' + allIds + '&defType=edismax&f.description.hl.alternateField=description&' +
-    'f.title.hl.alternateField=title&fl=dbid,uuid,access&' +
-    'fq=django_ct:core.dataset&hl=true&hl.fl=title,description&' +
-    'hl.maxAlternateFieldLength=128&hl.simple.post=%3C%2Fem%3E&' +
-    'hl.simple.pre=%3Cem%3E&q=' + query + '&' +
-    'qf=title%5E0.5+accession+submitter+text&rows=' + limit +
-    '&start=' + offset +'&wt=json';
+  function params (_query, _limit, _offset, _allIds, _synonyms) {
+    var parameters = {
+      allIds: _allIds,
+      defType: _synonyms ? 'synonym_edismax' : 'edismax',
+      'f.description.hl.alternateField': 'description',
+      'f.title.hl.alternateField': 'title',
+      fl: 'dbid,uuid,access',
+      fq: 'django_ct:core.dataset',
+      hl: 'true',
+      'hl.fl': 'title,description',
+      'hl.maxAlternateFieldLength': '128',
+      'hl.simple.post': '%3C%2Fem%3E',
+      'hl.simple.pre': '%3Cem%3E',
+      q: _query,
+      qf: 'title%5E0.5+accession+submitter+text',
+      rows: _limit,
+      start: _offset,
+      synonyms: '' + !!_synonyms + '',
+      wt: 'json'
+    };
+    var url = '';
+    var paramNames = Object.keys(parameters);
+    for (var i = 0, len = paramNames.length; i < len; i++) {
+      url += '&' + paramNames[i] + '=' + parameters[paramNames[i]];
+    }
+    return '?' + url.substr(1);
   }
 
   beforeEach(function () {
@@ -77,17 +95,14 @@ describe('DataSet.search-api: unit tests', function () {
   });
 
   describe('Factory', function () {
-
     it('should be available',
       function () {
         expect(!!Factory).toEqual(true);
       }
     );
-
   });
 
   describe('Factory instance', function () {
-
     it('should be a function',
       function () {
         factoryInstance = new Factory(query);
@@ -99,13 +114,12 @@ describe('DataSet.search-api: unit tests', function () {
       function () {
         factoryInstance = new Factory(query);
 
-        var data = 'test',
-            results,
-            promise = factoryInstance(limit, offset);
+        var results;
+        var promise = factoryInstance(limit, offset);
 
         $httpBackend
           .expectGET(
-            settings.appRoot + settings.solrApi + '/core/select' + params(
+            settings.appRoot + settings.solrApi + '/core/select/' + params(
               query,
               limit,
               offset,
@@ -130,13 +144,12 @@ describe('DataSet.search-api: unit tests', function () {
       function () {
         factoryInstance = new Factory(query, true);
 
-        var data = 'test',
-            results,
-            promise = factoryInstance(limit, offset);
+        var results;
+        var promise = factoryInstance(limit, offset);
 
         $httpBackend
           .expectGET(
-            settings.appRoot + settings.solrApi + '/core/select' + params(
+            settings.appRoot + settings.solrApi + '/core/select/' + params(
               query,
               limit,
               offset,
@@ -151,7 +164,7 @@ describe('DataSet.search-api: unit tests', function () {
 
         $httpBackend
           .expectGET(
-            settings.appRoot + settings.solrApi + '/core/select' + params(
+            settings.appRoot + settings.solrApi + '/core/select/' + params(
               query,
               limit,
               offset,
@@ -172,5 +185,36 @@ describe('DataSet.search-api: unit tests', function () {
       }
     );
 
+    it('should use different `defType` when synonym search is turned on',
+      function () {
+        settings.djangoApp.solrSynonymSearch = true;
+        factoryInstance = new Factory(query, true);
+
+        var results;
+        var promise = factoryInstance(limit, offset);
+
+        $httpBackend
+          .expectGET(
+            settings.appRoot + settings.solrApi + '/core/select/' + params(
+              query,
+              limit,
+              offset,
+              1,
+              true
+            )
+          )
+          .respond(200, fakeQueryResponse);
+
+        $httpBackend.flush();
+
+        promise.then(function (data) {
+          results = data;
+        });
+
+        $rootScope.$digest();
+
+        expect(results.meta.total).toEqual(1);
+      }
+    );
   });
 });

@@ -17,18 +17,20 @@ Example: FILE_STORE_DIR = 'files'
 import os
 import re
 import logging
-from datetime import datetime
 from urlparse import urlparse, urljoin
 from celery.result import AsyncResult
+
 from django.conf import settings
 from django.dispatch import receiver
 from django.db import models
 from django.db.models.signals import pre_delete
 from django_extensions.db.fields import UUIDField
-from django.contrib.sites.models import Site
 from django.core.files.storage import FileSystemStorage
 
-logger = logging.getLogger('file_store')
+from core.utils import is_url, get_aware_local_time
+
+
+logger = logging.getLogger(__name__)
 
 
 def _mkdir(path):
@@ -78,42 +80,6 @@ if not settings.FILE_UPLOAD_MAX_MEMORY_SIZE:
 FILE_STORE_BASE_URL = \
     urljoin(settings.MEDIA_URL, settings.FILE_STORE_DIR) + '/'
 
-# TODO: expand the list of file types. Reference:
-# http://wiki.g2.bx.psu.edu/Admin/Datatypes/Adding%20Datatypes
-# http://en.wikipedia.org/wiki/List_of_file_formats#Biology
-# list of file types in alphabetical order for convenience
-BAM = 'bam'
-BED = 'bed'
-BIGBED = 'bigbed'
-BIGWIG = 'bigwig'
-CBS = 'cbs'
-CEL = 'cel'
-CSV = 'csv'
-ELAND = 'eland'
-GFF = 'gff'
-GTF = 'gtf'
-GZ = 'gz'
-HTML = 'html'
-IDF = 'idf'
-FASTA = 'fasta'
-FASTQ = 'fastq'
-FASTQCSANGER = 'fastqcsanger'
-FASTQILLUMINA = 'fastqillumina'
-FASTQSANGER = 'fastqsanger'
-FASTQSOLEXA = 'fastqsolexa'
-PDF = 'pdf'
-SAM = 'sam'
-SEG = 'seg'
-TABULAR = 'tabular'
-TDF = 'tdf'
-TGZ = 'tgz'
-TXT = 'txt'
-VCF = 'vcf'
-WIG = 'wig'
-XML = 'xml'
-ZIP = 'zip'
-UNKNOWN = ''  # special catch-all type with no corresponding extension
-
 
 def file_path(instance, filename):
     """Construct relative file system path for new file store files relative to
@@ -138,11 +104,6 @@ def file_path(instance, filename):
     # Galaxy doesn't process names with parentheses in them
     filename = re.sub('[()]', '_', filename)
     return os.path.join(instance.sharename, dir1, dir2, filename)
-
-
-def is_url(string):
-    """Check if a given string is a URL"""
-    return urlparse(string).scheme != ""
 
 
 def map_source(source):
@@ -187,14 +148,21 @@ def generate_file_source_translator(username='', base_path=''):
 
 class FileType(models.Model):
     #: name of file extension
-    name = models.CharField(max_length=50)
+    name = models.CharField(unique=True, max_length=50)
     #: short description of file extension
     description = models.CharField(max_length=250)
-    #: file extension associated with the filename
-    extension = models.CharField(unique=True, max_length=50)
 
     def __unicode__(self):
         return self.description
+
+
+class FileExtension(models.Model):
+    # file extension associated with the filename
+    name = models.CharField(unique=True, max_length=50)
+    filetype = models.ForeignKey(FileType)
+
+    def __unicode__(self):
+        return self.name
 
 
 class _FileStoreItemManager(models.Manager):
@@ -276,14 +244,16 @@ class FileStoreItem(models.Model):
     # particular group
     sharename = models.CharField(max_length=20, blank=True)
     #: type of the file
-    filetype = models.ForeignKey(FileType, default=33)
+    filetype = models.ForeignKey(FileType, null=True)
     #: file import task ID
     import_task_id = UUIDField(blank=True)
     # Date created
-    created = models.DateTimeField(auto_now_add=True, default=datetime.now,
+    created = models.DateTimeField(auto_now_add=True,
+                                   default=get_aware_local_time,
                                    blank=True)
     # Date updated
-    updated = models.DateTimeField(auto_now=True, default=datetime.now,
+    updated = models.DateTimeField(auto_now=True,
+                                   default=get_aware_local_time,
                                    blank=True)
 
     objects = _FileStoreItemManager()
@@ -350,41 +320,59 @@ class FileStoreItem(models.Model):
             return None
 
     def get_filetype(self):
-        '''Retrieve the type of the datafile.
+        """Retrieve the type of the datafile.
 
-        :returns: str -- type of the datafile.
+        :returns: FileType object.
 
-        '''
+        """
         return self.filetype
 
     def set_filetype(self, filetype=''):
-        '''Assign the type of the datafile.
+        """Assign the type of the datafile.
         Only existing types allowed as arguments.
 
         :param filetype: requested file type.
         :type filetype: str.
         :returns: True if success, False if failure.
 
-        '''
+        """
         # make sure the file type is valid before assigning it to model field
 
-        all_known_extensions = [e.extension for e in FileType.objects.all()]
+        all_known_extensions = [e.name for e in
+                                FileExtension.objects.all()]
 
-        f = str(self.source.rpartition("/")[-1]).split('.', 1)[-1]
+        # If filetype argument is one that we know of great, Else we try to
+        # guess
+        if filetype in all_known_extensions:
+            f = filetype
+        else:
+            f = str(self.source.rpartition("/")[-1]).split('.', 1)[-1]
+
+        # Set the filetype of the FileStoreItem instance, if we still dont
+        # know the filetype after our guess earlier, we try to split on a
+        # '.' again etc. If we fail, the filetype is set to unknown
         try:
             if f in all_known_extensions:
-                self.filetype = FileType.objects.get(extension=f)
+                self.filetype = FileType.objects.get(
+                    description=FileExtension.objects.get(name=f).filetype)
             else:
                 f = f.split('.', 2)[-1]
                 if f in all_known_extensions:
-                    self.filetype = FileType.objects.get(extension=f)
+                    self.filetype = FileType.objects.get(
+                        description=FileExtension.objects.get(
+                            name=f).filetype)
                 else:
                     f = f.rpartition(".")[-1]
                     if f in all_known_extensions:
-                        self.filetype = FileType.objects.get(extension=f)
-                    else:
                         self.filetype = FileType.objects.get(
-                            extension="unknown")
+                            description=FileExtension.objects.get(
+                                name=f).filetype)
+                    else:
+                        # If we cannot assign a filetype after all of this,
+                        # we let the filetype associated with the filestore
+                        # item be null
+                        pass
+
             self.save()
             logger.info("File type is set to '%s'", f)
             return True
@@ -506,27 +494,22 @@ class FileStoreItem(models.Model):
             logger.error("Symlinking failed: source is not a file")
             return False
 
-    def get_full_url(self):
-        """Return the full URL (including hostname) for the datafile.
-
-        :returns: str -- local URL or source if it's a remote file
+    def get_datafile_url(self):
+        """ This returns the url for a given FileStoreItem. If the FileStoreItem
+        `is_local` then the url is constructed using the get_full_url method.
+        :param self: the FileStoreItem that we want a url for
+        :type self: A FileStoreItem instance
+        :returns: A url for the given FileStoreItem or None
         """
+
         if self.is_local():
-            try:
-                current_site = Site.objects.get_current()
-            except Site.DoesNotExist:
-                logger.error(
-                    "Cannot provide a full URL: no sites configured or "
-                    "SITE_ID is not set correctly")
-                return None
-            # FIXME: provide a URL without the domain portion
-            # visualization_manager.views may be expecting a full URL
-            return 'http://{}{}'.format(current_site.domain, self.datafile.url)
+            return self.datafile.url
         else:
             # data file doesn't exist on disk
             if os.path.isabs(self.source):
                 # source is a file system path
-                logger.error("File not found at '%s'", self.datafile.name)
+                logger.error("File not found at '%s'",
+                             self.datafile.name)
                 return None
             else:
                 # source is a URL

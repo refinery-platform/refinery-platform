@@ -1,9 +1,11 @@
+'use strict';
+
 function DoiWrapper ($q, $resource, settings) {
   this.$q = $q;
   this.$resource = $resource;
   this.settings = settings;
   this.doi = this.$resource(
-    this.settings.appRoot + '/doi/:id',
+    this.settings.appRoot + '/doi/:id/',
     {
       id: '@id'
     }
@@ -12,7 +14,7 @@ function DoiWrapper ($q, $resource, settings) {
 
 DoiWrapper.prototype.get = function (params) {
   if (!params.id) {
-    return $q.reject('No DOI given.');
+    return this.$q.reject('No DOI given.');
   }
   // Replace all forward slashes with dollar signs.
   params.id = this.escape(params.id);
@@ -33,7 +35,7 @@ Object.defineProperty(
     enumerable: true,
     configurable: false,
     writable: true
-});
+  });
 
 angular
   .module('refineryApp')

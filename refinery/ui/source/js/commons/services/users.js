@@ -1,18 +1,20 @@
+'use strict';
+
 function userFactory ($q, $resource, settings) {
-  var userService = {},
-      userResource = $resource(
-        settings.appRoot + settings.refineryApi + '/users/:uuid',
-        {
-          format: 'json'
-        },
-        {
-          query: {
-            method: 'GET',
-            isArray: false,
-          }
-        }
-      ),
-      store = {};
+  var userService = {};
+  var userResource = $resource(
+    settings.appRoot + settings.refineryApi + '/users/:uuid/',
+    {
+      format: 'json'
+    },
+    {
+      query: {
+        method: 'GET',
+        isArray: false
+      }
+    }
+  );
+  var store = {};
 
   /**
    * Query the API for user and user profile data.
@@ -56,9 +58,8 @@ function userFactory ($q, $resource, settings) {
 
         return store[uuid];
       });
-    } else {
-      return $q.when(store[uuid]);
     }
+    return $q.when(store[uuid]);
   };
 
   return userService;

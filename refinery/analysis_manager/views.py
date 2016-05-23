@@ -1,5 +1,4 @@
 import copy
-from datetime import datetime
 import json
 import logging
 from urlparse import urlparse
@@ -9,12 +8,11 @@ from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.http import (
-    HttpResponse, HttpResponseRedirect, HttpResponseServerError,
+    HttpResponse, HttpResponseServerError,
     HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden
 )
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from django.utils import simplejson
 
 from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import run_analysis
@@ -23,8 +21,9 @@ from core.models import (
     InvestigationLink, NodeSet, NodeRelationship, NodePair
 )
 from core.views import get_solr_results, custom_error_page
+from core.utils import get_aware_local_time
 from data_set_manager.models import Study, Assay, Node
-from workflow_manager.tasks import get_workflow_inputs, get_workflows
+from workflow_manager.tasks import get_workflows
 
 
 logger = logging.getLogger(__name__)
@@ -38,7 +37,7 @@ def index(request):
 
 
 def analysis_status(request, uuid):
-    logger.debug("analysis_manager.views.analysis_status called")
+    """Returns analysis status in HTML or JSON formats (for AJAX requests)"""
     # TODO: handle MultipleObjectsReturned exception
     try:
         analysis = Analysis.objects.get(uuid=uuid)
@@ -64,27 +63,25 @@ def analysis_status(request, uuid):
         storage.used = True
         # add analysis status message
         if analysis.get_status() == Analysis.FAILURE_STATUS:
-            msg = "Analysis '{}' failed. " \
-                  "No results were added to your data set."\
-                  .format(analysis.name)
+            msg = "Analysis '{}' failed. No results were added to your data " \
+                  "set.".format(analysis.name)
             messages.error(request, msg)
         elif analysis.get_status() == Analysis.SUCCESS_STATUS:
-            msg = "Analysis '{}' finished successfully. " \
-                  "View the results in the file browser."\
-                  .format(analysis.name)
+            msg = "Analysis '{}' finished successfully. View the results in " \
+                  "the file browser.".format(analysis.name)
             messages.success(request, msg)
 
     if request.is_ajax():
-        ret_json = {}
-        if status:
-            ret_json['preprocessing'] = status.preprocessing_status()
-            ret_json['execution'] = status.execution_status()
-            ret_json['postprocessing'] = status.postprocessing_status()
-            ret_json['cleanup'] = status.cleanup_status()
-            ret_json['overall'] = analysis.get_status()
-        logger.debug("Analysis: '%s'", analysis.name)
-        logger.debug(simplejson.dumps(ret_json))
-        return HttpResponse(simplejson.dumps(ret_json),
+        ret_json = {
+            'refineryImport': status.refinery_import_state(),
+            'galaxyImport': status.galaxy_import_state(),
+            'galaxyAnalysis': status.galaxy_analysis_state(),
+            'galaxyExport': status.galaxy_export_state(),
+            'overall': analysis.get_status(),
+        }
+        logger.debug("Analysis status for '%s': %s",
+                     analysis.name, json.dumps(ret_json, indent=4))
+        return HttpResponse(json.dumps(ret_json, indent=4),
                             mimetype='application/javascript')
     else:
         return render_to_response(
@@ -130,223 +127,6 @@ def analysis_cancel(request):
         return HttpResponseNotAllowed(['POST'])  # 405
 
 
-# TODO: remove this view if no longer in use
-def analysis_run(request):
-    logger.debug("analysis_manager.views.analysis_run called")
-    logger.debug("POST request content:\n%s",
-                 simplejson.dumps(request.POST, indent=4))
-
-    # gets workflow_uuid
-    workflow_uuid = request.POST.getlist('workflow_choice')[0]
-    # get study uuid
-    study_uuid = request.POST.getlist('study_uuid')[0]
-    # list of selected assays
-    selected_uuids = {}
-    # finds all selected assays
-    # (node_uuid, and associated workflow input type for selected samples)
-    for i, val in request.POST.iteritems():
-        if val and val != "":
-            if i.startswith('assay_'):
-                temp_uuid = i.replace('assay_', '')
-                selected_uuids[temp_uuid] = val
-
-    # DEBUG CODE
-    # Turn input from POST into ingestable data/exp format
-    # retrieving workflow based on input workflow_uuid
-    annot_inputs = get_workflow_inputs(workflow_uuid)
-    len_inputs = len(set(annot_inputs))
-
-    logger.debug("selected_uuids: %s", selected_uuids)
-
-    # CONFIGURE INPUT FILES
-    ret_list = []
-    ret_item = copy.deepcopy(annot_inputs)
-    pair_count = 0
-    pair = 1
-    tcount = 0
-
-    # for sd in selected_data:
-    while len(selected_uuids) != 0:
-        tcount += 1
-        if tcount > 5000:
-            break
-
-        for k, v in ret_item.iteritems():
-            for index, sd in selected_uuids.items():
-                # dealing w/ cases where their are more than input for a
-                # galaxy workflow
-                if len_inputs > 1:
-                    if k == sd and ret_item[k] is None:
-                        ret_item[k] = {}
-                        ret_item[k]["node_uuid"] = index
-                        ret_item[k]["pair_id"] = pair
-                        pair_count += 1
-                        del selected_uuids[index]
-                    if pair_count == 2:
-                        ret_list.append(ret_item)
-                        ret_item = copy.deepcopy(annot_inputs)
-                        pair_count = 0
-                        pair += 1
-                # deals w/ the case where there is a single input for a
-                # galaxy workflow
-                elif len_inputs == 1:
-                    ret_item = copy.deepcopy(annot_inputs)
-                    ret_item[k] = {}
-                    ret_item[k]["node_uuid"] = index
-                    ret_item[k]["pair_id"] = pair
-                    ret_list.append(ret_item)
-                    del selected_uuids[index]
-                    pair += 1
-
-    # retrieving workflow based on input workflow_uuid
-    curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
-
-    # REFINERY MODEL UPDATES
-
-    # TODO: catch if study or data set don't exist
-    study = Study.objects.get(uuid=study_uuid)
-    data_set = InvestigationLink.objects.filter(
-        investigation__uuid=study.investigation.uuid).order_by(
-        "version").reverse()[0].data_set
-
-    logger.info("Associating analysis with data set %s (%s)",
-                data_set, data_set.uuid)
-
-    # ANALYSIS MODEL
-    # How to create a simple analysis object
-    temp_name = curr_workflow.name + " " + str(datetime.now())
-    summary_name = "None provided."
-
-    analysis = Analysis(summary=summary_name,
-                        name=temp_name,
-                        project=request.user.get_profile().catch_all_project,
-                        data_set=data_set,
-                        workflow=curr_workflow,
-                        time_start=datetime.now())
-    analysis.save()
-    analysis.set_owner(request.user)
-    # gets galaxy internal id for specified workflow
-    workflow_galaxy_id = curr_workflow.internal_id
-
-    # getting distinct workflow inputs
-    workflow_data_inputs = curr_workflow.data_inputs.all()
-
-    logger.debug("ret_list")
-    logger.debug(simplejson.dumps(ret_list, indent=4))
-
-    # ANALYSIS MODEL
-    # Updating Refinery Models for updated workflow input
-    # (galaxy worfkflow input id & node_uuid)
-    count = 0
-    for samp in ret_list:
-        count += 1
-        for k, v in samp.items():
-            temp_input = WorkflowDataInputMap(workflow_data_input_name=k,
-                                              data_uuid=samp[k]["node_uuid"],
-                                              pair_id=count)
-            temp_input.save()
-            analysis.workflow_data_input_maps.add(temp_input)
-            analysis.save()
-
-    # keeping new reference to analysis_status
-    analysis_status = AnalysisStatus.objects.create(analysis=analysis)
-    analysis_status.save()
-    # call function via analysis_manager
-    run_analysis.delay(analysis)
-
-    return HttpResponseRedirect(
-        reverse('analysis_manager.views.analysis_status',
-                args=(analysis.uuid,)))
-
-
-# TODO: remove this view if no longer in use
-def repository_run(request):
-    logger.debug("analysis_manager.views.repository_run called")
-
-    if request.method == 'POST':
-        logger.debug(simplejson.dumps(request.POST, indent=4))
-        # attributes associated with node selection from interface
-        node_selection_blacklist_mode = \
-            request.POST['node_selection_blacklist_mode']
-        if node_selection_blacklist_mode == 'true':
-            node_selection_blacklist_mode = True
-        else:
-            node_selection_blacklist_mode = False
-        node_selection = request.POST.getlist('node_selection[]')
-
-        # solr results
-        solr_query = request.POST["query"]
-        solr_uuids = get_solr_results(
-            solr_query,
-            only_uuids=True,
-            selected_mode=node_selection_blacklist_mode,
-            selected_nodes=node_selection)
-
-        workflow_uuid = request.POST['workflow_choice']
-        study_uuid = request.POST['study_uuid']
-
-        # retrieving workflow based on input workflow_uuid
-        curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
-
-        # TODO: catch if study or data set don't exist
-        study = Study.objects.get(uuid=study_uuid)
-        data_set = InvestigationLink.objects.filter(
-            investigation__uuid=study.investigation.uuid).order_by(
-            "version").reverse()[0].data_set
-
-        logger.info("Associating analysis with data set %s (%s)",
-                    data_set, data_set.uuid)
-
-        # ANALYSIS MODEL
-        # How to create a simple analysis object
-        temp_name = curr_workflow.name + " " + datetime.now().strftime(
-            "%Y-%m-%d @ %H:%M:%S")
-        summary_name = "None provided."
-
-        analysis = Analysis(
-            summary=summary_name,
-            name=temp_name,
-            project=request.user.get_profile().catch_all_project,
-            data_set=data_set,
-            workflow=curr_workflow,
-            time_start=datetime.now()
-        )
-        analysis.save()
-
-        analysis.set_owner(request.user)
-        # gets galaxy internal id for specified workflow
-        workflow_galaxy_id = curr_workflow.internal_id
-        # getting distinct workflow inputs
-        workflow_data_inputs = curr_workflow.data_inputs.all()[0]
-        # NEED TO GET LIST OF FILE_UUIDS from solr query
-        count = 0
-        for file_uuid in solr_uuids:
-            count += 1
-            temp_input = WorkflowDataInputMap(
-                workflow_data_input_name=workflow_data_inputs.name,
-                data_uuid=file_uuid,
-                pair_id=count
-            )
-            temp_input.save()
-            analysis.workflow_data_input_maps.add(temp_input)
-            analysis.save()
-        # keeping new reference to analysis_status
-        analysis_status = AnalysisStatus.objects.create(analysis=analysis)
-        analysis_status.save()
-        # call function via analysis_manager
-        run_analysis.delay(analysis)
-        logger.debug(request.build_absolute_uri(
-            reverse('analysis_manager.views.analysis_status',
-                    args=(analysis.uuid,))
-        ))
-        ret_url = request.build_absolute_uri(
-            reverse('analysis_manager.views.analysis_status',
-                    args=(analysis.uuid,))
-        )
-        return HttpResponse(simplejson.dumps(ret_url),
-                            mimetype='application/json')
-
-
 def update_workflows(request):
     """ajax function for updating available workflows from galaxy"""
     logger.debug("analysis_manager.views.update_workflows")
@@ -386,14 +166,14 @@ def run(request):
     """Run analysis, return URL of the analysis status page
     Needs re-factoring
     """
-    logger.debug("analysis_manager.views.run called")
+    logger.debug("Received request to start analysis")
     if not request.is_ajax():
         return HttpResponseBadRequest()  # 400
     allowed_methods = ['POST']
     if request.method not in allowed_methods:
         return HttpResponseNotAllowed(allowed_methods)  # 405
 
-    analysis_config = simplejson.loads(request.body)
+    analysis_config = json.loads(request.body)
     try:
         workflow_uuid = analysis_config['workflowUuid']
         study_uuid = analysis_config['studyUuid']
@@ -413,7 +193,7 @@ def run(request):
         # TODO: handle DoesNotExist exception
         curr_node_set = NodeSet.objects.get(uuid=node_set_uuid)
         curr_node_dict = curr_node_set.solr_query_components
-        curr_node_dict = simplejson.loads(curr_node_dict)
+        curr_node_dict = json.loads(curr_node_dict)
         # solr results
         solr_uuids = get_solr_results(
             curr_node_set.solr_query,
@@ -437,8 +217,8 @@ def run(request):
         # ANALYSIS MODEL
         # How to create a simple analysis object
         if not custom_name:
-            temp_name = curr_workflow.name + " " + datetime.now().strftime(
-                "%Y-%m-%d @ %H:%M:%S")
+            temp_name = curr_workflow.name + " " + get_aware_local_time()\
+                .strftime("%Y-%m-%d @ %H:%M:%S")
         else:
             temp_name = custom_name
 
@@ -449,13 +229,11 @@ def run(request):
             project=request.user.get_profile().catch_all_project,
             data_set=data_set,
             workflow=curr_workflow,
-            time_start=datetime.now()
+            time_start=get_aware_local_time()
         )
         analysis.save()
         analysis.set_owner(request.user)
 
-        # gets galaxy internal id for specified workflow
-        workflow_galaxy_id = curr_workflow.internal_id
         # getting distinct workflow inputs
         workflow_data_inputs = curr_workflow.data_inputs.all()[0]
 
@@ -525,8 +303,8 @@ def run(request):
         # ANALYSIS MODEL
         # How to create a simple analysis object
         if not custom_name:
-            temp_name = curr_workflow.name + " " + datetime.now().strftime(
-                "%Y-%m-%d @ %H:%M:%S")
+            temp_name = curr_workflow.name + " " + get_aware_local_time()\
+                .strftime("%Y-%m-%d @ %H:%M:%S")
         else:
             temp_name = custom_name
 
@@ -538,18 +316,16 @@ def run(request):
             project=request.user.get_profile().catch_all_project,
             data_set=data_set,
             workflow=curr_workflow,
-            time_start=datetime.now()
+            time_start=get_aware_local_time()
         )
         analysis.save()
         analysis.set_owner(request.user)
 
-        # gets galaxy internal id for specified workflow
-        workflow_galaxy_id = curr_workflow.internal_id
         # getting distinct workflow inputs
         workflow_data_inputs = curr_workflow.data_inputs.all()
 
         logger.debug("ret_list")
-        logger.debug(simplejson.dumps(ret_list, indent=4))
+        logger.debug(json.dumps(ret_list, indent=4))
 
         # ANALYSIS MODEL
         # Updating Refinery Models for updated workflow input
@@ -571,18 +347,16 @@ def run(request):
     analysis_status.save()
 
     # call function via analysis_manager
-    run_analysis.delay(analysis)
+    run_analysis.delay(analysis.uuid)
 
-    redirect_url = reverse('analysis_manager.views.analysis_status',
-                           args=(analysis.uuid,))
-    return HttpResponse(redirect_url)
+    return HttpResponse(reverse('analysis-status', args=(analysis.uuid,)))
 
 
 def create_noderelationship(request):
     """ajax function for creating noderelationships based on multiple node sets
     """
     logger.debug("analysis_manager.views create_noderelationship called")
-    logger.debug(simplejson.dumps(request.POST, indent=4))
+    logger.debug(json.dumps(request.POST, indent=4))
     if request.is_ajax():
         nr_name = request.POST.getlist('name')[0]
         nr_description = request.POST.getlist('description')[0]
@@ -607,9 +381,9 @@ def create_noderelationship(request):
         # Need to deal w/ limits on current solr queries
         # solr results
         curr_node_dict1 = curr_node_set1.solr_query_components
-        curr_node_dict1 = simplejson.loads(curr_node_dict1)
+        curr_node_dict1 = json.loads(curr_node_dict1)
         curr_node_dict2 = curr_node_set2.solr_query_components
-        curr_node_dict2 = simplejson.loads(curr_node_dict2)
+        curr_node_dict2 = json.loads(curr_node_dict2)
         # getting list of node uuids based on input solr query
         node_set_solr1 = get_solr_results(
             curr_node_set1.solr_query,
@@ -631,16 +405,18 @@ def create_noderelationship(request):
             node_set_results1, node_set_results2, diff_fields, all_fields)
 
         logger.debug("MAKING RELATIONSHIPS NOW")
-        logger.debug(simplejson.dumps(nodes_set_match, indent=4))
+        logger.debug(json.dumps(nodes_set_match, indent=4))
         logger.debug(nodes_set_match)
         # TODO: need to include names, descriptions, summary
         if nr_name.strip() == '':
             nr_name = "{} - {} {}".format(
-                curr_node_set1.name, curr_node_set2.name, str(datetime.now())
+                curr_node_set1.name, curr_node_set2.name, str(
+                    get_aware_local_time())
             )
         if nr_description.strip() == '':
             nr_description = "{} - {} {}".format(
-                curr_node_set1.name, curr_node_set2.name, str(datetime.now())
+                curr_node_set1.name, curr_node_set2.name, str(
+                    get_aware_local_time())
             )
         new_relationship = NodeRelationship(node_set_1=curr_node_set1,
                                             node_set_2=curr_node_set2,
@@ -657,7 +433,7 @@ def create_noderelationship(request):
             new_pair.save()
             new_relationship.node_pairs.add(new_pair)
 
-        return HttpResponse(simplejson.dumps(match_info, indent=4),
+        return HttpResponse(json.dumps(match_info, indent=4),
                             mimetype='application/json')
 
 
@@ -695,7 +471,6 @@ class DictDiffer(object):
 def match_nodesets(ns1, ns2, diff_f, all_f, rel_type=None):
     """Helper function for matching 2 nodesets solr results"""
     logger.debug("analysis_manager.views match_nodesets called")
-    num_fields = len(all_f)
     ret_info = {}
     ret_info['total'] = str(len(ns1) + len(ns2))
     ret_info['node1_count'] = str(len(ns1))

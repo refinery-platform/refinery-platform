@@ -1,3 +1,5 @@
+'use strict';
+
 function DataSetDataApiFactory ($q, _, dataSetService) {
   /**
    * Class constructor for querying the dataset data API.
@@ -8,11 +10,17 @@ function DataSetDataApiFactory ($q, _, dataSetService) {
    *
    * @param   {Object}  extra  Parameters other than `limit` and `offset`.
    */
-  function DataSetDataApi (extra, firstTimeAllIds) {
+  function DataSetDataApi (extra, firstTimeAllIds, onlyIds) {
     var params = {};
 
     if (_.isObject(extra)) {
       params = _.cloneDeep(extra);
+    }
+
+    if (onlyIds) {
+      return dataSetService.query({
+        extra: 'ids'
+      }).$promise;
     }
 
     /**
@@ -30,7 +38,7 @@ function DataSetDataApiFactory ($q, _, dataSetService) {
       params.limit = limit;
       params.offset = offset;
 
-      var data = dataSetService
+      var returnData = dataSetService
         .query(params).$promise.then(function (data) {
           // Rename `meta.total_count` into `meta.total`.
           Object.defineProperty(
@@ -38,7 +46,7 @@ function DataSetDataApiFactory ($q, _, dataSetService) {
             'total',
             Object.getOwnPropertyDescriptor(data.meta, 'total_count')
           );
-          delete data.meta['total_count'];
+          delete data.meta.total_count;
 
           // Rename `objects` into `data`.
           Object.defineProperty(
@@ -46,7 +54,14 @@ function DataSetDataApiFactory ($q, _, dataSetService) {
             'data',
             Object.getOwnPropertyDescriptor(data, 'objects')
           );
-          delete data['objects'];
+          delete data.objects;
+
+          for (var i = data.data.length; i--;) {
+            data.data[i].creationDate = new Date(data.data[i].creation_date);
+            delete data.data[i].creation_date;
+            data.data[i].modificationDate = new Date(data.data[i].modification_date);
+            delete data.data[i].modification_date;
+          }
 
           return data;
         });
@@ -54,12 +69,16 @@ function DataSetDataApiFactory ($q, _, dataSetService) {
       var allIds = $q.when(false);
 
       if (firstTimeAllIds) {
-        allIds = dataSetService.query({extra:'ids'}).$promise;
-        firstTimeAllIds = false;
+        allIds = dataSetService.query({
+          extra: 'ids'
+        }).$promise;
+        firstTimeAllIds = false;  // eslint-disable-line no-param-reassign
       }
 
-      return $q.all([data, allIds]).then(function (results) {
-        results[0].addIds = results[1];
+      return $q.all([returnData, allIds]).then(function (results) {
+        if (results[1]) {
+          results[0].allIds = results[1].ids;
+        }
         return results[0];
       });
     };

@@ -5,46 +5,63 @@ Created on Feb 20, 2012
 '''
 from __future__ import absolute_import
 
-from urlparse import urljoin
-
+import ast
+import copy
 from datetime import datetime
 import logging
 import os
 import smtplib
 import socket
 import pysolr
+from urlparse import urljoin
+
 from django import forms
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages
 from django.contrib.messages import info
-from django.core.exceptions import MultipleObjectsReturned
-from django.core.mail import mail_admins, send_mail
+from django.contrib.sites.models import Site
+from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
+from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.models import Max
 from django.db.models.fields import IntegerField
 from django.db.models.signals import post_save, pre_delete, post_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
+from django.forms import ValidationError
+from django.template import loader, Context
 
 from bioblend import galaxy
+from django.template.loader import render_to_string
 from django_extensions.db.fields import UUIDField
 from django_auth_ldap.backend import LDAPBackend
-from guardian.shortcuts import get_users_with_perms, \
-    get_groups_with_perms, assign_perm, remove_perm, get_objects_for_group
-from registration.signals import user_registered, user_activated
-from data_set_manager.models import Investigation, Node, Study, Assay
-from file_store.models import get_file_size, FileStoreItem
-from galaxy_connector.models import Instance
-from .utils import update_data_set_index, delete_data_set_index, \
-    add_read_access_in_neo4j, remove_read_access_in_neo4j, \
-    delete_data_set_neo4j, delete_ontology_from_neo4j, \
-    delete_analysis_index, invalidate_cached_object
 from guardian.models import UserObjectPermission
+from guardian.shortcuts import (get_users_with_perms,
+                                get_groups_with_perms, assign_perm,
+                                remove_perm, get_objects_for_group)
+from registration.models import RegistrationProfile, RegistrationManager
+from registration.signals import user_registered, user_activated
 
+from data_set_manager.models import (Investigation, Node, Study, Assay,
+                                     NodeCollection)
+from data_set_manager.utils import (add_annotated_nodes_selection,
+                                    index_annotated_nodes_selection)
+from file_store.models import get_file_size, FileStoreItem, FileType
+from file_store.tasks import rename
+from galaxy_connector.galaxy_workflow import (create_expanded_workflow_graph,
+                                              countWorkflowSteps,
+                                              configure_workflow)
+from galaxy_connector.models import Instance
+from .utils import (update_data_set_index, delete_data_set_index,
+                    add_read_access_in_neo4j, remove_read_access_in_neo4j,
+                    delete_data_set_neo4j, delete_ontology_from_neo4j,
+                    delete_analysis_index, invalidate_cached_object,
+                    get_aware_local_time, email_admin)
 
 logger = logging.getLogger(__name__)
 
@@ -63,9 +80,9 @@ NR_TYPES = (
 
 
 class UserProfile (models.Model):
-    """Extends Django user model:
-    https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional
-    -information-about-users
+    """Extend Django user model:
+    https://docs.djangoproject.com/en/1.7/topics/auth/customizing/#extending-the-existing-user-model
+
     """
     uuid = UUIDField(unique=True, auto=True)
     user = models.OneToOneField(User)
@@ -74,10 +91,10 @@ class UserProfile (models.Model):
 
     def __unicode__(self):
         return (
-            self.user.first_name + " " +
-            self.user.last_name + " (" +
-            self.affiliation + "): " +
-            self.user.email
+            str(self.user.first_name) + " " +
+            str(self.user.last_name) + " (" +
+            str(self.affiliation) + "): " +
+            str(self.user.email)
         )
 
 
@@ -118,16 +135,9 @@ def create_user_profile_registered(sender, user, request, **kwargs):
 
     logger.info(
         "user profile for user %s has been created after registration %s",
-        user, datetime.now()
+        user, get_aware_local_time()
     )
-    mail_admins(
-        'New User Registered', 'User %s registered at %s'
-        % (user, datetime.now())
-    )
-    logger.info(
-        "email has been sent to admins informing of registration of user %s",
-        user
-    )
+
 
 user_registered.connect(
     create_user_profile_registered,
@@ -143,8 +153,10 @@ def messages_dedup(request, msg):
 
 
 def register_handler(request, sender, user, **kwargs):
-    messages_dedup(request, 'Thank you!  Your account has been activated.')
-    messages.success(request, 'Thank you!  Your account has been activated.')
+    # Send email to user once an Admin activates their account
+    user.email_user(settings.REFINERY_WELCOME_EMAIL_SUBJECT,
+                    settings.REFINERY_WELCOME_EMAIL_MESSAGE,
+                    settings.DEFAULT_FROM_EMAIL)
 
 
 user_activated.connect(register_handler, dispatch_uid='activated')
@@ -193,14 +205,15 @@ class BaseResource (models.Model):
     class Meta:
         abstract = True
 
+    def duplicate_slug_check(self):
+        return int(len(self.__class__.objects.filter(slug=self.slug).exclude(
+                    pk=self.pk)))
+
     def clean(self):
         # Check if model being saved/altered in Django Admin has a slug
         # duplicated elsewhere.
         if self.slug:
-            try:
-                self.__class__.objects.filter(slug=self.slug).exclude(
-                    pk=self.pk).get(slug=self.slug)
-            except self.DoesNotExist:
+            if self.duplicate_slug_check() == 0:
                 pass
             else:
                 raise forms.ValidationError("%s with slug: %s "
@@ -211,10 +224,7 @@ class BaseResource (models.Model):
     # Overriding save() method to disallow saving objects with duplicate slugs
     def save(self, *args, **kwargs):
         if self.slug:
-            try:
-                self.__class__.objects.filter(slug=self.slug).exclude(
-                    pk=self.pk).get(slug=self.slug)
-            except self.DoesNotExist:
+            if self.duplicate_slug_check() == 0:
                 try:
                     super(BaseResource, self).save(*args, **kwargs)
                 except Exception as e:
@@ -229,7 +239,13 @@ class BaseResource (models.Model):
             except Exception as e:
                 logger.error("Could not save %s: %s" % (
                     self.__class__.__name__, e))
-        invalidate_cached_object(self)
+
+    # Overriding delete() method For models that Inherit from BaseResource
+    def delete(self, using=None, *args, **kwargs):
+        if not deletion_checks(self):
+            super(BaseResource, self).save()
+        else:
+            super(BaseResource, self).delete()
 
 
 class OwnableResource (BaseResource):
@@ -406,7 +422,22 @@ class ManageableResource:
         abstract = True
 
 
+class DataSetQuerySet(models.query.QuerySet):
+
+    def delete(self):
+        for instance in self:
+            instance.delete()
+
+
+class DataSetManager(models.Manager):
+    def get_query_set(self):
+        return DataSetQuerySet(self.model, using=self._db)
+
+
 class DataSet(SharableResource):
+
+    UNTITLED_DATA_SET_TITLE = "Untitled data set"
+
     # TODO: add function to restore earlier version
     # TODO: add collections (of assays in the investigation) and associate them
     # with the versions
@@ -419,7 +450,9 @@ class DataSet(SharableResource):
     # name of source database for the accession number (e.g. "ArrayExpress")
     accession_source = models.CharField(max_length=128, blank=True,  null=True)
     # actual title of the dataset
-    title = models.CharField(max_length=250, blank=True,  null=True)
+    title = models.CharField(max_length=250, default=UNTITLED_DATA_SET_TITLE)
+
+    objects = DataSetManager()
 
     class Meta:
         verbose_name = "dataset"
@@ -434,6 +467,16 @@ class DataSet(SharableResource):
             unicode(self.get_owner_username()) + u' - ' +
             unicode(self.summary)
         )
+
+    def save(self, *args, **kwargs):
+        # We need to manually check if the title to be saved is blank because
+        # `blank=False` will only affect the admin interface
+        try:
+            if not self.title.strip():
+                self.title = self.UNTITLED_DATA_SET_TITLE
+        except AttributeError:
+            self.title = self.UNTITLED_DATA_SET_TITLE
+        super(DataSet, self).save(*args, **kwargs)
 
     def get_owner(self):
         owner = None
@@ -528,6 +571,18 @@ class DataSet(SharableResource):
             return None
         return il.investigation
 
+    def get_studies(self, version=None):
+        return Study.objects.filter(
+            investigation=self.get_investigation(version)
+        )
+
+    def get_assays(self, version=None):
+        return Assay.objects.filter(
+            study=Study.objects.filter(
+                investigation=self.get_investigation()
+            )
+        )
+
     def get_file_count(self):
         """Returns the number of files in the data set"""
         investigation = self.get_investigation()
@@ -546,17 +601,32 @@ class DataSet(SharableResource):
         """Returns the disk space in bytes used by all files in the data set"""
         investigation = self.get_investigation()
         file_size = 0
-        include_symlinks = True
 
         for study in investigation.study_set.all():
             files = Node.objects.filter(
                 study=study.id, file_uuid__isnull=False).values("file_uuid")
             for file in files:
                 size = get_file_size(
-                    file["file_uuid"], report_symlinks=include_symlinks)
+                    file["file_uuid"], report_symlinks=True)
                 file_size += size
 
         return file_size
+
+    def get_isa_archive(self):
+        """Returns the isa_archive that was used to create the DataSet"""
+        try:
+            isa_archive = FileStoreItem.objects.get(
+                uuid=InvestigationLink.objects.get(
+                    data_set__uuid=self.uuid).investigation.isarchive_file)
+            return isa_archive
+
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned,
+                InvestigationLink.DoesNotExist,
+                InvestigationLink.MultipleObjectsReturned) as e:
+            logger.error("Error while fetching FileStoreItem or "
+                         "InvestigationLink: %s" % e)
+        return None
 
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
@@ -627,12 +697,12 @@ class WorkflowDataInput (models.Model):
         return self.name + " (" + str(self.internal_id) + ")"
 
 
-class WorkflowEngine (OwnableResource, ManageableResource):
+class WorkflowEngine(OwnableResource, ManageableResource):
     # TODO: remove Galaxy dependency
     instance = models.ForeignKey(Instance, blank=True)
 
     def __unicode__(self):
-        return self.name + " - " + self.summary
+        return str(self.name) + " - " + str(self.summary)
 
     class Meta:
         verbose_name = "workflowengine"
@@ -675,6 +745,18 @@ class WorkflowInputRelationships(models.Model):
         )
 
 
+class WorkflowQuerySet(models.query.QuerySet):
+
+    def delete(self):
+        for instance in self:
+            instance.delete()
+
+
+class WorkflowManager(models.Manager):
+    def get_query_set(self):
+        return WorkflowQuerySet(self.model, using=self._db)
+
+
 class Workflow(SharableResource, ManageableResource):
     ANALYSIS_TYPE = "analysis"
     DOWNLOAD_TYPE = "download"
@@ -709,6 +791,8 @@ class Workflow(SharableResource, ManageableResource):
     )
     graph = models.TextField(null=True, blank=True)
 
+    objects = WorkflowManager()
+
     def __unicode__(self):
         return self.name + " - " + self.summary
 
@@ -726,8 +810,8 @@ class Project(SharableResource):
 
     def __unicode__(self):
         return (
-            self.name + " - " + self.get_owner_username() + " - " +
-            self.summary
+            str(self.name) + " - " + str(self.get_owner_username()) + " - " +
+            str(self.summary)
         )
 
     class Meta:
@@ -784,6 +868,18 @@ class AnalysisResult(models.Model):
         )
 
 
+class AnalysisQuerySet(models.query.QuerySet):
+
+    def delete(self):
+        for instance in self:
+            instance.delete()
+
+
+class AnalysisManager(models.Manager):
+    def get_query_set(self):
+        return AnalysisQuerySet(self.model, using=self._db)
+
+
 class Analysis(OwnableResource):
 
     SUCCESS_STATUS = "SUCCESS"
@@ -791,14 +887,12 @@ class Analysis(OwnableResource):
     RUNNING_STATUS = "RUNNING"
     INITIALIZED_STATUS = "INITIALIZED"
     UNKNOWN_STATUS = "UNKNOWN"  # analysis status from Galaxy is not available
-
     STATUS_CHOICES = (
         (SUCCESS_STATUS, "Analysis finished successfully"),
         (FAILURE_STATUS, "Analysis terminated after errors"),
         (RUNNING_STATUS, "Analysis is running"),
         (INITIALIZED_STATUS, "Analysis was initialized"),
     )
-
     project = models.ForeignKey(Project, related_name="analyses")
     data_set = models.ForeignKey(DataSet, blank=True)
     workflow = models.ForeignKey(Workflow, blank=True)
@@ -817,10 +911,12 @@ class Analysis(OwnableResource):
                               choices=STATUS_CHOICES, blank=True, null=True)
     status_detail = models.TextField(blank=True, null=True)
     # indicates if a user requested cancellation of this analysis
-    cancel = models.BooleanField(default=False)
+    canceled = models.BooleanField(default=False)
     # possibly replace results
     # output_nodes = models.ManyToManyField(Nodes, blank=True)
     # protocol = i.e. protocol node created when the analysis is created
+
+    objects = AnalysisManager()
 
     def __unicode__(self):
         return (
@@ -845,46 +941,469 @@ class Analysis(OwnableResource):
         self.status = status
         self.status_detail = message
         if status == self.FAILURE_STATUS or status == self.SUCCESS_STATUS:
-            self.time_end = datetime.now()
+            self.time_end = get_aware_local_time()
         self.save()
 
+    def successful(self):
+        return self.get_status() == self.SUCCESS_STATUS
+
     def failed(self):
-        return True if self.status == self.FAILURE_STATUS else False
+        return self.get_status() == self.FAILURE_STATUS
+
+    def running(self):
+        return self.get_status() == self.RUNNING_STATUS
 
     def galaxy_connection(self):
         return self.workflow.workflow_engine.instance.galaxy_connection()
 
-    def cleanup(self):
-        """Delete library, workflow and history from Galaxy if they exist"""
+    def prepare_galaxy(self):
+        """Prepare for analysis execution in Galaxy"""
+        error_msg = "Preparing Galaxy analysis failed: "
         connection = self.galaxy_connection()
-        error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
 
-        if self.library_id:
-            try:
-                connection.libraries.delete_library(self.library_id)
-            except galaxy.client.ConnectionError as e:
-                logger.error(error_msg, 'library', self.name, e.message)
+        # creates new library in galaxy
+        library_name = "{} Analysis - {} ({})".format(
+            Site.objects.get_current().name, self.uuid,
+            get_aware_local_time())
+        try:
+            library = connection.libraries.create_library(library_name)
+        except galaxy.client.ConnectionError as exc:
+            logger.error(error_msg +
+                         "can not create Galaxy library for analysis '%s': %s",
+                         self.name, exc.message)
+            raise
 
-        if self.workflow_galaxy_id:
-            try:
-                connection.workflows.delete_workflow(self.workflow_galaxy_id)
-            except galaxy.client.ConnectionError as e:
-                logger.error(error_msg, 'workflow', self.name, e.message)
+        # generates same ret_list purely based on analysis object
+        ret_list = self.get_config()
+        try:
+            workflow_dict = connection.workflows.export_workflow_json(
+                self.workflow.internal_id)
+        except galaxy.client.ConnectionError as exc:
+            logger.error(error_msg +
+                         "can not download Galaxy workflow for analysis '%s': "
+                         "%s", self.name, exc.message)
+            raise
 
-        if self.history_id:
-            try:
-                connection.histories.delete_history(
-                    self.history_id, purge=True)
-            except galaxy.client.ConnectionError as e:
-                logger.error(error_msg, 'history', self.name, e.message)
+        # getting expanded workflow configured based on input: ret_list
+        new_workflow, history_download, analysis_node_connections = \
+            configure_workflow(workflow_dict, ret_list)
+
+        # import connections into database
+        for analysis_node_connection in analysis_node_connections:
+            # lookup node object
+            if analysis_node_connection["node_uuid"]:
+                node = Node.objects.get(
+                        uuid=analysis_node_connection["node_uuid"])
+            else:
+                node = None
+            AnalysisNodeConnection.objects.create(
+                analysis=self,
+                subanalysis=analysis_node_connection['subanalysis'],
+                node=node,
+                step=int(analysis_node_connection['step']),
+                name=analysis_node_connection['name'],
+                filename=analysis_node_connection['filename'],
+                filetype=analysis_node_connection['filetype'],
+                direction=analysis_node_connection['direction'],
+                is_refinery_file=analysis_node_connection['is_refinery_file']
+                )
+        # saving outputs of workflow to download
+        for file_dl in history_download:
+            temp_dl = WorkflowFilesDL(step_id=file_dl['step_id'],
+                                      pair_id=file_dl['pair_id'],
+                                      filename=file_dl['name'])
+            temp_dl.save()
+            self.workflow_dl_files.add(temp_dl)
+            self.save()
+
+        # import newly generated workflow
+        try:
+            new_workflow_info = connection.workflows.import_workflow_json(
+                new_workflow)
+        except galaxy.client.ConnectionError as exc:
+            logger.error(error_msg +
+                         "error importing workflow into Galaxy for analysis "
+                         "'%s': %s", self.name, exc.message)
+            raise
+
+        # getting number of steps for current workflow
+        new_workflow_steps = countWorkflowSteps(new_workflow)
+
+        # creates new history in galaxy
+        history_name = "{} Analysis - {} ({})".format(
+            Site.objects.get_current().name, self.uuid,
+            get_aware_local_time())
+        try:
+            history = connection.histories.create_history(history_name)
+        except galaxy.client.ConnectionError as e:
+            error_msg += "error creating Galaxy history for analysis '%s': %s"
+            logger.error(error_msg, self.name, e.message)
+            raise
+
+        # updating analysis object
+        self.workflow_copy = new_workflow
+        self.workflow_steps_num = new_workflow_steps
+        self.workflow_galaxy_id = new_workflow_info['id']
+        self.library_id = library['id']
+        self.history_id = history['id']
+        self.save()
+
+    def galaxy_progress(self):
+        """Return analysis progress in Galaxy"""
+        connection = self.galaxy_connection()
+        try:
+            history = connection.histories.get_status(self.history_id)
+        except galaxy.client.ConnectionError as exc:
+            error_msg = "Unable to get progress for history {} of analysis " \
+                        "{}: {}".format(self.history_id, self.name, exc)
+            # if history with provided ID doesn't exist (HTTP 400)
+            if '400' in str(exc):
+                logger.error(error_msg)
+                self.set_status(Analysis.FAILURE_STATUS, error_msg)
+                raise RuntimeError()
+            else:
+                logger.warning(error_msg)
+                self.set_status(Analysis.UNKNOWN_STATUS, error_msg)
+                raise
+
+        if (history['state'] == 'error' or
+                history['state_details']['error'] > 0):
+            error_msg = "Analysis '{}' failed in Galaxy".format(self)
+            logger.error(error_msg)
+            self.set_status(Analysis.FAILURE_STATUS, error_msg)
+            raise RuntimeError()
+
+        return history['percent_complete']
+
+    def galaxy_cleanup(self):
+        """Determine when/if Galaxy libraries, workflows and histories are
+        to be deleted based on the value of
+        global setting: REFINERY_GALAXY_ANALYSIS_CLEANUP"""
+
+        cleanup = settings.REFINERY_GALAXY_ANALYSIS_CLEANUP
+
+        if (cleanup == 'always' or
+            cleanup == 'on_success' and
+                self.get_status() == self.SUCCESS_STATUS):
+
+            connection = self.galaxy_connection()
+            error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
+
+            # Delete Galaxy libraries, workflows and histories
+            if self.library_id:
+                try:
+                    connection.libraries.delete_library(self.library_id)
+                except galaxy.client.ConnectionError as e:
+                    logger.error(error_msg, 'library', self.name, e.message)
+
+            if self.workflow_galaxy_id:
+                try:
+                    connection.workflows.delete_workflow(
+                        self.workflow_galaxy_id)
+                except galaxy.client.ConnectionError as e:
+                    logger.error(error_msg, 'workflow', self.name, e.message)
+
+            if self.history_id:
+                try:
+                    connection.histories.delete_history(self.history_id,
+                                                        purge=True)
+                except galaxy.client.ConnectionError as e:
+                    logger.error(error_msg, 'history', self.name, e.message)
 
     def cancel(self):
-        # mark analysis as canceled
-        self.cancel = True
-        self.save()
-        # jobs in a running workflow are stopped by deleting its history
-        self.cleanup()
+        """Mark analysis as cancelled"""
+        self.canceled = True
         self.set_status(Analysis.FAILURE_STATUS, "Cancelled at user's request")
+        # jobs in a running workflow are stopped by deleting its history
+        self.galaxy_cleanup()
+
+    def get_input_file_uuid_list(self):
+        """Return a list of all input file UUIDs"""
+        input_file_uuid_list = []
+        for files in self.workflow_data_input_maps.all():
+            cur_node_uuid = files.data_uuid
+            cur_fs_uuid = Node.objects.get(uuid=cur_node_uuid).file_uuid
+            input_file_uuid_list.append(cur_fs_uuid)
+        return input_file_uuid_list
+
+    def send_email(self):
+        """Sends an email when the analysis is finished"""
+        # don't mail the user if analysis was canceled
+        if self.canceled:
+            return
+
+        # get basic information
+        user = self.get_owner()
+        name = self.name
+        site_name = Site.objects.get_current().name
+        site_domain = Site.objects.get_current().domain
+        status = self.status
+        data_set_uuid = self.data_set.uuid
+        # check status and change text slightly based on that
+        # set context for things needed in all emails
+        context_dict = {'name': name,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name,
+                        'username': user.username,
+                        'site_name': site_name,
+                        'site_domain': site_domain,
+                        'success': self.successful(),
+                        'uuid': self.uuid
+                        }
+        if self.successful():
+            email_subj = "[{}] Archive ready for download: {}".format(
+                    site_name, name)
+            # TODO: avoid hardcoding URL protocol
+            context_dict['url'] = urljoin(
+                    "http://" + site_domain,
+                    "data_sets/" + data_set_uuid + "/analysis/" + self.uuid)
+        else:
+            email_subj = "[{}] Archive creation failed: {}".format(
+                    site_name, name)
+            context_dict['default_email'] = settings.DEFAULT_FROM_EMAIL
+
+        if settings.REFINERY_REPOSITORY_MODE:
+            temp_loader = loader.get_template(
+                'analysis_manager/analysis_email_repository.txt')
+        else:
+            workflow = self.workflow.name
+            project = self.project
+
+            # get information needed to calculate the duration
+            start = self.time_start
+            end = self.time_end
+
+            duration = end - start
+            hours, remainder = divmod(duration.total_seconds(), 3600)
+            minutes, seconds = divmod(remainder, 60)
+
+            # formatting the duration string
+            hours = int(hours)
+            minutes = int(minutes)
+            if hours < 10:
+                hours = '0%s' % hours
+            if minutes < 10:
+                minutes = '0%s' % minutes
+            duration = "%s:%s hours" % (hours, minutes)
+
+            # fill in extra context
+            context_dict['workflow'] = workflow
+            context_dict['project'] = project
+            context_dict['dataset'] = self.data_set.name
+            context_dict['start'] = datetime.strftime(start, '%A, %d %B %G %r')
+            context_dict['end'] = datetime.strftime(end, '%A, %d %B %G %r')
+            context_dict['duration'] = duration
+
+            # get email contents ready
+            email_subj = "[{}] {}: {} ({})".format(
+                    site_name, status, name, workflow)
+            temp_loader = loader.get_template(
+                'analysis_manager/analysis_email_full.txt')
+
+        context = Context(context_dict)
+        try:
+            user.email_user(email_subj, temp_loader.render(context))
+        except smtplib.SMTPException as exc:
+            logger.error("Error sending email to '%s' for analysis '%s': %s",
+                         user.email, name, exc)
+        except socket.error:
+            logger.error(
+                "Email server error: status '%s' to '%s' for analysis '%s' "
+                "with UUID '%s'",
+                self.get_status(), user.email, name, self.uuid)
+        else:
+            logger.info(
+                "Emailed completion message: status '%s' to '%s' for analysis "
+                "'%s' with UUID '%s'",
+                self.get_status(), user.email, name, self.uuid)
+
+    def rename_results(self):
+        """Rename files in file_store after download"""
+        logger.debug("Renaming analysis results")
+        # rename file_store items to new name updated from galaxy file_ids
+        for result in AnalysisResult.objects.filter(analysis_uuid=self.uuid):
+            # new name to load
+            new_file_name = result.file_name
+            # workaround for FastQC reports downloaded from Galaxy as zip
+            # archives
+            (root, ext) = os.path.splitext(new_file_name)
+            item = FileStoreItem.objects.get_item(uuid=result.file_store_uuid)
+            if ext == '.html':
+                try:
+                    zipfile = FileType.objects.get(name="ZIP")
+                except (FileType.DoesNotExist,
+                        FileType.MultipleObjectsReturned) as exc:
+                    logger.error("Error renaming HTML to zip: %s", exc)
+                else:
+                    if item.get_filetype() == zipfile:
+                        new_file_name = ''.join([root, '.zip'])
+            rename(result.file_store_uuid, new_file_name)
+
+    def get_config(self):
+        # TEST RECREATING RET_LIST DICTIONARY FROM ANALYSIS MODEL
+        # getting distinct workflow inputs
+        annot_inputs = {}
+        for data_input in self.workflow.data_inputs.all():
+            input_type = data_input.name
+            annot_inputs[input_type] = None
+        ret_list = []
+        ret_item = copy.deepcopy(annot_inputs)
+        temp_count = 0
+        temp_len = len(annot_inputs)
+        t2 = self.workflow_data_input_maps.all().order_by('pair_id')
+        for wd in t2:
+            if ret_item[wd.workflow_data_input_name] is None:
+                ret_item[wd.workflow_data_input_name] = {
+                    'pair_id': wd.pair_id,
+                    'node_uuid': wd.data_uuid
+                }
+                temp_count += 1
+            if temp_count == temp_len:
+                ret_list.append(ret_item)
+                ret_item = copy.deepcopy(annot_inputs)
+                temp_count = 0
+        return ret_list
+
+    def attach_outputs_dataset(self):
+        # for testing: attach workflow graph and output files to data set graph
+        # 0. get study and assay from the first input node
+        study = AnalysisNodeConnection.objects.filter(
+            analysis=self, direction=INPUT_CONNECTION)[0].node.study
+        assay = AnalysisNodeConnection.objects.filter(
+            analysis=self, direction=INPUT_CONNECTION)[0].node.assay
+        # 1. read workflow into graph
+        graph = create_expanded_workflow_graph(
+            ast.literal_eval(self.workflow_copy))
+        # 2. create data transformation nodes for all tool nodes
+        data_transformation_nodes = [graph.node[node_id]
+                                     for node_id in graph.nodes()
+                                     if graph.node[node_id]['type'] == "tool"]
+        for data_transformation_node in data_transformation_nodes:
+            # TODO: incorporate subanalysis id in tool name???
+            data_transformation_node['node'] = Node.objects.create(
+                study=study, assay=assay, analysis_uuid=self.uuid,
+                type=Node.DATA_TRANSFORMATION,
+                name=data_transformation_node['tool_id'] + '_' +
+                data_transformation_node['name'])
+        # 3. create connection from input nodes to first data transformation
+        # nodes (input tool nodes in the graph are skipped)
+        for input_connection in AnalysisNodeConnection.objects.filter(
+                analysis=self, direction=INPUT_CONNECTION):
+            for edge in graph.edges_iter([input_connection.step]):
+                if (graph[edge[0]][edge[1]]['output_id'] ==
+                        str(input_connection.step) + '_' +
+                        input_connection.filename):
+                    input_node_id = edge[1]
+                    data_transformation_node = \
+                        graph.node[input_node_id]['node']
+                    input_connection.node.add_child(data_transformation_node)
+        # 4. create derived data file nodes for all entries and connect to data
+        # transformation nodes
+        for output_connection in AnalysisNodeConnection.objects.filter(
+                analysis=self, direction=OUTPUT_CONNECTION):
+            # create derived data file node
+            derived_data_file_node = Node.objects.create(
+                study=study, assay=assay, type=Node.DERIVED_DATA_FILE,
+                name=output_connection.name, analysis_uuid=self.uuid,
+                subanalysis=output_connection.subanalysis,
+                workflow_output=output_connection.name)
+            # retrieve uuid of corresponding output file if exists
+            logger.info("Results for '%s' and %s.%s: %s",
+                        self.uuid,
+                        output_connection.filename, output_connection.filetype,
+                        str(AnalysisResult.objects.filter(
+                            analysis_uuid=self.uuid,
+                            file_name=(output_connection.name + "." +
+                                       output_connection.filetype)).count()))
+            analysis_results = AnalysisResult.objects.filter(
+                analysis_uuid=self.uuid,
+                file_name=(output_connection.name + "." +
+                           output_connection.filetype))
+
+            if analysis_results.count() == 0:
+                logger.info("No output file found for node '%s' ('%s')",
+                            derived_data_file_node.name,
+                            derived_data_file_node.uuid)
+
+            if analysis_results.count() == 1:
+                derived_data_file_node.file_uuid =\
+                    analysis_results[0].file_store_uuid
+                logger.debug(
+                        "Output file %s.%s ('%s') assigned to node %s ('%s')",
+                        output_connection.name,
+                        output_connection.filetype,
+                        analysis_results[0].file_store_uuid,
+                        derived_data_file_node.name,
+                        derived_data_file_node.uuid)
+            if analysis_results.count() > 1:
+                logger.warning("Multiple output files returned for '%s.%s'." +
+                               "No assignment to output node was made.",
+                               output_connection.filename,
+                               output_connection.filetype)
+            output_connection.node = derived_data_file_node
+            output_connection.save()
+            # get graph edge that corresponds to this output node:
+            # a. attach output node to source data transformation node
+            # b. attach output node to target data transformation node
+            # (if exists)
+            if len(graph.edges([output_connection.step])) > 0:
+                for edge in graph.edges_iter([output_connection.step]):
+                    if (graph[edge[0]][edge[1]]['output_id'] ==
+                            str(output_connection.step) + "_" +
+                            output_connection.filename):
+                        output_node_id = edge[0]
+                        input_node_id = edge[1]
+                        data_transformation_output_node = \
+                            graph.node[output_node_id]['node']
+                        data_transformation_input_node = \
+                            graph.node[input_node_id]['node']
+                        data_transformation_output_node.add_child(
+                            derived_data_file_node)
+                        derived_data_file_node.add_child(
+                            data_transformation_input_node)
+                        # TODO: here we could add a (Refinery internal)
+                        # attribute to the derived data file node to indicate
+                        # which output of the tool it corresponds to
+            # connect outputs that are not inputs for any data transformation
+            if (output_connection.is_refinery_file and
+                    derived_data_file_node.parents.count() == 0):
+                graph.node[output_connection.step]['node'].add_child(
+                    derived_data_file_node)
+            # delete output nodes that are not refinery files and don't have
+            # any children
+            if (not output_connection.is_refinery_file and
+                    derived_data_file_node.children.count() == 0):
+                output_connection.node.delete()
+
+        # 5. create annotated nodes and index new nodes
+        node_uuids = AnalysisNodeConnection.objects.filter(
+            analysis=self, direction=OUTPUT_CONNECTION, is_refinery_file=True
+            ).values_list('node__uuid', flat=True)
+        add_annotated_nodes_selection(
+            node_uuids, Node.DERIVED_DATA_FILE, study.uuid, assay.uuid)
+        index_annotated_nodes_selection(node_uuids)
+
+    def attach_outputs_downloads(self):
+        analysis_results = AnalysisResult.objects.filter(
+                analysis_uuid=self.uuid)
+
+        if analysis_results.count() == 0:
+            logger.error("No results for download '%s' ('%s')",
+                         self.name, self.uuid)
+            return
+
+        for analysis_result in analysis_results:
+            item = FileStoreItem.objects.get(
+                    uuid=analysis_result.file_store_uuid)
+            if item:
+                download = Download.objects.create(name=self.name,
+                                                   data_set=self.data_set,
+                                                   file_store_item=item)
+                download.set_owner(self.get_owner())
+            else:
+                logger.warning(
+                    "No file found for '%s' in download '%s' ('%s')",
+                    analysis_result.file_store_uuid, self.name, self.uuid)
 
 
 #: Defining available relationship types
@@ -894,28 +1413,6 @@ WORKFLOW_NODE_CONNECTION_TYPES = (
     (INPUT_CONNECTION, 'in'),
     (OUTPUT_CONNECTION, 'out'),
 )
-
-
-# Deletes Analyses' related NodeIndexes from Solr upon deletion
-@receiver(pre_delete, sender=Analysis)
-def _analysis_delete(sender, instance, *args, **kwargs):
-    node_conections = AnalysisNodeConnection.objects.filter(analysis=instance)
-    for item in node_conections:
-        if item.node and "Derived" in item.node.type:
-            try:
-                delete_analysis_index(item.node)
-            except Exception as e:
-                logger.debug("No NodeIndex exists in Solr with id %s: %s",
-                             item.id, e)
-
-    solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
-                               "data_set_manager"),
-                       timeout=10)
-    """
-        solr.optimize() Tells Solr to streamline the number of segments used,
-        essentially a defragmentation/ garbage collection operation.
-    """
-    solr.optimize()
 
 
 class AnalysisNodeConnection(models.Model):
@@ -1074,7 +1571,7 @@ class NodeSet(SharableResource, TemporaryResource):
     node_count = models.IntegerField(blank=True, null=True)
     #: Implicit node is created "on the fly" to support an analysis while
     #: explicit node is created by the user to store a particular selection
-    is_implicit = models.BooleanField()
+    is_implicit = models.BooleanField(default=False)
     study = models.ForeignKey(Study)
     assay = models.ForeignKey(Assay)
     # is this the "current selection" node set for the associated study/assay?
@@ -1308,15 +1805,15 @@ class RefineryLDAPBackend(LDAPBackend):
                 send_mail(settings.REFINERY_WELCOME_EMAIL_SUBJECT,
                           settings.REFINERY_WELCOME_EMAIL_MESSAGE,
                           settings.DEFAULT_FROM_EMAIL, email_address_list)
-            except smtplib.SMTPException:
+            except smtplib.SMTPException as exc:
                 logger.error(
-                    "Cannot send welcome email to: %s: SMTP server error",
-                    email_address_list
+                    "Cannot send welcome email to: %s: SMTP server error: %s",
+                    email_address_list, exc
                 )
-            except socket.error as e:
+            except socket.error as exc:
                 logger.error(
                     "Cannot send welcome email to: %s: %s",
-                    email_address_list, e
+                    email_address_list, exc
                 )
         return user, created
 
@@ -1383,7 +1880,7 @@ class Invitation(models.Model):
 
     def save(self, *arg, **kwargs):
         if not self.id:
-            self.created = datetime.now()
+            self.created = get_aware_local_time()
         return super(Invitation, self).save(*arg, **kwargs)
 
 
@@ -1413,7 +1910,7 @@ class Ontology (models.Model):
     # Stores the most recent import date, i.e. this will be overwritten when a
     # ontology is re-imported.
     import_date = models.DateTimeField(
-        default=datetime.now,
+        default=get_aware_local_time,
         editable=False,
         auto_now=False
     )
@@ -1502,13 +1999,323 @@ def receiver_subclasses(signal, sender, dispatch_uid_prefix, **kwargs):
 
 @receiver_subclasses(post_delete, BaseResource, "baseresource_post_delete")
 def _baseresource_delete(sender, instance, **kwargs):
-    # Handles the invalidation of cached objects
-    # that have BaseResource as a subclass after a delete
+    '''
+        Handles the invalidation of cached objects that inherit from
+        BaseResource after being deleted
+    '''
     invalidate_cached_object(instance)
 
 
 @receiver_subclasses(post_save, BaseResource, "baseresource_post_save")
 def _baseresource_save(sender, instance, **kwargs):
-    # Handles the invalidation of cached objects
-    # that have BaseResource as a subclass after a save
+    '''
+        Handles the invalidation of cached objects that inherit from
+        BaseResource after being saved
+    '''
     invalidate_cached_object(instance)
+
+
+@receiver_subclasses(pre_delete, NodeCollection,
+                     "nodecollection_pre_delete")
+def _nodecollection_delete(sender, instance, **kwargs):
+    '''
+        This finds all subclasses related to a DataSet's NodeCollections and
+        handles the deletion of all FileStoreItems related to the DataSet
+    '''
+    nodes = Node.objects.filter(study=instance)
+    for node in nodes:
+        try:
+            FileStoreItem.objects.get(uuid=node.file_uuid).delete()
+        except Exception as e:
+            logger.debug("Could not delete FileStoreItem:%s" % str(e))
+
+
+def deletion_checks(instance):
+    '''
+        Takes a Model instance and runs the appropriate deletion checking
+        method based on the instance.__class__.__name__
+    '''
+    if instance.__class__.__name__ == "DataSet":
+        return dataset_deletion_check(instance)
+    if instance.__class__.__name__ == "Workflow":
+        return workflow_deletion_check(instance)
+    if instance.__class__.__name__ == "Analysis":
+        return analysis_deletion_check(instance)
+    return True
+
+
+def workflow_deletion_check(instance):
+    '''
+        Takes a Workflow instance and checks if an Analysis has been run
+        using it
+    '''
+    if bool(Analysis.objects.filter(workflow=instance)):
+        '''
+            Hide Workflow from ui if an Analysis has been run on it
+        '''
+        instance.is_active = False
+        logger.error("Could not delete Workflow, one or more Analyses have "
+                     "been run using it.")
+        return False
+
+    else:
+        '''
+            If an Analysis hasn't been run on said Workflow delete
+            WorkflowDataInputs and WorkflowInputRelationships if they exist
+        '''
+        try:
+            instance.data_inputs.remove()
+        except Exception as e:
+            logger.error("Could not delete WorkflowDataInput", e)
+        try:
+            instance.input_relationships.remove()
+        except Exception as e:
+            logger.error("Could not delete WorkflowInputRelationship", e)
+
+        return True
+
+
+def dataset_deletion_check(instance):
+    '''
+        Takes a DataSet instance and deletes NodeCollection and related objs.
+        based on uuid of Investigations linked to the DataSet as long as an
+        Analysis has not been run upon the DataSet.
+        This deletes Studys, Assays and Investigations in
+        addition to the related objects detected by Django
+    '''
+
+    related_investigation_links = InvestigationLink.objects.filter(
+        data_set=instance)
+    if related_investigation_links:
+        for item in related_investigation_links:
+            node_collection = NodeCollection.objects.get(
+                uuid=item.investigation.uuid)
+            try:
+                node_collection.delete()
+            except Exception as e:
+                logger.debug("Couldn't delete NodeCollection:", e)
+    return True
+
+
+def analysis_deletion_check(instance):
+    '''
+        Takes an Analysis instance and checks if any Nodes created by the
+        Analysis being deleted have been analyzed further.
+    '''
+
+    nodes = Node.objects.filter(analysis_uuid=instance.uuid)
+    delete = True
+    for node in nodes:
+        analysis_node_connections = AnalysisNodeConnection.objects.filter(
+            node=node)
+        for item in analysis_node_connections:
+            if item.direction == 'in':
+                delete = False
+
+    '''
+        If None of the Analyis' Nodes have been analyzed further, let us:
+        1. Delete assoctiated FileStoreItems
+        2. Delete AnalysisResults
+        3. Optimize Solr's index to reflect that
+        4. Delete the Nodes
+        5. Continue on to delete the Analysis,
+        WorkflowFilesDls, WorkflowDataInputMaps,
+        AnalysisNodeConnections, and AnalysisStatus'
+    '''
+
+    if not delete:
+        logger.error("Cannot delete Analysis: %s because one or  more of "
+                     "it's Nodes have been further analyzed" % instance)
+        return False
+
+    else:
+        '''
+            Delete associated FileStoreItems
+        '''
+        for node in nodes:
+            if node.file_uuid:
+                try:
+                    FileStoreItem.objects.get(uuid=node.file_uuid).delete()
+                except Exception as e:
+                    logger.debug("Could not delete FileStore Item with  "
+                                 "uuid: %s, " % node.file_uuid, e)
+
+        analysis_node_connections = AnalysisNodeConnection.objects.filter(
+            analysis=instance)
+
+        '''
+            Delete associated AnalysisResults
+        '''
+        analysis_results = AnalysisResult.objects.filter(
+            analysis_uuid=instance.uuid)
+        for item in analysis_results:
+            try:
+                item.delete()
+            except Exception as e:
+                logger.debug("Could not delete AnalysisResult %s:" %
+                             item, e)
+
+        '''
+            Optimize Solr's index
+        '''
+        for item in analysis_node_connections:
+            if item.node and "Derived" in item.node.type:
+                try:
+                    delete_analysis_index(item.node)
+                except Exception as e:
+                    logger.debug("No NodeIndex exists in Solr with id "
+                                 "%s:  %s",
+                                 item.id, e)
+
+        solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
+                                   "data_set_manager"), timeout=10)
+        '''
+            solr.optimize() Tells Solr to streamline the number of segments
+            used, essentially a defragmentation/ garbage collection
+            operation.
+        '''
+        try:
+            solr.optimize()
+        except Exception as e:
+            logger.error("Could not optimize Solr's index:", e)
+
+        '''
+            Delete Nodes Associated w/ the Analysis
+        '''
+        for node in nodes:
+            try:
+                node.delete()
+            except Exception as e:
+                logger.debug("Could not delete Node %s:" % node, e)
+        return True
+
+
+class AuthenticationFormUsernameOrEmail(AuthenticationForm):
+    def clean_username(self):
+        username = self.data['username']
+        if '@' in username:
+            try:
+                username = User.objects.get(email=username).username
+            except ObjectDoesNotExist:
+                raise ValidationError(
+                    self.error_messages['invalid_login'],
+                    code='invalid_login',
+                    params={'username': self.username_field.verbose_name},
+                )
+            except MultipleObjectsReturned:
+                raise ValidationError(
+                    'You have registered twice with the same email. Hence, ' +
+                    'we don\'t know under which user you want to log in. ' +
+                    'Please specify your username.',
+                    code='invalid_login',
+                    params={'username': self.username_field.verbose_name},
+                )
+        return username
+
+
+class CustomRegistrationManager(RegistrationManager):
+    def custom_create_inactive_user(self, username, email, password,
+                                    site, first_name, last_name,
+                                    affiliation, send_email=True):
+        """
+        Create a new, inactive ``User``, generate a
+        ``CustomRegistrationProfile`` and email its activation key to the
+        "Admin" User, returning the new ``User``.
+
+        By default, an activation email will be sent to the Admin. To disable
+        this, pass ``send_email=False``.
+
+        """
+        new_user = User.objects.create_user(username, email, password)
+        new_user.is_active = False
+
+        # Adding custom fields
+        new_user.first_name = first_name
+        new_user.last_name = last_name
+        new_user.affiliation = affiliation
+        new_user.save()
+
+        registration_profile = self.create_profile(new_user)
+
+        if send_email:
+            registration_profile.custom_send_activation_email(site)
+
+        return new_user
+
+    create_inactive_user = transaction.commit_on_success(
+        custom_create_inactive_user)
+
+
+class CustomRegistrationProfile(RegistrationProfile):
+    objects = CustomRegistrationManager()
+
+    def custom_send_activation_email(self, site):
+        """
+        Send a custom activation email to the "Admin" user.
+
+        The activation email will make use of two templates:
+
+        ``registration/activation_email_subject.txt``
+            This template will be used for the subject line of the
+            email. Because it is used as the subject line of an email,
+            this template's output **must** be only a single line of
+            text; output longer than one line will be forcibly joined
+            into only a single line.
+
+        ``registration/activation_email.txt``
+            This template will be used for the body of the email.
+
+        These templates will each receive the following context
+        variables:
+
+        ``activation_key``
+            The activation key for the new account.
+
+        ``expiration_days``
+            The number of days remaining during which the account may
+            be activated.
+
+        ``site``
+            An object representing the site on which the user
+            registered; depending on whether ``django.contrib.sites``
+            is installed, this may be an instance of either
+            ``django.contrib.sites.models.Site`` (if the sites
+            application is installed) or
+            ``django.contrib.sites.models.RequestSite`` (if
+            not). Consult the documentation for the Django sites
+            framework for details regarding these objects' interfaces.
+
+
+        ``registered_user_email``
+            The email address of the User who jsut registered
+
+        ``registered_user_username``
+            The username of the User who just registered
+
+
+        """
+        ctx_dict = {'activation_key': self.activation_key,
+                    'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
+                    'site': site.domain,
+                    'registered_user_email': self.user.email,
+                    'registered_user_username': self.user.username,
+                    'registered_user_full_name': "{} {}".format(
+                        self.user.first_name, self.user.last_name),
+                    'registered_user_affiliation': self.user.affiliation
+
+                    }
+        subject = render_to_string('registration/activation_email_subject.txt',
+                                   ctx_dict)
+        # Email subject *must not* contain newlines
+        subject = ''.join(subject.splitlines())
+
+        message = render_to_string('registration/activation_email.txt',
+                                   ctx_dict)
+
+        # Email the admin of this instance
+        email_admin(subject, message)
+
+        logger.info(
+            "An email has been sent to admins informing of registration of  "
+            "user %s", self.user
+        )

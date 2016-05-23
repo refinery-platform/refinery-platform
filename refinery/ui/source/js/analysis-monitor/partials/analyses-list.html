@@ -87,36 +87,41 @@
             &nbsp;
             <span class="spinner">
               <i class="{{analysis.status | analysisStatusIcon}} analyses-status"
-                tool-tip tool-tip-container="body" tool-tip-placement="bottom"
-                title="{{ analysis.status | analysisStatusTitle }}">
+                 refinery-tooltip
+                 refinery-tooltip-container="body"
+                 refinery-tooltip-placement="bottom"
+                 title="{{ analysis.status | analysisStatusTitle }}">
               </i>
             </span>
           </div>
           <div class="col-md-5 analysis-name">
             <span ng-switch on="analysis.status">
-              <span ng-switch-when="UNKNOWN">
-                {{ analysis.name }}
-              </span>
-              <span ng-switch-default>
+              <span ng-switch-when="SUCCESS">
                 <a ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
                   {{ analysis.name }}
                 </a>
               </span>
+              <span ng-switch-default>
+                  {{ analysis.name }}
+              </span>
             </span>
             <span ng-show="analysis.status=='RUNNING' ||
-            analysis.status=='INITIALIZED'" class="analysis-cancel-col">
+            analysis.status=='INITIALIZED' || analysis.status=='UNKNOWN'"
+              class="analysis-cancel-col">
               &nbsp;
-             <a rp-analysis-monitor-cancel-confirm confirmed-click=
-               "AMCtrl.cancelAnalysis(analysis.uuid)"
-                tool-tip tool-tip-container="body" tool-tip-placement="right"
-                title="Cancel Analysis">
-               <i class="fa fa-times-circle analyses-cancel"></i>
-             </a>
+              <a rp-analysis-monitor-cancel-confirm
+                 confirmed-click="AMCtrl.cancelAnalysis(analysis.uuid)"
+                 refinery-tooltip
+                 refinery-tooltip-container="body"
+                 refinery-tooltip-placement="right"
+                 title="Cancel Analysis">
+                <i class="fa fa-times-circle analyses-cancel"></i>
+              </a>
             </span>
            </div>
 
           <div class="col-md-1">
-            <span  rp-analysis-monitor-start-time-tooltip>
+            <span rp-analysis-monitor-start-time-tooltip>
               {{analysis.humanizeStartTime }}
             </span>
           </div>
@@ -126,7 +131,7 @@
           </div>
 
           <div class="col-md-1">
-            <span  rp-analysis-monitor-end-time-tooltip>
+            <span rp-analysis-monitor-end-time-tooltip>
                {{analysis.humanizeEndTime }}
             </span>
           </div>
@@ -140,159 +145,96 @@
 
         </div>
 
-        <span ng-if="analysis.status=='RUNNING' || analysis.status=='INITIALIZED'">
+        <span ng-if="analysis.status=='RUNNING' ||
+                     analysis.status=='INITIALIZED' ||
+                     analysis.status=='UNKNOWN'">
           <div class="row" id="{{analysis.uuid}}" uib-collapse="isCollapsed">
-            <div class="col-md-1">
-              &nbsp;
-            </div>
+            <div class="col-md-1">&nbsp;</div>
             <div class="col-md-11 analysis-running">
 
               <div ng-hide="AMCtrl.isAnalysisDetailLoaded(analysis.uuid)"
                   class="ng-hide">
-                  <div class = "analysis-retrieving">
-                     <span class="refinery-spinner analyses-view"></span>
-                    &nbsp;Retrieving analysis details.
-                   </div>
+                <div class = "analysis-retrieving">
+                  <span class="refinery-spinner analyses-view"></span>
+                  &nbsp;Retrieving analysis details.
                 </div>
+              </div>
 
-                <div ng-show="AMCtrl.isAnalysisDetailLoaded(analysis.uuid)">
-                  <ul class="analysisRunningList">
-                    <span ng-if="AMCtrl.analysesDetail[analysis.uuid]
-                    .cancelingAnalyses == true ||
-                    AMCtrl.initializedFlag[analysis.uuid] == true">
-                     <li id="analyses-cancel-notice">
-                        <div class="alert alert-warning">
-                          Canceling...
-                        </div>
-                      </li>
-                    </span>
-
-                    <li class="analysisRunningListItem">
-                      Input File Import
-                      <span rp-analysis-monitor-input-tooltip>
-                        <i class="fa fa-question-circle"></i>
-                      </span>
-                      <div ng-switch on="AMCtrl.analysesDetail[analysis.uuid]
-                      .preprocessing">
-                        <div ng-switch-when="SUCCESS">
-                          <div class="alert alert-success">
-                            {{ AMCtrl.analysesDetail[analysis.uuid].preprocessing }}
-                          </div>
-                        </div>
-                        <div ng-switch-when="PROGRESS">
-                          <div class="progress progress-analysis-bg">
-                            <div
-                              class="progress-bar progress-bar-striped
-                              active"
-                              role="progressbar"
-                              id="preprocessing-{{ analysis.uuid }}"
-                              style="width:{{AMCtrl.analysesDetail[analysis.uuid]
-                            .preprocessingPercentDone}}">
-                              <span class="progress-analyses-text">
-                                {{AMCtrl.analysesDetail[analysis.uuid]
-                                  .preprocessingPercentDone}}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div ng-switch-when="FAILURE">
-                          <div class="alert alert-warning">
-                            {{ AMCtrl.analysesDetail[analysis.uuid]
-                              .preprocessing }}
-                            </div>
-                        </div>
-                        <div ng-switch-default>
-                          <div class="alert alert-info">
-                            PENDING
-                          </div>
-                        </div>
-                      </div>
+              <div ng-show="AMCtrl.isAnalysisDetailLoaded(analysis.uuid)">
+                <ul class="analysisRunningList">
+                  <span ng-if="AMCtrl.analysesDetail[analysis.uuid].cancelingAnalyses == true ||
+                               AMCtrl.initializedFlag[analysis.uuid] == true">
+                    <li id="analyses-cancel-notice">
+                      <div class="alert alert-warning">Canceling...</div>
                     </li>
+                  </span>
 
-                    <li class="analysisRunningListItem">
-                      Execution
-                      <span rp-analysis-monitor-execution-tooltip>
-                        <i class="fa fa-question-circle"></i>
-                      </span>
-                      <div ng-switch on="AMCtrl.analysesDetail[analysis.uuid]
-                      .execution">
-                        <div ng-switch-when="SUCCESS">
-                          <div class="alert alert-success">
-                            {{ AMCtrl.analysesDetail[analysis.uuid]
-                              .execution }}
+                  <div ng-repeat="(stage, value) in AMCtrl.analysesDetail[analysis.uuid]">
+                    <div ng-if="!(stage=='cancelingAnalyses' || stage=='overall')">
+                      <li class="analysisRunningListItem">
+                        {{ stage | camelCaseToTitle}}
+                        <span refinery-tooltip
+                              refinery-tooltip-container="body"
+                              refinery-tooltip-placement="bottom"
+                              title={{stageTooltipInfo[stage]}}>
+                          <i class="fa fa-question-circle"></i>
+                        </span>
+                        <div ng-switch on="value.state">
+                          <div ng-switch-when="SUCCESS">
+                            <div class="alert alert-success">
+                              {{value.state}}</div>
                           </div>
-                        </div>
-                        <div ng-switch-when="RETRY">
-                          <div class="progress progress-analysis-bg">
-                            <div
-                              class="progress-bar progress-bar-striped
-                              active"
-                              role="progressbar"
-                              id="execution-{{ analysis.uuid }}" style="width:
-                            {{AMCtrl.analysesDetail[analysis.uuid].executionPercentDone}}">
-                              <span class="progress-analyses-text">
-                                {{AMCtrl.analysesDetail[analysis.uuid]
-                                  .executionPercentDone}}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div ng-switch-when="FAILURE">
-                          <div class="alert alert-warning">
-                            {{ AMCtrl.analysesDetail[analysis.uuid].execution }}
-                            </div>
-                        </div>
-                        <div ng-switch-default>
-                          <div class="alert alert-info">
-                            PENDING
-                          </div>
-                        </div>
-                      </div>
-                    </li>
-
-                    <li class="analysisRunningListItem">
-                      Output File Import
-                      <span rp-analysis-monitor-output-tooltip>
-                        <i class="fa fa-question-circle"></i>
-                      </span>
-                      <div ng-switch on="AMCtrl
-                      .analysesDetail[analysis.uuid].postprocessing">
-                        <div ng-switch-when="SUCCESS">
-                          <div class="alert alert-success">
-                            {{ AMCtrl.analysesDetail[analysis.uuid]
-                              .postprocessing }}
-                          </div>
-                        </div>
-                        <div ng-switch-when="FAILURE">
-                          <div class="alert alert-warning">
-                            {{ AMCtrl.analysesDetail[analysis.uuid]
-                              .postprocessing }}
-                          </div>
-                        </div>
-                        <div ng-switch-when="PROGRESS">
-                          <div class="progress progress-analysis-bg">
-                            <div
-                              class="progress-bar progress-bar-striped active"
-                              role="progressbar"
-                              id="postprocessing-{{ analysis.uuid }}"
-                              style="width:{{AMCtrl.analysesDetail[analysis.uuid]
-                            .postprocessingPercentDone}}">
-                              <span class="progress-analyses-text">
-                                {{AMCtrl.analysesDetail[analysis.uuid]
-                                  .postprocessingPercentDone}}
+                          <div ng-switch-when="PROGRESS">
+                            <div class="progress progress-analysis-bg">
+                              <div
+                                class="progress-bar progress-bar-striped active"
+                                role="progressbar"
+                                id="rf-import-{{analysis.uuid}}"
+                                style="width:{{value.percent_done}}%">
+                                <span class="progress-analyses-text">
+                                  {{value.percent_done}}%
                                 </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                         <div ng-switch-default>
-                          <div class="alert alert-info">
-                            PENDING
+                          <div ng-switch-when="FAILURE">
+                            <div class="alert alert-warning">
+                              {{value.state}}
+                            </div>
+                          </div>
+                          <div ng-switch-default>
+                            <span ng-if="analysis.status=='UNKNOWN' &&
+                            value.percent_done > 0">
+                              <div class="progress progress-analysis-bg">
+                                <div
+                                    class="progress-bar progress-bar-striped active"
+                                    role="progressbar"
+                                    id="rf-import-{{analysis.uuid}}"
+                                    style="width:{{value.percent_done}}%">
+                                    <span class="progress-analyses-text">
+                                      {{value.percent_done}}%
+                                    </span>
+                                </div>
+                              </div>
+                               <span
+                                refinery-tooltip
+                                refinery-tooltip-container="body"
+                                refinery-tooltip-placement="bottom"
+                                title="UNKNOWN status, due to possible
+                                connection error.">
+                                <i class="fa fa-exclamation-triangle"></i>
+                              </span>
+                            </span>
+                            <span ng-if="value.percent_done == 0">
+                              <div class="alert alert-info">PENDING</div>
+                            </span>
                           </div>
                         </div>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
+                       </li>
+                    </div>
+                  </div>
+                </ul>
+              </div>
             </div>
           </div>
         </span>
@@ -309,7 +251,7 @@
         </li>
         <li ng-repeat="pageNum in range()" ng-class="{active:pageNum==currentPage}"
           ng-click="setPage(pageNum)">
-          <a> {{ pageNum + 1 }}  </a>
+          <a> {{pageNum + 1}}  </a>
         </li>
         <li ng-class="nextPageDisabled()">
           <a href ng-click="nextPage()">»</a>

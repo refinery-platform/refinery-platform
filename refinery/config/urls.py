@@ -1,15 +1,15 @@
 import logging
 from django.conf import settings
-from django.conf.urls.defaults import patterns, include, url
+from django.conf.urls import patterns, include, url
 from django.conf.urls.static import static
 from django.contrib import admin
 from haystack.forms import FacetedSearchForm
 from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
-from registration.forms import RegistrationFormUniqueEmail
 from registration.backends.default.views import ActivationView
-from registration.backends.default.views import RegistrationView
 from tastypie.api import Api
+from rest_framework import routers
+
 from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     NodeResource, NodeSetListResource, NodePairResource,\
     NodeRelationshipResource, WorkflowResource, ExtendedGroupResource, \
@@ -17,15 +17,21 @@ from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     StatisticsResource, GroupManagementResource, \
     UserAuthenticationResource, InvitationResource, FastQCResource,  \
     UserProfileResource
-from core.models import DataSet
+from core.models import DataSet, AuthenticationFormUsernameOrEmail
+
+from core.views import WorkflowViewSet, CustomRegistrationView
+from file_store.views import FileStoreItemViewSet
+
+from data_set_manager.views import Assays, AssaysFiles, AssaysAttributes
+
 from data_set_manager.api import AttributeOrderResource, StudyResource,\
     AssayResource, InvestigationResource, ProtocolResource, \
     ProtocolReferenceResource, ProtocolReferenceParameterResource, \
     PublicationResource, AttributeResource
 
+from core.forms import RegistrationFormWithCustomFields
 
 logger = logging.getLogger(__name__)
-
 
 # NG: facets for Haystack
 sqs = (SearchQuerySet().using("core")
@@ -36,6 +42,13 @@ sqs = (SearchQuerySet().using("core")
 
 # Uncomment the next two lines to enable the admin:
 admin.autodiscover()
+
+
+# Django REST Framework urls
+router = routers.DefaultRouter()
+router.register(r'filestoreitems', FileStoreItemViewSet)
+router.register(r'workflows', WorkflowViewSet)
+
 
 # NG: added for tastypie URL
 v1_api = Api(api_name='v1')
@@ -94,6 +107,7 @@ urlpatterns = patterns(
     url(r'^visualization_manager/', include('visualization_manager.urls')),
     url(r'^file_server/', include('file_server.urls')),
     url(r'^tasks/', include('djcelery.urls')),
+    url(r'^docs/', include('rest_framework_swagger.urls')),
 
     # NG: added to include additional views for admin
     # (this is not the recommended way but the only one I got to work)
@@ -104,14 +118,17 @@ urlpatterns = patterns(
     # url(r"^admin/core/test_data/$", admin.site.admin_view(admin_test_data)),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^djangular/', include('djangular.urls')),
+    # Needs to be defined before all default URL patterns are included because
+    # in Django the first matched URL pattern wins
     url(
-        r'^accounts/password/reset/confirm/' +
-        '(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$',
-        'django.contrib.auth.views.password_reset_confirm',
+        r'^accounts/login/$',
+        'django.contrib.auth.views.login',
         {
-            'post_reset_redirect': '/accounts/login/?next=/'
-        }
+            'authentication_form': AuthenticationFormUsernameOrEmail
+        },
+        name='login'
     ),
+    url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^accounts/profile/$',
         'core.views.user_profile',
         name='user_profile'),
@@ -123,7 +140,8 @@ urlpatterns = patterns(
 
     url(
         r'^accounts/register/$',
-        RegistrationView.as_view(),
+        CustomRegistrationView.as_view(
+            form_class=RegistrationFormWithCustomFields),
         name='registration.views.register'
     ),
 
@@ -148,6 +166,21 @@ urlpatterns = patterns(
         ),
         name='search'
     ),
+    # Wire up our API using automatic URL routing.
+    url(r"^api/v2/", include(router.urls)),
+
+
+    url(r'^api/v2/assays/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
+        r''r'12})/$', Assays.as_view()),
+
+    url(r'^api/v2/assays/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
+        r''r'12})/files/$', AssaysFiles.as_view()),
+
+    url(r'^api/v2/assays/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
+        r''r'12})/attributes/$', AssaysAttributes.as_view()),
 
     # (r'^favicon\.ico$',
     # 'django.views.generic.simple.redirect_to',

@@ -13,28 +13,6 @@ file { "/home/${app_user}/.ssh/config":
   group  => $app_group,
 }
 
-class { 'postgresql::globals':
-  version  => '9.3',
-  encoding => 'UTF8',
-  locale   => 'en_US.utf8',
-}
-
-class { 'postgresql::server':
-}
-
-class { 'postgresql::lib::devel':
-}
-
-postgresql::server::role { $app_user:
-  createdb => true,
-}
-->
-postgresql::server::db { 'refinery':
-  user     => $app_user,
-  password => '',
-  owner    => $app_user,
-}
-
 class { 'python':
   version    => 'system',
   pip        => true,
@@ -108,8 +86,8 @@ file { "${django_root}/config/config.json":
   replace => false,
 }
 ->
-exec { "syncdb":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py syncdb --migrate --noinput",
+exec { "syncdb_initial":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py syncdb --noinput",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
@@ -119,6 +97,34 @@ exec { "syncdb":
   ],
 }
 ->
+exec { "migrate_registration":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate registration",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+}
+->
+exec { "migrate_core":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate core",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+}
+->
+exec { "init_refinery":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py init_refinery '${site_name}' '${site_url}'",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+}
+->
+exec { "migrate_guardian":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate guardian",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+}
+->
 exec { "create_superuser":
   command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata superuser.json",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
@@ -126,15 +132,15 @@ exec { "create_superuser":
   group       => $app_group,
 }
 ->
-exec { "init_refinery":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py init_refinery 'Refinery' '192.168.50.50:8000'",
+exec { "create_user":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py create_user 'guest' 'guest' 'guest@example.com' 'Guest' '' ''",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
 }
 ->
-exec { "create_user":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py create_user 'guest' 'guest' 'guest@example.com' 'Guest' '' ''",
+exec { "syncdb_final":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py syncdb --migrate --noinput",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
@@ -167,6 +173,16 @@ class solr {
     path    => "/bin",
   }
   ->
+  file { "${django_root}/solr/core/conf/solrconfig.xml":
+    ensure  => file,
+    content => template("${django_root}/solr/core/conf/solrconfig.xml.erb"),
+  }
+  ->
+  file { "${django_root}/solr/data_set_manager/conf/solrconfig.xml":
+    ensure  => file,
+    content => template("${django_root}/solr/data_set_manager/conf/solrconfig.xml.erb"),
+  }
+  ->
   exec { "solr_install":  # also starts the service
     command => "sudo bash ./install_solr_service.sh ${solr_archive} -u ${app_user}",
     cwd     => "/usr/local/src",
@@ -194,6 +210,24 @@ class solr {
 }
 include solr
 
+class solrSynonymAnalyzer {
+  $version = "2.0.0"
+  $url = "https://github.com/refinery-platform/solr-synonyms-analyzer/releases/download/v${version}/hon-lucene-synonyms.jar"
+
+  # Need to remove the old file manually as wget throws a weird
+  # `HTTP request sent, awaiting response... 403 Forbidden` error when the file
+  # already exists.
+
+  exec { "solr-synonym-analyzer-download":
+    command => "rm -f /vagrant/refinery/solr/lib/hon-lucene-synonyms.jar && wget -P /vagrant/refinery/solr/lib/ ${url}",
+    creates => "/vagrant/refinery/solr/lib/hon-lucene-synonyms.jar",
+    path    => "/usr/bin:/bin",
+    timeout => 120,  # downloading can take some time
+    notify => Service['solr'],
+  }
+}
+include solrSynonymAnalyzer
+
 class neo4j {
   $neo4j_config_file = '/etc/neo4j/neo4j-server.properties'
   include apt
@@ -214,9 +248,9 @@ class neo4j {
   }
   ->
   limits::fragment {
-    "neo4j/soft/nofile":
+    "${app_user}/soft/nofile":
       value => "40000";
-    "neo4j/hard/nofile":
+    "${app_user}/hard/nofile":
       value => "40000";
   }
   ->
@@ -231,7 +265,7 @@ class neo4j {
       match => 'org.neo4j.server.webserver.address=';
     'neo4j_increase_transaction_timeout':
       path  => $neo4j_config_file,
-      line  => 'org.neo4j.server.transaction.timeout=300';
+      line  => 'org.neo4j.server.transaction.timeout=600';
   }
   ~>
   service { 'neo4j-service':
@@ -241,8 +275,35 @@ class neo4j {
 }
 include neo4j
 
+class neo4jOntology {
+  $neo4j_config = '/etc/neo4j/neo4j-server.properties'
+  $version = "0.5.0"
+  $url = "https://github.com/refinery-platform/neo4j-ontology/releases/download/v${version}/ontology.jar"
+
+  # Need to remove the old file manually as wget throws a weird
+  # `HTTP request sent, awaiting response... 403 Forbidden` error when the file
+  # already exists.
+
+  exec { "neo4j-ontology-plugin-download":
+    command => "rm -f /var/lib/neo4j/plugins/ontology.jar && wget -P /var/lib/neo4j/plugins/ ${url}",
+    creates => "/var/lib/neo4j/plugins/ontology.jar",
+    path    => "/usr/bin:/bin",
+    timeout => 120,  # downloading can take some time
+    notify => Service['neo4j-service'],
+  }
+  ->
+  file_line {
+    'org.neo4j.server.thirdparty_jaxrs_classes':
+      path  => $neo4j_config,
+      line  => 'org.neo4j.server.thirdparty_jaxrs_classes=org.neo4j.ontology.server.unmanaged=/ontology/unmanaged',
+      notify => Service['neo4j-service'],
+      require => Package['neo4j'],
+  }
+}
+include neo4jOntology
+
 class owl2neo4j {
-  $owl2neo4j_version = "0.4.0"
+  $owl2neo4j_version = "0.6.1"
   $owl2neo4j_url = "https://github.com/flekschas/owl2neo4j/releases/download/v${owl2neo4j_version}/owl2neo4j.jar"
 
   # Need to remove the old file manually as wget throws a weird
@@ -275,7 +336,7 @@ class ui {
   apt::source { 'nodejs':
     ensure      => 'present',
     comment     => 'Nodesource NodeJS repo.',
-    location    => 'https://deb.nodesource.com/node_4.x',
+    location    => 'https://deb.nodesource.com/node_6.x',
     release     => 'trusty',
     repos       => 'main',
     key         => '9FD3B784BC1C6FC31A8A0A1C1655A0AB68576280',
@@ -291,7 +352,7 @@ class ui {
   }
   ->
   package {
-    'bower': ensure => '1.7.2', provider => 'npm';
+    'bower': ensure => '1.7.7', provider => 'npm';
     'grunt-cli': ensure => '0.1.13', provider => 'npm';
   }
   ->
@@ -313,7 +374,7 @@ class ui {
   }
   ->
   exec { "grunt":
-    command   => "/usr/bin/grunt build && /usr/bin/grunt compile",
+    command   => "/usr/bin/grunt make",
     cwd       => $ui_app_root,
     logoutput => on_failure,
     user      => $app_user,
@@ -337,10 +398,10 @@ service { 'memcached':
 }
 
 file { "${django_root}/supervisord.conf":
-  ensure => file,
-  source => "${django_root}/supervisord.conf.sample",
-  owner  => $app_user,
-  group  => $app_group,
+  ensure  => file,
+  content => template("${django_root}/supervisord.conf.erb"),
+  owner   => $app_user,
+  group   => $app_group,
 }
 ->
 exec { "supervisord":

@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Requirements:
+# awscli
+# jq
+
+: ${S3_CONFIG_URI?S3_CONFIG_URI should be set}
+
+Region=$(cat /home/ubuntu/region)
+
+aws s3 --region "$Region" cp "$S3_CONFIG_URI" s3-config

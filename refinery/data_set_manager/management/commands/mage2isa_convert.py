@@ -10,7 +10,7 @@ from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 
-from celery.task.sets import TaskSet, subtask
+from celery.task.sets import TaskSet
 
 from data_set_manager.models import Study
 from data_set_manager.tasks import convert_to_isatab

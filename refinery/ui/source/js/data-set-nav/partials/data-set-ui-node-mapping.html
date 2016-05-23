@@ -1,0 +1,162 @@
+<div ng-controller="FileMappingCtrl">
+  <div class="col-md-12" ng-if="currentNodeRelationship">
+    <div class="row">
+      <div class="col-md-4">
+        <span class="control-label" style="float: left; margin-top: 3px;">
+          {{currentNodeRelationship.name}} |
+          <b>{{ currentNodePairIndex + 1 }}</b> of
+          <b>{{currentNodeRelationship.node_pairs.length +
+            ( isPending() ? 1 : 0 )}}</b> relationships
+          <span ng-show="isPending()">(unsaved)</span>
+        </span>
+        <a href="#" id="help-mapping-statistics-button" style="height: 20px; width: 20px;">
+          <i class="fa fa-question-circle" style="font-size: 20px; margin-left:
+          5px; margin-right: 10px; position: relative; top: 5px;"></i>
+        </a>
+
+      </div>
+
+      <div class="col-md-8">
+        <!-- Prepared for future use! Do not remove. -->
+        <!--
+        <div style="float: right; display: block;">
+          <label style="dispaly: inline; float:left; margin-top: 3px; margin-right: 5px;">Mapping </label>
+          <div class="btn-group">
+            <button class="btn active">Manual</button>
+            <button class="btn">Automatic</button>
+          </div>
+          <a href="#" id="help-mapping-mode-button" style="height: 20px; width: 20px;">
+            <i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 0px; position: relative; top: 5px;"></i>
+          </a>
+        </div>
+
+        <div style="float: right; display: block;">
+          <label style="dispaly: inline; float:left; margin-top: 3px; margin-right: 5px;">Mode </label>
+          <div class="btn-group">
+            <button class="btn active">Edit</button>
+            <button class="btn">Overview</button>
+          </div>
+          <a href="#" id="help-mapping-view-button" style="height: 20px; width: 20px;">
+            <i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 10px; position: relative; top: 5px;"></i>
+          </a>
+        </div>
+        -->
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6">
+        <div>
+          <button
+            class="btn btn-default btn-xs outline"
+            ng-disabled="!hasNextMapping()"
+            ng-click="loadPreviousMapping()">
+            <i class="fa fa-backward"></i>
+          </button>
+          <button
+            class="btn btn-default btn-xs outline"
+            ng-disabled="currentNodePair == null"
+            ng-click="createMapping()">
+            New
+          </button>
+          <button
+            class="btn btn-default btn-xs outline"
+            ng-disabled="currentNodePair == null"
+            ng-click="deleteMapping()">
+            Delete Pair
+          </button>
+          <button
+            class="btn btn-default btn-xs outline"
+            ng-disabled="currentNodePair == null"
+            ng-click="deleteAllMappings()">
+            Delete All Pairs
+          </button>
+          <button
+            class="btn btn-default btn-xs outline"
+            ng-disabled="!hasNextMapping()"
+            ng-click="loadNextMapping()">
+            <i class="fa fa-forward"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <p>
+      </p>
+    </div>
+
+    <div
+      diff-attribute-list
+      set-a="nodeDropzones[0]"
+      set-b="nodeDropzones[1]">
+
+    </div>
+
+    <div class="row" ng-if="currentWorkflow">
+      <div class="col-md-12" style="border-top: 1px solid lightgray;
+      border-bottom: 1px solid lightgray; margin-bottom: 20px; padding: 10px;">
+      <table style="width: 100%;">
+      <tr>
+        <td style="text-align: right; width: 50%; padding-right: 5px;" >
+            <b>
+              <i
+                class="refinery-workflow-input-label-{{nodeDropzones[0].color}}">
+                {{currentWorkflow.input_relationships[0].set1}}
+              </i>
+            </b>
+          <br>
+            <small>
+            <span ng-if="!nodeDropzones[0].attributes">
+              Grab <i class="fa fa-bars"></i> in table below to drag file on
+              dropzone to <b>add</b> to the assignment.
+            </span>
+            <span ng-if="nodeDropzones[0].attributes">
+              Grab <i class="fa fa-bars"></i> in table below to drag file on
+              dropzone to <b>update</b> the assignment.
+            </span>
+            </small>
+        </td>
+        <td>
+          <div
+            node-dropzone-index="0"
+            class="refinery-dnd-dropzone
+            refinery-workflow-input-{{nodeDropzones[0].color}}"
+            node-droppable droppable="true">
+          </div>
+        </td>
+
+        <td ng-if="currentWorkflow && currentWorkflow.input_relationships[0].set2 != null">
+          <div
+            node-dropzone-index="1"
+            class="refinery-dnd-dropzone refinery-workflow-input-{{nodeDropzones[1].color}}"
+            node-droppable droppable="true">
+
+          </div>
+        </td>
+        <td style="text-align: left; width: 50%; padding-left: 5px;" >
+          <b>
+            <i
+              class="refinery-workflow-input-label-{{nodeDropzones[1].color}}">
+              {{currentWorkflow.input_relationships[0].set2}}
+            </i>
+          </b>
+          <br>
+          <small>
+          <span ng-if="!nodeDropzones[1].attributes">
+              Grab <i class="fa fa-bars"></i> in table below to drag file on
+            dropzone to <b>add</b> to the assignment.
+          </span>
+          <span ng-if="nodeDropzones[1].attributes">
+              Grab <i class="fa fa-bars"></i> in table below to drag file on
+            dropzone to <b>update</b> the assignment.
+          </span>
+          </small>
+        </td>
+      </tr>
+      </table>
+      </div>
+    </div>
+
+  </div>
+</div>

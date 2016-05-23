@@ -1,7 +1,7 @@
 {
   "ACCOUNT_ACTIVATION_DAYS": 7,
   "ADMINS": [
-    ["Refinery Admin", "admin@example.org"]
+    ["Refinery Admin", "<%= @admin || "admin@example.org" %>"]
   ],
   "ALLOWED_HOSTS": ["localhost", "127.0.0.1", "192.168.50.50"],
   "AUTH_LDAP_BASE_DN": "OU=Domain Users,DC=Domain",
@@ -20,28 +20,31 @@
   "DATABASES": {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "HOST": "",
+        "HOST": "<%= @rds_host %>",
         "NAME": "refinery",
-        "PASSWORD": "",
-        "PORT": "",
-        "USER": "<%= @app_user %>"
+        "PASSWORD": "<%= @rds_role_password %>",
+        "PORT": "<%= @rds_port %>",
+        "USER": "<%= @rds_role || "vagrant" %>"
     }
   },
-  "DEFAULT_FROM_EMAIL": "webmaster@localhost",
-  "EMAIL_HOST": "localhost",
+  "DEFAULT_FROM_EMAIL": "<%= @default_from_email || "webmaster@localhost" %>",
+  "EMAIL_HOST": "<%= @email_host || "localhost" %>",
   "EMAIL_PORT": 25,
+  "EMAIL_HOST_USER": "<%= @email_host_user %>",
+  "EMAIL_HOST_PASSWORD": "<%= @email_host_password %>",
+  "EMAIL_USE_TLS": <%= @email_use_tls || "false" %>,
   "EMAIL_SUBJECT_PREFIX": "[Refinery] ",
   "INTERVAL_BETWEEN_CHECKS": {
     "CELERY": 10.0,
     "GALAXY": 10.0,
     "SOLR": 10.0
   },
-  "ISA_TAB_DIR": "/vagrant/isa-tab",
-  "JAVA_ENTITY_EXPANSION_LIMIT": 100000,
+  "ISA_TAB_DIR": "<%= @isa_tab_dir %>",
+  "JAVA_ENTITY_EXPANSION_LIMIT": 1000000,
   "LANGUAGE_CODE": "en-us",
   "LIBS_DIR": "/opt",
   "LOG_LEVEL": "DEBUG",
-  "MEDIA_ROOT": "",
+  "MEDIA_ROOT": "<%= @media_root %>",
   "MEDIA_URL": "/media/",
   "NEO4J": {
     "BASE_URL": "http://localhost:7474",
@@ -94,10 +97,11 @@
   },
   "REFINERY_BANNER": "",
   "REFINERY_BANNER_ANONYMOUS_ONLY": false,
-  "REFINERY_DATA_IMPORT_DIR": "/vagrant/import",
+  "REFINERY_DATA_IMPORT_DIR": "<%= @import_dir %>",
   "REFINERY_EXTERNAL_AUTH": false,
   "REFINERY_EXTERNAL_AUTH_MESSAGE": "",
   "REFINERY_FILE_SOURCE_MAP": {},
+  "REFINERY_GALAXY_ANALYSIS_CLEANUP": "on_success",
   "REFINERY_GOOGLE_ANALYTICS_ID": "",
   "REFINERY_INNER_NAVBAR_HEIGHT": 20,
   "REFINERY_MAIN_LOGO": "",
@@ -105,11 +109,16 @@
   "REFINERY_REPOSITORY_MODE": false,
   "REFINERY_SOLR_BASE_URL": "http://localhost:8983/solr/",
   "REFINERY_SOLR_SPACE_DYNAMIC_FIELDS": "_",
+  "REFINERY_URL_SCHEME": "http",
   "REFINERY_WELCOME_EMAIL_MESSAGE": "Please fill out your user profile",
   "REFINERY_WELCOME_EMAIL_SUBJECT": "Welcome to Refinery",
   "REGISTRATION_OPEN": true,
   "SECRET_KEY": "SECRET",
-  "SERVER_EMAIL": "root@localhost",
+  "SERVER_EMAIL": "<%= @server_email || "root@localhost" %>",
+  "SOLR_SYNONYMS": false,
+  "SOLR_CUSTOM_SYNONYMS_FILE" :
+  "<%= @solr_custom_synonyms_file %>",
+  "SOLR_LIB_DIR": "<%= @solr_lib_dir %>",
   "STATIC_ROOT": "",
   "STATIC_URL": "/static/",
   "TIME_ZONE": "America/New_York",

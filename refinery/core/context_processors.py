@@ -7,12 +7,10 @@ Created on Aug 23, 2012
 # a context processor to pass settings variables to views by default
 # from: http://stackoverflow.com/q/433162
 
-import json
 import logging
 
 from django.conf import settings
 from django.contrib.sites.models import Site
-from django.core import serializers
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +26,7 @@ def extra_context(context):
     return {
         "ADMINS": settings.ADMINS[0][1],
         "CURRENT_COMMIT": settings.CURRENT_COMMIT,
+        "DEBUG": settings.DEBUG,
         "REFINERY_CSS": settings.REFINERY_CSS,
         "REFINERY_MAIN_LOGO": settings.REFINERY_MAIN_LOGO,
         "REFINERY_INNER_NAVBAR_HEIGHT": settings.REFINERY_INNER_NAVBAR_HEIGHT,
@@ -47,4 +46,5 @@ def extra_context(context):
         "REFINERY_EXTERNAL_AUTH": settings.REFINERY_EXTERNAL_AUTH,
         "REFINERY_EXTERNAL_AUTH_MESSAGE":
             settings.REFINERY_EXTERNAL_AUTH_MESSAGE,
+        "SOLR_SYNONYM_SEARCH": settings.SOLR_SYNONYMS
     }

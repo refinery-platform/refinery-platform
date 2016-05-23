@@ -1,10 +1,15 @@
+'use strict';
+
 angular
   .module('refineryApp')
   .constant('settings', {
-    appRoot: document.location.protocol + '//' + document.location.host,
+    appRoot: '',
     authThrottling: 60000,
     dashboard: {
       preview: {
+        defaultLengthAbstract: 256,
+        defaultLengthDescription: 384,
+        maxAnalyses: 3,
         maxBadges: 20
       },
       analysesSorting: [
@@ -51,6 +56,7 @@ angular
     debounceWindowResize: 250,
     neo4jApi: '/neo4j',
     refineryApi: '/api/v1',
+    refineryApiV2: '/api/v2',
     solrApi: '/solr',
     treemap: {
       singleRequestLimit: 200

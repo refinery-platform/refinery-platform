@@ -4,18 +4,16 @@ Created on May 4, 2012
 @author: nils
 '''
 
-import datetime
+from datetime import timedelta
 import json
 import logging
 import re
-import os
 from sets import Set
 import uuid
-from celery.task import task
-from subprocess import check_output
 
 from django.conf import settings
-from django.conf.urls.defaults import url
+from django.conf.urls import url
+from django.utils import timezone
 from django.contrib.auth.models import User, Group
 from django.contrib.sites.models import get_current_site
 from django.contrib.contenttypes.models import ContentType
@@ -47,7 +45,7 @@ from data_set_manager.api import StudyResource, AssayResource, \
 from data_set_manager.models import Node, Study, Attribute
 from file_store.models import FileStoreItem
 from fadapa import Fadapa
-from core.utils import get_all_data_sets_ids, get_data_sets_annotations
+from core.utils import get_data_sets_annotations
 
 logger = logging.getLogger(__name__)
 signer = Signer()
@@ -110,9 +108,9 @@ class SharableResourceAPIInterface(object):
             # whatever internal filtering can be performed on other things,
             # like limiting the return amount.
             res_list = [
-                dataset for dataset in res_list
-                if not hasattr(dataset, param) or
-                str(getattr(dataset, param)) == get_params[param]
+                item for item in res_list
+                if not hasattr(item, param) or
+                str(getattr(item, param)) == get_params[param]
             ]
 
         return res_list
@@ -422,12 +420,14 @@ class UserProfileResource(ModelResource):
 
 
 class DataSetResource(ModelResource, SharableResourceAPIInterface):
+    id_regex = '[0-9]+'
     uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
     owner = fields.CharField(attribute='owner', null=True)
     is_shared = fields.BooleanField(attribute='is_shared', null=True)
+    file_size = fields.IntegerField(attribute='file_size')
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, DataSet)
@@ -521,6 +521,15 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
                 name='api_%s_get_studies' % (
                     self._meta.resource_name
                 )),
+            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/assays%s$' % (
+                    self._meta.resource_name,
+                    self.uuid_regex,
+                    trailing_slash()
+                ),
+                self.wrap_view('get_assays'),
+                name='api_%s_get_studies' % (
+                    self._meta.resource_name
+                )),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/analyses%s$' % (
                     self._meta.resource_name,
                     self.uuid_regex,
@@ -537,12 +546,37 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
                     self.uuid_regex,
                     trailing_slash()
                 ),
-                self.wrap_view('get_assays'),
+                self.wrap_view('get_study_assays'),
                 name='api_%s_get_assays' % (
                     self._meta.resource_name
                 )),
+            url(r'^(?P<resource_name>%s)/(?P<id>%s)%s$' % (
+                    self._meta.resource_name,
+                    self.id_regex,
+                    trailing_slash()
+                ),
+                self.wrap_view('get_by_db_id'),
+                name='api_%s_get_by_db_id' % (
+                    self._meta.resource_name)
+                ),
         ]
         return prepend_urls_list
+
+    def filter_by_group(self, request, obj_list):
+        if 'group' in request.GET:
+            try:
+                group = ExtendedGroup.objects.get(
+                    id=request.GET['group']
+                )
+            except Exception:
+                group = None
+
+            if group:
+                obj_list = list(get_objects_for_group(
+                    group, 'core.read_dataset'
+                ))
+
+        return obj_list
 
     def obj_get(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
@@ -553,20 +587,68 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
     def get_object_list(self, request):
         obj_list = SharableResourceAPIInterface.get_object_list(self, request)
+        obj_list = self.filter_by_group(request, obj_list)
         return obj_list
 
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
 
     def get_all_ids(self, request, **kwargs):
-        # See here why `get_all_data_sets_ids()` has to be wrapped in `list()`
-        # http://stackoverflow.com/q/12609604/981933
+        data_sets = get_objects_for_user(request.user, 'core.read_dataset')
         return self.create_response(
             request,
             {
-                'ids': [data_set['id'] for data_set in get_all_data_sets_ids()]
+                'ids': [data_set.id for data_set in data_sets]
             }
         )
+
+    def get_by_db_id(self, request, **kwargs):
+        return_obj = {}
+
+        try:
+            ds = DataSet.objects.get(id=kwargs['id'])
+        except DataSet.DoesNotExist:
+            return HttpNoContent()
+
+        groups = GroupObjectPermission.objects.filter(object_pk=ds.id)
+
+        is_public = False
+        for group in groups:
+            if group.group == ExtendedGroup.objects.public_group():
+                is_public = True
+
+        is_owner = request.user.has_perm(
+            'core.share_dataset', ds
+        )
+
+        try:
+            user_uuid = request.user.userprofile.uuid
+        except:
+            user_uuid = None
+
+        if ds and request.user.has_perm('core.read_dataset', ds):
+            return_obj['accession'] = ds.accession
+            return_obj['accession_source'] = ds.accession_source
+            return_obj['creation_date'] = ds.creation_date
+            return_obj['description'] = ds.description
+            return_obj['file_count'] = ds.file_count
+            return_obj['file_size'] = ds.file_size
+            return_obj['id'] = ds.id
+            return_obj['is_owner'] = is_owner
+            return_obj['is_shared'] = groups.count() > 0
+            return_obj['modification_date'] = ds.modification_date
+            return_obj['name'] = ds.name
+            return_obj['owner'] = user_uuid if is_owner else None
+            return_obj['public'] = is_public
+            return_obj['share_list'] = None
+            return_obj['slug'] = ds.slug
+            return_obj['summary'] = ds.summary
+            return_obj['title'] = ds.title
+            return_obj['uuid'] = ds.uuid
+        else:
+            return HttpForbidden()
+
+        return self.create_response(request, return_obj)
 
     def get_all_annotations(self, request, **kwargs):
         return self.create_response(request, get_data_sets_annotations())
@@ -594,6 +676,32 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             investigation_uuid=data_set.get_investigation().uuid
         )
 
+    def get_assays(self, request, **kwargs):
+        try:
+            data_set = DataSet.objects.get(uuid=kwargs['uuid'])
+            assays = data_set.get_assays()
+        except ObjectDoesNotExist:
+            return HttpGone()
+
+        # Unfortunately Tastypie doesn't allow `get_list` to run on a list of
+        # identifiers.
+        return self.create_response(
+            request,
+            {
+                'meta': {
+                    'total_count': len(assays)
+                },
+                'objects': [
+                    {
+                        'id': assay.id,
+                        'uuid': assay.uuid,
+                        'technology': assay.technology,
+                        'measurement': assay.measurement
+                    } for assay in assays
+                ]
+            }
+        )
+
     def get_analyses(self, request, **kwargs):
         try:
             DataSet.objects.get(uuid=kwargs['uuid'])
@@ -605,7 +713,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             data_set__uuid=kwargs['uuid']
         )
 
-    def get_assays(self, request, **kwargs):
+    def get_study_assays(self, request, **kwargs):
         try:
             DataSet.objects.get(uuid=kwargs['uuid'])
             Study.objects.get(uuid=kwargs['study_uuid'])
@@ -625,6 +733,7 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
+    is_active = fields.BooleanField(attribute='is_active', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, Workflow)
@@ -635,8 +744,8 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
         detail_resource_name = 'workflow'
         resource_name = 'workflow'
         detail_uri_name = 'uuid'
-        # allowed_methods = ['get']
-        fields = ['name', 'uuid', 'summary']
+        allowed_methods = ['get', 'patch']
+        fields = ['name', 'uuid', 'summary', 'is_active']
         # authentication = SessionAuthentication()
         # authorization = GuardianAuthorization()
 
@@ -706,7 +815,7 @@ class WorkflowInputRelationshipsResource(ModelResource):
 
 
 class AnalysisResource(ModelResource):
-    data_set = fields.ToOneField(DataSetResource, 'data_set', use_in='detail')
+    data_set = fields.ToOneField(DataSetResource, 'data_set', use_in='all')
     uuid = fields.CharField(attribute='uuid', use_in='all')
     name = fields.CharField(attribute='name', use_in='all')
     data_set__uuid = fields.CharField(attribute='data_set__uuid', use_in='all')
@@ -717,22 +826,22 @@ class AnalysisResource(ModelResource):
         use_in='all'
     )
     workflow_steps_num = fields.IntegerField(
-        attribute='workflow_steps_num', blank=True, null=True, use_in='detail')
+        attribute='workflow_steps_num', blank=True, null=True, use_in='all')
     workflow_copy = fields.CharField(
-        attribute='workflow_copy', blank=True, null=True, use_in='detail')
+        attribute='workflow_copy', blank=True, null=True, use_in='all')
     history_id = fields.CharField(
-        attribute='history_id', blank=True, null=True, use_in='detail')
+        attribute='history_id', blank=True, null=True, use_in='all')
     workflow_galaxy_id = fields.CharField(
-        attribute='workflow_galaxy_id', blank=True, null=True, use_in='detail')
+        attribute='workflow_galaxy_id', blank=True, null=True, use_in='all')
     library_id = fields.CharField(
-        attribute='library_id', blank=True, null=True, use_in='detail')
+        attribute='library_id', blank=True, null=True, use_in='all')
     time_start = fields.DateTimeField(
-        attribute='time_start', blank=True, null=True, use_in='detail')
+        attribute='time_start', blank=True, null=True, use_in='all')
     time_end = fields.DateTimeField(
-        attribute='time_end', blank=True, null=True, use_in='detail')
+        attribute='time_end', blank=True, null=True, use_in='all')
     status = fields.CharField(
         attribute='status', default=Analysis.INITIALIZED_STATUS, blank=True,
-        null=True, use_in='detail')
+        null=True, use_in='all')
 
     class Meta:
         queryset = Analysis.objects.all()
@@ -749,6 +858,7 @@ class AnalysisResource(ModelResource):
             'time_start', 'uuid', 'workflow_galaxy_id', 'workflow_steps_num',
             'workflow_copy', 'owner', 'is_owner'
         ]
+
         filtering = {
             'data_set': ALL_WITH_RELATIONS,
             'workflow_steps_num': ALL_WITH_RELATIONS,
@@ -773,6 +883,7 @@ class AnalysisResource(ModelResource):
 
         else:
             bundle.data['owner'] = None
+
         return bundle
 
     def get_object_list(self, request, **kwargs):
@@ -858,7 +969,7 @@ class NodeResource(ModelResource):
             bundle.data['file_url'] = None
             bundle.data['file_import_status'] = None
         else:
-            bundle.data['file_url'] = file_item.get_full_url()
+            bundle.data['file_url'] = file_item.get_datafile_url()
             bundle.data['file_import_status'] = file_item.get_import_status()
         return bundle
 
@@ -904,7 +1015,7 @@ class NodeSetResource(ModelResource):
     solr_query_components = fields.CharField(
         attribute='solr_query_components', null=True)
     node_count = fields.IntegerField(attribute='node_count', null=True)
-    is_implicit = fields.BooleanField(attribute='is_implicit')
+    is_implicit = fields.BooleanField(attribute='is_implicit', default=False)
     study = fields.ToOneField(StudyResource, 'study')
     assay = fields.ToOneField(AssayResource, 'assay')
 
@@ -984,7 +1095,7 @@ class NodeSetListResource(ModelResource):
     study = fields.ToOneField(StudyResource, 'study')
     assay = fields.ToOneField(AssayResource, 'assay')
     node_count = fields.IntegerField(attribute='node_count', readonly=True)
-    is_implicit = fields.BooleanField(attribute='is_implicit')
+    is_implicit = fields.BooleanField(attribute='is_implicit', default=False)
 
     class Meta:
         # create node count attribute on the fly - node_count field has to be
@@ -1369,7 +1480,7 @@ class GroupManagementResource(Resource):
 
             return self.process_get_list(request, group_obj_list, **kwargs)
         elif request.method == 'POST':
-            data = json.loads(request.raw_post_data)
+            data = json.loads(request.body)
             new_group = ExtendedGroup(name=data['name'])
             new_group.save()
             new_group.group_ptr.user_set.add(user)
@@ -1399,7 +1510,7 @@ class GroupManagementResource(Resource):
             if not self.user_authorized(user, group):
                 return HttpUnauthorized()
 
-            data = json.loads(request.raw_post_data)
+            data = json.loads(request.body)
             new_member_list = data['member_list']
 
             # Remove old members before updating.
@@ -1419,7 +1530,7 @@ class GroupManagementResource(Resource):
             if not self.user_authorized(user, group):
                 return HttpUnauthorized()
 
-            data = json.loads(request.raw_post_data)
+            data = json.loads(request.body)
             new_member = data['user_id']
             group.user_set.add(new_member)
 
@@ -1584,7 +1695,6 @@ class UserAuthenticationResource(Resource):
         user = request.user
         is_logged_in = user.is_authenticated()
         is_admin = user.is_staff
-        id = user.id
         username = user.username if is_logged_in else 'AnonymousUser'
         auth_obj = UserAuthentication(
             is_logged_in,
@@ -1604,6 +1714,7 @@ class InvitationResource(ModelResource):
         queryset = Invitation.objects.all()
         resource_name = 'invitations'
         detail_uri_name = 'token_uuid'
+        allowed_methods = ['get', 'post', 'put', 'delete']
         # authentication = SessionAuthentication()
         authorization = Authorization()
         filtering = {
@@ -1627,7 +1738,9 @@ class InvitationResource(ModelResource):
         if token.expires is None:
             return True
 
-        return (datetime.datetime.now() - token.expires).total_seconds() >= 0
+        return (
+            timezone.now() - token.expires
+        ).total_seconds() >= 0
 
     def update_db(self):
         for i in Invitation.objects.all():
@@ -1682,7 +1795,7 @@ class InvitationResource(ModelResource):
     def obj_create(self, bundle, **kwargs):
         self.update_db()
         request = bundle.request
-        data = json.loads(request.raw_post_data)
+        data = json.loads(request.body)
         user = request.user
         group = self.get_group(int(data['group_id']))
 
@@ -1690,8 +1803,8 @@ class InvitationResource(ModelResource):
             raise ImmediateHttpResponse(HttpUnauthorized())
 
         inv = Invitation(token_uuid=uuid.uuid1(), group_id=group.id)
-        now = datetime.datetime.now()
-        token_duration = datetime.timedelta(days=settings.TOKEN_DURATION)
+        now = timezone.now()
+        token_duration = timedelta(days=settings.TOKEN_DURATION)
         inv.expires = now + token_duration
         inv.sender = user
         inv.recipient_email = data['email']
@@ -1709,11 +1822,11 @@ class InvitationResource(ModelResource):
             raise ImmediateHttpResponse(HttpNotFound('Not found or expired'))
 
         inv = inv_list[0]
-        now = datetime.datetime.now()
-        token_duration = datetime.timedelta(days=settings.TOKEN_DURATION)
+        now = timezone.now()
+        token_duration = timedelta(days=settings.TOKEN_DURATION)
         inv.expires = now + token_duration
         inv.save()
-        self.send_email(inv)
+        self.send_email(bundle.request, inv)
         return bundle
 
 
@@ -1810,7 +1923,7 @@ class ExtendedGroupResource(ModelResource):
 
     def obj_create(self, bundle, **kwargs):
         user = bundle.request.user
-        data = json.loads(bundle.request.raw_post_data)
+        data = json.loads(bundle.request.body)
         new_ext_group = ExtendedGroup(name=data['name'])
         new_ext_group.save()
         new_ext_group.user_set.add(user)
@@ -1853,7 +1966,7 @@ class ExtendedGroupResource(ModelResource):
             if not self.user_authorized(user, ext_group):
                 return HttpUnauthorized()
 
-            data = json.loads(request.raw_post_data)
+            data = json.loads(request.body)
             new_member_list = data['member_list']
 
             # Remove old members before updating.
@@ -1873,7 +1986,7 @@ class ExtendedGroupResource(ModelResource):
             if not self.user_authorized(user, ext_group):
                 return HttpUnauthorized()
 
-            data = json.loads(request.raw_post_data)
+            data = json.loads(request.body)
             new_member = data['user_id']
             ext_group.user_set.add(new_member)
 
@@ -1977,8 +2090,6 @@ class FastQCResource(Resource):
             return False
 
     def obj_get(self, bundle, **kwargs):
-        user = bundle.request.user
-
         analysis = Analysis.objects.get(uuid=kwargs['analysis_uuid'])
 
         if not analysis:

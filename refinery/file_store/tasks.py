@@ -2,15 +2,18 @@ import os
 import stat
 import logging
 import requests
-from urlparse import urlparse
 from tempfile import NamedTemporaryFile
+from urlparse import urlparse
+
+import celery
 from celery.task import task
 from django.core.files import File
-from file_store.models import FileStoreItem, get_temp_dir, file_path,\
-    FILE_STORE_BASE_DIR
+
+from file_store.models import (FileStoreItem, get_temp_dir, file_path,
+                               FILE_STORE_BASE_DIR)
 
 
-logger = logging.getLogger('file_store')
+logger = logging.getLogger(__name__)
 
 
 @task()
@@ -22,7 +25,7 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
     :type source: str.
     :param sharename: Group share name.
     :type sharename: str.
-    :param filetype: File type (must be one of the types declared in models.py)
+    :param filetype: File extension
     :type filetype: str.
     :param permanent: Flag indicating whether to add this instance to the cache
         or not.
@@ -31,6 +34,7 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
         doesn't provide file size in the HTTP headers.
     :type file_size: int.
     :returns: FileStoreItem UUID if success, None if failure.
+
     """
     # TODO: move to file_store/models.py since it's never used as a task
     logger.info("Creating FileStoreItem using source '%s'", source)
@@ -50,7 +54,7 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
 
 
 @task(track_started=True)
-def import_file(uuid, permanent=False, refresh=False, file_size=1):
+def import_file(uuid, permanent=False, refresh=False, file_size=0):
     """Download or copy file specified by UUID.
 
     :param permanent: Flag for adding the FileStoreItem to cache.
@@ -79,6 +83,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         if refresh:
             item.delete_datafile()
         else:
+            logger.info("File already exists: '%s'", item.get_absolute_path())
             return item
 
     # if source is an absolute file system path then copy,
@@ -120,26 +125,34 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         tmpfile = NamedTemporaryFile(dir=get_temp_dir(), delete=False)
 
         # provide a default value in case Content-Length is missing
-        remotefilesize = int(
+        remote_file_size = int(
             response.headers.get('Content-Length', file_size)
         )
         logger.debug("Downloading from '%s'", item.source)
         # download and save the file
-        localfilesize = 0
-        blocksize = 1 * 1024 * 1024  # 1MB
-        for buf in iter(lambda: response.raw.read(blocksize), ''):
-            localfilesize += len(buf)
-            tmpfile.write(buf)
+        local_file_size = 0
+        block_size = 10 * 1024 * 1024  # 10MB
+        for buf in iter(lambda: response.raw.read(block_size), ''):
+            local_file_size += len(buf)
+            try:
+                tmpfile.write(buf)
+            except IOError as exc:  # e.g., [Errno 28] No space left on device
+                logger.error("Error downloading from '%s': %s",
+                             item.source, exc)
+                import_file.update_state(state=celery.states.FAILURE)
+                return
             # check if we have a sane value for file size
-            if remotefilesize > 0:
-                percent_done = localfilesize * 100. / remotefilesize
+            if remote_file_size > 0:
+                percent_done = local_file_size * 100. / remote_file_size
             else:
                 percent_done = 0
             import_file.update_state(
                 state="PROGRESS",
-                meta={"percent_done": "%3.2f%%" % percent_done,
-                      'current': localfilesize, 'total': remotefilesize}
-                )
+                meta={
+                    "percent_done": "{:.0f}".format(percent_done),
+                    "current": local_file_size,
+                    "total": remote_file_size
+                })
         # cleanup
         # TODO: delete temp file if download failed
         tmpfile.flush()

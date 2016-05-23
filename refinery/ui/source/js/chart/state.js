@@ -1,3 +1,5 @@
+'use strict';
+
 angular
   .module('refineryChart')
   .config([
@@ -5,8 +7,7 @@ angular
     function (refineryStateProvider) {
       refineryStateProvider
         .state(
-          'none',
-          {
+          'none', {
             url: '/',
             templateUrl: '/static/partials/chart/partials/charts-main.html',
             controller: 'refineryChartCtrl as chart'
@@ -14,8 +15,7 @@ angular
           '/fastqc_viewer/'
         )
         .state(
-          'default',
-          {
+          'default', {
             url: '/{uuid}/',
             templateUrl: '/static/partials/chart/partials/charts-main.html',
             controller: 'refineryChartCtrl as chart'
@@ -23,14 +23,13 @@ angular
           '/fastqc_viewer/'
         )
         .state(
-          'full',
-          {
+          'full', {
             url: '/{uuid}/{mode}/',
             templateUrl: '/static/partials/chart/partials/charts-main.html',
             controller: 'refineryChartCtrl as chart'
           },
           '/fastqc_viewer/'
-        );
+      );
     }
   ]
 );

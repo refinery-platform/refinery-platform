@@ -1,0 +1,11 @@
+-   repo: git://github.com/pre-commit/pre-commit-hooks
+    sha: v0.4.2
+    hooks:
+    -   id: flake8
+        exclude: (migrations|ui)
+
+-   repo: git://github.com/refinery-platform/pre-commit-eslint
+    sha: 941761bad78622b337eda962d011d95d271a1da1
+    hooks:
+    -   id: eslint
+        files: ui/source/js/.+\.js

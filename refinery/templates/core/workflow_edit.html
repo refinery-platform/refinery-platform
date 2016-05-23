@@ -53,6 +53,15 @@
 			{% endif %}
 			<p>{{form.slug}}</p>
 
+            <div class="refinery-subheader">
+				<h4>Workflow Visibility (visible if checked)</h4>
+			</div>
+			{% if form.is_active.errors %}
+				<p class="errors">{{ form.is_active.errors.as_text }}</p>
+			{% endif %}
+            <input type="checkbox" name="is_active" value={{form.is_active}}
+            <br>
+            <br>
 			<div class="refinery-header">
 				<span class="refinery-header-left">
 					<h3>Workflow Engine</h3>

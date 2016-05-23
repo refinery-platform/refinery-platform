@@ -1,3 +1,5 @@
+'use strict';
+
 angular
   .module('containsDomElement', [])
   .service('containsDomElement', [function () {
@@ -19,7 +21,9 @@ angular
         }
         // Remove special search attribute
         delete searchEl.domSearchTarget;
-      } catch (e) {}
+      } catch (e) {
+        return false;
+      }
 
       return found;
     };

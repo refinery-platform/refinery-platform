@@ -687,7 +687,7 @@ class TDFVariableTile(TDFTile):
 
         # read track count: this is not stored because the information is
         # available in the TDF file header
-        track_count = tile_stream.read_integer()
+        tile_stream.read_integer()
         self.data = []
         for track in range(len(track_names)):
             self.data.append([])
@@ -717,7 +717,7 @@ class TDFBedTile(TDFTile):
 
         # read track count: this is not stored because the information is
         # available in the TDF file header
-        track_count = tile_stream.read_integer()
+        tile_stream.read_integer()
         self.data = []
         for track in range(len(track_names)):
             self.data.append([])

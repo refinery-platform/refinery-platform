@@ -1,4 +1,6 @@
-function FastQCDataService($resource, settings) {
+'use strict';
+
+function FastQCDataService ($resource, settings) {
   return $resource(
     settings.appRoot + settings.refineryApi + '/fastqc/:uuid/',
     {

@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# Name and password of PostgreSQL role to create.
+USER=${RDS_ROLE:-refinery}
+PASSWORD=${PASSWORD-password}
+
+HOST=$(jq -r .Address /home/ubuntu/rds)
+PORT=$(jq -r .Port /home/ubuntu/rds)
+
+: ${RDS_SUPERUSER_PASSWORD?RDS_SUPERUSER_PASSWORD should be set}
+
+psql -c '
+
+DO                
+$body$
+BEGIN
+   IF NOT EXISTS (
+      SELECT *
+      FROM   pg_catalog.pg_roles
+      WHERE  rolname = '"'$USER'"' )
+   THEN
+      CREATE ROLE '"$USER"' CREATEDB LOGIN PASSWORD '"'$PASSWORD'"';
+      GRANT '"$USER"' to root;
+   END IF;
+END
+$body$;
+
+' "postgresql://root:${RDS_SUPERUSER_PASSWORD}@${HOST}:${PORT}/postgres"
+

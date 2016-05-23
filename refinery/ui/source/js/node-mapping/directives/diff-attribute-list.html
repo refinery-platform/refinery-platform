@@ -1,0 +1,61 @@
+<table class="table table-striped table-condensed">
+  <thead>
+    <tr ng-if="diffAttributeList.setA.attributes.length > 0 && !diffAttributeList.setB.attributes">
+      <th></th>
+      <th
+        colspan=2
+        class="refinery-workflow-input-label-{{ diffAttributeList.setA.color }}">
+        <b>{{ diffAttributeList.setA['name'] }}</b>
+      </th>
+    </tr>
+    <tr ng-if="diffAttributeList.setB.attributes.length > 0 && !diffAttributeList.setA.attributes">
+      <th></th>
+      <th
+        colspan=2
+        class="refinery-workflow-input-label-{{ diffAttributeList.setB.color }}">
+        <b>{{ diffAttributeList.setB['name'] }}</b>
+      </th>
+    </tr>
+    <tr ng-if="diffAttributeList.diffAttributes.length > 0">
+      <th></th>
+      <th class="refinery-workflow-input-label-{{ diffAttributeList.setA.color }}">
+        <b>{{ diffAttributeList.setA['name'] }}</b>
+      </th>
+      <th class="refinery-workflow-input-label-{{ diffAttributeList.setB.color }}">
+        <b>{{ diffAttributeList.setB['name'] }}</b>
+      </th>
+    </tr>
+    <tr ng-if="diffAttributeList.diffAttributes.length == 0 &&
+               commonAttributes.length > 0 &&
+               diffAttributeList.setA.attributes.length > 0 &&
+               diffAttributeList.setB.attributes.length > 0">
+      <th></th>
+      <th colspan=2>
+        <b class="refinery-workflow-input-label-{{ diffAttributeList.setA.color }}">
+          {{ diffAttributeList.setA['name'] }}
+        </b>
+        &amp;
+        <b class="refinery-workflow-input-label-{{ diffAttributeList.setB.color }}">
+          {{ diffAttributeList.setB['name'] }}
+        </b> (identical files)
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr
+    ng-if="diffAttributeList.diffAttributes.length > 0"
+    ng-repeat="attribute in diffAttributeList.diffAttributes">
+    <td>{{ attribute.name }}</td>
+    <td><b>{{ attribute.valueSetA }}</b></td>
+    <td><b>{{ attribute.valueSetB }}</b></td>
+  </tr>
+  <tr ng-if="diffAttributeList.commonAttributes.length > 0">
+    <td>Shared</td>
+    <td colspan="2">
+      <span ng-repeat="attribute in diffAttributeList.commonAttributes">
+        {{ attribute.name }}: <b>{{ attribute.value }}</b>,&nbsp;
+      </span>
+    </td>
+  </tr>
+  </tbody>
+</table>

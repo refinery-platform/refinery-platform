@@ -237,10 +237,11 @@ class SingleFileColumnParser:
                 # create attribute as characteristic and attach to sample node
                 # if the sample node was newly created
                 if is_sample_new:
-                    attribute = Attribute.objects.create(
+                    Attribute.objects.create(
                         node=sample_node, type=Attribute.CHARACTERISTICS,
                         subtype=self.headers[column_index].strip().lower(),
-                        value=row[column_index].strip())
+                        value=row[column_index].strip()
+                    )
         # kick off data file importing tasks
         for uuid in data_files:
             import_file.delay(uuid)

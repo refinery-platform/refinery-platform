@@ -3,7 +3,7 @@ import sys
 import subprocess
 import py2neo
 import urlparse
-import simplejson
+import json
 from optparse import make_option
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -176,7 +176,7 @@ class Command(BaseCommand):
 
         if options['batch_import_file']:
             with open(options['batch_import_file']) as json_file:
-                ontologies = simplejson.load(json_file)['ontologies']
+                ontologies = json.load(json_file)['ontologies']
         else:
             ontologies = [{
                 "o": options['ontology_file'],

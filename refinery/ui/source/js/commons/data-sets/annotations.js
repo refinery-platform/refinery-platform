@@ -1,3 +1,5 @@
+'use strict';
+
 function DataSetAnnotationsFactory ($q, _, dataSetAnnotationService) {
   /**
    * Stores the dataset annotations.
@@ -66,7 +68,7 @@ function DataSetAnnotationsFactory ($q, _, dataSetAnnotationService) {
 
     for (var i = uris.length; i--;) {
       _annotations[uris[i]].precision = _annotations[uris[i]].total /
-        _dataSets.length;
+      _dataSets.length;
       _annotations[uris[i]].precisionTotal = _annotations[uris[i]].precision;
       _annotations[uris[i]].recall = 1;
     }
@@ -91,11 +93,10 @@ function DataSetAnnotationsFactory ($q, _, dataSetAnnotationService) {
     DataSetAnnotation.prototype,
     'total', {
       enumerable: true,
-      configurable: false,
       get: function () {
         return Object.keys(this.dataSets).length;
       }
-  });
+    });
 
   /**
    * Link dataset to annotation term.
@@ -193,8 +194,7 @@ function DataSetAnnotationsFactory ($q, _, dataSetAnnotationService) {
     if (!_loading) {
       _loading = $q.defer();
 
-      dataSetAnnotationService
-        .query().$promise.then(function (annotations) {
+      dataSetAnnotationService.query().$promise.then(function (annotations) {
         var dataSetIds = Object.keys(annotations);
 
         for (var i = dataSetIds.length; i--;) {
@@ -231,8 +231,7 @@ function DataSetAnnotationsFactory ($q, _, dataSetAnnotationService) {
 
     for (var i = uris.length; i--;) {
       _annotations[uris[i]].precision = annotations[uris[i]] / numDataSets;
-      _annotations[uris[i]].recall =
-        annotations[uris[i]] / _annotations[uris[i]].total;
+      _annotations[uris[i]].recall = annotations[uris[i]] / _annotations[uris[i]].total;
     }
   };
 

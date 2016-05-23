@@ -1,6 +1,6 @@
-describe('RefineryApp.module: unit tests', function () {
-  'use strict';
+'use strict';
 
+describe('RefineryApp.module: unit tests', function () {
   var module;
 
   beforeEach(function () {
@@ -8,19 +8,16 @@ describe('RefineryApp.module: unit tests', function () {
   });
 
   describe('Module', function () {
-
     it('should be registered', function () {
       expect(!!module).toEqual(true);
     });
-
   });
 
   describe('Dependencies:', function () {
-
-    var deps,
-        hasModule = function (m) {
-          return deps.indexOf(m) >= 0;
-        };
+    var deps;
+    var hasModule = function (m) {
+      return deps.indexOf(m) >= 0;
+    };
 
     beforeEach(function () {
       deps = module.value('refineryApp').requires;
@@ -50,6 +47,14 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('colors')).toEqual(true);
     });
 
+    it('should have "focusOn" as a dependency', function () {
+      expect(hasModule('focusOn')).toEqual(true);
+    });
+
+    it('should have "replaceWhiteSpaceWithHyphen" as a dependency', function () {
+      expect(hasModule('replaceWhiteSpaceWithHyphen')).toEqual(true);
+    });
+
     it('should have "refineryRouter" as a dependency', function () {
       expect(hasModule('refineryRouter')).toEqual(true);
     });
@@ -66,16 +71,12 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('refineryAnalysisLaunch')).toEqual(true);
     });
 
-    it('should have "refinerySolr" as a dependency', function () {
-      expect(hasModule('refinerySolr')).toEqual(true);
-    });
-
     it('should have "refineryNodeRelationship" as a dependency', function () {
       expect(hasModule('refineryNodeRelationship')).toEqual(true);
     });
 
-    it('should have "refineryIgv" as a dependency', function () {
-      expect(hasModule('refineryIgv')).toEqual(true);
+    it('should have "refineryDataSetExplorer" as a dependency', function () {
+      expect(hasModule('refineryDataSetExplorer')).toEqual(true);
     });
 
     it('should have "refineryStatistics" as a dependency', function () {
@@ -114,10 +115,13 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('refineryChart')).toEqual(true);
     });
 
+    it('should have "refineryFileBrowser" as a dependency', function () {
+      expect(hasModule('refineryFileBrowser')).toEqual(true);
+    });
+
     // Just a negative control to make sure that the test actually works.
     it('should NOT have "notExistingModule" as a dependency', function () {
       expect(hasModule('notExistingModule')).toEqual(false);
     });
-
   });
 });

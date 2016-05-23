@@ -1,25 +1,22 @@
-angular.module('refineryAnalysisMonitor')
-  .directive("rpAnalysisMonitorRunningTabIcon", rpAnalysisMonitorRunningTabIcon);
+'use strict';
 
-function rpAnalysisMonitorRunningTabIcon() {
-  "use strict";
-
+function rpAnalysisMonitorRunningTabIcon () {
   return {
     restrict: 'A',
     templateUrl: '/static/partials/analysis-monitor/partials/running-tab-icon.html',
     controller: 'AnalysisMonitorCtrl',
     controllerAs: 'AMCtrl',
     bindToController: {
-      launchAnalysisFlag: '='
+      launchAnalysisFlag: '=?'
     },
-    link: function (scope, element, attr) {
-      //if an analysis is launched, then the running list needs to be updated.
-     scope.AMCtrl.updateAnalysesRunningList();
-      scope.$on("rf/launchAnalysis", function (e) {
+    link: function (scope) {
+      // if an analysis is launched, then the running list needs to be updated.
+      scope.AMCtrl.updateAnalysesRunningList();
+      scope.$on('rf/launchAnalysis', function () {
         scope.AMCtrl.launchAnalysisFlag = true;
       });
-      
-      scope.$on("rf/cancelAnalysis", function(e){
+
+      scope.$on('rf/cancelAnalysis', function () {
         scope.AMCtrl.cancelTimerRunningList();
         scope.AMCtrl.updateAnalysesRunningList();
       });
@@ -27,4 +24,8 @@ function rpAnalysisMonitorRunningTabIcon() {
   };
 }
 
-
+angular
+  .module('refineryAnalysisMonitor')
+  .directive('rpAnalysisMonitorRunningTabIcon', [
+    rpAnalysisMonitorRunningTabIcon
+  ]);

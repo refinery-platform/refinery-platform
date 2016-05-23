@@ -1,0 +1,24 @@
+{{ FBCtrl.selectNodes.length }} of {{ FBCtrl.nodeCount }} files selected.
+   <a
+     popover-placement="bottom"
+     uib-popover=" The number of files currently selected. Use facet
+     attribute filters and individual file selection check boxes to modify
+     the current selection."
+     popover-title="Current File Selection"
+     popover-trigger="focus"
+     tabindex="0">
+       <i class="fa fa-question-circle fa-lg"></i>
+    </a>
+
+<div ng-if="FBCtrl.isOwner">
+  <i class="fa fa-wrench fa-border"
+   rp-assay-files-util-modal ng-click="open()">
+  </i>
+</div>
+<div id="grid1"
+  ui-grid="FBCtrl.gridOptions"
+  ui-grid-selection
+  ui-grid-infinite-scroll
+  ui-grid-resize-columns
+  class="grid">
+</div>

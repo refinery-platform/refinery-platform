@@ -4,7 +4,8 @@ Created on Feb 20, 2012
 @author: nils
 '''
 
-from django.conf.urls.defaults import patterns, url
+from django.conf.urls import patterns, url
+
 
 urlpatterns = patterns(
     'core.views',
@@ -43,6 +44,9 @@ urlpatterns = patterns(
     url(r'^data_sets/(?P<data_set_uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
         'data_set', name="data_set"),
+    url(r'^data_sets2/(?P<data_set_uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
+        'data_set2', name="data_set2"),
     url(r'^data_sets/(?P<data_set_uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/'
         r'analysis/(?P<analysis_uuid>'
@@ -75,6 +79,6 @@ urlpatterns = patterns(
         name="pubmed_search"),
     url(r'^pubmed/summary/(?P<id>.+)/', 'pubmed_summary',
         name="pubmed_summary"),
-    url(r'^neo4j/dataset-annotations/$', 'neo4j_dataset_annotations',
+    url(r'^neo4j/annotations/$', 'neo4j_dataset_annotations',
         name="neo4j_dataset_annotations")
 )
