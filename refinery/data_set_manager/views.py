@@ -646,13 +646,40 @@ class AssaysAttributes(APIView):
                     'Requires attribute id or solr_field name.',
                     status=status.HTTP_400_BAD_REQUEST)
 
+            # if old attribute order rank == 0, then all ranks need to be set
+            if attribute_order.rank == 0:
+                attribute_list = AttributeOrder.objects.filter(
+                    assay__uuid=uuid)
+                new_increment_rank = 1
+                for attribute in attribute_list:
+                    # updates all other ranks
+                    if attribute is not attribute_order:
+                        if new_increment_rank is not new_rank:
+                            serializer = AttributeOrderSerializer(
+                                    attribute,
+                                    {'rank': new_increment_rank},
+                                    partial=True)
+                        new_increment_rank = new_increment_rank + 1
+                    # updates requested attribute
+                    elif attribute is attribute_order:
+                        serializer = AttributeOrderSerializer(
+                                attribute,
+                                {'rank': new_rank},
+                                partial=True)
+
+                    if serializer.is_valid():
+                        serializer.save()
+                    else:
+                        return serializer.error
+
             # updates all ranks in assay's attribute order
-            if new_rank and new_rank != attribute_order.rank:
+            elif new_rank and new_rank != attribute_order.rank:
                 try:
                     update_attribute_order_ranks(attribute_order, new_rank)
                 except Exception as e:
                     return e
 
+            # updates the requested attribute rank with new rank
             serializer = AttributeOrderSerializer(attribute_order,
                                                   data=request.data,
                                                   partial=True)
