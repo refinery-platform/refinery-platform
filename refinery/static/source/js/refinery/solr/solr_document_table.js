@@ -510,7 +510,7 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function (parentElem
   }
 
   $("#" + parentElementId).html("");
-  var listHeader = '<a href="#" class="dropdown-toggle refinery-base' +
+  var listHeader = '<a href="#" class="dropdown-toggle refinery-base ' +
     'btn btn-xs btn-default" ' +
       'data-toggle="dropdown"><i class="fa fa-wrench"></i>&nbsp;Columns&nbsp;' +
       '<i class="fa fa-caret-down"></i></a>';
@@ -522,7 +522,7 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function (parentElem
       listItems.push("<li>" + visibleItems[i] + "</li>");
     }
 
-    $("#" + parentElementId).append(listHeader + '<ul id="' + listId + '"  style="max-height: 300px;  overflow: hidden; overflow-y: auto;" class="dropdown-menu" role="menu" aria-labelledby="dLabel">' + listItems.join("\n") + '</ul>');
+    $("#" + parentElementId).append(listHeader + '<ul id="' + listId + '"  style="max-height: 300px;  overflow: hidden; overflow-y: auto;" class="dropdown-menu p-a-1" role="menu" aria-labelledby="dLabel">' + listItems.join("\n") + '</ul>');
   }
 
   // configure columns
