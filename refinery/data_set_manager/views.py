@@ -407,20 +407,32 @@ class ProcessMetadataTableView(View):
             title = request.POST['title']
             data_file_column = request.POST['data_file_column']
         except (KeyError, ValueError):
-            error = {
-                'error_message':
-                    'Import failed because required parameters are missing'}
-            return render(request, self.template_name, error)
+            error_msg = 'Required parameters are missing'
+            error = {'error_message': error_msg}
+            if request.is_ajax():
+                return HttpResponse(
+                    json.dumps({'error': error_msg}), 'application/json'
+                )
+            else:
+                return render(request, self.template_name, error)
+
         source_column_index = request.POST.getlist('source_column_index')
         if not source_column_index:
-            error = {
-                'error_message':
-                    'Import failed because no source columns were selected'}
-            return render(request, self.template_name, error)
+            error_msg = 'Source columns have not been selected'
+            error = {'error_message': error_msg}
+            if request.is_ajax():
+                return HttpResponse(
+                    json.dumps({'error': error_msg}), 'application/json'
+                )
+            else:
+                return render(request, self.template_name, error)
+
         # workaround for breaking change in Angular
         # https://github.com/angular/angular.js/commit/7fda214c4f65a6a06b25cf5d5aff013a364e9cef
-        source_column_index = [column.replace("string:", "")
-                               for column in source_column_index]
+        source_column_index = [
+            column.replace("string:", "") for column in source_column_index
+        ]
+
         try:
             dataset_uuid = process_metadata_table(
                 username=request.user.username,
@@ -449,8 +461,16 @@ class ProcessMetadataTableView(View):
         except ValueError as exc:
             error = {'error_message': exc}
             return render(request, self.template_name, error)
-        return HttpResponseRedirect(
-            reverse(self.success_view_name, args=(dataset_uuid,)))
+
+        if request.is_ajax():
+            return HttpResponse(
+                json.dumps({'data_set_uuid': dataset_uuid}),
+                'application/json'
+            )
+        else:
+            return HttpResponseRedirect(
+                reverse(self.success_view_name, args=(dataset_uuid,))
+            )
 
 
 class CheckDataFilesView(View):
