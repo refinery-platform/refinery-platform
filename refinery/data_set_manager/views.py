@@ -36,7 +36,8 @@ from .models import AttributeOrder, Assay
 from .serializers import AttributeOrderSerializer, AssaySerializer
 from .utils import (generate_solr_params, search_solr, format_solr_response,
                     get_owner_from_assay, update_attribute_order_ranks,
-                    is_field_in_hidden_list, customize_attribute_response)
+                    is_field_in_hidden_list, customize_attribute_response,
+                    initialize_attribute_order_rank)
 
 logger = logging.getLogger(__name__)
 
@@ -648,30 +649,7 @@ class AssaysAttributes(APIView):
 
             # if old attribute order rank == 0, then all ranks need to be set
             if attribute_order.rank == 0:
-                attribute_list = AttributeOrder.objects.filter(
-                    assay__uuid=uuid)
-                new_increment_rank = 1
-                for attribute in attribute_list:
-                    # updates all other ranks
-                    if attribute is not attribute_order:
-                        if new_increment_rank is not new_rank:
-                            serializer = AttributeOrderSerializer(
-                                    attribute,
-                                    {'rank': new_increment_rank},
-                                    partial=True)
-                        new_increment_rank = new_increment_rank + 1
-                    # updates requested attribute
-                    elif attribute is attribute_order:
-                        serializer = AttributeOrderSerializer(
-                                attribute,
-                                {'rank': new_rank},
-                                partial=True)
-
-                    if serializer.is_valid():
-                        serializer.save()
-                    else:
-                        return serializer.error
-
+                initialize_attribute_order_rank()
             # updates all ranks in assay's attribute order
             elif new_rank and new_rank != attribute_order.rank:
                 try:
