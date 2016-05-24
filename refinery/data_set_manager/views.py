@@ -401,11 +401,19 @@ class ProcessMetadataTableView(View):
         return render(request, self.template_name)
 
     def post(self, request, *args, **kwargs):
+        if request.is_ajax():
+            try:
+                request_data = json.loads(request.body)
+            except Exception:
+                return HttpResponseBadRequest()
+        else:
+            request_data = request.POST
+
         # get required params
         try:
             metadata_file = request.FILES['file']
-            title = request.POST['title']
-            data_file_column = request.POST['data_file_column']
+            title = request_data.get('title')
+            data_file_column = request_data.get('data_file_column')
         except (KeyError, ValueError):
             error_msg = 'Required parameters are missing'
             error = {'error_message': error_msg}
@@ -440,27 +448,26 @@ class ProcessMetadataTableView(View):
                 metadata_file=metadata_file,
                 source_columns=source_column_index,
                 data_file_column=data_file_column,
-                auxiliary_file_column=request.POST.get(
-                    'aux_file_column',
-                    None
-                ),
-                base_path=request.POST.get('base_path', ""),
-                data_file_permanent=request.POST.get(
+                auxiliary_file_column=request_data.get('aux_file_column'),
+                base_path=request_data.get('base_path', ""),
+                data_file_permanent=request_data.get(
                     'data_file_permanent',
                     False
                 ),
-                species_column=request.POST.get('species_column', None),
-                genome_build_column=request.POST.get(
-                    'genome_build_column',
-                    None
-                ),
-                annotation_column=request.POST.get('annotation_column', None),
-                slug=request.POST.get('slug', None),
-                is_public=request.POST.get('is_public', False)
+                species_column=request_data.get('species_column'),
+                genome_build_column=request_data.get('genome_build_column'),
+                annotation_column=request_data.get('annotation_column'),
+                slug=request_data.get('slug'),
+                is_public=request_data.get('is_public', False)
             )
-        except ValueError as exc:
-            error = {'error_message': exc}
-            return render(request, self.template_name, error)
+        except ValueError as error_msg:
+            error = {'error_message': error_msg}
+            if request.is_ajax():
+                return HttpResponse(
+                    json.dumps({'error': error_msg}), 'application/json'
+                )
+            else:
+                return render(request, self.template_name, error)
 
         if request.is_ajax():
             return HttpResponse(
