@@ -457,16 +457,19 @@ class ProcessMetadataTableView(View):
                 auxiliary_file_column=request.POST.get('aux_file_column'),
                 base_path=request.POST.get('base_path', ''),
                 data_file_permanent=request.POST.get(
-                    'data_file_permanent',
-                    False
+                    'data_file_permanent', False
                 ),
                 species_column=request.POST.get('species_column'),
                 genome_build_column=request.POST.get('genome_build_column'),
                 annotation_column=request.POST.get('annotation_column'),
                 slug=request.POST.get('slug'),
-                is_public=request.POST.get('is_public', False)
+                is_public=request.POST.get('is_public', False),
+                delimiter=request.POST.get('delimiter'),
+                custom_delimiter_string=request.POST.get(
+                    'custom_delimiter_string', False
+                )
             )
-        except ValueError as error_msg:
+        except Exception as error_msg:
             error = {'error_message': error_msg}
             if request.is_ajax():
                 return HttpResponseServerError(
