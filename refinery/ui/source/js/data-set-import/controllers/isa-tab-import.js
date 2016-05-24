@@ -74,6 +74,7 @@ IsaTabImportCtrl.prototype.startImport = function () {
       }, 2500);
     })
     .catch(function (error) {
+      self.isErrored = true;
       self.$log.error(error);
     })
     .finally(function () {
