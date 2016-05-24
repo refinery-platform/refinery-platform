@@ -438,7 +438,7 @@ class ProcessMetadataTableView(View):
         # workaround for breaking change in Angular
         # https://github.com/angular/angular.js/commit/7fda214c4f65a6a06b25cf5d5aff013a364e9cef
         source_column_index = [
-            column.replace("string:", "") for column in source_column_index
+            column.replace('string:', '') for column in source_column_index
         ]
 
         try:
@@ -449,7 +449,7 @@ class ProcessMetadataTableView(View):
                 source_columns=source_column_index,
                 data_file_column=data_file_column,
                 auxiliary_file_column=request_data.get('aux_file_column'),
-                base_path=request_data.get('base_path', ""),
+                base_path=request_data.get('base_path', ''),
                 data_file_permanent=request_data.get(
                     'data_file_permanent',
                     False
