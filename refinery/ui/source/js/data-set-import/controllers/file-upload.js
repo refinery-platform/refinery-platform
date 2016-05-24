@@ -5,6 +5,7 @@ function RefineryFileUploadCtrl (
   $log,
   $scope,
   $timeout,
+  $window,
   $,
   chunkedUploadService,
   settings,
@@ -142,7 +143,7 @@ function RefineryFileUploadCtrl (
 
       if (worker) {
         worker.postMessage([
-          settings.appRoot,
+          $window.location.origin + settings.appRoot,
           file,
           options.chunkSize
         ]);
@@ -307,6 +308,7 @@ angular
     '$log',
     '$scope',
     '$timeout',
+    '$window',
     '$',
     'chunkedUploadService',
     'settings',
