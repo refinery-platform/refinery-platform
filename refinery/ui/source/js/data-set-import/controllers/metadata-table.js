@@ -1,14 +1,23 @@
 'use strict';
 
 function MetadataTableImportCtrl (
-  $log, $http, $rootScope, $timeout, d3, $uibModal, fileSources
+  $log,
+  $rootScope,
+  $timeout,
+  $window,
+  d3,
+  $uibModal,
+  fileSources,
+  tabularFileImportApi
 ) {
   this.$log = $log;
   this.$rootScope = $rootScope;
   this.$timeout = $timeout;
+  this.$window = $window;
   this.d3 = d3;
   this.$uibModal = $uibModal;
   this.fileSources = fileSources;
+  this.tabularFileImportApi = tabularFileImportApi;
 
   this.gridOptions = {
     resizeable: true
@@ -148,7 +157,7 @@ MetadataTableImportCtrl.prototype.checkFiles = function () {
   // Get the list of file references
   if (self.dataFileColumn) {
     self.metadata.forEach(function (row) {
-      fileData.list.push(row[self.dataFileColumn]);
+      fileData.list.push(row[self.metadataHeader[self.dataFileColumn]]);
     });
   }
 
@@ -192,17 +201,90 @@ MetadataTableImportCtrl.prototype.startImport = function () {
   var self = this;
 
   self.isImporting = true;
+
+  var formData = new FormData();
+
+  if (self.file) {
+    formData.append('file', self.file);
+  }
+  if (self.title) {
+    formData.append('title', self.title);
+  }
+  for (var i = 0; i < self.sourceColumnIndex.length; i++) {
+    formData.append(
+      'source_column_index', self.sourceColumnIndex[i]
+    );
+  }
+  if (self.dataFileColumn) {
+    formData.append('data_file_column', self.dataFileColumn);
+  }
+  switch (self.separator) {
+    case 'tab':
+      formData.append('delimiter', 'tab');
+      break;
+    case 'custom':
+      formData.append('delimiter', 'custom');
+      formData.append('custom_delimiter_string', self.customSeparator);
+      break;
+    default:
+      formData.append('delimiter', 'comma');
+      break;
+  }
+
+  if (self.auxFileColumn) {
+    formData.append('aux_file_column', self.auxFileColumn);
+  }
+  if (self.speciesColumn) {
+    formData.append('species_column', self.speciesColumn);
+  }
+  if (self.basePath) {
+    formData.append('base_path', self.basePath);
+  }
+  if (self.annotationColumn) {
+    formData.append('annotation_column', self.annotationColumn);
+  }
+  if (self.genomeBuildColumn) {
+    formData.append('genome_build_column', self.genomeBuildColumn);
+  }
+  if (self.slug) {
+    formData.append('slug', self.slug);
+  }
+  if (self.dataFilePermanent) {
+    formData.append('data_file_permanent', self.dataFilePermanent);
+  }
+  if (self.makePublic) {
+    formData.append('is_public', self.makePublic);
+  }
+
+  return this.tabularFileImportApi
+    .create({}, formData)
+    .$promise
+    .then(function (response) {
+      self.importedDataSetUuid = response.new_data_set_uuid;
+      self.isSuccessfullyImported = true;
+      self.$timeout(function () {
+        self.$window.location.href = '/data_sets/' + self.importedDataSetUuid;
+      }, 2500);
+    })
+    .catch(function (error) {
+      self.isErrored = true;
+      self.$log.error(error);
+    })
+    .finally(function () {
+      self.isImporting = false;
+    });
 };
 
 angular
   .module('refineryDataSetImport')
   .controller('MetadataTableImportCtrl', [
     '$log',
-    '$http',
     '$rootScope',
     '$timeout',
+    '$window',
     'd3',
     '$uibModal',
     'fileSources',
+    'tabularFileImportApi',
     MetadataTableImportCtrl
   ]);
