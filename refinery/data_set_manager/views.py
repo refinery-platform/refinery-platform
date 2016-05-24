@@ -424,7 +424,11 @@ class ProcessMetadataTableView(View):
             else:
                 return render(request, self.template_name, error)
 
-        source_column_index = request.POST.getlist('source_column_index')
+        if request.is_ajax():
+            source_column_index = request_data.get('source_column_index')
+        else:
+            source_column_index = request_data.getlist('source_column_index')
+
         if not source_column_index:
             error_msg = 'Source columns have not been selected'
             error = {'error_message': error_msg}
