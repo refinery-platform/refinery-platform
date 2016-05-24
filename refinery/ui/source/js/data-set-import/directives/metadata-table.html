@@ -20,6 +20,15 @@
       </div>
     </div>
 
+    <div
+      class="refinery-max z-1 refinery-bg-danger text-danger"
+      ng-if="metadataTable.isErrored">
+      <div class="text-centered">
+        <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+        Oh no! We apologize. Something went terribly wrong. Please call your admin.
+      </div>
+    </div>
+
     <label class="block label-block label-text-left">
       <span class="label-text label-left min-width-200">Select file:</span>
       <input
@@ -155,7 +164,7 @@
             class="width-95"
             required
             ng-model="metadataTable.dataFileColumn"
-            ng-options="heading for (id, heading) in metadataTable.metadataHeader track by id">
+            ng-options="id as heading for (id, heading) in metadataTable.metadataHeader track by id">
             <option value=""></option>
           </select>
         </div>
