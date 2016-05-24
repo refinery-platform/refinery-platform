@@ -38,6 +38,14 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
         var allDsIds = results[0];
         var data = results[1];
 
+        if (!Object.keys(data).length) {
+          // User doesn't have access to data sets with annotations or the
+          // backend is broken and returns an empty object.
+          treemapData.reject({ number: 1 });
+          graphData.reject({ number: 1 });
+          return;
+        }
+
         if (remixRoots) {
           // Check existance of remix roots
           var checkedRemixRoots = [];
