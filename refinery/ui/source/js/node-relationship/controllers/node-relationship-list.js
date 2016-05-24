@@ -96,11 +96,7 @@ function NodeRelationshipListCtrl (
         // if a node relationship should be selected: find its index
         if (selectedNodeRelationship) {
           $scope.selectedNodeRelationship.select = selectedNodeRelationship;
-
-          // if node relationship was found in list: fire update
-          if (selectedNodeRelationship >= 0) {
-            $scope.updateCurrentNodeRelationship();
-          }
+          $scope.updateCurrentNodeRelationship();
         }
       });
   };
@@ -201,7 +197,7 @@ function NodeRelationshipListCtrl (
 
     var modalInstance = $uibModal.open({
       templateUrl: '/static/partials/node-relationship/dialogs/confirmation-dialog.html',
-      controller: 'ConfirmationDialogInstanceCtrl',
+      controller: 'NRConfirmationDialogInstanceCtrl',
       resolve: {
         config: function () {
           return $scope.newDeleteMappingDialogConfig;

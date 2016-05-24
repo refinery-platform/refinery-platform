@@ -1424,8 +1424,8 @@ ul.badge-list {
   width: 100%;
   // default hover washes selected text
   ul>li>div.select2-result-label:hover {
-  background: #3875d7 !important;
-  color: white !important;
+  background: @gray-lighter !important;
+  color: @black !important;
 }
 }
 
@@ -1684,4 +1684,17 @@ body.is-screenshot-ready {
 
 .width-95 {
   width: 95%;
+}
+
+.btn-default.outline {
+  border: 1px solid @gray-lighterish;
+}
+
+.registration_required:before{
+   content:"*";
+   color:red;
+}
+
+#solrdoctab1-top-controls {
+   padding-bottom: 0.2em;
 }

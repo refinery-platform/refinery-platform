@@ -1,1 +1,1 @@
-Activate your {{site.name}} account - you have {{ expiration_days }} days!
+Activate the new {{site.name}} account belonging to {{ registered_user_full_name }} - {{ registered_user_username }} - {{registered_user_email}} - you have {{ expiration_days }} days!

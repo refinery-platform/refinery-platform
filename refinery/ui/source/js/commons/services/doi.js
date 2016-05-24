@@ -5,7 +5,7 @@ function DoiWrapper ($q, $resource, settings) {
   this.$resource = $resource;
   this.settings = settings;
   this.doi = this.$resource(
-    this.settings.appRoot + '/doi/:id',
+    this.settings.appRoot + '/doi/:id/',
     {
       id: '@id'
     }

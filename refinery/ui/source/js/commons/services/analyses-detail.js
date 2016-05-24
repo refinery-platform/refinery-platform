@@ -7,9 +7,10 @@ angular
   .factory('analysisDetailService', ['$resource', 'settings',
     function ($resource, settings) {
       var analysisDetail = $resource(
-        settings.appRoot + '/analysis_manager/:uuid/?format=json',
+        settings.appRoot + '/analysis_manager/:uuid/',
         {
-          uuid: '@uuid'
+          uuid: '@uuid',
+          format: 'json'
         },
         {
           query: {

@@ -119,7 +119,7 @@ describe('DataSet.search-api: unit tests', function () {
 
         $httpBackend
           .expectGET(
-            settings.appRoot + settings.solrApi + '/core/select' + params(
+            settings.appRoot + settings.solrApi + '/core/select/' + params(
               query,
               limit,
               offset,
@@ -149,7 +149,7 @@ describe('DataSet.search-api: unit tests', function () {
 
         $httpBackend
           .expectGET(
-            settings.appRoot + settings.solrApi + '/core/select' + params(
+            settings.appRoot + settings.solrApi + '/core/select/' + params(
               query,
               limit,
               offset,
@@ -164,7 +164,7 @@ describe('DataSet.search-api: unit tests', function () {
 
         $httpBackend
           .expectGET(
-            settings.appRoot + settings.solrApi + '/core/select' + params(
+            settings.appRoot + settings.solrApi + '/core/select/' + params(
               query,
               limit,
               offset,
@@ -195,7 +195,7 @@ describe('DataSet.search-api: unit tests', function () {
 
         $httpBackend
           .expectGET(
-            settings.appRoot + settings.solrApi + '/core/select' + params(
+            settings.appRoot + settings.solrApi + '/core/select/' + params(
               query,
               limit,
               offset,

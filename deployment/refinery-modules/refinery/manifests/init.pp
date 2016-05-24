@@ -97,6 +97,13 @@ exec { "syncdb_initial":
   ],
 }
 ->
+exec { "migrate_registration":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate registration",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+}
+->
 exec { "migrate_core":
   command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate core",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],

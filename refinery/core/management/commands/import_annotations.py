@@ -2,6 +2,8 @@ import logging
 import py2neo
 import time
 import urlparse
+import requests
+
 from optparse import make_option
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -193,6 +195,17 @@ class Command(BaseCommand):
         annotations = normalize_annotation_ont_ids(annotations)
         self.push_annotations_to_neo4j(annotations)
         self.push_users()
+
+        try:
+            requests.post(
+                urlparse.urljoin(
+                    settings.NEO4J_BASE_URL, 'ontology/unmanaged/annotations/'
+                )
+            )
+        except Exception as e:
+            logger.error(
+                'Neo4J couldn\'t prepare annotation sets. Error %s', e
+            )
 
         end = time.time()
         minutes = int(round((end - start) // 60))

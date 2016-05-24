@@ -3,7 +3,7 @@
 angular
   .module('refineryApp')
   .constant('settings', {
-    appRoot: document.location.protocol + '//' + document.location.host,
+    appRoot: '',
     authThrottling: 60000,
     dashboard: {
       preview: {

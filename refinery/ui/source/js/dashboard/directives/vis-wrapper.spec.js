@@ -38,7 +38,7 @@ describe('Dashboard.directive.visWrapper: unit tests', function () {
       .expectGET(
         settings.appRoot +
         settings.refineryApi +
-        '/data_sets/ids?format=json&order_by=-modification_date'
+        '/data_sets/ids/?format=json&order_by=-modification_date'
       )
       .respond(200);
 

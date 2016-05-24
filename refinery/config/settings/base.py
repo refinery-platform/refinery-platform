@@ -540,8 +540,7 @@ NEO4J_CONSTRAINTS = [
 ]
 
 SOLR_SYNONYMS = get_setting("SOLR_SYNONYMS")
-SOLR_LIB_DIR = "/vagrant/refinery/solr/lib"
-SOLR_CUSTOM_SYNONYMS_FILE = \
-    "/vagrant/refinery/solr/core/conf/custom-synonyms.txt"
+SOLR_LIB_DIR = get_setting("SOLR_LIB_DIR")
+SOLR_CUSTOM_SYNONYMS_FILE = get_setting("SOLR_CUSTOM_SYNONYMS_FILE")
 
-REFINERY_URL_SCHEME = "http"
+REFINERY_URL_SCHEME = get_setting("REFINERY_URL_SCHEME")

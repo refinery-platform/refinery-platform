@@ -46,7 +46,7 @@ describe('Common.service.userService: unit tests', function () {
           settings.appRoot +
           settings.refineryApi +
           '/users/' +
-          fakeUuid +
+          fakeUuid + '/' +
           params
       )
         .respond(200, fakeResponse);

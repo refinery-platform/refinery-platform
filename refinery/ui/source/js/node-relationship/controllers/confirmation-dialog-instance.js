@@ -1,6 +1,6 @@
 'use strict';
 
-function ConfirmationDialogInstanceCtrl ($scope, $uibModalInstance, config) {
+function NRConfirmationDialogInstanceCtrl ($scope, $uibModalInstance, config) {
   $scope.config = config;
 
   $scope.ok = function () {
@@ -15,6 +15,6 @@ function ConfirmationDialogInstanceCtrl ($scope, $uibModalInstance, config) {
 
 angular
   .module('refineryNodeRelationship')
-  .controller('ConfirmationDialogInstanceCtrl', [
-    '$scope', '$uibModalInstance', 'config', ConfirmationDialogInstanceCtrl
+  .controller('NRConfirmationDialogInstanceCtrl', [
+    '$scope', '$uibModalInstance', 'config', NRConfirmationDialogInstanceCtrl
   ]);

@@ -5,7 +5,7 @@ angular
   .factory('sharingService', ['$resource', 'settings',
     function ($resource, settings) {
       var sharing = $resource(
-        settings.appRoot + settings.refineryApi + '/:model/:uuid/sharing',
+        settings.appRoot + settings.refineryApi + '/:model/:uuid/sharing/',
         {
           model: '@model',
           uuid: '@uuid',

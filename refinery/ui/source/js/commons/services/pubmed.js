@@ -8,7 +8,7 @@ angular
        * Search
        */
       var search = $resource(
-        settings.appRoot + '/pubmed/search/:term',
+        settings.appRoot + '/pubmed/search/:term/',
         {
           term: '@term'
         }
@@ -18,7 +18,7 @@ angular
        * Fecth full article
        */
       var abstract = $resource(
-        settings.appRoot + '/pubmed/abstract/:id',
+        settings.appRoot + '/pubmed/abstract/:id/',
         {
           id: '@id'
         }
@@ -28,7 +28,7 @@ angular
        * Fetch basic meta data and summary
        */
       var summary = $resource(
-        settings.appRoot + '/pubmed/summary/:id',
+        settings.appRoot + '/pubmed/summary/:id/',
         {
           id: '@id'
         }

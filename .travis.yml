@@ -14,6 +14,9 @@ before_script:
   - cd refinery
 # See http://www.stuartellis.eu/articles/erb/#running-erb-from-the-command-line
   - erb config/config.json.erb > config/config.json
+  - python manage.py syncdb --noinput
+  - python manage.py migrate registration
+  - python manage.py migrate core
   - python manage.py syncdb --migrate --noinput
   - npm install --quiet -g grunt-cli@0.1.13 bower@1.7.7
   - cd ui && npm install && bower install && cd ../
