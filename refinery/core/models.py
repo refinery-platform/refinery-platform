@@ -65,7 +65,6 @@ from .utils import (update_data_set_index, delete_data_set_index,
 
 logger = logging.getLogger(__name__)
 
-
 #: Defining available node relationship types
 TYPE_1_1 = '1-1'
 TYPE_1_N = '1-N'
@@ -79,7 +78,7 @@ NR_TYPES = (
 )
 
 
-class UserProfile (models.Model):
+class UserProfile(models.Model):
     """Extend Django user model:
     https://docs.djangoproject.com/en/1.7/topics/auth/customizing/#extending-the-existing-user-model
 
@@ -112,6 +111,7 @@ def create_user_profile(sender, instance, created, **kwargs):
     """
     if created:
         UserProfile.objects.get_or_create(user=instance)
+
 
 post_save.connect(create_user_profile, sender=User)
 
@@ -178,13 +178,14 @@ def create_catch_all_project(sender, user, request, **kwargs):
             "the <a href='/'>homepage</a>.",
             extra_tags='safe',
             fail_silently=True
-        )   # needed to avoid MessageFailure when running tests
+        )  # needed to avoid MessageFailure when running tests
+
 
 # create catch all project for user if none exists
 user_logged_in.connect(create_catch_all_project)
 
 
-class BaseResource (models.Model):
+class BaseResource(models.Model):
     """Abstract base class for core resources such as projects, analyses,
     datasets and so on. See
     https://docs.djangoproject.com/en/1.3/topics/db/models/#abstract
@@ -207,7 +208,7 @@ class BaseResource (models.Model):
 
     def duplicate_slug_check(self):
         return int(len(self.__class__.objects.filter(slug=self.slug).exclude(
-                    pk=self.pk)))
+            pk=self.pk)))
 
     def clean(self):
         # Check if model being saved/altered in Django Admin has a slug
@@ -242,18 +243,16 @@ class BaseResource (models.Model):
 
     # Overriding delete() method For models that Inherit from BaseResource
     def delete(self, using=None, *args, **kwargs):
-        if not deletion_checks(self):
-            super(BaseResource, self).save()
-        else:
-            super(BaseResource, self).delete()
+        super(BaseResource, self).delete()
 
 
-class OwnableResource (BaseResource):
+class OwnableResource(BaseResource):
     """Abstract base class for core resources that can be owned
     (projects, data sets, workflows, workflow engines, etc.)
     IMPORTANT: expects derived classes to have "add/read/change/write_xxx"
     permissions, where "xxx" is the simple_modelname
     """
+
     def __unicode__(self):
         return self.name
 
@@ -293,7 +292,7 @@ class OwnableResource (BaseResource):
         abstract = True
 
 
-class SharableResource (OwnableResource):
+class SharableResource(OwnableResource):
     """Abstract base class for core resources that can be shared
     (projects, data sets, workflows, workflow engines, etc.)
     IMPORTANT:
@@ -313,6 +312,7 @@ class SharableResource (OwnableResource):
     Sharing something always grants read and add permission
     Change permission toggled by the value of the readonly flag
     """
+
     def share(self, group, readonly=True):
         assign_perm('read_%s' % self._meta.verbose_name, group, self)
         assign_perm('add_%s' % self._meta.verbose_name, group, self)
@@ -400,6 +400,7 @@ class ManageableResource:
     """Abstract base class for manageable resources such as disk space and
     workflow engines
     """
+
     def __unicode__(self):
         return self.name + " (" + self.uuid + ")"
 
@@ -423,7 +424,6 @@ class ManageableResource:
 
 
 class DataSetQuerySet(models.query.QuerySet):
-
     def delete(self):
         for instance in self:
             instance.delete()
@@ -435,7 +435,6 @@ class DataSetManager(models.Manager):
 
 
 class DataSet(SharableResource):
-
     UNTITLED_DATA_SET_TITLE = "Untitled data set"
 
     # TODO: add function to restore earlier version
@@ -446,9 +445,9 @@ class DataSet(SharableResource):
     # total number of bytes of all files in this data set
     file_size = models.BigIntegerField(blank=True, null=True, default=0)
     # accession number (e.g. "E-MTAB-2646")
-    accession = models.CharField(max_length=32, blank=True,  null=True)
+    accession = models.CharField(max_length=32, blank=True, null=True)
     # name of source database for the accession number (e.g. "ArrayExpress")
-    accession_source = models.CharField(max_length=128, blank=True,  null=True)
+    accession_source = models.CharField(max_length=128, blank=True, null=True)
     # actual title of the dataset
     title = models.CharField(max_length=250, default=UNTITLED_DATA_SET_TITLE)
 
@@ -477,6 +476,46 @@ class DataSet(SharableResource):
         except AttributeError:
             self.title = self.UNTITLED_DATA_SET_TITLE
         super(DataSet, self).save(*args, **kwargs)
+
+    def delete(self, **kwargs):
+        """
+        Overrides the DataSet model's delete method.
+
+        Deletes NodeCollection and related object based on uuid of
+        Investigations linked to the DataSet as long as an
+        Analysis has not been run upon the DataSet.
+        This deletes Studys, Assays and Investigations in
+        addition to the related objects detected by Django.
+
+        This method will also delete the isa_archive associated with the
+        DataSet if one exists.
+        """
+
+        # First check to see if DataSet has been analyzed
+        if not Analysis.objects.filter(data_set=self):
+            try:
+                self.get_isa_archive().delete()
+
+            except Exception as e:
+                logger.error("Couldn't delete DataSet's isa_archive: %s" % e)
+
+            related_investigation_links = InvestigationLink.objects.filter(
+                data_set=self)
+            if related_investigation_links:
+                for item in related_investigation_links:
+                    node_collection = NodeCollection.objects.get(
+                        uuid=item.investigation.uuid)
+                    try:
+                        node_collection.delete()
+                    except Exception as e:
+                        logger.debug("Couldn't delete NodeCollection:", e)
+
+            super(DataSet, self).delete()
+
+        else:
+            logger.error("Cannot delete DataSet: %s . It has been used in one "
+                         "or more analyses. " % self)
+            super(DataSet, self).save()
 
     def get_owner(self):
         owner = None
@@ -521,18 +560,18 @@ class DataSet(SharableResource):
         link = InvestigationLink(
             data_set=self,
             investigation=investigation,
-            version=version+1,
+            version=version + 1,
             message=message
         )
         link.save()
-        return version+1
+        return version + 1
 
     def get_version(self):
         try:
             version = (
-                InvestigationLink.objects
-                                 .filter(data_set=self)
-                                 .aggregate(Max("version"))["version__max"]
+                InvestigationLink.objects.filter(
+                    data_set=self
+                ).aggregate(Max("version"))["version__max"]
             )
             return version
         except:
@@ -542,15 +581,14 @@ class DataSet(SharableResource):
         try:
             if version is None:
                 version = (
-                    InvestigationLink.objects
-                                     .filter(data_set=self)
-                                     .aggregate(Max("version"))["version__max"]
+                    InvestigationLink.objects.filter(
+                        data_set=self).aggregate(
+                        Max("version"))["version__max"]
                 )
 
             return (
-                InvestigationLink.objects
-                                 .filter(data_set=self, version=version)
-                                 .get()
+                InvestigationLink.objects.filter(
+                    data_set=self, version=version).get()
             )
         except:
             return None
@@ -690,7 +728,7 @@ class InvestigationLink(models.Model):
         return retstr
 
 
-class WorkflowDataInput (models.Model):
+class WorkflowDataInput(models.Model):
     name = models.CharField(max_length=200)
     internal_id = models.IntegerField()
 
@@ -719,8 +757,9 @@ class DiskQuota(SharableResource, ManageableResource):
 
     def __unicode__(self):
         return (
-            self.name + " - Quota: " + str(self.current/(1024*1024*1024)) +
-            " of " + str(self.maximum/(1024*1024*1024)) + "GB available"
+            self.name + " - Quota: " + str(
+                self.current / (1024 * 1024 * 1024)) +
+            " of " + str(self.maximum / (1024 * 1024 * 1024)) + "GB available"
         )
 
     class Meta:
@@ -747,7 +786,6 @@ class WorkflowInputRelationships(models.Model):
 
 
 class WorkflowQuerySet(models.query.QuerySet):
-
     def delete(self):
         for instance in self:
             instance.delete()
@@ -805,6 +843,39 @@ class Workflow(SharableResource, ManageableResource):
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
         )
 
+    def delete(self, **kwargs):
+        '''
+        Overrides the Workflow model's delete method and checks if an
+        Analysis has been run utilizing it
+        '''
+
+        if bool(Analysis.objects.filter(workflow=self)):
+            '''
+                Hide Workflow from ui if an Analysis has been run on it
+            '''
+            self.is_active = False
+            logger.error(
+                "Could not delete Workflow: %s, one or more Analyses have "
+                "been run using it." % self)
+
+            super(Workflow, self).save()
+
+        else:
+            '''
+                If an Analysis hasn't been run on said Workflow delete
+                WorkflowDataInputs and WorkflowInputRelationships if they exist
+            '''
+            try:
+                self.data_inputs.remove()
+            except Exception as e:
+                logger.error("Could not delete WorkflowDataInput", e)
+            try:
+                self.input_relationships.remove()
+            except Exception as e:
+                logger.error("Could not delete WorkflowInputRelationship", e)
+
+            super(Workflow, self).delete()
+
 
 class Project(SharableResource):
     is_catch_all = models.BooleanField(default=False)
@@ -850,6 +921,7 @@ class AnalysisResult(models.Model):
     file_store_uuid = UUIDField(auto=False)
     file_name = models.TextField()
     file_type = models.TextField()
+
     # many to many to nodes uuid
 
     # associated tdf file
@@ -870,7 +942,6 @@ class AnalysisResult(models.Model):
 
 
 class AnalysisQuerySet(models.query.QuerySet):
-
     def delete(self):
         for instance in self:
             instance.delete()
@@ -882,7 +953,6 @@ class AnalysisManager(models.Manager):
 
 
 class Analysis(OwnableResource):
-
     SUCCESS_STATUS = "SUCCESS"
     FAILURE_STATUS = "FAILURE"
     RUNNING_STATUS = "RUNNING"
@@ -933,6 +1003,101 @@ class Analysis(OwnableResource):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
         )
         ordering = ['-time_end', '-time_start']
+
+    def delete(self, **kwargs):
+        '''
+            Overrides the Analysis model's delete method and checks if
+            any Nodes created by the Analysis being deleted have been
+            analyzed further.
+        '''
+
+        nodes = Node.objects.filter(analysis_uuid=self.uuid)
+        delete = True
+        for node in nodes:
+            analysis_node_connections = AnalysisNodeConnection.objects.filter(
+                node=node)
+            for item in analysis_node_connections:
+                if item.direction == 'in':
+                    delete = False
+
+        '''
+            If None of the Analyis' Nodes have been analyzed further, let us:
+            1. Delete assoctiated FileStoreItems
+            2. Delete AnalysisResults
+            3. Optimize Solr's index to reflect that
+            4. Delete the Nodes
+            5. Continue on to delete the Analysis,
+            WorkflowFilesDls, WorkflowDataInputMaps,
+            AnalysisNodeConnections, and AnalysisStatus'
+        '''
+
+        if not delete:
+            logger.error("Cannot delete Analysis: %s because one or  more of "
+                         "it's Nodes have been further analyzed" % self)
+
+            super(Analysis, self).save()
+
+        else:
+            '''
+                Delete associated FileStoreItems
+            '''
+            for node in nodes:
+                if node.file_uuid:
+                    try:
+                        FileStoreItem.objects.get(uuid=node.file_uuid).delete()
+                    except Exception as e:
+                        logger.debug("Could not delete FileStore Item with  "
+                                     "uuid: %s, " % node.file_uuid, e)
+
+            analysis_node_connections = AnalysisNodeConnection.objects.filter(
+                analysis=self)
+
+            '''
+                Delete associated AnalysisResults
+            '''
+            analysis_results = AnalysisResult.objects.filter(
+                analysis_uuid=self.uuid)
+            for item in analysis_results:
+                try:
+                    item.delete()
+                except Exception as e:
+                    logger.debug("Could not delete AnalysisResult %s:" %
+                                 item, e)
+
+            '''
+                Optimize Solr's index
+            '''
+            for item in analysis_node_connections:
+                if item.node and "Derived" in item.node.type:
+                    try:
+                        delete_analysis_index(item.node)
+                    except Exception as e:
+                        logger.debug("No NodeIndex exists in Solr with id "
+                                     "%s:  %s",
+                                     item.id, e)
+
+            solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
+                                       "data_set_manager"), timeout=10)
+            '''
+                solr.optimize() Tells Solr to streamline the number of segments
+                used, essentially a defragmentation/ garbage collection
+                operation.
+            '''
+            try:
+                solr.optimize()
+            except Exception as e:
+                logger.error("Could not optimize Solr's index:", e)
+
+            '''
+                Delete Nodes Associated w/ the Analysis
+            '''
+            for node in nodes:
+                try:
+                    node.delete()
+                except Exception as e:
+                    logger.debug("Could not delete Node %s:" % node, e)
+
+            super(Analysis, self).delete()
 
     def get_status(self):
         return self.status
@@ -994,7 +1159,7 @@ class Analysis(OwnableResource):
             # lookup node object
             if analysis_node_connection["node_uuid"]:
                 node = Node.objects.get(
-                        uuid=analysis_node_connection["node_uuid"])
+                    uuid=analysis_node_connection["node_uuid"])
             else:
                 node = None
             AnalysisNodeConnection.objects.create(
@@ -1007,7 +1172,7 @@ class Analysis(OwnableResource):
                 filetype=analysis_node_connection['filetype'],
                 direction=analysis_node_connection['direction'],
                 is_refinery_file=analysis_node_connection['is_refinery_file']
-                )
+            )
         # saving outputs of workflow to download
         for file_dl in history_download:
             temp_dl = WorkflowFilesDL(step_id=file_dl['step_id'],
@@ -1153,14 +1318,14 @@ class Analysis(OwnableResource):
                         }
         if self.successful():
             email_subj = "[{}] Archive ready for download: {}".format(
-                    site_name, name)
+                site_name, name)
             # TODO: avoid hardcoding URL protocol
             context_dict['url'] = urljoin(
-                    "http://" + site_domain,
-                    "data_sets/" + data_set_uuid + "/analysis/" + self.uuid)
+                "http://" + site_domain,
+                "data_sets/" + data_set_uuid + "/analysis/" + self.uuid)
         else:
             email_subj = "[{}] Archive creation failed: {}".format(
-                    site_name, name)
+                site_name, name)
             context_dict['default_email'] = settings.DEFAULT_FROM_EMAIL
 
         if settings.REFINERY_REPOSITORY_MODE:
@@ -1197,7 +1362,7 @@ class Analysis(OwnableResource):
 
             # get email contents ready
             email_subj = "[{}] {}: {} ({})".format(
-                    site_name, status, name, workflow)
+                site_name, status, name, workflow)
             temp_loader = loader.get_template(
                 'analysis_manager/analysis_email_full.txt')
 
@@ -1292,7 +1457,7 @@ class Analysis(OwnableResource):
                 analysis=self, direction=INPUT_CONNECTION):
             for edge in graph.edges_iter([input_connection.step]):
                 if (graph[edge[0]][edge[1]]['output_id'] ==
-                        str(input_connection.step) + '_' +
+                    str(input_connection.step) + '_' +
                         input_connection.filename):
                     input_node_id = edge[1]
                     data_transformation_node = \
@@ -1327,15 +1492,15 @@ class Analysis(OwnableResource):
                             derived_data_file_node.uuid)
 
             if analysis_results.count() == 1:
-                derived_data_file_node.file_uuid =\
+                derived_data_file_node.file_uuid = \
                     analysis_results[0].file_store_uuid
                 logger.debug(
-                        "Output file %s.%s ('%s') assigned to node %s ('%s')",
-                        output_connection.name,
-                        output_connection.filetype,
-                        analysis_results[0].file_store_uuid,
-                        derived_data_file_node.name,
-                        derived_data_file_node.uuid)
+                    "Output file %s.%s ('%s') assigned to node %s ('%s')",
+                    output_connection.name,
+                    output_connection.filetype,
+                    analysis_results[0].file_store_uuid,
+                    derived_data_file_node.name,
+                    derived_data_file_node.uuid)
             if analysis_results.count() > 1:
                 logger.warning("Multiple output files returned for '%s.%s'." +
                                "No assignment to output node was made.",
@@ -1350,7 +1515,7 @@ class Analysis(OwnableResource):
             if len(graph.edges([output_connection.step])) > 0:
                 for edge in graph.edges_iter([output_connection.step]):
                     if (graph[edge[0]][edge[1]]['output_id'] ==
-                            str(output_connection.step) + "_" +
+                        str(output_connection.step) + "_" +
                             output_connection.filename):
                         output_node_id = edge[0]
                         input_node_id = edge[1]
@@ -1379,14 +1544,14 @@ class Analysis(OwnableResource):
         # 5. create annotated nodes and index new nodes
         node_uuids = AnalysisNodeConnection.objects.filter(
             analysis=self, direction=OUTPUT_CONNECTION, is_refinery_file=True
-            ).values_list('node__uuid', flat=True)
+        ).values_list('node__uuid', flat=True)
         add_annotated_nodes_selection(
             node_uuids, Node.DERIVED_DATA_FILE, study.uuid, assay.uuid)
         index_annotated_nodes_selection(node_uuids)
 
     def attach_outputs_downloads(self):
         analysis_results = AnalysisResult.objects.filter(
-                analysis_uuid=self.uuid)
+            analysis_uuid=self.uuid)
 
         if analysis_results.count() == 0:
             logger.error("No results for download '%s' ('%s')",
@@ -1395,7 +1560,7 @@ class Analysis(OwnableResource):
 
         for analysis_result in analysis_results:
             item = FileStoreItem.objects.get(
-                    uuid=analysis_result.file_store_uuid)
+                uuid=analysis_result.file_store_uuid)
             if item:
                 download = Download.objects.create(name=self.name,
                                                    data_set=self.data_set,
@@ -1554,6 +1719,7 @@ def create_manager_group(sender, instance, created, **kwargs):
         instance.save()
         instance.manager_group.save()
         post_save.connect(create_manager_group, sender=ExtendedGroup)
+
 
 post_save.connect(create_manager_group, sender=ExtendedGroup)
 
@@ -1775,6 +1941,7 @@ def get_current_node_relationship(study_uuid, assay_uuid):
 
 class RefineryLDAPBackend(LDAPBackend):
     """Custom LDAP authentication class"""
+
     def get_or_create_user(self, username, ldap_user):
         """Send a welcome email to new users"""
         (user, created) = super(RefineryLDAPBackend, self).get_or_create_user(
@@ -1904,7 +2071,7 @@ def _add_user_to_neo4j(sender, **kwargs):
     )
 
 
-class Ontology (models.Model):
+class Ontology(models.Model):
     """Store meta information of imported ontologies
     """
 
@@ -1975,7 +2142,7 @@ def get_subclasses(classes, level=0):
 
     if level < len(classes):
         classes += classes[level].__subclasses__()
-        return get_subclasses(classes, level+1)
+        return get_subclasses(classes, level + 1)
     else:
         return classes
 
@@ -1988,13 +2155,15 @@ def receiver_subclasses(signal, sender, dispatch_uid_prefix, **kwargs):
         def signal_receiver(sender, **kwargs):
             ...
     """
+
     def _decorator(func):
         all_senders = get_subclasses(sender)
         for snd in all_senders:
-            signal.connect(func, sender=snd,
-                           dispatch_uid=dispatch_uid_prefix+'_'+snd.__name__,
-                           **kwargs)
+            signal.connect(
+                func, sender=snd, dispatch_uid=dispatch_uid_prefix + '_' +
+                snd.__name__, **kwargs)
         return func
+
     return _decorator
 
 
@@ -2029,173 +2198,6 @@ def _nodecollection_delete(sender, instance, **kwargs):
             FileStoreItem.objects.get(uuid=node.file_uuid).delete()
         except Exception as e:
             logger.debug("Could not delete FileStoreItem:%s" % str(e))
-
-
-def deletion_checks(instance):
-    '''
-        Takes a Model instance and runs the appropriate deletion checking
-        method based on the instance.__class__.__name__
-    '''
-    if instance.__class__.__name__ == "DataSet":
-        return dataset_deletion_check(instance)
-    if instance.__class__.__name__ == "Workflow":
-        return workflow_deletion_check(instance)
-    if instance.__class__.__name__ == "Analysis":
-        return analysis_deletion_check(instance)
-    return True
-
-
-def workflow_deletion_check(instance):
-    '''
-        Takes a Workflow instance and checks if an Analysis has been run
-        using it
-    '''
-    if bool(Analysis.objects.filter(workflow=instance)):
-        '''
-            Hide Workflow from ui if an Analysis has been run on it
-        '''
-        instance.is_active = False
-        logger.error("Could not delete Workflow, one or more Analyses have "
-                     "been run using it.")
-        return False
-
-    else:
-        '''
-            If an Analysis hasn't been run on said Workflow delete
-            WorkflowDataInputs and WorkflowInputRelationships if they exist
-        '''
-        try:
-            instance.data_inputs.remove()
-        except Exception as e:
-            logger.error("Could not delete WorkflowDataInput", e)
-        try:
-            instance.input_relationships.remove()
-        except Exception as e:
-            logger.error("Could not delete WorkflowInputRelationship", e)
-
-        return True
-
-
-def dataset_deletion_check(instance):
-    '''
-        Takes a DataSet instance and deletes NodeCollection and related objs.
-        based on uuid of Investigations linked to the DataSet as long as an
-        Analysis has not been run upon the DataSet.
-        This deletes Studys, Assays and Investigations in
-        addition to the related objects detected by Django
-    '''
-
-    try:
-        # Attempt to delete the isa_archive associated with the DataSet
-        instance.get_isa_archive().delete()
-
-    except Exception as e:
-        logger.error("Couldn't delete DataSet's isa_archive: %s" % e)
-
-    related_investigation_links = InvestigationLink.objects.filter(
-        data_set=instance)
-    if related_investigation_links:
-        for item in related_investigation_links:
-            node_collection = NodeCollection.objects.get(
-                uuid=item.investigation.uuid)
-            try:
-                node_collection.delete()
-            except Exception as e:
-                logger.debug("Couldn't delete NodeCollection:", e)
-    return True
-
-
-def analysis_deletion_check(instance):
-    '''
-        Takes an Analysis instance and checks if any Nodes created by the
-        Analysis being deleted have been analyzed further.
-    '''
-
-    nodes = Node.objects.filter(analysis_uuid=instance.uuid)
-    delete = True
-    for node in nodes:
-        analysis_node_connections = AnalysisNodeConnection.objects.filter(
-            node=node)
-        for item in analysis_node_connections:
-            if item.direction == 'in':
-                delete = False
-
-    '''
-        If None of the Analyis' Nodes have been analyzed further, let us:
-        1. Delete assoctiated FileStoreItems
-        2. Delete AnalysisResults
-        3. Optimize Solr's index to reflect that
-        4. Delete the Nodes
-        5. Continue on to delete the Analysis,
-        WorkflowFilesDls, WorkflowDataInputMaps,
-        AnalysisNodeConnections, and AnalysisStatus'
-    '''
-
-    if not delete:
-        logger.error("Cannot delete Analysis: %s because one or  more of "
-                     "it's Nodes have been further analyzed" % instance)
-        return False
-
-    else:
-        '''
-            Delete associated FileStoreItems
-        '''
-        for node in nodes:
-            if node.file_uuid:
-                try:
-                    FileStoreItem.objects.get(uuid=node.file_uuid).delete()
-                except Exception as e:
-                    logger.debug("Could not delete FileStore Item with  "
-                                 "uuid: %s, " % node.file_uuid, e)
-
-        analysis_node_connections = AnalysisNodeConnection.objects.filter(
-            analysis=instance)
-
-        '''
-            Delete associated AnalysisResults
-        '''
-        analysis_results = AnalysisResult.objects.filter(
-            analysis_uuid=instance.uuid)
-        for item in analysis_results:
-            try:
-                item.delete()
-            except Exception as e:
-                logger.debug("Could not delete AnalysisResult %s:" %
-                             item, e)
-
-        '''
-            Optimize Solr's index
-        '''
-        for item in analysis_node_connections:
-            if item.node and "Derived" in item.node.type:
-                try:
-                    delete_analysis_index(item.node)
-                except Exception as e:
-                    logger.debug("No NodeIndex exists in Solr with id "
-                                 "%s:  %s",
-                                 item.id, e)
-
-        solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
-                                   "data_set_manager"), timeout=10)
-        '''
-            solr.optimize() Tells Solr to streamline the number of segments
-            used, essentially a defragmentation/ garbage collection
-            operation.
-        '''
-        try:
-            solr.optimize()
-        except Exception as e:
-            logger.error("Could not optimize Solr's index:", e)
-
-        '''
-            Delete Nodes Associated w/ the Analysis
-        '''
-        for node in nodes:
-            try:
-                node.delete()
-            except Exception as e:
-                logger.debug("Could not delete Node %s:" % node, e)
-        return True
 
 
 class AuthenticationFormUsernameOrEmail(AuthenticationForm):

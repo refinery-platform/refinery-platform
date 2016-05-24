@@ -17,7 +17,6 @@ from core.models import (
     WorkflowEngine, WorkflowFilesDL, WorkflowInputRelationships, Download,
     Invitation, Ontology
 )
-from .models import deletion_checks
 
 
 class AnalysisNodeConnectionAdmin(ForeignKeyAutocompleteAdmin):
@@ -66,16 +65,9 @@ class WorkflowAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
     def delete_selected(self, request, objects):
 
         for instance in objects.all():
-            if not deletion_checks(instance):
-                instance.is_active = False
-                instance.save()
-                messages.error(request, "Could not delete Workflow:{} It has "
-                                        "been used in one or more "
-                                        "Analyses!".format(instance))
-            else:
-                instance.delete()
-                messages.success(request, "Workflow:{} deleted "
-                                          "successfully!".format(instance))
+            instance.delete()
+            messages.success(request, "Workflow:{} deleted "
+                                      "successfully!".format(instance))
 
     delete_selected.short_description = "Delete selected Workflows"
     actions = [delete_selected, hide_selected_workflows,
@@ -97,14 +89,9 @@ class DataSetAdmin(GuardedModelAdmin):
 
     def delete_selected(self, request, objects):
         for instance in objects.all():
-            if not deletion_checks(instance):
-                messages.error(request, "Could not delete DataSet:{} It has "
-                                        "been used in one or more "
-                                        "Analyses!".format(instance))
-            else:
-                instance.delete()
-                messages.success(request, "DataSet:{} deleted "
-                                          "successfully!".format(instance))
+            instance.delete()
+            messages.success(request, "DataSet:{} deleted "
+                                      "successfully!".format(instance))
 
     delete_selected.short_description = "Delete selected DataSets"
     actions = [delete_selected]
@@ -130,14 +117,9 @@ class AnalysisAdmin(GuardedModelAdmin):
 
     def delete_selected(self, request, objects):
         for instance in objects.all():
-            if not deletion_checks(instance):
-                messages.error(request, "Could not delete Analysis:{} It has "
-                                        "one or more Nodes that have been "
-                                        "re-analyzed!".format(instance))
-            else:
-                instance.delete()
-                messages.success(request, "Analysis:{} deleted "
-                                          "successfully!".format(instance))
+            instance.delete()
+            messages.success(request, "Analysis:{} deleted "
+                                      "successfully!".format(instance))
 
     delete_selected.short_description = "Delete selected Analyses"
     actions = [delete_selected]
