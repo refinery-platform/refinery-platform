@@ -143,8 +143,6 @@ VisWrapperCtrl.prototype.loadData = function () {
   if (!self.loadingStarted) {
     self.loadingStarted = true;
 
-    console.log('loading');
-
     // Trigger preloading / precomputing of D3 data for exploration.
     self.dashboardVisData.load(
       self.absRoot,
