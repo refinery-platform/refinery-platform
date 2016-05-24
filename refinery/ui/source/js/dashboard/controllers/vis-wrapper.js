@@ -1,17 +1,20 @@
 'use strict';
 
 function VisWrapperCtrl ($q, pubSub, dashboardVisData) {
-  this.$q = $q;
-  this.pubSub = pubSub;
+  var self = this;
+
+  self.$q = $q;
+  self.pubSub = pubSub;
+  self.dashboardVisData = dashboardVisData;
 
   // Absolute root node: OWL:Thing
   // The absolute root node is used for pruning the graph as it acts as a
   // single entry point.
-  this.absRoot = 'http://www.w3.org/2002/07/owl#Thing';
+  self.absRoot = 'http://www.w3.org/2002/07/owl#Thing';
 
   // Remix root nodes are a collection of nodes that act as meaningful entry
   // points across different ontologies in regards to browsing.
-  this.remixRoots = [
+  self.remixRoots = [
     'http://purl.obolibrary.org/obo/BTO_0002666',
     'http://purl.obolibrary.org/obo/BTO_0000088',
     'http://purl.obolibrary.org/obo/BTO_0000421',
@@ -61,7 +64,7 @@ function VisWrapperCtrl ($q, pubSub, dashboardVisData) {
 
   // Currently OWL2NEO4J doesn't extract the preferred label and even then we
   // might want to rename certain nodes in case their label is confusing.
-  this.rename = [{
+  self.rename = [{
     uri: 'http://www.w3.org/2002/07/owl#Thing',
     label: 'Root'
   }, {
@@ -72,76 +75,101 @@ function VisWrapperCtrl ($q, pubSub, dashboardVisData) {
   // Name of the property that is used to assess the size of a term.
   // E.g. if `Liver` is used to annotate 5 data sets then the size of `Liver`
   // is 5. The property of the term object is `dataSets` in this case.
-  this.propertyValue = 'dataSets';
+  self.propertyValue = 'dataSets';
 
-  // Trigger preloading / precomputing of D3 data for exploration.
-  dashboardVisData.load(
-    this.absRoot,
-    this.propertyValue,
-    this.remixRoots,
-    this.rename
-  );
+  self.graphDeferred = self.$q.defer();
+  self.graph = self.graphDeferred.promise;
 
-  var graph = this.$q.defer();
-  this.graph = graph.promise;
+  self.treemapDeferred = self.$q.defer();
+  self.treemap = self.treemapDeferred.promise;
 
-  var treemap = this.$q.defer();
-  this.treemap = treemap.promise;
+  self.annotationsDeferred = self.$q.defer();
+  self.annotations = self.annotationsDeferred.promise;
 
-  var annotations = this.$q.defer();
-  this.annotations = annotations.promise;
+  self.loading = true;
+  self.treemapLoading = $q.defer();
 
-  dashboardVisData.data
-    .then(function (results) {
-      graph.resolve({
-        graph: results.graph,
-        rootIds: [results.root]
-      });
-      treemap.resolve(results.treemap);
-      annotations.resolve(results.annotations);
-    })
-    .catch(function (error) {
-      this.loading = false;
-      if (error.number === 0) {
-        this.error = true;
-      } else {
-        this.noData = true;
-      }
-    }.bind(this));
+  self.pubSub.on('expandFinished', function () {
+    self.ready = true;
+  });
 
-  this.loading = true;
-  this.treemapLoading = $q.defer();
+  self.pubSub.on('vis.show', function () {
+    self.ready = true;
+    self.invisible = false;
+  });
 
-  this.pubSub.on('expandFinished', function () {
-    this.ready = true;
-  }.bind(this));
+  self.pubSub.on('collapsing', function () {
+    self.ready = false;
+  });
 
-  this.pubSub.on('vis.show', function () {
-    this.ready = true;
-    this.invisible = false;
-  }.bind(this));
+  self.pubSub.on('vis.hide', function () {
+    self.ready = false;
+  });
 
-  this.pubSub.on('collapsing', function () {
-    this.ready = false;
-  }.bind(this));
+  self.pubSub.on('vis.tempHide', function () {
+    self.invisible = true;
+  });
 
-  this.pubSub.on('vis.hide', function () {
-    this.ready = false;
-  }.bind(this));
-
-  this.pubSub.on('vis.tempHide', function () {
-    this.invisible = true;
-  }.bind(this));
-
-  this.pubSub.on('treemap.loaded', function () {
-    this.treemapLoading.resolve();
-  }.bind(this));
+  self.pubSub.on('treemap.loaded', function () {
+    self.treemapLoading.resolve();
+  });
 
   // Will be useful in the future when multiple services need to load.
-  this.$q.all([this.treemapLoading.promise]).then(function () {
-    this.loading = false;
-  }.bind(this));
+  self.$q.all([self.treemapLoading.promise]).then(function () {
+    self.loading = false;
+  });
 }
+
+Object.defineProperty(
+  VisWrapperCtrl.prototype,
+  'active', {
+    enumerable: true,
+    get: function () {
+      return this._active;
+    },
+    set: function (value) {
+      this._active = value;
+
+      if (value) {
+        this.loadData();
+      }
+    }
+  }
+);
+
+VisWrapperCtrl.prototype.loadData = function () {
+  var self = this;
+
+  if (!self.loadingStarted) {
+    self.loadingStarted = true;
+
+    // Trigger preloading / precomputing of D3 data for exploration.
+    self.dashboardVisData.load(
+      self.absRoot,
+      self.propertyValue,
+      self.remixRoots,
+      self.rename
+    );
+
+    self.dashboardVisData.data
+      .then(function (results) {
+        self.graphDeferred.resolve({
+          graph: results.graph,
+          rootIds: [results.root]
+        });
+        self.treemapDeferred.resolve(results.treemap);
+        self.annotationsDeferred.resolve(results.annotations);
+      })
+      .catch(function (error) {
+        self.loading = false;
+        if (error.number === 0) {
+          self.error = true;
+        } else {
+          self.noData = true;
+        }
+      });
+  }
+};
 
 angular
   .module('refineryDashboard')
