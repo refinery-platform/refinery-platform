@@ -74,6 +74,8 @@ export FACTER_SITE_NAME="$SITE_NAME"
 export FACTER_RDS_ROLE_PASSWORD=password
 # Already set by earlier part of userdata
 export RDS_SUPERUSER_PASSWORD
+export RDS_ENDPOINT_ADDRESS
+export RDS_ENDPOINT_PORT
 PASSWORD=$FACTER_RDS_ROLE_PASSWORD bin/ensure-postgresql-role
 bin/ensure-postgresql-database
 
