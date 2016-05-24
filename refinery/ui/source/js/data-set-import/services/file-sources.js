@@ -3,7 +3,7 @@
 function fileSources ($resource, settings, dataSetImportSettings) {
   return $resource(
     settings.appRoot +
-    dataSetImportSettings.checkFiles,
+    dataSetImportSettings.checkFilesUrl,
     {},
     {
       check: {
