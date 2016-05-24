@@ -423,21 +423,29 @@ class ProcessMetadataTableView(View):
                                for column in source_column_index]
         try:
             dataset_uuid = process_metadata_table(
-                username=request.user.username, title=title,
+                username=request.user.username,
+                title=title,
                 metadata_file=metadata_file,
                 source_columns=source_column_index,
                 data_file_column=data_file_column,
-                auxiliary_file_column=request.POST.get('aux_file_column',
-                                                       None),
+                auxiliary_file_column=request.POST.get(
+                    'aux_file_column',
+                    None
+                ),
                 base_path=request.POST.get('base_path', ""),
-                data_file_permanent=request.POST.get('data_file_permanent',
-                                                     False),
+                data_file_permanent=request.POST.get(
+                    'data_file_permanent',
+                    False
+                ),
                 species_column=request.POST.get('species_column', None),
-                genome_build_column=request.POST.get('genome_build_column',
-                                                     None),
+                genome_build_column=request.POST.get(
+                    'genome_build_column',
+                    None
+                ),
                 annotation_column=request.POST.get('annotation_column', None),
                 slug=request.POST.get('slug', None),
-                is_public=request.POST.get('is_public', False))
+                is_public=request.POST.get('is_public', False)
+            )
         except ValueError as exc:
             error = {'error_message': exc}
             return render(request, self.template_name, error)
