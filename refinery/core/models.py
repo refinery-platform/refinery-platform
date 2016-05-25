@@ -493,11 +493,14 @@ class DataSet(SharableResource):
 
         # First check to see if DataSet has been analyzed
         if not Analysis.objects.filter(data_set=self):
-            try:
-                self.get_isa_archive().delete()
+            isa_archive = self.get_isa_archive()
+            if isa_archive:
+                try:
+                    isa_archive.delete()
 
-            except Exception as e:
-                logger.error("Couldn't delete DataSet's isa_archive: %s" % e)
+                except (FileStoreItem.DoesNotExist, IOError) as e:
+                    logger.error(
+                        "Couldn't delete DataSet's isa_archive: %s" % e)
 
             related_investigation_links = InvestigationLink.objects.filter(
                 data_set=self)
