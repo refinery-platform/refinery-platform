@@ -1387,5 +1387,9 @@ class AnalysisDeletionTest(unittest.TestCase):
 
 class UtilitiesTest(TestCase):
     def test_get_aware_local_time(self):
+        timezone.localtime(timezone.now())
         expectedTime = timezone.localtime(timezone.now())
-        self.assertEqual(get_aware_local_time(), expectedTime)
+        responseTime = get_aware_local_time()
+        differenceTime = responseTime - expectedTime
+
+        self.assertLessEqual(differenceTime.total_seconds(), .99)
