@@ -1,6 +1,7 @@
 import json
 from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import unittest
 from guardian.shortcuts import assign_perm
 import mockcache as memcache
@@ -1217,7 +1218,11 @@ class DataSetDeletionTest(unittest.TestCase):
         )
         self.project = Project.objects.create()
         self.galaxy_instance = Instance.objects.create()
-        self.isa_archive_file = FileStoreItem.objects.create()
+        self.isa_archive_file = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.zip',
+                'Coffee is delicious!')
+        )
         self.investigation = \
             data_set_manager.models.Investigation.objects.create(
                 isarchive_file=self.isa_archive_file.uuid)
