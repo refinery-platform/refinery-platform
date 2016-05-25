@@ -36,7 +36,8 @@ from .models import AttributeOrder, Assay
 from .serializers import AttributeOrderSerializer, AssaySerializer
 from .utils import (generate_solr_params, search_solr, format_solr_response,
                     get_owner_from_assay, update_attribute_order_ranks,
-                    is_field_in_hidden_list, customize_attribute_response)
+                    is_field_in_hidden_list, customize_attribute_response,
+                    initialize_attribute_order_ranks)
 
 logger = logging.getLogger(__name__)
 
@@ -646,13 +647,17 @@ class AssaysAttributes(APIView):
                     'Requires attribute id or solr_field name.',
                     status=status.HTTP_400_BAD_REQUEST)
 
+            # if old attribute order rank == 0, then all ranks need to be set
+            if attribute_order.rank == 0:
+                initialize_attribute_order_ranks(attribute_order, new_rank)
             # updates all ranks in assay's attribute order
-            if new_rank and new_rank != attribute_order.rank:
+            elif new_rank and new_rank != attribute_order.rank:
                 try:
                     update_attribute_order_ranks(attribute_order, new_rank)
                 except Exception as e:
                     return e
 
+            # updates the requested attribute rank with new rank
             serializer = AttributeOrderSerializer(attribute_order,
                                                   data=request.data,
                                                   partial=True)
