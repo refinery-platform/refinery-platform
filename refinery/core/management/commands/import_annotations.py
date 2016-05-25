@@ -6,6 +6,7 @@ import requests
 
 from optparse import make_option
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from core.models import DataSet, ExtendedGroup
 from core.utils import normalize_annotation_ont_ids, get_data_set_annotations
@@ -129,8 +130,10 @@ class Command(BaseCommand):
                 # logged in can still see some visualization.
                 if group['group'].id is public_group_id:
                     users += [{
-                        'id': -1,
-                        'name': 'Anonymous'
+                        'id': settings.ANONYMOUS_USER_ID,
+                        'name': User.objects.get(
+                            id=settings.ANONYMOUS_USER_ID
+                        ).username
                     }]
 
             for user in users:
