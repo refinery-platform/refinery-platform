@@ -35,6 +35,7 @@ from django.db.utils import IntegrityError
 from django.dispatch import receiver
 from django.forms import ValidationError
 from django.template import loader, Context
+from django.utils import timezone
 
 from bioblend import galaxy
 from django.template.loader import render_to_string
@@ -941,7 +942,7 @@ class Analysis(OwnableResource):
         self.status = status
         self.status_detail = message
         if status == self.FAILURE_STATUS or status == self.SUCCESS_STATUS:
-            self.time_end = get_aware_local_time()
+            self.time_end = timezone.now()
         self.save()
 
     def successful(self):
@@ -1169,9 +1170,8 @@ class Analysis(OwnableResource):
             workflow = self.workflow.name
             project = self.project
 
-            # get information needed to calculate the duration
-            start = self.time_start
-            end = self.time_end
+            start = timezone.localtime(self.time_start)
+            end = timezone.localtime(self.time_end)
 
             duration = end - start
             hours, remainder = divmod(duration.total_seconds(), 3600)
