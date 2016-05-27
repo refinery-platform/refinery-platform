@@ -11,7 +11,7 @@ var ConfirmationDialogInstanceCtrl = function (
 };
 
 angular
-  .module('refineryMetadataTableImport')
+  .module('refineryDataSetImport')
   .controller('ConfirmationDialogInstanceCtrl', [
     '$scope', '$uibModalInstance', 'config', ConfirmationDialogInstanceCtrl
   ]);
