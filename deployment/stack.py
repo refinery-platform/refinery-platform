@@ -171,7 +171,8 @@ def main():
             'KeyName': config['KEY_NAME'],
             'IamInstanceProfile': functions.ref('WebInstanceProfile'),
             'Tags': instance_tags,
-        })
+        }),
+        core.DependsOn('RDSInstance'),
     )
 
     cft.resources.instance_profile = core.Resource(
