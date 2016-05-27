@@ -237,12 +237,12 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 							selectedItems.push("<tr class=\"facet-value\" id=\"" +
 								self._composeFacetValueId(facet, facetValue) + "\"><td>" +
 								'<input type="checkbox" checked>' +
-								"</td><td>" + facetValue + "</td><td align=right>" +
+								"</td><td>" + facetValue + "</td><td class='facet-value-count' align=right>" +
 								facetValueCount + "</td>" + "</tr>");
 							unselectedItems.push("<tr class=\"facet-value\" id=\"" +
 								self._composeFacetValueId(facet, facetValue) + "\"><td>" +
 								'<input type="checkbox" checked>' +
-								"</td><td>" + facetValue + "</td><td align=right>" +
+								"</td><td>" + facetValue + "</td><td class='facet-value-count' align=right>" +
 								facetValueCount + "</td>" + "</tr>");
 						}
 						else {
@@ -253,7 +253,7 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 							unselectedItems.push("<tr class=\"facet-value\" id=\"" +
 								self._composeFacetValueId(facet, facetValue) + "\"><td>" +
 								'<input type="checkbox">' +
-								"</td><td>" + facetValue + "</td><td align=right>" +
+								"</td><td>" + facetValue + "</td><td class='facet-value-count' align=right>" +
 								facetValueCount + "</td><td></td>" + "</tr>");
 						}
 					}
