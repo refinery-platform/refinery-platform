@@ -11,8 +11,7 @@ from datetime import timedelta
 from file_store.models import FileType, FileStoreItem
 from django.core.management.base import BaseCommand
 from django.core import management
-
-from core.utils import get_aware_local_time
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +52,7 @@ class Command(BaseCommand):
         try:
             days_ago = args[0]
             file_store_query = FileStoreItem.objects.filter(
-                created__gt=get_aware_local_time() - timedelta(
+                created__gt=timezone.now() - timedelta(
                     days=int(days_ago)))
         except Exception:
             file_store_query = FileStoreItem.objects.all()
