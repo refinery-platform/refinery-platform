@@ -1,3 +1,5 @@
+# workaround for https://github.com/celery/celery/issues/3225
+amqp==1.4.9
 anyjson==0.3.1
 argh==0.23.1
 bioblend==0.5.0
