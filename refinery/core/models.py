@@ -135,8 +135,8 @@ def create_user_profile_registered(sender, user, request, **kwargs):
     UserProfile.objects.get_or_create(user=user)
 
     logger.info(
-        "user profile for user %s has been created after registration %s",
-        user, get_aware_local_time()
+        "user profile for user %s has been created after registration",
+        user
     )
 
 
@@ -1880,7 +1880,7 @@ class Invitation(models.Model):
 
     def save(self, *arg, **kwargs):
         if not self.id:
-            self.created = get_aware_local_time()
+            self.created = timezone.now()
         return super(Invitation, self).save(*arg, **kwargs)
 
 
@@ -1910,7 +1910,7 @@ class Ontology (models.Model):
     # Stores the most recent import date, i.e. this will be overwritten when a
     # ontology is re-imported.
     import_date = models.DateTimeField(
-        default=get_aware_local_time,
+        default=timezone.now,
         editable=False,
         auto_now=False
     )
