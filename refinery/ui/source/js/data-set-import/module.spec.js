@@ -1,10 +1,10 @@
 'use strict';
 
-describe('RefineryMetadataTableImport.module: unit tests', function () {
+describe('DataSetImport.module: unit tests', function () {
   var module;
 
   beforeEach(function () {
-    module = angular.module('refineryMetadataTableImport');
+    module = angular.module('refineryDataSetImport');
   });
 
   describe('Module', function () {
@@ -20,11 +20,15 @@ describe('RefineryMetadataTableImport.module: unit tests', function () {
     };
 
     beforeEach(function () {
-      deps = module.value('refineryMetadataTableImport').requires;
+      deps = module.value('refineryDataSetImport').requires;
     });
 
     it('should have "angularFileUpload" as a dependency', function () {
       expect(hasModule('angularFileUpload')).toEqual(true);
+    });
+
+    it('should have "blueimp.fileupload" as a dependency', function () {
+      expect(hasModule('blueimp.fileupload')).toEqual(true);
     });
 
     it('should have "ui.grid" as a dependency', function () {

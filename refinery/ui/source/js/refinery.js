@@ -12,15 +12,18 @@ angular
      */
     'ui.router',
     'ngWebworker',
+    'file-model',
 
     /*
      * Angular App globals
      */
     'errors',
     'pubSub',
+    'getCookie',
     'closeOnOuterClick',
     'colors',
     'focusOn',
+    'clearFileInput',
     'replaceWhiteSpaceWithHyphen',
 
     /*
@@ -33,7 +36,6 @@ angular
     'refineryNodeRelationship',
     'refineryDataSetExplorer',
     'refineryStatistics',
-    'refineryMetadataTableImport',
     'refineryProvvis',
     'refineryDataSetImport',
     'refineryDataSetNav',

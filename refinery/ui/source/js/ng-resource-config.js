@@ -1,5 +1,12 @@
 'use strict';
 
+function UrlPatternNoStringException (message, urlPattern) {
+  this.message = (
+    message || 'The provided URL pattern (' + urlPattern + ') is no string'
+  );
+  this.name = 'UrlPatternNoStringException';
+}
+
 // Angular monkey patch to address removal of trailing slashes by $resource:
 // https://github.com/angular/angular.js/issues/992
 angular
@@ -8,7 +15,12 @@ angular
     $provide.decorator('$resource', ['$delegate', function ($delegate) {
       return function () {
         if (arguments.length > 0) {  // URL
-          arguments[0] = arguments[0].replace(/\/$/, '\\/');
+          try {
+            arguments[0] = arguments[0].replace(/\/$/, '\\/');
+          } catch (error) {
+            // Somehow the URL pattern is not a string
+            throw new UrlPatternNoStringException(null, arguments[0]);
+          }
         }
 
         if (arguments.length > 2) {  // Actions
