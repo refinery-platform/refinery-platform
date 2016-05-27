@@ -212,7 +212,7 @@ class BaseResource (models.Model):
     def clean(self):
         # Check if model being saved/altered in Django Admin has a slug
         # duplicated elsewhere.
-        if self.slug != "" and self.slug is not None:
+        if self.slug:
             if self.duplicate_slug_check() == 0:
                 pass
             else:
@@ -223,7 +223,7 @@ class BaseResource (models.Model):
 
     # Overriding save() method to disallow saving objects with duplicate slugs
     def save(self, *args, **kwargs):
-        if self.slug != "" and self.slug is not None:
+        if self.slug:
             if self.duplicate_slug_check() == 0:
                 try:
                     super(BaseResource, self).save(*args, **kwargs)
