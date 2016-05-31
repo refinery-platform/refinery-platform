@@ -302,7 +302,6 @@ function FileBrowserCtrl (
         columnWidth = Math.round(columnWidth * 2);
       }
 
-
       if (columnName === 'Url') {
         vm.customColumnName.push(vm.setCustomUrlColumnDef(columnName));
       } else {
@@ -327,6 +326,11 @@ function FileBrowserCtrl (
             'title="Download File \{{COL_FIELD}}\">' +
           '<a href="{{COL_FIELD}}" target="_blank">' +
           '<i class="fa fa-arrow-circle-o-down"></i></a>' +
+          '<span class="fastqc-viewer" ' +
+          'ng-if="COL_FIELD.indexOf(' + "'fastqc_results'" + ') >= 0">' +
+          '&nbsp;<a title="View FastQC Result" href="/fastqc_viewer/#/uuid">' +
+          '<i class="fa fa-bar-chart-o"></i></a>' +
+          '</span>' +
           '</div>' +
           '<div ng-if="!COL_FIELD"' +
             'title="File not available for download">' +
