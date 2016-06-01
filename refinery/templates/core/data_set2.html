@@ -88,14 +88,9 @@
                 Analyses
               </a>
             </li>
-            <li ui-sref-active="active">
-              <a ui-sref="details" class="dataSetTabs" >
-                Details
-              </a>
-            </li>
-            <li ui-sref-active="active">
-              <a ui-sref="sharing" class="dataSetTabs" >
-                Sharing
+             <li ui-sref-active="active">
+              <a ui-sref="about" class="dataSetTabs" >
+                About
               </a>
             </li>
           </ul>
@@ -280,7 +275,7 @@
             </p>
           </div>
 
-          <div class="dataSetTabContent ng-cloak" id="details">
+          <div class="dataSetTabContent ng-cloak" id="about">
 
             <div class="refinery-header">
               <span class="refinery-header-left">
@@ -365,9 +360,7 @@
             </div>
             <p>Current version <i>{{ data_set.get_version_details.version }}</i> created <i>{{ data_set.get_version_details.date }}</i>.
               Data set created <i>{{ data_set.creation_date }}</i>. Last modified <i>{{ data_set.modification_date }}</i>.</p>
-          </div>
 
-          <div class="dataSetTabContent ng-cloak" id="sharing">
             <div class="refinery-header">
               <span class="refinery-header-left">
                   <h3>Sharing</h3>
