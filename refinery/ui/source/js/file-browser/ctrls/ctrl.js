@@ -314,6 +314,21 @@ function FileBrowserCtrl (
           }
         );
         vm.setFastqcViewColumnDef(attribute.internal_name);
+      } else if (columnName === 'Analysis Group') {
+        var _cellTemplate = '<div class="ngCellText text-align-center"' +
+        'ng-class="col.colIndex()">{{COL_FIELD |' +
+          ' analysisGroupNegativeOneWithNA: "Analysis Group"}}</div>';
+
+        vm.customColumnName.push(
+          {
+            name: columnName,
+            width: columnWidth + '%',
+            field: attribute.internal_name,
+            cellTooltip: true,
+            enableHiding: false,
+            cellTemplate: _cellTemplate
+          }
+        );
       } else {
         vm.customColumnName.push(
           {
@@ -330,7 +345,7 @@ function FileBrowserCtrl (
   };
 
   vm.setFastqcViewColumnDef = function (fieldName) {
-    var cellTemplate = '<div class="ngCellText text-align-center"' +
+    var _cellTemplate = '<div class="ngCellText text-align-center"' +
         'ng-class="col.colIndex()">' +
         '<div class="fastqc-viewer" ' +
         'ng-if="row.entity.Url.indexOf(' + "'fastqc_results'" + ') >= 0">' +
@@ -349,7 +364,7 @@ function FileBrowserCtrl (
       enableSorting: false,
       enableColumnMenu: false,
       enableColumnResizing: false,
-      cellTemplate: cellTemplate
+      cellTemplate: _cellTemplate
     };
 
     vm.customColumnName.splice(1, 0, colProperty);
@@ -357,7 +372,7 @@ function FileBrowserCtrl (
 
   // File download column require unique template and fields.
   vm.setCustomUrlColumnDef = function (_columnName) {
-    var cellTemplate = '<div class="ngCellText text-align-center"' +
+    var _cellTemplate = '<div class="ngCellText text-align-center"' +
           'ng-class="col.colIndex()">' +
           '<div ng-if="COL_FIELD" title="Download File \{{COL_FIELD}}\">' +
           '<a href="{{COL_FIELD}}" target="_blank">' +
@@ -379,7 +394,7 @@ function FileBrowserCtrl (
       enableSorting: false,
       enableColumnMenu: false,
       enableColumnResizing: false,
-      cellTemplate: cellTemplate
+      cellTemplate: _cellTemplate
     };
   };
 
