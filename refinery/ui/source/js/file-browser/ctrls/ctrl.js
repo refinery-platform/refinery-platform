@@ -330,8 +330,8 @@ function FileBrowserCtrl (
   };
 
   vm.setFastqcViewColumnDef = function (fieldName) {
-    var cellTemplate = '<div class="ngCellText"' +
-        'ng-class="col.colIndex()" style="text-align:center">' +
+    var cellTemplate = '<div class="ngCellText text-align-center"' +
+        'ng-class="col.colIndex()">' +
         '<div class="fastqc-viewer" ' +
         'ng-if="row.entity.Url.indexOf(' + "'fastqc_results'" + ') >= 0">' +
         '&nbsp;<a title="View FastQC Result"' +
@@ -357,8 +357,8 @@ function FileBrowserCtrl (
 
   // File download column require unique template and fields.
   vm.setCustomUrlColumnDef = function (_columnName) {
-    var cellTemplate = '<div class="ngCellText"' +
-          'ng-class="col.colIndex()" style="text-align:center">' +
+    var cellTemplate = '<div class="ngCellText text-align-center"' +
+          'ng-class="col.colIndex()">' +
           '<div ng-if="COL_FIELD" title="Download File \{{COL_FIELD}}\">' +
           '<a href="{{COL_FIELD}}" target="_blank">' +
           '<i class="fa fa-arrow-circle-o-down"></i></a>' +
