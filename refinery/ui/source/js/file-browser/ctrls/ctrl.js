@@ -301,9 +301,19 @@ function FileBrowserCtrl (
       if (columnWidth < 10) {  // make sure columns are wide enough
         columnWidth = Math.round(columnWidth * 2);
       }
-
       if (columnName === 'Url') {
         vm.customColumnName.push(vm.setCustomUrlColumnDef(columnName));
+      } else if (columnName === 'Analysis') {
+        vm.customColumnName.push(
+          {
+            name: columnName,
+            width: columnWidth + '%',
+            field: attribute.internal_name,
+            cellTooltip: true,
+            enableHiding: false
+          }
+        );
+        vm.setFastqcViewColumnDef(attribute.internal_name);
       } else {
         vm.customColumnName.push(
           {
@@ -318,19 +328,40 @@ function FileBrowserCtrl (
     });
     vm.gridOptions.columnDefs = vm.customColumnName;
   };
+
+  vm.setFastqcViewColumnDef = function (fieldName) {
+    var cellTemplate = '<div class="ngCellText"' +
+        'ng-class="col.colIndex()" style="text-align:center">' +
+        '<div class="fastqc-viewer" ' +
+        'ng-if="row.entity.Url.indexOf(' + "'fastqc_results'" + ') >= 0">' +
+        '&nbsp;<a title="View FastQC Result"' +
+        ' href="/fastqc_viewer/#/\{{row.entity.' + [fieldName] + '}}\">' +
+        '<i class="fa fa-bar-chart-o"></i></a>' +
+        '</div>' +
+        '</div>';
+
+    var colProperty = {
+      field: 'fastqc viewer',
+      cellTooltip: false,
+      width: 4 + '%',
+      displayName: '',
+      enableFiltering: false,
+      enableSorting: false,
+      enableColumnMenu: false,
+      enableColumnResizing: false,
+      cellTemplate: cellTemplate
+    };
+
+    vm.customColumnName.splice(1, 0, colProperty);
+  };
+
   // File download column require unique template and fields.
   vm.setCustomUrlColumnDef = function (_columnName) {
     var cellTemplate = '<div class="ngCellText"' +
-          ' ng-class="col.colIndex()" style="text-align:center">' +
-          '<div ng-if="COL_FIELD"' +
-            'title="Download File \{{COL_FIELD}}\">' +
+          'ng-class="col.colIndex()" style="text-align:center">' +
+          '<div ng-if="COL_FIELD" title="Download File \{{COL_FIELD}}\">' +
           '<a href="{{COL_FIELD}}" target="_blank">' +
           '<i class="fa fa-arrow-circle-o-down"></i></a>' +
-          '<span class="fastqc-viewer" ' +
-          'ng-if="COL_FIELD.indexOf(' + "'fastqc_results'" + ') >= 0">' +
-          '&nbsp;<a title="View FastQC Result" href="/fastqc_viewer/#/uuid">' +
-          '<i class="fa fa-bar-chart-o"></i></a>' +
-          '</span>' +
           '</div>' +
           '<div ng-if="!COL_FIELD"' +
             'title="File not available for download">' +
