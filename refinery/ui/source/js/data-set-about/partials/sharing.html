@@ -1,0 +1,36 @@
+ <!--<div class="refinery-header">
+    <span class="refinery-header-left">
+        <h3>Sharing</h3>
+    </span>
+  </div>
+  <div class="refinery-subheader">
+    <h4>Owner</h4>
+  </div>
+  <p>
+    <span class="fa fa-user"></span>&nbsp;
+    { if data_set.get_owner %}
+      <a href="{ url "user" data_set.get_owner.get_profile.uuid }">
+        {{ data_set.get_owner_full_name }}
+      </a>
+    { else %}
+      {{ data_set.get_owner_full_name }}
+    { endif %}
+  </p>
+
+  { if data_set.get_groups|length > 0 }
+    <div class="refinery-subheader">
+      <h4>Groups</h4>
+    </div>
+    <p>
+      { for perm in data_set.get_groups %}
+        <a href="{ url 'group' perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
+        { if perm.read %}
+          <i class="fa fa-eye"></i>
+        { endif %}
+        { if perm.change %}
+          <i class="fa fa-pencil"></i>
+        { endif %}
+      { endfor %}
+    </p>
+  { endif }
+-->
