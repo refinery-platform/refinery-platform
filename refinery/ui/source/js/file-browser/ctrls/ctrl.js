@@ -301,37 +301,31 @@ function FileBrowserCtrl (
       if (columnWidth < 10) {  // make sure columns are wide enough
         columnWidth = Math.round(columnWidth * 2);
       }
+      var colProperty = {
+        name: columnName,
+        width: columnWidth + '%',
+        field: attribute.internal_name,
+        cellTooltip: true,
+        enableHiding: false,
+      };
       if (columnName === 'Url') {
+        // Url requires a custom template for downloading links
         vm.customColumnName.push(vm.setCustomUrlColumnDef(columnName));
       } else if (columnName === 'Analysis Group') {
+        // Analysis requires a custom template for filtering -1 entries
         var _cellTemplate = '<div class="ngCellText text-align-center"' +
         'ng-class="col.colIndex()">{{COL_FIELD |' +
           ' analysisGroupNegativeOneWithNA: "Analysis Group"}}</div>';
-        vm.customColumnName.push(
-          {
-            name: columnName,
-            width: columnWidth + '%',
-            field: attribute.internal_name,
-            cellTooltip: true,
-            enableHiding: false,
-            cellTemplate: _cellTemplate
-          }
-        );
+        colProperty.cellTemplate = _cellTemplate;
+        vm.customColumnName.push(colProperty);
       } else {
-        vm.customColumnName.push(
-          {
-            name: columnName,
-            width: columnWidth + '%',
-            field: attribute.internal_name,
-            cellTooltip: true,
-            enableHiding: false
-          }
-        );
+        vm.customColumnName.push(colProperty);
       }
     });
     vm.gridOptions.columnDefs = vm.customColumnName;
   };
 
+  // Helper method for grabbing the internal name, in fastqc viewer template
   var grabAnalysisInternalName = function (arrayOfObj) {
     var internalName = '';
     for (var i = 0; i < arrayOfObj.length; i ++) {
