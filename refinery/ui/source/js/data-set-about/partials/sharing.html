@@ -1,23 +1,26 @@
- <!--<div class="refinery-header">
-    <span class="refinery-header-left">
-        <h3>Sharing</h3>
-    </span>
+<div class="refinery-header">
+  <span class="refinery-header-left">
+      <h3>Sharing</h3>
+  </span>
   </div>
   <div class="refinery-subheader">
     <h4>Owner</h4>
   </div>
   <p>
     <span class="fa fa-user"></span>&nbsp;
-    { if data_set.get_owner %}
-      <a href="{ url "user" data_set.get_owner.get_profile.uuid }">
-        {{ data_set.get_owner_full_name }}
+    <span ng-if="ASCtrl.dataSet.is_owner">
+      <a href="/users/{{ ASCtrl.dataSet.owner }}">
+       You
       </a>
-    { else %}
-      {{ data_set.get_owner_full_name }}
-    { endif %}
+    </span>
+    <span ng-if="!ASCtrl.dataSet.is_owner">
+      <a href="/users/{{ ASCtrl.dataSet.owner }}">
+      {{ ASCtrl.ownerName }}
+      </a>
+    </span>
   </p>
 
-  { if data_set.get_groups|length > 0 }
+  <!--{ if data_set.get_groups|length > 0 }
     <div class="refinery-subheader">
       <h4>Groups</h4>
     </div>
@@ -32,5 +35,5 @@
         { endif %}
       { endfor %}
     </p>
-  { endif }
--->
+  { endif }->>
+

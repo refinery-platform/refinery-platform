@@ -6,6 +6,10 @@ function rpDataSetAboutSharing () {
     templateUrl: '/static/partials/data-set-about/partials/sharing.html',
     controller: 'AboutSharingCtrl',
     controllerAs: 'ASCtrl',
+    bindToController: {
+      dataSet: '@',
+      ownerName: '@'
+    }
   };
 }
 

@@ -9,6 +9,7 @@ function AboutSharingCtrl (
   ) {
   var vm = this;
   vm.dataSet = {};
+  vm.ownerName = '';
 
   vm.refreshDataSetStats = function () {
     var dataSetUuid = $window.dataSetUuid;
@@ -16,6 +17,16 @@ function AboutSharingCtrl (
     var promise = $q.defer();
     dataSetAboutFactory.getDataSet(dataSetUuid).then(function () {
       vm.dataSet = dataSetAboutFactory.dataSet;
+      vm.refreshOwnerName(vm.dataSet.owner);
+      promise.resolve();
+    });
+    return promise.promise;
+  };
+
+  vm.refreshOwnerName = function (userUuid) {
+    var promise = $q.defer();
+    dataSetAboutFactory.getOwnerName(userUuid).then(function () {
+      vm.ownerName = dataSetAboutFactory.ownerProfile.fullName;
       promise.resolve();
     });
     return promise.promise;
