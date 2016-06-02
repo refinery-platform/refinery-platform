@@ -111,8 +111,8 @@ exec { "migrate_core":
   group       => $app_group,
 }
 ->
-exec { "init_refinery":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py init_refinery '${site_name}' '${site_url}'",
+exec { "set_up_refinery_site_name":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py set_up_site_name '${site_name}' '${site_url}'",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
@@ -125,8 +125,22 @@ exec { "migrate_guardian":
   group       => $app_group,
 }
 ->
+exec { "create_public_group":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py create_public_group",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+}
+->
 exec { "create_superuser":
   command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata superuser.json",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+}
+->
+exec { "test_admin_user":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py test_admin_user",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
