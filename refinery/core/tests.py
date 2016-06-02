@@ -1,6 +1,7 @@
 import json
 
 from django.contrib.auth.models import User, Group
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils import unittest, timezone
 from django.test import TestCase
 
@@ -1015,26 +1016,37 @@ class BaseResourceSlugTest(unittest.TestCase):
         # make some data
         for index, item in enumerate(range(0, 10)):
             DataSet.objects.create(slug="TestSlug%d" % index)
-        Project.objects.create(name="project")
+        self.project = Project.objects.create(name="project")
+        self.project_with_slug = Project.objects.create(
+            name="project2",
+            slug="project_slug"
+        )
+        self.project_with_empty_slug = Project.objects.create(
+            name="project3",
+            slug=None
+        )
 
     def tearDown(self):
         DataSet.objects.all().delete()
         Project.objects.all().delete()
 
     def test_duplicate_slugs(self):
+        # Try to create DS with existing slug
         DataSet.objects.create(slug="TestSlug1")
         self.assertEqual(DataSet.objects.filter(slug="TestSlug1")
                          .count(), 1)
 
     def test_empty_slug(self):
-        self.assertTrue(DataSet.objects.create(slug=""))
+        DataSet.objects.create(slug="")
+        dataset_empty_slug = DataSet.objects.get(slug="")
+        self.assertIsNotNone(dataset_empty_slug)
 
     def test_edit_existing_slug(self):
         instance = DataSet.objects.get(slug="TestSlug1")
         instance.summary = "Edited Summary"
         instance.save()
-
-        self.assertTrue(DataSet.objects.get(summary="Edited Summary"))
+        data_set_edited = DataSet.objects.get(summary="Edited Summary")
+        self.assertIsNotNone(data_set_edited)
 
     def test_save_slug_no_change(self):
         instance = DataSet.objects.get(slug="TestSlug1")
@@ -1052,11 +1064,41 @@ class BaseResourceSlugTest(unittest.TestCase):
         self.assertNotEqual(instance.slug, instance_again.slug)
 
     def test_save_slug_when_another_model_with_same_slug_exists(self):
-        project_instance = Project.objects.get(name="project")
-        project_instance.slug = "TestSlug4"
-        project_instance.save()
+        dataset_with_same_slug_as_project = DataSet.objects.create(
+            slug=self.project_with_slug.slug)
+        self.assertIsNotNone(dataset_with_same_slug_as_project)
 
-        self.assertTrue(DataSet.objects.create(slug="TestSlug4"))
+    def test_save_empty_slug_when_another_model_with_same_slug_exists(self):
+        dataset_no_slug = DataSet.objects.create(
+            slug=self.project_with_empty_slug.slug)
+
+        self.assertIsNotNone(dataset_no_slug)
+
+    def test_save_slug_when_same_model_with_same_slug_exists(self):
+        Project.objects.create(name="project", slug="TestSlug4")
+        Project.objects.create(name="project_duplicate", slug="TestSlug4")
+        self.assertRaises(ObjectDoesNotExist,
+                          Project.objects.get,
+                          name="project_duplicate")
+
+    def test_save_empty_slug_when_same_model_with_same_slug_exists(self):
+        project_with_no_slug = Project.objects.create(name="project2",
+                                                      slug=None)
+        self.assertIsNotNone(project_with_no_slug)
+
+    def test_save__empty_slug_when_same_model_with_same_empty_slug_exists(
+            self):
+
+        Project.objects.create(name="project_no_slug", slug="")
+        Project.objects.create(name="project_no_slug_duplicate", slug="")
+        self.assertIsNotNone(Project.objects.get(
+            name="project_no_slug_duplicate"))
+
+        Project.objects.create(name="project_no_slug2", slug=None)
+        Project.objects.create(name="project_no_slug_duplicate2", slug=None)
+
+        self.assertIsNotNone(Project.objects.get(
+            name="project_no_slug_duplicate2"))
 
 
 class CachingTest(unittest.TestCase):
