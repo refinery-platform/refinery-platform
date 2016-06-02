@@ -1,10 +1,14 @@
 import json
+
 from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist
-from django.utils import unittest
+from django.utils import unittest, timezone
+from django.test import TestCase
+
 from guardian.shortcuts import assign_perm
 import mockcache as memcache
 from tastypie.test import ResourceTestCase
+
 from core.api import AnalysisResource
 from core.management.commands.init_refinery import create_public_group
 from core.management.commands.create_user import init_user
@@ -13,6 +17,7 @@ from core.models import (
     ExtendedGroup, DataSet, InvestigationLink, Project, Analysis, Workflow,
     WorkflowEngine, UserProfile, invalidate_cached_object,
     AnalysisNodeConnection, Node)
+from core.utils import get_aware_local_time
 from file_store.models import FileExtension
 import data_set_manager
 from galaxy_connector.models import Instance
@@ -1420,3 +1425,12 @@ class AnalysisDeletionTest(unittest.TestCase):
         # AnalysisNodeConnection with direction == 'in'
         self.analysis_with_node_analyzed_further.delete()
         self.assertNotEqual(self.analysis_with_node_analyzed_further, None)
+
+
+class UtilitiesTest(TestCase):
+    def test_get_aware_local_time(self):
+        expectedTime = timezone.localtime(timezone.now())
+        responseTime = get_aware_local_time()
+        differenceTime = responseTime - expectedTime
+
+        self.assertLessEqual(differenceTime.total_seconds(), .99)

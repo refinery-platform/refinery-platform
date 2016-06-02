@@ -31,20 +31,37 @@ class SingleFileColumnParser:
     4. First row contains the column headers and there is one non-empty string
     for each column.
     Defaults:
-    delimiter = tab
+    delimiter = comma
     file_column_index = last column
     file_permanent = files will be added to the file store permanently
     """
-    def __init__(self, metadata_file, file_source_translator,
-                 source_column_index, data_file_column_index=-1,
-                 auxiliary_file_column_index=None, file_base_path="",
-                 data_file_permanent=False, species_column_index=None,
-                 genome_build_column_index=None, annotation_column_index=None,
-                 sample_column_index=None, assay_column_index=None,
-                 column_index_separator=" "):
+    def __init__(
+        self,
+        metadata_file,
+        file_source_translator,
+        source_column_index,
+        data_file_column_index=-1,
+        auxiliary_file_column_index=None,
+        file_base_path="",
+        data_file_permanent=False,
+        species_column_index=None,
+        genome_build_column_index=None,
+        annotation_column_index=None,
+        sample_column_index=None,
+        assay_column_index=None,
+        column_index_separator=" ",
+        delimiter="comma",
+        custom_delimiter_string=","
+    ):
         """Prepare metadata file for parsing"""
         # single character to be used to separate columns
-        self.delimiter = "\t"
+        if delimiter == "comma":
+            self.delimiter = ","
+        if delimiter == "tab":
+            self.delimiter = "\t"
+        if delimiter == "custom":
+            self.delimiter = custom_delimiter_string
+
         # metadata file object
         self.metadata_file = metadata_file
         self.metadata_file.seek(0)
@@ -248,12 +265,25 @@ class SingleFileColumnParser:
         return investigation
 
 
-def process_metadata_table(username, title, metadata_file, source_columns,
-                           data_file_column, auxiliary_file_column=None,
-                           base_path="", data_file_permanent=False,
-                           species_column=None, genome_build_column=None,
-                           annotation_column=None, sample_column=None,
-                           assay_column=None, slug=None, is_public=False):
+def process_metadata_table(
+    username,
+    title,
+    metadata_file,
+    source_columns,
+    data_file_column,
+    auxiliary_file_column=None,
+    base_path="",
+    data_file_permanent=False,
+    species_column=None,
+    genome_build_column=None,
+    annotation_column=None,
+    sample_column=None,
+    assay_column=None,
+    slug=None,
+    is_public=False,
+    delimiter="comma",
+    custom_delimiter_string=","
+):
     """Create a dataset given a metadata file object and its description
     :param username: username
     :type username: str
@@ -325,22 +355,40 @@ def process_metadata_table(username, title, metadata_file, source_columns,
         slug = str(slug)
     except ValueError:
         slug = None
+
+    try:
+        delimiter = str(delimiter)
+    except ValueError:
+        delimiter = "comma"
+
+    try:
+        custom_delimiter_string = str(custom_delimiter_string)
+    except ValueError:
+        custom_delimiter_string = ","
+
     data_file_permanent = bool(data_file_permanent)
     is_public = bool(is_public)
     file_source_translator = generate_file_source_translator(
         username=username, base_path=base_path)
+
     parser = SingleFileColumnParser(
         metadata_file=metadata_file,
         file_source_translator=file_source_translator,
         source_column_index=source_columns,
         data_file_column_index=data_file_column,
         auxiliary_file_column_index=auxiliary_file_column,
-        file_base_path=base_path, data_file_permanent=data_file_permanent,
+        file_base_path=base_path,
+        data_file_permanent=data_file_permanent,
         species_column_index=species_column,
         genome_build_column_index=genome_build_column,
         annotation_column_index=annotation_column,
-        sample_column_index=sample_column, assay_column_index=assay_column,
-        column_index_separator="/")
+        sample_column_index=sample_column,
+        assay_column_index=assay_column,
+        column_index_separator="/",
+        delimiter=delimiter,
+        custom_delimiter_string=custom_delimiter_string
+    )
+
     investigation = parser.run()
     investigation.title = title
     investigation.save()

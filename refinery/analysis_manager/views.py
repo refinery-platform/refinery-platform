@@ -11,6 +11,7 @@ from django.http import (
     HttpResponse, HttpResponseServerError,
     HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden
 )
+from django.utils import timezone
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
@@ -229,7 +230,7 @@ def run(request):
             project=request.user.get_profile().catch_all_project,
             data_set=data_set,
             workflow=curr_workflow,
-            time_start=get_aware_local_time()
+            time_start=timezone.now()
         )
         analysis.save()
         analysis.set_owner(request.user)
@@ -316,7 +317,7 @@ def run(request):
             project=request.user.get_profile().catch_all_project,
             data_set=data_set,
             workflow=curr_workflow,
-            time_start=get_aware_local_time()
+            time_start=timezone.now()
         )
         analysis.save()
         analysis.set_owner(request.user)
