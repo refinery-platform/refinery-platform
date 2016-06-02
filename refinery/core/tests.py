@@ -3,13 +3,13 @@ import json
 from django.contrib.auth.models import User, Group
 from django.utils import unittest, timezone
 from django.test import TestCase
+from django.core.management import call_command
 
 from guardian.shortcuts import assign_perm
 import mockcache as memcache
 from tastypie.test import ResourceTestCase
 
 from core.api import AnalysisResource
-from core.management.commands.init_refinery import create_public_group
 from core.management.commands.create_user import init_user
 from core.models import (
     NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,
@@ -34,7 +34,9 @@ class UserCreateTest(unittest.TestCase):
         self.first_name = "John"
         self.last_name = "Sample"
         self.affiliation = "University"
-        create_public_group()
+
+        call_command('create_public_group')
+
         self.public_group_name = ExtendedGroup.objects.public_group().name
 
     def tearDown(self):
@@ -1072,7 +1074,7 @@ class CachingTest(unittest.TestCase):
         self.user1 = User.objects.create_user(
             self.username1, '', self.password1
         )
-        create_public_group()
+        call_command('create_public_group')
         self.public_group_name = ExtendedGroup.objects.public_group().name
         for index, item in enumerate(range(0, 6)):
             DataSet.objects.create(slug="TestSlug%d" % index)
