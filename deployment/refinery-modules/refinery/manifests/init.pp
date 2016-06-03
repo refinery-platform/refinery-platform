@@ -230,7 +230,6 @@ include solrSynonymAnalyzer
 
 class neo4j {
   $neo4j_config_file = '/etc/neo4j/neo4j-server.properties'
-  include apt
 
   apt::source { 'neo4j':
     ensure      => 'present',
@@ -319,20 +318,15 @@ class owl2neo4j {
 }
 include owl2neo4j
 
-class rabbit {
-  package { 'curl': }
-  ->
-  class { '::rabbitmq':
-    package_ensure => installed,
-    service_ensure => running,
-    port           => '5672',
-  }
+include apt
+apt::key { 'rabbitmq':
+  key    => '0A9AF2115F4687BD29803A206B73A36E6026DFCA',
+  before => Class['::rabbitmq']
 }
-include rabbit
+
+include '::rabbitmq'
 
 class ui {
-  include apt
-
   apt::source { 'nodejs':
     ensure      => 'present',
     comment     => 'Nodesource NodeJS repo.',
@@ -415,7 +409,7 @@ exec { "supervisord":
     Class["ui"],
     Class["solr"],
     Class["neo4j"],
-    Class["rabbit"],
+    Class["::rabbitmq"],
     Service["memcached"],
   ],
 }
