@@ -602,7 +602,7 @@ def create_update_ontology(name, acronym, uri, version, owl2neo4j_version):
         ontology.name = name
         ontology.uri = uri
         ontology.version = version
-        ontology.import_date = get_aware_local_time()
+        ontology.import_date = timezone.now()
         ontology.owl2neo4j_version = owl2neo4j_version
         ontology.save()
         logger.info('Updated %s', ontology)

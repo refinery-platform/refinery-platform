@@ -35,6 +35,7 @@ from django.db.utils import IntegrityError
 from django.dispatch import receiver
 from django.forms import ValidationError
 from django.template import loader, Context
+from django.utils import timezone
 
 from bioblend import galaxy
 from django.template.loader import render_to_string
@@ -134,8 +135,8 @@ def create_user_profile_registered(sender, user, request, **kwargs):
     UserProfile.objects.get_or_create(user=user)
 
     logger.info(
-        "user profile for user %s has been created after registration %s",
-        user, get_aware_local_time()
+        "user profile for user %s has been created after registration",
+        user
     )
 
 
@@ -1132,7 +1133,7 @@ class Analysis(OwnableResource):
         self.status = status
         self.status_detail = message
         if status == self.FAILURE_STATUS or status == self.SUCCESS_STATUS:
-            self.time_end = get_aware_local_time()
+            self.time_end = timezone.now()
         self.save()
 
     def successful(self):
@@ -1360,9 +1361,8 @@ class Analysis(OwnableResource):
             workflow = self.workflow.name
             project = self.project
 
-            # get information needed to calculate the duration
-            start = self.time_start
-            end = self.time_end
+            start = timezone.localtime(self.time_start)
+            end = timezone.localtime(self.time_end)
 
             duration = end - start
             hours, remainder = divmod(duration.total_seconds(), 3600)
@@ -2073,7 +2073,7 @@ class Invitation(models.Model):
 
     def save(self, *arg, **kwargs):
         if not self.id:
-            self.created = get_aware_local_time()
+            self.created = timezone.now()
         return super(Invitation, self).save(*arg, **kwargs)
 
 
@@ -2103,7 +2103,7 @@ class Ontology(models.Model):
     # Stores the most recent import date, i.e. this will be overwritten when a
     # ontology is re-imported.
     import_date = models.DateTimeField(
-        default=get_aware_local_time,
+        default=timezone.now,
         editable=False,
         auto_now=False
     )

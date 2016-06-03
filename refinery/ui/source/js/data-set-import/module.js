@@ -2,5 +2,9 @@
 
 angular
   .module('refineryDataSetImport', [
-    'blueimp.fileupload'
+    'angularFileUpload',
+    'blueimp.fileupload',
+    'ui.grid',
+    'ui.grid.edit',
+    'ui.grid.resizeColumns'
   ]);

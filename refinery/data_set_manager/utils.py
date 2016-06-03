@@ -822,6 +822,37 @@ def customize_attribute_response(facet_fields):
     return attribute_array
 
 
+def initialize_attribute_order_ranks(selected_attribute, new_rank):
+    # With a new set of attribute orders, this will set a default rank
+    attribute_list = AttributeOrder.objects.filter(
+        assay=selected_attribute.assay)
+    new_increment_rank = 1
+    for attribute in attribute_list:
+        # new rank is handled seperately
+        if new_increment_rank == new_rank:
+            new_increment_rank = new_increment_rank + 1
+        # internal attributes aren't shown, does not need rank
+        if not attribute.is_internal:
+            # updates requested attribute
+            if attribute == selected_attribute:
+                serializer = AttributeOrderSerializer(
+                        attribute,
+                        {'rank': new_rank},
+                        partial=True)
+            # updates all other attributes
+            else:
+                serializer = AttributeOrderSerializer(
+                    attribute,
+                    {'rank': new_increment_rank},
+                    partial=True)
+                new_increment_rank = new_increment_rank + 1
+
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return serializer.error
+
+
 def update_attribute_order_ranks(old_attribute, new_rank):
     # Updates an assays attribute order ranks based on a singular object
     try:

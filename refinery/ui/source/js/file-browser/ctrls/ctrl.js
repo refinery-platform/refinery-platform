@@ -301,33 +301,56 @@ function FileBrowserCtrl (
       if (columnWidth < 10) {  // make sure columns are wide enough
         columnWidth = Math.round(columnWidth * 2);
       }
-
-
+      var colProperty = {
+        name: columnName,
+        width: columnWidth + '%',
+        field: attribute.internal_name,
+        cellTooltip: true,
+        enableHiding: false,
+      };
       if (columnName === 'Url') {
+        // Url requires a custom template for downloading links
         vm.customColumnName.push(vm.setCustomUrlColumnDef(columnName));
+      } else if (columnName === 'Analysis Group') {
+        // Analysis requires a custom template for filtering -1 entries
+        var _cellTemplate = '<div class="ngCellText text-align-center"' +
+        'ng-class="col.colIndex()">{{COL_FIELD |' +
+          ' analysisGroupNegativeOneWithNA: "Analysis Group"}}</div>';
+        colProperty.cellTemplate = _cellTemplate;
+        vm.customColumnName.push(colProperty);
       } else {
-        vm.customColumnName.push(
-          {
-            name: columnName,
-            width: columnWidth + '%',
-            field: attribute.internal_name,
-            cellTooltip: true,
-            enableHiding: false
-          }
-        );
+        vm.customColumnName.push(colProperty);
       }
     });
     vm.gridOptions.columnDefs = vm.customColumnName;
   };
+
+  // Helper method for grabbing the internal name, in fastqc viewer template
+  var grabAnalysisInternalName = function (arrayOfObj) {
+    var internalName = '';
+    for (var i = 0; i < arrayOfObj.length; i ++) {
+      if (arrayOfObj[i].display_name === 'Analysis') {
+        internalName = arrayOfObj[i].internal_name;
+        break;
+      }
+    }
+    return internalName;
+  };
+
   // File download column require unique template and fields.
   vm.setCustomUrlColumnDef = function (_columnName) {
-    var cellTemplate = '<div class="ngCellText"' +
-          ' ng-class="col.colIndex()" style="text-align:center">' +
-          '<div ng-if="COL_FIELD"' +
-            'title="Download File \{{COL_FIELD}}\">' +
+    var internalName = grabAnalysisInternalName(vm.assayAttributes);
+    var _cellTemplate = '<div class="ngCellText text-align-center"' +
+          'ng-class="col.colIndex()">' +
+          '<div ng-if="COL_FIELD" title="Download File \{{COL_FIELD}}\">' +
           '<a href="{{COL_FIELD}}" target="_blank">' +
           '<i class="fa fa-arrow-circle-o-down"></i></a>' +
-          '</div>' +
+          '<span class="fastqc-viewer" ' +
+          'ng-if="row.entity.Url.indexOf(' + "'fastqc_results'" + ') >= 0">' +
+          '&nbsp;<a title="View FastQC Result"' +
+          ' href="/fastqc_viewer/#/\{{row.entity.' + internalName + '}}\">' +
+          '<i class="fa fa-bar-chart-o"></i></a>' +
+          '</span></div>' +
           '<div ng-if="!COL_FIELD"' +
             'title="File not available for download">' +
           '<i class="fa fa-bolt"></i>' +
@@ -344,7 +367,7 @@ function FileBrowserCtrl (
       enableSorting: false,
       enableColumnMenu: false,
       enableColumnResizing: false,
-      cellTemplate: cellTemplate
+      cellTemplate: _cellTemplate
     };
   };
 

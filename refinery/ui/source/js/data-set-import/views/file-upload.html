@@ -1,0 +1,167 @@
+<div class="tab-pane" id="data">
+  <div class="refinery-header">
+    <span class="refinery-header-left"><h3>Data file upload</h3></span>
+  </div>
+  <form id="fileupload" method="POST" enctype="multipart/form-data"
+        ng-controller="RefineryFileUploadCtrl"
+        data-file-upload="options"
+        ng-class="{'fileupload-processing': processing() || loadingFiles}">
+
+    <!-- Redirect browsers with JavaScript disabled to the origin page -->
+    <noscript>
+      <input type="hidden" name="redirect" value="/">
+    </noscript>
+
+    <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
+    <div class="row fileupload-buttonbar v-centered-row">
+      <div class="col-lg-4">
+        <!-- The fileinput-button span is used to style the file input field as button -->
+        <span
+          class="btn btn-success fileinput-button"
+          ng-class="{ 'disabled': disabled }">
+          <i class="fa fa-plus"></i>
+          <span>Add files &hellip;</span>
+          <input
+            type="file"
+            class="refinery-base"
+            name="files[]"
+            multiple
+            ng-disabled="disabled">
+        </span>
+        <button
+          class="btn btn-primary start"
+          ng-click="submit()"
+          ng-disabled="numUnfinishedUploads() === 0">
+          <i class="fa fa-upload"></i>
+          <span>Start upload</span>
+        </button>
+        <button
+          class="btn btn-warning cancel"
+          ng-click="cancel()"
+          ng-disabled="numUnfinishedUploads() === 0">
+          <i class="fa fa-ban"></i>
+          <span>Cancel upload</span>
+        </button>
+        <!-- The global file processing state -->
+        <!-- <span class="fileupload-process"></span> -->
+      </div>
+      <div class="col-lg-4">
+        <div class="v-center" ng-if="processing() || loadingFiles">
+          <span>Calculating MD5</span>
+          <button class="icon-only" ng-click="openHelpMd5()">
+            <i class="fa fa-question-circle" aria-hidden="true"></i>
+          </button>
+          <span>:</span>
+          <div class="refinery-spinner refinery-spinner-inline"></div>
+        </div>
+      </div>
+      <!-- The global progress state -->
+      <div
+        class="col-lg-4"
+        ng-show="queue.length">
+        <div class="v-center">
+          <!-- The global progress bar -->
+          <div
+            class="progress"
+            ng-class="{ 'progress-striped': !allUploaded, 'active': uploadActive }"
+            file-upload-progress="progress()">
+            <div
+              class="progress-bar"
+              ng-repeat="file in queuedFiles track by file.name"
+              ng-class="{ 'progress-bar-success': file.uploaded && !file.error, 'progress-bar-danger': file.error }"
+              ng-style="{ 'width': globalToIndividualProgress(num, $index) + '%' }">
+              <span ng-if="queuedFiles.length <= 20">
+                <span
+                  ng-if="globalReadableProgress(num, $index) > 0 && globalReadableProgress(num, $index) < 100">
+                  {{ globalToIndividualProgress(num, $index) + '%' }}
+                </span>
+                <i
+                  class="fa fa-check text-success"
+                  aria-hidden="true"
+                  ng-if="globalReadableProgress(num, $index) >= 100 && !file.error"></i>
+                <i
+                  class="fa fa-exclamation-triangle text-danger"
+                  aria-hidden="true"
+                  ng-if="file.error"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- The table listing the files available for upload/download -->
+    <div class="container-fluid">
+      <div
+        class="row bordered-row v-centered-row"
+        ng-repeat="file in queue"
+        ng-class="{
+          'processing': file.$processing(),
+          'bg-danger': file.error
+        }">
+        <div class="col-xs-4">
+          <div class="v-center">
+            <p class="name">
+              <strong>{{ file.name }}</strong>
+              ({{ file.size | formatFileSize }})
+            </p>
+          </div>
+        </div>
+        <div class="col-xs-4">
+          <div class="v-center">
+            <div
+              class="progress progress-striped active"
+              ng-class="{ 'progress-striped active': !file.uploaded && !file.error }"
+              file-upload-progress="file.$progress()">
+              <div
+                class="progress-bar"
+                role="progressbar"
+                ng-class="{ 'progress-bar-success': file.uploaded, 'progress-bar-danger': file.error }"
+                ng-style="{ width: num + '%' }">
+                <span ng-show="num > 0" ng-if="!file.error">{{ num + '%' }}</span>
+                <i class="fa fa-exclamation-triangle" ng-if="file.error"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xs-4">
+          <div ng-if="!file.uploaded && !file.error">
+            <button
+              class="btn btn-primary start"
+              ng-click="file.$submit()"
+              ng-hide="!file.$submit || options.autoUpload"
+              ng-disabled="file.$state() == 'pending' || file.$state() == 'rejected'">
+              <i class="fa fa-upload"></i>
+              <span>Start</span>
+            </button>
+            <button
+              class="btn btn-warning cancel"
+              ng-click="file.$cancel()"
+              ng-hide="!file.$cancel">
+              <i class="fa fa-ban"></i>
+              <span>Cancel</span>
+            </button>
+            <button
+              class="btn btn-danger destroy"
+              ng-controller="RefineryFileDestroyCtrl"
+              ng-click="file.$destroy()"
+              ng-hide="!file.$destroy">
+              <i class="fa fa-trash"></i>
+              <span>Delete</span>
+            </button>
+          </div>
+          <div class="v-center" ng-if="file.uploaded">
+            <i class="fa fa-check-circle success"></i>
+            <strong>Uploaded</strong>
+          </div>
+          <div class="v-center" ng-if="file.error">
+            <strong
+              class="error text-danger"
+              ng-if="file.error"
+              ng-bind="file.error">
+            </strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

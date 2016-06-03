@@ -1,19 +1,19 @@
 'use strict';
 
-describe('Dashboard.directive.visWrapper: unit tests', function () {
+describe('DataSetImport.directive.isaTabImport: unit tests', function () {
   var directiveEl;
   var $scope;
 
   beforeEach(function () {
     module('refineryApp');
     module('refineryApp.templates');
-    module('refineryDashboard');
+    module('refineryDataSetImport');
 
     var $compile;
+    // var $controller;
     var $rootScope;
 
     inject(function (
-      $injector,
       _$compile_,
       _$rootScope_
     ) {
@@ -23,17 +23,18 @@ describe('Dashboard.directive.visWrapper: unit tests', function () {
 
     $scope = $rootScope.$new();
 
-    var element = angular.element(
-      '<refinery-dashboard-vis-wrapper></refinery-dashboard-vis-wrapper>'
-    );
-    directiveEl = $compile(element)($scope);
+    directiveEl = $compile(
+      angular.element(
+        '<isa-tab-import import-option="import.option"></isa-tab-import>'
+      )
+    )($scope);
 
     $scope.$digest();
   });
 
   describe('DOM', function () {
     it('should replace custom element with template', function () {
-      expect(directiveEl.hasClass('content-container')).toBe(true);
+      expect(directiveEl.attr('id')).toBe('isa-tab-import-form');
     });
   });
 });
