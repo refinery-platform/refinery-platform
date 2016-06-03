@@ -1196,12 +1196,12 @@ class WorkflowDeletionTest(unittest.TestCase):
 
     def test_verify_no_deletion_if_workflow_used_in_analysis(self):
         self.workflow_used_by_analyses.delete()
-        self.assertTrue(self.workflow_used_by_analyses)
+        self.assertIsNotNone(self.workflow_used_by_analyses)
         self.assertFalse(self.workflow_used_by_analyses.is_active)
 
     def test_verify_deletion_if_workflow_not_used_in_analysis(self):
-        query = Workflow.objects.get(name="workflow_not_used_by_analyses")
-        self.assertIsNotNone(query)
+        self.assertIsNotNone(Workflow.objects.get(
+            name="workflow_not_used_by_analyses"))
         self.workflow_not_used_by_analyses.delete()
         self.assertRaises(ObjectDoesNotExist,
                           Workflow.objects.get,
@@ -1253,9 +1253,9 @@ class DataSetDeletionTest(unittest.TestCase):
         Project.objects.all().delete()
         WorkflowEngine.objects.all().delete()
         Workflow.objects.all().delete()
-        DataSet.objects.all().delete()
         Instance.objects.all().delete()
         Analysis.objects.all().delete()
+        DataSet.objects.all().delete()
         UserProfile.objects.all().delete()
         Node.objects.all().delete()
         FileStoreItem.objects.all().delete()
@@ -1266,21 +1266,19 @@ class DataSetDeletionTest(unittest.TestCase):
         InvestigationLink.objects.all().delete()
 
     def test_verify_dataset_deletion_if_no_analysis_run_upon_it(self):
-        query = DataSet.objects.get(name="dataset_without_analysis")
-        self.assertIsNotNone(query)
+        self.assertIsNotNone(
+            DataSet.objects.get(name="dataset_without_analysis"))
         self.dataset_without_analysis.delete()
         self.assertRaises(ObjectDoesNotExist,
                           DataSet.objects.get,
                           name="dataset_without_analysis")
 
     def test_verify_no_dataset_deletion_if_analysis_run_upon_it(self):
-        query = DataSet.objects.get(name="dataset_with_analysis")
         self.dataset_with_analysis.delete()
-        self.assertIsNotNone(query)
+        self.assertIsNotNone(DataSet.objects.get(name="dataset_with_analysis"))
 
     def test_isa_archive_deletion(self):
-        isa_archive = self.dataset_without_analysis.get_isa_archive()
-        self.assertIsNotNone(isa_archive)
+        self.assertIsNotNone(self.dataset_without_analysis.get_isa_archive())
         self.dataset_without_analysis.delete()
         self.assertIsNone(self.dataset_without_analysis.get_isa_archive())
 
@@ -1411,7 +1409,6 @@ class AnalysisDeletionTest(unittest.TestCase):
     def test_verify_analysis_remains_if_nodes_analyzed_further(self):
         # Try to delete Analysis with a Node that has an
         # AnalysisNodeConnection with direction == 'in'
-        query = Analysis.objects.get(
-            name='analysis_with_node_analyzed_further')
         self.analysis_with_node_analyzed_further.delete()
-        self.assertIsNotNone(query)
+        self.assertIsNotNone(Analysis.objects.get(
+            name='analysis_with_node_analyzed_further'))
