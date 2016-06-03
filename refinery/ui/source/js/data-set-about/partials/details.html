@@ -1,6 +1,6 @@
- <!--<div class="refinery-header">
+<div class="refinery-header">
     <span class="refinery-header-left">
-      <h3>{{ data_set.name }}</h3>
+      <h3>{{ ADCtrl.dataSet.name }}</h3>
     </span>
   </div>
 
@@ -8,30 +8,38 @@
     <h4>Summary</h4>
   </div>
   <p>
-    { if data_set.summary %}
+    <div ng-if="ADCtrl.dataSet.summary">
       {{ data_set.summary }}
-    { else %}
-      <i>None provided.</i>
-    { endif %}
+    </div>
+    <div ng-if="!ADCtrl.dataSet.summary">
+       <i>None provided.</i>
+    </div>
   </p>
 
   <div class="refinery-subheader">
     <h4>Description</h4>
   </div>
   <p>
-    { if data_set.description %}
-      {{ data_set.description|markdown:"safe" }}
-    { else %}
-      <i>None provided.</i>
-    { endif %}
+     <div ng-if="ADCtrl.dataSet.description">
+      {{ data_set.description }}
+    </div>
+    <div ng-if="!ADCtrl.dataSet.description">
+       <i>None provided.</i>
+    </div>
   </p>
 
   <div class="refinery-subheader">
     <h4>Shortcut Name</h4>
   </div>
-  <p>{ if data_set.slug %} {{ data_set.slug }} { else %} <i>None provided.</i>{ endif %}</p>
+  <p>
+    <div ng-if="ADCtrl.dataSet.slug">
+      {{ data_set.slug }}
+    </div>
+    <div ng-if="!ADCtrl.dataSet.slug">
+       <i>None provided.</i>
+    </div>
 
-  { if not REFINERY_REPOSITORY_MODE %}
+ <!-- { if not REFINERY_REPOSITORY_MODE %}
     <div class="refinery-header">
       <span class="refinery-header-left">
           <h3>Studies</h3>
@@ -45,9 +53,9 @@
         { endfor %}
       </ul>
     { endfor %}
-  { endif %}
+  { endif %} -->
 
-  <div class="refinery-header">
+ <!-- <div class="refinery-header">
     <span class="refinery-header-left">
         <h3>Files</h3>
     </span>
@@ -82,3 +90,4 @@
     Data set created <i>{{ data_set.creation_date }}</i>. Last modified <i>{{
      data_set.modification_date }}</i>.</p>->
 </div>
+-->

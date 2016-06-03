@@ -5,7 +5,10 @@ function rpDataSetAboutDetails () {
     restrict: 'E',
     templateUrl: '/static/partials/data-set-about/partials/details.html',
     controller: 'AboutDetailsCtrl',
-    controllerAs: 'ADCtrl'
+    controllerAs: 'ADCtrl',
+    bindToController: {
+      dataSet: '@',
+    }
   };
 }
 

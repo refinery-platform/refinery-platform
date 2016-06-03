@@ -14,7 +14,6 @@ function dataSetAboutFactory (
   var getDataSet = function (dataSetUuid) {
     var params = {
       uuid: dataSetUuid,
-      model: 'data_sets'
     };
     var dataSetRequest = dataSetService.query(params);
     dataSetRequest.$promise.then(function (response) {
