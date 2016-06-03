@@ -11,8 +11,10 @@ import mockcache as memcache
 from tastypie.test import ResourceTestCase
 
 from core.api import AnalysisResource
-from core.management.commands.init_refinery import create_public_group
+
 from core.management.commands.create_user import init_user
+from core.management.commands.create_public_group import create_public_group
+
 from core.models import (
     NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,
     ExtendedGroup, DataSet, InvestigationLink, Project, Analysis, Workflow,
@@ -40,7 +42,9 @@ class UserCreateTest(unittest.TestCase):
         self.first_name = "John"
         self.last_name = "Sample"
         self.affiliation = "University"
+
         create_public_group()
+
         self.public_group_name = ExtendedGroup.objects.public_group().name
 
     def tearDown(self):
