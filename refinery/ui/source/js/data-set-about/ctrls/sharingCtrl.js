@@ -19,16 +19,16 @@ function AboutSharingCtrl (
     dataSetAboutFactory.getDataSharingSet(dataSetUuid).then(function () {
       vm.dataSet = dataSetAboutFactory.dataSet;
       vm.refreshOwnerName(vm.dataSet.owner);
-      vm.refreshGroup(dataSetUuid);
+      console.log(vm.dataSet);
+      vm.refreshGroup(vm.dataSet.share_list[0]);
       promise.resolve();
     });
     return promise.promise;
   };
 
-  vm.refreshGroup = function (uuid) {
+  vm.refreshGroup = function (shareObj) {
     var promise = $q.defer();
-    dataSetAboutFactory.getGroup(uuid).then(function () {
-      console.log('in resolve');
+    dataSetAboutFactory.getGroup(shareObj).then(function () {
       promise.resolve();
     });
     return promise.promise;

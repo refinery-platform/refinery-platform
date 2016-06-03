@@ -3,7 +3,7 @@
 function dataSetAboutFactory (
   sharingService,
   userService,
-  groupService
+  groupMemberService
 ) {
   var dataSet = {};
   var ownerProfile = {};
@@ -21,19 +21,25 @@ function dataSetAboutFactory (
     return dataSetRequest.$promise;
   };
 
-  var getGroup = function (groupUuid) {
-    var params = {
-      uuid: groupUuid
+  var generateGroupObj = function (dataObj, permissions) {
+    return {
+      name: dataObj.name,
+      id: dataObj.id,
+      uuid: dataObj.uuid,
+      canEdit: permissions.change,
+      canRead: permissions.read
     };
-    var groupRequest = groupService.query(params);
-    console.log('in getGroupFactory');
-    console.log(groupRequest);
+  };
+
+  var getGroup = function (shareObj) {
+    var params = {
+      id: shareObj.groupId
+    };
+    var groupRequest = groupMemberService.query(params);
     groupRequest.$promise.then(function (response) {
-      console.log(response);
-      angular.copy(response.objects[0], group);
-     // angular.copy(response.objects[0], group);
+      angular.copy(generateGroupObj(response.objects[0], shareObj.perms), group);
     });
-    return group.$promise;
+    return groupRequest.$promise;
   };
 
   var getOwnerName = function (userUuid) {
@@ -59,7 +65,7 @@ angular
   .factory('dataSetAboutFactory', [
     'sharingService',
     'userService',
-    'groupService',
+    'groupMemberService',
     dataSetAboutFactory
   ]
 );
