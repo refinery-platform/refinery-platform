@@ -3,14 +3,16 @@ import json
 from django.contrib.auth.models import User, Group
 from django.utils import unittest, timezone
 from django.test import TestCase
-from django.core.management import call_command
 
 from guardian.shortcuts import assign_perm
 import mockcache as memcache
 from tastypie.test import ResourceTestCase
 
 from core.api import AnalysisResource
+
 from core.management.commands.create_user import init_user
+from core.management.commands.create_public_group import create_public_group
+
 from core.models import (
     NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,
     ExtendedGroup, DataSet, InvestigationLink, Project, Analysis, Workflow,
@@ -35,7 +37,7 @@ class UserCreateTest(unittest.TestCase):
         self.last_name = "Sample"
         self.affiliation = "University"
 
-        call_command('create_public_group')
+        create_public_group()
 
         self.public_group_name = ExtendedGroup.objects.public_group().name
 
@@ -1074,7 +1076,7 @@ class CachingTest(unittest.TestCase):
         self.user1 = User.objects.create_user(
             self.username1, '', self.password1
         )
-        call_command('create_public_group')
+        create_public_group()
         self.public_group_name = ExtendedGroup.objects.public_group().name
         for index, item in enumerate(range(0, 6)):
             DataSet.objects.create(slug="TestSlug%d" % index)
