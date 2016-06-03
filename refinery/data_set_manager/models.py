@@ -680,11 +680,11 @@ def _is_facet_attribute(attribute, study, assay):
         raise ValueError('No facets found.')
 
     items = results['response']['numFound']
-    attributeValues = len(
+    attribute_values = len(
         results['facet_counts']['facet_fields'][attribute]
     ) / 2
 
-    return (attributeValues / items) < ratio
+    return (attribute_values / items) < ratio
 
 
 def initialize_attribute_order(study, assay):
