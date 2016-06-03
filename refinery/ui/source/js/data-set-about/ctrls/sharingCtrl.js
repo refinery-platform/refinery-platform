@@ -12,7 +12,7 @@ function AboutSharingCtrl (
   vm.ownerName = '';
   vm.groupList = [];
 
-  vm.refreshDataSetStats = function () {
+  vm.refreshDataSetSharing = function () {
     var dataSetUuid = $window.dataSetUuid;
 
     var promise = $q.defer();
@@ -45,7 +45,7 @@ function AboutSharingCtrl (
     return promise.promise;
   };
 
-  vm.refreshDataSetStats();
+  vm.refreshDataSetSharing();
 }
 
 
