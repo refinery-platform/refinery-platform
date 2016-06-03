@@ -8,7 +8,7 @@ function AboutSharingCtrl (
   $q
   ) {
   var vm = this;
-  vm.dataSet = {};
+  vm.dataSetSharing = {};
   vm.ownerName = '';
   vm.groupList = [];
 
@@ -17,11 +17,10 @@ function AboutSharingCtrl (
 
     var promise = $q.defer();
     dataSetAboutFactory.getDataSharingSet(dataSetUuid).then(function () {
-      vm.dataSet = dataSetAboutFactory.dataSet;
-      console.log(vm.dataSet);
+      vm.dataSetSharing = dataSetAboutFactory.dataSetSharing;
       vm.refreshOwnerName(vm.dataSet.owner);
-      for (var i = 0; i < vm.dataSet.share_list.length; i++) {
-        vm.refreshGroup(vm.dataSet.share_list[i]);
+      for (var i = 0; i < vm.dataSetSharing.share_list.length; i++) {
+        vm.refreshGroup(vm.dataSetSharing.share_list[i]);
       }
       promise.resolve();
     });

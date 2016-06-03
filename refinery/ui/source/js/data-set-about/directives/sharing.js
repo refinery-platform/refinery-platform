@@ -7,7 +7,7 @@ function rpDataSetAboutSharing () {
     controller: 'AboutSharingCtrl',
     controllerAs: 'ASCtrl',
     bindToController: {
-      dataSet: '@',
+      dataSetSharing: '@',
       ownerName: '@',
       groupList: '@'
     }

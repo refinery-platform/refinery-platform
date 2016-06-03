@@ -1,4 +1,4 @@
- <div class="refinery-header">
+ <!--<div class="refinery-header">
     <span class="refinery-header-left">
       <h3>{{ data_set.name }}</h3>
     </span>
@@ -8,44 +8,44 @@
     <h4>Summary</h4>
   </div>
   <p>
-    {% if data_set.summary %}
+    { if data_set.summary %}
       {{ data_set.summary }}
-    {% else %}
+    { else %}
       <i>None provided.</i>
-    {% endif %}
+    { endif %}
   </p>
 
   <div class="refinery-subheader">
     <h4>Description</h4>
   </div>
   <p>
-    {% if data_set.description %}
+    { if data_set.description %}
       {{ data_set.description|markdown:"safe" }}
-    {% else %}
+    { else %}
       <i>None provided.</i>
-    {% endif %}
+    { endif %}
   </p>
 
   <div class="refinery-subheader">
     <h4>Shortcut Name</h4>
   </div>
-  <p>{% if data_set.slug %} {{ data_set.slug }} {% else %} <i>None provided.</i>{% endif %}</p>
+  <p>{ if data_set.slug %} {{ data_set.slug }} { else %} <i>None provided.</i>{ endif %}</p>
 
-  {% if not REFINERY_REPOSITORY_MODE %}
+  { if not REFINERY_REPOSITORY_MODE %}
     <div class="refinery-header">
       <span class="refinery-header-left">
           <h3>Studies</h3>
       </span>
     </div>
-    {% for study in studies %}
+    { for study in studies %}
       <p><strong>{{study.identifier}}</strong>: {{study.title}}</p>
       <ul>
         {% for assay in study.assay_set.all %}
           <li>Assay - {{assay}}</li>
-        {% endfor %}
+        { endfor %}
       </ul>
-    {% endfor %}
-  {% endif %}
+    { endfor %}
+  { endif %}
 
   <div class="refinery-header">
     <span class="refinery-header-left">
@@ -56,19 +56,18 @@
   <span class="refinery-subheader">
       <h3>Meta Data</h3>
   </span>
-  {% if isatab_archive or pre_isatab_archive %}
-    {% load core_extras %}
-    {% if isatab_archive %}
+  { if isatab_archive or pre_isatab_archive %}
+    { load core_extras %}
+    { if isatab_archive %}
       <p><a href="{{isatab_archive.get_datafile}}">{{isatab_archive.uuid|simple_name}}</a> ({{isatab_archive.get_file_size|filesizeformat}})</p>
-    {% endif %}
-    {% if pre_isatab_archive %}
+    { endif %}
+    { if pre_isatab_archive %}
       <p><a href="{{pre_isatab_archive.get_datafile}}"
       >{{pre_isatab_archive.uuid|simple_name}}</a> ({{pre_isatab_archive.get_file_size|filesizeformat}})</p>
-    {% endif %}
-  {% else %}
+    { endif %}
+  { else %}
     <p><i>Not available.</i></p>
-  {% endif %}
-
+  { endif %}
   <span class="refinery-subheader">
     <h3>Data Files</h3>
   </span>
@@ -80,5 +79,6 @@
     </span>
   </div>
   <p>Current version <i>{{ data_set.get_version_details.version }}</i> created <i>{{ data_set.get_version_details.date }}</i>.
-    Data set created <i>{{ data_set.creation_date }}</i>. Last modified <i>{{ data_set.modification_date }}</i>.</p>
+    Data set created <i>{{ data_set.creation_date }}</i>. Last modified <i>{{
+     data_set.modification_date }}</i>.</p>->
 </div>

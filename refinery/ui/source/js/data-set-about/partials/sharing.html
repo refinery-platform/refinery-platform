@@ -8,13 +8,13 @@
   </div>
   <p>
     <span class="fa fa-user"></span>&nbsp;
-    <span ng-if="ASCtrl.dataSet.is_owner">
-      <a href="/users/{{ ASCtrl.dataSet.owner }}">
+    <span ng-if="ASCtrl.dataSetSharing.is_owner">
+      <a href="/users/{{ ASCtrl.dataSetSharing.owner }}">
        You
       </a>
     </span>
-    <span ng-if="!ASCtrl.dataSet.is_owner">
-      <a href="/users/{{ ASCtrl.dataSet.owner }}">
+    <span ng-if="!ASCtrl.dataSetSharing.is_owner">
+      <a href="/users/{{ ASCtrl.dataSetSharing.owner }}">
       {{ ASCtrl.ownerName }}
       </a>
     </span>
