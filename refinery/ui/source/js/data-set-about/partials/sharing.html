@@ -26,7 +26,7 @@
   </div>
   <p>
   <div ng-repeat="group in ASCtrl.groupList" track by $index>
-     <a href="group.uuid">{{ group.name }}</a>&nbsp;
+     <a href="/groups/{{group.uuid}}">{{ group.name }}</a>&nbsp;
     <span ng-if="group.canRead">
        <i class="fa fa-eye"></i>
     </span>
