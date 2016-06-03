@@ -518,7 +518,12 @@ class DataSet(SharableResource):
         else:
             logger.error("Cannot delete DataSet: %s . It has been used in one "
                          "or more analyses. " % self)
-            super(DataSet, self).save()
+
+    def get_analyses(self):
+        return Analysis.objects.filter(data_set=self)
+
+    def get_investigation_links(self):
+        return InvestigationLink.objects.filter(data_set=self)
 
     def get_owner(self):
         owner = None
@@ -730,6 +735,12 @@ class InvestigationLink(models.Model):
         )
         return retstr
 
+    def get_node_collection(self):
+        try:
+            return NodeCollection.objects.get(uuid=self.investigation.uuid)
+        except (ObjectDoesNotExist, MultipleObjectsReturned) as e:
+                        logger.error(("Could not fetch NodeCollection: " % e))
+
 
 class WorkflowDataInput(models.Model):
     name = models.CharField(max_length=200)
@@ -845,6 +856,9 @@ class Workflow(SharableResource, ManageableResource):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
         )
+
+    def get_analyses(self):
+        return Analysis.objects.filter(workflow=self)
 
     def delete(self, **kwargs):
         '''
@@ -1079,6 +1093,19 @@ class Analysis(OwnableResource):
                                      "%s:  %s",
                                      item.id, e)
 
+    def get_status(self):
+        return self.status
+
+    def get_nodes(self):
+        return Node.objects.filter(analysis_uuid=self.uuid)
+
+    def get_analysis_node_connections_for_analysis(self):
+        return AnalysisNodeConnection.objects.filter(analysis=self)
+
+    def get_analysis_results(self):
+        return AnalysisResult.objects.filter(analysis_uuid=self.uuid)
+
+    def optimize_solr_index(self):
             solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
                                        "data_set_manager"), timeout=10)
             '''
@@ -1090,20 +1117,6 @@ class Analysis(OwnableResource):
                 solr.optimize()
             except Exception as e:
                 logger.error("Could not optimize Solr's index:", e)
-
-            '''
-                Delete Nodes Associated w/ the Analysis
-            '''
-            for node in nodes:
-                try:
-                    node.delete()
-                except Exception as e:
-                    logger.debug("Could not delete Node %s:" % node, e)
-
-            super(Analysis, self).delete()
-
-    def get_status(self):
-        return self.status
 
     def set_status(self, status, message=''):
         """Set analysis status and perform additional actions as required"""
