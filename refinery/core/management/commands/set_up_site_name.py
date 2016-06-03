@@ -14,13 +14,16 @@ class Command(BaseCommand):
     Description:
     main program; run the command
     """
+
     def handle(self, *args, **options):
         try:
             refinery_instance_name = args[0]
             refinery_base_url = args[1]
         except:
-            print "Insufficient arguments provided:\n%s" % self.help
+            sys.stdout.write("Insufficient arguments provided:\n%s" %
+                             self.help)
             sys.exit(2)
+
         set_up_site_name(refinery_instance_name, refinery_base_url)
 
 
@@ -31,5 +34,5 @@ def set_up_site_name(refinery_instance_name, refinery_base_url):
     site_obj.name = refinery_instance_name
     site_obj.domain = refinery_base_url
     site_obj.save()
-    print "Created Site with name %s and base URL %s.\n" % \
-          (site_obj.name, site_obj.domain)
+    sys.stdout.write("Created Site with name %s and base URL %s.\n" %
+                     (site_obj.name, site_obj.domain))

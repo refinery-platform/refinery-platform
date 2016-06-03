@@ -1,3 +1,4 @@
+import sys
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
@@ -15,6 +16,7 @@ class Command(BaseCommand):
     Description:
     main program; run the command
     """
+
     def handle(self, *args, **options):
         create_public_group()
 
@@ -29,20 +31,22 @@ def create_public_group():
     # a. test if there is already a "group" of the same name
     if Group.objects.filter(
             name__exact=settings.REFINERY_PUBLIC_GROUP_NAME).count() > 0:
-        print("A (standard) Django group named '%s' already exists." %
-              settings.REFINERY_PUBLIC_GROUP_NAME)
+        sys.stdout.write("A (standard) Django group named '%s' already "
+                         "exists." %
+                         settings.REFINERY_PUBLIC_GROUP_NAME)
     elif Group.objects.filter(
             id=settings.REFINERY_PUBLIC_GROUP_ID).count() > 0:
-        print("A (standard) Django group with id '%s' already exists." %
-              settings.REFINERY_PUBLIC_GROUP_ID)
+        sys.stdout.write("A (standard) Django group with id '%s' already "
+                         "exists." %
+                         settings.REFINERY_PUBLIC_GROUP_ID)
     elif ExtendedGroup.objects.filter(
             name__exact=settings.REFINERY_PUBLIC_GROUP_NAME).count() > 0:
-        print("A Refinery group named '%s' already exists." %
-              settings.REFINERY_PUBLIC_GROUP_NAME)
+        sys.stdout.write("A Refinery group named '%s' already exists." %
+                         settings.REFINERY_PUBLIC_GROUP_NAME)
     elif ExtendedGroup.objects.filter(
             name__exact=settings.REFINERY_PUBLIC_GROUP_ID).count() > 0:
-        print("A Refinery group with id '%s' already exists." %
-              settings.REFINERY_PUBLIC_GROUP_ID)
+        sys.stdout.write("A Refinery group with id '%s' already exists." %
+                         settings.REFINERY_PUBLIC_GROUP_ID)
     else:
         ExtendedGroup.objects.create(
             id=settings.REFINERY_PUBLIC_GROUP_ID,
@@ -55,5 +59,5 @@ def create_public_group():
         cursor.execute("SELECT setval(\'auth_group_id_seq\', %s )",
                        (settings.REFINERY_PUBLIC_GROUP_ID,))
         transaction.commit_unless_managed()
-        print("Successfully created group '%s'." %
-              settings.REFINERY_PUBLIC_GROUP_NAME)
+        sys.stdout.write("Successfully created group '%s'." %
+                         settings.REFINERY_PUBLIC_GROUP_NAME)
