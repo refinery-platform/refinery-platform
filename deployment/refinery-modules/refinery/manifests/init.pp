@@ -139,8 +139,8 @@ exec { "create_superuser":
   group       => $app_group,
 }
 ->
-exec { "test_admin_user":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py test_admin_user",
+exec { "add_admin_to_public_group":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py add_admin_to_public_group",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,

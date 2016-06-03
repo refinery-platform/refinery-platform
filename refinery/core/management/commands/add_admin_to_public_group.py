@@ -1,3 +1,4 @@
+import sys
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from core.models import ExtendedGroup
@@ -12,10 +13,10 @@ class Command(BaseCommand):
     """
     def handle(self, *args, **options):
 
-        test_admin_user()
+        add_admin_to_public_group()
 
 
-def test_admin_user():
+def add_admin_to_public_group():
     """Test if admin users exist and add to public group if they do
     """
     for user in User.objects.all():
@@ -24,5 +25,5 @@ def test_admin_user():
             if public_group:
                 public_group.user_set.add(user)
                 public_group.save()
-                print "Admin user exists and has been added to the Public " \
-                      "Group.\n"
+                sys.stdout.write("Admin user exists and has been added to "
+                                 "the Public Group.\n")
