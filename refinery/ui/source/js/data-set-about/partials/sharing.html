@@ -20,20 +20,20 @@
     </span>
   </p>
 
-  <!--{ if data_set.get_groups|length > 0 }
-    <div class="refinery-subheader">
-      <h4>Groups</h4>
-    </div>
-    <p>
-      { for perm in data_set.get_groups %}
-        <a href="{ url 'group' perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
-        { if perm.read %}
-          <i class="fa fa-eye"></i>
-        { endif %}
-        { if perm.change %}
-          <i class="fa fa-pencil"></i>
-        { endif %}
-      { endfor %}
-    </p>
-  { endif }->>
+<div ng-if="ASCtrl.groupList.length > 0">
+  <div class="refinery-subheader">
+    <h4>Groups</h4>
+  </div>
+  <p>
+  <div ng-repeat="group in ASCtrl.groupList" track by $index>
+     <a href="group.uuid">{{ group.name }}</a>&nbsp;
+    <span ng-if="group.canRead">
+       <i class="fa fa-eye"></i>
+    </span>
+    <span ng-if="group.canEdit">
+       <i class="fa fa-pencil"></i>
+    </span>
+  </div>
+  </p>
+</div>
 

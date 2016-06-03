@@ -9,7 +9,7 @@ function rpDataSetAboutSharing () {
     bindToController: {
       dataSet: '@',
       ownerName: '@',
-      groupInfo: '@'
+      groupList: '@'
     }
   };
 }
