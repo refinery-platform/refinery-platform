@@ -1040,6 +1040,9 @@ class BaseResourceSlugTest(unittest.TestCase):
         DataSet.objects.create(slug="")
         dataset_empty_slug = DataSet.objects.get(slug="")
         self.assertIsNotNone(dataset_empty_slug)
+        DataSet.objects.create(slug=None)
+        dataset_none_slug = DataSet.objects.get(slug=None)
+        self.assertIsNotNone(dataset_none_slug)
 
     def test_edit_existing_slug(self):
         instance = DataSet.objects.get(slug="TestSlug1")
@@ -1086,7 +1089,7 @@ class BaseResourceSlugTest(unittest.TestCase):
                                                       slug=None)
         self.assertIsNotNone(project_with_no_slug)
 
-    def test_save__empty_slug_when_same_model_with_same_empty_slug_exists(
+    def test_save_empty_slug_when_same_model_with_same_empty_slug_exists(
             self):
 
         Project.objects.create(name="project_no_slug", slug="")
@@ -1429,8 +1432,8 @@ class AnalysisDeletionTest(unittest.TestCase):
 
 class UtilitiesTest(TestCase):
     def test_get_aware_local_time(self):
-        expectedTime = timezone.localtime(timezone.now())
-        responseTime = get_aware_local_time()
-        differenceTime = responseTime - expectedTime
+        expected_time = timezone.localtime(timezone.now())
+        response_time = get_aware_local_time()
+        difference_time = response_time - expected_time
 
-        self.assertLessEqual(differenceTime.total_seconds(), .99)
+        self.assertLessEqual(difference_time.total_seconds(), .99)
