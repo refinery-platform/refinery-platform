@@ -8,7 +8,8 @@ function rpDataSetAboutSharing () {
     controllerAs: 'ASCtrl',
     bindToController: {
       dataSet: '@',
-      ownerName: '@'
+      ownerName: '@',
+      groupInfo: '@'
     }
   };
 }

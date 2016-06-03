@@ -10,14 +10,25 @@ function AboutSharingCtrl (
   var vm = this;
   vm.dataSet = {};
   vm.ownerName = '';
+  vm.groupName = '';
 
   vm.refreshDataSetStats = function () {
     var dataSetUuid = $window.dataSetUuid;
 
     var promise = $q.defer();
-    dataSetAboutFactory.getDataSet(dataSetUuid).then(function () {
+    dataSetAboutFactory.getDataSharingSet(dataSetUuid).then(function () {
       vm.dataSet = dataSetAboutFactory.dataSet;
       vm.refreshOwnerName(vm.dataSet.owner);
+      vm.refreshGroup(dataSetUuid);
+      promise.resolve();
+    });
+    return promise.promise;
+  };
+
+  vm.refreshGroup = function (uuid) {
+    var promise = $q.defer();
+    dataSetAboutFactory.getGroup(uuid).then(function () {
+      console.log('in resolve');
       promise.resolve();
     });
     return promise.promise;

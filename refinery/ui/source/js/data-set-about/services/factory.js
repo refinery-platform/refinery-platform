@@ -1,21 +1,39 @@
 'use strict';
 
 function dataSetAboutFactory (
-  dataSetService,
-  userService
+  sharingService,
+  userService,
+  groupService
 ) {
   var dataSet = {};
   var ownerProfile = {};
+  var group = {};
 
-  var getDataSet = function (dataSetUuid) {
+  var getDataSharingSet = function (dataSetUuid) {
     var params = {
-      uuid: dataSetUuid
+      uuid: dataSetUuid,
+      model: 'data_sets'
     };
-    var dataSetRequest = dataSetService.query(params);
+    var dataSetRequest = sharingService.query(params);
     dataSetRequest.$promise.then(function (response) {
-      angular.copy(response.objects[0], dataSet);
+      angular.copy(response, dataSet);
     });
     return dataSetRequest.$promise;
+  };
+
+  var getGroup = function (groupUuid) {
+    var params = {
+      uuid: groupUuid
+    };
+    var groupRequest = groupService.query(params);
+    console.log('in getGroupFactory');
+    console.log(groupRequest);
+    groupRequest.$promise.then(function (response) {
+      console.log(response);
+      angular.copy(response.objects[0], group);
+     // angular.copy(response.objects[0], group);
+    });
+    return group.$promise;
   };
 
   var getOwnerName = function (userUuid) {
@@ -29,16 +47,19 @@ function dataSetAboutFactory (
   return {
     dataSet: dataSet,
     ownerProfile: ownerProfile,
-    getDataSet: getDataSet,
-    getOwnerName: getOwnerName
+    group: group,
+    getDataSharingSet: getDataSharingSet,
+    getOwnerName: getOwnerName,
+    getGroup: getGroup
   };
 }
 
 angular
   .module('refineryDataSetAbout')
   .factory('dataSetAboutFactory', [
-    'dataSetService',
+    'sharingService',
     'userService',
+    'groupService',
     dataSetAboutFactory
   ]
 );
