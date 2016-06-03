@@ -9,6 +9,7 @@ angular
         {
           uuid: '@uuid',
           userId: '@userId',
+          id: 'id',
           format: 'json'
         },
         {
