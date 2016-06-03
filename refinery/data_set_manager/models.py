@@ -12,6 +12,8 @@ from django.conf import settings
 from django.db import models
 from django_extensions.db.fields import UUIDField
 
+import core
+import file_store
 from data_set_manager.genomes import map_species_id_to_default_genome_build
 
 
@@ -417,6 +419,37 @@ class Node(models.Model):
         node.save()
         return self
 
+    def get_derived_node_types(self):
+        """
+        This finds all node types which are "derived"
+        :returns: a list of all node types which are "derived"
+        """
+        derived_node_types = []
+
+        for item in self.FILES:
+            if "derived" in item.lower():
+                derived_node_types.append(item)
+
+        return derived_node_types
+
+    def is_derived(self):
+        """
+        This is a helper method to aid in the checking of if a Node has
+        been analyzed further when we delete an Analysis.
+        :returns True if the node in question's type exists in the list of
+        Node types which are "derived"
+        """
+
+        if self.type in self.get_derived_node_types():
+            return True
+
+    def get_analysis_node_connections_for_node(self):
+        return core.models.AnalysisNodeConnection.objects.filter(node=self)
+
+    def get_file_store_items(self):
+        return file_store.models.FileStoreItem.objects.filter(
+            uuid=self.file_uuid)
+
 
 class Attribute(models.Model):
     # allowed attribute types
@@ -647,11 +680,11 @@ def _is_facet_attribute(attribute, study, assay):
         raise ValueError('No facets found.')
 
     items = results['response']['numFound']
-    attributeValues = len(
+    attribute_values = len(
         results['facet_counts']['facet_fields'][attribute]
     ) / 2
 
-    return (attributeValues / items) < ratio
+    return (attribute_values / items) < ratio
 
 
 def initialize_attribute_order(study, assay):

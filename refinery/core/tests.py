@@ -2,6 +2,7 @@ import json
 
 from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import unittest, timezone
 from django.test import TestCase
 
@@ -17,8 +18,12 @@ from core.models import (
     ExtendedGroup, DataSet, InvestigationLink, Project, Analysis, Workflow,
     WorkflowEngine, UserProfile, invalidate_cached_object,
     AnalysisNodeConnection, Node)
+
+from file_store.models import FileStoreItem
+
 from core.utils import get_aware_local_time
 from file_store.models import FileExtension
+
 import data_set_manager
 from galaxy_connector.models import Instance
 
@@ -1212,9 +1217,22 @@ class WorkflowDeletionTest(unittest.TestCase):
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
-        self.workflow = Workflow.objects.create(
-            name="Workflow1", workflow_engine=self.workflow_engine)
+        self.workflow_used_by_analyses = Workflow.objects.create(
+            name="workflow_used_by_analyses",
+            workflow_engine=self.workflow_engine)
+        self.workflow_not_used_by_analyses = Workflow.objects.create(
+            name="workflow_not_used_by_analyses",
+            workflow_engine=self.workflow_engine)
         self.dataset = DataSet.objects.create()
+        self.analysis = Analysis.objects.create(
+            name='bla',
+            summary='keks',
+            project=self.project,
+            data_set=self.dataset,
+            workflow=self.workflow_used_by_analyses,
+            status="SUCCESS"
+        )
+        self.analysis.set_owner(self.user)
 
     def tearDown(self):
         User.objects.all().delete()
@@ -1226,32 +1244,21 @@ class WorkflowDeletionTest(unittest.TestCase):
         Analysis.objects.all().delete()
 
     def test_verify_workflow_used_by_analysis(self):
-        analysis = Analysis.objects.create(
-            name='bla',
-            summary='keks',
-            project=self.project,
-            data_set=self.dataset,
-            workflow=self.workflow,
-            status="SUCCESS"
-        )
-        analysis.set_owner(self.user)
-        self.assertEqual(analysis.workflow.name, "Workflow1")
+        self.assertEqual(self.analysis.workflow.name,
+                         "workflow_used_by_analyses")
 
     def test_verify_no_deletion_if_workflow_used_in_analysis(self):
-        analysis = Analysis.objects.create(
-            name='bla',
-            summary='keks',
-            project=self.project,
-            data_set=self.dataset,
-            workflow=self.workflow,
-            status="SUCCESS"
-        )
-        analysis.set_owner(self.user)
-        self.workflow.delete()
-        self.assertFalse(self.workflow.is_active)
+        self.workflow_used_by_analyses.delete()
+        self.assertIsNotNone(self.workflow_used_by_analyses)
+        self.assertFalse(self.workflow_used_by_analyses.is_active)
 
     def test_verify_deletion_if_workflow_not_used_in_analysis(self):
-        self.assertEqual(self.workflow.delete(), None)
+        self.assertIsNotNone(Workflow.objects.get(
+            name="workflow_not_used_by_analyses"))
+        self.workflow_not_used_by_analyses.delete()
+        self.assertRaises(ObjectDoesNotExist,
+                          Workflow.objects.get,
+                          name="workflow_not_used_by_analyses")
 
 
 class DataSetDeletionTest(unittest.TestCase):
@@ -1264,13 +1271,26 @@ class DataSetDeletionTest(unittest.TestCase):
         )
         self.project = Project.objects.create()
         self.galaxy_instance = Instance.objects.create()
+        self.isa_archive_file = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.zip',
+                'Coffee is delicious!')
+        )
+        self.investigation = \
+            data_set_manager.models.Investigation.objects.create(
+                isarchive_file=self.isa_archive_file.uuid)
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
         self.workflow = Workflow.objects.create(
             name="Workflow1", workflow_engine=self.workflow_engine)
-        self.dataset_with_analysis = DataSet.objects.create()
-        self.dataset_without_analysis = DataSet.objects.create()
+        self.dataset_with_analysis = DataSet.objects.create(
+            name="dataset_with_analysis")
+        self.dataset_without_analysis = \
+            DataSet.objects.create(name="dataset_without_analysis")
+        self.investigation_link = InvestigationLink.objects.create(
+            investigation=self.investigation,
+            data_set=self.dataset_without_analysis)
         self.analysis = Analysis.objects.create(
             name='bla',
             summary='keks',
@@ -1286,11 +1306,12 @@ class DataSetDeletionTest(unittest.TestCase):
         Project.objects.all().delete()
         WorkflowEngine.objects.all().delete()
         Workflow.objects.all().delete()
-        DataSet.objects.all().delete()
         Instance.objects.all().delete()
         Analysis.objects.all().delete()
+        DataSet.objects.all().delete()
         UserProfile.objects.all().delete()
         Node.objects.all().delete()
+        FileStoreItem.objects.all().delete()
         data_set_manager.models.Study.objects.all().delete()
         data_set_manager.models.Assay.objects.all().delete()
         data_set_manager.models.Investigation.objects.all().delete()
@@ -1298,11 +1319,21 @@ class DataSetDeletionTest(unittest.TestCase):
         InvestigationLink.objects.all().delete()
 
     def test_verify_dataset_deletion_if_no_analysis_run_upon_it(self):
-        self.assertEqual(self.dataset_without_analysis.delete(), None)
+        self.assertIsNotNone(
+            DataSet.objects.get(name="dataset_without_analysis"))
+        self.dataset_without_analysis.delete()
+        self.assertRaises(ObjectDoesNotExist,
+                          DataSet.objects.get,
+                          name="dataset_without_analysis")
 
     def test_verify_no_dataset_deletion_if_analysis_run_upon_it(self):
         self.dataset_with_analysis.delete()
-        self.assertNotEqual(self.dataset_with_analysis, None)
+        self.assertIsNotNone(DataSet.objects.get(name="dataset_with_analysis"))
+
+    def test_isa_archive_deletion(self):
+        self.assertIsNotNone(self.dataset_without_analysis.get_isa_archive())
+        self.dataset_without_analysis.delete()
+        self.assertIsNone(self.dataset_without_analysis.get_isa_archive())
 
 
 class AnalysisDeletionTest(unittest.TestCase):
@@ -1421,13 +1452,19 @@ class AnalysisDeletionTest(unittest.TestCase):
     def test_verify_analysis_deletion_if_nodes_not_analyzed_further(self):
         # Try to delete Analysis with a Node that has an
         # AnalysisNodeConnection with direction == 'out'
-        self.assertEqual(self.analysis.delete(), None)
+        query = Analysis.objects.get(
+            name='analysis_without_node_analyzed_further')
+        self.assertIsNotNone(query)
+        self.analysis.delete()
+        self.assertRaises(ObjectDoesNotExist, Analysis.objects.get,
+                          name='analysis_without_node_analyzed_further')
 
     def test_verify_analysis_remains_if_nodes_analyzed_further(self):
         # Try to delete Analysis with a Node that has an
         # AnalysisNodeConnection with direction == 'in'
         self.analysis_with_node_analyzed_further.delete()
-        self.assertNotEqual(self.analysis_with_node_analyzed_further, None)
+        self.assertIsNotNone(Analysis.objects.get(
+            name='analysis_with_node_analyzed_further'))
 
 
 class UtilitiesTest(TestCase):
