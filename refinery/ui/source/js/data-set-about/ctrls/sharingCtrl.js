@@ -10,7 +10,7 @@ function AboutSharingCtrl (
   var vm = this;
   vm.dataSet = {};
   vm.ownerName = '';
-  vm.groupName = '';
+  vm.groupList = [];
 
   vm.refreshDataSetStats = function () {
     var dataSetUuid = $window.dataSetUuid;
@@ -19,8 +19,9 @@ function AboutSharingCtrl (
     dataSetAboutFactory.getDataSharingSet(dataSetUuid).then(function () {
       vm.dataSet = dataSetAboutFactory.dataSet;
       vm.refreshOwnerName(vm.dataSet.owner);
-      console.log(vm.dataSet);
-      vm.refreshGroup(vm.dataSet.share_list[0]);
+      for (var i = 0; i < vm.dataSet.share_list.length; i++) {
+        vm.refreshGroup(vm.dataSet.share_list[i]);
+      }
       promise.resolve();
     });
     return promise.promise;
@@ -29,6 +30,7 @@ function AboutSharingCtrl (
   vm.refreshGroup = function (shareObj) {
     var promise = $q.defer();
     dataSetAboutFactory.getGroup(shareObj).then(function () {
+      vm.groupList.push(dataSetAboutFactory.group);
       promise.resolve();
     });
     return promise.promise;
