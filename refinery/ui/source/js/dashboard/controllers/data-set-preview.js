@@ -10,7 +10,7 @@ function DataSetPreviewCtrl (
   userService,
   authService,
   studyService,
-  assayService,
+  dataSetAssayService,
   dataSetService,
   sharingService,
   citationService,
@@ -30,7 +30,7 @@ function DataSetPreviewCtrl (
   this.user = authService;
   this.userService = userService;
   this.studyService = studyService;
-  this.assayService = assayService;
+  this.assayService = dataSetAssayService;
   this.dataSetService = dataSetService;
   this.sharingService = sharingService;
   this.citationService = citationService;
