@@ -2,6 +2,8 @@
 
 function dataSetAboutFactory (
   dataSetService,
+  studyService,
+  assayService,
   sharingService,
   userService,
   groupMemberService
@@ -10,6 +12,8 @@ function dataSetAboutFactory (
   var dataSetSharing = {};
   var ownerProfile = {};
   var group = {};
+  var studies = [];
+  var assays = [];
 
   var getDataSet = function (dataSetUuid) {
     var params = {
@@ -17,9 +21,37 @@ function dataSetAboutFactory (
     };
     var dataSetRequest = dataSetService.query(params);
     dataSetRequest.$promise.then(function (response) {
-      angular.copy(response, dataSet);
+      console.log('in data set');
+      console.log(response);
+      angular.copy(response.objects[0], dataSet);
     });
     return dataSetRequest.$promise;
+  };
+
+  var getStudies = function (dataSetUuid) {
+    var params = {
+      uuid: dataSetUuid,
+    };
+    var study = studyService.query(params);
+    study.$promise.then(function (response) {
+      console.log('in study');
+      console.log(response);
+      angular.copy(response.objects, studies);
+    });
+    return study.$promise;
+  };
+
+  var getAssays = function (dataSetUuid) {
+    var params = {
+      uuid: dataSetUuid,
+    };
+    var assay = assayService.query(params);
+    assay.$promise.then(function (response) {
+      console.log('in assay');
+      console.log(response);
+      angular.copy(response.objects, assays);
+    });
+    return assay.$promise;
   };
 
   var getDataSharingSet = function (dataSetUuid) {
@@ -68,7 +100,11 @@ function dataSetAboutFactory (
     dataSetSharing: dataSetSharing,
     ownerProfile: ownerProfile,
     group: group,
+    studies: studies,
+    assays: assays,
     getDataSet: getDataSet,
+    getStudies: getStudies,
+    getAssays: getAssays,
     getDataSharingSet: getDataSharingSet,
     getOwnerName: getOwnerName,
     getGroup: getGroup
@@ -79,6 +115,8 @@ angular
   .module('refineryDataSetAbout')
   .factory('dataSetAboutFactory', [
     'dataSetService',
+    'studyService',
+    'assayService',
     'sharingService',
     'userService',
     'groupMemberService',
