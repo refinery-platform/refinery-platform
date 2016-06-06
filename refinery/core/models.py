@@ -667,12 +667,33 @@ class DataSet(SharableResource):
         return file_size
 
     def get_isa_archive(self):
-        """Returns the isa_archive (FileStoreItem) that was used to create the
-        DataSet"""
+        """
+        Returns the isa_archive or tabular file that was used to create the
+        DataSet
+        """
         try:
             return FileStoreItem.objects.get(
                  uuid=InvestigationLink.objects.get(
                      data_set__uuid=self.uuid).investigation.isarchive_file)
+
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned,
+                InvestigationLink.DoesNotExist,
+                InvestigationLink.MultipleObjectsReturned) as e:
+            logger.error("Error while fetching FileStoreItem or "
+                         "InvestigationLink: %s" % e)
+            return None
+
+    def get_pre_isa_archive(self):
+        """
+        Returns the pre_isa_archive that was used to create the
+        DataSet
+        """
+        try:
+            return FileStoreItem.objects.get(
+                 uuid=InvestigationLink.objects.get(
+                     data_set__uuid=self.uuid).investigation
+                                              .pre_isarchive_file)
 
         except (FileStoreItem.DoesNotExist,
                 FileStoreItem.MultipleObjectsReturned,
