@@ -601,7 +601,14 @@ class Assays(APIView):
     def get_object(self, uuid):
         try:
             return Assay.objects.get(uuid=uuid)
-        except Assay.DoesNotExist:
+        except (Assay.DoesNotExist, MultipleObjectsReturned):
+            raise Http404
+
+    def get_query_set(self, study_uuid):
+        try:
+            study_obj = Study.objects.get(uuid=study_uuid)
+            return Assay.objects.filter(study=study_obj)
+        except (Study.DoesNotExist, MultipleObjectsReturned):
             raise Http404
 
     def get(self, request, format=None):
@@ -610,9 +617,7 @@ class Assays(APIView):
             serializer = AssaySerializer(assay)
             return Response(serializer.data)
         elif request.query_params.get('study'):
-            study_uuid = request.query_params.get('study')
-            study_obj = Study.objects.get(uuid=study_uuid)
-            assays = Assay.objects.filter(study=study_obj)
+            assays = self.get_query_set(request.query_params.get('study'))
             serializer = AssaySerializer(assays, many=True)
             return Response(serializer.data)
         else:
