@@ -60,9 +60,10 @@ class AssaysAPITests(APITestCase):
         Study.objects.all().delete()
         Investigation.objects.all().delete()
 
-    def test_get_valid(self):
+    def test_get_valid_uuid(self):
         # valid_uuid
-        request = self.factory.get('%s/%s/' % (self.url_root, self.valid_uuid))
+        request = self.factory.get('%s/?uuid=%s' % (
+            self.url_root, self.valid_uuid))
         response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
         self.assertItemsEqual(response.data.keys(), self.assay.keys())
