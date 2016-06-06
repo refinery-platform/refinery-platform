@@ -34,7 +34,7 @@ from core.models import (
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
-from core.utils import get_data_sets_annotations
+from core.utils import get_data_sets_annotations, get_anonymous_user
 from core.serializers import WorkflowSerializer
 
 from xml.parsers.expat import ExpatError
@@ -931,7 +931,7 @@ def neo4j_dataset_annotations(request):
     if request.user.username:
         user_name = request.user.username
     else:
-        user_name = User.objects.get(id=settings.ANONYMOUS_USER_ID).username
+        user_name = get_anonymous_user().username
 
     url = urljoin(
         settings.NEO4J_BASE_URL,

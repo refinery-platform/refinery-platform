@@ -3,6 +3,7 @@ import logging
 
 
 import py2neo
+from django.core.exceptions import MultipleObjectsReturned
 from django.core.mail import send_mail
 
 import core
@@ -699,8 +700,23 @@ def get_aware_local_time():
 
 
 def email_admin(subject, message):
-        """
-        Sends an email to the admin email configured in our Django Settings
-        """
-        send_mail(subject, message, settings.SERVER_EMAIL,
-                  [settings.ADMINS[0][1]])
+    """
+    Sends an email to the admin email configured in our Django Settings
+    """
+    send_mail(subject, message, settings.SERVER_EMAIL,
+              [settings.ADMINS[0][1]])
+
+
+def get_anonymous_user():
+    """
+    Trys to fetch the AnonymousUser otherwise returns None
+    """
+    try:
+        anonymous_user = User.objects.get(
+                id=settings.ANONYMOUS_USER_ID
+            )
+        return anonymous_user
+
+    except (User.DoesNotExist, MultipleObjectsReturned) as e:
+        logger.error("Could not fetch Anonymous User: %s" % e)
+        return None
