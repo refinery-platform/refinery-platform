@@ -18,7 +18,7 @@ function AboutSharingCtrl (
     var promise = $q.defer();
     dataSetAboutFactory.getDataSharingSet(dataSetUuid).then(function () {
       vm.dataSetSharing = dataSetAboutFactory.dataSetSharing;
-      vm.refreshOwnerName(vm.dataSet.owner);
+      vm.refreshOwnerName(vm.dataSetSharing.owner);
       for (var i = 0; i < vm.dataSetSharing.share_list.length; i++) {
         vm.refreshGroup(vm.dataSetSharing.share_list[i]);
       }

@@ -9,7 +9,7 @@
   </div>
   <p>
     <div ng-if="ADCtrl.dataSet.summary">
-      {{ data_set.summary }}
+      {{ dataSet.summary }}
     </div>
     <div ng-if="!ADCtrl.dataSet.summary">
        <i>None provided.</i>
@@ -21,7 +21,7 @@
   </div>
   <p>
      <div ng-if="ADCtrl.dataSet.description">
-      {{ data_set.description }}
+      {{ dataSet.description }}
     </div>
     <div ng-if="!ADCtrl.dataSet.description">
        <i>None provided.</i>
@@ -33,27 +33,21 @@
   </div>
   <p>
     <div ng-if="ADCtrl.dataSet.slug">
-      {{ data_set.slug }}
+      {{ dataSet.slug }}
     </div>
     <div ng-if="!ADCtrl.dataSet.slug">
        <i>None provided.</i>
     </div>
 
- <!-- { if not REFINERY_REPOSITORY_MODE %}
-    <div class="refinery-header">
-      <span class="refinery-header-left">
-          <h3>Studies</h3>
-      </span>
-    </div>
-    { for study in studies %}
-      <p><strong>{{study.identifier}}</strong>: {{study.title}}</p>
-      <ul>
-        {% for assay in study.assay_set.all %}
-          <li>Assay - {{assay}}</li>
-        { endfor %}
-      </ul>
-    { endfor %}
-  { endif %} -->
+  <div class="refinery-header">
+    <span class="refinery-header-left">
+        <h3>Studies</h3>
+    </span>
+  </div>
+
+  <div ng-repeat="study in ADCtrl.studies track by $index">
+    <strong>{{study.identifier}}</strong>: {{study.title}}
+  </div>
 
  <!-- <div class="refinery-header">
     <span class="refinery-header-left">

@@ -8,6 +8,8 @@ function rpDataSetAboutDetails () {
     controllerAs: 'ADCtrl',
     bindToController: {
       dataSet: '@',
+      studies: '@',
+      assays: '@'
     }
   };
 }
