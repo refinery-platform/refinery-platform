@@ -113,8 +113,8 @@ def createIGVsession(genome, uuids, is_file_uuid=False):
     tempfilename.write(doc.toprettyxml(indent="  "))
     tempfilename.close()
     # getting file_store_uuid
-    filestore_uuid = create(tempfilename.name, permanent=True, filetype="xml")
-    filestore_item = import_file(filestore_uuid, permanent=True, refresh=True)
+    filestore_uuid = create(tempfilename.name, filetype="xml")
+    filestore_item = import_file(filestore_uuid, refresh=True)
     # file to rename
     temp_name = filestore_item.datafile.name.split('/')
     temp_name = temp_name[len(temp_name) - 1] + '.xml'
@@ -358,8 +358,8 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
     tempfilename.close()
 
     # getting file_store_uuid
-    filestore_uuid = create(tempfilename.name, permanent=True, filetype="xml")
-    filestore_item = import_file(filestore_uuid, permanent=True, refresh=True)
+    filestore_uuid = create(tempfilename.name, filetype="xml")
+    filestore_item = import_file(filestore_uuid, refresh=True)
 
     # file to rename
     temp_name = filestore_item.datafile.name.split('/')
@@ -449,8 +449,8 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
     tempsampname.close()
 
     # getting file_store_uuid
-    filestore_uuid = create(tempsampname.name, permanent=True, filetype="txt")
-    filestore_item = import_file(filestore_uuid, permanent=True, refresh=True)
+    filestore_uuid = create(tempsampname.name, filetype="txt")
+    filestore_item = import_file(filestore_uuid, refresh=True)
 
     # file to rename
     temp_file = filestore_item.datafile.name.split('/')

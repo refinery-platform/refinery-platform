@@ -183,7 +183,7 @@ class SingleFileColumnParser:
         # FIXME: this will not create a FileStoreItem if self.metadata_file
         # does not exist on disk (e.g., a file object like TemporaryFile)
         investigation.pre_isarchive_file = create(
-            self.metadata_file.name, permanent=True)
+            self.metadata_file.name)
         import_file(investigation.pre_isarchive_file, refresh=True)
         investigation.save()
 
@@ -203,14 +203,14 @@ class SingleFileColumnParser:
             data_file_path = self.file_source_translator(
                 row[self.file_column_index])
             data_file_uuid = create(
-                source=data_file_path, permanent=self.file_permanent)
+                source=data_file_path)
             data_files.append(data_file_uuid)
             # add auxiliary file to file store
             if self.auxiliary_file_column_index:
                 auxiliary_file_path = self.file_source_translator(
                     row[self.auxiliary_file_column_index])
                 auxiliary_file_uuid = create(
-                    source=auxiliary_file_path, permanent=self.file_permanent)
+                    source=auxiliary_file_path)
                 data_files.append(auxiliary_file_uuid)
             else:
                 auxiliary_file_uuid = None
