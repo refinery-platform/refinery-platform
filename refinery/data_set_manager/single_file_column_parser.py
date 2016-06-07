@@ -259,9 +259,13 @@ class SingleFileColumnParser:
                         subtype=self.headers[column_index].strip().lower(),
                         value=row[column_index].strip()
                     )
-        # kick off data file importing tasks
-        for uuid in data_files:
-            import_file.delay(uuid)
+
+        # Start remote file import tasks if `Data File Permanent` flag set
+        # by the user
+        if self.file_permanent:
+            for uuid in data_files:
+                import_file.delay(uuid)
+
         return investigation
 
 
