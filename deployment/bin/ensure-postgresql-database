@@ -5,10 +5,22 @@ set -e
 DATABASE=refinery
 OWNER=refinery
 
-HOST=$(jq -r .Address /home/ubuntu/rds)
-PORT=$(jq -r .Port /home/ubuntu/rds)
+if [ -z "$RDS_ENDPOINT_ADDRESS" ]
+then
+    printf 1>&2 "RDS_ENDPOINT_ADDRESS should be set\n"
+    exit 99
+fi
+
+if [ -z "$RDS_ENDPOINT_PORT" ]
+then
+    printf 1>&2 "RDS_ENDPOINT_PORT should be set\n"
+    exit 99
+fi
 
 : ${RDS_SUPERUSER_PASSWORD?RDS_SUPERUSER_PASSWORD should be set}
+
+HOST=$RDS_ENDPOINT_ADDRESS
+PORT=$RDS_ENDPOINT_PORT
 
 
 # Test to see if database already exists
@@ -16,7 +28,7 @@ Exists=$(psql -t -q -c '
       SELECT $$true$$
       FROM   pg_catalog.pg_database
       WHERE  datname = '"'$DATABASE'"'
-' "postgresql://root:mypassword@${HOST}:${PORT}/postgres"
+' "postgresql://root:${RDS_SUPERUSER_PASSWORD}@${HOST}:${PORT}/postgres"
 )
 
 Exists=${Exists:-false}
