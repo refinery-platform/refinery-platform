@@ -41,15 +41,13 @@ function dataSetAboutFactory (
     return study.$promise;
   };
 
-  var getAssays = function (dataSetUuid) {
+  var getStudysAssays = function (studyUuid) {
     var params = {
-      uuid: dataSetUuid,
+      study: studyUuid,
     };
     var assay = assayService.query(params);
     assay.$promise.then(function (response) {
-      console.log('in assay');
-      console.log(response);
-      angular.copy(response.objects, assays);
+      angular.copy(response, assays);
     });
     return assay.$promise;
   };
@@ -104,7 +102,7 @@ function dataSetAboutFactory (
     assays: assays,
     getDataSet: getDataSet,
     getStudies: getStudies,
-    getAssays: getAssays,
+    getStudysAssays: getStudysAssays,
     getDataSharingSet: getDataSharingSet,
     getOwnerName: getOwnerName,
     getGroup: getGroup

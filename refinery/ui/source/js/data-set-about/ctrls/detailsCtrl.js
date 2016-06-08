@@ -10,7 +10,7 @@ function AboutDetailsCtrl (
   var vm = this;
   vm.dataSet = {};
   vm.studies = [];
-  vm.assays = [];
+  vm.assays = {};
   vm.dataSetUuid = $window.dataSetUuid;
 
   vm.refreshDataSetStats = function () {
@@ -26,15 +26,22 @@ function AboutDetailsCtrl (
     var promise = $q.defer();
     dataSetAboutFactory.getStudies(vm.dataSetUuid).then(function () {
       vm.studies = dataSetAboutFactory.studies;
+      console.log(vm.studies);
+      for (var i = 0; i < vm.studies.length; i++) {
+        vm.refreshAssays(vm.studies[i].uuid);
+      }
       promise.resolve();
     });
     return promise.promise;
   };
 
-  vm.refreshAssays = function () {
+  vm.refreshAssays = function (studyUuid) {
     var promise = $q.defer();
-    dataSetAboutFactory.getAssays(vm.dataSetUuid).then(function () {
-      vm.assays = dataSetAboutFactory.assays;
+    dataSetAboutFactory.getStudysAssays(studyUuid).then(function () {
+      console.log('in the refresh assays');
+      vm.assays[studyUuid] = dataSetAboutFactory.assays;
+      console.log(dataSetAboutFactory.assays);
+      console.log(vm.assays);
       promise.resolve();
     });
     return promise.promise;
@@ -42,7 +49,6 @@ function AboutDetailsCtrl (
 
   vm.refreshDataSetStats();
   vm.refreshStudies();
-  vm.refreshAssays();
 }
 
 angular

@@ -47,6 +47,33 @@
 
   <div ng-repeat="study in ADCtrl.studies track by $index">
     <strong>{{study.identifier}}</strong>: {{study.title}}
+    <ul ng-repeat="assay in ADCtrl.assays[study.uuid] track by $index">
+      Assay -
+      <span ng-if="assay.measurement">
+        Measurement: {{ assay.measurement }},
+      </span>
+      <span ng-if="assay.measurement_accession">
+        Measurement Accession: {{ assay.measurement_accession }}
+      </span>
+      <span ng-if="assay.measurement_source">
+        Measurement Source: {{ assay.measurement_source }},
+      </span>
+      <span ng-if="assay.technology">
+        Technology: {{ assay.technology }},
+      </span>
+      <span ng-if="assay.technology_accession">
+        Technology Accession: {{ assay.technology_accession }},
+      </span>
+      <span ng-if="assay.technology_source">
+        Technology Source: {{ assay.technology_source }},
+      </span>
+      <span ng-if="assay.platform">
+        Platform: {{ assay.platform }},
+      </span>
+      <span ng-if="assay.file_name">
+        File name: {{ assay.file_name }},
+      </span>
+    </ul>
   </div>
 
  <!-- <div class="refinery-header">
