@@ -20,14 +20,12 @@ logger = logging.getLogger(__name__)
 def create(source, sharename='', filetype='', file_size=1):
     """Create a FileStoreItem instance and return its UUID
     Important: source must be either an absolute file system path or a URL
-
     :param source: URL or absolute file system path to a file.
     :type source: str.
     :param sharename: Group share name.
     :type sharename: str.
     :param filetype: File extension
     :type filetype: str.
-    :type permanent: bool.
     :param file_size: For cases when the remote site specified by source URL
         doesn't provide file size in the HTTP headers.
     :type file_size: int.
@@ -52,8 +50,6 @@ def create(source, sharename='', filetype='', file_size=1):
 @task(track_started=True)
 def import_file(uuid, refresh=False, file_size=0):
     """Download or copy file specified by UUID.
-
-    :type permanent: bool.
     :param refresh: Flag for forcing update of the file.
     :type refresh: bool.
     :param file_size: size of the remote file.
