@@ -16,6 +16,7 @@ describe('Data Set About Factory', function () {
   it('factory and tools variables should exist', function () {
     expect(factory).toBeDefined();
     expect(factory.dataSet).toEqual({ });
+    expect(factory.studies).toEqual([]);
   });
 
   describe('getDataSet', function () {
@@ -76,6 +77,60 @@ describe('Data Set About Factory', function () {
       rootScope.$apply();
       expect(typeof response.then).toEqual('function');
       expect(successData).toEqual(dataSet);
+    });
+  });
+
+  describe('getStudies', function () {
+    var studyResult;
+
+    beforeEach(inject(function (
+      studyService,
+      _$q_,
+      _$rootScope_
+    ) {
+      $q = _$q_;
+      studyResult = { objects:
+        [{
+          description: 'A collection of RFC documents.',
+          file_name: 's_study.txt',
+          id: 10,
+          identifier: 'IETF Request for Comments',
+          investigation_uuid: '120f31a7-0f3a-4359-ab7b-4a83247c7887',
+          protocols: [],
+          publications: [],
+          release_date: null,
+          resource_uri: '/api/v1/study/8486046b-22f4-447f-9c81-41dbf6173c44/',
+          sources: [],
+          submission_date: '2013-03-22',
+          title: 'RFC Documents',
+          uuid: '8486046b-22f4-447f-9c81-41dbf6173c44'
+        }]
+      };
+      spyOn(studyService, 'query').and.callFake(function () {
+        deferred = $q.defer();
+        deferred.resolve(studyResult);
+        return {
+          $promise: deferred.promise
+        };
+      });
+
+      rootScope = _$rootScope_;
+    }));
+
+    it('getDataSet is a method', function () {
+      expect(angular.isFunction(factory.getStudies)).toBe(true);
+    });
+
+    it('getDataSet returns a promise', function () {
+      var successData;
+      var response = factory.getStudies({
+        uuid: fakeUuid
+      }).then(function (responseData) {
+        successData = responseData;
+      });
+      rootScope.$apply();
+      expect(typeof response.then).toEqual('function');
+      expect(successData).toEqual(studyResult);
     });
   });
 });
