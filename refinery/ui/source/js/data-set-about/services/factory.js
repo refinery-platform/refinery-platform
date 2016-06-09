@@ -61,7 +61,7 @@ function dataSetAboutFactory (
     return assay.$promise;
   };
 
-  var getDataSharingSet = function (dataSetUuid) {
+  var getDataSetSharing = function (dataSetUuid) {
     var params = {
       uuid: dataSetUuid,
       model: 'data_sets'
@@ -114,7 +114,7 @@ function dataSetAboutFactory (
     getDataSetInvestigation: getDataSetInvestigation,
     getStudies: getStudies,
     getStudysAssays: getStudysAssays,
-    getDataSharingSet: getDataSharingSet,
+    getDataSetSharing: getDataSetSharing,
     getOwnerName: getOwnerName,
     getGroup: getGroup
   };
