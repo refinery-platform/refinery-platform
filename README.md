@@ -31,7 +31,7 @@ Create a Python 2.7 virtual environment (optional but recommended, assumes `virt
 $ mkvirtualenv -a $(pwd) refinery-deployment
 ```
 
-Install development tools (assumes header files for Python are installed, for example in Ubuntu: `apt-get install python-dev`):
+Install deployment tools (assumes header files for Python are installed):
 ```bash
 $ pip install -r deployment/requirements.txt
 ```
@@ -44,11 +44,6 @@ $ cp fabricrc.sample ~/.fabricrc
 To pull the latest code and update Refinery installation:
 ```bash
 $ fab vm update
-```
-
-Install pre-commit hooks:
-```bash
-$ pre-commit install
 ```
 
 ### Refinery Operations on the VM
