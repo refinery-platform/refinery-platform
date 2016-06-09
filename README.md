@@ -8,7 +8,7 @@
 ### Prerequisites
 * Install [Git][gi] (2.3.2+), [Vagrant][va] (1.8.1+) and [Virtualbox][vb] (5.0.16+)
 * [Add SSH key to your GitHub account](https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/)
-* Note: this procedure has only been tested on local dvelopment machines running OS X 10.10+
+* Note: this procedure has only been tested on local development machines running OS X 10.10+
 
 ### Configure and Load Virtual Machine
 ```bash
