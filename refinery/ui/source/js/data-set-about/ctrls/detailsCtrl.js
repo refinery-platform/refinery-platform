@@ -26,7 +26,6 @@ function AboutDetailsCtrl (
     var promise = $q.defer();
     dataSetAboutFactory.getStudies(vm.dataSetUuid).then(function () {
       vm.studies = dataSetAboutFactory.studies;
-      console.log(vm.studies);
       for (var i = 0; i < vm.studies.length; i++) {
         vm.refreshAssays(vm.studies[i].uuid);
       }
@@ -38,10 +37,7 @@ function AboutDetailsCtrl (
   vm.refreshAssays = function (studyUuid) {
     var promise = $q.defer();
     dataSetAboutFactory.getStudysAssays(studyUuid).then(function () {
-      console.log('in the refresh assays');
       vm.assays[studyUuid] = dataSetAboutFactory.assays;
-      console.log(dataSetAboutFactory.assays);
-      console.log(vm.assays);
       promise.resolve();
     });
     return promise.promise;

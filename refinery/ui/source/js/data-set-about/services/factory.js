@@ -21,8 +21,6 @@ function dataSetAboutFactory (
     };
     var dataSetRequest = dataSetService.query(params);
     dataSetRequest.$promise.then(function (response) {
-      console.log('in data set');
-      console.log(response);
       angular.copy(response.objects[0], dataSet);
     });
     return dataSetRequest.$promise;
@@ -34,8 +32,6 @@ function dataSetAboutFactory (
     };
     var study = studyService.query(params);
     study.$promise.then(function (response) {
-      console.log('in study');
-      console.log(response);
       angular.copy(response.objects, studies);
     });
     return study.$promise;
