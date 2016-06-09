@@ -6,10 +6,11 @@ angular
     function ($resource, settings) {
       var assays = $resource(
         settings.appRoot + settings.refineryApiV2 + '/assays/',
+        {},
         {
           query: {
             method: 'GET',
-            isArray: false
+            isArray: true
           },
           params: {
             uuid: 'uuid',
