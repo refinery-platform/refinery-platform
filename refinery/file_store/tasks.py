@@ -17,19 +17,15 @@ logger = logging.getLogger(__name__)
 
 
 @task()
-def create(source, sharename='', filetype='', permanent=False, file_size=1):
+def create(source, sharename='', filetype='', file_size=1):
     """Create a FileStoreItem instance and return its UUID
     Important: source must be either an absolute file system path or a URL
-
     :param source: URL or absolute file system path to a file.
     :type source: str.
     :param sharename: Group share name.
     :type sharename: str.
     :param filetype: File extension
     :type filetype: str.
-    :param permanent: Flag indicating whether to add this instance to the cache
-        or not.
-    :type permanent: bool.
     :param file_size: For cases when the remote site specified by source URL
         doesn't provide file size in the HTTP headers.
     :type file_size: int.
@@ -48,17 +44,12 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
 
     logger.info("FileStoreItem created with UUID %s", item.uuid)
 
-    # TODO: don't add to cache if permanent
-
     return item.uuid
 
 
 @task(track_started=True)
-def import_file(uuid, permanent=False, refresh=False, file_size=0):
+def import_file(uuid, refresh=False, file_size=0):
     """Download or copy file specified by UUID.
-
-    :param permanent: Flag for adding the FileStoreItem to cache.
-    :type permanent: bool.
     :param refresh: Flag for forcing update of the file.
     :type refresh: bool.
     :param file_size: size of the remote file.
@@ -194,8 +185,6 @@ def import_file(uuid, permanent=False, refresh=False, file_size=0):
         item.datafile.name = rel_dst_path
         # save the model instance
         item.save()
-
-    # TODO: if permanent is False then add to cache
 
     return item
 
