@@ -45,16 +45,14 @@ function dataSetAboutFactory (
     };
     var investigationRequest = dataSetInvestigationService.query(params);
     investigationRequest.$promise.then(function (response) {
-      console.log('in factory investigation');
-      console.log(response);
-      angular.copy(response.objects, investigation);
+      angular.copy(response, investigation);
     });
     return investigationRequest.$promise;
   };
 
   var getStudysAssays = function (studyUuid) {
     var params = {
-      study: studyUuid,
+      study: studyUuid
     };
     var assay = assayService.query(params);
     assay.$promise.then(function (response) {
@@ -110,6 +108,7 @@ function dataSetAboutFactory (
     ownerProfile: ownerProfile,
     group: group,
     studies: studies,
+    investigation: investigation,
     assays: assays,
     getDataSet: getDataSet,
     getDataSetInvestigation: getDataSetInvestigation,

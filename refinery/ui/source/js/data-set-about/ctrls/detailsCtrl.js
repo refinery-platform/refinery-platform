@@ -26,7 +26,7 @@ function AboutDetailsCtrl (
   vm.refreshInvestigation = function () {
     var promise = $q.defer();
     dataSetAboutFactory.getDataSetInvestigation(vm.dataSetUuid).then(function () {
-      vm.dataSet = dataSetAboutFactory.investigation;
+      vm.investigation = dataSetAboutFactory.investigation;
       promise.resolve();
     });
     return promise.promise;

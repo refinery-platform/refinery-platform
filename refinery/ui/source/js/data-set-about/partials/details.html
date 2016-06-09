@@ -85,23 +85,25 @@
 <span class="refinery-subheader">
   <h3>Meta Data</h3>
 </span>
-<div ng-if="investigation.isarchive_file">
+<div ng-if="ADCtrl.investigation.isarchive_file">
   <p>
-    <a href="{{isatab_archive.get_datafile}}">
-      {{isatab_archive.uuid|simple_name}}
+    Isatab Archive
+ <!--   <a href="{{ADCtrl.isatab_archive.get_datafile}}">
+      {{ADCtrl.isatab_archive.uuid|simple_name}}
     </a>
-    ({{isatab_archive.get_file_size|filesizeformat}})
+    ({{ADCtrl.isatab_archive.get_file_size|filesizeformat}})-->
   </p>
  </div>
-<div ng-if="investigation.pre_isarchive_file">
+<div ng-if="ADCtrl.investigation.pre_isatab_archive_file">
     <p>
-      <a href="{{pre_isatab_archive.get_datafile}}">
-      {{pre_isatab_archive.uuid|simple_name}}
+      Pre_isatab_archive File
+    <!--  <a href="{{ADCtrl.pre_isatab_archive.get_datafile}}">
+      {{ADCtrl.pre_isatab_archive.uuid|simple_name}}
       </a>
-      {{pre_isatab_archive.get_file_size|filesizeformat}}
+      {{ADCtrl.pre_isatab_archive.get_file_size|filesizeformat}}-->
     </p>
 </div>
-<div ng-if="!(investigation.isarchive_file || investigation.pre_isarchive_file)">
+<div ng-if="!(ADCtrl.investigation.isarchive_file || ADCtrl.investigation.pre_isarchive_file)">
   <p><i>Not available.</i></p>
 </div>
 
