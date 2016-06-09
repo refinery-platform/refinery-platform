@@ -17,6 +17,7 @@ describe('Data Set About Factory', function () {
     expect(factory).toBeDefined();
     expect(factory.dataSet).toEqual({ });
     expect(factory.studies).toEqual([]);
+    expect(factory.assays).toEqual([]);
   });
 
   describe('getDataSet', function () {
@@ -131,6 +132,55 @@ describe('Data Set About Factory', function () {
       rootScope.$apply();
       expect(typeof response.then).toEqual('function');
       expect(successData).toEqual(studyResult);
+    });
+  });
+
+  describe('getStudysAssays', function () {
+    var assayResult;
+
+    beforeEach(inject(function (
+      assayService,
+      _$q_,
+      _$rootScope_
+    ) {
+      $q = _$q_;
+      assayResult = [{
+        file_name: 'a_assay.txt',
+        measurement: '1969 - 1979',
+        measurement_accession: '',
+        measurement_source: '',
+        platform: '',
+        study: 10,
+        technology: '',
+        technology_accession: null,
+        technology_source: '',
+        uuid: fakeUuid
+      }];
+      spyOn(assayService, 'query').and.callFake(function () {
+        deferred = $q.defer();
+        deferred.resolve(assayResult);
+        return {
+          $promise: deferred.promise
+        };
+      });
+
+      rootScope = _$rootScope_;
+    }));
+
+    it('getStudysAssay is a method', function () {
+      expect(angular.isFunction(factory.getStudysAssays)).toBe(true);
+    });
+
+    it('getStudysAssay returns a promise', function () {
+      var successData;
+      var response = factory.getStudysAssays({
+        uuid: fakeUuid
+      }).then(function (responseData) {
+        successData = responseData;
+      });
+      rootScope.$apply();
+      expect(typeof response.then).toEqual('function');
+      expect(successData).toEqual(assayResult);
     });
   });
 });
