@@ -82,32 +82,40 @@
     </span>
   </div>
 
-  <span class="refinery-subheader">
-      <h3>Meta Data</h3>
-  </span>
- <!-- { if isatab_archive or pre_isatab_archive %}
-    { load core_extras %}
-    { if isatab_archive %}
-      <p><a href="{{isatab_archive.get_datafile}}">{{isatab_archive.uuid|simple_name}}</a> ({{isatab_archive.get_file_size|filesizeformat}})</p>
-    { endif %}
-    { if pre_isatab_archive %}
-      <p><a href="{{pre_isatab_archive.get_datafile}}"
-      >{{pre_isatab_archive.uuid|simple_name}}</a> ({{pre_isatab_archive.get_file_size|filesizeformat}})</p>
-    { endif %}
-  { else %}
-    <p><i>Not available.</i></p>
-  { endif %}-->
-  <span class="refinery-subheader">
-    <h3>Data Files</h3>
-  </span>
-  <p>{{ ADCtrl.dataSet.file_count }} files <!--using {{ ADCtrl.dataSet
-  .file_size|filesizeformat }}</p>-->
+<span class="refinery-subheader">
+  <h3>Meta Data</h3>
+</span>
+<div ng-if="investigation.isarchive_file">
+  <p>
+    <a href="{{isatab_archive.get_datafile}}">
+      {{isatab_archive.uuid|simple_name}}
+    </a>
+    ({{isatab_archive.get_file_size|filesizeformat}})
+  </p>
+ </div>
+<div ng-if="investigation.pre_isarchive_file">
+    <p>
+      <a href="{{pre_isatab_archive.get_datafile}}">
+      {{pre_isatab_archive.uuid|simple_name}}
+      </a>
+      {{pre_isatab_archive.get_file_size|filesizeformat}}
+    </p>
+</div>
+<div ng-if="!(investigation.isarchive_file || investigation.pre_isarchive_file)">
+  <p><i>Not available.</i></p>
+</div>
 
-  <div class="refinery-header">
-    <span class="refinery-header-left">
-      <h3>History</h3>
-    </span>
-  </div>
+<span class="refinery-subheader">
+  <h3>Data Files</h3>
+</span>
+  <p>{{ ADCtrl.dataSet.file_count }} files
+    <!--using {{ ADCtrl.dataSet.file_size|filesizeformat }}</p>-->
+
+<div class="refinery-header">
+  <span class="refinery-header-left">
+    <h3>History</h3>
+  </span>
+</div>
 <p>Current version <!--<i>{{ data_set.get_version_details.version }}</i>-->
   created <i>{{ data_set.get_version_details.date }}</i>.-->
   Data set created <i>{{ ADCtrl.dataSet.creation_date }}</i>.

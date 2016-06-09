@@ -2,6 +2,7 @@
 
 function dataSetAboutFactory (
   dataSetService,
+  dataSetInvestigationService,
   studyService,
   assayService,
   sharingService,
@@ -14,10 +15,11 @@ function dataSetAboutFactory (
   var group = {};
   var studies = [];
   var assays = [];
+  var investigation = {};
 
   var getDataSet = function (dataSetUuid) {
     var params = {
-      uuid: dataSetUuid,
+      uuid: dataSetUuid
     };
     var dataSetRequest = dataSetService.query(params);
     dataSetRequest.$promise.then(function (response) {
@@ -28,13 +30,26 @@ function dataSetAboutFactory (
 
   var getStudies = function (dataSetUuid) {
     var params = {
-      uuid: dataSetUuid,
+      uuid: dataSetUuid
     };
     var study = studyService.query(params);
     study.$promise.then(function (response) {
       angular.copy(response.objects, studies);
     });
     return study.$promise;
+  };
+
+  var getDataSetInvestigation = function (dataSetUuid) {
+    var params = {
+      uuid: dataSetUuid
+    };
+    var investigationRequest = dataSetInvestigationService.query(params);
+    investigationRequest.$promise.then(function (response) {
+      console.log('in factory investigation');
+      console.log(response);
+      angular.copy(response.objects, investigation);
+    });
+    return investigationRequest.$promise;
   };
 
   var getStudysAssays = function (studyUuid) {
@@ -97,6 +112,7 @@ function dataSetAboutFactory (
     studies: studies,
     assays: assays,
     getDataSet: getDataSet,
+    getDataSetInvestigation: getDataSetInvestigation,
     getStudies: getStudies,
     getStudysAssays: getStudysAssays,
     getDataSharingSet: getDataSharingSet,
@@ -109,6 +125,7 @@ angular
   .module('refineryDataSetAbout')
   .factory('dataSetAboutFactory', [
     'dataSetService',
+    'dataSetInvestigationService',
     'studyService',
     'assayService',
     'sharingService',
