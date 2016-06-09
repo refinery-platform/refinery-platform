@@ -455,6 +455,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
                 pass
 
         bundle.data["isa_archive"] = bundle.obj.get_isa_archive()
+        bundle.data["pre_isa_archive"] = bundle.obj.get_pre_isa_archive()
 
         return bundle
 
