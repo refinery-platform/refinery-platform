@@ -397,7 +397,7 @@ def get_galaxy_download_tasks(analysis):
                 # only download files if size is greater than 1
                 if file_size > 0:
                     task_id = import_file.subtask(
-                            (filestore_uuid,))
+                            (filestore_uuid, False, file_size))
                     task_list.append(task_id)
 
     return task_list
