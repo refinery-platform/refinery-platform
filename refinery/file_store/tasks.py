@@ -6,6 +6,7 @@ from tempfile import NamedTemporaryFile
 from urlparse import urlparse
 
 import celery
+import zlib
 from celery.task import task
 from django.core.files import File
 
@@ -123,8 +124,25 @@ def import_file(uuid, refresh=False, file_size=0):
         # download and save the file
         local_file_size = 0
         block_size = 10 * 1024 * 1024  # 10MB
-        for buf in iter(lambda: response.raw.read(block_size), ''):
+        for buf in response.iter_content(block_size):
             local_file_size += len(buf)
+
+            # Check if there any content-encoding going on and decompress
+            # accordingly
+            try:
+                encoding_header = response.headers["content-encoding"]
+
+                # Choose the correct `wbits` based on the type of encoding
+                # See: http://stackoverflow.com/a/22311297
+                if encoding_header == "deflate":
+                    buf = zlib.decompress(buf, -zlib.MAX_WBITS)
+                elif encoding_header == "gzip":
+                    buf = zlib.decompress(buf, zlib.MAX_WBITS | 16)
+
+            except KeyError as e:
+                # Response does not have the `content-encoding` header
+                logger.debug(e)
+
             try:
                 tmpfile.write(buf)
             except IOError as exc:  # e.g., [Errno 28] No space left on device
