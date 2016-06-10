@@ -2,7 +2,6 @@
 
 function dataSetAboutFactory (
   dataSetService,
-  dataSetInvestigationService,
   studyService,
   assayService,
   sharingService,
@@ -37,17 +36,6 @@ function dataSetAboutFactory (
       angular.copy(response.objects, studies);
     });
     return study.$promise;
-  };
-
-  var getDataSetInvestigation = function (dataSetUuid) {
-    var params = {
-      uuid: dataSetUuid
-    };
-    var investigationRequest = dataSetInvestigationService.query(params);
-    investigationRequest.$promise.then(function (response) {
-      angular.copy(response, investigation);
-    });
-    return investigationRequest.$promise;
   };
 
   var getStudysAssays = function (studyUuid) {
@@ -111,7 +99,6 @@ function dataSetAboutFactory (
     investigation: investigation,
     assays: assays,
     getDataSet: getDataSet,
-    getDataSetInvestigation: getDataSetInvestigation,
     getStudies: getStudies,
     getStudysAssays: getStudysAssays,
     getDataSetSharing: getDataSetSharing,
@@ -124,7 +111,6 @@ angular
   .module('refineryDataSetAbout')
   .factory('dataSetAboutFactory', [
     'dataSetService',
-    'dataSetInvestigationService',
     'studyService',
     'assayService',
     'sharingService',
