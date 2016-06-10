@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from file_store.models import FileStoreItem
+from .models import FileStoreItem
 
 
 class FileStoreItemSerializer(serializers.ModelSerializer):

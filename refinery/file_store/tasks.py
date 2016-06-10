@@ -9,8 +9,8 @@ import celery
 from celery.task import task
 from django.core.files import File
 
-from file_store.models import (FileStoreItem, get_temp_dir, file_path,
-                               FILE_STORE_BASE_DIR)
+from .models import (FileStoreItem, get_temp_dir, file_path,
+                     FILE_STORE_BASE_DIR)
 
 
 logger = logging.getLogger(__name__)
