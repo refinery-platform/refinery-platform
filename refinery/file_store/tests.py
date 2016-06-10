@@ -10,10 +10,15 @@ from django.contrib.sites.models import Site
 from django.core.files import File
 from django.test import SimpleTestCase
 
+from rest_framework.test import APIRequestFactory
+from rest_framework.test import APITestCase
+
 from core.utils import get_full_url
 from file_store.models import file_path, get_temp_dir, get_file_object, \
     FileStoreItem, FileExtension, FILE_STORE_TEMP_DIR, \
     generate_file_source_translator, FileType
+from .views import FileStoreItems
+from .serializers import FileStoreItemSerializer
 
 
 class FileStoreModuleTest(SimpleTestCase):
@@ -293,3 +298,50 @@ class FileSourceTranslationTest(SimpleTestCase):
         translate_file_source = generate_file_source_translator()
         with self.assertRaises(ValueError):
             translate_file_source(self.rel_path_source)
+
+
+class FileStoreItemsAPITests(APITestCase):
+
+    def setUp(self):
+        self.factory = APIRequestFactory()
+        # create FileStoreItem instances without any disk operations
+        self.url_source = 'http://example.org/test_file.dat'
+        self.item_from_url = FileStoreItem.objects.create(
+            source=self.url_source, sharename='labname')
+        self.view = FileStoreItems.as_view()
+        self.valid_uuid = self.item_from_url.uuid
+        self.url_root = '/api/v2/file_store_items/'
+        self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
+        self.invalid_format_uuid = "xxxxxxxx"
+
+    def tearDown(self):
+        FileType.objects.all().delete()
+        FileExtension.objects.all().delete()
+
+    def test_get_valid(self):
+        # valid_uuid
+        file_store_item_obj = FileStoreItem.objects.get(
+            uuid=self.item_from_url.uuid)
+        expected_response = FileStoreItemSerializer(file_store_item_obj)
+        request = self.factory.get('%s/%s/' % (self.url_root, self.valid_uuid))
+        response = self.view(request, self.valid_uuid)
+        self.assertEqual(response.status_code, 200)
+
+        responseKeys = response.data.keys()
+        for field in responseKeys:
+            self.assertEqual(response.data[field],
+                             expected_response.data[field])
+
+    def test_get_invalid(self):
+        # invalid_uuid
+        request = self.factory.get('%s/%s/' % (self.url_root,
+                                               self.invalid_uuid))
+        response = self.view(request, self.invalid_uuid)
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_invalid_format(self):
+        # invalid_format_uuid
+        request = self.factory.get('%s/%s/'
+                                   % (self.url_root, self.invalid_format_uuid))
+        response = self.view(request, self.invalid_format_uuid)
+        self.assertEqual(response.status_code, 404)
