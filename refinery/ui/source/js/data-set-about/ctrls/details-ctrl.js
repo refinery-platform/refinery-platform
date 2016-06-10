@@ -11,22 +11,12 @@ function AboutDetailsCtrl (
   vm.dataSet = {};
   vm.studies = [];
   vm.assays = {};
-  vm.investigation = {};
   vm.dataSetUuid = $window.dataSetUuid;
 
   vm.refreshDataSetStats = function () {
     var promise = $q.defer();
     dataSetAboutFactory.getDataSet(vm.dataSetUuid).then(function () {
       vm.dataSet = dataSetAboutFactory.dataSet;
-      promise.resolve();
-    });
-    return promise.promise;
-  };
-
-  vm.refreshInvestigation = function () {
-    var promise = $q.defer();
-    dataSetAboutFactory.getDataSetInvestigation(vm.dataSetUuid).then(function () {
-      vm.investigation = dataSetAboutFactory.investigation;
       promise.resolve();
     });
     return promise.promise;
@@ -55,7 +45,6 @@ function AboutDetailsCtrl (
 
   vm.refreshDataSetStats();
   vm.refreshStudies();
-  vm.refreshInvestigation();
 }
 
 angular
