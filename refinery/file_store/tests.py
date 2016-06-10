@@ -14,10 +14,9 @@ from rest_framework.test import APIRequestFactory
 from rest_framework.test import APITestCase
 
 from core.utils import get_full_url
-from file_store.models import (file_path, get_temp_dir, get_file_object,
-                               FileStoreItem, FileExtension,
-                               FILE_STORE_TEMP_DIR,
-                               generate_file_source_translator, FileType)
+from .models import (file_path, get_temp_dir, get_file_object, FileStoreItem,
+                     FileExtension, FILE_STORE_TEMP_DIR,
+                     generate_file_source_translator, FileType)
 from .views import FileStoreItems
 from .serializers import FileStoreItemSerializer
 
