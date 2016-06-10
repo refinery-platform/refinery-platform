@@ -1,6 +1,6 @@
 'use strict';
 
-describe('Common.service.studies: unit tests', function () {
+describe('Common.service.sharing: unit tests', function () {
   var $httpBackend;
   var $rootScope;
   var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
