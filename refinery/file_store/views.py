@@ -2,8 +2,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.http import Http404
 
-from file_store.models import FileStoreItem
-from file_store.serializers import FileStoreItemSerializer
+from .models import FileStoreItem
+from .serializers import FileStoreItemSerializer
 
 
 class FileStoreItems(APIView):
