@@ -129,19 +129,15 @@ def import_file(uuid, refresh=False, file_size=0):
 
             # Check if there any content-encoding going on and decompress
             # accordingly
-            try:
-                encoding_header = response.headers["content-encoding"]
 
-                # Choose the correct `wbits` based on the type of encoding
-                # See: http://stackoverflow.com/a/22311297
-                if encoding_header == "deflate":
-                    buf = zlib.decompress(buf, -zlib.MAX_WBITS)
-                elif encoding_header == "gzip":
-                    buf = zlib.decompress(buf, zlib.MAX_WBITS | 16)
+            encoding_header = response.headers.get('content-encoding')
 
-            except KeyError as e:
-                # Response does not have the `content-encoding` header
-                logger.debug(e)
+            # Choose the correct `wbits` based on the type of encoding
+            # See: http://stackoverflow.com/a/22311297
+            if encoding_header == "deflate":
+                buf = zlib.decompress(buf, -zlib.MAX_WBITS)
+            elif encoding_header == "gzip":
+                buf = zlib.decompress(buf, zlib.MAX_WBITS | 16)
 
             try:
                 tmpfile.write(buf)
