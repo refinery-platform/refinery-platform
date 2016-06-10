@@ -20,7 +20,7 @@ from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
 from core.models import DataSet, AuthenticationFormUsernameOrEmail
 
 from core.views import WorkflowViewSet, CustomRegistrationView
-from file_store.views import FileStoreItemViewSet
+from file_store.views import FileStoreItems
 
 from data_set_manager.views import Assays, AssaysFiles, AssaysAttributes
 
@@ -46,7 +46,6 @@ admin.autodiscover()
 
 # Django REST Framework urls
 router = routers.DefaultRouter()
-router.register(r'filestoreitems', FileStoreItemViewSet)
 router.register(r'workflows', WorkflowViewSet)
 
 
@@ -181,6 +180,10 @@ urlpatterns = patterns(
     url(r'^api/v2/assays/(?P<uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
         r''r'12})/attributes/$', AssaysAttributes.as_view()),
+
+    url(r'^api/v2/filestoreitems/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
+        r''r'12})/$', FileStoreItems.as_view()),
 
     # (r'^favicon\.ico$',
     # 'django.views.generic.simple.redirect_to',
