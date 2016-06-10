@@ -170,9 +170,7 @@ urlpatterns = patterns(
     url(r"^api/v2/", include(router.urls)),
 
 
-    url(r'^api/v2/assays/(?P<uuid>'
-        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
-        r''r'12})/$', Assays.as_view()),
+    url(r'^api/v2/assays/$', Assays.as_view()),
 
     url(r'^api/v2/assays/(?P<uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'

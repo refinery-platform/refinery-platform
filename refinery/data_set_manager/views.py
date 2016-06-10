@@ -30,7 +30,7 @@ from django.http import Http404
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
 
-from core.models import os, get_user_import_dir, DataSet
+from core.models import os, get_user_import_dir, DataSet, Study
 from core.utils import get_full_url
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
@@ -585,9 +585,15 @@ class Assays(APIView):
         parameters:
             - name: uuid
               description: Assay uuid
+              paramType: query
               type: string
-              paramType: path
-              required: true
+              required: false
+
+            - name: study
+              description: Study uuid
+              paramType: query
+              type: string
+              required: false
 
     ...
     """
@@ -595,13 +601,27 @@ class Assays(APIView):
     def get_object(self, uuid):
         try:
             return Assay.objects.get(uuid=uuid)
-        except Assay.DoesNotExist:
+        except (Assay.DoesNotExist, MultipleObjectsReturned):
             raise Http404
 
-    def get(self, request, uuid, format=None):
-        assay = self.get_object(uuid)
-        serializer = AssaySerializer(assay)
-        return Response(serializer.data)
+    def get_query_set(self, study_uuid):
+        try:
+            study_obj = Study.objects.get(uuid=study_uuid)
+            return Assay.objects.filter(study=study_obj)
+        except (Study.DoesNotExist, MultipleObjectsReturned):
+            raise Http404
+
+    def get(self, request, format=None):
+        if request.query_params.get('uuid'):
+            assay = self.get_object(request.query_params.get('uuid'))
+            serializer = AssaySerializer(assay)
+            return Response(serializer.data)
+        elif request.query_params.get('study'):
+            assays = self.get_query_set(request.query_params.get('study'))
+            serializer = AssaySerializer(assays, many=True)
+            return Response(serializer.data)
+        else:
+            raise Http404
 
 
 class AssaysFiles(APIView):

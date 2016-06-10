@@ -31,12 +31,12 @@ class AssaysAPITests(APITestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
         investigation = Investigation.objects.create()
-        study = Study.objects.create(
+        self.study = Study.objects.create(
                 file_name='test_filename123.txt',
                 title='Study Title Test',
                 investigation=investigation)
         self.assay = {
-            'study': study,
+            'study': self.study,
             'measurement': 'transcription factor binding site',
             'measurement_accession': 'http://www.testurl.org/testID',
             'measurement_source': 'OBI',
@@ -48,7 +48,7 @@ class AssaysAPITests(APITestCase):
         }
         assay = Assay.objects.create(**self.assay)
         self.assay['uuid'] = assay.uuid
-        self.assay['study'] = study.id
+        self.assay['study'] = self.study.id
         self.valid_uuid = assay.uuid
         self.url_root = '/api/v2/assays/'
         self.view = Assays.as_view()
@@ -60,24 +60,41 @@ class AssaysAPITests(APITestCase):
         Study.objects.all().delete()
         Investigation.objects.all().delete()
 
-    def test_get_valid(self):
+    def test_get_valid_uuid(self):
         # valid_uuid
-        request = self.factory.get('%s/%s/' % (self.url_root, self.valid_uuid))
+        request = self.factory.get('%s/?uuid=%s' % (
+            self.url_root, self.valid_uuid))
         response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
         self.assertItemsEqual(response.data.keys(), self.assay.keys())
         self.assertItemsEqual(response.data.values(), self.assay.values())
 
-    def test_get_invalid(self):
+    def test_get_valid_study(self):
+        # valid_study_uuid
+        request = self.factory.get('%s/?study=%s' % (
+            self.url_root, self.study.uuid))
+        response = self.view(request, self.valid_uuid)
+        self.assertEqual(response.status_code, 200)
+        self.assertItemsEqual(response.data[0].keys(), self.assay.keys())
+        self.assertItemsEqual(response.data[0].values(), self.assay.values())
+
+    def test_get_invalid_uuid(self):
         # invalid_uuid
-        request = self.factory.get('%s/%s/' % (self.url_root,
-                                               self.invalid_uuid))
+        request = self.factory.get('%s/?uuid=%s' % (self.url_root,
+                                                    self.invalid_uuid))
         response = self.view(request, self.invalid_uuid)
         self.assertEqual(response.status_code, 404)
 
-    def test_get_invalid_format(self):
+    def test_get_invalid_study_uuid(self):
+        # invalid_study_uuid
+        request = self.factory.get('%s/?study=%s' % (self.url_root,
+                                                     self.invalid_uuid))
+        response = self.view(request, self.invalid_uuid)
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_invalid_format_uuid(self):
         # invalid_format_uuid
-        request = self.factory.get('%s/%s/'
+        request = self.factory.get('%s/?uuid=%s'
                                    % (self.url_root, self.invalid_format_uuid))
         response = self.view(request, self.invalid_format_uuid)
         self.assertEqual(response.status_code, 404)

@@ -129,16 +129,8 @@ function refineryDataSetNavConfig (
       true
     )
     .state(
-      'details', {
-        url: '/details/',
-        controller: 'refineryDataSetNavBlueprintCtrl'
-      },
-      '^\/data_sets2\/.*\/$',
-      true
-    )
-    .state(
-      'sharing', {
-        url: '/sharing/',
+      'about', {
+        url: '/about/',
         controller: 'refineryDataSetNavBlueprintCtrl'
       },
       '^\/data_sets2\/.*\/$',
