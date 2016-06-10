@@ -79,7 +79,7 @@ def run_analysis(analysis_uuid):
         refinery_import_tasks = []
         for input_file_uuid in analysis.get_input_file_uuid_list():
             refinery_import_task = import_file.subtask(
-                    (input_file_uuid, False, ))
+                    (input_file_uuid,))
             refinery_import_tasks.append(refinery_import_task)
         refinery_import = TaskSet(tasks=refinery_import_tasks).apply_async()
         refinery_import.save()
@@ -396,14 +396,8 @@ def get_galaxy_download_tasks(analysis):
                 # downloading analysis results into file_store
                 # only download files if size is greater than 1
                 if file_size > 0:
-                    # local download, force copying into the file_store instead
-                    # of symlinking
-                    if galaxy_instance.local_download:
-                        task_id = import_file.subtask(
-                            (filestore_uuid, False, True, file_size,))
-                    else:
-                        task_id = import_file.subtask(
-                            (filestore_uuid, False, False, file_size,))
+                    task_id = import_file.subtask(
+                            (filestore_uuid,))
                     task_list.append(task_id)
 
     return task_list
