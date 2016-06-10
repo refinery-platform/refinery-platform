@@ -110,18 +110,22 @@
 <span class="refinery-subheader">
   <h3>Data Files</h3>
 </span>
-  <p>{{ ADCtrl.dataSet.file_count }} files
-    <!--using {{ ADCtrl.dataSet.file_size|filesizeformat }}</p>-->
+<p>
+  {{ ADCtrl.dataSet.file_count }} files
+  <!-- ADD File type filter -->
+  <span ng-if="ADCtrl.dataSet.file_size > 0">
+    {{ ADCtrl.dataSet.file_size }}
+  </span>
+</p>
 
 <div class="refinery-header">
   <span class="refinery-header-left">
     <h3>History</h3>
   </span>
 </div>
-<p>Current version <!--<i>{{ data_set.get_version_details.version }}</i>-->
-  created <i>{{ data_set.get_version_details.date }}</i>.-->
+<p>Current version <i>{{ ADCtrl.dataSet.version }}</i>
   Data set created <i>{{ ADCtrl.dataSet.creation_date }}</i>.
-  Last modified <i>{{ADCtrl.dataSet.modification_date }}</i>.
+  Last modified <i>{{ ADCtrl.dataSet.modification_date }}</i>.
 </p>
 </div>
 
