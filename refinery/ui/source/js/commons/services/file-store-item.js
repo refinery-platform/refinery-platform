@@ -2,7 +2,7 @@
 
 angular
   .module('refineryApp')
-  .factory('FileStoreItemService', ['$resource', 'settings',
+  .factory('fileStoreItemService', ['$resource', 'settings',
     function ($resource, settings) {
       var fileStoreItem = $resource(
         settings.appRoot + settings.refineryApiV2 + '/file_store_items/:uuid/',
