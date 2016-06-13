@@ -134,12 +134,20 @@ def import_file(uuid, refresh=False, file_size=0):
 
             # Choose the correct `wbits` based on the type of encoding
             # See: http://stackoverflow.com/a/22311297
-            if encoding_header == "deflate":
-                buf = zlib.decompress(buf, -zlib.MAX_WBITS)
-            elif encoding_header == "gzip":
-                buf = zlib.decompress(buf, zlib.MAX_WBITS | 16)
-            elif encoding_header == "zlib":
-                buf = zlib.decompress(buf, zlib.MAX_WBITS)
+            try:
+                if encoding_header == "deflate":
+                    buf = zlib.decompress(buf, -zlib.MAX_WBITS)
+                elif encoding_header == "gzip":
+                    buf = zlib.decompress(buf, zlib.MAX_WBITS | 16)
+                elif encoding_header == "zlib":
+                    buf = zlib.decompress(buf, zlib.MAX_WBITS)
+            except zlib.error as e:
+                # 'e' here has been observed to be:
+                # Error -3 while decompressing data: incorrect header check
+                # This occurs when a webserver is misconfigured and provides
+                #  a `content-encoding` header without the data itself being
+                # encoded
+                logger.error(e)
 
             try:
                 tmpfile.write(buf)
