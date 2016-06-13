@@ -2,20 +2,16 @@
 
 function isaArchiveName () {
   return function (param) {
-    var titledParam;
-    if (param !== 'undefined') {
-      // regex to split on capital letters
-      titledParam = param.split(/(?=[A-Z])/);
-      // capitalized first letter
-      var firstLetter = titledParam[0].charAt(0).toUpperCase();
-      // rejoin first letter to word
-      titledParam[0] = firstLetter + titledParam[0].slice(1);
-
-      return titledParam.join(' ');
+    if (param !== undefined) {
+      console.log(param);
+      // split on backslash
+      var urlSplitArray = param.split('/');
+      // expect param, location/of/thing/fileName - pop fileName
+      return urlSplitArray.pop();
     }
     return param;
   };
 }
 
-angular.module('dataSetAboutFactory')
+angular.module('refineryDataSetAbout')
   .filter('isaArchiveName', [isaArchiveName]);

@@ -47,8 +47,11 @@ function dataSetAboutFactory (
     var params = {
       uuid: isaUuid
     };
+    console.log(isaUuid);
     var fileStore = fileStoreItemService.query(params);
-    fileStoreItemService.$promise.then(function (response) {
+    fileStore.$promise.then(function (response) {
+      console.log('in file Store item');
+      console.log(response);
       angular.copy(response, fileStoreItem);
     });
     return fileStore.$promise;
