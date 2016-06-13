@@ -50,4 +50,24 @@ describe('Controller: DetailsCtrl', function () {
       expect(mockDataSets).toEqual(true);
     });
   });
+
+  describe('refreshStudies', function () {
+    it('refreshStudies is method', function () {
+      expect(angular.isFunction(ctrl.refreshStudies)).toBe(true);
+    });
+
+    it('RefreshStudies returns promise', function () {
+      var mockStudies = false;
+      spyOn(factory, 'getStudies').and.callFake(function () {
+        return {
+          then: function () {
+            mockStudies = true;
+          }
+        };
+      });
+      expect(mockStudies).toEqual(false);
+      ctrl.refreshStudies();
+      expect(mockStudies).toEqual(true);
+    });
+  });
 });
