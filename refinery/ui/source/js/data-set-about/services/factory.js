@@ -4,6 +4,7 @@ function dataSetAboutFactory (
   dataSetService,
   studyService,
   assayService,
+  fileStoreItemService,
   sharingService,
   userService,
   groupMemberService
@@ -15,6 +16,9 @@ function dataSetAboutFactory (
   var studies = [];
   var assays = [];
   var investigation = {};
+  var isaTab = {};
+  var preIsaTab = {};
+  var fileStoreItem = {};
 
   var getDataSet = function (dataSetUuid) {
     var params = {
@@ -36,6 +40,18 @@ function dataSetAboutFactory (
       angular.copy(response.objects, studies);
     });
     return study.$promise;
+  };
+
+  // For isa-archive and pre-isa-archive file download url
+  var getFileStoreItem = function (isaUuid) {
+    var params = {
+      uuid: isaUuid
+    };
+    var fileStore = fileStoreItemService.query(params);
+    fileStoreItemService.$promise.then(function (response) {
+      angular.copy(response, fileStoreItem);
+    });
+    return fileStore.$promise;
   };
 
   var getStudysAssays = function (studyUuid) {
@@ -92,13 +108,17 @@ function dataSetAboutFactory (
 
   return {
     dataSet: dataSet,
+    fileStoreItem: fileStoreItem,
     dataSetSharing: dataSetSharing,
     ownerProfile: ownerProfile,
     group: group,
     studies: studies,
     investigation: investigation,
     assays: assays,
+    isaTab: isaTab,
+    preIsaTab: preIsaTab,
     getDataSet: getDataSet,
+    getFileStoreItem: getFileStoreItem,
     getStudies: getStudies,
     getStudysAssays: getStudysAssays,
     getDataSetSharing: getDataSetSharing,
@@ -113,6 +133,7 @@ angular
     'dataSetService',
     'studyService',
     'assayService',
+    'fileStoreItemService',
     'sharingService',
     'userService',
     'groupMemberService',
