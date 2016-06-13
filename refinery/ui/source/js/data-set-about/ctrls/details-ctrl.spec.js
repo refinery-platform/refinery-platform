@@ -36,7 +36,7 @@ describe('Controller: DetailsCtrl', function () {
       expect(angular.isFunction(ctrl.refreshDataSetStats)).toBe(true);
     });
 
-    it('RefreshDataSetStats returns promise', function () {
+    it('RefreshDataSetStats returns calls Factory and updates mock item', function () {
       var mockDataSets = false;
       spyOn(factory, 'getDataSet').and.callFake(function () {
         return {
@@ -56,7 +56,7 @@ describe('Controller: DetailsCtrl', function () {
       expect(angular.isFunction(ctrl.refreshStudies)).toBe(true);
     });
 
-    it('RefreshStudies returns promise', function () {
+    it('RefreshStudies returns calls Factory and updates mock item', function () {
       var mockStudies = false;
       spyOn(factory, 'getStudies').and.callFake(function () {
         return {
@@ -76,7 +76,7 @@ describe('Controller: DetailsCtrl', function () {
       expect(angular.isFunction(ctrl.refreshAssays)).toBe(true);
     });
 
-    it('refreshAssays returns promise', function () {
+    it('refreshAssays returns calls Factory and updates mock item', function () {
       var mockAssays = false;
       spyOn(factory, 'getStudysAssays').and.callFake(function () {
         return {
@@ -88,6 +88,26 @@ describe('Controller: DetailsCtrl', function () {
       expect(mockAssays).toEqual(false);
       ctrl.refreshAssays();
       expect(mockAssays).toEqual(true);
+    });
+  });
+
+  describe('refreshFileStoreItem', function () {
+    it('refreshFileStoreItem is method', function () {
+      expect(angular.isFunction(ctrl.refreshFileStoreItem)).toBe(true);
+    });
+
+    it('refreshFileStoreItem calls Factory and updates mock item', function () {
+      var mockFileStoreItem = false;
+      spyOn(factory, 'getFileStoreItem').and.callFake(function () {
+        return {
+          then: function () {
+            mockFileStoreItem = true;
+          }
+        };
+      });
+      expect(mockFileStoreItem).toEqual(false);
+      ctrl.refreshFileStoreItem();
+      expect(mockFileStoreItem).toEqual(true);
     });
   });
 });
