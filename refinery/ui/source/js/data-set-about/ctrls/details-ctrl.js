@@ -12,11 +12,18 @@ function AboutDetailsCtrl (
   vm.studies = [];
   vm.assays = {};
   vm.dataSetUuid = $window.dataSetUuid;
+  vm.fileStoreItem = {};
 
   vm.refreshDataSetStats = function () {
     var promise = $q.defer();
     dataSetAboutFactory.getDataSet(vm.dataSetUuid).then(function () {
       vm.dataSet = dataSetAboutFactory.dataSet;
+      // grab meta-data info
+      if (dataSetAboutFactory.dataSet.isa_archive) {
+        vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.isa_archive);
+      } else if (dataSetAboutFactory.dataSet.pre_isatab_archive) {
+        vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.pre_isa_archive);
+      }
       promise.resolve();
     });
     return promise.promise;
@@ -38,6 +45,15 @@ function AboutDetailsCtrl (
     var promise = $q.defer();
     dataSetAboutFactory.getStudysAssays(studyUuid).then(function () {
       vm.assays[studyUuid] = dataSetAboutFactory.assays;
+      promise.resolve();
+    });
+    return promise.promise;
+  };
+
+  vm.refreshFileStoreItem = function (isaUuid) {
+    var promise = $q.defer();
+    dataSetAboutFactory.getFileStoreItem(isaUuid).then(function () {
+      vm.fileStoreItem = dataSetAboutFactory.fileStoreItem;
       promise.resolve();
     });
     return promise.promise;
