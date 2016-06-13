@@ -85,25 +85,23 @@
 <span class="refinery-subheader">
   <h3>Meta Data</h3>
 </span>
-<div ng-if="ADCtrl.investigation.isarchive_file">
+<div ng-if="ADCtrl.dataSet.isa_archive">
   <p>
-    Isatab Archive
- <!--   <a href="{{ADCtrl.isatab_archive.get_datafile}}">
-      {{ADCtrl.isatab_archive.uuid|simple_name}}
+     <a href="{{ADCtrl.fileStoreItem.datafile && ADCtrl.fileStoreItem.datafile}}">
+      {{ADCtrl.fileStoreItem.datafile | isaArchiveName}}
     </a>
-    ({{ADCtrl.isatab_archive.get_file_size|filesizeformat}})-->
+   <!-- ({{ADCtrl.isa_archive.get_file_size|filesizeformat}})-->
   </p>
  </div>
-<div ng-if="ADCtrl.investigation.pre_isatab_archive_file">
+<div ng-if="ADCtrl.dataSet.pre_isa_archive && ADCtrl.fileStoreItem.datafile">
     <p>
-      Pre_isatab_archive File
-    <!--  <a href="{{ADCtrl.pre_isatab_archive.get_datafile}}">
-      {{ADCtrl.pre_isatab_archive.uuid|simple_name}}
+      <a href="{{ADCtrl.fileStoreItem.datafile}}">
+      {{ADCtrl.fileStoreItem.datafile | isaArchiveName}}
       </a>
-      {{ADCtrl.pre_isatab_archive.get_file_size|filesizeformat}}-->
+     <!-- {{ADCtrl.pre_isa_archive.get_file_size|filesizeformat}}-->
     </p>
 </div>
-<div ng-if="!(ADCtrl.investigation.isarchive_file || ADCtrl.investigation.pre_isarchive_file)">
+<div ng-if="!(ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive)">
   <p><i>Not available.</i></p>
 </div>
 
