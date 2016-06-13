@@ -2,8 +2,12 @@
 
 function fileSizeFormat () {
   return function (param) {
-    if (param !== undefined) {
+    if (param !== undefined && param !== '' && !isNaN(param)) {
       var fileStr = param;
+      // convert string number to integer
+      if (typeof(fileStr) !== 'number') {
+        fileStr = parseInt(fileStr, 10);
+      }
       if (fileStr < 1024) {
         return fileStr + ' Bytes';
       }
