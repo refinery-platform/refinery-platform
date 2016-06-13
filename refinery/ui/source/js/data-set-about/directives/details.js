@@ -10,6 +10,7 @@ function rpDataSetAboutDetails () {
       dataSet: '@',
       studies: '@',
       assays: '@',
+      fileStoreItem: '@'
     }
   };
 }
