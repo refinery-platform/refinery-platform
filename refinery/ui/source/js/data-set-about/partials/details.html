@@ -110,10 +110,10 @@
 </span>
 <p>
   {{ ADCtrl.dataSet.file_count }} files
-  <!-- ADD File type filter -->
-  <span ng-if="ADCtrl.dataSet.file_size > 0">
-    {{ ADCtrl.dataSet.file_size }}
-  </span>
+  <div ng-if="ADCtrl.dataSet.file_size > 0">
+    Total File Size:
+    {{ ADCtrl.dataSet.file_size | fileSizeFormat }}
+  </div>
 </p>
 
 <div class="refinery-header">
@@ -121,7 +121,7 @@
     <h3>History</h3>
   </span>
 </div>
-<p>Current version <i>{{ ADCtrl.dataSet.version }}</i>
+<p>Current version <i>{{ ADCtrl.dataSet.version }}</i>.
   Data set created <i>{{ ADCtrl.dataSet.creation_date }}</i>.
   Last modified <i>{{ ADCtrl.dataSet.modification_date }}</i>.
 </p>
