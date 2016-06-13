@@ -70,4 +70,24 @@ describe('Controller: DetailsCtrl', function () {
       expect(mockStudies).toEqual(true);
     });
   });
+
+  describe('refreshAssays', function () {
+    it('refreshAssays is method', function () {
+      expect(angular.isFunction(ctrl.refreshAssays)).toBe(true);
+    });
+
+    it('refreshAssays returns promise', function () {
+      var mockAssays = false;
+      spyOn(factory, 'getStudysAssays').and.callFake(function () {
+        return {
+          then: function () {
+            mockAssays = true;
+          }
+        };
+      });
+      expect(mockAssays).toEqual(false);
+      ctrl.refreshAssays();
+      expect(mockAssays).toEqual(true);
+    });
+  });
 });
