@@ -1,24 +1,23 @@
 'use strict';
 
 function dataSetAboutFactory (
-  dataSetService,
-  studyService,
   assayService,
+  dataSetService,
   fileStoreItemService,
+  groupMemberService,
   sharingService,
-  userService,
-  groupMemberService
+  studyService,
+  userService
 ) {
+  var assays = [];
   var dataSet = {};
   var dataSetSharing = {};
-  var ownerProfile = {};
+  var fileStoreItem = {};
   var group = {};
-  var studies = [];
-  var assays = [];
   var investigation = {};
   var isaTab = {};
-  var preIsaTab = {};
-  var fileStoreItem = {};
+  var ownerProfile = {};
+  var studies = [];
 
   var getDataSet = function (dataSetUuid) {
     var params = {
@@ -31,17 +30,6 @@ function dataSetAboutFactory (
     return dataSetRequest.$promise;
   };
 
-  var getStudies = function (dataSetUuid) {
-    var params = {
-      uuid: dataSetUuid
-    };
-    var study = studyService.query(params);
-    study.$promise.then(function (response) {
-      angular.copy(response.objects, studies);
-    });
-    return study.$promise;
-  };
-
   // For isa-archive and pre-isa-archive file download url
   var getFileStoreItem = function (isaUuid) {
     var params = {
@@ -52,17 +40,6 @@ function dataSetAboutFactory (
       angular.copy(response, fileStoreItem);
     });
     return fileStore.$promise;
-  };
-
-  var getStudysAssays = function (studyUuid) {
-    var params = {
-      study: studyUuid
-    };
-    var assay = assayService.query(params);
-    assay.$promise.then(function (response) {
-      angular.copy(response, assays);
-    });
-    return assay.$promise;
   };
 
   var getDataSetSharing = function (dataSetUuid) {
@@ -106,37 +83,60 @@ function dataSetAboutFactory (
     return ownerService;
   };
 
+  // Get Studies associated with a data set
+  var getStudies = function (dataSetUuid) {
+    var params = {
+      uuid: dataSetUuid
+    };
+    var study = studyService.query(params);
+    study.$promise.then(function (response) {
+      angular.copy(response.objects, studies);
+    });
+    return study.$promise;
+  };
+
+  // Get assays associated with a study
+  var getStudysAssays = function (studyUuid) {
+    var params = {
+      study: studyUuid
+    };
+    var assay = assayService.query(params);
+    assay.$promise.then(function (response) {
+      angular.copy(response, assays);
+    });
+    return assay.$promise;
+  };
+
   return {
-    dataSet: dataSet,
-    fileStoreItem: fileStoreItem,
-    dataSetSharing: dataSetSharing,
-    ownerProfile: ownerProfile,
-    group: group,
-    studies: studies,
-    investigation: investigation,
     assays: assays,
+    dataSet: dataSet,
+    dataSetSharing: dataSetSharing,
+    fileStoreItem: fileStoreItem,
+    group: group,
+    investigation: investigation,
     isaTab: isaTab,
-    preIsaTab: preIsaTab,
+    ownerProfile: ownerProfile,
+    studies: studies,
     getDataSet: getDataSet,
-    getFileStoreItem: getFileStoreItem,
-    getStudies: getStudies,
-    getStudysAssays: getStudysAssays,
     getDataSetSharing: getDataSetSharing,
+    getFileStoreItem: getFileStoreItem,
+    getGroup: getGroup,
     getOwnerName: getOwnerName,
-    getGroup: getGroup
+    getStudies: getStudies,
+    getStudysAssays: getStudysAssays
   };
 }
 
 angular
   .module('refineryDataSetAbout')
   .factory('dataSetAboutFactory', [
-    'dataSetService',
-    'studyService',
     'assayService',
+    'dataSetService',
     'fileStoreItemService',
-    'sharingService',
-    'userService',
     'groupMemberService',
+    'sharingService',
+    'studyService',
+    'userService',
     dataSetAboutFactory
   ]
 );
