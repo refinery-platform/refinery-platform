@@ -138,6 +138,8 @@ def import_file(uuid, refresh=False, file_size=0):
                 buf = zlib.decompress(buf, -zlib.MAX_WBITS)
             elif encoding_header == "gzip":
                 buf = zlib.decompress(buf, zlib.MAX_WBITS | 16)
+            elif encoding_header == "zlib":
+                buf = zlib.decompress(buf, zlib.MAX_WBITS)
 
             try:
                 tmpfile.write(buf)
