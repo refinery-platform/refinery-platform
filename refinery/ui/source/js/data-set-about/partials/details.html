@@ -90,7 +90,7 @@
      <a href="{{ADCtrl.fileStoreItem.datafile && ADCtrl.fileStoreItem.datafile}}">
       {{ADCtrl.fileStoreItem.datafile | isaArchiveName}}
     </a>
-   <!-- ({{ADCtrl.isa_archive.get_file_size|filesizeformat}})-->
+      - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
   </p>
  </div>
 <div ng-if="ADCtrl.dataSet.pre_isa_archive && ADCtrl.fileStoreItem.datafile">
@@ -98,7 +98,7 @@
       <a href="{{ADCtrl.fileStoreItem.datafile}}">
       {{ADCtrl.fileStoreItem.datafile | isaArchiveName}}
       </a>
-     <!-- {{ADCtrl.pre_isa_archive.get_file_size|filesizeformat}}-->
+      - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
     </p>
 </div>
 <div ng-if="!(ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive)">
@@ -111,8 +111,7 @@
 <p>
   {{ ADCtrl.dataSet.file_count }} files
   <div ng-if="ADCtrl.dataSet.file_size > 0">
-    Total File Size:
-    {{ ADCtrl.dataSet.file_size | fileSizeFormat }}
+   - {{ ADCtrl.dataSet.file_size | fileSizeFormat }}
   </div>
 </p>
 
