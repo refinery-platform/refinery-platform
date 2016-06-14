@@ -5,7 +5,6 @@ function AboutSharingCtrl (
   $scope,
   $location,
   $window,
-  $q,
   $log
   ) {
   var vm = this;
@@ -16,7 +15,6 @@ function AboutSharingCtrl (
   vm.refreshDataSetSharing = function () {
     var dataSetUuid = $window.dataSetUuid;
 
-    var promise = $q.defer();
     dataSetAboutFactory
       .getDataSetSharing(dataSetUuid)
       .then(function () {
@@ -27,40 +25,29 @@ function AboutSharingCtrl (
             vm.refreshGroup(vm.dataSetSharing.share_list[i]);
           }
         }
-        promise.resolve();
       }, function (error) {
         $log.error(error);
-        promise.reject();
       });
-    return promise.promise;
   };
 
   vm.refreshGroup = function (shareObj) {
-    var promise = $q.defer();
     dataSetAboutFactory
       .getGroup(shareObj)
       .then(function () {
         vm.groupList.push(dataSetAboutFactory.group);
-        promise.resolve();
       }, function (error) {
         $log.error(error);
-        promise.reject();
       });
-    return promise.promise;
   };
 
   vm.refreshOwnerName = function (userUuid) {
-    var promise = $q.defer();
     dataSetAboutFactory
       .getOwnerName(userUuid)
       .then(function () {
         vm.ownerName = dataSetAboutFactory.ownerProfile.fullName;
-        promise.resolve();
       }, function (error) {
         $log.error(error);
-        promise.reject();
       });
-    return promise.promise;
   };
 
   vm.refreshDataSetSharing();
