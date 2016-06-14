@@ -233,11 +233,12 @@ class solrSynonymAnalyzer {
   # already exists.
 
   exec { "solr-synonym-analyzer-download":
-    command => "rm -f /vagrant/refinery/solr/lib/hon-lucene-synonyms.jar && wget -P /vagrant/refinery/solr/lib/ ${url}",
-    creates => "/vagrant/refinery/solr/lib/hon-lucene-synonyms.jar",
+    command => "rm -f ${solr_lib_dir}/hon-lucene-synonyms.jar && wget -P ${solr_lib_dir} ${url}",
+    creates => "${solr_lib_dir}/hon-lucene-synonyms.jar",
     path    => "/usr/bin:/bin",
     timeout => 120,  # downloading can take some time
     notify => Service['solr'],
+    require => Exec['solr_install'],
   }
 }
 include solrSynonymAnalyzer
