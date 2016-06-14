@@ -1,9 +1,10 @@
 <div class="refinery-header">
-    <span class="refinery-header-left">
-      <h3>{{ ADCtrl.dataSet.name }}</h3>
-    </span>
-  </div>
+  <span class="refinery-header-left">
+    <h3>{{ ADCtrl.dataSet.name }}</h3>
+  </span>
+</div>
 
+<div>
   <div class="refinery-subheader">
     <h4>Summary</h4>
   </div>
@@ -11,8 +12,8 @@
     <div ng-if="ADCtrl.dataSet.summary">
       {{ dataSet.summary }}
     </div>
-    <div ng-if="!ADCtrl.dataSet.summary">
-       <i>None provided.</i>
+    <div ng-if="!ADCtrl.dataSet.summary" class="italic">
+       None provided.
     </div>
   </p>
 
@@ -23,8 +24,8 @@
      <div ng-if="ADCtrl.dataSet.description">
       {{ dataSet.description }}
     </div>
-    <div ng-if="!ADCtrl.dataSet.description">
-       <i>None provided.</i>
+    <div ng-if="!ADCtrl.dataSet.description" class="italic">
+       None provided.
     </div>
   </p>
 
@@ -35,10 +36,13 @@
     <div ng-if="ADCtrl.dataSet.slug">
       {{ dataSet.slug }}
     </div>
-    <div ng-if="!ADCtrl.dataSet.slug">
-       <i>None provided.</i>
+    <div ng-if="!ADCtrl.dataSet.slug" class="italic">
+       None provided.
     </div>
+  </p>
+</div>
 
+<div>
   <div class="refinery-header">
     <span class="refinery-header-left">
         <h3>Studies</h3>
@@ -82,9 +86,9 @@
     </span>
   </div>
 
-<span class="refinery-subheader">
-  <h3>Meta Data</h3>
-</span>
+  <span class="refinery-subheader">
+    <h3>Meta Data</h3>
+  </span>
 <div ng-if="ADCtrl.dataSet.isa_archive">
   <p>
      <a href="{{ADCtrl.fileStoreItem.datafile && ADCtrl.fileStoreItem.datafile}}">
@@ -92,37 +96,38 @@
     </a>
       - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
   </p>
- </div>
-<div ng-if="ADCtrl.dataSet.pre_isa_archive && ADCtrl.fileStoreItem.datafile">
+</div>
+  <div ng-if="ADCtrl.dataSet.pre_isa_archive && ADCtrl.fileStoreItem.datafile">
     <p>
       <a href="{{ADCtrl.fileStoreItem.datafile}}">
       {{ADCtrl.fileStoreItem.datafile | isaArchiveName}}
       </a>
       - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
     </p>
-</div>
-<div ng-if="!(ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive)">
-  <p><i>Not available.</i></p>
-</div>
-
-<span class="refinery-subheader">
-  <h3>Data Files</h3>
-</span>
-<p>
-  {{ ADCtrl.dataSet.file_count }} files
-  <div ng-if="ADCtrl.dataSet.file_size > 0">
-   - {{ ADCtrl.dataSet.file_size | fileSizeFormat }}
   </div>
-</p>
+  <div ng-if="!(ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive)">
+  <p class="italic">Not available.</p>
+  </div>
 
-<div class="refinery-header">
-  <span class="refinery-header-left">
-    <h3>History</h3>
+  <span class="refinery-subheader">
+    <h3>Data Files</h3>
   </span>
-</div>
-<p>Current version <i>{{ ADCtrl.dataSet.version }}</i>.
-  Data set created <i>{{ ADCtrl.dataSet.creation_date }}</i>.
-  Last modified <i>{{ ADCtrl.dataSet.modification_date }}</i>.
-</p>
+  <p>
+    {{ ADCtrl.dataSet.file_count }} files
+    <div ng-if="ADCtrl.dataSet.file_size > 0">
+     - {{ ADCtrl.dataSet.file_size | fileSizeFormat }}
+    </div>
+  </p>
+
+  <div class="refinery-header">
+    <span class="refinery-header-left">
+      <h3>History</h3>
+    </span>
+  </div>
+  <p>
+    Current version <span class="italic">{{ ADCtrl.dataSet.version }}</span>.
+    Data set created <span class="italic">{{ ADCtrl.dataSet.creation_date }}</span>.
+    Last modified <span class="italic">{{ ADCtrl.dataSet.modification_date }}</span>.
+  </p>
 </div>
 
