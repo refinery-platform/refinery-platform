@@ -238,6 +238,7 @@ class solrSynonymAnalyzer {
     path    => "/usr/bin:/bin",
     timeout => 120,  # downloading can take some time
     notify => Service['solr'],
+    require => Exec['solr_install'],
   }
 }
 include solrSynonymAnalyzer
