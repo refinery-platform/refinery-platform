@@ -12,7 +12,7 @@
     <div ng-if="ADCtrl.dataSet.summary">
       {{ dataSet.summary }}
     </div>
-    <div ng-if="!ADCtrl.dataSet.summary" class="italic">
+    <div ng-if="!ADCtrl.dataSet.summary" class="emphasized">
        None provided.
     </div>
   </p>
@@ -24,7 +24,7 @@
      <div ng-if="ADCtrl.dataSet.description">
       {{ dataSet.description }}
     </div>
-    <div ng-if="!ADCtrl.dataSet.description" class="italic">
+    <div ng-if="!ADCtrl.dataSet.description" class="emphasized">
        None provided.
     </div>
   </p>
@@ -36,7 +36,7 @@
     <div ng-if="ADCtrl.dataSet.slug">
       {{ dataSet.slug }}
     </div>
-    <div ng-if="!ADCtrl.dataSet.slug" class="italic">
+    <div ng-if="!ADCtrl.dataSet.slug" class="emphasized">
        None provided.
     </div>
   </p>
@@ -106,7 +106,7 @@
     </p>
   </div>
   <div ng-if="!(ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive)">
-  <p class="italic">Not available.</p>
+  <p class="emphasized">Not available.</p>
   </div>
 
   <span class="refinery-subheader">
@@ -125,9 +125,9 @@
     </span>
   </div>
   <p>
-    Current version <span class="italic">{{ ADCtrl.dataSet.version }}</span>.
-    Data set created <span class="italic">{{ ADCtrl.dataSet.creation_date }}</span>.
-    Last modified <span class="italic">{{ ADCtrl.dataSet.modification_date }}</span>.
+    Current version <span class="emphasized">{{ ADCtrl.dataSet.version }}</span>.
+    Data set created <span class="emphasized">{{ ADCtrl.dataSet.creation_date }}</span>.
+    Last modified <span class="emphasized">{{ ADCtrl.dataSet.modification_date }}</span>.
   </p>
 </div>
 
