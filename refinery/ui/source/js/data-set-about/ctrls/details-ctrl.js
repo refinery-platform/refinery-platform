@@ -5,13 +5,15 @@ function AboutDetailsCtrl (
   $scope,
   $location,
   $window,
-  $q
+  $q,
+  $log
   ) {
   var vm = this;
   vm.dataSet = {};
   vm.studies = [];
   vm.assays = {};
-  vm.dataSetUuid = $window.dataSetUuid;
+  // vm.dataSetUuid = $window.dataSetUuid;
+  vm.dataSetUuid = null;
   vm.fileStoreItem = {};
 
   vm.refreshDataSetStats = function () {
@@ -25,6 +27,9 @@ function AboutDetailsCtrl (
         vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.pre_isa_archive);
       }
       promise.resolve();
+    }, function (error) {
+      $log.error(error);
+      promise.reject();
     });
     return promise.promise;
   };
@@ -37,6 +42,9 @@ function AboutDetailsCtrl (
         vm.refreshAssays(vm.studies[i].uuid);
       }
       promise.resolve();
+    }, function (error) {
+      $log.error(error);
+      promise.reject();
     });
     return promise.promise;
   };
@@ -46,6 +54,9 @@ function AboutDetailsCtrl (
     dataSetAboutFactory.getStudysAssays(studyUuid).then(function () {
       vm.assays[studyUuid] = dataSetAboutFactory.assays;
       promise.resolve();
+    }, function (error) {
+      $log.error(error);
+      promise.reject();
     });
     return promise.promise;
   };
@@ -55,6 +66,9 @@ function AboutDetailsCtrl (
     dataSetAboutFactory.getFileStoreItem(isaUuid).then(function () {
       vm.fileStoreItem = dataSetAboutFactory.fileStoreItem;
       promise.resolve();
+    }, function (error) {
+      $log.error(error);
+      promise.reject();
     });
     return promise.promise;
   };
@@ -72,6 +86,7 @@ angular
     '$location',
     '$window',
     '$q',
+    '$log',
     AboutDetailsCtrl
   ]);
 
