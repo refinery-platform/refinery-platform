@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.sites.models import get_current_site, Site
 from django.contrib.sites.models import RequestSite
+from django.core.exceptions import MultipleObjectsReturned
 from django.core.urlresolvers import reverse
 from django.http import (
     HttpResponse, HttpResponseForbidden, HttpResponseRedirect)
@@ -23,19 +24,22 @@ from registration import signals
 from guardian.shortcuts import get_perms
 import requests
 from rest_framework import viewsets
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.http import Http404
 from data_set_manager.models import Node
 from core.forms import (
     ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 )
 from core.models import (
     ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
-    Analysis, Invitation, Ontology,
+    Analysis, Invitation, Ontology, NodeGroup,
     CustomRegistrationProfile)
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
 from core.utils import get_data_sets_annotations, get_anonymous_user
-from core.serializers import WorkflowSerializer
+from core.serializers import WorkflowSerializer, NodeGroupSerializer
 
 from xml.parsers.expat import ExpatError
 
@@ -1027,3 +1031,59 @@ class CustomRegistrationView(RegistrationView):
 
         """
         return ('registration_complete', (), {})
+
+
+class NodeGroups(APIView):
+    """
+    Return assay object
+
+    ---
+    #YAML
+
+    GET:
+        serializer: AssaySerializer
+        omit_serializer: false
+
+        parameters:
+            - name: uuid
+              description: Assay uuid
+              paramType: query
+              type: string
+              required: false
+
+            - name: study
+              description: Study uuid
+              paramType: query
+              type: string
+              required: false
+
+             - name: assay
+              description: Assay uuid
+              paramType: query
+              type: string
+              required: false
+
+            - name: nodes_uuids
+              description: Nodes uuids
+              paramType: query
+              type: string
+              required: false
+
+            - name: node_count
+              description: Nodes uuids
+              paramType: query
+              type: string
+              required: false
+    ...
+    """
+
+    def get_object(self, uuid):
+        try:
+            return NodeGroup.objects.get(uuid=uuid)
+        except (NodeGroup.DoesNotExist, MultipleObjectsReturned):
+            raise Http404
+
+    def get(self, request, format=None):
+        node_group = self.get_object(request.query_params.get('uuid'))
+        serializer = NodeGroupSerializer(node_group)
+        return Response(serializer.data)
