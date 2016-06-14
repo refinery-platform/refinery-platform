@@ -5,7 +5,8 @@ function AboutSharingCtrl (
   $scope,
   $location,
   $window,
-  $q
+  $q,
+  $log
   ) {
   var vm = this;
   vm.dataSetSharing = {};
@@ -16,34 +17,49 @@ function AboutSharingCtrl (
     var dataSetUuid = $window.dataSetUuid;
 
     var promise = $q.defer();
-    dataSetAboutFactory.getDataSetSharing(dataSetUuid).then(function () {
-      vm.dataSetSharing = dataSetAboutFactory.dataSetSharing;
-      vm.refreshOwnerName(vm.dataSetSharing.owner);
-      if (vm.dataSetSharing.share_list) {
-        for (var i = 0; i < vm.dataSetSharing.share_list.length; i++) {
-          vm.refreshGroup(vm.dataSetSharing.share_list[i]);
+    dataSetAboutFactory
+      .getDataSetSharing(dataSetUuid)
+      .then(function () {
+        vm.dataSetSharing = dataSetAboutFactory.dataSetSharing;
+        vm.refreshOwnerName(vm.dataSetSharing.owner);
+        if (vm.dataSetSharing.share_list) {
+          for (var i = 0; i < vm.dataSetSharing.share_list.length; i++) {
+            vm.refreshGroup(vm.dataSetSharing.share_list[i]);
+          }
         }
-      }
-      promise.resolve();
-    });
+        promise.resolve();
+      }, function (error) {
+        $log.error(error);
+        promise.reject();
+      });
     return promise.promise;
   };
 
   vm.refreshGroup = function (shareObj) {
     var promise = $q.defer();
-    dataSetAboutFactory.getGroup(shareObj).then(function () {
-      vm.groupList.push(dataSetAboutFactory.group);
-      promise.resolve();
-    });
+    dataSetAboutFactory
+      .getGroup(shareObj)
+      .then(function () {
+        vm.groupList.push(dataSetAboutFactory.group);
+        promise.resolve();
+      }, function (error) {
+        $log.error(error);
+        promise.reject();
+      });
     return promise.promise;
   };
 
   vm.refreshOwnerName = function (userUuid) {
     var promise = $q.defer();
-    dataSetAboutFactory.getOwnerName(userUuid).then(function () {
-      vm.ownerName = dataSetAboutFactory.ownerProfile.fullName;
-      promise.resolve();
-    });
+    dataSetAboutFactory
+      .getOwnerName(userUuid)
+      .then(function () {
+        vm.ownerName = dataSetAboutFactory.ownerProfile.fullName;
+        promise.resolve();
+      }, function (error) {
+        $log.error(error);
+        promise.reject();
+      });
     return promise.promise;
   };
 
@@ -60,6 +76,7 @@ angular
     '$location',
     '$window',
     '$q',
+    '$log',
     AboutSharingCtrl
   ]);
 
