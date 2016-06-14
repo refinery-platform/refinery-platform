@@ -5,7 +5,6 @@ function AboutDetailsCtrl (
   $scope,
   $location,
   $window,
-  $q,
   $log
   ) {
   var vm = this;
@@ -17,7 +16,6 @@ function AboutDetailsCtrl (
   vm.fileStoreItem = {};
 
   vm.refreshDataSetStats = function () {
-    var promise = $q.defer();
     dataSetAboutFactory.getDataSet(vm.dataSetUuid).then(function () {
       vm.dataSet = dataSetAboutFactory.dataSet;
       // grab meta-data info
@@ -26,51 +24,36 @@ function AboutDetailsCtrl (
       } else if (dataSetAboutFactory.dataSet.pre_isatab_archive) {
         vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.pre_isa_archive);
       }
-      promise.resolve();
     }, function (error) {
       $log.error(error);
-      promise.reject();
     });
-    return promise.promise;
   };
 
   vm.refreshStudies = function () {
-    var promise = $q.defer();
     dataSetAboutFactory.getStudies(vm.dataSetUuid).then(function () {
       vm.studies = dataSetAboutFactory.studies;
       for (var i = 0; i < vm.studies.length; i++) {
         vm.refreshAssays(vm.studies[i].uuid);
       }
-      promise.resolve();
     }, function (error) {
       $log.error(error);
-      promise.reject();
     });
-    return promise.promise;
   };
 
   vm.refreshAssays = function (studyUuid) {
-    var promise = $q.defer();
     dataSetAboutFactory.getStudysAssays(studyUuid).then(function () {
       vm.assays[studyUuid] = dataSetAboutFactory.assays;
-      promise.resolve();
     }, function (error) {
       $log.error(error);
-      promise.reject();
     });
-    return promise.promise;
   };
 
   vm.refreshFileStoreItem = function (isaUuid) {
-    var promise = $q.defer();
     dataSetAboutFactory.getFileStoreItem(isaUuid).then(function () {
       vm.fileStoreItem = dataSetAboutFactory.fileStoreItem;
-      promise.resolve();
     }, function (error) {
       $log.error(error);
-      promise.reject();
     });
-    return promise.promise;
   };
 
   vm.refreshDataSetStats();
@@ -85,7 +68,6 @@ angular
     '$scope',
     '$location',
     '$window',
-    '$q',
     '$log',
     AboutDetailsCtrl
   ]);
