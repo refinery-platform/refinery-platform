@@ -5,7 +5,7 @@ function AboutSharingCtrl (
   $scope,
   $location,
   $window,
-  $q
+  $log
   ) {
   var vm = this;
   vm.dataSetSharing = {};
@@ -15,36 +15,39 @@ function AboutSharingCtrl (
   vm.refreshDataSetSharing = function () {
     var dataSetUuid = $window.dataSetUuid;
 
-    var promise = $q.defer();
-    dataSetAboutFactory.getDataSetSharing(dataSetUuid).then(function () {
-      vm.dataSetSharing = dataSetAboutFactory.dataSetSharing;
-      vm.refreshOwnerName(vm.dataSetSharing.owner);
-      if (vm.dataSetSharing.share_list) {
-        for (var i = 0; i < vm.dataSetSharing.share_list.length; i++) {
-          vm.refreshGroup(vm.dataSetSharing.share_list[i]);
+    dataSetAboutFactory
+      .getDataSetSharing(dataSetUuid)
+      .then(function () {
+        vm.dataSetSharing = dataSetAboutFactory.dataSetSharing;
+        vm.refreshOwnerName(vm.dataSetSharing.owner);
+        if (vm.dataSetSharing.share_list) {
+          for (var i = 0; i < vm.dataSetSharing.share_list.length; i++) {
+            vm.refreshGroup(vm.dataSetSharing.share_list[i]);
+          }
         }
-      }
-      promise.resolve();
-    });
-    return promise.promise;
+      }, function (error) {
+        $log.error(error);
+      });
   };
 
   vm.refreshGroup = function (shareObj) {
-    var promise = $q.defer();
-    dataSetAboutFactory.getGroup(shareObj).then(function () {
-      vm.groupList.push(dataSetAboutFactory.group);
-      promise.resolve();
-    });
-    return promise.promise;
+    dataSetAboutFactory
+      .getGroup(shareObj)
+      .then(function () {
+        vm.groupList.push(dataSetAboutFactory.group);
+      }, function (error) {
+        $log.error(error);
+      });
   };
 
   vm.refreshOwnerName = function (userUuid) {
-    var promise = $q.defer();
-    dataSetAboutFactory.getOwnerName(userUuid).then(function () {
-      vm.ownerName = dataSetAboutFactory.ownerProfile.fullName;
-      promise.resolve();
-    });
-    return promise.promise;
+    dataSetAboutFactory
+      .getOwnerName(userUuid)
+      .then(function () {
+        vm.ownerName = dataSetAboutFactory.ownerProfile.fullName;
+      }, function (error) {
+        $log.error(error);
+      });
   };
 
   vm.refreshDataSetSharing();
@@ -59,7 +62,7 @@ angular
     '$scope',
     '$location',
     '$window',
-    '$q',
+    '$log',
     AboutSharingCtrl
   ]);
 

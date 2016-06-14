@@ -5,7 +5,7 @@ function AboutDetailsCtrl (
   $scope,
   $location,
   $window,
-  $q
+  $log
   ) {
   var vm = this;
   vm.dataSet = {};
@@ -15,48 +15,52 @@ function AboutDetailsCtrl (
   vm.fileStoreItem = {};
 
   vm.refreshDataSetStats = function () {
-    var promise = $q.defer();
-    dataSetAboutFactory.getDataSet(vm.dataSetUuid).then(function () {
-      vm.dataSet = dataSetAboutFactory.dataSet;
-      // grab meta-data info
-      if (dataSetAboutFactory.dataSet.isa_archive) {
-        vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.isa_archive);
-      } else if (dataSetAboutFactory.dataSet.pre_isatab_archive) {
-        vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.pre_isa_archive);
-      }
-      promise.resolve();
-    });
-    return promise.promise;
+    dataSetAboutFactory
+      .getDataSet(vm.dataSetUuid)
+      .then(function () {
+        vm.dataSet = dataSetAboutFactory.dataSet;
+        // grab meta-data info
+        if (dataSetAboutFactory.dataSet.isa_archive) {
+          vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.isa_archive);
+        } else if (dataSetAboutFactory.dataSet.pre_isatab_archive) {
+          vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.pre_isa_archive);
+        }
+      }, function (error) {
+        $log.error(error);
+      });
   };
 
   vm.refreshStudies = function () {
-    var promise = $q.defer();
-    dataSetAboutFactory.getStudies(vm.dataSetUuid).then(function () {
-      vm.studies = dataSetAboutFactory.studies;
-      for (var i = 0; i < vm.studies.length; i++) {
-        vm.refreshAssays(vm.studies[i].uuid);
-      }
-      promise.resolve();
-    });
-    return promise.promise;
+    dataSetAboutFactory
+      .getStudies(vm.dataSetUuid)
+      .then(function () {
+        vm.studies = dataSetAboutFactory.studies;
+        for (var i = 0; i < vm.studies.length; i++) {
+          vm.refreshAssays(vm.studies[i].uuid);
+        }
+      }, function (error) {
+        $log.error(error);
+      });
   };
 
   vm.refreshAssays = function (studyUuid) {
-    var promise = $q.defer();
-    dataSetAboutFactory.getStudysAssays(studyUuid).then(function () {
-      vm.assays[studyUuid] = dataSetAboutFactory.assays;
-      promise.resolve();
-    });
-    return promise.promise;
+    dataSetAboutFactory
+      .getStudysAssays(studyUuid)
+      .then(function () {
+        vm.assays[studyUuid] = dataSetAboutFactory.assays;
+      }, function (error) {
+        $log.error(error);
+      });
   };
 
   vm.refreshFileStoreItem = function (isaUuid) {
-    var promise = $q.defer();
-    dataSetAboutFactory.getFileStoreItem(isaUuid).then(function () {
-      vm.fileStoreItem = dataSetAboutFactory.fileStoreItem;
-      promise.resolve();
-    });
-    return promise.promise;
+    dataSetAboutFactory
+      .getFileStoreItem(isaUuid)
+      .then(function () {
+        vm.fileStoreItem = dataSetAboutFactory.fileStoreItem;
+      }, function (error) {
+        $log.error(error);
+      });
   };
 
   vm.refreshDataSetStats();
@@ -71,7 +75,7 @@ angular
     '$scope',
     '$location',
     '$window',
-    '$q',
+    '$log',
     AboutDetailsCtrl
   ]);
 
