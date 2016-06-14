@@ -11,8 +11,7 @@ function AboutDetailsCtrl (
   vm.dataSet = {};
   vm.studies = [];
   vm.assays = {};
-  // vm.dataSetUuid = $window.dataSetUuid;
-  vm.dataSetUuid = null;
+  vm.dataSetUuid = $window.dataSetUuid;
   vm.fileStoreItem = {};
 
   vm.refreshDataSetStats = function () {
