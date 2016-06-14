@@ -82,6 +82,54 @@ describe('Data Set About Factory', function () {
     });
   });
 
+  describe('getFileStoreItem', function () {
+    var fileStore;
+
+    beforeEach(inject(function (
+      fileStoreItemService,
+      _$q_,
+      _$rootScope_
+    ) {
+      $q = _$q_;
+      fileStore = {
+        id: 42,
+        filetype: 'Zip compressed archive',
+        datafile: '/media/file_store/94/70/rfc-test_4_LYaeGAD.zip',
+        uuid: fakeUuid,
+        source: '/vagrant/media/file_store/temp/rfc-test_4.zip',
+        sharename: '',
+        import_task_id: '2638d2de-0ed3-439f-be74-d4631be0a58a',
+        created: '2016-05-12T12:43:27.363785Z',
+        updated: '2016-05-12T12:43:27.392864Z'
+      };
+      spyOn(fileStoreItemService, 'query').and.callFake(function () {
+        deferred = $q.defer();
+        deferred.resolve(fileStore);
+        return {
+          $promise: deferred.promise
+        };
+      });
+
+      rootScope = _$rootScope_;
+    }));
+
+    it('getFileStoreItem is a method', function () {
+      expect(angular.isFunction(factory.getFileStoreItem)).toBe(true);
+    });
+
+    it('getFileStoreItem returns a promise', function () {
+      var successData;
+      var response = factory.getFileStoreItem({
+        uuid: fakeUuid
+      }).then(function (responseData) {
+        successData = responseData;
+      });
+      rootScope.$apply();
+      expect(typeof response.then).toEqual('function');
+      expect(successData).toEqual(fileStore);
+    });
+  });
+
   describe('getStudies', function () {
     var studyResult;
 
