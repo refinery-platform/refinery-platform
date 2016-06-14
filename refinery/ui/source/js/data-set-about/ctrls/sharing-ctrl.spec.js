@@ -34,7 +34,7 @@ describe('Controller: AboutSharingCtrl', function () {
       expect(angular.isFunction(ctrl.refreshDataSetSharing)).toBe(true);
     });
 
-    it('RefreshDataSetStats returns calls Factory and updates mock item', function () {
+    it('RefreshDataSetSharing returns calls Factory and updates mock item', function () {
       var mockDataSets = false;
       spyOn(factory, 'getDataSetSharing').and.callFake(function () {
         return {
@@ -70,7 +70,7 @@ describe('Controller: AboutSharingCtrl', function () {
   });
 
   describe('refreshOwnerName', function () {
-    it('refreshAssays is method', function () {
+    it('refreshOwnerName is method', function () {
       expect(angular.isFunction(ctrl.refreshOwnerName)).toBe(true);
     });
 
