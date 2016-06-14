@@ -468,7 +468,7 @@ angular
     'userService',
     'authService',
     'studyService',
-    'assayService',
+    'dataSetAssayService',
     'dataSetService',
     'sharingService',
     'citationService',
