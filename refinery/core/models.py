@@ -1792,8 +1792,10 @@ class NodeGroup(SharableResource, TemporaryResource):
     is_implicit = models.BooleanField(default=False)
     study = models.ForeignKey(Study)
     assay = models.ForeignKey(Assay)
-    # is this the "current selection" node set for the associated study/assay?
+    # The "current selection" node set for the associated study/assay
     is_current = models.BooleanField(default=False)
+    # Nodes in the group
+    nodes_uuids = models.ManyToManyField(Node, blank=True, null=True)
 
     class Meta:
         verbose_name = "node_group"
@@ -1807,113 +1809,6 @@ class NodeGroup(SharableResource, TemporaryResource):
             self.name + ("*" if self.is_current else "") + " - " +
             self.get_owner_username()
         )
-
-
-def get_current_node_group(study_uuid, assay_uuid):
-    """Retrieve current node set. Create current node set if does not exist"""
-    node_group = None
-
-    try:
-        node_group = NodeGroup.objects.get_or_create(
-            study__uuid=study_uuid,
-            assay__uuid=assay_uuid,
-            is_implicit=True,
-            is_current=True
-        )
-    except MultipleObjectsReturned:
-        logger.error(
-            "Multiple current node sets for study " + study_uuid + "/assay " +
-            assay_uuid + "."
-        )
-    finally:
-        return node_group
-
-
-@transaction.commit_manually()
-def create_node_group(name, study, assay, summary=''):
-    """Create a new NodeSet.
-    :param name: name of the new NodeSet.
-    :type name: str.
-    :param study: Study model instance.
-    :type study: Study.
-    :param study: Assay model instance.
-    :type study: Assay.
-    :param summary: description of the new NodeSet.
-    :type summary: str.
-    :returns: NodeSet -- new instance.
-    :raises: IntegrityError, ValueError
-    """
-    try:
-        node_group = NodeGroup.objects.create(
-            name=name,
-            study=study,
-            assay=assay,
-            summary=summary
-        )
-    except (IntegrityError, ValueError) as e:
-        transaction.rollback()
-        logger.error("Failed to create NodeGroup: {}".format(e.message))
-        raise
-    transaction.commit()
-    logger.info("NodeGroup created with UUID '{}'".format(node_group.uuid))
-    return node_group
-
-
-def get_node_group(uuid):
-    """Retrieve a NodeGroup given its UUID.
-    :param uuid: NodeGroup UUID.
-    :type uuid: str.
-    :returns: NodeGroup -- instance that corresponds to the given UUID.
-    :raises: DoesNotExist
-    """
-    try:
-        return NodeGroup.objects.get(uuid=uuid)
-    except NodeGroup.DoesNotExist:
-        logger.error(
-            "Failed to retrieve NodeGroup: UUID '{}' does not exist".format(
-                uuid)
-        )
-        raise
-
-
-def update_node_group(uuid, name=None, summary=None, study=None, assay=None):
-    """Replace data in an existing NodeGroup with the provided data.
-    :param uuid: NodeSet UUID.
-    :type uuid: str.
-    :param name: new NodeSet name.
-    :type name: str.
-    :param summary: new NodeSet description.
-    :type summary: str.
-    :param study: Study model instance.
-    :type study: Study.
-    :param assay: Assay model instance.
-    :type assay: Assay.
-    :raises: DoesNotExist
-    """
-    try:
-        node_group = get_node_group(uuid=uuid)
-    except NodeGroup.DoesNotExist:
-        logger.error(
-            "Failed to update NodeGroup: UUID '{}' does not exist".format(uuid)
-        )
-        raise
-    if name is not None:
-        node_group.name = name
-    if summary is not None:
-        node_group.summary = summary
-    if study is not None:
-        node_group.study = study
-    if assay is not None:
-        node_group.assay = assay
-    node_group.save()
-
-
-def delete_node_group(uuid):
-    """Delete a NodeGroup specified by UUID.
-    :param uuid: NodeGroup UUID.
-    :type uuid: str.
-    """
-    NodeGroup.objects.filter(uuid=uuid).delete()
 
 
 class NodeSet(SharableResource, TemporaryResource):
