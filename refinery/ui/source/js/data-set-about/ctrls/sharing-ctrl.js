@@ -62,7 +62,6 @@ angular
     '$scope',
     '$location',
     '$window',
-    '$q',
     '$log',
     AboutSharingCtrl
   ]);
