@@ -1,5 +1,6 @@
-from core.models import Workflow
 from rest_framework import serializers
+
+from .models import Workflow
 
 
 class WorkflowSerializer(serializers.HyperlinkedModelSerializer):
