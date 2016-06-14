@@ -17,8 +17,8 @@ class NodeGroupSerializer(serializers.ModelSerializer):
             """
             instance.node_count = validated_data.get('node_count',
                                                      instance.node_count)
-            instance.nodes_uuids = validated_data.get('nodes_uuid',
-                                                      instance.nodes_uuid)
+            instance.nodes_uuids = validated_data.get('nodes_uuids',
+                                                      instance.nodes_uuids)
             instance.save()
             return instance
 
