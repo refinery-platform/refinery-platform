@@ -141,13 +141,15 @@ def import_file(uuid, refresh=False, file_size=0):
                     buf = zlib.decompress(buf, zlib.MAX_WBITS | 16)
                 elif encoding_header == "zlib":
                     buf = zlib.decompress(buf, zlib.MAX_WBITS)
-            except zlib.error as e:
-                # 'e' here has been observed to be:
+            except zlib.error as exc:
+                # 'exc' here has been observed to be:
                 # Error -3 while decompressing data: incorrect header check
                 # This occurs when a webserver is misconfigured and provides
                 #  a `content-encoding` header without the data itself being
                 # encoded
-                logger.error(e)
+                logger.error("Error while decompressing data from '%s': %s",
+                             item.source, exc)
+                import_file.update_state(state=celery.states.FAILURE)
 
             try:
                 tmpfile.write(buf)
