@@ -1035,18 +1035,18 @@ class CustomRegistrationView(RegistrationView):
 
 class NodeGroups(APIView):
     """
-    Return assay object
+    Return NodeGroups object
 
     ---
     #YAML
 
     GET:
-        serializer: AssaySerializer
+        serializer: NodeGroupSerializer
         omit_serializer: false
 
         parameters:
             - name: uuid
-              description: Assay uuid
+              description: NodeGroup uuid
               paramType: query
               type: string
               required: false
@@ -1057,22 +1057,28 @@ class NodeGroups(APIView):
               type: string
               required: false
 
-             - name: assay
+            - name: assay
               description: Assay uuid
               paramType: query
               type: string
               required: false
 
             - name: nodes_uuids
-              description: Nodes uuids
+              description: Uuids of nodes in group
+              paramType: query
+              type: array
+              required: false
+
+            - name: node_count
+              description: Number of nodes
               paramType: query
               type: string
               required: false
 
-            - name: node_count
-              description: Nodes uuids
+            - name: is_current
+              description: Is node group the current selection
               paramType: query
-              type: string
+              type: boolean
               required: false
     ...
     """
