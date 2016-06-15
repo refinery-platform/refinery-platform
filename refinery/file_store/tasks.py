@@ -125,7 +125,8 @@ def import_file(uuid, refresh=False, file_size=0):
             import_failure = False
             local_file_size = 0
             block_size = 10 * 1024 * 1024  # 10MB
-            for buf in response.iter_content(block_size):
+
+            for buf in iter(lambda: response.raw.read(block_size), ''):
                 local_file_size += len(buf)
 
                 # Check if theres any content-encoding going on and decompress
