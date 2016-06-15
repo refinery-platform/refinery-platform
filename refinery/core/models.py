@@ -1786,7 +1786,7 @@ class NodeGroup(SharableResource, TemporaryResource):
     """
 
     #: Number of nodes in the NodeSet (provided in POST/PUT/PATCH requests)
-    node_count = models.IntegerField(blank=True, null=True)
+    node_count = models.IntegerField(default=0)
     #: Implicit node is created "on the fly" to support an analysis while
     #: explicit node is created by the user to store a particular selection
     is_implicit = models.BooleanField(default=False)
