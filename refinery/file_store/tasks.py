@@ -122,7 +122,7 @@ def import_file(uuid, refresh=False, file_size=0):
             )
             logger.debug("Downloading from '%s'", item.source)
             # download and save the file
-            download_failure = False
+            import_failure = False
             local_file_size = 0
             block_size = 10 * 1024 * 1024  # 10MB
             for buf in response.iter_content(block_size):
@@ -152,7 +152,7 @@ def import_file(uuid, refresh=False, file_size=0):
                         "Error while decompressing data from '%s': %s",
                         item.source, exc)
                     import_file.update_state(state=celery.states.FAILURE)
-                    download_failure = True
+                    import_failure = True
                     break
 
                 try:
@@ -162,7 +162,7 @@ def import_file(uuid, refresh=False, file_size=0):
                     logger.error("Error downloading from '%s': %s",
                                  item.source, exc)
                     import_file.update_state(state=celery.states.FAILURE)
-                    download_failure = True
+                    import_failure = True
                     break
                 # check if we have a sane value for file size
                 if remote_file_size > 0:
@@ -178,7 +178,7 @@ def import_file(uuid, refresh=False, file_size=0):
                     })
 
             # delete temp. file if download failed
-            if download_failure:
+            if import_failure:
 
                 logger.error("File import task has failed. Deleting "
                              "temporary file...")
