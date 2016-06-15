@@ -139,10 +139,11 @@ def import_file(uuid, refresh=False, file_size=0):
                 try:
                     if encoding_header == "deflate":
                         buf = zlib.decompress(buf, -zlib.MAX_WBITS)
-                    elif encoding_header == "gzip":
-                        buf = zlib.decompress(buf, zlib.MAX_WBITS | 16)
-                    elif encoding_header == "zlib":
-                        buf = zlib.decompress(buf, zlib.MAX_WBITS)
+                    elif encoding_header in ["gzip", "zlib"]:
+                        # `zlib.MAX_WBITS | 32` will auto-detect and
+                        # decompress zlib and gzip formats
+                        buf = zlib.decompress(buf, zlib.MAX_WBITS | 32)
+
                 except zlib.error as exc:
                     # 'exc' here has been observed to be:
                     # Error -3 while decompressing data: incorrect header check
