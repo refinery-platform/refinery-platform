@@ -1094,6 +1094,12 @@ class NodeGroups(APIView):
 
         parameters:
 
+             - name: name
+              description: Name of node group
+              paramType: query
+              type: boolean
+              required: true
+
             - name: study
               description: Study uuid
               paramType: query
@@ -1117,18 +1123,6 @@ class NodeGroups(APIView):
               paramType: query
               type: string
               required: false
-
-            - name: is_current
-              description: Is node group the current selection
-              paramType: query
-              type: boolean
-              required: true
-
-            - name: name
-              description: Name of node group
-              paramType: query
-              type: boolean
-              required: true
     ...
     """
 
