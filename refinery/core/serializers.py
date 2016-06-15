@@ -8,7 +8,10 @@ class NodeGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = NodeGroup
         fields = ('id', 'uuid', 'node_count', 'is_implicit', 'study',
-                  'assay', 'is_current', 'nodes_uuids')
+                  'assay', 'is_current', 'nodes_uuids', 'name')
+
+        def create(self, validated_data):
+            return NodeGroup(**validated_data)
 
         def update(self, instance, validated_data):
             """
