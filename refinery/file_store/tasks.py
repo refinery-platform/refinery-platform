@@ -151,7 +151,6 @@ def import_file(uuid, refresh=False, file_size=0):
                     logger.error(
                         "Error while decompressing data from '%s': %s",
                         item.source, exc)
-                    import_file.update_state(state=celery.states.FAILURE)
                     import_failure = True
                     break
 
@@ -161,9 +160,9 @@ def import_file(uuid, refresh=False, file_size=0):
                     # e.g., [Errno 28] No space left on device
                     logger.error("Error downloading from '%s': %s",
                                  item.source, exc)
-                    import_file.update_state(state=celery.states.FAILURE)
                     import_failure = True
                     break
+
                 # check if we have a sane value for file size
                 if remote_file_size > 0:
                     percent_done = local_file_size * 100. / remote_file_size
@@ -191,7 +190,10 @@ def import_file(uuid, refresh=False, file_size=0):
                 # "with" keyword since the return happens before the "with"
                 # is completed
                 tmpfile.close()
-                return
+
+                import_file.update_state(task_id=import_file.request.id,
+                                         state=celery.states.FAILURE)
+                return item
 
         logger.debug("Finished downloading from '%s'", item.source)
 
