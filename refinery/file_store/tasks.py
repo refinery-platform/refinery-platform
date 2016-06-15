@@ -128,7 +128,7 @@ def import_file(uuid, refresh=False, file_size=0):
             for buf in response.iter_content(block_size):
                 local_file_size += len(buf)
 
-                # Check if there any content-encoding going on and decompress
+                # Check if theres any content-encoding going on and decompress
                 # accordingly
 
                 encoding_header = response.headers.get('content-encoding')
