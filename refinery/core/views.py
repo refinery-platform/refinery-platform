@@ -26,6 +26,7 @@ import requests
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
 from django.http import Http404
 from data_set_manager.models import Node
 from core.forms import (
@@ -1136,3 +1137,10 @@ class NodeGroups(APIView):
         node_group = self.get_object(request.query_params.get('uuid'))
         serializer = NodeGroupSerializer(node_group)
         return Response(serializer.data)
+
+    def post(self, request, format=None):
+        serializer = NodeGroupSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -11,7 +11,15 @@ class NodeGroupSerializer(serializers.ModelSerializer):
                   'assay', 'is_current', 'nodes_uuids', 'name')
 
         def create(self, validated_data):
-            return NodeGroup(**validated_data)
+            node_group = NodeGroup(
+                study=validated_data['email'],
+                assay=validated_data['username'],
+                name=validated_data['name'],
+                node_count=validated_data['node_count'],
+                nodes_uuids=validated_data['nodes_uuids']
+            )
+            node_group.save()
+            return node_group
 
         def update(self, instance, validated_data):
             """
