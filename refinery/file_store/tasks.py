@@ -179,8 +179,9 @@ def import_file(uuid, refresh=False, file_size=0):
 
             # delete temp. file if download failed
             if download_failure:
-                logger.debug("File import has failed. Deleting temporary "
-                             "File...")
+
+                logger.error("File import task has failed. Deleting "
+                             "temporary file...")
 
                 # Setting the tempfile's delete == True deletes the file
                 # upon a `close()`
