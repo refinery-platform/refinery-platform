@@ -1,0 +1,39 @@
+<div class="refinery-header">
+  <span class="refinery-header-left">
+      <h3>Sharing</h3>
+  </span>
+  </div>
+  <div class="refinery-subheader">
+    <h4>Owner</h4>
+  </div>
+  <p>
+    <span class="fa fa-user"></span>&nbsp;
+    <span ng-if="ASCtrl.dataSetSharing.is_owner">
+      <a href="/users/{{ ASCtrl.dataSetSharing.owner }}">
+       You
+      </a>
+    </span>
+    <span ng-if="!ASCtrl.dataSetSharing.is_owner">
+      <a href="/users/{{ ASCtrl.dataSetSharing.owner }}">
+      {{ ASCtrl.ownerName }}
+      </a>
+    </span>
+  </p>
+
+<div ng-if="ASCtrl.groupList.length > 0">
+  <div class="refinery-subheader">
+    <h4>Groups</h4>
+  </div>
+  <p>
+  <div ng-repeat="group in ASCtrl.groupList track by $index">
+     <a href="/groups/{{group.uuid}}">{{ group.name }}</a>&nbsp;
+    <span ng-if="group.canRead">
+       <i class="fa fa-eye"></i>
+    </span>
+    <span ng-if="group.canEdit">
+       <i class="fa fa-pencil"></i>
+    </span>
+  </div>
+  </p>
+</div>
+

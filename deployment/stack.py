@@ -92,7 +92,13 @@ def main():
         "",
         "#!/bin/sh\n",
         "AWS_DEFAULT_REGION=", functions.ref("AWS::Region"), "\n",
-        "RDS_NAME=", config['RDS_NAME'], "\n",
+        "RDS_ID=", functions.ref('RDSInstance'), "\n",
+        "RDS_ENDPOINT_ADDRESS=",
+        functions.get_att('RDSInstance', 'Endpoint.Address'),
+        "\n",
+        "RDS_ENDPOINT_PORT=",
+        functions.get_att('RDSInstance', 'Endpoint.Port'),
+        "\n",
         "RDS_SUPERUSER_PASSWORD=", config['RDS_SUPERUSER_PASSWORD'], "\n",
         "RDS_ROLE=", config['RDS_ROLE'], "\n",
         "ADMIN=", config['ADMIN'], "\n",
@@ -165,7 +171,8 @@ def main():
             'KeyName': config['KEY_NAME'],
             'IamInstanceProfile': functions.ref('WebInstanceProfile'),
             'Tags': instance_tags,
-        })
+        }),
+        core.DependsOn('RDSInstance'),
     )
 
     cft.resources.instance_profile = core.Resource(

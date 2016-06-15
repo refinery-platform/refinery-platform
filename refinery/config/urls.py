@@ -1,8 +1,10 @@
 import logging
+
 from django.conf import settings
 from django.conf.urls import patterns, include, url
 from django.conf.urls.static import static
 from django.contrib import admin
+
 from haystack.forms import FacetedSearchForm
 from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
@@ -10,25 +12,24 @@ from registration.backends.default.views import ActivationView
 from tastypie.api import Api
 from rest_framework import routers
 
-from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
-    NodeResource, NodeSetListResource, NodePairResource,\
-    NodeRelationshipResource, WorkflowResource, ExtendedGroupResource, \
-    WorkflowInputRelationshipsResource, DataSetResource,\
-    StatisticsResource, GroupManagementResource, \
-    UserAuthenticationResource, InvitationResource, FastQCResource,  \
-    UserProfileResource
+from core.api import (AnalysisResource, ProjectResource, NodeSetResource,
+                      NodeResource, NodeSetListResource, NodePairResource,
+                      NodeRelationshipResource, WorkflowResource,
+                      ExtendedGroupResource,
+                      WorkflowInputRelationshipsResource, DataSetResource,
+                      StatisticsResource, GroupManagementResource,
+                      UserAuthenticationResource, InvitationResource,
+                      FastQCResource, UserProfileResource)
 from core.models import DataSet, AuthenticationFormUsernameOrEmail
-
 from core.views import WorkflowViewSet, CustomRegistrationView
-from file_store.views import FileStoreItemViewSet
-
+from file_store.views import FileStoreItems
 from data_set_manager.views import Assays, AssaysFiles, AssaysAttributes
-
-from data_set_manager.api import AttributeOrderResource, StudyResource,\
-    AssayResource, InvestigationResource, ProtocolResource, \
-    ProtocolReferenceResource, ProtocolReferenceParameterResource, \
-    PublicationResource, AttributeResource
-
+from data_set_manager.api import (AttributeOrderResource, StudyResource,
+                                  AssayResource, InvestigationResource,
+                                  ProtocolResource,
+                                  ProtocolReferenceResource,
+                                  ProtocolReferenceParameterResource,
+                                  PublicationResource, AttributeResource)
 from core.forms import RegistrationFormWithCustomFields
 
 logger = logging.getLogger(__name__)
@@ -46,7 +47,6 @@ admin.autodiscover()
 
 # Django REST Framework urls
 router = routers.DefaultRouter()
-router.register(r'filestoreitems', FileStoreItemViewSet)
 router.register(r'workflows', WorkflowViewSet)
 
 
@@ -170,9 +170,7 @@ urlpatterns = patterns(
     url(r"^api/v2/", include(router.urls)),
 
 
-    url(r'^api/v2/assays/(?P<uuid>'
-        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
-        r''r'12})/$', Assays.as_view()),
+    url(r'^api/v2/assays/$', Assays.as_view()),
 
     url(r'^api/v2/assays/(?P<uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
@@ -181,6 +179,10 @@ urlpatterns = patterns(
     url(r'^api/v2/assays/(?P<uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
         r''r'12})/attributes/$', AssaysAttributes.as_view()),
+
+    url(r'^api/v2/file_store_items/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
+        r''r'12})/$', FileStoreItems.as_view()),
 
     # (r'^favicon\.ico$',
     # 'django.views.generic.simple.redirect_to',

@@ -119,6 +119,10 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('refineryFileBrowser')).toEqual(true);
     });
 
+    it('should have "refineryDataSetAbout" as a dependency', function () {
+      expect(hasModule('refineryDataSetAbout')).toEqual(true);
+    });
+
     // Just a negative control to make sure that the test actually works.
     it('should NOT have "notExistingModule" as a dependency', function () {
       expect(hasModule('notExistingModule')).toEqual(false);

@@ -454,7 +454,19 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             except:
                 pass
 
-        bundle.data["isa_archive"] = bundle.obj.get_isa_archive()
+        isa_archive = bundle.obj.get_isa_archive()
+        pre_isa_archive = bundle.obj.get_pre_isa_archive()
+
+        if isa_archive:
+            bundle.data["isa_archive"] = isa_archive.uuid
+
+        if pre_isa_archive:
+            bundle.data["pre_isa_archive"] = pre_isa_archive.uuid
+
+        bundle.data["version"] = bundle.obj.get_version_details().version
+        bundle.data["date"] = bundle.obj.get_version_details().date
+        bundle.data["creation_date"] = bundle.obj.creation_date
+        bundle.data["modification_date"] = bundle.obj.modification_date
 
         return bundle
 

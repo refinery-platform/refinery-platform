@@ -1280,9 +1280,17 @@ class DataSetDeletionTest(unittest.TestCase):
                 'test_file.zip',
                 'Coffee is delicious!')
         )
+        self.pre_isa_archive_file = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.txt',
+                'Coffee is delicious!')
+        )
         self.investigation = \
             data_set_manager.models.Investigation.objects.create(
-                isarchive_file=self.isa_archive_file.uuid)
+                isarchive_file=self.isa_archive_file.uuid,
+                pre_isarchive_file=self.pre_isa_archive_file.uuid
+            )
+
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
@@ -1292,9 +1300,11 @@ class DataSetDeletionTest(unittest.TestCase):
             name="dataset_with_analysis")
         self.dataset_without_analysis = \
             DataSet.objects.create(name="dataset_without_analysis")
-        self.investigation_link = InvestigationLink.objects.create(
-            investigation=self.investigation,
-            data_set=self.dataset_without_analysis)
+        self.investigation_link = \
+            InvestigationLink.objects.create(
+                investigation=self.investigation,
+                data_set=self.dataset_without_analysis)
+
         self.analysis = Analysis.objects.create(
             name='bla',
             summary='keks',
@@ -1338,6 +1348,12 @@ class DataSetDeletionTest(unittest.TestCase):
         self.assertIsNotNone(self.dataset_without_analysis.get_isa_archive())
         self.dataset_without_analysis.delete()
         self.assertIsNone(self.dataset_without_analysis.get_isa_archive())
+
+    def test_pre_isa_archive_deletion(self):
+        self.assertIsNotNone(
+            self.dataset_without_analysis.get_pre_isa_archive())
+        self.dataset_without_analysis.delete()
+        self.assertIsNone(self.dataset_without_analysis.get_pre_isa_archive())
 
 
 class AnalysisDeletionTest(unittest.TestCase):

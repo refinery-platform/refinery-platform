@@ -1,0 +1,133 @@
+<div class="refinery-header">
+  <span class="refinery-header-left">
+    <h3>{{ ADCtrl.dataSet.name }}</h3>
+  </span>
+</div>
+
+<div>
+  <div class="refinery-subheader">
+    <h4>Summary</h4>
+  </div>
+  <p>
+    <div ng-if="ADCtrl.dataSet.summary">
+      {{ dataSet.summary }}
+    </div>
+    <div ng-if="!ADCtrl.dataSet.summary" class="emphasized">
+       None provided.
+    </div>
+  </p>
+
+  <div class="refinery-subheader">
+    <h4>Description</h4>
+  </div>
+  <p>
+     <div ng-if="ADCtrl.dataSet.description">
+      {{ dataSet.description }}
+    </div>
+    <div ng-if="!ADCtrl.dataSet.description" class="emphasized">
+       None provided.
+    </div>
+  </p>
+
+  <div class="refinery-subheader">
+    <h4>Shortcut Name</h4>
+  </div>
+  <p>
+    <div ng-if="ADCtrl.dataSet.slug">
+      {{ dataSet.slug }}
+    </div>
+    <div ng-if="!ADCtrl.dataSet.slug" class="emphasized">
+       None provided.
+    </div>
+  </p>
+</div>
+
+<div>
+  <div class="refinery-header">
+    <span class="refinery-header-left">
+        <h3>Studies</h3>
+    </span>
+  </div>
+
+  <div ng-repeat="study in ADCtrl.studies track by $index">
+    <strong>{{study.identifier}}</strong>: {{study.title}}
+    <ul ng-repeat="assay in ADCtrl.assays[study.uuid] track by $index">
+      Assay -
+      <span ng-if="assay.measurement">
+        Measurement: {{ assay.measurement }},
+      </span>
+      <span ng-if="assay.measurement_accession">
+        Measurement Accession: {{ assay.measurement_accession }}
+      </span>
+      <span ng-if="assay.measurement_source">
+        Measurement Source: {{ assay.measurement_source }},
+      </span>
+      <span ng-if="assay.technology">
+        Technology: {{ assay.technology }},
+      </span>
+      <span ng-if="assay.technology_accession">
+        Technology Accession: {{ assay.technology_accession }},
+      </span>
+      <span ng-if="assay.technology_source">
+        Technology Source: {{ assay.technology_source }},
+      </span>
+      <span ng-if="assay.platform">
+        Platform: {{ assay.platform }},
+      </span>
+      <span ng-if="assay.file_name">
+        File name: {{ assay.file_name }}
+      </span>
+    </ul>
+  </div>
+
+  <div class="refinery-header">
+    <span class="refinery-header-left">
+      <h3>Files</h3>
+    </span>
+  </div>
+
+  <span class="refinery-subheader">
+    <h3>Meta Data</h3>
+  </span>
+<div ng-if="ADCtrl.dataSet.isa_archive">
+  <p>
+     <a href="{{ADCtrl.fileStoreItem.datafile && ADCtrl.fileStoreItem.datafile}}">
+      {{ADCtrl.fileStoreItem.datafile | isaArchiveName}}
+    </a>
+      - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
+  </p>
+</div>
+  <div ng-if="ADCtrl.dataSet.pre_isa_archive && ADCtrl.fileStoreItem.datafile">
+    <p>
+      <a href="{{ADCtrl.fileStoreItem.datafile}}">
+      {{ADCtrl.fileStoreItem.datafile | isaArchiveName}}
+      </a>
+      - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
+    </p>
+  </div>
+  <div ng-if="!(ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive)">
+  <p class="emphasized">Not available.</p>
+  </div>
+
+  <span class="refinery-subheader">
+    <h3>Data Files</h3>
+  </span>
+  <p>
+    {{ ADCtrl.dataSet.file_count }} files
+    <div ng-if="ADCtrl.dataSet.file_size > 0">
+     - {{ ADCtrl.dataSet.file_size | fileSizeFormat }}
+    </div>
+  </p>
+
+  <div class="refinery-header">
+    <span class="refinery-header-left">
+      <h3>History</h3>
+    </span>
+  </div>
+  <p>
+    Current version <span class="emphasized">{{ ADCtrl.dataSet.version }}</span>.
+    Data set created <span class="emphasized">{{ ADCtrl.dataSet.creation_date }}</span>.
+    Last modified <span class="emphasized">{{ ADCtrl.dataSet.modification_date }}</span>.
+  </p>
+</div>
+
