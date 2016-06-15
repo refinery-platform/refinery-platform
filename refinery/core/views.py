@@ -1080,6 +1080,55 @@ class NodeGroups(APIView):
               paramType: query
               type: boolean
               required: false
+
+            - name: name
+              description: Name of node group
+              paramType: query
+              type: boolean
+              required: false
+
+
+     POST:
+        serializer: NodeGroupSerializer
+        omit_serializer: false
+
+        parameters:
+
+            - name: study
+              description: Study uuid
+              paramType: query
+              type: string
+              required: true
+
+            - name: assay
+              description: Assay uuid
+              paramType: query
+              type: string
+              required: true
+
+            - name: nodes_uuids
+              description: Uuids of nodes in group
+              paramType: query
+              type: array
+              required: false
+
+            - name: node_count
+              description: Number of nodes
+              paramType: query
+              type: string
+              required: false
+
+            - name: is_current
+              description: Is node group the current selection
+              paramType: query
+              type: boolean
+              required: true
+
+            - name: name
+              description: Name of node group
+              paramType: query
+              type: boolean
+              required: true
     ...
     """
 
