@@ -1046,6 +1046,12 @@ class NodeGroups(APIView):
         omit_serializer: false
 
         parameters:
+            - name: name
+              description: Name of node group
+              paramType: query
+              type: string
+              required: false
+
             - name: uuid
               description: NodeGroup uuid
               paramType: query
@@ -1082,48 +1088,40 @@ class NodeGroups(APIView):
               type: boolean
               required: false
 
+    POST:
+        parameters:
             - name: name
               description: Name of node group
-              paramType: query
-              type: boolean
-              required: false
-
-
-     POST:
-        serializer: NodeGroupSerializer
-        omit_serializer: false
-
-        parameters:
-
-             - name: name
-              description: Name of node group
-              paramType: query
-              type: boolean
+              in: query
+              type: string
               required: true
 
             - name: study
               description: Study uuid
-              paramType: query
+              in: query
               type: string
               required: true
 
             - name: assay
               description: Assay uuid
-              paramType: query
+              in: query
               type: string
               required: true
 
             - name: nodes_uuids
               description: Uuids of nodes in group
-              paramType: query
+              in: query
               type: array
+              items:
+                type: string
               required: false
 
             - name: node_count
               description: Number of nodes
-              paramType: query
+              in: query
               type: string
               required: false
+
     ...
     """
 

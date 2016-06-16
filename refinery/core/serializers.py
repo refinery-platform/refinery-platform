@@ -4,21 +4,23 @@ from .models import Workflow, NodeGroup
 
 
 class NodeGroupSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = NodeGroup
         fields = ('id', 'uuid', 'node_count', 'is_implicit', 'study',
                   'assay', 'is_current', 'nodes_uuids', 'name')
 
         def create(self, validated_data):
-            node_group = NodeGroup(
-                study=validated_data['email'],
-                assay=validated_data['username'],
-                name=validated_data['name'],
-                node_count=validated_data['node_count'],
-                nodes_uuids=validated_data['nodes_uuids']
+            node_group = NodeGroup.objects.create(
+                study=validated_data.get('study'),
+                assay=validated_data.get('assay'),
+                name=validated_data.get('name')
             )
-            node_group.save()
+            if validated_data.get('node_count'):
+                node_group.node_count = validated_data.get('node_count')
+                node_group.save()
+            if validated_data.get('nodes_uuids'):
+                node_group.nodes_uuids = validated_data.get('nodes_uuids')
+                node_group.save()
             return node_group
 
         def update(self, instance, validated_data):
