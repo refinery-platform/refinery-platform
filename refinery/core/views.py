@@ -32,6 +32,8 @@ from data_set_manager.models import Node
 from core.forms import (
     ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 )
+
+from data_set_manager.models import Study, Assay
 from core.models import (
     ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
     Analysis, Invitation, Ontology, NodeGroup,
@@ -1137,6 +1139,18 @@ class NodeGroups(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
+        try:
+            request.data['study'] = Study.objects.get(uuid=request.data.get(
+                'study')).id
+        except (Study.DoesNotExist, MultipleObjectsReturned):
+            raise Http404
+
+        try:
+            request.data['assay'] = Assay.objects.get(uuid=request.data.get(
+                'assay')).id
+        except (Assay.DoesNotExist, MultipleObjectsReturned):
+            raise Http404
+
         serializer = NodeGroupSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
