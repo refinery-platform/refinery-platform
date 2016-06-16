@@ -1117,13 +1117,6 @@ class NodeGroups(APIView):
               items:
                 type: string
               required: false
-
-            - name: node_count
-              description: Number of nodes
-              in: query
-              type: string
-              required: false
-
     ...
     """
 
