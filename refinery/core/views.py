@@ -1099,13 +1099,13 @@ class NodeGroups(APIView):
               required: true
 
             - name: study
-              description: Study uuid
+              description: Study uuid or ids
               in: query
               type: string
               required: true
 
             - name: assay
-              description: Assay uuid
+              description: Assay uuid or ids
               in: query
               type: string
               required: true
@@ -1139,17 +1139,20 @@ class NodeGroups(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        try:
-            request.data['study'] = Study.objects.get(uuid=request.data.get(
-                'study')).id
-        except (Study.DoesNotExist, MultipleObjectsReturned):
-            raise Http404
-
-        try:
-            request.data['assay'] = Assay.objects.get(uuid=request.data.get(
-                'assay')).id
-        except (Assay.DoesNotExist, MultipleObjectsReturned):
-            raise Http404
+        # check if study uuid is passed
+        if(request.data.get('study').index('-') > -1):
+            try:
+                request.data['study'] = Study.objects.get(
+                    uuid=request.data.get('study')).id
+            except (Study.DoesNotExist, MultipleObjectsReturned):
+                raise Http404
+        # check if assay uuid is passed
+        if(request.data.get('assay').index('-') > -1):
+            try:
+                request.data['assay'] = Assay.objects.get(
+                    uuid=request.data.get('assay')).id
+            except (Assay.DoesNotExist, MultipleObjectsReturned):
+                raise Http404
 
         serializer = NodeGroupSerializer(data=request.data)
         if serializer.is_valid():
