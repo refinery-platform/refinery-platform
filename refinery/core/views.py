@@ -11,7 +11,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.sites.models import get_current_site, Site
 from django.contrib.sites.models import RequestSite
-from django.core.exceptions import MultipleObjectsReturned
 from django.core.urlresolvers import reverse
 from django.http import (
     HttpResponse, HttpResponseForbidden, HttpResponseRedirect)
@@ -27,17 +26,16 @@ from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.http import Http404
 from data_set_manager.models import Node
 from core.forms import (
     ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 )
 
-from data_set_manager.models import Study, Assay
 from core.models import (
     ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
     Analysis, Invitation, Ontology, NodeGroup,
     CustomRegistrationProfile)
+from data_set_manager.models import Study, Assay
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
@@ -1123,8 +1121,10 @@ class NodeGroups(APIView):
     def get_object(self, uuid):
         try:
             return NodeGroup.objects.get(uuid=uuid)
-        except (NodeGroup.DoesNotExist, MultipleObjectsReturned):
-            raise Http404
+        except NodeGroup.DoesNotExist as e:
+            return Response(e, status=status.HTTP_404_NOT_FOUND)
+        except NodeGroup.MultipleObjectsReturned(e):
+            return Response(e, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request, format=None):
         node_group = self.get_object(request.query_params.get('uuid'))
@@ -1137,15 +1137,20 @@ class NodeGroups(APIView):
             try:
                 request.data['study'] = Study.objects.get(
                     uuid=request.data.get('study')).id
-            except (Study.DoesNotExist, MultipleObjectsReturned):
-                raise Http404
+            except Study.DoesNotExist as e:
+                return Response(e, status=status.HTTP_404_NOT_FOUND)
+            except Study.MultipleObjectsReturned as e:
+                return Response(e, status=status.HTTP_400_BAD_REQUEST)
+
         # check if assay uuid is passed
         if(request.data.get('assay').index('-') > -1):
             try:
                 request.data['assay'] = Assay.objects.get(
                     uuid=request.data.get('assay')).id
-            except (Assay.DoesNotExist, MultipleObjectsReturned):
-                raise Http404
+            except Assay.DoesNotExist as e:
+                return Response(e, status=status.HTTP_404_NOT_FOUND)
+            except Assay.MultipleObjectsReturned as e:
+                return Response(e, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = NodeGroupSerializer(data=request.data)
         if serializer.is_valid():
