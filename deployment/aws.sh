@@ -39,6 +39,11 @@ export S3_CONFIG_URI
 (cd /home/ubuntu &&
  /srv/refinery-platform/deployment/bin/get-s3-config)
 
+# List of SSH users
+SSH_USERS=$(jq -r '"" + .SSH_USERS' < /home/ubuntu/s3-config) 
+# Deliberately field split to get several users.
+sh /srv/refinery-platform/deployment/bin/fetch-github-ssh-keys $SSH_USERS
+
 # Tag the attached root volume
 sh /srv/refinery-platform/deployment/bin/fix-untagged-volumes
 
