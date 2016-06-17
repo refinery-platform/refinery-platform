@@ -1794,8 +1794,9 @@ class NodeGroup(SharableResource, TemporaryResource):
     assay = models.ForeignKey(Assay)
     # The "current selection" node set for the associated study/assay
     is_current = models.BooleanField(default=False)
-    # Nodes in the group
-    nodes_uuids = models.ManyToManyField(Node, blank=True, null=True)
+    # Nodes in the group, using uuids are foreign-key
+    nodes_ids = models.ManyToManyField(Node, through='NodeGroupToNode',
+                                       blank=True, null=True)
 
     class Meta:
         verbose_name = "node group"
@@ -1809,6 +1810,12 @@ class NodeGroup(SharableResource, TemporaryResource):
             self.name + ("*" if self.is_current else "") + " - " +
             self.get_owner_username()
         )
+
+
+# Custom through table to allow usage of uuids for foreign keys
+class NodeGroupToNode(models.Model):
+    node = models.ForeignKey(Node)
+    node_group = models.ForeignKey(NodeGroup)
 
 
 class NodeSet(SharableResource, TemporaryResource):
