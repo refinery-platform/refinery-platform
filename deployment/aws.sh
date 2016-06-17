@@ -8,6 +8,8 @@ set -x
 # to both Vagrant and AWS. Both bootstrap.sh and aws.sh (this
 # script) are supplied via cloudinit userdata.
 
+env
+
 # Normally supplied as input, but use a default if not.
 GIT_BRANCH=${GIT_BRANCH:-develop}
 
