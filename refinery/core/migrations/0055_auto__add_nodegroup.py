@@ -8,14 +8,6 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'NodeGroupToNode'
-        db.create_table(u'core_nodegrouptonode', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('node', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['data_set_manager.Node'])),
-            ('node_group', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['core.NodeGroup'])),
-        ))
-        db.send_create_signal(u'core', ['NodeGroupToNode'])
-
         # Adding model 'NodeGroup'
         db.create_table(u'core_nodegroup', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
@@ -34,13 +26,22 @@ class Migration(SchemaMigration):
         ))
         db.send_create_signal(u'core', ['NodeGroup'])
 
+        # Adding M2M table for field nodes_ids on 'NodeGroup'
+        m2m_table_name = db.shorten_name(u'core_nodegroup_nodes_ids')
+        db.create_table(m2m_table_name, (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('nodegroup', models.ForeignKey(orm[u'core.nodegroup'], null=False)),
+            ('node', models.ForeignKey(orm[u'data_set_manager.node'], null=False))
+        ))
+        db.create_unique(m2m_table_name, ['nodegroup_id', 'node_id'])
+
 
     def backwards(self, orm):
-        # Deleting model 'NodeGroupToNode'
-        db.delete_table(u'core_nodegrouptonode')
-
         # Deleting model 'NodeGroup'
         db.delete_table(u'core_nodegroup')
+
+        # Removing M2M table for field nodes_ids on 'NodeGroup'
+        db.delete_table(db.shorten_name(u'core_nodegroup_nodes_ids'))
 
 
     models = {
@@ -212,17 +213,11 @@ class Migration(SchemaMigration):
             'modification_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '250', 'null': 'True'}),
             'node_count': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'nodes_ids': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['data_set_manager.Node']", 'null': 'True', 'through': u"orm['core.NodeGroupToNode']", 'blank': 'True'}),
+            'nodes_ids': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['data_set_manager.Node']", 'null': 'True', 'blank': 'True'}),
             'slug': ('django.db.models.fields.CharField', [], {'max_length': '250', 'null': 'True', 'blank': 'True'}),
             'study': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['data_set_manager.Study']"}),
             'summary': ('django.db.models.fields.CharField', [], {'max_length': '1000', 'blank': 'True'}),
             'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'})
-        },
-        u'core.nodegrouptonode': {
-            'Meta': {'object_name': 'NodeGroupToNode'},
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'node': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['data_set_manager.Node']"}),
-            'node_group': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['core.NodeGroup']"})
         },
         u'core.nodepair': {
             'Meta': {'object_name': 'NodePair'},
