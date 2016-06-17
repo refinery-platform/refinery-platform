@@ -8,14 +8,40 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
+        # Adding model 'NodeGroupToNode'
+        db.create_table(u'core_nodegrouptonode', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('node', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['data_set_manager.Node'])),
+            ('node_group', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['core.NodeGroup'])),
+        ))
+        db.send_create_signal(u'core', ['NodeGroupToNode'])
 
-        # Changing field 'NodeGroup.node_count'
-        db.alter_column(u'core_nodegroup', 'node_count', self.gf('django.db.models.fields.IntegerField')())
+        # Adding model 'NodeGroup'
+        db.create_table(u'core_nodegroup', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('uuid', self.gf('django.db.models.fields.CharField')(unique=True, max_length=36, blank=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=250, null=True)),
+            ('summary', self.gf('django.db.models.fields.CharField')(max_length=1000, blank=True)),
+            ('creation_date', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
+            ('modification_date', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
+            ('description', self.gf('django.db.models.fields.TextField')(max_length=5000, blank=True)),
+            ('slug', self.gf('django.db.models.fields.CharField')(max_length=250, null=True, blank=True)),
+            ('node_count', self.gf('django.db.models.fields.IntegerField')(default=0)),
+            ('is_implicit', self.gf('django.db.models.fields.BooleanField')(default=False)),
+            ('study', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['data_set_manager.Study'])),
+            ('assay', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['data_set_manager.Assay'])),
+            ('is_current', self.gf('django.db.models.fields.BooleanField')(default=False)),
+        ))
+        db.send_create_signal(u'core', ['NodeGroup'])
+
 
     def backwards(self, orm):
+        # Deleting model 'NodeGroupToNode'
+        db.delete_table(u'core_nodegrouptonode')
 
-        # Changing field 'NodeGroup.node_count'
-        db.alter_column(u'core_nodegroup', 'node_count', self.gf('django.db.models.fields.IntegerField')(null=True))
+        # Deleting model 'NodeGroup'
+        db.delete_table(u'core_nodegroup')
+
 
     models = {
         u'auth.group': {
@@ -186,11 +212,17 @@ class Migration(SchemaMigration):
             'modification_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '250', 'null': 'True'}),
             'node_count': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'nodes_uuids': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['data_set_manager.Node']", 'null': 'True', 'blank': 'True'}),
+            'nodes_ids': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['data_set_manager.Node']", 'null': 'True', 'through': u"orm['core.NodeGroupToNode']", 'blank': 'True'}),
             'slug': ('django.db.models.fields.CharField', [], {'max_length': '250', 'null': 'True', 'blank': 'True'}),
             'study': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['data_set_manager.Study']"}),
             'summary': ('django.db.models.fields.CharField', [], {'max_length': '1000', 'blank': 'True'}),
             'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'})
+        },
+        u'core.nodegrouptonode': {
+            'Meta': {'object_name': 'NodeGroupToNode'},
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'node': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['data_set_manager.Node']"}),
+            'node_group': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['core.NodeGroup']"})
         },
         u'core.nodepair': {
             'Meta': {'object_name': 'NodePair'},
