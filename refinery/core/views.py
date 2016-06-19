@@ -26,7 +26,6 @@ from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from data_set_manager.models import Node
 from core.forms import (
     ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 )
@@ -35,7 +34,7 @@ from core.models import (
     ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
     Analysis, Invitation, Ontology, NodeGroup,
     CustomRegistrationProfile)
-from data_set_manager.models import Study, Assay
+from data_set_manager.models import Study, Assay, Node
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
@@ -1061,13 +1060,6 @@ class NodeGroups(APIView):
             - name: study
               description: Study uuid
               paramType: query
-              type: string
-              required: false
-
-            - name: assay
-              description: Assay uuid
-              paramType: query
-              type: string
               required: false
 
             - name: nodes_uuids
@@ -1077,7 +1069,7 @@ class NodeGroups(APIView):
               required: false
 
             - name: node_count
-              description: Number of nodes
+              description: Number of nodes, generated dynamically
               paramType: query
               type: string
               required: false
@@ -1087,6 +1079,13 @@ class NodeGroups(APIView):
               paramType: query
               type: boolean
               required: false
+              type: string
+              required: false
+
+            - name: assay
+              description: Assay uuid
+              paramType: query
+              type: string
 
     POST:
         parameters:
@@ -1110,6 +1109,14 @@ class NodeGroups(APIView):
 
             - name: nodes_uuids
               description: Uuids of nodes in group
+              in: query
+              type: array
+              items:
+                type: string
+              required: false
+
+            - name: nodes_ids
+              description: ids of nodes in group
               in: query
               type: array
               items:
@@ -1152,8 +1159,24 @@ class NodeGroups(APIView):
             except Assay.MultipleObjectsReturned as e:
                 return Response(e, status=status.HTTP_400_BAD_REQUEST)
 
+        # Node nodes_uuids are passed, update the nodes_ids field
+        if request.data.get('nodes_uuids'):
+            nodes_ids = []
+            nodes_uuids_list = request.data.get('nodes_uuids').replace(
+                " ", "").split(',')
+            for node in nodes_uuids_list:
+                try:
+                    nodes_ids.append(Node.objects.get(uuid=node).id)
+                except Node.DoesNotExist as e:
+                    return Response(e, status=status.HTTP_404_NOT_FOUND)
+                except Node.MultipleObjectsReturned as e:
+                    return Response(e, status=status.HTTP_400_BAD_REQUEST)
+
+            request.data['nodes_ids'] = nodes_ids
+            request.data['node_count'] = len(nodes_ids)
         serializer = NodeGroupSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
