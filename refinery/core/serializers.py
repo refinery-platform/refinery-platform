@@ -17,7 +17,8 @@ class NodeGroupSerializer(serializers.ModelSerializer):
         node_group = NodeGroup.objects.create(
             study=validated_data.get('study'),
             assay=validated_data.get('assay'),
-            name=validated_data.get('name')
+            name=validated_data.get('name'),
+            is_current=validated_data.get('is_current')
         )
         """Had to add nodes_ids after group creation. List does not show up in
         validate_data due to read_only attribute."""

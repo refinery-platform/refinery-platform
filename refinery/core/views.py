@@ -1107,6 +1107,12 @@ class NodeGroups(APIView):
               type: string
               required: true
 
+            - name: is_current
+              description: The "current selection" node set for the study/assay
+              in: query
+              type: boolean
+              required: false
+
             - name: nodes_uuids
               description: Uuids of nodes in group
               in: query
