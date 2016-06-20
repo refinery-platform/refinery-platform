@@ -34,10 +34,13 @@ class NodeGroupSerializer(serializers.ModelSerializer):
         Update and return an existing `NodeGroup` instance, given the
         validated data.
         """
-        instance.node_count = validated_data.get('node_count',
-                                                 instance.node_count)
-        instance.nodes_uuids = validated_data.get('nodes_uuids',
-                                                  instance.nodes_uuids)
+        if self.initial_data.get('nodes_ids'):
+            instance.nodes_ids = self.initial_data.get('nodes_ids',
+                                                       instance.nodes_ids)
+            instance.node_count = len(self.initial_data.get('nodes_ids'))
+
+        instance.is_current = validated_data.get('is_current',
+                                                 instance.is_current)
         instance.save()
         return instance
 

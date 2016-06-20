@@ -1128,6 +1128,40 @@ class NodeGroups(APIView):
               items:
                 type: string
               required: false
+
+    PUT:
+        parameters_strategy:
+        form: replace
+        query: merge
+
+        parameters:
+            - name: uuid
+              description: Node Group Uuid
+              in: form
+              type: string
+              required: true
+
+            - name: is_current
+              description: The "current selection" node set for the study/assay
+              in: form
+              type: boolean
+              required: false
+
+            - name: nodes_uuids
+              description: Uuids of nodes in group
+              in: form
+              type: array
+              items:
+                type: string
+              required: false
+
+            - name: nodes_ids
+              description: ids of nodes in group
+              in: form
+              type: array
+              items:
+                type: string
+              required: false
     ...
     """
 
@@ -1179,10 +1213,42 @@ class NodeGroups(APIView):
                     return Response(e, status=status.HTTP_400_BAD_REQUEST)
 
             request.data['nodes_ids'] = nodes_ids
-            request.data['node_count'] = len(nodes_ids)
         serializer = NodeGroupSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, format=None):
+        try:
+            uuid = request.data.get('uuid')
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        node_group = self.get_object(uuid)
+        # Node nodes_uuids are passed, update the nodes_ids field
+        if request.data.get('nodes_uuids'):
+            nodes_ids = []
+            nodes_uuids_list = request.data.get('nodes_uuids').replace(
+                " ", "").split(',')
+            for node in nodes_uuids_list:
+                try:
+                    nodes_ids.append(Node.objects.get(uuid=node).id)
+                except Node.DoesNotExist as e:
+                    return Response(e, status=status.HTTP_404_NOT_FOUND)
+                except Node.MultipleObjectsReturned as e:
+                    return Response(e, status=status.HTTP_400_BAD_REQUEST)
+            # Work around to add nodes_ids to request packet
+            request.data._mutable = True
+            request.data['nodes_ids'] = nodes_ids
+
+        serializer = NodeGroupSerializer(node_group, data=request.data,
+                                         partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
