@@ -14,6 +14,7 @@ from django.contrib.sites.models import RequestSite
 from django.core.urlresolvers import reverse
 from django.http import (
     HttpResponse, HttpResponseForbidden, HttpResponseRedirect)
+from django.http import Http404
 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext, loader
@@ -1138,16 +1139,15 @@ class NodeGroups(APIView):
     def get_object(self, uuid):
         try:
             return NodeGroup.objects.get(uuid=uuid)
-        except NodeGroup.DoesNotExist as e:
-            return Response(e, status=status.HTTP_404_NOT_FOUND)
-        except NodeGroup.MultipleObjectsReturned(e):
-            return Response(e, status=status.HTTP_400_BAD_REQUEST)
+        except (NodeGroup.DoesNotExist,
+                NodeGroup.MultipleObjectsReturned) as e:
+            raise Http404(e)
 
     def get_query_set(self, assay_uuid):
         try:
             return NodeGroup.objects.filter(assay=assay_uuid)
         except NodeGroup.DoesNotExist as e:
-            return Response(e, status=status.HTTP_404_NOT_FOUND)
+            raise Http404(e)
 
     def get(self, request, format=None):
         if request.query_params.get('uuid'):
