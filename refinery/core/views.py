@@ -30,16 +30,17 @@ from core.forms import (
     ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 )
 
-from core.models import (
-    ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
-    Analysis, Invitation, Ontology, NodeGroup,
-    CustomRegistrationProfile)
 from data_set_manager.models import Study, Assay, Node
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
-from core.utils import get_data_sets_annotations, get_anonymous_user
+from core.models import (
+    ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
+    Analysis, Invitation, Ontology, NodeGroup,
+    CustomRegistrationProfile)
 from core.serializers import WorkflowSerializer, NodeGroupSerializer
+from core.utils import (get_data_sets_annotations, get_anonymous_user,
+                        node_group_uuids_str_to_ids_list)
 
 from xml.parsers.expat import ExpatError
 
@@ -1201,16 +1202,11 @@ class NodeGroups(APIView):
 
         # Node nodes_uuids are passed, update the nodes_ids field
         if request.data.get('nodes_uuids'):
-            nodes_ids = []
-            nodes_uuids_list = request.data.get('nodes_uuids').replace(
-                " ", "").split(',')
-            for node in nodes_uuids_list:
-                try:
-                    nodes_ids.append(Node.objects.get(uuid=node).id)
-                except Node.DoesNotExist as e:
-                    return Response(e, status=status.HTTP_404_NOT_FOUND)
-                except Node.MultipleObjectsReturned as e:
-                    return Response(e, status=status.HTTP_400_BAD_REQUEST)
+            nodes_ids = node_group_uuids_str_to_ids_list(request.data.get(
+                'nodes_uuids'))
+            # Method returns a list unless an error occurs
+            if not isinstance(nodes_ids, list):
+                return Response(nodes_ids.message)
 
             request.data['nodes_ids'] = nodes_ids
         serializer = NodeGroupSerializer(data=request.data)
@@ -1230,17 +1226,11 @@ class NodeGroups(APIView):
         node_group = self.get_object(uuid)
         # Node nodes_uuids are passed, update the nodes_ids field
         if request.data.get('nodes_uuids'):
-            nodes_ids = []
-            nodes_uuids_list = request.data.get('nodes_uuids').replace(
-                " ", "").split(',')
-            for node in nodes_uuids_list:
-                try:
-                    nodes_ids.append(Node.objects.get(uuid=node).id)
-                except Node.DoesNotExist as e:
-                    return Response(e, status=status.HTTP_404_NOT_FOUND)
-                except Node.MultipleObjectsReturned as e:
-                    return Response(e, status=status.HTTP_400_BAD_REQUEST)
-
+            nodes_ids = node_group_uuids_str_to_ids_list(request.data.get(
+                'nodes_uuids'))
+            # Method returns a list unless an error occurs
+            if not isinstance(nodes_ids, list):
+                return Response(nodes_ids.message)
             # Work around to add nodes_ids to request packet
             request.data._mutable = True
             request.data['nodes_ids'] = nodes_ids

@@ -24,7 +24,7 @@ class NodeGroupSerializer(serializers.ModelSerializer):
         validate_data due to read_only attribute."""
         if self.initial_data.get('nodes_ids'):
             node_group.nodes_ids.add(*self.initial_data.get('nodes_ids'))
-            node_group.nod_count = len(self.initial_data.get('nodes_ids'))
+            node_group.node_count = len(self.initial_data.get('nodes_ids'))
             node_group.save()
 
         return node_group
