@@ -1240,6 +1240,7 @@ class NodeGroups(APIView):
                     return Response(e, status=status.HTTP_404_NOT_FOUND)
                 except Node.MultipleObjectsReturned as e:
                     return Response(e, status=status.HTTP_400_BAD_REQUEST)
+
             # Work around to add nodes_ids to request packet
             request.data._mutable = True
             request.data['nodes_ids'] = nodes_ids
