@@ -1046,40 +1046,9 @@ class NodeGroups(APIView):
         omit_serializer: false
 
         parameters:
-            - name: name
-              description: Name of node group
-              paramType: query
-              type: string
-              required: false
-
             - name: uuid
               description: NodeGroup uuid
               paramType: query
-              type: string
-              required: false
-
-            - name: study
-              description: Study uuid
-              paramType: query
-              required: false
-
-            - name: nodes_uuids
-              description: Uuids of nodes in group
-              paramType: query
-              type: array
-              required: false
-
-            - name: node_count
-              description: Number of nodes, generated dynamically
-              paramType: query
-              type: string
-              required: false
-
-            - name: is_current
-              description: Is node group the current selection
-              paramType: query
-              type: boolean
-              required: false
               type: string
               required: false
 
