@@ -31,7 +31,7 @@ from core.forms import (
     ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 )
 
-from data_set_manager.models import Node, Assay, Study
+from data_set_manager.models import Node
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
@@ -1148,24 +1148,6 @@ class NodeGroups(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
-
-        # Check if study object exists, grab pk and update request obj
-        try:
-            request.data['study'] = Study.objects.get(uuid=request.data.get(
-                'study')).id
-        except Study.DoesNotExist as e:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        except Study.MultipleObjectsReturned as e:
-            return Response(e, status=status.HTTP_400_BAD_REQUEST)
-
-        # Check if assay object exists, grab pk and update request obj
-        try:
-            request.data['assay'] = Assay.objects.get(uuid=request.data.get(
-                'assay')).id
-        except Assay.DoesNotExist as e:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        except Assay.MultipleObjectsReturned as e:
-            return Response(e, status=status.HTTP_400_BAD_REQUEST)
 
         # Node nodes_uuids are passed, update the nodes_ids field
         if request.data.get('nodes'):

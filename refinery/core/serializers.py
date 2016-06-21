@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from .models import Workflow, NodeGroup
-from data_set_manager.models import Node
+from data_set_manager.models import Node, Assay, Study
 
 
 class NodeGroupSerializer(serializers.ModelSerializer):
@@ -9,6 +9,11 @@ class NodeGroupSerializer(serializers.ModelSerializer):
                                                read_only=False,
                                                queryset=Node.objects.all(),
                                                required=False)
+
+    assay = serializers.SlugRelatedField(
+        queryset=Assay.objects.all(), read_only=False, slug_field='uuid')
+    study = serializers.SlugRelatedField(
+        queryset=Study.objects.all(), read_only=False, slug_field='uuid')
 
     class Meta:
         model = NodeGroup
