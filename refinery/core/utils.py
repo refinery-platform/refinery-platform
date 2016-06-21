@@ -16,8 +16,6 @@ from urlparse import urlparse, urljoin
 import core
 from .search_indexes import DataSetIndex
 from data_set_manager.search_indexes import NodeIndex
-# For the generic get_id_from_uuids models aren't used until runtime
-from data_set_manager.models import Node
 
 
 logger = logging.getLogger(__name__)
@@ -720,20 +718,3 @@ def get_anonymous_user():
     except (User.DoesNotExist, MultipleObjectsReturned) as e:
         logger.error("Could not fetch Anonymous User: %s" % e)
         return None
-
-
-def node_uuids_str_to_ids_list(uuids_str):
-    """ Node Model
-     @param = string of node uuids seperated by comma
-     returns list of node ids """
-    nodes_ids = []
-    nodes_uuids_list = uuids_str.replace(" ", "").split(',')
-    for node in nodes_uuids_list:
-        try:
-            nodes_ids.append(Node.objects.get(uuid=node).id)
-        except Node.DoesNotExist as e:
-            return e
-        except Node.MultipleObjectsReturned as e:
-            return e
-
-        return nodes_ids

@@ -3,7 +3,6 @@ import json
 from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.http import Http404
 from django.utils import unittest, timezone
 from django.test import TestCase
 
@@ -22,7 +21,7 @@ from core.models import (
     Analysis, Workflow, WorkflowEngine, UserProfile, invalidate_cached_object,
     AnalysisNodeConnection)
 from file_store.models import FileStoreItem
-from core.utils import (get_aware_local_time, node_uuids_str_to_ids_list)
+from core.utils import (get_aware_local_time)
 from file_store.models import FileExtension
 
 from data_set_manager.models import (Study, Assay, Node, Investigation)
@@ -1460,50 +1459,9 @@ class AnalysisDeletionTest(unittest.TestCase):
 
 
 class UtilitiesTest(TestCase):
-    def setUp(self):
-        investigation = Investigation.objects.create()
-        self.study = Study.objects.create(
-                file_name='test_filename123.txt',
-                title='Study Title Test',
-                investigation=investigation)
-        self.assay = {
-            'study': self.study,
-            'measurement': 'transcription factor binding site',
-            'measurement_accession': 'http://www.testurl.org/testID',
-            'measurement_source': 'OBI',
-            'technology': 'nucleotide sequencing',
-            'technology_accession': 'test info',
-            'technology_source': 'test source',
-            'platform': 'Genome Analyzer II',
-            'file_name': 'test_assay_filename.txt'
-        }
-        assay = Assay.objects.create(**self.assay)
-        self.assay['uuid'] = assay.uuid
-        self.assay['id'] = assay.id
-        node_1 = Node.objects.create().uuid
-        node_2 = Node.objects.create().uuid
-        node_3 = Node.objects.create().uuid
-        self.nodes_str = '%s, %s, %s' % (node_1, node_2, node_3)
-        self.nodes_list = [node_1, node_2, node_3]
-        self.invalid_uuid = '03b5f681-35d5-4bdd-bc7d-8552fa777ebc'
-
-    def tearDown(self):
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
-
     def test_get_aware_local_time(self):
         expected_time = timezone.localtime(timezone.now())
         response_time = get_aware_local_time()
         difference_time = response_time - expected_time
 
         self.assertLessEqual(difference_time.total_seconds(), .99)
-
-    def test_node_uuids_str_to_ids_list(self):
-        node_uuids_str_to_ids_list(self.nodes_str)
-
-    def test_node_uuids_str_to_ids_list_error(self):
-        self.assertRaises(Http404,
-                          node_uuids_str_to_ids_list,
-                          self.invalid_uuid,
-                          "Assay")
