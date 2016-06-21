@@ -723,6 +723,9 @@ def get_anonymous_user():
 
 
 def node_group_uuids_str_to_ids_list(uuids_str):
+    """ Node Group Model
+     @param = string of node uuids seperated by comma
+     returns list of node ids """
     nodes_ids = []
     nodes_uuids_list = uuids_str.replace(" ", "").split(',')
     for node in nodes_uuids_list:
