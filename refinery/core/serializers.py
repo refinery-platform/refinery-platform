@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from .models import Workflow, NodeGroup
+from data_set_manager.serializers import AssaySerializer
 
 
 class NodeGroupSerializer(serializers.ModelSerializer):
@@ -10,6 +11,7 @@ class NodeGroupSerializer(serializers.ModelSerializer):
     nodes = serializers.PrimaryKeyRelatedField(many=True,
                                                read_only=True,
                                                required=False)
+    assay = AssaySerializer(source='assay')
 
     class Meta:
         model = NodeGroup
