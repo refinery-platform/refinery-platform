@@ -10,6 +10,7 @@ from django.core.exceptions import MultipleObjectsReturned
 from django.core.mail import send_mail
 from django.core.cache import cache
 from django.db import connection
+from django.http import Http404
 from django.utils import timezone
 from urlparse import urlparse, urljoin
 
@@ -733,3 +734,12 @@ def node_group_uuids_str_to_ids_list(uuids_str):
             return e
 
         return nodes_ids
+
+
+def get_id_from_uuid(uuid, model_name):
+    # Generic helper method to grab an objects id from uuid
+    try:
+        return eval(model_name).objects.get(uuid=uuid).id
+    except (eval(model_name).DoesNotExist,
+            eval(model_name).MultipleObjectsReturned) as e:
+        raise Http404(e)

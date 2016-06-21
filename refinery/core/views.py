@@ -31,7 +31,7 @@ from core.forms import (
     ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 )
 
-from data_set_manager.models import Study, Assay, Node
+from data_set_manager.models import Node
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
@@ -41,7 +41,7 @@ from core.models import (
     CustomRegistrationProfile)
 from core.serializers import WorkflowSerializer, NodeGroupSerializer
 from core.utils import (get_data_sets_annotations, get_anonymous_user,
-                        node_group_uuids_str_to_ids_list)
+                        node_group_uuids_str_to_ids_list, get_id_from_uuid)
 
 from xml.parsers.expat import ExpatError
 
@@ -1149,13 +1149,6 @@ class NodeGroups(APIView):
         except NodeGroup.DoesNotExist as e:
             raise Http404(e)
 
-    def get_id_from_uuid(self, uuid, name):
-        try:
-            return eval(name).objects.get(uuid=uuid).id
-        except (eval(name).DoesNotExist,
-                eval(name).MultipleObjectsReturned) as e:
-            raise Http404(e)
-
     def get(self, request, format=None):
         # Expects a uuid or assay uuid.
         if request.query_params.get('uuid'):
@@ -1163,7 +1156,7 @@ class NodeGroups(APIView):
         elif request.query_params.get('assay'):
             assay = request.query_params.get('assay')
             if assay.index('-') > -1:
-                assay = self.get_id_from_uuid(assay, 'Assay')
+                assay = get_id_from_uuid(assay, 'Assay')
             node_group = self.get_query_set(assay)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -1174,23 +1167,12 @@ class NodeGroups(APIView):
     def post(self, request, format=None):
         # check if study uuid is passed
         if request.data.get('study').index('-') > -1:
-            try:
-                request.data['study'] = Study.objects.get(
-                    uuid=request.data.get('study')).id
-            except Study.DoesNotExist as e:
-                return Response(e, status=status.HTTP_404_NOT_FOUND)
-            except Study.MultipleObjectsReturned as e:
-                return Response(e, status=status.HTTP_400_BAD_REQUEST)
-
+            request.data['study'] = get_id_from_uuid(request.data.get(
+                'study'), 'Study')
         # check if assay uuid is passed
         if request.data.get('assay').index('-') > -1:
-            try:
-                request.data['assay'] = Assay.objects.get(
-                    uuid=request.data.get('assay')).id
-            except Assay.DoesNotExist as e:
-                return Response(e, status=status.HTTP_404_NOT_FOUND)
-            except Assay.MultipleObjectsReturned as e:
-                return Response(e, status=status.HTTP_400_BAD_REQUEST)
+            request.data['assay'] = get_id_from_uuid(request.data.get(
+                'assay'), 'Assay')
 
         # Node nodes_uuids are passed, update the nodes_ids field
         if request.data.get('nodes_uuids'):
@@ -1198,8 +1180,8 @@ class NodeGroups(APIView):
                 'nodes_uuids'))
             # Method returns a list unless an error occurs
             if not isinstance(nodes_ids, list):
+                # Error occurred
                 return Response(nodes_ids.message)
-
             request.data['nodes_ids'] = nodes_ids
         serializer = NodeGroupSerializer(data=request.data)
         if serializer.is_valid():
