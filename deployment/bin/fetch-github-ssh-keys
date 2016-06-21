@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# A script to fetch public SSH keys from github,
+# and append them to ~/.ssh/authorized_keys
+
+# The list of github users,
+# should be the command line arguments to this script.
+
+# jq and curl are both required.
+
+for u in "$@"
+do
+    curl https://api.github.com/users/"$u"/keys |
+    jq -r '.[].key'
+done >> ~/.ssh/authorized_keys
