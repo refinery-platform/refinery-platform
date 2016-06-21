@@ -1054,7 +1054,7 @@ class NodeGroups(APIView):
               required: false
 
             - name: assay
-              description: Assay uuid
+              description: Assay uuid or ids
               paramType: query
               type: string
 
@@ -1143,26 +1143,37 @@ class NodeGroups(APIView):
                 NodeGroup.MultipleObjectsReturned) as e:
             raise Http404(e)
 
-    def get_query_set(self, assay_uuid):
+    def get_query_set(self, assay_id):
         try:
-            return NodeGroup.objects.filter(assay=assay_uuid)
+            return NodeGroup.objects.filter(assay=assay_id)
         except NodeGroup.DoesNotExist as e:
             raise Http404(e)
 
+    def get_id_from_uuid(self, uuid, name):
+        try:
+            return eval(name).objects.get(uuid=uuid).id
+        except (eval(name).DoesNotExist,
+                eval(name).MultipleObjectsReturned) as e:
+            raise Http404(e)
+
     def get(self, request, format=None):
+        # Expects a uuid or assay uuid.
         if request.query_params.get('uuid'):
             node_group = self.get_object(request.query_params.get('uuid'))
         elif request.query_params.get('assay'):
-            node_group = self.get_object(request.query_params.get('uuid'))
+            assay = request.query_params.get('assay')
+            if assay.index('-') > -1:
+                assay = self.get_id_from_uuid(assay, 'Assay')
+            node_group = self.get_query_set(assay)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = NodeGroupSerializer(node_group)
+        serializer = NodeGroupSerializer(node_group, many=True)
         return Response(serializer.data)
 
     def post(self, request, format=None):
         # check if study uuid is passed
-        if(request.data.get('study').index('-') > -1):
+        if request.data.get('study').index('-') > -1:
             try:
                 request.data['study'] = Study.objects.get(
                     uuid=request.data.get('study')).id
@@ -1172,7 +1183,7 @@ class NodeGroups(APIView):
                 return Response(e, status=status.HTTP_400_BAD_REQUEST)
 
         # check if assay uuid is passed
-        if(request.data.get('assay').index('-') > -1):
+        if request.data.get('assay').index('-') > -1:
             try:
                 request.data['assay'] = Assay.objects.get(
                     uuid=request.data.get('assay')).id
