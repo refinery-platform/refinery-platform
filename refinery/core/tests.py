@@ -3,6 +3,7 @@ import json
 from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.http import Http404
 from django.utils import unittest, timezone
 from django.test import TestCase
 
@@ -1522,8 +1523,8 @@ class UtilitiesTest(TestCase):
 
     def test_get_id_from_uuid(self):
         response_id = get_id_from_uuid(self.assay.get('uuid'), "Assay")
-        self.assetEqual(response_id, self.assay.get('id'))
+        self.assertEqual(response_id, self.assay.get('id'))
 
     def test_get_id_from_uuid_error(self):
-        response = get_id_from_uuid(self.assay.get('uuid'), "Assay")
-        self.assetEqual(response.status_code, 404)
+        self.assertRaises(Http404,
+                          get_id_from_uuid, self.invalid_uuid, "Assay")
