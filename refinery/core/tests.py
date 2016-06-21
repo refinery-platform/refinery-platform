@@ -22,8 +22,7 @@ from core.models import (
     Analysis, Workflow, WorkflowEngine, UserProfile, invalidate_cached_object,
     AnalysisNodeConnection)
 from file_store.models import FileStoreItem
-from core.utils import (get_aware_local_time, get_id_from_uuid,
-                        node_uuids_str_to_ids_list)
+from core.utils import (get_aware_local_time, node_uuids_str_to_ids_list)
 from file_store.models import FileExtension
 
 from data_set_manager.models import (Study, Assay, Node, Investigation)
@@ -1500,13 +1499,11 @@ class UtilitiesTest(TestCase):
 
         self.assertLessEqual(difference_time.total_seconds(), .99)
 
-    def test_get_id_from_uuid(self):
-        response_id = get_id_from_uuid(self.assay.get('uuid'), "Assay")
-        self.assertEqual(response_id, self.assay.get('id'))
-
-    def test_get_id_from_uuid_error(self):
-        self.assertRaises(Http404,
-                          get_id_from_uuid, self.invalid_uuid, "Assay")
-
     def test_node_uuids_str_to_ids_list(self):
         node_uuids_str_to_ids_list(self.nodes_str)
+
+    def test_node_uuids_str_to_ids_list_error(self):
+        self.assertRaises(Http404,
+                          node_uuids_str_to_ids_list,
+                          self.invalid_uuid,
+                          "Assay")
