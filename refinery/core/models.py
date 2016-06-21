@@ -1795,7 +1795,7 @@ class NodeGroup(SharableResource, TemporaryResource):
     # The "current selection" node set for the associated study/assay
     is_current = models.BooleanField(default=False)
     # Nodes in the group, using uuids are foreign-key
-    nodes = models.ManyToManyField(Node)
+    nodes = models.ManyToManyField(Node, blank=True, null=True)
 
     class Meta:
         verbose_name = "node group"

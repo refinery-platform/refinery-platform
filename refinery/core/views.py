@@ -40,8 +40,7 @@ from core.models import (
     Analysis, Invitation, Ontology, NodeGroup,
     CustomRegistrationProfile)
 from core.serializers import WorkflowSerializer, NodeGroupSerializer
-from core.utils import (get_data_sets_annotations, get_anonymous_user,
-                        node_uuids_str_to_ids_list)
+from core.utils import (get_data_sets_annotations, get_anonymous_user)
 
 from xml.parsers.expat import ExpatError
 
@@ -1148,7 +1147,7 @@ class NodeGroups(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        # Node nodes_uuids are passed, update the nodes_ids field
+        # A node string list is passed, so needs formatting to list
         if request.data.get('nodes'):
             nodes_uuids = request.data.get('nodes').replace(" ", "").split(',')
             request.data.setlist('nodes', nodes_uuids)
@@ -1156,10 +1155,8 @@ class NodeGroups(APIView):
         serializer = NodeGroupSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors,
-                        status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, format=None):
         try:
@@ -1169,15 +1166,10 @@ class NodeGroups(APIView):
 
         node_group = self.get_object(uuid)
         # Node nodes_uuids are passed, update the nodes_ids field
-        if request.data.get('nodes_uuids'):
-            nodes_ids = node_uuids_str_to_ids_list(request.data.get(
-                'nodes_uuids'))
-            # Method returns a list unless an error occurs
-            if not isinstance(nodes_ids, list):
-                return Response(nodes_ids.message)
-            # Work around to add nodes_ids to request packet
+        if request.data.get('nodes'):
+            nodes_uuids = request.data.get('nodes').replace(" ", "").split(',')
             request.data._mutable = True
-            request.data['nodes_ids'] = nodes_ids
+            request.data.setlist('nodes', nodes_uuids)
 
         serializer = NodeGroupSerializer(node_group, data=request.data,
                                          partial=True)

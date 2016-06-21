@@ -9,7 +9,8 @@ class NodeGroupSerializer(serializers.ModelSerializer):
     nodes = serializers.SlugRelatedField(many=True,
                                          slug_field='uuid',
                                          queryset=Node.objects.all(),
-                                         required=False)
+                                         required=False,
+                                         allow_null=True)
     assay = serializers.SlugRelatedField(queryset=Assay.objects.all(),
                                          slug_field='uuid')
     study = serializers.SlugRelatedField(queryset=Study.objects.all(),
@@ -40,9 +41,9 @@ class NodeGroupSerializer(serializers.ModelSerializer):
         Update and return an existing `NodeGroup` instance, given the
         validated data.
         """
-        if self.initial_data.get('nodes'):
-            instance.nodes = self.initial_data.get('nodes', instance.nodes)
-            instance.node_count = len(self.initial_data.get('nodes'))
+        if validated_data.get('nodes'):
+            instance.nodes = validated_data.get('nodes', instance.nodes)
+            instance.node_count = len(validated_data.get('nodes'))
 
         instance.is_current = validated_data.get('is_current',
                                                  instance.is_current)
