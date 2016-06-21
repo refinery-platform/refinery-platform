@@ -17,6 +17,7 @@ from urlparse import urlparse, urljoin
 import core
 from .search_indexes import DataSetIndex
 from data_set_manager.search_indexes import NodeIndex
+# For the generic get_id_from_uuids models aren't used until runtime
 from data_set_manager.models import Node, Assay, Study  # nopep8
 
 
