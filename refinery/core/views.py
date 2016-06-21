@@ -1148,16 +1148,10 @@ class NodeGroups(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
-
         # Node nodes_uuids are passed, update the nodes_ids field
         if request.data.get('nodes'):
-            nodes_ids = node_uuids_str_to_ids_list(request.data.get(
-                'nodes'))
-            # Method returns a list unless an error occurs
-            if not isinstance(nodes_ids, list):
-                # Error occurred
-                return Response(nodes_ids.message)
-            request.data.setlist('nodes', nodes_ids)
+            nodes_uuids = request.data.get('nodes').replace(" ", "").split(',')
+            request.data.setlist('nodes', nodes_uuids)
 
         serializer = NodeGroupSerializer(data=request.data)
         if serializer.is_valid():

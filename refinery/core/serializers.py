@@ -5,19 +5,19 @@ from data_set_manager.models import Node, Assay, Study
 
 
 class NodeGroupSerializer(serializers.ModelSerializer):
-    nodes = serializers.PrimaryKeyRelatedField(many=True,
-                                               read_only=False,
-                                               queryset=Node.objects.all(),
-                                               required=False)
-
-    assay = serializers.SlugRelatedField(
-        queryset=Assay.objects.all(), read_only=False, slug_field='uuid')
-    study = serializers.SlugRelatedField(
-        queryset=Study.objects.all(), read_only=False, slug_field='uuid')
+    # Slug related field associated uuids with model
+    nodes = serializers.SlugRelatedField(many=True,
+                                         slug_field='uuid',
+                                         queryset=Node.objects.all(),
+                                         required=False)
+    assay = serializers.SlugRelatedField(queryset=Assay.objects.all(),
+                                         slug_field='uuid')
+    study = serializers.SlugRelatedField(queryset=Study.objects.all(),
+                                         slug_field='uuid')
 
     class Meta:
         model = NodeGroup
-        fields = ('id', 'uuid', 'node_count', 'is_implicit', 'study',
+        fields = ('uuid', 'node_count', 'is_implicit', 'study',
                   'assay', 'is_current', 'nodes', 'name')
 
     def create(self, validated_data):
@@ -25,7 +25,7 @@ class NodeGroupSerializer(serializers.ModelSerializer):
             study=validated_data.get('study'),
             assay=validated_data.get('assay'),
             name=validated_data.get('name'),
-            is_current=validated_data.get('is_current')
+            is_current=validated_data.get('is_current'),
         )
         # Add foreign keys after object is created
         if validated_data.get('nodes'):
