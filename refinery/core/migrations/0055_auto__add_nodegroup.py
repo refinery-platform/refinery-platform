@@ -26,8 +26,8 @@ class Migration(SchemaMigration):
         ))
         db.send_create_signal(u'core', ['NodeGroup'])
 
-        # Adding M2M table for field nodes_ids on 'NodeGroup'
-        m2m_table_name = db.shorten_name(u'core_nodegroup_nodes_ids')
+        # Adding M2M table for field nodes on 'NodeGroup'
+        m2m_table_name = db.shorten_name(u'core_nodegroup_nodes')
         db.create_table(m2m_table_name, (
             ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
             ('nodegroup', models.ForeignKey(orm[u'core.nodegroup'], null=False)),
@@ -40,8 +40,8 @@ class Migration(SchemaMigration):
         # Deleting model 'NodeGroup'
         db.delete_table(u'core_nodegroup')
 
-        # Removing M2M table for field nodes_ids on 'NodeGroup'
-        db.delete_table(db.shorten_name(u'core_nodegroup_nodes_ids'))
+        # Removing M2M table for field nodes on 'NodeGroup'
+        db.delete_table(db.shorten_name(u'core_nodegroup_nodes'))
 
 
     models = {
@@ -213,7 +213,7 @@ class Migration(SchemaMigration):
             'modification_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '250', 'null': 'True'}),
             'node_count': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'nodes_ids': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['data_set_manager.Node']", 'null': 'True', 'blank': 'True'}),
+            'nodes': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['data_set_manager.Node']", 'symmetrical': 'False'}),
             'slug': ('django.db.models.fields.CharField', [], {'max_length': '250', 'null': 'True', 'blank': 'True'}),
             'study': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['data_set_manager.Study']"}),
             'summary': ('django.db.models.fields.CharField', [], {'max_length': '1000', 'blank': 'True'}),
