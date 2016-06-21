@@ -20,12 +20,13 @@ from core.models import (
     NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,
     ExtendedGroup, DataSet, InvestigationLink, Project,
     Analysis, Workflow, WorkflowEngine, UserProfile, invalidate_cached_object,
-    AnalysisNodeConnection, Node)
+    AnalysisNodeConnection)
 from file_store.models import FileStoreItem
-from core.utils import (get_aware_local_time, get_id_from_uuid)
+from core.utils import (get_aware_local_time, get_id_from_uuid,
+                        node_uuids_str_to_ids_list)
 from file_store.models import FileExtension
 
-import data_set_manager
+from data_set_manager.models import (Study, Assay, Node, Investigation)
 from galaxy_connector.models import Instance
 
 cache = memcache.Client(["127.0.0.1:11211"])
@@ -71,11 +72,9 @@ class NodeSetTest(unittest.TestCase):
     """Test all NodeSet operations"""
 
     def setUp(self):
-        self.investigation = \
-            data_set_manager.models.Investigation.objects.create()
-        self.study = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation)
-        self.assay = data_set_manager.models.Assay.objects.create(
+        self.investigation = Investigation.objects.create()
+        self.study = Study.objects.create(investigation=self.investigation)
+        self.assay = Assay.objects.create(
             study=self.study)
         self.query = json.dumps({
             "facets": {
@@ -166,8 +165,7 @@ class NodeSetTest(unittest.TestCase):
         """Test updating NodeSet study"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
                                          assay=self.assay)
-        new_study = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation)
+        new_study = Study.objects.create(investigation=self.investigation)
         update_nodeset(uuid=nodeset.uuid, study=new_study)
         self.assertEqual(
             NodeSet.objects.get(uuid=nodeset.uuid).study, new_study
@@ -177,8 +175,7 @@ class NodeSetTest(unittest.TestCase):
         """Test updating NodeSet assay"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
                                          assay=self.assay)
-        new_assay = data_set_manager.models.Assay.objects.create(
-            study=self.study)
+        new_assay = Assay.objects.create(study=self.study)
         update_nodeset(uuid=nodeset.uuid, assay=new_assay)
         self.assertEqual(
             NodeSet.objects.get(uuid=nodeset.uuid).assay, new_assay
@@ -225,18 +222,12 @@ class NodeSetResourceTest(ResourceTestCase):
 
     def setUp(self):
         super(NodeSetResourceTest, self).setUp()
-        self.investigation = \
-            data_set_manager.models.Investigation.objects.create()
-        self.study = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation)
-        self.assay = data_set_manager.models.Assay.objects.create(
-            study=self.study)
-        self.investigation2 = \
-            data_set_manager.models.Investigation.objects.create()
-        self.study2 = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation)
-        self.assay2 = data_set_manager.models.Assay.objects.create(
-            study=self.study2)
+        self.investigation = Investigation.objects.create()
+        self.study = Study.objects.create(investigation=self.investigation)
+        self.assay = Assay.objects.create(study=self.study)
+        self.investigation2 = Investigation.objects.create()
+        self.study2 = Study.objects.create(investigation=self.investigation)
+        self.assay2 = Assay.objects.create(study=self.study2)
         self.query = {
             "facets": {
                 "platform_Characteristics_10_5_s": [],
@@ -591,22 +582,12 @@ class NodeSetListResourceTest(ResourceTestCase):
 
     def setUp(self):
         super(NodeSetListResourceTest, self).setUp()
-        self.investigation = \
-            data_set_manager.models.Investigation.objects.create()
-        self.study = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation
-        )
-        self.assay = data_set_manager.models.Assay.objects.create(
-            study=self.study
-        )
-        self.investigation2 = \
-            data_set_manager.models.Investigation.objects.create()
-        self.study2 = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation
-        )
-        self.assay2 = data_set_manager.models.Assay.objects.create(
-            study=self.study2
-        )
+        self.investigation = Investigation.objects.create()
+        self.study = Study.objects.create(investigation=self.investigation)
+        self.assay = Assay.objects.create(study=self.study)
+        self.investigation2 = Investigation.objects.create()
+        self.study2 = Study.objects.create(investigation=self.investigation)
+        self.assay2 = Assay.objects.create(study=self.study2)
         self.query = {
             "facets": {
                 "platform_Characteristics_10_5_s": [],
@@ -1284,8 +1265,7 @@ class DataSetDeletionTest(unittest.TestCase):
                 'test_file.txt',
                 'Coffee is delicious!')
         )
-        self.investigation = \
-            data_set_manager.models.Investigation.objects.create(
+        self.investigation = Investigation.objects.create(
                 isarchive_file=self.isa_archive_file.uuid,
                 pre_isarchive_file=self.pre_isa_archive_file.uuid
             )
@@ -1325,9 +1305,9 @@ class DataSetDeletionTest(unittest.TestCase):
         UserProfile.objects.all().delete()
         Node.objects.all().delete()
         FileStoreItem.objects.all().delete()
-        data_set_manager.models.Study.objects.all().delete()
-        data_set_manager.models.Assay.objects.all().delete()
-        data_set_manager.models.Investigation.objects.all().delete()
+        Study.objects.all().delete()
+        Assay.objects.all().delete()
+        Investigation.objects.all().delete()
         AnalysisNodeConnection.objects.all().delete()
         InvestigationLink.objects.all().delete()
 
@@ -1412,26 +1392,20 @@ class AnalysisDeletionTest(unittest.TestCase):
         self.analysis_with_node_analyzed_further.set_owner(self.user)
 
         # Create Investigation/InvestigationLinks for the DataSets
-        self.investigation = \
-            data_set_manager.models.Investigation.objects.create()
+        self.investigation = Investigation.objects.create()
         self.investigation_link = InvestigationLink.objects.create(
             investigation=self.investigation,
             data_set=self.dataset_with_analysis)
-        self.investigation1 = \
-            data_set_manager.models.Investigation.objects.create()
+        self.investigation1 = Investigation.objects.create()
         self.investigation_link1 = InvestigationLink.objects.create(
             investigation=self.investigation1,
             data_set=self.dataset_with_analysis1)
 
         # Create Studys and Assays
-        self.study = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation)
-        self.assay = data_set_manager.models.Assay.objects.create(
-            study=self.study)
-        self.study1 = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation1)
-        self.assay1 = data_set_manager.models.Assay.objects.create(
-            study=self.study1)
+        self.study = Study.objects.create(investigation=self.investigation)
+        self.assay = Assay.objects.create(study=self.study)
+        self.study1 = Study.objects.create(investigation=self.investigation1)
+        self.assay1 = Assay.objects.create(study=self.study1)
 
         # Create Nodes
         self.node = Node.objects.create(assay=self.assay, study=self.study,
@@ -1462,9 +1436,9 @@ class AnalysisDeletionTest(unittest.TestCase):
         Analysis.objects.all().delete()
         UserProfile.objects.all().delete()
         Node.objects.all().delete()
-        data_set_manager.models.Study.objects.all().delete()
-        data_set_manager.models.Assay.objects.all().delete()
-        data_set_manager.models.Investigation.objects.all().delete()
+        Study.objects.all().delete()
+        Assay.objects.all().delete()
+        Investigation.objects.all().delete()
         AnalysisNodeConnection.objects.all().delete()
         InvestigationLink.objects.all().delete()
 
@@ -1488,8 +1462,8 @@ class AnalysisDeletionTest(unittest.TestCase):
 
 class UtilitiesTest(TestCase):
     def setUp(self):
-        investigation = data_set_manager.models.Investigation.objects.create()
-        self.study = data_set_manager.models.Study.objects.create(
+        investigation = Investigation.objects.create()
+        self.study = Study.objects.create(
                 file_name='test_filename123.txt',
                 title='Study Title Test',
                 investigation=investigation)
@@ -1504,15 +1478,20 @@ class UtilitiesTest(TestCase):
             'platform': 'Genome Analyzer II',
             'file_name': 'test_assay_filename.txt'
         }
-        assay = data_set_manager.models.Assay.objects.create(**self.assay)
+        assay = Assay.objects.create(**self.assay)
         self.assay['uuid'] = assay.uuid
         self.assay['id'] = assay.id
-        self.invalid_uuid = "03b5f681-35d5-4bdd-bc7d-8552fa777ebc"
+        node_1 = Node.objects.create().uuid
+        node_2 = Node.objects.create().uuid
+        node_3 = Node.objects.create().uuid
+        self.nodes_str = '%s, %s, %s' % (node_1, node_2, node_3)
+        self.nodes_list = [node_1, node_2, node_3]
+        self.invalid_uuid = '03b5f681-35d5-4bdd-bc7d-8552fa777ebc'
 
     def tearDown(self):
-        data_set_manager.models.Assay.objects.all().delete()
-        data_set_manager.models.Study.objects.all().delete()
-        data_set_manager.models.Investigation.objects.all().delete()
+        Assay.objects.all().delete()
+        Study.objects.all().delete()
+        Investigation.objects.all().delete()
 
     def test_get_aware_local_time(self):
         expected_time = timezone.localtime(timezone.now())
@@ -1528,3 +1507,6 @@ class UtilitiesTest(TestCase):
     def test_get_id_from_uuid_error(self):
         self.assertRaises(Http404,
                           get_id_from_uuid, self.invalid_uuid, "Assay")
+
+    def test_node_uuids_str_to_ids_list(self):
+        node_uuids_str_to_ids_list(self.nodes_str)
