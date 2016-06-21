@@ -41,7 +41,7 @@ from core.models import (
     CustomRegistrationProfile)
 from core.serializers import WorkflowSerializer, NodeGroupSerializer
 from core.utils import (get_data_sets_annotations, get_anonymous_user,
-                        node_group_uuids_str_to_ids_list, get_id_from_uuid)
+                        node_uuids_str_to_ids_list, get_id_from_uuid)
 
 from xml.parsers.expat import ExpatError
 
@@ -1176,7 +1176,7 @@ class NodeGroups(APIView):
 
         # Node nodes_uuids are passed, update the nodes_ids field
         if request.data.get('nodes_uuids'):
-            nodes_ids = node_group_uuids_str_to_ids_list(request.data.get(
+            nodes_ids = node_uuids_str_to_ids_list(request.data.get(
                 'nodes_uuids'))
             # Method returns a list unless an error occurs
             if not isinstance(nodes_ids, list):
@@ -1199,7 +1199,7 @@ class NodeGroups(APIView):
         node_group = self.get_object(uuid)
         # Node nodes_uuids are passed, update the nodes_ids field
         if request.data.get('nodes_uuids'):
-            nodes_ids = node_group_uuids_str_to_ids_list(request.data.get(
+            nodes_ids = node_uuids_str_to_ids_list(request.data.get(
                 'nodes_uuids'))
             # Method returns a list unless an error occurs
             if not isinstance(nodes_ids, list):

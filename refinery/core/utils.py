@@ -723,8 +723,8 @@ def get_anonymous_user():
         return None
 
 
-def node_group_uuids_str_to_ids_list(uuids_str):
-    """ Node Group Model
+def node_uuids_str_to_ids_list(uuids_str):
+    """ Node Model
      @param = string of node uuids seperated by comma
      returns list of node ids """
     nodes_ids = []
