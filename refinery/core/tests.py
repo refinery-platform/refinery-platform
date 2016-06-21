@@ -17,13 +17,11 @@ from core.management.commands.create_public_group import create_public_group
 
 from core.models import (
     NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,
-    ExtendedGroup, DataSet, InvestigationLink, Project, Analysis, Workflow,
-    WorkflowEngine, UserProfile, invalidate_cached_object,
+    ExtendedGroup, DataSet, InvestigationLink, Project,
+    Analysis, Workflow, WorkflowEngine, UserProfile, invalidate_cached_object,
     AnalysisNodeConnection, Node)
-
 from file_store.models import FileStoreItem
-
-from core.utils import get_aware_local_time
+from core.utils import (get_aware_local_time, get_id_from_uuid)
 from file_store.models import FileExtension
 
 import data_set_manager
@@ -1488,9 +1486,44 @@ class AnalysisDeletionTest(unittest.TestCase):
 
 
 class UtilitiesTest(TestCase):
+    def setUp(self):
+        investigation = data_set_manager.models.Investigation.objects.create()
+        self.study = data_set_manager.models.Study.objects.create(
+                file_name='test_filename123.txt',
+                title='Study Title Test',
+                investigation=investigation)
+        self.assay = {
+            'study': self.study,
+            'measurement': 'transcription factor binding site',
+            'measurement_accession': 'http://www.testurl.org/testID',
+            'measurement_source': 'OBI',
+            'technology': 'nucleotide sequencing',
+            'technology_accession': 'test info',
+            'technology_source': 'test source',
+            'platform': 'Genome Analyzer II',
+            'file_name': 'test_assay_filename.txt'
+        }
+        assay = data_set_manager.models.Assay.objects.create(**self.assay)
+        self.assay['uuid'] = assay.uuid
+        self.assay['id'] = assay.id
+        self.invalid_uuid = "03b5f681-35d5-4bdd-bc7d-8552fa777ebc"
+
+    def tearDown(self):
+        data_set_manager.models.Assay.objects.all().delete()
+        data_set_manager.models.Study.objects.all().delete()
+        data_set_manager.models.Investigation.objects.all().delete()
+
     def test_get_aware_local_time(self):
         expected_time = timezone.localtime(timezone.now())
         response_time = get_aware_local_time()
         difference_time = response_time - expected_time
 
         self.assertLessEqual(difference_time.total_seconds(), .99)
+
+    def test_get_id_from_uuid(self):
+        response_id = get_id_from_uuid(self.assay.get('uuid'), "Assay")
+        self.assetEqual(response_id, self.assay.get('id'))
+
+    def test_get_id_from_uuid_error(self):
+        response = get_id_from_uuid(self.assay.get('uuid'), "Assay")
+        self.assetEqual(response.status_code, 404)

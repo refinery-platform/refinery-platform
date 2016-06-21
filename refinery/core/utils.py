@@ -17,7 +17,7 @@ from urlparse import urlparse, urljoin
 import core
 from .search_indexes import DataSetIndex
 from data_set_manager.search_indexes import NodeIndex
-from data_set_manager.models import Node
+from data_set_manager.models import Node, Assay, Study  # nopep8
 
 
 logger = logging.getLogger(__name__)
@@ -740,7 +740,11 @@ def node_group_uuids_str_to_ids_list(uuids_str):
 
 
 def get_id_from_uuid(uuid, model_name):
-    # Generic helper method to grab an objects id from uuid
+    """ Generic helper method to grab an objects id from uuid
+    @param: uuid
+    type: 1 uuid string
+    @param: model_name
+    type: String (ensure it is imported above)"""
     try:
         return eval(model_name).objects.get(uuid=uuid).id
     except (eval(model_name).DoesNotExist,
