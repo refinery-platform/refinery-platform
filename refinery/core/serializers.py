@@ -1,18 +1,14 @@
 from rest_framework import serializers
 
 from .models import Workflow, NodeGroup
-from data_set_manager.serializers import AssaySerializer, StudySerializer
+from data_set_manager.models import Node
 
 
 class NodeGroupSerializer(serializers.ModelSerializer):
-    """Read_only: included in the API output, but not be included in during
-    create/update. True so we can pass list, otherwise we'd get pk validation
-    error, 'expect pk got list' """
     nodes = serializers.PrimaryKeyRelatedField(many=True,
-                                               read_only=True,
+                                               read_only=False,
+                                               queryset=Node.objects.all(),
                                                required=False)
-    assay = AssaySerializer(source='assay')
-    assay = StudySerializer(source='study')
 
     class Meta:
         model = NodeGroup
@@ -26,12 +22,10 @@ class NodeGroupSerializer(serializers.ModelSerializer):
             name=validated_data.get('name'),
             is_current=validated_data.get('is_current')
         )
-        """Work-around to pass nodes pk list to serializer. Had to add nodes
-        after group creation. List does not show up in validate_data due to
-        read_only attribute."""
-        if self.initial_data.get('nodes'):
-            node_group.nodes.add(*self.initial_data.get('nodes'))
-            node_group.node_count = len(self.initial_data.get('nodes'))
+        # Add foreign keys after object is created
+        if validated_data.get('nodes'):
+            node_group.nodes.add(*validated_data.get('nodes'))
+            node_group.node_count = len(validated_data.get('nodes'))
             node_group.save()
 
         return node_group

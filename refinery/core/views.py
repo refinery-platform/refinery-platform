@@ -1168,14 +1168,14 @@ class NodeGroups(APIView):
             return Response(e, status=status.HTTP_400_BAD_REQUEST)
 
         # Node nodes_uuids are passed, update the nodes_ids field
-        if request.data.get('nodes_uuids'):
+        if request.data.get('nodes'):
             nodes_ids = node_uuids_str_to_ids_list(request.data.get(
-                'nodes_uuids'))
+                'nodes'))
             # Method returns a list unless an error occurs
             if not isinstance(nodes_ids, list):
                 # Error occurred
                 return Response(nodes_ids.message)
-            request.data['nodes_ids'] = nodes_ids
+            request.data.setlist('nodes', nodes_ids)
 
         serializer = NodeGroupSerializer(data=request.data)
         if serializer.is_valid():
