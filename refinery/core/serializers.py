@@ -4,14 +4,14 @@ from .models import Workflow, NodeGroup
 
 
 class NodeGroupSerializer(serializers.ModelSerializer):
-    nodes_ids = serializers.PrimaryKeyRelatedField(many=True,
-                                                   read_only=True,
-                                                   required=False)
+    nodes = serializers.PrimaryKeyRelatedField(many=True,
+                                               read_only=True,
+                                               required=False)
 
     class Meta:
         model = NodeGroup
         fields = ('id', 'uuid', 'node_count', 'is_implicit', 'study',
-                  'assay', 'is_current', 'nodes_ids', 'name')
+                  'assay', 'is_current', 'nodes', 'name')
 
     def create(self, validated_data):
         node_group = NodeGroup.objects.create(
@@ -22,9 +22,9 @@ class NodeGroupSerializer(serializers.ModelSerializer):
         )
         """Had to add nodes_ids after group creation. List does not show up in
         validate_data due to read_only attribute."""
-        if self.initial_data.get('nodes_ids'):
-            node_group.nodes_ids.add(*self.initial_data.get('nodes_ids'))
-            node_group.node_count = len(self.initial_data.get('nodes_ids'))
+        if self.initial_data.get('nodes'):
+            node_group.nodes.add(*self.initial_data.get('nodes'))
+            node_group.node_count = len(self.initial_data.get('nodes'))
             node_group.save()
 
         return node_group
@@ -34,10 +34,9 @@ class NodeGroupSerializer(serializers.ModelSerializer):
         Update and return an existing `NodeGroup` instance, given the
         validated data.
         """
-        if self.initial_data.get('nodes_ids'):
-            instance.nodes_ids = self.initial_data.get('nodes_ids',
-                                                       instance.nodes_ids)
-            instance.node_count = len(self.initial_data.get('nodes_ids'))
+        if self.initial_data.get('nodes'):
+            instance.nodes = self.initial_data.get('nodes', instance.nodes)
+            instance.node_count = len(self.initial_data.get('nodes'))
 
         instance.is_current = validated_data.get('is_current',
                                                  instance.is_current)
