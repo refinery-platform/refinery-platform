@@ -31,7 +31,7 @@ from core.forms import (
     ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 )
 
-from data_set_manager.models import Node
+from data_set_manager.models import Node, Assay, Study
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
@@ -41,7 +41,7 @@ from core.models import (
     CustomRegistrationProfile)
 from core.serializers import WorkflowSerializer, NodeGroupSerializer
 from core.utils import (get_data_sets_annotations, get_anonymous_user,
-                        node_uuids_str_to_ids_list, get_id_from_uuid)
+                        node_uuids_str_to_ids_list)
 
 from xml.parsers.expat import ExpatError
 
@@ -1084,16 +1084,8 @@ class NodeGroups(APIView):
               type: boolean
               required: false
 
-            - name: nodes_uuids
-              description: Uuids of nodes in group
-              in: query
-              type: array
-              items:
-                type: string
-              required: false
-
-            - name: nodes_ids
-              description: ids of nodes in group
+            - name: nodes
+              description: uuids of nodes in group
               in: query
               type: array
               items:
@@ -1118,7 +1110,7 @@ class NodeGroups(APIView):
               type: boolean
               required: false
 
-            - name: nodes_uuids
+            - name: nodes
               description: Uuids of nodes in group
               in: form
               type: array
@@ -1126,13 +1118,6 @@ class NodeGroups(APIView):
                 type: string
               required: false
 
-            - name: nodes_ids
-              description: ids of nodes in group
-              in: form
-              type: array
-              items:
-                type: string
-              required: false
     ...
     """
 
@@ -1155,8 +1140,6 @@ class NodeGroups(APIView):
             node_group = self.get_object(request.query_params.get('uuid'))
         elif request.query_params.get('assay'):
             assay = request.query_params.get('assay')
-            if assay.index('-') > -1:
-                assay = get_id_from_uuid(assay, 'Assay')
             node_group = self.get_query_set(assay)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -1165,14 +1148,24 @@ class NodeGroups(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        # check if study uuid is passed
-        if request.data.get('study').index('-') > -1:
-            request.data['study'] = get_id_from_uuid(request.data.get(
-                'study'), 'Study')
-        # check if assay uuid is passed
-        if request.data.get('assay').index('-') > -1:
-            request.data['assay'] = get_id_from_uuid(request.data.get(
-                'assay'), 'Assay')
+
+        # Check if study object exists, grab pk and update request obj
+        try:
+            request.data['study'] = Study.objects.get(uuid=request.data.get(
+                'study')).id
+        except Study.DoesNotExist as e:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except Study.MultipleObjectsReturned as e:
+            return Response(e, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if assay object exists, grab pk and update request obj
+        try:
+            request.data['assay'] = Assay.objects.get(uuid=request.data.get(
+                'assay')).id
+        except Assay.DoesNotExist as e:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except Assay.MultipleObjectsReturned as e:
+            return Response(e, status=status.HTTP_400_BAD_REQUEST)
 
         # Node nodes_uuids are passed, update the nodes_ids field
         if request.data.get('nodes_uuids'):
@@ -1183,9 +1176,11 @@ class NodeGroups(APIView):
                 # Error occurred
                 return Response(nodes_ids.message)
             request.data['nodes_ids'] = nodes_ids
+
         serializer = NodeGroupSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors,
                         status=status.HTTP_400_BAD_REQUEST)
