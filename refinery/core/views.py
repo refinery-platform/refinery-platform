@@ -1137,13 +1137,14 @@ class NodeGroups(APIView):
         # Expects a uuid or assay uuid.
         if request.query_params.get('uuid'):
             node_group = self.get_object(request.query_params.get('uuid'))
+            serializer = NodeGroupSerializer(node_group)
         elif request.query_params.get('assay'):
             assay = request.query_params.get('assay')
             node_group = self.get_query_set(assay)
+            serializer = NodeGroupSerializer(node_group, many=True)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = NodeGroupSerializer(node_group, many=True)
         return Response(serializer.data)
 
     def post(self, request, format=None):
