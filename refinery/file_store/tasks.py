@@ -3,10 +3,12 @@ import os
 import stat
 import logging
 import requests
+from celery.exceptions import Ignore
 from requests.exceptions import ContentDecodingError
 
 from tempfile import NamedTemporaryFile
 from urlparse import urlparse
+import celery
 from celery.task import task
 
 from django.core.files import File
@@ -16,13 +18,6 @@ from .models import (FileStoreItem, get_temp_dir, file_path,
 
 
 logger = logging.getLogger(__name__)
-
-
-class ImportFileTaskError(Exception):
-    def __init__(self):
-        # Call the base class constructor with the parameters it needs
-        super(ImportFileTaskError, self).__init__(
-            "import_file task has failed")
 
 
 @task()
@@ -180,9 +175,10 @@ def import_file(uuid, refresh=False, file_size=0):
                 # is completed
                 tmpfile.close()
 
-                # Raise ImportFileTaskError which will be recognized by
-                # Celery, and properly fail this import_file task
-                raise ImportFileTaskError
+                import_file.update_state(state=celery.states.FAILURE)
+
+                # ignore the task so no other state is recorded
+                raise Ignore()
 
         logger.debug("Finished downloading from '%s'", item.source)
 
