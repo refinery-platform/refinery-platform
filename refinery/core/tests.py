@@ -1564,14 +1564,22 @@ class NodeGroupAPITests(APITestCase):
     def test_put_valid_uuid_and_valid_input(self):
         # valid uuid and valid input
         request = self.factory.put('%s/' % self.url_root,
-                                   {'uuid': self.valid_uuid,
+                                   {'uuid': self.node_group_2.uuid,
                                     'nodes': '%s, %s' % (self.node_1.uuid,
                                                          self.node_2.uuid),
-                                    'is_current': True
-                                    })
-        response = self.view(request, self.valid_uuid)
+                                    'is_current': True})
+        response = self.view(request, self.node_group_2.uuid)
         self.assertEqual(response.status_code, 202)
         self.assertItemsEqual(response.data.get('nodes'), self.nodes_list_uuid)
+
+    def test_put_valid_uuid_and_invalid_node(self):
+        # valid uuid but node invalid uuid
+        request = self.factory.put('%s/' % self.url_root,
+                                   {'uuid': self.node_group_2.uuid,
+                                    'nodes': self.invalid_uuid,
+                                    'is_current': True})
+        response = self.view(request, self.node_group_2.uuid)
+        self.assertEqual(response.status_code, 400)
 
     def test_put_invalid_uuid(self):
         # invalid_uuid
