@@ -3,7 +3,6 @@ import os
 import stat
 import logging
 import requests
-from celery.exceptions import Ignore
 from requests.exceptions import ContentDecodingError
 
 from tempfile import NamedTemporaryFile
@@ -178,7 +177,8 @@ def import_file(uuid, refresh=False, file_size=0):
                 import_file.update_state(state=celery.states.FAILURE)
 
                 # ignore the task so no other state is recorded
-                raise Ignore()
+                # See: http://stackoverflow.com/a/33143545
+                raise celery.exceptions.Ignore()
 
         logger.debug("Finished downloading from '%s'", item.source)
 
