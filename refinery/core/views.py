@@ -1127,9 +1127,9 @@ class NodeGroups(APIView):
                 NodeGroup.MultipleObjectsReturned) as e:
             raise Http404(e)
 
-    def get_query_set(self, assay_id):
+    def get_query_set(self, assay_uuid):
         try:
-            return NodeGroup.objects.filter(assay=assay_id)
+            return NodeGroup.objects.filter(assay=assay_uuid)
         except NodeGroup.DoesNotExist as e:
             raise Http404(e)
 
@@ -1140,8 +1140,8 @@ class NodeGroups(APIView):
             serializer = NodeGroupSerializer(node_group)
         elif request.query_params.get('assay'):
             assay = request.query_params.get('assay')
-            node_group = self.get_query_set(assay)
-            serializer = NodeGroupSerializer(node_group, many=True)
+            node_groups = self.get_query_set(assay)
+            serializer = NodeGroupSerializer(node_groups, many=True)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
