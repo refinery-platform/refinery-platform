@@ -1593,7 +1593,7 @@ class NodeGroupAPITests(APITestCase):
                                     'nodes': '%s, %s' % (self.node_1.uuid,
                                                          self.node_2.uuid),
                                     'is_current': True})
-        response = self.view(request, self.node_group_2.uuid)
+        response = self.view(request)
         self.assertEqual(response.status_code, 202)
         self.assertItemsEqual(response.data.get('nodes'), self.nodes_list_uuid)
 
@@ -1603,7 +1603,7 @@ class NodeGroupAPITests(APITestCase):
                                    {'uuid': self.node_group_2.uuid,
                                     'nodes': self.invalid_uuid,
                                     'is_current': True})
-        response = self.view(request, self.node_group_2.uuid)
+        response = self.view(request)
         self.assertEqual(response.status_code, 400)
 
     def test_put_invalid_uuid(self):
@@ -1611,7 +1611,7 @@ class NodeGroupAPITests(APITestCase):
         request = self.factory.put('%s/' % self.url_root,
                                    {'uuid': self.invalid_uuid}
                                    )
-        response = self.view(request, self.invalid_uuid)
+        response = self.view(request)
         self.assertEqual(response.status_code, 404)
 
     def test_put_invalid_format_uuid(self):
@@ -1619,7 +1619,7 @@ class NodeGroupAPITests(APITestCase):
         request = self.factory.put('%s/' % self.url_root,
                                    {'uuid': self.invalid_format_uuid}
                                    )
-        response = self.view(request, self.invalid_format_uuid)
+        response = self.view(request)
         self.assertEqual(response.status_code, 404)
 
 
