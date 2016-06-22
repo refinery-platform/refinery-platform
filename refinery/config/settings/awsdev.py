@@ -3,8 +3,8 @@
 # See https://github.com/parklab/refinery-platform/wiki/AWS for
 # more details.
 
-# Like prod, but overriding some things.
-from .prod import *  # NOQA
+# Like aws.py but importing from dev instead.
+from .dev import *  # NOQA
 
 EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
 EMAIL_HOST_USER = get_setting('EMAIL_HOST_USER')
