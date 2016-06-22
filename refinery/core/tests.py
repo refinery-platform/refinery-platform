@@ -1496,6 +1496,7 @@ class NodeGroupAPITests(APITestCase):
             name='Test Node Group 1'
         )
         self.nodes_list = [self.node_1, self.node_2]
+        self.nodes_list_uuid = [self.node_1.uuid, self.node_2.uuid]
         self.node_group.nodes.add(*self.nodes_list)
         self.node_group.node_count = len(self.nodes_list)
         self.node_group.save()
@@ -1559,6 +1560,18 @@ class NodeGroupAPITests(APITestCase):
                                       self.invalid_format_uuid))
         response = self.view(request, self.invalid_format_uuid)
         self.assertEqual(response.status_code, 404)
+
+    def test_put_valid_uuid_and_valid_input(self):
+        # valid uuid and valid input
+        request = self.factory.put('%s/' % self.url_root,
+                                   {'uuid': self.valid_uuid,
+                                    'nodes': '%s, %s' % (self.node_1.uuid,
+                                                         self.node_2.uuid),
+                                    'is_current': True
+                                    })
+        response = self.view(request, self.valid_uuid)
+        self.assertEqual(response.status_code, 202)
+        self.assertItemsEqual(response.data.get('nodes'), self.nodes_list_uuid)
 
 
 class UtilitiesTest(TestCase):
