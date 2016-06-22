@@ -1129,7 +1129,7 @@ class NodeGroups(APIView):
 
     def get_query_set(self, assay_uuid):
         try:
-            return NodeGroup.objects.filter(assay=assay_uuid)
+            return NodeGroup.objects.filter(assay__uuid=assay_uuid)
         except NodeGroup.DoesNotExist as e:
             raise Http404(e)
 
