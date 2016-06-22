@@ -1163,7 +1163,7 @@ class NodeGroups(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         node_group = self.get_object(uuid)
-        # Node nodes_uuids are passed, update the nodes_ids field
+        # A node string list is passed, so needs formatting to list
         if request.data.get('nodes'):
             nodes_uuids = request.data.get('nodes').replace(" ", "").split(',')
             request.data._mutable = True
