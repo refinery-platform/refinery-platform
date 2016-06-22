@@ -6,6 +6,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import unittest, timezone
 from django.test import TestCase
 
+from rest_framework.test import APIRequestFactory
+from rest_framework.test import APITestCase
 from guardian.shortcuts import assign_perm
 import mockcache as memcache
 from tastypie.test import ResourceTestCase
@@ -19,9 +21,11 @@ from core.models import (
     NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,
     ExtendedGroup, DataSet, InvestigationLink, Project,
     Analysis, Workflow, WorkflowEngine, UserProfile, invalidate_cached_object,
-    AnalysisNodeConnection)
-from file_store.models import FileStoreItem
+    AnalysisNodeConnection, NodeGroup)
 from core.utils import (get_aware_local_time)
+from core.views import NodeGroups
+from .serializers import NodeGroupSerializer
+from file_store.models import FileStoreItem
 from file_store.models import FileExtension
 
 from data_set_manager.models import (Study, Assay, Node, Investigation)
@@ -1456,6 +1460,114 @@ class AnalysisDeletionTest(unittest.TestCase):
         self.analysis_with_node_analyzed_further.delete()
         self.assertIsNotNone(Analysis.objects.get(
             name='analysis_with_node_analyzed_further'))
+
+
+class NodeGroupAPITests(APITestCase):
+
+    def setUp(self):
+        self.factory = APIRequestFactory()
+        investigation = Investigation.objects.create()
+        self.study = Study.objects.create(
+                file_name='test_filename123.txt',
+                title='Study Title Test',
+                investigation=investigation)
+        assay = {
+            'study': self.study,
+            'measurement': 'transcription factor binding site',
+            'measurement_accession': 'http://www.testurl.org/testID',
+            'measurement_source': 'OBI',
+            'technology': 'nucleotide sequencing',
+            'technology_accession': 'test info',
+            'technology_source': 'test source',
+            'platform': 'Genome Analyzer II',
+            'file_name': 'test_assay_filename.txt'
+        }
+        self.assay = Assay.objects.create(**assay)
+        self.node_1 = Node.objects.create(assay=self.assay,
+                                          study=self.study,
+                                          name='Node1')
+
+        self.node_2 = Node.objects.create(assay=self.assay,
+                                          study=self.study,
+                                          name='Node2')
+        self.node_group = NodeGroup.objects.create(
+            assay=self.assay,
+            study=self.study,
+            name='Test Node Group 1'
+        )
+        self.nodes_list = [self.node_1, self.node_2]
+        self.node_group.nodes.add(*self.nodes_list)
+        self.node_group.node_count = len(self.nodes_list)
+        self.node_group.save()
+
+        self.node_group_2 = NodeGroup.objects.create(
+            assay=self.assay,
+            study=self.study,
+            name='Test Node Group 2'
+        )
+        self.node_group_list = [self.node_group, self.node_group_2]
+        self.valid_uuid = self.node_group.uuid
+        self.url_root = '/api/v2/node_groups/'
+        self.view = NodeGroups.as_view()
+        self.invalid_uuid = "03b5f681-35d5-4bdd-bc7d-8552fa777ebc"
+        self.invalid_format_uuid = "xxxxxxxx"
+
+    def tearDown(self):
+        NodeGroup.objects.all().delete()
+        Node.objects.all().delete()
+        Assay.objects.all().delete()
+        Study.objects.all().delete()
+        Investigation.objects.all().delete()
+
+    def test_get_valid_uuid(self):
+        # valid_uuid
+        request = self.factory.get('%s/?uuid=%s' % (
+            self.url_root, self.valid_uuid))
+        response = self.view(request, self.valid_uuid)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data,
+                         NodeGroupSerializer(self.node_group).data)
+
+    def test_get_valid_assay_uuid(self):
+        # valid_assay_uuid
+        request = self.factory.get('%s/?assay=%s' % (
+            self.url_root, self.assay.uuid))
+        response = self.view(request, self.assay.uuid)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), len(self.node_group_list))
+        self.assertItemsEqual(response.data, NodeGroupSerializer(
+            self.node_group_list, many=True).data)
+
+    # def test_get_valid_study(self):
+    #     # valid_study_uuid
+    #     request = self.factory.get('%s/?study=%s' % (
+    #         self.url_root, self.study.uuid))
+    #     response = self.view(request, self.valid_uuid)
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertItemsEqual(response.data[0].keys(), self.assay.keys())
+    #     self.assertItemsEqual(response.data[0].values(), self.assay.values())
+    #
+    # def test_get_invalid_uuid(self):
+    #     # invalid_uuid
+    #     request = self.factory.get('%s/?uuid=%s' % (self.url_root,
+    #                                                 self.invalid_uuid))
+    #     response = self.view(request, self.invalid_uuid)
+    #     self.assertEqual(response.status_code, 404)
+    #
+    # def test_get_invalid_study_uuid(self):
+    #     # invalid_study_uuid
+    #     request = self.factory.get('%s/?study=%s' % (self.url_root,
+    #                                                  self.invalid_uuid))
+    #     response = self.view(request, self.invalid_uuid)
+    #     self.assertEqual(response.status_code, 404)
+    #
+    # def test_get_invalid_format_uuid(self):
+    #     # invalid_format_uuid
+    #     request = self.factory.get('%s/?uuid=%s'
+    #                                % (self.url_root,
+    #                                   self.invalid_format_uuid))
+    #     response = self.view(request, self.invalid_format_uuid)
+    #     self.assertEqual(response.status_code, 404)
 
 
 class UtilitiesTest(TestCase):
