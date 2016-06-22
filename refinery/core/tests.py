@@ -1573,6 +1573,22 @@ class NodeGroupAPITests(APITestCase):
         self.assertEqual(response.status_code, 202)
         self.assertItemsEqual(response.data.get('nodes'), self.nodes_list_uuid)
 
+    def test_put_invalid_uuid(self):
+        # invalid_uuid
+        request = self.factory.put('%s/' % self.url_root,
+                                   {'uuid': self.invalid_uuid}
+                                   )
+        response = self.view(request, self.invalid_uuid)
+        self.assertEqual(response.status_code, 404)
+
+    def test_put_invalid_format_uuid(self):
+        # invalid_format_uuid
+        request = self.factory.put('%s/' % self.url_root,
+                                   {'uuid': self.invalid_format_uuid}
+                                   )
+        response = self.view(request, self.invalid_format_uuid)
+        self.assertEqual(response.status_code, 404)
+
 
 class UtilitiesTest(TestCase):
     def test_get_aware_local_time(self):
