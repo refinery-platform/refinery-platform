@@ -1,13 +1,15 @@
+
 import os
 import stat
 import logging
 import requests
+from requests.exceptions import ContentDecodingError
+
 from tempfile import NamedTemporaryFile
 from urlparse import urlparse
-
 from celery.task import task
+
 from django.core.files import File
-from requests.exceptions import ContentDecodingError
 
 from .models import (FileStoreItem, get_temp_dir, file_path,
                      FILE_STORE_BASE_DIR)
