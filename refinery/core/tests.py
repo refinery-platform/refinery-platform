@@ -1576,6 +1576,16 @@ class NodeGroupAPITests(APITestCase):
                          len(self.nodes_list_uuid))
         self.assertItemsEqual(response.data.get('nodes'), self.nodes_list_uuid)
 
+    def test_post_invalid_form(self):
+        # invalid form
+        new_node_group = {'name': 'Test Group3',
+                          'assay': self.assay.uuid,
+                          'study': self.study.uuid,
+                          'nodes': '%s' % self.invalid_uuid}
+        request = self.factory.post('%s/' % self.url_root, new_node_group)
+        response = self.view(request)
+        self.assertEqual(response.status_code, 400)
+
     def test_put_valid_uuid_and_valid_input(self):
         # valid uuid and valid input
         request = self.factory.put('%s/' % self.url_root,
