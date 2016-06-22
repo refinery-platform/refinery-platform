@@ -1538,36 +1538,27 @@ class NodeGroupAPITests(APITestCase):
         self.assertItemsEqual(response.data, NodeGroupSerializer(
             self.node_group_list, many=True).data)
 
-    # def test_get_valid_study(self):
-    #     # valid_study_uuid
-    #     request = self.factory.get('%s/?study=%s' % (
-    #         self.url_root, self.study.uuid))
-    #     response = self.view(request, self.valid_uuid)
-    #     self.assertEqual(response.status_code, 200)
-    #     self.assertItemsEqual(response.data[0].keys(), self.assay.keys())
-    #     self.assertItemsEqual(response.data[0].values(), self.assay.values())
-    #
-    # def test_get_invalid_uuid(self):
-    #     # invalid_uuid
-    #     request = self.factory.get('%s/?uuid=%s' % (self.url_root,
-    #                                                 self.invalid_uuid))
-    #     response = self.view(request, self.invalid_uuid)
-    #     self.assertEqual(response.status_code, 404)
-    #
-    # def test_get_invalid_study_uuid(self):
-    #     # invalid_study_uuid
-    #     request = self.factory.get('%s/?study=%s' % (self.url_root,
-    #                                                  self.invalid_uuid))
-    #     response = self.view(request, self.invalid_uuid)
-    #     self.assertEqual(response.status_code, 404)
-    #
-    # def test_get_invalid_format_uuid(self):
-    #     # invalid_format_uuid
-    #     request = self.factory.get('%s/?uuid=%s'
-    #                                % (self.url_root,
-    #                                   self.invalid_format_uuid))
-    #     response = self.view(request, self.invalid_format_uuid)
-    #     self.assertEqual(response.status_code, 404)
+    def test_get_invalid_uuid(self):
+        # invalid_uuid
+        request = self.factory.get('%s/?uuid=%s' % (self.url_root,
+                                                    self.invalid_uuid))
+        response = self.view(request, self.invalid_uuid)
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_invalid_assay_uuid(self):
+        # invalid_assay_uuid
+        request = self.factory.get('%s/?assay=%s' % (self.url_root,
+                                                     self.invalid_uuid))
+        response = self.view(request, self.invalid_uuid)
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_invalid_format_uuid(self):
+        # invalid_format_uuid
+        request = self.factory.get('%s/?uuid=%s'
+                                   % (self.url_root,
+                                      self.invalid_format_uuid))
+        response = self.view(request, self.invalid_format_uuid)
+        self.assertEqual(response.status_code, 404)
 
 
 class UtilitiesTest(TestCase):
