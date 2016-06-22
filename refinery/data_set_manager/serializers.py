@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import AttributeOrder, Assay, Study
+from .models import AttributeOrder, Assay
 
 
 class AssaySerializer(serializers.ModelSerializer):
@@ -35,10 +35,3 @@ class AttributeOrderSerializer(serializers.ModelSerializer):
                                                 instance.is_active)
         instance.save()
         return instance
-
-
-class StudySerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Study
-        fields = ('uuid', 'investigation', 'title', 'file_name')
