@@ -91,11 +91,10 @@ def run_analysis(analysis_uuid):
     # check if all files were successfully imported into Refinery
     refinery_import = TaskSetResult.restore(
             analysis_status.refinery_import_task_group_id)
-
     if not refinery_import.ready():
         logger.debug("Input file import pending for analysis '%s'", analysis)
         run_analysis.retry(countdown=RETRY_INTERVAL)
-    elif refinery_import.failed():
+    elif not refinery_import.successful():
         logger.error("Analysis '%s' failed during file import", analysis)
         analysis.set_status(Analysis.FAILURE_STATUS)
         analysis.send_email()
