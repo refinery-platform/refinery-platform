@@ -9,41 +9,35 @@ angular
         {},
         {
           get: {
-            method: 'GET'
+            method: 'GET',
+            params: {
+              uuid: 'uuid'
+            }
           },
-          params: {
-            uuid: 'uuid'
-          }
-        },
-        {
           query: {
             method: 'GET',
-            isArray: true
+            isArray: true,
+            params: {
+              assay: 'assay'
+            }
           },
-          params: {
-            assay: 'assay'
-          }
-        },
-        {
           update: {
-            method: 'PUT'
+            method: 'PUT',
+            params: {
+              uuid: 'uuid',
+              nodes: 'nodes',
+              is_current: 'is_current'
+            }
           },
-          params: {
-            uuid: 'uuid',
-            nodes: 'nodes',
-            is_current: 'is_current'
-          }
-        },
-        {
           save: {
-            method: 'POST'
-          },
-          params: {
-            name: 'name',
-            study: 'study',
-            assay: 'assay',
-            nodes: 'nodes',
-            is_current: 'is_current'
+            method: 'POST',
+            params: {
+              name: 'name',
+              study: 'study',
+              assay: 'assay',
+              nodes: 'nodes',
+              is_current: 'is_current'
+            }
           }
         }
       );
