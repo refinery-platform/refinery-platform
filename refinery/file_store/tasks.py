@@ -174,8 +174,6 @@ def import_file(uuid, refresh=False, file_size=0):
                 # is completed
                 tmpfile.close()
 
-                import_file.update_state(state=celery.states.FAILURE)
-
                 # ignore the task so no other state is recorded
                 # See: http://stackoverflow.com/a/33143545
                 raise celery.exceptions.Ignore()
