@@ -78,6 +78,9 @@ RDS_SUPERUSER_PASSWORD: "mypassword"
 # The name of the PostgreSQL role to create.
 RDS_ROLE: "refinery"
 
+#List of github usernames to allow ssh access into the Refinery instance
+#SSH_USERS: <username_0> <username_1> ...
+
 # == Not changeable ==
 
 # These things that might become configurable later.
