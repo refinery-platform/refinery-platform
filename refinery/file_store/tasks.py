@@ -169,11 +169,6 @@ def import_file(uuid, refresh=False, file_size=0):
                 # upon a `close()`
                 tmpfile.delete = True
 
-                # Close the file here even though we are utilizing the
-                # "with" keyword since the return happens before the "with"
-                # is completed
-                tmpfile.close()
-
                 # ignore the task so no other state is recorded
                 # See: http://stackoverflow.com/a/33143545
                 raise celery.exceptions.Ignore()
