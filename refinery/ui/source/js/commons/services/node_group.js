@@ -8,11 +8,19 @@ angular
         settings.appRoot + settings.refineryApiV2 + '/node_group/',
         {},
         {
-          query: {
+          get: {
             method: 'GET'
           },
           params: {
-            uuid: 'uuid',
+            uuid: 'uuid'
+          }
+        },
+        {
+          query: {
+            method: 'GET',
+            isArray: true
+          },
+          params: {
             assay: 'assay'
           }
         },
