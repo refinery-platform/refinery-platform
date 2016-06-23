@@ -1,13 +1,15 @@
+
 import os
 import stat
 import logging
 import requests
+from requests.exceptions import ContentDecodingError
+
 from tempfile import NamedTemporaryFile
 from urlparse import urlparse
-
 import celery
-import zlib
 from celery.task import task
+
 from django.core.files import File
 
 from .models import (FileStoreItem, get_temp_dir, file_path,
@@ -122,75 +124,54 @@ def import_file(uuid, refresh=False, file_size=0):
             )
             logger.debug("Downloading from '%s'", item.source)
             # download and save the file
-            download_failure = False
+            import_failure = False
             local_file_size = 0
             block_size = 10 * 1024 * 1024  # 10MB
-            for buf in response.iter_content(block_size):
-                local_file_size += len(buf)
 
-                # Check if there any content-encoding going on and decompress
-                # accordingly
+            try:
+                for buf in response.iter_content(block_size):
+                    local_file_size += len(buf)
 
-                encoding_header = response.headers.get('content-encoding')
+                    try:
+                        tmpfile.write(buf)
+                    except IOError as exc:
+                        # e.g., [Errno 28] No space left on device
+                        logger.error("Error downloading from '%s': %s",
+                                     item.source, exc)
+                        import_failure = True
+                        break
 
-                # Choose the correct `wbits` based on the type of encoding
-                # See: http://stackoverflow.com/a/22311297
-                try:
-                    if encoding_header == "deflate":
-                        buf = zlib.decompress(buf, -zlib.MAX_WBITS)
-                    elif encoding_header == "gzip":
-                        buf = zlib.decompress(buf, zlib.MAX_WBITS | 16)
-                    elif encoding_header == "zlib":
-                        buf = zlib.decompress(buf, zlib.MAX_WBITS)
-                except zlib.error as exc:
-                    # 'exc' here has been observed to be:
-                    # Error -3 while decompressing data: incorrect header check
-                    # This occurs when a webserver is misconfigured and
-                    # provides a `content-encoding` header without the data
-                    # itself being encoded
-                    logger.error(
-                        "Error while decompressing data from '%s': %s",
-                        item.source, exc)
-                    import_file.update_state(state=celery.states.FAILURE)
-                    download_failure = True
-                    break
+                    # check if we have a sane value for file size
+                    if remote_file_size > 0:
+                        percent_done = local_file_size * 100. / \
+                                       remote_file_size
+                    else:
+                        percent_done = 0
 
-                try:
-                    tmpfile.write(buf)
-                except IOError as exc:
-                    # e.g., [Errno 28] No space left on device
-                    logger.error("Error downloading from '%s': %s",
-                                 item.source, exc)
-                    import_file.update_state(state=celery.states.FAILURE)
-                    download_failure = True
-                    break
-                # check if we have a sane value for file size
-                if remote_file_size > 0:
-                    percent_done = local_file_size * 100. / remote_file_size
-                else:
-                    percent_done = 0
-                import_file.update_state(
-                    state="PROGRESS",
-                    meta={
-                        "percent_done": "{:.0f}".format(percent_done),
-                        "current": local_file_size,
-                        "total": remote_file_size
-                    })
+                    import_file.update_state(
+                        state="PROGRESS",
+                        meta={
+                            "percent_done": "{:.0f}".format(percent_done),
+                            "current": local_file_size,
+                            "total": remote_file_size
+                        })
 
-            # delete temp. file if download failed
-            if download_failure:
-                logger.debug("File import has failed. Deleting temporary "
-                             "File...")
+            except ContentDecodingError as e:
+                logger.error("Error while decoding response content:%s" % e)
+                import_failure = True
+
+            if import_failure:
+                # delete temp. file if download failed
+                logger.error("File import task has failed. Deleting "
+                             "temporary file...")
 
                 # Setting the tempfile's delete == True deletes the file
                 # upon a `close()`
                 tmpfile.delete = True
 
-                # Close the file here even though we are utilizing the
-                # "with" keyword since the return happens before the "with"
-                # is completed
-                tmpfile.close()
-                return
+                # ignore the task so no other state is recorded
+                # See: http://stackoverflow.com/a/33143545
+                raise celery.exceptions.Ignore()
 
         logger.debug("Finished downloading from '%s'", item.source)
 
