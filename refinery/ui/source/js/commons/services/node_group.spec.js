@@ -148,5 +148,50 @@ describe('Common.service.node_group: unit tests', function () {
         expect(putResponse[fieldName]).toEqual(results[fieldName]);
       });
     });
+
+    it('save should return a resolving promise', function () {
+      var postParams = {
+        name: 'Test Node Group 1',
+        study: '8486046b-22f4-447f-9c81-41dbf6173c44',
+        assay: '2a3c4155-db7b-4138-afcb-67ad1cc04d51',
+        is_current: false,
+        nodes: [
+          '910117c5-fda2-4700-ae87-dc897f3a5d85',
+          '1a50204d-49fa-4082-a708-26ee93fb0f86',
+          '32e977fc-b906-4315-b6ed-6a644d173492'
+        ]
+      };
+      var postResponse = {
+        uuid: '6b0d1b79-8f5d-4ae7-a874-f4d8b6746dcd',
+        node_count: 3,
+        is_implicit: false,
+        study: '8486046b-22f4-447f-9c81-41dbf6173c44',
+        assay: '2a3c4155-db7b-4138-afcb-67ad1cc04d51',
+        is_current: false,
+        nodes: [
+          '910117c5-fda2-4700-ae87-dc897f3a5d85',
+          '1a50204d-49fa-4082-a708-26ee93fb0f86',
+          '32e977fc-b906-4315-b6ed-6a644d173492'
+        ],
+        name: 'Test Node Group 1'
+      };
+      $httpBackend
+        .expectPOST(
+          settings.appRoot +
+          settings.refineryApiV2 + '/node_group/',
+          postParams
+        ).respond(200, postResponse);
+
+      var results;
+      var promise = service.save(postParams).$promise.then(function (response) {
+        results = response;
+      });
+      expect(typeof promise.then).toEqual('function');
+      $httpBackend.flush();
+      $rootScope.$digest();
+      angular.forEach(postResponse, function (value, fieldName) {
+        expect(postResponse[fieldName]).toEqual(results[fieldName]);
+      });
+    });
   });
 });
