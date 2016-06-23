@@ -2,6 +2,7 @@
 
 function fileBrowserFactory (
   assayFileService,
+  nodeGroupService,
   nodeService,
   assayAttributeService,
   $window,
@@ -14,6 +15,7 @@ function fileBrowserFactory (
   var assayFilesTotalItems = {};
   var nodeCount = { value: 0 };
   var nodeUrl = {};
+  var nodeGroupList = [];
   var csrfToken = $window.csrf_token;
   // Helper function encodes field array in an obj
   var encodeAttributeFields = function (attributeObj) {
@@ -68,6 +70,18 @@ function fileBrowserFactory (
       nodeUrl = response.file_url;
     });
     return nodeFile.$promise;
+  };
+
+  var getNodeGroupList = function (assayUuid) {
+    var params = {
+      assay: assayUuid
+    };
+
+    var nodeGroups = nodeGroupService.query(params);
+    nodeGroups.$promise.then(function (response) {
+      angular.copy(response, nodeGroupList);
+    });
+    return nodeGroups.$promise;
   };
 
   // Adds the file_url to the assay files array
@@ -185,9 +199,11 @@ function fileBrowserFactory (
     analysisFilter: analysisFilter,
     assayFilesTotalItems: assayFilesTotalItems,
     nodeCount: nodeCount,
+    nodeGroupList: nodeGroupList,
     getAssayFiles: getAssayFiles,
     getAssayAttributeOrder: getAssayAttributeOrder,
-    postAssayAttributeOrder: postAssayAttributeOrder
+    postAssayAttributeOrder: postAssayAttributeOrder,
+    getNodeGroupList: getNodeGroupList
   };
 }
 
@@ -195,6 +211,7 @@ angular
   .module('refineryFileBrowser')
   .factory('fileBrowserFactory', [
     'assayFileService',
+    'nodeGroupService',
     'nodeService',
     'assayAttributeService',
     '$window',
