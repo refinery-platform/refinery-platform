@@ -6,6 +6,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import unittest, timezone
 from django.test import TestCase
 
+from rest_framework.test import APIRequestFactory
+from rest_framework.test import APITestCase
 from guardian.shortcuts import assign_perm
 import mockcache as memcache
 from tastypie.test import ResourceTestCase
@@ -17,16 +19,16 @@ from core.management.commands.create_public_group import create_public_group
 
 from core.models import (
     NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,
-    ExtendedGroup, DataSet, InvestigationLink, Project, Analysis, Workflow,
-    WorkflowEngine, UserProfile, invalidate_cached_object,
-    AnalysisNodeConnection, Node)
-
+    ExtendedGroup, DataSet, InvestigationLink, Project,
+    Analysis, Workflow, WorkflowEngine, UserProfile, invalidate_cached_object,
+    AnalysisNodeConnection, NodeGroup)
+from core.utils import (get_aware_local_time)
+from core.views import NodeGroups
+from .serializers import NodeGroupSerializer
 from file_store.models import FileStoreItem
-
-from core.utils import get_aware_local_time
 from file_store.models import FileExtension
 
-import data_set_manager
+from data_set_manager.models import (Study, Assay, Node, Investigation)
 from galaxy_connector.models import Instance
 
 cache = memcache.Client(["127.0.0.1:11211"])
@@ -72,11 +74,9 @@ class NodeSetTest(unittest.TestCase):
     """Test all NodeSet operations"""
 
     def setUp(self):
-        self.investigation = \
-            data_set_manager.models.Investigation.objects.create()
-        self.study = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation)
-        self.assay = data_set_manager.models.Assay.objects.create(
+        self.investigation = Investigation.objects.create()
+        self.study = Study.objects.create(investigation=self.investigation)
+        self.assay = Assay.objects.create(
             study=self.study)
         self.query = json.dumps({
             "facets": {
@@ -167,8 +167,7 @@ class NodeSetTest(unittest.TestCase):
         """Test updating NodeSet study"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
                                          assay=self.assay)
-        new_study = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation)
+        new_study = Study.objects.create(investigation=self.investigation)
         update_nodeset(uuid=nodeset.uuid, study=new_study)
         self.assertEqual(
             NodeSet.objects.get(uuid=nodeset.uuid).study, new_study
@@ -178,8 +177,7 @@ class NodeSetTest(unittest.TestCase):
         """Test updating NodeSet assay"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
                                          assay=self.assay)
-        new_assay = data_set_manager.models.Assay.objects.create(
-            study=self.study)
+        new_assay = Assay.objects.create(study=self.study)
         update_nodeset(uuid=nodeset.uuid, assay=new_assay)
         self.assertEqual(
             NodeSet.objects.get(uuid=nodeset.uuid).assay, new_assay
@@ -226,18 +224,12 @@ class NodeSetResourceTest(ResourceTestCase):
 
     def setUp(self):
         super(NodeSetResourceTest, self).setUp()
-        self.investigation = \
-            data_set_manager.models.Investigation.objects.create()
-        self.study = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation)
-        self.assay = data_set_manager.models.Assay.objects.create(
-            study=self.study)
-        self.investigation2 = \
-            data_set_manager.models.Investigation.objects.create()
-        self.study2 = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation)
-        self.assay2 = data_set_manager.models.Assay.objects.create(
-            study=self.study2)
+        self.investigation = Investigation.objects.create()
+        self.study = Study.objects.create(investigation=self.investigation)
+        self.assay = Assay.objects.create(study=self.study)
+        self.investigation2 = Investigation.objects.create()
+        self.study2 = Study.objects.create(investigation=self.investigation)
+        self.assay2 = Assay.objects.create(study=self.study2)
         self.query = {
             "facets": {
                 "platform_Characteristics_10_5_s": [],
@@ -592,22 +584,12 @@ class NodeSetListResourceTest(ResourceTestCase):
 
     def setUp(self):
         super(NodeSetListResourceTest, self).setUp()
-        self.investigation = \
-            data_set_manager.models.Investigation.objects.create()
-        self.study = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation
-        )
-        self.assay = data_set_manager.models.Assay.objects.create(
-            study=self.study
-        )
-        self.investigation2 = \
-            data_set_manager.models.Investigation.objects.create()
-        self.study2 = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation
-        )
-        self.assay2 = data_set_manager.models.Assay.objects.create(
-            study=self.study2
-        )
+        self.investigation = Investigation.objects.create()
+        self.study = Study.objects.create(investigation=self.investigation)
+        self.assay = Assay.objects.create(study=self.study)
+        self.investigation2 = Investigation.objects.create()
+        self.study2 = Study.objects.create(investigation=self.investigation)
+        self.assay2 = Assay.objects.create(study=self.study2)
         self.query = {
             "facets": {
                 "platform_Characteristics_10_5_s": [],
@@ -1285,8 +1267,7 @@ class DataSetDeletionTest(unittest.TestCase):
                 'test_file.txt',
                 'Coffee is delicious!')
         )
-        self.investigation = \
-            data_set_manager.models.Investigation.objects.create(
+        self.investigation = Investigation.objects.create(
                 isarchive_file=self.isa_archive_file.uuid,
                 pre_isarchive_file=self.pre_isa_archive_file.uuid
             )
@@ -1326,9 +1307,9 @@ class DataSetDeletionTest(unittest.TestCase):
         UserProfile.objects.all().delete()
         Node.objects.all().delete()
         FileStoreItem.objects.all().delete()
-        data_set_manager.models.Study.objects.all().delete()
-        data_set_manager.models.Assay.objects.all().delete()
-        data_set_manager.models.Investigation.objects.all().delete()
+        Study.objects.all().delete()
+        Assay.objects.all().delete()
+        Investigation.objects.all().delete()
         AnalysisNodeConnection.objects.all().delete()
         InvestigationLink.objects.all().delete()
 
@@ -1413,26 +1394,20 @@ class AnalysisDeletionTest(unittest.TestCase):
         self.analysis_with_node_analyzed_further.set_owner(self.user)
 
         # Create Investigation/InvestigationLinks for the DataSets
-        self.investigation = \
-            data_set_manager.models.Investigation.objects.create()
+        self.investigation = Investigation.objects.create()
         self.investigation_link = InvestigationLink.objects.create(
             investigation=self.investigation,
             data_set=self.dataset_with_analysis)
-        self.investigation1 = \
-            data_set_manager.models.Investigation.objects.create()
+        self.investigation1 = Investigation.objects.create()
         self.investigation_link1 = InvestigationLink.objects.create(
             investigation=self.investigation1,
             data_set=self.dataset_with_analysis1)
 
         # Create Studys and Assays
-        self.study = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation)
-        self.assay = data_set_manager.models.Assay.objects.create(
-            study=self.study)
-        self.study1 = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation1)
-        self.assay1 = data_set_manager.models.Assay.objects.create(
-            study=self.study1)
+        self.study = Study.objects.create(investigation=self.investigation)
+        self.assay = Assay.objects.create(study=self.study)
+        self.study1 = Study.objects.create(investigation=self.investigation1)
+        self.assay1 = Assay.objects.create(study=self.study1)
 
         # Create Nodes
         self.node = Node.objects.create(assay=self.assay, study=self.study,
@@ -1463,9 +1438,9 @@ class AnalysisDeletionTest(unittest.TestCase):
         Analysis.objects.all().delete()
         UserProfile.objects.all().delete()
         Node.objects.all().delete()
-        data_set_manager.models.Study.objects.all().delete()
-        data_set_manager.models.Assay.objects.all().delete()
-        data_set_manager.models.Investigation.objects.all().delete()
+        Study.objects.all().delete()
+        Assay.objects.all().delete()
+        Investigation.objects.all().delete()
         AnalysisNodeConnection.objects.all().delete()
         InvestigationLink.objects.all().delete()
 
@@ -1485,6 +1460,167 @@ class AnalysisDeletionTest(unittest.TestCase):
         self.analysis_with_node_analyzed_further.delete()
         self.assertIsNotNone(Analysis.objects.get(
             name='analysis_with_node_analyzed_further'))
+
+
+class NodeGroupAPITests(APITestCase):
+
+    def setUp(self):
+        self.factory = APIRequestFactory()
+        investigation = Investigation.objects.create()
+        self.study = Study.objects.create(
+                file_name='test_filename123.txt',
+                title='Study Title Test',
+                investigation=investigation)
+        assay = {
+            'study': self.study,
+            'measurement': 'transcription factor binding site',
+            'measurement_accession': 'http://www.testurl.org/testID',
+            'measurement_source': 'OBI',
+            'technology': 'nucleotide sequencing',
+            'technology_accession': 'test info',
+            'technology_source': 'test source',
+            'platform': 'Genome Analyzer II',
+            'file_name': 'test_assay_filename.txt'
+        }
+        self.assay = Assay.objects.create(**assay)
+        self.node_1 = Node.objects.create(assay=self.assay,
+                                          study=self.study,
+                                          name='Node1')
+
+        self.node_2 = Node.objects.create(assay=self.assay,
+                                          study=self.study,
+                                          name='Node2')
+        self.node_group = NodeGroup.objects.create(
+            assay=self.assay,
+            study=self.study,
+            name='Test Node Group 1'
+        )
+        self.nodes_list = [self.node_1, self.node_2]
+        self.nodes_list_uuid = [self.node_1.uuid, self.node_2.uuid]
+        self.node_group.nodes.add(*self.nodes_list)
+        self.node_group.node_count = len(self.nodes_list)
+        self.node_group.save()
+
+        self.node_group_2 = NodeGroup.objects.create(
+            assay=self.assay,
+            study=self.study,
+            name='Test Node Group 2'
+        )
+        self.node_group_list = [self.node_group, self.node_group_2]
+        self.valid_uuid = self.node_group.uuid
+        self.url_root = '/api/v2/node_groups/'
+        self.view = NodeGroups.as_view()
+        self.invalid_uuid = "03b5f681-35d5-4bdd-bc7d-8552fa777ebc"
+        self.invalid_format_uuid = "xxxxxxxx"
+
+    def tearDown(self):
+        NodeGroup.objects.all().delete()
+        Node.objects.all().delete()
+        Assay.objects.all().delete()
+        Study.objects.all().delete()
+        Investigation.objects.all().delete()
+
+    def test_get_valid_uuid(self):
+        # valid_uuid
+        request = self.factory.get('%s/?uuid=%s' % (
+            self.url_root, self.valid_uuid))
+        response = self.view(request, self.valid_uuid)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data,
+                         NodeGroupSerializer(self.node_group).data)
+
+    def test_get_valid_assay_uuid(self):
+        # valid_assay_uuid
+        request = self.factory.get('%s/?assay=%s' % (
+            self.url_root, self.assay.uuid))
+        response = self.view(request, self.assay.uuid)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), len(self.node_group_list))
+        self.assertItemsEqual(response.data, NodeGroupSerializer(
+            self.node_group_list, many=True).data)
+
+    def test_get_invalid_uuid(self):
+        # invalid_uuid
+        request = self.factory.get('%s/?uuid=%s' % (self.url_root,
+                                                    self.invalid_uuid))
+        response = self.view(request, self.invalid_uuid)
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_invalid_assay_uuid(self):
+        # invalid_assay_uuid
+        request = self.factory.get('%s/?assay=%s' % (self.url_root,
+                                                     self.invalid_uuid))
+        response = self.view(request, self.invalid_uuid)
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_invalid_format_uuid(self):
+        # invalid_format_uuid
+        request = self.factory.get('%s/?uuid=%s'
+                                   % (self.url_root,
+                                      self.invalid_format_uuid))
+        response = self.view(request, self.invalid_format_uuid)
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_valid_form(self):
+        # valid form
+        new_node_group = {'name': 'Test Group3',
+                          'assay': self.assay.uuid,
+                          'study': self.study.uuid,
+                          'nodes': '%s, %s' % (self.node_1.uuid,
+                                               self.node_2.uuid)}
+        request = self.factory.post('%s/' % self.url_root, new_node_group)
+        response = self.view(request)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data.get('name'), new_node_group.get('name'))
+        self.assertEqual(response.data.get('node_count'),
+                         len(self.nodes_list_uuid))
+        self.assertItemsEqual(response.data.get('nodes'), self.nodes_list_uuid)
+
+    def test_post_invalid_form(self):
+        # invalid form
+        new_node_group = {'name': 'Test Group3',
+                          'assay': self.assay.uuid,
+                          'study': self.study.uuid,
+                          'nodes': '%s' % self.invalid_uuid}
+        request = self.factory.post('%s/' % self.url_root, new_node_group)
+        response = self.view(request)
+        self.assertEqual(response.status_code, 400)
+
+    def test_put_valid_uuid_and_valid_input(self):
+        # valid uuid and valid input
+        request = self.factory.put('%s/' % self.url_root,
+                                   {'uuid': self.node_group_2.uuid,
+                                    'nodes': '%s, %s' % (self.node_1.uuid,
+                                                         self.node_2.uuid),
+                                    'is_current': True})
+        response = self.view(request)
+        self.assertEqual(response.status_code, 202)
+        self.assertItemsEqual(response.data.get('nodes'), self.nodes_list_uuid)
+
+    def test_put_valid_uuid_and_invalid_node(self):
+        # valid uuid but node invalid uuid
+        request = self.factory.put('%s/' % self.url_root,
+                                   {'uuid': self.node_group_2.uuid,
+                                    'nodes': self.invalid_uuid,
+                                    'is_current': True})
+        response = self.view(request)
+        self.assertEqual(response.status_code, 400)
+
+    def test_put_invalid_uuid(self):
+        # invalid_uuid
+        request = self.factory.put('%s/' % self.url_root,
+                                   {'uuid': self.invalid_uuid}
+                                   )
+        response = self.view(request)
+        self.assertEqual(response.status_code, 404)
+
+    def test_put_invalid_format_uuid(self):
+        # invalid_format_uuid
+        request = self.factory.put('%s/' % self.url_root,
+                                   {'uuid': self.invalid_format_uuid}
+                                   )
+        response = self.view(request)
+        self.assertEqual(response.status_code, 404)
 
 
 class UtilitiesTest(TestCase):

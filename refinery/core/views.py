@@ -14,6 +14,7 @@ from django.contrib.sites.models import RequestSite
 from django.core.urlresolvers import reverse
 from django.http import (
     HttpResponse, HttpResponseForbidden, HttpResponseRedirect)
+from django.http import Http404
 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext, loader
@@ -23,19 +24,23 @@ from registration import signals
 from guardian.shortcuts import get_perms
 import requests
 from rest_framework import viewsets
-from data_set_manager.models import Node
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 from core.forms import (
     ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 )
-from core.models import (
-    ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
-    Analysis, Invitation, Ontology,
-    CustomRegistrationProfile)
+
+from data_set_manager.models import Node
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
-from core.utils import get_data_sets_annotations, get_anonymous_user
-from core.serializers import WorkflowSerializer
+from core.models import (
+    ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
+    Analysis, Invitation, Ontology, NodeGroup,
+    CustomRegistrationProfile)
+from core.serializers import WorkflowSerializer, NodeGroupSerializer
+from core.utils import (get_data_sets_annotations, get_anonymous_user)
 
 from xml.parsers.expat import ExpatError
 
@@ -1027,3 +1032,146 @@ class CustomRegistrationView(RegistrationView):
 
         """
         return ('registration_complete', (), {})
+
+
+class NodeGroups(APIView):
+    """
+    Return NodeGroups object
+
+    ---
+    #YAML
+
+    GET:
+        serializer: NodeGroupSerializer
+        omit_serializer: false
+
+        parameters:
+            - name: uuid
+              description: NodeGroup uuid
+              paramType: query
+              type: string
+              required: false
+
+            - name: assay
+              description: Assay uuid or ids
+              paramType: query
+              type: string
+
+    POST:
+        parameters:
+            - name: name
+              description: Name of node group
+              in: query
+              type: string
+              required: true
+
+            - name: study
+              description: Study uuid or ids
+              in: query
+              type: string
+              required: true
+
+            - name: assay
+              description: Assay uuid or ids
+              in: query
+              type: string
+              required: true
+
+            - name: is_current
+              description: The "current selection" node set for the study/assay
+              in: query
+              type: boolean
+              required: false
+
+            - name: nodes
+              description: uuids of nodes in group
+              in: query
+              type: array
+              items:
+                type: string
+              required: false
+
+    PUT:
+        parameters_strategy:
+        form: replace
+        query: merge
+
+        parameters:
+            - name: uuid
+              description: Node Group Uuid
+              in: form
+              type: string
+              required: true
+
+            - name: is_current
+              description: The "current selection" node set for the study/assay
+              in: form
+              type: boolean
+              required: false
+
+            - name: nodes
+              description: Uuids of nodes in group
+              in: form
+              type: array
+              items:
+                type: string
+              required: false
+
+    ...
+    """
+
+    def get_object(self, uuid):
+        try:
+            return NodeGroup.objects.get(uuid=uuid)
+        except (NodeGroup.DoesNotExist,
+                NodeGroup.MultipleObjectsReturned) as e:
+            raise Http404(e)
+
+    def get(self, request, format=None):
+        # Expects a uuid or assay uuid.
+        if request.query_params.get('uuid'):
+            node_group = self.get_object(request.query_params.get('uuid'))
+            serializer = NodeGroupSerializer(node_group)
+        elif request.query_params.get('assay'):
+            assay_uuid = request.query_params.get('assay')
+            node_groups = NodeGroup.objects.filter(assay__uuid=assay_uuid)
+            # If filter returns empty response
+            if not node_groups:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+            serializer = NodeGroupSerializer(node_groups, many=True)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        # A node string list is passed, so needs formatting to list
+        if request.data.get('nodes'):
+            nodes_uuids = request.data.get('nodes').replace(" ", "").split(',')
+            request.data.setlist('nodes', nodes_uuids)
+
+        serializer = NodeGroupSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, format=None):
+        try:
+            uuid = request.data.get('uuid')
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        node_group = self.get_object(uuid)
+        # A node string list is passed, so needs formatting to list
+        if request.data.get('nodes'):
+            nodes_uuids = request.data.get('nodes').replace(" ", "").split(',')
+            request.data._mutable = True
+            request.data.setlist('nodes', nodes_uuids)
+
+        serializer = NodeGroupSerializer(node_group, data=request.data,
+                                         partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

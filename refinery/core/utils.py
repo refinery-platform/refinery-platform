@@ -1,21 +1,19 @@
 from __future__ import absolute_import
 import logging
 
-
 import py2neo
-from django.core.exceptions import MultipleObjectsReturned
-from django.core.mail import send_mail
-
-import core
-from urlparse import urlparse, urljoin
 
 from django.conf import settings
 from django.contrib.sites.models import Site
-from django.core.cache import cache
 from django.contrib.auth.models import User
+from django.core.exceptions import MultipleObjectsReturned
+from django.core.mail import send_mail
+from django.core.cache import cache
 from django.db import connection
 from django.utils import timezone
+from urlparse import urlparse, urljoin
 
+import core
 from .search_indexes import DataSetIndex
 from data_set_manager.search_indexes import NodeIndex
 
