@@ -5,7 +5,7 @@ angular
   .factory('nodeGroupService', ['$resource', 'settings',
     function ($resource, settings) {
       var nodeGroup = $resource(
-        settings.appRoot + settings.refineryApiV2 + '/node_group/',
+        settings.appRoot + settings.refineryApiV2 + '/node_groups/',
         {},
         {
           /* get: get a node groups:

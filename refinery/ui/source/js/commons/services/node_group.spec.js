@@ -45,7 +45,7 @@ describe('Common.service.node_group: unit tests', function () {
       $httpBackend
         .expectGET(
           settings.appRoot +
-          settings.refineryApiV2 + '/node_group/?uuid=' + validUuid
+          settings.refineryApiV2 + '/node_groups/?uuid=' + validUuid
         ).respond(200, uuidResponse);
 
       var results;
@@ -85,7 +85,7 @@ describe('Common.service.node_group: unit tests', function () {
       $httpBackend
         .expectGET(
           settings.appRoot +
-          settings.refineryApiV2 + '/node_group/?assay=' + validUuid
+          settings.refineryApiV2 + '/node_groups/?assay=' + validUuid
         ).respond(200, assayUuidResponse);
 
       var results;
@@ -133,7 +133,7 @@ describe('Common.service.node_group: unit tests', function () {
       $httpBackend
         .expectPUT(
           settings.appRoot +
-          settings.refineryApiV2 + '/node_group/',
+          settings.refineryApiV2 + '/node_groups/',
           putParams
         ).respond(200, putResponse);
 
@@ -178,7 +178,7 @@ describe('Common.service.node_group: unit tests', function () {
       $httpBackend
         .expectPOST(
           settings.appRoot +
-          settings.refineryApiV2 + '/node_group/',
+          settings.refineryApiV2 + '/node_groups/',
           postParams
         ).respond(200, postResponse);
 
