@@ -8,12 +8,20 @@ angular
         settings.appRoot + settings.refineryApiV2 + '/node_group/',
         {},
         {
+          /* get: get a node groups:
+                @params: uuid (req)
+                type: string, uuid
+          */
           get: {
             method: 'GET',
             params: {
               uuid: 'uuid'
             }
           },
+          /* query: get a list of  node groups:
+                @params: assay (req)
+                type: string, uuid
+          */
           query: {
             method: 'GET',
             isArray: true,
@@ -21,23 +29,31 @@ angular
               assay: 'assay'
             }
           },
+          /* update: update an exisiting node group:
+                @params: uuid (req)
+                type: string, uuid
+                @params: nodes
+                type: string list, uuids
+                @params: is_current
+                type: boolen
+          */
           update: {
-            method: 'PUT',
-            params: {
-              uuid: 'uuid',
-              nodes: 'nodes',
-              is_current: 'is_current'
-            }
+            method: 'PUT'
           },
+          /* save: Create a new node group:
+                @params: name (req)
+                type: string
+                @params: assay (req)
+                type: string, uuid
+                @params: study (req)
+                type: string, uuid
+                @params: nodes
+                type: string list, uuids
+                @params: is_current
+                type: boolen
+           */
           save: {
-            method: 'POST',
-            params: {
-              name: 'name',
-              study: 'study',
-              assay: 'assay',
-              nodes: 'nodes',
-              is_current: 'is_current'
-            }
+            method: 'POST'
           }
         }
       );
