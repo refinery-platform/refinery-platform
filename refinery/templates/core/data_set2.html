@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="{% static "vendor/tipsy/src/stylesheets/tipsy.css" %}" />
   <link rel="stylesheet" href="{% static "vendor/select2/select2.css" %}" />
   <link rel="styleSheet" href="{% static "vendor/angular-ui-grid/ui-grid.min.css" %}"/>
-   <link rel="stylesheet" href="{% static "vendor/ui-select/dist/select.min.css" %}" />
+  <link rel="stylesheet" href="{% static "vendor/ui-select/dist/select.min.css" %}" />
 {% endblock head_html %}
 
 {% block title %} - Data Set {{ data_set.name }}{% endblock %}
@@ -139,7 +139,8 @@
                       {% if not REFINERY_REPOSITORY_MODE %}
                         <div class="row">
                           <div class="col-md-12">
-                            <rp-file-browser-node-group></rp-file-browser-node-group>
+                            <rp-file-browser-node-group>
+                            </rp-file-browser-node-group>
                           </div>
                         </div>
                       {% endif %}
