@@ -9,5 +9,6 @@ angular
     // Third-party
     'ui.bootstrap',
     'ui.router',
-    'ui.select'
+    'ui.select',
+    'ngSanitize'
   ]);
