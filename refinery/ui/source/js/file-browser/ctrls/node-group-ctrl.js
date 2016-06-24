@@ -2,11 +2,13 @@
 
 function NodeGroupCtrl (
   $log,
+  $scope,
   $window,
   fileBrowserFactory
   ) {
   var vm = this;
   vm.nodeGroupList = [];
+  $scope.selectedNodeGroup = { select: vm.nodeGroupList[0] };
 
   // Refresh attribute lists when modal opens
   vm.refreshNodeGroupList = function () {
@@ -19,6 +21,10 @@ function NodeGroupCtrl (
     });
   };
 
+  vm.updateCurrentNodeGroup = function () {
+    console.log('updateCurrentNodeGroup');
+  };
+
   console.log('in the ctrl');
   vm.refreshNodeGroupList();
 }
@@ -28,6 +34,7 @@ angular
   .controller('NodeGroupCtrl',
   [
     '$log',
+    '$scope',
     '$window',
     'fileBrowserFactory',
     NodeGroupCtrl
