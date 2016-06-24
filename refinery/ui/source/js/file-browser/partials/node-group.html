@@ -1,17 +1,15 @@
-<!-- <ui-select
+<ui-select
     append-to-body="true"
-    ng-model="selectedNodeGroup.select"
-    on-select="updateCurrentNodeGroup()"
+    ng-model="NGCtrl.selectedNodeGroup.select"
+    on-select="NGCtrl.updateCurrentNodeGroup()"
     theme="select2"
     class="ui-select-drop">
      <ui-select-match placeholder="Select a node group">
        <span ng-bind="$select.selected.name"></span>
      </ui-select-match>
-    <ui-select-choices repeat="nodeGroup in (nodeGroupList | filter: $select.search)">
+    <ui-select-choices
+      position="down"
+      repeat="nodeGroup in (NGCtrl.nodeGroupList | filter: $select.search)">
       <span ng-bind="nodeGroup.name"></span>
     </ui-select-choices>
-</ui-select>-->
-Node Group Html
-<div ng-repeat="nodeGroup in NGCtrl.nodeGroupList">
-  {{ nodeGroup.name }}
-</div>
+</ui-select>
