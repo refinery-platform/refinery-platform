@@ -84,6 +84,14 @@ function fileBrowserFactory (
     return nodeGroups.$promise;
   };
 
+  var createNodeGroup = function (params) {
+    var nodeGroup = nodeGroupService.save(params);
+    nodeGroup.$promise.then(function () {
+      getNodeGroupList(params.assayUuid);
+    });
+    return nodeGroup.$promise;
+  };
+
   // Adds the file_url to the assay files array
   var addNodeDetailtoAssayFiles = function () {
     angular.forEach(assayFiles, function (facetObj) {
@@ -200,6 +208,7 @@ function fileBrowserFactory (
     assayFilesTotalItems: assayFilesTotalItems,
     nodeCount: nodeCount,
     nodeGroupList: nodeGroupList,
+    createNodeGroup: createNodeGroup,
     getAssayFiles: getAssayFiles,
     getAssayAttributeOrder: getAssayAttributeOrder,
     postAssayAttributeOrder: postAssayAttributeOrder,
