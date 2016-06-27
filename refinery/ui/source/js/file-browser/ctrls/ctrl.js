@@ -9,6 +9,7 @@ function FileBrowserCtrl (
   isOwnerService,
   $timeout,
   $q,
+  $log,
   $window,
   _
   ) {
@@ -48,6 +49,26 @@ function FileBrowserCtrl (
   vm.assayFilesTotal = 1;
   vm.totalPages = 1;
   vm.cachePages = 2;
+
+  vm.nodeGroupList = [];
+  vm.selectedNodeGroup = { select: vm.nodeGroupList[0] };
+
+  // Refresh attribute lists when modal opens
+  vm.refreshNodeGroupList = function () {
+    var assayUuid = $window.externalAssayUuid;
+
+    fileBrowserFactory.getNodeGroupList(assayUuid).then(function () {
+      vm.nodeGroupList = fileBrowserFactory.nodeGroupList;
+    }, function (error) {
+      $log.error(error);
+    });
+  };
+
+  vm.updateCurrentNodeGroup = function () {
+    console.log('updateCurrentNodeGroup');
+    console.log(vm.selectedNodeGroup.select);
+  };
+
 
   vm.refreshAssayFiles = function () {
     vm.filesParam.offset = vm.lastPage * vm.rowCount;
@@ -402,6 +423,7 @@ angular
     'isOwnerService',
     '$timeout',
     '$q',
+    '$log',
     '$window',
     '_',
     FileBrowserCtrl
