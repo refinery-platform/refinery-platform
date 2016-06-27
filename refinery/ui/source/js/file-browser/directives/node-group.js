@@ -4,10 +4,13 @@ function rpFileBrowserNodeGroup () {
   return {
     restrict: 'E',
     templateUrl: '/static/partials/file-browser/partials/node-group.html',
-    controller: 'NodeGroupCtrl',
-    controllerAs: 'NGCtrl',
+    controller: 'FileBrowserCtrl',
+    controllerAs: 'FBNGCtrl',
     bindToController: {
       nodeGroupList: '@'
+    },
+    link: function (scope, element, attr, ctrl) {
+      ctrl.refreshNodeGroupList();
     }
   };
 }

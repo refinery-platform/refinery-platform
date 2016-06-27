@@ -1,7 +1,7 @@
 <ui-select
     append-to-body="true"
-    ng-model="NGCtrl.selectedNodeGroup.select"
-    on-select="NGCtrl.updateCurrentNodeGroup()"
+    ng-model="FBNGCtrl.selectedNodeGroup.select"
+    on-select="FBNGCtrl.updateCurrentNodeGroup()"
     theme="select2"
     class="ui-select-drop">
      <ui-select-match placeholder="Select a node group">
@@ -9,7 +9,12 @@
      </ui-select-match>
     <ui-select-choices
       position="down"
-      repeat="nodeGroup in (NGCtrl.nodeGroupList | filter: $select.search)">
+      repeat="nodeGroup in (FBNGCtrl.nodeGroupList | filter: $select.search)">
       <span ng-bind="nodeGroup.name"></span>
     </ui-select-choices>
 </ui-select>
+
+<div>
+  <span class="refinery-base btn btn-default btn-xs">Save</span>
+  <span class="refinery-base btn btn-default btn-xs">Reset</span>
+</div>
