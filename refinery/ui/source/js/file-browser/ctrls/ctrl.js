@@ -49,6 +49,7 @@ function FileBrowserCtrl (
   vm.assayFilesTotal = 1;
   vm.totalPages = 1;
   vm.cachePages = 2;
+  vm.counter = 0;
 
   vm.nodeGroupList = [];
   vm.selectedNodeGroup = { select: vm.nodeGroupList[0] };
@@ -71,6 +72,7 @@ function FileBrowserCtrl (
 
 
   vm.refreshAssayFiles = function () {
+    console.log('in the refresh Assay Files');
     vm.filesParam.offset = vm.lastPage * vm.rowCount;
     vm.filesParam.limit = vm.rowCount;
 
@@ -106,7 +108,10 @@ function FileBrowserCtrl (
     });
     vm.filesParam.filter_attribute = {};
     angular.copy(vm.selectedFieldList, vm.filesParam.filter_attribute);
-    vm.reset();
+    console.log(vm.selectedFieldList);
+    if (Object.keys(vm.selectedFieldList).length > 0) {
+      vm.reset();
+    }
   };
 
   // helper method, upon refresh/load add fields to select data objs from query
@@ -173,6 +178,10 @@ function FileBrowserCtrl (
     vm.gridApi.selection.on.rowSelectionChangedBatch(null, function () {
       vm.selectNodes = gridApi.selection.getSelectedRows();
     });
+
+    $timeout(function () {
+      gridApi.selection.selectRow(vm.gridOptions.data[0]);
+    }, 1);
   };
 
 
@@ -405,6 +414,7 @@ function FileBrowserCtrl (
     function () {
       if (resetGridService.resetGridFlag) {
         vm.reset();
+        console.log('watch resetGridFlag');
       }
     }
   );
