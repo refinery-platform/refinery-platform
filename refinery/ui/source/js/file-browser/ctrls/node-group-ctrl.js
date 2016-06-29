@@ -27,6 +27,23 @@ function NodeGroupCtrl (
     selectedNodesService.setSelectedNodesUuids(vm.selectedNodeGroup.select.nodes);
     resetGridService.setResetGridFlag(true);
   };
+
+  vm.saveNodeGroup = function (name) {
+    console.log('in saveNodeGroup');
+    console.log(selectedNodesService.selectedNodesUuids);
+    var params = {
+      name: name,
+      assay: $window.externalAssayUuid,
+      study: $window.externalStudyUuid,
+      nodes: selectedNodesService.selectedNodesUuids.join(',')
+    };
+    fileBrowserFactory.createNodeGroup(params).then(function (response) {
+      console.log(response);
+      vm.nodeGroupList.push(response.data);
+    }, function (error) {
+      $log.error(error);
+    });
+  };
 }
 
 angular
