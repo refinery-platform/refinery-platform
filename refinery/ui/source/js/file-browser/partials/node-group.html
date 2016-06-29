@@ -15,8 +15,16 @@
 </ui-select>
 
 <div>
-  <span
+  <button
     class="refinery-base btn btn-default btn-xs"
-    ng-click="FBNGCtrl.createNodeGroup()">Save</span>
+    rp-file-browser-node-group-name
+    refinery-tooltip
+    refinery-tooltip-container="body"
+    refinery-tooltip-placement="right"
+    title="Save a new node group">
+   Save
+  </button>
+
   <span class="refinery-base btn btn-default btn-xs">Reset</span>
 </div>
+
