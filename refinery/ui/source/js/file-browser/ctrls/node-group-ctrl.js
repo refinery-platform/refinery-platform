@@ -24,9 +24,6 @@ function NodeGroupCtrl (
   };
 
   vm.updateCurrentNodeGroup = function () {
-    console.log('in updateCurrentNodeGroup');
-    console.log('lets reset');
-    console.log(vm.selectedNodeGroup.select);
     selectedNodesService.setSelectedNodesUuids(vm.selectedNodeGroup.select.nodes);
     resetGridService.setResetGridFlag(true);
   };

@@ -129,7 +129,6 @@ function FileBrowserCtrl (
     }
   };
 
-
   // Updates which attribute filters are selected and the ui-grid data
   vm.attributeSelectionUpdate = function (_internalName, _field) {
     vm.updateSelectionList(_internalName, _field);
@@ -141,11 +140,11 @@ function FileBrowserCtrl (
 
   // Ui-grid methods for catching grid events
   vm.gridOptions.onRegisterApi = function (gridApi) {
-    // set gridApi on scop
-
     // Infinite Grid Load
     gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
     gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
+
+    // prevent scope issues
     if (!vm.gridApi) {
       vm.gridApi = gridApi;
     }
@@ -160,7 +159,7 @@ function FileBrowserCtrl (
     });
 
     vm.gridApi.selection.on.rowSelectionChangedBatch(null, function () {
-     // vm.selectNodes = gridApi.selection.getSelectedRows();
+      // update node service selected node which is shared by nodeGroupCtrl
       selectedNodesService.setSelectedNodes(gridApi.selection.getSelectedRows());
     });
   };
@@ -190,7 +189,6 @@ function FileBrowserCtrl (
     return promise.promise;
   };
 
-
   vm.getDataUp = function () {
     if (vm.firstPage > 0) {
       vm.firstPage--;
@@ -218,7 +216,6 @@ function FileBrowserCtrl (
       });
     return promise.promise;
   };
-
 
   vm.checkDataLength = function (discardDirection) {
     // work out whether we need to discard a page, if so discard from the
@@ -249,7 +246,7 @@ function FileBrowserCtrl (
     }
   };
 
-   // Grabs ui-grid objects based on the  node-group uuids list
+  // Heloper function, Gets ui-grid objects based on the node-group uuidsList
   vm.getGridRowsFromUuids = function (uuidsList) {
     var selectedNodes = [];
     angular.forEach(vm.gridApi.core.getVisibleRows(), function (row) {
@@ -260,13 +257,14 @@ function FileBrowserCtrl (
     selectedNodesService.setSelectedNodes(selectedNodes);
   };
 
-  // Selects rows on the ui-grid
+  // Helper function: select rows on the ui-grid
   vm.setGridSelectedRows = function (rows) {
     angular.forEach(rows, function (row) {
       vm.gridApi.selection.selectRow(row);
     });
   };
 
+  // Reset the data, selected rows, and scroll position in the grid
   vm.reset = function () {
     vm.firstPage = 0;
     vm.lastPage = 0;
@@ -281,6 +279,7 @@ function FileBrowserCtrl (
         // timeout needed to allow digest cycle to complete,and grid to finish ingesting the data
           vm.gridApi.infiniteScroll.resetScroll(vm.firstPage > 0, vm.lastPage < vm.totalPages);
           resetGridService.setResetGridFlag(false);
+          // Select rows either from node group lists or previously selected
           if (selectedNodesService.selectedNodesUuids.length > 0) {
             vm.getGridRowsFromUuids(selectedNodesService.selectedNodesUuids);
             vm.setGridSelectedRows(selectedNodesService.selectedNodes);
