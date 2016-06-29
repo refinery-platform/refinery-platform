@@ -23,7 +23,7 @@ function NodeGroupCtrl (
     });
   };
 
-  vm.updateCurrentNodeGroup = function () {
+  vm.selectCurrentNodeGroup = function () {
     selectedNodesService.setSelectedNodesUuids(vm.selectedNodeGroup.select.nodes);
     resetGridService.setResetGridFlag(true);
   };
