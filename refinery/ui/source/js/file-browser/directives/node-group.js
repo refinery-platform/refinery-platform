@@ -4,7 +4,7 @@ function rpFileBrowserNodeGroup () {
   return {
     restrict: 'E',
     templateUrl: '/static/partials/file-browser/partials/node-group.html',
-    controller: 'FileBrowserCtrl',
+    controller: 'NodeGroupCtrl',
     controllerAs: 'FBNGCtrl',
     bindToController: {
       nodeGroupList: '@'
