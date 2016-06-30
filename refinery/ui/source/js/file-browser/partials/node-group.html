@@ -3,15 +3,14 @@
     ng-model="FBNGCtrl.nodeGroupList.selected"
     on-select="FBNGCtrl.selectCurrentNodeGroup()"
     theme="select2"
-    class="ui-select-drop"
-    reset-search-input="'false'">
-     <ui-select-match placeholder="Select a node group">
-       {{$select.selected.name}}
-     </ui-select-match>
-    <ui-select-choices
-      position="down"
-      repeat="nodeGroup in FBNGCtrl.nodeGroupList | filter: $select.search">
-      <span ng-bind="nodeGroup.name"></span>
+    class="ui-select-drop">
+  <ui-select-match placeholder="Select a node group">
+    <span ng-bind="$select.selected.name"></span>
+  </ui-select-match>
+  <ui-select-choices
+    position="down"
+    repeat="nodeGroup in FBNGCtrl.nodeGroupList | filter: $select.search">
+    <span ng-bind="nodeGroup.name"></span>
     </ui-select-choices>
 </ui-select>
 <div>
@@ -24,7 +23,6 @@
     title="Save a new node group">
    Save
   </button>
-
   <span class="refinery-base btn btn-default btn-xs">Reset</span>
 </div>
 
