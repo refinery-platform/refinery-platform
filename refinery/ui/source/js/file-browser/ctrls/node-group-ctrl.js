@@ -2,7 +2,6 @@
 
 function NodeGroupCtrl (
   fileBrowserFactory,
-  $scope,
   $q,
   $log,
   $window,
@@ -55,7 +54,6 @@ angular
   .controller('NodeGroupCtrl',
   [
     'fileBrowserFactory',
-    '$scope',
     '$q',
     '$log',
     '$window',
