@@ -47,6 +47,16 @@ function NodeGroupCtrl (
       $log.error(error);
     });
   };
+
+  vm.clearSelectedNodes = function () {
+    // Deselects node group
+    vm.nodeGroupList.selected = undefined;
+    // Empties nodes uuids list used when grids are reset
+    selectedNodesService.setSelectedNodeUuidsFromNodeGroup([]);
+    // Empties selected nodes used when grids are reset
+    selectedNodesService.setSelectedNodes([]);
+    resetGridService.setResetGridFlag(true);
+  };
 }
 
 angular

@@ -8,6 +8,8 @@ function selectedNodesService () {
 
   vm.setSelectedNodes = function (nodesList) {
     vm.selectedNodes = [];
+    console.log('set selected Nodes');
+    console.log(nodesList);
    // avoid angular.copy because $$hashkeys are not copied
     angular.forEach(nodesList, function (node) {
       vm.selectedNodes.push(node);
@@ -22,6 +24,7 @@ function selectedNodesService () {
 
   vm.setSelectedNodeUuidsFromNodeGroup = function (nodesUuidsList) {
     angular.copy(nodesUuidsList, vm.selectedNodeUuidsFromNodeGroup);
+    console.log(vm.selectedNodeUuidsFromNodeGroup);
     return vm.selectedNodeUuidsFromNodeGroup;
   };
 

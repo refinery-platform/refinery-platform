@@ -10,7 +10,7 @@
   <ui-select-choices
     position="down"
     repeat="nodeGroup in FBNGCtrl.nodeGroupList | filter: $select.search">
-    <span ng-bind="nodeGroup.name"></span>
+    <span ng-bind-html="nodeGroup.name | highlight: $select.search"></span>
     </ui-select-choices>
 </ui-select>
 <div>
@@ -23,6 +23,14 @@
     title="Save a new node group">
    Save
   </button>
-  <span class="refinery-base btn btn-default btn-xs">Reset</span>
+  <span
+    class="refinery-base btn btn-default btn-xs"
+    ng-click="FBNGCtrl.clearSelectedNodes()"
+    refinery-tooltip
+    refinery-tooltip-container="body"
+    refinery-tooltip-placement="right"
+    title="Clear node groups and selected nodes.">
+    Clear Selected Nodes
+  </span>
 </div>
 

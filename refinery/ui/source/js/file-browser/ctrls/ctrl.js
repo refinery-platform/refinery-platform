@@ -283,8 +283,11 @@ function FileBrowserCtrl (
           if (selectedNodesService.selectedNodeUuidsFromNodeGroup.length > 0) {
             vm.getGridRowsFromUuids(selectedNodesService.selectedNodeUuidsFromNodeGroup);
             vm.setGridSelectedRows(selectedNodesService.selectedNodes);
-          } else {
+          } else if (selectedNodesService.selectedNodes.length > 0) {
             vm.setGridSelectedRows(selectedNodesService.selectedNodes);
+          } else {
+            console.log('clearing the nodes selected');
+            vm.gridApi.selection.clearSelectedRows();
           }
         });
       });
