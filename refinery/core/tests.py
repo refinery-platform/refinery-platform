@@ -1566,8 +1566,8 @@ class NodeGroupAPITests(APITestCase):
         new_node_group = {'name': 'Test Group3',
                           'assay': self.assay.uuid,
                           'study': self.study.uuid,
-                          'nodes': '%s, %s' % (self.node_1.uuid,
-                                               self.node_2.uuid)}
+                          'nodes': [self.node_1.uuid, self.node_2.uuid]
+                          }
         request = self.factory.post('%s/' % self.url_root, new_node_group)
         response = self.view(request)
         self.assertEqual(response.status_code, 201)
