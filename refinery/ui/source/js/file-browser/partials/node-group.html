@@ -1,19 +1,19 @@
 <ui-select
     append-to-body="true"
-    ng-model="FBNGCtrl.selectedNodeGroup.select"
+    ng-model="FBNGCtrl.nodeGroupList.selected"
     on-select="FBNGCtrl.selectCurrentNodeGroup()"
     theme="select2"
-    class="ui-select-drop">
+    class="ui-select-drop"
+    reset-search-input="'false'">
      <ui-select-match placeholder="Select a node group">
-       <span ng-bind="$select.selected.name"></span>
+       {{$select.selected.name}}
      </ui-select-match>
     <ui-select-choices
       position="down"
-      repeat="nodeGroup in (FBNGCtrl.nodeGroupList | filter: $select.search)">
+      repeat="nodeGroup in FBNGCtrl.nodeGroupList | filter: $select.search">
       <span ng-bind="nodeGroup.name"></span>
     </ui-select-choices>
 </ui-select>
-
 <div>
   <button
     class="refinery-base btn btn-default btn-xs"
