@@ -7,7 +7,7 @@ function rpFileBrowserNodeGroup () {
     controller: 'NodeGroupCtrl',
     controllerAs: 'FBNGCtrl',
     bindToController: {
-      nodeGroupList: '@'
+      nodeGroupList: '=?'
     },
     link: function (scope, element, attr, ctrl) {
       ctrl.refreshNodeGroupList();

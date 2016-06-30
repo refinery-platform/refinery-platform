@@ -2,6 +2,7 @@
 
 function NodeGroupCtrl (
   fileBrowserFactory,
+  $scope,
   $q,
   $log,
   $window,
@@ -10,36 +11,39 @@ function NodeGroupCtrl (
   ) {
   var vm = this;
   vm.nodeGroupList = [];
-  vm.selectedNodeGroup = { select: vm.nodeGroupList[0] };
+  vm.nodeGroupList.selected = vm.nodeGroupList[0];
 
   // Refresh attribute lists when modal opens
   vm.refreshNodeGroupList = function () {
     var assayUuid = $window.externalAssayUuid;
+    var promise = $q.defer();
 
     fileBrowserFactory.getNodeGroupList(assayUuid).then(function () {
       vm.nodeGroupList = fileBrowserFactory.nodeGroupList;
+      promise.resolve();
     }, function (error) {
       $log.error(error);
+      promise.reject();
     });
+    return promise.promise;
   };
 
   vm.selectCurrentNodeGroup = function () {
-    selectedNodesService.setSelectedNodesUuids(vm.selectedNodeGroup.select.nodes);
+    selectedNodesService.setSelectedNodeUuidsFromNodeGroup(vm.nodeGroupList.selected.nodes);
     resetGridService.setResetGridFlag(true);
   };
 
   vm.saveNodeGroup = function (name) {
-    console.log('in saveNodeGroup');
-    console.log(selectedNodesService.selectedNodesUuids);
     var params = {
       name: name,
       assay: $window.externalAssayUuid,
       study: $window.externalStudyUuid,
-      nodes: selectedNodesService.selectedNodesUuids.join(',')
+      nodes: selectedNodesService.selectedNodeUuidsFromUI
     };
-    fileBrowserFactory.createNodeGroup(params).then(function (response) {
-      console.log(response);
-      vm.nodeGroupList.push(response.data);
+    fileBrowserFactory.createNodeGroup(params).then(function () {
+      vm.refreshNodeGroupList().then(function () {
+        vm.nodeGroupList.selected = vm.nodeGroupList[vm.nodeGroupList.length - 1];
+      });
     }, function (error) {
       $log.error(error);
     });
@@ -51,6 +55,7 @@ angular
   .controller('NodeGroupCtrl',
   [
     'fileBrowserFactory',
+    '$scope',
     '$q',
     '$log',
     '$window',
