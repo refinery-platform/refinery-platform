@@ -1145,11 +1145,6 @@ class NodeGroups(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        # A node string list is passed, so needs formatting to list
-        if request.data.get('nodes'):
-            nodes_uuids = request.data.get('nodes').replace(" ", "").split(',')
-            request.data.setlist('nodes', nodes_uuids)
-
         serializer = NodeGroupSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
