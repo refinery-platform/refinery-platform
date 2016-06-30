@@ -86,9 +86,6 @@ function fileBrowserFactory (
 
   var createNodeGroup = function (params) {
     var nodeGroup = nodeGroupService.save(params);
-    nodeGroup.$promise.then(function () {
-      getNodeGroupList(params.assayUuid);
-    });
     return nodeGroup.$promise;
   };
 
