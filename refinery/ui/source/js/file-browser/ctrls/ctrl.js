@@ -140,28 +140,28 @@ function FileBrowserCtrl (
 
   // Ui-grid methods for catching grid events
   vm.gridOptions.onRegisterApi = function (gridApi) {
-    // Infinite Grid Load
-    gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
-    gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
-
-    // prevent scope issues
+    // prevent scoping issues, after reset or initial generation
     if (!vm.gridApi) {
       vm.gridApi = gridApi;
-    }
+       // Infinite Grid Load
+      gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
+      gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
 
-    // Sort events
-    vm.gridApi.core.on.sortChanged(null, vm.sortChanged);
-    vm.sortChanged(vm.gridApi.grid, [vm.gridOptions.columnDefs[1]]);
+      // Sort events
+      vm.gridApi.core.on.sortChanged(null, vm.sortChanged);
+      vm.sortChanged(vm.gridApi.grid, [vm.gridOptions.columnDefs[1]]);
 
-    // Checkbox selection events
-    vm.gridApi.selection.on.rowSelectionChanged(null, function () {
-      selectedNodesService.setSelectedNodes(gridApi.selection.getSelectedRows());
-    });
+      // Checkbox selection events
+      vm.gridApi.selection.on.rowSelectionChanged(null, function () {
+        selectedNodesService.setSelectedNodes(gridApi.selection.getSelectedRows());
+        selectedNodesService.getUuidsFromSelectedNodesInUI();
+      });
 
-    vm.gridApi.selection.on.rowSelectionChangedBatch(null, function () {
       // update node service selected node which is shared by nodeGroupCtrl
-      selectedNodesService.setSelectedNodes(gridApi.selection.getSelectedRows());
-    });
+      vm.gridApi.selection.on.rowSelectionChangedBatch(null, function () {
+        selectedNodesService.setSelectedNodes(gridApi.selection.getSelectedRows());
+      });
+    }
   };
 
   vm.getDataDown = function () {
@@ -280,8 +280,8 @@ function FileBrowserCtrl (
           vm.gridApi.infiniteScroll.resetScroll(vm.firstPage > 0, vm.lastPage < vm.totalPages);
           resetGridService.setResetGridFlag(false);
           // Select rows either from node group lists or previously selected
-          if (selectedNodesService.selectedNodesUuids.length > 0) {
-            vm.getGridRowsFromUuids(selectedNodesService.selectedNodesUuids);
+          if (selectedNodesService.selectedNodeUuidsFromNodeGroup.length > 0) {
+            vm.getGridRowsFromUuids(selectedNodesService.selectedNodeUuidsFromNodeGroup);
             vm.setGridSelectedRows(selectedNodesService.selectedNodes);
           } else {
             vm.setGridSelectedRows(selectedNodesService.selectedNodes);
@@ -290,7 +290,6 @@ function FileBrowserCtrl (
       });
     }
   };
-
 
   // Generates param: sort for api call from ui-grid response
   vm.sortChanged = function (grid, sortColumns) {
@@ -420,7 +419,6 @@ function FileBrowserCtrl (
     }
   );
 }
-
 
 angular
   .module('refineryFileBrowser')
