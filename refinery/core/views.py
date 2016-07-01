@@ -38,9 +38,10 @@ from file_store.models import FileStoreItem
 from core.models import (
     ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
     Analysis, Invitation, Ontology, NodeGroup,
-    CustomRegistrationProfile, Assay)
+    CustomRegistrationProfile)
 from core.serializers import WorkflowSerializer, NodeGroupSerializer
-from core.utils import (get_data_sets_annotations, get_anonymous_user)
+from core.utils import (get_data_sets_annotations, get_anonymous_user,
+                        create_current_selection_node_group)
 
 from xml.parsers.expat import ExpatError
 
@@ -1137,36 +1138,14 @@ class NodeGroups(APIView):
             node_groups = NodeGroup.objects.filter(assay__uuid=assay_uuid)
             # If filter returns empty response
             if not node_groups:
-                # confirm a study uuid exists and then create a default
-                # current selection
-                try:
-                    assay = Assay.objects.get(uuid=assay_uuid)
-                except Assay.DoesNotExist as e:
-                    return Response(e, status=status.HTTP_404_NOT_FOUND)
-                except Assay.MultipleObjectsReturned as e:
-                    Response(status=status.HTTP_400_BAD_REQUEST)
-
-                study_uuid = assay.study.uuid
-                # initialize node_group with a current_selection
-                serializer = NodeGroupSerializer(data={
-                    'assay': assay_uuid,
-                    'study': study_uuid,
-                    'name': 'Current Selection'
-                })
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response(
-                        serializer.data,
-                        status=status.HTTP_201_CREATED)
-                else:
-                    return Response(
-                        serializer.errors,
-                        status=status.HTTP_400_BAD_REQUEST)
-
+                # Returns Response: created current_selection group or errors
+                return create_current_selection_node_group(assay_uuid)
+            # Serialize list of node_groups
             serializer = NodeGroupSerializer(node_groups, many=True)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        # Return node_group or list of assay's node_groups
         return Response(serializer.data)
 
     def post(self, request, format=None):
