@@ -22,7 +22,8 @@ from core.models import (
     ExtendedGroup, DataSet, InvestigationLink, Project,
     Analysis, Workflow, WorkflowEngine, UserProfile, invalidate_cached_object,
     AnalysisNodeConnection, NodeGroup)
-from core.utils import (get_aware_local_time)
+from core.utils import (get_aware_local_time,
+                        create_current_selection_node_group)
 from core.views import NodeGroups
 from .serializers import NodeGroupSerializer
 from file_store.models import FileStoreItem
@@ -1624,9 +1625,44 @@ class NodeGroupAPITests(APITestCase):
 
 
 class UtilitiesTest(TestCase):
+    def setUp(self):
+        investigation = Investigation.objects.create()
+        self.study = Study.objects.create(
+                file_name='test_filename123.txt',
+                title='Study Title Test',
+                investigation=investigation)
+        assay = {
+            'study': self.study,
+            'measurement': 'transcription factor binding site',
+            'measurement_accession': 'http://www.testurl.org/testID',
+            'measurement_source': 'OBI',
+            'technology': 'nucleotide sequencing',
+            'technology_accession': 'test info',
+            'technology_source': 'test source',
+            'platform': 'Genome Analyzer II',
+            'file_name': 'test_assay_filename.txt'
+        }
+        self.assay = Assay.objects.create(**assay)
+        self.valid_uuid = self.assay.uuid
+        self.invalid_uuid = "03b5f681-35d5-4bdd-bc7d-8552fa777ebc"
+
+    def tearDown(self):
+        NodeGroup.objects.all().delete()
+        Assay.objects.all().delete()
+        Study.objects.all().delete()
+        Investigation.objects.all().delete()
+
     def test_get_aware_local_time(self):
         expected_time = timezone.localtime(timezone.now())
         response_time = get_aware_local_time()
         difference_time = response_time - expected_time
 
         self.assertLessEqual(difference_time.total_seconds(), .99)
+
+    def test_create_current_selection_node_group_valid(self):
+        response = create_current_selection_node_group(self.valid_uuid)
+        self.assertEqual(response.status_code, 201)
+
+    def test_create_current_selection_node_group_invalid(self):
+        response = create_current_selection_node_group(self.invalid_uuid)
+        self.assertEqual(response.status_code, 404)
