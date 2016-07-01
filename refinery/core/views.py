@@ -1147,8 +1147,7 @@ class NodeGroups(APIView):
                     Response(status=status.HTTP_400_BAD_REQUEST)
 
                 study_uuid = assay.study.uuid
-                """initialize node_group with a current_selection, occurs
-                the first time a data set is viewing in the file browser"""
+                # initialize node_group with a current_selection
                 serializer = NodeGroupSerializer(data={
                     'assay': assay_uuid,
                     'study': study_uuid,
@@ -1184,12 +1183,6 @@ class NodeGroups(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         node_group = self.get_object(uuid)
-        # A node string list is passed, so needs formatting to list
-        if request.data.get('nodes'):
-            nodes_uuids = request.data.get('nodes').replace(" ", "").split(',')
-            request.data._mutable = True
-            request.data.setlist('nodes', nodes_uuids)
-
         serializer = NodeGroupSerializer(node_group, data=request.data,
                                          partial=True)
         if serializer.is_valid():
