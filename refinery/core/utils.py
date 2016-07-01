@@ -18,8 +18,7 @@ from urlparse import urlparse, urljoin
 import core
 from .search_indexes import DataSetIndex
 from data_set_manager.search_indexes import NodeIndex
-
-from data_set.manager.models import Assay
+from data_set_manager.models import Assay
 
 logger = logging.getLogger(__name__)
 
@@ -732,7 +731,6 @@ def create_current_selection_node_group(assay_uuid):
     :return: Response obj
     """
     # confirm an assay exists
-    create_current_selection_node_group(assay_uuid)
     try:
         assay = Assay.objects.get(uuid=assay_uuid)
     except Assay.DoesNotExist as e:
