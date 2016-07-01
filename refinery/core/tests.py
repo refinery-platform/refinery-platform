@@ -1590,8 +1590,8 @@ class NodeGroupAPITests(APITestCase):
         # valid uuid and valid input
         request = self.factory.put('%s/' % self.url_root,
                                    {'uuid': self.node_group_2.uuid,
-                                    'nodes': '%s, %s' % (self.node_1.uuid,
-                                                         self.node_2.uuid),
+                                    'nodes':
+                                        [self.node_1.uuid, self.node_2.uuid],
                                     'is_current': True})
         response = self.view(request)
         self.assertEqual(response.status_code, 202)
