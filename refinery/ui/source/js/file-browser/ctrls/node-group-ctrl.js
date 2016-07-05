@@ -19,6 +19,11 @@ function NodeGroupCtrl (
 
     fileBrowserFactory.getNodeGroupList(assayUuid).then(function () {
       vm.nodeGroupList = fileBrowserFactory.nodeGroupList;
+
+      // Default set the node group list to be current selection
+      if (vm.nodeGroupList.length > 0) {
+        vm.nodeGroupList.selected = vm.nodeGroupList[0];
+      }
       promise.resolve();
     }, function (error) {
       $log.error(error);
