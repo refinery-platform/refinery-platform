@@ -6,7 +6,8 @@ function refineryAppConfig (
   $logProvider,
   $provide,
   $urlRouterProvider,
-  settings
+  settings,
+  uiSelectConfig
 ) {
   /*
    * Force URLs to be caseinsensitive.
@@ -55,6 +56,10 @@ function refineryAppConfig (
     });
     return $delegate;
   }]);
+
+  // For ui-select, known bug. Should be fixed in the next release
+  // https://github.com/angular-ui/ui-select/issues/1672
+  uiSelectConfig.removeSelected = false;
 }
 
 angular
@@ -66,5 +71,6 @@ angular
     '$provide',
     '$urlRouterProvider',
     'settings',
+    'uiSelectConfig',
     refineryAppConfig
   ]);
