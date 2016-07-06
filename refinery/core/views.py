@@ -1180,6 +1180,8 @@ class NodeGroups(APIView):
             uuid_list = []
             for node in solr_reponse_json.get('nodes'):
                 uuid_list.append(node.get('uuid'))
+            request.data._mutable = True
+            request.data.setlist('nodes', uuid_list)
 
         serializer = NodeGroupSerializer(data=request.data)
         if serializer.is_valid():
