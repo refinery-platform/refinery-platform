@@ -46,7 +46,8 @@
         "spectrum/spectrum.css",
         "tipsy/src/stylesheets/tipsy.css",
         "d3-list-graph/dist/listGraph.min.css",
-        "ui-select/dist/select.min.css"
+        "ui-select/dist/select.min.css",
+        "intro.js/minified/introjs.min.css"
       ],
       "images": [
         "jquery-file-upload/img/loading.gif",
@@ -66,6 +67,7 @@
         "angular-animate/angular-animate.min.js",
         "angular-bootstrap/ui-bootstrap-tpls.min.js",
         "angular-bootstrap/ui-bootstrap.min.js",
+        "angular-intro.js/build/angular-intro.min.js",
         "angular-file-model/angular-file-model.js",
         "angular-resource/angular-resource.min.js",
         "angular-sanitize/angular-sanitize.min.js",
@@ -82,10 +84,12 @@
         "d3-tip/index.js",
         "c3/c3.min.js",
         "graphlib/dist/graphlib.core.min.js",
+        "intro.js/minified/intro.min.js",
         "dagre/dist/dagre.core.min.js",
         "filesize/lib/filesize.min.js",
         "floatThead/dist/jquery.floatThead.min.js",
         "humanize/humanize.js",
+        "ui/bower_components/intro.js/minified/intro.min.js",
         "ng-file-upload/angular-file-upload.min.js",
         "jquery-file-upload/js/jquery.fileupload-angular.js",
         "jquery-file-upload/js/jquery.iframe-transport.js",
