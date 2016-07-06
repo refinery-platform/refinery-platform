@@ -1,102 +1,104 @@
 <div id="metadata-table-form">
-  <p>Please select a tabular file (e.g. <code>.csv</code>, <code>.tsv</code> or <code>.txt</code>) containing the metadata table.</p>
+  <div id="fileUploadStep4">
+    <p>Please select a tabular file (e.g. <code>
+    .csv</code>, <code>.tsv</code> or <code>.txt</code>) containing the metadata table.</p>
 
-  <div class="relative">
-    <div
-      class="refinery-max z-1 refinery-spinner-bg"
-      ng-if="metadataTable.isImporting">
-      <div class="refinery-spinner-center">
-        <div class="refinery-spinner"></div>
+    <div class="relative">
+      <div
+        class="refinery-max z-1 refinery-spinner-bg"
+        ng-if="metadataTable.isImporting">
+        <div class="refinery-spinner-center">
+          <div class="refinery-spinner"></div>
+        </div>
       </div>
-    </div>
 
-    <div
-      class="refinery-max z-1 refinery-bg-success text-success"
-      ng-if="metadataTable.isSuccessfullyImported">
-      <div class="text-centered">
-        <i class="fa fa-check" aria-hidden="true"></i>
-        Data set has been successfully imported. You will be redirected sortly.
-        Otherwise click <a ng-href="/data_sets/{{ metadataTable.importedDataSetUuid }}">here</a>.
+      <div
+        class="refinery-max z-1 refinery-bg-success text-success"
+        ng-if="metadataTable.isSuccessfullyImported">
+        <div class="text-centered">
+          <i class="fa fa-check" aria-hidden="true"></i>
+          Data set has been successfully imported. You will be redirected sortly.
+          Otherwise click <a ng-href="/data_sets/{{ metadataTable.importedDataSetUuid }}">here</a>.
+        </div>
       </div>
-    </div>
 
-    <div
-      class="refinery-max z-1 refinery-bg-danger text-danger"
-      ng-if="metadataTable.isErrored">
-      <div class="text-centered">
-        <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
-        Oh no! We apologize. Something went terribly wrong. Please call your admin.
+      <div
+        class="refinery-max z-1 refinery-bg-danger text-danger"
+        ng-if="metadataTable.isErrored">
+        <div class="text-centered">
+          <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+          Oh no! We apologize. Something went terribly wrong. Please call your admin.
+        </div>
       </div>
+
+      <label class="block label-block label-text-left">
+        <span class="label-text label-left min-width-200">Select file:</span>
+        <input
+          name="tabular_file"
+          type="file"
+          ng-disabled="!metadataTable.isSeparatorOk"
+          file-model="metadataTable.file"
+          clear-file-input="metadataTable"
+          clear-file-input-model="metadataTable.file">
+        <button
+          class="icon-only"
+          ng-if="metadataTable.file"
+          ng-click="metadataTable.clearFile()">
+          <i
+            class="fa fa-times-circle"
+            aria-hidden="true"
+            title="Clear selected file"
+            refinery-tooltip
+            refinery-tooltip-container="body"
+            refinery-tooltip-placement="top"
+            refinery-tooltip-delay-show="750"
+            refinery-tooltip-delay-hide="150"
+            refinery-tooltip-hide-on-click="true">
+          </i>
+        </button>
+        <span class="text-warning" ng-if="!metadataTable.isSeparatorOk && !metadataTable.file">
+          <i class="fa fa-warning" aria-hidden="true"></i>
+          Please specify the custom separator <strong>prior</strong> to file selection.
+        </span>
+      </label>
+
+      <label class="block label-block label-text-left">
+        <span class="label-text label-left min-width-200">Comma separation:</span>
+        <input
+          type="radio"
+          value="comma"
+          ng-model="metadataTable.separator"
+          ng-change="metadataTable.setParser()"
+          ng-disabled="!!metadataTable.importOption">
+      </label>
+
+      <label class="block label-block label-text-left">
+        <span class="label-text label-left min-width-200">Tab separation:</span>
+        <input
+          type="radio"
+          value="tab"
+          ng-model="metadataTable.separator"
+          ng-change="metadataTable.setParser()"
+          ng-disabled="!!metadataTable.importOption">
+      </label>
+
+      <label class="block label-block label-text-left">
+        <span class="label-text label-left min-width-200">Custom separation:</span>
+        <input
+          type="radio"
+          value="custom"
+          ng-model="metadataTable.separator"
+          ng-change="metadataTable.setParser()"
+          ng-disabled="!!metadataTable.importOption">
+        <input
+          type="text"
+          class="m-l-1"
+          placeholder="E.g. &quot;;&quot;, &quot;|&quot;, &quot;$&quot;, etc."
+          ng-model="metadataTable.customSeparator"
+          ng-change="metadataTable.setParser()"
+          ng-disabled="!!metadataTable.importOption">
+      </label>
     </div>
-
-    <label class="block label-block label-text-left">
-      <span class="label-text label-left min-width-200">Select file:</span>
-      <input
-        name="tabular_file"
-        type="file"
-        ng-disabled="!metadataTable.isSeparatorOk"
-        file-model="metadataTable.file"
-        clear-file-input="metadataTable"
-        clear-file-input-model="metadataTable.file">
-      <button
-        class="icon-only"
-        ng-if="metadataTable.file"
-        ng-click="metadataTable.clearFile()">
-        <i
-          class="fa fa-times-circle"
-          aria-hidden="true"
-          title="Clear selected file"
-          refinery-tooltip
-          refinery-tooltip-container="body"
-          refinery-tooltip-placement="top"
-          refinery-tooltip-delay-show="750"
-          refinery-tooltip-delay-hide="150"
-          refinery-tooltip-hide-on-click="true">
-        </i>
-      </button>
-      <span class="text-warning" ng-if="!metadataTable.isSeparatorOk && !metadataTable.file">
-        <i class="fa fa-warning" aria-hidden="true"></i>
-        Please specify the custom separator <strong>prior</strong> to file selection.
-      </span>
-    </label>
-
-    <label class="block label-block label-text-left">
-      <span class="label-text label-left min-width-200">Comma separation:</span>
-      <input
-        type="radio"
-        value="comma"
-        ng-model="metadataTable.separator"
-        ng-change="metadataTable.setParser()"
-        ng-disabled="!!metadataTable.importOption">
-    </label>
-
-    <label class="block label-block label-text-left">
-      <span class="label-text label-left min-width-200">Tab separation:</span>
-      <input
-        type="radio"
-        value="tab"
-        ng-model="metadataTable.separator"
-        ng-change="metadataTable.setParser()"
-        ng-disabled="!!metadataTable.importOption">
-    </label>
-
-    <label class="block label-block label-text-left">
-      <span class="label-text label-left min-width-200">Custom separation:</span>
-      <input
-        type="radio"
-        value="custom"
-        ng-model="metadataTable.separator"
-        ng-change="metadataTable.setParser()"
-        ng-disabled="!!metadataTable.importOption">
-      <input
-        type="text"
-        class="m-l-1"
-        placeholder="E.g. &quot;;&quot;, &quot;|&quot;, &quot;$&quot;, etc."
-        ng-model="metadataTable.customSeparator"
-        ng-change="metadataTable.setParser()"
-        ng-disabled="!!metadataTable.importOption">
-    </label>
-
     <div ng-if="metadataTable.file">
       <div class="refinery-subheader">
         <h4>Preview (5 rows):</h4>

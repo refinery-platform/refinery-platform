@@ -1,79 +1,80 @@
 <div id="isa-tab-import-form">
-  <p>
-    Please provide <code>.zip</code> archive containing an investigation, study, and assay
-    file.
-  </p>
+  <div id="fileUploadStep6">
+    <p>
+      Please provide <code>.zip</code> archive containing an investigation, study, and assay
+      file.
+    </p>
 
-  <div class="relative">
-    <div
-      class="refinery-max z-1 refinery-spinner-bg"
-      ng-if="isaTabImport.isImporting">
-      <div class="refinery-spinner-center">
-        <div class="refinery-spinner"></div>
+    <div class="relative">
+      <div
+        class="refinery-max z-1 refinery-spinner-bg"
+        ng-if="isaTabImport.isImporting">
+        <div class="refinery-spinner-center">
+          <div class="refinery-spinner"></div>
+        </div>
       </div>
-    </div>
 
-    <div
-      class="refinery-max z-1 refinery-bg-success text-success"
-      ng-if="isaTabImport.isSuccessfullyImported">
-      <div class="text-centered">
-        <i class="fa fa-check" aria-hidden="true"></i>
-        Data set has been successfully imported. You will be redirected sortly.
-        Otherwise click <a ng-href="/data_sets/{{ isaTabImport.importedDataSetUuid }}">here</a>.
+      <div
+        class="refinery-max z-1 refinery-bg-success text-success"
+        ng-if="isaTabImport.isSuccessfullyImported">
+        <div class="text-centered">
+          <i class="fa fa-check" aria-hidden="true"></i>
+          Data set has been successfully imported. You will be redirected sortly.
+          Otherwise click <a ng-href="/data_sets/{{ isaTabImport.importedDataSetUuid }}">here</a>.
+        </div>
       </div>
-    </div>
 
-    <div
-      class="refinery-max z-1 refinery-bg-danger text-danger"
-      ng-if="isaTabImport.isErrored">
-      <div class="text-centered">
-        <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
-        Oh no! We apologize. Something went terribly wrong. Please call your admin.
+      <div
+        class="refinery-max z-1 refinery-bg-danger text-danger"
+        ng-if="isaTabImport.isErrored">
+        <div class="text-centered">
+          <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+          Oh no! We apologize. Something went terribly wrong. Please call your admin.
+        </div>
       </div>
+
+      <label class="block label-block label-text-left">
+        <span class="label-text label-left min-width-200">Select local ISA-Tab archive:</span>
+        <input
+          id="id_isa_tab_file"
+          name="isa_tab_file"
+          type="file"
+          ng-disabled="!!isaTabImport.urlToFile"
+          file-model="isaTabImport.file"
+          clear-file-input="isaTabFile"
+          clear-file-input-model="isaTabImport.file">
+        <button
+          class="icon-only"
+          ng-if="isaTabImport.file"
+          ng-click="isaTabImport.clearFile()">
+          <i
+            class="fa fa-times-circle"
+            aria-hidden="true"
+            title="Clear selected file"
+            refinery-tooltip
+            refinery-tooltip-container="body"
+            refinery-tooltip-placement="top"
+            refinery-tooltip-delay-show="750"
+            refinery-tooltip-delay-hide="150"
+            refinery-tooltip-hide-on-click="true">
+          </i>
+        </button>
+      </label>
+
+      <div class="text-muted m-t-1-2 m-b-1-2">or</div>
+
+      <label class="block label-block label-text-left">
+        <span class="label-text min-width-200">URL to remote ISA-Tab archive:</span>
+        <input
+          id="id_isa_tab_url"
+          name="isa_tab_url"
+          size="37"
+          type="text"
+          placeholder="e.g. http://example.com/isa-tab.zip"
+          ng-model="isaTabImport.urlToFile"
+          ng-disabled="!!isaTabImport.file">
+      </label>
     </div>
-
-    <label class="block label-block label-text-left">
-      <span class="label-text label-left min-width-200">Select local ISA-Tab archive:</span>
-      <input
-        id="id_isa_tab_file"
-        name="isa_tab_file"
-        type="file"
-        ng-disabled="!!isaTabImport.urlToFile"
-        file-model="isaTabImport.file"
-        clear-file-input="isaTabFile"
-        clear-file-input-model="isaTabImport.file">
-      <button
-        class="icon-only"
-        ng-if="isaTabImport.file"
-        ng-click="isaTabImport.clearFile()">
-        <i
-          class="fa fa-times-circle"
-          aria-hidden="true"
-          title="Clear selected file"
-          refinery-tooltip
-          refinery-tooltip-container="body"
-          refinery-tooltip-placement="top"
-          refinery-tooltip-delay-show="750"
-          refinery-tooltip-delay-hide="150"
-          refinery-tooltip-hide-on-click="true">
-        </i>
-      </button>
-    </label>
-
-    <div class="text-muted m-t-1-2 m-b-1-2">or</div>
-
-    <label class="block label-block label-text-left">
-      <span class="label-text min-width-200">URL to remote ISA-Tab archive:</span>
-      <input
-        id="id_isa_tab_url"
-        name="isa_tab_url"
-        size="37"
-        type="text"
-        placeholder="e.g. http://example.com/isa-tab.zip"
-        ng-model="isaTabImport.urlToFile"
-        ng-disabled="!!isaTabImport.file">
-    </label>
-
     <button
       id="isa-import-button"
       class="block refinery-base btn btn-default"
@@ -86,3 +87,4 @@
     </button>
   </div>
 </div>
+

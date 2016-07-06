@@ -9,12 +9,19 @@
         </h3>
       </span>
       <span class="refinery-header-right">
-        <a
-          href="./data_set_manager/import/"
-          class="no-underline btn"
-          ng-if="dashboard.showUploadButton()">
-          <i class="fa fa-plus-circle"></i> Upload
-        </a>
+        <div ng-controller="introCtrl">
+          <div ng-intro-options="IntroOptions" ng-intro-method="start"
+               ng-intro-oncomplete="CompletedEvent" ng-intro-onexit="ExitEvent"
+               ng-intro-onchange="ChangeEvent" ng-intro-onbeforechange="BeforeChangeEvent"
+               ng-intro-onafterchange="AfterChangeEvent">
+            <a id="fileUploadStep0"
+              href="./data_set_manager/import/"
+              class="no-underline btn"
+              ng-if="dashboard.showUploadButton()">
+              <i class="fa fa-plus-circle"></i> Upload
+            </a>
+          </div>
+        </div>
         <button
           class="no-underline btn"
           ng-class="{'active': dashboard.dataSetExploration}"
