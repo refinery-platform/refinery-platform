@@ -30,7 +30,7 @@ function FileBrowserCtrl (
   vm.queryKeys = Object.keys($location.search());
   vm.selectedField = {};
   vm.selectedFieldList = {};
-  // vm.selectNodes = [];
+  vm.selectNodesCount = 0;
   vm.gridOptions = {
     appScopeProvider: vm,
     infiniteScrollRowsFromEnd: 40,
@@ -154,12 +154,14 @@ function FileBrowserCtrl (
       // Checkbox selection events
       vm.gridApi.selection.on.rowSelectionChanged(null, function () {
         selectedNodesService.setSelectedNodes(gridApi.selection.getSelectedRows());
+        vm.selectNodesCount = selectedNodesService.selectedNodes.length;
         selectedNodesService.getUuidsFromSelectedNodesInUI();
       });
 
       // update node service selected node which is shared by nodeGroupCtrl
       vm.gridApi.selection.on.rowSelectionChangedBatch(null, function () {
         selectedNodesService.setSelectedNodes(gridApi.selection.getSelectedRows());
+        vm.selectNodesCount = selectedNodesService.selectedNodes.length;
       });
     }
   };
@@ -255,6 +257,7 @@ function FileBrowserCtrl (
       }
     });
     selectedNodesService.setSelectedNodes(selectedNodes);
+    vm.selectNodesCount = selectedNodesService.selectedNodes.length;
   };
 
   // Helper function: select rows on the ui-grid
@@ -286,7 +289,6 @@ function FileBrowserCtrl (
           } else if (selectedNodesService.selectedNodes.length > 0) {
             vm.setGridSelectedRows(selectedNodesService.selectedNodes);
           } else {
-            console.log('clearing the nodes selected');
             vm.gridApi.selection.clearSelectedRows();
           }
         });
