@@ -47,6 +47,9 @@ describe('Controller: Node Group Ctrl', function () {
   it('selectCurrentNodeGroupNodes calls on correct service methods', function () {
     var mockServiceResponse = false;
     var mockResetResponse = false;
+    ctrl.nodeGroups = {
+      selected: []
+    };
     spyOn(service, 'setSelectedNodeUuidsFromNodeGroup').and.callFake(function () {
       mockServiceResponse = true;
     });
@@ -58,6 +61,42 @@ describe('Controller: Node Group Ctrl', function () {
     ctrl.selectCurrentNodeGroupNodes();
     expect(mockServiceResponse).toEqual(true);
     expect(mockResetResponse).toEqual(true);
+  });
+
+  it('clear select nodes calls on correct service methods', function () {
+    var mockServiceUuidsResponse = false;
+    var mockServiceNodesResponse = false;
+    var mockResetResponse = false;
+    ctrl.nodeGroups = {
+      groups: [{
+        uuid: '7f9fdd26-187f-45d1-a87e-4d4e02d5aa1d',
+        node_count: 0,
+        is_implicit: false,
+        study: '8486046b-22f4-447f-9c81-41dbf6173c44',
+        assay: '2a3c4155-db7b-4138-afcb-67ad1cc04d51',
+        is_current: false,
+        nodes: [],
+        name: 'Node Group 1'
+      }]
+    };
+    spyOn(service, 'setSelectedNodeUuidsFromNodeGroup').and.callFake(function () {
+      mockServiceUuidsResponse = true;
+    });
+    spyOn(service, 'setSelectedNodes').and.callFake(function () {
+      mockServiceNodesResponse = true;
+    });
+    spyOn(resetService, 'setResetGridFlag').and.callFake(function () {
+      mockResetResponse = true;
+    });
+    expect(mockServiceUuidsResponse).toEqual(false);
+    expect(mockServiceNodesResponse).toEqual(false);
+    expect(mockResetResponse).toEqual(false);
+    expect(ctrl.nodeGroups.selected).toEqual(undefined);
+    ctrl.clearSelectedNodes();
+    expect(mockServiceUuidsResponse).toEqual(true);
+    expect(mockServiceNodesResponse).toEqual(true);
+    expect(mockResetResponse).toEqual(true);
+    expect(ctrl.nodeGroups.selected).toEqual(ctrl.nodeGroups.groups[0]);
   });
 
   describe('Test RefreshNodeGroupList', function () {
