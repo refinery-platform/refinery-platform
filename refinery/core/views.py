@@ -32,6 +32,8 @@ from core.forms import (
 )
 
 from data_set_manager.models import Node
+from data_set_manager.utils import (generate_solr_params, search_solr,
+                                    format_solr_response)
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
@@ -1092,6 +1094,13 @@ class NodeGroups(APIView):
                 type: string
               required: false
 
+            - name: subtract_nodes_flag
+              description: True will subtract nodes from all assay file nodes
+              in: query
+              type: boolean
+              require: false
+
+
     PUT:
         parameters_strategy:
         form: replace
@@ -1149,6 +1158,29 @@ class NodeGroups(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
+        # Check if the nodes list should be updated if the nodes list should be
+        # subtracted from all nodes.
+        if request.data.get('subtract_nodes_flag'):
+            # Params required to filter solr_request to juse uuids for nodes
+            params = {
+                'attributes': 'uuid',
+                'facets': 'uuid',
+                'limit': 10000000,
+                'include_facet_count': 'false'
+            }
+            solr_params = generate_solr_params(params, request.data.get(
+                'assay'))
+            node_arr = str(request.data.get('nodes')).split(',')
+            str_nodes = (' OR ').join(node_arr)
+
+            field_filter = "&fq=-uuid:(" + str_nodes + ")"
+            solr_params = ''.join([solr_params, field_filter])
+            solr_response = search_solr(solr_params, 'data_set_manager')
+            solr_reponse_json = format_solr_response(solr_response)
+            uuid_list = []
+            for node in solr_reponse_json.get('nodes'):
+                uuid_list.append(node.get('uuid'))
+
         serializer = NodeGroupSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
