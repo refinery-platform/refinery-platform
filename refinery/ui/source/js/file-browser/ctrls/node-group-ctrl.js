@@ -25,11 +25,13 @@ function NodeGroupCtrl (
     });
   };
 
-  vm.selectCurrentNodeGroup = function () {
+  // Update selected nodes when new node group is selected
+  vm.selectCurrentNodeGroupNodes = function () {
     selectedNodesService.setSelectedNodeUuidsFromNodeGroup(vm.nodeGroups.selected.nodes);
     resetGridService.setResetGridFlag(true);
   };
 
+  // Create a new node group
   vm.saveNodeGroup = function (name) {
     var params = {
       name: name,
@@ -42,6 +44,7 @@ function NodeGroupCtrl (
     });
   };
 
+  // Helper method to clear selected nodes and node group selection
   vm.clearSelectedNodes = function () {
     // Deselects node group
     vm.nodeGroups.selected = vm.nodeGroups.groups[0];
