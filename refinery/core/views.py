@@ -32,8 +32,6 @@ from core.forms import (
 )
 
 from data_set_manager.models import Node
-from data_set_manager.utils import (generate_solr_params, search_solr,
-                                    format_solr_response)
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
@@ -43,7 +41,8 @@ from core.models import (
     CustomRegistrationProfile)
 from core.serializers import WorkflowSerializer, NodeGroupSerializer
 from core.utils import (get_data_sets_annotations, get_anonymous_user,
-                        create_current_selection_node_group)
+                        create_current_selection_node_group,
+                        filter_nodes_uuids_in_solr)
 
 from xml.parsers.expat import ExpatError
 
@@ -1161,25 +1160,10 @@ class NodeGroups(APIView):
         # Check if the nodes list should be updated if the nodes list should be
         # subtracted from all nodes.
         if request.data.get('subtract_nodes_flag'):
-            # Params required to filter solr_request to juse uuids for nodes
-            params = {
-                'attributes': 'uuid',
-                'facets': 'uuid',
-                'limit': 10000000,
-                'include_facet_count': 'false'
-            }
-            solr_params = generate_solr_params(params, request.data.get(
-                'assay'))
-            node_arr = str(request.data.get('nodes')).split(',')
-            str_nodes = (' OR ').join(node_arr)
-
-            field_filter = "&fq=-uuid:(" + str_nodes + ")"
-            solr_params = ''.join([solr_params, field_filter])
-            solr_response = search_solr(solr_params, 'data_set_manager')
-            solr_reponse_json = format_solr_response(solr_response)
-            uuid_list = []
-            for node in solr_reponse_json.get('nodes'):
-                uuid_list.append(node.get('uuid'))
+            uuid_list = filter_nodes_uuids_in_solr(
+                request.data.get('subtract_nodes_flag'),
+                request.data.get('assay')
+            )
             request.data._mutable = True
             request.data.setlist('nodes', uuid_list)
 
