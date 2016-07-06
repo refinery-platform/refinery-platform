@@ -526,15 +526,15 @@ def generate_solr_params(params, assay_uuid):
                  '"Array Data Matrix File" OR' \
                  '"Derived Array Data Matrix File")'
 
-    is_annotation = params.get('is_annotation', default='false')
-    facet_count = params.get('include_facet_count', default='true')
-    start = params.get('offset', default='0')
-    row = params.get('limit', default='20')
-    field_limit = params.get('attributes', default=None)
-    facet_field = params.get('facets', default=None)
-    facet_pivot = params.get('pivots', default=None)
-    sort = params.get('sort', default=None)
-    facet_filter = params.get('filter_attribute', default=None)
+    is_annotation = params.get('is_annotation', 'false')
+    facet_count = params.get('include_facet_count', 'true')
+    start = params.get('offset', '0')
+    row = params.get('limit', '20')
+    field_limit = params.get('attributes', None)
+    facet_field = params.get('facets', None)
+    facet_pivot = params.get('pivots', None)
+    sort = params.get('sort', None)
+    facet_filter = params.get('filter_attribute', None)
 
     fixed_solr_params = \
         '&'.join([file_types,
