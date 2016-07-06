@@ -9,31 +9,24 @@ function NodeGroupCtrl (
   selectedNodesService
   ) {
   var vm = this;
-  vm.nodeGroupList = [];
-  vm.nodeGroupList.selected = vm.nodeGroupList[0];
+  vm.nodeGroups = {
+    groups: []
+  };
+  vm.nodeGroups.selected = vm.nodeGroups.groups[0];
 
   // Refresh attribute lists when modal opens
   vm.refreshNodeGroupList = function () {
     var assayUuid = $window.externalAssayUuid;
-    var promise = $q.defer();
-
     fileBrowserFactory.getNodeGroupList(assayUuid).then(function () {
-      vm.nodeGroupList = fileBrowserFactory.nodeGroupList;
-
-      // Default set the node group list to be current selection
-      if (vm.nodeGroupList.length > 0) {
-        vm.nodeGroupList.selected = vm.nodeGroupList[0];
-      }
-      promise.resolve();
+      vm.nodeGroups.groups = fileBrowserFactory.nodeGroupList;
+      vm.nodeGroups.selected = vm.nodeGroups.groups[0];
     }, function (error) {
       $log.error(error);
-      promise.reject();
     });
-    return promise.promise;
   };
 
   vm.selectCurrentNodeGroup = function () {
-    selectedNodesService.setSelectedNodeUuidsFromNodeGroup(vm.nodeGroupList.selected.nodes);
+    selectedNodesService.setSelectedNodeUuidsFromNodeGroup(vm.nodeGroups.selected.nodes);
     resetGridService.setResetGridFlag(true);
   };
 
@@ -45,17 +38,13 @@ function NodeGroupCtrl (
       nodes: selectedNodesService.selectedNodeUuidsFromUI
     };
     fileBrowserFactory.createNodeGroup(params).then(function () {
-      vm.refreshNodeGroupList().then(function () {
-        vm.nodeGroupList.selected = vm.nodeGroupList[vm.nodeGroupList.length - 1];
-      });
-    }, function (error) {
-      $log.error(error);
+      vm.refreshNodeGroupList();
     });
   };
 
   vm.clearSelectedNodes = function () {
     // Deselects node group
-    vm.nodeGroupList.selected = undefined;
+    vm.nodeGroups.selected = vm.nodeGroups.groups[0];
     // Empties nodes uuids list used when grids are reset
     selectedNodesService.setSelectedNodeUuidsFromNodeGroup([]);
     // Empties selected nodes used when grids are reset

@@ -1,6 +1,6 @@
 <ui-select
     append-to-body="true"
-    ng-model="FBNGCtrl.nodeGroupList.selected"
+    ng-model="FBNGCtrl.nodeGroups.selected"
     on-select="FBNGCtrl.selectCurrentNodeGroup()"
     theme="select2"
     class="ui-select-drop">
@@ -9,7 +9,8 @@
   </ui-select-match>
   <ui-select-choices
     position="down"
-    repeat="nodeGroup in FBNGCtrl.nodeGroupList | filter: $select.search">
+    repeat="nodeGroup in FBNGCtrl.nodeGroups.groups | filter: $select.search
+     track by nodeGroup.uuid">
     <span ng-bind-html="nodeGroup.name | highlight: $select.search"></span>
     </ui-select-choices>
 </ui-select>

@@ -2,14 +2,14 @@
 
 function rpFileBrowserNodeGroup () {
   return {
-    restrict: 'E',
+    restrict: 'AE',
     templateUrl: '/static/partials/file-browser/partials/node-group.html',
     controller: 'NodeGroupCtrl',
     controllerAs: 'FBNGCtrl',
     bindToController: {
-      nodeGroupList: '=?'
+      nodeGroups: '=?'
     },
-    link: function (scope, element, attr, ctrl) {
+    link: function (scope, element, attrs, ctrl) {
       ctrl.refreshNodeGroupList();
     }
   };
