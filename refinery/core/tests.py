@@ -1675,11 +1675,21 @@ class UtilitiesTest(TestCase):
         self.assertEqual(response.status_code, 404)
 
     # Mock methods used in filter_nodes_uuids_in_solr
-    def fake_search_solr(nodes_obj, str_name):
-        return []
+    def fake_generate_solr_params(params, assay_uuid):
+        # Method should response with a string
+        return ''
 
-    def fake_format_solr_response(uuids_array):
-        if len(uuids_array) > 0:
+    def fake_search_solr(params, str_name):
+        # Method expects solr params and a str_name and should return a string
+        # But for mock testing purpose, it will return an array
+        if ' OR ' in params:
+            return ['test', 'list']
+        else:
+            return []
+
+    def fake_format_solr_response(solr_uuids_list):
+        # Method expects solr_response, but for testing passing a mock list
+        if len(solr_uuids_list) > 0:
             # if uuids are passed in
             response_node_uuids = [
                 {'uuid': 'd2041706-ad2e-4f5b-a6ac-2122fe2a9751'},
@@ -1708,8 +1718,11 @@ class UtilitiesTest(TestCase):
             ]
         return {'nodes': response_node_uuids}
 
+    @mock.patch("core.utils.generate_solr_params",
+                fake_generate_solr_params)
     @mock.patch("core.utils.search_solr", fake_search_solr)
-    @mock.patch("core.utils.format_solr_response", fake_format_solr_response)
+    @mock.patch("core.utils.format_solr_response",
+                fake_format_solr_response)
     def test_filter_nodes_uuids_in_solr_with_uuids(self):
         response_node_uuids = [
             'd2041706-ad2e-4f5b-a6ac-2122fe2a9751',
@@ -1724,6 +1737,8 @@ class UtilitiesTest(TestCase):
         response = filter_nodes_uuids_in_solr(self.valid_uuid, self.node_uuids)
         self.assertItemsEqual(response, response_node_uuids)
 
+    @mock.patch("core.utils.generate_solr_params",
+                fake_generate_solr_params)
     @mock.patch("core.utils.search_solr", fake_search_solr)
     @mock.patch("core.utils.format_solr_response", fake_format_solr_response)
     def test_filter_nodes_uuids_in_solr_no_uuids(self):
