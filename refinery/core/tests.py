@@ -1682,16 +1682,12 @@ class UtilitiesTest(TestCase):
 
     def fake_search_solr(params, str_name):
         # Method expects solr params and a str_name. It should return a string
-        # But for mock testing purpose, it will return an array.
-        # Str is in params only if filter_out_uuids are passed
-        if '&fq=-uuid' in params:
-            return ['test', 'list']
-        else:
-            return []
+        # For mock purpose, pass params which are included in solr_response
+        return params
 
-    def fake_format_solr_response(solr_uuids_list):
-        # Method expects solr_response, but for testing passing a mock list
-        if len(solr_uuids_list) > 0:
+    def fake_format_solr_response(solr_response):
+        # Method expects solr_response and returns array of uuid objs
+        if '&fq=-uuid' in solr_response:
             # if uuids are passed in
             response_node_uuids = [
                 {'uuid': 'd2041706-ad2e-4f5b-a6ac-2122fe2a9751'},
