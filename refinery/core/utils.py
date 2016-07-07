@@ -780,8 +780,8 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[]):
     solr_params = generate_solr_params(params, assay_uuid)
     # Only require solr filters if exception uuids are passed
     if len(filter_out_uuids) > 0:
-        node_arr = str(filter_out_uuids).split(',')
-        str_nodes = (' OR ').join(node_arr)
+        # node_arr = str(filter_out_uuids).split(',')
+        str_nodes = (' OR ').join(filter_out_uuids)
         field_filter = "&fq=-uuid:(" + str_nodes + ")"
         solr_params = ''.join([solr_params, field_filter])
     solr_response = search_solr(solr_params, 'data_set_manager')
