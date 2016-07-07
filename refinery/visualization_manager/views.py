@@ -25,7 +25,8 @@ def igv_session(request):
     query = request.GET.copy()
     try:
         uuids = query["uuids"].split(",")
-    except:
+    except Exception as e:
+        logger.error("Error formatting uuids: %s" % e)
         uuids = []
 
     logger.info(str(len(uuids)) + " file uuids received: " + ", ".join(uuids))
@@ -37,7 +38,7 @@ def igv_session(request):
 
     for genome_build, file_uuids in genome_builds.iteritems():
         if genome_build is not None:
-            igv_urls.append(createIGVsession(genome_build, file_uuids))
+            igv_urls.append(create_igv_session(genome_build, file_uuids))
 
     if len(igv_urls) == 0 and len(uuids) > 0:
         logger.warning("None of " + str(
@@ -55,9 +56,10 @@ def profile_viewer_session(request):
                           end_location=200000000, sequence_name="chr1")
 
 
-def createIGVsession(genome, uuids, is_file_uuid=False):
+def create_igv_session(genome, uuids, is_file_uuid=False):
     """ Creates session file for selected file uuids, returns newly created
     filestore uuid
+    :param is_file_uuid:
     :param genome: Genome to be used in session file i.e. hg18, dm3
     :type genome: string.
     :param uuids: Array of UUIDs to be used
@@ -81,7 +83,7 @@ def createIGVsession(genome, uuids, is_file_uuid=False):
         </Resources>
     </Global>
     """
-    logger.debug("visualization_manager.createIGVsession called")
+    logger.debug("visualization_manager.create_igv_session called")
 
     # Create the minidom document
     doc = Document()
@@ -102,7 +104,7 @@ def createIGVsession(genome, uuids, is_file_uuid=False):
         logger.debug('New resource: ' + curr_name + ' - ' + curr_url)
 
         # What to do if fs does not exist?
-        if (curr_name):
+        if curr_name:
             # creates Resource element
             res = doc.createElement("Resource")
             res.setAttribute("name", curr_name)
@@ -144,7 +146,7 @@ def results_igv(request):
     logger.debug("uuids")
     logger.debug(uuids)
     # NEED SPECIES
-    igv_url = createIGVsession("mm9", uuids, is_file_uuid=True)
+    igv_url = create_igv_session("mm9", uuids, is_file_uuid=True)
     return redirect(igv_url)
 
 
@@ -178,10 +180,10 @@ def igv_multi_species(solr_results, solr_annot=None):
 
     for k, v in unique_species.items():
         if solr_annot is not None and solr_annot["response"]["numFound"] > 0:
-            sample_file = addIGVSamples(fields, unique_species[k]['solr'],
-                                        unique_annot[k]['solr'])
+            sample_file = add_igv_samples(fields, unique_species[k]['solr'],
+                                          unique_annot[k]['solr'])
         else:
-            sample_file = addIGVSamples(fields, unique_species[k]['solr'])
+            sample_file = add_igv_samples(fields, unique_species[k]['solr'])
 
         logger.debug('Sample File: ' + sample_file)
 
@@ -198,13 +200,13 @@ def igv_multi_species(solr_results, solr_annot=None):
             if (solr_annot is not None and solr_annot["response"][
                                            "numFound"] > 0):
                 if k in unique_annot:
-                    temp_url = createIGVsessionAnnot(
+                    temp_url = create_igv_session_annot(
                         k, unique_species[k], annot_uuids=unique_annot[k],
                         samp_file=sample_file)
             else:
-                temp_url = createIGVsessionAnnot(k, unique_species[k],
-                                                 annot_uuids=None,
-                                                 samp_file=sample_file)
+                temp_url = create_igv_session_annot(k, unique_species[k],
+                                                    annot_uuids=None,
+                                                    samp_file=sample_file)
 
             if species_id:
                 ui_results['species'][species_id + ' (' + k + ')'] = temp_url
@@ -280,7 +282,7 @@ def get_unique_species(docs):
     return unique_species, unique_count
 
 
-def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
+def create_igv_session_annot(genome, uuids, annot_uuids=None, samp_file=None):
     """Creates session file for selected file uuids, returns newly created
     filestore uuid
     :param genome: Genome to be used in session file i.e. hg18, dm3
@@ -318,10 +320,10 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
     xml_resources = doc.createElement("Resources")
     xml.appendChild(xml_resources)
     # adding selected samples to xml file
-    addIGVResource(uuids["node_uuid"], xml_resources, doc)
+    add_igv_resource(uuids["node_uuid"], xml_resources, doc)
     if annot_uuids:
         # adding selected samples to xml file
-        addIGVResource(annot_uuids["node_uuid"], xml_resources, doc)
+        add_igv_resource(annot_uuids["node_uuid"], xml_resources, doc)
     # adds sample information file to IGV session file
     if samp_file:
         # <Resource name="Sample Information"
@@ -381,7 +383,7 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
     return igv_url
 
 
-def addIGVResource(uuidlist, xml_res, xml_doc):
+def add_igv_resource(uuidlist, xml_res, xml_doc):
     """Adds resources to current IGV session file
     :param uuidlist: Array of filestore UUIDs
     :type uuidlist: Array.
@@ -394,7 +396,7 @@ def addIGVResource(uuidlist, xml_res, xml_doc):
     for node_uuid in uuidlist:
         # gets filestore item
         curr_name, curr_url = get_file_name(node_uuid)
-        logger.debug("addIGVResource: name = %s, curr_url = %s",
+        logger.debug("add_igv_resource: name = %s, curr_url = %s",
                      curr_name, curr_url)
         # What to do if fs does not exist?
         if curr_url:
@@ -409,7 +411,7 @@ def addIGVResource(uuidlist, xml_res, xml_doc):
             xml_res.appendChild(res)
 
 
-def addIGVSamples(fields, results_samp, annot_samples=None):
+def add_igv_samples(fields, results_samp, annot_samples=None):
     """creates phenotype file for IGV
     :param samples: Solr results for samples to be included
     :type samples: Array.
@@ -425,31 +427,31 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
             fields_dict[i] = new_key
 
     # Creating temp file to enter into file_store
-    tempsampname = tempfile.NamedTemporaryFile(delete=False)
+    temp_sample_name = tempfile.NamedTemporaryFile(delete=False)
 
     # writing header to sample file
-    tempsampname.write("#sampleTable" + "\n")
+    temp_sample_name.write("#sampleTable" + "\n")
 
     # writing column names to sample file
     col_names = "Linking_id"
     for k, v in fields_dict.iteritems():
         col_names = col_names + '\t' + v
-    tempsampname.write(col_names + "\n")
+    temp_sample_name.write(col_names + "\n")
 
     # iterating over sample files
     pheno_results = get_sample_lines(fields_dict, results_samp)
-    tempsampname.write(pheno_results)
+    temp_sample_name.write(pheno_results)
 
     # if annotations are not null
     if annot_samples:
         pheno_annot = get_sample_lines(fields_dict, annot_samples)
-        tempsampname.write(pheno_annot)
+        temp_sample_name.write(pheno_annot)
 
     # closing temp file
-    tempsampname.close()
+    temp_sample_name.close()
 
     # getting file_store_uuid
-    filestore_uuid = create(tempsampname.name, filetype="txt")
+    filestore_uuid = create(temp_sample_name.name, filetype="txt")
     filestore_item = import_file(filestore_uuid, refresh=True)
 
     # file to rename
@@ -466,31 +468,61 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
     curr_url = get_full_url(curr_fs.get_datafile_url())
 
     # delete temp file
-    os.unlink(tempsampname.name)
+    os.unlink(temp_sample_name.name)
 
     return curr_url
 
 
-def get_file_name(nodeuuid, sampFile=None, is_file_uuid=False):
+def get_file_name(nodeuuid, samp_file=None, is_file_uuid=False):
     """Helper function for getting a file_name from a filestore uuid
-    :param fileuuid: Filestore uuid
-    :type fileuuid: String
+    :param nodeuuid: Node uuid
+    :type nodeuuid: String
     """
-    # if uuid is a file_store uuid (associated w/ analysis results)
-    if is_file_uuid:
-        temp_fs = FileStoreItem.objects.get(uuid=nodeuuid)
-    else:
+    temp_fs = None
+    try:
         # getting the current file_uuid from the given node_uuid
         curr_file_uuid = Node.objects.get(uuid=nodeuuid).file_uuid
-        # checking to see if it has a file_server item
-        temp_fs = get_aux_file_item(curr_file_uuid)
+    except(Node.DoesNotExist, Node.MultipleObjectsReturned) as e:
+            logger.error("Could not fetch Node from %s: %s" % (nodeuuid, e))
+
+    # if uuid is a file_store uuid (associated w/ analysis results)
+    if is_file_uuid:
+        try:
+            temp_fs = FileStoreItem.objects.get(uuid=nodeuuid)
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned) as e:
+            logger.error("Could not fetch FileStoreItem from %s: %s" % (
+                nodeuuid, e))
+    else:
+        try:
+            # checking to see if it has a file_server item
+            temp_fs = get_aux_file_item(curr_file_uuid)
+        except Exception as e:
+            logger.error("Could not fetch aux_file_item from %s: %s" % (
+                curr_file_uuid, e))
 
     # If no associated file_server auxiliary file then use main data file for
     # IGV
     if temp_fs is None:
         # getting file information based on file_uuids
-        temp_fs = FileStoreItem.objects.get(uuid=curr_file_uuid)
+        try:
+            temp_fs = FileStoreItem.objects.get(uuid=curr_file_uuid)
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned) as e:
+            logger.error("Could not fetch FileStoreItem: %s" % e)
 
+    return create_temp_filename_and_url(temp_fs, samp_file)
+
+
+def create_temp_filename_and_url(temp_fs, samp_file):
+    """Helper function for creating a temporary filename and file url from a
+    given FileStore Item and sample file
+    :param temp_fs: Filestore uuid
+    :type temp_fs: FileStoreItem
+    :param samp_file: T/F value for # IGV SEG FILE HACK
+    :type samp_file: Bool
+    :returns: temp_name, temp_url
+    """
     temp_name = temp_fs.datafile.name.split('/')
     temp_name = temp_name[len(temp_name) - 1]
 
@@ -498,7 +530,7 @@ def get_file_name(nodeuuid, sampFile=None, is_file_uuid=False):
     temp_url = get_full_url(temp_fs.get_datafile_url())
 
     # IGV SEG FILE HACK
-    if sampFile:
+    if samp_file:
         if temp_name.startswith("metaData"):
             new_name = temp_name.split("_")
             if len(new_name) > 1:
