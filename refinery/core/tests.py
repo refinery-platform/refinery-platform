@@ -1677,13 +1677,14 @@ class UtilitiesTest(TestCase):
 
     # Mock methods used in filter_nodes_uuids_in_solr
     def fake_generate_solr_params(params, assay_uuid):
-        # Method should response with a string
+        # Method should respond with a string
         return ''
 
     def fake_search_solr(params, str_name):
-        # Method expects solr params and a str_name and should return a string
-        # But for mock testing purpose, it will return an array
-        if ' OR ' in params:
+        # Method expects solr params and a str_name. It should return a string
+        # But for mock testing purpose, it will return an array.
+        # Str is in params only if filter_out_uuids are passed
+        if '&fq=-uuid' in params:
             return ['test', 'list']
         else:
             return []
