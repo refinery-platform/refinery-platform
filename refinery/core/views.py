@@ -40,7 +40,8 @@ from core.models import (
     Analysis, Invitation, Ontology, NodeGroup,
     CustomRegistrationProfile)
 from core.serializers import WorkflowSerializer, NodeGroupSerializer
-from core.utils import (get_data_sets_annotations, get_anonymous_user)
+from core.utils import (get_data_sets_annotations, get_anonymous_user,
+                        create_current_selection_node_group)
 
 from xml.parsers.expat import ExpatError
 
@@ -1137,19 +1138,17 @@ class NodeGroups(APIView):
             node_groups = NodeGroup.objects.filter(assay__uuid=assay_uuid)
             # If filter returns empty response
             if not node_groups:
-                return Response(status=status.HTTP_404_NOT_FOUND)
+                # Returns Response: created current_selection group or errors
+                return create_current_selection_node_group(assay_uuid)
+            # Serialize list of node_groups
             serializer = NodeGroupSerializer(node_groups, many=True)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        # Return node_group or list of assay's node_groups
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        # A node string list is passed, so needs formatting to list
-        if request.data.get('nodes'):
-            nodes_uuids = request.data.get('nodes').replace(" ", "").split(',')
-            request.data.setlist('nodes', nodes_uuids)
-
         serializer = NodeGroupSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -1163,12 +1162,6 @@ class NodeGroups(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         node_group = self.get_object(uuid)
-        # A node string list is passed, so needs formatting to list
-        if request.data.get('nodes'):
-            nodes_uuids = request.data.get('nodes').replace(" ", "").split(',')
-            request.data._mutable = True
-            request.data.setlist('nodes', nodes_uuids)
-
         serializer = NodeGroupSerializer(node_group, data=request.data,
                                          partial=True)
         if serializer.is_valid():

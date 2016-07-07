@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="{% static "vendor/tipsy/src/stylesheets/tipsy.css" %}" />
   <link rel="stylesheet" href="{% static "vendor/select2/select2.css" %}" />
   <link rel="styleSheet" href="{% static "vendor/angular-ui-grid/ui-grid.min.css" %}"/>
+  <link rel="stylesheet" href="{% static "vendor/ui-select/dist/select.min.css" %}" />
 {% endblock head_html %}
 
 {% block title %} - Data Set {{ data_set.name }}{% endblock %}
@@ -136,25 +137,10 @@
                   <div class="row">
                     <div class="col-md-2">
                       {% if not REFINERY_REPOSITORY_MODE %}
-                        <div class="row" style="margin-bottom: 5px;">
+                        <div class="row">
                           <div class="col-md-12">
-                              <span id="node-set-manager-panel">
-                                <span id="node-set-manager-controls"></span>
-                              </span>
-                          </div>
-                        </div>
-                        <div class="row" style="margin-bottom: 5px;">
-                          <div class="col-md-12">
-                            <div style="width: 100%;">
-                              <div id="node-set-save-button" class="refinery-base
-                              btn btn-default btn-xs">
-                                Save
-                              </div>
-                              <div id="clear-facets"
-                                class="refinery-base btn btn-default btn-xs">
-                                Reset
-                              </div>
-                            </div>
+                            <rp-file-browser-node-group>
+                            </rp-file-browser-node-group>
                           </div>
                         </div>
                       {% endif %}

@@ -11,12 +11,14 @@ from django.core.mail import send_mail
 from django.core.cache import cache
 from django.db import connection
 from django.utils import timezone
+from rest_framework.response import Response
+from rest_framework import status
 from urlparse import urlparse, urljoin
 
 import core
 from .search_indexes import DataSetIndex
 from data_set_manager.search_indexes import NodeIndex
-
+from data_set_manager.models import Assay
 
 logger = logging.getLogger(__name__)
 
@@ -718,3 +720,40 @@ def get_anonymous_user():
     except (User.DoesNotExist, MultipleObjectsReturned) as e:
         logger.error("Could not fetch Anonymous User: %s" % e)
         return None
+
+
+def create_current_selection_node_group(assay_uuid):
+    """
+    Helper method to create a current selection group which
+    is default for all node_group list
+
+    :param assay_uuid: string of uuid
+    :return: Response obj
+    """
+    # confirm an assay exists
+    try:
+        assay = Assay.objects.get(uuid=assay_uuid)
+    except Assay.DoesNotExist as e:
+        return Response(e, status=status.HTTP_404_NOT_FOUND)
+    except Assay.MultipleObjectsReturned as e:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    study_uuid = assay.study.uuid
+    # initialize node_group with a current_selection
+    serializer = core.serializers.NodeGroupSerializer(data={
+        'assay': assay_uuid,
+        'study': study_uuid,
+        'name': 'Current Selection'
+    })
+
+    # creating a default current_selection, therefore returning 201
+    if serializer.is_valid():
+        serializer.save()
+        # UI expects a list from assay query
+        return Response(
+            [serializer.data],
+            status=status.HTTP_201_CREATED)
+    else:
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST)

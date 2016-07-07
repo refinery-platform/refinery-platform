@@ -1798,6 +1798,7 @@ class NodeGroup(SharableResource, TemporaryResource):
     nodes = models.ManyToManyField(Node, blank=True, null=True)
 
     class Meta:
+        unique_together = ["assay", "name"]
         verbose_name = "node group"
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),

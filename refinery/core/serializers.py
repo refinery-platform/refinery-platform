@@ -26,7 +26,7 @@ class NodeGroupSerializer(serializers.ModelSerializer):
             study=validated_data.get('study'),
             assay=validated_data.get('assay'),
             name=validated_data.get('name'),
-            is_current=validated_data.get('is_current'),
+            is_current=validated_data.get('is_current', False),
         )
         # Add foreign keys after object is created
         if validated_data.get('nodes'):

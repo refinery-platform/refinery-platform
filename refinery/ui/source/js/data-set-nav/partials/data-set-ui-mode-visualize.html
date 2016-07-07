@@ -9,6 +9,7 @@
         {{$select.selected.name}}
     </ui-select-match>
     <ui-select-choices
+      position="down"
       repeat="nodeset in (nodesetList | filter: $select.search)">
         {{nodeset.name}}
     </ui-select-choices>
