@@ -1126,6 +1126,12 @@ class NodeGroups(APIView):
                 type: string
               required: false
 
+            - name: subtract_nodes_flag
+              description: True will subtract nodes from all assay file nodes
+              in: query
+              type: boolean
+              require: false
+
     ...
     """
 
@@ -1161,8 +1167,8 @@ class NodeGroups(APIView):
         # subtracted from all nodes.
         if request.data.get('subtract_nodes_flag'):
             uuid_list = filter_nodes_uuids_in_solr(
-                request.data.get('subtract_nodes_flag'),
-                request.data.get('assay')
+                request.data.get('assay'),
+                request.data.get('subtract_nodes_flag')
             )
             request.data._mutable = True
             request.data.setlist('nodes', uuid_list)
@@ -1178,6 +1184,14 @@ class NodeGroups(APIView):
             uuid = request.data.get('uuid')
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        if request.data.get('subtract_nodes_flag'):
+            uuid_list = filter_nodes_uuids_in_solr(
+                request.data.get('assay'),
+                request.data.get('subtract_nodes_flag')
+            )
+            request.data._mutable = True
+            request.data.setlist('nodes', uuid_list)
 
         node_group = self.get_object(uuid)
         serializer = NodeGroupSerializer(node_group, data=request.data,
