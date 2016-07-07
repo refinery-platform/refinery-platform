@@ -479,9 +479,11 @@ def get_file_name(nodeuuid, samp_file=None, is_file_uuid=False):
     :type nodeuuid: String
     """
     temp_fs = None
-
-    # getting the current file_uuid from the given node_uuid
-    curr_file_uuid = Node.objects.get(uuid=nodeuuid).file_uuid
+    try:
+        # getting the current file_uuid from the given node_uuid
+        curr_file_uuid = Node.objects.get(uuid=nodeuuid).file_uuid
+    except(Node.DoesNotExist, Node.MultipleObjectsReturned) as e:
+            logger.error("Could not fetch Node from %s: %s" % (nodeuuid, e))
 
     # if uuid is a file_store uuid (associated w/ analysis results)
     if is_file_uuid:
@@ -495,9 +497,9 @@ def get_file_name(nodeuuid, samp_file=None, is_file_uuid=False):
         try:
             # checking to see if it has a file_server item
             temp_fs = get_aux_file_item(curr_file_uuid)
-        except (Node.DoesNotExist,
-                Node.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch Node from %s: %s" % (nodeuuid, e))
+        except Exception as e:
+            logger.error("Could not fetch aux_file_item from %s: %s" % (
+                curr_file_uuid, e))
 
     # If no associated file_server auxiliary file then use main data file for
     # IGV
