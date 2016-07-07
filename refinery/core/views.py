@@ -1171,7 +1171,7 @@ class NodeGroups(APIView):
             request.data.setlist('nodes', nodes_uuid_list)
 
         # Nodes list updated with remaining nodes after subtraction
-        if request.data.get('subtract_nodes_flag'):
+        if request.data.get('subtract_nodes_flag') == 'true':
             filtered_uuid_list = filter_nodes_uuids_in_solr(
                 request.data.get('assay'),
                 request.data.get('subtract_nodes_flag')
