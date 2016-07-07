@@ -1094,7 +1094,7 @@ class NodeGroups(APIView):
               required: false
               collectionFormat: multi
 
-            - name: subtract_nodes_flag
+            - name: use_complement_nodes
               description: True will subtract nodes from all assay file nodes
               paramType: form
               type: boolean
@@ -1125,7 +1125,7 @@ class NodeGroups(APIView):
               type: string
               required: false
 
-            - name: subtract_nodes_flag
+            - name: use_complement_nodes
               description: True will subtract nodes from all assay file nodes
               paramType: form
               type: boolean
@@ -1171,10 +1171,10 @@ class NodeGroups(APIView):
             request.data.setlist('nodes', nodes_uuid_list)
 
         # Nodes list updated with remaining nodes after subtraction
-        if request.data.get('subtract_nodes_flag') == 'true':
+        if request.data.get('use_complement_nodes') == 'true':
             filtered_uuid_list = filter_nodes_uuids_in_solr(
                 request.data.get('assay'),
-                request.data.get('subtract_nodes_flag')
+                request.data.get('use_complement_nodes')
             )
             request.data.setlist('nodes', filtered_uuid_list)
 
@@ -1199,10 +1199,10 @@ class NodeGroups(APIView):
             request.data.setlist('nodes', nodes_uuid_list)
 
         # Nodes list updated with remaining nodes after subtraction
-        if request.data.get('subtract_nodes_flag'):
+        if request.data.get('use_complement_nodes'):
             uuid_list = filter_nodes_uuids_in_solr(
                 request.data.get('assay'),
-                request.data.get('subtract_nodes_flag')
+                request.data.get('use_complement_nodes')
             )
             request.data.setlist('nodes', uuid_list)
 
