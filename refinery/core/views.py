@@ -41,7 +41,8 @@ from core.models import (
     CustomRegistrationProfile)
 from core.serializers import WorkflowSerializer, NodeGroupSerializer
 from core.utils import (get_data_sets_annotations, get_anonymous_user,
-                        create_current_selection_node_group)
+                        create_current_selection_node_group,
+                        filter_nodes_uuids_in_solr)
 
 from xml.parsers.expat import ExpatError
 
@@ -1062,35 +1063,43 @@ class NodeGroups(APIView):
         parameters:
             - name: name
               description: Name of node group
-              in: query
+              paramType: form
               type: string
               required: true
 
             - name: study
               description: Study uuid or ids
-              in: query
+              paramType: form
               type: string
               required: true
 
             - name: assay
               description: Assay uuid or ids
-              in: query
+              paramType: form
               type: string
               required: true
 
             - name: is_current
               description: The "current selection" node set for the study/assay
-              in: query
+              paramType: form
               type: boolean
               required: false
 
             - name: nodes
-              description: uuids of nodes in group
-              in: query
+              description: uuids of nodes in group expect format uuid,uuid,uuid
+              paramType: form
               type: array
               items:
                 type: string
               required: false
+              collectionFormat: multi
+
+            - name: use_complement_nodes
+              description: True will subtract nodes from all assay file nodes
+              paramType: form
+              type: boolean
+              require: false
+
 
     PUT:
         parameters_strategy:
@@ -1100,23 +1109,27 @@ class NodeGroups(APIView):
         parameters:
             - name: uuid
               description: Node Group Uuid
-              in: form
+              paramType: form
               type: string
               required: true
 
             - name: is_current
               description: The "current selection" node set for the study/assay
-              in: form
+              paramType: form
               type: boolean
               required: false
 
             - name: nodes
-              description: Uuids of nodes in group
-              in: form
-              type: array
-              items:
-                type: string
+              description: Uuids of nodes in group expect format uuid,uuid,uuid
+              paramType: form
+              type: string
               required: false
+
+            - name: use_complement_nodes
+              description: True will subtract nodes from all assay file nodes
+              paramType: form
+              type: boolean
+              require: false
 
     ...
     """
@@ -1149,6 +1162,22 @@ class NodeGroups(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
+        # Swagger issue: put/post queryDict, make data mutable to update nodes
+        request.data._mutable = True
+        if request.data.get('nodes') and isinstance(request.data.get(
+                'nodes'), unicode):
+            nodes_uuid_list = request.data.get('nodes').replace(" ", "").split(
+                ',')
+            request.data.setlist('nodes', nodes_uuid_list)
+
+        # Nodes list updated with remaining nodes after subtraction
+        if request.data.get('use_complement_nodes') == 'true':
+            filtered_uuid_list = filter_nodes_uuids_in_solr(
+                request.data.get('assay'),
+                request.data.get('use_complement_nodes')
+            )
+            request.data.setlist('nodes', filtered_uuid_list)
+
         serializer = NodeGroupSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -1160,6 +1189,22 @@ class NodeGroups(APIView):
             uuid = request.data.get('uuid')
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        # Swagger issue: put/post queryDict, make data mutable to update nodes
+        request.data._mutable = True
+        if request.data.get('nodes') and isinstance(request.data.get(
+                'nodes'), unicode):
+            nodes_uuid_list = request.data.get('nodes').replace(" ", "").split(
+                ',')
+            request.data.setlist('nodes', nodes_uuid_list)
+
+        # Nodes list updated with remaining nodes after subtraction
+        if request.data.get('use_complement_nodes'):
+            uuid_list = filter_nodes_uuids_in_solr(
+                request.data.get('assay'),
+                request.data.get('use_complement_nodes')
+            )
+            request.data.setlist('nodes', uuid_list)
 
         node_group = self.get_object(uuid)
         serializer = NodeGroupSerializer(node_group, data=request.data,
