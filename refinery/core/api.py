@@ -307,17 +307,18 @@ class SharableResourceAPIInterface(object):
         if not res:
             return HttpBadRequest()
 
-        if user.is_authenticated and user != res.get_owner():
-            return HttpUnauthorized()
-
-        # User not authenticated, res is not public.
-        if not user.is_authenticated() and res and not res.is_public():
-            return HttpUnauthorized()
-
         if request.method == 'GET':
             kwargs['sharing'] = True
             return self.process_get(request, res, **kwargs)
         elif request.method == 'PUT':
+
+            if user.is_authenticated() and user != res.get_owner():
+                return HttpUnauthorized()
+
+            # User not authenticated, res is not public.
+            if not user.is_authenticated() and res and not res.is_public():
+                return HttpUnauthorized()
+
             data = json.loads(request.body)
             new_share_list = data['share_list']
 
