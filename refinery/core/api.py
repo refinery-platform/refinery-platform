@@ -83,17 +83,34 @@ class SharableResourceAPIInterface(object):
         return perms
 
     def get_share_list(self, user, res):
-        groups_in = filter(
+        """
+            Produces a list containing the intersection between Groups that
+            the user is a part of and Groups that the resource has been
+            shared with
+            :param user: a User obj
+            :param res: a SharableResource obj
+            :return: list w/ intersection of both afformentioned item's Groups
+        """
+        users_groups = filter(
             lambda g:
             not self.is_manager_group(g) and user in g.user_set.all(),
             Group.objects.all())
+
+        try:
+            resources_groups = [Group.objects.get(id=item["id"]) for item in
+                                res.get_groups()]
+        except (Group.DoesNotExist, Group.MultipleObjectsReturned) as e:
+            logger.error("Could not fetch Group with id %s: %s" %
+                         (item["id"], e))
+
+        intersection = list(set(users_groups).intersection(resources_groups))
 
         return map(
             lambda g: {
                 'group_id': g.id,
                 'group_name': g.name,
                 'perms': self.get_perms(res, g)},
-            groups_in)
+            intersection)
 
     def groups_with_user(self, user):
         return filter(lambda g: user in g.user_set.all(), Group.objects.all())
