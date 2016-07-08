@@ -1,4 +1,5 @@
 import json
+import mock
 
 from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist
@@ -23,7 +24,8 @@ from core.models import (
     Analysis, Workflow, WorkflowEngine, UserProfile, invalidate_cached_object,
     AnalysisNodeConnection, NodeGroup)
 from core.utils import (get_aware_local_time,
-                        create_current_selection_node_group)
+                        create_current_selection_node_group,
+                        filter_nodes_uuids_in_solr)
 from core.views import NodeGroups
 from .serializers import NodeGroupSerializer
 from file_store.models import FileStoreItem
@@ -1564,10 +1566,11 @@ class NodeGroupAPITests(APITestCase):
 
     def test_post_valid_form(self):
         # valid form
+        nodes_str = (',').join(self.nodes_list_uuid)
         new_node_group = {'name': 'Test Group3',
                           'assay': self.assay.uuid,
                           'study': self.study.uuid,
-                          'nodes': [self.node_1.uuid, self.node_2.uuid]
+                          'nodes': nodes_str
                           }
         request = self.factory.post('%s/' % self.url_root, new_node_group)
         response = self.view(request)
@@ -1589,10 +1592,10 @@ class NodeGroupAPITests(APITestCase):
 
     def test_put_valid_uuid_and_valid_input(self):
         # valid uuid and valid input
+        nodes_str = (',').join(self.nodes_list_uuid)
         request = self.factory.put('%s/' % self.url_root,
                                    {'uuid': self.node_group_2.uuid,
-                                    'nodes':
-                                        [self.node_1.uuid, self.node_2.uuid],
+                                    'nodes': nodes_str,
                                     'is_current': True})
         response = self.view(request)
         self.assertEqual(response.status_code, 202)
@@ -1645,6 +1648,11 @@ class UtilitiesTest(TestCase):
         self.assay = Assay.objects.create(**assay)
         self.valid_uuid = self.assay.uuid
         self.invalid_uuid = "03b5f681-35d5-4bdd-bc7d-8552fa777ebc"
+        self.node_uuids = [
+            "1a50204d-49fa-4082-a708-26ee93fb0f86",
+            "32e977fc-b906-4315-b6ed-6a644d173492",
+            "910117c5-fda2-4700-ae87-dc897f3a5d85"
+            ]
 
     def tearDown(self):
         NodeGroup.objects.all().delete()
@@ -1666,3 +1674,84 @@ class UtilitiesTest(TestCase):
     def test_create_current_selection_node_group_invalid(self):
         response = create_current_selection_node_group(self.invalid_uuid)
         self.assertEqual(response.status_code, 404)
+
+    # Mock methods used in filter_nodes_uuids_in_solr
+    def fake_generate_solr_params(params, assay_uuid):
+        # Method should respond with a string
+        return ''
+
+    def fake_search_solr(params, str_name):
+        # Method expects solr params and a str_name. It should return a string
+        # For mock purpose, pass params which are included in solr_response
+        return params
+
+    def fake_format_solr_response(solr_response):
+        # Method expects solr_response and returns array of uuid objs
+        if '&fq=-uuid' in solr_response:
+            # if uuids are passed in
+            response_node_uuids = [
+                {'uuid': 'd2041706-ad2e-4f5b-a6ac-2122fe2a9751'},
+                {'uuid': '57d2b371-a364-4806-b7ee-366a722ca9f4'},
+                {'uuid': 'c9d7f81f-2274-4179-ad00-28227bf4b9b7'},
+                {'uuid': 'e082ce03-0a83-4162-af5c-7472e450d7d0'},
+                {'uuid': '880e60f7-7036-4468-b9c8-fdeebe7c21c3'},
+                {'uuid': '945aaca7-dc58-47b8-8012-e9821249ca7a'},
+                {'uuid': '2b939cb3-5b40-48c2-8df7-e5472c3bdcca'},
+                {'uuid': 'd5e6fef8-d8c9-4df9-b5f0-dd757fe79f7d'}
+            ]
+        else:
+            # else return all uuids
+            response_node_uuids = [
+                {'uuid': '1a50204d-49fa-4082-a708-26ee93fb0f86'},
+                {'uuid': '32e977fc-b906-4315-b6ed-6a644d173492'},
+                {'uuid': '910117c5-fda2-4700-ae87-dc897f3a5d85'},
+                {'uuid': 'd2041706-ad2e-4f5b-a6ac-2122fe2a9751'},
+                {'uuid': '57d2b371-a364-4806-b7ee-366a722ca9f4'},
+                {'uuid': 'c9d7f81f-2274-4179-ad00-28227bf4b9b7'},
+                {'uuid': 'e082ce03-0a83-4162-af5c-7472e450d7d0'},
+                {'uuid': '880e60f7-7036-4468-b9c8-fdeebe7c21c3'},
+                {'uuid': '945aaca7-dc58-47b8-8012-e9821249ca7a'},
+                {'uuid': '2b939cb3-5b40-48c2-8df7-e5472c3bdcca'},
+                {'uuid': 'd5e6fef8-d8c9-4df9-b5f0-dd757fe79f7d'}
+            ]
+        return {'nodes': response_node_uuids}
+
+    @mock.patch("core.utils.generate_solr_params",
+                fake_generate_solr_params)
+    @mock.patch("core.utils.search_solr", fake_search_solr)
+    @mock.patch("core.utils.format_solr_response",
+                fake_format_solr_response)
+    def test_filter_nodes_uuids_in_solr_with_uuids(self):
+        response_node_uuids = [
+            'd2041706-ad2e-4f5b-a6ac-2122fe2a9751',
+            '57d2b371-a364-4806-b7ee-366a722ca9f4',
+            'c9d7f81f-2274-4179-ad00-28227bf4b9b7',
+            'e082ce03-0a83-4162-af5c-7472e450d7d0',
+            '880e60f7-7036-4468-b9c8-fdeebe7c21c3',
+            '945aaca7-dc58-47b8-8012-e9821249ca7a',
+            '2b939cb3-5b40-48c2-8df7-e5472c3bdcca',
+            'd5e6fef8-d8c9-4df9-b5f0-dd757fe79f7d'
+        ]
+        response = filter_nodes_uuids_in_solr(self.valid_uuid, self.node_uuids)
+        self.assertItemsEqual(response, response_node_uuids)
+
+    @mock.patch("core.utils.generate_solr_params",
+                fake_generate_solr_params)
+    @mock.patch("core.utils.search_solr", fake_search_solr)
+    @mock.patch("core.utils.format_solr_response", fake_format_solr_response)
+    def test_filter_nodes_uuids_in_solr_no_uuids(self):
+        response_node_uuids = [
+            '1a50204d-49fa-4082-a708-26ee93fb0f86',
+            '32e977fc-b906-4315-b6ed-6a644d173492',
+            '910117c5-fda2-4700-ae87-dc897f3a5d85',
+            'd2041706-ad2e-4f5b-a6ac-2122fe2a9751',
+            '57d2b371-a364-4806-b7ee-366a722ca9f4',
+            'c9d7f81f-2274-4179-ad00-28227bf4b9b7',
+            'e082ce03-0a83-4162-af5c-7472e450d7d0',
+            '880e60f7-7036-4468-b9c8-fdeebe7c21c3',
+            '945aaca7-dc58-47b8-8012-e9821249ca7a',
+            '2b939cb3-5b40-48c2-8df7-e5472c3bdcca',
+            'd5e6fef8-d8c9-4df9-b5f0-dd757fe79f7d'
+        ]
+        response = filter_nodes_uuids_in_solr(self.valid_uuid, [])
+        self.assertItemsEqual(response, response_node_uuids)

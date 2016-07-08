@@ -19,6 +19,8 @@ import core
 from .search_indexes import DataSetIndex
 from data_set_manager.search_indexes import NodeIndex
 from data_set_manager.models import Assay
+from data_set_manager.utils import (generate_solr_params, search_solr,
+                                    format_solr_response)
 
 logger = logging.getLogger(__name__)
 
@@ -757,3 +759,35 @@ def create_current_selection_node_group(assay_uuid):
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST)
+
+
+def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[]):
+    """
+    Helper method to create a current selection group which
+    is default for all node_group list
+
+    :param assay_uuid: unicode, string
+    :param filter_out_uuids: unicode, string
+    :return: List of uuids
+    """
+    # Params required to filter solr_request to just get uuids for nodes
+    params = {
+        'attributes': 'uuid',
+        'facets': 'uuid',
+        'limit': 10000000,
+        'include_facet_count': 'false'
+    }
+    solr_params = generate_solr_params(params, assay_uuid)
+    # Only require solr filters if exception uuids are passed
+    if filter_out_uuids:
+        # node_arr = str(filter_out_uuids).split(',')
+        str_nodes = (' OR ').join(filter_out_uuids)
+        field_filter = "&fq=-uuid:({})".format(str_nodes)
+        solr_params = ''.join([solr_params, field_filter])
+    solr_response = search_solr(solr_params, 'data_set_manager')
+    solr_reponse_json = format_solr_response(solr_response)
+    uuid_list = []
+    for node in solr_reponse_json.get('nodes'):
+        uuid_list.append(node.get('uuid'))
+
+    return uuid_list
