@@ -152,16 +152,28 @@ function FileBrowserCtrl (
       vm.sortChanged(vm.gridApi.grid, [vm.gridOptions.columnDefs[1]]);
 
       // Checkbox selection events
-      vm.gridApi.selection.on.rowSelectionChanged(null, function () {
+      vm.gridApi.selection.on.rowSelectionChanged(null, function (row) {
+        console.log('select row event');
+        console.log('row');
         selectedNodesService.setSelectedNodes(gridApi.selection.getSelectedRows());
         vm.selectNodesCount = selectedNodesService.selectedNodes.length;
         selectedNodesService.getUuidsFromSelectedNodesInUI();
+        if (selectedNodesService.selectedAllFlag) {
+          selectedNodesService.setComplementSeletedNodes(row.entity.uuid);
+          console.log(row);
+        }
       });
 
       // update node service selected node which is shared by nodeGroupCtrl
-      vm.gridApi.selection.on.rowSelectionChangedBatch(null, function () {
-        selectedNodesService.setSelectedNodes(gridApi.selection.getSelectedRows());
-        vm.selectNodesCount = selectedNodesService.selectedNodes.length;
+      vm.gridApi.selection.on.rowSelectionChangedBatch(null, function (eventRows) {
+        console.log('select all event');
+        console.log(eventRows);
+        if (eventRows[0].isSelected) {
+          selectedNodesService.setSelectedAllFlags(true);
+          // Need to manually set vm.selectNodesCount to count of all list
+        } else {
+          selectedNodesService.setSelectedAllFlags(false);
+        }
       });
     }
   };
