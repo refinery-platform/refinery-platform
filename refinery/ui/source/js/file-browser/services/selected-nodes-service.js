@@ -36,12 +36,9 @@ function selectedNodesService () {
   };
 
   vm.setSelectedAllFlags = function (flag) {
-    console.log(flag);
     if (flag) {
-      console.log('going to true');
       vm.selectedAllFlag = flag;
     } else {
-      console.log('going to false');
       // flag is false, reset complement selected nodes
       vm.selectedAllFlag = flag;
       vm.complementSelectedNodes = [];
@@ -52,8 +49,6 @@ function selectedNodesService () {
     if (vm.complementSelectedNodes.indexOf(nodeUuid) === -1) {
       vm.complementSelectedNodes.push(nodeUuid);
     }
-    console.log('in vm set complement');
-    console.log(vm.complementSelectedNodes);
     return vm.complementSelectedNodes;
   };
 }
