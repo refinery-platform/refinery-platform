@@ -27,6 +27,7 @@ from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.parsers import JSONParser
 from core.forms import (
     ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 )
@@ -1134,6 +1135,8 @@ class NodeGroups(APIView):
     ...
     """
 
+    parser_classes = (JSONParser,)
+
     def get_object(self, uuid):
         try:
             return NodeGroup.objects.get(uuid=uuid)
@@ -1163,12 +1166,12 @@ class NodeGroups(APIView):
 
     def post(self, request, format=None):
         # Swagger issue: put/post queryDict, make data mutable to update nodes
-        request.data._mutable = True
-        if request.data.get('nodes') and isinstance(request.data.get(
-                'nodes'), unicode):
-            nodes_uuid_list = request.data.get('nodes').replace(" ", "").split(
-                ',')
-            request.data.setlist('nodes', nodes_uuid_list)
+        if 'form-urlencoded' in request.content_type:
+            request.data._mutable = True
+            if request.data.get('nodes'):
+                nodes_uuid_list = request.data.get('nodes').replace(
+                    " ", "").split(',')
+                request.data.setlist('nodes', nodes_uuid_list)
 
         # Nodes list updated with remaining nodes after subtraction
         if request.data.get('use_complement_nodes') == 'true':
@@ -1176,7 +1179,10 @@ class NodeGroups(APIView):
                 request.data.get('assay'),
                 request.data.get('use_complement_nodes')
             )
-            request.data.setlist('nodes', filtered_uuid_list)
+            if 'form-urlencoded' in request.content_type:
+                request.data.setlist('nodes', filtered_uuid_list)
+            else:
+                request.data.nodes = filtered_uuid_list
 
         serializer = NodeGroupSerializer(data=request.data)
         if serializer.is_valid():
