@@ -1187,7 +1187,7 @@ class NodeGroups(APIView):
                     request.data.get('assay'),
                     request.data.get('nodes')
                 )
-                request.data.nodes = filtered_uuid_list
+                request.data['nodes'] = filtered_uuid_list
 
         serializer = NodeGroupSerializer(data=request.data)
         if serializer.is_valid():
