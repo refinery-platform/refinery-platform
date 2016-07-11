@@ -1061,6 +1061,10 @@ class NodeGroups(APIView):
               type: string
 
     POST:
+        consumes:
+            - application/json
+        produces:
+            - application/json
         parameters:
             - name: name
               description: Name of node group
@@ -1090,10 +1094,7 @@ class NodeGroups(APIView):
               description: uuids of nodes in group expect format uuid,uuid,uuid
               paramType: form
               type: array
-              items:
-                type: string
               required: false
-              collectionFormat: multi
 
             - name: use_complement_nodes
               description: True will subtract nodes from all assay file nodes
@@ -1123,7 +1124,7 @@ class NodeGroups(APIView):
             - name: nodes
               description: Uuids of nodes in group expect format uuid,uuid,uuid
               paramType: form
-              type: string
+              type: array
               required: false
 
             - name: use_complement_nodes
@@ -1174,14 +1175,18 @@ class NodeGroups(APIView):
                 request.data.setlist('nodes', nodes_uuid_list)
 
         # Nodes list updated with remaining nodes after subtraction
-        if request.data.get('use_complement_nodes') == 'true':
-            filtered_uuid_list = filter_nodes_uuids_in_solr(
-                request.data.get('assay'),
-                request.data.get('use_complement_nodes')
-            )
+        if request.data.get('use_complement_nodes'):
             if 'form-urlencoded' in request.content_type:
+                filtered_uuid_list = filter_nodes_uuids_in_solr(
+                    request.data.get('assay'),
+                    request.data.getlist('nodes')
+                )
                 request.data.setlist('nodes', filtered_uuid_list)
             else:
+                filtered_uuid_list = filter_nodes_uuids_in_solr(
+                    request.data.get('assay'),
+                    request.data.get('nodes')
+                )
                 request.data.nodes = filtered_uuid_list
 
         serializer = NodeGroupSerializer(data=request.data)
