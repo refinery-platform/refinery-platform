@@ -161,7 +161,8 @@ function FileBrowserCtrl (
         }
       });
 
-      // update node service selected node which is shared by nodeGroupCtrl
+      // Event only occurs when checkbox is selected. Checking the first row
+      // selected, ensures it's a true select all
       vm.gridApi.selection.on.rowSelectionChangedBatch(null, function (eventRows) {
         if (eventRows[0].isSelected) {
           selectedNodesService.setSelectedAllFlags(true);
