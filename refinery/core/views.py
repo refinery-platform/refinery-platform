@@ -27,7 +27,6 @@ from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.parsers import JSONParser
 from core.forms import (
     ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 )
@@ -1136,8 +1135,6 @@ class NodeGroups(APIView):
     ...
     """
 
-    parser_classes = (JSONParser,)
-
     def get_object(self, uuid):
         try:
             return NodeGroup.objects.get(uuid=uuid)
@@ -1167,29 +1164,31 @@ class NodeGroups(APIView):
 
     def post(self, request, format=None):
         # Swagger issue: put/post queryDict, make data mutable to update nodes
+        # Convert to dict for ease
         if 'form-urlencoded' in request.content_type:
-            request.data._mutable = True
-            if request.data.get('nodes'):
-                nodes_uuid_list = request.data.get('nodes').replace(
-                    " ", "").split(',')
-                request.data.setlist('nodes', nodes_uuid_list)
+            param_dict = {}
+            for key in request.data:
+
+                if key == 'nodes':
+                    param_dict[key] = request.data.get(
+                        key).replace(' ', '').split(',')
+                elif key == 'use_complement_nodes':
+                    # correct type to boolean, used in conditional below
+                    param_dict[key] = json.loads(request.data.get(key))
+                else:
+                    param_dict[key] = request.data.get(key)
+        else:
+            param_dict = request.data
 
         # Nodes list updated with remaining nodes after subtraction
-        if request.data.get('use_complement_nodes'):
-            if 'form-urlencoded' in request.content_type:
-                filtered_uuid_list = filter_nodes_uuids_in_solr(
-                    request.data.get('assay'),
-                    request.data.getlist('nodes')
-                )
-                request.data.setlist('nodes', filtered_uuid_list)
-            else:
-                filtered_uuid_list = filter_nodes_uuids_in_solr(
-                    request.data.get('assay'),
-                    request.data.get('nodes')
-                )
-                request.data['nodes'] = filtered_uuid_list
+        if param_dict.get('use_complement_nodes'):
+            filtered_uuid_list = filter_nodes_uuids_in_solr(
+                param_dict.get('assay'),
+                param_dict.get('nodes')
+            )
+            param_dict['nodes'] = filtered_uuid_list
 
-        serializer = NodeGroupSerializer(data=request.data)
+        serializer = NodeGroupSerializer(data=param_dict)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
