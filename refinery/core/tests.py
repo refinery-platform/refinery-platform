@@ -1566,11 +1566,10 @@ class NodeGroupAPITests(APITestCase):
 
     def test_post_valid_form(self):
         # valid form
-        nodes_str = (',').join(self.nodes_list_uuid)
         new_node_group = {'name': 'Test Group3',
                           'assay': self.assay.uuid,
                           'study': self.study.uuid,
-                          'nodes': nodes_str
+                          'nodes': self.nodes_list_uuid
                           }
         request = self.factory.post('%s/' % self.url_root, new_node_group)
         response = self.view(request)
