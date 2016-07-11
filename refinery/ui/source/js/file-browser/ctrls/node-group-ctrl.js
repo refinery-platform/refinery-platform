@@ -33,25 +33,18 @@ function NodeGroupCtrl (
 
   // Create a new node group
   vm.saveNodeGroup = function (name) {
-    var params = {};
+    var params = {
+      name: name,
+      assay: $window.externalAssayUuid,
+      study: $window.externalStudyUuid
+    };
     if (selectedNodesService.selectedAllFlag) {
-      params = {
-        name: name,
-        assay: $window.externalAssayUuid,
-        study: $window.externalStudyUuid,
-        nodes: selectedNodesService.complementSelectedNodes,
-        use_complement_nodes: true
-      };
+      params.nodes = selectedNodesService.complementSelectedNodes;
+      params.use_complement_nodes = true;
     } else {
-      params = {
-        name: name,
-        assay: $window.externalAssayUuid,
-        study: $window.externalStudyUuid,
-        nodes: selectedNodesService.selectedNodeUuidsFromUI,
-        use_complement_nodes: false
-      };
+      params.nodes = selectedNodesService.selectedNodeUuidsFromUI;
+      params.use_complement_nodes = false;
     }
-
     fileBrowserFactory.createNodeGroup(params).then(function () {
       vm.refreshNodeGroupList();
     });
