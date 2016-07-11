@@ -38,6 +38,9 @@ function NodeGroupCtrl (
       assay: $window.externalAssayUuid,
       study: $window.externalStudyUuid
     };
+
+    // If select all box is checked, the complements are sent and backend
+    // generates nodes list
     if (selectedNodesService.selectedAllFlag) {
       params.nodes = selectedNodesService.complementSelectedNodes;
       params.use_complement_nodes = true;

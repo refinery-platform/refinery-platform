@@ -27,6 +27,7 @@ function selectedNodesService () {
     return vm.selectedNodeUuidsFromNodeGroup;
   };
 
+  // Grabs uuids from UI-Grid row objects
   vm.getUuidsFromSelectedNodesInUI = function () {
     var uuidsList = [];
     angular.forEach(vm.selectedNodes, function (node) {
@@ -35,6 +36,7 @@ function selectedNodesService () {
     vm.setSelectedNodeUuidsFromUI(uuidsList);
   };
 
+  // Flag for when select all event checkbox is selected
   vm.setSelectedAllFlags = function (flag) {
     if (flag) {
       vm.selectedAllFlag = flag;
@@ -45,6 +47,7 @@ function selectedNodesService () {
     }
   };
 
+  // These are non-selected nodes uuid, when the select all flag is true
   vm.setComplementSeletedNodes = function (nodeUuid) {
     if (vm.complementSelectedNodes.indexOf(nodeUuid) === -1) {
       vm.complementSelectedNodes.push(nodeUuid);
