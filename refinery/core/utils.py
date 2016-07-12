@@ -806,11 +806,12 @@ def admin_ui_deletion(request, objects_to_delete, single_model=None):
         :param single_model: Set this to true when calling from a overridden
         `delete_model` method in the admin.py code
     """
-    def build_delete_response(delete_response):
-        if delete_response[0]:
-            messages.success(request, delete_response[1])
+
+    def build_delete_response(del_response):
+        if del_response[0]:
+            messages.success(request, del_response[1])
         else:
-            messages.error(request, delete_response[1])
+            messages.error(request, del_response[1])
 
     # If this method is triggered from an Admin UI 'delete_selected' call
     if not single_model:
@@ -824,5 +825,7 @@ def admin_ui_deletion(request, objects_to_delete, single_model=None):
         obj = objects_to_delete
         delete_response = obj.delete()
 
-        messages.set_level(request, messages.ERROR)
-        build_delete_response(delete_response)
+        if not delete_response[0]:
+            # Fix for multiple messages displaying
+            messages.set_level(request, messages.ERROR)
+            build_delete_response(delete_response)
