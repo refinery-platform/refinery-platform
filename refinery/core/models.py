@@ -911,7 +911,7 @@ class Workflow(SharableResource, ManageableResource):
         Analysis has been run utilizing it
         '''
 
-        if not self.get_analyses():
+        if self.get_analyses().count() > 0:
             # Hide Workflow from ui if an Analysis has been run on it
 
             self.is_active = False
