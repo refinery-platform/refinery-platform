@@ -1060,6 +1060,10 @@ class NodeGroups(APIView):
               type: string
 
     POST:
+        consumes:
+            - application/json
+        produces:
+            - application/json
         parameters:
             - name: name
               description: Name of node group
@@ -1089,10 +1093,7 @@ class NodeGroups(APIView):
               description: uuids of nodes in group expect format uuid,uuid,uuid
               paramType: form
               type: array
-              items:
-                type: string
               required: false
-              collectionFormat: multi
 
             - name: use_complement_nodes
               description: True will subtract nodes from all assay file nodes
@@ -1122,7 +1123,7 @@ class NodeGroups(APIView):
             - name: nodes
               description: Uuids of nodes in group expect format uuid,uuid,uuid
               paramType: form
-              type: string
+              type: array
               required: false
 
             - name: use_complement_nodes
@@ -1163,22 +1164,31 @@ class NodeGroups(APIView):
 
     def post(self, request, format=None):
         # Swagger issue: put/post queryDict, make data mutable to update nodes
-        request.data._mutable = True
-        if request.data.get('nodes') and isinstance(request.data.get(
-                'nodes'), unicode):
-            nodes_uuid_list = request.data.get('nodes').replace(" ", "").split(
-                ',')
-            request.data.setlist('nodes', nodes_uuid_list)
+        # Convert to dict for ease
+        if 'form-urlencoded' in request.content_type:
+            param_dict = {}
+            for key in request.data:
+
+                if key == 'nodes':
+                    param_dict[key] = request.data.get(
+                        key).replace(' ', '').split(',')
+                elif key == 'use_complement_nodes':
+                    # correct type to boolean, used in conditional below
+                    param_dict[key] = json.loads(request.data.get(key))
+                else:
+                    param_dict[key] = request.data.get(key)
+        else:
+            param_dict = request.data
 
         # Nodes list updated with remaining nodes after subtraction
-        if request.data.get('use_complement_nodes') == 'true':
+        if param_dict.get('use_complement_nodes'):
             filtered_uuid_list = filter_nodes_uuids_in_solr(
-                request.data.get('assay'),
-                request.data.get('use_complement_nodes')
+                param_dict.get('assay'),
+                param_dict.get('nodes')
             )
-            request.data.setlist('nodes', filtered_uuid_list)
+            param_dict['nodes'] = filtered_uuid_list
 
-        serializer = NodeGroupSerializer(data=request.data)
+        serializer = NodeGroupSerializer(data=param_dict)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -1191,23 +1201,31 @@ class NodeGroups(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # Swagger issue: put/post queryDict, make data mutable to update nodes
-        request.data._mutable = True
-        if request.data.get('nodes') and isinstance(request.data.get(
-                'nodes'), unicode):
-            nodes_uuid_list = request.data.get('nodes').replace(" ", "").split(
-                ',')
-            request.data.setlist('nodes', nodes_uuid_list)
+        # Convert to dict for ease
+        if 'form-urlencoded' in request.content_type:
+            param_dict = {}
+            for key in request.data:
+
+                if key == 'nodes':
+                    param_dict[key] = request.data.get(
+                        key).replace(' ', '').split(',')
+                elif key == 'use_complement_nodes':
+                    # correct type to boolean, used in conditional below
+                    param_dict[key] = json.loads(request.data.get(key))
+                else:
+                    param_dict[key] = request.data.get(key)
+        else:
+            param_dict = request.data
 
         # Nodes list updated with remaining nodes after subtraction
-        if request.data.get('use_complement_nodes'):
-            uuid_list = filter_nodes_uuids_in_solr(
-                request.data.get('assay'),
-                request.data.get('use_complement_nodes')
+        if param_dict.get('use_complement_nodes'):
+            filtered_uuid_list = filter_nodes_uuids_in_solr(
+                param_dict.get('assay'),
+                param_dict.get('nodes')
             )
-            request.data.setlist('nodes', uuid_list)
-
+            param_dict['nodes'] = filtered_uuid_list
         node_group = self.get_object(uuid)
-        serializer = NodeGroupSerializer(node_group, data=request.data,
+        serializer = NodeGroupSerializer(node_group, data=param_dict,
                                          partial=True)
         if serializer.is_valid():
             serializer.save()
