@@ -1196,7 +1196,8 @@ class StatisticsResource(Resource):
             model_list = model.objects.all()
         else:
             # Provide distinct call here to filter out inactive workflows
-            model_list = model.objects.all().distinct("internal_id")
+            model_list = model.objects.filter(is_active=True).distinct(
+                "internal_id")
 
         total = len(model_list)
 
