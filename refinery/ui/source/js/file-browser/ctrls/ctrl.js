@@ -157,22 +157,32 @@ function FileBrowserCtrl (
         vm.selectNodesCount = selectedNodesService.selectedNodes.length;
         selectedNodesService.getUuidsFromSelectedNodesInUI();
         if (selectedNodesService.selectedAllFlag) {
-          console.log(row.entity);
-          selectedNodesService.setComplementSeletedNodes(row.entity);
+          selectedNodesService.setComplementSeletedNodes(row);
         }
       });
 
       // Event only occurs when checkbox is selected. Checking the first row
       // selected, ensures it's a true select all
       vm.gridApi.selection.on.rowSelectionChangedBatch(null, function (eventRows) {
-        console.log('in row changed batch');
-        console.log(selectedNodesService.complementSelectedNodes);
         if (eventRows[0].isSelected) {
           selectedNodesService.setSelectedAllFlags(true);
           // Need to manually set vm.selectNodesCount to count of all list
-          // ensure complement nodes are deselected
         } else {
           selectedNodesService.setSelectedAllFlags(false);
+        }
+      });
+    }
+  };
+
+  // Helper methods to deselect complement nodes when infinite scroll
+  // triggers select-all event
+  vm.deselectComplementNodes = function () {
+    if (selectedNodesService.selectedAllFlag) {
+      vm.gridApi.selection.selectAllRows();
+      // ensure complement nodes are deselected
+      angular.forEach(selectedNodesService.complementSelectedNodes, function (nodeRow) {
+        if (nodeRow.isSelected) {
+          vm.gridApi.selection.unSelectRow(nodeRow.entity);
         }
       });
     }
@@ -193,10 +203,7 @@ function FileBrowserCtrl (
           .then(function () {
             vm.checkDataLength('up');
             // if select all flag, then select incoming data
-            if (selectedNodesService.selectedAllFlag) {
-              console.log('select all row down');
-              vm.gridApi.selection.selectAllRows();
-            }
+            vm.deselectComplementNodes();
           })
           .then(function () {
             promise.resolve();
@@ -226,10 +233,7 @@ function FileBrowserCtrl (
           .then(function () {
             vm.checkDataLength('down');
             // if select all flag, then select incoming data
-            if (selectedNodesService.selectedAllFlag) {
-              console.log('select all row up');
-              vm.gridApi.selection.selectAllRows();
-            }
+            vm.deselectComplementNodes();
           })
           .then(function () {
             promise.resolve();
