@@ -524,17 +524,25 @@ class DataSet(SharableResource):
                     logger.error("Couldn't delete NodeCollection:", e)
 
             super(DataSet, self).delete()
-            # Return a "truthy" value here so that the admin ui knows what
-            # type of message to display to the end user
-            return True
+
+            # Return a "truthy" value here so that the admin ui knows if the
+            # deletion succeeded or not as well as the proper message to
+            # display to the end user
+            return True, "DataSet: {} was deleted successfully!".format(self)
 
         else:
-            logger.error("Cannot delete DataSet: %s . It has been used in one "
-                         "or more analyses. " % self)
+            # Prepare string to be displayed upon a failed deletion
+            deletion_error_message = "Cannot delete DataSet: {}. It has " \
+                                     "been used in these analyses: {}".format(
+                                                self,
+                                                str(self.get_analyses())
+                                            )
+            logger.error(deletion_error_message)
 
-            # Return a "falsey" value here so that the admin ui knows what
-            # type of message to display to the end user
-            return False
+            # Return a "falsey" value here so that the admin ui knows if the
+            # deletion succeeded or not as well as the proper message to
+            # display to the end user
+            return False, deletion_error_message
 
     def get_analyses(self):
         return Analysis.objects.filter(data_set=self)
@@ -903,19 +911,25 @@ class Workflow(SharableResource, ManageableResource):
         Analysis has been run utilizing it
         '''
 
-        if self.get_analyses().count() > 0:
+        if not self.get_analyses():
             # Hide Workflow from ui if an Analysis has been run on it
 
             self.is_active = False
-            logger.error(
-                "Could not delete Workflow: %s, one or more Analyses have "
-                "been run using it." % self)
+            # Prepare string to display upon a failed deletion
+            deletion_error_message = "Could not delete Workflow: {}, " \
+                                     "These Analyses have been run " \
+                                     "utilizing it: {}. Setting it as " \
+                                     "'inactive'".format(
+                                            self, self.get_analyses()
+                                        )
+            logger.error(deletion_error_message)
 
             self.save()
 
-            # Return a "falsey" value here so that the admin ui knows what
-            # type of message to display to the end user
-            return False
+            # Return a "falsey" value here so that the admin ui knows if the
+            # deletion succeeded or not as well as the proper message to
+            # display to the end user
+            return False, deletion_error_message
 
         else:
             '''
@@ -933,9 +947,10 @@ class Workflow(SharableResource, ManageableResource):
 
             super(Workflow, self).delete()
 
-            # Return a "truthy" value here so that the admin ui knows what
-            # type of message to display to the end user
-            return True
+            # Return a "truthy" value here so that the admin ui knows if the
+            # deletion succeeded or not as well as the proper message to
+            # display to the end user
+            return True, "Workflow: {} was deleted successfully!"
 
 
 class Project(SharableResource):
@@ -1121,17 +1136,24 @@ class Analysis(OwnableResource):
             nodes.delete()
 
             super(Analysis, self).delete()
-            # Return a "truthy" value here so that the admin ui knows what
-            # type of message to display to the end user
-            return True
+
+            # Return a "truthy" value here so that the admin ui knows if the
+            # deletion succeeded or not as well as the proper message to
+            # display to the end user
+            return True, "Analysis: {} was deleted successfully!".format(self)
 
         else:
-            logger.error("Cannot delete Analysis: %s because one or  more of "
-                         "it's Nodes have been further analyzed" % self)
+            # Prepare string to be displayed upon a failed deletion
+            deletion_error_message = "Cannot delete Analysis: %s because  " \
+                                     "one or more of it's Nodes have been  " \
+                                     "further analyzed".format(self)
 
-            # Return a "falsey" value here so that the admin ui knows what
-            # type of message to display to the end user
-            return False
+            logger.error(deletion_error_message)
+
+            # Return a "falsey" value here so that the admin ui knows if the
+            # deletion succeeded or not as well as the proper message to
+            # display to the end user
+            return False, deletion_error_message
 
     def get_status(self):
         return self.status
