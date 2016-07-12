@@ -164,6 +164,8 @@ function FileBrowserCtrl (
       // Event only occurs when checkbox is selected. Checking the first row
       // selected, ensures it's a true select all
       vm.gridApi.selection.on.rowSelectionChangedBatch(null, function (eventRows) {
+        console.log('in row changed batch');
+        console.log(selectedNodesService.complementSelectedNodes);
         if (eventRows[0].isSelected) {
           selectedNodesService.setSelectedAllFlags(true);
           // Need to manually set vm.selectNodesCount to count of all list
@@ -188,6 +190,11 @@ function FileBrowserCtrl (
           .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
           .then(function () {
             vm.checkDataLength('up');
+            // if select all flag, then select incoming data
+            if (selectedNodesService.selectedAllFlag) {
+              console.log('select all row down');
+              vm.gridApi.selection.selectAllRows();
+            }
           })
           .then(function () {
             promise.resolve();
@@ -216,6 +223,11 @@ function FileBrowserCtrl (
           .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
           .then(function () {
             vm.checkDataLength('down');
+            // if select all flag, then select incoming data
+            if (selectedNodesService.selectedAllFlag) {
+              console.log('select all row up');
+              vm.gridApi.selection.selectAllRows();
+            }
           })
           .then(function () {
             promise.resolve();
