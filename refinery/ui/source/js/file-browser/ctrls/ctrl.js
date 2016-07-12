@@ -19,7 +19,6 @@ function FileBrowserCtrl (
   vm.assayAttributes = [];
   vm.attributeFilter = [];
   vm.analysisFilter = [];
-  vm.nodeCount = 0;
   vm.filesParam = {
     uuid: $window.externalAssayUuid
   };
@@ -60,7 +59,6 @@ function FileBrowserCtrl (
 
     var promise = $q.defer();
     fileBrowserFactory.getAssayFiles(vm.filesParam).then(function () {
-      vm.nodeCount = fileBrowserFactory.nodeCount.value;
       vm.assayFiles = vm.assayFiles.concat(fileBrowserFactory.assayFiles);
       vm.gridOptions.data = vm.assayFiles;
       vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
@@ -167,6 +165,7 @@ function FileBrowserCtrl (
         if (eventRows[0].isSelected) {
           selectedNodesService.setSelectedAllFlags(true);
           // Need to manually set vm.selectNodesCount to count of all list
+          vm.selectNodesCount = vm.assayFilesTotal;
         } else {
           selectedNodesService.setSelectedAllFlags(false);
         }
