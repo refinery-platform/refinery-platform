@@ -320,6 +320,8 @@ function FileBrowserCtrl (
       vm.gridApi.infiniteScroll.setScrollDirections(false, false);
 
       vm.assayFiles = [];
+      vm.selectNodesCount = 0;
+
       vm.refreshAssayFiles().then(function () {
         $timeout(function () {
         // timeout needed to allow digest cycle to complete,and grid to finish ingesting the data
