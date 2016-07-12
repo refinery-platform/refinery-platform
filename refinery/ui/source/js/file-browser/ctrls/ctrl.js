@@ -184,6 +184,11 @@ function FileBrowserCtrl (
           vm.gridApi.selection.unSelectRow(nodeRow.entity);
         }
       });
+    } else if (selectedNodesService.selectedNodeUuidsFromNodeGroup.length > 0) {
+      vm.getGridRowsFromUuids(selectedNodesService.selectedNodeUuidsFromNodeGroup);
+      vm.setGridSelectedRows(selectedNodesService.selectedNodes);
+    } else if (selectedNodesService.selectedNodes.length > 0) {
+      vm.setGridSelectedRows(selectedNodesService.selectedNodes);
     }
   };
 
@@ -276,7 +281,7 @@ function FileBrowserCtrl (
   // Heloper function, Gets ui-grid objects based on the node-group uuidsList
   vm.getGridRowsFromUuids = function (uuidsList) {
     var selectedNodes = [];
-    angular.forEach(vm.gridApi.core.getVisibleRows(), function (row) {
+    angular.forEach(vm.gridApi.grid.rows, function (row) {
       if (uuidsList.indexOf(row.entity.uuid) > -1) {
         selectedNodes.push(row.entity);
       }
