@@ -4,6 +4,7 @@ import logging
 import py2neo
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.sites.models import Site
 from django.contrib.auth.models import User
 from django.core.exceptions import MultipleObjectsReturned
@@ -791,3 +792,37 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[]):
         uuid_list.append(node.get('uuid'))
 
     return uuid_list
+
+
+def admin_ui_deletion(request, objects_to_delete, single_model=None):
+    """
+        Helper method to delete objects selected in the Django admin
+        interface and display the proper message based on the status of
+        their deletion
+        :param objects_to_delete: iterable of Objects selected in admin UI,
+        or a single object instance if `delete_model:admin_ui_deletion` is
+        called with single_model having a truthy value
+        :param request: the request Obj
+        :param single_model: Set this to true when calling from a overridden
+        `delete_model` method in the admin.py code
+    """
+    def build_delete_response(delete_response):
+        if delete_response[0]:
+            messages.success(request, delete_response[1])
+        else:
+            messages.error(request, delete_response[1])
+
+    # If this method is triggered from an Admin UI 'delete_selected' call
+    if not single_model:
+        for instance in objects_to_delete.all():
+            delete_response = instance.delete()
+            build_delete_response(delete_response)
+
+    # If this method is triggered from an Admin UI 'delete_model' call
+    else:
+        # If we reach this point, we are only deleting a single object
+        obj = objects_to_delete
+        delete_response = obj.delete()
+
+        messages.set_level(request, messages.ERROR)
+        build_delete_response(delete_response)
