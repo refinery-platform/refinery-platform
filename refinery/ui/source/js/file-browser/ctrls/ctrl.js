@@ -157,7 +157,8 @@ function FileBrowserCtrl (
         vm.selectNodesCount = selectedNodesService.selectedNodes.length;
         selectedNodesService.getUuidsFromSelectedNodesInUI();
         if (selectedNodesService.selectedAllFlag) {
-          selectedNodesService.setComplementSeletedNodes(row.entity.uuid);
+          console.log(row.entity);
+          selectedNodesService.setComplementSeletedNodes(row.entity);
         }
       });
 
@@ -169,6 +170,7 @@ function FileBrowserCtrl (
         if (eventRows[0].isSelected) {
           selectedNodesService.setSelectedAllFlags(true);
           // Need to manually set vm.selectNodesCount to count of all list
+          // ensure complement nodes are deselected
         } else {
           selectedNodesService.setSelectedAllFlags(false);
         }

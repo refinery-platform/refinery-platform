@@ -7,6 +7,7 @@ function selectedNodesService () {
   vm.selectedNodeUuidsFromNodeGroup = [];
   vm.selectedAllFlag = false;
   vm.complementSelectedNodes = [];
+  vm.complementSelectedNodesUuidsFromUI = [];
 
   vm.setSelectedNodes = function (nodesList) {
     vm.selectedNodes = [];
@@ -48,9 +49,10 @@ function selectedNodesService () {
   };
 
   // These are non-selected nodes uuid, when the select all flag is true
-  vm.setComplementSeletedNodes = function (nodeUuid) {
-    if (vm.complementSelectedNodes.indexOf(nodeUuid) === -1) {
-      vm.complementSelectedNodes.push(nodeUuid);
+  vm.setComplementSeletedNodes = function (nodeRow) {
+    if (vm.complementSelectedNodesUuidsFromUI.indexOf(nodeRow.uuid) === -1) {
+      vm.complementSelectedNodes.push(nodeRow);
+      vm.complementSelectedNodesUuidsFromUI.push(nodeRow.uuid);
     }
     return vm.complementSelectedNodes;
   };

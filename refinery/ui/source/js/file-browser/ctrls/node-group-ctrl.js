@@ -42,7 +42,7 @@ function NodeGroupCtrl (
     // If select all box is checked, the complements are sent and backend
     // generates nodes list
     if (selectedNodesService.selectedAllFlag) {
-      params.nodes = selectedNodesService.complementSelectedNodes;
+      params.nodes = selectedNodesService.complementSelectedNodesUuidsFromUI;
       params.use_complement_nodes = true;
     } else {
       params.nodes = selectedNodesService.selectedNodeUuidsFromUI;
