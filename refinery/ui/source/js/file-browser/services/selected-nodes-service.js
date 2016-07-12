@@ -51,9 +51,9 @@ function selectedNodesService () {
 
   // These are non-selected nodes uuid, when the select all flag is true
   vm.setComplementSeletedNodes = function (nodeRow) {
-    if (vm.complementSelectedNodesUuidsFromUI.indexOf(nodeRow.uuid) === -1) {
+    if (vm.complementSelectedNodesUuidsFromUI.indexOf(nodeRow.entity.uuid) === -1) {
       vm.complementSelectedNodes.push(nodeRow);
-      vm.complementSelectedNodesUuidsFromUI.push(nodeRow.uuid);
+      vm.complementSelectedNodesUuidsFromUI.push(nodeRow.entity.uuid);
     }
     return vm.complementSelectedNodes;
   };
