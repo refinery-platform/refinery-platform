@@ -52,7 +52,7 @@ function FileBrowserCtrl (
   vm.cachePages = 2;
   vm.counter = 0;
 
-
+ // Ui-grid rows generated from assay files
   vm.refreshAssayFiles = function () {
     vm.filesParam.offset = vm.lastPage * vm.rowCount;
     vm.filesParam.limit = vm.rowCount;
