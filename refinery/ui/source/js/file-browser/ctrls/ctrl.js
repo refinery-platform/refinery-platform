@@ -151,23 +151,36 @@ function FileBrowserCtrl (
 
       // Checkbox selection events
       vm.gridApi.selection.on.rowSelectionChanged(null, function (row) {
-        selectedNodesService.setSelectedNodes(gridApi.selection.getSelectedRows());
-        vm.selectNodesCount = selectedNodesService.selectedNodes.length;
-        selectedNodesService.getUuidsFromSelectedNodesInUI();
+        // When selected All, watching the deselect events for complement nodes
         if (selectedNodesService.selectedAllFlag) {
           selectedNodesService.setComplementSeletedNodes(row);
+          vm.selectNodesCount = vm.selectNodesCount - 1;
+        } else {
+          selectedNodesService.setSelectedNodes(gridApi.selection.getSelectedRows());
+          // When node group contains uuids not yet loaded in the ui, set
+          // selectNodesCount from nodegroup nodes length offseted by
+          // the unselected visible rows
+          if (selectedNodesService.selectedNodeUuidsFromNodeGroup.length >
+            selectedNodesService.selectedNodes.length) {
+            vm.selectNodesCount = selectedNodesService.selectedNodeUuidsFromNodeGroup.length -
+            vm.gridApi.grid.rows.length + selectedNodesService.selectedNodes.length;
+          } else {
+            vm.selectNodesCount = selectedNodesService.selectedNodes.length;
+          }
+          selectedNodesService.getUuidsFromSelectedNodesInUI();
         }
       });
 
-      // Event only occurs when checkbox is selected. Checking the first row
-      // selected, ensures it's a true select all
+      // Event only occurs when checkbox is selected/deselected.
       vm.gridApi.selection.on.rowSelectionChangedBatch(null, function (eventRows) {
+       // Checking the first row selected, ensures it's a true select all
         if (eventRows[0].isSelected) {
           selectedNodesService.setSelectedAllFlags(true);
           // Need to manually set vm.selectNodesCount to count of all list
           vm.selectNodesCount = vm.assayFilesTotal;
         } else {
           selectedNodesService.setSelectedAllFlags(false);
+          vm.selectNodesCount = 0;
         }
       });
     }
