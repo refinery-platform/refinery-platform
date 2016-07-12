@@ -173,9 +173,9 @@ function FileBrowserCtrl (
     }
   };
 
-  // Helper methods to deselect complement nodes when infinite scroll
-  // triggers select-all event
-  var resetSelectAllAndDeselectComplementNodes = function () {
+  // Helper method to select/deselect rows programmically after dynamic
+  // scroll adds more data
+  var correctRowSelectionInUI = function () {
     if (selectedNodesService.selectedAllFlag) {
       vm.gridApi.selection.selectAllRows();
       // ensure complement nodes are deselected
@@ -206,8 +206,8 @@ function FileBrowserCtrl (
           .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
           .then(function () {
             vm.checkDataLength('up');
-            // programmically reset select all and complement nodes
-            resetSelectAllAndDeselectComplementNodes();
+            // programmically select/deselect due to new rows
+            correctRowSelectionInUI();
           })
           .then(function () {
             promise.resolve();
@@ -236,8 +236,8 @@ function FileBrowserCtrl (
           .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
           .then(function () {
             vm.checkDataLength('down');
-            // programmically reset select all and complement nodes
-            resetSelectAllAndDeselectComplementNodes();
+            // programmically select/deselect due to new rows
+            correctRowSelectionInUI();
           })
           .then(function () {
             promise.resolve();
