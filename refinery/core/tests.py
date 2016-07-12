@@ -1566,11 +1566,10 @@ class NodeGroupAPITests(APITestCase):
 
     def test_post_valid_form(self):
         # valid form
-        nodes_str = (',').join(self.nodes_list_uuid)
         new_node_group = {'name': 'Test Group3',
                           'assay': self.assay.uuid,
                           'study': self.study.uuid,
-                          'nodes': nodes_str
+                          'nodes': self.nodes_list_uuid
                           }
         request = self.factory.post('%s/' % self.url_root, new_node_group)
         response = self.view(request)
@@ -1592,10 +1591,9 @@ class NodeGroupAPITests(APITestCase):
 
     def test_put_valid_uuid_and_valid_input(self):
         # valid uuid and valid input
-        nodes_str = (',').join(self.nodes_list_uuid)
         request = self.factory.put('%s/' % self.url_root,
                                    {'uuid': self.node_group_2.uuid,
-                                    'nodes': nodes_str,
+                                    'nodes': self.nodes_list_uuid,
                                     'is_current': True})
         response = self.view(request)
         self.assertEqual(response.status_code, 202)

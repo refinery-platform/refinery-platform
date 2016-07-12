@@ -767,7 +767,7 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[]):
     is default for all node_group list
 
     :param assay_uuid: unicode, string
-    :param filter_out_uuids: unicode, string
+    :param filter_out_uuids: array of unicode, string
     :return: List of uuids
     """
     # Params required to filter solr_request to just get uuids for nodes

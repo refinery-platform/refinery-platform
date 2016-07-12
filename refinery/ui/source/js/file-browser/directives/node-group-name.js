@@ -8,7 +8,7 @@ function rpFileBrowserNodeGroupName (bootbox, $log) {
       var isUniqueName = function (name) {
         var flag = true;
         for (var i = 0; i < ctrl.nodeGroups.groups.length; i ++) {
-          if (ctrl.nodeGroups.items[i].name === name) {
+          if (ctrl.nodeGroups && ctrl.nodeGroups.items[i].name === name) {
             flag = false;
             break;
           }

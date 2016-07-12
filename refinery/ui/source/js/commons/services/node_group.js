@@ -36,6 +36,8 @@ angular
                 type: string list, uuids
                 @params: is_current
                 type: boolen
+                @params: use_complement_nodes
+                type: boolen
           */
           update: {
             method: 'PUT'
@@ -50,6 +52,8 @@ angular
                 @params: nodes
                 type: string list, uuids
                 @params: is_current
+                type: boolen
+                @params: use_complement_nodes
                 type: boolen
            */
           save: {

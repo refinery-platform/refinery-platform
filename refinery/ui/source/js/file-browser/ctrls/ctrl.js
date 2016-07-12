@@ -152,16 +152,24 @@ function FileBrowserCtrl (
       vm.sortChanged(vm.gridApi.grid, [vm.gridOptions.columnDefs[1]]);
 
       // Checkbox selection events
-      vm.gridApi.selection.on.rowSelectionChanged(null, function () {
+      vm.gridApi.selection.on.rowSelectionChanged(null, function (row) {
         selectedNodesService.setSelectedNodes(gridApi.selection.getSelectedRows());
         vm.selectNodesCount = selectedNodesService.selectedNodes.length;
         selectedNodesService.getUuidsFromSelectedNodesInUI();
+        if (selectedNodesService.selectedAllFlag) {
+          selectedNodesService.setComplementSeletedNodes(row.entity.uuid);
+        }
       });
 
-      // update node service selected node which is shared by nodeGroupCtrl
-      vm.gridApi.selection.on.rowSelectionChangedBatch(null, function () {
-        selectedNodesService.setSelectedNodes(gridApi.selection.getSelectedRows());
-        vm.selectNodesCount = selectedNodesService.selectedNodes.length;
+      // Event only occurs when checkbox is selected. Checking the first row
+      // selected, ensures it's a true select all
+      vm.gridApi.selection.on.rowSelectionChangedBatch(null, function (eventRows) {
+        if (eventRows[0].isSelected) {
+          selectedNodesService.setSelectedAllFlags(true);
+          // Need to manually set vm.selectNodesCount to count of all list
+        } else {
+          selectedNodesService.setSelectedAllFlags(false);
+        }
       });
     }
   };
@@ -342,7 +350,7 @@ function FileBrowserCtrl (
         width: columnWidth + '%',
         field: attribute.internal_name,
         cellTooltip: true,
-        enableHiding: false,
+        enableHiding: false
       };
       if (columnName === 'Url') {
         // Url requires a custom template for downloading links
