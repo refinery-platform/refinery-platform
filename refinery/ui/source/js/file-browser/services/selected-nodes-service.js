@@ -45,6 +45,7 @@ function selectedNodesService () {
       // flag is false, reset complement selected nodes
       vm.selectedAllFlag = flag;
       vm.complementSelectedNodes = [];
+      vm.complementSelectedNodesUuidsFromUI = [];
     }
   };
 
