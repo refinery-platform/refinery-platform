@@ -27,6 +27,7 @@ function NodeGroupCtrl (
 
   // Update selected nodes when new node group is selected
   vm.selectCurrentNodeGroupNodes = function () {
+    console.log(vm.nodeGroups.selected);
     selectedNodesService.setSelectedNodeUuidsFromNodeGroup(vm.nodeGroups.selected.nodes);
     resetGridService.setResetGridFlag(true);
   };
