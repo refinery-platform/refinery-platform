@@ -3,7 +3,7 @@
 function selectedNodesService () {
   var vm = this;
   vm.selectedNodes = [];
-  vm.selectedNodeUuidsFromUI = [];
+  vm.selectedNodeUuids = [];
   vm.selectedNodeUuidsFromNodeGroup = [];
   vm.selectedAllFlag = false;
   vm.complementSelectedNodes = [];
@@ -13,9 +13,9 @@ function selectedNodesService () {
   vm.setSelectedNodes = function (nodeRow) {
     console.log('just in the set selected nodes');
     console.log(nodeRow);
-    var ind = vm.selectedNodeUuidsFromUI.indexOf(nodeRow.entity.uuid);
+    var ind = vm.selectedNodeUuids.indexOf(nodeRow.entity.uuid);
     console.log(vm.selectedNodes);
-    console.log(vm.selectedNodeUuidsFromUI);
+    console.log(vm.selectedNodeUuids);
     console.log('select node');
    // console.log(nodeRow);
     if (nodeRow.isSelected) {
@@ -23,8 +23,8 @@ function selectedNodesService () {
         console.log('true');
      //   console.log(nodeRow);
         vm.selectedNodes.push(nodeRow);
-        vm.selectedNodeUuidsFromUI.push(nodeRow.entity.uuid);
-        console.log(vm.selectedNodeUuidsFromUI);
+        vm.selectedNodeUuids.push(nodeRow.entity.uuid);
+        console.log(vm.selectedNodeUuids);
         console.log(vm.selectedNodes);
       }
     } else if (nodeRow.isSelected === false) {
@@ -33,9 +33,9 @@ function selectedNodesService () {
       console.log(nodeRow.entity);
       if (ind > -1) {
         console.log('in the ind');
-        console.log(vm.selectedNodeUuidsFromUI);
+        console.log(vm.selectedNodeUuids);
         console.log(vm.selectedNodes);
-        vm.selectedNodeUuidsFromUI.splice(ind, 1);
+        vm.selectedNodeUuids.splice(ind, 1);
         vm.selectedNodes.splice(ind, 1);
       }
     }
@@ -43,23 +43,9 @@ function selectedNodesService () {
     return vm.selectedNodes;
   };
 
-  vm.setSelectedNodeUuidsFromUI = function (nodesUuidsListUI) {
-    angular.copy(nodesUuidsListUI, vm.selectedNodeUuidsFromUI);
-    return vm.selectedNodeUuidsFromUI;
-  };
-
   vm.setSelectedNodeUuidsFromNodeGroup = function (nodesUuidsList) {
     angular.copy(nodesUuidsList, vm.selectedNodeUuidsFromNodeGroup);
     return vm.selectedNodeUuidsFromNodeGroup;
-  };
-
-  // Grabs uuids from UI-Grid row objects
-  vm.getUuidsFromSelectedNodesInUI = function () {
-    var uuidsList = [];
-    angular.forEach(vm.selectedNodes, function (node) {
-      uuidsList.push(node.uuid);
-    });
-    vm.setSelectedNodeUuidsFromUI(uuidsList);
   };
 
   // Flag for when select all event checkbox is selected

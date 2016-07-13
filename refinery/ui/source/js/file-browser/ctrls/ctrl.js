@@ -172,7 +172,6 @@ function FileBrowserCtrl (
           } else {
             vm.selectNodesCount = selectedNodesService.selectedNodes.length;
           }
-         // selectedNodesService.getUuidsFromSelectedNodesInUI();
         }
       });
 
@@ -312,7 +311,7 @@ function FileBrowserCtrl (
   vm.setGridSelectedRows = function () {
     // If user scrolls quickly, there could be a delay for selected items
     angular.forEach(vm.gridApi.grid.rows, function (gridRow) {
-      if (selectedNodesService.selectedNodeUuidsFromUI.indexOf(gridRow.entity.uuid) > -1) {
+      if (selectedNodesService.selectedNodeUuids.indexOf(gridRow.entity.uuid) > -1) {
         console.log('in grid selected rows');
         vm.gridApi.selection.selectRow(gridRow.entity);
       }
