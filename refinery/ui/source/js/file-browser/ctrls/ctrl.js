@@ -44,22 +44,25 @@ function FileBrowserCtrl (
     enableSelectionBatchEvent: true,
     multiSelect: true
   };
+  // Total file size in data set, sent from api
+  vm.assayFilesTotal = 1;
+  // variables supporting dynamic scrolling
   vm.firstPage = 0;
   vm.lastPage = 0;
   vm.rowCount = 100;
-  vm.assayFilesTotal = 1;
   vm.totalPages = 1;
   vm.cachePages = 2;
   vm.counter = 0;
 
- // Ui-grid rows generated from assay files
   vm.refreshAssayFiles = function () {
     vm.filesParam.offset = vm.lastPage * vm.rowCount;
     vm.filesParam.limit = vm.rowCount;
 
     var promise = $q.defer();
     fileBrowserFactory.getAssayFiles(vm.filesParam).then(function () {
+      // Grabbing 100 files per request, keeping max of 300 at a time
       vm.assayFiles = vm.assayFiles.concat(fileBrowserFactory.assayFiles);
+      // Ui-grid rows generated from assay files
       vm.gridOptions.data = vm.assayFiles;
       vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
       vm.totalPages = Math.floor(vm.assayFilesTotal / vm.rowCount);
@@ -135,7 +138,6 @@ function FileBrowserCtrl (
     vm.reset();
   };
 
-
   // Ui-grid methods for catching grid events
   vm.gridOptions.onRegisterApi = function (gridApi) {
     // prevent scoping issues, after reset or initial generation
@@ -156,7 +158,10 @@ function FileBrowserCtrl (
           selectedNodesService.setComplementSeletedNodes(row);
           vm.selectNodesCount = vm.selectNodesCount - 1;
         } else {
-          selectedNodesService.setSelectedNodes(gridApi.selection.getSelectedRows());
+          console.log('in the select row event');
+          console.log(row);
+          // add or remove row to list
+          selectedNodesService.setSelectedNodes(row);
           // When node group contains uuids not yet loaded in the ui, set
           // selectNodesCount from nodegroup nodes length offseted by
           // the unselected visible rows
@@ -167,7 +172,7 @@ function FileBrowserCtrl (
           } else {
             vm.selectNodesCount = selectedNodesService.selectedNodes.length;
           }
-          selectedNodesService.getUuidsFromSelectedNodesInUI();
+         // selectedNodesService.getUuidsFromSelectedNodesInUI();
         }
       });
 
@@ -293,13 +298,13 @@ function FileBrowserCtrl (
 
   // Heloper function, Gets ui-grid objects based on the node-group uuidsList
   vm.getGridRowsFromUuids = function (uuidsList) {
-    var selectedNodes = [];
     angular.forEach(vm.gridApi.grid.rows, function (row) {
+      console.log('in get Grid Rows from uuids');
       if (uuidsList.indexOf(row.entity.uuid) > -1) {
-        selectedNodes.push(row.entity);
+        console.log(row);
+        selectedNodesService.setSelectedNodes(row);
       }
     });
-    selectedNodesService.setSelectedNodes(selectedNodes);
     vm.selectNodesCount = selectedNodesService.selectedNodes.length;
   };
 
@@ -308,6 +313,7 @@ function FileBrowserCtrl (
     // If user scrolls quickly, there could be a delay for selected items
     angular.forEach(vm.gridApi.grid.rows, function (gridRow) {
       if (selectedNodesService.selectedNodeUuidsFromUI.indexOf(gridRow.entity.uuid) > -1) {
+        console.log('in grid selected rows');
         vm.gridApi.selection.selectRow(gridRow.entity);
       }
     });
@@ -317,6 +323,7 @@ function FileBrowserCtrl (
   vm.reset = function () {
     vm.firstPage = 0;
     vm.lastPage = 0;
+    console.log('in reset');
 
     // turn off the infinite scroll handling up and down
     if (typeof vm.gridApi !== 'undefined') {
@@ -324,6 +331,8 @@ function FileBrowserCtrl (
 
       vm.assayFiles = [];
       vm.selectNodesCount = 0;
+      console.log('selected nodes in reset');
+      console.log(selectedNodesService.selectedNodes);
 
       vm.refreshAssayFiles().then(function () {
         $timeout(function () {
@@ -335,8 +344,10 @@ function FileBrowserCtrl (
             vm.getGridRowsFromUuids(selectedNodesService.selectedNodeUuidsFromNodeGroup);
             vm.setGridSelectedRows();
           } else if (selectedNodesService.selectedNodes.length > 0) {
+            console.log('else if selectedNodes');
             vm.setGridSelectedRows();
           } else {
+            console.log('clearing');
             vm.gridApi.selection.clearSelectedRows();
           }
         });
