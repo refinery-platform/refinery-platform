@@ -3,7 +3,9 @@
   "ADMINS": [
     ["Refinery Admin", "<%= @admin || "admin@example.org" %>"]
   ],
-  "ALLOWED_HOSTS": ["localhost", "127.0.0.1", "192.168.50.50"],
+  "ALLOWED_HOSTS": ["localhost", "127.0.0.1", "192.168.50.50"
+    <%= @site_url ? ', "' + @site_url +  '"' : "" %>
+    ],
   "AUTH_LDAP_BASE_DN": "OU=Domain Users,DC=Domain",
   "AUTH_LDAP_BIND_DN": "",
   "AUTH_LDAP_BIND_PASSWORD": "",

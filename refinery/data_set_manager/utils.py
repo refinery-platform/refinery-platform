@@ -526,15 +526,15 @@ def generate_solr_params(params, assay_uuid):
                  '"Array Data Matrix File" OR' \
                  '"Derived Array Data Matrix File")'
 
-    is_annotation = params.get('is_annotation', default='false')
-    facet_count = params.get('include_facet_count', default='true')
-    start = params.get('offset', default='0')
-    row = params.get('limit', default='20')
-    field_limit = params.get('attributes', default=None)
-    facet_field = params.get('facets', default=None)
-    facet_pivot = params.get('pivots', default=None)
-    sort = params.get('sort', default=None)
-    facet_filter = params.get('filter_attribute', default=None)
+    is_annotation = params.get('is_annotation', 'false')
+    facet_count = params.get('include_facet_count', 'true')
+    start = params.get('offset', '0')
+    row = params.get('limit', '20')
+    field_limit = params.get('attributes', None)
+    facet_field = params.get('facets', None)
+    facet_pivot = params.get('pivots', None)
+    sort = params.get('sort', None)
+    facet_filter = params.get('filter_attribute', None)
 
     fixed_solr_params = \
         '&'.join([file_types,
@@ -723,12 +723,16 @@ def format_solr_response(solr_response):
     # Reorganizes solr response into easier to digest objects.
     order_facet_fields = solr_response_json.get('responseHeader').get(
             'params').get('fl').split(',')
-    facet_field_counts = solr_response_json.get('facet_counts').get(
+    if solr_response_json.get('facet_counts'):
+        facet_field_counts = solr_response_json.get('facet_counts').get(
             'facet_fields')
+        facet_field_counts_obj = objectify_facet_field_counts(
+            facet_field_counts)
+        solr_response_json['facet_field_counts'] = facet_field_counts_obj
+        del solr_response_json['facet_counts']
+
     facet_field_docs = solr_response_json.get('response').get('docs')
     facet_field_docs_count = solr_response_json.get('response').get('numFound')
-    facet_field_counts_obj = objectify_facet_field_counts(facet_field_counts)
-    solr_response_json['facet_field_counts'] = facet_field_counts_obj
     attributes = customize_attribute_response(order_facet_fields)
     solr_response_json["attributes"] = attributes
     solr_response_json["nodes"] = facet_field_docs
@@ -736,7 +740,6 @@ def format_solr_response(solr_response):
 
     # Remove unused fields from solr response
     del solr_response_json['responseHeader']
-    del solr_response_json['facet_counts']
     del solr_response_json['response']
 
     return solr_response_json

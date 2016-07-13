@@ -1,0 +1,37 @@
+<ui-select
+    append-to-body="true"
+    ng-model="FBNGCtrl.nodeGroups.selected"
+    on-select="FBNGCtrl.selectCurrentNodeGroupNodes()"
+    theme="select2"
+    class="ui-select-drop">
+  <ui-select-match placeholder="Select a node group">
+    <span ng-bind="$select.selected.name"></span>
+  </ui-select-match>
+  <ui-select-choices
+    position="down"
+    repeat="nodeGroup in FBNGCtrl.nodeGroups.groups | filter: $select.search
+     track by nodeGroup.uuid">
+    <span ng-bind-html="nodeGroup.name | highlight: $select.search"></span>
+    </ui-select-choices>
+</ui-select>
+<div>
+  <button
+    class="refinery-base btn btn-default btn-xs"
+    rp-file-browser-node-group-name
+    refinery-tooltip
+    refinery-tooltip-container="body"
+    refinery-tooltip-placement="right"
+    title="Save a new node group">
+   Save
+  </button>
+  <span
+    class="refinery-base btn btn-default btn-xs"
+    ng-click="FBNGCtrl.clearSelectedNodes()"
+    refinery-tooltip
+    refinery-tooltip-container="body"
+    refinery-tooltip-placement="right"
+    title="Clear node groups and selected nodes.">
+    Clear Selected Nodes
+  </span>
+</div>
+

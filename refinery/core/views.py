@@ -40,7 +40,9 @@ from core.models import (
     Analysis, Invitation, Ontology, NodeGroup,
     CustomRegistrationProfile)
 from core.serializers import WorkflowSerializer, NodeGroupSerializer
-from core.utils import (get_data_sets_annotations, get_anonymous_user)
+from core.utils import (get_data_sets_annotations, get_anonymous_user,
+                        create_current_selection_node_group,
+                        filter_nodes_uuids_in_solr)
 
 from xml.parsers.expat import ExpatError
 
@@ -1058,38 +1060,47 @@ class NodeGroups(APIView):
               type: string
 
     POST:
+        consumes:
+            - application/json
+        produces:
+            - application/json
         parameters:
             - name: name
               description: Name of node group
-              in: query
+              paramType: form
               type: string
               required: true
 
             - name: study
               description: Study uuid or ids
-              in: query
+              paramType: form
               type: string
               required: true
 
             - name: assay
               description: Assay uuid or ids
-              in: query
+              paramType: form
               type: string
               required: true
 
             - name: is_current
               description: The "current selection" node set for the study/assay
-              in: query
+              paramType: form
               type: boolean
               required: false
 
             - name: nodes
-              description: uuids of nodes in group
-              in: query
+              description: uuids of nodes in group expect format uuid,uuid,uuid
+              paramType: form
               type: array
-              items:
-                type: string
               required: false
+
+            - name: use_complement_nodes
+              description: True will subtract nodes from all assay file nodes
+              paramType: form
+              type: boolean
+              require: false
+
 
     PUT:
         parameters_strategy:
@@ -1099,23 +1110,27 @@ class NodeGroups(APIView):
         parameters:
             - name: uuid
               description: Node Group Uuid
-              in: form
+              paramType: form
               type: string
               required: true
 
             - name: is_current
               description: The "current selection" node set for the study/assay
-              in: form
+              paramType: form
               type: boolean
               required: false
 
             - name: nodes
-              description: Uuids of nodes in group
-              in: form
+              description: Uuids of nodes in group expect format uuid,uuid,uuid
+              paramType: form
               type: array
-              items:
-                type: string
               required: false
+
+            - name: use_complement_nodes
+              description: True will subtract nodes from all assay file nodes
+              paramType: form
+              type: boolean
+              require: false
 
     ...
     """
@@ -1137,20 +1152,43 @@ class NodeGroups(APIView):
             node_groups = NodeGroup.objects.filter(assay__uuid=assay_uuid)
             # If filter returns empty response
             if not node_groups:
-                return Response(status=status.HTTP_404_NOT_FOUND)
+                # Returns Response: created current_selection group or errors
+                return create_current_selection_node_group(assay_uuid)
+            # Serialize list of node_groups
             serializer = NodeGroupSerializer(node_groups, many=True)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        # Return node_group or list of assay's node_groups
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        # A node string list is passed, so needs formatting to list
-        if request.data.get('nodes'):
-            nodes_uuids = request.data.get('nodes').replace(" ", "").split(',')
-            request.data.setlist('nodes', nodes_uuids)
+        # Swagger issue: put/post queryDict, make data mutable to update nodes
+        # Convert to dict for ease
+        if 'form-urlencoded' in request.content_type:
+            param_dict = {}
+            for key in request.data:
 
-        serializer = NodeGroupSerializer(data=request.data)
+                if key == 'nodes':
+                    param_dict[key] = request.data.get(
+                        key).replace(' ', '').split(',')
+                elif key == 'use_complement_nodes':
+                    # correct type to boolean, used in conditional below
+                    param_dict[key] = json.loads(request.data.get(key))
+                else:
+                    param_dict[key] = request.data.get(key)
+        else:
+            param_dict = request.data
+
+        # Nodes list updated with remaining nodes after subtraction
+        if param_dict.get('use_complement_nodes'):
+            filtered_uuid_list = filter_nodes_uuids_in_solr(
+                param_dict.get('assay'),
+                param_dict.get('nodes')
+            )
+            param_dict['nodes'] = filtered_uuid_list
+
+        serializer = NodeGroupSerializer(data=param_dict)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -1162,14 +1200,32 @@ class NodeGroups(APIView):
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        node_group = self.get_object(uuid)
-        # A node string list is passed, so needs formatting to list
-        if request.data.get('nodes'):
-            nodes_uuids = request.data.get('nodes').replace(" ", "").split(',')
-            request.data._mutable = True
-            request.data.setlist('nodes', nodes_uuids)
+        # Swagger issue: put/post queryDict, make data mutable to update nodes
+        # Convert to dict for ease
+        if 'form-urlencoded' in request.content_type:
+            param_dict = {}
+            for key in request.data:
 
-        serializer = NodeGroupSerializer(node_group, data=request.data,
+                if key == 'nodes':
+                    param_dict[key] = request.data.get(
+                        key).replace(' ', '').split(',')
+                elif key == 'use_complement_nodes':
+                    # correct type to boolean, used in conditional below
+                    param_dict[key] = json.loads(request.data.get(key))
+                else:
+                    param_dict[key] = request.data.get(key)
+        else:
+            param_dict = request.data
+
+        # Nodes list updated with remaining nodes after subtraction
+        if param_dict.get('use_complement_nodes'):
+            filtered_uuid_list = filter_nodes_uuids_in_solr(
+                param_dict.get('assay'),
+                param_dict.get('nodes')
+            )
+            param_dict['nodes'] = filtered_uuid_list
+        node_group = self.get_object(uuid)
+        serializer = NodeGroupSerializer(node_group, data=param_dict,
                                          partial=True)
         if serializer.is_valid():
             serializer.save()
