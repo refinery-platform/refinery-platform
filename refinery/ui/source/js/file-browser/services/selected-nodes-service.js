@@ -27,6 +27,7 @@ function selectedNodesService () {
         console.log(vm.selectedNodeUuids);
         console.log(vm.selectedNodes);
       }
+      // Have to set explictly to keep deleted rows from infinite scrolling
     } else if (nodeRow.isSelected === false) {
       console.log('false');
       console.log(nodeRow);

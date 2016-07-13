@@ -158,8 +158,6 @@ function FileBrowserCtrl (
           selectedNodesService.setComplementSeletedNodes(row);
           vm.selectNodesCount = vm.selectNodesCount - 1;
         } else {
-          console.log('in the select row event');
-          console.log(row);
           // add or remove row to list
           selectedNodesService.setSelectedNodes(row);
           // When node group contains uuids not yet loaded in the ui, set
@@ -298,9 +296,7 @@ function FileBrowserCtrl (
   // Heloper function, Gets ui-grid objects based on the node-group uuidsList
   vm.getGridRowsFromUuids = function (uuidsList) {
     angular.forEach(vm.gridApi.grid.rows, function (row) {
-      console.log('in get Grid Rows from uuids');
       if (uuidsList.indexOf(row.entity.uuid) > -1) {
-        console.log(row);
         selectedNodesService.setSelectedNodes(row);
       }
     });
@@ -312,7 +308,6 @@ function FileBrowserCtrl (
     // If user scrolls quickly, there could be a delay for selected items
     angular.forEach(vm.gridApi.grid.rows, function (gridRow) {
       if (selectedNodesService.selectedNodeUuids.indexOf(gridRow.entity.uuid) > -1) {
-        console.log('in grid selected rows');
         vm.gridApi.selection.selectRow(gridRow.entity);
       }
     });
@@ -329,7 +324,6 @@ function FileBrowserCtrl (
       vm.gridApi.infiniteScroll.setScrollDirections(false, false);
 
       vm.assayFiles = [];
-      vm.selectNodesCount = 0;
       console.log('selected nodes in reset');
       console.log(selectedNodesService.selectedNodes);
 
