@@ -199,9 +199,9 @@ function FileBrowserCtrl (
       });
     } else if (selectedNodesService.selectedNodeUuidsFromNodeGroup.length > 0) {
       vm.getGridRowsFromUuids(selectedNodesService.selectedNodeUuidsFromNodeGroup);
-      vm.setGridSelectedRows(selectedNodesService.selectedNodes);
+      vm.setGridSelectedRows();
     } else if (selectedNodesService.selectedNodes.length > 0) {
-      vm.setGridSelectedRows(selectedNodesService.selectedNodes);
+      vm.setGridSelectedRows();
     }
   };
 
@@ -304,9 +304,12 @@ function FileBrowserCtrl (
   };
 
   // Helper function: select rows on the ui-grid
-  vm.setGridSelectedRows = function (rows) {
-    angular.forEach(rows, function (row) {
-      vm.gridApi.selection.selectRow(row);
+  vm.setGridSelectedRows = function () {
+    // If user scrolls quickly, there could be a delay for selected items
+    angular.forEach(vm.gridApi.grid.rows, function (gridRow) {
+      if (selectedNodesService.selectedNodeUuidsFromUI.indexOf(gridRow.entity.uuid) > -1) {
+        vm.gridApi.selection.selectRow(gridRow.entity);
+      }
     });
   };
 
@@ -330,9 +333,9 @@ function FileBrowserCtrl (
           // Select rows either from node group lists or previously selected
           if (selectedNodesService.selectedNodeUuidsFromNodeGroup.length > 0) {
             vm.getGridRowsFromUuids(selectedNodesService.selectedNodeUuidsFromNodeGroup);
-            vm.setGridSelectedRows(selectedNodesService.selectedNodes);
+            vm.setGridSelectedRows();
           } else if (selectedNodesService.selectedNodes.length > 0) {
-            vm.setGridSelectedRows(selectedNodesService.selectedNodes);
+            vm.setGridSelectedRows();
           } else {
             vm.gridApi.selection.clearSelectedRows();
           }
