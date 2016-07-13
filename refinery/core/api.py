@@ -1186,8 +1186,18 @@ class StatisticsResource(Resource):
     workflow = fields.DictField(attribute='workflow')
     project = fields.DictField(attribute='project')
 
-    def stat_summary(self, model):
-        model_list = model.objects.all()
+    class Meta:
+        resource_name = 'statistics'
+        object_class = ResourceStatistics
+
+    def stat_summary(self, model, unique_workflows=False):
+
+        if not unique_workflows:
+            model_list = model.objects.all()
+        else:
+            # Filter out inactive workflows
+            model_list = model.objects.filter(is_active=True)
+
         total = len(model_list)
 
         public = len(filter(lambda x: x.is_public(), model_list))
@@ -1201,10 +1211,6 @@ class StatisticsResource(Resource):
             'total': total, 'public': public,
             'private': private, 'private_shared': private_shared
         }
-
-    class Meta:
-        resource_name = 'statistics'
-        object_class = ResourceStatistics
 
     def detail_uri_kwargs(self, bundle_or_obj):
         kwargs = {}
@@ -1226,7 +1232,7 @@ class StatisticsResource(Resource):
         if 'dataset' in request.GET:
             dataset_summary = self.stat_summary(DataSet)
         if 'workflow' in request.GET:
-            workflow_summary = self.stat_summary(Workflow)
+            workflow_summary = self.stat_summary(Workflow, True)
         if 'project' in request.GET:
             project_summary = self.stat_summary(Project)
 
