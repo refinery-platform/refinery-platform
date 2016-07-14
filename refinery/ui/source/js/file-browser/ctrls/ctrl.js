@@ -154,16 +154,10 @@ function FileBrowserCtrl (
       // Checkbox selection events
       vm.gridApi.selection.on.rowSelectionChanged(null, function (row) {
         // When selected All, watching the deselect events for complement nodes
-        if (selectedNodesService.selectedAllFlag &&
-          selectedNodesService.selectedNodes.length > 0) {
+        if (selectedNodesService.selectedAllFlag) {
           selectedNodesService.setComplementSeletedNodes(row);
           vm.selectNodesCount = vm.assayFilesTotal -
             selectedNodesService.complementSelectedNodes.length;
-        // user manually deselects all rows
-        } else if (selectedNodesService.selectedAllFlag &&
-          selectedNodesService.selectedNodes.length === 0) {
-          selectedNodesService.setSelectedAllFlags(false);
-          vm.selectNodesCount = 0;
         } else {
           // add or remove row to list
           selectedNodesService.setSelectedNodes(row);

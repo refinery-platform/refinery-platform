@@ -27,12 +27,9 @@ function NodeGroupCtrl (
 
   // Update selected nodes when new node group is selected
   vm.selectCurrentNodeGroupNodes = function () {
-    // Reset service data
+    selectedNodesService.setSelectedAllFlags(false);
+    // Copy node group nodes uuids to service
     selectedNodesService.setSelectedNodeUuidsFromNodeGroup(vm.nodeGroups.selected.nodes);
-    selectedNodesService.selectedNodes = [];
-    selectedNodesService.selectedNodeUuids = [];
-    selectedNodesService.complementSelectedNodes = [];
-    selectedNodesService.complementSelectedNodesUuids = [];
     resetGridService.setResetGridFlag(true);
   };
 
@@ -58,17 +55,11 @@ function NodeGroupCtrl (
     });
   };
 
-  // Helper method to clear selected nodes and node group selection
+  // RESET button: Clear selected nodes and node group selection
   vm.clearSelectedNodes = function () {
     // Deselects node group
     vm.nodeGroups.selected = vm.nodeGroups.groups[0];
-    // Empties nodes uuids list used when grids are reset
-    selectedNodesService.setSelectedNodeUuidsFromNodeGroup([]);
-    // Empties selected nodes used when grids are reset
-    selectedNodesService.selectedNodes = [];
-    selectedNodesService.selectedNodeUuidsFromNodeGroup = [];
-    selectedNodesService.complementSelectedNodes = [];
-    selectedNodesService.complementSelectedNodesUuids = [];
+    selectedNodesService.setSelectedAllFlags(false);
     resetGridService.setResetGridFlag(true);
   };
 }
