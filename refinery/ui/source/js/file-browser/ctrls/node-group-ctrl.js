@@ -27,7 +27,11 @@ function NodeGroupCtrl (
 
   // Update selected nodes when new node group is selected
   vm.selectCurrentNodeGroupNodes = function () {
+    // Reset service data
     selectedNodesService.setSelectedNodeUuidsFromNodeGroup(vm.nodeGroups.selected.nodes);
+    selectedNodesService.selectedNodes = [];
+    selectedNodesService.complementSelectedNodes = [];
+    selectedNodesService.complementSelectedNodesUuids = [];
     resetGridService.setResetGridFlag(true);
   };
 
@@ -60,7 +64,10 @@ function NodeGroupCtrl (
     // Empties nodes uuids list used when grids are reset
     selectedNodesService.setSelectedNodeUuidsFromNodeGroup([]);
     // Empties selected nodes used when grids are reset
-    selectedNodesService.setSelectedNodes([]);
+    selectedNodesService.selectedNodes = [];
+    selectedNodesService.selectedNodeUuidsFromNodeGroup = [];
+    selectedNodesService.complementSelectedNodes = [];
+    selectedNodesService.complementSelectedNodesUuids = [];
     resetGridService.setResetGridFlag(true);
   };
 }
