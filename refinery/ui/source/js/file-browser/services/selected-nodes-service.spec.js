@@ -73,12 +73,14 @@ describe('Selected-Nodes-Service', function () {
     expect(service.complementSelectedNodesUuids.length).toEqual(0);
     // Does not add duplicate uuids
     service.setComplementSeletedNodes({
-      entity: { uuid: 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x' }
+      entity: { uuid: 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x' },
+      isSelected: false
     });
     expect(service.complementSelectedNodes.length).toEqual(1);
     expect(service.complementSelectedNodesUuids.length).toEqual(1);
     service.setComplementSeletedNodes({
-      entity: { uuid: 'x7398x83x-x9xx-4740-x9x7-x7x0x98123x' }
+      entity: { uuid: 'x7398x83x-x9xx-4740-x9x7-x7x0x98123x' },
+      isSelected: false
     });
     expect(service.complementSelectedNodes.length).toEqual(2);
     expect(service.complementSelectedNodesUuids.length).toEqual(2);

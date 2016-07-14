@@ -64,7 +64,6 @@ describe('Controller: Node Group Ctrl', function () {
   });
 
   it('clear select nodes calls on correct service methods', function () {
-    var mockServiceUuidsResponse = false;
     var mockServiceNodesResponse = false;
     var mockResetResponse = false;
     ctrl.nodeGroups = {
@@ -79,21 +78,16 @@ describe('Controller: Node Group Ctrl', function () {
         name: 'Node Group 1'
       }]
     };
-    spyOn(service, 'setSelectedNodeUuidsFromNodeGroup').and.callFake(function () {
-      mockServiceUuidsResponse = true;
-    });
-    spyOn(service, 'setSelectedNodes').and.callFake(function () {
+    spyOn(service, 'setSelectedAllFlags').and.callFake(function () {
       mockServiceNodesResponse = true;
     });
     spyOn(resetService, 'setResetGridFlag').and.callFake(function () {
       mockResetResponse = true;
     });
-    expect(mockServiceUuidsResponse).toEqual(false);
     expect(mockServiceNodesResponse).toEqual(false);
     expect(mockResetResponse).toEqual(false);
     expect(ctrl.nodeGroups.selected).toEqual(undefined);
     ctrl.clearSelectedNodes();
-    expect(mockServiceUuidsResponse).toEqual(true);
     expect(mockServiceNodesResponse).toEqual(true);
     expect(mockResetResponse).toEqual(true);
     expect(ctrl.nodeGroups.selected).toEqual(ctrl.nodeGroups.groups[0]);
