@@ -33,6 +33,21 @@ function selectedNodesService () {
     return vm.selectedNodeUuidsFromNodeGroup;
   };
 
+  // create ui-grid like objects to match with rows in ui-gride
+  vm.setSelectedNodesFromNodeGroup = function (nodesUuidsList) {
+    angular.forEach(nodesUuidsList, function (uuid) {
+      vm.setSelectedNodes(
+        {
+          entity: { uuid: uuid },
+          isSelected: true
+        }
+      );
+    });
+    console.log('in the set selected Nodes');
+    console.log(vm.selectedNodes);
+    return vm.selectedNodes;
+  };
+
   // Flag for when select all event checkbox is selected
   vm.setSelectedAllFlags = function (flag) {
     if (flag) {

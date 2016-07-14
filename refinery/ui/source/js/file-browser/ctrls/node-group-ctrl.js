@@ -30,6 +30,7 @@ function NodeGroupCtrl (
     // Reset service data
     selectedNodesService.setSelectedNodeUuidsFromNodeGroup(vm.nodeGroups.selected.nodes);
     selectedNodesService.selectedNodes = [];
+    selectedNodesService.selectedNodeUuids = [];
     selectedNodesService.complementSelectedNodes = [];
     selectedNodesService.complementSelectedNodesUuids = [];
     resetGridService.setResetGridFlag(true);

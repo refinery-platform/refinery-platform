@@ -160,16 +160,7 @@ function FileBrowserCtrl (
         } else {
           // add or remove row to list
           selectedNodesService.setSelectedNodes(row);
-          // When node group contains uuids not yet loaded in the ui, set
-          // selectNodesCount from nodegroup nodes length offseted by
-          // the unselected visible rows
-          if (selectedNodesService.selectedNodeUuidsFromNodeGroup.length >
-            selectedNodesService.selectedNodes.length) {
-            vm.selectNodesCount = selectedNodesService.selectedNodeUuidsFromNodeGroup.length -
-            vm.gridApi.grid.rows.length + selectedNodesService.selectedNodes.length;
-          } else {
-            vm.selectNodesCount = selectedNodesService.selectedNodes.length;
-          }
+          vm.selectNodesCount = selectedNodesService.selectedNodes.length;
         }
       });
 
@@ -203,8 +194,8 @@ function FileBrowserCtrl (
   vm.setGridUnselectedRows = function (uuidsList) {
     // If user scrolls quickly, there could be a delay for selected items
     angular.forEach(vm.gridApi.grid.rows, function (gridRow) {
-      if (uuidsList.indexOf(gridRow.entity.uuid) > -1) {
-        vm.gridApi.selection.unSelectRow(gridRow.entity);
+      if (uuidsList.indexOf(gridRow.entity.uuid) === -1) {
+        vm.gridApi.selection.selectRow(gridRow.entity);
       }
     });
   };
@@ -214,12 +205,9 @@ function FileBrowserCtrl (
   var correctRowSelectionInUI = function () {
     // select all event, track complements
     if (selectedNodesService.selectedAllFlag) {
-      vm.gridApi.selection.selectAllRows();
+      // vm.gridApi.selection.selectAllRows();
       // ensure complement nodes are deselected
       vm.setGridUnselectedRows(selectedNodesService.complementSelectedNodesUuids);
-      // selection from node groups
-    } else if (selectedNodesService.selectedNodeUuidsFromNodeGroup.length > 0) {
-      vm.setGridSelectedRows(selectedNodesService.selectedNodeUuidsFromNodeGroup);
       // previous selected nodes maintained during infinite scrolling
     } else if (selectedNodesService.selectedNodes.length > 0) {
       vm.setGridSelectedRows(selectedNodesService.selectedNodeUuids);
@@ -330,11 +318,18 @@ function FileBrowserCtrl (
           resetGridService.setResetGridFlag(false);
           // Select rows either from node group lists or previously selected
           if (selectedNodesService.selectedNodeUuidsFromNodeGroup.length > 0) {
-            vm.setGridSelectedRows(selectedNodesService.selectedNodeUuidsFromNodeGroup);
+            selectedNodesService.setSelectedNodesFromNodeGroup(
+              selectedNodesService.selectedNodeUuidsFromNodeGroup
+            );
+            vm.selectNodesCount = selectedNodesService.selectedNodeUuidsFromNodeGroup.length;
+            correctRowSelectionInUI();
           } else if (selectedNodesService.selectedNodes.length > 0) {
-            vm.setGridSelectedRows(selectedNodesService.selectedNodeUuids);
+            vm.setGridSelectedRows(selectedNodesService.selectedNodes);
+            vm.selectNodesCount = selectedNodesService.selectedNodeUuids.length;
+            correctRowSelectionInUI();
           } else {
             vm.gridApi.selection.clearSelectedRows();
+            vm.selectNodesCount = 0;
           }
         });
       });
