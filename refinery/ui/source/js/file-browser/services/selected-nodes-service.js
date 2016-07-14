@@ -42,6 +42,9 @@ function selectedNodesService () {
       vm.selectedAllFlag = flag;
       vm.complementSelectedNodes = [];
       vm.complementSelectedNodesUuidsFromUI = [];
+      vm.selectedNodes = [];
+      vm.selectedNodeUuids = [];
+      vm.selectedNodeUuidsFromNodeGroup = [];
     }
   };
 
