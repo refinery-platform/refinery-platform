@@ -42,10 +42,10 @@ function NodeGroupCtrl (
     // If select all box is checked, the complements are sent and backend
     // generates nodes list
     if (selectedNodesService.selectedAllFlag) {
-      params.nodes = selectedNodesService.complementSelectedNodesUuidsFromUI;
+      params.nodes = selectedNodesService.complementSelectedNodesUuids;
       params.use_complement_nodes = true;
     } else {
-      params.nodes = selectedNodesService.selectedNodeUuidsFromUI;
+      params.nodes = selectedNodesService.selectedNodeUuids;
       params.use_complement_nodes = false;
     }
     fileBrowserFactory.createNodeGroup(params).then(function () {
