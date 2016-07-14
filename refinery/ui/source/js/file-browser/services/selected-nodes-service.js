@@ -11,31 +11,15 @@ function selectedNodesService () {
 
   // Manual keep track of selected nodes, due to dynamic scrolling
   vm.setSelectedNodes = function (nodeRow) {
-    console.log('just in the set selected nodes');
-    console.log(nodeRow);
     var ind = vm.selectedNodeUuids.indexOf(nodeRow.entity.uuid);
-    console.log(vm.selectedNodes);
-    console.log(vm.selectedNodeUuids);
-    console.log('select node');
-   // console.log(nodeRow);
     if (nodeRow.isSelected) {
       if (ind === -1) {
-        console.log('true');
-     //   console.log(nodeRow);
         vm.selectedNodes.push(nodeRow);
         vm.selectedNodeUuids.push(nodeRow.entity.uuid);
-        console.log(vm.selectedNodeUuids);
-        console.log(vm.selectedNodes);
       }
       // Have to set explictly to keep deleted rows from infinite scrolling
     } else if (nodeRow.isSelected === false) {
-      console.log('false');
-      console.log(nodeRow);
-      console.log(nodeRow.entity);
       if (ind > -1) {
-        console.log('in the ind');
-        console.log(vm.selectedNodeUuids);
-        console.log(vm.selectedNodes);
         vm.selectedNodeUuids.splice(ind, 1);
         vm.selectedNodes.splice(ind, 1);
       }
@@ -45,8 +29,6 @@ function selectedNodesService () {
   };
 
   vm.setSelectedNodeUuidsFromNodeGroup = function (nodesUuidsList) {
-    console.log('in set selected node uuids from node group');
-    console.log(vm.selectedNodeUuidsFromNodeGroup);
     angular.copy(nodesUuidsList, vm.selectedNodeUuidsFromNodeGroup);
     return vm.selectedNodeUuidsFromNodeGroup;
   };
