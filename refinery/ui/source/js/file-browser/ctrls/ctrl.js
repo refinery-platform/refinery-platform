@@ -159,7 +159,6 @@ function FileBrowserCtrl (
           vm.selectNodesCount = vm.selectNodesCount - 1;
         } else {
           // add or remove row to list
-          console.log('in row selection event');
           selectedNodesService.setSelectedNodes(row);
           // When node group contains uuids not yet loaded in the ui, set
           // selectNodesCount from nodegroup nodes length offseted by
@@ -294,20 +293,6 @@ function FileBrowserCtrl (
     }
   };
 
-  // Heloper function, Gets ui-grid objects based on the node-group uuidsList
-  vm.getGridRowsFromUuids = function (uuidsList) {
-    console.log('in get griw rows from uuid');
-    console.log(uuidsList);
-    angular.forEach(vm.gridApi.grid.rows, function (row) {
-      console.log(row);
-      if (uuidsList.indexOf(row.entity.uuid) > -1) {
-
-       // selectedNodesService.setSelectedNodes(row);
-      }
-    });
-    vm.selectNodesCount = selectedNodesService.selectedNodes.length;
-  };
-
   // Helper function: select rows on the ui-grid
   vm.setGridSelectedRows = function (uuidsList) {
     // If user scrolls quickly, there could be a delay for selected items
@@ -322,15 +307,12 @@ function FileBrowserCtrl (
   vm.reset = function () {
     vm.firstPage = 0;
     vm.lastPage = 0;
-    console.log('in reset');
 
     // turn off the infinite scroll handling up and down
     if (typeof vm.gridApi !== 'undefined') {
       vm.gridApi.infiniteScroll.setScrollDirections(false, false);
 
       vm.assayFiles = [];
-      console.log('selected nodes in reset');
-      console.log(selectedNodesService.selectedNodes);
 
       vm.refreshAssayFiles().then(function () {
         $timeout(function () {
@@ -339,16 +321,10 @@ function FileBrowserCtrl (
           resetGridService.setResetGridFlag(false);
           // Select rows either from node group lists or previously selected
           if (selectedNodesService.selectedNodeUuidsFromNodeGroup.length > 0) {
-            console.log('in selectedNode UUids reset conditional');
-            vm.getGridRowsFromUuids(selectedNodesService.selectedNodeUuidsFromNodeGroup);
-            console.log('uuids from node group');
-            console.log(selectedNodesService.selectedNodeUuidsFromNodeGroup);
             vm.setGridSelectedRows(selectedNodesService.selectedNodeUuidsFromNodeGroup);
           } else if (selectedNodesService.selectedNodes.length > 0) {
-            console.log('else if selectedNodes');
             vm.setGridSelectedRows(selectedNodesService.selectedNodeUuidsFromNodeGroup);
           } else {
-            console.log('clearing');
             vm.gridApi.selection.clearSelectedRows();
           }
         });
