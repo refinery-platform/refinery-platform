@@ -154,9 +154,16 @@ function FileBrowserCtrl (
       // Checkbox selection events
       vm.gridApi.selection.on.rowSelectionChanged(null, function (row) {
         // When selected All, watching the deselect events for complement nodes
-        if (selectedNodesService.selectedAllFlag) {
+        if (selectedNodesService.selectedAllFlag &&
+          selectedNodesService.selectedNodes.length > 0) {
           selectedNodesService.setComplementSeletedNodes(row);
-          vm.selectNodesCount = vm.selectNodesCount - 1;
+          vm.selectNodesCount = vm.assayFilesTotal -
+            selectedNodesService.complementSelectedNodes.length;
+        // user manually deselects all rows
+        } else if (selectedNodesService.selectedAllFlag &&
+          selectedNodesService.selectedNodes.length === 0) {
+          selectedNodesService.setSelectedAllFlags(false);
+          vm.selectNodesCount = 0;
         } else {
           // add or remove row to list
           selectedNodesService.setSelectedNodes(row);
@@ -201,11 +208,10 @@ function FileBrowserCtrl (
   };
 
   // Helper method to select/deselect rows programmically after dynamic
-  // scroll adds more data
+  // scroll adds more data, at reset and per 300 rows
   var correctRowSelectionInUI = function () {
     // select all event, track complements
     if (selectedNodesService.selectedAllFlag) {
-      // vm.gridApi.selection.selectAllRows();
       // ensure complement nodes are deselected
       vm.setGridUnselectedRows(selectedNodesService.complementSelectedNodesUuids);
       // previous selected nodes maintained during infinite scrolling
