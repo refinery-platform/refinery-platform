@@ -24,7 +24,7 @@ function selectedNodesService () {
         vm.selectedNodes.splice(ind, 1);
       }
     }
-
+    // else nothing should occur to nodeRow because it is not in assayFiles
     return vm.selectedNodes;
   };
 

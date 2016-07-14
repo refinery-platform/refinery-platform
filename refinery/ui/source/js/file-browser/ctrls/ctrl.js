@@ -191,6 +191,7 @@ function FileBrowserCtrl (
   // Helper method to select/deselect rows programmically after dynamic
   // scroll adds more data
   var correctRowSelectionInUI = function () {
+    // select all event, track complements
     if (selectedNodesService.selectedAllFlag) {
       vm.gridApi.selection.selectAllRows();
       // ensure complement nodes are deselected
@@ -199,11 +200,12 @@ function FileBrowserCtrl (
           vm.gridApi.selection.unSelectRow(nodeRow.entity);
         }
       });
+      // selection from node groups
     } else if (selectedNodesService.selectedNodeUuidsFromNodeGroup.length > 0) {
-     // vm.getGridRowsFromUuids(selectedNodesService.selectedNodeUuidsFromNodeGroup);
       vm.setGridSelectedRows(selectedNodesService.selectedNodeUuidsFromNodeGroup);
+      // previous selected nodes maintained during infinite scrolling
     } else if (selectedNodesService.selectedNodes.length > 0) {
-      vm.setGridSelectedRows(selectedNodesService.selectedNodeUuidsFromNodeGroup);
+      vm.setGridSelectedRows(selectedNodesService.selectedNodeUuids);
     }
   };
 
