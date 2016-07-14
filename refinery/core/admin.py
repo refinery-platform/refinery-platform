@@ -5,7 +5,6 @@ Created on Feb 20, 2012
 '''
 
 from django.contrib import admin
-from django.contrib import messages
 
 from django_extensions.admin import ForeignKeyAutocompleteAdmin
 from guardian.admin import GuardedModelAdmin
@@ -17,12 +16,13 @@ from core.models import (
     WorkflowEngine, WorkflowFilesDL, WorkflowInputRelationships, Download,
     Invitation, Ontology
 )
+from core.utils import admin_ui_deletion
 
 
 class AnalysisNodeConnectionAdmin(ForeignKeyAutocompleteAdmin):
     raw_id_fields = ("node",)
     list_display = ['__unicode__', 'id', 'analysis', 'subanalysis', 'node',
-                    'step', 'name',  'filename', 'filetype', 'direction',
+                    'step', 'name', 'filename', 'filetype', 'direction',
                     'is_refinery_file']
 
 
@@ -52,22 +52,21 @@ class WorkflowAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
     list_display = ['__unicode__', 'id', 'internal_id', 'workflow_engine',
                     'show_in_repository_mode', 'is_active', 'type']
 
-    def hide_selected_workflows(modeladmin, request, queryset):
+    def hide_selected_workflows(self, request, queryset):
         for obj in queryset:
             obj.is_active = False
             obj.save()
 
-    def show_selected_workflows(modeladmin, request, queryset):
+    def show_selected_workflows(self, request, queryset):
         for obj in queryset:
             obj.is_active = True
             obj.save()
 
-    def delete_selected(self, request, objects):
+    def delete_selected(self, request, objs):
+        admin_ui_deletion(request, objs)
 
-        for instance in objects.all():
-            instance.delete()
-            messages.success(request, "Workflow:{} deleted "
-                                      "successfully!".format(instance))
+    def delete_model(self, request, obj):
+        admin_ui_deletion(request, obj, True)
 
     delete_selected.short_description = "Delete selected Workflows"
     actions = [delete_selected, hide_selected_workflows,
@@ -87,11 +86,11 @@ class DataSetAdmin(GuardedModelAdmin):
     list_display = ['__unicode__', 'id', 'name', 'file_count', 'file_size',
                     'accession', 'accession_source', 'title']
 
-    def delete_selected(self, request, objects):
-        for instance in objects.all():
-            instance.delete()
-            messages.success(request, "DataSet:{} deleted "
-                                      "successfully!".format(instance))
+    def delete_selected(self, request, objs):
+        admin_ui_deletion(request, objs)
+
+    def delete_model(self, request, obj):
+        admin_ui_deletion(request, obj, True)
 
     delete_selected.short_description = "Delete selected DataSets"
     actions = [delete_selected]
@@ -109,17 +108,16 @@ class InvestigationLinkAdmin(GuardedModelAdmin):
 
 
 class AnalysisAdmin(GuardedModelAdmin):
-
     list_display = ['__unicode__', 'id', 'project', 'data_set',
                     'workflow', 'workflow_steps_num', 'history_id',
-                    'workflow_galaxy_id', 'library_id',  'time_start',
+                    'workflow_galaxy_id', 'library_id', 'time_start',
                     'time_end', 'status', 'status_detail']
 
-    def delete_selected(self, request, objects):
-        for instance in objects.all():
-            instance.delete()
-            messages.success(request, "Analysis:{} deleted "
-                                      "successfully!".format(instance))
+    def delete_selected(self, request, objs):
+        admin_ui_deletion(request, objs)
+
+    def delete_model(self, request, obj):
+        admin_ui_deletion(request, obj, True)
 
     delete_selected.short_description = "Delete selected Analyses"
     actions = [delete_selected]
