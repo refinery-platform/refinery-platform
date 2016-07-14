@@ -65,10 +65,20 @@ function selectedNodesService () {
 
   // These are non-selected nodes uuid, when the select all flag is true
   vm.setComplementSeletedNodes = function (nodeRow) {
-    if (vm.complementSelectedNodesUuids.indexOf(nodeRow.entity.uuid) === -1) {
-      vm.complementSelectedNodes.push(nodeRow);
-      vm.complementSelectedNodesUuids.push(nodeRow.entity.uuid);
+    var ind = vm.complementSelectedNodesUuids.indexOf(nodeRow.entity.uuid);
+    if (nodeRow.isSelected === false) {
+      if (ind === -1) {
+        vm.complementSelectedNodes.push(nodeRow);
+        vm.complementSelectedNodesUuids.push(nodeRow.entity.uuid);
+      }
+      // Have to set explictly to keep deleted rows from infinite scrolling
+    } else if (nodeRow.isSelected === true) {
+      if (ind > -1) {
+        vm.complementSelectedNodes.splice(ind, 1);
+        vm.complementSelectedNodesUuids.splice(ind, 1);
+      }
     }
+    // else nothing should occur to nodeRow because it is not in assayFiles
     return vm.complementSelectedNodes;
   };
 }

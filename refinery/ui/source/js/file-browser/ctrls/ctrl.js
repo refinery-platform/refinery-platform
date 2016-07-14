@@ -195,6 +195,7 @@ function FileBrowserCtrl (
   vm.setGridUnselectedRows = function (uuidsList) {
     // If user scrolls quickly, there could be a delay for selected items
     angular.forEach(vm.gridApi.grid.rows, function (gridRow) {
+      // select rows if not in complement list
       if (uuidsList.indexOf(gridRow.entity.uuid) === -1) {
         vm.gridApi.selection.selectRow(gridRow.entity);
       }
