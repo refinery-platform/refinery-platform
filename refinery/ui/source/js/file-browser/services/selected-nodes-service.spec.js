@@ -16,7 +16,7 @@ describe('Selected-Nodes-Service', function () {
     expect(service.selectedNodeUuidsFromNodeGroup).toEqual([]);
     expect(service.selectedAllFlag).toEqual(false);
     expect(service.complementSelectedNodes).toEqual([]);
-    expect(service.complementSelectedNodesUuidsFromUI).toEqual([]);
+    expect(service.complementSelectedNodesUuids).toEqual([]);
   });
 
   it('all methods exist', function () {
@@ -54,33 +54,33 @@ describe('Selected-Nodes-Service', function () {
       { entity: { uuid: 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x' } },
       { entity: { uuid: 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x' } }
     ];
-    service.complementSelectedNodesUuidsFromUI = [
+    service.complementSelectedNodesUuids = [
       'x5788x83x-x9xx-4740-x9x7-x7x0x98765x',
       'x5788x83x-x9xx-4740-x9x7-x7x0x98765x'
     ];
     service.setSelectedAllFlags(true);
     expect(service.selectedAllFlag).toEqual(true);
     expect(service.complementSelectedNodes.length).toEqual(2);
-    expect(service.complementSelectedNodesUuidsFromUI.length).toEqual(2);
+    expect(service.complementSelectedNodesUuids.length).toEqual(2);
     service.setSelectedAllFlags(false);
     expect(service.selectedAllFlag).toEqual(false);
     expect(service.complementSelectedNodes).toEqual([]);
-    expect(service.complementSelectedNodesUuidsFromUI).toEqual([]);
+    expect(service.complementSelectedNodesUuids).toEqual([]);
   });
 
   it('setComplementSeletedNodes', function () {
     expect(service.complementSelectedNodes.length).toEqual(0);
-    expect(service.complementSelectedNodesUuidsFromUI.length).toEqual(0);
+    expect(service.complementSelectedNodesUuids.length).toEqual(0);
     // Does not add duplicate uuids
     service.setComplementSeletedNodes({
       entity: { uuid: 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x' }
     });
     expect(service.complementSelectedNodes.length).toEqual(1);
-    expect(service.complementSelectedNodesUuidsFromUI.length).toEqual(1);
+    expect(service.complementSelectedNodesUuids.length).toEqual(1);
     service.setComplementSeletedNodes({
       entity: { uuid: 'x7398x83x-x9xx-4740-x9x7-x7x0x98123x' }
     });
     expect(service.complementSelectedNodes.length).toEqual(2);
-    expect(service.complementSelectedNodesUuidsFromUI.length).toEqual(2);
+    expect(service.complementSelectedNodesUuids.length).toEqual(2);
   });
 });

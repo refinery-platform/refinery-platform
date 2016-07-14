@@ -7,7 +7,7 @@ function selectedNodesService () {
   vm.selectedNodeUuidsFromNodeGroup = [];
   vm.selectedAllFlag = false;
   vm.complementSelectedNodes = [];
-  vm.complementSelectedNodesUuidsFromUI = [];
+  vm.complementSelectedNodesUuids = [];
 
   // Manual keep track of selected nodes, due to dynamic scrolling
   vm.setSelectedNodes = function (nodeRow) {
@@ -41,7 +41,7 @@ function selectedNodesService () {
       // flag is false, reset complement selected nodes
       vm.selectedAllFlag = flag;
       vm.complementSelectedNodes = [];
-      vm.complementSelectedNodesUuidsFromUI = [];
+      vm.complementSelectedNodesUuids = [];
       vm.selectedNodes = [];
       vm.selectedNodeUuids = [];
       vm.selectedNodeUuidsFromNodeGroup = [];
@@ -50,9 +50,9 @@ function selectedNodesService () {
 
   // These are non-selected nodes uuid, when the select all flag is true
   vm.setComplementSeletedNodes = function (nodeRow) {
-    if (vm.complementSelectedNodesUuidsFromUI.indexOf(nodeRow.entity.uuid) === -1) {
+    if (vm.complementSelectedNodesUuids.indexOf(nodeRow.entity.uuid) === -1) {
       vm.complementSelectedNodes.push(nodeRow);
-      vm.complementSelectedNodesUuidsFromUI.push(nodeRow.entity.uuid);
+      vm.complementSelectedNodesUuids.push(nodeRow.entity.uuid);
     }
     return vm.complementSelectedNodes;
   };
