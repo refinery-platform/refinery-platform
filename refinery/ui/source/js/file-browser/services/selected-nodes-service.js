@@ -45,6 +45,8 @@ function selectedNodesService () {
   };
 
   vm.setSelectedNodeUuidsFromNodeGroup = function (nodesUuidsList) {
+    console.log('in set selected node uuids from node group');
+    console.log(vm.selectedNodeUuidsFromNodeGroup);
     angular.copy(nodesUuidsList, vm.selectedNodeUuidsFromNodeGroup);
     return vm.selectedNodeUuidsFromNodeGroup;
   };
