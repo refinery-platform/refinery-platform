@@ -157,7 +157,13 @@ class NodeSetAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
 
 class UserProfileAdmin(GuardedModelAdmin):
     list_display = ['__unicode__', 'id', 'uuid', 'user', 'affiliation',
-                    'catch_all_project']
+                    'catch_all_project', 'get_last_login']
+
+    def get_last_login(self, obj):
+        return obj.user.last_login
+
+    get_last_login.short_description = 'Last login'
+    get_last_login.admin_order_field = 'user__last_login'
 
 
 class OntologyAdmin(GuardedModelAdmin):
