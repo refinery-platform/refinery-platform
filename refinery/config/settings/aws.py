@@ -6,6 +6,8 @@
 # Like prod, but overriding some things.
 from .prod import *  # NOQA
 
+import requests
+
 # Ensure that the AWS private IP is an Allowed Host.
 # (required for ELB pings to work,
 # see https://github.com/parklab/refinery-platform/issues/1239)
