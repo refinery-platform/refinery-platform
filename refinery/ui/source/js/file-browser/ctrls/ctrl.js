@@ -45,7 +45,7 @@ function FileBrowserCtrl (
     multiSelect: true
   };
   // Total file size in data set, sent from api
-  vm.assayFilesTotal = 1;
+  vm.assayFilesTotal = 0;
   // variables supporting dynamic scrolling
   vm.firstPage = 0;
   vm.lastPage = 0;
@@ -135,6 +135,9 @@ function FileBrowserCtrl (
     vm.updateSelectionList(_internalName, _field);
     vm.filesParam.filter_attribute = {};
     angular.copy(vm.selectedFieldList, vm.filesParam.filter_attribute);
+    // Resets selection
+    selectedNodesService.setSelectedAllFlags(false);
+    // resets grid
     vm.reset();
   };
 
