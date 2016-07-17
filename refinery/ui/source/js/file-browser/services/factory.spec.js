@@ -25,7 +25,6 @@ describe('File Browser Factory', function () {
     expect(factory.attributeFilter).toEqual({});
     expect(factory.analysisFilter).toEqual({});
     expect(factory.assayFilesTotalItems).toEqual({});
-    expect(factory.nodeCount.value).toEqual(0);
     expect(factory.nodeGroupList).toEqual([]);
   });
 
