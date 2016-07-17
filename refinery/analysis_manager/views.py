@@ -19,7 +19,7 @@ from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import run_analysis
 from core.models import (
     Analysis, Workflow, WorkflowEngine, WorkflowDataInputMap,
-    InvestigationLink, NodeSet, NodeRelationship, NodePair
+    InvestigationLink, NodeSet, NodeRelationship, NodePair, NodeGroup
 )
 from core.views import get_solr_results, custom_error_page
 from core.utils import get_aware_local_time
@@ -175,19 +175,105 @@ def run(request):
         return HttpResponseNotAllowed(allowed_methods)  # 405
 
     analysis_config = json.loads(request.body)
+    # try:
+    #     workflow_uuid = analysis_config['workflowUuid']
+    #     study_uuid = analysis_config['studyUuid']
+    #     node_set_uuid = analysis_config['nodeSetUuid']
+    #     node_relationship_uuid = analysis_config['nodeRelationshipUuid']
+    #     custom_name = analysis_config['name']
+    # except KeyError:
+    #     return HttpResponseBadRequest()  # 400
+    # # must provide workflow and study UUIDs,
+    # # and either node set UUID or node relationship UUID
+    # if not (workflow_uuid and study_uuid and
+    #         (node_set_uuid or node_relationship_uuid)):
+    #     return HttpResponseBadRequest()  # 400
+
     try:
         workflow_uuid = analysis_config['workflowUuid']
         study_uuid = analysis_config['studyUuid']
-        node_set_uuid = analysis_config['nodeSetUuid']
+        node_set_uuid = analysis_config['nodeGroupUuid']
         node_relationship_uuid = analysis_config['nodeRelationshipUuid']
         custom_name = analysis_config['name']
-    except KeyError:
-        return HttpResponseBadRequest()  # 400
-    # must provide workflow and study UUIDs,
-    # and either node set UUID or node relationship UUID
-    if not (workflow_uuid and study_uuid and
-            (node_set_uuid or node_relationship_uuid)):
-        return HttpResponseBadRequest()  # 400
+    except:
+        # check to see if node_group uuids are passed
+        try:
+            workflow_uuid = analysis_config['workflowUuid']
+            study_uuid = analysis_config['studyUuid']
+            node_group_uuid = analysis_config['nodeSetUuid']
+            node_relationship_uuid = analysis_config['nodeRelationshipUuid']
+            custom_name = analysis_config['name']
+        except KeyError:
+            return HttpResponseBadRequest()  # 400
+        # must provide workflow and study UUIDs,
+        # and either node set UUID or node relationship UUID
+        if not (workflow_uuid and study_uuid and
+                (node_set_uuid or node_relationship_uuid)):
+            return HttpResponseBadRequest()  # 400
+
+    # single-input workflow based node group
+    if node_group_uuid:
+        # TODO: handle DoesNotExist exception
+        curr_node_group = NodeGroup.objects.get(uuid=node_group_uuid)
+
+        # no need to use solr to grab uuids
+        # curr_node_dict = curr_node_set.solr_query_components
+        # curr_node_dict = json.loads(curr_node_dict)
+        # solr results
+        # solr_uuids = get_solr_results(
+        # curr_node_set.solr_query,
+        # only_uuids=True,
+        # selected_mode=curr_node_dict['documentSelectionBlacklistMode'],
+        # selected_nodes=curr_node_dict['documentSelection']
+        # )
+        # retrieving workflow based on input workflow_uuid
+        # TODO: handle DoesNotExist exception
+        curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
+
+        # TODO: catch if study or data set don't exist
+        study = Study.objects.get(uuid=study_uuid)
+        data_set = InvestigationLink.objects.filter(
+            investigation__uuid=study.investigation.uuid).order_by(
+                "version").reverse()[0].data_set
+
+        logger.info("Associating analysis with data set %s (%s)",
+                    data_set, data_set.uuid)
+
+        # ANALYSIS MODEL
+        # How to create a simple analysis object
+        if not custom_name:
+            temp_name = curr_workflow.name + " " + get_aware_local_time()\
+                .strftime("%Y-%m-%d @ %H:%M:%S")
+        else:
+            temp_name = custom_name
+
+        summary_name = "None provided."
+        analysis = Analysis(
+            summary=summary_name,
+            name=temp_name,
+            project=request.user.get_profile().catch_all_project,
+            data_set=data_set,
+            workflow=curr_workflow,
+            time_start=timezone.now()
+        )
+        analysis.save()
+        analysis.set_owner(request.user)
+
+        # getting distinct workflow inputs
+        workflow_data_inputs = curr_workflow.data_inputs.all()[0]
+
+        # NEED TO GET LIST OF FILE_UUIDS from node_group_uuid fields
+        count = 0
+        for file_uuid in curr_node_group.uuids:
+            count += 1
+            temp_input = WorkflowDataInputMap(
+                workflow_data_input_name=workflow_data_inputs.name,
+                data_uuid=file_uuid,
+                pair_id=count
+            )
+            temp_input.save()
+            analysis.workflow_data_input_maps.add(temp_input)
+            analysis.save()
 
     # single-input workflow
     if node_set_uuid:
