@@ -175,41 +175,20 @@ def run(request):
         return HttpResponseNotAllowed(allowed_methods)  # 405
 
     analysis_config = json.loads(request.body)
-    # try:
-    #     workflow_uuid = analysis_config['workflowUuid']
-    #     study_uuid = analysis_config['studyUuid']
-    #     node_set_uuid = analysis_config['nodeSetUuid']
-    #     node_relationship_uuid = analysis_config['nodeRelationshipUuid']
-    #     custom_name = analysis_config['name']
-    # except KeyError:
-    #     return HttpResponseBadRequest()  # 400
-    # # must provide workflow and study UUIDs,
-    # # and either node set UUID or node relationship UUID
-    # if not (workflow_uuid and study_uuid and
-    #         (node_set_uuid or node_relationship_uuid)):
-    #     return HttpResponseBadRequest()  # 400
-
     try:
         workflow_uuid = analysis_config['workflowUuid']
         study_uuid = analysis_config['studyUuid']
-        node_set_uuid = analysis_config['nodeGroupUuid']
+        node_set_uuid = analysis_config['nodeSetUuid']
+        node_group_uuid = analysis_config['nodeGroupUuid']
         node_relationship_uuid = analysis_config['nodeRelationshipUuid']
         custom_name = analysis_config['name']
-    except:
-        # check to see if node_group uuids are passed
-        try:
-            workflow_uuid = analysis_config['workflowUuid']
-            study_uuid = analysis_config['studyUuid']
-            node_group_uuid = analysis_config['nodeSetUuid']
-            node_relationship_uuid = analysis_config['nodeRelationshipUuid']
-            custom_name = analysis_config['name']
-        except KeyError:
-            return HttpResponseBadRequest()  # 400
-        # must provide workflow and study UUIDs,
-        # and either node set UUID or node relationship UUID
-        if not (workflow_uuid and study_uuid and
-                (node_set_uuid or node_relationship_uuid)):
-            return HttpResponseBadRequest()  # 400
+    except KeyError:
+        return HttpResponseBadRequest()  # 400
+    # must provide workflow and study UUIDs,
+    # and either node set UUID or node relationship UUID
+    if not (workflow_uuid and study_uuid and
+            (node_set_uuid or node_relationship_uuid)):
+        return HttpResponseBadRequest()  # 400
 
     # single-input workflow based node group
     if node_group_uuid:
