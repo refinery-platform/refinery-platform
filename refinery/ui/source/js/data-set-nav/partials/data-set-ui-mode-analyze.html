@@ -16,7 +16,6 @@
 	</ui-select>
 
   <div ng-show="currentWorkflow.isAvailable()">
-
     <div class="refinery-subheader">
       <h4>Name</h4>
     </div>
@@ -45,7 +44,12 @@
       </span>
     </div>
 
-    <div ng-controller="NodeSetListApiCtrl" ng-if="currentWorkflow.isSingleInput()">
+    <div ng-if="dataSet2Flag">
+      <rp-file-browser-node-group></rp-file-browser-node-group>
+    </div>
+
+    <div ng-if="!dataSet2Flag">
+      <div ng-controller="NodeSetListApiCtrl" ng-if="currentWorkflow.isSingleInput()">
       <ui-select
         ng-model="selectedNodeset.select"
         on-select="updateCurrentNodeSet()"
@@ -70,6 +74,8 @@
         ng-disabled="!(currentNodeSet && currentNodeSet.node_count > 0)">
         Launch Analysis
       </button>
+    </div>
+
     </div>
 
 
