@@ -46,6 +46,12 @@
 
     <div ng-if="dataSet2Flag">
       <rp-file-browser-node-group></rp-file-browser-node-group>
+      <button
+        class="btn btn-warning"
+        rp-analysis-launch-modal
+        ng-click="open()">
+        Launch Analysis
+      </button>
     </div>
 
     <div ng-if="!dataSet2Flag">
