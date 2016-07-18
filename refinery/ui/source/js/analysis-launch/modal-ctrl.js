@@ -8,7 +8,8 @@ function AnalysisLaunchModalCtrl (
   timeStamp,
   workflow,
   analysisLaunchConfigService,
-  analysisLaunchFactory
+  analysisLaunchFactory,
+  selectedNodesService
 ) {
   var nowTimeStamp = timeStamp.getTimeStamp();
   var workflowName = workflow.getName();
@@ -27,13 +28,16 @@ function AnalysisLaunchModalCtrl (
     $scope.analysisLaunchFlag = 'LOADING';
 
     if ($scope.tempName !== null) {
-      analysisLaunchConfigService.setAnalysisConfig(
-        {
-          name: $scope.dataObj.name
-        }
-      );
-
+      var paramsObj = {
+        name: $scope.dataObj.name
+      };
+      if (selectedNodesService.nodeGroupUuid.length > 0) {
+        paramsObj.nodeGroupUuid = selectedNodesService.nodeGroupUuid;
+      }
+      analysisLaunchConfigService.setAnalysisConfig(paramsObj);
       var launchParams = analysisLaunchConfigService.getAnalysisConfig();
+      console.log('launch params');
+      console.log(launchParams);
       analysisLaunchFactory.postLaunchAnalysis(launchParams)
         .then(function () {
           $scope.analysisLaunchFlag = 'SUCCESS';
@@ -69,5 +73,6 @@ angular
     'workflow',
     'analysisLaunchConfigService',
     'analysisLaunchFactory',
+    'selectedNodesService',
     AnalysisLaunchModalCtrl
   ]);
