@@ -1,5 +1,6 @@
 <div id="metadata-table-form">
-  <p>Please select a tabular file (e.g. <code>.csv</code>, <code>.tsv</code> or <code>.txt</code>) containing the metadata table.</p>
+  <p>Please select a tabular file (e.g. <code>.csv</code>,
+    <code>.tsv</code> or <code>.txt</code>) containing the metadata table.</p>
 
   <div class="relative">
     <div
@@ -28,37 +29,6 @@
         Oh no! We apologize. Something went terribly wrong. Please call your admin.
       </div>
     </div>
-
-    <label class="block label-block label-text-left">
-      <span class="label-text label-left min-width-200">Select file:</span>
-      <input
-        name="tabular_file"
-        type="file"
-        ng-disabled="!metadataTable.isSeparatorOk"
-        file-model="metadataTable.file"
-        clear-file-input="metadataTable"
-        clear-file-input-model="metadataTable.file">
-      <button
-        class="icon-only"
-        ng-if="metadataTable.file"
-        ng-click="metadataTable.clearFile()">
-        <i
-          class="fa fa-times-circle"
-          aria-hidden="true"
-          title="Clear selected file"
-          refinery-tooltip
-          refinery-tooltip-container="body"
-          refinery-tooltip-placement="top"
-          refinery-tooltip-delay-show="750"
-          refinery-tooltip-delay-hide="150"
-          refinery-tooltip-hide-on-click="true">
-        </i>
-      </button>
-      <span class="text-warning" ng-if="!metadataTable.isSeparatorOk && !metadataTable.file">
-        <i class="fa fa-warning" aria-hidden="true"></i>
-        Please specify the custom separator <strong>prior</strong> to file selection.
-      </span>
-    </label>
 
     <label class="block label-block label-text-left">
       <span class="label-text label-left min-width-200">Comma separation:</span>
@@ -95,6 +65,39 @@
         ng-model="metadataTable.customSeparator"
         ng-change="metadataTable.setParser()"
         ng-disabled="!!metadataTable.importOption">
+    </label>
+
+    <div class="text-muted m-t-1-2 m-b-1-2">and</div>
+
+    <label class="block label-block label-text-left">
+      <span class="label-text label-left min-width-200">Select file:</span>
+      <input
+        name="tabular_file"
+        type="file"
+        ng-disabled="!metadataTable.isSeparatorOk"
+        file-model="metadataTable.file"
+        clear-file-input="metadataTable"
+        clear-file-input-model="metadataTable.file">
+      <button
+        class="icon-only"
+        ng-if="metadataTable.file"
+        ng-click="metadataTable.clearFile()">
+        <i
+          class="fa fa-times-circle"
+          aria-hidden="true"
+          title="Clear selected file"
+          refinery-tooltip
+          refinery-tooltip-container="body"
+          refinery-tooltip-placement="top"
+          refinery-tooltip-delay-show="750"
+          refinery-tooltip-delay-hide="150"
+          refinery-tooltip-hide-on-click="true">
+        </i>
+      </button>
+      <span class="text-warning" ng-if="!metadataTable.isSeparatorOk && !metadataTable.file">
+        <i class="fa fa-warning" aria-hidden="true"></i>
+        Please specify the custom separator <strong>prior</strong> to file selection.
+      </span>
     </label>
 
     <div ng-if="metadataTable.file">
