@@ -30,6 +30,7 @@ function NodeGroupCtrl (
     selectedNodesService.setSelectedAllFlags(false);
     // Copy node group nodes uuids to service
     selectedNodesService.setSelectedNodeUuidsFromNodeGroup(vm.nodeGroups.selected.nodes);
+    selectedNodesService.nodeGroupUuid = vm.nodeGroups.selected.uuid;
     resetGridService.setResetGridFlag(true);
   };
 

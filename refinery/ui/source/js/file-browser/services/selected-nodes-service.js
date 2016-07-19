@@ -8,6 +8,7 @@ function selectedNodesService () {
   vm.selectedAllFlag = false;
   vm.complementSelectedNodes = [];
   vm.complementSelectedNodesUuids = [];
+  vm.nodeGroupUuid = '';
 
   // Manual keep track of selected nodes, due to dynamic scrolling
   vm.setSelectedNodes = function (nodeRow) {
