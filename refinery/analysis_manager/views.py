@@ -187,7 +187,7 @@ def run(request):
     # must provide workflow and study UUIDs,
     # and either node set UUID or node relationship UUID
     if not (workflow_uuid and study_uuid and
-            (node_set_uuid or node_relationship_uuid)):
+            (node_set_uuid or node_relationship_uuid or node_group_uuid)):
         return HttpResponseBadRequest()  # 400
 
     # single-input workflow based node group
@@ -243,11 +243,11 @@ def run(request):
 
         # NEED TO GET LIST OF FILE_UUIDS from node_group_uuid fields
         count = 0
-        for file_uuid in curr_node_group.uuids:
+        for file in curr_node_group.nodes.all():
             count += 1
             temp_input = WorkflowDataInputMap(
                 workflow_data_input_name=workflow_data_inputs.name,
-                data_uuid=file_uuid,
+                data_uuid=file.uuid,
                 pair_id=count
             )
             temp_input.save()
