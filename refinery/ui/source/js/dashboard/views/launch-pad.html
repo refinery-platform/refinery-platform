@@ -435,14 +435,26 @@
                 refinery-tooltip-hide-on-click="true">
                 <i class="fa fa-compress"></i>
               </button>
-              <a
-                class="title"
-                title="Expand data set preview"
-                refinery-tooltip
-                refinery-tooltip-container="body"
-                refinery-tooltip-placement="top"
-                ng-click="dashboard.expandDataSetPreview(dataSet.uuid)"
-                ng-bind-html="dataSet.title"></a>
+              <span ng-if="dataSet.title == 'Untitled data set'">
+                <a
+                  class="title one-line"
+                  title="Expand data set preview"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="top"
+                  ng-click="dashboard.expandDataSetPreview(dataSet.uuid)"
+                  ng-bind-html="dataSet.name"></a>
+              </span>
+              <span ng-if="dataSet.title != 'Untitled data set'">
+                <a
+                  class="title one-line"
+                  title="Expand data set preview"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="top"
+                  ng-click="dashboard.expandDataSetPreview(dataSet.uuid)"
+                  ng-bind-html="dataSet.title"></a>
+              </span>
               <div class="flex-box indicators">
                 <ul class="flex-item-two flex-left no-list-style">
                   <li class="indicator"
