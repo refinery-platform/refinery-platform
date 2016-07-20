@@ -120,7 +120,7 @@ function TreemapCtrl (
   this.settings = treemapSettings;
   this.pubSub = pubSub;
   this.treemapContext = treemapContext;
-  this.$visWrapper = this.$element.closest('.visWrapper');
+  this.$visWrapper = this.$element.closest('.vis-wrapper');
   this.$timeout = $timeout;
 
   this.Webworker = Webworker;
