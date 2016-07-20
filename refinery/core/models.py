@@ -88,6 +88,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User)
     affiliation = models.CharField(max_length=100, blank=True)
     catch_all_project = models.ForeignKey('Project', blank=True, null=True)
+    login_count = models.IntegerField(default=0)
 
     def __unicode__(self):
         return (
@@ -182,8 +183,16 @@ def create_catch_all_project(sender, user, request, **kwargs):
         )  # needed to avoid MessageFailure when running tests
 
 
+def iterate_user_login_count(sender, user, request, **kwargs):
+    user.userprofile.login_count += 1
+    user.userprofile.save()
+
+
 # create catch all project for user if none exists
 user_logged_in.connect(create_catch_all_project)
+
+# Iterate `login_count` to keep track of user's logins
+user_logged_in.connect(iterate_user_login_count)
 
 
 class BaseResource(models.Model):
