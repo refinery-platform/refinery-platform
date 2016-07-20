@@ -70,16 +70,15 @@ SolrFacetView.prototype.render = function ( solrResponse ) {
 	// <i class=\"icon-remove-sign\"></i>&nbsp;&nbsp;Reset All</a><br>&nbsp;<br>" );
    	
    	$( "#clear-facets" ).click( function( event ) {
-		// clear facet selection
-		var counter = self._query.clearFacetSelection();
+			// clear facet selection
+			var counter = self._query.clearFacetSelection();
 			// Default is whitelist.
 			self._query.setDocumentSelectionBlacklistMode(false);
 			self._query.clearDocumentSelection();
-		
-		// reload page
+			// reload page
 			if ( counter > 0 ) {
 				self._commands.execute( SOLR_FACET_SELECTION_CLEARED_COMMAND );
-		}
+			}
    	});				
 
 	self._renderTree( solrResponse );
