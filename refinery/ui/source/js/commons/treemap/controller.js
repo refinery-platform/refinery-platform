@@ -413,7 +413,7 @@ TreemapCtrl.prototype.addEventListeners = function () {
         termIds.push(data.terms[i].term);
       }
     } else {
-      this.$log.error('No annotations?', data);
+      this.$log.info('No annotations available.', data);
     }
     this.focusNode(termIds);
   }.bind(this));
@@ -425,7 +425,7 @@ TreemapCtrl.prototype.addEventListeners = function () {
         termIds.push(data.terms[i].term);
       }
     } else {
-      this.$log.error('No annotations?', data);
+      this.$log.info('No annotations available.', data);
     }
     this.blurNode(termIds);
   }.bind(this));
