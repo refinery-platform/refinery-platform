@@ -1516,7 +1516,7 @@ TreemapCtrl.prototype.setBreadCrumb = function (node) {
     .removeAttr('style');
   this.treemap.breadCrumbWidth = 0;
   this.treemap.breadCrumbContainerWidth = this.treemap.breadCrumbContainerWidth ||
-  this.treemap.$grandParentContainer.width();
+    this.treemap.$grandParentContainer.width();
 
   var child = node;
   var parent = child.parent;
