@@ -175,7 +175,7 @@ function TreemapCtrl (
   this.treemap.$element = this.$(this.treemap.element.node());
 
   this.treemap.grandParent = this.d3.select(this.$visWrapper[0])
-    .select('.root-path');
+    .select('#treemap-root-path');
   this.treemap.$grandParent = this.$(this.treemap.grandParent.node());
   this.treemap.$grandParentContainer = this.treemap.$grandParent.parent();
 
