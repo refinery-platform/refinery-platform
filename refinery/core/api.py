@@ -39,7 +39,7 @@ from tastypie.utils import trailing_slash
 from core.models import Project, NodeSet, NodeRelationship, NodePair, \
     Workflow, WorkflowInputRelationships, Analysis, DataSet, \
     ResourceStatistics, GroupManagement, ExtendedGroup, \
-    UserAuthentication, Invitation, UserProfile, FastQC
+    UserAuthentication, Invitation, UserProfile, FastQC, Tutorials
 from data_set_manager.api import StudyResource, AssayResource, \
     InvestigationResource
 from data_set_manager.models import Node, Study, Attribute
@@ -431,10 +431,44 @@ class UserProfileResource(ModelResource):
 
     class Meta:
         queryset = UserProfile.objects.all()
+        allowed_methods = ['get', 'put']
         detail_uri_name = 'uuid'
         resource_name = 'users'
         authentication = Authentication()
         authorization = Authorization()
+
+    # Handle PUT requests for updating a User's tutorial views
+    def obj_update(self, bundle, **kwargs):
+        try:
+            userprofile = UserProfile.objects.get(uuid=kwargs[u'uuid'])
+            user = userprofile.user
+        except (UserProfile.DoesNotExist,
+                UserProfile.MultipleObjectsReturned) as e:
+            logger.error("Could not fetch UserProfile: %s" % e)
+            return HttpNoContent
+
+        # User not authenticated
+        if not user.is_authenticated():
+            return HttpUnauthorized()
+
+        try:
+            t = Tutorials.objects.get(user_profile=userprofile)
+        except (Tutorials.DoesNotExist,
+                Tutorials.MultipleObjectsReturned) as e:
+            logger.error("Could not fetch Tutorial: %s" % e)
+            return HttpNoContent
+
+        # Update User's Tutorials based on payload received
+        if bundle.data["collab_viewed"]:
+            t.collaboration_tutorial_viewed = bundle.data["collab_viewed"]
+        if bundle.data["launchpad_viewed"]:
+            t.launchpad_tutorial_viewed = bundle.data["launchpad_viewed"]
+        if bundle.data["upload_viewed"]:
+            t.data_upload_tutorial_viewed = bundle.data["upload_viewed"]
+
+        t.save()
+
+        return HttpAccepted
 
 
 class DataSetResource(ModelResource, SharableResourceAPIInterface):
