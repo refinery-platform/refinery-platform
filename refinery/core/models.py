@@ -98,6 +98,18 @@ class UserProfile(models.Model):
             str(self.user.email)
         )
 
+    def has_viewed_launchpad_tut(self):
+        return Tutorials.objects.get(
+            user_profile=self).launchpad_tutorial_viewed
+
+    def has_viewed_data_upload_tut(self):
+        return Tutorials.objects.get(
+            user_profile=self).data_upload_tutorial_viewed
+
+    def has_viewed_collaboration_tut(self):
+        return Tutorials.objects.get(
+            user_profile=self).collaboration_tutorial_viewed
+
 
 def get_user_import_dir(user):
     """Return import directory for given user
@@ -134,6 +146,7 @@ def add_new_user_to_public_group(sender, instance, created, **kwargs):
 
 def create_user_profile_registered(sender, user, request, **kwargs):
     UserProfile.objects.get_or_create(user=user)
+    Tutorials.objects.create(user_profile=user.userprofile)
 
     logger.info(
         "user profile for user %s has been created after registration",
@@ -193,6 +206,26 @@ user_logged_in.connect(create_catch_all_project)
 
 # Iterate `login_count` to keep track of user's logins
 user_logged_in.connect(iterate_user_login_count)
+
+
+class Tutorials(models.Model):
+    """
+        Model to keep track of the tutorials that a
+        User has viewed
+    """
+    user_profile = models.ForeignKey(UserProfile)
+    launchpad_tutorial_viewed = models.BooleanField(default=False)
+    collaboration_tutorial_viewed = models.BooleanField(default=False)
+    data_upload_tutorial_viewed = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        return (
+            "Launchpad - {}, Collaboration - {}, DataUpload - {}".format(
+             self.launchpad_tutorial_viewed,
+             self.collaboration_tutorial_viewed,
+             self.data_upload_tutorial_viewed)
+
+        )
 
 
 class BaseResource(models.Model):
