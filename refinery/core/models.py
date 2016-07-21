@@ -258,6 +258,11 @@ class BaseResource(models.Model):
     def clean(self):
         # Check if model being saved/altered in Django Admin has a slug
         # duplicated elsewhere.
+
+        # Catches white spaces passed as slug & removes trail/lead white spaces
+        if self.slug:
+            self.slug = self.slug.strip()
+
         if self.slug:
             if self.duplicate_slug_check() == 0:
                 pass
@@ -269,6 +274,10 @@ class BaseResource(models.Model):
 
     # Overriding save() method to disallow saving objects with duplicate slugs
     def save(self, *args, **kwargs):
+        # Catches white spaces passed as slug & removes trail/lead white spaces
+        if self.slug:
+            self.slug = self.slug.strip()
+
         if self.slug:
             if self.duplicate_slug_check() == 0:
                 try:

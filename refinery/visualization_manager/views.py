@@ -551,7 +551,7 @@ def get_sample_lines(fields, results):
     # iterating over samples
     for row in results:
         # adding file_name to matrix as linking id
-        line, url = get_file_name(row["uuid"], sampFile=True)
+        line, url = get_file_name(row["uuid"], samp_file=True)
         # adding fields to sample information matrix
         for k, v in fields.iteritems():
             if k in row:

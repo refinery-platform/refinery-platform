@@ -356,7 +356,8 @@ def process_metadata_table(
     except (TypeError, ValueError):
         assay_column = None
     try:
-        slug = str(slug)
+        if slug:
+            slug = str(slug)
     except ValueError:
         slug = None
 

@@ -27,6 +27,8 @@ function NodeGroupCtrl (
 
   // Update selected nodes when new node group is selected
   vm.selectCurrentNodeGroupNodes = function () {
+    selectedNodesService.setSelectedAllFlags(false);
+    // Copy node group nodes uuids to service
     selectedNodesService.setSelectedNodeUuidsFromNodeGroup(vm.nodeGroups.selected.nodes);
     resetGridService.setResetGridFlag(true);
   };
@@ -42,10 +44,10 @@ function NodeGroupCtrl (
     // If select all box is checked, the complements are sent and backend
     // generates nodes list
     if (selectedNodesService.selectedAllFlag) {
-      params.nodes = selectedNodesService.complementSelectedNodes;
+      params.nodes = selectedNodesService.complementSelectedNodesUuids;
       params.use_complement_nodes = true;
     } else {
-      params.nodes = selectedNodesService.selectedNodeUuidsFromUI;
+      params.nodes = selectedNodesService.selectedNodeUuids;
       params.use_complement_nodes = false;
     }
     fileBrowserFactory.createNodeGroup(params).then(function () {
@@ -53,14 +55,11 @@ function NodeGroupCtrl (
     });
   };
 
-  // Helper method to clear selected nodes and node group selection
+  // RESET button: Clear selected nodes and node group selection
   vm.clearSelectedNodes = function () {
     // Deselects node group
     vm.nodeGroups.selected = vm.nodeGroups.groups[0];
-    // Empties nodes uuids list used when grids are reset
-    selectedNodesService.setSelectedNodeUuidsFromNodeGroup([]);
-    // Empties selected nodes used when grids are reset
-    selectedNodesService.setSelectedNodes([]);
+    selectedNodesService.setSelectedAllFlags(false);
     resetGridService.setResetGridFlag(true);
   };
 }

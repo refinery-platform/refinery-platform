@@ -3,23 +3,29 @@
 function selectedNodesService () {
   var vm = this;
   vm.selectedNodes = [];
-  vm.selectedNodeUuidsFromUI = [];
+  vm.selectedNodeUuids = [];
   vm.selectedNodeUuidsFromNodeGroup = [];
   vm.selectedAllFlag = false;
   vm.complementSelectedNodes = [];
+  vm.complementSelectedNodesUuids = [];
 
-  vm.setSelectedNodes = function (nodesList) {
-    vm.selectedNodes = [];
-   // avoid angular.copy because $$hashkeys are not copied
-    angular.forEach(nodesList, function (node) {
-      vm.selectedNodes.push(node);
-    });
+  // Manual keep track of selected nodes, due to dynamic scrolling
+  vm.setSelectedNodes = function (nodeRow) {
+    var ind = vm.selectedNodeUuids.indexOf(nodeRow.entity.uuid);
+    if (nodeRow.isSelected) {
+      if (ind === -1) {
+        vm.selectedNodes.push(nodeRow);
+        vm.selectedNodeUuids.push(nodeRow.entity.uuid);
+      }
+      // Have to set explictly to keep deleted rows from infinite scrolling
+    } else if (nodeRow.isSelected === false) {
+      if (ind > -1) {
+        vm.selectedNodeUuids.splice(ind, 1);
+        vm.selectedNodes.splice(ind, 1);
+      }
+    }
+    // else nothing should occur to nodeRow because it is not in assayFiles
     return vm.selectedNodes;
-  };
-
-  vm.setSelectedNodeUuidsFromUI = function (nodesUuidsListUI) {
-    angular.copy(nodesUuidsListUI, vm.selectedNodeUuidsFromUI);
-    return vm.selectedNodeUuidsFromUI;
   };
 
   vm.setSelectedNodeUuidsFromNodeGroup = function (nodesUuidsList) {
@@ -27,13 +33,17 @@ function selectedNodesService () {
     return vm.selectedNodeUuidsFromNodeGroup;
   };
 
-  // Grabs uuids from UI-Grid row objects
-  vm.getUuidsFromSelectedNodesInUI = function () {
-    var uuidsList = [];
-    angular.forEach(vm.selectedNodes, function (node) {
-      uuidsList.push(node.uuid);
+  // create ui-grid like objects to match with rows in ui-gride
+  vm.setSelectedNodesFromNodeGroup = function (nodesUuidsList) {
+    angular.forEach(nodesUuidsList, function (uuid) {
+      vm.setSelectedNodes(
+        {
+          entity: { uuid: uuid },
+          isSelected: true
+        }
+      );
     });
-    vm.setSelectedNodeUuidsFromUI(uuidsList);
+    return vm.selectedNodes;
   };
 
   // Flag for when select all event checkbox is selected
@@ -44,14 +54,29 @@ function selectedNodesService () {
       // flag is false, reset complement selected nodes
       vm.selectedAllFlag = flag;
       vm.complementSelectedNodes = [];
+      vm.complementSelectedNodesUuids = [];
+      vm.selectedNodes = [];
+      vm.selectedNodeUuids = [];
+      vm.selectedNodeUuidsFromNodeGroup = [];
     }
   };
 
   // These are non-selected nodes uuid, when the select all flag is true
-  vm.setComplementSeletedNodes = function (nodeUuid) {
-    if (vm.complementSelectedNodes.indexOf(nodeUuid) === -1) {
-      vm.complementSelectedNodes.push(nodeUuid);
+  vm.setComplementSeletedNodes = function (nodeRow) {
+    var ind = vm.complementSelectedNodesUuids.indexOf(nodeRow.entity.uuid);
+    if (nodeRow.isSelected === false) {
+      if (ind === -1) {
+        vm.complementSelectedNodes.push(nodeRow);
+        vm.complementSelectedNodesUuids.push(nodeRow.entity.uuid);
+      }
+      // Have to set explictly to keep deleted rows from infinite scrolling
+    } else if (nodeRow.isSelected === true) {
+      if (ind > -1) {
+        vm.complementSelectedNodes.splice(ind, 1);
+        vm.complementSelectedNodesUuids.splice(ind, 1);
+      }
     }
+    // else nothing should occur to nodeRow because it is not in assayFiles
     return vm.complementSelectedNodes;
   };
 }

@@ -13,7 +13,6 @@ function fileBrowserFactory (
   var attributeFilter = {};
   var analysisFilter = {};
   var assayFilesTotalItems = {};
-  var nodeCount = { value: 0 };
   var nodeUrl = {};
   var nodeGroupList = [];
   var csrfToken = $window.csrf_token;
@@ -137,7 +136,6 @@ function fileBrowserFactory (
       /** Api returns uuid field, which is needed to retrieve the
        *  download file_url for nodeset api. It should be hidden in the data
        *  table first **/
-      nodeCount.value = response.nodes_count;
       var culledAttributes = hideUuidAttribute(response.attributes);
       angular.copy(culledAttributes, assayAttributes);
       // Add file_download column first
@@ -203,7 +201,6 @@ function fileBrowserFactory (
     attributeFilter: attributeFilter,
     analysisFilter: analysisFilter,
     assayFilesTotalItems: assayFilesTotalItems,
-    nodeCount: nodeCount,
     nodeGroupList: nodeGroupList,
     createNodeGroup: createNodeGroup,
     getAssayFiles: getAssayFiles,

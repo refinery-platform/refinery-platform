@@ -104,7 +104,17 @@ MetadataTableImportCtrl.prototype.renderTable = function () {
   var reader = new FileReader();
   reader.onload = function (event) {
     self.$rootScope.$apply(function () {
-      self.metadata = self.parser(event.target.result);
+      // trim whitespaces before and after the entire str then split on newline
+      var dataArr = event.target.result.trim().split(/\r\n|\r|\n/g);
+       // remove any white spaces before/after each row
+      for (var i = 0; i < dataArr.length; i++) {
+        dataArr[i] = dataArr[i].trim();
+      }
+      // rejoin rows with new line
+      var fileStr = dataArr.join('\r\n');
+      // Create a new file with the modified data and the originial file props.
+      self.strippedFile = new File([fileStr], self.file.name, self.file);
+      self.metadata = self.parser(fileStr);
       // Get 5 lines to display on screen
       self.metadataSample = self.metadata.slice(0, 5);
       self.metadataHeader = Object.keys(self.metadataSample[0]);
@@ -203,9 +213,8 @@ MetadataTableImportCtrl.prototype.startImport = function () {
   self.isImporting = true;
 
   var formData = new FormData();
-
   if (self.file) {
-    formData.append('file', self.file);
+    formData.append('file', self.strippedFile);
   }
   if (self.title) {
     formData.append('title', self.title);

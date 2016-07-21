@@ -12,39 +12,31 @@ describe('Selected-Nodes-Service', function () {
   it('service variables should exist', function () {
     expect(service).toBeDefined();
     expect(service.selectedNodes).toEqual([]);
-    expect(service.selectedNodeUuidsFromUI).toEqual([]);
+    expect(service.selectedNodeUuids).toEqual([]);
     expect(service.selectedNodeUuidsFromNodeGroup).toEqual([]);
     expect(service.selectedAllFlag).toEqual(false);
     expect(service.complementSelectedNodes).toEqual([]);
+    expect(service.complementSelectedNodesUuids).toEqual([]);
   });
 
   it('all methods exist', function () {
     expect(angular.isFunction(service.setSelectedNodes)).toBe(true);
-    expect(angular.isFunction(service.setSelectedNodeUuidsFromUI)).toBe(true);
-    expect(angular.isFunction(service.setSelectedNodeUuidsFromNodeGroup)).toBe(true);
-    expect(angular.isFunction(service.getUuidsFromSelectedNodesInUI)).toBe(true);
     expect(angular.isFunction(service.setSelectedAllFlags)).toBe(true);
+    expect(angular.isFunction(service.setSelectedNodeUuidsFromNodeGroup)).toBe(true);
     expect(angular.isFunction(service.setComplementSeletedNodes)).toBe(true);
   });
 
   it('setSelectedNodes updates selectedNodes', function () {
-    var nodesList = [
-      { uuid: 'x508x83x-x9xx-4740-x9x7-x7x0x631280x' },
-      { uuid: 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x' }
-    ];
+    var node = {
+      entity: { uuid: 'x508x83x-x9xx-4740-x9x7-x7x0x631280x' },
+      isSelected: true
+    };
+    var nodesUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+    expect(service.selectedNodeUuids).toEqual([]);
     expect(service.selectedNodes).toEqual([]);
-    service.setSelectedNodes(nodesList);
-    expect(service.selectedNodes).toEqual(nodesList);
-  });
-
-  it('setSelectedNodeUuidsFromUI updates selectedNodeUuidsFromUI', function () {
-    var nodesList = [
-      'x508x83x-x9xx-4740-x9x7-x7x0x631280x',
-      'x5788x83x-x9xx-4740-x9x7-x7x0x98765x'
-    ];
-    expect(service.selectedNodeUuidsFromUI).toEqual([]);
-    service.setSelectedNodeUuidsFromUI(nodesList);
-    expect(service.selectedNodeUuidsFromUI).toEqual(nodesList);
+    service.setSelectedNodes(node);
+    expect(service.selectedNodes).toEqual([node]);
+    expect(service.selectedNodeUuids).toEqual([nodesUuid]);
   });
 
   it('setSelectedNodeUuidsFromNodeGroup updates selectedNodeUuidsFromNodeGroup', function () {
@@ -57,40 +49,40 @@ describe('Selected-Nodes-Service', function () {
     expect(service.selectedNodeUuidsFromNodeGroup).toEqual(nodesList);
   });
 
-  it('getUuidsFromSelectedNodesInUI calls on setSelectedNodeUuidsFromUi', function () {
-    service.selectedNodes = [
-      'x508x83x-x9xx-4740-x9x7-x7x0x631280x',
-      'x5788x83x-x9xx-4740-x9x7-x7x0x98765x'
-    ];
-    spyOn(service, 'setSelectedNodeUuidsFromUI');
-    expect(service.setSelectedNodeUuidsFromUI).not.toHaveBeenCalled();
-    service.getUuidsFromSelectedNodesInUI();
-    expect(service.setSelectedNodeUuidsFromUI).toHaveBeenCalled();
-  });
-
   it('setSelectedAllFlags', function () {
     service.complementSelectedNodes = [
-      'x508x83x-x9xx-4740-x9x7-x7x0x631280x',
+      { entity: { uuid: 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x' } },
+      { entity: { uuid: 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x' } }
+    ];
+    service.complementSelectedNodesUuids = [
+      'x5788x83x-x9xx-4740-x9x7-x7x0x98765x',
       'x5788x83x-x9xx-4740-x9x7-x7x0x98765x'
     ];
     service.setSelectedAllFlags(true);
     expect(service.selectedAllFlag).toEqual(true);
     expect(service.complementSelectedNodes.length).toEqual(2);
+    expect(service.complementSelectedNodesUuids.length).toEqual(2);
     service.setSelectedAllFlags(false);
     expect(service.selectedAllFlag).toEqual(false);
     expect(service.complementSelectedNodes).toEqual([]);
+    expect(service.complementSelectedNodesUuids).toEqual([]);
   });
 
   it('setComplementSeletedNodes', function () {
-    service.complementSelectedNodes = [
-      'x508x83x-x9xx-4740-x9x7-x7x0x631280x',
-      'x5788x83x-x9xx-4740-x9x7-x7x0x98765x'
-    ];
-    expect(service.complementSelectedNodes.length).toEqual(2);
+    expect(service.complementSelectedNodes.length).toEqual(0);
+    expect(service.complementSelectedNodesUuids.length).toEqual(0);
     // Does not add duplicate uuids
-    service.setComplementSeletedNodes('x5788x83x-x9xx-4740-x9x7-x7x0x98765x');
+    service.setComplementSeletedNodes({
+      entity: { uuid: 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x' },
+      isSelected: false
+    });
+    expect(service.complementSelectedNodes.length).toEqual(1);
+    expect(service.complementSelectedNodesUuids.length).toEqual(1);
+    service.setComplementSeletedNodes({
+      entity: { uuid: 'x7398x83x-x9xx-4740-x9x7-x7x0x98123x' },
+      isSelected: false
+    });
     expect(service.complementSelectedNodes.length).toEqual(2);
-    service.setComplementSeletedNodes('x7398x83x-x9xx-4740-x9x7-x7x0x98123x');
-    expect(service.complementSelectedNodes.length).toEqual(3);
+    expect(service.complementSelectedNodesUuids.length).toEqual(2);
   });
 });

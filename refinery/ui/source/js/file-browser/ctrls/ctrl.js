@@ -19,7 +19,6 @@ function FileBrowserCtrl (
   vm.assayAttributes = [];
   vm.attributeFilter = [];
   vm.analysisFilter = [];
-  vm.nodeCount = 0;
   vm.filesParam = {
     uuid: $window.externalAssayUuid
   };
@@ -45,14 +44,15 @@ function FileBrowserCtrl (
     enableSelectionBatchEvent: true,
     multiSelect: true
   };
+  // Total file size in data set, sent from api
+  vm.assayFilesTotal = 0;
+  // variables supporting dynamic scrolling
   vm.firstPage = 0;
   vm.lastPage = 0;
   vm.rowCount = 100;
-  vm.assayFilesTotal = 1;
   vm.totalPages = 1;
   vm.cachePages = 2;
   vm.counter = 0;
-
 
   vm.refreshAssayFiles = function () {
     vm.filesParam.offset = vm.lastPage * vm.rowCount;
@@ -60,8 +60,9 @@ function FileBrowserCtrl (
 
     var promise = $q.defer();
     fileBrowserFactory.getAssayFiles(vm.filesParam).then(function () {
-      vm.nodeCount = fileBrowserFactory.nodeCount.value;
+      // Grabbing 100 files per request, keeping max of 300 at a time
       vm.assayFiles = vm.assayFiles.concat(fileBrowserFactory.assayFiles);
+      // Ui-grid rows generated from assay files
       vm.gridOptions.data = vm.assayFiles;
       vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
       vm.totalPages = Math.floor(vm.assayFilesTotal / vm.rowCount);
@@ -134,9 +135,11 @@ function FileBrowserCtrl (
     vm.updateSelectionList(_internalName, _field);
     vm.filesParam.filter_attribute = {};
     angular.copy(vm.selectedFieldList, vm.filesParam.filter_attribute);
+    // Resets selection
+    selectedNodesService.setSelectedAllFlags(false);
+    // resets grid
     vm.reset();
   };
-
 
   // Ui-grid methods for catching grid events
   vm.gridOptions.onRegisterApi = function (gridApi) {
@@ -153,24 +156,65 @@ function FileBrowserCtrl (
 
       // Checkbox selection events
       vm.gridApi.selection.on.rowSelectionChanged(null, function (row) {
-        selectedNodesService.setSelectedNodes(gridApi.selection.getSelectedRows());
-        vm.selectNodesCount = selectedNodesService.selectedNodes.length;
-        selectedNodesService.getUuidsFromSelectedNodesInUI();
+        // When selected All, watching the deselect events for complement nodes
         if (selectedNodesService.selectedAllFlag) {
-          selectedNodesService.setComplementSeletedNodes(row.entity.uuid);
+          selectedNodesService.setComplementSeletedNodes(row);
+          vm.selectNodesCount = vm.assayFilesTotal -
+            selectedNodesService.complementSelectedNodes.length;
+        } else {
+          // add or remove row to list
+          selectedNodesService.setSelectedNodes(row);
+          vm.selectNodesCount = selectedNodesService.selectedNodes.length;
         }
       });
 
-      // Event only occurs when checkbox is selected. Checking the first row
-      // selected, ensures it's a true select all
+      // Event only occurs when checkbox is selected/deselected.
       vm.gridApi.selection.on.rowSelectionChangedBatch(null, function (eventRows) {
+       // Checking the first row selected, ensures it's a true select all
         if (eventRows[0].isSelected) {
           selectedNodesService.setSelectedAllFlags(true);
           // Need to manually set vm.selectNodesCount to count of all list
+          vm.selectNodesCount = vm.assayFilesTotal;
         } else {
           selectedNodesService.setSelectedAllFlags(false);
+          vm.selectNodesCount = 0;
         }
       });
+    }
+  };
+
+
+  // Helper function: select rows on the ui-grid
+  vm.setGridSelectedRows = function (uuidsList) {
+    // If user scrolls quickly, there could be a delay for selected items
+    angular.forEach(vm.gridApi.grid.rows, function (gridRow) {
+      if (uuidsList.indexOf(gridRow.entity.uuid) > -1) {
+        vm.gridApi.selection.selectRow(gridRow.entity);
+      }
+    });
+  };
+
+   // Helper function: select rows on the ui-grid
+  vm.setGridUnselectedRows = function (uuidsList) {
+    // If user scrolls quickly, there could be a delay for selected items
+    angular.forEach(vm.gridApi.grid.rows, function (gridRow) {
+      // select rows if not in complement list
+      if (uuidsList.indexOf(gridRow.entity.uuid) === -1) {
+        vm.gridApi.selection.selectRow(gridRow.entity);
+      }
+    });
+  };
+
+  // Helper method to select/deselect rows programmically after dynamic
+  // scroll adds more data, at reset and per 300 rows
+  var correctRowSelectionInUI = function () {
+    // select all event, track complements
+    if (selectedNodesService.selectedAllFlag) {
+      // ensure complement nodes are deselected
+      vm.setGridUnselectedRows(selectedNodesService.complementSelectedNodesUuids);
+      // previous selected nodes maintained during infinite scrolling
+    } else if (selectedNodesService.selectedNodes.length > 0) {
+      vm.setGridSelectedRows(selectedNodesService.selectedNodeUuids);
     }
   };
 
@@ -188,6 +232,8 @@ function FileBrowserCtrl (
           .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
           .then(function () {
             vm.checkDataLength('up');
+            // programmically select/deselect due to new rows
+            correctRowSelectionInUI();
           })
           .then(function () {
             promise.resolve();
@@ -216,6 +262,8 @@ function FileBrowserCtrl (
           .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
           .then(function () {
             vm.checkDataLength('down');
+            // programmically select/deselect due to new rows
+            correctRowSelectionInUI();
           })
           .then(function () {
             promise.resolve();
@@ -256,25 +304,6 @@ function FileBrowserCtrl (
     }
   };
 
-  // Heloper function, Gets ui-grid objects based on the node-group uuidsList
-  vm.getGridRowsFromUuids = function (uuidsList) {
-    var selectedNodes = [];
-    angular.forEach(vm.gridApi.core.getVisibleRows(), function (row) {
-      if (uuidsList.indexOf(row.entity.uuid) > -1) {
-        selectedNodes.push(row.entity);
-      }
-    });
-    selectedNodesService.setSelectedNodes(selectedNodes);
-    vm.selectNodesCount = selectedNodesService.selectedNodes.length;
-  };
-
-  // Helper function: select rows on the ui-grid
-  vm.setGridSelectedRows = function (rows) {
-    angular.forEach(rows, function (row) {
-      vm.gridApi.selection.selectRow(row);
-    });
-  };
-
   // Reset the data, selected rows, and scroll position in the grid
   vm.reset = function () {
     vm.firstPage = 0;
@@ -285,6 +314,7 @@ function FileBrowserCtrl (
       vm.gridApi.infiniteScroll.setScrollDirections(false, false);
 
       vm.assayFiles = [];
+
       vm.refreshAssayFiles().then(function () {
         $timeout(function () {
         // timeout needed to allow digest cycle to complete,and grid to finish ingesting the data
@@ -292,12 +322,18 @@ function FileBrowserCtrl (
           resetGridService.setResetGridFlag(false);
           // Select rows either from node group lists or previously selected
           if (selectedNodesService.selectedNodeUuidsFromNodeGroup.length > 0) {
-            vm.getGridRowsFromUuids(selectedNodesService.selectedNodeUuidsFromNodeGroup);
-            vm.setGridSelectedRows(selectedNodesService.selectedNodes);
+            selectedNodesService.setSelectedNodesFromNodeGroup(
+              selectedNodesService.selectedNodeUuidsFromNodeGroup
+            );
+            vm.selectNodesCount = selectedNodesService.selectedNodeUuidsFromNodeGroup.length;
+            correctRowSelectionInUI();
           } else if (selectedNodesService.selectedNodes.length > 0) {
             vm.setGridSelectedRows(selectedNodesService.selectedNodes);
+            vm.selectNodesCount = selectedNodesService.selectedNodeUuids.length;
+            correctRowSelectionInUI();
           } else {
             vm.gridApi.selection.clearSelectedRows();
+            vm.selectNodesCount = 0;
           }
         });
       });
