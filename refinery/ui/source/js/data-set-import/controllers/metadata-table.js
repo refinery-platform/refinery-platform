@@ -106,8 +106,8 @@ MetadataTableImportCtrl.prototype.renderTable = function () {
     self.$rootScope.$apply(function () {
       // trim whitespaces before and after the entire str then split on newline
       var dataArr = event.target.result.trim().split(/\r\n|\r|\n/g);
+       // remove any white spaces before/after each row
       for (var i = 0; i < dataArr.length; i++) {
-        // remove any white spaces before/after each row
         dataArr[i] = dataArr[i].trim();
       }
       // rejoin rows with new line
