@@ -104,8 +104,6 @@ MetadataTableImportCtrl.prototype.renderTable = function () {
   var reader = new FileReader();
   reader.onload = function (event) {
     self.$rootScope.$apply(function () {
-      console.log('in the file reader');
-      console.log(event);
       // trim whitespaces before and after the entire str then split on newline
       var dataArr = event.target.result.trim().split(/\r\n|\r|\n/g);
       for (var i = 0; i < dataArr.length; i++) {
@@ -114,7 +112,8 @@ MetadataTableImportCtrl.prototype.renderTable = function () {
       }
       // rejoin rows with new line
       var fileStr = dataArr.join('\r\n');
-      self.strippedFile = new Blob([fileStr], { type: 'text' });
+      // Create a new file with the modified data and the originial file props.
+      self.strippedFile = new File([fileStr], self.file.name, self.file);
       self.metadata = self.parser(fileStr);
       // Get 5 lines to display on screen
       self.metadataSample = self.metadata.slice(0, 5);
@@ -128,6 +127,8 @@ MetadataTableImportCtrl.prototype.renderTable = function () {
     });
   };
   reader.readAsText(self.file);
+  // self.strippedFile = new File([self.file], { type: 'text' });
+  //  reader.readAsText(self.strippedFile);
 };
 
 MetadataTableImportCtrl.prototype.makeColumnDefs = function () {
@@ -214,9 +215,7 @@ MetadataTableImportCtrl.prototype.startImport = function () {
   self.isImporting = true;
 
   var formData = new FormData();
-  if (self.strippedFile) {
-    console.log('in form data');
-    console.log(self.strippedFile);
+  if (self.file) {
     formData.append('file', self.strippedFile);
   }
   if (self.title) {
@@ -275,7 +274,7 @@ MetadataTableImportCtrl.prototype.startImport = function () {
       self.importedDataSetUuid = response.new_data_set_uuid;
       self.isSuccessfullyImported = true;
       self.$timeout(function () {
-        self.$window.location.href = '/data_sets/' + self.importedDataSetUuid;
+       // self.$window.location.href = '/data_sets/' + self.importedDataSetUuid;
       }, 2500);
     })
     .catch(function (error) {
