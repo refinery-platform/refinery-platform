@@ -1,4 +1,4 @@
-<div
+<div id="launchpadStep0"
   class="col-md-4"
   refinery-expandable-panel>
   <div class="refinery-panel">
@@ -32,21 +32,25 @@
       </span>
     </div>
 
-    <div
+    <div id="launchpadStep1Fix"
       class="refinery-sub-panel"
       ng-class="{'border': dashboard.expandedDataSetPanelBorder}"
       refinery-width-fixer>
+
       <form class="navbar-search form-group">
+        <div id="launchpadStep1">
         <i class="fa fa-search"></i>
         <i class="fa fa-times-circle"
           ng-if="dashboard.searchQueryDataSets"
           ng-click="dashboard.resetDataSetSearch()"></i>
         <input
+
           type="text"
           class="search-query form-control"
           placeholder="Search"
           ng-model="dashboard.searchQueryDataSets"
           ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)">
+          </div>
       </form>
 
       <div class="refinery-panel-header">
@@ -79,7 +83,7 @@
           </div>
         </div>
         <div class="floatbox">
-          <div class="floatbox-min-right">
+          <div id="launchpadStep2" class="floatbox-min-right">
             <button
               class="fa fa-shopping-cart is-mirrored icon-only disabled-default"
               title="Data Cart"
@@ -231,7 +235,7 @@
           </label>
         </div>
       </div>
-      <div refinery-panel-ref-offset>
+      <div id="launchpadStep3" refinery-panel-ref-offset>
         <div
           class="data-cart"
           ng-class="{ 'active': dashboard.showDataCart }"
@@ -566,7 +570,7 @@
   ng-if="dashboard.expandedDataSetPanelBorder">
 </div>
 
-<div
+<div id="launchpadStep4"
   class="col-md-4 pushable"
   ng-class="{'pushed': dashboard.expandDataSetPanel}"
   ng-if="!dashboard.repoMode">
@@ -774,7 +778,7 @@
   </div>
 </div>
 
-<div
+<div id="launchpadStep5"
   class="col-md-4 pushable"
   ng-class="{'pushed': dashboard.expandDataSetPanel}"
   ng-if="!dashboard.repoMode">
