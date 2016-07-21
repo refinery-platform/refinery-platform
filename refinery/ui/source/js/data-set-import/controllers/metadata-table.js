@@ -127,8 +127,6 @@ MetadataTableImportCtrl.prototype.renderTable = function () {
     });
   };
   reader.readAsText(self.file);
-  // self.strippedFile = new File([self.file], { type: 'text' });
-  //  reader.readAsText(self.strippedFile);
 };
 
 MetadataTableImportCtrl.prototype.makeColumnDefs = function () {
