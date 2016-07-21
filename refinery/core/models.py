@@ -220,11 +220,13 @@ class Tutorials(models.Model):
 
     def __unicode__(self):
         return (
-            "Launchpad - {}, Collaboration - {}, DataUpload - {}".format(
+            "User: {} | Launchpad: {}, Collaboration: {}, DataUpload:"
+            " {}".format(
+             self.user_profile.user.username,
              self.launchpad_tutorial_viewed,
              self.collaboration_tutorial_viewed,
-             self.data_upload_tutorial_viewed)
-
+             self.data_upload_tutorial_viewed
+            )
         )
 
 
