@@ -112,6 +112,28 @@
       </div>
 
       <div class="navbar-text pull-right">
+       {% if user.is_authenticated %}
+          {% if user.userprofile.login_count == 1 %}
+            <li id="attentionGrabber" class="attention_grabber">
+             <a class="pulse pointer"
+               popover-placement="bottom" popover-trigger="click"
+                uib-popover-template="dynamicPopover.templateUrl">
+                <i class="fa
+                 fa-question-circle"></i> Help
+              </a>
+            </li>
+
+          {% else %}
+             <a class="pointer"
+               popover-placement="bottom" popover-trigger="click"
+                uib-popover-template="dynamicPopover.templateUrl">
+                <i class="fa
+                 fa-question-circle"></i> Help
+              </a>
+          {% endif %}
+         &nbsp;&nbsp;|&nbsp;&nbsp;
+      {% endif %}
+
         {% if user.is_authenticated %}
           <i class="fa fa-user"></i>
           <a href="{% url "user" user.get_profile.uuid %}" tabindex=5>
@@ -315,6 +337,11 @@
     );
 
     $(document).ready( function(){
+
+      $('#attentionGrabber').on('click', function(){
+        $('#attentionGrabber').removeClass('attention_grabber');
+       });
+
       sizing();
 
       // detect IE: https://gist.github.com/527683
