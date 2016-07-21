@@ -1,6 +1,6 @@
 'use strict';
 
-function AppCtrl ($, $rootScope, $timeout, $window, _, pubSub, settings) {
+function AppCtrl ($, $sce, $scope, $rootScope, $timeout, $window, _, pubSub, settings) {
   this.$window = $window;
   this.jqWindow = $($window);
   this.$ = $;
@@ -58,6 +58,28 @@ function AppCtrl ($, $rootScope, $timeout, $window, _, pubSub, settings) {
       }
     }, 0);
   });
+
+  $scope.isOnHomepage = location.pathname === '/';
+
+  $scope.tutorials_viewed = {
+    launchpad: settings.djangoApp.launchpad_tut_viewed,
+    collaboration: settings.djangoApp.collaboration_tut_viewed,
+    data_upload: settings.djangoApp.data_upload_tut_viewed
+  };
+
+  $scope.currentCommit = settings.djangoApp.currentCommit;
+
+  $scope.uuid = settings.djangoApp.userprofileUUID;
+
+  $scope.collaborationKey = 'collaborationTutorialFirstStepViewed';
+  $scope.dataUploadKey = 'dataUploadTutorialFirstStepViewed';
+
+  $scope.dynamicPopover = {
+    title: 'Refinery Tutorials',
+    content: 'These are some helpful tutorials to guide you through Refinery!',
+    templateUrl: '/static/partials/tutorials/partials/tutorialPopover.html'
+
+  };
 }
 
 AppCtrl.prototype.globalClick = function ($event) {
@@ -68,6 +90,8 @@ angular
   .module('refineryApp')
   .controller('AppCtrl', [
     '$',
+    '$sce',
+    '$scope',
     '$rootScope',
     '$timeout',
     '$window',
