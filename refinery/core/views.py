@@ -42,7 +42,7 @@ from core.models import (
 from core.serializers import WorkflowSerializer, NodeGroupSerializer
 from core.utils import (get_data_sets_annotations, get_anonymous_user,
                         create_current_selection_node_group,
-                        filter_nodes_uuids_in_solr)
+                        filter_nodes_uuids_in_solr, move_node_to_lead)
 
 from xml.parsers.expat import ExpatError
 
@@ -1156,16 +1156,14 @@ class NodeGroups(APIView):
                 return create_current_selection_node_group(assay_uuid)
             # Serialize list of node_groups
             serializer = NodeGroupSerializer(node_groups, many=True)
+            # Move current_selection to front of the list, if not already
+            if serializer.data[0].get('name') != 'Current Selection':
+                # Helper method returns sorted serializer.data
+                return Response(move_node_to_lead(serializer.data, 'name',
+                                                  'Current Selection'))
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        # Move current_selection to front of the list
-        if serializer.data[0].name != 'Current Selection':
-            for node in serializer.data:
-                if node.name == 'Current Selection':
-                    curr_index = serializer.data.index(node)
-                    serializer.data.insert(0, serializer.data.pop(curr_index))
-                    break
         # Return node_group or list of assay's node_groups
         return Response(serializer.data)
 
