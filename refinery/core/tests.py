@@ -1775,13 +1775,13 @@ class UtilitiesTest(TestCase):
         ]
         response_arr = nodes_list
         self.assertNotEqual(response_arr[0].get('name'),
-                            nodes_list[3].get('name'))
+                            nodes_list[2].get('name'))
         # Should move current selection node to front
         response_arr = move_obj_to_front(nodes_list, 'name', 'Current '
                                                              'Selection')
         self.assertEqual(response_arr[0].get('name'),
                          nodes_list[0].get('name'))
-        # Should leaves leading nodes in front
+        # Should leave leading node in front
         response_arr = move_obj_to_front(nodes_list, 'name', 'Current '
                                                              'Selection')
         self.assertEqual(response_arr[0].get('name'),
