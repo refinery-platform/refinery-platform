@@ -829,7 +829,7 @@ def admin_ui_deletion(request, objects_to_delete, single_model=None):
             create_delete_response_message(delete_response)
 
 
-def move_obj_to_front(obj_arr, prop_key, prop_value):
+def move_obj_to_front(obj_arr, match_key, match_value):
     """
         Helper method move the first obj matching to the front of the arr
         based on key and value
@@ -837,12 +837,12 @@ def move_obj_to_front(obj_arr, prop_key, prop_value):
         or a single object instance if `delete_model:admin_ui_deletion` is
         called with `single_model` having a truthy value
         :param obj_arr: An array of objects
-        :param prop_key: Key to match
-        :param prop_key: Value to match
+        :param match_key: Key to match
+        :param match_value: Value to match
     """
     modified_obj_arr = obj_arr
     for obj in obj_arr:
-        if obj.get(prop_key) == prop_value:
+        if obj.get(match_key) == match_value:
             curr_index = obj_arr.index(obj)
             modified_obj_arr.insert(0, modified_obj_arr.pop(curr_index))
             break
