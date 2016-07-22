@@ -9,6 +9,7 @@ function selectedNodesService () {
   vm.complementSelectedNodes = [];
   vm.complementSelectedNodesUuids = [];
   vm.nodeGroupUuid = '';
+  vm.currentSelectionUuid = '';
 
   // Manual keep track of selected nodes, due to dynamic scrolling
   vm.setSelectedNodes = function (nodeRow) {
@@ -79,6 +80,10 @@ function selectedNodesService () {
     }
     // else nothing should occur to nodeRow because it is not in assayFiles
     return vm.complementSelectedNodes;
+  };
+
+  vm.resetNodeGroupSelection = function () {
+    vm.nodeGroupUuid = vm.currentSelectionUuid;
   };
 }
 
