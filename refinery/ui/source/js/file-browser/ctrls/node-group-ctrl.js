@@ -5,6 +5,7 @@ function NodeGroupCtrl (
   $q,
   $log,
   $window,
+  $scope,
   resetGridService,
   selectedNodesService
   ) {
@@ -63,6 +64,18 @@ function NodeGroupCtrl (
     selectedNodesService.setSelectedAllFlags(false);
     resetGridService.setResetGridFlag(true);
   };
+
+  $scope.$watch(
+    function () {
+      return selectedNodesService.resetNodeGroup;
+    },
+    function () {
+      if (selectedNodesService.resetNodeGroup) {
+        vm.nodeGroups.selected = vm.nodeGroups.groups[0];
+        selectedNodesService.resetNodeGroupSelection(false);
+      }
+    }
+  );
 }
 
 angular
@@ -73,6 +86,7 @@ angular
     '$q',
     '$log',
     '$window',
+    '$scope',
     'resetGridService',
     'selectedNodesService',
     NodeGroupCtrl

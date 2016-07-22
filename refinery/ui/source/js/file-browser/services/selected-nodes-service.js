@@ -10,6 +10,7 @@ function selectedNodesService () {
   vm.complementSelectedNodesUuids = [];
   vm.nodeGroupUuid = '';
   vm.currentSelectionUuid = '';
+  vm.resetNodeGroup = false;
 
   // Manual keep track of selected nodes, due to dynamic scrolling
   vm.setSelectedNodes = function (nodeRow) {
@@ -82,8 +83,11 @@ function selectedNodesService () {
     return vm.complementSelectedNodes;
   };
 
-  vm.resetNodeGroupSelection = function () {
-    vm.nodeGroupUuid = vm.currentSelectionUuid;
+  vm.resetNodeGroupSelection = function (flag) {
+    if (flag) {
+      vm.nodeGroupUuid = vm.currentSelectionUuid;
+    }
+    vm.resetNodeGroup = flag;
   };
 }
 
