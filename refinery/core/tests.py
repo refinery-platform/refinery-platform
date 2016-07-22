@@ -25,7 +25,7 @@ from core.models import (
     AnalysisNodeConnection, NodeGroup)
 from core.utils import (get_aware_local_time,
                         create_current_selection_node_group,
-                        filter_nodes_uuids_in_solr, move_node_to_lead)
+                        filter_nodes_uuids_in_solr, move_obj_to_front)
 from core.views import NodeGroups
 from .serializers import NodeGroupSerializer
 from file_store.models import FileStoreItem
@@ -1754,7 +1754,7 @@ class UtilitiesTest(TestCase):
         response = filter_nodes_uuids_in_solr(self.valid_uuid, [])
         self.assertItemsEqual(response, response_node_uuids)
 
-    def test_move_node_to_lead_valid(self):
+    def test_move_obj_to_front_valid(self):
         nodes_list = [
             {
                 'uuid': 'b55c3f8b-693b-4918-861b-c3e9268ec597',
@@ -1777,12 +1777,39 @@ class UtilitiesTest(TestCase):
         self.assertNotEqual(response_arr[0].get('name'),
                             nodes_list[3].get('name'))
         # Should move current selection node to front
-        response_arr = move_node_to_lead(nodes_list, 'name', 'Current '
+        response_arr = move_obj_to_front(nodes_list, 'name', 'Current '
                                                              'Selection')
         self.assertEqual(response_arr[0].get('name'),
                          nodes_list[0].get('name'))
         # Should leaves leading nodes in front
-        response_arr = move_node_to_lead(nodes_list, 'name', 'Current '
+        response_arr = move_obj_to_front(nodes_list, 'name', 'Current '
+                                                             'Selection')
+        self.assertEqual(response_arr[0].get('name'),
+                         nodes_list[0].get('name'))
+
+    def test_move_obj_to_front_missing_prop(self):
+        # Method does not throw errors if obj is missing prop_key
+        nodes_list = [
+            {
+                'uuid': 'b55c3f8b-693b-4918-861b-c3e9268ec597',
+            },
+            {
+                'uuid': 'c18d7a3d-f54a-42ae-9a30-37f631fa7e73',
+            },
+            {
+                'uuid': '22b3dc7e-bcbd-4dfc-bccb-db72b02b4d0e',
+                'name': 'Another NodeGroup'
+            },
+            {
+                'uuid': '0c6dc0e6-1a79-427d-b7a8-1b4f4c422755',
+                'name': 'Current Selection'
+            },
+        ]
+        response_arr = nodes_list
+        self.assertNotEqual(response_arr[0].get('name'),
+                            nodes_list[3].get('name'))
+        # Should move current selection node to front
+        response_arr = move_obj_to_front(nodes_list, 'name', 'Current '
                                                              'Selection')
         self.assertEqual(response_arr[0].get('name'),
                          nodes_list[0].get('name'))

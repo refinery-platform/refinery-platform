@@ -829,22 +829,22 @@ def admin_ui_deletion(request, objects_to_delete, single_model=None):
             create_delete_response_message(delete_response)
 
 
-def move_node_to_lead(node_arr, prop_key, prop_value):
+def move_obj_to_front(obj_arr, prop_key, prop_value):
     """
-        Helper method move the first node matching to the front of the arr
+        Helper method move the first obj matching to the front of the arr
         based on key and value
         :param objects_to_delete: iterable of Objects selected in admin UI,
         or a single object instance if `delete_model:admin_ui_deletion` is
         called with `single_model` having a truthy value
-        :param node_arr: An array of node objects
+        :param obj_arr: An array of objects
         :param prop_key: Key to match
         :param prop_key: Value to match
     """
-    modified_node_arr = node_arr
-    for node in node_arr:
-        if node.get(prop_key) == prop_value:
-            curr_index = node_arr.index(node)
-            modified_node_arr.insert(0, modified_node_arr.pop(curr_index))
+    modified_obj_arr = obj_arr
+    for obj in obj_arr:
+        if obj.get(prop_key) == prop_value:
+            curr_index = obj_arr.index(obj)
+            modified_obj_arr.insert(0, modified_obj_arr.pop(curr_index))
             break
 
-    return modified_node_arr
+    return modified_obj_arr
