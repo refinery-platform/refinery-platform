@@ -1766,11 +1766,11 @@ class UtilitiesTest(TestCase):
             },
             {
                 'uuid': '22b3dc7e-bcbd-4dfc-bccb-db72b02b4d0e',
-                'name': 'Another NodeGroup'
+                'name': 'Current Selection'
             },
             {
                 'uuid': '0c6dc0e6-1a79-427d-b7a8-1b4f4c422755',
-                'name': 'Current Selection'
+                'name': 'Another NodeGroup'
             },
         ]
         response_arr = nodes_list
