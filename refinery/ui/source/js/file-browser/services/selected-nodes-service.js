@@ -44,8 +44,6 @@ function selectedNodesService () {
         }
       );
     });
-    console.log('in the set selected Nodes');
-    console.log(vm.selectedNodes);
     return vm.selectedNodes;
   };
 

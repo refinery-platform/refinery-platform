@@ -120,7 +120,7 @@ function TreemapCtrl (
   this.settings = treemapSettings;
   this.pubSub = pubSub;
   this.treemapContext = treemapContext;
-  this.$visWrapper = this.$element.closest('.visWrapper');
+  this.$visWrapper = this.$element.closest('.vis-wrapper');
   this.$timeout = $timeout;
 
   this.Webworker = Webworker;
@@ -175,7 +175,7 @@ function TreemapCtrl (
   this.treemap.$element = this.$(this.treemap.element.node());
 
   this.treemap.grandParent = this.d3.select(this.$visWrapper[0])
-    .select('.root-path');
+    .select('#treemap-root-path');
   this.treemap.$grandParent = this.$(this.treemap.grandParent.node());
   this.treemap.$grandParentContainer = this.treemap.$grandParent.parent();
 
@@ -413,7 +413,7 @@ TreemapCtrl.prototype.addEventListeners = function () {
         termIds.push(data.terms[i].term);
       }
     } else {
-      this.$log.error('No annotations?', data);
+      this.$log.info('No annotations available.', data);
     }
     this.focusNode(termIds);
   }.bind(this));
@@ -425,7 +425,7 @@ TreemapCtrl.prototype.addEventListeners = function () {
         termIds.push(data.terms[i].term);
       }
     } else {
-      this.$log.error('No annotations?', data);
+      this.$log.info('No annotations available.', data);
     }
     this.blurNode(termIds);
   }.bind(this));
@@ -1516,7 +1516,7 @@ TreemapCtrl.prototype.setBreadCrumb = function (node) {
     .removeAttr('style');
   this.treemap.breadCrumbWidth = 0;
   this.treemap.breadCrumbContainerWidth = this.treemap.breadCrumbContainerWidth ||
-  this.treemap.$grandParentContainer.width();
+    this.treemap.$grandParentContainer.width();
 
   var child = node;
   var parent = child.parent;

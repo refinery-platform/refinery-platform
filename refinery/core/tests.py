@@ -1097,6 +1097,12 @@ class BaseResourceSlugTest(unittest.TestCase):
         self.assertIsNotNone(Project.objects.get(
             name="project_no_slug_duplicate2"))
 
+        Project.objects.create(name="project_no_slug3", slug="            ")
+        Project.objects.create(name="project_no_slug_duplicate3",
+                               slug="            ")
+        self.assertIsNotNone(Project.objects.get(
+            name="project_no_slug_duplicate3"))
+
 
 class CachingTest(unittest.TestCase):
     """Testing the addition and deletion of cached objects"""
