@@ -125,6 +125,7 @@ def create_user_profile(sender, instance, created, **kwargs):
     """
     if created:
         UserProfile.objects.get_or_create(user=instance)
+        Tutorials.objects.create(user_profile=instance.userprofile)
 
 
 post_save.connect(create_user_profile, sender=User)
