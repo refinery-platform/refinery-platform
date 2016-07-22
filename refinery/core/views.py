@@ -1159,6 +1159,13 @@ class NodeGroups(APIView):
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        # Move current_selection to front of the list
+        if serializer.data[0].name != 'Current Selection':
+            for node in serializer.data:
+                if node.name == 'Current Selection':
+                    curr_index = serializer.data.index(node)
+                    serializer.data.insert(0, serializer.data.pop(curr_index))
+                    break
         # Return node_group or list of assay's node_groups
         return Response(serializer.data)
 
