@@ -213,13 +213,26 @@ class NodeSetTest(unittest.TestCase):
         )
 
 
-def make_api_uri(resource_name, resource_id=''):
+def make_api_uri(resource_name, resource_id='', sharing=False):
     """Helper function to build Tastypie REST URIs"""
     base_url = '/api/v1'
+    uri = '/'.join([base_url, resource_name]) + '/'
+    uri_with_resource_id = '/'.join([base_url, resource_name, resource_id]) \
+                           + '/'
+
+    def add_sharing(uri):
+        return uri + 'sharing/'
+
     if resource_id:
-        return '/'.join([base_url, resource_name, resource_id]) + '/'
+        if sharing:
+            return add_sharing(uri_with_resource_id)
+        else:
+            return uri_with_resource_id
     else:
-        return '/'.join([base_url, resource_name]) + '/'
+        if sharing:
+            return add_sharing(uri)
+        else:
+            return uri
 
 
 class NodeSetResourceTest(ResourceTestCase):
