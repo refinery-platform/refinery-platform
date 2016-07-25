@@ -20,7 +20,9 @@ function NodeGroupCtrl (
     var assayUuid = $window.externalAssayUuid;
     fileBrowserFactory.getNodeGroupList(assayUuid).then(function () {
       vm.nodeGroups.groups = fileBrowserFactory.nodeGroupList;
+      // Current Selection node is first returned
       vm.nodeGroups.selected = vm.nodeGroups.groups[0];
+      selectedNodesService.currentSelectionUuid = vm.nodeGroups.groups[0].uuid;
     }, function (error) {
       $log.error(error);
     });
@@ -31,7 +33,9 @@ function NodeGroupCtrl (
     selectedNodesService.setSelectedAllFlags(false);
     // Copy node group nodes uuids to service
     selectedNodesService.setSelectedNodeUuidsFromNodeGroup(vm.nodeGroups.selected.nodes);
-    selectedNodesService.nodeGroupUuid = vm.nodeGroups.selected.uuid;
+    selectedNodesService.selectedNodeGroupUuid = vm.nodeGroups.selected.uuid;
+    console.log('just updated selection');
+    console.log(selectedNodesService.selectedNodeGroupUuid);
     resetGridService.setResetGridFlag(true);
   };
 
@@ -70,6 +74,7 @@ function NodeGroupCtrl (
       return selectedNodesService.resetNodeGroup;
     },
     function () {
+      console.log('in the watcher for reset node group');
       if (selectedNodesService.resetNodeGroup) {
         vm.nodeGroups.selected = vm.nodeGroups.groups[0];
         selectedNodesService.resetNodeGroupSelection(false);

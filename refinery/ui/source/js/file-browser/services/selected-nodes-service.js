@@ -8,8 +8,8 @@ function selectedNodesService () {
   vm.selectedAllFlag = false;
   vm.complementSelectedNodes = [];
   vm.complementSelectedNodesUuids = [];
-  vm.nodeGroupUuid = '';
-  vm.currentSelectionUuid = '';
+  vm.selectedNodeGroupUuid = '';
+  vm.defaultCurrentSelectionUuid = '';
   vm.resetNodeGroup = false;
 
   // Manual keep track of selected nodes, due to dynamic scrolling
@@ -61,6 +61,8 @@ function selectedNodesService () {
       vm.selectedNodes = [];
       vm.selectedNodeUuids = [];
       vm.selectedNodeUuidsFromNodeGroup = [];
+      vm.selectedNodeGroupUuid = '';
+      vm.resetNodeGroup = false;
     }
   };
 
@@ -84,10 +86,13 @@ function selectedNodesService () {
   };
 
   vm.resetNodeGroupSelection = function (flag) {
-    if (flag) {
-      vm.nodeGroupUuid = vm.currentSelectionUuid;
+    if (flag && vm.selectedNodeGroupUuid !== vm.defaultCurrentSelectionUuid) {
+      vm.selectedNodeGroupUuid = vm.defaultCurrentSelectionUuid;
+      vm.resetNodeGroup = true;
+      console.log('in the reset Node Group Selection, reset true');
+    } else {
+      vm.resetNodeGroup = flag;
     }
-    vm.resetNodeGroup = flag;
   };
 }
 

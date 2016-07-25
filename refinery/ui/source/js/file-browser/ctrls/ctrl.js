@@ -157,6 +157,7 @@ function FileBrowserCtrl (
       // Checkbox selection events
       vm.gridApi.selection.on.rowSelectionChanged(null, function (row) {
         // When selected All, watching the deselect events for complement nodes
+        console.log('in the row selection changes');
         if (selectedNodesService.selectedAllFlag) {
           selectedNodesService.setComplementSeletedNodes(row);
           vm.selectNodesCount = vm.assayFilesTotal -
@@ -170,7 +171,10 @@ function FileBrowserCtrl (
 
       // Event only occurs when checkbox is selected/deselected.
       vm.gridApi.selection.on.rowSelectionChangedBatch(null, function (eventRows) {
-       // Checking the first row selected, ensures it's a true select all
+        console.log('in the row selected change BATCH');
+        // When event all occurs, the node group should be current selection
+        selectedNodesService.resetNodeGroupSelection(true);
+        // Checking the first row selected, ensures it's a true select all
         if (eventRows[0].isSelected) {
           selectedNodesService.setSelectedAllFlags(true);
           // Need to manually set vm.selectNodesCount to count of all list
@@ -317,11 +321,13 @@ function FileBrowserCtrl (
 
       vm.refreshAssayFiles().then(function () {
         $timeout(function () {
+          console.log('in reset');
         // timeout needed to allow digest cycle to complete,and grid to finish ingesting the data
           vm.gridApi.infiniteScroll.resetScroll(vm.firstPage > 0, vm.lastPage < vm.totalPages);
           resetGridService.setResetGridFlag(false);
           // Select rows either from node group lists or previously selected
           if (selectedNodesService.selectedNodeUuidsFromNodeGroup.length > 0) {
+            console.log('in the reset, node group was selected');
             selectedNodesService.setSelectedNodesFromNodeGroup(
               selectedNodesService.selectedNodeUuidsFromNodeGroup
             );
