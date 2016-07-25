@@ -89,7 +89,6 @@
         "filesize/lib/filesize.min.js",
         "floatThead/dist/jquery.floatThead.min.js",
         "humanize/humanize.js",
-        "ui/bower_components/intro.js/minified/intro.min.js",
         "ng-file-upload/angular-file-upload.min.js",
         "jquery-file-upload/js/jquery.fileupload-angular.js",
         "jquery-file-upload/js/jquery.iframe-transport.js",
