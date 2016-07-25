@@ -26,6 +26,10 @@ sudo su -c '
   git checkout '"$GIT_BRANCH"'
 ' ubuntu
 
+printf '%s' "${OVERRIDE_DJANGO_CONFIG-}" |
+  base64 -d > /srv/refinery-platform/refinery/config/override-config.yaml
+
+
 cd /srv/refinery-platform/deployment
 
 # Write AWS region to file (for later use).

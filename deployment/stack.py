@@ -34,6 +34,7 @@ python stack.py > web.json
 # CloudInit
 #   https://help.ubuntu.com/community/CloudInit
 
+import base64
 import datetime
 import json     # for json.dumps
 import os       # for os.popen, os.urandom
@@ -84,6 +85,14 @@ def main():
     config_uri = save_s3_config(config, unique_suffix)
     sys.stderr.write("Configuration saved to {}\n".format(config_uri))
 
+    # Load override_django_config from optional file.
+    override_django_config = ""
+    try:
+        with open('override_django_config.yaml') as f:
+            override_django_config = f.read()
+    except IOError:
+        pass
+
     # The userdata script is executed via CloudInit.
     # It's made by concatenating a block of parameter variables,
     # with the bootstrap.sh script,
@@ -109,6 +118,8 @@ def main():
         "SITE_URL=", config['SITE_URL'], "\n",
         # May contain spaces, but can't contain "'"
         "SITE_NAME='", config['SITE_NAME'], "'\n",
+        "OVERRIDE_DJANGO_CONFIG=",
+        base64.b64encode(override_django_config), "\n",
         "GIT_BRANCH=", commit, "\n",
         "\n",
         open('bootstrap.sh').read(),
