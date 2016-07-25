@@ -1858,6 +1858,8 @@ class ShareableResourceTest(ResourceTestCase):
 
     def test_get_shareable_resource_expecting_no_share_list(self):
         """
+        This test trys to fetch a ShareableResource that has not been shared
+        and  expects to not see the `share_list` field in the response
         """
 
         assign_perm("read_%s" % self.dataset._meta.module_name, self.user,
@@ -1873,6 +1875,8 @@ class ShareableResourceTest(ResourceTestCase):
 
     def test_get_shareable_resource_expecting_share_list(self):
         """
+        This test trys to fetch a ShareableResource that has been shared and
+        expects to see the `share_list` field in the response
         """
         self.dataset.share(group=Group.objects.get(name="Public"))
         assign_perm("read_%s" % self.dataset._meta.module_name, self.user,
