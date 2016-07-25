@@ -91,7 +91,7 @@ function selectedNodesService () {
       vm.resetNodeGroup = true;
       console.log('in the reset Node Group Selection, reset true');
     } else {
-      vm.resetNodeGroup = flag;
+      vm.resetNodeGroup = false;
     }
   };
 }

@@ -54,6 +54,8 @@ function FileBrowserCtrl (
   vm.cachePages = 2;
   vm.counter = 0;
 
+  vm.afterNodeGroupUpdate = false;
+
   vm.refreshAssayFiles = function () {
     vm.filesParam.offset = vm.lastPage * vm.rowCount;
     vm.filesParam.limit = vm.rowCount;
@@ -158,6 +160,16 @@ function FileBrowserCtrl (
       vm.gridApi.selection.on.rowSelectionChanged(null, function (row) {
         // When selected All, watching the deselect events for complement nodes
         console.log('in the row selection changes');
+
+        if (selectedNodesService.selectedNodeGroupUuid &&
+          selectedNodesService.selectedNodeGroupUuid !==
+          selectedNodesService.defaultCurrentSelectionUuid) {
+          if (vm.afterNodeGroupUpdate) {
+            vm.afterNodeGroupUpdate = false;
+            selectedNodesService.resetNodeGroupSelection(true);
+          }
+        }
+
         if (selectedNodesService.selectedAllFlag) {
           selectedNodesService.setComplementSeletedNodes(row);
           vm.selectNodesCount = vm.assayFilesTotal -
@@ -333,6 +345,7 @@ function FileBrowserCtrl (
             );
             vm.selectNodesCount = selectedNodesService.selectedNodeUuidsFromNodeGroup.length;
             correctRowSelectionInUI();
+            vm.afterNodeGroupUpdate = true;
           } else if (selectedNodesService.selectedNodes.length > 0) {
             vm.setGridSelectedRows(selectedNodesService.selectedNodes);
             vm.selectNodesCount = selectedNodesService.selectedNodeUuids.length;
