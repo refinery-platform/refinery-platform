@@ -25,7 +25,7 @@ from core.models import (
     AnalysisNodeConnection, NodeGroup, Tutorials)
 from core.utils import (get_aware_local_time,
                         create_current_selection_node_group,
-                        filter_nodes_uuids_in_solr)
+                        filter_nodes_uuids_in_solr, move_obj_to_front)
 from core.views import NodeGroups
 from .serializers import NodeGroupSerializer
 from file_store.models import FileStoreItem
@@ -213,13 +213,26 @@ class NodeSetTest(unittest.TestCase):
         )
 
 
-def make_api_uri(resource_name, resource_id=''):
+def make_api_uri(resource_name, resource_id='', sharing=False):
     """Helper function to build Tastypie REST URIs"""
     base_url = '/api/v1'
+    uri = '/'.join([base_url, resource_name]) + '/'
+    uri_with_resource_id = '/'.join([base_url, resource_name, resource_id]) \
+                           + '/'
+
+    def add_sharing(uri):
+        return uri + 'sharing/'
+
     if resource_id:
-        return '/'.join([base_url, resource_name, resource_id]) + '/'
+        if sharing:
+            return add_sharing(uri_with_resource_id)
+        else:
+            return uri_with_resource_id
     else:
-        return '/'.join([base_url, resource_name]) + '/'
+        if sharing:
+            return add_sharing(uri)
+        else:
+            return uri
 
 
 class NodeSetResourceTest(ResourceTestCase):
@@ -1097,6 +1110,12 @@ class BaseResourceSlugTest(unittest.TestCase):
         self.assertIsNotNone(Project.objects.get(
             name="project_no_slug_duplicate2"))
 
+        Project.objects.create(name="project_no_slug3", slug="            ")
+        Project.objects.create(name="project_no_slug_duplicate3",
+                               slug="            ")
+        self.assertIsNotNone(Project.objects.get(
+            name="project_no_slug_duplicate3"))
+
 
 class CachingTest(unittest.TestCase):
     """Testing the addition and deletion of cached objects"""
@@ -1754,6 +1773,66 @@ class UtilitiesTest(TestCase):
         response = filter_nodes_uuids_in_solr(self.valid_uuid, [])
         self.assertItemsEqual(response, response_node_uuids)
 
+    def test_move_obj_to_front_valid(self):
+        nodes_list = [
+            {
+                'uuid': 'b55c3f8b-693b-4918-861b-c3e9268ec597',
+                'name': 'Test Node Group'
+            },
+            {
+                'uuid': 'c18d7a3d-f54a-42ae-9a30-37f631fa7e73',
+                'name': 'Completement Nodes 2'
+            },
+            {
+                'uuid': '22b3dc7e-bcbd-4dfc-bccb-db72b02b4d0e',
+                'name': 'Current Selection'
+            },
+            {
+                'uuid': '0c6dc0e6-1a79-427d-b7a8-1b4f4c422755',
+                'name': 'Another NodeGroup'
+            },
+        ]
+        response_arr = nodes_list
+        self.assertNotEqual(response_arr[0].get('name'),
+                            nodes_list[2].get('name'))
+        # Should move current selection node to front
+        response_arr = move_obj_to_front(nodes_list, 'name', 'Current '
+                                                             'Selection')
+        self.assertEqual(response_arr[0].get('name'),
+                         nodes_list[0].get('name'))
+        # Should leave leading node in front
+        response_arr = move_obj_to_front(nodes_list, 'name', 'Current '
+                                                             'Selection')
+        self.assertEqual(response_arr[0].get('name'),
+                         nodes_list[0].get('name'))
+
+    def test_move_obj_to_front_missing_prop(self):
+        # Method does not throw errors if obj is missing prop_key
+        nodes_list = [
+            {
+                'uuid': 'b55c3f8b-693b-4918-861b-c3e9268ec597',
+            },
+            {
+                'uuid': 'c18d7a3d-f54a-42ae-9a30-37f631fa7e73',
+            },
+            {
+                'uuid': '22b3dc7e-bcbd-4dfc-bccb-db72b02b4d0e',
+                'name': 'Another NodeGroup'
+            },
+            {
+                'uuid': '0c6dc0e6-1a79-427d-b7a8-1b4f4c422755',
+                'name': 'Current Selection'
+            },
+        ]
+        response_arr = nodes_list
+        self.assertNotEqual(response_arr[0].get('name'),
+                            nodes_list[3].get('name'))
+        # Should move current selection node to front
+        response_arr = move_obj_to_front(nodes_list, 'name', 'Current '
+                                                             'Selection')
+        self.assertEqual(response_arr[0].get('name'),
+                         nodes_list[0].get('name'))
+
 
 class UserTutorialsTest(TestCase):
     """
@@ -1776,3 +1855,60 @@ class UserTutorialsTest(TestCase):
         self.assertIsNotNone(
             Tutorials.objects.get(user_profile=self.userprofile)
         )
+
+
+class ShareableResourceTest(ResourceTestCase):
+    def setUp(self):
+        super(ShareableResourceTest, self).setUp()
+        self.investigation = Investigation.objects.create()
+        self.dataset = DataSet.objects.create(name="Cool DataSet")
+        self.investigation_link = InvestigationLink.objects.create(
+            data_set=self.dataset, investigation=self.investigation)
+        self.username = self.password = 'user'
+        self.user = User.objects.create_user(self.username, '',
+                                             self.password)
+        create_public_group()
+
+    def tearDown(self):
+        DataSet.objects.all().delete()
+
+    def get_credentials(self):
+        """Authenticate as self.user"""
+        # workaround required to use SessionAuthentication
+        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
+        return self.api_client.client.login(username=self.username,
+                                            password=self.password)
+
+    def test_get_shareable_resource_expecting_no_share_list(self):
+        """
+        This test trys to fetch a ShareableResource that has not been shared
+        and  expects to not see the `share_list` field in the response
+        """
+
+        assign_perm("read_%s" % self.dataset._meta.module_name, self.user,
+                    self.dataset)
+        dataset_uri = make_api_uri('data_sets', self.dataset.uuid)
+        response = self.api_client.get(
+            dataset_uri,
+            format='json',
+            authentication=self.get_credentials()
+        )
+        self.assertValidJSONResponse(response)
+        self.assertRaises(KeyError, json.loads(response.content)["share_list"])
+
+    def test_get_shareable_resource_expecting_share_list(self):
+        """
+        This test trys to fetch a ShareableResource that has been shared and
+        expects to see the `share_list` field in the response
+        """
+        self.dataset.share(group=Group.objects.get(name="Public"))
+        assign_perm("read_%s" % self.dataset._meta.module_name, self.user,
+                    self.dataset)
+        dataset_uri = make_api_uri('data_sets', self.dataset.uuid, True)
+        response = self.api_client.get(
+            dataset_uri,
+            format='json',
+            authentication=self.get_credentials(),
+        )
+        self.assertValidJSONResponse(response)
+        self.assertIsNotNone(json.loads(response.content)["share_list"])

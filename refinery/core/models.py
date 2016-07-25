@@ -252,20 +252,31 @@ class BaseResource(models.Model):
     class Meta:
         abstract = True
 
-    def duplicate_slug_check(self):
-        return int(len(self.__class__.objects.filter(slug=self.slug).exclude(
-            pk=self.pk)))
+    def duplicate_slug_exists(self):
+        """
+        Checks if any other instance within the BaseResource being saved has an
+        identical slug. Empty slugs and `None` slugs are not treated as
+        duplicates
+
+        :returns: Boolean based on if a duplicate slug exists
+        """
+        # Catches white spaces passed as slug & removes trail/lead white spaces
+        if self.slug:
+            self.slug = self.slug.strip()
+
+        # If the slug isn't empty after stripping whitespace
+        if self.slug:
+            return bool(len(self.__class__.objects.filter(slug=self.slug).
+                        exclude(pk=self.pk)))
+        else:
+            return False
 
     def clean(self):
         # Check if model being saved/altered in Django Admin has a slug
         # duplicated elsewhere.
 
-        # Catches white spaces passed as slug & removes trail/lead white spaces
         if self.slug:
-            self.slug = self.slug.strip()
-
-        if self.slug:
-            if self.duplicate_slug_check() == 0:
+            if not self.duplicate_slug_exists():
                 pass
             else:
                 raise forms.ValidationError("%s with slug: %s "
@@ -275,12 +286,9 @@ class BaseResource(models.Model):
 
     # Overriding save() method to disallow saving objects with duplicate slugs
     def save(self, *args, **kwargs):
-        # Catches white spaces passed as slug & removes trail/lead white spaces
-        if self.slug:
-            self.slug = self.slug.strip()
 
         if self.slug:
-            if self.duplicate_slug_check() == 0:
+            if not self.duplicate_slug_exists():
                 try:
                     super(BaseResource, self).save(*args, **kwargs)
                 except Exception as e:
