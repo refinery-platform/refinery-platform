@@ -111,7 +111,8 @@ def update_refinery():
         with shell_env(GIT_MERGE_AUTOEDIT='no'):
             run("git pull origin {branch}".format(**env))
     with cd(env.refinery_ui_dir):
-        run("npm prune && npm update")
+        run("npm prune --progress false")
+        run("npm update --progress false")
         run("rm -rf bower_components")
         run("bower update --config.interactive=false")
         run("grunt make")
