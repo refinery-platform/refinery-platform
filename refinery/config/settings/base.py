@@ -1,8 +1,11 @@
 import json
 import logging
 import os
+import yaml
+
 import djcelery
 import subprocess
+
 from django.core.exceptions import ImproperlyConfigured
 
 logger = logging.getLogger(__name__)
@@ -13,6 +16,8 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(__file__),
 
 local_settings_file_path = os.path.join(BASE_DIR,
                                         'refinery/config/config.json')
+override_path = os.path.join(BASE_DIR,
+    'refinery/config/override-config.yaml')
 
 # load config.json
 try:
@@ -21,6 +26,14 @@ try:
 except IOError as e:
     error_msg = "Could not open '{}': {}".format(local_settings_file_path, e)
     raise ImproperlyConfigured(error_msg)
+
+# load (optional) override-config.yaml
+try:
+    with open(override_path, 'r') as f:
+        override = yaml.load(f)
+    local_settings.update(override)
+except IOError:
+    pass
 
 
 def get_setting(name, settings=local_settings):
