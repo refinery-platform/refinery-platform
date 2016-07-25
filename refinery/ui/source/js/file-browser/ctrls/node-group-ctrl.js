@@ -34,8 +34,6 @@ function NodeGroupCtrl (
     // Copy node group nodes uuids to service
     selectedNodesService.setSelectedNodeUuidsFromNodeGroup(vm.nodeGroups.selected.nodes);
     selectedNodesService.selectedNodeGroupUuid = vm.nodeGroups.selected.uuid;
-    console.log('just updated selection');
-    console.log(selectedNodesService.selectedNodeGroupUuid);
     resetGridService.setResetGridFlag(true);
   };
 
@@ -74,7 +72,6 @@ function NodeGroupCtrl (
       return selectedNodesService.resetNodeGroup;
     },
     function () {
-      console.log('in the watcher for reset node group');
       if (selectedNodesService.resetNodeGroup) {
         vm.nodeGroups.selected = vm.nodeGroups.groups[0];
         selectedNodesService.resetNodeGroupSelection(false);

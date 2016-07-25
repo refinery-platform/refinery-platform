@@ -89,7 +89,6 @@ function selectedNodesService () {
     if (flag && vm.selectedNodeGroupUuid !== vm.defaultCurrentSelectionUuid) {
       vm.selectedNodeGroupUuid = vm.defaultCurrentSelectionUuid;
       vm.resetNodeGroup = true;
-      console.log('in the reset Node Group Selection, reset true');
     } else {
       vm.resetNodeGroup = false;
     }
