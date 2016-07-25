@@ -440,7 +440,13 @@ def add_igv_samples(fields, results_samp, annot_samples=None):
 
     # iterating over sample files
     pheno_results = get_sample_lines(fields_dict, results_samp)
-    temp_sample_name.write(pheno_results)
+    try:
+        temp_sample_name.write(pheno_results)
+    except UnicodeEncodeError as e:
+        logger.error("Could not write results to file: %s. "
+                     "Trying again with the content to write encoded "
+                     "properly." % e)
+        temp_sample_name.write(pheno_results.encode("utf-8"))
 
     # if annotations are not null
     if annot_samples:
