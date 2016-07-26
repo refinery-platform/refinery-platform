@@ -17,7 +17,7 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(__file__),
 local_settings_file_path = os.path.join(BASE_DIR,
                                         'refinery/config/config.json')
 override_path = os.path.join(BASE_DIR,
-    'refinery/config/override-config.yaml')
+                             'refinery/config/override-config.yaml')
 
 # load config.json
 try:
