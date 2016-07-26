@@ -192,15 +192,29 @@ def run(request):
 
     # single-input workflow based node group
     if node_group_uuid:
-        # TODO: handle DoesNotExist exception
-        curr_node_group = NodeGroup.objects.get(uuid=node_group_uuid)
-        curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
+        try:
+            curr_node_group = NodeGroup.objects.get(uuid=node_group_uuid)
+        except NodeGroup.DoesNotExist:
+            logger.error("Node Group with UUID '{}' does not exist".format(
+                node_group_uuid))
+            return HttpResponseBadRequest(status='404')
 
-        # TODO: catch if study or data set don't exist
-        study = Study.objects.get(uuid=study_uuid)
+        curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
+        if not curr_workflow:
+            return HttpResponseBadRequest(status='404')
+
+        try:
+            study = Study.objects.get(uuid=study_uuid)
+        except Study.DoesNotExist:
+            logger.error("Study with UUID '{}' does not exist".format(
+                study_uuid))
+            return HttpResponseBadRequest(status='404')
+
         data_set = InvestigationLink.objects.filter(
             investigation__uuid=study.investigation.uuid).order_by(
                 "version").reverse()[0].data_set
+        if not data_set:
+            return HttpResponseBadRequest(status='404')
 
         logger.info("Associating analysis with data set %s (%s)",
                     data_set, data_set.uuid)
