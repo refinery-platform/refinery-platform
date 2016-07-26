@@ -50,6 +50,8 @@ function AnalysisLaunchModalCtrl (
       if (selectedNodesService.selectedNodeGroupUuid ===
         selectedNodesService.defaultCurrentSelectionUuid) {
         var nodeGroupParams = selectedNodesService.setNodeGroupParams();
+        nodeGroupParams.uuid = selectedNodesService.defaultCurrentSelectionUuid;
+
         nodeGroupService.update(nodeGroupParams).$promise.then(function () {
           launchAnalysis(analysisParams);
         });

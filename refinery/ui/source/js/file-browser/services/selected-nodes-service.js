@@ -61,7 +61,7 @@ function selectedNodesService ($window) {
       vm.selectedNodes = [];
       vm.selectedNodeUuids = [];
       vm.selectedNodeUuidsFromNodeGroup = [];
-      vm.selectedNodeGroupUuid = '';
+      vm.selectedNodeGroupUuid = vm.defaultCurrentSelectionUuid;
       vm.resetNodeGroup = false;
     }
   };
