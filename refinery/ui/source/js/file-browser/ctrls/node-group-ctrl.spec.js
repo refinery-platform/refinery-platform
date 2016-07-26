@@ -50,7 +50,7 @@ describe('Controller: Node Group Ctrl', function () {
     ctrl.nodeGroups = {
       selected: []
     };
-    spyOn(service, 'setSelectedNodeUuidsFromNodeGroup').and.callFake(function () {
+    spyOn(service, 'setSelectedNodesUuidsFromNodeGroup').and.callFake(function () {
       mockServiceResponse = true;
     });
     spyOn(resetService, 'setResetGridFlag').and.callFake(function () {

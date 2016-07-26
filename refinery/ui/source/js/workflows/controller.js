@@ -1,7 +1,7 @@
 'use strict';
 
 function WorkflowListApiCtrl (
-  $scope, $rootScope, workflowService, workflow
+  $scope, $rootScope, workflowService, workflow, $location
 ) {
   $scope.workflowList = [];
   $scope.selectedWorkflow = { select: $scope.workflowList[0] };
@@ -23,6 +23,16 @@ function WorkflowListApiCtrl (
       $rootScope.$emit('workflowChangedEvent', workflow.get());
     }
   };
+
+  // Temp method for setting which file browser is being uses
+  $scope.whichFileBrowserBrowser = function () {
+    $scope.dataSet2Flag = false;
+    if ($location.absUrl().indexOf('data_sets2') > -1) {
+      $scope.dataSet2Flag = true;
+    }
+  };
+
+  $scope.whichFileBrowserBrowser();
 }
 
 angular
@@ -32,5 +42,6 @@ angular
     '$rootScope',
     'workflowService',
     'workflow',
+    '$location',
     WorkflowListApiCtrl
   ]);

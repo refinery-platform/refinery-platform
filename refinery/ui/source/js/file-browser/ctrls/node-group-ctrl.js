@@ -5,6 +5,7 @@ function NodeGroupCtrl (
   $q,
   $log,
   $window,
+  $scope,
   resetGridService,
   selectedNodesService
   ) {
@@ -19,7 +20,10 @@ function NodeGroupCtrl (
     var assayUuid = $window.externalAssayUuid;
     fileBrowserFactory.getNodeGroupList(assayUuid).then(function () {
       vm.nodeGroups.groups = fileBrowserFactory.nodeGroupList;
+      // Current Selection node is first returned
       vm.nodeGroups.selected = vm.nodeGroups.groups[0];
+      selectedNodesService.defaultCurrentSelectionUuid = vm.nodeGroups.groups[0].uuid;
+      selectedNodesService.selectedNodeGroupUuid = selectedNodesService.defaultCurrentSelectionUuid;
     }, function (error) {
       $log.error(error);
     });
@@ -29,27 +33,15 @@ function NodeGroupCtrl (
   vm.selectCurrentNodeGroupNodes = function () {
     selectedNodesService.setSelectedAllFlags(false);
     // Copy node group nodes uuids to service
-    selectedNodesService.setSelectedNodeUuidsFromNodeGroup(vm.nodeGroups.selected.nodes);
+    selectedNodesService.setSelectedNodesUuidsFromNodeGroup(vm.nodeGroups.selected.nodes);
+    selectedNodesService.selectedNodeGroupUuid = vm.nodeGroups.selected.uuid;
     resetGridService.setResetGridFlag(true);
   };
 
   // Create a new node group
   vm.saveNodeGroup = function (name) {
-    var params = {
-      name: name,
-      assay: $window.externalAssayUuid,
-      study: $window.externalStudyUuid
-    };
-
-    // If select all box is checked, the complements are sent and backend
-    // generates nodes list
-    if (selectedNodesService.selectedAllFlag) {
-      params.nodes = selectedNodesService.complementSelectedNodesUuids;
-      params.use_complement_nodes = true;
-    } else {
-      params.nodes = selectedNodesService.selectedNodeUuids;
-      params.use_complement_nodes = false;
-    }
+    var params = selectedNodesService.setNodeGroupParams();
+    params.name = name;
     fileBrowserFactory.createNodeGroup(params).then(function () {
       vm.refreshNodeGroupList();
     });
@@ -62,6 +54,18 @@ function NodeGroupCtrl (
     selectedNodesService.setSelectedAllFlags(false);
     resetGridService.setResetGridFlag(true);
   };
+
+  $scope.$watch(
+    function () {
+      return selectedNodesService.resetNodeGroup;
+    },
+    function () {
+      if (selectedNodesService.resetNodeGroup) {
+        vm.nodeGroups.selected = vm.nodeGroups.groups[0];
+        selectedNodesService.resetNodeGroupSelection(false);
+      }
+    }
+  );
 }
 
 angular
@@ -72,6 +76,7 @@ angular
     '$q',
     '$log',
     '$window',
+    '$scope',
     'resetGridService',
     'selectedNodesService',
     NodeGroupCtrl

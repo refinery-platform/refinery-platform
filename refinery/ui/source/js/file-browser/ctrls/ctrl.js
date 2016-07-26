@@ -54,6 +54,8 @@ function FileBrowserCtrl (
   vm.cachePages = 2;
   vm.counter = 0;
 
+  vm.afterNodeGroupUpdate = false;
+
   vm.refreshAssayFiles = function () {
     vm.filesParam.offset = vm.lastPage * vm.rowCount;
     vm.filesParam.limit = vm.rowCount;
@@ -157,6 +159,15 @@ function FileBrowserCtrl (
       // Checkbox selection events
       vm.gridApi.selection.on.rowSelectionChanged(null, function (row) {
         // When selected All, watching the deselect events for complement nodes
+        if (selectedNodesService.selectedNodeGroupUuid &&
+          selectedNodesService.selectedNodeGroupUuid !==
+          selectedNodesService.defaultCurrentSelectionUuid) {
+          if (vm.afterNodeGroupUpdate) {
+            vm.afterNodeGroupUpdate = false;
+            selectedNodesService.resetNodeGroupSelection(true);
+          }
+        }
+
         if (selectedNodesService.selectedAllFlag) {
           selectedNodesService.setComplementSeletedNodes(row);
           vm.selectNodesCount = vm.assayFilesTotal -
@@ -170,7 +181,9 @@ function FileBrowserCtrl (
 
       // Event only occurs when checkbox is selected/deselected.
       vm.gridApi.selection.on.rowSelectionChangedBatch(null, function (eventRows) {
-       // Checking the first row selected, ensures it's a true select all
+        // When event all occurs, the node group should be current selection
+        selectedNodesService.resetNodeGroupSelection(true);
+        // Checking the first row selected, ensures it's a true select all
         if (eventRows[0].isSelected) {
           selectedNodesService.setSelectedAllFlags(true);
           // Need to manually set vm.selectNodesCount to count of all list
@@ -214,7 +227,7 @@ function FileBrowserCtrl (
       vm.setGridUnselectedRows(selectedNodesService.complementSelectedNodesUuids);
       // previous selected nodes maintained during infinite scrolling
     } else if (selectedNodesService.selectedNodes.length > 0) {
-      vm.setGridSelectedRows(selectedNodesService.selectedNodeUuids);
+      vm.setGridSelectedRows(selectedNodesService.selectedNodesUuids);
     }
   };
 
@@ -321,15 +334,16 @@ function FileBrowserCtrl (
           vm.gridApi.infiniteScroll.resetScroll(vm.firstPage > 0, vm.lastPage < vm.totalPages);
           resetGridService.setResetGridFlag(false);
           // Select rows either from node group lists or previously selected
-          if (selectedNodesService.selectedNodeUuidsFromNodeGroup.length > 0) {
+          if (selectedNodesService.selectedNodesUuidsFromNodeGroup.length > 0) {
             selectedNodesService.setSelectedNodesFromNodeGroup(
-              selectedNodesService.selectedNodeUuidsFromNodeGroup
+              selectedNodesService.selectedNodesUuidsFromNodeGroup
             );
-            vm.selectNodesCount = selectedNodesService.selectedNodeUuidsFromNodeGroup.length;
+            vm.selectNodesCount = selectedNodesService.selectedNodesUuidsFromNodeGroup.length;
             correctRowSelectionInUI();
+            vm.afterNodeGroupUpdate = true;
           } else if (selectedNodesService.selectedNodes.length > 0) {
             vm.setGridSelectedRows(selectedNodesService.selectedNodes);
-            vm.selectNodesCount = selectedNodesService.selectedNodeUuids.length;
+            vm.selectNodesCount = selectedNodesService.selectedNodesUuids.length;
             correctRowSelectionInUI();
           } else {
             vm.gridApi.selection.clearSelectedRows();

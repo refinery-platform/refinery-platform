@@ -5,9 +5,7 @@ function watchNodeSelection () {
   vm.nodeSelection = [];
 
   vm.setNodeSelection = function (nodeSelectArray) {
-    console.log('in service');
     vm.nodeSelection = nodeSelectArray;
-    console.log(vm.nodeSelection);
   };
 }
 
