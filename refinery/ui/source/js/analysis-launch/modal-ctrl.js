@@ -25,6 +25,18 @@ function AnalysisLaunchModalCtrl (
     }
   );
 
+  var launchAnalysis = function (params) {
+    analysisLaunchConfigService.setAnalysisConfig(params);
+    var launchParams = analysisLaunchConfigService.getAnalysisConfig();
+    analysisLaunchFactory.postLaunchAnalysis(launchParams)
+      .then(function () {
+        $scope.analysisLaunchFlag = 'SUCCESS';
+      }, function (error) {
+        $log.log(error);
+        $scope.analysisLaunchFlag = 'FAILED';
+      });
+  };
+
   $scope.ok = function () {
     $scope.analysisLaunchFlag = 'LOADING';
 
@@ -36,16 +48,12 @@ function AnalysisLaunchModalCtrl (
         paramsObj.nodeGroupUuid = selectedNodesService.selectedNodeGroupUuid;
       }
 
-      console.log('selected');
-      console.log(selectedNodesService.selectedNodeGroupUuid);
-      console.log(selectedNodesService.defaultCurrentSelectionUuid);
-
       // update current selection nodes
       if (selectedNodesService.selectedNodeGroupUuid ===
         selectedNodesService.defaultCurrentSelectionUuid) {
         var params = {
           uuid: selectedNodesService.selectedNodeGroupUuid,
-          assay: $window.externalAssayUuid,
+          assay: $window.externalAssayUuid
         };
         if (selectedNodesService.selectedAllFlag) {
           params.nodes = selectedNodesService.complementSelectedNodesUuids;
@@ -56,27 +64,10 @@ function AnalysisLaunchModalCtrl (
         }
 
         nodeGroupService.update(params).$promise.then(function () {
-          console.log('in promise of update');
-          analysisLaunchConfigService.setAnalysisConfig(paramsObj);
-          var launchParams = analysisLaunchConfigService.getAnalysisConfig();
-          analysisLaunchFactory.postLaunchAnalysis(launchParams)
-            .then(function () {
-              $scope.analysisLaunchFlag = 'SUCCESS';
-            }, function (error) {
-              $log.log(error);
-              $scope.analysisLaunchFlag = 'FAILED';
-            });
+          launchAnalysis(paramsObj);
         });
       } else {
-        analysisLaunchConfigService.setAnalysisConfig(paramsObj);
-        var launchParams = analysisLaunchConfigService.getAnalysisConfig();
-        analysisLaunchFactory.postLaunchAnalysis(launchParams)
-          .then(function () {
-            $scope.analysisLaunchFlag = 'SUCCESS';
-          }, function (error) {
-            $log.log(error);
-            $scope.analysisLaunchFlag = 'FAILED';
-          });
+        launchAnalysis(paramsObj);
       }
     }
   };
