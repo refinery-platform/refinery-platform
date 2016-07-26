@@ -74,6 +74,8 @@ function AppCtrl ($, $sce, $scope, $rootScope, $timeout, $window, _, pubSub, set
   $scope.collaborationKey = 'collaborationTutorialFirstStepViewed';
   $scope.dataUploadKey = 'dataUploadTutorialFirstStepViewed';
 
+  $scope.refineryTutorialSteps = JSON.parse(settings.djangoApp.refineryTutorialSteps);
+
   $scope.dynamicPopover = {
     title: 'Refinery Tutorials',
     content: 'These are some helpful tutorials to guide you through Refinery!',

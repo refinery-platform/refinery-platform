@@ -36,6 +36,7 @@
       admins: '{{ ADMINS|safe }}',
       repositoryMode: {{ REFINERY_REPOSITORY_MODE|yesno:"true,false,undefined" }},
       solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
+      refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}'
     };
 
     if (window.djangoApp.userId === 'None' || window.djangoApp.userName === 'None') {
