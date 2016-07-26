@@ -71,7 +71,7 @@ function AnalysisLaunchModalCtrl (
 
   $scope.view = function () {
     $uibModalInstance.close('view');
-    $window.location.href = '/data_sets/' + $window.dataSetUuid + '/#/analyses';
+    $window.location.hash = 'analyses';
   };
 }
 
