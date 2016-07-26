@@ -194,19 +194,6 @@ def run(request):
     if node_group_uuid:
         # TODO: handle DoesNotExist exception
         curr_node_group = NodeGroup.objects.get(uuid=node_group_uuid)
-
-        # no need to use solr to grab uuids
-        # curr_node_dict = curr_node_set.solr_query_components
-        # curr_node_dict = json.loads(curr_node_dict)
-        # solr results
-        # solr_uuids = get_solr_results(
-        # curr_node_set.solr_query,
-        # only_uuids=True,
-        # selected_mode=curr_node_dict['documentSelectionBlacklistMode'],
-        # selected_nodes=curr_node_dict['documentSelection']
-        # )
-        # retrieving workflow based on input workflow_uuid
-        # TODO: handle DoesNotExist exception
         curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
 
         # TODO: catch if study or data set don't exist
