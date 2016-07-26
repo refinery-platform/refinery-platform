@@ -98,15 +98,15 @@ function selectedNodesService ($window) {
   // generates nodes list
   vm.setNodeGroupParams = function () {
     var params = {
-      uuid: selectedNodesService.selectedNodeGroupUuid,
+      uuid: vm.selectedNodeGroupUuid,
       assay: $window.externalAssayUuid,
       study: $window.externalStudyUuid
     };
-    if (selectedNodesService.selectedAllFlag) {
-      params.nodes = selectedNodesService.complementSelectedNodesUuids;
+    if (vm.selectedAllFlag) {
+      params.nodes = vm.complementSelectedNodesUuids;
       params.use_complement_nodes = true;
     } else {
-      params.nodes = selectedNodesService.selectedNodesUuids;
+      params.nodes = vm.selectedNodesUuids;
       params.use_complement_nodes = false;
     }
 
