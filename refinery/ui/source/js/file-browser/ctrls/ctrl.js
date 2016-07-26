@@ -227,7 +227,7 @@ function FileBrowserCtrl (
       vm.setGridUnselectedRows(selectedNodesService.complementSelectedNodesUuids);
       // previous selected nodes maintained during infinite scrolling
     } else if (selectedNodesService.selectedNodes.length > 0) {
-      vm.setGridSelectedRows(selectedNodesService.selectedNodeUuids);
+      vm.setGridSelectedRows(selectedNodesService.selectedNodesUuids);
     }
   };
 
@@ -334,16 +334,16 @@ function FileBrowserCtrl (
           vm.gridApi.infiniteScroll.resetScroll(vm.firstPage > 0, vm.lastPage < vm.totalPages);
           resetGridService.setResetGridFlag(false);
           // Select rows either from node group lists or previously selected
-          if (selectedNodesService.selectedNodeUuidsFromNodeGroup.length > 0) {
+          if (selectedNodesService.selectedNodesUuidsFromNodeGroup.length > 0) {
             selectedNodesService.setSelectedNodesFromNodeGroup(
-              selectedNodesService.selectedNodeUuidsFromNodeGroup
+              selectedNodesService.selectedNodesUuidsFromNodeGroup
             );
-            vm.selectNodesCount = selectedNodesService.selectedNodeUuidsFromNodeGroup.length;
+            vm.selectNodesCount = selectedNodesService.selectedNodesUuidsFromNodeGroup.length;
             correctRowSelectionInUI();
             vm.afterNodeGroupUpdate = true;
           } else if (selectedNodesService.selectedNodes.length > 0) {
             vm.setGridSelectedRows(selectedNodesService.selectedNodes);
-            vm.selectNodesCount = selectedNodesService.selectedNodeUuids.length;
+            vm.selectNodesCount = selectedNodesService.selectedNodesUuids.length;
             correctRowSelectionInUI();
           } else {
             vm.gridApi.selection.clearSelectedRows();

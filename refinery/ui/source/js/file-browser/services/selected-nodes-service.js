@@ -3,8 +3,8 @@
 function selectedNodesService ($window) {
   var vm = this;
   vm.selectedNodes = [];
-  vm.selectedNodeUuids = [];
-  vm.selectedNodeUuidsFromNodeGroup = [];
+  vm.selectedNodesUuids = [];
+  vm.selectedNodesUuidsFromNodeGroup = [];
   vm.selectedAllFlag = false;
   vm.complementSelectedNodes = [];
   vm.complementSelectedNodesUuids = [];
@@ -14,16 +14,16 @@ function selectedNodesService ($window) {
 
   // Manual keep track of selected nodes, due to dynamic scrolling
   vm.setSelectedNodes = function (nodeRow) {
-    var ind = vm.selectedNodeUuids.indexOf(nodeRow.entity.uuid);
+    var ind = vm.selectedNodesUuids.indexOf(nodeRow.entity.uuid);
     if (nodeRow.isSelected) {
       if (ind === -1) {
         vm.selectedNodes.push(nodeRow);
-        vm.selectedNodeUuids.push(nodeRow.entity.uuid);
+        vm.selectedNodesUuids.push(nodeRow.entity.uuid);
       }
       // Have to set explictly to keep deleted rows from infinite scrolling
     } else if (nodeRow.isSelected === false) {
       if (ind > -1) {
-        vm.selectedNodeUuids.splice(ind, 1);
+        vm.selectedNodesUuids.splice(ind, 1);
         vm.selectedNodes.splice(ind, 1);
       }
     }
@@ -31,9 +31,9 @@ function selectedNodesService ($window) {
     return vm.selectedNodes;
   };
 
-  vm.setSelectedNodeUuidsFromNodeGroup = function (nodesUuidsList) {
-    angular.copy(nodesUuidsList, vm.selectedNodeUuidsFromNodeGroup);
-    return vm.selectedNodeUuidsFromNodeGroup;
+  vm.setSelectedNodesUuidsFromNodeGroup = function (nodesUuidsList) {
+    angular.copy(nodesUuidsList, vm.selectedNodesUuidsFromNodeGroup);
+    return vm.selectedNodesUuidsFromNodeGroup;
   };
 
   // create ui-grid like objects to match with rows in ui-gride
@@ -59,8 +59,8 @@ function selectedNodesService ($window) {
       vm.complementSelectedNodes = [];
       vm.complementSelectedNodesUuids = [];
       vm.selectedNodes = [];
-      vm.selectedNodeUuids = [];
-      vm.selectedNodeUuidsFromNodeGroup = [];
+      vm.selectedNodesUuids = [];
+      vm.selectedNodesUuidsFromNodeGroup = [];
       vm.selectedNodeGroupUuid = vm.defaultCurrentSelectionUuid;
       vm.resetNodeGroup = false;
     }
@@ -106,7 +106,7 @@ function selectedNodesService ($window) {
       params.nodes = selectedNodesService.complementSelectedNodesUuids;
       params.use_complement_nodes = true;
     } else {
-      params.nodes = selectedNodesService.selectedNodeUuids;
+      params.nodes = selectedNodesService.selectedNodesUuids;
       params.use_complement_nodes = false;
     }
 
