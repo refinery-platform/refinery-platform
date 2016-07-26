@@ -5,25 +5,32 @@ describe('Selected-Nodes-Service', function () {
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryFileBrowser'));
-  beforeEach(inject(function (_selectedNodesService_) {
+  beforeEach(inject(function (_selectedNodesService_, $window) {
     service = _selectedNodesService_;
+    $window.externalAssayUuid = '8486046b-22f4-447f-9c81-41dbf6173c44';
+    $window.externalStudyUuid = '2341568b-22f4-643f-9c76-32dbf6173d66';
   }));
 
   it('service variables should exist', function () {
     expect(service).toBeDefined();
     expect(service.selectedNodes).toEqual([]);
-    expect(service.selectedNodeUuids).toEqual([]);
-    expect(service.selectedNodeUuidsFromNodeGroup).toEqual([]);
+    expect(service.selectedNodesUuids).toEqual([]);
+    expect(service.selectedNodesUuidsFromNodeGroup).toEqual([]);
     expect(service.selectedAllFlag).toEqual(false);
     expect(service.complementSelectedNodes).toEqual([]);
-    expect(service.complementSelectedNodesUuids).toEqual([]);
+    expect(service.selectedNodeGroupUuid).toEqual('');
+    expect(service.defaultCurrentSelectionUuid).toEqual('');
+    expect(service.resetNodeGroup).toEqual(false);
   });
 
   it('all methods exist', function () {
     expect(angular.isFunction(service.setSelectedNodes)).toBe(true);
+    expect(angular.isFunction(service.setSelectedNodesUuidsFromNodeGroup)).toBe(true);
+    expect(angular.isFunction(service.setSelectedNodesFromNodeGroup)).toBe(true);
     expect(angular.isFunction(service.setSelectedAllFlags)).toBe(true);
-    expect(angular.isFunction(service.setSelectedNodeUuidsFromNodeGroup)).toBe(true);
     expect(angular.isFunction(service.setComplementSeletedNodes)).toBe(true);
+    expect(angular.isFunction(service.resetNodeGroupSelection)).toBe(true);
+    expect(angular.isFunction(service.setNodeGroupParams)).toBe(true);
   });
 
   it('setSelectedNodes updates selectedNodes', function () {
@@ -32,21 +39,37 @@ describe('Selected-Nodes-Service', function () {
       isSelected: true
     };
     var nodesUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
-    expect(service.selectedNodeUuids).toEqual([]);
+    expect(service.selectedNodesUuids).toEqual([]);
     expect(service.selectedNodes).toEqual([]);
     service.setSelectedNodes(node);
     expect(service.selectedNodes).toEqual([node]);
-    expect(service.selectedNodeUuids).toEqual([nodesUuid]);
+    expect(service.selectedNodesUuids).toEqual([nodesUuid]);
   });
 
-  it('setSelectedNodeUuidsFromNodeGroup updates selectedNodeUuidsFromNodeGroup', function () {
+  it('setSelectedNodesUuidsFromNodeGroup updates' +
+    ' selectedNodesUuidsFromNodeGroup', function () {
     var nodesList = [
       'x508x83x-x9xx-4740-x9x7-x7x0x631280x',
       'x5788x83x-x9xx-4740-x9x7-x7x0x98765x'
     ];
-    expect(service.selectedNodeUuidsFromNodeGroup).toEqual([]);
-    service.setSelectedNodeUuidsFromNodeGroup(nodesList);
-    expect(service.selectedNodeUuidsFromNodeGroup).toEqual(nodesList);
+    expect(service.selectedNodesUuidsFromNodeGroup).toEqual([]);
+    service.setSelectedNodesUuidsFromNodeGroup(nodesList);
+    expect(service.selectedNodesUuidsFromNodeGroup).toEqual(nodesList);
+  });
+
+  it('setSelectedNodesFromNodeGroup calls on setSelectedNode', function () {
+    var uuidList = ['x5788x83x-x9xx-4740-x9x7-x7x0x98765x'];
+
+    spyOn(service, 'setSelectedNodes');
+    var expectedParam = {
+      entity: {
+        uuid: 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x'
+      },
+      isSelected: true
+    };
+    expect(service.setSelectedNodes).not.toHaveBeenCalled();
+    service.setSelectedNodesFromNodeGroup(uuidList);
+    expect(service.setSelectedNodes).toHaveBeenCalledWith(expectedParam);
   });
 
   it('setSelectedAllFlags', function () {
@@ -84,5 +107,45 @@ describe('Selected-Nodes-Service', function () {
     });
     expect(service.complementSelectedNodes.length).toEqual(2);
     expect(service.complementSelectedNodesUuids.length).toEqual(2);
+  });
+
+  it('resetNodeGroupSelection to true flag', function () {
+    expect(service.selectedNodeGroupUuid).toEqual('');
+    service.defaultCurrentSelectionUuid = 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x';
+    service.resetNodeGroupSelection(true);
+    expect(service.selectedNodeGroupUuid).toEqual(service.defaultCurrentSelectionUuid);
+    expect(service.resetNodeGroup).toEqual(true);
+    service.resetNodeGroupSelection(false);
+    expect(service.resetNodeGroup).toEqual(false);
+  });
+
+  it('resetNodeGroupSelection to false flag', function () {
+    expect(service.selectedNodeGroupUuid).toEqual('');
+    service.defaultCurrentSelectionUuid = 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x';
+    service.resetNodeGroupSelection(false);
+    expect(service.selectedNodeGroupUuid).toEqual('');
+    expect(service.resetNodeGroup).toEqual(false);
+  });
+
+  it('setNodeGroupParams sets correct complement nodes params', function () {
+    service.selectedAllFlag = true;
+    service.selectedNodeGroupUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+    service.complementSelectedNodesUuids = ['x5788x83x-x9xx-4740-x9x7-x7x0x98765x'];
+
+    var response = service.setNodeGroupParams();
+    expect(response.uuid).toEqual(service.selectedNodeGroupUuid);
+    expect(response.nodes).toEqual(service.complementSelectedNodesUuids);
+    expect(response.use_complement_nodes).toEqual(true);
+  });
+
+  it('setNodeGroupParams sets correct selected nodes params', function () {
+    service.selectedAllFlag = false;
+    service.selectedNodeGroupUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+    service.selectedNodesUuids = ['db03efb7-cf01-4840-bcb2-7b023efc290c'];
+
+    var response = service.setNodeGroupParams();
+    expect(response.uuid).toEqual(service.selectedNodeGroupUuid);
+    expect(response.nodes).toEqual(service.selectedNodesUuids);
+    expect(response.use_complement_nodes).toEqual(false);
   });
 });
