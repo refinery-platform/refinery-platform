@@ -22,7 +22,8 @@ function NodeGroupCtrl (
       vm.nodeGroups.groups = fileBrowserFactory.nodeGroupList;
       // Current Selection node is first returned
       vm.nodeGroups.selected = vm.nodeGroups.groups[0];
-      selectedNodesService.currentSelectionUuid = vm.nodeGroups.groups[0].uuid;
+      selectedNodesService.defaultCurrentSelectionUuid = vm.nodeGroups.groups[0].uuid;
+      selectedNodesService.selectedNodeGroupUuid = selectedNodesService.defaultCurrentSelectionUuid;
     }, function (error) {
       $log.error(error);
     });
@@ -39,21 +40,8 @@ function NodeGroupCtrl (
 
   // Create a new node group
   vm.saveNodeGroup = function (name) {
-    var params = {
-      name: name,
-      assay: $window.externalAssayUuid,
-      study: $window.externalStudyUuid
-    };
-
-    // If select all box is checked, the complements are sent and backend
-    // generates nodes list
-    if (selectedNodesService.selectedAllFlag) {
-      params.nodes = selectedNodesService.complementSelectedNodesUuids;
-      params.use_complement_nodes = true;
-    } else {
-      params.nodes = selectedNodesService.selectedNodeUuids;
-      params.use_complement_nodes = false;
-    }
+    var params = selectedNodesService.setNodeGroupParams();
+    params.name = name;
     fileBrowserFactory.createNodeGroup(params).then(function () {
       vm.refreshNodeGroupList();
     });

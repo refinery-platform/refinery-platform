@@ -1,6 +1,6 @@
 'use strict';
 
-function selectedNodesService () {
+function selectedNodesService ($window) {
   var vm = this;
   vm.selectedNodes = [];
   vm.selectedNodeUuids = [];
@@ -93,10 +93,30 @@ function selectedNodesService () {
       vm.resetNodeGroup = false;
     }
   };
+
+  // If select all box is checked, the complements are sent and backend
+  // generates nodes list
+  vm.setNodeGroupParams = function () {
+    var params = {
+      uuid: selectedNodesService.selectedNodeGroupUuid,
+      assay: $window.externalAssayUuid,
+      study: $window.externalStudyUuid
+    };
+    if (selectedNodesService.selectedAllFlag) {
+      params.nodes = selectedNodesService.complementSelectedNodesUuids;
+      params.use_complement_nodes = true;
+    } else {
+      params.nodes = selectedNodesService.selectedNodeUuids;
+      params.use_complement_nodes = false;
+    }
+
+    return params;
+  };
 }
 
 angular.module('refineryFileBrowser')
   .service('selectedNodesService', [
+    '$window',
     selectedNodesService
   ]
 );

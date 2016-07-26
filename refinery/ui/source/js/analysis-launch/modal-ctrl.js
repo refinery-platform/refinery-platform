@@ -41,33 +41,20 @@ function AnalysisLaunchModalCtrl (
     $scope.analysisLaunchFlag = 'LOADING';
 
     if ($scope.tempName !== null) {
-      var paramsObj = {
-        name: $scope.dataObj.name
+      var analysisParams = {
+        name: $scope.dataObj.name,
+        nodeGroupUuid: selectedNodesService.selectedNodeGroupUuid
       };
-      if (selectedNodesService.selectedNodeGroupUuid.length > 0) {
-        paramsObj.nodeGroupUuid = selectedNodesService.selectedNodeGroupUuid;
-      }
 
       // update current selection nodes
       if (selectedNodesService.selectedNodeGroupUuid ===
         selectedNodesService.defaultCurrentSelectionUuid) {
-        var params = {
-          uuid: selectedNodesService.selectedNodeGroupUuid,
-          assay: $window.externalAssayUuid
-        };
-        if (selectedNodesService.selectedAllFlag) {
-          params.nodes = selectedNodesService.complementSelectedNodesUuids;
-          params.use_complement_nodes = true;
-        } else {
-          params.nodes = selectedNodesService.selectedNodeUuids;
-          params.use_complement_nodes = false;
-        }
-
-        nodeGroupService.update(params).$promise.then(function () {
-          launchAnalysis(paramsObj);
+        var nodeGroupParams = selectedNodesService.setNodeGroupParams();
+        nodeGroupService.update(nodeGroupParams).$promise.then(function () {
+          launchAnalysis(analysisParams);
         });
       } else {
-        launchAnalysis(paramsObj);
+        launchAnalysis(analysisParams);
       }
     }
   };
