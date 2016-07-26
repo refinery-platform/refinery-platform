@@ -4,6 +4,8 @@
 'use strict';
 
 function launchpadTutorialCtrl ($scope, updateUserTutorials) {
+  var stepText = $scope.refineryTutorialSteps.LAUNCHPAD_TUTORIAL;
+
   var data = {
     uuid: $scope.uuid,
     launchpad_viewed: true,
@@ -16,8 +18,7 @@ function launchpadTutorialCtrl ($scope, updateUserTutorials) {
     updateUserTutorials.updateUser(data);
   };
 
-  $scope.launchpadExitEvent = function (event) {
-    console.log('here', event.id);
+  $scope.launchpadExitEvent = function () {
     document.getElementById('launchpadStep1Fix').style['min-width'] = null;
   };
 
@@ -52,64 +53,51 @@ function launchpadTutorialCtrl ($scope, updateUserTutorials) {
     $scope.launchpadIntroOptions.steps = [
       {
         element: document.querySelector('#launchpadStep'),
-        intro: '<div class="text-align-center">' +
-        'Useful links such as currently running <b>Analyses</b>, ' +
-        'login, logout, user profile edit etc.' +
-        ' are located here.</div>',
+        intro: '<div class="text-align-center">' + stepText.STEP0 + '</div>',
         position: 'bottom'
       },
       {
         element: document.querySelector('#launchpadStep0'),
-        intro: '<div class="text-align-center">' +
-        'This panel shows you information about <b>DataSets</b> you\'ve' +
-        ' successfully uploaded.</div>',
+        intro: '<div class="text-align-center">' + stepText.STEP1 + '</div>',
         position: 'right'
       },
       {
         element: document.querySelector('#launchpadStep1'),
-        intro: '<div class="text-align-center">' +
-        'Here you can search across your <b>Datasets</b> and their defined' +
-        ' <b>Metadata</b>.</div>',
+        intro: '<div class="text-align-center">' + stepText.STEP2 + '</div>',
         position: 'bottom'
       },
       {
         element: document.querySelector('#launchpadStep2'),
-        intro: '<div class="text-align-center">' +
-        'You can also sort and filter your <b>Datasets</b> here.</div>',
+        intro: '<div class="text-align-center">' + stepText.STEP3 + '</div>',
         position: 'bottom'
       },
       {
         element: document.querySelector('#launchpadStep3'),
-        intro: '<div class="text-align-center"><b>Datasets</b> ' +
-        'will populate this area once uploaded.</div>',
+        intro: '<div class="text-align-center">' + stepText.STEP4 + '</div>',
         position: 'top'
       },
       {
         element: document.querySelector('#launchpadStep4'),
         intro: '<div' +
-        ' class="text-align-center">This panel shows you information about ' +
-        '<b>Analyses</b> and the status of their execution.<br></div><hr><div' +
-        ' class="text-align-center">' +
-        '<b>Analyses</b> can have three states: <br>' +
-        '<i class="analyses-status fa fa-exclamation-triangle" title=""' +
-        ' refinery-tooltip="" refinery-tooltip-container="body" ' +
+        ' class="text-align-center">' + stepText.STEP5.a + '<br></div><hr><div' +
+        ' class="text-align-center">' + stepText.STEP5.b +
+        '<br><i class="analyses-status fa fa-exclamation-triangle" title=""' +
+        'refinery-tooltip="" refinery-tooltip-container="body" ' +
         'refinery-tooltip-placement="left" data-container="body" ' +
-        'data-original-title="Analysis failed."></i> <b>Failure</b>' +
+        'data-original-title="Analysis failed."></i>' + stepText.STEP5.c +
         '<br><i class="analyses-status fa fa-check-circle" title="" ' +
         'refinery-tooltip="" refinery-tooltip-container="body" ' +
         'refinery-tooltip-placement="left" data-container="body" ' +
-        'data-original-title="Analysis successful."></i> <b>Success</b>' +
-        '<br><i class="analyses-status fa fa-cog" title="" refinery-tooltip="" ' +
-        'refinery-tooltip-container="body" refinery-tooltip-placement="left"' +
+        'data-original-title="Analysis successful."></i> ' + stepText.STEP5.d +
+        '<br><i class="analyses-status fa fa-cog" title="" ' +
+        'refinery-tooltip="" refinery-tooltip-container="body" refinery-tooltip-placement="left"' +
         ' data-container="body" data-original-title="Analysis is running.">' +
-        ' <b>Running</b></i></div>',
+         stepText.STEP5.e + '</i></div>',
         position: 'left'
       },
       {
         element: document.querySelector('#launchpadStep5'),
-        intro: '<div class="text-align-center">' +
-        'This panel shows you information about <b>Workflows</b> ' +
-        'currently imported into this Refinery instance.</div>',
+        intro: '<div class="text-align-center">' + stepText.STEP6 + '</div>',
         position: 'left'
       }
     ];

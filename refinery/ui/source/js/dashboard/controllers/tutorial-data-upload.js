@@ -4,6 +4,8 @@
 'use strict';
 
 function dataUploadTutorialCtrl ($scope, tutorialPageNavigation) {
+  var stepText = $scope.refineryTutorialSteps.DATA_UPLOAD_TUTORIAL;
+
   $scope.dataUploadCompletedEvent = function () {
     tutorialPageNavigation.setData($scope.dataUploadKey, true);
     document.getElementById('dataUploadTutorialStep0').click();
@@ -38,8 +40,7 @@ function dataUploadTutorialCtrl ($scope, tutorialPageNavigation) {
     $scope.dataUploadIntroOptions.steps = [
       {
         element: document.querySelector('#dataUploadTutorialStep0'),
-        intro: '<div class="text-align-center">Click here to start uploading ' +
-        'files into your Refinery instance.</div>',
+        intro: '<div class="text-align-center">' + stepText.STEP0 + '</div>',
         position: 'bottom'
       }
     ];

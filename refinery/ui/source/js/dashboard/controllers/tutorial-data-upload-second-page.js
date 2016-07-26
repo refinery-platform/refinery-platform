@@ -4,6 +4,7 @@
 'use strict';
 function dataUploadTutorialCtrl2 (
   $scope, tutorialPageNavigation, updateUserTutorials) {
+  var stepText = $scope.refineryTutorialSteps.DATA_UPLOAD_TUTORIAL;
   var lastEventId = null;
 
   $scope.dataUploadCompletedEvent = function () {
@@ -61,38 +62,32 @@ function dataUploadTutorialCtrl2 (
       $scope.dataUploadIntroOptions.steps = [
         {
           element: document.querySelector('#dataUploadTutorialStep1'),
-          intro: '<div class="text-align-center">Use this tab to import a ' +
-          'delimited metadata table or ISA-Archive.</div>',
+          intro: '<div class="text-align-center">' + stepText.STEP1 + '</div>',
           position: 'bottom'
         },
         {
           element: document.querySelector('#dataUploadTutorialStep2'),
-          intro: '<div class="text-align-center">Or use this tab to import any ' +
-          'other data file.</div>',
+          intro: '<div class="text-align-center">' + stepText.STEP2 + '</div>',
           position: 'bottom'
         },
         {
           element: document.querySelector('#dataUploadTutorialStep3'),
-          intro: '<div class="text-align-center">Here we can upload a tabular ' +
-          'file and specify its formatting.</div>',
+          intro: '<div class="text-align-center">' + stepText.STEP3 + '</div>',
           position: 'bottom'
         },
         {
           element: document.querySelector('#dataUploadTutorialStep4'),
-          intro: '<div class="text-align-center">Select a file containing the ' +
-          'metadata table.</div>',
+          intro: '<div class="text-align-center">' + stepText.STEP4 + '</div>',
           position: 'bottom'
         },
         {
           element: document.querySelector('#dataUploadTutorialStep5'),
-          intro: '<div class="text-align-center">Here we can upload a zip ' +
-          'archive that complies with ISA standards.</div>',
+          intro: '<div class="text-align-center">' + stepText.STEP5 + '</div>',
           position: 'bottom'
         },
         {
           element: document.querySelector('#dataUploadTutorialStep6'),
-          intro: '<div class="text-align-center">Select a local or ' +
-          'remote ISA-Archive.</div>',
+          intro: '<div class="text-align-center">' + stepText.STEP6 + '</div>',
           position: 'bottom'
         },
         {

@@ -5,6 +5,8 @@
 
 function collaborationTutorialCtrl2 (
   $scope, tutorialPageNavigation, updateUserTutorials) {
+  var stepText = $scope.refineryTutorialSteps.COLLABORATION_TUTORIAL;
+
   $scope.collabCompletedEvent = function () {
     var data = {
       uuid: $scope.uuid,
@@ -40,20 +42,17 @@ function collaborationTutorialCtrl2 (
     steps: [
       {
         element: document.querySelector('#collaborationTutorialStep1'),
-        intro: '<div class="text-align-center"><b>Groups</b> that you are a ' +
-        'member of appear in this panel.</div>',
+        intro: '<div class="text-align-center">' + stepText.STEP1 + '</div>',
         position: 'right'
       },
       {
         element: document.querySelector('#collaborationTutorialStep2'),
-        intro: '<div class="text-align-center"><b>Members</b> of the <b>Group</b>' +
-        ' highlighted to the left are listed here.</div>',
+        intro: '<div class="text-align-center">' + stepText.STEP2 + '</div>',
         position: 'left'
       },
       {
         element: document.querySelector('#collaborationTutorialStep3'),
-        intro: '<div class="text-align-center">Here you can see your ' +
-        '<b>Pending Invitations</b></div>',
+        intro: '<div class="text-align-center">' + stepText.STEP3 + '</div>',
         position: 'left'
       }
     ]

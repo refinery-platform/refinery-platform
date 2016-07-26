@@ -4,17 +4,17 @@
 'use strict';
 
 function collaborationTutorialCtrl ($scope, tutorialPageNavigation) {
+  var stepText = $scope.refineryTutorialSteps.COLLABORATION_TUTORIAL;
+
   $scope.collabCompletedEvent = function () {
     tutorialPageNavigation.setData($scope.collaborationKey, true);
     document.getElementById('collaborationTutorialStep0_click').click();
   };
 
-  $scope.collabExitEvent = function (event) {
-    console.log(event.id, 'ExitEvent');
+  $scope.collabExitEvent = function () {
   };
 
-  $scope.collabChangeEvent = function (event) {
-    console.log(event.id, 'changeEvent');
+  $scope.collabChangeEvent = function () {
   };
 
   $scope.collabBeforeChangeEvent = function () {
@@ -45,7 +45,7 @@ function collaborationTutorialCtrl ($scope, tutorialPageNavigation) {
     $scope.collabIntroOptions.steps = [
       {
         element: document.querySelector('#collaborationTutorialStep0'),
-        intro: 'Here you can collaborate with other Refinery users',
+        intro: '<div class="text-align-center">' + stepText.STEP0 + '</div>',
         position: 'bottom'
       }
     ];
