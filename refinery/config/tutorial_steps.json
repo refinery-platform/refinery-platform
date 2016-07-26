@@ -1,0 +1,32 @@
+{
+  "LAUNCHPAD_TUTORIAL": {
+    "STEP0": "Useful links such as currently running <b>Analyses</b> are located here.",
+    "STEP1": "This panel shows you information about <b>DataSets</b> you've successfully uploaded.",
+    "STEP2": "Here you can search across your <b>Datasets</b> and their defined <b>Metadata</b>.",
+    "STEP3": "You can also sort and filter your <b>Datasets</b> here.",
+    "STEP4": "<b>Datasets</b> will populate this area once uploaded.",
+    "STEP5": {
+      "a": "This panel shows you information about <b>Analyses</b> and the status of their execution.",
+      "b": "<b>Analyses</b> can have three states:",
+      "c": "<b>Failure</b>",
+      "d": "<b>Success</b>",
+      "e": "<b>Running</b>"
+    },
+    "STEP6": "This panel shows you information about <b>Workflows</b> currently imported into this Refinery instance."
+  },
+  "DATA_UPLOAD_TUTORIAL": {
+    "STEP0": "Click here to start uploading files into your Refinery instance.",
+    "STEP1": "Use this tab to import a delimited metadata table or ISA-Archive.",
+    "STEP2": "Or use this tab to import any other data file.",
+    "STEP3": "Here you can upload a tabular file and specify its formatting.",
+    "STEP4": "Select a file containing the metadata table.",
+    "STEP5": "Here you can upload a zip archive that complies with ISA standards.",
+    "STEP6": "Here you can select a local or remote ISA-Archive."
+  },
+  "COLLABORATION_TUTORIAL": {
+    "STEP0": "Here you can collaborate with other Refinery users",
+    "STEP1": "<b>Groups</b> that you are a member of appear in this panel.",
+    "STEP2": "<b>Members</b> of the <b>Group</b> highlighted to the left are listed here.",
+    "STEP3": "Here you can see your <b>Pending Invitations</b>"
+  }
+}
