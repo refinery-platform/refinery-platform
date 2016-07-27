@@ -24,6 +24,10 @@ function dataUploadTutorialCtrl ($scope, tutorialPageNavigation) {
   $scope.dataUploadAfterChangeEvent = function () {
   };
 
+  $scope.startHandler = function () {
+    tutorialPageNavigation.setData($scope.dataUploadAutoStart, true);
+    window.location = '/';
+  };
 
   $scope.dataUploadIntroOptions = {
     showStepNumbers: false,
@@ -44,6 +48,10 @@ function dataUploadTutorialCtrl ($scope, tutorialPageNavigation) {
         position: 'bottom'
       }
     ];
+    if (tutorialPageNavigation.getData($scope.dataUploadAutoStart) === 'true') {
+      tutorialPageNavigation.setData($scope.dataUploadAutoStart, false);
+      $scope.dataUploadStart();
+    }
   }, 500);
 }
 

@@ -27,7 +27,10 @@ function collaborationTutorialCtrl ($scope, tutorialPageNavigation) {
         'background-color'] = '#525252';
     }
   };
-
+  $scope.startHandler = function () {
+    tutorialPageNavigation.setData($scope.collabAutoStart, true);
+    window.location = '/';
+  };
 
   $scope.collabIntroOptions = {
     showStepNumbers: false,
@@ -40,7 +43,6 @@ function collaborationTutorialCtrl ($scope, tutorialPageNavigation) {
     doneLabel: 'Proceed to collaboration page'
   };
 
-
   setTimeout(function () {
     $scope.collabIntroOptions.steps = [
       {
@@ -49,6 +51,10 @@ function collaborationTutorialCtrl ($scope, tutorialPageNavigation) {
         position: 'bottom'
       }
     ];
+    if (tutorialPageNavigation.getData($scope.collabAutoStart) === 'true') {
+      tutorialPageNavigation.setData($scope.collabAutoStart, false);
+      $scope.collaborationStart();
+    }
   }, 500);
 }
 

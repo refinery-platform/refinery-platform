@@ -3,7 +3,7 @@
  */
 'use strict';
 
-function launchpadTutorialCtrl ($scope, updateUserTutorials) {
+function launchpadTutorialCtrl ($scope, updateUserTutorials, tutorialPageNavigation) {
   var stepText = $scope.refineryTutorialSteps.LAUNCHPAD_TUTORIAL;
 
   var data = {
@@ -36,6 +36,11 @@ function launchpadTutorialCtrl ($scope, updateUserTutorials) {
       document.getElementsByClassName('introjs-showElement')[0].style[
         'background-color'] = '#525252';
     }
+  };
+
+  $scope.startHandler = function () {
+    tutorialPageNavigation.setData($scope.launchpadAutoStart, true);
+    window.location = '/';
   };
 
   $scope.launchpadIntroOptions = {
@@ -101,6 +106,11 @@ function launchpadTutorialCtrl ($scope, updateUserTutorials) {
         position: 'left'
       }
     ];
+
+    if (tutorialPageNavigation.getData($scope.launchpadAutoStart) === 'true') {
+      tutorialPageNavigation.setData($scope.launchpadAutoStart, false);
+      $scope.launchpadStart();
+    }
   }, 500);
 }
 
@@ -109,5 +119,6 @@ angular
   .controller('launchpadTutorialCtrl', [
     '$scope',
     'updateUserTutorials',
+    'tutorialPageNavigation',
     launchpadTutorialCtrl
   ]);
