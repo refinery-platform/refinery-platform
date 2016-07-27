@@ -75,6 +75,14 @@
   <!-- header navigation bar -->
 
   <nav class="refinery-base navbar navbar-default navbar-fixed-top">
+  <div ng-controller="launchpadTutorialCtrl">
+    <div ng-intro-options="launchpadIntroOptions"
+         ng-intro-method="launchpadStart"
+         ng-intro-oncomplete="launchpadCompletedEvent"
+         ng-intro-onexit="launchpadExitEvent"
+         ng-intro-onchange="launchpadChangeEvent"
+         ng-intro-onbeforechange="launchpadBeforeChangeEvent"
+         ng-intro-onafterchange="launchpadAfterChangeEvent">
     <div id="launchpadStep" class="container-fluid">
 
       <div class="navbar-header pull-left">
@@ -171,7 +179,15 @@
         </a>
       </span>
       </div>
-      <div class="collapse navbar-collapse" id="navbarMain">
+      <div class="collapse navbar-collapse" id="navbarMain"
+           ng-controller="collaborationTutorialCtrl">
+         <div ng-intro-options="collabIntroOptions"
+         ng-intro-method="collaborationStart"
+         ng-intro-oncomplete="collabCompletedEvent"
+         ng-intro-onexit="collabExitEvent"
+         ng-intro-onchange="collabChangeEvent"
+         ng-intro-onbeforechange="collabBeforeChangeEvent"
+         ng-intro-onafterchange="collabAfterChangeEvent">
         <ul class="nav navbar-nav">
           <li id="collaborationTutorialStep0" class="{{
             navbar_class_collaboration }}">
@@ -185,8 +201,10 @@
           </li>
         </ul>
       </div>
-
+      </div>
     </div>
+    </div>
+  </div>
     <div class="navbar-subheader">
       <div class="container-fluid">
         <div style="clear: left; display:block;">

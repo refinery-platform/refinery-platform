@@ -10,10 +10,11 @@
       </span>
       <span class="refinery-header-right">
         <div ng-controller="dataUploadTutorialCtrl">
-          <div ng-intro-options="IntroOptions" ng-intro-method="start"
-               ng-intro-oncomplete="CompletedEvent" ng-intro-onexit="ExitEvent"
-               ng-intro-onchange="ChangeEvent" ng-intro-onbeforechange="BeforeChangeEvent"
-               ng-intro-onafterchange="AfterChangeEvent">
+          <div ng-intro-options="dataUploadIntroOptions"
+               ng-intro-method="dataUploadStart"
+               ng-intro-oncomplete="dataUploadCompletedEvent" ng-intro-onexit="dataUploadExitEvent"
+               ng-intro-onchange="dataUploadChangeEvent" ng-intro-onbeforechange="dataUploadBeforeChangeEvent"
+               ng-intro-onafterchange="dataUploadAfterChangeEvent">
             <a id="dataUploadTutorialStep0"
               href="./data_set_manager/import/"
               class="no-underline btn"
