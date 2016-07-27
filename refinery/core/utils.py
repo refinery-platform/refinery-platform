@@ -785,6 +785,7 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
     # Add attribute filters and facet params to generate solr_params
     if filter_attribute:
         params['filter_attribute'] = filter_attribute
+        # unicode to object to grab keys
         params['facets'] = ','.join(ast.literal_eval(filter_attribute).keys())
 
     solr_params = generate_solr_params(params, assay_uuid)
