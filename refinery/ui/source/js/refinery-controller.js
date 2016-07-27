@@ -75,6 +75,10 @@ function AppCtrl ($, $sce, $scope, $rootScope, $timeout, $window, _, pubSub, set
   $scope.collaborationKey = 'collaborationTutorialFirstStepViewed';
   $scope.dataUploadKey = 'dataUploadTutorialFirstStepViewed';
 
+  $scope.collabAutoStart = 'collaborationAtuoStart';
+  $scope.dataUploadAutoStart = 'dataUploadAutoStart';
+  $scope.launchpadAutoStart = 'launchpadAutoStart';
+
   $scope.refineryTutorialSteps = JSON.parse(settings.djangoApp.refineryTutorialSteps);
 
   $scope.dynamicPopover = {
