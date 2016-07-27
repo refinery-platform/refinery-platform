@@ -60,6 +60,7 @@ function AppCtrl ($, $sce, $scope, $rootScope, $timeout, $window, _, pubSub, set
   });
 
   $scope.isOnHomepage = location.pathname === '/';
+  $scope.isntOnHomepage = location.pathname !== '/';
 
   $scope.tutorials_viewed = {
     launchpad: settings.djangoApp.launchpad_tut_viewed,
