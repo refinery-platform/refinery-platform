@@ -1101,6 +1101,12 @@ class NodeGroups(APIView):
               type: boolean
               require: false
 
+            - name: filter_attribute
+              description: Filters for attributes fields
+              paramType: form
+              type: string
+              required: false
+
 
     PUT:
         parameters_strategy:
@@ -1173,7 +1179,6 @@ class NodeGroups(APIView):
         if 'form-urlencoded' in request.content_type:
             param_dict = {}
             for key in request.data:
-
                 if key == 'nodes':
                     param_dict[key] = request.data.get(
                         key).replace(' ', '').split(',')
@@ -1189,7 +1194,8 @@ class NodeGroups(APIView):
         if param_dict.get('use_complement_nodes'):
             filtered_uuid_list = filter_nodes_uuids_in_solr(
                 param_dict.get('assay'),
-                param_dict.get('nodes')
+                param_dict.get('nodes'),
+                param_dict.get('filter_attribute')
             )
             param_dict['nodes'] = filtered_uuid_list
 

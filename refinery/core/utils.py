@@ -19,9 +19,11 @@ from urlparse import urlparse, urljoin
 import core
 from .search_indexes import DataSetIndex
 from data_set_manager.search_indexes import NodeIndex
-from data_set_manager.models import Assay
+from data_set_manager.models import Assay, AttributeOrder
+from data_set_manager.serializers import AttributeOrderSerializer
 from data_set_manager.utils import (generate_solr_params, search_solr,
-                                    format_solr_response)
+                                    format_solr_response,
+                                    generate_filtered_facet_fields)
 
 logger = logging.getLogger(__name__)
 
@@ -762,7 +764,8 @@ def create_current_selection_node_group(assay_uuid):
             status=status.HTTP_400_BAD_REQUEST)
 
 
-def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[]):
+def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
+                               filter_attribute={}):
     """
     Helper method to create a current selection group which
     is default for all node_group list
@@ -778,6 +781,15 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[]):
         'limit': 10000000,
         'include_facet_count': 'false'
     }
+
+    if filter_attribute:
+        params['filter_attribute'] = filter_attribute
+        attributes_str = AttributeOrder.objects.filter(assay__uuid=assay_uuid)
+        attributes = AttributeOrderSerializer(attributes_str, many=True)
+        facet_field_obj = generate_filtered_facet_fields(attributes.data)
+        facet_field = facet_field_obj.get('facet_field')
+        params['facets'] = ','.join(facet_field)
+
     solr_params = generate_solr_params(params, assay_uuid)
     # Only require solr filters if exception uuids are passed
     if filter_out_uuids:
