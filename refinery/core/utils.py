@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import logging
 
 import py2neo
+import ast
 
 from django.conf import settings
 from django.contrib import messages
@@ -784,7 +785,7 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
     # Add attribute filters and facet params to generate solr_params
     if filter_attribute:
         params['filter_attribute'] = filter_attribute
-        params['facets'] = ','.join(filter_attribute.keys())
+        params['facets'] = ','.join(ast.literal_eval(filter_attribute).keys())
 
     solr_params = generate_solr_params(params, assay_uuid)
     # Only require solr filters if exception uuids are passed

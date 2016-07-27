@@ -4,7 +4,6 @@ import urllib
 import xmltodict
 import logging
 import json
-import ast
 from urlparse import urljoin
 
 from django.conf import settings
@@ -1186,9 +1185,6 @@ class NodeGroups(APIView):
                 elif key == 'use_complement_nodes':
                     # correct type to boolean, used in conditional below
                     param_dict[key] = json.loads(request.data.get(key))
-                elif key == 'filter_attribute':
-                    # correct type to boolean, used in conditional below
-                    param_dict[key] = ast.literal_eval(request.data.get(key))
                 else:
                     param_dict[key] = request.data.get(key)
         else:
