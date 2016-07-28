@@ -9,14 +9,13 @@ function selectedFilterService ($location) {
     // Check if attribute already exists in selectedFieldList
     if (selectedField[field] &&
       typeof vm.selectedFieldList[internalName] !== 'undefined') {
-      // add field url query and selectedList;
       vm.selectedFieldList[internalName].push(field);
+      // add field url query
       $location.search(field, selectedField[field]);
       // Add new attribute to selectedFieldList
     } else if (selectedField[field]) {
-      console.log('internal name does not exist');
-      // add field url query and selectedList
       vm.selectedFieldList[internalName] = [field];
+       // add field url query
       $location.search(field, selectedField[field]);
     } else {
       // remove attribute field
@@ -27,6 +26,7 @@ function selectedFilterService ($location) {
       if (vm.selectedFieldList[internalName].length === 0) {
         delete vm.selectedFieldList[internalName];
       }
+      // remove from url query
       $location.search(field, null);
     }
   };

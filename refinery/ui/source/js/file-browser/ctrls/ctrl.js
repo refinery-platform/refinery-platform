@@ -215,6 +215,7 @@ function FileBrowserCtrl (
     }
   };
 
+  // Helper method for dynamic scrolling, grabs data when scrolling down
   vm.getDataDown = function () {
     vm.lastPage++;
     vm.filesParam.offset = vm.lastPage * vm.rowCount;
@@ -242,6 +243,7 @@ function FileBrowserCtrl (
     return promise.promise;
   };
 
+  // Helper method for dynamic scrolling, grabs data when scrolling up
   vm.getDataUp = function () {
     if (vm.firstPage > 0) {
       vm.firstPage--;
