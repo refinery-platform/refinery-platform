@@ -4,15 +4,11 @@ function selectedFilterService ($location) {
   var vm = this;
   vm.selectedFieldList = {};
 
+  // Update the selected fields in the filter
   vm.updateSelectedFilters = function (selectedField, internalName, field) {
-    console.log('in the field list');
-    console.log(selectedField);
-    console.log(internalName);
-    console.log(field);
     if (selectedField[field] &&
       typeof vm.selectedFieldList[internalName] !== 'undefined') {
-      // add field url query and selectedList
-      console.log('internal name exists');
+      // add field url query and selectedList;
       vm.selectedFieldList[internalName].push(field);
       $location.search(field, selectedField[field]);
     } else if (selectedField[field]) {
@@ -22,10 +18,6 @@ function selectedFilterService ($location) {
       $location.search(field, selectedField[field]);
     } else {
       // remove attribute field
-      console.log('removing field');
-     // console.log(vm.selectedFieldList);
-      console.log(internalName);
-      console.log(vm.selectedFieldList[internalName]);
       var ind = vm.selectedFieldList[internalName].indexOf(field);
       if (ind > -1) {
         vm.selectedFieldList[internalName].splice(ind, 1);
@@ -35,7 +27,6 @@ function selectedFilterService ($location) {
       }
       $location.search(field, null);
     }
-    console.log(vm.selectedFieldList);
   };
 }
 

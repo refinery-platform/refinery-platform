@@ -93,12 +93,7 @@ function FileBrowserCtrl (
       vm.refreshSelectedFieldFromQuery(attributeObj);
     });
     vm.filesParam.filter_attribute = {};
-    angular.forEach(vm.filesParam.filter_attribute, function (field, name) {
-      console.log('check Url query');
-      console.log(name);
-      console.log(field);
-      selectedFilterService.updateSelectedFilters(vm.selectedField, name, field);
-    });
+
     angular.copy(selectedFilterService.selectedFieldList, vm.filesParam.filter_attribute);
     // Grid only needs to reset if filters are applied
     if (Object.keys(selectedFilterService.selectedFieldList).length > 0) {
@@ -118,9 +113,6 @@ function FileBrowserCtrl (
 
   // Updates selection field list and url
   vm.updateSelectionList = function (internalName, field) {
-    console.log('update selection list');
-    console.log(name);
-    console.log(field);
     selectedFilterService.updateSelectedFilters(vm.selectedField, internalName, field);
   };
 
@@ -129,13 +121,6 @@ function FileBrowserCtrl (
     vm.updateSelectionList(_internalName, _field);
     vm.filesParam.filter_attribute = {};
     angular.copy(selectedFilterService.selectedFieldList, vm.filesParam.filter_attribute);
-    angular.forEach(vm.filesParam.filter_attribute, function (field, name) {
-      console.log('attributeSelectionUpdate');
-      console.log(vm.filesParam.filter_attribute);
-      console.log(name);
-      console.log(field);
-      selectedFilterService.updateSelectedFilters(vm.selectedField, name, field);
-    });
     // Resets selection
     selectedNodesService.setSelectedAllFlags(false);
     // resets grid

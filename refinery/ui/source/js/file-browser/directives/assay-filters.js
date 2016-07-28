@@ -64,7 +64,7 @@ function rpFileBrowserAssayFilters ($timeout, $location, selectedFilterService) 
         return false;
       };
 
-      // Helper method, oops through fields to find matching attributes and
+      // Helper method, loops through fields to find matching attributes and
       // drops down panel from url query
       var updateDomDropdown = function (allFields, attributeName, attributeInternalName) {
         var queryFields = Object.keys($location.search());
