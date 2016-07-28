@@ -1,6 +1,6 @@
 'use strict';
 
-function rpFileBrowserAssayFilters ($timeout, $location) {
+function rpFileBrowserAssayFilters ($timeout, $location, selectedFilterService) {
   return {
     restrict: 'E',
     templateUrl: '/static/partials/file-browser/partials/assay-filters.html',
@@ -21,7 +21,7 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
         var attribute = angular.element(
           document.querySelector('#' + escapeAttributeName)
         );
-        var selectedKeys = Object.keys(scope.FBCtrl.selectedFieldList);
+        var selectedKeys = Object.keys(selectedFilterService.selectedFieldList);
         var selectedAttributeIndex = selectedKeys.indexOf(attributeObj.internal_name);
         if (attributeTitle.hasClass('fa-caret-right')) {
           // open panel
@@ -53,8 +53,8 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
       scope.showField = function (field, internalName, attributeName) {
         var escapedAttributeName = attributeName.replace(' ', '-');
         var selectedIndex = -1;
-        if (scope.FBCtrl.selectedFieldList[internalName] !== undefined) {
-          selectedIndex = scope.FBCtrl.selectedFieldList[internalName].indexOf(field);
+        if (selectedFilterService.selectedFieldList[internalName] !== undefined) {
+          selectedIndex = selectedFilterService.selectedFieldList[internalName].indexOf(field);
         }
         if (!isMinimized(escapedAttributeName)) {
           return true;
@@ -82,9 +82,9 @@ function rpFileBrowserAssayFilters ($timeout, $location) {
               document.querySelector('#' + escapeAttributeName)).addClass('in');
               attributeTitle.removeClass('fa-caret-right');
               attributeTitle.addClass('fa-caret-down');
-              scope.FBCtrl.selectedFieldList[attributeInternalName] = [allFields[ind]];
+              selectedFilterService.selectedFieldList[attributeInternalName] = [allFields[ind]];
             } else {
-              scope.FBCtrl.selectedFieldList[attributeInternalName].push(allFields[ind]);
+              selectedFilterService.selectedFieldList[attributeInternalName].push(allFields[ind]);
             }
           }
         }
@@ -125,6 +125,7 @@ angular
   .directive('rpFileBrowserAssayFilters', [
     '$timeout',
     '$location',
+    'selectedFilterService',
     rpFileBrowserAssayFilters
   ]
 );

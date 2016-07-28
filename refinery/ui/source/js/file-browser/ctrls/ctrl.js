@@ -8,6 +8,7 @@ function FileBrowserCtrl (
   resetGridService,
   isOwnerService,
   selectedNodesService,
+  selectedFilterService,
   $timeout,
   $q,
   $log,
@@ -28,7 +29,7 @@ function FileBrowserCtrl (
   vm.customColumnName = [];
   vm.queryKeys = Object.keys($location.search());
   vm.selectedField = {};
-  vm.selectedFieldList = {};
+ // vm.selectedFieldList = {};
   vm.selectNodesCount = 0;
   vm.gridOptions = {
     appScopeProvider: vm,
@@ -92,9 +93,15 @@ function FileBrowserCtrl (
       vm.refreshSelectedFieldFromQuery(attributeObj);
     });
     vm.filesParam.filter_attribute = {};
-    angular.copy(vm.selectedFieldList, vm.filesParam.filter_attribute);
+    angular.forEach(vm.filesParam.filter_attribute, function (field, name) {
+      console.log('check Url query');
+      console.log(name);
+      console.log(field);
+      selectedFilterService.updateSelectedFilters(vm.selectedField, name, field);
+    });
+    angular.copy(selectedFilterService.selectedFieldList, vm.filesParam.filter_attribute);
     // Grid only needs to reset if filters are applied
-    if (Object.keys(vm.selectedFieldList).length > 0) {
+    if (Object.keys(selectedFilterService.selectedFieldList).length > 0) {
       vm.reset();
     }
   };
@@ -111,32 +118,24 @@ function FileBrowserCtrl (
 
   // Updates selection field list and url
   vm.updateSelectionList = function (internalName, field) {
-    if (vm.selectedField[field] &&
-      typeof vm.selectedFieldList[internalName] !== 'undefined') {
-      // add field url query and selectedList
-      vm.selectedFieldList[internalName].push(field);
-      $location.search(field, vm.selectedField[field]);
-    } else if (vm.selectedField[field]) {
-      // add field url query and selectedList
-      vm.selectedFieldList[internalName] = [field];
-      $location.search(field, vm.selectedField[field]);
-    } else {
-      var ind = vm.selectedFieldList[internalName].indexOf(field);
-      if (ind > -1) {
-        vm.selectedFieldList[internalName].splice(ind, 1);
-      }
-      if (vm.selectedFieldList[internalName].length === 0) {
-        delete vm.selectedFieldList[internalName];
-      }
-      $location.search(field, null);
-    }
+    console.log('update selection list');
+    console.log(name);
+    console.log(field);
+    selectedFilterService.updateSelectedFilters(vm.selectedField, internalName, field);
   };
 
   // Updates which attribute filters are selected and the ui-grid data
   vm.attributeSelectionUpdate = function (_internalName, _field) {
     vm.updateSelectionList(_internalName, _field);
     vm.filesParam.filter_attribute = {};
-    angular.copy(vm.selectedFieldList, vm.filesParam.filter_attribute);
+    angular.copy(selectedFilterService.selectedFieldList, vm.filesParam.filter_attribute);
+    angular.forEach(vm.filesParam.filter_attribute, function (field, name) {
+      console.log('attributeSelectionUpdate');
+      console.log(vm.filesParam.filter_attribute);
+      console.log(name);
+      console.log(field);
+      selectedFilterService.updateSelectedFilters(vm.selectedField, name, field);
+    });
     // Resets selection
     selectedNodesService.setSelectedAllFlags(false);
     // resets grid
@@ -494,6 +493,7 @@ angular
     'resetGridService',
     'isOwnerService',
     'selectedNodesService',
+    'selectedFilterService',
     '$timeout',
     '$q',
     '$log',
