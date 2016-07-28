@@ -1,6 +1,6 @@
 'use strict';
 
-function selectedNodesService ($window) {
+function selectedNodesService ($window, fileBrowserFactory, selectedFilterService) {
   var vm = this;
   vm.selectedNodes = [];
   vm.selectedNodesUuids = [];
@@ -105,11 +105,13 @@ function selectedNodesService ($window) {
     if (vm.selectedAllFlag) {
       params.nodes = vm.complementSelectedNodesUuids;
       params.use_complement_nodes = true;
+      params.filter_attribute = fileBrowserFactory.encodeAttributeFields(
+        selectedFilterService.selectedFieldList
+      );
     } else {
       params.nodes = vm.selectedNodesUuids;
       params.use_complement_nodes = false;
     }
-
     return params;
   };
 }
@@ -117,6 +119,8 @@ function selectedNodesService ($window) {
 angular.module('refineryFileBrowser')
   .service('selectedNodesService', [
     '$window',
+    'fileBrowserFactory',
+    'selectedFilterService',
     selectedNodesService
   ]
 );
