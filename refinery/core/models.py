@@ -125,7 +125,7 @@ def create_user_profile(sender, instance, created, **kwargs):
     """
     if created:
         UserProfile.objects.get_or_create(user=instance)
-        Tutorials.objects.create(user_profile=instance.userprofile)
+        Tutorials.objects.get_or_create(user_profile=instance.userprofile)
 
 
 post_save.connect(create_user_profile, sender=User)
@@ -147,7 +147,7 @@ def add_new_user_to_public_group(sender, instance, created, **kwargs):
 
 def create_user_profile_registered(sender, user, request, **kwargs):
     UserProfile.objects.get_or_create(user=user)
-    Tutorials.objects.create(user_profile=user.userprofile)
+    Tutorials.objects.get_or_create(user_profile=user.userprofile)
 
     logger.info(
         "user profile for user %s has been created after registration",
