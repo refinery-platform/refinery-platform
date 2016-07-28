@@ -6,11 +6,13 @@ function selectedFilterService ($location) {
 
   // Update the selected fields in the filter
   vm.updateSelectedFilters = function (selectedField, internalName, field) {
+    // Check if attribute already exists in selectedFieldList
     if (selectedField[field] &&
       typeof vm.selectedFieldList[internalName] !== 'undefined') {
       // add field url query and selectedList;
       vm.selectedFieldList[internalName].push(field);
       $location.search(field, selectedField[field]);
+      // Add new attribute to selectedFieldList
     } else if (selectedField[field]) {
       console.log('internal name does not exist');
       // add field url query and selectedList
