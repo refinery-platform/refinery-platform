@@ -55,8 +55,6 @@ function FileBrowserCtrl (
   vm.cachePages = 2;
   vm.counter = 0;
 
-  vm.afterNodeGroupUpdate = false;
-
   vm.refreshAssayFiles = function () {
     vm.filesParam.offset = vm.lastPage * vm.rowCount;
     vm.filesParam.limit = vm.rowCount;
@@ -143,15 +141,6 @@ function FileBrowserCtrl (
       // Checkbox selection events
       vm.gridApi.selection.on.rowSelectionChanged(null, function (row) {
         // When selected All, watching the deselect events for complement nodes
-        if (selectedNodesService.selectedNodeGroupUuid &&
-          selectedNodesService.selectedNodeGroupUuid !==
-          selectedNodesService.defaultCurrentSelectionUuid) {
-          if (vm.afterNodeGroupUpdate) {
-            vm.afterNodeGroupUpdate = false;
-            selectedNodesService.resetNodeGroupSelection(true);
-          }
-        }
-
         if (selectedNodesService.selectedAllFlag) {
           selectedNodesService.setComplementSeletedNodes(row);
           vm.selectNodesCount = vm.assayFilesTotal -
@@ -160,6 +149,14 @@ function FileBrowserCtrl (
           // add or remove row to list
           selectedNodesService.setSelectedNodes(row);
           vm.selectNodesCount = selectedNodesService.selectedNodes.length;
+        }
+
+        if (selectedNodesService.selectedNodeGroupUuid !==
+          selectedNodesService.defaultCurrentSelectionUuid &&
+          selectedNodesService.selectedNodesUuidsFromNodeGroup.length !==
+          selectedNodesService.selectedNodes.length) {
+          // Reset the node group selection to current selection
+          selectedNodesService.resetNodeGroupSelection(true);
         }
       });
 
@@ -326,7 +323,6 @@ function FileBrowserCtrl (
             );
             vm.selectNodesCount = selectedNodesService.selectedNodesUuidsFromNodeGroup.length;
             correctRowSelectionInUI();
-            vm.afterNodeGroupUpdate = true;
           } else if (selectedNodesService.selectedNodes.length > 0) {
             vm.setGridSelectedRows(selectedNodesService.selectedNodes);
             vm.selectNodesCount = selectedNodesService.selectedNodesUuids.length;
