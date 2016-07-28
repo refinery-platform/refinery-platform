@@ -269,6 +269,32 @@ def main():
         })
     )
 
+    # ELB per http://cfn-pyplates.readthedocs.io/en/latest/examples/options/template.html
+    cft.resources.elb = core.Resource('LoadBalancer',
+        'AWS::ElasticLoadBalancing::LoadBalancer',
+        {
+            'AvailabilityZones': [config['AVAILABILITY_ZONE']],
+            'HealthCheck': {
+                'HealthyThreshold': '2',
+                'Interval': '30',
+                'Target': 'HTTP:80/',
+                'Timeout': '5',
+                'UnhealthyThreshold': '2'
+            },
+            'Instances': [functions.ref('WebInstance')],
+              
+            'Listeners': [
+                {
+                    'LoadBalancerPort': '80',
+                    'Protocol': 'HTTP',
+                    'InstanceProtocol': 'HTTP',
+                    'InstancePort': '80',
+                    'PolicyNames': []
+                },
+            ],
+            "Tags": instance_tags,  # todo: Should be different?
+        })
+
     print(str(cft))
 
 
