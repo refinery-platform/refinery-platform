@@ -786,7 +786,13 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
     if filter_attribute:
         params['filter_attribute'] = filter_attribute
         # unicode to object to grab keys
-        params['facets'] = ','.join(ast.literal_eval(filter_attribute).keys())
+        if isinstance(filter_attribute, unicode):
+            # handling unicode sent by swagger
+            params['facets'] = ','.join(
+                ast.literal_eval(filter_attribute).keys()
+            )
+        else:
+            params['facets'] = ','.join(filter_attribute.keys())
 
     solr_params = generate_solr_params(params, assay_uuid)
     # Only require solr filters if exception uuids are passed
