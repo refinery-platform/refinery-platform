@@ -7,7 +7,7 @@ function selectedFilterService ($location) {
   /**
    * Helper method which removes selected Field and deletes empty attributes
    * @param {string} attributeName - internal name,'Month_Characteristics_10_5_s'
-   * @param {true or null} fieldName - field name
+   * @param {string} fieldName - field name
   */
   var removeSelectedField = function (attributeName, fieldName) {
     // remove attribute field
@@ -24,7 +24,7 @@ function selectedFilterService ($location) {
   /**
    * Helper method which updates the url query with fields
    * @param {string} fieldName - name of field
-   * @param {true or null} value - True adds name or null removes name
+   * @param {string} value - True adds name or null removes name
   */
   var updateUrlQuery = function (fieldName, value) {
     $location.search(fieldName, value);
