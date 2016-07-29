@@ -96,7 +96,7 @@ function selectedNodesService ($window, fileBrowserFactory, selectedFilterServic
 
   // If select all box is checked, the complements are sent and backend
   // generates nodes list
-  vm.setNodeGroupParams = function () {
+  vm.getNodeGroupParams = function () {
     var params = {
       uuid: vm.selectedNodeGroupUuid,
       assay: $window.externalAssayUuid,
