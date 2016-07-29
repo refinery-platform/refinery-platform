@@ -1232,7 +1232,8 @@ class NodeGroups(APIView):
         if param_dict.get('use_complement_nodes'):
             filtered_uuid_list = filter_nodes_uuids_in_solr(
                 param_dict.get('assay'),
-                param_dict.get('nodes')
+                param_dict.get('nodes'),
+                param_dict.get('filter_attribute')
             )
             param_dict['nodes'] = filtered_uuid_list
         node_group = self.get_object(uuid)
