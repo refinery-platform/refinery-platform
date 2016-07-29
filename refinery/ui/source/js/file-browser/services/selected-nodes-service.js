@@ -1,6 +1,6 @@
 'use strict';
 
-function selectedNodesService ($window, fileBrowserFactory, selectedFilterService) {
+function selectedNodesService ($window, selectedFilterService) {
   var vm = this;
   vm.selectedNodes = [];
   vm.selectedNodesUuids = [];
@@ -127,9 +127,7 @@ function selectedNodesService ($window, fileBrowserFactory, selectedFilterServic
     if (vm.selectedAllFlag) {
       params.nodes = vm.complementSelectedNodesUuids;
       params.use_complement_nodes = true;
-      params.filter_attribute = fileBrowserFactory.encodeAttributeFields(
-        selectedFilterService.selectedFieldList
-      );
+      params.filter_attribute = selectedFilterService.selectedFieldList;
     } else {
       params.nodes = vm.selectedNodesUuids;
       params.use_complement_nodes = false;
@@ -141,7 +139,6 @@ function selectedNodesService ($window, fileBrowserFactory, selectedFilterServic
 angular.module('refineryFileBrowser')
   .service('selectedNodesService', [
     '$window',
-    'fileBrowserFactory',
     'selectedFilterService',
     selectedNodesService
   ]
