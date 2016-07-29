@@ -1138,6 +1138,11 @@ class NodeGroups(APIView):
               type: boolean
               require: false
 
+            - name: filter_attribute
+              description: Filters for attributes fields {solr_name:[field]}
+              paramType: form
+              type: string
+              required: false
     ...
     """
 
