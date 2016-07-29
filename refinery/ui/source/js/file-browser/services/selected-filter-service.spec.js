@@ -54,4 +54,24 @@ describe('Selected-Filter-Service', function () {
     });
     expect(location.search).toHaveBeenCalledWith(field, selectedField[field]);
   });
+
+  it('updateSelectedFilters deletes field', function () {
+    service.selectedFieldList = {
+      Month_Characteristics_10_5_s: ['January', 'March', 'April'],
+      REFINERY_WORKFLOW_OUTPUT_10_5_s: ['1', '2']
+    };
+    var selectedField = {
+      January: true,
+      March: true,
+      April: true,
+      February: false };
+    var name = 'Month_Characteristics_10_5_s';
+    var field = 'February';
+    var response = service.updateSelectedFilters(selectedField, name, field);
+    expect(response).toEqual({
+      Month_Characteristics_10_5_s: ['January', 'March', 'April'],
+      REFINERY_WORKFLOW_OUTPUT_10_5_s: ['1', '2']
+    });
+    expect(location.search).toHaveBeenCalledWith(field, null);
+  });
 });
