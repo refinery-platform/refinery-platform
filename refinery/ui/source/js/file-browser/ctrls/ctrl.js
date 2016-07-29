@@ -162,6 +162,7 @@ function FileBrowserCtrl (
           vm.selectNodesCount = selectedNodesService.selectedNodes.length;
         }
 
+        // when not current selection, check if a new row was deselect/selected
         if (selectedNodesService.selectedNodeGroupUuid !==
           selectedNodesService.defaultCurrentSelectionUuid &&
           selectedNodesService.selectedNodesUuidsFromNodeGroup.length !==

@@ -591,6 +591,7 @@ def insert_facet_field_filter(facet_filter, facet_field_arr):
     # For solr requests, removes duplicate facet fields with filters from
     # facet_field_arr, maintains facet_field order
     if facet_filter:
+        # handle default formatting in get request, query_params
         if isinstance(facet_filter, unicode):
             facet_filter = json.loads(facet_filter)
         for facet in facet_filter:
