@@ -30,7 +30,7 @@ describe('Selected-Nodes-Service', function () {
     expect(angular.isFunction(service.setSelectedAllFlags)).toBe(true);
     expect(angular.isFunction(service.setComplementSeletedNodes)).toBe(true);
     expect(angular.isFunction(service.resetNodeGroupSelection)).toBe(true);
-    expect(angular.isFunction(service.setNodeGroupParams)).toBe(true);
+    expect(angular.isFunction(service.getNodeGroupParams)).toBe(true);
   });
 
   it('setSelectedNodes updates selectedNodes', function () {
