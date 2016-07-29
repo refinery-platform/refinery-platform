@@ -40,7 +40,6 @@ function NodeGroupCtrl (
 
   // Create a new node group
   vm.saveNodeGroup = function (name) {
-    console.log(selectedNodesService.selectedFieldList);
     var params = selectedNodesService.setNodeGroupParams();
     params.name = name;
     fileBrowserFactory.createNodeGroup(params).then(function () {
