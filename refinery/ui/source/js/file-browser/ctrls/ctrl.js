@@ -477,6 +477,7 @@ function FileBrowserCtrl (
           vm.selectedField[field] = false;
         });
         selectedFilterService.resetAttributeFilter(vm.selectedField);
+        vm.filesParam.filter_attribute = {};
       }
     }
   );
