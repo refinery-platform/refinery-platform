@@ -472,12 +472,12 @@ function FileBrowserCtrl (
     },
     function () {
       if (resetGridService.resetGridFlag) {
-        vm.reset();
         angular.forEach(vm.selectedField, function (value, field) {
           vm.selectedField[field] = false;
         });
         selectedFilterService.resetAttributeFilter(vm.selectedField);
         vm.filesParam.filter_attribute = {};
+        vm.reset();
       }
     }
   );
