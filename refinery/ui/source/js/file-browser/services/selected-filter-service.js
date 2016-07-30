@@ -40,23 +40,16 @@ function selectedFilterService ($location) {
    * @param {string} field - Field name, 'March'
    */
   vm.updateSelectedFilters = function (activeFields, attribute, field) {
-    console.log('in updatedSelectedFilters');
-    console.log(activeFields);
-    console.log(attribute);
-    console.log(field);
     // Check if attribute already exists in selectedFieldList
     if (activeFields[field] && vm.selectedFieldList[attribute]) {
-      console.log('in first if');
       vm.selectedFieldList[attribute].push(field);
       updateUrlQuery(field, activeFields[field]);
     // Add new attribute to selectedFieldList
     } else if (activeFields[field]) {
-      console.log('in second if');
       vm.selectedFieldList[attribute] = [field];
       updateUrlQuery(field, activeFields[field]);
     // remove empty fields
     } else if (vm.selectedFieldList[attribute]) {
-      console.log('in third if');
       removeSelectedField(attribute, field);
       updateUrlQuery(field, null);
     }

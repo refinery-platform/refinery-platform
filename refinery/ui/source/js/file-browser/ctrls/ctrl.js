@@ -473,7 +473,6 @@ function FileBrowserCtrl (
     function () {
       if (resetGridService.resetGridFlag) {
         vm.reset();
-        console.log('in the reset Grid flag');
         angular.forEach(vm.selectedField, function (value, field) {
           vm.selectedField[field] = false;
         });
