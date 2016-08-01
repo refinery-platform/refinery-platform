@@ -74,4 +74,40 @@ describe('Selected-Filter-Service', function () {
     });
     expect(location.search).toHaveBeenCalledWith(field, null);
   });
+
+  it('resetAttributeFilter calls updateSelectedFilters', function () {
+    service.selectedFieldList = {
+      Month_Characteristics_10_5_s: ['January', 'March', 'April'],
+      REFINERY_WORKFLOW_OUTPUT_10_5_s: ['1', '2']
+    };
+    var selectedField = {
+      January: false,
+      March: false,
+      April: false,
+      1: false,
+      2: false };
+    spyOn(service, 'updateSelectedFilters');
+
+    service.resetAttributeFilter(selectedField);
+    expect(service.updateSelectedFilters.calls.count()).toEqual(
+      Object.keys(selectedField).length
+    );
+  });
+
+  it('resetAttributeFilter integration test, updates selectedFieldList', function () {
+    service.selectedFieldList = {
+      Month_Characteristics_10_5_s: ['January', 'March', 'April'],
+      REFINERY_WORKFLOW_OUTPUT_10_5_s: ['1', '2']
+    };
+    var selectedField = {
+      January: false,
+      March: false,
+      April: false,
+      1: false,
+      2: false };
+
+    service.resetAttributeFilter(selectedField);
+    expect(service.selectedFieldList).toEqual({});
+    expect(location.search.calls.count()).toEqual(Object.keys(selectedField).length);
+  });
 });
