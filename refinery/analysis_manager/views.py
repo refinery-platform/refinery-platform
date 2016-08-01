@@ -7,7 +7,6 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.urlresolvers import reverse
-from django.core.exceptions import MultipleObjectsReturned
 from django.http import (
     HttpResponse, HttpResponseServerError,
     HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden
@@ -195,32 +194,46 @@ def run(request):
     if node_group_uuid:
         try:
             curr_node_group = NodeGroup.objects.get(uuid=node_group_uuid)
-        except (NodeGroup.DoesNotExist, MultipleObjectsReturned):
+        except NodeGroup.DoesNotExist:
             logger.error("Node Group with UUID '{}' does not exist".format(
                 node_group_uuid))
             return HttpResponse(status='404')
+        except NodeGroup.MultipleObjectsReturned:
+            logger.error("Node Group with UUID '{}' returned multiple "
+                         "objects".format(node_group_uuid))
+            return HttpResponse(status='500')
 
-        curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
-        if not curr_workflow:
-            logger.error("Workflow with UUID '{}' does not exist".format(
+        try:
+            curr_workflow = Workflow.objects.get(uuid=workflow_uuid)[0]
+        except Workflow.DoesNotExist:
+            logger.error("WorkFlow with UUID '{}' does not exist".format(
                 workflow_uuid))
             return HttpResponse(status='404')
+        except Workflow.MultipleObjectsReturned:
+            logger.error("WorkFlow with UUID '{}' returns multiple objects"
+                         .format(workflow_uuid))
+            return HttpResponse(status='500')
 
         try:
             study = Study.objects.get(uuid=study_uuid)
-        except (Study.DoesNotExist, MultipleObjectsReturned):
+        except Study.DoesNotExist:
             logger.error("Study with UUID '{}' does not exist".format(
                 study_uuid))
             return HttpResponse(status='404')
+        except (Study.MultipleObjectsReturned):
+            logger.error("Study with UUID '{}' returns multiple objects"
+                         .format(study_uuid))
+            return HttpResponse(status='500')
 
-        data_set = InvestigationLink.objects.filter(
+        investigation_links = InvestigationLink.objects.filter(
             investigation__uuid=study.investigation.uuid).order_by(
-                "version").reverse()[0].data_set
-        if not data_set:
+                "version")
+        if not investigation_links:
             logger.error("InvestigationLink with UUID '{}' with does not "
                          "exist".format(study.investigation.uuid))
             return HttpResponse(status='404')
 
+        data_set = investigation_links.reverse()[0].data_set
         logger.info("Associating analysis with data set %s (%s)",
                     data_set, data_set.uuid)
 
