@@ -258,15 +258,20 @@ def run(request):
         analysis.set_owner(request.user)
 
         # getting distinct workflow inputs
-        workflow_data_inputs = curr_workflow.data_inputs.all()[0]
+        try:
+            workflow_data_inputs = curr_workflow.data_inputs.all()[0]
+        except IndexError:
+            logger.error("Workflow with UUID '{}' has an index "
+                         "error with inputs".format(workflow_uuid.uuid))
+            return HttpResponse(status='500')
 
         # NEED TO GET LIST OF FILE_UUIDS from node_group_uuid fields
         count = 0
-        for file in curr_node_group.nodes.all():
+        for node_file in curr_node_group.nodes.all():
             count += 1
             temp_input = WorkflowDataInputMap(
                 workflow_data_input_name=workflow_data_inputs.name,
-                data_uuid=file.uuid,
+                data_uuid=node_file.uuid,
                 pair_id=count
             )
             temp_input.save()
