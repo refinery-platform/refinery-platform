@@ -42,16 +42,16 @@ function AnalysisLaunchModalCtrl (
 
     if ($scope.tempName !== null) {
       var analysisParams = {
-        name: $scope.dataObj.name,
-        nodeGroupUuid: selectedNodesService.selectedNodeGroupUuid
+        name: $scope.dataObj.name
       };
-
       // update current selection nodes
-      if (selectedNodesService.selectedNodeGroupUuid ===
+      if (selectedNodesService.selectedNodeGroupUuid !== '' &&
+        selectedNodesService.selectedNodeGroupUuid ===
         selectedNodesService.defaultCurrentSelectionUuid) {
-        var nodeGroupParams = selectedNodesService.getNodeGroupParams();
+        analysisParams.nodeGroupUuid = selectedNodesService.selectedNodeGroupUuid;
+        var nodeGroupParams = selectedNodesService.setNodeGroupParams();
         nodeGroupParams.uuid = selectedNodesService.defaultCurrentSelectionUuid;
-
+        // update current selection with params
         nodeGroupService.update(nodeGroupParams).$promise.then(function () {
           launchAnalysis(analysisParams);
         });
