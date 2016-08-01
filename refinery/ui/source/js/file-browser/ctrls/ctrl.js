@@ -478,12 +478,14 @@ function FileBrowserCtrl (
     });
   };
 
+  // Reset grid flag is set to true, grid, params, filters, and nodes resets
   $scope.$watch(
     function () {
       return resetGridService.resetGridFlag;
     },
     function () {
       if (resetGridService.resetGridFlag) {
+        // Have to set selected Fields in control due to service scope
         angular.forEach(vm.selectedField, function (value, field) {
           vm.selectedField[field] = false;
         });
