@@ -5,7 +5,7 @@ function rpFileBrowserNodeGroupButtons () {
     restrict: 'AE',
     templateUrl: '/static/partials/file-browser/partials/node-group-buttons.html',
     controller: 'NodeGroupCtrl',
-    controllerAs: 'FBNGCtrl',
+    controllerAs: 'NGCtrl',
     bindToController: {
       nodeGroups: '=?'
     }
