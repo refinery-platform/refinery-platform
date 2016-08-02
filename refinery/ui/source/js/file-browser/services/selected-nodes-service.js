@@ -134,6 +134,14 @@ function selectedNodesService ($window, selectedFilterService) {
     }
     return params;
   };
+
+  vm.isNodeSelectionEmpty = function () {
+    var params = vm.getNodeGroupParams();
+    if (params.nodes.length !== 0 || params.use_complement_nodes) {
+      return false;
+    }
+    return true;
+  };
 }
 
 angular.module('refineryFileBrowser')
