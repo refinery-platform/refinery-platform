@@ -155,17 +155,17 @@ describe('Selected-Nodes-Service', function () {
   });
 
   describe('isNodeSelectionEmpty, helper method', function () {
-    it('isNodeSelectionEmpty returns false', function () {
+    it('isNodeSelectionEmpty returns true', function () {
       spyOn(service, 'getNodeGroupParams').and.returnValue({
         nodes: [],
         use_complement_nodes: false
       });
 
       var response = service.isNodeSelectionEmpty();
-      expect(response).toEqual(false);
+      expect(response).toEqual(true);
     });
 
-    it('isNodeSelectionEmpty returns true when nodes are selected', function () {
+    it('isNodeSelectionEmpty returns false when nodes are selected', function () {
       spyOn(service, 'getNodeGroupParams').and.returnValue({
         nodes: [
           'x5788x83x-x9xx-4740-x9x7-x7x0x98765x',
@@ -175,17 +175,30 @@ describe('Selected-Nodes-Service', function () {
       });
 
       var response = service.isNodeSelectionEmpty();
-      expect(response).toEqual(true);
+      expect(response).toEqual(false);
     });
 
-    it('isNodeSelectionEmpty returns true with when select all', function () {
+    it('isNodeSelectionEmpty returns false with when select all', function () {
       spyOn(service, 'getNodeGroupParams').and.returnValue({
         nodes: [],
         use_complement_nodes: true
       });
 
       var response = service.isNodeSelectionEmpty();
-      expect(response).toEqual(true);
+      expect(response).toEqual(false);
+    });
+
+    it('isNodeSelectionEmpty returns false with when both values are', function () {
+      spyOn(service, 'getNodeGroupParams').and.returnValue({
+        nodes: [
+          'x5788x83x-x9xx-4740-x9x7-x7x0x98765x',
+          'x5788x83x-x9xx-4740-x9x7-x7x0x98765x'
+        ],
+        use_complement_nodes: true
+      });
+
+      var response = service.isNodeSelectionEmpty();
+      expect(response).toEqual(false);
     });
   });
 });
