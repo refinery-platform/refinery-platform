@@ -55,6 +55,14 @@ function NodeGroupCtrl (
     resetGridService.setResetGridFlag(true);
   };
 
+  vm.emptySelectionFlag = function () {
+    var params = selectedNodesService.getNodeGroupParams();
+    if (params.nodes.length !== 0 || params.use_complement_nodes) {
+      return false;
+    }
+    return true;
+  };
+
   $scope.$watch(
     function () {
       return selectedNodesService.resetNodeGroup;
