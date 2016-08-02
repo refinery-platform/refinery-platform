@@ -135,6 +135,9 @@ function selectedNodesService ($window, selectedFilterService) {
     return params;
   };
 
+
+  // Used by ctrls for node-group and launch-analysis partials to designate
+  // whether any nodes are selected.
   vm.isNodeSelectionEmpty = function () {
     var params = vm.getNodeGroupParams();
     if (params.nodes.length !== 0 || params.use_complement_nodes) {

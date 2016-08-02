@@ -50,7 +50,8 @@
         <button
           class="btn btn-warning"
           rp-analysis-launch-modal
-          ng-click="open()">
+          ng-click="open()"
+          ng-disabled="isLaunchNodesSelectionEmpty()">
           Launch Analysis
         </button>
       </div>
@@ -79,7 +80,7 @@
         class="btn btn-warning"
         rp-analysis-launch-modal
         ng-click="open()"
-        ng-disabled="isLaunchNodesSelectionEmpty()">
+        ng-disabled="!(currentNodeSet && currentNodeSet.node_count > 0)">
         Launch Analysis
       </button>
     </div>
