@@ -140,7 +140,7 @@ function selectedNodesService ($window, selectedFilterService) {
   // whether any nodes are selected.
   vm.isNodeSelectionEmpty = function () {
     var params = vm.getNodeGroupParams();
-    if (params.nodes.length !== 0 || params.use_complement_nodes) {
+    if (params.nodes.length === 0 && !params.use_complement_nodes) {
       return false;
     }
     return true;

@@ -127,25 +127,62 @@ describe('Selected-Nodes-Service', function () {
     expect(service.resetNodeGroup).toEqual(false);
   });
 
-  it('getNodeGroupParams sets correct complement nodes params', function () {
-    service.selectedAllFlag = true;
-    service.selectedNodeGroupUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
-    service.complementSelectedNodesUuids = ['x5788x83x-x9xx-4740-x9x7-x7x0x98765x'];
+  describe('getNodeGroupParams', function () {
+    it('getNodeGroupParams sets correct complement nodes params', function () {
+      service.selectedAllFlag = true;
+      service.selectedNodeGroupUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+      service.complementSelectedNodesUuids = ['x5788x83x-x9xx-4740-x9x7-x7x0x98765x'];
 
-    var response = service.getNodeGroupParams();
-    expect(response.uuid).toEqual(service.selectedNodeGroupUuid);
-    expect(response.nodes).toEqual(service.complementSelectedNodesUuids);
-    expect(response.use_complement_nodes).toEqual(true);
+      var response = service.getNodeGroupParams();
+      expect(response.uuid).toEqual(service.selectedNodeGroupUuid);
+      expect(response.nodes).toEqual(service.complementSelectedNodesUuids);
+      expect(response.use_complement_nodes).toEqual(true);
+    });
+
+    it('getNodeGroupParams sets correct selected nodes params', function () {
+      service.selectedAllFlag = false;
+      service.selectedNodeGroupUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+      service.selectedNodesUuids = ['db03efb7-cf01-4840-bcb2-7b023efc290c'];
+
+      var response = service.getNodeGroupParams();
+      expect(response.uuid).toEqual(service.selectedNodeGroupUuid);
+      expect(response.nodes).toEqual(service.selectedNodesUuids);
+      expect(response.use_complement_nodes).toEqual(false);
+    });
   });
 
-  it('getNodeGroupParams sets correct selected nodes params', function () {
-    service.selectedAllFlag = false;
-    service.selectedNodeGroupUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
-    service.selectedNodesUuids = ['db03efb7-cf01-4840-bcb2-7b023efc290c'];
+  describe('isNodeSelectionEmpty, helper method', function () {
+    it('isNodeSelectionEmpty returns false', function () {
+      spyOn(service, 'getNodeGroupParams').and.returnValue({
+        nodes: [],
+        use_complement_nodes: false
+      });
 
-    var response = service.getNodeGroupParams();
-    expect(response.uuid).toEqual(service.selectedNodeGroupUuid);
-    expect(response.nodes).toEqual(service.selectedNodesUuids);
-    expect(response.use_complement_nodes).toEqual(false);
+      var response = service.isNodeSelectionEmpty();
+      expect(response).toEqual(false);
+    });
+
+    it('isNodeSelectionEmpty returns true when nodes are selected', function () {
+      spyOn(service, 'getNodeGroupParams').and.returnValue({
+        nodes: [
+          'x5788x83x-x9xx-4740-x9x7-x7x0x98765x',
+          'x5788x83x-x9xx-4740-x9x7-x7x0x98765x'
+        ],
+        use_complement_nodes: false
+      });
+
+      var response = service.isNodeSelectionEmpty();
+      expect(response).toEqual(true);
+    });
+
+    it('isNodeSelectionEmpty returns true with when select all', function () {
+      spyOn(service, 'getNodeGroupParams').and.returnValue({
+        nodes: [],
+        use_complement_nodes: true
+      });
+
+      var response = service.isNodeSelectionEmpty();
+      expect(response).toEqual(true);
+    });
   });
 });
