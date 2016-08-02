@@ -10,7 +10,6 @@ function rpFileBrowserNodeGroup () {
       nodeGroups: '=?'
     },
     link: function (scope, element, attrs, ctrl) {
-      console.log('in the directive');
       ctrl.refreshNodeGroupList();
     }
   };
