@@ -31,6 +31,7 @@ describe('Selected-Nodes-Service', function () {
     expect(angular.isFunction(service.setComplementSeletedNodes)).toBe(true);
     expect(angular.isFunction(service.resetNodeGroupSelection)).toBe(true);
     expect(angular.isFunction(service.getNodeGroupParams)).toBe(true);
+    expect(angular.isFunction(service.isNodeSelectionEmpty)).toBe(true);
   });
 
   it('setSelectedNodes updates selectedNodes', function () {
@@ -109,22 +110,24 @@ describe('Selected-Nodes-Service', function () {
     expect(service.complementSelectedNodesUuids.length).toEqual(2);
   });
 
-  it('resetNodeGroupSelection to true flag', function () {
-    expect(service.selectedNodeGroupUuid).toEqual('');
-    service.defaultCurrentSelectionUuid = 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x';
-    service.resetNodeGroupSelection(true);
-    expect(service.selectedNodeGroupUuid).toEqual(service.defaultCurrentSelectionUuid);
-    expect(service.resetNodeGroup).toEqual(true);
-    service.resetNodeGroupSelection(false);
-    expect(service.resetNodeGroup).toEqual(false);
-  });
+  describe('resetNodeGroupSelection, helper method', function () {
+    it('resetNodeGroupSelection to true flag', function () {
+      expect(service.selectedNodeGroupUuid).toEqual('');
+      service.defaultCurrentSelectionUuid = 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x';
+      service.resetNodeGroupSelection(true);
+      expect(service.selectedNodeGroupUuid).toEqual(service.defaultCurrentSelectionUuid);
+      expect(service.resetNodeGroup).toEqual(true);
+      service.resetNodeGroupSelection(false);
+      expect(service.resetNodeGroup).toEqual(false);
+    });
 
-  it('resetNodeGroupSelection to false flag', function () {
-    expect(service.selectedNodeGroupUuid).toEqual('');
-    service.defaultCurrentSelectionUuid = 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x';
-    service.resetNodeGroupSelection(false);
-    expect(service.selectedNodeGroupUuid).toEqual('');
-    expect(service.resetNodeGroup).toEqual(false);
+    it('resetNodeGroupSelection to false flag', function () {
+      expect(service.selectedNodeGroupUuid).toEqual('');
+      service.defaultCurrentSelectionUuid = 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x';
+      service.resetNodeGroupSelection(false);
+      expect(service.selectedNodeGroupUuid).toEqual('');
+      expect(service.resetNodeGroup).toEqual(false);
+    });
   });
 
   describe('getNodeGroupParams', function () {
