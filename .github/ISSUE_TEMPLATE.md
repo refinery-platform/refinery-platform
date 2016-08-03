@@ -1,4 +1,4 @@
-Commit:
+Commit: 
 
 ### Steps to reproduce
 1.
