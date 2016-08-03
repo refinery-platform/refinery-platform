@@ -1,6 +1,7 @@
 
 import os
 import stat
+import time
 import logging
 import requests
 from requests.exceptions import ContentDecodingError
@@ -8,12 +9,13 @@ from requests.exceptions import ContentDecodingError
 from tempfile import NamedTemporaryFile
 from urlparse import urlparse
 import celery
-from celery.task import task
+from celery.task import task, TaskSet
+import pysam
 
 from django.core.files import File
 
 from .models import (FileStoreItem, get_temp_dir, file_path,
-                     FILE_STORE_BASE_DIR)
+                     FILE_STORE_BASE_DIR, FileExtension)
 
 
 logger = logging.getLogger(__name__)
@@ -210,6 +212,24 @@ def import_file(uuid, refresh=False, file_size=0):
         # save the model instance
         item.save()
 
+        try:
+            extension = FileExtension.objects.get(filetype=item.filetype)
+            if extension.name.lower() == "bam":
+                bam_path = os.path.abspath(item.get_absolute_path())
+                logger.debug("Bam path: %s" % bam_path)
+
+                # Run generate_bam_index as a subtask as to not hold up
+                # other file imports
+                bam_index_task = [generate_bam_index.subtask((bam_path,))]
+                bam_index_creation = TaskSet(
+                    tasks=bam_index_task).apply_async()
+                bam_index_creation.save()
+
+        except (FileExtension.DoesNotExist,
+                FileExtension.MultipleObjectsReturned) as e:
+            logger.error("Could not retrieve FileExtension. FileStoreItem "
+                         "may not have an associated FileType. %s" % e)
+
     return item
 
 
@@ -349,6 +369,31 @@ def download_file(url, target_path, file_size=1):
 
     response.close()
     logger.debug("Finished downloading")
+
+
+@task()
+def generate_bam_index(full_path_to_bam):
+    """
+    Task that will generate a .bai file in the same directory of the .bam
+    file passed in
+    :param full_path_to_bam: the full path on disk to the .bam file to be
+    indexed
+    :type full_path_to_bam: string
+    """
+    try:
+        start_time = time.time()
+        logger.debug("Starting bam index generation for %s" % full_path_to_bam)
+
+        # Try to generate the .bai file in the same dir as the bam so that
+        # IGV can vizualize the bam file properly
+        pysam.index(bytes(full_path_to_bam))
+
+        logger.debug("Bam index for %s generated in %s seconds." % (
+            full_path_to_bam, time.time() - start_time))
+
+    except Exception as e:
+        logger.error("Something went wrong while trying to generate the bam "
+                     "index for %s. %s" % (full_path_to_bam, e))
 
 
 class DownloadError(StandardError):
