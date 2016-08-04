@@ -1,7 +1,12 @@
 'use strict';
 
 function WorkflowListApiCtrl (
-  $scope, $rootScope, workflowService, workflow, $location
+  $scope,
+  $rootScope,
+  workflowService,
+  workflow,
+  $location,
+  selectedNodesService
 ) {
   $scope.workflowList = [];
   $scope.selectedWorkflow = { select: $scope.workflowList[0] };
@@ -32,6 +37,10 @@ function WorkflowListApiCtrl (
     }
   };
 
+  $scope.isLaunchNodesSelectionEmpty = function () {
+    return selectedNodesService.isNodeSelectionEmpty();
+  };
+
   $scope.whichFileBrowserBrowser();
 }
 
@@ -43,5 +52,6 @@ angular
     'workflowService',
     'workflow',
     '$location',
+    'selectedNodesService',
     WorkflowListApiCtrl
   ]);

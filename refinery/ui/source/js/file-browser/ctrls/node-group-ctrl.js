@@ -55,6 +55,10 @@ function NodeGroupCtrl (
     resetGridService.setResetGridFlag(true);
   };
 
+  vm.isNodeGroupSelectionEmpty = function () {
+    return selectedNodesService.isNodeSelectionEmpty();
+  };
+
   $scope.$watch(
     function () {
       return selectedNodesService.resetNodeGroup;
