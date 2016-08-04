@@ -349,7 +349,12 @@ function FileBrowserCtrl (
     }
   };
 
-  // Generates param: sort for api call from ui-grid response
+   /**
+   * Generates sort param for api call from ui-grid response and calls grid
+    * reset
+   * @param {obj} grid - ui-grid obj
+   * @param {string} sortColumns - string defining sort direction
+   */
   vm.sortChanged = function (grid, sortColumns) {
     if (typeof sortColumns !== 'undefined' &&
         typeof sortColumns[0] !== 'undefined' &&
@@ -414,7 +419,10 @@ function FileBrowserCtrl (
     vm.gridOptions.columnDefs = vm.customColumnName;
   };
 
-  // Helper method for grabbing the internal name, in fastqc viewer template
+  /**
+   * Helper method for grabbing the internal name, in fastqc viewer template
+   * @param {obj} arrayOfObj - ui-grid data obj
+   */
   var grabAnalysisInternalName = function (arrayOfObj) {
     var internalName = '';
     for (var i = 0; i < arrayOfObj.length; i ++) {
@@ -426,7 +434,10 @@ function FileBrowserCtrl (
     return internalName;
   };
 
-  // File download column require unique template and fields.
+   /**
+   * Helper method for file download column, requires unique template & fields.
+   * @param {string} _columnName - column name
+   */
   vm.setCustomUrlColumnDef = function (_columnName) {
     var internalName = grabAnalysisInternalName(vm.assayAttributes);
     var _cellTemplate = '<div class="ngCellText text-align-center"' +
@@ -460,18 +471,26 @@ function FileBrowserCtrl (
     };
   };
 
+  // Sets boolean for data set ownership
   vm.checkDataSetOwnership = function () {
     isOwnerService.refreshDataSetOwner().then(function () {
       vm.isOwner = isOwnerService.isOwner;
     });
   };
 
+  // Reset grid flag is set to true, grid, params, filters, and nodes resets
   $scope.$watch(
     function () {
       return resetGridService.resetGridFlag;
     },
     function () {
       if (resetGridService.resetGridFlag) {
+        // Have to set selected Fields in control due to service scope
+        angular.forEach(vm.selectedField, function (value, field) {
+          vm.selectedField[field] = false;
+        });
+        selectedFilterService.resetAttributeFilter(vm.selectedField);
+        vm.filesParam.filter_attribute = {};
         vm.reset();
       }
     }
