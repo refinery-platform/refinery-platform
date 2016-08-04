@@ -49,7 +49,7 @@ function AnalysisLaunchModalCtrl (
         selectedNodesService.selectedNodeGroupUuid ===
         selectedNodesService.defaultCurrentSelectionUuid) {
         analysisParams.nodeGroupUuid = selectedNodesService.selectedNodeGroupUuid;
-        var nodeGroupParams = selectedNodesService.setNodeGroupParams();
+        var nodeGroupParams = selectedNodesService.getNodeGroupParams();
         nodeGroupParams.uuid = selectedNodesService.defaultCurrentSelectionUuid;
         // update current selection with params
         nodeGroupService.update(nodeGroupParams).$promise.then(function () {
