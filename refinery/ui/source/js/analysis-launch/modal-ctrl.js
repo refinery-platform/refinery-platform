@@ -48,6 +48,7 @@ function AnalysisLaunchModalCtrl (
       if (selectedNodesService.selectedNodeGroupUuid !== '' &&
         selectedNodesService.selectedNodeGroupUuid ===
         selectedNodesService.defaultCurrentSelectionUuid) {
+        analysisParams.nodeGroupUuid = selectedNodesService.selectedNodeGroupUuid;
         var nodeGroupParams = selectedNodesService.getNodeGroupParams();
         nodeGroupParams.uuid = selectedNodesService.defaultCurrentSelectionUuid;
         // update current selection with params
