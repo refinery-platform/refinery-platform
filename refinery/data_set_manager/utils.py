@@ -574,8 +574,10 @@ def generate_solr_params(params, assay_uuid):
         solr_params = ''.join([solr_params, '&sort=', sort])
 
     if facet_filter:
-        facet_filter = urlunquote(facet_filter)
-        facet_filter = json.loads(facet_filter)
+        # handle default formatting in get request, query_params
+        if isinstance(facet_filter, unicode):
+            facet_filter = urlunquote(facet_filter)
+            facet_filter = json.loads(facet_filter)
         facet_filter_str = create_facet_filter_query(facet_filter)
         solr_params = ''.join([solr_params, facet_filter_str])
 
@@ -589,7 +591,9 @@ def insert_facet_field_filter(facet_filter, facet_field_arr):
     # For solr requests, removes duplicate facet fields with filters from
     # facet_field_arr, maintains facet_field order
     if facet_filter:
-        facet_filter = json.loads(facet_filter)
+        # handle default formatting in get request, query_params
+        if isinstance(facet_filter, unicode):
+            facet_filter = json.loads(facet_filter)
         for facet in facet_filter:
             ind = facet_field_arr.index(facet)
             facet_field_arr[ind] = ''.join(['{!ex=', facet, '}', facet])

@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import logging
 
 import py2neo
+import ast
 
 from django.conf import settings
 from django.contrib import messages
@@ -762,13 +763,15 @@ def create_current_selection_node_group(assay_uuid):
             status=status.HTTP_400_BAD_REQUEST)
 
 
-def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[]):
+def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
+                               filter_attribute={}):
     """
     Helper method to create a current selection group which
     is default for all node_group list
 
     :param assay_uuid: unicode, string
     :param filter_out_uuids: array of unicode, string
+    :param filter_attribute: object of attributes and their filtered fields
     :return: List of uuids
     """
     # Params required to filter solr_request to just get uuids for nodes
@@ -778,6 +781,19 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[]):
         'limit': 10000000,
         'include_facet_count': 'false'
     }
+
+    # Add attribute filters and facet params to generate solr_params
+    if filter_attribute:
+        params['filter_attribute'] = filter_attribute
+        # unicode to object to grab keys
+        if isinstance(filter_attribute, unicode):
+            # handling unicode sent by swagger
+            params['facets'] = ','.join(
+                ast.literal_eval(filter_attribute).keys()
+            )
+        else:
+            params['facets'] = ','.join(filter_attribute.keys())
+
     solr_params = generate_solr_params(params, assay_uuid)
     # Only require solr filters if exception uuids are passed
     if filter_out_uuids:
