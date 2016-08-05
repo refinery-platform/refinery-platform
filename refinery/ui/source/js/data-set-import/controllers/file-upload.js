@@ -264,7 +264,7 @@ function RefineryFileUploadCtrl (
   };
 
   var uploadAlways = function () {
-    formData = [];  // clear upload_id for the next upload
+    formData = [];  // clear formData, including upload_id for the next upload
   };
 
   // Tiggered when a new file is uploaded
