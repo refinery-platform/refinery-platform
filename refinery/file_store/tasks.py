@@ -111,7 +111,7 @@ def import_file(uuid, refresh=False, file_size=0):
             return None
         except requests.exceptions.ConnectionError as e:
             logger.error("Could not open URL '%s'. Reason: '%s'",
-                         item.source, e.reason)
+                         item.source, e)
             return None
         except ValueError as e:
             logger.error("Could not open URL '%s'. Reason: '%s'",
@@ -220,7 +220,8 @@ def import_file(uuid, refresh=False, file_size=0):
 
                 # Run generate_bam_index as a subtask as to not hold up
                 # other file imports
-                bam_index_task = [generate_bam_index.subtask((bam_path,))]
+                bam_index_task = [generate_bam_index.subtask((
+                    bam_path, item))]
                 bam_index_creation = TaskSet(
                     tasks=bam_index_task).apply_async()
                 bam_index_creation.save()
@@ -335,7 +336,7 @@ def download_file(url, target_path, file_size=1):
         response = requests.get(url, stream=True)
     except requests.exceptions.ConnectionError as e:
         raise DownloadError(
-            "Could not open URL '{}'. Reason: '{}'".format(url, e.reason))
+            "Could not open URL '{}'. Reason: '{}'".format(url, e))
     except ValueError as e:
         raise DownloadError("Could not open URL '{}'".format(url))
 
@@ -372,13 +373,15 @@ def download_file(url, target_path, file_size=1):
 
 
 @task()
-def generate_bam_index(full_path_to_bam):
+def generate_bam_index(full_path_to_bam, bam_filestoreitem):
     """
     Task that will generate a .bai file in the same directory of the .bam
-    file passed in
+    file passed in and associate it with the FileStoreItem it was created for
     :param full_path_to_bam: the full path on disk to the .bam file to be
     indexed
     :type full_path_to_bam: string
+    :param bam_filestoreitem: The FileStoreItem of the bam to be indexed
+    :type bam_filestoreitem: FileStoreItem
     """
     try:
         start_time = time.time()
@@ -391,9 +394,21 @@ def generate_bam_index(full_path_to_bam):
         logger.debug("Bam index for %s generated in %s seconds." % (
             full_path_to_bam, time.time() - start_time))
 
+        # Associate new bam index file with the FileStoreItem that the bam
+        # belongs to
+        bam_index_filetype = FileExtension.objects.get(name="bai").filetype
+
+        bam_index_filestoreitem = FileStoreItem.objects.create_item(
+            source=full_path_to_bam + ".bai",
+            filetype=bam_index_filetype,
+        )
+
+        bam_filestoreitem.set_index_file(bam_index_filestoreitem)
+
     except Exception as e:
         logger.error("Something went wrong while trying to generate the bam "
                      "index for %s. %s" % (full_path_to_bam, e))
+        return
 
 
 class DownloadError(StandardError):
