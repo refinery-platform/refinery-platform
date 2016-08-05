@@ -257,6 +257,10 @@ class FileStoreItem(models.Model):
                                    default=timezone.now,
                                    blank=True)
 
+    # Associated FileStoreItem utilized for visualization in IGV
+    index_file = models.OneToOneField("self", on_delete=models.CASCADE,
+                                      blank=True, null=True)
+
     objects = _FileStoreItemManager()
 
     def __unicode__(self):
@@ -520,6 +524,18 @@ class FileStoreItem(models.Model):
         """Return file import task state"""
         return AsyncResult(self.import_task_id).state
 
+    def set_index_file(self, filestore_item_for_index):
+        """
+        :param filestore_item_for_index: FileStoreItem to be used as an
+        index for another FileStoreItem
+        :type filestore_item_for_index: FileStoreItem instance
+        """
+        self.index_file = filestore_item_for_index
+        self.save()
+
+    def get_index_file(self):
+        return self.index_file or None
+
 
 def is_local(uuid):
     """Check if this FileStoreItem can be used as a file object
@@ -619,6 +635,12 @@ def _delete_datafile(sender, **kwargs):
     item = kwargs.get('instance')
     logger.debug("Deleting FileStoreItem with UUID '%s'", item.uuid)
     item.delete_datafile()
+
+    if item.index_file:
+        item.index_file.delete_datafile()
+        logger.debug("Deleting index file for FileStoreItem with UUID '%s'",
+                     item.uuid)
+        item.index_file.delete()
 
 
 def _symlink_file_on_disk(source, target):
