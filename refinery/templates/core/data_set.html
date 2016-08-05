@@ -846,6 +846,7 @@
 
     document.getElementById('view-selector').onclick = function()
     {
+      var selectedDisplay = $(this).val();
       if (selectedDisplay === 'pivot-view-tab' ||
         selectedDisplay === 'provenance-view-tab')
       {
