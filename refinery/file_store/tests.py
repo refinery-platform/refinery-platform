@@ -8,7 +8,7 @@ from urlparse import urljoin
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, TransactionTestCase
 
 from rest_framework.test import APIRequestFactory
 from rest_framework.test import APITestCase
@@ -417,3 +417,55 @@ class FileStoreItemsAPITests(APITestCase):
                                    % (self.url_root, self.invalid_format_uuid))
         response = self.view(request, self.invalid_format_uuid)
         self.assertEqual(response.status_code, 404)
+
+
+class FileStoreItemIndexFileTests(TransactionTestCase):
+
+    def setUp(self):
+        self.bam_filetype = FileType.objects.create(
+            name="BAM", description="BAM file")
+        self.bam_fileextension = FileExtension.objects.create(
+            name="bam", filetype=self.bam_filetype)
+        self.filename = 'test_file.bam'
+        self.index_filename = 'test_file.bam.bai'
+        self.sharename = 'labname'
+        self.url_source = urljoin('http://example.org/', self.filename)
+
+    def tearDown(self):
+        FileType.objects.all().delete()
+        FileExtension.objects.all().delete()
+        FileStoreItem.objects.all().delete()
+
+    def test_set_index_file_and_deletion(self):
+
+        # create FileStoreItem instances without any disk operations
+        parent_filestore_item = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                self.filename,
+                'Coffee is delicious!'
+            ),
+            source=self.url_source,
+            sharename=self.sharename
+        )
+
+        index_filestore_item = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                self.index_filename,
+                'Coffee is delicious!'
+            ),
+            source=self.url_source,
+            sharename=self.sharename
+        )
+
+        parent_filestore_item.set_index_file(index_filestore_item)
+
+        self.assertEquals(
+            parent_filestore_item.get_index_file(), index_filestore_item
+        )
+
+        parent_filestore_item.delete()
+
+        self.assertIsNone(parent_filestore_item.datafile)
+        self.assertIsNone(parent_filestore_item)
+        self.assertIsNone(index_filestore_item.datafile)
+        self.assertIsNone(index_filestore_item)
