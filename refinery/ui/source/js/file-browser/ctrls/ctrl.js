@@ -8,6 +8,7 @@ function FileBrowserCtrl (
   resetGridService,
   isOwnerService,
   selectedNodesService,
+  selectedFilterService,
   $timeout,
   $q,
   $log,
@@ -28,7 +29,7 @@ function FileBrowserCtrl (
   vm.customColumnName = [];
   vm.queryKeys = Object.keys($location.search());
   vm.selectedField = {};
-  vm.selectedFieldList = {};
+ // vm.selectedFieldList = {};
   vm.selectNodesCount = 0;
   vm.gridOptions = {
     appScopeProvider: vm,
@@ -92,9 +93,10 @@ function FileBrowserCtrl (
       vm.refreshSelectedFieldFromQuery(attributeObj);
     });
     vm.filesParam.filter_attribute = {};
-    angular.copy(vm.selectedFieldList, vm.filesParam.filter_attribute);
+
+    angular.copy(selectedFilterService.selectedFieldList, vm.filesParam.filter_attribute);
     // Grid only needs to reset if filters are applied
-    if (Object.keys(vm.selectedFieldList).length > 0) {
+    if (Object.keys(selectedFilterService.selectedFieldList).length > 0) {
       vm.reset();
     }
   };
@@ -111,32 +113,14 @@ function FileBrowserCtrl (
 
   // Updates selection field list and url
   vm.updateSelectionList = function (internalName, field) {
-    if (vm.selectedField[field] &&
-      typeof vm.selectedFieldList[internalName] !== 'undefined') {
-      // add field url query and selectedList
-      vm.selectedFieldList[internalName].push(field);
-      $location.search(field, vm.selectedField[field]);
-    } else if (vm.selectedField[field]) {
-      // add field url query and selectedList
-      vm.selectedFieldList[internalName] = [field];
-      $location.search(field, vm.selectedField[field]);
-    } else {
-      var ind = vm.selectedFieldList[internalName].indexOf(field);
-      if (ind > -1) {
-        vm.selectedFieldList[internalName].splice(ind, 1);
-      }
-      if (vm.selectedFieldList[internalName].length === 0) {
-        delete vm.selectedFieldList[internalName];
-      }
-      $location.search(field, null);
-    }
+    selectedFilterService.updateSelectedFilters(vm.selectedField, internalName, field);
   };
 
   // Updates which attribute filters are selected and the ui-grid data
   vm.attributeSelectionUpdate = function (_internalName, _field) {
     vm.updateSelectionList(_internalName, _field);
     vm.filesParam.filter_attribute = {};
-    angular.copy(vm.selectedFieldList, vm.filesParam.filter_attribute);
+    angular.copy(selectedFilterService.selectedFieldList, vm.filesParam.filter_attribute);
     // Resets selection
     selectedNodesService.setSelectedAllFlags(false);
     // resets grid
@@ -176,6 +160,15 @@ function FileBrowserCtrl (
           // add or remove row to list
           selectedNodesService.setSelectedNodes(row);
           vm.selectNodesCount = selectedNodesService.selectedNodes.length;
+        }
+
+        // when not current selection, check if a new row was deselect/selected
+        if (selectedNodesService.selectedNodeGroupUuid !==
+          selectedNodesService.defaultCurrentSelectionUuid &&
+          selectedNodesService.selectedNodesUuidsFromNodeGroup.length !==
+          selectedNodesService.selectedNodes.length) {
+          // Reset the node group selection to current selection
+          selectedNodesService.resetNodeGroupSelection(true);
         }
       });
 
@@ -231,6 +224,7 @@ function FileBrowserCtrl (
     }
   };
 
+  // Helper method for dynamic scrolling, grabs data when scrolling down
   vm.getDataDown = function () {
     vm.lastPage++;
     vm.filesParam.offset = vm.lastPage * vm.rowCount;
@@ -258,6 +252,7 @@ function FileBrowserCtrl (
     return promise.promise;
   };
 
+  // Helper method for dynamic scrolling, grabs data when scrolling up
   vm.getDataUp = function () {
     if (vm.firstPage > 0) {
       vm.firstPage--;
@@ -354,7 +349,12 @@ function FileBrowserCtrl (
     }
   };
 
-  // Generates param: sort for api call from ui-grid response
+   /**
+   * Generates sort param for api call from ui-grid response and calls grid
+    * reset
+   * @param {obj} grid - ui-grid obj
+   * @param {string} sortColumns - string defining sort direction
+   */
   vm.sortChanged = function (grid, sortColumns) {
     if (typeof sortColumns !== 'undefined' &&
         typeof sortColumns[0] !== 'undefined' &&
@@ -419,7 +419,10 @@ function FileBrowserCtrl (
     vm.gridOptions.columnDefs = vm.customColumnName;
   };
 
-  // Helper method for grabbing the internal name, in fastqc viewer template
+  /**
+   * Helper method for grabbing the internal name, in fastqc viewer template
+   * @param {obj} arrayOfObj - ui-grid data obj
+   */
   var grabAnalysisInternalName = function (arrayOfObj) {
     var internalName = '';
     for (var i = 0; i < arrayOfObj.length; i ++) {
@@ -431,7 +434,10 @@ function FileBrowserCtrl (
     return internalName;
   };
 
-  // File download column require unique template and fields.
+   /**
+   * Helper method for file download column, requires unique template & fields.
+   * @param {string} _columnName - column name
+   */
   vm.setCustomUrlColumnDef = function (_columnName) {
     var internalName = grabAnalysisInternalName(vm.assayAttributes);
     var _cellTemplate = '<div class="ngCellText text-align-center"' +
@@ -465,18 +471,26 @@ function FileBrowserCtrl (
     };
   };
 
+  // Sets boolean for data set ownership
   vm.checkDataSetOwnership = function () {
     isOwnerService.refreshDataSetOwner().then(function () {
       vm.isOwner = isOwnerService.isOwner;
     });
   };
 
+  // Reset grid flag is set to true, grid, params, filters, and nodes resets
   $scope.$watch(
     function () {
       return resetGridService.resetGridFlag;
     },
     function () {
       if (resetGridService.resetGridFlag) {
+        // Have to set selected Fields in control due to service scope
+        angular.forEach(vm.selectedField, function (value, field) {
+          vm.selectedField[field] = false;
+        });
+        selectedFilterService.resetAttributeFilter(vm.selectedField);
+        vm.filesParam.filter_attribute = {};
         vm.reset();
       }
     }
@@ -494,6 +508,7 @@ angular
     'resetGridService',
     'isOwnerService',
     'selectedNodesService',
+    'selectedFilterService',
     '$timeout',
     '$q',
     '$log',

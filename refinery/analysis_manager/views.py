@@ -7,7 +7,6 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.urlresolvers import reverse
-from django.core.exceptions import MultipleObjectsReturned
 from django.http import (
     HttpResponse, HttpResponseServerError,
     HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden
@@ -195,32 +194,46 @@ def run(request):
     if node_group_uuid:
         try:
             curr_node_group = NodeGroup.objects.get(uuid=node_group_uuid)
-        except (NodeGroup.DoesNotExist, MultipleObjectsReturned):
+        except NodeGroup.DoesNotExist:
             logger.error("Node Group with UUID '{}' does not exist".format(
                 node_group_uuid))
             return HttpResponse(status='404')
+        except NodeGroup.MultipleObjectsReturned:
+            logger.error("Node Group with UUID '{}' returned multiple "
+                         "objects".format(node_group_uuid))
+            return HttpResponse(status='500')
 
-        curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
-        if not curr_workflow:
-            logger.error("Workflow with UUID '{}' does not exist".format(
+        try:
+            curr_workflow = Workflow.objects.get(uuid=workflow_uuid)[0]
+        except Workflow.DoesNotExist:
+            logger.error("WorkFlow with UUID '{}' does not exist".format(
                 workflow_uuid))
             return HttpResponse(status='404')
+        except Workflow.MultipleObjectsReturned:
+            logger.error("WorkFlow with UUID '{}' returns multiple objects"
+                         .format(workflow_uuid))
+            return HttpResponse(status='500')
 
         try:
             study = Study.objects.get(uuid=study_uuid)
-        except (Study.DoesNotExist, MultipleObjectsReturned):
+        except Study.DoesNotExist:
             logger.error("Study with UUID '{}' does not exist".format(
                 study_uuid))
             return HttpResponse(status='404')
+        except (Study.MultipleObjectsReturned):
+            logger.error("Study with UUID '{}' returns multiple objects"
+                         .format(study_uuid))
+            return HttpResponse(status='500')
 
-        data_set = InvestigationLink.objects.filter(
+        investigation_links = InvestigationLink.objects.filter(
             investigation__uuid=study.investigation.uuid).order_by(
-                "version").reverse()[0].data_set
-        if not data_set:
+                "version")
+        if not investigation_links:
             logger.error("InvestigationLink with UUID '{}' with does not "
                          "exist".format(study.investigation.uuid))
             return HttpResponse(status='404')
 
+        data_set = investigation_links.reverse()[0].data_set
         logger.info("Associating analysis with data set %s (%s)",
                     data_set, data_set.uuid)
 
@@ -245,15 +258,20 @@ def run(request):
         analysis.set_owner(request.user)
 
         # getting distinct workflow inputs
-        workflow_data_inputs = curr_workflow.data_inputs.all()[0]
+        try:
+            workflow_data_inputs = curr_workflow.data_inputs.all()[0]
+        except IndexError:
+            logger.error("Workflow with UUID '{}' has an index "
+                         "error with inputs".format(workflow_uuid.uuid))
+            return HttpResponse(status='500')
 
         # NEED TO GET LIST OF FILE_UUIDS from node_group_uuid fields
         count = 0
-        for file in curr_node_group.nodes.all():
+        for node_file in curr_node_group.nodes.all():
             count += 1
             temp_input = WorkflowDataInputMap(
                 workflow_data_input_name=workflow_data_inputs.name,
-                data_uuid=file.uuid,
+                data_uuid=node_file.uuid,
                 pair_id=count
             )
             temp_input.save()

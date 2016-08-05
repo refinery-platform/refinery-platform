@@ -40,7 +40,7 @@ function NodeGroupCtrl (
 
   // Create a new node group
   vm.saveNodeGroup = function (name) {
-    var params = selectedNodesService.setNodeGroupParams();
+    var params = selectedNodesService.getNodeGroupParams();
     params.name = name;
     fileBrowserFactory.createNodeGroup(params).then(function () {
       vm.refreshNodeGroupList();
@@ -53,6 +53,10 @@ function NodeGroupCtrl (
     vm.nodeGroups.selected = vm.nodeGroups.groups[0];
     selectedNodesService.setSelectedAllFlags(false);
     resetGridService.setResetGridFlag(true);
+  };
+
+  vm.isNodeGroupSelectionEmpty = function () {
+    return selectedNodesService.isNodeSelectionEmpty();
   };
 
   $scope.$watch(

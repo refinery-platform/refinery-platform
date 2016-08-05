@@ -30,7 +30,8 @@ describe('Selected-Nodes-Service', function () {
     expect(angular.isFunction(service.setSelectedAllFlags)).toBe(true);
     expect(angular.isFunction(service.setComplementSeletedNodes)).toBe(true);
     expect(angular.isFunction(service.resetNodeGroupSelection)).toBe(true);
-    expect(angular.isFunction(service.setNodeGroupParams)).toBe(true);
+    expect(angular.isFunction(service.getNodeGroupParams)).toBe(true);
+    expect(angular.isFunction(service.isNodeSelectionEmpty)).toBe(true);
   });
 
   it('setSelectedNodes updates selectedNodes', function () {
@@ -109,43 +110,95 @@ describe('Selected-Nodes-Service', function () {
     expect(service.complementSelectedNodesUuids.length).toEqual(2);
   });
 
-  it('resetNodeGroupSelection to true flag', function () {
-    expect(service.selectedNodeGroupUuid).toEqual('');
-    service.defaultCurrentSelectionUuid = 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x';
-    service.resetNodeGroupSelection(true);
-    expect(service.selectedNodeGroupUuid).toEqual(service.defaultCurrentSelectionUuid);
-    expect(service.resetNodeGroup).toEqual(true);
-    service.resetNodeGroupSelection(false);
-    expect(service.resetNodeGroup).toEqual(false);
+  describe('resetNodeGroupSelection, helper method', function () {
+    it('resetNodeGroupSelection to true flag', function () {
+      expect(service.selectedNodeGroupUuid).toEqual('');
+      service.defaultCurrentSelectionUuid = 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x';
+      service.resetNodeGroupSelection(true);
+      expect(service.selectedNodeGroupUuid).toEqual(service.defaultCurrentSelectionUuid);
+      expect(service.resetNodeGroup).toEqual(true);
+      service.resetNodeGroupSelection(false);
+      expect(service.resetNodeGroup).toEqual(false);
+    });
+
+    it('resetNodeGroupSelection to false flag', function () {
+      expect(service.selectedNodeGroupUuid).toEqual('');
+      service.defaultCurrentSelectionUuid = 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x';
+      service.resetNodeGroupSelection(false);
+      expect(service.selectedNodeGroupUuid).toEqual('');
+      expect(service.resetNodeGroup).toEqual(false);
+    });
   });
 
-  it('resetNodeGroupSelection to false flag', function () {
-    expect(service.selectedNodeGroupUuid).toEqual('');
-    service.defaultCurrentSelectionUuid = 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x';
-    service.resetNodeGroupSelection(false);
-    expect(service.selectedNodeGroupUuid).toEqual('');
-    expect(service.resetNodeGroup).toEqual(false);
+  describe('getNodeGroupParams', function () {
+    it('getNodeGroupParams sets correct complement nodes params', function () {
+      service.selectedAllFlag = true;
+      service.selectedNodeGroupUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+      service.complementSelectedNodesUuids = ['x5788x83x-x9xx-4740-x9x7-x7x0x98765x'];
+
+      var response = service.getNodeGroupParams();
+      expect(response.uuid).toEqual(service.selectedNodeGroupUuid);
+      expect(response.nodes).toEqual(service.complementSelectedNodesUuids);
+      expect(response.use_complement_nodes).toEqual(true);
+    });
+
+    it('getNodeGroupParams sets correct selected nodes params', function () {
+      service.selectedAllFlag = false;
+      service.selectedNodeGroupUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+      service.selectedNodesUuids = ['db03efb7-cf01-4840-bcb2-7b023efc290c'];
+
+      var response = service.getNodeGroupParams();
+      expect(response.uuid).toEqual(service.selectedNodeGroupUuid);
+      expect(response.nodes).toEqual(service.selectedNodesUuids);
+      expect(response.use_complement_nodes).toEqual(false);
+    });
   });
 
-  it('setNodeGroupParams sets correct complement nodes params', function () {
-    service.selectedAllFlag = true;
-    service.selectedNodeGroupUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
-    service.complementSelectedNodesUuids = ['x5788x83x-x9xx-4740-x9x7-x7x0x98765x'];
+  describe('isNodeSelectionEmpty, helper method', function () {
+    it('isNodeSelectionEmpty returns true', function () {
+      spyOn(service, 'getNodeGroupParams').and.returnValue({
+        nodes: [],
+        use_complement_nodes: false
+      });
 
-    var response = service.setNodeGroupParams();
-    expect(response.uuid).toEqual(service.selectedNodeGroupUuid);
-    expect(response.nodes).toEqual(service.complementSelectedNodesUuids);
-    expect(response.use_complement_nodes).toEqual(true);
-  });
+      var response = service.isNodeSelectionEmpty();
+      expect(response).toEqual(true);
+    });
 
-  it('setNodeGroupParams sets correct selected nodes params', function () {
-    service.selectedAllFlag = false;
-    service.selectedNodeGroupUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
-    service.selectedNodesUuids = ['db03efb7-cf01-4840-bcb2-7b023efc290c'];
+    it('isNodeSelectionEmpty returns false when nodes are selected', function () {
+      spyOn(service, 'getNodeGroupParams').and.returnValue({
+        nodes: [
+          'x5788x83x-x9xx-4740-x9x7-x7x0x98765x',
+          'x5788x83x-x9xx-4740-x9x7-x7x0x98765x'
+        ],
+        use_complement_nodes: false
+      });
 
-    var response = service.setNodeGroupParams();
-    expect(response.uuid).toEqual(service.selectedNodeGroupUuid);
-    expect(response.nodes).toEqual(service.selectedNodesUuids);
-    expect(response.use_complement_nodes).toEqual(false);
+      var response = service.isNodeSelectionEmpty();
+      expect(response).toEqual(false);
+    });
+
+    it('isNodeSelectionEmpty returns false with when select all', function () {
+      spyOn(service, 'getNodeGroupParams').and.returnValue({
+        nodes: [],
+        use_complement_nodes: true
+      });
+
+      var response = service.isNodeSelectionEmpty();
+      expect(response).toEqual(false);
+    });
+
+    it('isNodeSelectionEmpty returns false with when both values are', function () {
+      spyOn(service, 'getNodeGroupParams').and.returnValue({
+        nodes: [
+          'x5788x83x-x9xx-4740-x9x7-x7x0x98765x',
+          'x5788x83x-x9xx-4740-x9x7-x7x0x98765x'
+        ],
+        use_complement_nodes: true
+      });
+
+      var response = service.isNodeSelectionEmpty();
+      expect(response).toEqual(false);
+    });
   });
 });
