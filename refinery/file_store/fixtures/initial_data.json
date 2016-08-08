@@ -264,6 +264,14 @@
     }
   },
   {
+    "model": "file_store.FileType",
+    "pk": 38,
+    "fields": {
+      "description": "Illumina basecall file",
+      "name": "BCL"
+    }
+  },
+  {
     "model": "file_store.FileExtension",
     "pk": 1,
     "fields": {
@@ -545,10 +553,18 @@
   },
   {
     "model": "file_store.FileExtension",
-    "pk": 37,
+    "pk": 38,
     "fields": {
-      "name": "dat",
-      "filetype": 37
+      "name": "fq",
+      "filetype": 15
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 39,
+    "fields": {
+      "name": "BCL",
+      "filetype": 38
     }
   }
 ]
