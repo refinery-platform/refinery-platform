@@ -6,18 +6,19 @@ function WorkflowListApiCtrl (
   workflowService,
   workflow,
   $location,
-  selectedNodesService
+  selectedNodesService,
+  selectedWorkflowService
 ) {
+  var vm = this;
   $scope.workflowList = [];
-  $scope.selectedWorkflow = { select: $scope.workflowList[0] };
+  $scope.selectedWorkflow = { select: selectedWorkflowService.selectedWorkflow };
 
-  $scope.getWorkflowList = function () {
+  vm.getWorkflowList = function () {
     var Workflows = workflowService.get(function () {
-      $scope.workflowList = Workflows.objects;
+      selectedWorkflowService.setSelectedWorkflowList(Workflows.objects);
+      $scope.workflowList = selectedWorkflowService.selectedWorkflowList;
     });
   };
-
-  $scope.getWorkflowList();
 
   $scope.currentWorkflow = workflow;
 
@@ -42,6 +43,16 @@ function WorkflowListApiCtrl (
   };
 
   $scope.whichFileBrowserBrowser();
+
+  $scope.$watch(
+    function () {
+      return $scope.selectedWorkflow.select;
+    },
+    function () {
+      console.log('in the watcher');
+      selectedWorkflowService.setSelectedWorkflow($scope.selectedWorkflow.select);
+    }
+  );
 }
 
 angular
@@ -53,5 +64,6 @@ angular
     'workflow',
     '$location',
     'selectedNodesService',
+    'selectedWorkflowService',
     WorkflowListApiCtrl
   ]);
