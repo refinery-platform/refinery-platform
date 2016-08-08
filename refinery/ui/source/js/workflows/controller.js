@@ -10,20 +10,20 @@ function WorkflowListApiCtrl (
   selectedWorkflowService
 ) {
   var vm = this;
-  $scope.workflowList = [];
-  $scope.selectedWorkflow = { select: selectedWorkflowService.selectedWorkflow };
+  vm.workflowList = [];
+  vm.selectedWorkflow = { select: selectedWorkflowService.selectedWorkflow };
 
   vm.getWorkflowList = function () {
     var Workflows = workflowService.get(function () {
       selectedWorkflowService.setSelectedWorkflowList(Workflows.objects);
-      $scope.workflowList = selectedWorkflowService.selectedWorkflowList;
+      vm.workflowList = selectedWorkflowService.selectedWorkflowList;
     });
   };
 
   $scope.currentWorkflow = workflow;
 
-  $scope.updateCurrentWorkflow = function () {
-    workflow.set($scope.selectedWorkflow.select);
+  vm.updateCurrentWorkflow = function () {
+    workflow.set(vm.selectedWorkflow.select);
 
     if (workflow.isAvailable()) {
       $rootScope.$emit('workflowChangedEvent', workflow.get());
@@ -46,11 +46,10 @@ function WorkflowListApiCtrl (
 
   $scope.$watch(
     function () {
-      return $scope.selectedWorkflow.select;
+      return vm.selectedWorkflow.select;
     },
     function () {
-      console.log('in the watcher');
-      selectedWorkflowService.setSelectedWorkflow($scope.selectedWorkflow.select);
+      selectedWorkflowService.setSelectedWorkflow(vm.selectedWorkflow.select);
     }
   );
 }

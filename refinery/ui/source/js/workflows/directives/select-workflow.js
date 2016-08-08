@@ -7,7 +7,8 @@ function rpSelectWorkflow () {
     controller: 'WorkflowListApiCtrl',
     controllerAs: 'WLACtrl',
     bindToController: {
-      nodeGroups: '=?'
+      workflowList: '@',
+      selectedWorkflow: '=?'
     },
     link: function (scope, element, attrs, ctrl) {
       console.log('in the directive');
