@@ -10,7 +10,6 @@ from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
 from registration.backends.default.views import ActivationView
 from tastypie.api import Api
-from rest_framework import routers
 
 from core.api import (AnalysisResource, ProjectResource, NodeSetResource,
                       NodeResource, NodeSetListResource, NodePairResource,
@@ -21,7 +20,7 @@ from core.api import (AnalysisResource, ProjectResource, NodeSetResource,
                       UserAuthenticationResource, InvitationResource,
                       FastQCResource, UserProfileResource)
 from core.models import DataSet, AuthenticationFormUsernameOrEmail
-from core.views import WorkflowViewSet, CustomRegistrationView, NodeGroups
+from core.views import CustomRegistrationView, NodeGroups
 from file_store.views import FileStoreItems
 from data_set_manager.views import Assays, AssaysFiles, AssaysAttributes
 from data_set_manager.api import (AttributeOrderResource, StudyResource,
@@ -43,11 +42,6 @@ sqs = (SearchQuerySet().using("core")
 
 # Uncomment the next two lines to enable the admin:
 admin.autodiscover()
-
-
-# Django REST Framework urls
-router = routers.DefaultRouter()
-router.register(r'workflows', WorkflowViewSet)
 
 
 # NG: added for tastypie URL
@@ -166,8 +160,6 @@ urlpatterns = patterns(
         ),
         name='search'
     ),
-    # Wire up our API using automatic URL routing.
-    url(r"^api/v2/", include(router.urls)),
 
     url(r'^api/v2/node_groups/$', NodeGroups.as_view()),
 

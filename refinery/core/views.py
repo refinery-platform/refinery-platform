@@ -23,7 +23,7 @@ from registration import signals
 
 from guardian.shortcuts import get_perms
 import requests
-from rest_framework import viewsets
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -39,7 +39,7 @@ from core.models import (
     ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
     Analysis, Invitation, Ontology, NodeGroup,
     CustomRegistrationProfile)
-from core.serializers import WorkflowSerializer, NodeGroupSerializer
+from core.serializers import NodeGroupSerializer
 from core.utils import (get_data_sets_annotations, get_anonymous_user,
                         create_current_selection_node_group,
                         filter_nodes_uuids_in_solr, move_obj_to_front)
@@ -967,14 +967,6 @@ def neo4j_dataset_annotations(request):
         )
 
     return HttpResponse(response, mimetype='application/json')
-
-
-class WorkflowViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows Workflows to be viewed
-    """
-    queryset = Workflow.objects.all()
-    serializer_class = WorkflowSerializer
 
 
 class CustomRegistrationView(RegistrationView):
