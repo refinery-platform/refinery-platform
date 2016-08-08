@@ -11,7 +11,6 @@ function rpSelectWorkflow () {
       selectedWorkflow: '=?'
     },
     link: function (scope, element, attrs, ctrl) {
-      console.log('in the directive');
       ctrl.getWorkflowList();
     }
   };

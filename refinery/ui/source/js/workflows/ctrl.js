@@ -44,6 +44,7 @@ function WorkflowListApiCtrl (
 
   $scope.whichFileBrowserBrowser();
 
+  // Watches for a new workflow selection and updates service
   $scope.$watch(
     function () {
       return vm.selectedWorkflow.select;
