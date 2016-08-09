@@ -269,9 +269,10 @@ def main():
         })
     )
 
-    # ELB per http://cfn-pyplates.readthedocs.io/en/latest/examples/options/template.html
-    cft.resources.elb = core.Resource('LoadBalancer',
-        'AWS::ElasticLoadBalancing::LoadBalancer',
+    # ELB per
+    # http://cfn-pyplates.readthedocs.io/en/latest/examples/options/template.html
+    cft.resources.elb = core.Resource(
+        'LoadBalancer', 'AWS::ElasticLoadBalancing::LoadBalancer',
         {
             'AvailabilityZones': [config['AVAILABILITY_ZONE']],
             'HealthCheck': {
@@ -282,7 +283,7 @@ def main():
                 'UnhealthyThreshold': '4'
             },
             'Instances': [functions.ref('WebInstance')],
-              
+
             'Listeners': [
                 {
                     'LoadBalancerPort': '80',
