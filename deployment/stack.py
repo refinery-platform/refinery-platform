@@ -279,7 +279,7 @@ def main():
                 'Interval': '30',
                 'Target': 'HTTP:80/',
                 'Timeout': '5',
-                'UnhealthyThreshold': '2'
+                'UnhealthyThreshold': '4'
             },
             'Instances': [functions.ref('WebInstance')],
               
