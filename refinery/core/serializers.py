@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import NodeGroup
+from .models import Workflow, NodeGroup
 from data_set_manager.models import Node, Assay, Study
 
 
@@ -49,3 +49,14 @@ class NodeGroupSerializer(serializers.ModelSerializer):
                                                  instance.is_current)
         instance.save()
         return instance
+
+
+class WorkflowSerializer(serializers.HyperlinkedModelSerializer):
+    instance = serializers.HyperlinkedIdentityField(
+        view_name='workflow-detail')
+    workflow_engine = serializers.StringRelatedField()
+    data_inputs = serializers.StringRelatedField()
+    input_relationships = serializers.StringRelatedField()
+
+    class Meta:
+        model = Workflow
