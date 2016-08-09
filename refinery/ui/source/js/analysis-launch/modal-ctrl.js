@@ -8,7 +8,9 @@ function AnalysisLaunchModalCtrl (
   timeStamp,
   workflow,
   analysisLaunchConfigService,
-  analysisLaunchFactory
+  analysisLaunchFactory,
+  selectedNodesService,
+  nodeGroupService
 ) {
   var nowTimeStamp = timeStamp.getTimeStamp();
   var workflowName = workflow.getName();
@@ -23,24 +25,39 @@ function AnalysisLaunchModalCtrl (
     }
   );
 
+  var launchAnalysis = function (params) {
+    analysisLaunchConfigService.setAnalysisConfig(params);
+    var launchParams = analysisLaunchConfigService.getAnalysisConfig();
+    analysisLaunchFactory.postLaunchAnalysis(launchParams)
+      .then(function () {
+        $scope.analysisLaunchFlag = 'SUCCESS';
+      }, function (error) {
+        $log.log(error);
+        $scope.analysisLaunchFlag = 'FAILED';
+      });
+  };
+
   $scope.ok = function () {
     $scope.analysisLaunchFlag = 'LOADING';
 
     if ($scope.tempName !== null) {
-      analysisLaunchConfigService.setAnalysisConfig(
-        {
-          name: $scope.dataObj.name
-        }
-      );
-
-      var launchParams = analysisLaunchConfigService.getAnalysisConfig();
-      analysisLaunchFactory.postLaunchAnalysis(launchParams)
-        .then(function () {
-          $scope.analysisLaunchFlag = 'SUCCESS';
-        }, function (error) {
-          $log.log(error);
-          $scope.analysisLaunchFlag = 'FAILED';
+      var analysisParams = {
+        name: $scope.dataObj.name
+      };
+      // update current selection nodes
+      if (selectedNodesService.selectedNodeGroupUuid !== '' &&
+        selectedNodesService.selectedNodeGroupUuid ===
+        selectedNodesService.defaultCurrentSelectionUuid) {
+        analysisParams.nodeGroupUuid = selectedNodesService.selectedNodeGroupUuid;
+        var nodeGroupParams = selectedNodesService.getNodeGroupParams();
+        nodeGroupParams.uuid = selectedNodesService.defaultCurrentSelectionUuid;
+        // update current selection with params
+        nodeGroupService.update(nodeGroupParams).$promise.then(function () {
+          launchAnalysis(analysisParams);
         });
+      } else {
+        launchAnalysis(analysisParams);
+      }
     }
   };
 
@@ -54,7 +71,7 @@ function AnalysisLaunchModalCtrl (
 
   $scope.view = function () {
     $uibModalInstance.close('view');
-    $window.location.href = '/data_sets/' + $window.dataSetUuid + '/#/analyses';
+    $window.location.hash = 'analyses';
   };
 }
 
@@ -69,5 +86,7 @@ angular
     'workflow',
     'analysisLaunchConfigService',
     'analysisLaunchFactory',
+    'selectedNodesService',
+    'nodeGroupService',
     AnalysisLaunchModalCtrl
   ]);

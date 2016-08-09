@@ -275,28 +275,18 @@ class BaseResource(models.Model):
         # Check if model being saved/altered in Django Admin has a slug
         # duplicated elsewhere.
 
-        if self.slug:
-            if not self.duplicate_slug_exists():
-                pass
-            else:
-                raise forms.ValidationError("%s with slug: %s "
-                                            "already exists!"
-                                            % (self.__class__.__name__,
-                                               self.slug))
+        if self.duplicate_slug_exists():
+            raise forms.ValidationError("%s with slug: %s "
+                                        "already exists!"
+                                        % (self.__class__.__name__,
+                                           self.slug))
 
     # Overriding save() method to disallow saving objects with duplicate slugs
     def save(self, *args, **kwargs):
 
-        if self.slug:
-            if not self.duplicate_slug_exists():
-                try:
-                    super(BaseResource, self).save(*args, **kwargs)
-                except Exception as e:
-                    logger.error("Could not save %s: %s" % (
-                        self.__class__.__name__, e))
-            else:
-                logger.error("%s with slug: %s already exists!" % (
-                    self.__class__.__name__, self.slug))
+        if self.duplicate_slug_exists():
+            logger.error("%s with slug: %s already exists!" % (
+                self.__class__.__name__, self.slug))
         else:
             try:
                 super(BaseResource, self).save(*args, **kwargs)

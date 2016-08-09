@@ -366,8 +366,16 @@ class ui {
     'grunt-cli': ensure => '0.1.13', provider => 'npm';
   }
   ->
-  exec { "npm_local_modules":
-    command   => "/usr/bin/npm prune && /usr/bin/npm install",
+  exec { "npm_prune_local_modules":
+    command   => "/usr/bin/npm prune --progress false",
+    cwd       => $ui_app_root,
+    logoutput => on_failure,
+    user      => $app_user,
+    group     => $app_group,
+  }
+  ->
+  exec { "npm_install_local_modules":
+    command   => "/usr/bin/npm install --progress false",
     cwd       => $ui_app_root,
     logoutput => on_failure,
     user      => $app_user,

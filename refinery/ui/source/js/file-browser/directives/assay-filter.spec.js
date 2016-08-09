@@ -12,13 +12,15 @@ describe('rpAssayFiles directive unit test', function () {
   var directiveElement;
   var jQuery;
   var $timeout;
+  var service;
 
   beforeEach(inject(function (
     _$compile_,
     _$rootScope_,
     $templateCache,
     _$_,
-    _$timeout_
+    _$timeout_,
+    _selectedFilterService_
   ) {
     $templateCache.put(
       '/static/partials/file-browser/partials/assay-filters.html',
@@ -31,6 +33,7 @@ describe('rpAssayFiles directive unit test', function () {
     compile = _$compile_;
     rootScope = _$rootScope_;
     scope = rootScope.$new();
+    service = _selectedFilterService_;
     jQuery = _$_;
     $timeout = _$timeout_;
     template = '<rp-file-browser-assay-filters></rp-file-browser-assay-filters>';
@@ -80,7 +83,7 @@ describe('rpAssayFiles directive unit test', function () {
   });
 
   it('test showFields', function () {
-    scope.FBCtrl.selectedFieldList = {
+    service.selectedFieldList = {
       REFINERY_ANALYSIS_UUID_92_46_s: ['N/A', 'Test Workflow', '3']
     };
     // Test default, panel is closed and not selected

@@ -5,11 +5,16 @@ describe('Controller: FileBrowserCtrl', function () {
   var scope;
   var factory;
   var $controller;
+  var service;
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryFileBrowser'));
   beforeEach(inject(function (
-    $rootScope, _$controller_, _fileBrowserFactory_, $window
+    $rootScope,
+    _$controller_,
+    _fileBrowserFactory_,
+    _selectedFilterService_,
+    $window
   ) {
     scope = $rootScope.$new();
     $controller = _$controller_;
@@ -17,6 +22,7 @@ describe('Controller: FileBrowserCtrl', function () {
       $scope: scope
     });
     factory = _fileBrowserFactory_;
+    service = _selectedFilterService_;
     $window.externalAssayUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
   }));
 
@@ -44,7 +50,7 @@ describe('Controller: FileBrowserCtrl', function () {
           name: 'Graphics Facilities at Ames Research Center'
         }],
           internal_name: 'Title_Characteristics_92_46_s' } };
-    ctrl.selectedFieldList = {
+    service.selectedFieldList = {
       REFINERY_ANALYSIS_UUID_92_46_s: ['N/A', 'Test Workflow', '3']
     };
     spyOn(scope, '$broadcast');
@@ -54,7 +60,7 @@ describe('Controller: FileBrowserCtrl', function () {
     expect(scope.$broadcast).not.toHaveBeenCalled();
     expect(ctrl.reset).not.toHaveBeenCalled();
     ctrl.checkUrlQueryFilters();
-    expect(ctrl.selectedFieldList).toEqual(ctrl.filesParam.filter_attribute);
+    expect(service.selectedFieldList).toEqual(ctrl.filesParam.filter_attribute);
     expect(ctrl.refreshSelectedFieldFromQuery).toHaveBeenCalled();
     expect(scope.$broadcast).toHaveBeenCalled();
     expect(ctrl.reset).toHaveBeenCalled();
@@ -75,13 +81,13 @@ describe('Controller: FileBrowserCtrl', function () {
       internal_name: 'Month_Characteristics_92_46_s'
     };
     ctrl.queryKeys = ['March', 'April', 'Conner'];
-    expect(ctrl.selectedFieldList.Month_Characteristics_92_46_s)
+    expect(service.selectedFieldList.Month_Characteristics_92_46_s)
       .not.toBeDefined();
     expect(ctrl.selectedField.March).not.toBeDefined();
     ctrl.refreshSelectedFieldFromQuery(attributeObj);
     expect(ctrl.selectedField.March).toEqual(true);
     expect(ctrl.selectedField.June).not.toBeDefined();
-    expect(ctrl.selectedFieldList.Month_Characteristics_92_46_s)
+    expect(service.selectedFieldList.Month_Characteristics_92_46_s)
       .toEqual(['March', 'April']);
   });
 

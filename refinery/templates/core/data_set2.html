@@ -141,6 +141,8 @@
                           <div class="col-md-12">
                             <rp-file-browser-node-group>
                             </rp-file-browser-node-group>
+                            <rp-file-browser-node-group-buttons>
+                            </rp-file-browser-node-group-buttons>
                           </div>
                         </div>
                       {% endif %}
@@ -464,10 +466,9 @@
 
     document.getElementById('view-selector').onclick = function()
     {
-      if (document.getElementById('select2-chosen-1').innerHTML.match
-              ('Provenance') ||
-          document.getElementById('select2-chosen-1').innerHTML.match
-              ('Matrix'))
+      var selectedDisplay = $(this).val();
+      if (selectedDisplay === 'pivot-view-tab' ||
+        selectedDisplay === 'provenance-view-tab')
       {
         $('#solrdoctab1-top-controls').hide();
       }
