@@ -1,6 +1,6 @@
 'use strict';
 
-function selectedNodesService ($window) {
+function selectedNodesService ($window, selectedFilterService) {
   var vm = this;
   vm.selectedNodes = [];
   vm.selectedNodesUuids = [];
@@ -12,7 +12,11 @@ function selectedNodesService ($window) {
   vm.defaultCurrentSelectionUuid = '';
   vm.resetNodeGroup = false;
 
-  // Manual keep track of selected nodes, due to dynamic scrolling
+  /**
+   * Manually keep track of selected nodes which is neccessary due to dynamic
+   * scrolling in the ui-grid
+   * @param {obj} nodeRow - ui-grid row obj
+   * */
   vm.setSelectedNodes = function (nodeRow) {
     var ind = vm.selectedNodesUuids.indexOf(nodeRow.entity.uuid);
     if (nodeRow.isSelected) {
@@ -27,16 +31,23 @@ function selectedNodesService ($window) {
         vm.selectedNodes.splice(ind, 1);
       }
     }
-    // else nothing should occur to nodeRow because it is not in assayFiles
+    // else nothing because it is not in current block of data
     return vm.selectedNodes;
   };
 
+   /**
+   * Deep copy of a list of node uuids to the selected uuids from node group
+   * @param {list} nodesUuidsList - list of uuids
+   */
   vm.setSelectedNodesUuidsFromNodeGroup = function (nodesUuidsList) {
     angular.copy(nodesUuidsList, vm.selectedNodesUuidsFromNodeGroup);
     return vm.selectedNodesUuidsFromNodeGroup;
   };
 
-  // create ui-grid like objects to match with rows in ui-gride
+  /**
+   * Helper method create ui-grid like objects to match with rows in ui-grid
+   * @param {list} nodesUuidsList - list of uuids
+   */
   vm.setSelectedNodesFromNodeGroup = function (nodesUuidsList) {
     angular.forEach(nodesUuidsList, function (uuid) {
       vm.setSelectedNodes(
@@ -49,7 +60,11 @@ function selectedNodesService ($window) {
     return vm.selectedNodes;
   };
 
-  // Flag for when select all event checkbox is selected
+   /**
+   * Flag for when select all event checkbox is selected or resets all
+    * variables when deselected
+   * @param {boolean} flag - false will reset selections
+   */
   vm.setSelectedAllFlags = function (flag) {
     if (flag) {
       vm.selectedAllFlag = flag;
@@ -66,7 +81,10 @@ function selectedNodesService ($window) {
     }
   };
 
-  // These are non-selected nodes uuid, when the select all flag is true
+  /**
+   * These are non-selected nodes uuid, when the select all flag is true
+   * @param {obj} nodeRow - ui-grid row object or ui-grid structured row objects
+   */
   vm.setComplementSeletedNodes = function (nodeRow) {
     var ind = vm.complementSelectedNodesUuids.indexOf(nodeRow.entity.uuid);
     if (nodeRow.isSelected === false) {
@@ -85,6 +103,10 @@ function selectedNodesService ($window) {
     return vm.complementSelectedNodes;
   };
 
+   /**
+   * Resets Node Group UI-Select menu to default Current Selection
+   * @param {boolean} flag - resets boolean
+   */
   vm.resetNodeGroupSelection = function (flag) {
     if (flag && vm.selectedNodeGroupUuid !== vm.defaultCurrentSelectionUuid) {
       vm.selectedNodeGroupUuid = vm.defaultCurrentSelectionUuid;
@@ -94,29 +116,41 @@ function selectedNodesService ($window) {
     }
   };
 
-  // If select all box is checked, the complements are sent and backend
-  // generates nodes list
-  vm.setNodeGroupParams = function () {
+   // Generates node group params
+  vm.getNodeGroupParams = function () {
     var params = {
       uuid: vm.selectedNodeGroupUuid,
       assay: $window.externalAssayUuid,
       study: $window.externalStudyUuid
     };
+    // Select all box is checked, complement uuids sent & backend grabs uuids
     if (vm.selectedAllFlag) {
       params.nodes = vm.complementSelectedNodesUuids;
       params.use_complement_nodes = true;
+      params.filter_attribute = selectedFilterService.selectedFieldList;
     } else {
       params.nodes = vm.selectedNodesUuids;
       params.use_complement_nodes = false;
     }
-
     return params;
+  };
+
+
+  // Used by ctrls for node-group and launch-analysis partials to designate
+  // whether any nodes are selected.
+  vm.isNodeSelectionEmpty = function () {
+    var params = vm.getNodeGroupParams();
+    if (params.nodes.length === 0 && !params.use_complement_nodes) {
+      return true;
+    }
+    return false;
   };
 }
 
 angular.module('refineryFileBrowser')
   .service('selectedNodesService', [
     '$window',
+    'selectedFilterService',
     selectedNodesService
   ]
 );

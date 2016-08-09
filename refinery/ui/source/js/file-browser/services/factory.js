@@ -206,7 +206,8 @@ function fileBrowserFactory (
     getAssayFiles: getAssayFiles,
     getAssayAttributeOrder: getAssayAttributeOrder,
     postAssayAttributeOrder: postAssayAttributeOrder,
-    getNodeGroupList: getNodeGroupList
+    getNodeGroupList: getNodeGroupList,
+    encodeAttributeFields: encodeAttributeFields
   };
 }
 
