@@ -975,6 +975,7 @@ class WorkflowViewSet(viewsets.ModelViewSet):
     """
     queryset = Workflow.objects.all()
     serializer_class = WorkflowSerializer
+    http_method_names = ['get']
 
 
 class CustomRegistrationView(RegistrationView):
