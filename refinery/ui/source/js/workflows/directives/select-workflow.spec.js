@@ -1,4 +1,3 @@
-// Unit test for assay filter
 'use strict';
 
 describe('rpSelectWorkflow directive unit test', function () {
