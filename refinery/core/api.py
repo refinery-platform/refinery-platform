@@ -263,14 +263,6 @@ class SharableResourceAPIInterface(object):
     def obj_get(self, bundle, **kwargs):
         res = self.get_res(kwargs['uuid'])
 
-        # Remove `share_list` field from GETs that don't utilize the
-        # `sharing` kwarg
-        try:
-            if self.fields["share_list"] is None:
-                del self.fields["share_list"]
-        except KeyError:
-            pass
-
         request = bundle.request
         user = request.user
 
