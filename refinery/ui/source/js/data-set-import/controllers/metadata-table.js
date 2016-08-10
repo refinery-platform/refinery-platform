@@ -223,12 +223,14 @@ MetadataTableImportCtrl.prototype.startImport = function () {
     formData.append('title', self.title);
   }
   for (var i = 0; i < self.sourceColumnIndex.length; i++) {
+    // from select menu, need to grab index of sourceColumnIndex
     var sourceIndex = self.metadataHeader.indexOf(self.sourceColumnIndex[i]);
     formData.append(
       'source_column_index', sourceIndex
     );
   }
   if (self.dataFileColumn) {
+    // from select menu, need to grab index of dataFileColumn
     var fieldIndex = self.metadataHeader.indexOf(self.dataFileColumn);
     formData.append('data_file_column', fieldIndex);
   }
