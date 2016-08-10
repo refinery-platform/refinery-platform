@@ -222,7 +222,6 @@ MetadataTableImportCtrl.prototype.startImport = function () {
   if (self.title) {
     formData.append('title', self.title);
   }
-  console.log(self.sourceColumnIndex);
   for (var i = 0; i < self.sourceColumnIndex.length; i++) {
     var sourceIndex = self.metadataHeader.indexOf(self.sourceColumnIndex[i]);
     formData.append(
@@ -230,7 +229,6 @@ MetadataTableImportCtrl.prototype.startImport = function () {
     );
   }
   if (self.dataFileColumn) {
-   // formData.append('data_file_column', self.dataFileColumn);
     var fieldIndex = self.metadataHeader.indexOf(self.dataFileColumn);
     formData.append('data_file_column', fieldIndex);
   }
