@@ -278,9 +278,9 @@ MetadataTableImportCtrl.prototype.startImport = function () {
     .then(function (response) {
       self.importedDataSetUuid = response.new_data_set_uuid;
       self.isSuccessfullyImported = true;
-     // self.$timeout(function () {
-     // self.$window.location.href = '/data_sets/' + self.importedDataSetUuid;
-     // }, 2500);
+      self.$timeout(function () {
+        self.$window.location.href = '/data_sets/' + self.importedDataSetUuid;
+      }, 2500);
     })
     .catch(function (error) {
       self.isErrored = true;
