@@ -149,7 +149,7 @@
               multiple
               size="{{ metadataTable.metadataHeader.length || 10 }}"
               ng-model="metadataTable.sourceColumnIndex"
-              ng-options="id as heading for (id, heading) in metadataTable.metadataHeader">
+              ng-options="heading for heading in metadataTable.metadataHeader">
             </select>
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
@@ -169,8 +169,8 @@
               class="width-95"
               required
               ng-model="metadataTable.dataFileColumn"
-              ng-options="id as heading for (id, heading) in metadataTable.metadataHeader track by id">
-              <option value=""></option>
+              ng-options="heading for heading in metadataTable.metadataHeader
+               track by heading">
             </select>
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
@@ -187,9 +187,9 @@
             <select
               name="species_column"
               class="width-95"
+              required
               ng-model="metadataTable.speciesColumn"
               ng-options="heading for heading in metadataTable.metadataHeader">
-              <option value=""></option>
             </select>
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">

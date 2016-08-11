@@ -118,6 +118,9 @@ MetadataTableImportCtrl.prototype.renderTable = function () {
       // Get 5 lines to display on screen
       self.metadataSample = self.metadata.slice(0, 5);
       self.metadataHeader = Object.keys(self.metadataSample[0]);
+      self.sourceColumnIndex = [self.metadataHeader[0]];
+      self.dataFileColumn = self.metadataHeader[0];
+      self.speciesColumn = self.metadataHeader[0];
       self.gridOptions.columnDefs = self.makeColumnDefs();
 
       // Since we are using the _controller as_ syntax we have to update the
@@ -220,12 +223,16 @@ MetadataTableImportCtrl.prototype.startImport = function () {
     formData.append('title', self.title);
   }
   for (var i = 0; i < self.sourceColumnIndex.length; i++) {
+    // from select menu, need to grab index of sourceColumnIndex
+    var sourceIndex = self.metadataHeader.indexOf(self.sourceColumnIndex[i]);
     formData.append(
-      'source_column_index', self.sourceColumnIndex[i]
+      'source_column_index', sourceIndex
     );
   }
   if (self.dataFileColumn) {
-    formData.append('data_file_column', self.dataFileColumn);
+    // from select menu, need to grab index of dataFileColumn
+    var fieldIndex = self.metadataHeader.indexOf(self.dataFileColumn);
+    formData.append('data_file_column', fieldIndex);
   }
   switch (self.separator) {
     case 'tab':
