@@ -264,6 +264,30 @@
     }
   },
   {
+    "model": "file_store.FileType",
+    "pk": 38,
+    "fields": {
+      "description": "Illumina basecall file",
+      "name": "BCL"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": 39,
+    "fields": {
+      "description": "Illumina basecall file gzipped",
+      "name": "BCL GZip file"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": 40,
+    "fields": {
+      "description": "Illumina basecall file tarred + gzipped",
+      "name": "BCL TGZ file"
+    }
+  },
+  {
     "model": "file_store.FileExtension",
     "pk": 1,
     "fields": {
@@ -545,10 +569,34 @@
   },
   {
     "model": "file_store.FileExtension",
-    "pk": 37,
+    "pk": 38,
     "fields": {
-      "name": "dat",
-      "filetype": 37
+      "name": "fq",
+      "filetype": 15
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 39,
+    "fields": {
+      "name": "BCL",
+      "filetype": 38
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 39,
+    "fields": {
+      "name": "BCL.gz",
+      "filetype": 39
+    }
+  }
+  ,{
+    "model": "file_store.FileExtension",
+    "pk": 40,
+    "fields": {
+      "name": "BCL.tgz",
+      "filetype": 40
     }
   }
 ]
