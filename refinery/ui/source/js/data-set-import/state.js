@@ -9,17 +9,17 @@ function DataSetImportStates (
       'import', {
         url: '/',
         reloadOnSearch: false,
-        templateUrl: '/static/partials/data-set-import/views/import.html',
+        templateUrl: '/static/partials/data-set-import/views/tabular-file-import.html',
         controller: 'RefineryImportCtrl as import'
       },
       '/data_set_manager/import/'
     )
     .state(
-      'fileUpload', {
-        url: '/upload/',
+      'isaTabImport', {
+        url: '/isaTabImport/',
         reloadOnSearch: false,
-        templateUrl: '/static/partials/data-set-import/views/file-upload.html',
-        controller: 'RefineryFileUploadCtrl as fileUpload'
+        templateUrl: '/static/partials/data-set-import/views/isa-tab-import.html',
+        controller: 'RefineryImportCtrl as isaTabImport'
       },
       '/data_set_manager/import/'
     );
