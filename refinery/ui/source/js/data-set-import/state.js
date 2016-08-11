@@ -9,7 +9,7 @@ function DataSetImportStates (
       'import', {
         url: '/',
         reloadOnSearch: false,
-        templateUrl: '/static/partials/data-set-import/views/tabular-file-import.html',
+        templateUrl: '/static/partials/data-set-import/views/import.html',
         controller: 'RefineryImportCtrl as import'
       },
       '/data_set_manager/import/'
