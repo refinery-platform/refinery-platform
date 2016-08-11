@@ -25,7 +25,7 @@ function MetadataTableImportCtrl (
   this.badFileList = [];
   this.dataFileColumn = null;
 
-  this.separator = 'comma';
+  this.separator = 'tab';
   this.customSeparator = null;
   // This is only false when `this.separator` is `custom` but
   // `this.customSeparator` is an empty String.
