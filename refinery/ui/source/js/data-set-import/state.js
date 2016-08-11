@@ -10,16 +10,14 @@ function DataSetImportStates (
         url: '/',
         reloadOnSearch: false,
         templateUrl: '/static/partials/data-set-import/views/import.html',
-        controller: 'RefineryImportCtrl as import'
       },
       '/data_set_manager/import/'
     )
     .state(
       'isaTabImport', {
-        url: '/isaTabImport/',
+        url: '/isa-tab-import',
         reloadOnSearch: false,
         templateUrl: '/static/partials/data-set-import/views/isa-tab-import.html',
-        controller: 'RefineryImportCtrl as isaTabImport'
       },
       '/data_set_manager/import/'
     );
