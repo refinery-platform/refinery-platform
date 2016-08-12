@@ -130,7 +130,11 @@ function IgvCtrl (
   };
 
   $scope.launchIgv = function () {
-    $window.open($scope.selectedSpecies.select.url);
+    var params = $.param({
+      species: $scope.selectedSpecies.select.name,
+      nodes: $scope.igvConfig.node_selection
+    });
+    $window.open('/visualization?' + params);
   };
 }
 
