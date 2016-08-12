@@ -130,7 +130,7 @@ function IgvCtrl (
   };
 
   $scope.launchIgv = function () {
-    var params = $.param({
+    var params = jQuery.param({
       species: $scope.selectedSpecies.select.name,
       nodes: $scope.igvConfig.node_selection
     });
