@@ -594,7 +594,8 @@ def analysis(request, analysis_uuid):
 
 
 def visualization(request):
-    return render_to_response('core/visualization/visualization.html', context_instance=RequestContext(request))
+    return render_to_response('core/visualization/visualization.html',
+                              context_instance=RequestContext(request))
 
 
 def solr_core_search(request):
