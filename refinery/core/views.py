@@ -593,6 +593,10 @@ def analysis(request, analysis_uuid):
                               context_instance=RequestContext(request))
 
 
+def visualization(request):
+    return render_to_response('core/visualization/visualization.html', context_instance=RequestContext(request))
+
+
 def solr_core_search(request):
     """Query Solr's core index for search.
 
