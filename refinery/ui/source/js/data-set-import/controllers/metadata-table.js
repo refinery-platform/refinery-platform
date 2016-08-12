@@ -119,8 +119,18 @@ MetadataTableImportCtrl.prototype.renderTable = function () {
       self.metadataSample = self.metadata.slice(0, 5);
       self.metadataHeader = Object.keys(self.metadataSample[0]);
       self.sourceColumnIndex = [self.metadataHeader[0]];
-      self.dataFileColumn = self.metadataHeader[0];
-      self.speciesColumn = self.metadataHeader[0];
+
+      // Preselects column to match sample of tabular metadata.
+      if (self.metadataHeader.length > 2) {
+        self.dataFileColumn = self.metadataHeader[1];
+        self.speciesColumn = self.metadataHeader[2];
+      } else if (self.metadataHeader.length > 1) {
+        self.dataFileColumn = self.metadataHeader[1];
+        self.speciesColumn = self.metadataHeader[1];
+      } else {
+        self.dataFileColumn = self.metadataHeader[0];
+        self.speciesColumn = self.metadataHeader[0];
+      }
       self.gridOptions.columnDefs = self.makeColumnDefs();
 
       // Since we are using the _controller as_ syntax we have to update the
