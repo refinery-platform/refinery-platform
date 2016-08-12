@@ -1,5 +1,8 @@
 <div id="metadata-table-form">
-   <p>
+  <div class="refinery-subheader m-t-1">
+    <h3>Provide Metadata File</h3>
+  </div>
+  <p>
     <a
       href="/static/sample-files/refinery-sample-metadata.tsv"
       target="_blank"
@@ -124,7 +127,7 @@
       </div>
 
       <div class="refinery-subheader m-t-1">
-        <h3>Import Settings</h3>
+        <h3>Configure Metadata Import</h3>
       </div>
 
       <div>
@@ -344,7 +347,14 @@
         </div>
       </div>
 
+      <div class="m-t-1 m-b-1">
+        <rp-file-upload></rp-file-upload>
+      </div>
+
       <div>
+        <div class="refinery-subheader m-t-1">
+           <h3>Start Import</h3>
+        </div>
         <button
           class="refinery-base btn btn-default"
           ng-click="metadataTable.checkFiles()"
