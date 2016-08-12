@@ -9,7 +9,7 @@ function metadataTableDirective () {
     controllerAs: 'metadataTable',
     restrict: 'E',
     replace: true,
-    templateUrl: '/static/partials/data-set-import/directives/metadata-table.html'
+    templateUrl: '/static/partials/data-set-import/partials/metadata-table.html'
   };
 }
 
