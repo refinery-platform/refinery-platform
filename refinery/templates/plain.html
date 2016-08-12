@@ -19,6 +19,9 @@
   <meta name="msapplication-TileImage" content="{% static "images/tileicon.png" %}">
 
   <title>{{ REFINERY_INSTANCE_NAME }}{% block title %}{% endblock %}</title>
+
+  {% block head %}
+  {% endblock %}
 </head>
 
 <body>

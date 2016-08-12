@@ -1,13 +1,80 @@
 {% extends "plain.html" %}
 
 {% block title %}
-{{ block.super }} - Visualization
+    {{ block.super }} - Visualization
 {% endblock %}
 
-{% block subheader %}
-	IGV
+{% block head %}
+    <!-- jQuery UI CSS -->
+    <link rel="stylesheet" type="text/css"
+          href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css"/>
+
+    <!-- Font Awesome CSS -->
+    <link rel="stylesheet" type="text/css"
+          href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"/>
+
+    <!-- IGV CSS -->
+    <link rel="stylesheet" type="text/css" href="//igv.org/web/release/1.0.1/igv-1.0.1.css">
+
+    <!-- jQuery JS -->
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+
+    <!-- IGV JS-->
+    <script type="text/javascript" src="//igv.org/web/release/1.0.1/igv-1.0.1.js"></script>
 {% endblock %}
 
 {% block content %}
-Hello world!
+
+    <div id="igv"></div>
+
+
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+
+            var div,
+                    options,
+                    browser;
+
+            div = $("#igv")[0];
+            options = {
+                locus: "myc",
+                showKaryo: false,
+                showNavigation: true,
+                showRuler: true,
+                reference: {
+                    fastaURL: "//s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg19/hg19.fasta",
+                    cytobandURL: "//s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg19/cytoBand.txt"
+                },
+                flanking: 1000,
+                apiKey: 'AIzaSyDUUAUFpQEN4mumeMNIRWXSiTh5cPtUAD0',
+                trackDefaults: {
+                    bam: {
+                        coverageThreshold: 0.2,
+                        coverageQualityWeight: true
+                    }
+                },
+                palette: [
+                    ["#00A0B0", "#6A4A3C", "#CC333F", "#EB6841"]
+                ],
+                tracks: [
+                    {
+                        name: "Genes",
+                        url: "//s3.amazonaws.com/igv.broadinstitute.org/annotations/hg19/genes/gencode.v18.collapsed.bed",
+                        order: -Number.MAX_VALUE,
+                        displayMode: "EXPANDED"
+
+                    }
+                ]
+            };
+
+            browser = igv.createBrowser(div, options);
+
+            igv.ga4gh.initialize();
+
+        });
+
+    </script>
+
 {% endblock %}
