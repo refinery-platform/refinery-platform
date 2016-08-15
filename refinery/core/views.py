@@ -594,8 +594,18 @@ def analysis(request, analysis_uuid):
 
 
 def visualize_genome(request):
-    return render_to_response('core/visualize/genome.html',
-                              context_instance=RequestContext(request))
+    url_base = "//s3.amazonaws.com/igv.broadinstitute.org"
+    return render_to_response(
+          'core/visualize/genome.html',
+          {
+              "fasta_url": url_base + "/genomes/seq/hg19/hg19.fasta",
+              "cytoband_url": url_base + "/genomes/seq/hg19/cytoBand.txt",
+              "tracks":
+                  {
+                      "Genes": url_base + "/annotations/hg19/genes/gencode.v18.collapsed.bed"  # noqa: E501
+                  }
+          },
+          context_instance=RequestContext(request))
 
 
 def solr_core_search(request):

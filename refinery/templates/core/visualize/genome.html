@@ -39,39 +39,25 @@
 
             div = $("#igv")[0];
             options = {
-                locus: "myc",
-                showKaryo: false,
-                showNavigation: true,
-                showRuler: true,
+                showKaryo: true, // Default is false.
                 reference: {
-                    fastaURL: "//s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg19/hg19.fasta",
-                    cytobandURL: "//s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg19/cytoBand.txt"
+                    fastaURL: '{{ fasta_url|escapejs }}',
+                    cytobandURL: '{{ cytoband_url|escapejs }}'
                 },
-                flanking: 1000,
-                apiKey: 'AIzaSyDUUAUFpQEN4mumeMNIRWXSiTh5cPtUAD0',
-                trackDefaults: {
-                    bam: {
-                        coverageThreshold: 0.2,
-                        coverageQualityWeight: true
-                    }
-                },
-                palette: [
-                    ["#00A0B0", "#6A4A3C", "#CC333F", "#EB6841"]
-                ],
                 tracks: [
-                    {
-                        name: "Genes",
-                        url: "//s3.amazonaws.com/igv.broadinstitute.org/annotations/hg19/genes/gencode.v18.collapsed.bed",
-                        order: -Number.MAX_VALUE,
-                        displayMode: "EXPANDED"
-
-                    }
+                        // If we need more than this, pass in JSON instead.
+                        {% for name, url in tracks.items %}
+                            {
+                                name: '{{ name|escapejs }}',
+                                url: '{{ url|escapejs }}',
+                                displayMode: "EXPANDED"
+                            }
+                            {% if not forloop.last %},{% endif %}
+                        {% endfor %}
                 ]
             };
 
             browser = igv.createBrowser(div, options);
-
-            igv.ga4gh.initialize();
 
         });
 
