@@ -600,7 +600,7 @@ def visualize_genome(request):
     and passes the information to IGV.js.
     """
     species = request.GET.get('species')
-    # node_ids = request.GET.get('node_ids')
+    node_ids = request.GET.getlist('node_ids')
 
     # TODO: Support all species listed in UI.
     # http://www.ncbi.nlm.nih.gov/guide/howto/dwn-genome/
@@ -612,10 +612,8 @@ def visualize_genome(request):
         }
     }
 
-    # TODO: Look up real files by ID.
-    tracks = {
-        "Genes": url_base + "/annotations/hg19/genes/gencode.v18.collapsed.bed"  # noqa: E501
-    }
+    nodes = [Node.objects.filter(uuid=node_id)[0] for node_id in node_ids]
+    tracks = {node.type: node.name for node in nodes}
 
     return render_to_response(
           'core/visualize/genome.html',
