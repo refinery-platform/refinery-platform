@@ -957,7 +957,7 @@ class Workflow(SharableResource, ManageableResource):
             # Return a "truthy" value here so that the admin ui knows if the
             # deletion succeeded or not as well as the proper message to
             # display to the end user
-            return True, "Workflow: {} was deleted successfully!"
+            return True, "Workflow: {} was deleted successfully!".format(self)
 
 
 class Project(SharableResource):
