@@ -44,42 +44,55 @@
       </div>
     </div>
 
-    <label class="block label-block label-text-left">
-      <span class="label-text label-left min-width-200">Tab separation:</span>
-      <input
-        type="radio"
-        value="tab"
-        ng-model="metadataTable.separator"
-        ng-change="metadataTable.setParser()"
-        ng-disabled="!!metadataTable.importOption">
-    </label>
+    <ul class="list-inline">
+      <li class="min-width-200">
+        <label class="block label-block label-text-left">
+        <span class="label-text label-left">
+          Tab separation:
+        </span>
+        <input
+          type="radio"
+          value="tab"
+          ng-model="metadataTable.separator"
+          ng-change="metadataTable.setParser()"
+          ng-disabled="!!metadataTable.importOption">
+        </label>
+      </li>
+      <li class="min-width-200">
+        <label class="block label-block label-text-left">
+        <span class="label-text label-left">
+          Comma separation:
+        </span>
+        <input
+          type="radio"
+          value="comma"
+          ng-model="metadataTable.separator"
+          ng-change="metadataTable.setParser()"
+          ng-disabled="!!metadataTable.importOption">
+        </label>
+      </li>
 
-    <label class="block label-block label-text-left">
-      <span class="label-text label-left min-width-200">Comma separation:</span>
-      <input
-        type="radio"
-        value="comma"
-        ng-model="metadataTable.separator"
-        ng-change="metadataTable.setParser()"
-        ng-disabled="!!metadataTable.importOption">
-    </label>
-
-    <label class="block label-block label-text-left">
-      <span class="label-text label-left min-width-200">Custom separation:</span>
-      <input
-        type="radio"
-        value="custom"
-        ng-model="metadataTable.separator"
-        ng-change="metadataTable.setParser()"
-        ng-disabled="!!metadataTable.importOption">
-      <input
-        type="text"
-        class="m-l-1"
-        placeholder="E.g. &quot;;&quot;, &quot;|&quot;, &quot;$&quot;, etc."
-        ng-model="metadataTable.customSeparator"
-        ng-change="metadataTable.setParser()"
-        ng-disabled="!!metadataTable.importOption">
-    </label>
+      <li class="min-width-200 align-bottom">
+        <label class="block label-block label-text-left">
+        <span class="label-text label-left">
+          Custom separation:
+        </span>
+        <input
+          type="radio"
+          value="custom"
+          ng-model="metadataTable.separator"
+          ng-change="metadataTable.setParser()"
+          ng-disabled="!!metadataTable.importOption">
+        <input
+          type="text"
+          class="m-l-1"
+          placeholder="E.g. &quot;;&quot;, &quot;|&quot;, &quot;$&quot;, etc."
+          ng-model="metadataTable.customSeparator"
+          ng-change="metadataTable.setParser()"
+          ng-disabled="!!metadataTable.importOption">
+        </label>
+      </li>
+    </ul>
 
     <div class="text-muted m-t-1-2 m-b-1-2">and</div>
 
