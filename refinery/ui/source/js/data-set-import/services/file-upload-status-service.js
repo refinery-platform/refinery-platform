@@ -11,7 +11,11 @@ function fileUploadStatusService () {
    * @param { string } status - none, queuing, running
    */
   vm.setFileUploadStatus = function (status) {
-    vm.fileUploadStatus = status;
+    var statusOptions = ['none', 'queuing', 'running'];
+    if (statusOptions.indexOf(status) > -1) {
+      vm.fileUploadStatus = status;
+    }
+    return vm.fileUploadStatus;
   };
 }
 
