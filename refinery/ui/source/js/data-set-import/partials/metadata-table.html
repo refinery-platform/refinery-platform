@@ -377,7 +377,9 @@
         <button
           class="refinery-base btn btn-primary"
           ng-click="metadataTable.startImport()"
-          ng-disabled="metadataTable.importMetadataTableForm.$invalid">
+          ng-disabled="metadataTable.importMetadataTableForm.$invalid ||
+          metadataTable.areFilesUploading()"
+        >
           Upload Data Set
         </button>
       </div>

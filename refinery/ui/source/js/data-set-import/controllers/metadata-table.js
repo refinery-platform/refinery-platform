@@ -8,7 +8,8 @@ function MetadataTableImportCtrl (
   d3,
   $uibModal,
   fileSources,
-  tabularFileImportApi
+  tabularFileImportApi,
+  fileUploadStatusService
 ) {
   this.$log = $log;
   this.$rootScope = $rootScope;
@@ -31,6 +32,14 @@ function MetadataTableImportCtrl (
   // `this.customSeparator` is an empty String.
   this.isSeparatorOk = true;
   this.setParser();
+
+  // Helper method to disable data file upload if files are uploading
+  this.areFilesUploading = function () {
+    if (fileUploadStatusService.fileUploadStatus === 'running') {
+      return true;
+    }
+    return false;
+  };
 }
 
 Object.defineProperty(
@@ -312,5 +321,6 @@ angular
     '$uibModal',
     'fileSources',
     'tabularFileImportApi',
+    'fileUploadStatusService',
     MetadataTableImportCtrl
   ]);

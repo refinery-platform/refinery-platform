@@ -10,12 +10,11 @@ function fileUploadStatusService () {
     vm.selectedWorkflow = 'none';
   };
 
-
   /**
    * * Used by UI to deactive Upload Data Set Button depending on the file
-   * upload status. None: No files added or All files uploaded, Queue: Files
-   * have been added but not uploaded, Running: Files are being uploaded.
-   * @param { string } status - None, Queue, Running
+   * upload status. none: No files added or All files uploaded, queue: Files
+   * have been added but not uploaded, running: Files are being uploaded.
+   * @param { string } status - none, queue, running
    */
   vm.setFileUploadStatus = function (status) {
     vm.fileUploadStatus = status;

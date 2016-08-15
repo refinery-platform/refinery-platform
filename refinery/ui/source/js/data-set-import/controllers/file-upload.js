@@ -215,15 +215,18 @@ function RefineryFileUploadCtrl (
       if ($element.fileupload('active') > 0) {
         $scope.uploadActive = true;
         $scope.uploadInProgress = true;
+        fileUploadStatusService.setFileUploadStatus('running');
       } else {
         $scope.uploadActive = false;
         $scope.uploadInProgress = false;
+        fileUploadStatusService.setFileUploadStatus('queue');
       }
 
       if (totalNumFilesUploaded === totalNumFilesQueued) {
         $scope.allUploaded = true;
         $scope.uploadActive = false;
         $scope.uploadInProgress = false;
+        fileUploadStatusService.setFileUploadStatus('none');
       }
 
       $timeout(function () {
@@ -291,6 +294,9 @@ function RefineryFileUploadCtrl (
       }
     }
     totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
+    if (totalNumFilesQueued === 0) {
+      fileUploadStatusService.setFileUploadStatus('none');
+    }
     fileCache[data.files[0].name] = undefined;
     delete fileCache[data.files[0].name];
   });
@@ -301,6 +307,7 @@ function RefineryFileUploadCtrl (
       return false;
     }
     currentUploadFile++;
+    fileUploadStatusService.setFileUploadStatus('running');
     return true;
   });
 
