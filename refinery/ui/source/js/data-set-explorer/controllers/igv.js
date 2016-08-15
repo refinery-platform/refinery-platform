@@ -134,7 +134,7 @@ function IgvCtrl (
       species: $scope.selectedSpecies.select.name,
       nodes: $scope.igvConfig.node_selection
     });
-    $window.open('/visualization?' + params);
+    $window.open('/visualize/genome?' + params);
   };
 }
 

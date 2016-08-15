@@ -593,8 +593,8 @@ def analysis(request, analysis_uuid):
                               context_instance=RequestContext(request))
 
 
-def visualization(request):
-    return render_to_response('core/visualization/visualization.html',
+def visualize_genome(request):
+    return render_to_response('core/visualize/genome.html',
                               context_instance=RequestContext(request))
 
 
