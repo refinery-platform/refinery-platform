@@ -594,16 +594,36 @@ def analysis(request, analysis_uuid):
 
 
 def visualize_genome(request):
+    """Provide IGV.js visualization of requested species + file nodes
+
+    Looks up species by name, and data files by node_id,
+    and passes the information to IGV.js.
+    """
+    species = request.GET.get('species')
+    # node_ids = request.GET.get('node_ids')
+
+    # TODO: Support all species listed in UI.
+    # http://www.ncbi.nlm.nih.gov/guide/howto/dwn-genome/
     url_base = "//s3.amazonaws.com/igv.broadinstitute.org"
+    species_urls = {
+        'H. sapiens (hg19)': {
+            'fasta': url_base + "/genomes/seq/hg19/hg19.fasta",
+            'cytoband': url_base + "/genomes/seq/hg19/cytoBand.txt"
+        }
+    }
+
+    # TODO: Look up real files by ID.
+    tracks = {
+        "Genes": url_base + "/annotations/hg19/genes/gencode.v18.collapsed.bed"  # noqa: E501
+    }
+
     return render_to_response(
           'core/visualize/genome.html',
           {
-              "fasta_url": url_base + "/genomes/seq/hg19/hg19.fasta",
-              "cytoband_url": url_base + "/genomes/seq/hg19/cytoBand.txt",
-              "tracks":
-                  {
-                      "Genes": url_base + "/annotations/hg19/genes/gencode.v18.collapsed.bed"  # noqa: E501
-                  }
+              "fasta_url": species_urls[species]["fasta"],
+              "cytoband_url": species_urls[species]["cytoband"],
+              "tracks": tracks
+
           },
           context_instance=RequestContext(request))
 

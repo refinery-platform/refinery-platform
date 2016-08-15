@@ -132,7 +132,7 @@ function IgvCtrl (
   $scope.launchIgv = function () {
     var params = $httpParamSerializer({
       species: $scope.selectedSpecies.select.name,
-      nodes: $scope.igvConfig.node_selection
+      node_ids: $scope.igvConfig.node_selection
     });
     $window.open('/visualize/genome?' + params);
   };
