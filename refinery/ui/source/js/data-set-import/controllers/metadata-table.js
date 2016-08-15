@@ -40,6 +40,14 @@ function MetadataTableImportCtrl (
     }
     return false;
   };
+
+  // Helper method to disable data file upload if files are uploading
+  this.areFilesInQueue = function () {
+    if (fileUploadStatusService.fileUploadStatus === 'queuing') {
+      return true;
+    }
+    return false;
+  };
 }
 
 Object.defineProperty(

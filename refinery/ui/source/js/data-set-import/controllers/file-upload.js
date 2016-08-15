@@ -219,7 +219,7 @@ function RefineryFileUploadCtrl (
       } else {
         $scope.uploadActive = false;
         $scope.uploadInProgress = false;
-        fileUploadStatusService.setFileUploadStatus('queue');
+        fileUploadStatusService.setFileUploadStatus('queuing');
       }
 
       if (totalNumFilesUploaded === totalNumFilesQueued) {
@@ -283,6 +283,7 @@ function RefineryFileUploadCtrl (
     totalNumFilesQueued++;
     $scope.queuedFiles.push(data.files[0]);
     fileCache[data.files[0].name] = true;
+    fileUploadStatusService.setFileUploadStatus('queuing');
     return true;
   });
 

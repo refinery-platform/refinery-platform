@@ -382,6 +382,10 @@
         >
           Upload Data Set
         </button>
+        <span class="text-warning" ng-if="metadataTable.areFilesInQueue()">
+          <i class="fa fa-warning" aria-hidden="true"></i>
+          All data files have not been uploaded.
+        </span>
       </div>
     </div>
   </div>
