@@ -1,7 +1,7 @@
 'use strict';
 
 function IgvCtrl (
-  $scope, $http, $window, $log, $resource
+  $scope, $http, $window, $log, $resource, $httpParamSerializer
 ) {
   $scope.igvConfig = {
     query: null,
@@ -130,7 +130,7 @@ function IgvCtrl (
   };
 
   $scope.launchIgv = function () {
-    var params = jQuery.param({
+    var params = $httpParamSerializer({
       species: $scope.selectedSpecies.select.name,
       nodes: $scope.igvConfig.node_selection
     });
@@ -146,5 +146,6 @@ angular
     '$window',
     '$log',
     '$resource',
+    '$httpParamSerializer',
     IgvCtrl
   ]);
