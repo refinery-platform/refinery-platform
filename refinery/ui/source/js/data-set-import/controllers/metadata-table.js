@@ -41,7 +41,7 @@ function MetadataTableImportCtrl (
     return false;
   };
 
-  // Helper method to disable data file upload if files are uploading
+  // Helper method to show warning text when data files are queued
   this.areFilesInQueue = function () {
     if (fileUploadStatusService.fileUploadStatus === 'queuing') {
       return true;
