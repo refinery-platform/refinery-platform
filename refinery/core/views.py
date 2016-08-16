@@ -601,16 +601,10 @@ def visualize_genome(request):
     """
     species = request.GET.get('species')
     node_ids = request.GET.getlist('node_ids')
+    genome = re.search(r'\(([^)]*)\)', species).group(1)
 
-    # TODO: Support all species listed in UI.
-    # http://www.ncbi.nlm.nih.gov/guide/howto/dwn-genome/
-    url_base = "//s3.amazonaws.com/igv.broadinstitute.org"
-    species_urls = {
-        'H. sapiens (hg19)': {
-            'fasta': url_base + "/genomes/seq/hg19/hg19.fasta",
-            'cytoband': url_base + "/genomes/seq/hg19/cytoBand.txt"
-        }
-    }
+    url_base = "https://s3.amazonaws.com/data.cloud.refinery-platform.org" \
+        + "/data/igv-reference/" + genome + "/" + genome
 
     nodes = [Node.objects.filter(uuid=node_id)[0] for node_id in node_ids]
     tracks = {node.type: node.name for node in nodes}
@@ -618,10 +612,10 @@ def visualize_genome(request):
     return render_to_response(
           'core/visualize/genome.html',
           {
-              "fasta_url": species_urls[species]["fasta"],
-              "cytoband_url": species_urls[species]["cytoband"],
+              "fasta_url": url_base + ".fasta",
+              "index_url": url_base + ".fai",
+              "cytoband_url": url_base + ".cytoband",
               "tracks": tracks
-
           },
           context_instance=RequestContext(request))
 
