@@ -4,6 +4,7 @@
 # more details.
 
 import requests
+from requests.exceptions import HTTPError
 
 # Like prod, but overriding some things.
 from .prod import *  # NOQA
@@ -14,10 +15,14 @@ from .prod import *  # NOQA
 
 # Not checking for exceptions: if we can't get EC2 instance
 # metadata, something horrible is wrong.
-PRIVATE_IP = requests.get(
-  "http://169.254.169.254/latest/meta-data/local-ipv4", timeout=1.0).text
+try:
+    PRIVATE_IP = requests.get(
+      "http://169.254.169.254/latest/meta-data/local-ipv4", timeout=1.0)
+    PRIVATE_IP.raise_for_status()
+except HTTPError as e:
+    logger.error(e)
 
-ALLOWED_HOSTS.append(PRIVATE_IP)
+ALLOWED_HOSTS.append(PRIVATE_IP.text)
 
 EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
 EMAIL_HOST_USER = get_setting('EMAIL_HOST_USER')

@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import shutil
@@ -9,8 +10,11 @@ import requests
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction, IntegrityError
+from requests.exceptions import HTTPError
 
 from annotation_server.models import Taxon
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -37,9 +41,14 @@ class Command(BaseCommand):
         taxonomy_archive = os.path.join(temp_dir, "taxdump.tar.gz")
         # grab the tarfile and extract its contents
         print "Downloading taxonomy information"
-        u = requests.get(settings.TAXONOMY_URL)
+        try:
+            response = requests.get(settings.TAXONOMY_URL)
+            response.raise_for_status()
+        except HTTPError as e:
+            logger.error(e)
+
         f = open(taxonomy_archive, 'wb')
-        f.write(u.content)
+        f.write(response.content)
         f.close()
         tar_file = tarfile.open(taxonomy_archive, 'r:gz')
         tar_file.extractall(temp_dir)
