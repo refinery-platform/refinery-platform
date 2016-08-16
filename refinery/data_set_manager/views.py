@@ -124,13 +124,13 @@ class TakeOwnershipOfPublicDatasetView(View):
         if from_old_template:
             # Redirect to process_isa_tab view
             response = HttpResponseRedirect(
-                reverse('process_isa_tab')
+                get_full_url(reverse('process_isa_tab'))
             )
         else:
             # Redirect to process_isa_tab view with arg 'ajax' if request is
             #  not coming from old Django Template
             response = HttpResponseRedirect(
-                reverse('process_isa_tab', args=['ajax'])
+                get_full_url(reverse('process_isa_tab', args=['ajax']))
             )
 
         # set cookie
