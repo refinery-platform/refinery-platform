@@ -295,11 +295,18 @@ function RefineryFileUploadCtrl (
       }
     }
     totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
-    if (totalNumFilesQueued === 0) {
-      fileUploadStatusService.setFileUploadStatus('none');
-    }
+
     fileCache[data.files[0].name] = undefined;
     delete fileCache[data.files[0].name];
+
+    // wait for digest to complete
+    $timeout(function () {
+      if (totalNumFilesQueued === 0) {
+        fileUploadStatusService.setFileUploadStatus('none');
+      } else if ($element.fileupload('active') === 0) {
+        fileUploadStatusService.setFileUploadStatus('queuing');
+      }
+    }, 110);
   });
 
   $element.on('fileuploadsubmit', function submit (event, data) {
