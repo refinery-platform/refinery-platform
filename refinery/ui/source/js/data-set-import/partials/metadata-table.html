@@ -1,5 +1,8 @@
 <div id="metadata-table-form">
-   <p>
+  <div class="refinery-subheader m-t-1">
+    <h3>Provide Metadata File</h3>
+  </div>
+  <p>
     <a
       href="/static/sample-files/refinery-sample-metadata.tsv"
       target="_blank"
@@ -8,11 +11,11 @@
       refinery-tooltip-placement="right"
       title="Download sample file, refinery-sample-metadata.tsv">
       <i class="fa fa-download"> </i>
-      Download an example metadata tabular file.
+      Download an example tabular metadata file.
     </a>
   </p>
-  <p>Select a tabular file (e.g. <code>.csv</code>, <code>.tsv</code>
-    or <code>.txt</code>) containing the metadata table.
+  <p>
+    Choose delimiter and then select tabular metadata table.
   </p>
 
   <div class="relative">
@@ -43,42 +46,55 @@
       </div>
     </div>
 
-    <label class="block label-block label-text-left">
-      <span class="label-text label-left min-width-200">Tab separation:</span>
-      <input
-        type="radio"
-        value="tab"
-        ng-model="metadataTable.separator"
-        ng-change="metadataTable.setParser()"
-        ng-disabled="!!metadataTable.importOption">
-    </label>
+    <ul class="list-inline">
+      <li class="min-width-200">
+        <label class="block label-block label-text-left">
+        <span class="label-text label-left">
+          Tab separation:
+        </span>
+        <input
+          type="radio"
+          value="tab"
+          ng-model="metadataTable.separator"
+          ng-change="metadataTable.setParser()"
+          ng-disabled="!!metadataTable.importOption">
+        </label>
+      </li>
+      <li class="min-width-200">
+        <label class="block label-block label-text-left">
+        <span class="label-text label-left">
+          Comma separation:
+        </span>
+        <input
+          type="radio"
+          value="comma"
+          ng-model="metadataTable.separator"
+          ng-change="metadataTable.setParser()"
+          ng-disabled="!!metadataTable.importOption">
+        </label>
+      </li>
 
-    <label class="block label-block label-text-left">
-      <span class="label-text label-left min-width-200">Comma separation:</span>
-      <input
-        type="radio"
-        value="comma"
-        ng-model="metadataTable.separator"
-        ng-change="metadataTable.setParser()"
-        ng-disabled="!!metadataTable.importOption">
-    </label>
-
-    <label class="block label-block label-text-left">
-      <span class="label-text label-left min-width-200">Custom separation:</span>
-      <input
-        type="radio"
-        value="custom"
-        ng-model="metadataTable.separator"
-        ng-change="metadataTable.setParser()"
-        ng-disabled="!!metadataTable.importOption">
-      <input
-        type="text"
-        class="m-l-1"
-        placeholder="E.g. &quot;;&quot;, &quot;|&quot;, &quot;$&quot;, etc."
-        ng-model="metadataTable.customSeparator"
-        ng-change="metadataTable.setParser()"
-        ng-disabled="!!metadataTable.importOption">
-    </label>
+      <li class="min-width-200 align-bottom">
+        <label class="block label-block label-text-left">
+        <span class="label-text label-left">
+          Custom separation:
+        </span>
+        <input
+          type="radio"
+          value="custom"
+          ng-model="metadataTable.separator"
+          ng-change="metadataTable.setParser()"
+          ng-disabled="!!metadataTable.importOption">
+        <input
+          type="text"
+          class="m-l-1"
+          placeholder="E.g. &quot;;&quot;, &quot;|&quot;, &quot;$&quot;, etc."
+          ng-model="metadataTable.customSeparator"
+          ng-change="metadataTable.setParser()"
+          ng-disabled="!!metadataTable.importOption">
+        </label>
+      </li>
+    </ul>
 
     <div class="text-muted m-t-1-2 m-b-1-2">and</div>
 
@@ -96,7 +112,7 @@
         ng-if="metadataTable.file"
         ng-click="metadataTable.clearFile()">
         <i
-          class="fa fa-times-circle"
+          class="fa fa-times-circle fa-lg refinery-warning"
           aria-hidden="true"
           title="Clear selected file"
           refinery-tooltip
@@ -124,7 +140,7 @@
       </div>
 
       <div class="refinery-subheader m-t-1">
-        <h3>Import Settings</h3>
+        <h3>Configure Metadata Import</h3>
       </div>
 
       <div>
@@ -344,7 +360,14 @@
         </div>
       </div>
 
+      <div class="m-t-1 m-b-1">
+        <rp-file-upload></rp-file-upload>
+      </div>
+
       <div>
+        <div class="refinery-subheader m-t-1">
+           <h3>Upload Data Set</h3>
+        </div>
         <button
           class="refinery-base btn btn-default"
           ng-click="metadataTable.checkFiles()"
@@ -354,9 +377,15 @@
         <button
           class="refinery-base btn btn-primary"
           ng-click="metadataTable.startImport()"
-          ng-disabled="metadataTable.importMetadataTableForm.$invalid">
-          Start Import
+          ng-disabled="metadataTable.importMetadataTableForm.$invalid ||
+          metadataTable.areFilesUploading()"
+        >
+          Upload Data Set
         </button>
+        <span class="text-warning" ng-if="metadataTable.areFilesInQueue()">
+          <i class="fa fa-warning" aria-hidden="true"></i>
+          All data files have not been uploaded.
+        </span>
       </div>
     </div>
   </div>
