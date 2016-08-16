@@ -32,10 +32,9 @@
     <script type="text/javascript">
 
         $(document).ready(function () {
+            var div, options, browser;
 
-            var div,
-                    options,
-                    browser;
+            console.log('TODO: hit the API for each:', {{ node_ids_json|safe }});
 
             div = $("#igv")[0];
             options = {
@@ -46,15 +45,7 @@
                     cytobandURL: '{{ cytoband_url|escapejs }}'
                 },
                 tracks: [
-                        // If we need more than this, pass in JSON instead.
-                        {% for name, url in tracks.items %}
-                            {
-                                name: '{{ name|escapejs }}',
-                                url: '{{ url|escapejs }}',
-                                displayMode: "EXPANDED"
-                            }
-                            {% if not forloop.last %},{% endif %}
-                        {% endfor %}
+                        'TODO'
                 ]
             };
 

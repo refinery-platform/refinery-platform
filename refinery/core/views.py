@@ -601,13 +601,12 @@ def visualize_genome(request):
     """
     species = request.GET.get('species')
     node_ids = request.GET.getlist('node_ids')
-    genome = re.search(r'\(([^)]*)\)', species).group(1)
 
+    genome = re.search(r'\(([^)]*)\)', species).group(1)
+    # TODO: Better to pass genome id instead of parsing?
     url_base = "https://s3.amazonaws.com/data.cloud.refinery-platform.org" \
         + "/data/igv-reference/" + genome + "/" + genome
-
-    nodes = [Node.objects.filter(uuid=node_id)[0] for node_id in node_ids]
-    tracks = {node.type: node.name for node in nodes}
+    node_ids_json = json.dumps(node_ids)
 
     return render_to_response(
           'core/visualize/genome.html',
@@ -615,7 +614,7 @@ def visualize_genome(request):
               "fasta_url": url_base + ".fasta",
               "index_url": url_base + ".fai",
               "cytoband_url": url_base + ".cytoband",
-              "tracks": tracks
+              "node_ids_json": node_ids_json
           },
           context_instance=RequestContext(request))
 
