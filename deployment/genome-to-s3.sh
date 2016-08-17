@@ -54,14 +54,20 @@ for GENOME in $@; do
   download_and_unzip bigZips/$GENOME.fa
   download_and_unzip database/cytoBand.txt
   
+  if [ ! -e cytoBand.txt ]; then
+    # "Ideo" seems to be more detailed?
+    download_and_unzip database/cytoBandIdeo.txt
+    mv cytoBandIdeo.txt cytoBand.txt
+  fi
+
   if [ -e $GENOME.fa.fai ]
     then warn "$GENOME.fa.fai already exists: will not regenerate"
     else faidx $GENOME.fa > /dev/null || warn 'FAI creation failed'
   fi
-
-  aws s3 sync --exclude "*.gz" --region us-east-1 /tmp/genomes/$GENOME \
-      s3://data.cloud.refinery-platform.org/data/igv-reference/$GENOME
 done
+
+aws s3 sync --exclude "*.gz" --region us-east-1 /tmp/genomes \
+    s3://data.cloud.refinery-platform.org/data/igv-reference
 
 echo 'Delete the cache to free up some disk.'
 du -h /tmp/genomes
