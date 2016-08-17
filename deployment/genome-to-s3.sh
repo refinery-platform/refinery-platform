@@ -36,6 +36,10 @@ which faidx > /dev/null || die 'Install faidx:
 
 which aws > /dev/null || die 'Install aws-cli'
 
+which twoBitToFa > /dev/null || die 'Install twoBitToFa:
+Choose the directory of your system on http://hgdownload.soe.ucsc.edu/admin/exe/,
+download "twoBitToFa", and "chmod a+x". (Or build from source.)'
+
 aws s3 ls > /dev/null || die 'Check aws-cli credentials'
 
 
