@@ -49,9 +49,16 @@ for GENOME in $@; do
   mkdir -p $GENOME  
   cd $GENOME
   
-  download_and_unzip bigZips/upstream1000.fa # TODO: $GENOME.fa
+  # Replace $GENOME.fa with upstream1000.fa to get a smaller file for testing.
+
+  download_and_unzip bigZips/$GENOME.fa
   download_and_unzip database/cytoBand.txt
   
+  if [ -e $GENOME.fa.fai ]
+    then warn "$GENOME.fa.fai already exists: will not regenerate"
+    else faidx $GENOME.fa > /dev/null || warn 'FAI creation failed'
+  fi
+
   aws s3 sync --exclude "*.gz" --region us-east-1 /tmp/genomes/$GENOME \
       s3://data.cloud.refinery-platform.org/data/igv-reference/$GENOME
 done
