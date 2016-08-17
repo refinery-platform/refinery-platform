@@ -2,6 +2,9 @@
 set -o errexit
 set -o nounset
 
+
+### Helper functions
+
 die() { echo "$@" 1>&2; exit 1; }
 warn() { echo "$@" 1>&2; }
 
@@ -21,6 +24,9 @@ download_and_unzip() {
   fi
 }
 
+
+### Check for dependencies
+
 which faidx > /dev/null || die 'Install faidx:
 - "pip install pyfaidx" makes "faidx" available on command line.
 - or:
@@ -32,6 +38,9 @@ which aws > /dev/null || die 'Install aws-cli'
 
 aws s3 ls > /dev/null || die 'Check aws-cli credentials'
 
+
+### Main
+
 mkdir -p /tmp/genomes
 
 for GENOME in $@; do
@@ -39,8 +48,12 @@ for GENOME in $@; do
   cd /tmp/genomes
   mkdir -p $GENOME  
   cd $GENOME
+  
   download_and_unzip bigZips/upstream1000.fa # TODO: $GENOME.fa
-  download_and_unzip database/cytoBand.txt 
+  download_and_unzip database/cytoBand.txt
+  
+  aws s3 sync --exclude "*.gz" --region us-east-1 /tmp/genomes/$GENOME \
+      s3://data.cloud.refinery-platform.org/data/igv-reference/$GENOME
 done
 
 echo 'Delete the cache to free up some disk.'
