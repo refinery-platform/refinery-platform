@@ -271,6 +271,30 @@ def main():
 
     # ELB per
     # http://cfn-pyplates.readthedocs.io/en/latest/examples/options/template.html
+
+    # Insecure, Port 80, HTTP listener
+    http_listener = {
+        'LoadBalancerPort': '80',
+        'Protocol': 'HTTP',
+        'InstanceProtocol': 'HTTP',
+        'InstancePort': '80',
+        'PolicyNames': []
+    }
+    listeners = [http_listener]
+
+    if 'TLS_CERTIFICATE' in config:
+        # Secure, Port 443, HTTPS listener
+        https_listener = {
+            'LoadBalancerPort': '443',
+            'Protocol': 'HTTPS',
+            'InstanceProtocol': 'HTTP',
+            'InstancePort': '80',
+            'PolicyNames': [],
+            'SSLCertificateId': config['TLS_CERTIFICATE']
+        }
+        listeners.append(https_listener)
+
+
     cft.resources.elb = core.Resource(
         'LoadBalancer', 'AWS::ElasticLoadBalancing::LoadBalancer',
         {
@@ -284,15 +308,7 @@ def main():
             },
             'Instances': [functions.ref('WebInstance')],
 
-            'Listeners': [
-                {
-                    'LoadBalancerPort': '80',
-                    'Protocol': 'HTTP',
-                    'InstanceProtocol': 'HTTP',
-                    'InstancePort': '80',
-                    'PolicyNames': []
-                },
-            ],
+            'Listeners': listeners,
             "Tags": instance_tags,  # todo: Should be different?
         })
 
