@@ -28,32 +28,33 @@
 
     <div id="igv"></div>
 
-
     <script type="text/javascript">
 
         $(document).ready(function () {
             var node_ids = {{ node_ids_json|safe }};
+            var ajaxes = $.map(node_ids, function(node_id) {
+                return $.getJSON('/api/v1/node/' + node_id); // TODO: v2
+            });
 
-            Promise.all($.map(node_ids, function(node_id) {
-                $.getJSON('/api/v1/node/' + node_id);
-            })).then(function() {
-                var div, options;
-
-                div = $("#igv")[0];
-                options = {
+            $.when.apply(null, ajaxes).then(function() {
+                // The elements of ajaxes correspond
+                // to the elements of the arguments array.
+                var track_urls = $.map(arguments, function(response){
+                    return response[0].file_url; // TODO: v2
+                });
+                var div = $("#igv")[0];
+                var options = {
                     showKaryo: true, // Default is false.
                     reference: {
                         fastaURL: '{{ fasta_url|escapejs }}',
                         indexURL: '{{ index_url|escapejs }}',
                         cytobandURL: '{{ cytoband_url|escapejs }}'
                     },
-                    tracks: [
-                            'TODO'
-                    ]
+                    tracks: track_urls
                 };
+
                 igv.createBrowser(div, options);
             });
-
         });
 
     </script>
