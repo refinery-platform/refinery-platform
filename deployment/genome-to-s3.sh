@@ -13,7 +13,9 @@ download_and_unzip() {
   BASE=`basename $1`
   if [ -e $BASE.gz ] || [ -e $BASE ]
     then warn "$BASE.gz or $BASE already exists: skip download"
-    else ftp ftp://hgdownload.cse.ucsc.edu/goldenPath/$GENOME/$1.gz || warn "$1.gz not available" 
+    else ftp ftp://hgdownload.cse.ucsc.edu/goldenPath/$GENOME/$1.gz \
+      || ftp ftp://hgdownload.cse.ucsc.edu/goldenPath/$GENOME/$1 \
+      || warn "neither $1.gz nor $1 is available" 
   fi
 
   if [ -e $BASE.gz ]; then
@@ -30,48 +32,57 @@ download_and_unzip() {
 which faidx > /dev/null || die 'Install faidx:
 - "pip install pyfaidx" makes "faidx" available on command line.
 - or:
-  - download from http://www.htslib.org/download/
+  - download source from http://www.htslib.org/download/
   - make and install
   - make alias for "samtools faidx"'
 
-which aws > /dev/null || die 'Install aws-cli'
-
 which twoBitToFa > /dev/null || die 'Install twoBitToFa:
-Choose the directory of your system on http://hgdownload.soe.ucsc.edu/admin/exe/,
+Choose the directory of your OS on http://hgdownload.soe.ucsc.edu/admin/exe/,
 download "twoBitToFa", and "chmod a+x". (Or build from source.)'
+
+which aws > /dev/null || die 'Install aws-cli'
 
 aws s3 ls > /dev/null || die 'Check aws-cli credentials'
 
 
 ### Main
 
-mkdir -p /tmp/genomes
+LOCAL=/tmp/genomes
+
+mkdir -p $LOCAL
 
 for GENOME in $@; do
+  echo # Blank line for readability
   echo "Starting $GENOME..."
-  cd /tmp/genomes
+  cd $LOCAL
   mkdir -p $GENOME  
   cd $GENOME
   
-  # Replace $GENOME.fa with upstream1000.fa to get a smaller file for testing.
+  download_and_unzip bigZips/$GENOME.2bit
+  if [ -e $GENOME.2bit ]; then
+    twoBitToFa $GENOME.2bit $GENOME.fa
+  fi
 
   download_and_unzip bigZips/$GENOME.fa
-  download_and_unzip database/cytoBand.txt
-  
-  if [ ! -e cytoBand.txt ]; then
-    # "Ideo" seems to be more detailed?
-    download_and_unzip database/cytoBandIdeo.txt
-    mv cytoBandIdeo.txt cytoBand.txt
-  fi
+  # Replace $GENOME.fa with upstream1000.fa to get a smaller file for testing.
 
   if [ -e $GENOME.fa.fai ]
     then warn "$GENOME.fa.fai already exists: will not regenerate"
     else faidx $GENOME.fa > /dev/null || warn 'FAI creation failed'
   fi
+
+  download_and_unzip database/cytoBand.txt  
+  if [ ! -e cytoBand.txt ]; then
+    # "Ideo" seems to be more detailed?
+    download_and_unzip database/cytoBandIdeo.txt \
+      && mv cytoBandIdeo.txt cytoBand.txt \
+      || warn "No cytoBand.txt for $GENOME"
+    # TODO: Make a mock cytoBand, rather than tracking which are not available?
+  fi
 done
 
-aws s3 sync --exclude "*.gz" --region us-east-1 /tmp/genomes \
-    s3://data.cloud.refinery-platform.org/data/igv-reference
+aws s3 sync --exclude "*.gz" --exclude "*.2bit" --region us-east-1 \
+    $LOCAL s3://data.cloud.refinery-platform.org/data/igv-reference
 
 echo 'Delete the cache to free up some disk.'
-du -h /tmp/genomes
+du -h $LOCAL
