@@ -269,6 +269,28 @@ def main():
         })
     )
 
+    cft.resources.elbsg = core.Resource(
+        'ELBSecurityGroup', 'AWS::EC2::SecurityGroup',
+        core.Properties({
+            'GroupDescription': "Refinery ELB",
+            'SecurityGroupEgress':  [],
+            'SecurityGroupIngress': [
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": "80",
+                    "ToPort": "80",
+                    "CidrIp": "0.0.0.0/0",
+                },
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": "443",
+                    "ToPort": "443",
+                    "CidrIp": "0.0.0.0/0",
+                },
+            ],
+        })
+    )
+
     # ELB per
     # http://cfn-pyplates.readthedocs.io/en/latest/examples/options/template.html
 
@@ -294,7 +316,6 @@ def main():
         }
         listeners.append(https_listener)
 
-
     cft.resources.elb = core.Resource(
         'LoadBalancer', 'AWS::ElasticLoadBalancing::LoadBalancer',
         {
@@ -309,6 +330,8 @@ def main():
             'Instances': [functions.ref('WebInstance')],
 
             'Listeners': listeners,
+            'SecurityGroups': [
+                functions.get_att('ELBSecurityGroup', 'GroupId')],
             "Tags": instance_tags,  # todo: Should be different?
         })
 
