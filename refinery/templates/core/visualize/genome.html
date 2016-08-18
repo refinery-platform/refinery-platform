@@ -33,14 +33,14 @@
         $(document).ready(function () {
             var node_ids = {{ node_ids_json|safe }};
             var ajaxes = $.map(node_ids, function(node_id) {
-                return $.getJSON('/api/v1/node/' + node_id); // TODO: v2
+                return $.getJSON('/api/v2/nodes/' + node_id + '/?format=json');
             });
 
             $.when.apply(null, ajaxes).then(function() {
                 // The elements of ajaxes correspond
                 // to the elements of the arguments array.
                 var track_urls = $.map(arguments, function(response){
-                    return response[0].file_url; // TODO: v2
+                    return response.full_file_store_item_url;
                 });
                 var div = $("#igv")[0];
                 var options = {
