@@ -39,7 +39,8 @@ from core.models import (
     ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
     Analysis, Invitation, Ontology, NodeGroup,
     CustomRegistrationProfile)
-from core.serializers import WorkflowSerializer, NodeGroupSerializer
+from core.serializers import (
+    WorkflowSerializer, NodeGroupSerializer, NodeSerializer)
 from core.utils import (get_data_sets_annotations, get_anonymous_user,
                         create_current_selection_node_group,
                         filter_nodes_uuids_in_solr, move_obj_to_front)
@@ -1001,6 +1002,15 @@ class WorkflowViewSet(viewsets.ModelViewSet):
     """
     queryset = Workflow.objects.all()
     serializer_class = WorkflowSerializer
+
+
+class NodeViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows Nodes to be viewed
+    """
+    queryset = Node.objects.all()
+    serializer_class = NodeSerializer
+    http_method_names = ['get']
 
 
 class CustomRegistrationView(RegistrationView):

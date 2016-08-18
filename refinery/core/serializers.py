@@ -60,3 +60,8 @@ class WorkflowSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Workflow
+
+
+class NodeSerializer(serializers.Serializer):
+    pass
+    # TODO
