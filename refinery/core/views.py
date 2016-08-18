@@ -1010,6 +1010,7 @@ class NodeViewSet(viewsets.ModelViewSet):
     """
     queryset = Node.objects.all()
     serializer_class = NodeSerializer
+    lookup_field = 'uuid'
     http_method_names = ['get']
 
 
