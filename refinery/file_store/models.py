@@ -329,6 +329,21 @@ class FileStoreItem(models.Model):
         """
         return self.filetype
 
+    def get_fileextension(self):
+        """Retrieve the FileExtension model instance associated with the
+        FileStoreItem.
+
+        :returns: name of FileExtension.
+
+        """
+        try:
+            return FileExtension.objects.get(
+                filetype=self.filetype).name.lower()
+        except (FileExtension.DoesNotExist,
+                FileExtension.MultipleObjectsReturned) as e:
+            logger.error("Failed to retrieve FileExtension! %s", e)
+            return None
+
     def set_filetype(self, filetype=''):
         """Assign the type of the datafile.
         Only existing types allowed as arguments.
