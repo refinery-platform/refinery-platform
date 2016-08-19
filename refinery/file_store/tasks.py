@@ -3,7 +3,8 @@ import os
 import stat
 import logging
 import requests
-from requests.exceptions import ContentDecodingError
+from requests.exceptions import ContentDecodingError, HTTPError, \
+    ConnectionError
 
 from tempfile import NamedTemporaryFile
 from urlparse import urlparse
@@ -104,17 +105,19 @@ def import_file(uuid, refresh=False, file_size=0):
         # check if source file can be downloaded
         try:
             response = requests.get(item.source, stream=True)
-        except requests.exceptions.HTTPError as e:
-            logger.error("Could not open URL '%s'", item.source)
-            return None
-        except requests.exceptions.ConnectionError as e:
+            response.raise_for_status()
+        except (HTTPError, ConnectionError, ValueError) as e:
             logger.error("Could not open URL '%s'. Reason: '%s'",
-                         item.source, e.reason)
-            return None
-        except ValueError as e:
-            logger.error("Could not open URL '%s'. Reason: '%s'",
-                         item.source, e.message)
-            return None
+                         item.source, e)
+
+            import_file.update_state(
+                state=celery.states.FAILURE,
+                meta='Analysis Failed during import_file subtask'
+            )
+
+            # ignore the task so no other state is recorded
+            # See: http://stackoverflow.com/a/33143545
+            raise celery.exceptions.Ignore()
 
         with NamedTemporaryFile(dir=get_temp_dir(), delete=False) as tmpfile:
 
@@ -168,6 +171,11 @@ def import_file(uuid, refresh=False, file_size=0):
                 # Setting the tempfile's delete == True deletes the file
                 # upon a `close()`
                 tmpfile.delete = True
+
+                import_file.update_state(
+                    state=celery.states.FAILURE,
+                    meta='Analysis Failed during import_file subtask'
+                )
 
                 # ignore the task so no other state is recorded
                 # See: http://stackoverflow.com/a/33143545
@@ -313,6 +321,9 @@ def download_file(url, target_path, file_size=1):
     # TODO: refactor to use requests
     try:
         response = requests.get(url, stream=True)
+        response.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
     except requests.exceptions.ConnectionError as e:
         raise DownloadError(
             "Could not open URL '{}'. Reason: '{}'".format(url, e.reason))

@@ -8,6 +8,7 @@ import logging
 import time
 import urlparse
 import requests
+from requests.exceptions import HTTPError
 import json
 
 from django.db.models import Q
@@ -695,7 +696,12 @@ def search_solr(encoded_params, core):
     """
     url_portion = '/'.join([core, "select"])
     url = urlparse.urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
-    full_response = requests.get(url, params=encoded_params)
+    try:
+        full_response = requests.get(url, params=encoded_params)
+        full_response.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
+
     response = full_response.content
 
     return response

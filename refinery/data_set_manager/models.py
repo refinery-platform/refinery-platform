@@ -7,6 +7,7 @@ Created on May 10, 2012
 from datetime import datetime
 import logging
 import requests
+from requests.exceptions import HTTPError
 
 from django.conf import settings
 from django.db import models
@@ -669,8 +670,11 @@ def _is_facet_attribute(attribute, study, assay):
     logger.debug('Query parameters: %s', params)
 
     headers = {'Accept': 'application/json'}
-
-    response = requests.get(url, params=params, headers=headers)
+    try:
+        response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
 
     results = response.json()
 
@@ -724,7 +728,11 @@ def initialize_attribute_order(study, assay):
 
     headers = {'Accept': 'application/json'}
 
-    response = requests.get(url, params=params, headers=headers)
+    try:
+        response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
 
     results = response.json()
 
