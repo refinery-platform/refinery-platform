@@ -4,6 +4,7 @@ import stat
 import time
 import logging
 import requests
+from django.conf import settings
 from requests.exceptions import ContentDecodingError, HTTPError, \
     ConnectionError
 
@@ -15,6 +16,7 @@ import pysam
 
 from django.core.files import File
 
+from data_set_manager.models import Node
 from .models import (FileStoreItem, get_temp_dir, file_path,
                      FILE_STORE_BASE_DIR, FileExtension)
 
@@ -220,23 +222,24 @@ def import_file(uuid, refresh=False, file_size=0):
         # save the model instance
         item.save()
 
-        try:
-            extension = FileExtension.objects.get(filetype=item.filetype)
-            if extension.name.lower() == "bam":
-                bam_path = os.path.abspath(item.get_absolute_path())
-                logger.debug("Bam path: %s" % bam_path)
+        # Check if the Django setting to generate auxiliary file has been
+        # set to work on files imported into Refinery
+        if settings.REFINERY_AUXILIARY_FILE_GENERATION == "upon_file_import":
+            if item.filetype.used_for_visualization:
 
-                # Run generate_bam_index as a subtask as to not hold up
+                parent_node = item.get_associated_node()
+
+                # Run generate_auxiliary_node as a subtask as to not hold up
                 # other file imports
-                bam_index_task = [generate_bam_index.subtask((bam_path,))]
-                bam_index_creation = TaskSet(
-                    tasks=bam_index_task).apply_async()
-                bam_index_creation.save()
-
-        except (FileExtension.DoesNotExist,
-                FileExtension.MultipleObjectsReturned) as e:
-            logger.error("Could not retrieve FileExtension. FileStoreItem "
-                         "may not have an associated FileType. %s" % e)
+                auxiliary_node_generation_task = [
+                    generate_auxiliary_node.subtask((item, parent_node,))]
+                auxiliary_node_generation = TaskSet(
+                    tasks=auxiliary_node_generation_task).apply_async()
+                # Associate uuid of Node for which we are generating the
+                # aux. Node for so we can fetch the status of the aux. file
+                # generation
+                auxiliary_node_generation.taskset_id = parent_node.uuid
+                auxiliary_node_generation.save()
 
     return item
 
