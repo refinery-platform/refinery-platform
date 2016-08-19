@@ -1382,6 +1382,16 @@ class NodeClassMethodTests(TestCase):
                 'test_file.bam',
                 'Coffee is delicious!')
         )
+        self.filestore_item_1 = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.bed',
+                'Coffee is delicious!')
+        )
+        self.filestore_item_2 = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.seg',
+                'Coffee is delicious!')
+        )
         self.dataset = DataSet.objects.create()
         # Create Investigation/InvestigationLinks for the DataSets
         self.investigation = Investigation.objects.create()
@@ -1395,6 +1405,17 @@ class NodeClassMethodTests(TestCase):
 
         # Create Nodes
         self.node = Node.objects.create(assay=self.assay, study=self.study)
+        self.another_node = Node.objects.create(assay=self.assay,
+                                             study=self.study)
+
+    def tearDown(self):
+        FileStoreItem.objects.all().delete()
+        InvestigationLink.objects.all().delete()
+        Investigation.objects.all().delete()
+        Node.objects.all().delete()
+        Study.objects.all().delete()
+        Assay.objects.all().delete()
+        DataSet.objects.all().delete()
 
     def test_create_and_associate_auxiliary_node(self):
         self.assertEqual(self.node.get_children(), [])
@@ -1408,3 +1429,28 @@ class NodeClassMethodTests(TestCase):
             file_uuid=self.filestore_item.uuid).get_parents()[0], self.node)
         self.assertEqual(self.node.get_children()[0].is_auxiliary_node, True)
 
+    def test_get_children(self):
+        self.assertEqual(self.node.get_children(), [])
+        self.node.add_child(self.another_node)
+        self.assertIsNotNone(self.node.get_children()[0])
+        self.assertEqual(self.node.get_children()[0], self.another_node)
+
+    def test_get_parents(self):
+        self.assertEqual(self.another_node.get_parents(), [])
+        self.node.add_child(self.another_node)
+        self.assertIsNotNone(self.another_node.get_parents()[0])
+        self.assertEqual(self.another_node.get_parents()[0], self.node)
+
+    def test_get_auxiliary_nodes(self):
+        self.assertEqual(self.node.get_children(), [])
+        self.assertEqual(self.node.get_auxiliary_nodes(), [])
+        self.node.create_and_associate_auxiliary_node(self.filestore_item.uuid)
+        self.assertEqual(self.node.get_auxiliary_nodes()[0], Node.objects.get(
+            file_uuid=self.filestore_item.uuid))
+        self.node.create_and_associate_auxiliary_node(
+            self.filestore_item_1.uuid)
+        self.node.create_and_associate_auxiliary_node(
+            self.filestore_item_2.uuid)
+        self.assertEqual(len(self.node.get_auxiliary_nodes()), 3)
+
+    # TODO: write test for Node.get_auxiliary_node_generation_task_state()
