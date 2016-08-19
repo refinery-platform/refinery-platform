@@ -152,6 +152,7 @@ class FileType(models.Model):
     name = models.CharField(unique=True, max_length=50)
     #: short description of file extension
     description = models.CharField(max_length=250)
+    used_for_visualization = models.BooleanField(default=False, blank=True)
 
     def __unicode__(self):
         return self.description
