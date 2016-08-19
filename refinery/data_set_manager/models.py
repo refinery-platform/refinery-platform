@@ -401,6 +401,7 @@ class Node(models.Model):
     species = models.IntegerField(db_index=True, null=True)
     is_annotation = models.BooleanField(default=False)
     analysis_uuid = UUIDField(default=None, blank=True, null=True, auto=False)
+    is_auxiliary_node = models.BooleanField(default=False)
     subanalysis = models.IntegerField(null=True, blank=False)
     workflow_output = models.CharField(null=True, blank=False, max_length=100)
 
