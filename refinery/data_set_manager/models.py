@@ -489,6 +489,13 @@ class Node(models.Model):
         """
         return [parent for parent in self.parents.all()]
 
+    def get_auxiliary_nodes(self):
+        """
+        Return a list of child Nodes that have their `is_auxiliary_node` set to
+        True for a given Node
+        """
+        return [node for node in self.get_children() if node.is_auxiliary_node]
+
 
 class Attribute(models.Model):
     # allowed attribute types
