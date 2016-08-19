@@ -1,6 +1,6 @@
-import logging
 import os
 import re
+import sys
 import shutil
 import string
 import tarfile
@@ -13,8 +13,6 @@ from django.db import transaction, IntegrityError
 from requests.exceptions import HTTPError
 
 from annotation_server.models import Taxon
-
-logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -45,7 +43,7 @@ class Command(BaseCommand):
             response = requests.get(settings.TAXONOMY_URL)
             response.raise_for_status()
         except HTTPError as e:
-            logger.error(e)
+            sys.stdout.write(e)
 
         f = open(taxonomy_archive, 'wb')
         f.write(response.content)

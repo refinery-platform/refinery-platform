@@ -1,5 +1,4 @@
 import errno
-import logging
 import os
 import re
 import string
@@ -16,8 +15,6 @@ from celery.task.sets import TaskSet
 from data_set_manager.models import Study
 from data_set_manager.tasks import convert_to_isatab
 from datetime import date, datetime, timedelta
-
-logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -70,7 +67,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """main program; calls the parsing and insertion functions"""
-        logger.info("Logging from mage2isa_convert")
+        sys.stdout.write("Logging from mage2isa_convert")
         ae_query = self._make_query(args)
         try:
             os.makedirs(settings.CONVERSION_DIR)
@@ -86,15 +83,15 @@ class Command(BaseCommand):
             # if file doesn't exist yet, then just make last_date_run today
             last_date_run = date.today()
 
-        logger.info("getting %s", ae_query)
+        sys.stdout.write("getting %s", ae_query)
 
         try:
             response = requests.get(ae_query, stream=True)
             response.raise_for_status()
         except HTTPError as e:
-            logger.error(e)
+            sys.stdout.write(e)
 
-        logger.info("writing to file %s", ae_file)
+        sys.stdout.write("writing to file %s", ae_file)
         # TODO: use context manager for file operations
         f = open(ae_file, 'w')
         # download in pieces to make sure you're never biting off too much
@@ -155,7 +152,7 @@ class Command(BaseCommand):
         job = TaskSet(tasks=s_tasks)
         result = job.apply_async()
         for i in result.iterate():
-            logger.info(i)
+            sys.stdout.write(i)
             sys.stdout.flush()
         # space-saving measure
         os.remove(ae_file)
