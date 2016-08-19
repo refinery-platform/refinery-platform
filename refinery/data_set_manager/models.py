@@ -478,9 +478,15 @@ class Node(models.Model):
         return "Task: {} - {}".format(self.uuid, task[0].state)
 
     def get_children(self):
+        """
+        Return a list of child Nodes for a given Node
+        """
         return [child for child in self.children.all()]
 
     def get_parents(self):
+        """
+        Return a list of parent Nodes for a given Node
+        """
         return [parent for parent in self.parents.all()]
 
 
