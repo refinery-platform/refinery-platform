@@ -272,6 +272,31 @@ class FileStoreItemTest(SimpleTestCase):
         self.assertTrue(item_from_url.filetype,
                         os.path.splitext(self.filename)[1])
 
+    def test_get_fileextension(self):
+        """Check that the correct FileExtension is returned"""
+        # create FileStoreItem instances without any disk operations
+        item_from_url = FileStoreItem.objects.create(
+            source=self.url_source,
+            sharename=self.sharename
+        )
+        item_from_path = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                self.filename,
+                'Coffee is delicious!'
+            ),
+            source=self.path_source,
+            sharename=self.sharename
+        )
+
+        item_from_url.set_filetype()
+        item_from_path.set_filetype()
+
+        self.assertEqual(item_from_path.get_fileextension(),
+                         self.filename.split(".")[-1])
+        # data file doesn't exist on disk and source is a URL
+        self.assertEqual(item_from_url.get_fileextension(),
+                         self.filename.split(".")[-1])
+
 
 class FileStoreItemManagerTest(SimpleTestCase):
     """FileStoreItemManager methods test"""
