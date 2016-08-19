@@ -561,14 +561,6 @@
   },
   {
     "model": "file_store.FileExtension",
-    "pk": 36,
-    "fields": {
-      "name": "cel",
-      "filetype": 6
-    }
-  },
-  {
-    "model": "file_store.FileExtension",
     "pk": 38,
     "fields": {
       "name": "fq",
