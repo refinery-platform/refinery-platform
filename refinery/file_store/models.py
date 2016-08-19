@@ -345,8 +345,6 @@ class FileStoreItem(models.Model):
         # If filetype argument is one that we know of great, Else we try to
         # guess
 
-        filetype = filetype.lower()
-
         if filetype in all_known_extensions:
             f = filetype
         else:
