@@ -4,7 +4,8 @@
     "pk": 1,
     "fields": {
       "description": "Binary compressed SAM",
-      "name": "BAM"
+      "name": "BAM",
+      "used_for_visualization": true
     }
   },
   {
@@ -12,7 +13,8 @@
     "pk": 2,
     "fields": {
       "description": "BED file",
-      "name": "BED"
+      "name": "BED",
+      "used_for_visualization": true
     }
   },
   {
@@ -28,7 +30,8 @@
     "pk": 4,
     "fields": {
       "description": "Big WIG",
-      "name": "BIGWIG"
+      "name": "BIGWIG",
+      "used_for_visualization": true
     }
   },
   {
@@ -68,7 +71,8 @@
     "pk": 9,
     "fields": {
       "description": "GFF file",
-      "name": "GFF"
+      "name": "GFF",
+      "used_for_visualization": true
     }
   },
   {
@@ -172,7 +176,8 @@
     "pk": 22,
     "fields": {
       "description": "Segmented Data File",
-      "name": "SEG"
+      "name": "SEG",
+      "used_for_visualization": true
     }
   },
   {
@@ -188,7 +193,8 @@
     "pk": 24,
     "fields": {
       "description": "TDF file",
-      "name": "TDF"
+      "name": "TDF",
+      "used_for_visualization": true
     }
   },
   {
@@ -212,7 +218,8 @@
     "pk": 27,
     "fields": {
       "description": "Variant Call Format",
-      "name": "VCF"
+      "name": "VCF",
+      "used_for_visualization": true
     }
   },
   {
@@ -220,7 +227,8 @@
     "pk": 28,
     "fields": {
       "description": "Wiggle Track Format",
-      "name": "WIG"
+      "name": "WIG",
+      "used_for_visualization": true
     }
   },
   {
@@ -285,6 +293,15 @@
     "fields": {
       "description": "Illumina basecall file tarred + gzipped",
       "name": "BCL TGZ file"
+    }
+  },
+  {
+    "model": "file_store.FileType",
+    "pk": 41,
+    "fields": {
+      "description": "Bam index file",
+      "name": "BAI file",
+      "used_for_visualization": true
     }
   },
   {
@@ -582,13 +599,21 @@
       "name": "bcl.gz",
       "filetype": 39
     }
-  }
-  ,{
+  },
+  {
     "model": "file_store.FileExtension",
     "pk": 40,
     "fields": {
       "name": "bcl.tgz",
       "filetype": 40
+    }
+  },
+  {
+    "model": "file_store.FileExtension",
+    "pk": 41,
+    "fields": {
+      "name": "bai",
+      "filetype": 41
     }
   }
 ]
