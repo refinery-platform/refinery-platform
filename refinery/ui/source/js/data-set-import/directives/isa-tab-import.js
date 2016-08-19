@@ -10,7 +10,7 @@ function isaTabImportDirective () {
     restrict: 'E',
     replace: true,
     templateUrl:
-      '/static/partials/data-set-import/directives/isa-tab-import.html'
+      '/static/partials/data-set-import/partials/isa-tab-import.html'
   };
 }
 

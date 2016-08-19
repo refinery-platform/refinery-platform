@@ -1,7 +1,7 @@
 // Unit test for assay filter
 'use strict';
 
-describe('rpAssayFiles directive unit test', function () {
+describe('rpNodeGroup directive unit test', function () {
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryFileBrowser'));
 

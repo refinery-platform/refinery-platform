@@ -68,6 +68,7 @@ Please see [installation notes] for more details, including information on how t
   dependencies successfully. *Any errors* in the output of `vagrant provision` indicate that you have to re-run the command.
 - If you run into a build error in OS X when trying to install Fabric: `export C_INCLUDE_PATH=/usr/local/include`
 - If you have a VPN connection running, you may need to disconnect and reconnect before you can access the VM. In some cases you may have to reboot the host machine.
+- To make sure all the required services are running after the VM was restarted or shut down, you need to provision again: `vagrant reload --provision` or `vagrant up --provision`
 
 [gi]: http://git-scm.com/
 [va]: http://www.vagrantup.com/
