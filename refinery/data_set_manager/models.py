@@ -458,7 +458,7 @@ class Node(models.Model):
         node = Node.objects.create(
             study=self.study,
             assay=self.assay,
-            name="index file for: {}".format(self.name),
+            name="auxiliary Node for: {}".format(self.name),
             is_auxiliary_node=True,
             file_uuid=filestore_item_uuid
         )
@@ -476,6 +476,12 @@ class Node(models.Model):
             return None
 
         return "Task: {} - {}".format(self.uuid, task[0].state)
+
+    def get_children(self):
+        return [child for child in self.children.all()]
+
+    def get_parents(self):
+        return [parent for parent in self.parents.all()]
 
 
 class Attribute(models.Model):

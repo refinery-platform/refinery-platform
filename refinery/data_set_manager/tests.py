@@ -4,6 +4,7 @@ when you run "manage.py test".
 
 Replace this with more appropriate tests for your application.
 """
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.http import QueryDict
@@ -12,7 +13,8 @@ from rest_framework.test import APIRequestFactory
 from rest_framework.test import APITestCase
 from rest_framework.test import APIClient
 
-from .models import AttributeOrder, Assay, Study, Investigation
+from file_store.models import FileStoreItem
+from .models import AttributeOrder, Assay, Study, Investigation, Node
 from .views import Assays, AssaysAttributes
 from .utils import (update_attribute_order_ranks,
                     customize_attribute_response, format_solr_response,
@@ -1371,3 +1373,38 @@ class UtilitiesTest(TestCase):
                          'Error: New rank == old rank')
         attribute_list = AttributeOrder.objects.filter(assay=self.assay)
         self.assertItemsEqual(old_attribute_list, attribute_list)
+
+
+class NodeClassMethodTests(TestCase):
+    def setUp(self):
+        self.filestore_item = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.bam',
+                'Coffee is delicious!')
+        )
+        self.dataset = DataSet.objects.create()
+        # Create Investigation/InvestigationLinks for the DataSets
+        self.investigation = Investigation.objects.create()
+        self.investigation_link = InvestigationLink.objects.create(
+            investigation=self.investigation,
+            data_set=self.dataset)
+
+        # Create Studys and Assays
+        self.study = Study.objects.create(investigation=self.investigation)
+        self.assay = Assay.objects.create(study=self.study)
+
+        # Create Nodes
+        self.node = Node.objects.create(assay=self.assay, study=self.study)
+
+    def test_create_and_associate_auxiliary_node(self):
+        self.assertEqual(self.node.get_children(), [])
+        self.node.create_and_associate_auxiliary_node(self.filestore_item.uuid)
+        self.assertIsNotNone(self.node.get_children())
+        self.assertIsNotNone(Node.objects.get(
+            file_uuid=self.filestore_item.uuid))
+        self.assertEqual(self.node.get_children()[0], Node.objects.get(
+            file_uuid=self.filestore_item.uuid))
+        self.assertEqual(Node.objects.get(
+            file_uuid=self.filestore_item.uuid).get_parents()[0], self.node)
+        self.assertEqual(self.node.get_children()[0].is_auxiliary_node, True)
+
