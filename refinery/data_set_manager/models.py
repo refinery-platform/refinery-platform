@@ -6,7 +6,9 @@ Created on May 10, 2012
 
 from datetime import datetime
 import logging
+
 import requests
+from celery.result import TaskSetResult
 from requests.exceptions import HTTPError
 
 from django.conf import settings
@@ -462,6 +464,18 @@ class Node(models.Model):
         )
 
         self.add_child(node)
+
+    def get_auxiliary_node_generation_task_state(self):
+        """return the state of the auxiliary Node/FileStoreItem generation task
+        for a given Node"""
+
+        task = TaskSetResult.restore(self.uuid)
+
+        if not task:
+            logger.error("TaskSet with UUID '%s' doesn't exist", self.uuid)
+            return None
+
+        return "Task: {} - {}".format(self.uuid, task[0].state)
 
 
 class Attribute(models.Model):
