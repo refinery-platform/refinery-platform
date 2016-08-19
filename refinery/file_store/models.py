@@ -344,10 +344,15 @@ class FileStoreItem(models.Model):
 
         # If filetype argument is one that we know of great, Else we try to
         # guess
+
+        filetype = filetype.lower()
+
         if filetype in all_known_extensions:
             f = filetype
         else:
             f = str(self.source.rpartition("/")[-1]).split('.', 1)[-1]
+
+        f = f.lower()
 
         # Set the filetype of the FileStoreItem instance, if we still dont
         # know the filetype after our guess earlier, we try to split on a
