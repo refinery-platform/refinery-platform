@@ -383,28 +383,67 @@ def download_file(url, target_path, file_size=1):
 
 
 @task()
-def generate_bam_index(full_path_to_bam):
+def generate_auxiliary_node(file_store_item, parent_node):
     """
-    Task that will generate a .bai file in the same directory of the .bam
-    file passed in
-    :param full_path_to_bam: the full path on disk to the .bam file to be
-    indexed
-    :type full_path_to_bam: string
+    Task that will generate an auxiliary Node for visualization purposes
+    with specific file generation tasks going on for different FileTypes
+    flagged as: `used_for_visualization`.
+
+    :param file_store_item: a FileStoreItem instance
+    :type file_store_item: FileStoreItem
+    :param parent_node: a Node instance
+    :type parent_node: Node
     """
+    generate_auxiliary_node.update_state(
+        state=celery.states.RUNNING,
+        meta="Auxiliary Node generation for {} has started.".format(
+            parent_node)
+    )
+
+    datafile_path = os.path.abspath(file_store_item.get_absolute_path())
+
     try:
-        start_time = time.time()
-        logger.debug("Starting bam index generation for %s" % full_path_to_bam)
+        FileExtension.objects.get(filetype=file_store_item.filetype)
+    except (FileExtension.DoesNotExist,
+            FileExtension.MultipleObjectsReturned) as e:
+        logger.error(e)
 
-        # Try to generate the .bai file in the same dir as the bam so that
-        # IGV can vizualize the bam file properly
-        pysam.index(bytes(full_path_to_bam))
+    if file_store_item.get_fileextension() == "bam":
 
-        logger.debug("Bam index for %s generated in %s seconds." % (
-            full_path_to_bam, time.time() - start_time))
+        try:
+            start_time = time.time()
+            logger.debug(
+                "Starting bam index generation for %s" % datafile_path)
 
-    except Exception as e:
-        logger.error("Something went wrong while trying to generate the bam "
-                     "index for %s. %s" % (full_path_to_bam, e))
+            # Try to generate the .bai file in the same dir as the bam so that
+            # IGV can vizualize the bam file properly
+            pysam.index(bytes(datafile_path))
+
+            auxiliary_filestore_item = FileStoreItem.objects.create_item(
+                datafile_path + ".bai")
+
+            parent_node.create_and_associate_auxiliary_node(
+                auxiliary_filestore_item.uuid)
+
+            generate_auxiliary_node.update_state(
+                state=celery.states.SUCCESS,
+                meta="Auxiliary Node generation for {} has succeeded.".format(
+                    parent_node)
+            )
+
+            logger.debug("Bam index for %s generated in %s seconds." % (
+                datafile_path, time.time() - start_time))
+
+        except Exception as e:
+            logger.error(
+                "Something went wrong while trying to generate the bam "
+                "index for %s. %s" % (datafile_path, e))
+            generate_auxiliary_node.update_state(
+                state=celery.states.FAILURE,
+                meta="Auxiliary Node generation for {} has failed.".format(
+                    parent_node)
+            )
+            raise celery.exceptions.Ignore()
 
 
 class DownloadError(StandardError):
