@@ -33,12 +33,12 @@ class Command(BaseCommand):
             for line in tf:
                 taxon_filter[string.strip(line)] = 1
         except:
-            print "No taxon_file"
+            sys.stdout.write("No taxon_file")
         # setup
         temp_dir = tempfile.mkdtemp()
         taxonomy_archive = os.path.join(temp_dir, "taxdump.tar.gz")
         # grab the tarfile and extract its contents
-        print "Downloading taxonomy information"
+        sys.stdout.write("Downloading taxonomy information")
         try:
             response = requests.get(settings.TAXONOMY_URL)
             response.raise_for_status()
@@ -54,7 +54,7 @@ class Command(BaseCommand):
         names_file = os.path.join(temp_dir, "names.dmp")
         nodes_file = os.path.join(temp_dir, "nodes.dmp")
         # get a list of node IDs we're interested in (a list of the species)
-        print "Getting species taxon IDs"
+        sys.stdout.write("Getting species taxon IDs")
         species_node_ids = dict()
         f = open(nodes_file, 'rb')
         for line in f:
@@ -71,7 +71,7 @@ class Command(BaseCommand):
                 else:
                     species_node_ids[node_id] = list()
         f.close()
-        print "Associating species taxon IDs and names"
+        sys.stdout.write("Associating species taxon IDs and names")
         # go through names file to get the names
         f = open(names_file, 'rb')
         for line in f:
@@ -111,7 +111,7 @@ class Command(BaseCommand):
                 taxon = Taxon(**entry)
                 try:
                     taxon.save()
-                    print "%s created." % taxon
+                    sys.stdout.write("%s created." % taxon)
                 except IntegrityError:
                     transaction.rollback_unless_managed()
-                    print "Duplicate Value %s" % taxon
+                    sys.stdout.write("Duplicate Value %s" % taxon)
