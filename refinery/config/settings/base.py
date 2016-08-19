@@ -557,3 +557,9 @@ SOLR_LIB_DIR = get_setting("SOLR_LIB_DIR")
 SOLR_CUSTOM_SYNONYMS_FILE = get_setting("SOLR_CUSTOM_SYNONYMS_FILE")
 
 REFINERY_URL_SCHEME = get_setting("REFINERY_URL_SCHEME")
+
+# Setting to determine when we should generate index files for
+# viszualization purposes. Possible values are "on_file_import" or
+# "never"
+REFINERY_AUXILIARY_FILE_GENERATION = get_setting(
+    "REFINERY_AUXILIARY_FILE_GENERATION")
