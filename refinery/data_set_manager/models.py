@@ -452,6 +452,17 @@ class Node(models.Model):
         return file_store.models.FileStoreItem.objects.filter(
             uuid=self.file_uuid)
 
+    def create_and_associate_auxiliary_node(self, filestore_item_uuid):
+        node = Node.objects.create(
+            study=self.study,
+            assay=self.assay,
+            name="index file for: {}".format(self.name),
+            is_auxiliary_node=True,
+            file_uuid=filestore_item_uuid
+        )
+
+        self.add_child(node)
+
 
 class Attribute(models.Model):
     # allowed attribute types
