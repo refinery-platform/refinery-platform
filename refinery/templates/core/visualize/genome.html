@@ -36,11 +36,20 @@
                 return $.getJSON('/api/v2/nodes/' + node_id + '/?format=json');
             });
 
+            // When more than one node is specified, but if only a single node
+            // is given, the console log below actually returns a 3 element array:
+            // The AJAX response object is being taken as the array, instead of as
+            // the first element of a 1-element array.
+            console.log('ajaxes: ', ajaxes); // TODO
             $.when.apply(null, ajaxes).then(function() {
                 // The elements of ajaxes correspond
                 // to the elements of the arguments array.
-                var track_urls = $.map(arguments, function(response){
-                    return response.full_file_store_item_url;
+                console.log('Array from arguments: ', Array.from(arguments)); // TODO
+                var tracks = $.map(arguments, function(response){
+                    return {
+                        name: response[0].full_file_store_item_url.replace(/.*\//, ''),
+                        url: response[0].full_file_store_item_url
+                    };
                 });
                 var div = $("#igv")[0];
                 var options = {
@@ -50,7 +59,7 @@
                         indexURL: '{{ index_url|escapejs }}',
                         cytobandURL: '{{ cytoband_url|escapejs }}'
                     },
-                    tracks: track_urls
+                    tracks: tracks
                 };
 
                 igv.createBrowser(div, options);
