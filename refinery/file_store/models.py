@@ -29,7 +29,7 @@ from django.core.files.storage import FileSystemStorage
 from django.utils import timezone
 
 from core.utils import is_url
-
+from data_set_manager.models import Node
 
 logger = logging.getLogger(__name__)
 
@@ -538,6 +538,14 @@ class FileStoreItem(models.Model):
     def get_import_status(self):
         """Return file import task state"""
         return AsyncResult(self.import_task_id).state
+
+    def get_associated_node(self):
+        try:
+            node = Node.objects.get(file_uuid=self.uuid)
+            return node
+        except (Node.DoesNotExist, Node.MultipleObjectsReturned) as e:
+            logger.error(e)
+            return None
 
 
 def is_local(uuid):
