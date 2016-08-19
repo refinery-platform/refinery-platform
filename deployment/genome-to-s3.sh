@@ -51,6 +51,12 @@ LOCAL=/tmp/genomes
 
 mkdir -p $LOCAL
 
+if [[ $# -eq 0 ]]; then
+  die "USAGE:
+$0 GENOME1 [ GENOME2 ... ]
+Fetches reference genomes from UCSC, unzips, indexes, and uploads to S3."
+fi
+
 for GENOME in $@; do
   echo # Blank line for readability
   echo "Starting $GENOME..."
@@ -59,20 +65,20 @@ for GENOME in $@; do
   cd $GENOME
   
   download_and_unzip bigZips/$GENOME.2bit
-  if [ -e $GENOME.2bit ]; then
+  if [[ -e $GENOME.2bit ]]; then
     twoBitToFa $GENOME.2bit $GENOME.fa
   fi
 
   download_and_unzip bigZips/$GENOME.fa
   # Replace $GENOME.fa with upstream1000.fa to get a smaller file for testing.
 
-  if [ -e $GENOME.fa.fai ]
+  if [[ -e $GENOME.fa.fai ]]
     then warn "$GENOME.fa.fai already exists: will not regenerate"
     else faidx $GENOME.fa > /dev/null || warn 'FAI creation failed'
   fi
 
   download_and_unzip database/cytoBand.txt  
-  if [ ! -e cytoBand.txt ]; then
+  if [[ ! -e cytoBand.txt ]]; then
     # "Ideo" seems to be more detailed?
     download_and_unzip database/cytoBandIdeo.txt \
       && mv cytoBandIdeo.txt cytoBand.txt \
