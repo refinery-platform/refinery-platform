@@ -224,8 +224,9 @@ def import_file(uuid, refresh=False, file_size=0):
 
         # Check if the Django setting to generate auxiliary file has been
         # set to work on files imported into Refinery
-        if settings.REFINERY_AUXILIARY_FILE_GENERATION == "upon_file_import":
-            if item.filetype.used_for_visualization:
+        if item.filetype.used_for_visualization:
+            if settings.REFINERY_AUXILIARY_FILE_GENERATION ==\
+                    "upon_file_import":
 
                 parent_node = item.get_associated_node()
 
