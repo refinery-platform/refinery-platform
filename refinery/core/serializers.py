@@ -1,7 +1,10 @@
+import logging
 from rest_framework import serializers
 
 from .models import Workflow, NodeGroup
 from data_set_manager.models import Node, Assay, Study
+
+logger = logging.getLogger(__name__)
 
 
 class NodeGroupSerializer(serializers.ModelSerializer):
@@ -60,3 +63,11 @@ class WorkflowSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Workflow
+
+
+class NodeSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = Node
+        fields = ['uuid', 'full_file_store_item_url']
+        lookup_field = 'uuid'

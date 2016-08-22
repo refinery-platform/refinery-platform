@@ -40,7 +40,8 @@ from core.models import (
     ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
     Analysis, Invitation, Ontology, NodeGroup,
     CustomRegistrationProfile)
-from core.serializers import WorkflowSerializer, NodeGroupSerializer
+from core.serializers import (
+    WorkflowSerializer, NodeGroupSerializer, NodeSerializer)
 from core.utils import (get_data_sets_annotations, get_anonymous_user,
                         create_current_selection_node_group,
                         filter_nodes_uuids_in_solr, move_obj_to_front)
@@ -594,6 +595,32 @@ def analysis(request, analysis_uuid):
                               context_instance=RequestContext(request))
 
 
+def visualize_genome(request):
+    """Provide IGV.js visualization of requested species + file nodes
+
+    Looks up species by name, and data files by node_id,
+    and passes the information to IGV.js.
+    """
+    species = request.GET.get('species')
+    node_ids = request.GET.getlist('node_ids')
+
+    genome = re.search(r'\(([^)]*)\)', species).group(1)
+    # TODO: Better to pass genome id instead of parsing?
+    url_base = "https://s3.amazonaws.com/data.cloud.refinery-platform.org" \
+        + "/data/igv-reference/" + genome + "/"
+    node_ids_json = json.dumps(node_ids)
+
+    return render_to_response(
+          'core/visualize/genome.html',
+          {
+              "fasta_url": url_base + genome + ".fa",
+              "index_url": url_base + genome + ".fa.fai",
+              "cytoband_url": url_base + "cytoBand.txt",
+              "node_ids_json": node_ids_json
+          },
+          context_instance=RequestContext(request))
+
+
 def solr_core_search(request):
     """Query Solr's core index for search.
 
@@ -1007,6 +1034,16 @@ class WorkflowViewSet(viewsets.ModelViewSet):
     """
     queryset = Workflow.objects.all()
     serializer_class = WorkflowSerializer
+    http_method_names = ['get']
+
+
+class NodeViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows Nodes to be viewed
+    """
+    queryset = Node.objects.all()
+    serializer_class = NodeSerializer
+    lookup_field = 'uuid'
     http_method_names = ['get']
 
 

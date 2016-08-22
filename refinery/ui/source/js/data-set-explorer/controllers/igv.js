@@ -1,7 +1,7 @@
 'use strict';
 
 function IgvCtrl (
-  $scope, $http, $window, $log, $resource
+  $scope, $http, $window, $log, $resource, $httpParamSerializer
 ) {
   $scope.igvConfig = {
     query: null,
@@ -130,7 +130,11 @@ function IgvCtrl (
   };
 
   $scope.launchIgv = function () {
-    $window.open($scope.selectedSpecies.select.url);
+    var params = $httpParamSerializer({
+      species: $scope.selectedSpecies.select.name,
+      node_ids: $scope.igvConfig.node_selection
+    });
+    $window.open('/visualize/genome?' + params);
   };
 }
 
@@ -142,5 +146,6 @@ angular
     '$window',
     '$log',
     '$resource',
+    '$httpParamSerializer',
     IgvCtrl
   ]);
