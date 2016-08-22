@@ -106,7 +106,7 @@ def import_file(uuid, refresh=False, file_size=0):
         try:
             response = requests.get(item.source, stream=True)
             response.raise_for_status()
-        except (HTTPError, ConnectionError, ValueError) as e:
+        except HTTPError as e:
             logger.error("Could not open URL '%s'. Reason: '%s'",
                          item.source, e)
 
@@ -118,6 +118,13 @@ def import_file(uuid, refresh=False, file_size=0):
             # ignore the task so no other state is recorded
             # See: http://stackoverflow.com/a/33143545
             raise celery.exceptions.Ignore()
+
+        # FIXME: When importing a tabular file into Refinery, there is a
+        # dependance on this ConnectionError below returning `None`!!!!
+        except(ConnectionError, ValueError) as e:
+            logger.error("Could not open URL '%s'. Reason: '%s'",
+                         item.source, e)
+            return None
 
         with NamedTemporaryFile(dir=get_temp_dir(), delete=False) as tmpfile:
 
