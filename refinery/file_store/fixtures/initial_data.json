@@ -4,8 +4,7 @@
     "pk": 1,
     "fields": {
       "description": "Binary compressed SAM",
-      "name": "BAM",
-      "used_for_visualization": true
+      "name": "BAM"
     }
   },
   {
@@ -13,8 +12,7 @@
     "pk": 2,
     "fields": {
       "description": "BED file",
-      "name": "BED",
-      "used_for_visualization": true
+      "name": "BED"
     }
   },
   {
@@ -30,8 +28,7 @@
     "pk": 4,
     "fields": {
       "description": "Big WIG",
-      "name": "BIGWIG",
-      "used_for_visualization": true
+      "name": "BIGWIG"
     }
   },
   {
@@ -71,8 +68,7 @@
     "pk": 9,
     "fields": {
       "description": "GFF file",
-      "name": "GFF",
-      "used_for_visualization": true
+      "name": "GFF"
     }
   },
   {
@@ -176,8 +172,7 @@
     "pk": 22,
     "fields": {
       "description": "Segmented Data File",
-      "name": "SEG",
-      "used_for_visualization": true
+      "name": "SEG"
     }
   },
   {
@@ -193,8 +188,7 @@
     "pk": 24,
     "fields": {
       "description": "TDF file",
-      "name": "TDF",
-      "used_for_visualization": true
+      "name": "TDF"
     }
   },
   {
@@ -218,8 +212,7 @@
     "pk": 27,
     "fields": {
       "description": "Variant Call Format",
-      "name": "VCF",
-      "used_for_visualization": true
+      "name": "VCF"
     }
   },
   {
@@ -227,8 +220,7 @@
     "pk": 28,
     "fields": {
       "description": "Wiggle Track Format",
-      "name": "WIG",
-      "used_for_visualization": true
+      "name": "WIG"
     }
   },
   {
@@ -300,8 +292,7 @@
     "pk": 41,
     "fields": {
       "description": "Bam index file",
-      "name": "BAI file",
-      "used_for_visualization": true
+      "name": "BAI file"
     }
   },
   {
