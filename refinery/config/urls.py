@@ -21,7 +21,8 @@ from core.api import (AnalysisResource, ProjectResource, NodeSetResource,
                       UserAuthenticationResource, InvitationResource,
                       FastQCResource, UserProfileResource)
 from core.models import DataSet, AuthenticationFormUsernameOrEmail
-from core.views import WorkflowViewSet, CustomRegistrationView, NodeGroups
+from core.views import (WorkflowViewSet, NodeViewSet,
+                        CustomRegistrationView, NodeGroups)
 from file_store.views import FileStoreItems
 from data_set_manager.views import Assays, AssaysFiles, AssaysAttributes
 from data_set_manager.api import (AttributeOrderResource, StudyResource,
@@ -48,7 +49,7 @@ admin.autodiscover()
 # Django REST Framework urls
 router = routers.DefaultRouter()
 router.register(r'workflows', WorkflowViewSet)
-
+router.register(r'nodes', NodeViewSet)
 
 # NG: added for tastypie URL
 v1_api = Api(api_name='v1')

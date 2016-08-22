@@ -451,6 +451,21 @@ class Node(models.Model):
         return file_store.models.FileStoreItem.objects.filter(
             uuid=self.file_uuid)
 
+    def full_file_store_item_url(self):
+        try:
+            file_store_item = file_store.models.FileStoreItem.objects.get(
+                uuid=self.file_uuid
+            )
+            return core.utils.get_full_url(
+                file_store_item.get_datafile_url()
+            )
+        except (
+                file_store.models.FileStoreItem.DoesNotExist,
+                file_store.models.FileStoreItem.MultipleObjectsReturned
+        ) as e:
+            logger.error(e)
+            return None
+
 
 class Attribute(models.Model):
     # allowed attribute types
