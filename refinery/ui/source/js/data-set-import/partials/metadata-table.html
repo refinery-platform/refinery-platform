@@ -143,7 +143,7 @@
         <h3>Configure Metadata Import</h3>
       </div>
 
-      <div>
+      <div ng-form="importMetadataTableForm">
         <div class="refinery-subheader m-t-1">
           <h4>
             Required
@@ -377,7 +377,7 @@
         <button
           class="refinery-base btn btn-primary"
           ng-click="metadataTable.startImport()"
-          ng-disabled="metadataTable.importMetadataTableForm.$invalid ||
+          ng-disabled="importMetadataTableForm.$invalid ||
           metadataTable.areFilesUploading()"
         >
           Upload Data Set
