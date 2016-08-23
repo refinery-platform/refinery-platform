@@ -55,39 +55,8 @@
           <div class="refinery-spinner refinery-spinner-inline"></div>
         </div>
       </div>
-      <!-- The global progress state -->
-      <div
-        class="col-lg-4"
-        ng-show="queue.length">
-        <div class="v-center">
-          <!-- The global progress bar -->
-          <div
-            class="progress"
-            ng-class="{ 'progress-striped': !allUploaded, 'active': uploadActive }"
-            file-upload-progress="progress()">
-            <div
-              class="progress-bar"
-              ng-repeat="file in queuedFiles track by file.name"
-              ng-class="{ 'progress-bar-success': file.uploaded && !file.error, 'progress-bar-danger': file.error }"
-              ng-style="{ 'width': globalToIndividualProgress(num, $index) + '%' }">
-              <span ng-if="queuedFiles.length <= 20">
-                <span
-                  ng-if="globalReadableProgress(num, $index) > 0 && globalReadableProgress(num, $index) < 100">
-                  {{ globalToIndividualProgress(num, $index) + '%' }}
-                </span>
-                <i
-                  class="fa fa-check text-success"
-                  aria-hidden="true"
-                  ng-if="globalReadableProgress(num, $index) >= 100 && !file.error"></i>
-                <i
-                  class="fa fa-exclamation-triangle text-danger"
-                  aria-hidden="true"
-                  ng-if="file.error"></i>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+
+      <!-- Removed global progress state, issue #1300 -->
     </div>
     <!-- The table listing the files available for upload/download -->
     <div class="container-fluid">
