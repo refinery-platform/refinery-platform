@@ -6,6 +6,7 @@ angular
      * Angular modules
      */
     'ngResource',
+    'ngMessages',
 
     /*
      * Third party modules
