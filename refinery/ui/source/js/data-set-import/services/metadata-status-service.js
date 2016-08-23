@@ -10,7 +10,9 @@ function metadataStatusService () {
    * @param { boolean } status - true or false if file is previewed
    */
   vm.setMetadataPreviewStatus = function (status) {
-    vm.metadataPreviewStatus = status;
+    if (typeof(status) === 'boolean') {
+      vm.metadataPreviewStatus = status;
+    }
   };
 }
 
