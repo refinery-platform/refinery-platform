@@ -2,37 +2,44 @@
 # by refinery-modules/refinery/manifests/init.pp
 
 WSGIPythonHome <%= @virtualenv %>
-WSGIScriptAlias / <%= @django_root %>/config/wsgi.py
-
-ServerName refinery.example.org
-
-<Directory <%= @django_root %>/config>
-    <Files wsgi.py>
-        Order deny,allow
-        Require all granted
-    </Files>
-</Directory>
 
 SetEnv DJANGO_SETTINGS_MODULE <%= @django_settings_module %>
 
-WSGIDaemonProcess refinery user=<%= @app_user %> group=<%= @app_group %> \
-    python-path=<%= @django_root %>:<%= @virtualenv %>/lib/python2.7/site-packages
-WSGIProcessGroup refinery
+<VirtualHost *:80>
+    ServerName refinery.example.org
 
-#Alias /robots.txt /vagrant/refinery/static/robots.txt
-#Alias /favicon.ico /vagrant/refinery/static/favicon.ico
+    RewriteEngine On
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    RewriteRule ^.*$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
-AliasMatch ^/([^/]*\.css) <%= @django_root %>/static/styles/$1
+    <Directory <%= @django_root %>/config>
+        <Files wsgi.py>
+            Order deny,allow
+            Require all granted
+        </Files>
+    </Directory>
+    WSGIScriptAlias / <%= @django_root %>/config/wsgi.py
 
-Alias /static/ <%= @project_root %>/static/
-Alias /media/ <%= @media_root %>/
+    WSGIDaemonProcess refinery user=<%= @app_user %> group=<%= @app_group %> \
+        python-path=<%= @django_root %>:<%= @virtualenv %>/lib/python2.7/site-packages
+    WSGIProcessGroup refinery
 
-<Directory <%= @project_root %>/static>
-    Order deny,allow
-    Require all granted
-</Directory>
+    #Alias /robots.txt /vagrant/refinery/static/robots.txt
+    #Alias /favicon.ico /vagrant/refinery/static/favicon.ico
 
-<Directory <%= @media_root %>>
-    Order deny,allow
-    Require all granted
-</Directory>
+    AliasMatch ^/([^/]*\.css) <%= @django_root %>/static/styles/$1
+
+    Alias /static/ <%= @project_root %>/static/
+    Alias /media/ <%= @media_root %>/
+
+    <Directory <%= @project_root %>/static>
+        Order deny,allow
+        Require all granted
+    </Directory>
+
+    <Directory <%= @media_root %>>
+        Order deny,allow
+        Require all granted
+    </Directory>
+
+</VirtualHost>
