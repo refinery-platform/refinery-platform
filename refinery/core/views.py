@@ -23,6 +23,7 @@ from registration import signals
 
 from guardian.shortcuts import get_perms
 import requests
+from requests.exceptions import HTTPError
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -39,7 +40,8 @@ from core.models import (
     ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
     Analysis, Invitation, Ontology, NodeGroup,
     CustomRegistrationProfile)
-from core.serializers import WorkflowSerializer, NodeGroupSerializer
+from core.serializers import (
+    WorkflowSerializer, NodeGroupSerializer, NodeSerializer)
 from core.utils import (get_data_sets_annotations, get_anonymous_user,
                         create_current_selection_node_group,
                         filter_nodes_uuids_in_solr, move_obj_to_front)
@@ -593,6 +595,32 @@ def analysis(request, analysis_uuid):
                               context_instance=RequestContext(request))
 
 
+def visualize_genome(request):
+    """Provide IGV.js visualization of requested species + file nodes
+
+    Looks up species by name, and data files by node_id,
+    and passes the information to IGV.js.
+    """
+    species = request.GET.get('species')
+    node_ids = request.GET.getlist('node_ids')
+
+    genome = re.search(r'\(([^)]*)\)', species).group(1)
+    # TODO: Better to pass genome id instead of parsing?
+    url_base = "https://s3.amazonaws.com/data.cloud.refinery-platform.org" \
+        + "/data/igv-reference/" + genome + "/"
+    node_ids_json = json.dumps(node_ids)
+
+    return render_to_response(
+          'core/visualize/genome.html',
+          {
+              "fasta_url": url_base + genome + ".fa",
+              "index_url": url_base + genome + ".fa.fai",
+              "cytoband_url": url_base + "cytoBand.txt",
+              "node_ids_json": node_ids_json
+          },
+          context_instance=RequestContext(request))
+
+
 def solr_core_search(request):
     """Query Solr's core index for search.
 
@@ -631,8 +659,11 @@ def solr_core_search(request):
         annotations = params['annotations'] in ['1', 'true', 'True']
     except KeyError:
         annotations = False
-
-    response = requests.get(url, params=params, headers=headers)
+    try:
+        response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
 
     if allIds or annotations:
         # Query for all uuids given the same query. Solr shold be very fast
@@ -648,11 +679,15 @@ def solr_core_search(request):
             'start': 0,
             'wt': 'json'
         }
-        response_ids = requests.get(
-            url,
-            params=all_ids_params,
-            headers=headers
-        )
+        try:
+            response_ids = requests.get(
+                url,
+                params=all_ids_params,
+                headers=headers
+            )
+            response_ids.raise_for_status()
+        except HTTPError as e:
+            logger.error(e)
 
         if response_ids.status_code == 200:
             response_ids = response_ids.json()
@@ -683,8 +718,13 @@ def solr_select(request, core):
 
     url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
     data = request.GET.urlencode()
-    fullResponse = requests.get(url, params=data)
-    response = fullResponse.content
+    try:
+        full_response = requests.get(url, params=data)
+        full_response.raise_for_status()
+        response = full_response.content
+    except HTTPError as e:
+        logger.error(e)
+
     return HttpResponse(response, mimetype='application/json')
 
 
@@ -771,11 +811,15 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
         replace_rows_str = '&rows=' + str(10000)
         query = query.replace(m_obj.group(), replace_rows_str)
 
-    # opening solr query results
-    results = requests.get(query, stream=True).raw.read()
+    try:
+        # opening solr query results
+        results = requests.get(query, stream=True)
+        results.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
 
     # converting results into json for python
-    results = json.loads(results)
+    results = json.loads(results.raw.read())
 
     # IF list of nodes to remove from query exists
     if selected_nodes:
@@ -837,6 +881,9 @@ def doi(request, id):
 
     try:
         response = requests.get(url, headers=headers)
+        response.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
     except requests.exceptions.ConnectionError:
         return HttpResponse('Service currently unavailable', status=503)
 
@@ -861,6 +908,9 @@ def pubmed_abstract(request, id):
 
     try:
         response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
     except requests.exceptions.ConnectionError:
         return HttpResponse('Service currently unavailable', status=503)
 
@@ -896,6 +946,9 @@ def pubmed_search(request, term):
 
     try:
         response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
+    except HTTPError as e:
+        logger.debug(e)
     except requests.exceptions.ConnectionError:
         return HttpResponse('Service currently unavailable', status=503)
 
@@ -919,6 +972,9 @@ def pubmed_summary(request, id):
 
     try:
         response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
     except requests.exceptions.ConnectionError:
         return HttpResponse('Service currently unavailable', status=503)
 
@@ -957,6 +1013,9 @@ def neo4j_dataset_annotations(request):
 
     try:
         response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
     except requests.exceptions.ConnectionError as e:
         logger.error('Neo4J seems to be offline.')
         logger.error(e)
@@ -975,6 +1034,16 @@ class WorkflowViewSet(viewsets.ModelViewSet):
     """
     queryset = Workflow.objects.all()
     serializer_class = WorkflowSerializer
+    http_method_names = ['get']
+
+
+class NodeViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows Nodes to be viewed
+    """
+    queryset = Node.objects.all()
+    serializer_class = NodeSerializer
+    lookup_field = 'uuid'
     http_method_names = ['get']
 
 

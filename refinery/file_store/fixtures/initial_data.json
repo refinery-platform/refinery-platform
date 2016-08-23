@@ -561,14 +561,6 @@
   },
   {
     "model": "file_store.FileExtension",
-    "pk": 36,
-    "fields": {
-      "name": "CEL",
-      "filetype": 6
-    }
-  },
-  {
-    "model": "file_store.FileExtension",
     "pk": 38,
     "fields": {
       "name": "fq",
@@ -579,7 +571,7 @@
     "model": "file_store.FileExtension",
     "pk": 39,
     "fields": {
-      "name": "BCL",
+      "name": "bcl",
       "filetype": 38
     }
   },
@@ -587,7 +579,7 @@
     "model": "file_store.FileExtension",
     "pk": 39,
     "fields": {
-      "name": "BCL.gz",
+      "name": "bcl.gz",
       "filetype": 39
     }
   }
@@ -595,7 +587,7 @@
     "model": "file_store.FileExtension",
     "pk": 40,
     "fields": {
-      "name": "BCL.tgz",
+      "name": "bcl.tgz",
       "filetype": 40
     }
   }
