@@ -34,7 +34,7 @@ function metadataTableDirective (
       // Watches for tab navigation
       scope.$on('$stateChangeStart', function (event) {
         if (metadataStatusService.metadataPreviewStatus) {
-          var answer = confirm('Files uploading or tabular data in preview' +
+          var answer = confirm('Uploading files or tabular data in preview' +
             ' will be lost.');
           if (!answer) {
             event.preventDefault();
@@ -49,7 +49,7 @@ function metadataTableDirective (
       //suppress all warnings between comments
       $(window).on('beforeunload', function () {
         if (metadataStatusService.metadataPreviewStatus) {
-          return 'Files uploading or tabular data in preview will be lost.';
+          return 'Uploading files or tabular data in preview will be lost.';
         }
       });
       /*eslint-enable */

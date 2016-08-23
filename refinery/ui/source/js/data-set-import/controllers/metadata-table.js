@@ -142,7 +142,6 @@ MetadataTableImportCtrl.prototype.renderTable = function () {
     });
   };
   // Set preview flag so ui can trigger alert when navigating away.
-  console.log('in the reset service');
   this.metadataStatusService.setMetadataPreviewStatus(true);
   reader.readAsText(self.file);
 };
