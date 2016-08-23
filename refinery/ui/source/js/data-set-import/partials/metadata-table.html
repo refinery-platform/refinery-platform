@@ -159,6 +159,8 @@
               class="width-95"
               name="title"
               required
+              ng-minlength="3"
+              ng-maxlength="50"
               ng-model="metadataTable.title"/>
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
@@ -368,24 +370,56 @@
         <div class="refinery-subheader m-t-1">
            <h3>Upload Data Set</h3>
         </div>
-        <button
-          class="refinery-base btn btn-default"
-          ng-click="metadataTable.checkFiles()"
-          ng-disabled="!metadataTable.dataFileColumn">
-          Check Availability of Data File
-        </button>
-        <button
-          class="refinery-base btn btn-primary"
-          ng-click="metadataTable.startImport()"
-          ng-disabled="importMetadataTableForm.$invalid ||
-          metadataTable.areFilesUploading()"
-        >
-          Upload Data Set
-        </button>
-        <span class="text-warning" ng-if="metadataTable.areFilesInQueue()">
-          <i class="fa fa-warning" aria-hidden="true"></i>
-          All data files have not been uploaded.
-        </span>
+        <div class="row m-t-1-4 m-b-1-4">
+          <div class="col-sm-12 col-md-6 col-lg-3">
+            <button
+              class="refinery-base btn btn-default"
+              ng-click="metadataTable.checkFiles()"
+              ng-disabled="!metadataTable.dataFileColumn">
+              Check Availability of Data File
+            </button>
+            <button
+              class="refinery-base btn btn-primary"
+              ng-click="metadataTable.startImport()"
+              ng-disabled="importMetadataTableForm.$invalid ||
+              metadataTable.areFilesUploading()">
+              Upload Data Set
+            </button>
+            </div>
+          <div class="col-sm-12 col-md-6 col-lg-4">
+            <span class="text-warning"
+              ng-if="metadataTable.areFilesInQueue()">
+              <i class="fa fa-warning" aria-hidden="true"></i>
+              All data files have not been uploaded.
+            </span>
+            <span
+              ng-messages="importMetadataTableForm.title.$error"
+              role="alert"
+              class="text-danger">
+              <div ng-message="required">
+                <i class="fa fa-warning" aria-hidden="true"></i>
+                Required: Enter a title.
+              </div>
+              <div ng-message="minlength">
+                <i class="fa fa-warning" aria-hidden="true"></i>
+                Error: Title is too short.
+              </div>
+              <div ng-message="maxlength">
+                <i class="fa fa-warning" aria-hidden="true"></i>
+                Error: Title is too long.
+              </div>
+            </span>
+            <span
+              ng-messages="importMetadataTableForm.source_column_index.$error"
+              role="alert"
+              class="text-danger">
+              <div ng-message="required">
+                <i class="fa fa-warning" aria-hidden="true"></i>
+                Required: Select a Sample Identifier.
+              </div>
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
