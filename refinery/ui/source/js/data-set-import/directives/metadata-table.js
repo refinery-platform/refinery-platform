@@ -1,6 +1,10 @@
 'use strict';
 
-function metadataTableDirective (fileUploadStatusService, $) {
+function metadataTableDirective (
+  fileUploadStatusService,
+  $,
+  metadataStatusService
+) {
   return {
     bindToController: {
       importOption: '='
@@ -27,30 +31,28 @@ function metadataTableDirective (fileUploadStatusService, $) {
         return false;
       };
 
-      // scope.$on('$stateChangeStart', function (event) {
-      //  console.log('in the location');
-      //  var answer = confirm('Are you sure you want to leave this page?');
-      //  if (!answer) {
-      //    event.preventDefault();
-      //  }
-      // });
-
-      // scope.$on('$locationChangeStart', function (event, next, current) {
-      //  console.log(next);
-      //  console.log(current);
-      //  var answer = '';
-      //  if (next !== current) {
-      //    console.log('yawn');
-      //    answer = confirm('Are you sure you want to navigate this page');
-      //  }
-      //  if (!answer) {
-      //    event.preventDefault();
-      //  }
-      // });
-
-      $(window).on('beforeunload', function () {
-        return 'Files uploading or tabular data in previewwill be lost.';
+      // Watches for tab navigation
+      scope.$on('$stateChangeStart', function (event) {
+        if (metadataStatusService.metadataPreviewStatus) {
+          var answer = confirm('Files uploading or tabular data in preview' +
+            ' will be lost.');
+          if (!answer) {
+            event.preventDefault();
+          } else {
+            metadataStatusService.setMetadataPreviewStatus(false);
+          }
+        }
       });
+
+      // Watches for navigation away from the import template
+      /*eslint-disable */
+      //suppress all warnings between comments
+      $(window).on('beforeunload', function () {
+        if (metadataStatusService.metadataPreviewStatus) {
+          return 'Files uploading or tabular data in preview will be lost.';
+        }
+      });
+      /*eslint-enable */
     }
   };
 }
@@ -60,5 +62,6 @@ angular
   .directive('metadataTable', [
     'fileUploadStatusService',
     '$',
+    'metadataStatusService',
     metadataTableDirective
   ]);

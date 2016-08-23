@@ -10,13 +10,6 @@ function DataSetImportStates (
         url: '/',
         reloadOnSearch: false,
         templateUrl: '/static/partials/data-set-import/views/import.html',
-        onExit: function () {
-          var answer = confirm('Files uploading or tabular data in preview' +
-            ' will be lost.');
-          if (!answer) {
-            event.preventDefault();
-          }
-        }
       },
       '/data_set_manager/import/'
     )
