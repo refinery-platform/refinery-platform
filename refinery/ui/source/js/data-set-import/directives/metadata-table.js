@@ -1,6 +1,6 @@
 'use strict';
 
-function metadataTableDirective (fileUploadStatusService) {
+function metadataTableDirective (fileUploadStatusService, $) {
   return {
     bindToController: {
       importOption: '='
@@ -26,6 +26,31 @@ function metadataTableDirective (fileUploadStatusService) {
         }
         return false;
       };
+
+      // scope.$on('$stateChangeStart', function (event) {
+      //  console.log('in the location');
+      //  var answer = confirm('Are you sure you want to leave this page?');
+      //  if (!answer) {
+      //    event.preventDefault();
+      //  }
+      // });
+
+      // scope.$on('$locationChangeStart', function (event, next, current) {
+      //  console.log(next);
+      //  console.log(current);
+      //  var answer = '';
+      //  if (next !== current) {
+      //    console.log('yawn');
+      //    answer = confirm('Are you sure you want to navigate this page');
+      //  }
+      //  if (!answer) {
+      //    event.preventDefault();
+      //  }
+      // });
+
+      $(window).on('beforeunload', function () {
+        return 'Files uploading or tabular data in previewwill be lost.';
+      });
     }
   };
 }
@@ -34,5 +59,6 @@ angular
   .module('refineryDataSetImport')
   .directive('metadataTable', [
     'fileUploadStatusService',
+    '$',
     metadataTableDirective
   ]);
