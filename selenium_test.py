@@ -1,8 +1,7 @@
 from os import environ
 
 
-def base_url():
-    return environ['BASE_URL']
+base_url = environ['BASE_URL']
 
 
 def assert_body_text(selenium, *search_texts):
@@ -11,8 +10,30 @@ def assert_body_text(selenium, *search_texts):
         assert search_text in all_text
 
 
-def test_homepage(selenium):
-    selenium.get(base_url())
-    assert_body_text(selenium, 'Collaboration', 'Statistics', 'About',
-                     'Register', 'Login', 'Launch Pad', 'Data Sets',
-                     'Analyses', 'Workflows')
+class TestLoginNotRequired:
+
+    def test_home_page(self, selenium):
+        selenium.get(base_url)
+        assert_body_text(selenium, 'Collaboration', 'Statistics', 'About',
+                         'Register', 'Login', 'Launch Pad', 'Data Sets',
+                         'Analyses', 'Workflows')
+
+    def test_statistics_page(self, selenium):
+        selenium.get(base_url)
+        selenium.find_element_by_link_text('Statistics').click()
+        assert_body_text(selenium, 'Users', 'Groups', 'Files',
+                         'Data Sets', 'Workflows', 'Projects')
+
+    def test_about_page(self, selenium):
+        selenium.get(base_url)
+        selenium.find_element_by_link_text('About').click()
+        assert_body_text(selenium, 'Background', 'Contact', 'Funding', 'Team',
+                         'Most Recent Code for this Instance')
+        # TODO: All sections are empty right now
+
+    def test_register_page(self, selenium):
+        pass  # TODO
+
+
+class TestLoginRequired:
+    pass
