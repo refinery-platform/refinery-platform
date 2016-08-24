@@ -230,7 +230,8 @@ def import_file(uuid, refresh=False, file_size=0):
 
         # Check if the Django setting to generate auxiliary file has been
         # set to work on files imported into Refinery
-        if item.filetype.used_for_visualization:
+        logger.debug("Checking if some auxiliary Node should be generated")
+        if item.filetype.used_for_visualization and item.is_local():
             if settings.REFINERY_AUXILIARY_FILE_GENERATION ==\
                     "upon_file_import":
 
