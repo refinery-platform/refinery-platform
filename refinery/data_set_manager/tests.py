@@ -1406,7 +1406,7 @@ class NodeClassMethodTests(TestCase):
         # Create Nodes
         self.node = Node.objects.create(assay=self.assay, study=self.study)
         self.another_node = Node.objects.create(assay=self.assay,
-                                             study=self.study)
+                                                study=self.study)
 
     def tearDown(self):
         FileStoreItem.objects.all().delete()
@@ -1424,33 +1424,43 @@ class NodeClassMethodTests(TestCase):
         self.assertIsNotNone(Node.objects.get(
             file_uuid=self.filestore_item.uuid))
         self.assertEqual(self.node.get_children()[0], Node.objects.get(
-            file_uuid=self.filestore_item.uuid))
+            file_uuid=self.filestore_item.uuid).uuid)
         self.assertEqual(Node.objects.get(
-            file_uuid=self.filestore_item.uuid).get_parents()[0], self.node)
-        self.assertEqual(self.node.get_children()[0].is_auxiliary_node, True)
+            file_uuid=self.filestore_item.uuid).get_parents()[0],
+                         self.node.uuid)
+        self.assertEqual(Node.objects.get(uuid=self.node.get_children()[
+            0]).is_auxiliary_node, True)
 
     def test_get_children(self):
         self.assertEqual(self.node.get_children(), [])
         self.node.add_child(self.another_node)
         self.assertIsNotNone(self.node.get_children()[0])
-        self.assertEqual(self.node.get_children()[0], self.another_node)
+        self.assertEqual(self.node.get_children()[0], self.another_node.uuid)
 
     def test_get_parents(self):
         self.assertEqual(self.another_node.get_parents(), [])
         self.node.add_child(self.another_node)
         self.assertIsNotNone(self.another_node.get_parents()[0])
-        self.assertEqual(self.another_node.get_parents()[0], self.node)
+        self.assertEqual(self.another_node.get_parents()[0], self.node.uuid)
 
     def test_get_auxiliary_nodes(self):
         self.assertEqual(self.node.get_children(), [])
-        self.assertEqual(self.node.get_auxiliary_nodes(), [])
         self.node.create_and_associate_auxiliary_node(self.filestore_item.uuid)
-        self.assertEqual(self.node.get_auxiliary_nodes()[0], Node.objects.get(
-            file_uuid=self.filestore_item.uuid))
-        self.node.create_and_associate_auxiliary_node(
-            self.filestore_item_1.uuid)
-        self.node.create_and_associate_auxiliary_node(
-            self.filestore_item_2.uuid)
-        self.assertEqual(len(self.node.get_auxiliary_nodes()), 3)
+        self.assertNotEqual(self.node.get_children(), [])
+        self.assertEqual(Node.objects.get(
+            file_uuid=self.filestore_item.uuid
+        ).get_relative_file_store_item_url(),
+                         FileStoreItem.objects.get(
+                             uuid=Node.objects.get(
+                                 file_uuid=self.filestore_item.uuid).file_uuid
+                         ).get_datafile_url())
+        self.node.create_and_associate_auxiliary_node(self.filestore_item.uuid)
+        self.assertEqual(Node.objects.get(
+            file_uuid=self.filestore_item.uuid
+        ).get_relative_file_store_item_url(),
+                         FileStoreItem.objects.get(
+                             uuid=Node.objects.get(
+                                 file_uuid=self.filestore_item.uuid).file_uuid
+                         ).get_datafile_url())
 
-    # TODO: write test for Node.get_auxiliary_node_generation_task_state()
+        # TODO: write test for Node.get_auxiliary_node_generation_task_state()
