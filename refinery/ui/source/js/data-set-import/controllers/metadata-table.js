@@ -65,7 +65,7 @@ MetadataTableImportCtrl.prototype.setImportOption = function (value) {
 
 MetadataTableImportCtrl.prototype.clearFile = function () {
   // Set preview flag so ui won't trigger alert when navigating away.
-  self.metadataStatusService.setMetadataPreviewStatus(false);
+  this.metadataStatusService.setMetadataPreviewStatus(false);
   this.$rootScope.$broadcast('clearFileInput', 'metadataTable');
 };
 
