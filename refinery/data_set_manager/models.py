@@ -19,7 +19,6 @@ import core
 import file_store
 from data_set_manager.genomes import map_species_id_to_default_genome_build
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -451,63 +450,89 @@ class Node(models.Model):
         return core.models.AnalysisNodeConnection.objects.filter(node=self)
 
     def get_file_store_items(self):
+        """
+        Returns a list of FileStoreItems associated with a Node
+        """
         return file_store.models.FileStoreItem.objects.filter(
             uuid=self.file_uuid)
 
     def create_and_associate_auxiliary_node(self, filestore_item_uuid):
-        node = Node.objects.create(
-            study=self.study,
-            assay=self.assay,
-            name="auxiliary Node for: {}".format(self.name),
-            is_auxiliary_node=True,
-            file_uuid=filestore_item_uuid
-        )
+            """
+            Tries to create and associate an auxiliary Node with a parent
+            node.
 
-        self.add_child(node)
+            If said auxiliary Node already exists, we just do a get()
+            and do not re-add it as a child
+            """
+            node = Node.objects.get_or_create(
+                study=self.study,
+                assay=self.assay,
+                name="auxiliary Node for: {}".format(self.name),
+                is_auxiliary_node=True,
+                file_uuid=filestore_item_uuid
+            )
+
+            # get_or_create() returns a tuple (<Node_object>, Boolean
+            # <created>)
+            # So, if this Node is newly created, we will associate it as a
+            # child to its parent
+            if node[1]:
+                self.add_child(node[0])
 
     def get_auxiliary_node_generation_task_state(self):
-        """return the state of the auxiliary Node/FileStoreItem generation task
-        for a given Node"""
+        """
+        return the state of the auxiliary Node/FileStoreItem generation task
+        for a given Node
+        """
 
         task = TaskSetResult.restore(self.uuid)
 
         if not task:
-            logger.error("TaskSet with UUID '%s' doesn't exist", self.uuid)
+            logger.debug("TaskSet with UUID '%s' doesn't exist", self.uuid)
             return None
 
-        return "Task: {} - {}".format(self.uuid, task[0].state)
+        return "{}".format(task[0].state)
 
     def get_children(self):
         """
-        Return a list of child Nodes for a given Node
+        Return a list of child Node's uuids for a given Node
         """
-        return [child for child in self.children.all()]
+        return [child.uuid for child in self.children.all()]
 
     def get_parents(self):
         """
-        Return a list of parent Nodes for a given Node
+        Return a list of parent Node's uuids for a given Node
         """
-        return [parent for parent in self.parents.all()]
+        return [parent.uuid for parent in self.parents.all()]
 
-    def get_auxiliary_nodes(self):
+    def get_auxiliary_node(self):
         """
-        Return a list of child Nodes that have their `is_auxiliary_node` set to
-        True for a given Node
+        Return uuid of auxiliary Node if
+        one exists,
+        otherwise return None
         """
-        return [node for node in self.get_children() if node.is_auxiliary_node]
+        child_nodes = self.get_children()
 
-    def full_file_store_item_url(self):
+        for uuid in child_nodes:
+            node = Node.objects.get(uuid=uuid)
+            if node.is_auxiliary_node:
+                return node.uuid
+
+        return None
+
+    def get_relative_file_store_item_url(self):
+        """
+        Return relative path to a Node's FileStoreItem's
+        datafile if one exists, otherwise return None
+        """
         try:
             file_store_item = file_store.models.FileStoreItem.objects.get(
                 uuid=self.file_uuid
             )
-            return core.utils.get_full_url(
-                file_store_item.get_datafile_url()
-            )
-        except (
-                file_store.models.FileStoreItem.DoesNotExist,
-                file_store.models.FileStoreItem.MultipleObjectsReturned
-        ) as e:
+            return file_store_item.get_datafile_url()
+
+        except (file_store.models.FileStoreItem.DoesNotExist,
+                file_store.models.FileStoreItem.MultipleObjectsReturned) as e:
             logger.error(e)
             return None
 

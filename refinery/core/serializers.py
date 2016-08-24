@@ -1,6 +1,7 @@
 import logging
 from rest_framework import serializers
 
+import file_store
 from .models import Workflow, NodeGroup
 from data_set_manager.models import Node, Assay, Study
 
@@ -66,8 +67,47 @@ class WorkflowSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class NodeSerializer(serializers.HyperlinkedModelSerializer):
+    child_nodes = serializers.SerializerMethodField('_get_children')
+    parent_nodes = serializers.SerializerMethodField('_get_parents')
+    auxiliary_node = serializers.SerializerMethodField('_get_aux_nodes')
+    auxiliary_node_task_state = serializers.SerializerMethodField(
+        '_get_aux_node_task_state')
+    file_extension = serializers.SerializerMethodField(
+        '_get_file_extension')
+    relative_file_store_item_url = serializers.SerializerMethodField(
+        '_get_relative_url')
+
+    def _get_children(self, obj):
+        return obj.get_children()
+
+    def _get_parents(self, obj):
+        return obj.get_parents()
+
+    def _get_aux_nodes(self, obj):
+        return obj.get_relative_file_store_item_url()
+
+    def _get_aux_node_task_state(self, obj):
+        return obj.get_auxiliary_node_generation_task_state()
+
+    def _get_file_extension(self, obj):
+        try:
+            return file_store.models.FileExtension.objects.get(
+                filetype=file_store.models.FileStoreItem.objects.get(
+                    uuid=obj.file_uuid).filetype).name
+        except (file_store.models.FileExtension.DoesNotExist,
+                file_store.models.FileExtension.MultipleObjectsReturned,
+                file_store.models.FileStoreItem.DoesNotExist,
+                file_store.models.FileStoreItem.MultipleObjectsReturned) as e:
+            logger.debug(e)
+            return None
+
+    def _get_relative_url(self, obj):
+        return obj.get_relative_file_store_item_url()
 
     class Meta:
         model = Node
-        fields = ['uuid', 'full_file_store_item_url']
-        lookup_field = 'uuid'
+        fields = ['uuid', 'relative_file_store_item_url',
+                  'parent_nodes',
+                  'child_nodes', 'auxiliary_node',
+                  'auxiliary_node_task_state',
+                  'file_extension']
