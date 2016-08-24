@@ -2,6 +2,7 @@ import os
 import yaml
 import pytest
 import time
+import re
 
 base_url = os.environ['BASE_URL']
 
@@ -20,11 +21,6 @@ def assert_body_text(selenium, *search_texts):
     all_text = selenium.find_element_by_tag_name('body').text
     for search_text in search_texts:
         assert search_text in all_text
-
-
-def upload(selenium):
-    path = os.environ['UPLOAD']
-    selenium.find_element_by_name('tabular_file').send_keys(path)
 
 
 class TestLoginNotRequired:
@@ -60,4 +56,9 @@ class TestLoginRequired:
     def test_upload(self, selenium, login):
         selenium.find_element_by_link_text('Upload').click()
         time.sleep(1)  # TODO: Something better?
-        upload(selenium)
+        path = os.environ['UPLOAD']
+        selenium.find_element_by_name('tabular_file').send_keys(path)
+        expected_title = re.sub(r'\..*$', '', re.sub(r'^.*/', '', path))
+        title_el = selenium.find_element_by_name('title')
+        assert title_el.get_attribute('value') == expected_title
+        pytest.set_trace()  # Keep the window open to plan the next step
