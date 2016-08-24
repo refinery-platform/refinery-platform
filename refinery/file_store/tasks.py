@@ -404,8 +404,11 @@ def generate_auxiliary_node(file_store_item, parent_node):
     :param parent_node: a Node instance
     :type parent_node: Node
     """
+
+    logger.debug("Parent Node: %s", parent_node.uuid)
+
     generate_auxiliary_node.update_state(
-        state=celery.states.RUNNING,
+        state=celery.states.STARTED,
         meta="Auxiliary Node generation for {} has started.".format(
             parent_node)
     )
