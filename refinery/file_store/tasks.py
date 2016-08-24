@@ -16,7 +16,6 @@ import pysam
 
 from django.core.files import File
 
-from data_set_manager.models import Node
 from .models import (FileStoreItem, get_temp_dir, file_path,
                      FILE_STORE_BASE_DIR, FileExtension)
 
