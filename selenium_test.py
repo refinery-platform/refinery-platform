@@ -1,11 +1,13 @@
-from os import environ
+import os
 import yaml
+import pytest
 
-base_url = environ['BASE_URL']
+base_url = os.environ['BASE_URL']
 
 
+@pytest.fixture
 def login(selenium):
-    creds = yaml.load(open(environ['CREDS_YML']))
+    creds = yaml.load(open(os.environ['CREDS_YML']))
     selenium.get(base_url)
     selenium.find_element_by_link_text('Login').click()
     selenium.find_element_by_id('id_username').send_keys(creds['username'])
@@ -46,6 +48,5 @@ class TestLoginNotRequired:
 
 class TestLoginRequired:
 
-    def test_login(self, selenium):
-        login(selenium)
+    def test_login(self, selenium, login):
         assert_body_text(selenium, 'Upload', 'Logout')
