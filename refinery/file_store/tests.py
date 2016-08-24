@@ -8,7 +8,7 @@ from urlparse import urljoin
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import SimpleTestCase, TransactionTestCase
+from django.test import SimpleTestCase
 
 from rest_framework.test import APIRequestFactory
 from rest_framework.test import APITestCase
