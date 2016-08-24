@@ -1,7 +1,16 @@
 from os import environ
-
+import yaml
 
 base_url = environ['BASE_URL']
+
+
+def login(selenium):
+    creds = yaml.load(open(environ['CREDS_YML']))
+    selenium.get(base_url)
+    selenium.find_element_by_link_text('Login').click()
+    selenium.find_element_by_id('id_username').send_keys(creds['username'])
+    selenium.find_element_by_id('id_password').send_keys(creds['password'])
+    selenium.find_element_by_xpath('//input[@type="submit"]').click()
 
 
 def assert_body_text(selenium, *search_texts):
@@ -36,4 +45,7 @@ class TestLoginNotRequired:
 
 
 class TestLoginRequired:
-    pass
+
+    def test_login(self, selenium):
+        login(selenium)
+        assert_body_text(selenium, 'Upload', 'Logout')
