@@ -30,13 +30,20 @@ before_script:
 script:
   - flake8 --exclude=migrations,ui ..
 
-  - echo 'travis_fold:start:django-tests'
+  - echo -en 'travis_fold:start:django-tests\r'
   - coverage run manage.py test
-  - echo 'travis_fold:end:django-tests'
+  - echo -en 'travis_fold:end:django-tests\r'
 
   - echo 'travis_fold:start:grunt'
   - cd ui && grunt && cd ../
   - echo 'travis_fold:end:grunt'
+
+    # debugging...
+  - pip show pytest
+  - which pytest
+  - pip install pytest # Should not be necessary...
+  - pip show pytest
+  - which pytest
 
   - echo 'travis_fold:start:selenium'
   - python manage.py runserver &

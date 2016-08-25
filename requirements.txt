@@ -55,7 +55,6 @@ pycparser==2.13
 Pygments==1.6rc1
 pyOpenSSL==0.15.1
 pysolr==3.3.2
-pytest==3.0.1
 pytest-selenium==1.3.1
 python-ldap==2.4.19
 python-magic==0.4.6
