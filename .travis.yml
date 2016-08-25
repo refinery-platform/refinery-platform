@@ -27,8 +27,8 @@ script:
   - flake8 --exclude=migrations,ui ..
   - coverage run manage.py test
   - cd ui && grunt && cd ../
-  - python manage.py runserver && cd selenium
-  - curl http://localhost:8000 # TODO: Remove; just for debugging Travis.
+  - python manage.py runserver &
+  - cd selenium
   - BASE_URL=http://localhost:8000 CREDS_YML=guest-creds.yml UPLOAD=gff3.csv \
     pytest basic_test.py --driver Firefox
 after_success:
