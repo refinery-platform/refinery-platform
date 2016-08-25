@@ -22,43 +22,35 @@ def assert_body_text(selenium, *search_texts):
     for search_text in search_texts:
         assert search_text in all_text
 
-
-class TestLoginNotRequired:
-
-    def test_home_page(self, selenium):
-        selenium.get(base_url)
-        assert_body_text(selenium, 'Collaboration', 'Statistics', 'About',
-                         'Register', 'Login', 'Launch Pad', 'Data Sets',
-                         'Analyses', 'Workflows')
-
-    def test_statistics_page(self, selenium):
-        selenium.get(base_url)
-        selenium.find_element_by_link_text('Statistics').click()
-        assert_body_text(selenium, 'Users', 'Groups', 'Files',
-                         'Data Sets', 'Workflows', 'Projects')
-
-    def test_about_page(self, selenium):
-        selenium.get(base_url)
-        selenium.find_element_by_link_text('About').click()
-        assert_body_text(selenium, 'Background', 'Contact', 'Funding', 'Team',
-                         'Most Recent Code for this Instance')
-        # TODO: All sections are empty right now
-
-    def test_register_page(self, selenium):
-        pass  # TODO
+# TESTS:
 
 
-class TestLoginRequired:
+def test_login_not_required(selenium):
+    selenium.get(base_url)
+    assert_body_text(selenium, 'Collaboration', 'Statistics', 'About',
+                     'Register', 'Login', 'Launch Pad', 'Data Sets',
+                     'Analyses', 'Workflows')
 
-    def test_login(self, selenium, login):
-        assert_body_text(selenium, 'Upload', 'Logout')
+    selenium.find_element_by_link_text('Statistics').click()
+    assert_body_text(selenium, 'Users', 'Groups', 'Files',
+                     'Data Sets', 'Workflows', 'Projects')
 
-    def test_upload(self, selenium, login):
-        selenium.find_element_by_link_text('Upload').click()
-        time.sleep(1)  # TODO: Something better?
-        path = os.environ['UPLOAD']
-        selenium.find_element_by_name('tabular_file').send_keys(path)
-        expected_title = re.sub(r'\..*$', '', re.sub(r'^.*/', '', path))
-        title_el = selenium.find_element_by_name('title')
-        assert title_el.get_attribute('value') == expected_title
-        pytest.set_trace()  # Keep the window open to plan the next step
+    selenium.find_element_by_link_text('About').click()
+    assert_body_text(selenium, 'Background', 'Contact', 'Funding', 'Team',
+                     'Most Recent Code for this Instance')
+    # TODO: All sections are empty right now
+    # TODO: Registration page
+
+
+def test_upload(selenium, login):
+    assert_body_text(selenium, 'Upload', 'Logout')
+
+    selenium.find_element_by_link_text('Upload').click()
+    time.sleep(1)  # TODO: Something better?
+    path = os.environ['UPLOAD']
+
+    selenium.find_element_by_name('tabular_file').send_keys(path)
+    expected_title = re.sub(r'\..*$', '', re.sub(r'^.*/', '', path))
+    title_el = selenium.find_element_by_name('title')
+    assert title_el.get_attribute('value') == expected_title
+    pytest.set_trace()  # In debug, hit "c" to continue.
