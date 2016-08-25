@@ -8,7 +8,8 @@ function MetadataTableImportCtrl (
   d3,
   $uibModal,
   fileSources,
-  tabularFileImportApi
+  tabularFileImportApi,
+  metadataStatusService
 ) {
   this.$log = $log;
   this.$rootScope = $rootScope;
@@ -18,6 +19,7 @@ function MetadataTableImportCtrl (
   this.$uibModal = $uibModal;
   this.fileSources = fileSources;
   this.tabularFileImportApi = tabularFileImportApi;
+  this.metadataStatusService = metadataStatusService;
 
   this.gridOptions = {
     resizeable: true
@@ -62,6 +64,8 @@ MetadataTableImportCtrl.prototype.setImportOption = function (value) {
 };
 
 MetadataTableImportCtrl.prototype.clearFile = function () {
+  // Set preview flag so ui won't trigger alert when navigating away.
+  this.metadataStatusService.setMetadataPreviewStatus(false);
   this.$rootScope.$broadcast('clearFileInput', 'metadataTable');
 };
 
@@ -139,6 +143,8 @@ MetadataTableImportCtrl.prototype.renderTable = function () {
       self.gridOptions.data = self.metadataSample;
     });
   };
+  // Set preview flag so ui can trigger alert when navigating away.
+  this.metadataStatusService.setMetadataPreviewStatus(true);
   reader.readAsText(self.file);
 };
 
@@ -288,6 +294,8 @@ MetadataTableImportCtrl.prototype.startImport = function () {
     .then(function (response) {
       self.importedDataSetUuid = response.new_data_set_uuid;
       self.isSuccessfullyImported = true;
+      // Set preview flag so ui won't trigger alert when navigating away.
+      self.metadataStatusService.setMetadataPreviewStatus(false);
       self.$timeout(function () {
         self.$window.location.href = '/data_sets/' + self.importedDataSetUuid;
       }, 2500);
@@ -312,5 +320,6 @@ angular
     '$uibModal',
     'fileSources',
     'tabularFileImportApi',
+    'metadataStatusService',
     MetadataTableImportCtrl
   ]);
