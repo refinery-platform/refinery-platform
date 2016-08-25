@@ -31,7 +31,7 @@
         <button
           class="refinery-base btn btn-default start"
           ng-click="submit()"
-          ng-disabled="numUnfinishedUploads() === 0">
+          ng-disabled="numUnfinishedUploads() === 0 || processing() || loadingFiles">
           <i class="fa fa-upload"></i>
           <span>Start upload</span>
         </button>
@@ -98,7 +98,7 @@
               class="refinery-base btn btn-default start"
               ng-click="file.$submit()"
               ng-hide="!file.$submit || options.autoUpload"
-              ng-disabled="file.$state() == 'pending' || file.$state() == 'rejected'">
+              ng-disabled="file.$state() == 'pending' || file.$state() == 'rejected' || loadingFiles">
               <i class="fa fa-upload"></i>
               <span>Start</span>
             </button>
