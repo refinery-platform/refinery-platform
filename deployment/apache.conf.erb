@@ -8,9 +8,11 @@ SetEnv DJANGO_SETTINGS_MODULE <%= @django_settings_module %>
 <VirtualHost *:80>
     ServerName <%= @site_url %>
 
+    <% if @tls_rewrite %>
     RewriteEngine On
     RewriteCond %{HTTP:X-Forwarded-Proto} !https
     RewriteRule ^.*$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+    <% end %>
 
     <Directory <%= @django_root %>/config>
         <Files wsgi.py>

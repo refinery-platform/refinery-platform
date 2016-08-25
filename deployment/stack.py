@@ -83,6 +83,10 @@ def main():
     config_uri = save_s3_config(config, unique_suffix)
     sys.stderr.write("Configuration saved to {}\n".format(config_uri))
 
+    tls_rewrite = "false"
+    if 'TLS_CERTIFICATE' in config:
+        tls_rewrite = "true"
+
     # The userdata script is executed via CloudInit.
     # It's made by concatenating a block of parameter variables,
     # with the bootstrap.sh script,
@@ -106,6 +110,7 @@ def main():
         "DEFAULT_FROM_EMAIL=", config['DEFAULT_FROM_EMAIL'], "\n",
         "SERVER_EMAIL=", config['SERVER_EMAIL'], "\n",
         "IAM_SMTP_USER=", functions.ref('RefinerySMTPUser'), "\n",
+        "FACTER_TLS_REWRITE=", tls_rewrite, "\n",
         "S3_CONFIG_URI=", config['S3_CONFIG_URI'], "\n",
         "SITE_URL=", config['SITE_URL'], "\n",
         # May contain spaces, but can't contain "'"
