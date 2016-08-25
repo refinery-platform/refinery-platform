@@ -28,32 +28,22 @@ before_script:
   - bower install --config.interactive=false
   - cd ../
 script:
-  - flake8 --exclude=migrations,ui ..
-
-  - echo -en 'travis_fold:start:django-tests\r'
-  - coverage run manage.py test
-  - echo -en 'travis_fold:end:django-tests\r'
-
-  - echo 'travis_fold:start:grunt'
-  - pushd ui; grunt; popd
-  - echo 'travis_fold:end:grunt'
-
-    # debugging...
-  - pip show pytest
-  - which pytest
-  - pytest --version
-
-  - pushd ../selenium
-
-  - pip show pytest
-  - which pytest
-  - pytest --version
-
+#  - flake8 --exclude=migrations,ui ..
+#
+#  - echo -en 'travis_fold:start:django-tests'
+#  - coverage run manage.py test
+#  - echo -en 'travis_fold:end:django-tests'
+#
+#  - echo 'travis_fold:start:grunt'
+#  - pushd ui; grunt; popd
+#  - echo 'travis_fold:end:grunt'
 
   - echo 'travis_fold:start:selenium'
   - python manage.py runserver &
-  - BASE_URL=http://localhost:8000 CREDS_YML=guest-creds.yml UPLOAD=gff3.csv \
-    pytest basic_test.py --driver Firefox
+  - pushd ../selenium
+  - export BASE_URL=http://localhost:8000 CREDS_YML=guest-creds.yml UPLOAD=gff3.csv
+  - pytest basic_test.py --driver Firefox
+  - popd
   - echo 'travis_fold:end:selenium'
 after_success:
   - codecov
