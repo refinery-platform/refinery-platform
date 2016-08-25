@@ -460,10 +460,6 @@ exec { 'apache2-refinery-enable':
   command => '/usr/sbin/a2ensite 001-refinery',
 }
 ~>
-exec { 'apache2-default-disable':
-  command => '/usr/sbin/a2dissite 000-default',
-}
-~>
 service { 'apache2':
   ensure     => running,
   hasrestart => true,

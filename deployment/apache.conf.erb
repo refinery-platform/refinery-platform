@@ -6,7 +6,7 @@ WSGIPythonHome <%= @virtualenv %>
 SetEnv DJANGO_SETTINGS_MODULE <%= @django_settings_module %>
 
 <VirtualHost *:80>
-    ServerName refinery.example.org
+    ServerName <%= @site_url %>
 
     RewriteEngine On
     RewriteCond %{HTTP:X-Forwarded-Proto} !https
