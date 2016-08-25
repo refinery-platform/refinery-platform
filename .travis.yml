@@ -1,6 +1,10 @@
 language: python
 python:
   - 2.7
+cache:
+  directories:
+  - $HOME/.cache/pip
+  - /usr/lib/node_modules # TODO: Confirm
 services:
   - postgresql
   - neo4j
@@ -26,9 +30,9 @@ before_script:
 script:
   - flake8 --exclude=migrations,ui ..
 
-  - travis_fold:start:tests
+  - travis_fold:start:django-tests
   - coverage run manage.py test
-  - travis_fold:end:tests
+  - travis_fold:end:django-tests
 
   - travis_fold:start:grunt
   - cd ui && grunt && cd ../
