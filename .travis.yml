@@ -30,20 +30,20 @@ before_script:
 script:
   - flake8 --exclude=migrations,ui ..
 
-  - travis_fold:start:django-tests
+  - echo 'travis_fold:start:django-tests'
   - coverage run manage.py test
-  - travis_fold:end:django-tests
+  - echo 'travis_fold:end:django-tests'
 
-  - travis_fold:start:grunt
+  - echo 'travis_fold:start:grunt'
   - cd ui && grunt && cd ../
-  - travis_fold:end:grunt
+  - echo 'travis_fold:end:grunt'
 
-  - travis_fold:start:selenium
+  - echo 'travis_fold:start:selenium'
   - python manage.py runserver &
   - cd ../selenium
   - BASE_URL=http://localhost:8000 CREDS_YML=guest-creds.yml UPLOAD=gff3.csv \
     pytest basic_test.py --driver Firefox
-  - travis_fold:end:selenium
+  - echo 'travis_fold:end:selenium'
 after_success:
   - codecov
   - npm run codecov
