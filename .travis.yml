@@ -9,6 +9,8 @@ install:
 env:
   - DJANGO_SETTINGS_MODULE=config.settings.dev
 before_script:
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"  # From https://docs.travis-ci.com/user/gui-and-headless-browsers/#Using-xvfb-to-Run-Tests-That-Require-a-GUI
   - createuser --createdb --no-superuser --no-createrole vagrant
   - createdb -O vagrant refinery
   - cd refinery
