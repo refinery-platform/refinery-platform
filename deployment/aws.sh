@@ -8,11 +8,16 @@ set -x
 # to both Vagrant and AWS. Both bootstrap.sh and aws.sh (this
 # script) are supplied via cloudinit userdata.
 
+env
+
 # Normally supplied as input, but use a default if not.
 GIT_BRANCH=${GIT_BRANCH:-develop}
 
 /usr/bin/apt-get -q -y install htop
 /usr/bin/apt-get -q -y install awscli jq postgresql-client-9.3
+
+printf '%s' "${CONFIG_YAML}" | base64 -d > /home/ubuntu/config.yaml
+printf '%s' "${CONFIG_JSON}" | base64 -d > /home/ubuntu/config.json
 
 # Fetch the source code repo (from github),
 # and switch to the desired commit/branch.
@@ -23,6 +28,8 @@ sudo su -c '
   cd /srv/refinery-platform
   git checkout '"$GIT_BRANCH"'
 ' ubuntu
+
+ln -s /home/ubuntu/config.yaml /srv/refinery-platform/refinery/config/override-config.yaml
 
 cd /srv/refinery-platform/deployment
 
@@ -39,23 +46,32 @@ export S3_CONFIG_URI
 (cd /home/ubuntu &&
  /srv/refinery-platform/deployment/bin/get-s3-config)
 
+# List of SSH users
+SSH_USERS=$(jq -r '"" + .SSH_USERS' < /home/ubuntu/s3-config) 
+# Deliberately field split to get several users.
+HOME=/home/ubuntu sh /srv/refinery-platform/deployment/bin/fetch-github-ssh-keys $SSH_USERS
+
 # Tag the attached root volume
 sh /srv/refinery-platform/deployment/bin/fix-untagged-volumes
 
-# Discover IP endpoint for our PostgreSQL RDS, and place it in
-# environment variables for puppet/facter to use
-: ${RDS_NAME?RDS_NAME must be set}
-bin/aws-rds-endpoint "$RDS_NAME" > /home/ubuntu/rds
+# CloudFormation should have set the endpoint
+# (DNS address and port) for our PostgreSQL RDS.
+# Copy them so that puppet/facter can use it.
+: ${RDS_ENDPOINT_ADDRESS?RDS_ENDPOINT_ADDRESS must be set}
+: ${RDS_ENDPOINT_PORT?RDS_ENDPOINT_PORT must be set}
 
 # FACTER environment variables become facts for puppet;
 # see https://puppetlabs.com/blog/facter-part-1-facter-101
-export FACTER_RDS_HOST=$(jq -r .Address /home/ubuntu/rds)
-export FACTER_RDS_PORT=$(jq -r .Port /home/ubuntu/rds)
+export FACTER_RDS_HOST=$RDS_ENDPOINT_ADDRESS
+export FACTER_RDS_PORT=$RDS_ENDPOINT_PORT
 export FACTER_RDS_ROLE="$RDS_ROLE"
 
 # Create SMTP credentials and
 # place them in (facter) environment variables.
 . bin/create-smtp-credentials
+
+export FACTER_DJANGO_SETTINGS_MODULE=$(
+  jq -r .DJANGO_SETTINGS_MODULE /home/ubuntu/s3-config)
 
 export FACTER_ADMIN="$ADMIN"
 export FACTER_DEFAULT_FROM_EMAIL="$DEFAULT_FROM_EMAIL"
@@ -70,6 +86,8 @@ export FACTER_SITE_NAME="$SITE_NAME"
 export FACTER_RDS_ROLE_PASSWORD=password
 # Already set by earlier part of userdata
 export RDS_SUPERUSER_PASSWORD
+export RDS_ENDPOINT_ADDRESS
+export RDS_ENDPOINT_PORT
 PASSWORD=$FACTER_RDS_ROLE_PASSWORD bin/ensure-postgresql-role
 bin/ensure-postgresql-database
 

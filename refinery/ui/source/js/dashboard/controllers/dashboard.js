@@ -918,7 +918,7 @@ DashboardCtrl.prototype.dataSetIsPreviewed = function (uuid) {
  */
 DashboardCtrl.prototype.dataSetMouseEnter = function (dataSet) {
   this.$rootScope.$emit('dashboardVisNodeFocus', {
-    terms: dataSet.annotations,
+    terms: dataSet.annotations || [],
     source: 'resultsList'
   });
   if (this.listGraphHideUnrelatedNodes !== dataSet.id) {
@@ -936,7 +936,7 @@ DashboardCtrl.prototype.dataSetMouseEnter = function (dataSet) {
  */
 DashboardCtrl.prototype.dataSetMouseLeave = function (dataSet) {
   this.$rootScope.$emit('dashboardVisNodeBlur', {
-    terms: dataSet.annotations,
+    terms: dataSet.annotations || [],
     source: 'resultsList'
   });
   this.listGraphHideUnrelatedNodes = undefined;

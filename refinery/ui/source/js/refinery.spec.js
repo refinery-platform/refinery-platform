@@ -31,6 +31,10 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('ui.router')).toEqual(true);
     });
 
+    it('should have "file-model" as a dependency', function () {
+      expect(hasModule('file-model')).toEqual(true);
+    });
+
     it('should have "ngWebworker" as a dependency', function () {
       expect(hasModule('ngWebworker')).toEqual(true);
     });
@@ -83,10 +87,6 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('refineryStatistics')).toEqual(true);
     });
 
-    it('should have "refineryMetadataTableImport" as a dependency', function () {
-      expect(hasModule('refineryMetadataTableImport')).toEqual(true);
-    });
-
     it('should have "refineryProvvis" as a dependency', function () {
       expect(hasModule('refineryProvvis')).toEqual(true);
     });
@@ -117,6 +117,10 @@ describe('RefineryApp.module: unit tests', function () {
 
     it('should have "refineryFileBrowser" as a dependency', function () {
       expect(hasModule('refineryFileBrowser')).toEqual(true);
+    });
+
+    it('should have "refineryDataSetAbout" as a dependency', function () {
+      expect(hasModule('refineryDataSetAbout')).toEqual(true);
     });
 
     // Just a negative control to make sure that the test actually works.

@@ -179,9 +179,9 @@ describe('RefineryDataSetNav.state: unit tests', function () {
       expect($state.current.name).toEqual('analyses');
     });
 
-    it('should be "details" when path is "/details"', function () {
-      goTo('/details');
-      expect($state.current.name).toEqual('details');
+    it('should be "details" when path is "/about"', function () {
+      goTo('/about');
+      expect($state.current.name).toEqual('about');
     });
 
     it('should be "browse" when path is not existing', function () {

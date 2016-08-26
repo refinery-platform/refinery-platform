@@ -8,6 +8,7 @@ import logging
 import time
 import urlparse
 import requests
+from requests.exceptions import HTTPError
 import json
 
 from django.db.models import Q
@@ -526,15 +527,15 @@ def generate_solr_params(params, assay_uuid):
                  '"Array Data Matrix File" OR' \
                  '"Derived Array Data Matrix File")'
 
-    is_annotation = params.get('is_annotation', default='false')
-    facet_count = params.get('include_facet_count', default='true')
-    start = params.get('offset', default='0')
-    row = params.get('limit', default='20')
-    field_limit = params.get('attributes', default=None)
-    facet_field = params.get('facets', default=None)
-    facet_pivot = params.get('pivots', default=None)
-    sort = params.get('sort', default=None)
-    facet_filter = params.get('filter_attribute', default=None)
+    is_annotation = params.get('is_annotation', 'false')
+    facet_count = params.get('include_facet_count', 'true')
+    start = params.get('offset', '0')
+    row = params.get('limit', '20')
+    field_limit = params.get('attributes', None)
+    facet_field = params.get('facets', None)
+    facet_pivot = params.get('pivots', None)
+    sort = params.get('sort', None)
+    facet_filter = params.get('filter_attribute', None)
 
     fixed_solr_params = \
         '&'.join([file_types,
@@ -574,8 +575,10 @@ def generate_solr_params(params, assay_uuid):
         solr_params = ''.join([solr_params, '&sort=', sort])
 
     if facet_filter:
-        facet_filter = urlunquote(facet_filter)
-        facet_filter = json.loads(facet_filter)
+        # handle default formatting in get request, query_params
+        if isinstance(facet_filter, unicode):
+            facet_filter = urlunquote(facet_filter)
+            facet_filter = json.loads(facet_filter)
         facet_filter_str = create_facet_filter_query(facet_filter)
         solr_params = ''.join([solr_params, facet_filter_str])
 
@@ -589,7 +592,9 @@ def insert_facet_field_filter(facet_filter, facet_field_arr):
     # For solr requests, removes duplicate facet fields with filters from
     # facet_field_arr, maintains facet_field order
     if facet_filter:
-        facet_filter = json.loads(facet_filter)
+        # handle default formatting in get request, query_params
+        if isinstance(facet_filter, unicode):
+            facet_filter = json.loads(facet_filter)
         for facet in facet_filter:
             ind = facet_field_arr.index(facet)
             facet_field_arr[ind] = ''.join(['{!ex=', facet, '}', facet])
@@ -691,7 +696,12 @@ def search_solr(encoded_params, core):
     """
     url_portion = '/'.join([core, "select"])
     url = urlparse.urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
-    full_response = requests.get(url, params=encoded_params)
+    try:
+        full_response = requests.get(url, params=encoded_params)
+        full_response.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
+
     response = full_response.content
 
     return response
@@ -723,12 +733,16 @@ def format_solr_response(solr_response):
     # Reorganizes solr response into easier to digest objects.
     order_facet_fields = solr_response_json.get('responseHeader').get(
             'params').get('fl').split(',')
-    facet_field_counts = solr_response_json.get('facet_counts').get(
+    if solr_response_json.get('facet_counts'):
+        facet_field_counts = solr_response_json.get('facet_counts').get(
             'facet_fields')
+        facet_field_counts_obj = objectify_facet_field_counts(
+            facet_field_counts)
+        solr_response_json['facet_field_counts'] = facet_field_counts_obj
+        del solr_response_json['facet_counts']
+
     facet_field_docs = solr_response_json.get('response').get('docs')
     facet_field_docs_count = solr_response_json.get('response').get('numFound')
-    facet_field_counts_obj = objectify_facet_field_counts(facet_field_counts)
-    solr_response_json['facet_field_counts'] = facet_field_counts_obj
     attributes = customize_attribute_response(order_facet_fields)
     solr_response_json["attributes"] = attributes
     solr_response_json["nodes"] = facet_field_docs
@@ -736,7 +750,6 @@ def format_solr_response(solr_response):
 
     # Remove unused fields from solr response
     del solr_response_json['responseHeader']
-    del solr_response_json['facet_counts']
     del solr_response_json['response']
 
     return solr_response_json
@@ -820,6 +833,37 @@ def customize_attribute_response(facet_fields):
         attribute_array.append(customized_field)
 
     return attribute_array
+
+
+def initialize_attribute_order_ranks(selected_attribute, new_rank):
+    # With a new set of attribute orders, this will set a default rank
+    attribute_list = AttributeOrder.objects.filter(
+        assay=selected_attribute.assay)
+    new_increment_rank = 1
+    for attribute in attribute_list:
+        # new rank is handled seperately
+        if new_increment_rank == new_rank:
+            new_increment_rank = new_increment_rank + 1
+        # internal attributes aren't shown, does not need rank
+        if not attribute.is_internal:
+            # updates requested attribute
+            if attribute == selected_attribute:
+                serializer = AttributeOrderSerializer(
+                        attribute,
+                        {'rank': new_rank},
+                        partial=True)
+            # updates all other attributes
+            else:
+                serializer = AttributeOrderSerializer(
+                    attribute,
+                    {'rank': new_increment_rank},
+                    partial=True)
+                new_increment_rank = new_increment_rank + 1
+
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return serializer.error
 
 
 def update_attribute_order_ranks(old_attribute, new_rank):

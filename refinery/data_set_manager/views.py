@@ -12,8 +12,12 @@ import json
 from django import forms
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.urlresolvers import reverse
-from django.http import (HttpResponseRedirect, HttpResponse,
-                         HttpResponseBadRequest)
+from django.http import (
+    HttpResponseRedirect,
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseServerError
+)
 from django.shortcuts import render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
@@ -26,7 +30,7 @@ from django.http import Http404
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
 
-from core.models import os, get_user_import_dir, DataSet
+from core.models import os, get_user_import_dir, DataSet, Study
 from core.utils import get_full_url
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
@@ -36,7 +40,8 @@ from .models import AttributeOrder, Assay
 from .serializers import AttributeOrderSerializer, AssaySerializer
 from .utils import (generate_solr_params, search_solr, format_solr_response,
                     get_owner_from_assay, update_attribute_order_ranks,
-                    is_field_in_hidden_list, customize_attribute_response)
+                    is_field_in_hidden_list, customize_attribute_response,
+                    initialize_attribute_order_ranks)
 
 logger = logging.getLogger(__name__)
 
@@ -119,13 +124,13 @@ class TakeOwnershipOfPublicDatasetView(View):
         if from_old_template:
             # Redirect to process_isa_tab view
             response = HttpResponseRedirect(
-                reverse('process_isa_tab')
+                get_full_url(reverse('process_isa_tab'))
             )
         else:
             # Redirect to process_isa_tab view with arg 'ajax' if request is
             #  not coming from old Django Template
             response = HttpResponseRedirect(
-                reverse('process_isa_tab', args=['ajax'])
+                get_full_url(reverse('process_isa_tab', args=['ajax']))
             )
 
         # set cookie
@@ -144,7 +149,6 @@ class ImportISATabFileForm(forms.Form):
         cleaned_data = super(ImportISATabFileForm, self).clean()
         f = cleaned_data.get("isa_tab_file")
         url = cleaned_data.get("isa_tab_url")
-        # either a file or a URL must be provided
         if f or url:
             return cleaned_data
         else:
@@ -217,62 +221,167 @@ class ProcessISATabView(View):
 
     def post(self, request, *args, **kwargs):
         form = ImportISATabFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            f = form.cleaned_data['isa_tab_file']
-            url = form.cleaned_data['isa_tab_url']
-            logger.debug("ISA-Tab URL: %s", url)
-            context = RequestContext(request, {'form': form})
+
+        if form.is_valid() or request.is_ajax():
+            try:
+                f = form.cleaned_data['isa_tab_file']
+            except KeyError:
+                f = None
+
+            try:
+                url = form.cleaned_data['isa_tab_url']
+            except KeyError:
+                url = None
+
             if url:
-                # TODO: replace with chain
-                # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks
-                u = urlparse.urlparse(url)
-                file_name = u.path.split('/')[-1]
-                temp_file_path = os.path.join(get_temp_dir(), file_name)
-                try:
-                    # TODO: refactor download_file to take file handle instead
-                    # of path
-                    download_file(url, temp_file_path)
-                except DownloadError as e:
-                    logger.error("Problem downloading ISA-Tab file. %s", e)
-                    error = "Problem downloading ISA-Tab file from: " + url
-                    context = RequestContext(request,
-                                             {'form': form, 'error': error})
-                    return render_to_response(self.template_name,
-                                              context_instance=context)
+                response = self.import_by_url(url)
+                if not response['success']:
+                    if request.is_ajax():
+                        return HttpResponse(
+                            json.dumps({
+                                'error': response.message
+                            }),
+                            'application/json'
+                        )
+
+                    return render_to_response(
+                        self.template_name,
+                        context_instance=RequestContext(
+                            request,
+                            {
+                                'form': form,
+                                'error': response.message
+                            }
+                        )
+                    )
             else:
-                temp_file_path = os.path.join(get_temp_dir(), f.name)
-                try:
-                    handle_uploaded_file(f, temp_file_path)
-                except IOError as e:
-                    error_msg = "Error writing ISA-Tab file to disk."
-                    error_msg += " IOError: %s, file name: %s, error: %s"
-                    logger.error(error_msg, e.errno, e.filename, e.strerror)
-                    error = "Error writing ISA-Tab file to disk"
-                    context = RequestContext(request,
-                                             {'form': form, 'error': error})
-                    return render_to_response(self.template_name,
-                                              context_instance=context)
-            logger.debug("Temp file name: '%s'", temp_file_path)
+                response = self.import_by_file(f)
+                if not response['success']:
+                    if request.is_ajax():
+                        return HttpResponse(
+                            json.dumps({
+                                'error': response.message
+                            }),
+                            'application/json'
+                        )
+
+                    return render_to_response(
+                        self.template_name,
+                        context_instance=RequestContext(
+                            request,
+                            {
+                                'form': form,
+                                'error': response.message
+                            }
+                        )
+                    )
+
+            logger.debug(
+                "Temp file name: '%s'", response['data']['temp_file_path']
+            )
+
             dataset_uuid = (parse_isatab.delay(
                 request.user.username,
                 False,
-                temp_file_path
+                response['data']['temp_file_path']
             ).get())[0]
+
             # TODO: exception handling (OSError)
-            os.unlink(temp_file_path)
+            os.unlink(response['data']['temp_file_path'])
             if dataset_uuid:
+                if request.is_ajax():
+                    return HttpResponse(
+                        json.dumps({
+                            'success': 'Data set imported',
+                            'data': {
+                                'new_data_set_uuid': dataset_uuid
+                            }
+                        }),
+                        'application/json'
+                    )
+
                 return HttpResponseRedirect(
-                    reverse(self.success_view_name, args=(dataset_uuid,)))
+                    reverse(self.success_view_name, args=[dataset_uuid])
+                )
             else:
                 error = 'Problem parsing ISA-Tab file'
-                context = RequestContext(request,
-                                         {'form': form, 'error': error})
-                return render_to_response(self.template_name,
-                                          context_instance=context)
+                if request.is_ajax():
+                    return HttpResponse(
+                        json.dumps({
+                            'error': error
+                        }),
+                        'application/json'
+                    )
+
+                context = RequestContext(
+                    request,
+                    {
+                        'form': form,
+                        'error': error
+                    }
+                )
+                return render_to_response(
+                    self.template_name,
+                    context_instance=context
+                )
         else:  # submitted form is not valid
             context = RequestContext(request, {'form': form})
-            return render_to_response(self.template_name,
-                                      context_instance=context)
+            return render_to_response(
+                self.template_name,
+                context_instance=context
+            )
+
+    def import_by_file(self, file):
+        temp_file_path = os.path.join(get_temp_dir(), file.name)
+        try:
+            handle_uploaded_file(file, temp_file_path)
+        except IOError as e:
+            error_msg = "Error writing ISA-Tab file to disk"
+            logger.error(
+                "%s. IOError: %s, file name: %s, error: %s.",
+                error_msg,
+                e.errno,
+                e.filename,
+                e.strerror
+            )
+            return {
+                "success": False,
+                "message": error_msg
+            }
+
+        return {
+            "success": True,
+            "message": "File imported.",
+            "data": {
+                "temp_file_path": temp_file_path
+            }
+        }
+
+    def import_by_url(self, url):
+        # TODO: replace with chain
+        # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks
+        parsed_url = urlparse.urlparse(url)
+        file_name = parsed_url.path.split('/')[-1]
+        temp_file_path = os.path.join(get_temp_dir(), file_name)
+        try:
+            # TODO: refactor download_file to take file handle instead
+            # of path
+            download_file(url, temp_file_path)
+        except DownloadError as e:
+            error_msg = "Problem downloading ISA-Tab file from: " + url
+            logger.error("%s. %s", (error_msg, e))
+            return {
+                "success": False,
+                "message": error_msg
+            }
+
+        return {
+            "success": True,
+            "message": "File imported.",
+            "data": {
+                "temp_file_path": temp_file_path
+            }
+        }
 
 
 def handle_uploaded_file(source_file, target_path):
@@ -297,48 +406,88 @@ class ProcessMetadataTableView(View):
         return render(request, self.template_name)
 
     def post(self, request, *args, **kwargs):
-        # get required params
+        # Get required params
         try:
             metadata_file = request.FILES['file']
-            title = request.POST['title']
-            data_file_column = request.POST['data_file_column']
+            title = request.POST.get('title')
+            data_file_column = request.POST.get('data_file_column')
         except (KeyError, ValueError):
-            error = {
-                'error_message':
-                    'Import failed because required parameters are missing'}
-            return render(request, self.template_name, error)
-        source_column_index = request.POST.getlist('source_column_index')
-        if not source_column_index:
-            error = {
-                'error_message':
-                    'Import failed because no source columns were selected'}
-            return render(request, self.template_name, error)
+            error_msg = 'Required parameters are missing'
+            error = {'error_message': error_msg}
+            if request.is_ajax():
+                return HttpResponseBadRequest(
+                    json.dumps({'error': error_msg}), 'application/json'
+                )
+            else:
+                return render(request, self.template_name, error)
+
+        try:
+            source_column_index = request.POST.getlist('source_column_index')
+        except TypeError as error_msg:
+            error = {'error_message': error_msg}
+            if request.is_ajax():
+                return HttpResponseBadRequest(
+                    json.dumps({'error': error_msg}), 'application/json'
+                )
+            else:
+                return render(request, self.template_name, error)
+        else:
+            if not source_column_index:
+                error_msg = 'Source columns have not been selected'
+                error = {'error_message': error_msg}
+                if request.is_ajax():
+                    return HttpResponseBadRequest(
+                        json.dumps({'error': error_msg}), 'application/json'
+                    )
+                else:
+                    return render(request, self.template_name, error)
+
         # workaround for breaking change in Angular
         # https://github.com/angular/angular.js/commit/7fda214c4f65a6a06b25cf5d5aff013a364e9cef
-        source_column_index = [column.replace("string:", "")
-                               for column in source_column_index]
+        source_column_index = [
+            column.replace('string:', '') for column in source_column_index
+        ]
+
         try:
             dataset_uuid = process_metadata_table(
-                username=request.user.username, title=title,
+                username=request.user.username,
+                title=title,
                 metadata_file=metadata_file,
                 source_columns=source_column_index,
                 data_file_column=data_file_column,
-                auxiliary_file_column=request.POST.get('aux_file_column',
-                                                       None),
-                base_path=request.POST.get('base_path', ""),
-                data_file_permanent=request.POST.get('data_file_permanent',
-                                                     False),
-                species_column=request.POST.get('species_column', None),
-                genome_build_column=request.POST.get('genome_build_column',
-                                                     None),
-                annotation_column=request.POST.get('annotation_column', None),
-                slug=request.POST.get('slug', None),
-                is_public=request.POST.get('is_public', False))
-        except ValueError as exc:
-            error = {'error_message': exc}
-            return render(request, self.template_name, error)
-        return HttpResponseRedirect(
-            reverse(self.success_view_name, args=(dataset_uuid,)))
+                auxiliary_file_column=request.POST.get('aux_file_column'),
+                base_path=request.POST.get('base_path', ''),
+                data_file_permanent=request.POST.get(
+                    'data_file_permanent', False
+                ),
+                species_column=request.POST.get('species_column'),
+                genome_build_column=request.POST.get('genome_build_column'),
+                annotation_column=request.POST.get('annotation_column'),
+                slug=request.POST.get('slug'),
+                is_public=request.POST.get('is_public', False),
+                delimiter=request.POST.get('delimiter'),
+                custom_delimiter_string=request.POST.get(
+                    'custom_delimiter_string', False
+                )
+            )
+        except Exception as error_msg:
+            error = {'error_message': error_msg}
+            if request.is_ajax():
+                return HttpResponseServerError(
+                    json.dumps({'error': error_msg}), 'application/json'
+                )
+            else:
+                return render(request, self.template_name, error)
+
+        if request.is_ajax():
+            return HttpResponse(
+                json.dumps({'new_data_set_uuid': dataset_uuid}),
+                'application/json'
+            )
+        else:
+            return HttpResponseRedirect(
+                reverse(self.success_view_name, args=(dataset_uuid,))
+            )
 
 
 class CheckDataFilesView(View):
@@ -436,9 +585,15 @@ class Assays(APIView):
         parameters:
             - name: uuid
               description: Assay uuid
+              paramType: query
               type: string
-              paramType: path
-              required: true
+              required: false
+
+            - name: study
+              description: Study uuid
+              paramType: query
+              type: string
+              required: false
 
     ...
     """
@@ -446,13 +601,27 @@ class Assays(APIView):
     def get_object(self, uuid):
         try:
             return Assay.objects.get(uuid=uuid)
-        except Assay.DoesNotExist:
+        except (Assay.DoesNotExist, MultipleObjectsReturned):
             raise Http404
 
-    def get(self, request, uuid, format=None):
-        assay = self.get_object(uuid)
-        serializer = AssaySerializer(assay)
-        return Response(serializer.data)
+    def get_query_set(self, study_uuid):
+        try:
+            study_obj = Study.objects.get(uuid=study_uuid)
+            return Assay.objects.filter(study=study_obj)
+        except (Study.DoesNotExist, MultipleObjectsReturned):
+            raise Http404
+
+    def get(self, request, format=None):
+        if request.query_params.get('uuid'):
+            assay = self.get_object(request.query_params.get('uuid'))
+            serializer = AssaySerializer(assay)
+            return Response(serializer.data)
+        elif request.query_params.get('study'):
+            assays = self.get_query_set(request.query_params.get('study'))
+            serializer = AssaySerializer(assays, many=True)
+            return Response(serializer.data)
+        else:
+            raise Http404
 
 
 class AssaysFiles(APIView):
@@ -646,13 +815,17 @@ class AssaysAttributes(APIView):
                     'Requires attribute id or solr_field name.',
                     status=status.HTTP_400_BAD_REQUEST)
 
+            # if old attribute order rank == 0, then all ranks need to be set
+            if attribute_order.rank == 0:
+                initialize_attribute_order_ranks(attribute_order, new_rank)
             # updates all ranks in assay's attribute order
-            if new_rank and new_rank != attribute_order.rank:
+            elif new_rank and new_rank != attribute_order.rank:
                 try:
                     update_attribute_order_ranks(attribute_order, new_rank)
                 except Exception as e:
                     return e
 
+            # updates the requested attribute rank with new rank
             serializer = AttributeOrderSerializer(attribute_order,
                                                   data=request.data,
                                                   partial=True)

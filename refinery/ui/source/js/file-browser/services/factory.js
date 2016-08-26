@@ -2,6 +2,7 @@
 
 function fileBrowserFactory (
   assayFileService,
+  nodeGroupService,
   nodeService,
   assayAttributeService,
   $window,
@@ -12,8 +13,8 @@ function fileBrowserFactory (
   var attributeFilter = {};
   var analysisFilter = {};
   var assayFilesTotalItems = {};
-  var nodeCount = { value: 0 };
   var nodeUrl = {};
+  var nodeGroupList = [];
   var csrfToken = $window.csrf_token;
   // Helper function encodes field array in an obj
   var encodeAttributeFields = function (attributeObj) {
@@ -70,6 +71,23 @@ function fileBrowserFactory (
     return nodeFile.$promise;
   };
 
+  var getNodeGroupList = function (assayUuid) {
+    var params = {
+      assay: assayUuid
+    };
+
+    var nodeGroups = nodeGroupService.query(params);
+    nodeGroups.$promise.then(function (response) {
+      angular.copy(response, nodeGroupList);
+    });
+    return nodeGroups.$promise;
+  };
+
+  var createNodeGroup = function (params) {
+    var nodeGroup = nodeGroupService.save(params);
+    return nodeGroup.$promise;
+  };
+
   // Adds the file_url to the assay files array
   var addNodeDetailtoAssayFiles = function () {
     angular.forEach(assayFiles, function (facetObj) {
@@ -118,7 +136,6 @@ function fileBrowserFactory (
       /** Api returns uuid field, which is needed to retrieve the
        *  download file_url for nodeset api. It should be hidden in the data
        *  table first **/
-      nodeCount.value = response.nodes_count;
       var culledAttributes = hideUuidAttribute(response.attributes);
       angular.copy(culledAttributes, assayAttributes);
       // Add file_download column first
@@ -184,10 +201,13 @@ function fileBrowserFactory (
     attributeFilter: attributeFilter,
     analysisFilter: analysisFilter,
     assayFilesTotalItems: assayFilesTotalItems,
-    nodeCount: nodeCount,
+    nodeGroupList: nodeGroupList,
+    createNodeGroup: createNodeGroup,
     getAssayFiles: getAssayFiles,
     getAssayAttributeOrder: getAssayAttributeOrder,
-    postAssayAttributeOrder: postAssayAttributeOrder
+    postAssayAttributeOrder: postAssayAttributeOrder,
+    getNodeGroupList: getNodeGroupList,
+    encodeAttributeFields: encodeAttributeFields
   };
 }
 
@@ -195,6 +215,7 @@ angular
   .module('refineryFileBrowser')
   .factory('fileBrowserFactory', [
     'assayFileService',
+    'nodeGroupService',
     'nodeService',
     'assayAttributeService',
     '$window',

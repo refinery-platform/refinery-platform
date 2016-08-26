@@ -7,13 +7,18 @@ from urlparse import urljoin
 
 from django.conf import settings
 from django.contrib.sites.models import Site
-from django.core.files import File
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import SimpleTestCase
 
+from rest_framework.test import APIRequestFactory
+from rest_framework.test import APITestCase
+
 from core.utils import get_full_url
-from file_store.models import file_path, get_temp_dir, get_file_object, \
-    FileStoreItem, FileExtension, FILE_STORE_TEMP_DIR, \
-    generate_file_source_translator, FileType
+from .models import (file_path, get_temp_dir, get_file_object, FileStoreItem,
+                     FileExtension, FILE_STORE_TEMP_DIR,
+                     generate_file_source_translator, FileType)
+from .views import FileStoreItems
+from .serializers import FileStoreItemSerializer
 
 
 class FileStoreModuleTest(SimpleTestCase):
@@ -26,14 +31,23 @@ class FileStoreModuleTest(SimpleTestCase):
         # create FileStoreItem instances without any disk operations
         self.path_source = os.path.join('/example/path', self.filename)
         self.item_from_path = FileStoreItem.objects.create(
-            source=self.path_source, sharename=self.sharename)
+            datafile=SimpleUploadedFile(
+                self.filename,
+                'Coffee is delicious!'
+            ),
+            source=self.path_source,
+            sharename=self.sharename
+        )
         self.url_source = urljoin('http://example.org/', self.filename)
         self.item_from_url = FileStoreItem.objects.create(
-            source=self.url_source, sharename=self.sharename)
+            source=self.url_source,
+            sharename=self.sharename
+        )
 
     def tearDown(self):
         FileType.objects.all().delete()
         FileExtension.objects.all().delete()
+        FileStoreItem.objects.all().delete()
 
     def test_file_path(self):
         """Check that the file store path contains share name and file name"""
@@ -53,10 +67,18 @@ class FileStoreModuleTest(SimpleTestCase):
         new_filename = 'Kc.dMi-2_Q4443_.wig_5.tdf'
         path_source = os.path.join('/example/path', filename)
         item_from_path = FileStoreItem.objects.create(
-            source=path_source, sharename=self.sharename)
+            datafile=SimpleUploadedFile(
+                self.filename,
+                'Coffee is delicious!'
+            ),
+            source=path_source,
+            sharename=self.sharename
+        )
         url_source = urljoin('http://example.org/', filename)
         item_from_url = FileStoreItem.objects.create(
-            source=url_source, sharename=self.sharename)
+            source=url_source,
+            sharename=self.sharename
+        )
         path = file_path(item_from_url, filename)
         self.assertIn(self.sharename, path)
         self.assertIn(new_filename, path)
@@ -95,41 +117,39 @@ class FileStoreItemTest(SimpleTestCase):
         self.tdf_filetype = FileType.objects.create(
             name="TDF", description="TDF file")
         self.tdf_fileextension = FileExtension.objects.create(
-                name="tdf", filetype=self.tdf_filetype)
+            name="tdf", filetype=self.tdf_filetype)
 
         self.filename = 'test_file.tdf'
         self.sharename = 'labname'
         self.path_source = os.path.join('/example/path', self.filename)
         self.url_source = urljoin('http://example.org/', self.filename)
-        self.test_file_path = "/tmp/test_file.txt"
-        self.test_file = File(open(self.test_file_path, "w+"),
-                              "This is just a test.")
 
     def tearDown(self):
         FileType.objects.all().delete()
         FileExtension.objects.all().delete()
         FileStoreItem.objects.all().delete()
-        os.remove(self.test_file_path)
 
     def test_get_full_url_local_file(self):
         """Check if the full URL is properly returned for files that exist
         in Refinery
         """
         # create FileStoreItem instances without any disk operations
-        local_file = FileStoreItem.objects.create(source=self.path_source,
-                                                  sharename=self.sharename)
-
-        local_file.datafile = self.test_file
-
-        local_file.save()
+        local_file = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                self.filename,
+                'Coffee is delicious!'
+            ),
+            source=self.path_source,
+            sharename=self.sharename
+        )
 
         self.assertEqual(
             get_full_url(local_file.get_datafile_url()),
             '{}://{}{}'.format(
-                            settings.REFINERY_URL_SCHEME,
-                            Site.objects.get_current().domain,
-                            local_file.datafile.url
-                         )
+                settings.REFINERY_URL_SCHEME,
+                Site.objects.get_current().domain,
+                local_file.datafile.url
+            )
         )
 
     def test_get_full_url_remote_file(self):
@@ -137,18 +157,28 @@ class FileStoreItemTest(SimpleTestCase):
         imported
         """
         # create FileStoreItem instances without any disk operations
-        item_from_url = FileStoreItem.objects.create(source=self.url_source,
-                                                     sharename=self.sharename)
+        item_from_url = FileStoreItem.objects.create(
+            source=self.url_source,
+            sharename=self.sharename
+        )
         self.assertEqual(get_full_url(item_from_url.get_datafile_url()),
                          item_from_url.source)
 
     def test_get_file_extension(self):
         """Check that the correct file extension is returned"""
         # create FileStoreItem instances without any disk operations
-        item_from_url = FileStoreItem.objects.create(source=self.url_source,
-                                                     sharename=self.sharename)
-        item_from_path = FileStoreItem.objects.create(source=self.path_source,
-                                                      sharename=self.sharename)
+        item_from_url = FileStoreItem.objects.create(
+            source=self.url_source,
+            sharename=self.sharename
+        )
+        item_from_path = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                self.filename,
+                'Coffee is delicious!'
+            ),
+            source=self.path_source,
+            sharename=self.sharename
+        )
         # data file doesn't exist on disk and source is an abs file system path
         self.assertEqual(item_from_path.get_file_extension(),
                          os.path.splitext(self.filename)[1])
@@ -164,15 +194,22 @@ class FileStoreItemTest(SimpleTestCase):
         self.bigbed_fileextension = FileExtension.objects.create(
             name="bb", filetype=self.bigbed_filetype)
 
-        filetype = FileExtension.objects.get(name='bb').filetype
-        item_from_path = FileStoreItem.objects.create(source=self.url_source,
-                                                      sharename=self.sharename,
-                                                      filetype=filetype)
-        item_from_url = FileStoreItem.objects.create(source=self.path_source,
-                                                     sharename=self.sharename,
-                                                     filetype=filetype)
-        self.assertEqual(item_from_path.get_filetype(), filetype)
-        self.assertEqual(item_from_url.get_filetype(), filetype)
+        item_from_path = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.bb',
+                'Coffee is delicious!'
+            ),
+            source=self.path_source,
+            sharename=self.sharename,
+            filetype=self.bigbed_filetype
+        )
+        item_from_url = FileStoreItem.objects.create(
+            source=self.url_source,
+            sharename=self.sharename,
+            filetype=self.bigbed_filetype
+        )
+        self.assertEqual(item_from_path.get_filetype(), self.bigbed_filetype)
+        self.assertEqual(item_from_url.get_filetype(), self.bigbed_filetype)
 
     def test_set_valid_file_type(self):
         """Check that a valid file type is set correctly"""
@@ -180,31 +217,54 @@ class FileStoreItemTest(SimpleTestCase):
             name="WIG", description="WIG File")
         self.wig_fileextension = FileExtension.objects.create(
             name="wig", filetype=self.wig_filetype)
-        item_from_path = FileStoreItem.objects.create(source=self.url_source,
-                                                      sharename=self.sharename)
-        item_from_url = FileStoreItem.objects.create(source=self.path_source,
-                                                     sharename=self.sharename)
-        filetype = FileExtension.objects.get(name='wig').filetype
-        self.assertTrue(item_from_path.set_filetype(filetype))
-        self.assertNotEqual(item_from_path.filetype, filetype)
-        self.assertTrue(item_from_url.set_filetype(filetype))
-        self.assertNotEqual(item_from_url.filetype, filetype)
+        item_from_path = FileStoreItem.objects.create(
+            source=self.url_source,
+            sharename=self.sharename
+        )
+        item_from_url = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                self.filename,
+                'Coffee is delicious!'
+            ),
+            source=self.path_source,
+            sharename=self.sharename
+        )
+        self.assertTrue(item_from_path.set_filetype(self.wig_filetype))
+        self.assertNotEqual(item_from_path.filetype, self.wig_filetype)
+        self.assertTrue(item_from_url.set_filetype(self.wig_filetype))
+        self.assertNotEqual(item_from_url.filetype, self.wig_filetype)
 
     def test_set_unknown_file_type(self):
         """Check that an unknown file type is not set"""
-        item_from_url = FileStoreItem.objects.create(source=self.path_source,
-                                                     sharename=self.sharename)
-        item_from_path = FileStoreItem.objects.create(source=self.url_source,
-                                                      sharename=self.sharename)
+        item_from_url = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                self.filename,
+                'Coffee is delicious!'
+            ),
+            source=self.path_source,
+            sharename=self.sharename
+        )
+        item_from_path = FileStoreItem.objects.create(
+            source=self.url_source,
+            sharename=self.sharename
+        )
         self.assertIsNone(item_from_url.filetype)
         self.assertIsNone(item_from_path.filetype)
 
     def test_set_file_type_automatically(self):
         """Check that a file type is set automatically"""
-        item_from_url = FileStoreItem.objects.create(source=self.path_source,
-                                                     sharename=self.sharename)
-        item_from_path = FileStoreItem.objects.create(source=self.url_source,
-                                                      sharename=self.sharename)
+        item_from_url = FileStoreItem.objects.create(
+            source=self.url_source,
+            sharename=self.sharename
+        )
+        item_from_path = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                self.filename,
+                'Coffee is delicious!'
+            ),
+            source=self.path_source,
+            sharename=self.sharename
+        )
         item_from_path.set_filetype()
         self.assertTrue(item_from_path.filetype,
                         os.path.splitext(self.filename)[1])
@@ -233,7 +293,14 @@ class FileStoreItemManagerTest(SimpleTestCase):
         instance
         """
         settings.REFINERY_FILE_SOURCE_MAP = {self.url_prefix: self.path_prefix}
-        item = FileStoreItem.objects.create_item(self.url_source)
+        item = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                self.filename,
+                'Coffee is delicious!'
+            ),
+            source=self.path_source,
+            sharename=self.sharename
+        )
         self.assertEqual(item.source, self.path_source)
 
     def test_empty_file_source_map_translation(self):
@@ -241,9 +308,19 @@ class FileStoreItemManagerTest(SimpleTestCase):
         instances
         """
         settings.REFINERY_FILE_SOURCE_MAP = {}
-        item = FileStoreItem.objects.create_item(self.url_source)
+        item = FileStoreItem.objects.create(
+            source=self.url_source,
+            sharename=self.sharename
+        )
         self.assertEqual(item.source, self.url_source)
-        item = FileStoreItem.objects.create_item(self.path_source)
+        item = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                self.filename,
+                'Coffee is delicious!'
+            ),
+            source=self.path_source,
+            sharename=self.sharename
+        )
         self.assertEqual(item.source, self.path_source)
 
 
@@ -293,3 +370,50 @@ class FileSourceTranslationTest(SimpleTestCase):
         translate_file_source = generate_file_source_translator()
         with self.assertRaises(ValueError):
             translate_file_source(self.rel_path_source)
+
+
+class FileStoreItemsAPITests(APITestCase):
+
+    def setUp(self):
+        self.factory = APIRequestFactory()
+        # create FileStoreItem instances without any disk operations
+        self.url_source = 'http://example.org/test_file.dat'
+        self.item_from_url = FileStoreItem.objects.create(
+            source=self.url_source, sharename='labname')
+        self.view = FileStoreItems.as_view()
+        self.valid_uuid = self.item_from_url.uuid
+        self.url_root = '/api/v2/file_store_items/'
+        self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
+        self.invalid_format_uuid = "xxxxxxxx"
+
+    def tearDown(self):
+        FileType.objects.all().delete()
+        FileExtension.objects.all().delete()
+
+    def test_get_valid(self):
+        # valid_uuid
+        file_store_item_obj = FileStoreItem.objects.get(
+            uuid=self.item_from_url.uuid)
+        expected_response = FileStoreItemSerializer(file_store_item_obj)
+        request = self.factory.get('%s/%s/' % (self.url_root, self.valid_uuid))
+        response = self.view(request, self.valid_uuid)
+        self.assertEqual(response.status_code, 200)
+
+        responseKeys = response.data.keys()
+        for field in responseKeys:
+            self.assertEqual(response.data[field],
+                             expected_response.data[field])
+
+    def test_get_invalid(self):
+        # invalid_uuid
+        request = self.factory.get('%s/%s/' % (self.url_root,
+                                               self.invalid_uuid))
+        response = self.view(request, self.invalid_uuid)
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_invalid_format(self):
+        # invalid_format_uuid
+        request = self.factory.get('%s/%s/'
+                                   % (self.url_root, self.invalid_format_uuid))
+        response = self.view(request, self.invalid_format_uuid)
+        self.assertEqual(response.status_code, 404)

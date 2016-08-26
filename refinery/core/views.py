@@ -14,6 +14,7 @@ from django.contrib.sites.models import RequestSite
 from django.core.urlresolvers import reverse
 from django.http import (
     HttpResponse, HttpResponseForbidden, HttpResponseRedirect)
+from django.http import Http404
 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext, loader
@@ -22,20 +23,27 @@ from registration import signals
 
 from guardian.shortcuts import get_perms
 import requests
+from requests.exceptions import HTTPError
 from rest_framework import viewsets
-from data_set_manager.models import Node
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 from core.forms import (
     ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 )
-from core.models import (
-    ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
-    Analysis, Invitation, Ontology,
-    CustomRegistrationProfile)
+
+from data_set_manager.models import Node
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
-from core.utils import get_data_sets_annotations
-from core.serializers import WorkflowSerializer
+from core.models import (
+    ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
+    Analysis, Invitation, Ontology, NodeGroup,
+    CustomRegistrationProfile)
+from core.serializers import WorkflowSerializer, NodeGroupSerializer
+from core.utils import (get_data_sets_annotations, get_anonymous_user,
+                        create_current_selection_node_group,
+                        filter_nodes_uuids_in_solr, move_obj_to_front)
 
 from xml.parsers.expat import ExpatError
 
@@ -624,8 +632,11 @@ def solr_core_search(request):
         annotations = params['annotations'] in ['1', 'true', 'True']
     except KeyError:
         annotations = False
-
-    response = requests.get(url, params=params, headers=headers)
+    try:
+        response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
 
     if allIds or annotations:
         # Query for all uuids given the same query. Solr shold be very fast
@@ -641,11 +652,15 @@ def solr_core_search(request):
             'start': 0,
             'wt': 'json'
         }
-        response_ids = requests.get(
-            url,
-            params=all_ids_params,
-            headers=headers
-        )
+        try:
+            response_ids = requests.get(
+                url,
+                params=all_ids_params,
+                headers=headers
+            )
+            response_ids.raise_for_status()
+        except HTTPError as e:
+            logger.error(e)
 
         if response_ids.status_code == 200:
             response_ids = response_ids.json()
@@ -676,8 +691,13 @@ def solr_select(request, core):
 
     url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
     data = request.GET.urlencode()
-    fullResponse = requests.get(url, params=data)
-    response = fullResponse.content
+    try:
+        full_response = requests.get(url, params=data)
+        full_response.raise_for_status()
+        response = full_response.content
+    except HTTPError as e:
+        logger.error(e)
+
     return HttpResponse(response, mimetype='application/json')
 
 
@@ -764,11 +784,15 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
         replace_rows_str = '&rows=' + str(10000)
         query = query.replace(m_obj.group(), replace_rows_str)
 
-    # opening solr query results
-    results = requests.get(query, stream=True).raw.read()
+    try:
+        # opening solr query results
+        results = requests.get(query, stream=True)
+        results.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
 
     # converting results into json for python
-    results = json.loads(results)
+    results = json.loads(results.raw.read())
 
     # IF list of nodes to remove from query exists
     if selected_nodes:
@@ -830,6 +854,9 @@ def doi(request, id):
 
     try:
         response = requests.get(url, headers=headers)
+        response.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
     except requests.exceptions.ConnectionError:
         return HttpResponse('Service currently unavailable', status=503)
 
@@ -854,6 +881,9 @@ def pubmed_abstract(request, id):
 
     try:
         response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
     except requests.exceptions.ConnectionError:
         return HttpResponse('Service currently unavailable', status=503)
 
@@ -889,6 +919,9 @@ def pubmed_search(request, term):
 
     try:
         response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
+    except HTTPError as e:
+        logger.debug(e)
     except requests.exceptions.ConnectionError:
         return HttpResponse('Service currently unavailable', status=503)
 
@@ -912,6 +945,9 @@ def pubmed_summary(request, id):
 
     try:
         response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
     except requests.exceptions.ConnectionError:
         return HttpResponse('Service currently unavailable', status=503)
 
@@ -931,7 +967,7 @@ def neo4j_dataset_annotations(request):
     if request.user.username:
         user_name = request.user.username
     else:
-        user_name = 'anonymous'
+        user_name = get_anonymous_user().username
 
     url = urljoin(
         settings.NEO4J_BASE_URL,
@@ -950,6 +986,9 @@ def neo4j_dataset_annotations(request):
 
     try:
         response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
     except requests.exceptions.ConnectionError as e:
         logger.error('Neo4J seems to be offline.')
         logger.error(e)
@@ -968,6 +1007,7 @@ class WorkflowViewSet(viewsets.ModelViewSet):
     """
     queryset = Workflow.objects.all()
     serializer_class = WorkflowSerializer
+    http_method_names = ['get']
 
 
 class CustomRegistrationView(RegistrationView):
@@ -1027,3 +1067,217 @@ class CustomRegistrationView(RegistrationView):
 
         """
         return ('registration_complete', (), {})
+
+
+class NodeGroups(APIView):
+    """
+    Return NodeGroups object
+
+    ---
+    #YAML
+
+    GET:
+        serializer: NodeGroupSerializer
+        omit_serializer: false
+
+        parameters:
+            - name: uuid
+              description: NodeGroup uuid
+              paramType: query
+              type: string
+              required: false
+
+            - name: assay
+              description: Assay uuid or ids
+              paramType: query
+              type: string
+
+    POST:
+        consumes:
+            - application/json
+        produces:
+            - application/json
+        parameters:
+            - name: name
+              description: Name of node group
+              paramType: form
+              type: string
+              required: true
+
+            - name: study
+              description: Study uuid or ids
+              paramType: form
+              type: string
+              required: true
+
+            - name: assay
+              description: Assay uuid or ids
+              paramType: form
+              type: string
+              required: true
+
+            - name: is_current
+              description: The "current selection" node set for the study/assay
+              paramType: form
+              type: boolean
+              required: false
+
+            - name: nodes
+              description: uuids of nodes in group expect format uuid,uuid,uuid
+              paramType: form
+              type: array
+              required: false
+
+            - name: use_complement_nodes
+              description: True will subtract nodes from all assay file nodes
+              paramType: form
+              type: boolean
+              require: false
+
+            - name: filter_attribute
+              description: Filters for attributes fields {solr_name:[field]}
+              paramType: form
+              type: string
+              required: false
+
+
+    PUT:
+        parameters_strategy:
+        form: replace
+        query: merge
+
+        parameters:
+            - name: uuid
+              description: Node Group Uuid
+              paramType: form
+              type: string
+              required: true
+
+            - name: is_current
+              description: The "current selection" node set for the study/assay
+              paramType: form
+              type: boolean
+              required: false
+
+            - name: nodes
+              description: Uuids of nodes in group expect format uuid,uuid,uuid
+              paramType: form
+              type: array
+              required: false
+
+            - name: use_complement_nodes
+              description: True will subtract nodes from all assay file nodes
+              paramType: form
+              type: boolean
+              require: false
+
+            - name: filter_attribute
+              description: Filters for attributes fields {solr_name:[field]}
+              paramType: form
+              type: string
+              required: false
+    ...
+    """
+
+    def get_object(self, uuid):
+        try:
+            return NodeGroup.objects.get(uuid=uuid)
+        except (NodeGroup.DoesNotExist,
+                NodeGroup.MultipleObjectsReturned) as e:
+            raise Http404(e)
+
+    def get(self, request, format=None):
+        # Expects a uuid or assay uuid.
+        if request.query_params.get('uuid'):
+            node_group = self.get_object(request.query_params.get('uuid'))
+            serializer = NodeGroupSerializer(node_group)
+        elif request.query_params.get('assay'):
+            assay_uuid = request.query_params.get('assay')
+            node_groups = NodeGroup.objects.filter(assay__uuid=assay_uuid)
+            # If filter returns empty response
+            if not node_groups:
+                # Returns Response: created current_selection group or errors
+                return create_current_selection_node_group(assay_uuid)
+            # Serialize list of node_groups
+            serializer = NodeGroupSerializer(node_groups, many=True)
+            # Move current_selection to front of the list, if not already
+            if serializer.data[0].get('name') != 'Current Selection':
+                # Helper method returns array with current selection node first
+                return Response(move_obj_to_front(serializer.data, 'name',
+                                                  'Current Selection'))
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        # Return node_group or list of assay's node_groups
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        # Swagger issue: put/post queryDict, make data mutable to update nodes
+        # Convert to dict for ease
+        if 'form-urlencoded' in request.content_type:
+            param_dict = {}
+            for key in request.data:
+                if key == 'nodes':
+                    param_dict[key] = request.data.get(
+                        key).replace(' ', '').split(',')
+                elif key == 'use_complement_nodes':
+                    # correct type to boolean, used in conditional below
+                    param_dict[key] = json.loads(request.data.get(key))
+                else:
+                    param_dict[key] = request.data.get(key)
+        else:
+            param_dict = request.data
+
+        # Nodes list updated with remaining nodes after subtraction
+        if param_dict.get('use_complement_nodes'):
+            filtered_uuid_list = filter_nodes_uuids_in_solr(
+                param_dict.get('assay'),
+                param_dict.get('nodes'),
+                param_dict.get('filter_attribute')
+            )
+            param_dict['nodes'] = filtered_uuid_list
+
+        serializer = NodeGroupSerializer(data=param_dict)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, format=None):
+        try:
+            uuid = request.data.get('uuid')
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        # Swagger issue: put/post queryDict, make data mutable to update nodes
+        # Convert to dict for ease
+        if 'form-urlencoded' in request.content_type:
+            param_dict = {}
+            for key in request.data:
+
+                if key == 'nodes':
+                    param_dict[key] = request.data.get(
+                        key).replace(' ', '').split(',')
+                elif key == 'use_complement_nodes':
+                    # correct type to boolean, used in conditional below
+                    param_dict[key] = json.loads(request.data.get(key))
+                else:
+                    param_dict[key] = request.data.get(key)
+        else:
+            param_dict = request.data
+
+        # Nodes list updated with remaining nodes after subtraction
+        if param_dict.get('use_complement_nodes'):
+            filtered_uuid_list = filter_nodes_uuids_in_solr(
+                param_dict.get('assay'),
+                param_dict.get('nodes'),
+                param_dict.get('filter_attribute')
+            )
+            param_dict['nodes'] = filtered_uuid_list
+        node_group = self.get_object(uuid)
+        serializer = NodeGroupSerializer(node_group, data=param_dict,
+                                         partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -1,35 +1,35 @@
+
 import os
 import stat
 import logging
 import requests
+from requests.exceptions import ContentDecodingError, HTTPError, \
+    ConnectionError
+
 from tempfile import NamedTemporaryFile
 from urlparse import urlparse
-
 import celery
 from celery.task import task
+
 from django.core.files import File
 
-from file_store.models import (FileStoreItem, get_temp_dir, file_path,
-                               FILE_STORE_BASE_DIR)
+from .models import (FileStoreItem, get_temp_dir, file_path,
+                     FILE_STORE_BASE_DIR)
 
 
 logger = logging.getLogger(__name__)
 
 
 @task()
-def create(source, sharename='', filetype='', permanent=False, file_size=1):
+def create(source, sharename='', filetype='', file_size=1):
     """Create a FileStoreItem instance and return its UUID
     Important: source must be either an absolute file system path or a URL
-
     :param source: URL or absolute file system path to a file.
     :type source: str.
     :param sharename: Group share name.
     :type sharename: str.
     :param filetype: File extension
     :type filetype: str.
-    :param permanent: Flag indicating whether to add this instance to the cache
-        or not.
-    :type permanent: bool.
     :param file_size: For cases when the remote site specified by source URL
         doesn't provide file size in the HTTP headers.
     :type file_size: int.
@@ -48,17 +48,12 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
 
     logger.info("FileStoreItem created with UUID %s", item.uuid)
 
-    # TODO: don't add to cache if permanent
-
     return item.uuid
 
 
 @task(track_started=True)
-def import_file(uuid, permanent=False, refresh=False, file_size=0):
+def import_file(uuid, refresh=False, file_size=0):
     """Download or copy file specified by UUID.
-
-    :param permanent: Flag for adding the FileStoreItem to cache.
-    :type permanent: bool.
     :param refresh: Flag for forcing update of the file.
     :type refresh: bool.
     :param file_size: size of the remote file.
@@ -110,54 +105,89 @@ def import_file(uuid, permanent=False, refresh=False, file_size=0):
         # check if source file can be downloaded
         try:
             response = requests.get(item.source, stream=True)
-        except requests.exceptions.HTTPError as e:
-            logger.error("Could not open URL '%s'", item.source)
-            return None
-        except requests.exceptions.ConnectionError as e:
+            response.raise_for_status()
+        except HTTPError as e:
             logger.error("Could not open URL '%s'. Reason: '%s'",
-                         item.source, e.reason)
-            return None
-        except ValueError as e:
-            logger.error("Could not open URL '%s'. Reason: '%s'",
-                         item.source, e.message)
-            return None
+                         item.source, e)
 
-        tmpfile = NamedTemporaryFile(dir=get_temp_dir(), delete=False)
-
-        # provide a default value in case Content-Length is missing
-        remote_file_size = int(
-            response.headers.get('Content-Length', file_size)
-        )
-        logger.debug("Downloading from '%s'", item.source)
-        # download and save the file
-        local_file_size = 0
-        block_size = 10 * 1024 * 1024  # 10MB
-        for buf in iter(lambda: response.raw.read(block_size), ''):
-            local_file_size += len(buf)
-            try:
-                tmpfile.write(buf)
-            except IOError as exc:  # e.g., [Errno 28] No space left on device
-                logger.error("Error downloading from '%s': %s",
-                             item.source, exc)
-                import_file.update_state(state=celery.states.FAILURE)
-                return
-            # check if we have a sane value for file size
-            if remote_file_size > 0:
-                percent_done = local_file_size * 100. / remote_file_size
-            else:
-                percent_done = 0
             import_file.update_state(
-                state="PROGRESS",
-                meta={
-                    "percent_done": "{:.0f}".format(percent_done),
-                    "current": local_file_size,
-                    "total": remote_file_size
-                })
-        # cleanup
-        # TODO: delete temp file if download failed
-        tmpfile.flush()
-        tmpfile.close()
-        response.close()
+                state=celery.states.FAILURE,
+                meta='Analysis Failed during import_file subtask'
+            )
+
+            # ignore the task so no other state is recorded
+            # See: http://stackoverflow.com/a/33143545
+            raise celery.exceptions.Ignore()
+
+        # FIXME: When importing a tabular file into Refinery, there is a
+        # dependance on this ConnectionError below returning `None`!!!!
+        except(ConnectionError, ValueError) as e:
+            logger.error("Could not open URL '%s'. Reason: '%s'",
+                         item.source, e)
+            return None
+
+        with NamedTemporaryFile(dir=get_temp_dir(), delete=False) as tmpfile:
+
+            # provide a default value in case Content-Length is missing
+            remote_file_size = int(
+                response.headers.get('Content-Length', file_size)
+            )
+            logger.debug("Downloading from '%s'", item.source)
+            # download and save the file
+            import_failure = False
+            local_file_size = 0
+            block_size = 10 * 1024 * 1024  # 10MB
+
+            try:
+                for buf in response.iter_content(block_size):
+                    local_file_size += len(buf)
+
+                    try:
+                        tmpfile.write(buf)
+                    except IOError as exc:
+                        # e.g., [Errno 28] No space left on device
+                        logger.error("Error downloading from '%s': %s",
+                                     item.source, exc)
+                        import_failure = True
+                        break
+
+                    # check if we have a sane value for file size
+                    if remote_file_size > 0:
+                        percent_done = local_file_size * 100. / \
+                                       remote_file_size
+                    else:
+                        percent_done = 0
+
+                    import_file.update_state(
+                        state="PROGRESS",
+                        meta={
+                            "percent_done": "{:.0f}".format(percent_done),
+                            "current": local_file_size,
+                            "total": remote_file_size
+                        })
+
+            except ContentDecodingError as e:
+                logger.error("Error while decoding response content:%s" % e)
+                import_failure = True
+
+            if import_failure:
+                # delete temp. file if download failed
+                logger.error("File import task has failed. Deleting "
+                             "temporary file...")
+
+                # Setting the tempfile's delete == True deletes the file
+                # upon a `close()`
+                tmpfile.delete = True
+
+                import_file.update_state(
+                    state=celery.states.FAILURE,
+                    meta='Analysis Failed during import_file subtask'
+                )
+
+                # ignore the task so no other state is recorded
+                # See: http://stackoverflow.com/a/33143545
+                raise celery.exceptions.Ignore()
+
         logger.debug("Finished downloading from '%s'", item.source)
 
         # get the file name from URL (remove query string)
@@ -194,8 +224,6 @@ def import_file(uuid, permanent=False, refresh=False, file_size=0):
         item.datafile.name = rel_dst_path
         # save the model instance
         item.save()
-
-    # TODO: if permanent is False then add to cache
 
     return item
 
@@ -300,6 +328,9 @@ def download_file(url, target_path, file_size=1):
     # TODO: refactor to use requests
     try:
         response = requests.get(url, stream=True)
+        response.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
     except requests.exceptions.ConnectionError as e:
         raise DownloadError(
             "Could not open URL '{}'. Reason: '{}'".format(url, e.reason))

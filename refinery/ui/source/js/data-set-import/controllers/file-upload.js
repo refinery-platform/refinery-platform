@@ -5,13 +5,33 @@ function RefineryFileUploadCtrl (
   $log,
   $scope,
   $timeout,
+  $window,
   $,
+  chunkedUploadService,
   settings,
   SparkMD5,
   dataSetImportSettings,
-  $uibModal
+  $uibModal,
+  getCookie
 ) {
-  var csrf = '';
+  var csrftoken = getCookie('csrftoken');
+
+  // The next function and jQuery call ensure that the `csrftoken` is used for
+  // every request. This is needed because the _jQuery file upload_ plugin uses
+  // jQuery's internal AJAX methods.
+  function csrfSafeMethod (method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+  }
+  $.ajaxSetup({
+    beforeSend: function (xhr, settingsTwo) {
+      if (!csrfSafeMethod(settingsTwo.type) && !this.crossDomain) {
+        xhr.setRequestHeader('X-CSRFToken', csrftoken);
+      }
+    }
+  });
+
+  // var csrf = '';
   var formData = [];
   var md5 = {};
   var totalNumFilesQueued = 0;
@@ -28,16 +48,6 @@ function RefineryFileUploadCtrl (
   $scope.uploadActive = true;
   $scope.loadingFiles = false;
 
-  if ($('input[name=\'csrfmiddlewaretoken\']')[0]) {
-    csrf = $('input[name=\'csrfmiddlewaretoken\']')[0].value;
-    formData = [{
-      name: 'csrfmiddlewaretoken',
-      value: csrf
-    }];
-  } else {
-    $log.error('CSRF middleware token was not found in the upload form');
-  }
-
   var worker = false;
 
   function workerCode () {
@@ -45,8 +55,31 @@ function RefineryFileUploadCtrl (
     var chunkSize = 2097152;
 
     function calcMD5 (file) {
-      var slice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
-      var chunks = Math.ceil(file.size / chunkSize);
+      var slice;
+      if (self.File) {
+        slice = (
+          self.File.prototype.slice ||
+          self.File.prototype.mozSlice ||
+          self.File.prototype.webkitSlice
+        );
+      }
+      if (self.Blob) {
+        slice = (
+          self.Blob.prototype.slice ||
+          self.Blob.prototype.mozSlice ||
+          self.Blob.prototype.webkitSlice
+        );
+      }
+
+      if (!slice) {
+        postMessage({
+          name: file.name,
+          error: 'Neither the File API nor the Blob API are supported.'
+        });
+        return;
+      }
+
+      var chunks = self.Math.ceil(file.size / chunkSize);
       var spark = new self.SparkMD5.ArrayBuffer();
       var currentChunk = 0;
 
@@ -107,7 +140,27 @@ function RefineryFileUploadCtrl (
       var that = this;
       var dfd = $.Deferred();  // eslint-disable-line new-cap
       var file = data.files[data.index];
-      var slice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
+      var slice;
+      if (window.File) {
+        slice = (
+          window.File.prototype.slice ||
+          window.File.prototype.mozSlice ||
+          window.File.prototype.webkitSlice
+        );
+      }
+      if (!slice && window.Blob) {
+        slice = (
+          window.Blob.prototype.slice ||
+          window.Blob.prototype.mozSlice ||
+          window.Blob.prototype.webkitSlice
+        );
+      }
+
+      if (!slice) {
+        $log.error('Neither the File API nor the Blob API are supported.');
+        return undefined;
+      }
+
       var chunks = Math.ceil(file.size / options.chunkSize);
       var currentChunk = 0;
       var spark = new SparkMD5.ArrayBuffer();
@@ -133,7 +186,7 @@ function RefineryFileUploadCtrl (
 
       if (worker) {
         worker.postMessage([
-          settings.appRoot,
+          $window.location.origin + settings.appRoot,
           file,
           options.chunkSize
         ]);
@@ -150,48 +203,47 @@ function RefineryFileUploadCtrl (
     }
   };
 
-  var uploadDone = function (e, data) {
+  var uploadDone = function (event, data) {
     var file = data.files[0];
 
-    $.ajax({
-      type: 'POST',
-      url: dataSetImportSettings.uploadCompleteUrl,
-      data: {
-        csrfmiddlewaretoken: csrf,
-        upload_id: data.result.upload_id,
-        md5: md5[file.name]
-      },
-      dataType: 'json',
-      success: function () {
-        totalNumFilesUploaded++;
+    function success () {
+      totalNumFilesUploaded++;
 
-        file.uploaded = true;
+      file.uploaded = true;
 
-        if ($element.fileupload('active') > 0) {
-          $scope.uploadActive = true;
-          $scope.uploadInProgress = true;
-        } else {
-          $scope.uploadActive = false;
-          $scope.uploadInProgress = false;
-        }
-
-        if (totalNumFilesUploaded === totalNumFilesQueued) {
-          $scope.allUploaded = true;
-          $scope.uploadActive = false;
-          $scope.uploadInProgress = false;
-        }
-
-        $timeout(function () {
-          // Fritz: I am not sure why we need to wait 100ms instead of 0ms
-          // (i.e. one digestion) but this solves the issues with the last
-          // progress bar not being changed into success mode.
-          $scope.$apply();
-        }, 100);
-      },
-      error: function (jqXHR, textStatus, errorThrown) {
-        $log.error('Error uploading file:', textStatus, '-', errorThrown);
+      if ($element.fileupload('active') > 0) {
+        $scope.uploadActive = true;
+        $scope.uploadInProgress = true;
+      } else {
+        $scope.uploadActive = false;
+        $scope.uploadInProgress = false;
       }
-    });
+
+      if (totalNumFilesUploaded === totalNumFilesQueued) {
+        $scope.allUploaded = true;
+        $scope.uploadActive = false;
+        $scope.uploadInProgress = false;
+      }
+
+      $timeout(function () {
+        // Fritz: I am not sure why we need to wait 100ms instead of 0ms
+        // (i.e. one digestion) but this solves the issues with the last
+        // progress bar not being changed into success mode.
+        $scope.$apply();
+      }, 100);
+    }
+
+    function error (errorMessage) {
+      $log.error('Error uploading file!', errorMessage);
+    }
+
+    chunkedUploadService.save({
+      upload_id: data.result.upload_id,
+      md5: md5[file.name]
+    })
+    .$promise
+    .then(success)
+    .catch(error);
   };
 
   var getFormData = function () {
@@ -212,7 +264,7 @@ function RefineryFileUploadCtrl (
   };
 
   var uploadAlways = function () {
-    formData.splice(1);  // clear upload_id for the next upload
+    formData = [];  // clear formData, including upload_id for the next upload
   };
 
   // Tiggered when a new file is uploaded
@@ -299,10 +351,13 @@ angular
     '$log',
     '$scope',
     '$timeout',
+    '$window',
     '$',
+    'chunkedUploadService',
     'settings',
     'SparkMD5',
     'dataSetImportSettings',
     '$uibModal',
+    'getCookie',
     RefineryFileUploadCtrl
   ]);

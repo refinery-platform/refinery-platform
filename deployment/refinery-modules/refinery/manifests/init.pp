@@ -111,8 +111,8 @@ exec { "migrate_core":
   group       => $app_group,
 }
 ->
-exec { "init_refinery":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py init_refinery '${site_name}' '${site_url}'",
+exec { "set_up_refinery_site_name":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py set_up_site_name '${site_name}' '${site_url}'",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
@@ -125,8 +125,22 @@ exec { "migrate_guardian":
   group       => $app_group,
 }
 ->
+exec { "create_public_group":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py create_public_group",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+}
+->
 exec { "create_superuser":
   command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata superuser.json",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+}
+->
+exec { "add_admin_to_public_group":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py add_admin_to_public_group",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
@@ -219,18 +233,18 @@ class solrSynonymAnalyzer {
   # already exists.
 
   exec { "solr-synonym-analyzer-download":
-    command => "rm -f /vagrant/refinery/solr/lib/hon-lucene-synonyms.jar && wget -P /vagrant/refinery/solr/lib/ ${url}",
-    creates => "/vagrant/refinery/solr/lib/hon-lucene-synonyms.jar",
+    command => "rm -f ${solr_lib_dir}/hon-lucene-synonyms.jar && wget -P ${solr_lib_dir} ${url}",
+    creates => "${solr_lib_dir}/hon-lucene-synonyms.jar",
     path    => "/usr/bin:/bin",
     timeout => 120,  # downloading can take some time
     notify => Service['solr'],
+    require => Exec['solr_install'],
   }
 }
 include solrSynonymAnalyzer
 
 class neo4j {
   $neo4j_config_file = '/etc/neo4j/neo4j-server.properties'
-  include apt
 
   apt::source { 'neo4j':
     ensure      => 'present',
@@ -319,20 +333,16 @@ class owl2neo4j {
 }
 include owl2neo4j
 
-class rabbit {
-  package { 'curl': }
-  ->
-  class { '::rabbitmq':
-    package_ensure => installed,
-    service_ensure => running,
-    port           => '5672',
-  }
+include apt
+# workaround for https://github.com/parklab/refinery-platform/issues/1181
+apt::key { 'rabbitmq':
+  key    => '0A9AF2115F4687BD29803A206B73A36E6026DFCA',
+  before => Class['::rabbitmq']
 }
-include rabbit
+
+include '::rabbitmq'
 
 class ui {
-  include apt
-
   apt::source { 'nodejs':
     ensure      => 'present',
     comment     => 'Nodesource NodeJS repo.',
@@ -356,8 +366,16 @@ class ui {
     'grunt-cli': ensure => '0.1.13', provider => 'npm';
   }
   ->
-  exec { "npm_local_modules":
-    command   => "/usr/bin/npm prune && /usr/bin/npm install",
+  exec { "npm_prune_local_modules":
+    command   => "/usr/bin/npm prune --progress false",
+    cwd       => $ui_app_root,
+    logoutput => on_failure,
+    user      => $app_user,
+    group     => $app_group,
+  }
+  ->
+  exec { "npm_install_local_modules":
+    command   => "/usr/bin/npm install --progress false",
     cwd       => $ui_app_root,
     logoutput => on_failure,
     user      => $app_user,
@@ -415,7 +433,7 @@ exec { "supervisord":
     Class["ui"],
     Class["solr"],
     Class["neo4j"],
-    Class["rabbit"],
+    Class["::rabbitmq"],
     Service["memcached"],
   ],
 }

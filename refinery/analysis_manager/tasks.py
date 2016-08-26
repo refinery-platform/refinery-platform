@@ -32,9 +32,11 @@ class AnalysisHandlerTask(Task):
         """Set analysis status to failure in case of errors not handled in the
         monitoring task
         """
-        logger.error("Monitoring task for analysis with UUID '%s' failed due "
-                     "to unexpected error: '%s: %s'",
-                     args[0], einfo.type, einfo.exception)
+        error_msg = "Monitoring task for analysis with UUID '{}' failed due " \
+                    "to unexpected error: '{}: {}'".format(
+                         args[0], einfo.type, einfo.exception)
+
+        logger.error(error_msg)
         try:
             analysis = Analysis.objects.get(uuid=args[0])
         except (Analysis.DoesNotExist, Analysis.MultipleObjectsReturned) as e:
@@ -42,7 +44,7 @@ class AnalysisHandlerTask(Task):
                          args[0], e)
             return
         logger.error("Setting status of analysis '%s' to failure", analysis)
-        analysis.set_status(Analysis.FAILURE_STATUS)
+        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
 
 
 @task(base=AnalysisHandlerTask, max_retries=None)
@@ -79,7 +81,7 @@ def run_analysis(analysis_uuid):
         refinery_import_tasks = []
         for input_file_uuid in analysis.get_input_file_uuid_list():
             refinery_import_task = import_file.subtask(
-                    (input_file_uuid, False, ))
+                    (input_file_uuid,))
             refinery_import_tasks.append(refinery_import_task)
         refinery_import = TaskSet(tasks=refinery_import_tasks).apply_async()
         refinery_import.save()
@@ -95,8 +97,9 @@ def run_analysis(analysis_uuid):
         logger.debug("Input file import pending for analysis '%s'", analysis)
         run_analysis.retry(countdown=RETRY_INTERVAL)
     elif not refinery_import.successful():
-        logger.error("Analysis '%s' failed during file import", analysis)
-        analysis.set_status(Analysis.FAILURE_STATUS)
+        error_msg = "Analysis '{}' failed during file import".format(analysis)
+        logger.error(error_msg)
+        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.send_email()
         refinery_import.delete()
         return
@@ -108,9 +111,10 @@ def run_analysis(analysis_uuid):
             analysis.prepare_galaxy()
         except (requests.exceptions.ConnectionError,
                 galaxy.client.ConnectionError):
-            logger.error("Analysis '%s' failed during preparation in Galaxy",
-                         analysis)
-            analysis.set_status(Analysis.FAILURE_STATUS)
+            error_msg = "Analysis '{}' failed during preparation in " \
+                        "Galaxy".format(analysis)
+            logger.error(error_msg)
+            analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
             analysis.send_email()
             refinery_import.delete()
             return
@@ -131,8 +135,9 @@ def run_analysis(analysis_uuid):
         logger.debug("Analysis '%s' pending in Galaxy", analysis)
         run_analysis.retry(countdown=RETRY_INTERVAL)
     elif not galaxy_import.successful():
-        logger.error("Analysis '%s' failed in Galaxy", analysis)
-        analysis.set_status(Analysis.FAILURE_STATUS)
+        error_msg = "Analysis '{}' failed in Galaxy".format(analysis)
+        logger.error(error_msg)
+        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
         analysis.send_email()
         refinery_import.delete()
@@ -183,9 +188,10 @@ def run_analysis(analysis_uuid):
         run_analysis.retry(countdown=RETRY_INTERVAL)
     # all tasks must have succeeded or failed
     elif not galaxy_export.successful():
-        logger.error("Analysis '%s' failed while downloading results from "
-                     "Galaxy", analysis)
-        analysis.set_status(Analysis.FAILURE_STATUS)
+        error_msg = "Analysis '%s' failed while downloading results from  " \
+                    "Galaxy".format(analysis)
+        logger.error(error_msg)
+        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.send_email()
         refinery_import.delete()
         galaxy_import.delete()
@@ -213,7 +219,8 @@ def run_analysis(analysis_uuid):
 
     # Update file count and file size of the corresponding data set
     analysis.data_set.file_count = analysis.data_set.get_file_count()
-    analysis.data_set.file_size = analysis.data_set.get_file_size()
+    # FIXME: line below is causing analyses to be marked as failed
+    # analysis.data_set.file_size = analysis.data_set.get_file_size()
     analysis.data_set.save()
 
 
@@ -383,7 +390,7 @@ def get_galaxy_download_tasks(analysis):
                 # TODO: when changing permanent=True, fix update of % download
                 # of file
                 filestore_uuid = create(
-                    source=download_url, filetype=file_type, permanent=False)
+                    source=download_url, filetype=file_type)
                 # adding history files to django model
                 temp_file = AnalysisResult(
                     analysis_uuid=analysis.uuid,
@@ -395,14 +402,8 @@ def get_galaxy_download_tasks(analysis):
                 # downloading analysis results into file_store
                 # only download files if size is greater than 1
                 if file_size > 0:
-                    # local download, force copying into the file_store instead
-                    # of symlinking
-                    if galaxy_instance.local_download:
-                        task_id = import_file.subtask(
-                            (filestore_uuid, False, True, file_size,))
-                    else:
-                        task_id = import_file.subtask(
-                            (filestore_uuid, False, False, file_size,))
+                    task_id = import_file.subtask(
+                            (filestore_uuid, False, file_size))
                     task_list.append(task_id)
 
     return task_list

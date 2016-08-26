@@ -1,15 +1,17 @@
 # <img src="https://pbs.twimg.com/profile_images/519505652083748864/bG9itLTl_400x400.png" height=30px width=30px>&nbsp;Refinery Platform [![Build Status](https://travis-ci.org/parklab/refinery-platform.svg?branch=develop)](https://travis-ci.org/parklab/refinery-platform) [![Coverage Status](https://img.shields.io/codecov/c/github/parklab/refinery-platform/develop.svg)](https://codecov.io/github/parklab/refinery-platform?branch=develop)
 
-Additional information about how to administrate and develop Refinery can be found in the [wiki](http://github.com/parklab/refinery-platform/wiki).
+* Additional information about how to administer and develop Refinery can be found in the [wiki](http://github.com/parklab/refinery-platform/wiki)
+* [Production deployments](https://github.com/parklab/refinery-platform/wiki/AWS-installation) require access to Amazon Web Services
+* Supported web browsers: Chrome 52 (Linux and OS X), Firefox 47 (Linux) / 48 (OS X), Safari 9.1.2 (OS X)
 
 ## Installing and Launching for Development
 
 ### Prerequisites
-
-Install [Git][gi], [Vagrant][va] (1.8.1+) and [Virtualbox][vb] (5.0.12+).
+* Install [Git][gi] (2.3.2+), [Vagrant][va] (1.8.1+) and [Virtualbox][vb] (5.0.16+)
+* [Add SSH key to your GitHub account](https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/)
+* Note: this procedure has only been tested on local development machines running OS X 10.10+
 
 ### Configure and Load Virtual Machine
-
 ```bash
 $ git clone git@github.com:parklab/refinery-platform.git
 $ cd refinery-platform
@@ -17,7 +19,6 @@ $ vagrant up
 ```
 
 The above step should take about 15 minutes depending on the speed of your machine and Internet connection. If you get an error, simply retry by:
-
 ```bash
 $ vagrant provision
 ```
@@ -26,40 +27,29 @@ Open <http://192.168.50.50:8000/> in your web browser.
 
 ### Configure Deployment Environment on the Host
 
-Create a Python 2.7 virtual environment (optional but recommended, assumes virtualenvwrapper is installed, for example in Ubuntu: `apt-get install virtualenvwrapper`):
-
+Create a Python 2.7 virtual environment (optional but recommended, assumes `virtualenvwrapper` is installed):
 ```bash
 $ mkvirtualenv -a $(pwd) refinery-deployment
 ```
 
-Install development tools (assumes header files for Python are installed, for example in Ubuntu: `apt-get install python-dev`):
-
+Install deployment tools (assumes header files for Python are installed):
 ```bash
 $ pip install -r deployment/requirements.txt
 ```
 
-Use fabricrc.sample to update or initialize Fabric configuration, for example:
-
+Use `fabricrc.sample` to update or initialize Fabric configuration, for example:
 ```bash
 $ cp fabricrc.sample ~/.fabricrc
 ```
 
 To pull the latest code and update Refinery installation:
-
 ```bash
 $ fab vm update
-```
-
-Install pre-commit hooks:
-
-```bash
-$ pre-commit install
 ```
 
 ### Refinery Operations on the VM
 
 Connect to the initialized VM:
-
 ```bash
 $ vagrant ssh
 $ workon refinery-platform

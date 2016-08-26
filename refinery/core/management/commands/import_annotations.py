@@ -2,11 +2,15 @@ import logging
 import py2neo
 import time
 import urlparse
+import requests
+
 from optparse import make_option
 from django.conf import settings
+
 from django.core.management.base import BaseCommand
 from core.models import DataSet, ExtendedGroup
-from core.utils import normalize_annotation_ont_ids, get_data_set_annotations
+from core.utils import (normalize_annotation_ont_ids, get_data_set_annotations,
+                        get_anonymous_user)
 
 logger = logging.getLogger(__name__)
 root_logger = logging.getLogger()
@@ -125,10 +129,11 @@ class Command(BaseCommand):
 
                 # We need to add an anonymous user so that people who haven't
                 # logged in can still see some visualization.
+
                 if group['group'].id is public_group_id:
                     users += [{
-                        'id': -1,
-                        'name': 'Anonymous'
+                        'id': settings.ANONYMOUS_USER_ID,
+                        'name': get_anonymous_user().username
                     }]
 
             for user in users:
@@ -193,6 +198,17 @@ class Command(BaseCommand):
         annotations = normalize_annotation_ont_ids(annotations)
         self.push_annotations_to_neo4j(annotations)
         self.push_users()
+
+        try:
+            requests.post(
+                urlparse.urljoin(
+                    settings.NEO4J_BASE_URL, 'ontology/unmanaged/annotations/'
+                )
+            )
+        except Exception as e:
+            logger.error(
+                'Neo4J couldn\'t prepare annotation sets. Error %s', e
+            )
 
         end = time.time()
         minutes = int(round((end - start) // 60))

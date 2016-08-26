@@ -70,17 +70,17 @@ SolrFacetView.prototype.render = function ( solrResponse ) {
 	// <i class=\"icon-remove-sign\"></i>&nbsp;&nbsp;Reset All</a><br>&nbsp;<br>" );
    	
    	$( "#clear-facets" ).click( function( event ) {
-		// clear facet selection
-		var counter = self._query.clearFacetSelection();
-		
-		self._query.clearDocumentSelection();
-		
-		// reload page
-		if ( counter > 0 ) {
-   			self._commands.execute( SOLR_FACET_SELECTION_CLEARED_COMMAND );   						
-		}
+			// clear facet selection
+			var counter = self._query.clearFacetSelection();
+			// Default is whitelist.
+			self._query.setDocumentSelectionBlacklistMode(false);
+			self._query.clearDocumentSelection();
+			// reload page
+			if ( counter > 0 ) {
+				self._commands.execute( SOLR_FACET_SELECTION_CLEARED_COMMAND );
+			}
    	});				
-			
+
 	self._renderTree( solrResponse );
 	
 	//$( "#" + self.parentElementId ).html( code );		
@@ -237,12 +237,12 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 							selectedItems.push("<tr class=\"facet-value\" id=\"" +
 								self._composeFacetValueId(facet, facetValue) + "\"><td>" +
 								'<input type="checkbox" checked>' +
-								"</td><td>" + facetValue + "</td><td align=right>" +
+								"</td><td>" + facetValue + "</td><td class='facet-value-count' align=right>" +
 								facetValueCount + "</td>" + "</tr>");
 							unselectedItems.push("<tr class=\"facet-value\" id=\"" +
 								self._composeFacetValueId(facet, facetValue) + "\"><td>" +
 								'<input type="checkbox" checked>' +
-								"</td><td>" + facetValue + "</td><td align=right>" +
+								"</td><td>" + facetValue + "</td><td class='facet-value-count' align=right>" +
 								facetValueCount + "</td>" + "</tr>");
 						}
 						else {
@@ -253,7 +253,7 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 							unselectedItems.push("<tr class=\"facet-value\" id=\"" +
 								self._composeFacetValueId(facet, facetValue) + "\"><td>" +
 								'<input type="checkbox">' +
-								"</td><td>" + facetValue + "</td><td align=right>" +
+								"</td><td>" + facetValue + "</td><td class='facet-value-count' align=right>" +
 								facetValueCount + "</td><td></td>" + "</tr>");
 						}
 					}

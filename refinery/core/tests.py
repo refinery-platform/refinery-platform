@@ -1,19 +1,37 @@
 import json
+import mock
+
 from django.contrib.auth.models import User, Group
-from django.utils import unittest
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils import unittest, timezone
+from django.test import TestCase
+
+from rest_framework.test import APIRequestFactory
+from rest_framework.test import APITestCase
 from guardian.shortcuts import assign_perm
 import mockcache as memcache
 from tastypie.test import ResourceTestCase
+
 from core.api import AnalysisResource
-from core.management.commands.init_refinery import create_public_group
+
 from core.management.commands.create_user import init_user
+from core.management.commands.create_public_group import create_public_group
+
 from core.models import (
     NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,
-    ExtendedGroup, DataSet, InvestigationLink, Project, Analysis, Workflow,
-    WorkflowEngine, UserProfile, invalidate_cached_object,
-    AnalysisNodeConnection, Node)
+    ExtendedGroup, DataSet, InvestigationLink, Project,
+    Analysis, Workflow, WorkflowEngine, UserProfile, invalidate_cached_object,
+    AnalysisNodeConnection, NodeGroup)
+from core.utils import (get_aware_local_time,
+                        create_current_selection_node_group,
+                        filter_nodes_uuids_in_solr, move_obj_to_front)
+from core.views import NodeGroups
+from .serializers import NodeGroupSerializer
+from file_store.models import FileStoreItem
 from file_store.models import FileExtension
-import data_set_manager
+
+from data_set_manager.models import (Study, Assay, Node, Investigation)
 from galaxy_connector.models import Instance
 
 cache = memcache.Client(["127.0.0.1:11211"])
@@ -29,7 +47,9 @@ class UserCreateTest(unittest.TestCase):
         self.first_name = "John"
         self.last_name = "Sample"
         self.affiliation = "University"
+
         create_public_group()
+
         self.public_group_name = ExtendedGroup.objects.public_group().name
 
     def tearDown(self):
@@ -57,11 +77,9 @@ class NodeSetTest(unittest.TestCase):
     """Test all NodeSet operations"""
 
     def setUp(self):
-        self.investigation = \
-            data_set_manager.models.Investigation.objects.create()
-        self.study = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation)
-        self.assay = data_set_manager.models.Assay.objects.create(
+        self.investigation = Investigation.objects.create()
+        self.study = Study.objects.create(investigation=self.investigation)
+        self.assay = Assay.objects.create(
             study=self.study)
         self.query = json.dumps({
             "facets": {
@@ -152,8 +170,7 @@ class NodeSetTest(unittest.TestCase):
         """Test updating NodeSet study"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
                                          assay=self.assay)
-        new_study = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation)
+        new_study = Study.objects.create(investigation=self.investigation)
         update_nodeset(uuid=nodeset.uuid, study=new_study)
         self.assertEqual(
             NodeSet.objects.get(uuid=nodeset.uuid).study, new_study
@@ -163,8 +180,7 @@ class NodeSetTest(unittest.TestCase):
         """Test updating NodeSet assay"""
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
                                          assay=self.assay)
-        new_assay = data_set_manager.models.Assay.objects.create(
-            study=self.study)
+        new_assay = Assay.objects.create(study=self.study)
         update_nodeset(uuid=nodeset.uuid, assay=new_assay)
         self.assertEqual(
             NodeSet.objects.get(uuid=nodeset.uuid).assay, new_assay
@@ -197,13 +213,26 @@ class NodeSetTest(unittest.TestCase):
         )
 
 
-def make_api_uri(resource_name, resource_id=''):
+def make_api_uri(resource_name, resource_id='', sharing=False):
     """Helper function to build Tastypie REST URIs"""
     base_url = '/api/v1'
+    uri = '/'.join([base_url, resource_name]) + '/'
+    uri_with_resource_id = '/'.join([base_url, resource_name, resource_id]) \
+                           + '/'
+
+    def add_sharing(uri):
+        return uri + 'sharing/'
+
     if resource_id:
-        return '/'.join([base_url, resource_name, resource_id]) + '/'
+        if sharing:
+            return add_sharing(uri_with_resource_id)
+        else:
+            return uri_with_resource_id
     else:
-        return '/'.join([base_url, resource_name]) + '/'
+        if sharing:
+            return add_sharing(uri)
+        else:
+            return uri
 
 
 class NodeSetResourceTest(ResourceTestCase):
@@ -211,18 +240,12 @@ class NodeSetResourceTest(ResourceTestCase):
 
     def setUp(self):
         super(NodeSetResourceTest, self).setUp()
-        self.investigation = \
-            data_set_manager.models.Investigation.objects.create()
-        self.study = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation)
-        self.assay = data_set_manager.models.Assay.objects.create(
-            study=self.study)
-        self.investigation2 = \
-            data_set_manager.models.Investigation.objects.create()
-        self.study2 = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation)
-        self.assay2 = data_set_manager.models.Assay.objects.create(
-            study=self.study2)
+        self.investigation = Investigation.objects.create()
+        self.study = Study.objects.create(investigation=self.investigation)
+        self.assay = Assay.objects.create(study=self.study)
+        self.investigation2 = Investigation.objects.create()
+        self.study2 = Study.objects.create(investigation=self.investigation)
+        self.assay2 = Assay.objects.create(study=self.study2)
         self.query = {
             "facets": {
                 "platform_Characteristics_10_5_s": [],
@@ -577,22 +600,12 @@ class NodeSetListResourceTest(ResourceTestCase):
 
     def setUp(self):
         super(NodeSetListResourceTest, self).setUp()
-        self.investigation = \
-            data_set_manager.models.Investigation.objects.create()
-        self.study = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation
-        )
-        self.assay = data_set_manager.models.Assay.objects.create(
-            study=self.study
-        )
-        self.investigation2 = \
-            data_set_manager.models.Investigation.objects.create()
-        self.study2 = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation
-        )
-        self.assay2 = data_set_manager.models.Assay.objects.create(
-            study=self.study2
-        )
+        self.investigation = Investigation.objects.create()
+        self.study = Study.objects.create(investigation=self.investigation)
+        self.assay = Assay.objects.create(study=self.study)
+        self.investigation2 = Investigation.objects.create()
+        self.study2 = Study.objects.create(investigation=self.investigation)
+        self.assay2 = Assay.objects.create(study=self.study2)
         self.query = {
             "facets": {
                 "platform_Characteristics_10_5_s": [],
@@ -1010,26 +1023,40 @@ class BaseResourceSlugTest(unittest.TestCase):
         # make some data
         for index, item in enumerate(range(0, 10)):
             DataSet.objects.create(slug="TestSlug%d" % index)
-        Project.objects.create(name="project")
+        self.project = Project.objects.create(name="project")
+        self.project_with_slug = Project.objects.create(
+            name="project2",
+            slug="project_slug"
+        )
+        self.project_with_empty_slug = Project.objects.create(
+            name="project3",
+            slug=None
+        )
 
     def tearDown(self):
         DataSet.objects.all().delete()
         Project.objects.all().delete()
 
     def test_duplicate_slugs(self):
+        # Try to create DS with existing slug
         DataSet.objects.create(slug="TestSlug1")
         self.assertEqual(DataSet.objects.filter(slug="TestSlug1")
                          .count(), 1)
 
     def test_empty_slug(self):
-        self.assertTrue(DataSet.objects.create(slug=""))
+        DataSet.objects.create(slug="")
+        dataset_empty_slug = DataSet.objects.get(slug="")
+        self.assertIsNotNone(dataset_empty_slug)
+        DataSet.objects.create(slug=None)
+        dataset_none_slug = DataSet.objects.get(slug=None)
+        self.assertIsNotNone(dataset_none_slug)
 
     def test_edit_existing_slug(self):
         instance = DataSet.objects.get(slug="TestSlug1")
         instance.summary = "Edited Summary"
         instance.save()
-
-        self.assertTrue(DataSet.objects.get(summary="Edited Summary"))
+        data_set_edited = DataSet.objects.get(summary="Edited Summary")
+        self.assertIsNotNone(data_set_edited)
 
     def test_save_slug_no_change(self):
         instance = DataSet.objects.get(slug="TestSlug1")
@@ -1047,11 +1074,47 @@ class BaseResourceSlugTest(unittest.TestCase):
         self.assertNotEqual(instance.slug, instance_again.slug)
 
     def test_save_slug_when_another_model_with_same_slug_exists(self):
-        project_instance = Project.objects.get(name="project")
-        project_instance.slug = "TestSlug4"
-        project_instance.save()
+        dataset_with_same_slug_as_project = DataSet.objects.create(
+            slug=self.project_with_slug.slug)
+        self.assertIsNotNone(dataset_with_same_slug_as_project)
 
-        self.assertTrue(DataSet.objects.create(slug="TestSlug4"))
+    def test_save_empty_slug_when_another_model_with_same_slug_exists(self):
+        dataset_no_slug = DataSet.objects.create(
+            slug=self.project_with_empty_slug.slug)
+
+        self.assertIsNotNone(dataset_no_slug)
+
+    def test_save_slug_when_same_model_with_same_slug_exists(self):
+        Project.objects.create(name="project", slug="TestSlug4")
+        Project.objects.create(name="project_duplicate", slug="TestSlug4")
+        self.assertRaises(ObjectDoesNotExist,
+                          Project.objects.get,
+                          name="project_duplicate")
+
+    def test_save_empty_slug_when_same_model_with_same_slug_exists(self):
+        project_with_no_slug = Project.objects.create(name="project2",
+                                                      slug=None)
+        self.assertIsNotNone(project_with_no_slug)
+
+    def test_save_empty_slug_when_same_model_with_same_empty_slug_exists(
+            self):
+
+        Project.objects.create(name="project_no_slug", slug="")
+        Project.objects.create(name="project_no_slug_duplicate", slug="")
+        self.assertIsNotNone(Project.objects.get(
+            name="project_no_slug_duplicate"))
+
+        Project.objects.create(name="project_no_slug2", slug=None)
+        Project.objects.create(name="project_no_slug_duplicate2", slug=None)
+
+        self.assertIsNotNone(Project.objects.get(
+            name="project_no_slug_duplicate2"))
+
+        Project.objects.create(name="project_no_slug3", slug="            ")
+        Project.objects.create(name="project_no_slug_duplicate3",
+                               slug="            ")
+        self.assertIsNotNone(Project.objects.get(
+            name="project_no_slug_duplicate3"))
 
 
 class CachingTest(unittest.TestCase):
@@ -1162,9 +1225,22 @@ class WorkflowDeletionTest(unittest.TestCase):
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
-        self.workflow = Workflow.objects.create(
-            name="Workflow1", workflow_engine=self.workflow_engine)
+        self.workflow_used_by_analyses = Workflow.objects.create(
+            name="workflow_used_by_analyses",
+            workflow_engine=self.workflow_engine)
+        self.workflow_not_used_by_analyses = Workflow.objects.create(
+            name="workflow_not_used_by_analyses",
+            workflow_engine=self.workflow_engine)
         self.dataset = DataSet.objects.create()
+        self.analysis = Analysis.objects.create(
+            name='bla',
+            summary='keks',
+            project=self.project,
+            data_set=self.dataset,
+            workflow=self.workflow_used_by_analyses,
+            status="SUCCESS"
+        )
+        self.analysis.set_owner(self.user)
 
     def tearDown(self):
         User.objects.all().delete()
@@ -1176,32 +1252,21 @@ class WorkflowDeletionTest(unittest.TestCase):
         Analysis.objects.all().delete()
 
     def test_verify_workflow_used_by_analysis(self):
-        analysis = Analysis.objects.create(
-            name='bla',
-            summary='keks',
-            project=self.project,
-            data_set=self.dataset,
-            workflow=self.workflow,
-            status="SUCCESS"
-        )
-        analysis.set_owner(self.user)
-        self.assertEqual(analysis.workflow.name, "Workflow1")
+        self.assertEqual(self.analysis.workflow.name,
+                         "workflow_used_by_analyses")
 
     def test_verify_no_deletion_if_workflow_used_in_analysis(self):
-        analysis = Analysis.objects.create(
-            name='bla',
-            summary='keks',
-            project=self.project,
-            data_set=self.dataset,
-            workflow=self.workflow,
-            status="SUCCESS"
-        )
-        analysis.set_owner(self.user)
-        self.workflow.delete()
-        self.assertFalse(self.workflow.is_active)
+        self.workflow_used_by_analyses.delete()
+        self.assertIsNotNone(self.workflow_used_by_analyses)
+        self.assertFalse(self.workflow_used_by_analyses.is_active)
 
     def test_verify_deletion_if_workflow_not_used_in_analysis(self):
-        self.assertEqual(self.workflow.delete(), None)
+        self.assertIsNotNone(Workflow.objects.get(
+            name="workflow_not_used_by_analyses"))
+        self.workflow_not_used_by_analyses.delete()
+        self.assertRaises(ObjectDoesNotExist,
+                          Workflow.objects.get,
+                          name="workflow_not_used_by_analyses")
 
 
 class DataSetDeletionTest(unittest.TestCase):
@@ -1214,13 +1279,35 @@ class DataSetDeletionTest(unittest.TestCase):
         )
         self.project = Project.objects.create()
         self.galaxy_instance = Instance.objects.create()
+        self.isa_archive_file = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.zip',
+                'Coffee is delicious!')
+        )
+        self.pre_isa_archive_file = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.txt',
+                'Coffee is delicious!')
+        )
+        self.investigation = Investigation.objects.create(
+                isarchive_file=self.isa_archive_file.uuid,
+                pre_isarchive_file=self.pre_isa_archive_file.uuid
+            )
+
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
         self.workflow = Workflow.objects.create(
             name="Workflow1", workflow_engine=self.workflow_engine)
-        self.dataset_with_analysis = DataSet.objects.create()
-        self.dataset_without_analysis = DataSet.objects.create()
+        self.dataset_with_analysis = DataSet.objects.create(
+            name="dataset_with_analysis")
+        self.dataset_without_analysis = \
+            DataSet.objects.create(name="dataset_without_analysis")
+        self.investigation_link = \
+            InvestigationLink.objects.create(
+                investigation=self.investigation,
+                data_set=self.dataset_without_analysis)
+
         self.analysis = Analysis.objects.create(
             name='bla',
             summary='keks',
@@ -1236,23 +1323,40 @@ class DataSetDeletionTest(unittest.TestCase):
         Project.objects.all().delete()
         WorkflowEngine.objects.all().delete()
         Workflow.objects.all().delete()
-        DataSet.objects.all().delete()
         Instance.objects.all().delete()
         Analysis.objects.all().delete()
+        DataSet.objects.all().delete()
         UserProfile.objects.all().delete()
         Node.objects.all().delete()
-        data_set_manager.models.Study.objects.all().delete()
-        data_set_manager.models.Assay.objects.all().delete()
-        data_set_manager.models.Investigation.objects.all().delete()
+        FileStoreItem.objects.all().delete()
+        Study.objects.all().delete()
+        Assay.objects.all().delete()
+        Investigation.objects.all().delete()
         AnalysisNodeConnection.objects.all().delete()
         InvestigationLink.objects.all().delete()
 
     def test_verify_dataset_deletion_if_no_analysis_run_upon_it(self):
-        self.assertEqual(self.dataset_without_analysis.delete(), None)
+        self.assertIsNotNone(
+            DataSet.objects.get(name="dataset_without_analysis"))
+        self.dataset_without_analysis.delete()
+        self.assertRaises(ObjectDoesNotExist,
+                          DataSet.objects.get,
+                          name="dataset_without_analysis")
 
     def test_verify_no_dataset_deletion_if_analysis_run_upon_it(self):
         self.dataset_with_analysis.delete()
-        self.assertNotEqual(self.dataset_with_analysis, None)
+        self.assertIsNotNone(DataSet.objects.get(name="dataset_with_analysis"))
+
+    def test_isa_archive_deletion(self):
+        self.assertIsNotNone(self.dataset_without_analysis.get_isa_archive())
+        self.dataset_without_analysis.delete()
+        self.assertIsNone(self.dataset_without_analysis.get_isa_archive())
+
+    def test_pre_isa_archive_deletion(self):
+        self.assertIsNotNone(
+            self.dataset_without_analysis.get_pre_isa_archive())
+        self.dataset_without_analysis.delete()
+        self.assertIsNone(self.dataset_without_analysis.get_pre_isa_archive())
 
 
 class AnalysisDeletionTest(unittest.TestCase):
@@ -1312,26 +1416,20 @@ class AnalysisDeletionTest(unittest.TestCase):
         self.analysis_with_node_analyzed_further.set_owner(self.user)
 
         # Create Investigation/InvestigationLinks for the DataSets
-        self.investigation = \
-            data_set_manager.models.Investigation.objects.create()
+        self.investigation = Investigation.objects.create()
         self.investigation_link = InvestigationLink.objects.create(
             investigation=self.investigation,
             data_set=self.dataset_with_analysis)
-        self.investigation1 = \
-            data_set_manager.models.Investigation.objects.create()
+        self.investigation1 = Investigation.objects.create()
         self.investigation_link1 = InvestigationLink.objects.create(
             investigation=self.investigation1,
             data_set=self.dataset_with_analysis1)
 
         # Create Studys and Assays
-        self.study = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation)
-        self.assay = data_set_manager.models.Assay.objects.create(
-            study=self.study)
-        self.study1 = data_set_manager.models.Study.objects.create(
-            investigation=self.investigation1)
-        self.assay1 = data_set_manager.models.Assay.objects.create(
-            study=self.study1)
+        self.study = Study.objects.create(investigation=self.investigation)
+        self.assay = Assay.objects.create(study=self.study)
+        self.study1 = Study.objects.create(investigation=self.investigation1)
+        self.assay1 = Assay.objects.create(study=self.study1)
 
         # Create Nodes
         self.node = Node.objects.create(assay=self.assay, study=self.study,
@@ -1362,19 +1460,375 @@ class AnalysisDeletionTest(unittest.TestCase):
         Analysis.objects.all().delete()
         UserProfile.objects.all().delete()
         Node.objects.all().delete()
-        data_set_manager.models.Study.objects.all().delete()
-        data_set_manager.models.Assay.objects.all().delete()
-        data_set_manager.models.Investigation.objects.all().delete()
+        Study.objects.all().delete()
+        Assay.objects.all().delete()
+        Investigation.objects.all().delete()
         AnalysisNodeConnection.objects.all().delete()
         InvestigationLink.objects.all().delete()
 
     def test_verify_analysis_deletion_if_nodes_not_analyzed_further(self):
         # Try to delete Analysis with a Node that has an
         # AnalysisNodeConnection with direction == 'out'
-        self.assertEqual(self.analysis.delete(), None)
+        query = Analysis.objects.get(
+            name='analysis_without_node_analyzed_further')
+        self.assertIsNotNone(query)
+        self.analysis.delete()
+        self.assertRaises(ObjectDoesNotExist, Analysis.objects.get,
+                          name='analysis_without_node_analyzed_further')
 
     def test_verify_analysis_remains_if_nodes_analyzed_further(self):
         # Try to delete Analysis with a Node that has an
         # AnalysisNodeConnection with direction == 'in'
         self.analysis_with_node_analyzed_further.delete()
-        self.assertNotEqual(self.analysis_with_node_analyzed_further, None)
+        self.assertIsNotNone(Analysis.objects.get(
+            name='analysis_with_node_analyzed_further'))
+
+
+class NodeGroupAPITests(APITestCase):
+
+    def setUp(self):
+        self.factory = APIRequestFactory()
+        investigation = Investigation.objects.create()
+        self.study = Study.objects.create(
+                file_name='test_filename123.txt',
+                title='Study Title Test',
+                investigation=investigation)
+        assay = {
+            'study': self.study,
+            'measurement': 'transcription factor binding site',
+            'measurement_accession': 'http://www.testurl.org/testID',
+            'measurement_source': 'OBI',
+            'technology': 'nucleotide sequencing',
+            'technology_accession': 'test info',
+            'technology_source': 'test source',
+            'platform': 'Genome Analyzer II',
+            'file_name': 'test_assay_filename.txt'
+        }
+        self.assay = Assay.objects.create(**assay)
+        self.node_1 = Node.objects.create(assay=self.assay,
+                                          study=self.study,
+                                          name='Node1')
+
+        self.node_2 = Node.objects.create(assay=self.assay,
+                                          study=self.study,
+                                          name='Node2')
+        self.node_group = NodeGroup.objects.create(
+            assay=self.assay,
+            study=self.study,
+            name='Test Node Group 1'
+        )
+        self.nodes_list = [self.node_1, self.node_2]
+        self.nodes_list_uuid = [self.node_1.uuid, self.node_2.uuid]
+        self.node_group.nodes.add(*self.nodes_list)
+        self.node_group.node_count = len(self.nodes_list)
+        self.node_group.save()
+
+        self.node_group_2 = NodeGroup.objects.create(
+            assay=self.assay,
+            study=self.study,
+            name='Test Node Group 2'
+        )
+        self.node_group_list = [self.node_group, self.node_group_2]
+        self.valid_uuid = self.node_group.uuid
+        self.url_root = '/api/v2/node_groups/'
+        self.view = NodeGroups.as_view()
+        self.invalid_uuid = "03b5f681-35d5-4bdd-bc7d-8552fa777ebc"
+        self.invalid_format_uuid = "xxxxxxxx"
+
+    def tearDown(self):
+        NodeGroup.objects.all().delete()
+        Node.objects.all().delete()
+        Assay.objects.all().delete()
+        Study.objects.all().delete()
+        Investigation.objects.all().delete()
+
+    def test_get_valid_uuid(self):
+        # valid_uuid
+        request = self.factory.get('%s/?uuid=%s' % (
+            self.url_root, self.valid_uuid))
+        response = self.view(request, self.valid_uuid)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data,
+                         NodeGroupSerializer(self.node_group).data)
+
+    def test_get_valid_assay_uuid(self):
+        # valid_assay_uuid
+        request = self.factory.get('%s/?assay=%s' % (
+            self.url_root, self.assay.uuid))
+        response = self.view(request, self.assay.uuid)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), len(self.node_group_list))
+        self.assertItemsEqual(response.data, NodeGroupSerializer(
+            self.node_group_list, many=True).data)
+
+    def test_get_invalid_uuid(self):
+        # invalid_uuid
+        request = self.factory.get('%s/?uuid=%s' % (self.url_root,
+                                                    self.invalid_uuid))
+        response = self.view(request, self.invalid_uuid)
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_invalid_assay_uuid(self):
+        # invalid_assay_uuid
+        request = self.factory.get('%s/?assay=%s' % (self.url_root,
+                                                     self.invalid_uuid))
+        response = self.view(request, self.invalid_uuid)
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_invalid_format_uuid(self):
+        # invalid_format_uuid
+        request = self.factory.get('%s/?uuid=%s'
+                                   % (self.url_root,
+                                      self.invalid_format_uuid))
+        response = self.view(request, self.invalid_format_uuid)
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_valid_form(self):
+        # valid form
+        new_node_group = {'name': 'Test Group3',
+                          'assay': self.assay.uuid,
+                          'study': self.study.uuid,
+                          'nodes': self.nodes_list_uuid
+                          }
+        request = self.factory.post('%s/' % self.url_root, new_node_group)
+        response = self.view(request)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data.get('name'), new_node_group.get('name'))
+        self.assertEqual(response.data.get('node_count'),
+                         len(self.nodes_list_uuid))
+        self.assertItemsEqual(response.data.get('nodes'), self.nodes_list_uuid)
+
+    def test_post_invalid_form(self):
+        # invalid form
+        new_node_group = {'name': 'Test Group3',
+                          'assay': self.assay.uuid,
+                          'study': self.study.uuid,
+                          'nodes': '%s' % self.invalid_uuid}
+        request = self.factory.post('%s/' % self.url_root, new_node_group)
+        response = self.view(request)
+        self.assertEqual(response.status_code, 400)
+
+    def test_put_valid_uuid_and_valid_input(self):
+        # valid uuid and valid input
+        request = self.factory.put('%s/' % self.url_root,
+                                   {'uuid': self.node_group_2.uuid,
+                                    'nodes': self.nodes_list_uuid,
+                                    'is_current': True})
+        response = self.view(request)
+        self.assertEqual(response.status_code, 202)
+        self.assertItemsEqual(response.data.get('nodes'), self.nodes_list_uuid)
+
+    def test_put_valid_uuid_and_invalid_node(self):
+        # valid uuid but node invalid uuid
+        request = self.factory.put('%s/' % self.url_root,
+                                   {'uuid': self.node_group_2.uuid,
+                                    'nodes': self.invalid_uuid,
+                                    'is_current': True})
+        response = self.view(request)
+        self.assertEqual(response.status_code, 400)
+
+    def test_put_invalid_uuid(self):
+        # invalid_uuid
+        request = self.factory.put('%s/' % self.url_root,
+                                   {'uuid': self.invalid_uuid}
+                                   )
+        response = self.view(request)
+        self.assertEqual(response.status_code, 404)
+
+    def test_put_invalid_format_uuid(self):
+        # invalid_format_uuid
+        request = self.factory.put('%s/' % self.url_root,
+                                   {'uuid': self.invalid_format_uuid}
+                                   )
+        response = self.view(request)
+        self.assertEqual(response.status_code, 404)
+
+
+class UtilitiesTest(TestCase):
+    def setUp(self):
+        investigation = Investigation.objects.create()
+        self.study = Study.objects.create(
+                file_name='test_filename123.txt',
+                title='Study Title Test',
+                investigation=investigation)
+        assay = {
+            'study': self.study,
+            'measurement': 'transcription factor binding site',
+            'measurement_accession': 'http://www.testurl.org/testID',
+            'measurement_source': 'OBI',
+            'technology': 'nucleotide sequencing',
+            'technology_accession': 'test info',
+            'technology_source': 'test source',
+            'platform': 'Genome Analyzer II',
+            'file_name': 'test_assay_filename.txt'
+        }
+        self.assay = Assay.objects.create(**assay)
+        self.valid_uuid = self.assay.uuid
+        self.invalid_uuid = "03b5f681-35d5-4bdd-bc7d-8552fa777ebc"
+        self.node_uuids = [
+            "1a50204d-49fa-4082-a708-26ee93fb0f86",
+            "32e977fc-b906-4315-b6ed-6a644d173492",
+            "910117c5-fda2-4700-ae87-dc897f3a5d85"
+            ]
+
+    def tearDown(self):
+        NodeGroup.objects.all().delete()
+        Assay.objects.all().delete()
+        Study.objects.all().delete()
+        Investigation.objects.all().delete()
+
+    def test_get_aware_local_time(self):
+        expected_time = timezone.localtime(timezone.now())
+        response_time = get_aware_local_time()
+        difference_time = response_time - expected_time
+
+        self.assertLessEqual(difference_time.total_seconds(), .99)
+
+    def test_create_current_selection_node_group_valid(self):
+        response = create_current_selection_node_group(self.valid_uuid)
+        self.assertEqual(response.status_code, 201)
+
+    def test_create_current_selection_node_group_invalid(self):
+        response = create_current_selection_node_group(self.invalid_uuid)
+        self.assertEqual(response.status_code, 404)
+
+    # Mock methods used in filter_nodes_uuids_in_solr
+    def fake_generate_solr_params(params, assay_uuid):
+        # Method should respond with a string
+        return ''
+
+    def fake_search_solr(params, str_name):
+        # Method expects solr params and a str_name. It should return a string
+        # For mock purpose, pass params which are included in solr_response
+        return params
+
+    def fake_format_solr_response(solr_response):
+        # Method expects solr_response and returns array of uuid objs
+        if '&fq=-uuid' in solr_response:
+            # if uuids are passed in
+            response_node_uuids = [
+                {'uuid': 'd2041706-ad2e-4f5b-a6ac-2122fe2a9751'},
+                {'uuid': '57d2b371-a364-4806-b7ee-366a722ca9f4'},
+                {'uuid': 'c9d7f81f-2274-4179-ad00-28227bf4b9b7'},
+                {'uuid': 'e082ce03-0a83-4162-af5c-7472e450d7d0'},
+                {'uuid': '880e60f7-7036-4468-b9c8-fdeebe7c21c3'},
+                {'uuid': '945aaca7-dc58-47b8-8012-e9821249ca7a'},
+                {'uuid': '2b939cb3-5b40-48c2-8df7-e5472c3bdcca'},
+                {'uuid': 'd5e6fef8-d8c9-4df9-b5f0-dd757fe79f7d'}
+            ]
+        else:
+            # else return all uuids
+            response_node_uuids = [
+                {'uuid': '1a50204d-49fa-4082-a708-26ee93fb0f86'},
+                {'uuid': '32e977fc-b906-4315-b6ed-6a644d173492'},
+                {'uuid': '910117c5-fda2-4700-ae87-dc897f3a5d85'},
+                {'uuid': 'd2041706-ad2e-4f5b-a6ac-2122fe2a9751'},
+                {'uuid': '57d2b371-a364-4806-b7ee-366a722ca9f4'},
+                {'uuid': 'c9d7f81f-2274-4179-ad00-28227bf4b9b7'},
+                {'uuid': 'e082ce03-0a83-4162-af5c-7472e450d7d0'},
+                {'uuid': '880e60f7-7036-4468-b9c8-fdeebe7c21c3'},
+                {'uuid': '945aaca7-dc58-47b8-8012-e9821249ca7a'},
+                {'uuid': '2b939cb3-5b40-48c2-8df7-e5472c3bdcca'},
+                {'uuid': 'd5e6fef8-d8c9-4df9-b5f0-dd757fe79f7d'}
+            ]
+        return {'nodes': response_node_uuids}
+
+    @mock.patch("core.utils.generate_solr_params",
+                fake_generate_solr_params)
+    @mock.patch("core.utils.search_solr", fake_search_solr)
+    @mock.patch("core.utils.format_solr_response",
+                fake_format_solr_response)
+    def test_filter_nodes_uuids_in_solr_with_uuids(self):
+        response_node_uuids = [
+            'd2041706-ad2e-4f5b-a6ac-2122fe2a9751',
+            '57d2b371-a364-4806-b7ee-366a722ca9f4',
+            'c9d7f81f-2274-4179-ad00-28227bf4b9b7',
+            'e082ce03-0a83-4162-af5c-7472e450d7d0',
+            '880e60f7-7036-4468-b9c8-fdeebe7c21c3',
+            '945aaca7-dc58-47b8-8012-e9821249ca7a',
+            '2b939cb3-5b40-48c2-8df7-e5472c3bdcca',
+            'd5e6fef8-d8c9-4df9-b5f0-dd757fe79f7d'
+        ]
+        response = filter_nodes_uuids_in_solr(self.valid_uuid, self.node_uuids)
+        self.assertItemsEqual(response, response_node_uuids)
+
+    @mock.patch("core.utils.generate_solr_params",
+                fake_generate_solr_params)
+    @mock.patch("core.utils.search_solr", fake_search_solr)
+    @mock.patch("core.utils.format_solr_response", fake_format_solr_response)
+    def test_filter_nodes_uuids_in_solr_no_uuids(self):
+        response_node_uuids = [
+            '1a50204d-49fa-4082-a708-26ee93fb0f86',
+            '32e977fc-b906-4315-b6ed-6a644d173492',
+            '910117c5-fda2-4700-ae87-dc897f3a5d85',
+            'd2041706-ad2e-4f5b-a6ac-2122fe2a9751',
+            '57d2b371-a364-4806-b7ee-366a722ca9f4',
+            'c9d7f81f-2274-4179-ad00-28227bf4b9b7',
+            'e082ce03-0a83-4162-af5c-7472e450d7d0',
+            '880e60f7-7036-4468-b9c8-fdeebe7c21c3',
+            '945aaca7-dc58-47b8-8012-e9821249ca7a',
+            '2b939cb3-5b40-48c2-8df7-e5472c3bdcca',
+            'd5e6fef8-d8c9-4df9-b5f0-dd757fe79f7d'
+        ]
+        response = filter_nodes_uuids_in_solr(self.valid_uuid, [])
+        self.assertItemsEqual(response, response_node_uuids)
+
+    def test_move_obj_to_front_valid(self):
+        nodes_list = [
+            {
+                'uuid': 'b55c3f8b-693b-4918-861b-c3e9268ec597',
+                'name': 'Test Node Group'
+            },
+            {
+                'uuid': 'c18d7a3d-f54a-42ae-9a30-37f631fa7e73',
+                'name': 'Completement Nodes 2'
+            },
+            {
+                'uuid': '22b3dc7e-bcbd-4dfc-bccb-db72b02b4d0e',
+                'name': 'Current Selection'
+            },
+            {
+                'uuid': '0c6dc0e6-1a79-427d-b7a8-1b4f4c422755',
+                'name': 'Another NodeGroup'
+            },
+        ]
+        response_arr = nodes_list
+        self.assertNotEqual(response_arr[0].get('name'),
+                            nodes_list[2].get('name'))
+        # Should move current selection node to front
+        response_arr = move_obj_to_front(nodes_list, 'name', 'Current '
+                                                             'Selection')
+        self.assertEqual(response_arr[0].get('name'),
+                         nodes_list[0].get('name'))
+        # Should leave leading node in front
+        response_arr = move_obj_to_front(nodes_list, 'name', 'Current '
+                                                             'Selection')
+        self.assertEqual(response_arr[0].get('name'),
+                         nodes_list[0].get('name'))
+
+    def test_move_obj_to_front_missing_prop(self):
+        # Method does not throw errors if obj is missing prop_key
+        nodes_list = [
+            {
+                'uuid': 'b55c3f8b-693b-4918-861b-c3e9268ec597',
+            },
+            {
+                'uuid': 'c18d7a3d-f54a-42ae-9a30-37f631fa7e73',
+            },
+            {
+                'uuid': '22b3dc7e-bcbd-4dfc-bccb-db72b02b4d0e',
+                'name': 'Another NodeGroup'
+            },
+            {
+                'uuid': '0c6dc0e6-1a79-427d-b7a8-1b4f4c422755',
+                'name': 'Current Selection'
+            },
+        ]
+        response_arr = nodes_list
+        self.assertNotEqual(response_arr[0].get('name'),
+                            nodes_list[3].get('name'))
+        # Should move current selection node to front
+        response_arr = move_obj_to_front(nodes_list, 'name', 'Current '
+                                                             'Selection')
+        self.assertEqual(response_arr[0].get('name'),
+                         nodes_list[0].get('name'))

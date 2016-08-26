@@ -2,8 +2,7 @@ from django.db import models
 
 from bioblend import galaxy
 
-from galaxy_connector.galaxy_workflow import (GalaxyWorkflow,
-                                              GalaxyWorkflowInput)
+import galaxy_workflow
 
 
 class Instance(models.Model):
@@ -25,13 +24,13 @@ class Instance(models.Model):
         connection = self.galaxy_connection()
         workflows = []
         for workflow_entry in connection.workflows.get_workflows():
-            workflow = GalaxyWorkflow(workflow_entry['name'],
-                                      workflow_entry['id'])
+            workflow = galaxy_workflow.GalaxyWorkflow(workflow_entry['name'],
+                                                      workflow_entry['id'])
             # get workflow inputs
             workflow_inputs = connection.workflows.show_workflow(
                 workflow.identifier)['inputs']
             for input_identifier, input_description in workflow_inputs.items():
-                workflow_input = GalaxyWorkflowInput(
+                workflow_input = galaxy_workflow.GalaxyWorkflowInput(
                     input_description['label'], input_identifier)
                 workflow.add_input(workflow_input)
             workflows.append(workflow)

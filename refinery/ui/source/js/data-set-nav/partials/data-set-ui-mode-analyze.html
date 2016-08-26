@@ -1,20 +1,7 @@
+<rp-select-workflow></rp-select-workflow>
+
 <div ng-controller="WorkflowListApiCtrl">
-  <ui-select
-    append-to-body="true"
-    ng-model="selectedWorkflow.select"
-    on-select="updateCurrentWorkflow()"
-    theme="select2"
-    class="ui-select-drop">
-     <ui-select-match placeholder="Select a workflow">
-       <span ng-bind="$select.selected.name"></span>
-     </ui-select-match>
-    <ui-select-choices repeat="workflow in (workflowList | filter: $select.search)">
-      <span ng-bind="workflow.name"></span>
-    </ui-select-choices>
-	</ui-select>
-
   <div ng-show="currentWorkflow.isAvailable()">
-
     <div class="refinery-subheader">
       <h4>Name</h4>
     </div>
@@ -43,7 +30,21 @@
       </span>
     </div>
 
-    <div ng-controller="NodeSetListApiCtrl" ng-if="currentWorkflow.isSingleInput()">
+    <div ng-if="dataSet2Flag">
+      <rp-file-browser-node-group></rp-file-browser-node-group>
+      <div class="p-a-1">
+        <button
+          class="btn btn-warning"
+          rp-analysis-launch-modal
+          ng-click="open()"
+          ng-disabled="isLaunchNodesSelectionEmpty()">
+          Launch Analysis
+        </button>
+      </div>
+    </div>
+
+    <div ng-if="!dataSet2Flag">
+      <div ng-controller="NodeSetListApiCtrl" ng-if="currentWorkflow.isSingleInput()">
       <ui-select
         ng-model="selectedNodeset.select"
         on-select="updateCurrentNodeSet()"
@@ -68,6 +69,8 @@
         ng-disabled="!(currentNodeSet && currentNodeSet.node_count > 0)">
         Launch Analysis
       </button>
+    </div>
+
     </div>
 
 

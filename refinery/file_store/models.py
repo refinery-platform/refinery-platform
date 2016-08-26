@@ -26,8 +26,9 @@ from django.db import models
 from django.db.models.signals import pre_delete
 from django_extensions.db.fields import UUIDField
 from django.core.files.storage import FileSystemStorage
+from django.utils import timezone
 
-from core.utils import is_url, get_aware_local_time
+from core.utils import is_url
 
 
 logger = logging.getLogger(__name__)
@@ -249,11 +250,11 @@ class FileStoreItem(models.Model):
     import_task_id = UUIDField(blank=True)
     # Date created
     created = models.DateTimeField(auto_now_add=True,
-                                   default=get_aware_local_time,
+                                   default=timezone.now,
                                    blank=True)
     # Date updated
     updated = models.DateTimeField(auto_now=True,
-                                   default=get_aware_local_time,
+                                   default=timezone.now,
                                    blank=True)
 
     objects = _FileStoreItemManager()
@@ -343,10 +344,13 @@ class FileStoreItem(models.Model):
 
         # If filetype argument is one that we know of great, Else we try to
         # guess
+
         if filetype in all_known_extensions:
             f = filetype
         else:
             f = str(self.source.rpartition("/")[-1]).split('.', 1)[-1]
+
+        f = f.lower()
 
         # Set the filetype of the FileStoreItem instance, if we still dont
         # know the filetype after our guess earlier, we try to split on a

@@ -1,23 +1,28 @@
 from __future__ import absolute_import
 import logging
 
-
 import py2neo
-from django.core.mail import send_mail
-
-import core
-from urlparse import urlparse, urljoin
+import ast
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.sites.models import Site
-from django.core.cache import cache
 from django.contrib.auth.models import User
+from django.core.exceptions import MultipleObjectsReturned
+from django.core.mail import send_mail
+from django.core.cache import cache
 from django.db import connection
 from django.utils import timezone
+from rest_framework.response import Response
+from rest_framework import status
+from urlparse import urlparse, urljoin
 
+import core
 from .search_indexes import DataSetIndex
 from data_set_manager.search_indexes import NodeIndex
-
+from data_set_manager.models import Assay
+from data_set_manager.utils import (generate_solr_params, search_solr,
+                                    format_solr_response)
 
 logger = logging.getLogger(__name__)
 
@@ -602,7 +607,7 @@ def create_update_ontology(name, acronym, uri, version, owl2neo4j_version):
         ontology.name = name
         ontology.uri = uri
         ontology.version = version
-        ontology.import_date = get_aware_local_time()
+        ontology.import_date = timezone.now()
         ontology.owl2neo4j_version = owl2neo4j_version
         ontology.save()
         logger.info('Updated %s', ontology)
@@ -699,8 +704,163 @@ def get_aware_local_time():
 
 
 def email_admin(subject, message):
-        """
-        Sends an email to the admin email configured in our Django Settings
-        """
-        send_mail(subject, message, settings.SERVER_EMAIL,
-                  [settings.ADMINS[0][1]])
+    """
+    Sends an email to the admin email configured in our Django Settings
+    """
+    send_mail(subject, message, settings.SERVER_EMAIL,
+              [settings.ADMINS[0][1]])
+
+
+def get_anonymous_user():
+    """
+    Trys to fetch the AnonymousUser otherwise returns None
+    """
+    try:
+        anonymous_user = User.objects.get(
+                id=settings.ANONYMOUS_USER_ID
+            )
+        return anonymous_user
+
+    except (User.DoesNotExist, MultipleObjectsReturned) as e:
+        logger.error("Could not fetch Anonymous User: %s" % e)
+        return None
+
+
+def create_current_selection_node_group(assay_uuid):
+    """
+    Helper method to create a current selection group which
+    is default for all node_group list
+
+    :param assay_uuid: string of uuid
+    :return: Response obj
+    """
+    # confirm an assay exists
+    try:
+        assay = Assay.objects.get(uuid=assay_uuid)
+    except Assay.DoesNotExist as e:
+        return Response(e, status=status.HTTP_404_NOT_FOUND)
+    except Assay.MultipleObjectsReturned as e:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    study_uuid = assay.study.uuid
+    # initialize node_group with a current_selection
+    serializer = core.serializers.NodeGroupSerializer(data={
+        'assay': assay_uuid,
+        'study': study_uuid,
+        'name': 'Current Selection'
+    })
+
+    # creating a default current_selection, therefore returning 201
+    if serializer.is_valid():
+        serializer.save()
+        # UI expects a list from assay query
+        return Response(
+            [serializer.data],
+            status=status.HTTP_201_CREATED)
+    else:
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST)
+
+
+def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
+                               filter_attribute={}):
+    """
+    Helper method to create a current selection group which
+    is default for all node_group list
+
+    :param assay_uuid: unicode, string
+    :param filter_out_uuids: array of unicode, string
+    :param filter_attribute: object of attributes and their filtered fields
+    :return: List of uuids
+    """
+    # Params required to filter solr_request to just get uuids for nodes
+    params = {
+        'attributes': 'uuid',
+        'facets': 'uuid',
+        'limit': 10000000,
+        'include_facet_count': 'false'
+    }
+
+    # Add attribute filters and facet params to generate solr_params
+    if filter_attribute:
+        params['filter_attribute'] = filter_attribute
+        # unicode to object to grab keys
+        if isinstance(filter_attribute, unicode):
+            # handling unicode sent by swagger
+            params['facets'] = ','.join(
+                ast.literal_eval(filter_attribute).keys()
+            )
+        else:
+            params['facets'] = ','.join(filter_attribute.keys())
+
+    solr_params = generate_solr_params(params, assay_uuid)
+    # Only require solr filters if exception uuids are passed
+    if filter_out_uuids:
+        # node_arr = str(filter_out_uuids).split(',')
+        str_nodes = (' OR ').join(filter_out_uuids)
+        field_filter = "&fq=-uuid:({})".format(str_nodes)
+        solr_params = ''.join([solr_params, field_filter])
+    solr_response = search_solr(solr_params, 'data_set_manager')
+    solr_reponse_json = format_solr_response(solr_response)
+    uuid_list = []
+    for node in solr_reponse_json.get('nodes'):
+        uuid_list.append(node.get('uuid'))
+
+    return uuid_list
+
+
+def admin_ui_deletion(request, objects_to_delete, single_model=None):
+    """
+        Helper method to delete objects selected in the Django admin
+        interface and display the proper message based on the status of
+        their deletion
+        :param objects_to_delete: iterable of Objects selected in admin UI,
+        or a single object instance if `delete_model:admin_ui_deletion` is
+        called with `single_model` having a truthy value
+        :param request: the request Obj
+        :param single_model: Set this to true when calling from a overridden
+        `delete_model` method in the admin.py code
+    """
+
+    def create_delete_response_message(del_response):
+        if del_response[0]:
+            messages.success(request, del_response[1])
+        else:
+            messages.error(request, del_response[1])
+
+    # If this method is triggered from an Admin UI 'delete_selected' call
+    if not single_model:
+        for instance in objects_to_delete.all():
+            delete_response = instance.delete()
+            create_delete_response_message(delete_response)
+
+    # If this method is triggered from an Admin UI 'delete_model' call
+    else:
+        delete_response = objects_to_delete.delete()
+
+        if not delete_response[0]:
+            # Fix for multiple messages displaying
+            messages.set_level(request, messages.ERROR)
+            create_delete_response_message(delete_response)
+
+
+def move_obj_to_front(obj_arr, match_key, match_value):
+    """
+        Helper method move the first obj matching to the front of the arr
+        based on key and value
+        :param objects_to_delete: iterable of Objects selected in admin UI,
+        or a single object instance if `delete_model:admin_ui_deletion` is
+        called with `single_model` having a truthy value
+        :param obj_arr: An array of objects
+        :param match_key: Key to match
+        :param match_value: Value to match
+    """
+    modified_obj_arr = obj_arr
+    for obj in obj_arr:
+        if obj.get(match_key) == match_value:
+            curr_index = obj_arr.index(obj)
+            modified_obj_arr.insert(0, modified_obj_arr.pop(curr_index))
+            break
+
+    return modified_obj_arr
