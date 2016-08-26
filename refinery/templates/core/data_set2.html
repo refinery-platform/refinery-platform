@@ -161,24 +161,6 @@
 
                     <div class="row" style="margin-bottom: 5px;">
                       <div class="col-md-12">
-
-                        {% if REFINERY_REPOSITORY_MODE %}
-                          <!-- CHECK BOXES FOR SELECTING SAMPLES -->
-                          {% for work in workflows %}
-                            <a id="submitReposBtn" data-workflow_id="
-                            {{work.uuid}}" role="button" style="margin-left:
-                            5px" class="btn  btn-warning disabled"
-                              rel="tooltip" data-placement="bottom"
-                              data-html="true" title="">
-                              <i class="fa fa-arrow-circle-o-down"></i>&nbsp;&nbsp;Download as
-                              Archive</a>
-                            <a href="#" id="help-download-button"
-                              style="height: 20px; width: 20px;"><i
-                              class="fa fa-question-circle" style="font-size:
-                              20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
-                          {% endfor %}
-                        {% endif %}
-
                         <div id="view-selector-div">
                           <label id="label-display" for="s2id_autogen1">Display</label>
                           <select id="view-selector">
@@ -219,7 +201,7 @@
                     <div class="row">
                       <div class="tabbable">
                         <div class="tab-content">
-                          <div class="tab-pane active fade in">
+                          <div class="tab-pane active fade in" id="table-view-tab">
                             <rp-file-browser-assay-files>
                             </rp-file-browser-assay-files>
                           </div>
@@ -417,6 +399,20 @@
 
       $("[rel=tooltip]").tooltip();
     });
+
+    document.getElementById('view-selector').onclick = function()
+    {
+      var selectedDisplay = $(this).val();
+      if (selectedDisplay === 'pivot-view-tab' ||
+        selectedDisplay === 'provenance-view-tab')
+      {
+        $('#solrdoctab1-top-controls').hide();
+      }
+      else
+      {
+        $('#solrdoctab1-top-controls').show();
+      }
+    };
 
     /*
      * Sticky table header using floatThead.js
