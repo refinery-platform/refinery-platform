@@ -1,10 +1,7 @@
 language: python
 python:
   - 2.7
-cache:
-  directories:
-  - $HOME/.cache/pip
-  - node_modules # TODO: Confirm
+sudo: false
 services:
   - postgresql
   - neo4j
@@ -42,7 +39,7 @@ script:
   - python manage.py runserver &
   - pushd ../selenium
   - export BASE_URL=http://localhost:8000 CREDS_YML=guest-creds.yml UPLOAD=gff3.csv
-  - pytest basic_test.py --driver Firefox
+  - pytest basic_test.py --driver PhantomJS
   - popd
   - echo 'travis_fold:end:selenium'
 after_success:

@@ -53,5 +53,5 @@ def test_upload(selenium, login):
     expected_title = re.sub(r'\..*$', '', re.sub(r'^.*/', '', path))
     title_el = selenium.find_element_by_name('title')
     assert title_el.get_attribute('value') == expected_title
-    if os.environ['TRAVIS'] != 'true':
+    if not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true'):
         pytest.set_trace()  # In debug, hit "c" to continue.
