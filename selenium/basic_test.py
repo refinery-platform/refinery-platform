@@ -9,6 +9,8 @@ base_url = os.environ['BASE_URL']
 
 @pytest.fixture
 def login(selenium):
+    print os.getcwd()  # TODO: debug Travis
+    print os.listdir(os.getcwd())
     creds = yaml.load(open(os.environ['CREDS_YML']))
     selenium.get(base_url)
     selenium.find_element_by_link_text('Login').click()
