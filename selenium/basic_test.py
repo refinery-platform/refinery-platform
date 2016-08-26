@@ -27,15 +27,18 @@ def assert_body_text(selenium, *search_texts):
 
 def test_login_not_required(selenium):
     selenium.get(base_url)
+    time.sleep(1)
     assert_body_text(selenium, 'Collaboration', 'Statistics', 'About',
                      'Register', 'Login', 'Launch Pad', 'Data Sets',
                      'Analyses', 'Workflows')
 
     selenium.find_element_by_link_text('Statistics').click()
+    time.sleep(1)
     assert_body_text(selenium, 'Users', 'Groups', 'Files',
                      'Data Sets', 'Workflows', 'Projects')
 
     selenium.find_element_by_link_text('About').click()
+    time.sleep(1)
     assert_body_text(selenium, 'Background', 'Contact', 'Funding', 'Team',
                      'Most Recent Code for this Instance')
     # TODO: All sections are empty right now
