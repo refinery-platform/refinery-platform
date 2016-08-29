@@ -1,7 +1,6 @@
 import os
 import yaml
 import pytest
-import time
 import re
 
 base_url = os.environ['BASE_URL']
@@ -33,13 +32,9 @@ def assert_body_text(selenium, *search_texts):
 
 def test_login_not_required(selenium):
     selenium.get(base_url)
-    time.sleep(2)
-    selenium.get(base_url)  # TODO: Ilya reports page load problem 1st time.
     assert_body_text(selenium, 'Collaboration', 'Statistics', 'About',
                      'Register', 'Login', 'Launch Pad', 'Data Sets',
                      'Analyses', 'Workflows')
-    # assert 'Data Sets' in 'example.com\nRegister      |    Login   |
-    # \nCollaboration\nStatistics\nAbout\nLaunch Pad'
 
     selenium.find_element_by_link_text('Statistics').click()
     assert_body_text(selenium, 'Users', 'Groups', 'Files',
@@ -52,7 +47,6 @@ def test_login_not_required(selenium):
     # TODO: Registration page
 
 
-@pytest.mark.xfail(reason='on Travis login is failing')
 def test_upload(selenium, login):
     assert_body_text(selenium, 'Upload', 'Logout')
 
