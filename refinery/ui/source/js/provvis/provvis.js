@@ -249,6 +249,10 @@ var provvis = (function (  // eslint-disable-line no-unused-vars
         /* Initialize canvas dimensions. */
         var width = $('div#provenance-visualization').width() - 10;
         var height = $('div#solr-table-view').height() - 25;
+        /* Data set 2 browser has a new id for data table."*/
+        if (height < 0) {
+          height = $('#assay-files-table').height() - 25;
+        }
 
         /* TODO: Temp fix for sidebar height. */
         $('#provenance-sidebar').css('height', height);

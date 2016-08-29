@@ -30,7 +30,7 @@
       </span>
     </div>
 
-    <div ng-if="dataSet2Flag">
+    <div ng-if="dataSet2Flag && currentWorkflow.isSingleInput()">
       <rp-file-browser-node-group></rp-file-browser-node-group>
       <div class="p-a-1">
         <button

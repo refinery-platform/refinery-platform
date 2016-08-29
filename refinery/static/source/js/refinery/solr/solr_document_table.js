@@ -106,10 +106,13 @@ SolrDocumentTable.prototype.render = function(solrResponse) {
   $("#" + self._parentElementId)
     .trigger('refinery/solrTable/destroy')
     .html("");
-  self._renderTable(solrResponse);
-  //$( "#" + self._parentElementId ).html( code );
-  // attach event listeners
-  // ..
+   // Required while data set 2 lives in parallel.
+  if (window.location.href.indexOf('data_sets2') === -1) {
+    self._renderTable(solrResponse);
+    //$( "#" + self._parentElementId ).html( code );
+    // attach event listeners
+    // ..
+  }
 };
 
 SolrDocumentTable.prototype._renderTable = function(solrResponse) {
@@ -145,7 +148,8 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
   }).appendTo('#' + topControlsId);
 
   self._generateDocumentsPerPageControl(
-    documentsPerPageControlId, [10, 20, 50, 100, 500]);
+    documentsPerPageControlId, [10, 20, 50, 100, 500]
+  );
 
   $('<table/>', {
     'class': 'table table-striped table-condensed',
