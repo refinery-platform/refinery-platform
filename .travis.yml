@@ -41,9 +41,7 @@ script:
   - python manage.py runserver &
   - pushd ../selenium
   - export BASE_URL=http://localhost:8000 CREDS_YML=guest_creds.yml UPLOAD=gff3.csv
-  - pytest basic_test.py --driver SauceLabs \
-                         --capability browserName Firefox \
-                         --capability tunnel-identifier $TRAVIS_JOB_NUMBER
+  - pytest basic_test.py --driver SauceLabs --capability browserName Firefox --capability tunnelIdentifier $TRAVIS_JOB_NUMBER
   - popd
   - echo 'travis_fold:end:selenium'
 after_success:
