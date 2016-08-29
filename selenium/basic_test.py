@@ -27,9 +27,8 @@ def assert_body_text(selenium, *search_texts):
 
 def test_login_not_required(selenium):
     selenium.get(base_url)
-    time.sleep(10)
+    time.sleep(2)
     selenium.get(base_url)  # TODO: Ilya reports page load problem 1st time.
-    time.sleep(10)
     assert_body_text(selenium, 'Collaboration', 'Statistics', 'About',
                      'Register', 'Login', 'Launch Pad', 'Data Sets',
                      'Analyses', 'Workflows')
@@ -37,12 +36,10 @@ def test_login_not_required(selenium):
     # \nCollaboration\nStatistics\nAbout\nLaunch Pad'
 
     selenium.find_element_by_link_text('Statistics').click()
-    time.sleep(10)
     assert_body_text(selenium, 'Users', 'Groups', 'Files',
                      'Data Sets', 'Workflows', 'Projects')
 
     selenium.find_element_by_link_text('About').click()
-    time.sleep(10)
     assert_body_text(selenium, 'Background', 'Contact', 'Funding', 'Team',
                      'Most Recent Code for this Instance')
     # TODO: All sections are empty right now
@@ -54,7 +51,6 @@ def test_upload(selenium, login):
     assert_body_text(selenium, 'Upload', 'Logout')
 
     selenium.find_element_by_link_text('Upload').click()
-    time.sleep(1)  # TODO: Something better?
     path = os.environ['UPLOAD']
 
     selenium.find_element_by_name('tabular_file').send_keys(path)
