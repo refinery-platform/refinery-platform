@@ -91,6 +91,8 @@ function refineryDataSetNavConfig (
     .state(
       'analyses', {
         url: '/analyses/',
+        templateUrl:
+          '/static/partials/data-set-nav/partials/analyses-tab.html',
         controller: 'refineryDataSetNavBlueprintCtrl'
       },
       '^\/data_sets2\/.*\/$',
@@ -99,6 +101,8 @@ function refineryDataSetNavConfig (
     .state(
       'about', {
         url: '/about/',
+        templateUrl:
+          '/static/partials/data-set-nav/partials/details-tab.html',
         controller: 'refineryDataSetNavBlueprintCtrl'
       },
       '^\/data_sets2\/.*\/$',
