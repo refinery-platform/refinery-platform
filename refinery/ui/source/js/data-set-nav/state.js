@@ -89,40 +89,8 @@ function refineryDataSetNavConfig (
       true
     )
     .state(
-      'browse', {
-        url: '/files/browse',
-        templateUrl:
-          '/static/partials/data-set-nav/partials/data-set-ui-mode-browse.html',
-        controller: 'refineryDataSetNavFilesBrowseCtrl'
-      },
-      '^\/data_sets2\/.*\/$',
-      true
-    )
-    .state(
-      'analyze', {
-        url: '/files/analyze/',
-        templateUrl:
-          '/static/partials/data-set-nav/partials/data-set-ui-mode-analyze.html',
-        controller: 'refineryDataSetNavAnalyzeCtrl'
-      },
-      '^\/data_sets2\/.*\/$',
-      true
-    )
-    .state(
-      'visualize', {
-        templateUrl:
-          '/static/partials/data-set-nav/partials/data-set-ui-mode-visualize.html',
-        url: '/files/visualize/',
-        controller: 'refineryDataSetNavVisualizeCtrl'
-      },
-      '^\/data_sets2\/.*\/$',
-      true
-    )
-    .state(
       'analyses', {
         url: '/analyses/',
-        templateUrl:
-          '/static/partials/analysis-monitor/partials/analyses-list.html',
         controller: 'refineryDataSetNavBlueprintCtrl'
       },
       '^\/data_sets2\/.*\/$',
