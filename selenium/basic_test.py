@@ -8,6 +8,12 @@ base_url = os.environ['BASE_URL']
 
 
 @pytest.fixture
+def selenium(selenium):
+    selenium.implicitly_wait(5)
+    return selenium
+
+
+@pytest.fixture
 def login(selenium):
     creds = yaml.load(open(os.environ['CREDS_YML']))
     selenium.get(base_url)
