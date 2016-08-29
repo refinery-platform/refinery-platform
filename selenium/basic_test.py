@@ -25,9 +25,10 @@ def assert_body_text(selenium, *search_texts):
 # TESTS:
 
 
-@pytest.mark.xfail(reason='on Travis only the top of the page comes through')
 def test_login_not_required(selenium):
     selenium.get(base_url)
+    time.sleep(10)
+    selenium.get(base_url)  # TODO: Ilya reports page load problem 1st time.
     time.sleep(10)
     assert_body_text(selenium, 'Collaboration', 'Statistics', 'About',
                      'Register', 'Login', 'Launch Pad', 'Data Sets',
