@@ -44,8 +44,10 @@ script:
   # (https://docs.travis-ci.com/user/sauce-connect/),
   # while Pytest looks for SAUCELABS_USERNAME and SAUCELABS_API_KEY
   # (http://pytest-selenium.readthedocs.io/en/latest/user_guide.html#sauce-labs).
-  - EXPORT SAUCE_USERNAME=$SAUCELABS_USERNAME SAUCE_ACCESS_KEY=$SAUCELABS_API_KEY
-  - printenv | sort | grep SAUCE | perl -pne 's/=(...).+/=$1.../'
+  # This has been recognized as a point of confusion, but there is no plan to change anything.
+  # https://github.com/pytest-dev/pytest-selenium/issues/53
+  - export SAUCELABS_USERNAME=$SAUCE_USERNAME SAUCELABS_API_KEY=$SAUCE_ACCESS_KEY
+  - printenv | sort | grep SAUCE | perl -pne 's/=(...).+/=$1.../' # debug helper
   - export BASE_URL=http://localhost:8000 CREDS_YML=guest_creds.yml UPLOAD=gff3.csv
   - pytest basic_test.py --driver SauceLabs --capability browserName Firefox --capability tunnelIdentifier $TRAVIS_JOB_NUMBER
   - popd
