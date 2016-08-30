@@ -116,7 +116,7 @@ function refineryDataSetNavConfig (
       true
     )
     .otherwise(
-      '/files/browse',
+      '/files/',
       '^\/data_sets2\/.*\/$',
       true
   );
