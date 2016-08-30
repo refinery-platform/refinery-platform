@@ -21,7 +21,7 @@ before_script:
   - python manage.py migrate registration
   - python manage.py migrate core
   - python manage.py migrate guardian
-  - python manage.py migrate create_public_group
+  - python manage.py create_public_group
   - python manage.py syncdb --migrate --noinput
   - python manage.py create_user 'guest' 'guest' 'guest@example.com' 'Guest'
   - npm install -g grunt-cli@0.1.13 bower@1.7.7 --progress false
