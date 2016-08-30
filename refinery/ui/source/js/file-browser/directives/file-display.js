@@ -1,6 +1,6 @@
 'use strict';
 
-function rpFileDisplay ($) {
+function rpFileDisplay ($, $window) {
   return {
     restrict: 'E',
     templateUrl: '/static/partials/file-browser/partials/file-display.html',
@@ -8,6 +8,12 @@ function rpFileDisplay ($) {
       $('#view-selector').select2({ minimumResultsForSearch: -1 });
       $('#view-selector').on('change', function (event) {
         $('#navigation-tabs a[href="#' + event.added.element[0].value + '"]').tab('show');
+
+        if (event.val === 'pivot-view-tab') {
+          $window.pivotMatrixView.render();
+        } else if (event.val === 'provenance-view-tab') {
+          console.log('in provenance-view-tab');
+        }
       });
     }
   };
@@ -15,5 +21,5 @@ function rpFileDisplay ($) {
 
 angular
   .module('refineryFileBrowser')
-  .directive('rpFileDisplay', ['$', rpFileDisplay]
+  .directive('rpFileDisplay', ['$', '$window', rpFileDisplay]
 );
