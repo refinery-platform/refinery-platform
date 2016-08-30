@@ -131,17 +131,23 @@
 
           // render pivot matrix upon activation of tab (otherwise the labels will be missing because their
           // width cannot be determined while the matrix is not visible (getBBox and getBoundingClientRect don't work)
-        $('#view-selector').on("change", function (e) {
-          if (e.val === "pivot-view-tab") {
-                pivotMatrixView.render();
+        // Handle in angular when in data_set2
+        if (window.location.href.indexOf('data_sets2') === -1) {
+          $('#view-selector').on("change", function (e) {
+            console.log('in the view selector catch for pivot');
+            if (e.val === "pivot-view-tab") {
+              pivotMatrixView.render();
             }
           });
+        }
 
         $('#view-selector').on("change", function (e) {
-          if (e.val === "provenance-view-tab") {
+            if (e.val === "provenance-view-tab") {
               if (provvis.get() instanceof provvisDecl.ProvVis === true) {
+                console.log('in if');
                 provvisRender.update(provvis.get(), lastProvVisSolrResponse);
               } else {
+                console.log('in else');
                 provVisQuery = query.clone();
                 provVisQuery.setDocumentCount(provVisQuery.getTotalDocumentCount());
                 provVisQuery.setDocumentIndex(0);
