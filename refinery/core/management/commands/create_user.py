@@ -23,7 +23,7 @@ class Command(BaseCommand):
     """
     def handle(self, username, password, email, first_name, last_name,
                affiliation, **options):
-        """Create a user account for Refinery (user is inactive).
+        """Create a user account for Refinery.
         """
 
         # delete if exists
@@ -37,12 +37,10 @@ class Command(BaseCommand):
             return
 
         init_user(
-            username, password, email, first_name, last_name, affiliation,
-            is_active=False)
+            username, password, email, first_name, last_name, affiliation)
 
 
-def init_user(username, password, email, first_name, last_name, affiliation,
-              is_active=True):
+def init_user(username, password, email, first_name, last_name, affiliation):
     """Create a new User instance with specified values.
     """
     user_object = User.objects.create_user(
@@ -50,7 +48,7 @@ def init_user(username, password, email, first_name, last_name, affiliation,
     user_object.first_name = first_name
     user_object.last_name = last_name
     user_object.get_profile().affiliation = affiliation
-    user_object.is_active = is_active
+    user_object.is_active = True
     user_object.save()
     user_object.get_profile().save()
 
