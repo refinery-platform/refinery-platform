@@ -32,9 +32,9 @@ before_script:
 script:
   - flake8 --exclude=migrations,ui ..
 
-#  - echo -en 'travis_fold:start:django-tests'
-#  - coverage run manage.py test
-#  - echo -en 'travis_fold:end:django-tests'
+  - echo 'travis_fold:start:django-tests'
+  - coverage run manage.py test
+  - echo 'travis_fold:end:django-tests'
 
   - echo 'travis_fold:start:grunt'
   - pushd ui
