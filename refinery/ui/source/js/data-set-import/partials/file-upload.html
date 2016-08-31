@@ -95,7 +95,7 @@
         <div class="col-xs-4">
           <div ng-if="!file.uploaded && !file.error">
             <button
-              class="refinery-base btn btn-default start"
+              class="active-group btn btn-default start"
               ng-click="file.$submit()"
               ng-hide="!file.$submit || options.autoUpload"
               ng-disabled="file.$state() == 'pending' || file.$state() == 'rejected' || loadingFiles">
