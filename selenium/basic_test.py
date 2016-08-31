@@ -1,6 +1,7 @@
 import os
 import yaml
 import pytest
+from time import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -76,11 +77,12 @@ def test_login_not_required(selenium):
                      'You must provide an Affiliation',
                      'This field is required')
 
-    selenium.find_element_by_name('username').send_keys('2')
+    stamp = str(time())  # Helps  prevent collisions when running locally.
+    selenium.find_element_by_name('username').send_keys(stamp)
     selenium.find_element_by_name('first_name').send_keys('first')
     selenium.find_element_by_name('last_name').send_keys('last')
     selenium.find_element_by_name('affiliation').send_keys('affiliation')
-    selenium.find_element_by_name('email').send_keys('email@example.edu')
+    selenium.find_element_by_name('email').send_keys('%s@example.edu' % stamp)
     selenium.find_element_by_name('password1').send_keys('password')
     selenium.find_element_by_name('password2').send_keys('password')
 
@@ -95,11 +97,23 @@ def test_upload(selenium, login):
     assert_body_text(selenium, 'Upload', 'Logout')
 
     selenium.find_element_by_link_text('Upload').click()
-    # path = os.environ['UPLOAD']
-    #
-    # selenium.find_element_by_name('tabular_file').send_keys(path)
+    assert_body_text(selenium, 'Data Set Import',
+                     'Tabular Metadata', 'ISA-Tab Metadata',
+                     'PROVIDE METADATA FILE',
+                     'Download an example', 'Choose delimiter', 'Select file')
+
+    path = os.environ['UPLOAD']
+
+    # TODO: File uploads did work in the old UI, but no longer.
+    # Can we trigger the event Angular is looking for?
+
+    selenium.find_element_by_name('tabular_file').send_keys(path)
+    # selenium.execute_script('$("[name=tabular_file]").change()')
+
+    # assert_body_text(selenium, 'PREVIEW (5 ROWS)')
     # expected_title = re.sub(r'\..*$', '', re.sub(r'^.*/', '', path))
     # title_el = selenium.find_element_by_name('title')
     # assert title_el.get_attribute('value') == expected_title
+
     if not_travis:
         pytest.set_trace()
