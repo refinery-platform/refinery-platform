@@ -226,6 +226,12 @@
     // lodash v2 or other libraries like underscore.
     window.lodashLatest = _.noConflict();
   </script>
+
+  <!-- Only needed when loading D3.js v4 and D3.js v3 -->
+  <!-- This an be removed once everything runs on D3.js v4 -->
+  {% block vendor_scripts_pre_d3_v3 %}
+  {% endblock %}
+
   <script src="{% static "vendor/d3/d3.min.js" %}"></script>
   <script src="{% static "vendor/humanize/humanize.js" %}"></script>
 
