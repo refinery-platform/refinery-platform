@@ -1,7 +1,9 @@
 import os
 import yaml
 import pytest
-import time
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 base_url = os.environ['BASE_URL']
 
@@ -20,30 +22,30 @@ def login(selenium):
     selenium.find_element_by_id('id_username').send_keys(creds['username'])
     selenium.find_element_by_id('id_password').send_keys(creds['password'])
     selenium.find_element_by_xpath('//input[@type="submit"]').click()
+    assert_body_text(selenium, 'Logout')
 
 
 def assert_body_text(selenium, *search_texts):
-    all_text = selenium.find_element_by_tag_name('body').text
     for search_text in search_texts:
-        assert search_text in all_text
+        WebDriverWait(selenium, 10).until(
+            EC.text_to_be_present_in_element(
+                (By.TAG_NAME, 'body'), search_text)
+        )
 
 # TESTS:
 
 
 def test_login_not_required(selenium):
     selenium.get(base_url)
-    time.sleep(2)  # TODO
     assert_body_text(selenium, 'Collaboration', 'Statistics', 'About',
                      'Register', 'Login', 'Launch Pad', 'Data Sets',
                      'Analyses', 'Workflows')
 
     selenium.find_element_by_link_text('Statistics').click()
-    time.sleep(2)  # TODO
     assert_body_text(selenium, 'Users', 'Groups', 'Files',
                      'Data Sets', 'Workflows', 'Projects')
 
     selenium.find_element_by_link_text('About').click()
-    time.sleep(2)  # TODO
     assert_body_text(selenium, 'Background', 'Contact', 'Funding', 'Team',
                      'Most Recent Code for this Instance')
     # TODO: All sections are empty right now
@@ -51,7 +53,6 @@ def test_login_not_required(selenium):
 
 
 def test_upload(selenium, login):
-    time.sleep(2)  # TODO
     assert_body_text(selenium, 'Upload', 'Logout')
 
     selenium.find_element_by_link_text('Upload').click()
