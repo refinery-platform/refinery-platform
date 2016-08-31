@@ -458,6 +458,7 @@ angular
   .controller('ListGraphCtrl', [
     '$element',
     '$rootScope',
+    'd3V4',
     'graph',
     'listGraphSettings',
     'dataSet',
