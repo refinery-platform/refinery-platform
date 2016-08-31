@@ -11,7 +11,8 @@ SetEnv DJANGO_SETTINGS_MODULE <%= @django_settings_module %>
     <% if @tls_rewrite %>
     RewriteEngine On
     RewriteCond %{HTTP:X-Forwarded-Proto} !https
-    RewriteRule ^.*$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+    RewriteCond %{HTTP_HOST} <%= @site_url %>
+    RewriteRule ^.*$ https://%{HTTP_HOST}%{REQUEST_URI} [R=302,L]
     <% end %>
 
     <Directory <%= @django_root %>/config>
