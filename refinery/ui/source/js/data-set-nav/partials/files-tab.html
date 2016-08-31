@@ -1,6 +1,12 @@
 <div class="dataSetTabContent" id="files">
   <div class="row">
-    <div class="col-md-offset-8 col-md-2">
+    <div class="col-md-offset-2 col-md-3">
+      <rp-file-browser-node-group>
+      </rp-file-browser-node-group>
+       <rp-file-browser-node-group-buttons>
+       </rp-file-browser-node-group-buttons>
+    </div>
+    <div class="col-md-offset-3 col-md-2">
       <rp-select-workflow></rp-select-workflow>
     </div>
     <div class="col-md-1">
@@ -8,29 +14,13 @@
     </div>
   </div>
 
-  <div class="row">
+  <div class="row y-scrollable">
     <div class="col-md-2">
-      <div class="row">
-        <div class="col-md-12">
-          <rp-file-browser-node-group>
-          </rp-file-browser-node-group>
-          <rp-file-browser-node-group-buttons>
-          </rp-file-browser-node-group-buttons>
-        </div>
-      </div>
-
-      <div class="row y-scrollable">
-        <div class="col-md-12">
-          <rp-file-browser-assay-filters>
-          </rp-file-browser-assay-filters>
-        </div>
-      </div>
+      <rp-file-browser-assay-filters>
+      </rp-file-browser-assay-filters>
     </div>
-
-    <div class="row">
-      <div class="col-md-10" id="main-area">
-        <rp-file-display></rp-file-display>
-      </div>
+    <div class="col-md-10" id="main-area">
+      <rp-file-display></rp-file-display>
     </div>
   </div>
 </div>
