@@ -1,9 +1,9 @@
 'use strict';
 
-function rpFileBrowserNodeGroupButtons () {
+function rpFileBrowserNodeGroupSave () {
   return {
     restrict: 'AE',
-    templateUrl: '/static/partials/file-browser/partials/node-group-buttons.html',
+    templateUrl: '/static/partials/file-browser/partials/node-group-save.html',
     controller: 'NodeGroupCtrl',
     controllerAs: 'NGCtrl',
     bindToController: {
@@ -14,7 +14,7 @@ function rpFileBrowserNodeGroupButtons () {
 
 angular
   .module('refineryFileBrowser')
-  .directive('rpFileBrowserNodeGroupButtons', [
-    rpFileBrowserNodeGroupButtons
+  .directive('rpFileBrowserNodeGroupSave', [
+    rpFileBrowserNodeGroupSave
   ]
 );
