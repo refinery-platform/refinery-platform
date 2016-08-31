@@ -59,6 +59,10 @@
 
 {% block vendor_scripts %}
   <script type="text/javascript" src="{% static "vendor/jquery-mousewheel/jquery.mousewheel.min.js" %}"></script>
-  <script type="text/javascript" src="{% static "vendor/d3-list-graph/dist/d3.layout.listGraph.min.js" %}"></script>
+  <script type="text/javascript" src="{% static "vendor/d3-v4/d3.min.js" %}"></script>
+  <script type="text/javascript" src="{% static "vendor/d3-list-graph/dist/d3.listGraph.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/d3-list-graph/dist/listGraph.min.js" %}"></script>
+  <script type="text/javascript">
+    var d3V4 = d3;
+  </script>
 {% endblock %}

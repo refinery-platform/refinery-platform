@@ -5,10 +5,11 @@
  *
  * @method  ListGraphCtrl
  * @author  Fritz Lekschas
- * @date    2016-05-06
+ * @date    2016-08-31
  *
  * @param   {Object}  $element           Directive's root element.
  * @param   {Object}  $rootScope         Angular's root scope.
+ * @param   {Object}  d3V4               D3.js version 4.x.
  * @param   {Object}  graph              Graph library.
  * @param   {Object}  listGraphSettings  Settings.
  * @param   {Object}  dataSet            DataSet service.
@@ -16,7 +17,14 @@
  * @param   {Object}  ListGraphVis       The list graph visualization.
  */
 function ListGraphCtrl (
-  $element, $rootScope, graph, listGraphSettings, dataSet, pubSub, ListGraphVis
+  $element,
+  $rootScope,
+  d3V4,
+  graph,
+  listGraphSettings,
+  dataSet,
+  pubSub,
+  ListGraphVis
 ) {
   this.graphLib = graph;
   this.$element = $element;
@@ -43,6 +51,7 @@ function ListGraphCtrl (
         rootNodes: this.visRoots,
         iconPath: this.settings.iconPath,
         // Optional
+        d3: d3V4,  // Can be removed once we use D3 v4 globally
         activeLevel: 1,
         columns: Math.round(this.width / 175),
         dispatcher: pubSub.trigger,
