@@ -4,8 +4,10 @@ import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 
 base_url = os.environ['BASE_URL']
+not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
 
 
 @pytest.fixture
@@ -27,10 +29,18 @@ def login(selenium):
 
 def assert_body_text(selenium, *search_texts):
     for search_text in search_texts:
-        WebDriverWait(selenium, 10).until(
-            EC.text_to_be_present_in_element(
-                (By.TAG_NAME, 'body'), search_text)
-        )
+        try:
+            WebDriverWait(selenium, 5).until(
+                EC.text_to_be_present_in_element(
+                    (By.TAG_NAME, 'body'), search_text)
+            )
+        except TimeoutException:
+            raise AssertionError(
+                '"%s" not in body: \n%s' % (
+                    search_text,
+                    selenium.find_element_by_tag_name('body').text
+                ))
+
 
 # TESTS:
 
@@ -49,7 +59,28 @@ def test_login_not_required(selenium):
     assert_body_text(selenium, 'Background', 'Contact', 'Funding', 'Team',
                      'Most Recent Code for this Instance')
     # TODO: All sections are empty right now
-    # TODO: Registration page
+
+    selenium.find_element_by_link_text('Register').click()
+    assert_body_text(selenium, 'Sign Up', 'Register for an account',
+                     'Indicates a required field',
+                     'USERNAME', 'FIRST NAME', 'LAST NAME',
+                     'AFFILIATION', 'EMAIL ADDRESS',
+                     'PASSWORD (AGAIN)')
+
+    selenium.find_element_by_name('username').send_keys('guest')
+    selenium.find_element_by_xpath('//input[@type="submit"]').click()
+    assert_body_text(selenium, 'Please correct the errors below',
+                     'A user with that username already exists',
+                     'You must provide a First Name',
+                     'You must provide a Last Name',
+                     'You must provide an Affiliation',
+                     'This field is required')
+
+    selenium.find_element_by_name('username').send_keys('2')
+    selenium.find_element_by_xpath('//input[@type="submit"]').click()
+
+    if not_travis:
+        pytest.set_trace()
 
 
 def test_upload(selenium, login):
@@ -62,5 +93,5 @@ def test_upload(selenium, login):
     # expected_title = re.sub(r'\..*$', '', re.sub(r'^.*/', '', path))
     # title_el = selenium.find_element_by_name('title')
     # assert title_el.get_attribute('value') == expected_title
-    if not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true'):
-        pytest.set_trace()  # In debug, hit "c" to continue.
+    if not_travis:
+        pytest.set_trace()
