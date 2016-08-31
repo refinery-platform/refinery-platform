@@ -134,7 +134,6 @@
         // Handle in angular when in data_set2
         if (window.location.href.indexOf('data_sets2') === -1) {
           $('#view-selector').on("change", function (e) {
-            console.log('in the view selector catch for pivot');
             if (e.val === "pivot-view-tab") {
               pivotMatrixView.render();
             }
@@ -144,10 +143,8 @@
         $('#view-selector').on("change", function (e) {
             if (e.val === "provenance-view-tab") {
               if (provvis.get() instanceof provvisDecl.ProvVis === true) {
-                console.log('in if');
                 provvisRender.update(provvis.get(), lastProvVisSolrResponse);
               } else {
-                console.log('in else');
                 provVisQuery = query.clone();
                 provVisQuery.setDocumentCount(provVisQuery.getTotalDocumentCount());
                 provVisQuery.setDocumentIndex(0);
