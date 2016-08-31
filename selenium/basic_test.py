@@ -77,7 +77,15 @@ def test_login_not_required(selenium):
                      'This field is required')
 
     selenium.find_element_by_name('username').send_keys('2')
+    selenium.find_element_by_name('first_name').send_keys('first')
+    selenium.find_element_by_name('last_name').send_keys('last')
+    selenium.find_element_by_name('affiliation').send_keys('affiliation')
+    selenium.find_element_by_name('email').send_keys('email@example.edu')
+    selenium.find_element_by_name('password1').send_keys('password')
+    selenium.find_element_by_name('password2').send_keys('password')
+
     selenium.find_element_by_xpath('//input[@type="submit"]').click()
+    assert_body_text(selenium, 'Registration complete')
 
     if not_travis:
         pytest.set_trace()
