@@ -1,6 +1,24 @@
 <div class="dataSetTabContent" id="files">
   <div class="row">
-    <div class="col-md-offset-2 col-md-3">
+    <div class="col-md-2">
+      <rp-file-display></rp-file-display>
+      <!--<div ng-if="FBCtrl.isOwner">-->
+      <i class="fa fa-wrench fa-border"
+        rp-assay-files-util-modal ng-click="open()">
+      </i>
+      <a
+        id="help-view-selector"
+        popover-placement="right"
+        uib-popover="The collection of files in this data set can be displayed using different representations."
+        popover-title="Select File Display Mode"
+        popover-trigger="focus"
+        popover-append-to-body="true"
+        tabindex="0">
+        <i class="fa fa-question-circle fa-lg"></i>
+      </a>
+      <!--</div>-->
+    </div>
+    <div class="col-md-3">
       <rp-select-nodes-count></rp-select-nodes-count>
       <rp-file-browser-node-group-reset>
       </rp-file-browser-node-group-reset>
@@ -37,7 +55,7 @@
       </rp-file-browser-assay-filters>
     </div>
     <div class="col-md-10" id="main-area">
-      <rp-file-display></rp-file-display>
+      <rp-file-browser-assay-files></rp-file-browser-assay-files>
     </div>
   </div>
 </div>
