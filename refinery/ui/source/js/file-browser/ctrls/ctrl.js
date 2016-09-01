@@ -29,8 +29,6 @@ function FileBrowserCtrl (
   vm.customColumnName = [];
   vm.queryKeys = Object.keys($location.search());
   vm.selectedField = {};
- // vm.selectedFieldList = {};
-  vm.selectNodesCount = 0;
   vm.gridOptions = {
     appScopeProvider: vm,
     infiniteScrollRowsFromEnd: 40,
@@ -45,8 +43,6 @@ function FileBrowserCtrl (
     enableSelectionBatchEvent: true,
     multiSelect: true
   };
-  // Total file size in data set, sent from api
-  vm.assayFilesTotal = 0;
   // variables supporting dynamic scrolling
   vm.firstPage = 0;
   vm.lastPage = 0;
@@ -67,8 +63,8 @@ function FileBrowserCtrl (
       vm.assayFiles = vm.assayFiles.concat(fileBrowserFactory.assayFiles);
       // Ui-grid rows generated from assay files
       vm.gridOptions.data = vm.assayFiles;
-      vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
-      vm.totalPages = Math.floor(vm.assayFilesTotal / vm.rowCount);
+      selectedNodesService.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
+      vm.totalPages = Math.floor(selectedNodesService.assayFilesTotal / vm.rowCount);
       vm.assayAttributes = fileBrowserFactory.assayAttributes;
       vm.attributeFilter = fileBrowserFactory.attributeFilter;
       vm.analysisFilter = fileBrowserFactory.analysisFilter;
@@ -154,12 +150,12 @@ function FileBrowserCtrl (
 
         if (selectedNodesService.selectedAllFlag) {
           selectedNodesService.setComplementSeletedNodes(row);
-          vm.selectNodesCount = vm.assayFilesTotal -
+          selectedNodesService.selectNodesCount = selectedNodesService.assayFilesTotal -
             selectedNodesService.complementSelectedNodes.length;
         } else {
           // add or remove row to list
           selectedNodesService.setSelectedNodes(row);
-          vm.selectNodesCount = selectedNodesService.selectedNodes.length;
+          selectedNodesService.selectNodesCount = selectedNodesService.selectedNodes.length;
         }
 
         // when not current selection, check if a new row was deselect/selected
@@ -180,10 +176,10 @@ function FileBrowserCtrl (
         if (eventRows[0].isSelected) {
           selectedNodesService.setSelectedAllFlags(true);
           // Need to manually set vm.selectNodesCount to count of all list
-          vm.selectNodesCount = vm.assayFilesTotal;
+          selectedNodesService.selectNodesCount = selectedNodesService.assayFilesTotal;
         } else {
           selectedNodesService.setSelectedAllFlags(false);
-          vm.selectNodesCount = 0;
+          selectedNodesService.selectNodesCount = 0;
         }
       });
     }
@@ -333,16 +329,17 @@ function FileBrowserCtrl (
             selectedNodesService.setSelectedNodesFromNodeGroup(
               selectedNodesService.selectedNodesUuidsFromNodeGroup
             );
-            vm.selectNodesCount = selectedNodesService.selectedNodesUuidsFromNodeGroup.length;
+            selectedNodesService.selectNodesCount = selectedNodesService
+              .selectedNodesUuidsFromNodeGroup.length;
             correctRowSelectionInUI();
             vm.afterNodeGroupUpdate = true;
           } else if (selectedNodesService.selectedNodes.length > 0) {
             vm.setGridSelectedRows(selectedNodesService.selectedNodes);
-            vm.selectNodesCount = selectedNodesService.selectedNodesUuids.length;
+            selectedNodesService.selectNodesCount = selectedNodesService.selectedNodesUuids.length;
             correctRowSelectionInUI();
           } else {
             vm.gridApi.selection.clearSelectedRows();
-            vm.selectNodesCount = 0;
+            selectedNodesService.selectNodesCount = 0;
           }
         });
       });

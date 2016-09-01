@@ -11,6 +11,8 @@ function selectedNodesService ($window, selectedFilterService) {
   vm.selectedNodeGroupUuid = '';
   vm.defaultCurrentSelectionUuid = '';
   vm.resetNodeGroup = false;
+  vm.selectNodesCount = 0;
+  vm.assayFilesTotal = 0;
 
   /**
    * Manually keep track of selected nodes which is neccessary due to dynamic

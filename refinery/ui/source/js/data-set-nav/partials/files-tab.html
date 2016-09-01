@@ -1,8 +1,19 @@
 <div class="dataSetTabContent" id="files">
   <div class="row">
-    <div class="col-md-offset-2 col-md-1">
+    <div class="col-md-offset-2 col-md-3">
+      <rp-select-nodes-count></rp-select-nodes-count>
       <rp-file-browser-node-group-reset>
       </rp-file-browser-node-group-reset>
+       <a
+         popover-placement="bottom"
+         uib-popover=" The number of files currently selected. Use facet
+         attribute filters and individual file selection check boxes to modify
+         the current selection."
+         popover-title="Current File Selection"
+         popover-trigger="focus"
+         tabindex="0">
+           <i class="fa fa-question-circle fa-lg"></i>
+        </a>
     </div>
     <div class="col-md-2">
       <rp-file-browser-node-group>
@@ -12,7 +23,7 @@
       <rp-file-browser-node-group-save>
       </rp-file-browser-node-group-save>
     </div>
-    <div class="col-md-offset-2 col-md-2">
+    <div class="col-md-offset-1 col-md-2">
       <rp-select-workflow></rp-select-workflow>
     </div>
     <div class="col-md-1">
