@@ -8,7 +8,7 @@ class Migration(DataMigration):
     def forwards(self, orm):
         "Write your forwards methods here."
         call_command('loaddata',
-                     'file_store/fixtures/file_types_used_for_visualiztion.json')
+                     'file_store/fixtures/initial_data.json')
 
     def backwards(self, orm):
         "Write your backwards methods here."
