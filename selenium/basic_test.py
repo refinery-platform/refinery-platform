@@ -82,7 +82,7 @@ def test_login_not_required(selenium):
     selenium.find_element_by_name('first_name').send_keys('first')
     selenium.find_element_by_name('last_name').send_keys('last')
     selenium.find_element_by_name('affiliation').send_keys('affiliation')
-    selenium.find_element_by_name('email').send_keys('%s@example.edu' % stamp)
+    selenium.find_element_by_name('email').send_keys('%s@example.org' % stamp)
     selenium.find_element_by_name('password1').send_keys('password')
     selenium.find_element_by_name('password2').send_keys('password')
 
