@@ -24,7 +24,7 @@ def extra_context(context):
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     """
     return {
-        "ADMINS": settings.ADMINS[0][1],
+        "ADMIN_EMAIL": settings.ADMINS[0][1],
         "CURRENT_COMMIT": settings.CURRENT_COMMIT,
         "DEBUG": settings.DEBUG,
         "REFINERY_CSS": settings.REFINERY_CSS,
