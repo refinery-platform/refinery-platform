@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 import file_store
 from .models import Workflow, NodeGroup
-from data_set_manager.models import Node, Assay, Study
+from data_set_manager.models import Node, Assay, Study, AuxiliaryNodeStatus
 
 logger = logging.getLogger(__name__)
 
@@ -69,9 +69,10 @@ class WorkflowSerializer(serializers.HyperlinkedModelSerializer):
 class NodeSerializer(serializers.HyperlinkedModelSerializer):
     child_nodes = serializers.SerializerMethodField('_get_children')
     parent_nodes = serializers.SerializerMethodField('_get_parents')
-    auxiliary_node = serializers.SerializerMethodField('_get_aux_nodes')
-    auxiliary_node_task_state = serializers.SerializerMethodField(
-        '_get_aux_node_task_state')
+    auxiliary_nodes = serializers.SerializerMethodField('_get_aux_nodes')
+    auxiliary_node_task_states = serializers.SerializerMethodField(
+                '_get_aux_node_task_states'
+            )
     file_extension = serializers.SerializerMethodField(
         '_get_file_extension')
     relative_file_store_item_url = serializers.SerializerMethodField(
@@ -84,19 +85,33 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
         return obj.get_parents()
 
     def _get_aux_nodes(self, obj):
-        return obj.get_relative_file_store_item_url()
+        aux_nodes = obj.get_auxiliary_nodes()
+        urls = []
+        for uuid in aux_nodes:
+            node = Node.objects.get(uuid=uuid)
+            urls.append(node.get_relative_file_store_item_url())
+        return urls
 
-    def _get_aux_node_task_state(self, obj):
-        return obj.get_auxiliary_node_generation_task_state()
+    def _get_aux_node_task_states(self, obj):
+        aux_nodes = obj.get_auxiliary_nodes()
+        states = []
+        for uuid in aux_nodes:
+            try:
+                states.append(
+                    AuxiliaryNodeStatus.objects.get(
+                        uuid=uuid).get_task_state()
+                )
+            except (AuxiliaryNodeStatus.DoesNotExist,
+                    AuxiliaryNodeStatus.MultipleObjectsReturned) as e:
+                logger.error(e)
+
+        return states
 
     def _get_file_extension(self, obj):
         try:
-            return file_store.models.FileExtension.objects.get(
-                filetype=file_store.models.FileStoreItem.objects.get(
-                    uuid=obj.file_uuid).filetype).name
-        except (file_store.models.FileExtension.DoesNotExist,
-                file_store.models.FileExtension.MultipleObjectsReturned,
-                file_store.models.FileStoreItem.DoesNotExist,
+            return file_store.models.FileStoreItem.objects.get(
+                    uuid=obj.file_uuid).get_file_extension()
+        except (file_store.models.FileStoreItem.DoesNotExist,
                 file_store.models.FileStoreItem.MultipleObjectsReturned) as e:
             logger.debug(e)
             return None
@@ -108,6 +123,6 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
         model = Node
         fields = ['uuid', 'relative_file_store_item_url',
                   'parent_nodes',
-                  'child_nodes', 'auxiliary_node',
-                  'auxiliary_node_task_state',
+                  'child_nodes', 'auxiliary_nodes',
+                  'auxiliary_node_task_states',
                   'file_extension']
