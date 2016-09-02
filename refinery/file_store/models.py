@@ -17,7 +17,7 @@ Example: FILE_STORE_DIR = 'files'
 import os
 import re
 import logging
-from urlparse import urlparse, urljoin
+from urlparse import urljoin
 from celery.result import AsyncResult
 
 from django.conf import settings
@@ -28,8 +28,7 @@ from django_extensions.db.fields import UUIDField
 from django.core.files.storage import FileSystemStorage
 from django.utils import timezone
 
-from core.utils import is_url
-from data_set_manager.models import Node
+import core
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +130,7 @@ def generate_file_source_translator(username='', base_path=''):
         """
         source = map_source(source.strip())
         # ignore URLs and absolute file paths
-        if is_url(source) or os.path.isabs(source):
+        if core.utils.is_url(source) or os.path.isabs(source):
             return source
         # process relative path
         if base_path:
@@ -247,7 +246,7 @@ class FileStoreItem(models.Model):
     sharename = models.CharField(max_length=20, blank=True)
     #: type of the file
     filetype = models.ForeignKey(FileType, null=True)
-    #: file import task ID
+    #: file import /genetask ID
     import_task_id = UUIDField(blank=True)
     # Date created
     created = models.DateTimeField(auto_now_add=True,
@@ -295,17 +294,13 @@ class FileStoreItem(models.Model):
         :returns: str -- file extension that begins with a period.
 
         '''
-        # try to get extension from file on disk if exists
-        if self.datafile.name:
-            return get_extension_from_path(self.datafile.name)
-        else:  # otherwise get it from file source
-            if os.path.isabs(self.source):
-                return get_extension_from_path(self.source)
-            else:
-                # otherwise treat the source as URL
-                u = urlparse(self.source)
-                name = u.path.split('/')[-1]
-                return os.path.splitext(name)[-1]
+        try:
+
+            return FileExtension.objects.get(filetype=self.filetype).name
+        except (FileExtension.DoesNotExist,
+                FileExtension.MultipleObjectsReturned) as e:
+            logger.error("Error while trying to fetch FileExtension %s", e)
+            return None
 
     def get_file_object(self):
         '''Open data file.
@@ -328,21 +323,6 @@ class FileStoreItem(models.Model):
 
         """
         return self.filetype
-
-    def get_fileextension(self):
-        """Retrieve the FileExtension model instance associated with the
-        FileStoreItem.
-
-        :returns: name of FileExtension.
-
-        """
-        try:
-            return FileExtension.objects.get(
-                filetype=self.filetype).name.lower()
-        except (FileExtension.DoesNotExist,
-                FileExtension.MultipleObjectsReturned) as e:
-            logger.error("Failed to retrieve FileExtension! %s", e)
-            return None
 
     def set_filetype(self, filetype=''):
         """Assign the type of the datafile.
@@ -538,14 +518,6 @@ class FileStoreItem(models.Model):
     def get_import_status(self):
         """Return file import task state"""
         return AsyncResult(self.import_task_id).state
-
-    def get_associated_node(self):
-        try:
-            node = Node.objects.get(file_uuid=self.uuid)
-            return node
-        except (Node.DoesNotExist, Node.MultipleObjectsReturned) as e:
-            logger.error(e)
-            return None
 
 
 def is_local(uuid):
