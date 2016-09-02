@@ -29,6 +29,11 @@ class AnnotatedNodeAdmin(ForeignKeyAutocompleteAdmin):
                     "node_workflow_output", "is_annotation"]
 
 
+class AuxiliaryNodeStatusAdmin(ForeignKeyAutocompleteAdmin):
+    list_display = ["__unicode__", "uuid",
+                    "aux_node_generation_task_state"]
+
+
 class NodeCollectionAdmin(ForeignKeyAutocompleteAdmin):
     list_display = ["__unicode__", "title", "uuid", "identifier",
                     "description", "release_date", "submission_date"]
@@ -60,3 +65,4 @@ admin.site.register(models.AttributeOrder)
 admin.site.register(models.AttributeDefinition)
 admin.site.register(models.AnnotatedNode, AnnotatedNodeAdmin)
 admin.site.register(models.AnnotatedNodeRegistry)
+admin.site.register(models.AuxiliaryNodeStatus, AuxiliaryNodeStatusAdmin)
