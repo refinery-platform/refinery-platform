@@ -29,6 +29,8 @@ function FileBrowserCtrl (
   vm.customColumnName = [];
   vm.queryKeys = Object.keys($location.search());
   vm.selectedField = {};
+  vm.selectNodesCount = 0;
+  vm.assayFilesTotal = 0;
   vm.gridOptions = {
     appScopeProvider: vm,
     infiniteScrollRowsFromEnd: 40,
@@ -63,8 +65,8 @@ function FileBrowserCtrl (
       vm.assayFiles = vm.assayFiles.concat(fileBrowserFactory.assayFiles);
       // Ui-grid rows generated from assay files
       vm.gridOptions.data = vm.assayFiles;
-      selectedNodesService.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
-      vm.totalPages = Math.floor(selectedNodesService.assayFilesTotal / vm.rowCount);
+      vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
+      vm.totalPages = Math.floor(vm.assayFilesTotal / vm.rowCount);
       vm.assayAttributes = fileBrowserFactory.assayAttributes;
       vm.attributeFilter = fileBrowserFactory.attributeFilter;
       vm.analysisFilter = fileBrowserFactory.analysisFilter;
@@ -150,12 +152,12 @@ function FileBrowserCtrl (
 
         if (selectedNodesService.selectedAllFlag) {
           selectedNodesService.setComplementSeletedNodes(row);
-          selectedNodesService.selectNodesCount = selectedNodesService.assayFilesTotal -
+          vm.selectNodesCount = vm.assayFilesTotal -
             selectedNodesService.complementSelectedNodes.length;
         } else {
           // add or remove row to list
           selectedNodesService.setSelectedNodes(row);
-          selectedNodesService.selectNodesCount = selectedNodesService.selectedNodes.length;
+          vm.selectNodesCount = selectedNodesService.selectedNodes.length;
         }
 
         // when not current selection, check if a new row was deselect/selected
@@ -176,10 +178,10 @@ function FileBrowserCtrl (
         if (eventRows[0].isSelected) {
           selectedNodesService.setSelectedAllFlags(true);
           // Need to manually set vm.selectNodesCount to count of all list
-          selectedNodesService.selectNodesCount = selectedNodesService.assayFilesTotal;
+          vm.selectNodesCount = vm.assayFilesTotal;
         } else {
           selectedNodesService.setSelectedAllFlags(false);
-          selectedNodesService.selectNodesCount = 0;
+          vm.selectNodesCount = 0;
         }
       });
     }

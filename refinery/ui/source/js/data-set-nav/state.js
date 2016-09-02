@@ -82,8 +82,9 @@ function refineryDataSetNavConfig (
       'files', {
         url: '/files/',
         templateUrl:
-          '/static/partials/data-set-nav/partials/files-tab.html',
-        controller: 'refineryDataSetNavFilesCtrl'
+          '/static/partials/file-browser/views/files-tab.html',
+        controller: 'FileBrowserCtrl',
+        controllerAs: 'FBCtrl'
       },
       '^\/data_sets2\/.*\/$',
       true
