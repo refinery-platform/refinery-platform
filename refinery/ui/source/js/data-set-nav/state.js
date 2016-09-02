@@ -93,8 +93,8 @@ function refineryDataSetNavConfig (
       'analyses', {
         url: '/analyses/',
         templateUrl:
-          '/static/partials/data-set-nav/partials/analyses-tab.html',
-        controller: 'refineryDataSetNavBlueprintCtrl'
+          '/static/partials/analysis-monitor/views/analyses-tab.html',
+        controller: 'AnalysisMonitorCtrl'
       },
       '^\/data_sets2\/.*\/$',
       true
