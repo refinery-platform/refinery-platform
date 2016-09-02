@@ -1,7 +1,7 @@
 // Unit test for reset button directive
 'use strict';
 
-describe('rpFileBrowserNodeGroupReset directive unit test', function () {
+describe('rpFileBrowserSelectionReset directive unit test', function () {
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryFileBrowser'));
 
@@ -17,13 +17,13 @@ describe('rpFileBrowserNodeGroupReset directive unit test', function () {
     $templateCache
   ) {
     $templateCache.put(
-      '/static/partials/file-browser/partials/node-group-reset.html',
+      '/static/partials/file-browser/partials/selection-reset.html',
       '<button class="btn btn-default btn-xs" id="reset"></button>'
     );
     compile = _$compile_;
     rootScope = _$rootScope_;
     scope = rootScope.$new();
-    template = '<rp-file-browser-node-group-reset></rp-file-browser-node-group-reset>';
+    template = '<rp-file-browser-selection-reset></rp-file-browser-selection-reset>';
     directiveElement = compile(template)(scope);
     scope.$digest();
   }));

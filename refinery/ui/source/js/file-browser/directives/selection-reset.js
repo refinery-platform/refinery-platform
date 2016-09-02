@@ -1,9 +1,9 @@
 'use strict';
 
-function rpFileBrowserNodeGroupReset () {
+function rpFileBrowserSelectionReset () {
   return {
     restrict: 'AE',
-    templateUrl: '/static/partials/file-browser/partials/node-group-reset.html',
+    templateUrl: '/static/partials/file-browser/partials/selection-reset.html',
     controller: 'NodeGroupCtrl',
     controllerAs: 'NGCtrl',
     bindToController: {
@@ -14,7 +14,7 @@ function rpFileBrowserNodeGroupReset () {
 
 angular
   .module('refineryFileBrowser')
-  .directive('rpFileBrowserNodeGroupReset', [
-    rpFileBrowserNodeGroupReset
+  .directive('rpFileBrowserSelectionReset', [
+    rpFileBrowserSelectionReset
   ]
 );
