@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import sys
 from south.v2 import DataMigration
 from django.core.management import call_command
 
@@ -7,11 +8,12 @@ class Migration(DataMigration):
 
     def forwards(self, orm):
         "Write your forwards methods here."
-        call_command('loaddata',
-                     'file_store/fixtures/initial_data.json')
+        # Load some data
+        call_command("loaddata", "file_store/fixtures/file_store_data.json")
 
     def backwards(self, orm):
         "Write your backwards methods here."
+        pass
 
     models = {
         u'file_store.fileextension': {
