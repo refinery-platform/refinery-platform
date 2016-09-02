@@ -4,14 +4,18 @@ import errno
 import glob
 import logging
 import os
+import pysam
 import re
 import shutil
 import string
+import time
 import subprocess
 import sys
 import tempfile
 import traceback
 import requests
+import uuid
+import celery
 from requests.exceptions import HTTPError
 
 from django.conf import settings
@@ -24,7 +28,7 @@ from core.models import DataSet, FileStoreItem, ExtendedGroup
 from core.utils import update_data_set_index, add_data_set_to_neo4j
 from .isa_tab_parser import IsaTabParser
 from .models import Investigation, Node, \
-    initialize_attribute_order
+    initialize_attribute_order, AuxiliaryNodeStatus
 from .utils import get_node_types, update_annotated_nodes, \
     index_annotated_nodes, calculate_checksum
 
@@ -509,3 +513,67 @@ def parse_isatab(username, public, path,
             )
         )
     return None, os.path.basename(path), False
+
+
+@task()
+def generate_auxiliary_node(parent_node):
+    """
+    Task that will generate an auxiliary Node for visualization purposes
+    with specific file generation tasks going on for different FileTypes
+    flagged as: `used_for_visualization`.
+
+    :param parent_node: a Node instance
+    :type parent_node: Node
+    """
+
+    generate_auxiliary_node.update_state(
+        state=celery.states.STARTED,
+        meta="Auxiliary Node generation for {} has started.".format(
+            parent_node)
+    )
+
+    file_store_item = parent_node.get_file_store_item()
+
+    datafile_path = os.path.abspath(file_store_item.get_absolute_path())
+
+    if file_store_item.get_file_extension().lower() == "bam":
+
+        try:
+            start_time = time.time()
+            logger.debug(
+                "Starting bam index generation for %s" % datafile_path)
+
+            # try to generate a bam_index file
+            pysam.index(bytes(datafile_path))
+
+            auxiliary_file_store_item = FileStoreItem.objects.create_item(
+                datafile_path + ".bai")
+
+            parent_node.create_and_associate_auxiliary_node(
+                auxiliary_file_store_item.uuid)
+
+            AuxiliaryNodeStatus.objects.create(
+                uuid=auxiliary_file_store_item.uuid,
+                aux_node_generation_task_state=AuxiliaryNodeStatus.OK
+            )
+
+            generate_auxiliary_node.update_state(
+                state=celery.states.SUCCESS,
+                meta="Auxiliary Node generation for {} has succeeded.".format(
+                    parent_node)
+            )
+
+            logger.debug("Bam index for %s generated in %s seconds." % (
+                datafile_path, time.time() - start_time))
+
+        except Exception as e:
+            logger.error(
+                "Something went wrong while trying to generate the bam "
+                "index for %s. %s" % (datafile_path, e))
+
+            generate_auxiliary_node.update_state(
+                state=celery.states.FAILURE,
+                meta="Auxiliary Node generation for {} has failed.".format(
+                    parent_node)
+            )
+            raise celery.exceptions.Ignore()

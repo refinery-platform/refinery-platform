@@ -8,7 +8,7 @@ from datetime import datetime
 import logging
 
 import requests
-from celery.result import TaskSetResult
+from celery.task import TaskSet
 from requests.exceptions import HTTPError
 
 from django.conf import settings
@@ -526,6 +526,28 @@ class Node(models.Model):
                 file_store.models.FileStoreItem.MultipleObjectsReturned) as e:
             logger.error(e)
             return None
+
+    def run_generate_auxiliary_node_task(self):
+        # Check if the Django setting to generate auxiliary file has been
+        # set to work on files imported into Refinery
+        logger.debug("Checking if some auxiliary Node should be generated")
+        item = self.get_file_store_item()
+        if item.filetype.used_for_visualization and item.is_local():
+            if settings.REFINERY_AUXILIARY_FILE_GENERATION ==\
+                    "upon_file_import":
+
+                # Run generate_auxiliary_node as a subtask as to not hold up
+                # other file imports
+                auxiliary_node_generation_task = [
+                    data_set_manager.tasks.generate_auxiliary_node.subtask((
+                        self,))]
+                auxiliary_node_generation = TaskSet(
+                    tasks=auxiliary_node_generation_task).apply_async()
+                # Associate uuid of Node for which we are generating the
+                # aux. Node for so we can fetch the status of the aux. file
+                # generation
+                auxiliary_node_generation.taskset_id = item.import_task_id
+                auxiliary_node_generation.save()
 
 
 class Attribute(models.Model):

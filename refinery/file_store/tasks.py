@@ -1,23 +1,23 @@
 
 import os
 import stat
-import time
 import logging
 import requests
-from django.conf import settings
+from celery.signals import task_success
+
 from requests.exceptions import ContentDecodingError, HTTPError, \
     ConnectionError
 
 from tempfile import NamedTemporaryFile
 from urlparse import urlparse
 import celery
-from celery.task import task, TaskSet
-import pysam
+from celery.task import task
 
 from django.core.files import File
 
+import data_set_manager
 from .models import (FileStoreItem, get_temp_dir, file_path,
-                     FILE_STORE_BASE_DIR, FileExtension)
+                     FILE_STORE_BASE_DIR)
 
 
 logger = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ def create(source, sharename='', filetype='', file_size=1):
     return item.uuid
 
 
-@task(track_started=True)
+@task(track_started=True, name='import_file')
 def import_file(uuid, refresh=False, file_size=0):
     """Download or copy file specified by UUID.
     :param refresh: Flag for forcing update of the file.
@@ -228,28 +228,19 @@ def import_file(uuid, refresh=False, file_size=0):
         # save the model instance
         item.save()
 
-        # Check if the Django setting to generate auxiliary file has been
-        # set to work on files imported into Refinery
-        logger.debug("Checking if some auxiliary Node should be generated")
-        if item.filetype.used_for_visualization and item.is_local():
-            if settings.REFINERY_AUXILIARY_FILE_GENERATION ==\
-                    "upon_file_import":
-
-                parent_node = item.get_associated_node()
-
-                # Run generate_auxiliary_node as a subtask as to not hold up
-                # other file imports
-                auxiliary_node_generation_task = [
-                    generate_auxiliary_node.subtask((item, parent_node,))]
-                auxiliary_node_generation = TaskSet(
-                    tasks=auxiliary_node_generation_task).apply_async()
-                # Associate uuid of Node for which we are generating the
-                # aux. Node for so we can fetch the status of the aux. file
-                # generation
-                auxiliary_node_generation.taskset_id = parent_node.uuid
-                auxiliary_node_generation.save()
-
     return item
+
+
+@task_success.connect(sender=import_file)
+def begin_auxiliary_node_generation(sender, result, **kwargs):
+    file_store_item = result
+    try:
+        data_set_manager.models.Node.objects.get(
+            file_uuid=file_store_item.uuid).run_generate_auxiliary_node_task()
+    except (data_set_manager.models.Node.DoesNotExist,
+            data_set_manager.models.Node.MultipleObjectsReturned) \
+            as e:
+        logger.error(e)
 
 
 @task()
@@ -391,73 +382,6 @@ def download_file(url, target_path, file_size=1):
 
     response.close()
     logger.debug("Finished downloading")
-
-
-@task()
-def generate_auxiliary_node(file_store_item, parent_node):
-    """
-    Task that will generate an auxiliary Node for visualization purposes
-    with specific file generation tasks going on for different FileTypes
-    flagged as: `used_for_visualization`.
-
-    :param file_store_item: a FileStoreItem instance
-    :type file_store_item: FileStoreItem
-    :param parent_node: a Node instance
-    :type parent_node: Node
-    """
-
-    logger.debug("Parent Node: %s", parent_node.uuid)
-
-    generate_auxiliary_node.update_state(
-        state=celery.states.STARTED,
-        meta="Auxiliary Node generation for {} has started.".format(
-            parent_node)
-    )
-
-    datafile_path = os.path.abspath(file_store_item.get_absolute_path())
-
-    try:
-        FileExtension.objects.get(filetype=file_store_item.filetype)
-    except (FileExtension.DoesNotExist,
-            FileExtension.MultipleObjectsReturned) as e:
-        logger.error(e)
-
-    if file_store_item.get_fileextension() == "bam":
-
-        try:
-            start_time = time.time()
-            logger.debug(
-                "Starting bam index generation for %s" % datafile_path)
-
-            # Try to generate the .bai file in the same dir as the bam so that
-            # IGV can vizualize the bam file properly
-            pysam.index(bytes(datafile_path))
-
-            auxiliary_filestore_item = FileStoreItem.objects.create_item(
-                datafile_path + ".bai")
-
-            parent_node.create_and_associate_auxiliary_node(
-                auxiliary_filestore_item.uuid)
-
-            generate_auxiliary_node.update_state(
-                state=celery.states.SUCCESS,
-                meta="Auxiliary Node generation for {} has succeeded.".format(
-                    parent_node)
-            )
-
-            logger.debug("Bam index for %s generated in %s seconds." % (
-                datafile_path, time.time() - start_time))
-
-        except Exception as e:
-            logger.error(
-                "Something went wrong while trying to generate the bam "
-                "index for %s. %s" % (datafile_path, e))
-            generate_auxiliary_node.update_state(
-                state=celery.states.FAILURE,
-                meta="Auxiliary Node generation for {} has failed.".format(
-                    parent_node)
-            )
-            raise celery.exceptions.Ignore()
 
 
 class DownloadError(StandardError):
