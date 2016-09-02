@@ -494,6 +494,12 @@ function FileBrowserCtrl (
       }
     }
   );
+
+  // initialize the dataset
+  vm.checkDataSetOwnership();
+  vm.refreshAssayFiles().then(function () {
+    vm.checkUrlQueryFilters();
+  });
 }
 
 angular

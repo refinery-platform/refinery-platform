@@ -4,12 +4,6 @@ function rpFileBrowserAssayFilters ($timeout, $location, selectedFilterService) 
   return {
     restrict: 'E',
     templateUrl: '/static/partials/file-browser/partials/assay-filters.html',
-    controller: 'FileBrowserCtrl',
-    controllerAs: 'FBCtrl',
-    bindToController: {
-      attributeFilter: '@',
-      analysisFilter: '@'
-    },
     link: function (scope) {
       // ng-click event for attribute filter panels
       scope.dropAttributePanel = function (e, attributeName, attributeObj) {
