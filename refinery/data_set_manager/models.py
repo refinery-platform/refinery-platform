@@ -449,12 +449,17 @@ class Node(models.Model):
     def get_analysis_node_connections_for_node(self):
         return core.models.AnalysisNodeConnection.objects.filter(node=self)
 
-    def get_file_store_items(self):
+    def get_file_store_item(self):
         """
-        Returns a list of FileStoreItems associated with a Node
+        Returns a FileStoreItem associated with a Node or None
         """
-        return file_store.models.FileStoreItem.objects.filter(
-            uuid=self.file_uuid)
+        try:
+            return file_store.models.FileStoreItem.objects.get(
+                uuid=self.file_uuid)
+        except (file_store.models.FileStoreItem.DoesNotExist,
+                file_store.models.FileStoreItem.MultipleObjectsReturned) as e:
+            logger.error(e)
+            return None
 
     def create_and_associate_auxiliary_node(self, filestore_item_uuid):
             """
@@ -472,26 +477,14 @@ class Node(models.Model):
                 file_uuid=filestore_item_uuid
             )
 
-            # get_or_create() returns a tuple (<Node_object>, Boolean
-            # <created>)
+            # get_or_create() returns a tuple:
+            # (<Node_object>, Boolean: <created>)
             # So, if this Node is newly created, we will associate it as a
             # child to its parent
+            # See here for reference: http://bit.ly/2bL0PH5
             if node[1]:
                 self.add_child(node[0])
-
-    def get_auxiliary_node_generation_task_state(self):
-        """
-        return the state of the auxiliary Node/FileStoreItem generation task
-        for a given Node
-        """
-
-        task = TaskSetResult.restore(self.uuid)
-
-        if not task:
-            logger.debug("TaskSet with UUID '%s' doesn't exist", self.uuid)
-            return None
-
-        return "{}".format(task[0].state)
+                return node[0]
 
     def get_children(self):
         """
@@ -505,20 +498,18 @@ class Node(models.Model):
         """
         return [parent.uuid for parent in self.parents.all()]
 
-    def get_auxiliary_node(self):
+    def get_auxiliary_nodes(self):
         """
-        Return uuid of auxiliary Node if
-        one exists,
-        otherwise return None
+        Return uuids of auxiliary Nodes for a Given Node
         """
         child_nodes = self.get_children()
-
+        aux_nodes = []
         for uuid in child_nodes:
             node = Node.objects.get(uuid=uuid)
             if node.is_auxiliary_node:
-                return node.uuid
+                aux_nodes.append(node.uuid)
 
-        return None
+        return aux_nodes
 
     def get_relative_file_store_item_url(self):
         """
