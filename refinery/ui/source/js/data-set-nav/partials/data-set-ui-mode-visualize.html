@@ -38,10 +38,17 @@
 	</ui-select>
     <button
       class="btn btn-warning ui-select-drop"
-      ng-click="launchIgv()"
+      ng-click="launchIgvJava()"
       ng-disabled="speciesList.length == 0">
       <i class="fa fa-bar-chart-o"></i>
-      &nbsp;&nbsp;Launch IGV.js
+      &nbsp;&nbsp;Launch Stand-alone IGV
+    </button>
+    <button
+      class="btn btn-warning ui-select-drop"
+      ng-click="launchIgvJs()"
+      ng-disabled="speciesList.length == 0">
+      <i class="fa fa-bar-chart-o"></i>
+      &nbsp;&nbsp;Launch Web-based IGV
     </button>
   </div>
 </div>

@@ -129,7 +129,11 @@ function IgvCtrl (
     });
   };
 
-  $scope.launchIgv = function () {
+  $scope.launchIgvJava = function () {
+    $window.open($scope.selectedSpecies.select.url);
+  };
+
+  $scope.launchIgvJs = function () {
     var params = $httpParamSerializer({
       species: $scope.selectedSpecies.select.name,
       node_ids: $scope.igvConfig.node_selection
