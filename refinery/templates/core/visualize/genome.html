@@ -45,7 +45,7 @@
                   };
 
                   if (promise.file_extension === "bam") {
-                    igv_track.indexURL = promise.auxiliary_node;
+                    igv_track.indexURL = promise.auxiliary_nodes[0];
                   }
 
                   return igv_track;
