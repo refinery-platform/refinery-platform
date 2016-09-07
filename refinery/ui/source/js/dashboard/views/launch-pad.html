@@ -1,5 +1,4 @@
 <div
-  id="intro-js-satori-overview-1"
   class="col-md-4"
   refinery-expandable-panel>
   <div class="refinery-panel">
@@ -28,12 +27,12 @@
     </div>
 
     <div
-      id="intro-js-satori-overview-2"
+      id="intro-js-data-set-view"
       class="refinery-sub-panel"
       ng-class="{'border': dashboard.expandedDataSetPanelBorder}"
       refinery-width-fixer>
       <form
-        id="intro-js-satori-overview-3"
+        id="intro-js-search-interface"
         class="navbar-search form-group">
         <i class="fa fa-search"></i>
         <i class="fa fa-times-circle"
@@ -48,6 +47,7 @@
       </form>
 
       <div
+        id="intro-js-data-set-header"
         class="refinery-panel-header">
         <div
           class="refinery-notification"
@@ -79,8 +79,20 @@
         </div>
         <div class="floatbox">
           <div
-            id="intro-js-satori-overview-7"
+            id="intro-js-data-cart-filter-sort"
             class="floatbox-min-right">
+            <button
+              class="fa fa-info-circle icon-only"
+              title="Introduction to the Data Set View"
+              ng-click="dashboard.satoriIntros.dataSetViewStart()"
+              ng-if="dashboard.dataSetExploration"
+              refinery-tooltip
+              refinery-tooltip-container="body"
+              refinery-tooltip-placement="left"
+              refinery-tooltip-delay-show="750"
+              refinery-tooltip-delay-hide="150"
+              refinery-tooltip-hide-on-click="true">
+            </button>
             <button
               class="fa fa-shopping-cart is-mirrored icon-only disabled-default"
               title="Data Cart"
@@ -88,7 +100,7 @@
               ng-click="dashboard.toggleDataCart()"
               refinery-tooltip
               refinery-tooltip-container="body"
-              refinery-tooltip-placement="left"
+              refinery-tooltip-placement="top"
               refinery-tooltip-delay-show="750"
               refinery-tooltip-delay-hide="150"
               refinery-tooltip-hide-on-click="true">
@@ -126,7 +138,7 @@
             </button>
           </div>
           <div class="floatbox-max-left">
-            <h4 id="intro-js-satori-overview-6">
+            <h4 id="intro-js-data-set-num">
               <span ng-if="dashboard.searchQueryDataSets.length">
                 Found
               </span>
@@ -233,7 +245,7 @@
         </div>
       </div>
       <div
-        id="intro-js-satori-overview-4"
+        id="intro-js-data-set-list"
         refinery-panel-ref-offset>
         <div
           class="data-cart"
@@ -401,7 +413,7 @@
             class="results no-list-style infinite-scrolling"
             ng-class="{'search': dashboard.searchDataSet}">
             <li
-              class="intro-js-satori-overview-5"
+              class="intro-js-data-set-surrogate"
               ui-scroll="dataSet in dashboard.dataSets"
               buffer-size="50"
               adapter="dashboard.dataSetsAdapter"
@@ -870,3 +882,21 @@
     </div>
   </div>
 </div>
+
+<!-- Intro.js Overview of SATORI -->
+<div
+  ng-intro-options="dashboard.satoriIntros.overviewOptions"
+  ng-intro-method="dashboard.satoriIntros.overviewStart"
+  ng-intro-oncomplete="dashboard.satoriIntros.overviewCompletedEvent"
+  ng-intro-onexit="dashboard.satoriIntros.overviewExitEvent"
+  ng-intro-onchange="dashboard.satoriIntros.overviewChangeEvent"
+  ng-intro-onbeforechange="dashboard.satoriIntros.overviewBeforeChangeEvent"
+  ng-intro-onafterchange="dashboard.satoriIntros.overviewAfterChangeEvent"
+  ng-intro-autostart="dashboard.satoriIntros.overviewShouldAutoStart">
+
+<!-- Intro.js Details of the Data Set View -->
+<div
+  ng-intro-options="dashboard.satoriIntros.dataSetViewOptions"
+  ng-intro-method="dashboard.satoriIntros.dataSetViewStart"
+  ng-intro-onchange="dashboard.satoriIntros.dataSetViewChangeEvent"
+  ng-intro-autostart="dashboard.satoriIntros.dataSetViewShouldAutoStart">

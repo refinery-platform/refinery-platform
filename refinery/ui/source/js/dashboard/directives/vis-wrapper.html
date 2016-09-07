@@ -1,17 +1,8 @@
 <div
-  id="intro-js-satori-overview-8"
+  id="intro-js-exploration-view"
   class="content-container"
   ng-class="{'hidden': !visWrapper.active, 'invisible': visWrapper.invisible}">
   <div ng-if="visWrapper.active">
-    <div
-      ng-intro-options="visWrapper.introJsSatoriOverviewOptions"
-      ng-intro-method="visWrapper.introJsSatoriOverviewStart"
-      ng-intro-oncomplete="visWrapper.introJsSatoriOverviewCompletedEvent"
-      ng-intro-onexit="visWrapper.introJsSatoriOverviewExitEvent"
-      ng-intro-onchange="visWrapper.introJsSatoriOverviewChangeEvent"
-      ng-intro-onbeforechange="visWrapper.introJsSatoriOverviewBeforeChangeEvent"
-      ng-intro-onafterchange="visWrapper.introJsSatoriOverviewAfterChangeEvent"
-      ng-intro-autostart="visWrapper.introJsSatoriOverviewShouldAutoStart">
     <div
       class="refinery-panel-topbar"
       ng-class="{'allow-overflow': visWrapper.ready}">
@@ -20,9 +11,6 @@
         ng-class="{'allow-overflow': visWrapper.ready}">
         <div class="floatbox-min-right">
           <ul id="intro-js-satori-overview-2" class="help no-list-style horizontal-list">
-            <li>
-              <span class="btn" ng-click="visWrapper.introJsSatoriOverviewStart()">Quick Intro</span>
-            </li>
             <li>
               Highlight:
               <span class="inputs">
@@ -89,11 +77,18 @@
         </div>
         <div class="floatbox-max-left">
           <h4>Repository exploration</h4>
+          <span
+            id="intro-js-satori-overview-start"
+            class="btn"
+            ng-click="visWrapper.satoriIntros.overviewStart()">
+            <span class="fa fa-info-circle"></span>
+            Introduction
+          </span>
         </div>
       </div>
     </div>
     <div class="full-without-topbar">
-      <div id="intro-js-satori-overview-9" class="top-half">
+      <div id="intro-js-list-graph" class="top-half">
         <div class="refinery-global-notifier" ng-if="visWrapper.loading !== false">
           <div class="refinery-notifier-icon refinery-spinner"></div>
         </div>
@@ -116,7 +111,7 @@
             value-property-name="visWrapper.propertyValue"></list-graph>
         </div>
       </div>
-      <div id="intro-js-satori-overview-10" class="bottom-half">
+      <div id="intro-js-treemap" class="bottom-half">
         <div class="refinery-global-notifier" ng-if="visWrapper.loading !== false">
           <div class="refinery-notifier-icon refinery-spinner"></div>
         </div>
