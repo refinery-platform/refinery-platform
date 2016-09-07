@@ -177,6 +177,17 @@ class _FileStoreItemManager(models.Manager):
         :type source: str.
         :returns: FileStoreItem -- if success, None if failure.
         """
+        # If we are generating an auxiliary file, we cannot assign a
+        # `source` yet since the file is being generated. We still want the
+        # benfeit of being able to track it's task state, so we will need to
+        #  create an `empty` FileStoreItem instance and utilize it's
+        # import_task_id field
+
+        if source == 'auxiliary_file':
+            logger.debug("Creating an auxiliary FileStoreItem")
+            item = self.create(sharename=sharename, filetype=filetype)
+            return item
+
         # it doesn't make sense to create a FileStoreItem without a file source
         if not source:
             logger.error("Source is required but was not provided")
