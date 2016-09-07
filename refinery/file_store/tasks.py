@@ -232,8 +232,8 @@ def import_file(uuid, refresh=False, file_size=0):
 
 
 @task_success.connect(sender=import_file)
-def begin_auxiliary_node_generation(sender, result, **kwargs):
-    file_store_item = result
+def begin_auxiliary_node_generation(**kwargs):
+    file_store_item = kwargs['result']
     try:
         data_set_manager.models.Node.objects.get(
             file_uuid=file_store_item.uuid).run_generate_auxiliary_node_task()
