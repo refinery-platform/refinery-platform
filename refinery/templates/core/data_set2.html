@@ -91,7 +91,7 @@
             </li>
              <li ui-sref-active="active">
               <a ui-sref="about" class="dataSetTabs" >
-                About
+                Details
               </a>
             </li>
           </ul>
@@ -161,24 +161,6 @@
 
                     <div class="row" style="margin-bottom: 5px;">
                       <div class="col-md-12">
-
-                        {% if REFINERY_REPOSITORY_MODE %}
-                          <!-- CHECK BOXES FOR SELECTING SAMPLES -->
-                          {% for work in workflows %}
-                            <a id="submitReposBtn" data-workflow_id="
-                            {{work.uuid}}" role="button" style="margin-left:
-                            5px" class="btn  btn-warning disabled"
-                              rel="tooltip" data-placement="bottom"
-                              data-html="true" title="">
-                              <i class="fa fa-arrow-circle-o-down"></i>&nbsp;&nbsp;Download as
-                              Archive</a>
-                            <a href="#" id="help-download-button"
-                              style="height: 20px; width: 20px;"><i
-                              class="fa fa-question-circle" style="font-size:
-                              20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
-                          {% endfor %}
-                        {% endif %}
-
                         <div id="view-selector-div">
                           <label id="label-display" for="s2id_autogen1">Display</label>
                           <select id="view-selector">
@@ -187,8 +169,15 @@
                             <option value="provenance-view-tab">Provenance
                             </option>
                           </select>
-                          <a href="#" id="help-view-selector-button">
-                            <i class="fa fa-question-circle"></i>
+                          <a
+                            id="help-view-selector"
+                            popover-placement="left"
+                            uib-popover="The collection of files in this data set can be displayed using different representations."
+                            popover-title="Select File Display Mode"
+                            popover-trigger="focus"
+                            popover-append-to-body="true"
+                            tabindex="0">
+                            <i class="fa fa-question-circle fa-lg"></i>
                           </a>
                         </div>
 
@@ -212,7 +201,7 @@
                     <div class="row">
                       <div class="tabbable">
                         <div class="tab-content">
-                          <div class="tab-pane active fade in">
+                          <div class="tab-pane active fade in" id="table-view-tab">
                             <rp-file-browser-assay-files>
                             </rp-file-browser-assay-files>
                           </div>
@@ -409,81 +398,15 @@
       })
 
       $("[rel=tooltip]").tooltip();
-
-      $("#help-igv-button").click( function(event) {
-        bootbox.alert(
-            "<h3><i class=\"fa fa-bar-chart-o\"></i>&nbsp;&nbsp;View in " +
-            "IGV</h3>" +
-            "<p>" +
-            "The selected files can be viewed in IGV (<a href=\"http://www.broadinstitute.org/igv\">Integrative Genomics Viewer</a>) along with the meta data shown in the table. " +
-            "IGV is launched through <a href=\"http://www.java.com/en/download/faq/java_webstart.xml\">Java WebStart</a>. This means that the software will be launched even if IGV is not installed on your computer. <b>Java needs to be installed for Java WebStart to be available</b>." +
-            "</p>" +
-            "<p>" +
-            "Once you have selected a of files and the clicked the \"View in IGV\" button (and selected a genome build) a <b>JNLP</b> file named \"igv.jnlp\" will be downloaded to your computer." +
-            "</p>" +
-            "<p>" +
-            "Many browsers will automatically open the downloaded JNLP file to launch the Java WebStart application. <b>If IGV is not launched by your browser after the file was downloaded, you need to launch IGV manually by double-clicking the downloaded JNLP file</b>." +
-            "</p>"
-        );
-      });
-
-      $("#help-download-button").click( function(event) {
-        bootbox.alert(
-            "<h3><i class=\"fa fa-arrow-circle-o-down\"></i>&nbsp;&nbsp;Download as " +
-            "Archive</h3>" +
-            "<p>" +
-            "The selected files can be bulk downloaded as an archive file if you are logged in and if you have selected 20 or less files." +
-            "</p>" +
-            "<p>" +
-            "Archives are created on demand and will require some time to be processed. After clicking the \"Download as Archive\" button you will be taken to a progress page. You can leave this page at any time." +
-            "</p>" +
-            "<p>" +
-            "You will receive an email once the archive is ready for downloading. You can also monitor progress on the homepage in the \"Downloads\" section if you are logged in." +
-            "</p>"
-        );
-      });
-
-      $("#help-data-annotation-button").click( function(event) {
-        bootbox.alert(
-            "<h3>Showing Data or Annotation Files</h3>" +
-            "<p>" +
-            "Data sets can have associated \"annotation\" files that will be included when you launch IGV with a set of selected data files. " +
-            "To view available annotation files select \"Annotation\". To switch back to the data files select \"Data\"." +
-            "</p>"
-        );
-      });
-
-      $("#help-view-selector-button").click( function(event) {
-        bootbox.alert(
-            "<h3>Select File Display Mode</h3>" +
-            "<p>" +
-            "The collection of files in this data set can be displayed using different representations." +
-            "</p>"
-        );
-      });
-
     });
 
-    document.getElementById('view-selector').onclick = function()
-    {
-      var selectedDisplay = $(this).val();
-      if (selectedDisplay === 'pivot-view-tab' ||
-        selectedDisplay === 'provenance-view-tab')
-      {
-        $('#solrdoctab1-top-controls').hide();
-      }
-      else
-      {
-        $('#solrdoctab1-top-controls').show();
-      }
-    };
     /*
      * Sticky table header using floatThead.js
      */
     (function(window, $, undefined){
       'use strict';
 
-      var $solrTable = $('#solr-table-view'),
+      var $solrTable = $('#assay-files-table'),
           $table = $('#table_matrix'),
           $window = $(window);
 
