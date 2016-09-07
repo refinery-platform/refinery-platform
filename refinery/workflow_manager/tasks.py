@@ -112,20 +112,21 @@ def import_workflow(workflow, workflow_engine, workflow_dictionary):
 
     workflow_annotation = get_workflow_annotation(workflow_dictionary)
     if not workflow_annotation:
-        issues.append("Workflow annotation not found.")
+        issues.append("Workflow annotation not found")
         return issues
 
     workflow_type = get_workflow_type(workflow_annotation)
     if not workflow_type:
-        issues.append("Workflow type not found.")
+        issues.append("Workflow type not found")
         return issues
 
     input_steps = get_input_steps(workflow_dictionary)
     if not input_steps:
-        issues.append('Workflow does not define inputs.')
+        issues.append("Workflow does not define inputs")
         return issues
 
     input_relationships = get_input_relationships(workflow_annotation)
+    # single input workflows don't define input relationships
 
     # extract names of workflow input (if input step defines more than one
     # input only the first one will be used)
