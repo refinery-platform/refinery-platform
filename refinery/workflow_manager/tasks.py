@@ -37,52 +37,77 @@ GALAXY_INPUT_RELATIONSHIP_OPTIONAL_FIELDS = []  # [(field, type), ...]
 GALAXY_INPUT_RELATIONSHIP_CATEGORIES = [category[0] for category in NR_TYPES]
 
 
+class GalaxyWorkflow(object):
+    def __init__(self, name, identifier):
+        self.name = name
+        self.identifier = identifier
+        self.inputs = []
+
+    def __unicode__(self):
+        return self.name + " (" + self.identifier + "): " + str(
+            len(self.inputs)) + " inputs"
+
+    def add_input(self, workflow_input):
+        self.inputs.append(workflow_input)
+
+
+class GalaxyWorkflowInput(object):
+    def __init__(self, name, identifier):
+        self.name = name
+        self.identifier = identifier
+
+    def __unicode__(self):
+        return self.name + " (" + self.identifier + ")"
+
+
 @task()
 def get_workflows(workflow_engine):
-    workflows = []
+    """Retrieve workflows from Galaxy and import into Refinery"""
+    workflow_list = []
     issues = []
     connection = workflow_engine.instance.galaxy_connection()
+
     try:
-        # get all workflows
-        workflows = workflow_engine.instance.get_complete_workflows()
-    except galaxy.client.ConnectionError as e:
+        workflow_list = connection.workflows.get_workflows()
+    except galaxy.client.ConnectionError as exc:
         logger.error("Unable to retrieve workflows from '%s' - skipping - %s",
-                     workflow_engine.instance.base_url, e)
+                     workflow_engine.instance.base_url, exc)
+    else:
+        # deactivate existing workflows for this workflow engine: deleting
+        # workflows would lead to loss of the provenance information
+        Workflow.objects.filter(
+            workflow_engine=workflow_engine).update(is_active=False)
 
-    # make existing workflows for this workflow engine inactive
-    # (deleting the workflows would remove provenance information
-    # and also lead to the deletion of the corresponding analyses)
-    Workflow.objects.filter(
-        workflow_engine=workflow_engine).update(is_active=False)
-
-    # for each workflow, create a core Workflow object and its associated
-    # WorkflowDataInput objects
-    for workflow in workflows:
-        logger.info("Importing workflow %s ...", workflow.name)
+    for workflow_entry in workflow_list:
+        workflow_object = GalaxyWorkflow(workflow_entry['name'],
+                                         workflow_entry['id'])
+        workflow_inputs = connection.workflows.show_workflow(
+            workflow_object.identifier)['inputs']
+        for input_identifier, input_description in workflow_inputs.items():
+            workflow_input = GalaxyWorkflowInput(input_description['label'],
+                                                 input_identifier)
+            workflow_object.add_input(workflow_input)
+        logger.info("Importing workflow %s ...", workflow_object.name)
         try:
             workflow_dictionary = connection.workflows.export_workflow_json(
-                workflow.identifier)
+                workflow_object.identifier)
         except galaxy.client.ConnectionError as exc:
             logger.error("Unable to retrieve workflow '%s' from '%s'"
-                         " - skipping ... (%s)", workflow.identifier,
+                         " - skipping ... (%s)", workflow_object.identifier,
                          workflow_engine.instance.base_url, exc)
-
-        if workflow_dictionary is not None:
+        else:
             workflow_issues = import_workflow(
-                workflow, workflow_engine, workflow_dictionary
-            )
-
-            if len(workflow_issues) > 0:
-                msg = "\nUnable to import workflow '{}' " \
-                      "due to the following issues:"
-                msg = msg.format(workflow.name)
-                issues.append(msg)
+                workflow_object, workflow_engine, workflow_dictionary)
+            if workflow_issues:
+                issues.append("Unable to import workflow '{}' due to the "
+                              "following issues:".format(workflow_object.name))
                 issues += workflow_issues
 
     return issues
 
 
 def import_workflow(workflow, workflow_engine, workflow_dictionary):
+    """Create a Workflow object and its associated WorkflowDataInput objects"""
     issues = []
     has_step_issues = False
     has_input_issues = False
