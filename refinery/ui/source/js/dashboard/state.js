@@ -11,8 +11,7 @@ angular
           'launchPad', {
             url: '/?q',
             reloadOnSearch: false,
-            templateUrl: '/static/partials/dashboard/views/launch-pad.html',
-            controller: 'LaunchPadCtrl as launchPad'
+            templateUrl: '/static/partials/dashboard/views/launch-pad.html'
           },
           '/'
         )
