@@ -109,26 +109,39 @@ def get_workflows(workflow_engine):
 def import_workflow(workflow, workflow_engine, workflow_dictionary):
     """Create a Workflow object and its associated WorkflowDataInput objects"""
     issues = []
-    has_step_issues = False
-    has_input_issues = False
 
     workflow_annotation = get_workflow_annotation(workflow_dictionary)
-
-    if workflow_annotation is None:
+    if not workflow_annotation:
         issues.append("Workflow annotation not found.")
         return issues
 
     workflow_type = get_workflow_type(workflow_annotation)
-
-    if workflow_type is None:
+    if not workflow_type:
         issues.append("Workflow type not found.")
         return issues
 
+    input_steps = get_input_steps(workflow_dictionary)
+    if not input_steps:
+        issues.append('Workflow does not define inputs.')
+        return issues
+
+    input_relationships = get_input_relationships(workflow_annotation)
+
+    # extract names of workflow input (if input step defines more than one
+    # input only the first one will be used)
+    workflow_input_names = []
+    for step in input_steps:
+        step_inputs = get_step_inputs(step)
+        if step_inputs and 'name' in step_inputs[0]:
+            workflow_input_names.append(step_inputs[0]['name'])
+
     # check workflow inputs for correct annotations
-    workflow_input_issues = check_workflow_inputs(workflow_dictionary)
-    if len(workflow_input_issues) > 0:
-        has_input_issues = True
-        issues = issues + workflow_input_issues
+    workflow_input_issues = check_workflow_inputs(workflow_input_names)
+    workflow_input_relationship_issues = check_workflow_input_relationships(
+        input_steps, input_relationships, workflow_input_names)
+    if workflow_input_issues or workflow_input_relationship_issues:
+        issues += workflow_input_issues + workflow_input_relationship_issues
+        return issues
 
     # check workflow steps for correct annotations and skip import if problems
     # are detected
@@ -136,16 +149,12 @@ def import_workflow(workflow, workflow_engine, workflow_dictionary):
     if workflow_step_issues is None:
         # no error in parsing but no outputs defined
         issues.append("Workflow does not declare outputs.")
-        has_step_issues = True
-    else:
-        if len(workflow_step_issues) > 0:
-            has_step_issues = True
-            issues = issues + workflow_step_issues
-
-    # skip import if workflow has incorrect input annotations or step
-    # annotation
-    if has_step_issues or has_input_issues:
         return issues
+    else:
+        if workflow_step_issues:
+            issues += workflow_step_issues
+            return issues
+
     # import workflow
     if workflow_type is not None:  # if workflow is meant for refinery
         workflow_object = Workflow.objects.create(
@@ -451,43 +460,24 @@ def get_input_relationships(workflow_annotation):
     return workflow_annotation[GALAXY_WORKFLOW_RELATIONSHIPS]
 
 
-def check_workflow_inputs(workflow_dictionary):
+def check_workflow_inputs(workflow_input_names):
     issues = []
-    # -------------------------------------------------------------------------
-    # TESTS FOR WORKFLOW INPUTS
-    # -------------------------------------------------------------------------
-    workflow_annotation = get_workflow_annotation(workflow_dictionary)
 
-    # TEST: if workflow has annotation
-    if workflow_annotation is None:
-        issues.append('Workflow annotation not found.')
-        return issues
-    input_steps = get_input_steps(workflow_dictionary)
-
-    # TEST: if workflow defines inputs
-    if input_steps is None:
-        issues.append('Workflow does not define inputs.')
-        return issues
-    # extract names of workflow input (if input step defines more than one
-    # input only the first one will be used)
-    workflow_input_names = []
-    for step in input_steps:
-        step_inputs = get_step_inputs(step)
-        if step_inputs is not None and 'name' in step_inputs[0]:
-            workflow_input_names.append(step_inputs[0]['name'])
-
-    # TEST: are workflow input names unique?
+    # are workflow input names unique?
     unique_workflow_input_names = {}
     map(unique_workflow_input_names.__setitem__, workflow_input_names, [])
     if len(unique_workflow_input_names.keys()) < len(workflow_input_names):
         issues.append('Workflow input names are not unique: ' +
                       ', '.join(workflow_input_names))
-    # -------------------------------------------------------------------------
-    # TESTS FOR INPUT RELATIONSHIPS
-    # -------------------------------------------------------------------------
-    input_relationships = get_input_relationships(workflow_annotation)
 
-    # TEST: if workflow define more than one input relationship if there is
+    return issues
+
+
+def check_workflow_input_relationships(
+        input_steps, input_relationships, workflow_input_names):
+    issues = []
+
+    # if workflow defines more than one input relationship if there is
     # only one input
     if len(input_steps) == 1:
         if input_relationships is not None and len(input_relationships) > 1:
