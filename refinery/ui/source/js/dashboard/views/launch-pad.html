@@ -1,4 +1,5 @@
 <div
+  id="intro-js-satori-overview-1"
   class="col-md-4"
   refinery-expandable-panel>
   <div class="refinery-panel">
@@ -27,10 +28,13 @@
     </div>
 
     <div
+      id="intro-js-satori-overview-2"
       class="refinery-sub-panel"
       ng-class="{'border': dashboard.expandedDataSetPanelBorder}"
       refinery-width-fixer>
-      <form class="navbar-search form-group">
+      <form
+        id="intro-js-satori-overview-3"
+        class="navbar-search form-group">
         <i class="fa fa-search"></i>
         <i class="fa fa-times-circle"
           ng-if="dashboard.searchQueryDataSets"
@@ -43,7 +47,8 @@
           ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)">
       </form>
 
-      <div class="refinery-panel-header">
+      <div
+        class="refinery-panel-header">
         <div
           class="refinery-notification"
           ng-class="{'active': dashboard.showNotification() }">
@@ -73,7 +78,9 @@
           </div>
         </div>
         <div class="floatbox">
-          <div class="floatbox-min-right">
+          <div
+            id="intro-js-satori-overview-7"
+            class="floatbox-min-right">
             <button
               class="fa fa-shopping-cart is-mirrored icon-only disabled-default"
               title="Data Cart"
@@ -119,7 +126,7 @@
             </button>
           </div>
           <div class="floatbox-max-left">
-            <h4>
+            <h4 id="intro-js-satori-overview-6">
               <span ng-if="dashboard.searchQueryDataSets.length">
                 Found
               </span>
@@ -225,7 +232,9 @@
           </label>
         </div>
       </div>
-      <div refinery-panel-ref-offset>
+      <div
+        id="intro-js-satori-overview-4"
+        refinery-panel-ref-offset>
         <div
           class="data-cart"
           ng-class="{ 'active': dashboard.showDataCart }"
@@ -392,6 +401,7 @@
             class="results no-list-style infinite-scrolling"
             ng-class="{'search': dashboard.searchDataSet}">
             <li
+              class="intro-js-satori-overview-5"
               ui-scroll="dataSet in dashboard.dataSets"
               buffer-size="50"
               adapter="dashboard.dataSetsAdapter"

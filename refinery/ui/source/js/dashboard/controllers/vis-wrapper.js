@@ -118,6 +118,109 @@ function VisWrapperCtrl ($q, pubSub, dashboardVisData) {
   self.$q.all([self.treemapLoading.promise]).then(function () {
     self.loading = false;
   });
+
+  // Intro.js
+  self.introJsOptions = {
+    steps: [
+      {
+        element: '#intro-js-satori-overview-1',
+        intro: 'This is the search and exploration interface of SATORI.',
+        position: 'top'
+      },
+      {
+        element: '#intro-js-satori-overview-2',
+        intro:
+          'This is the data set view conisting of the search interface, the ' +
+          'list of data sets, filter options, the data cart.',
+        position: 'right'
+      },
+      {
+        element: '#intro-js-satori-overview-3',
+        intro:
+        'The search interface starts querying as you type. Its design has ' +
+        'been kept at a minimum.',
+        position: 'right'
+      },
+      {
+        element: '#intro-js-satori-overview-4',
+        intro:
+          'The list of data sets holds either all data sets or the results ' +
+          'of a search or term query.',
+        position: 'right'
+      },
+      {
+        element: document.querySelectorAll('.intro-js-satori-overview-6')[0],
+        intro:
+          'This a data set snippet holding the data sets title, sharing ' +
+          'information, and a button to add the data set to the data cart.',
+        position: 'right'
+      },
+      {
+        element: '#intro-js-satori-overview-6',
+        intro:
+          'Here you can find the total number of data sets or results.',
+        position: 'right'
+      },
+      {
+        element: '#intro-js-satori-overview-7',
+        intro:
+          'Here you can open the data cart or filter and sort data sets.',
+        position: 'right'
+      },
+      {
+        element: '#intro-js-satori-overview-8',
+        intro:
+          'This is the <em>exploration view</em> containing the two main ' +
+          'visualizations for exploring the Refinery Platform',
+        position: 'left'
+      },
+      {
+        element: '#intro-js-satori-overview-9',
+        intro:
+          'This is the node-link diagram.',
+        position: 'left'
+      },
+      {
+        element: '#intro-js-satori-overview-10',
+        intro:
+          'This is the treemap.',
+        position: 'left'
+      }
+    ],
+    showStepNumbers: false,
+    exitOnOverlayClick: true,
+    exitOnEsc: true,
+    nextLabel: '<span class="intro-js-prev">Next</span>',
+    prevLabel: '<span class="intro-js-prev">Previous</span>',
+    skipLabel: '<span class="intro-js-exit">Exit</span>',
+    doneLabel: '<span class="intro-js-exit">Thanks</span>'
+  };
+
+  self.introJsShouldAutoStart = false;
+
+  self.introJsCompletedEvent = function () {
+    console.log('Completed Event called');
+  };
+
+  self.introJsExitEvent = function () {
+    console.log('Exit Event called');
+  };
+
+  self.introJsChangeEvent = function (targetElement) {
+    console.log('Change Event called');
+    console.log(targetElement);  // The target element
+    console.log(this);  // The IntroJS object
+  };
+
+  self.introJsBeforeChangeEvent = function (targetElement) {
+    console.log('Before Change Event called');
+    console.log(targetElement);
+  };
+
+  self.introJsAfterChangeEvent = function (targetElement) {
+    console.log('After Change Event called');
+    console.log(targetElement);
+  };
 }
 
 Object.defineProperty(

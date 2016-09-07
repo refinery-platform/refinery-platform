@@ -1,5 +1,17 @@
-<div class="content-container" ng-class="{'hidden': !visWrapper.active, 'invisible': visWrapper.invisible}">
+<div
+  id="intro-js-satori-overview-8"
+  class="content-container"
+  ng-class="{'hidden': !visWrapper.active, 'invisible': visWrapper.invisible}">
   <div ng-if="visWrapper.active">
+    <div
+      ng-intro-options="visWrapper.introJsOptions"
+      ng-intro-method="visWrapper.introJsStart"
+      ng-intro-oncomplete="visWrapper.introJsCompletedEvent"
+      ng-intro-onexit="visWrapper.introJsExitEvent"
+      ng-intro-onchange="visWrapper.introJsChangeEvent"
+      ng-intro-onbeforechange="visWrapper.introJsBeforeChangeEvent"
+      ng-intro-onafterchange="visWrapper.introJsAfterChangeEvent"
+      ng-intro-autostart="visWrapper.introJsShouldAutoStart">
     <div
       class="refinery-panel-topbar"
       ng-class="{'allow-overflow': visWrapper.ready}">
@@ -7,7 +19,10 @@
         class="floatbox"
         ng-class="{'allow-overflow': visWrapper.ready}">
         <div class="floatbox-min-right">
-          <ul class="help no-list-style horizontal-list">
+          <ul id="intro-js-satori-overview-2" class="help no-list-style horizontal-list">
+            <li>
+              <span class="btn" ng-click="visWrapper.introJsStart()">Quick Intro</span>
+            </li>
             <li>
               Highlight:
               <span class="inputs">
@@ -78,7 +93,7 @@
       </div>
     </div>
     <div class="full-without-topbar">
-      <div class="top-half">
+      <div id="intro-js-satori-overview-9" class="top-half">
         <div class="refinery-global-notifier" ng-if="visWrapper.loading !== false">
           <div class="refinery-notifier-icon refinery-spinner"></div>
         </div>
@@ -101,7 +116,7 @@
             value-property-name="visWrapper.propertyValue"></list-graph>
         </div>
       </div>
-      <div class="bottom-half">
+      <div id="intro-js-satori-overview-10" class="bottom-half">
         <div class="refinery-global-notifier" ng-if="visWrapper.loading !== false">
           <div class="refinery-notifier-icon refinery-spinner"></div>
         </div>
