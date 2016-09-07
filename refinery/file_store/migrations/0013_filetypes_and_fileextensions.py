@@ -1,25 +1,35 @@
 # -*- coding: utf-8 -*-
-import sys
+import os
+from django.core import serializers
 from south.v2 import DataMigration
-from django.core.management import call_command
 
 
 class Migration(DataMigration):
 
     def forwards(self, orm):
-        "Write your forwards methods here."
-        # Load some data
-        call_command("loaddata", "file_store/fixtures/file_store_data.json")
+        fixture_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../fixtures'))
+        fixture_filename = 'file_store_data.json'
+        fixture_file = os.path.join(fixture_dir, fixture_filename)
+
+        fixture = open(fixture_file, 'rb')
+        objects = serializers.deserialize('json', fixture, ignorenonexistent=True)
+        for obj in objects:
+            obj.save()
+        fixture.close()
 
     def backwards(self, orm):
-        "Write your backwards methods here."
-        pass
+        "Brutally deleting all entries for this model..."
+        orm.Filetype.objects.all().delete()
+        orm.FileExtension.objects.all().delete()
+
+    dependencies = [
+        ('file_store', '0012_auto__add_field_filetype_used_for_visualization'),
+    ]
 
     models = {
         u'file_store.fileextension': {
             'Meta': {'object_name': 'FileExtension'},
-            'filetype': ('django.db.models.fields.related.ForeignKey', [],
-                         {'default': '33', 'to': u"orm['file_store.FileType']"}),
+            'filetype': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['file_store.FileType']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'})
         },
@@ -27,8 +37,7 @@ class Migration(DataMigration):
             'Meta': {'object_name': 'FileStoreItem'},
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'auto_now_add': 'True', 'blank': 'True'}),
             'datafile': ('django.db.models.fields.files.FileField', [], {'max_length': '1024', 'blank': 'True'}),
-            'filetype': ('django.db.models.fields.related.ForeignKey', [],
-                         {'default': '33', 'to': u"orm['file_store.FileType']"}),
+            'filetype': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['file_store.FileType']", 'null': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'import_task_id': ('django.db.models.fields.CharField', [], {'max_length': '36', 'blank': 'True'}),
             'sharename': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
@@ -40,7 +49,8 @@ class Migration(DataMigration):
             'Meta': {'object_name': 'FileType'},
             'description': ('django.db.models.fields.CharField', [], {'max_length': '250'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'})
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'}),
+            'used_for_visualization': ('django.db.models.fields.BooleanField', [], {'default': 'False'})
         }
     }
 
