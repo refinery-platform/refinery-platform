@@ -3,12 +3,11 @@ Created on May 10, 2012
 
 @author: nils
 '''
-
 from datetime import datetime
 import logging
 
 import requests
-from celery.task import TaskSet
+from celery.result import AsyncResult
 from requests.exceptions import HTTPError
 
 from django.conf import settings
@@ -17,7 +16,9 @@ from django_extensions.db.fields import UUIDField
 
 import core
 import file_store
-from data_set_manager.genomes import map_species_id_to_default_genome_build
+import data_set_manager
+
+from file_store.models import FileStoreItem
 
 logger = logging.getLogger(__name__)
 
@@ -308,8 +309,10 @@ class NodeManager(models.Manager):
             if (item["genome_build"] is None and
                     item["species"] is not None and
                     default_fallback is True):
-                item["genome_build"] = map_species_id_to_default_genome_build(
-                    item["species"])
+                item["genome_build"] = \
+                    data_set_manager.genomes.\
+                    map_species_id_to_default_genome_build(
+                            item["species"])
             if item["genome_build"] not in result:
                 result[item["genome_build"]] = []
             result[item["genome_build"]].append(item["file_uuid"])
@@ -531,23 +534,33 @@ class Node(models.Model):
         # Check if the Django setting to generate auxiliary file has been
         # set to work on files imported into Refinery
         logger.debug("Checking if some auxiliary Node should be generated")
-        item = self.get_file_store_item()
-        if item.filetype.used_for_visualization and item.is_local():
-            if settings.REFINERY_AUXILIARY_FILE_GENERATION ==\
-                    "upon_file_import":
 
-                # Run generate_auxiliary_node as a subtask as to not hold up
-                # other file imports
-                auxiliary_node_generation_task = [
-                    data_set_manager.tasks.generate_auxiliary_node.subtask((
-                        self,))]
-                auxiliary_node_generation = TaskSet(
-                    tasks=auxiliary_node_generation_task).apply_async()
-                # Associate uuid of Node for which we are generating the
-                # aux. Node for so we can fetch the status of the aux. file
-                # generation
-                auxiliary_node_generation.taskset_id = item.import_task_id
-                auxiliary_node_generation.save()
+        file_store_item = self.get_file_store_item()
+
+        if (file_store_item.filetype.used_for_visualization and
+            file_store_item.is_local() and
+                settings.REFINERY_AUXILIARY_FILE_GENERATION ==
+                "upon_file_import"):
+
+            datafile_path = file_store_item.get_absolute_path()
+
+            auxiliary_file_store_item = FileStoreItem.objects.create(
+                source='auxiliary_file')
+
+            aux_node = self.create_and_associate_auxiliary_node(
+                auxiliary_file_store_item.uuid)
+
+            result = data_set_manager.tasks.generate_auxiliary_file.delay(
+                aux_node, datafile_path, file_store_item)
+
+            auxiliary_file_store_item.import_task_id = result.task_id
+            auxiliary_file_store_item.save()
+
+    def get_auxiliary_file_generation_task_state(self):
+        if self.is_auxiliary_node:
+            return AsyncResult(self.get_file_store_item().import_task_id).state
+        else:
+            return None
 
 
 class Attribute(models.Model):
