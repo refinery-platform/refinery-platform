@@ -1733,10 +1733,10 @@ class UtilitiesTest(TestCase):
             ]
         return {'nodes': response_node_uuids}
 
-    @mock.patch("core.utils.generate_solr_params",
+    @mock.patch("data_set_manager.utils.generate_solr_params",
                 fake_generate_solr_params)
-    @mock.patch("core.utils.search_solr", fake_search_solr)
-    @mock.patch("core.utils.format_solr_response",
+    @mock.patch("data_set_manager.utils.search_solr", fake_search_solr)
+    @mock.patch("data_set_manager.utils.format_solr_response",
                 fake_format_solr_response)
     def test_filter_nodes_uuids_in_solr_with_uuids(self):
         response_node_uuids = [
@@ -1752,10 +1752,11 @@ class UtilitiesTest(TestCase):
         response = filter_nodes_uuids_in_solr(self.valid_uuid, self.node_uuids)
         self.assertItemsEqual(response, response_node_uuids)
 
-    @mock.patch("core.utils.generate_solr_params",
+    @mock.patch("data_set_manager.utils.generate_solr_params",
                 fake_generate_solr_params)
-    @mock.patch("core.utils.search_solr", fake_search_solr)
-    @mock.patch("core.utils.format_solr_response", fake_format_solr_response)
+    @mock.patch("data_set_manager.utils.search_solr", fake_search_solr)
+    @mock.patch("data_set_manager.utils.format_solr_response",
+                fake_format_solr_response)
     def test_filter_nodes_uuids_in_solr_no_uuids(self):
         response_node_uuids = [
             '1a50204d-49fa-4082-a708-26ee93fb0f86',
