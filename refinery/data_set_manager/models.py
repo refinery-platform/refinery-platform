@@ -893,36 +893,3 @@ class ProtocolReferenceParameter(models.Model):
 
     def __unicode__(self):
         return unicode(self.name) + " = " + unicode(self.value)
-
-
-class AuxiliaryNodeStatus(models.Model):
-    OK = 'SUCCESS'
-    ERROR = 'FAILURE'
-    PROGRESS = 'PROGRESS'
-    aux_node_generation_task_states = (
-        (OK, 'OK'),
-        (ERROR, 'Error'),
-        (PROGRESS, 'Running')
-    )
-
-    uuid = UUIDField(default=None)
-    aux_node_generation_task_state = models.CharField(
-        max_length=10,
-        blank=True,
-        choices=aux_node_generation_task_states
-    )
-
-    def __unicode__(self):
-        return self.get_task_state()
-
-    def get_task_state(self):
-        return "Auxiliary Node: {} Task state: {} ".format(
-                self.get_auxiliary_node(),
-                self.aux_node_generation_task_state
-        )
-
-    def get_auxiliary_node(self):
-        try:
-            return Node.objects.get(file_uuid=self.uuid).uuid
-        except (Node.DoesNotExist, Node. MultipleObjectsReturned) as e:
-            logger.error(e)

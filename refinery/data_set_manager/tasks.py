@@ -28,7 +28,7 @@ from core.models import DataSet, FileStoreItem, ExtendedGroup
 from core.utils import update_data_set_index, add_data_set_to_neo4j
 from .isa_tab_parser import IsaTabParser
 from .models import Investigation, Node, \
-    initialize_attribute_order, AuxiliaryNodeStatus
+    initialize_attribute_order
 from .utils import get_node_types, update_annotated_nodes, \
     index_annotated_nodes, calculate_checksum
 
@@ -552,10 +552,6 @@ def generate_auxiliary_node(parent_node):
             parent_node.create_and_associate_auxiliary_node(
                 auxiliary_file_store_item.uuid)
 
-            AuxiliaryNodeStatus.objects.create(
-                uuid=auxiliary_file_store_item.uuid,
-                aux_node_generation_task_state=AuxiliaryNodeStatus.OK
-            )
 
             generate_auxiliary_node.update_state(
                 state=celery.states.SUCCESS,
