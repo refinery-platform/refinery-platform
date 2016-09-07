@@ -401,7 +401,8 @@ HAYSTACK_CONNECTIONS = {
 REFINERY_CSS = ["styles/refinery-style-bootstrap.css",
                 "styles/refinery-style-bootstrap-responsive.css",
                 "styles/refinery-style.css",
-                "vendor/fontawesome/css/font-awesome.min.css"]
+                "vendor/fontawesome/css/font-awesome.min.css",
+                "vendor/intro.js/minified/intro.min.css"]
 
 # set height of navigation bar (e.g. to fit a logo)
 REFINERY_INNER_NAVBAR_HEIGHT = get_setting("REFINERY_INNER_NAVBAR_HEIGHT")
