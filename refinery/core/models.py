@@ -48,9 +48,13 @@ from guardian.shortcuts import (get_users_with_perms,
 from registration.models import RegistrationProfile, RegistrationManager
 from registration.signals import user_registered, user_activated
 
-import data_set_manager
+
 from file_store.models import get_file_size, FileStoreItem, FileType
 from file_store.tasks import rename
+from data_set_manager.models import (Node, Study, Assay, Investigation,
+                                     NodeCollection)
+from data_set_manager.utils import (add_annotated_nodes_selection,
+                                    index_annotated_nodes_selection)
 from galaxy_connector.galaxy_workflow import (create_expanded_workflow_graph,
                                               countWorkflowSteps,
                                               configure_workflow)
@@ -647,13 +651,13 @@ class DataSet(SharableResource):
         return il.investigation
 
     def get_studies(self, version=None):
-        return data_set_manager.models.Study.objects.filter(
+        return Study.objects.filter(
             investigation=self.get_investigation(version)
         )
 
     def get_assays(self, version=None):
-        return data_set_manager.models.Assay.objects.filter(
-            study=data_set_manager.models.Study.objects.filter(
+        return Assay.objects.filter(
+            study=Study.objects.filter(
                 investigation=self.get_investigation()
             )
         )
@@ -665,7 +669,7 @@ class DataSet(SharableResource):
 
         for study in investigation.study_set.all():
             file_count += (
-                data_set_manager.models.Node.objects
+                Node.objects
                 .filter(study=study.id, file_uuid__isnull=False)
                 .count()
             )
@@ -678,7 +682,7 @@ class DataSet(SharableResource):
         file_size = 0
 
         for study in investigation.study_set.all():
-            files = data_set_manager.models.Node.objects.filter(
+            files = Node.objects.filter(
                 study=study.id, file_uuid__isnull=False).values("file_uuid")
             for file in files:
                 size = get_file_size(
@@ -768,7 +772,7 @@ def _dataset_delete(sender, instance, *args, **kwargs):
 
 class InvestigationLink(models.Model):
     data_set = models.ForeignKey(DataSet)
-    investigation = models.ForeignKey(data_set_manager.models.Investigation)
+    investigation = models.ForeignKey(Investigation)
     version = models.IntegerField(default=1)
     message = models.CharField(max_length=500, blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True)
@@ -785,7 +789,7 @@ class InvestigationLink(models.Model):
 
     def get_node_collection(self):
         try:
-            return data_set_manager.models.NodeCollection.objects.get(
+            return NodeCollection.objects.get(
                 uuid=self.investigation.uuid)
         except (ObjectDoesNotExist, MultipleObjectsReturned) as e:
             logger.error(("Could not fetch NodeCollection: " % e))
@@ -1163,7 +1167,7 @@ class Analysis(OwnableResource):
         return self.status
 
     def get_nodes(self):
-        return data_set_manager.models.Node.objects.filter(
+        return Node.objects.filter(
             analysis_uuid=self.uuid)
 
     def get_analysis_node_connections_for_analysis(self):
@@ -1241,7 +1245,7 @@ class Analysis(OwnableResource):
         for analysis_node_connection in analysis_node_connections:
             # lookup node object
             if analysis_node_connection["node_uuid"]:
-                node = data_set_manager.models.Node.objects.get(
+                node = Node.objects.get(
                     uuid=analysis_node_connection["node_uuid"])
             else:
                 node = None
@@ -1371,7 +1375,7 @@ class Analysis(OwnableResource):
         input_file_uuid_list = []
         for files in self.workflow_data_input_maps.all():
             cur_node_uuid = files.data_uuid
-            cur_fs_uuid = data_set_manager.models.Node.objects.get(
+            cur_fs_uuid = Node.objects.get(
                 uuid=cur_node_uuid).file_uuid
             input_file_uuid_list.append(cur_fs_uuid)
         return input_file_uuid_list
@@ -1530,9 +1534,9 @@ class Analysis(OwnableResource):
         for data_transformation_node in data_transformation_nodes:
             # TODO: incorporate subanalysis id in tool name???
             data_transformation_node['node'] = \
-                data_set_manager.models.Node.objects.create(
+                Node.objects.create(
                     study=study, assay=assay, analysis_uuid=self.uuid,
-                    type=data_set_manager.models.Node.DATA_TRANSFORMATION,
+                    type=Node.DATA_TRANSFORMATION,
                     name=data_transformation_node['tool_id'] + '_' +
                     data_transformation_node['name']
                 )
@@ -1554,9 +1558,9 @@ class Analysis(OwnableResource):
                 analysis=self, direction=OUTPUT_CONNECTION):
             # create derived data file node
             derived_data_file_node = \
-                data_set_manager.models.Node.objects.create(
+                Node.objects.create(
                     study=study, assay=assay,
-                    type=data_set_manager.models.Node.DERIVED_DATA_FILE,
+                    type=Node.DERIVED_DATA_FILE,
                     name=output_connection.name, analysis_uuid=self.uuid,
                     subanalysis=output_connection.subanalysis,
                     workflow_output=output_connection.name)
@@ -1632,10 +1636,10 @@ class Analysis(OwnableResource):
         node_uuids = AnalysisNodeConnection.objects.filter(
             analysis=self, direction=OUTPUT_CONNECTION, is_refinery_file=True
         ).values_list('node__uuid', flat=True)
-        data_set_manager.utils.add_annotated_nodes_selection(
-            node_uuids, data_set_manager.models.Node.DERIVED_DATA_FILE,
+        add_annotated_nodes_selection(
+            node_uuids, Node.DERIVED_DATA_FILE,
             study.uuid, assay.uuid)
-        data_set_manager.utils.index_annotated_nodes_selection(node_uuids)
+        index_annotated_nodes_selection(node_uuids)
 
     def attach_outputs_downloads(self):
         analysis_results = AnalysisResult.objects.filter(
@@ -1676,7 +1680,7 @@ class AnalysisNodeConnection(models.Model):
     # workflow template
     # (unique within the analysis)
     subanalysis = IntegerField(null=True, blank=False)
-    node = models.ForeignKey(data_set_manager.models.Node,
+    node = models.ForeignKey(Node,
                              related_name="workflow_node_connections",
                              null=True, blank=True, default=None)
     # step id in the expanded workflow template, e.g. 10
@@ -1824,12 +1828,12 @@ class NodeGroup(SharableResource, TemporaryResource):
     #: Implicit node is created "on the fly" to support an analysis while
     #: explicit node is created by the user to store a particular selection
     is_implicit = models.BooleanField(default=False)
-    study = models.ForeignKey(data_set_manager.models.Study)
-    assay = models.ForeignKey(data_set_manager.models.Assay)
+    study = models.ForeignKey(Study)
+    assay = models.ForeignKey(Assay)
     # The "current selection" node set for the associated study/assay
     is_current = models.BooleanField(default=False)
     # Nodes in the group, using uuids are foreign-key
-    nodes = models.ManyToManyField(data_set_manager.models.Node, blank=True,
+    nodes = models.ManyToManyField(Node, blank=True,
                                    null=True)
 
     class Meta:
@@ -1862,8 +1866,8 @@ class NodeSet(SharableResource, TemporaryResource):
     #: Implicit node is created "on the fly" to support an analysis while
     #: explicit node is created by the user to store a particular selection
     is_implicit = models.BooleanField(default=False)
-    study = models.ForeignKey(data_set_manager.models.Study)
-    assay = models.ForeignKey(data_set_manager.models.Assay)
+    study = models.ForeignKey(Study)
+    assay = models.ForeignKey(Assay)
     # is this the "current selection" node set for the associated study/assay?
     is_current = models.BooleanField(default=False)
 
@@ -2006,10 +2010,10 @@ class NodePair(models.Model):
     """Linking of specific node relationships for a given node relationship"""
     uuid = UUIDField(unique=True, auto=True)
     #: specific file node
-    node1 = models.ForeignKey(data_set_manager.models.Node,
+    node1 = models.ForeignKey(Node,
                               related_name="node1")
     #: connected file node
-    node2 = models.ForeignKey(data_set_manager.models.Node,
+    node2 = models.ForeignKey(Node,
                               related_name="node2", blank=True,
                               null=True)
     # defines a grouping of node relationships i.e. replicate
@@ -2031,8 +2035,8 @@ class NodeRelationship(BaseResource):
                                    blank=True, null=True)
     node_set_2 = models.ForeignKey(NodeSet, related_name='node_set_2',
                                    blank=True, null=True)
-    study = models.ForeignKey(data_set_manager.models.Study)
-    assay = models.ForeignKey(data_set_manager.models.Assay)
+    study = models.ForeignKey(Study)
+    assay = models.ForeignKey(Assay)
     # is this the "current mapping" node set for the associated study/assay?
     is_current = models.BooleanField(default=False)
 
@@ -2310,14 +2314,14 @@ def _baseresource_save(sender, instance, **kwargs):
     invalidate_cached_object(instance)
 
 
-@receiver_subclasses(pre_delete, data_set_manager.models.NodeCollection,
+@receiver_subclasses(pre_delete, NodeCollection,
                      "nodecollection_pre_delete")
 def _nodecollection_delete(sender, instance, **kwargs):
     '''
         This finds all subclasses related to a DataSet's NodeCollections and
         handles the deletion of all FileStoreItems related to the DataSet
     '''
-    nodes = data_set_manager.models.Node.objects.filter(study=instance)
+    nodes = Node.objects.filter(study=instance)
     for node in nodes:
         try:
             FileStoreItem.objects.get(uuid=node.file_uuid).delete()
