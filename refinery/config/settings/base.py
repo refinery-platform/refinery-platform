@@ -563,3 +563,9 @@ REFINERY_URL_SCHEME = get_setting("REFINERY_URL_SCHEME")
 # "never"
 REFINERY_AUXILIARY_FILE_GENERATION = get_setting(
     "REFINERY_AUXILIARY_FILE_GENERATION")
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+    )
+}
