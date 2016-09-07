@@ -416,7 +416,7 @@ class FileStoreItem(models.Model):
 
         :returns: bool -- True if deletion succeeded, False otherwise.
         """
-        if self.datafile.name:
+        if self.datafile:
             logger.debug("Deleting datafile '%s'", self.datafile.name)
             try:
                 self.datafile.delete()
