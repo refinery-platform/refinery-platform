@@ -1,6 +1,6 @@
 'use strict';
 
-function analysisMonitorAnalysesList () {
+function analysisMonitorAnalysesList ($rootScope, $location) {
   return {
     restrict: 'E',
     templateUrl: '/static/partials/analysis-monitor/partials/analyses-list.html',
@@ -18,9 +18,13 @@ function analysisMonitorAnalysesList () {
         galaxyExport: 'Downloading analysis results from Galaxy'
       };
 
-      scope.$on('refinery/analyze-tab-active', function () {
+      if ($location.absUrl().indexOf('data_sets2') > -1) {
         scope.AMCtrl.updateAnalysesList();
-      });
+      } else {
+        scope.$on('refinery/analyze-tab-active', function () {
+          scope.AMCtrl.updateAnalysesList();
+        });
+      }
 
       scope.isCollapsed = false;
 
@@ -94,5 +98,6 @@ angular
   .module('refineryAnalysisMonitor')
   .directive('analysisMonitorAnalysesList', [
     '$rootScope',
+    '$location',
     analysisMonitorAnalysesList
   ]);

@@ -1,0 +1,9 @@
+<div ng-controller="WorkflowListApiCtrl">
+    <button
+      class="btn btn-primary"
+      rp-analysis-launch-modal
+      ng-click="open()"
+      ng-disabled="isLaunchNodesSelectionEmpty() || !currentWorkflow.isAvailable()">
+      Run Analysis
+    </button>
+</div>
