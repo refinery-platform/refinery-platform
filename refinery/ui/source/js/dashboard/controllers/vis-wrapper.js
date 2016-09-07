@@ -120,7 +120,7 @@ function VisWrapperCtrl ($q, pubSub, dashboardVisData) {
   });
 
   // Intro.js
-  self.introJsOptions = {
+  self.introJsSatoriOverviewOptions = {
     steps: [
       {
         element: '#intro-js-satori-overview-1',
@@ -196,28 +196,28 @@ function VisWrapperCtrl ($q, pubSub, dashboardVisData) {
     doneLabel: '<span class="intro-js-exit">Thanks</span>'
   };
 
-  self.introJsShouldAutoStart = false;
+  self.introJsSatoriOverviewShouldAutoStart = false;
 
-  self.introJsCompletedEvent = function () {
+  self.introJsSatoriOverviewCompletedEvent = function () {
     console.log('Completed Event called');
   };
 
-  self.introJsExitEvent = function () {
+  self.introJsSatoriOverviewExitEvent = function () {
     console.log('Exit Event called');
   };
 
-  self.introJsChangeEvent = function (targetElement) {
+  self.introJsSatoriOverviewChangeEvent = function (targetElement) {
     console.log('Change Event called');
     console.log(targetElement);  // The target element
     console.log(this);  // The IntroJS object
   };
 
-  self.introJsBeforeChangeEvent = function (targetElement) {
+  self.introJsSatoriOverviewBeforeChangeEvent = function (targetElement) {
     console.log('Before Change Event called');
     console.log(targetElement);
   };
 
-  self.introJsAfterChangeEvent = function (targetElement) {
+  self.introJsSatoriOverviewAfterChangeEvent = function (targetElement) {
     console.log('After Change Event called');
     console.log(targetElement);
   };

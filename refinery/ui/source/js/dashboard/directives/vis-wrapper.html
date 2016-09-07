@@ -4,14 +4,14 @@
   ng-class="{'hidden': !visWrapper.active, 'invisible': visWrapper.invisible}">
   <div ng-if="visWrapper.active">
     <div
-      ng-intro-options="visWrapper.introJsOptions"
-      ng-intro-method="visWrapper.introJsStart"
-      ng-intro-oncomplete="visWrapper.introJsCompletedEvent"
-      ng-intro-onexit="visWrapper.introJsExitEvent"
-      ng-intro-onchange="visWrapper.introJsChangeEvent"
-      ng-intro-onbeforechange="visWrapper.introJsBeforeChangeEvent"
-      ng-intro-onafterchange="visWrapper.introJsAfterChangeEvent"
-      ng-intro-autostart="visWrapper.introJsShouldAutoStart">
+      ng-intro-options="visWrapper.introJsSatoriOverviewOptions"
+      ng-intro-method="visWrapper.introJsSatoriOverviewStart"
+      ng-intro-oncomplete="visWrapper.introJsSatoriOverviewCompletedEvent"
+      ng-intro-onexit="visWrapper.introJsSatoriOverviewExitEvent"
+      ng-intro-onchange="visWrapper.introJsSatoriOverviewChangeEvent"
+      ng-intro-onbeforechange="visWrapper.introJsSatoriOverviewBeforeChangeEvent"
+      ng-intro-onafterchange="visWrapper.introJsSatoriOverviewAfterChangeEvent"
+      ng-intro-autostart="visWrapper.introJsSatoriOverviewShouldAutoStart">
     <div
       class="refinery-panel-topbar"
       ng-class="{'allow-overflow': visWrapper.ready}">
@@ -21,7 +21,7 @@
         <div class="floatbox-min-right">
           <ul id="intro-js-satori-overview-2" class="help no-list-style horizontal-list">
             <li>
-              <span class="btn" ng-click="visWrapper.introJsStart()">Quick Intro</span>
+              <span class="btn" ng-click="visWrapper.introJsSatoriOverviewStart()">Quick Intro</span>
             </li>
             <li>
               Highlight:
