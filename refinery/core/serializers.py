@@ -120,9 +120,7 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
         return obj.get_relative_file_store_item_url() or None
 
     def _ready_for_igv_detail_view(self, obj):
-        if (not obj.is_auxiliary_node and
-                obj.get_file_store_item().
-                get_file_extension().lower() == "bam"):
+        if not obj.is_auxiliary_node:
             ready_for_igv_detail_view = True
             for item in obj.get_auxiliary_nodes():
                 try:
