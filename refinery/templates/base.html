@@ -33,7 +33,7 @@
       launchpad_tut_viewed: `{{ user.userprofile.has_viewed_launchpad_tut }}`,
       collaboration_tut_viewed: `{{ user.userprofile.has_viewed_collaboration_tut}}`,
       data_upload_tut_viewed: `{{ user.userprofile.has_viewed_data_upload_tut}}`,
-      admins: '{{ ADMINS|safe }}',
+      admins: '{{ ADMIN_EMAIL|safe }}',
       repositoryMode: {{ REFINERY_REPOSITORY_MODE|yesno:"true,false,undefined" }},
       solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
       refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}'
@@ -263,6 +263,7 @@
   <script src="{% static "vendor/angular-bootstrap/ui-bootstrap-tpls.min.js" %}"></script>
   <script src="{% static "vendor/angular-drag-and-drop-lists/angular-drag-and-drop-lists.min.js" %}"></script>
   <script src="{% static "vendor/angular-file-model/angular-file-model.js" %}"></script>
+  <script src="{% static "vendor/angular-messages/angular-messages.min.js" %}"></script>
   <script src="{% static "vendor/ng-webworker/src/ng-webworker.min.js" %}"></script>
   <script src="{% static "vendor/filesize/lib/filesize.min.js" %}"></script>
   <script src="{% static "vendor/lodash/lodash.min.js" %}"></script>
@@ -318,7 +319,7 @@
 
     var username = '{{ user.username }}';
     var user_id = '{{ user.id }}';
-    var admins = '{{ ADMINS|safe }}';
+    var admins = '{{ ADMIN_EMAIL|safe }}';
     if (username === 'None' || user_id === 'None') {
         username = undefined;
         user_id = undefined;

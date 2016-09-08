@@ -8,7 +8,8 @@ function MetadataTableImportCtrl (
   d3,
   $uibModal,
   fileSources,
-  tabularFileImportApi
+  tabularFileImportApi,
+  metadataStatusService
 ) {
   this.$log = $log;
   this.$rootScope = $rootScope;
@@ -18,6 +19,7 @@ function MetadataTableImportCtrl (
   this.$uibModal = $uibModal;
   this.fileSources = fileSources;
   this.tabularFileImportApi = tabularFileImportApi;
+  this.metadataStatusService = metadataStatusService;
 
   this.gridOptions = {
     resizeable: true
@@ -25,7 +27,7 @@ function MetadataTableImportCtrl (
   this.badFileList = [];
   this.dataFileColumn = null;
 
-  this.separator = 'comma';
+  this.separator = 'tab';
   this.customSeparator = null;
   // This is only false when `this.separator` is `custom` but
   // `this.customSeparator` is an empty String.
@@ -62,6 +64,8 @@ MetadataTableImportCtrl.prototype.setImportOption = function (value) {
 };
 
 MetadataTableImportCtrl.prototype.clearFile = function () {
+  // Set preview flag so ui won't trigger alert when navigating away.
+  this.metadataStatusService.setMetadataPreviewStatus(false);
   this.$rootScope.$broadcast('clearFileInput', 'metadataTable');
 };
 
@@ -112,12 +116,32 @@ MetadataTableImportCtrl.prototype.renderTable = function () {
       }
       // rejoin rows with new line
       var fileStr = dataArr.join('\r\n');
-      // Create a new file with the modified data and the originial file props.
-      self.strippedFile = new File([fileStr], self.file.name, self.file);
+      /* Create a new file with the modified data and the originial file props.
+      * Safari does not support the File API Constructor.
+      * */
+      if (typeof self.$window.File === 'function') {
+        self.strippedFile = new File([fileStr], self.file.name, self.file);
+      } else {
+        self.strippedFile = new Blob([fileStr], { type: 'application/json' });
+      }
+
       self.metadata = self.parser(fileStr);
       // Get 5 lines to display on screen
       self.metadataSample = self.metadata.slice(0, 5);
       self.metadataHeader = Object.keys(self.metadataSample[0]);
+      self.sourceColumnIndex = [self.metadataHeader[0]];
+
+      // Preselects column to match sample of tabular metadata.
+      if (self.metadataHeader.length > 2) {
+        self.dataFileColumn = self.metadataHeader[1];
+        self.speciesColumn = self.metadataHeader[2];
+      } else if (self.metadataHeader.length > 1) {
+        self.dataFileColumn = self.metadataHeader[1];
+        self.speciesColumn = self.metadataHeader[1];
+      } else {
+        self.dataFileColumn = self.metadataHeader[0];
+        self.speciesColumn = self.metadataHeader[0];
+      }
       self.gridOptions.columnDefs = self.makeColumnDefs();
 
       // Since we are using the _controller as_ syntax we have to update the
@@ -126,6 +150,8 @@ MetadataTableImportCtrl.prototype.renderTable = function () {
       self.gridOptions.data = self.metadataSample;
     });
   };
+  // Set preview flag so ui can trigger alert when navigating away.
+  this.metadataStatusService.setMetadataPreviewStatus(true);
   reader.readAsText(self.file);
 };
 
@@ -220,12 +246,16 @@ MetadataTableImportCtrl.prototype.startImport = function () {
     formData.append('title', self.title);
   }
   for (var i = 0; i < self.sourceColumnIndex.length; i++) {
+    // from select menu, need to grab index of sourceColumnIndex
+    var sourceIndex = self.metadataHeader.indexOf(self.sourceColumnIndex[i]);
     formData.append(
-      'source_column_index', self.sourceColumnIndex[i]
+      'source_column_index', sourceIndex
     );
   }
   if (self.dataFileColumn) {
-    formData.append('data_file_column', self.dataFileColumn);
+    // from select menu, need to grab index of dataFileColumn
+    var fieldIndex = self.metadataHeader.indexOf(self.dataFileColumn);
+    formData.append('data_file_column', fieldIndex);
   }
   switch (self.separator) {
     case 'tab':
@@ -271,6 +301,8 @@ MetadataTableImportCtrl.prototype.startImport = function () {
     .then(function (response) {
       self.importedDataSetUuid = response.new_data_set_uuid;
       self.isSuccessfullyImported = true;
+      // Set preview flag so ui won't trigger alert when navigating away.
+      self.metadataStatusService.setMetadataPreviewStatus(false);
       self.$timeout(function () {
         self.$window.location.href = '/data_sets/' + self.importedDataSetUuid;
       }, 2500);
@@ -295,5 +327,6 @@ angular
     '$uibModal',
     'fileSources',
     'tabularFileImportApi',
+    'metadataStatusService',
     MetadataTableImportCtrl
   ]);

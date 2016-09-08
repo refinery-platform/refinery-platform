@@ -37,6 +37,7 @@
 {% block content %}
 {% if not REFINERY_REPOSITORY_MODE or request.user.is_staff %}
 {% verbatim %}
+
 <div ng-controller="dataUploadTutorialCtrl2">
 
   <div ng-intro-options="dataUploadIntroOptions"
@@ -52,20 +53,18 @@
         <div class="col-md-10">
           <ul class="nav nav-tabs" id="tabs">
             <li id="dataUploadTutorialStep1" ui-sref-active="active">
-              <a ui-sref="import">Step 1.
-                Import Metadata</a>
+              <a ui-sref="import">Tabular Metadata</a>
             </li>
             <li id="dataUploadTutorialStep2" ui-sref-active="active">
-              <a id="dataUploadTutorial_click" ui-sref="fileUpload">Step 2.
-              Upload
-                Raw Data (Optional)</a>
+              <a ui-sref="isaTabImport">ISA-Tab Metadata</a>
             </li>
           </ul>
+
         </div>
       </div>
-    </div>
-    <div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
-      <div ui-view></div>
+      <div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
+        <div ui-view></div>
+      </div>
     </div>
   </div>
 </div>

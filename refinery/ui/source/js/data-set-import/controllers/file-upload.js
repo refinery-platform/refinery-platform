@@ -8,6 +8,7 @@ function RefineryFileUploadCtrl (
   $window,
   $,
   chunkedUploadService,
+  fileUploadStatusService,
   settings,
   SparkMD5,
   dataSetImportSettings,
@@ -214,15 +215,18 @@ function RefineryFileUploadCtrl (
       if ($element.fileupload('active') > 0) {
         $scope.uploadActive = true;
         $scope.uploadInProgress = true;
+        fileUploadStatusService.setFileUploadStatus('running');
       } else {
         $scope.uploadActive = false;
         $scope.uploadInProgress = false;
+        fileUploadStatusService.setFileUploadStatus('queuing');
       }
 
       if (totalNumFilesUploaded === totalNumFilesQueued) {
         $scope.allUploaded = true;
         $scope.uploadActive = false;
         $scope.uploadInProgress = false;
+        fileUploadStatusService.setFileUploadStatus('none');
       }
 
       $timeout(function () {
@@ -279,6 +283,7 @@ function RefineryFileUploadCtrl (
     totalNumFilesQueued++;
     $scope.queuedFiles.push(data.files[0]);
     fileCache[data.files[0].name] = true;
+    fileUploadStatusService.setFileUploadStatus('queuing');
     return true;
   });
 
@@ -290,8 +295,18 @@ function RefineryFileUploadCtrl (
       }
     }
     totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
+
     fileCache[data.files[0].name] = undefined;
     delete fileCache[data.files[0].name];
+
+    // wait for digest to complete
+    $timeout(function () {
+      if (totalNumFilesQueued === 0) {
+        fileUploadStatusService.setFileUploadStatus('none');
+      } else if ($element.fileupload('active') === 0) {
+        fileUploadStatusService.setFileUploadStatus('queuing');
+      }
+    }, 110);
   });
 
   $element.on('fileuploadsubmit', function submit (event, data) {
@@ -300,6 +315,7 @@ function RefineryFileUploadCtrl (
       return false;
     }
     currentUploadFile++;
+    fileUploadStatusService.setFileUploadStatus('running');
     return true;
   });
 
@@ -354,6 +370,7 @@ angular
     '$window',
     '$',
     'chunkedUploadService',
+    'fileUploadStatusService',
     'settings',
     'SparkMD5',
     'dataSetImportSettings',

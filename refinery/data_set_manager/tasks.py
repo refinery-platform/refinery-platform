@@ -12,6 +12,7 @@ import sys
 import tempfile
 import traceback
 import requests
+from requests.exceptions import HTTPError
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -83,11 +84,15 @@ def download_http_file(url, out_dir, accession, new_name=None,
     logger.info("url: %s\n" % url)
 
     if not os.path.exists(file_path):
-        u = requests.get(url, stream=True)
+        try:
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+        except HTTPError as e:
+            logger.error(e)
         # FIXME: use context manager to open the file
         f = open(file_path, 'wb')
         if galaxy_file_size is None:
-            meta = u.headers
+            meta = response.headers
             logger.info("meta: %s\n", meta)
             file_size = int(meta.getheaders("Content-Length")[0])
         else:
@@ -97,7 +102,7 @@ def download_http_file(url, out_dir, accession, new_name=None,
         file_size_dl = 0
         block_sz = 8192
         while True:
-            buffer = u.raw.read(block_sz)
+            buffer = response.raw.read(block_sz)
             if not buffer:
                 break
             file_size_dl += len(buffer)
@@ -197,9 +202,15 @@ def zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc):
     # make url to fetch the experiment
     url = "%s/%s" % (settings.AE_BASE_URL, accession)
     # get ArrayExpress information to get URLs to download
-    u = requests.get(url, stream=True)
+    try:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
+
     f = open(ae_name, 'wb')
-    f.write(u.raw.read())  # small file, so just grab whole thing in one go
+    f.write(response.raw.read())  # small file, so just grab whole thing in
+    # one go
     f.close()
     # open and read in the last line (the HTML) that has the info we want
     f = open(ae_name, 'rb')
@@ -217,10 +228,16 @@ def zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc):
             file_name = link.split('/')[-1]  # get the file name
             if not re.search(r'^http://', link):
                 link = "http://www.ebi.ac.uk%s" % link
-            u = requests.get(link, stream=True)
+
+            try:
+                response = requests.get(link, stream=True)
+                response.raise_for_status()
+            except HTTPError as e:
+                logger.error(e)
+
             file = os.path.join(dir_to_zip, file_name)
             f = open(file, 'wb')
-            f.write(u.raw.read())  # again, shouldn't be a large file
+            f.write(response.raw.read())  # again, shouldn't be a large file
             f.close()
     files_to_zip = 0
     for dirname, dirnames, filenames in os.walk(dir_to_zip):
