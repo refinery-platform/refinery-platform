@@ -1,5 +1,17 @@
 class refinery::aws {
 
+# Cron job to do backups
+
+# See https://puppet.com/blog/automating-puppet-cron-jobs-and-scheduled-tasks
+# for cron.
+cron { 'cron-backup':
+  ensure => present,
+  command => 'ec2-create-snapshot',
+  hour => ['0'],
+  target => 'root',
+  user => 'root',
+}
+
 # Ensure formatted filesystem
 # https://forge.puppetlabs.com/puppetlabs/lvm
 # http://docs.puppetlabs.com/puppet/4.3/reference/types/mount.html
@@ -94,5 +106,7 @@ exec { "copy_superuser_json":
   group       => $app_group,
   before      => Exec["create_superuser"],
 }
+
+
 
 }
