@@ -1,5 +1,5 @@
 <div ng-controller="launchpadTutorialCtrl">
-  <div class="text-align-center" >
+  <div>
     <h4> {{ dynamicPopover.title }} <br><small>{{ dynamicPopover.content
     }}</small></h4>
     <div  ng-intro-options="launchpadIntroOptions"
@@ -24,10 +24,10 @@
             <i class="fa fa-check-square-o"></i>
             <a ng-if="isOnHomepage" class="black clickable"
                  ng-click="launchpadStart();">
-              Start Launchpad tutorial (again)</a>
+              Start Launchpad tutorial</a>
             <a ng-if="isntOnHomepage"class="black clickable"
                   ng-click="startHandler();">
-              Start Launchpad tutorial (again)</a>
+              Start Launchpad tutorial</a>
             </div>
           </li>
 
@@ -56,10 +56,10 @@
               <i class="fa fa-check-square-o"></i>
               <a ng-if="isOnHomepage" class="black clickable"
                  ng-click="dataUploadStart();">
-              Start Data Upload tutorial (again)</a>
+              Start Data Upload tutorial</a>
               <a ng-if="isntOnHomepage" class="black clickable"
                  ng-click="startHandler();">
-              Start Data Upload tutorial (again)</a>
+              Start Data Upload tutorial</a>
               </div>
           </li>
 
@@ -88,10 +88,10 @@
             <i class="fa fa-check-square-o"></i>
             <a ng-if="isOnHomepage" class="black clickable"
                ng-click="collaborationStart();">
-              Start Collaboration tutorial (again)</a>
+              Start Collaboration tutorial</a>
             <a ng-if="isntOnHomepage" class="black clickable"
                ng-click="startHandler();">
-              Start Collaboration tutorial (again)</a>
+              Start Collaboration tutorial</a>
           </div>
         </li>
         </div>

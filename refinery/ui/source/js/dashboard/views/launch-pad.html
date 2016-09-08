@@ -15,13 +15,15 @@
                ng-intro-oncomplete="dataUploadCompletedEvent" ng-intro-onexit="dataUploadExitEvent"
                ng-intro-onchange="dataUploadChangeEvent" ng-intro-onbeforechange="dataUploadBeforeChangeEvent"
                ng-intro-onafterchange="dataUploadAfterChangeEvent">
-            <a id="dataUploadTutorialStep0"
-              href="./data_set_manager/import/"
-              class="no-underline btn"
-              id="import-button"
-              ng-if="dashboard.showUploadButton()">
-              <i class="fa fa-plus-circle"></i> Upload
-            </a>
+            <div id="dataUploadTutorialStep0">
+              <a
+                href="./data_set_manager/import/"
+                class="no-underline btn"
+                id="import-button"
+                ng-if="dashboard.showUploadButton()">
+                <i class="fa fa-plus-circle"></i> Upload
+              </a>
+            </div>
           </div>
         </div>
 

@@ -31,9 +31,13 @@ function dataUploadTutorialCtrl2 (
       setTimeout(function () {
         $scope.dataUploadIntroOptions.steps = [
           {
-            element: document.querySelector('#dataUploadTutorialStep7'),
-            intro: '<div>Select local files to import ' +
-            'into Refinery</div>',
+            element: document.querySelector('#dataUploadTutorialStep5'),
+            intro: '<div>' + stepText.STEP5 + '</div>',
+            position: 'bottom'
+          },
+          {
+            element: document.querySelector('#dataUploadTutorialStep6'),
+            intro: '<div>' + stepText.STEP6 + '</div>',
             position: 'bottom'
           }
         ];
@@ -82,19 +86,15 @@ function dataUploadTutorialCtrl2 (
         },
         {
           element: document.querySelector('#dataUploadTutorialStep5'),
-          intro: '<div>' + stepText.STEP5 + '</div>',
+          intro: 'This never gets reached... just needed as a place holder',
           position: 'bottom'
         },
         {
           element: document.querySelector('#dataUploadTutorialStep6'),
-          intro: '<div>' + stepText.STEP6 + '</div>',
-          position: 'bottom'
-        },
-        {
-          element: document.querySelector('#dataUploadTutorialStep7'),
           intro: 'This never gets reached... just needed as a place holder',
           position: 'bottom'
         }
+
       ];
       $scope.dataUploadStart();
     }

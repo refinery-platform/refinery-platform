@@ -8,7 +8,7 @@ function dataUploadTutorialCtrl ($scope, tutorialPageNavigation) {
 
   $scope.dataUploadCompletedEvent = function () {
     tutorialPageNavigation.setData($scope.dataUploadKey, true);
-    document.getElementById('dataUploadTutorialStep0').click();
+    document.getElementById('import-button').click();
   };
 
   $scope.dataUploadExitEvent = function () {
