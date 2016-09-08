@@ -15,13 +15,13 @@
     "STEP6": "This panel lists all workflows that are available to you."
   },
   "DATA_UPLOAD_TUTORIAL": {
-    "STEP0": "Click here to start uploading files into your Refinery instance.",
-    "STEP1": "Use this tab to import a delimited metadata table or ISA-Archive.",
+    "STEP0": "Click here to start uploading data sets.",
+    "STEP1": "Use this tab to import a delimited metadata table or an ISA-Tab archive (ZIP file).",
     "STEP2": "Or use this tab to import any other data file.",
     "STEP3": "Here you can upload a tabular file and specify its formatting.",
-    "STEP4": "Select a file containing the metadata table.",
-    "STEP5": "Here you can upload a zip archive that complies with ISA standards.",
-    "STEP6": "Here you can select a local or remote ISA-Archive."
+    "STEP4": "Select a tabular file containing the meta data associated with the data files in the data set.",
+    "STEP5": "Here you can upload a ZIP archive that complies with the ISA-Tab standard from your local computer.",
+    "STEP6": "Here you can select a local or remote ISA-Tab archive."
   },
   "COLLABORATION_TUTORIAL": {
     "STEP0": "Here you can create user groups to collaborate and share data with other users.",
