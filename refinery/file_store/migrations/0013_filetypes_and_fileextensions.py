@@ -12,7 +12,7 @@ class Migration(DataMigration):
         "fields": {
           "description": "Binary compressed SAM",
           "name": "BAM",
-          "used_for_visualization": true
+          "used_for_visualization": True
         }
       },
       {
@@ -21,7 +21,7 @@ class Migration(DataMigration):
         "fields": {
           "description": "BED file",
           "name": "BED",
-          "used_for_visualization": true
+          "used_for_visualization": True
         }
       },
       {
@@ -38,7 +38,7 @@ class Migration(DataMigration):
         "fields": {
           "description": "Big WIG",
           "name": "BIGWIG",
-          "used_for_visualization": true
+          "used_for_visualization": True
         }
       },
       {
@@ -79,7 +79,7 @@ class Migration(DataMigration):
         "fields": {
           "description": "GFF file",
           "name": "GFF",
-          "used_for_visualization": true
+          "used_for_visualization": True
         }
       },
       {
@@ -184,7 +184,7 @@ class Migration(DataMigration):
         "fields": {
           "description": "Segmented Data File",
           "name": "SEG",
-          "used_for_visualization": true
+          "used_for_visualization": True
         }
       },
       {
@@ -201,7 +201,7 @@ class Migration(DataMigration):
         "fields": {
           "description": "TDF file",
           "name": "TDF",
-          "used_for_visualization": true
+          "used_for_visualization": True
         }
       },
       {
@@ -226,7 +226,7 @@ class Migration(DataMigration):
         "fields": {
           "description": "Variant Call Format",
           "name": "VCF",
-          "used_for_visualization": true
+          "used_for_visualization": True
         }
       },
       {
@@ -235,7 +235,7 @@ class Migration(DataMigration):
         "fields": {
           "description": "Wiggle Track Format",
           "name": "WIG",
-          "used_for_visualization": true
+          "used_for_visualization": True
         }
       },
       {
@@ -308,7 +308,7 @@ class Migration(DataMigration):
         "fields": {
           "description": "BAM index file",
           "name": "BAI file",
-          "used_for_visualization": true
+          "used_for_visualization": True
         }
       },
       {
