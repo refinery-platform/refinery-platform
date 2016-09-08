@@ -24,9 +24,9 @@
     "STEP6": "Here you can select a local or remote ISA-Archive."
   },
   "COLLABORATION_TUTORIAL": {
-    "STEP0": "Here you can collaborate with other Refinery users",
-    "STEP1": "<b>Groups</b> that you are a member of appear in this panel.",
-    "STEP2": "<b>Members</b> of the <b>Group</b> highlighted to the left are listed here.",
-    "STEP3": "Here you can see your <b>Pending Invitations</b>"
+    "STEP0": "Here you can create user groups to collaborate and share data with other users.",
+    "STEP1": "All groups that you are a member of appear in this panel. If you are the manager of a group, you can also modify its member list.",
+    "STEP2": "Members of the group highlighted in the panel to the left are shown here. If you are a manager, you can use the '+' icon to invite new users.",
+    "STEP3": "Here you can see pending invitations for the selected group. You can also revoke or resend pending invitations."
   }
 }
