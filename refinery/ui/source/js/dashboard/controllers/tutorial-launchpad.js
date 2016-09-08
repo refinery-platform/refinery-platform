@@ -58,34 +58,34 @@ function launchpadTutorialCtrl ($scope, updateUserTutorials, tutorialPageNavigat
     $scope.launchpadIntroOptions.steps = [
       {
         element: document.querySelector('#launchpadStep'),
-        intro: '<div class="text-align-center">' + stepText.STEP0 + '</div>',
+        intro: '<div>' + stepText.STEP0 + '</div>',
         position: 'bottom'
       },
       {
         element: document.querySelector('#launchpadStep0'),
-        intro: '<div class="text-align-center">' + stepText.STEP1 + '</div>',
+        intro: '<div>' + stepText.STEP1 + '</div>',
         position: 'right'
       },
       {
         element: document.querySelector('#launchpadStep1'),
-        intro: '<div class="text-align-center">' + stepText.STEP2 + '</div>',
+        intro: '<div>' + stepText.STEP2 + '</div>',
         position: 'bottom'
       },
       {
         element: document.querySelector('#launchpadStep2'),
-        intro: '<div class="text-align-center">' + stepText.STEP3 + '</div>',
+        intro: '<div>' + stepText.STEP3 + '</div>',
         position: 'bottom'
       },
       {
         element: document.querySelector('#launchpadStep3'),
-        intro: '<div class="text-align-center">' + stepText.STEP4 + '</div>',
+        intro: '<div>' + stepText.STEP4 + '</div>',
         position: 'top'
       },
       {
         element: document.querySelector('#launchpadStep4'),
         intro: '<div' +
-        ' class="text-align-center">' + stepText.STEP5.a + '<br></div><hr><div' +
-        ' class="text-align-center">' + stepText.STEP5.b +
+        '>' + stepText.STEP5.a + '<br></div><hr><div' +
+        '>' + stepText.STEP5.b +
         '<br><i class="analyses-status fa fa-exclamation-triangle" title=""' +
         'refinery-tooltip="" refinery-tooltip-container="body" ' +
         'refinery-tooltip-placement="left" data-container="body" ' +
@@ -95,14 +95,15 @@ function launchpadTutorialCtrl ($scope, updateUserTutorials, tutorialPageNavigat
         'refinery-tooltip-placement="left" data-container="body" ' +
         'data-original-title="Analysis successful."></i> ' + stepText.STEP5.d +
         '<br><i class="analyses-status fa fa-cog" title="" ' +
-        'refinery-tooltip="" refinery-tooltip-container="body" refinery-tooltip-placement="left"' +
-        ' data-container="body" data-original-title="Analysis is running.">' +
-         stepText.STEP5.e + '</i></div>',
+        'refinery-tooltip="" refinery-tooltip-container="body" ' +
+        'refinery-tooltip-placement="left"' +
+        ' data-container="body" data-original-title="Analysis is running."></i> ' +
+         stepText.STEP5.e + '</div>',
         position: 'left'
       },
       {
         element: document.querySelector('#launchpadStep5'),
-        intro: '<div class="text-align-center">' + stepText.STEP6 + '</div>',
+        intro: '<div>' + stepText.STEP6 + '</div>',
         position: 'left'
       }
     ];

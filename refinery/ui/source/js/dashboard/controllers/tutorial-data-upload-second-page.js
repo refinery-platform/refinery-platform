@@ -32,7 +32,7 @@ function dataUploadTutorialCtrl2 (
         $scope.dataUploadIntroOptions.steps = [
           {
             element: document.querySelector('#dataUploadTutorialStep7'),
-            intro: '<div class="text-align-center">Select local files to import ' +
+            intro: '<div>Select local files to import ' +
             'into Refinery</div>',
             position: 'bottom'
           }
@@ -62,32 +62,32 @@ function dataUploadTutorialCtrl2 (
       $scope.dataUploadIntroOptions.steps = [
         {
           element: document.querySelector('#dataUploadTutorialStep1'),
-          intro: '<div class="text-align-center">' + stepText.STEP1 + '</div>',
+          intro: '<div>' + stepText.STEP1 + '</div>',
           position: 'bottom'
         },
         {
           element: document.querySelector('#dataUploadTutorialStep2'),
-          intro: '<div class="text-align-center">' + stepText.STEP2 + '</div>',
+          intro: '<div>' + stepText.STEP2 + '</div>',
           position: 'bottom'
         },
         {
           element: document.querySelector('#dataUploadTutorialStep3'),
-          intro: '<div class="text-align-center">' + stepText.STEP3 + '</div>',
+          intro: '<div>' + stepText.STEP3 + '</div>',
           position: 'bottom'
         },
         {
           element: document.querySelector('#dataUploadTutorialStep4'),
-          intro: '<div class="text-align-center">' + stepText.STEP4 + '</div>',
+          intro: '<div>' + stepText.STEP4 + '</div>',
           position: 'bottom'
         },
         {
           element: document.querySelector('#dataUploadTutorialStep5'),
-          intro: '<div class="text-align-center">' + stepText.STEP5 + '</div>',
+          intro: '<div>' + stepText.STEP5 + '</div>',
           position: 'bottom'
         },
         {
           element: document.querySelector('#dataUploadTutorialStep6'),
-          intro: '<div class="text-align-center">' + stepText.STEP6 + '</div>',
+          intro: '<div>' + stepText.STEP6 + '</div>',
           position: 'bottom'
         },
         {

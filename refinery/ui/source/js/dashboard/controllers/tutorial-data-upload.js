@@ -44,7 +44,7 @@ function dataUploadTutorialCtrl ($scope, tutorialPageNavigation) {
     $scope.dataUploadIntroOptions.steps = [
       {
         element: document.querySelector('#dataUploadTutorialStep0'),
-        intro: '<div class="text-align-center">' + stepText.STEP0 + '</div>',
+        intro: '<div>' + stepText.STEP0 + '</div>',
         position: 'bottom'
       }
     ];

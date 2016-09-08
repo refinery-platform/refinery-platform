@@ -16,8 +16,8 @@
   },
   "DATA_UPLOAD_TUTORIAL": {
     "STEP0": "Click here to start uploading data sets.",
-    "STEP1": "Use this tab to import a delimited metadata table or an ISA-Tab archive (ZIP file).",
-    "STEP2": "Or use this tab to import any other data file.",
+    "STEP1": "Use this tab to import a delimited metadata table.",
+    "STEP2": "Use this tab to import an ISA-Tab archive (ZIP file).",
     "STEP3": "Here you can upload a tabular file and specify its formatting.",
     "STEP4": "Select a tabular file containing the meta data associated with the data files in the data set.",
     "STEP5": "Here you can upload a ZIP archive that complies with the ISA-Tab standard from your local computer.",
