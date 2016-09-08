@@ -54,7 +54,7 @@ def create(source, sharename='', filetype='', file_size=1):
     return item.uuid
 
 
-@task(track_started=True, name='import_file')
+@task(track_started=True)
 def import_file(uuid, refresh=False, file_size=0):
     """Download or copy file specified by UUID.
     :param refresh: Flag for forcing update of the file.
