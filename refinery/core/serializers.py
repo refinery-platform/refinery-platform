@@ -81,8 +81,8 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
         '_get_file_extension')
     relative_file_store_item_url = serializers.SerializerMethodField(
         '_get_relative_url')
-    ready_for_visualization = serializers.SerializerMethodField(
-     '_is_ready_for_visualization')
+    ready_for_igv_detail_view = serializers.SerializerMethodField(
+     '_ready_for_igv_detail_view')
     is_auxiliary_node = serializers.SerializerMethodField(
      '_is_auxiliary_node')
 
@@ -96,8 +96,12 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
         aux_nodes = obj.get_auxiliary_nodes()
         urls = []
         for uuid in aux_nodes:
-            node = data_set_manager.models.Node.objects.get(uuid=uuid)
-            urls.append(node.get_relative_file_store_item_url())
+            try:
+                node = data_set_manager.models.Node.objects.get(uuid=uuid)
+                urls.append(node.get_relative_file_store_item_url())
+            except (data_set_manager.models.Node.DoesNotExist,
+                    data_set_manager.models.Node.MultipleObjectsReturned) as e:
+                logger.debug(e)
         return urls
 
     def _get_aux_node_task_state(self, obj):
@@ -115,21 +119,24 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
     def _get_relative_url(self, obj):
         return obj.get_relative_file_store_item_url() or None
 
-    def _is_ready_for_visualization(self, obj):
-        if not obj.is_auxiliary_node:
-            ready_for_viz = None
+    def _ready_for_igv_detail_view(self, obj):
+        if not obj.is_auxiliary_node and obj.get_file_extension().lower() ==\
+                "bam":
+            ready_for_igv_detail_view = True
             for item in obj.get_auxiliary_nodes():
                 try:
                     node = data_set_manager.models.Node.objects.get(uuid=item)
-                    state = node.get_auxiliary_file_generation_task_state()
-                    if state != "SUCCESS":
-                        ready_for_viz = False
-
                 except (data_set_manager.models.Node.DoesNotExist,
                         data_set_manager.models.Node.MultipleObjectsReturned) \
                         as e:
                     logger.error(e)
-            return ready_for_viz
+                    return False
+
+                state = node.get_auxiliary_file_generation_task_state()
+                if not state.successful():
+                    ready_for_igv_detail_view = False
+
+            return ready_for_igv_detail_view
         else:
             return None
 
@@ -153,6 +160,6 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
             'is_auxiliary_node',
             'file_extension',
             'auxiliary_file_generation_task_state',
-            'ready_for_visualization',
+            'ready_for_igv_detail_view',
             'file_uuid'
         ]
