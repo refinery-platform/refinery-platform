@@ -33,8 +33,8 @@ function launchpadTutorialCtrl ($scope, updateUserTutorials, tutorialPageNavigat
 
   $scope.launchpadAfterChangeEvent = function (event) {
     if (event.id === 'launchpadStep') {
-      document.getElementsByClassName('introjs-showElement')[0].style[
-        'background-color'] = '#525252';
+      document.getElementsByClassName('introjs-helperLayer')[0].style['background-color'] =
+         'rgba(255, 255, 255, 0.25)';
     }
   };
 

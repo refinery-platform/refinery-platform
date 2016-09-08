@@ -22,8 +22,8 @@ function collaborationTutorialCtrl ($scope, tutorialPageNavigation) {
 
   $scope.collabAfterChangeEvent = function (event) {
     if (event.id === 'collaborationTutorialStep0') {
-      document.getElementsByClassName('introjs-showElement')[0].style[
-        'background-color'] = '#525252';
+      document.getElementsByClassName('introjs-helperLayer')[0].style['background-color'] =
+        'rgba(255, 255, 255, 0.25)';
     }
   };
   $scope.startHandler = function () {
