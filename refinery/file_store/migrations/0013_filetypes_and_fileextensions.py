@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
+import json
 import os
 from django.core import serializers
 from south.v2 import DataMigration
 
 
 class Migration(DataMigration):
-
 
     def forwards(self, orm):
         data = [
@@ -627,7 +627,8 @@ class Migration(DataMigration):
             }
           }
         ]
-        objects = serializers.deserialize('json', data, ignorenonexistent=True)
+        data_as_json = json.dumps([ob.__dict__ for ob in data])
+        objects = serializers.deserialize('json', data_as_json, ignorenonexistent=True)
         for obj in objects:
             obj.save()
 
