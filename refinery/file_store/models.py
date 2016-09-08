@@ -257,7 +257,7 @@ class FileStoreItem(models.Model):
     sharename = models.CharField(max_length=20, blank=True)
     #: type of the file
     filetype = models.ForeignKey(FileType, null=True)
-    #: file import /genetask ID
+    #: file import task ID
     import_task_id = UUIDField(blank=True)
     # Date created
     created = models.DateTimeField(auto_now_add=True,

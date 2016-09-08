@@ -233,6 +233,10 @@ def import_file(uuid, refresh=False, file_size=0):
 
 @task_success.connect(sender=import_file)
 def begin_auxiliary_node_generation(**kwargs):
+    # NOTE: Celery docs suggest to access these fields through kwargs as the
+    # structure of celery signal handlers changes often
+    # See: http://bit.ly/2cbTy3k
+
     file_store_item = kwargs['result']
     try:
         data_set_manager.models.Node.objects.get(

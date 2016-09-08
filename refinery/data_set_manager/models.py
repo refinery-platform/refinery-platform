@@ -454,7 +454,8 @@ class Node(models.Model):
 
     def get_file_store_item(self):
         """
-        Returns a FileStoreItem associated with a Node or None
+        Returns the FileStoreItem associated with a given Node or None if
+        there isn't one
         """
         try:
             return file_store.models.FileStoreItem.objects.get(
@@ -506,7 +507,7 @@ class Node(models.Model):
 
     def get_auxiliary_nodes(self):
         """
-        Return uuids of auxiliary Nodes for a Given Node
+        Return a list of uuids of auxiliary Nodes for a Given Node
         """
         child_nodes = self.get_children()
         aux_nodes = []
@@ -534,12 +535,27 @@ class Node(models.Model):
             return None
 
     def run_generate_auxiliary_node_task(self):
+        """
+        This method is initiated after a task_success signal is returned
+        from the `import_file` task.
+
+        Here we check if the imported FileStoreItem returned from the
+        `import_file` task is in need of the creation of some auxiliary
+        File/Node. If this is the case, we create auxiliary Node and
+        FileStoreItem objects, and then proceed to run the
+        generate_auxiliary_file task, and associate said task's id with the
+        newly created FileStoreItems `import_task_id` field so that we can
+        monitor the task state.
+
+        """
+
         # Check if the Django setting to generate auxiliary file has been
-        # set to work on files imported into Refinery
+        # set to run when FileStoreItems are imported into Refinery
         logger.debug("Checking if some auxiliary Node should be generated")
 
         file_store_item = self.get_file_store_item()
 
+        # Check if we pass the logic to generate aux. Files/Nodes
         if (file_store_item.filetype.used_for_visualization and
             file_store_item.is_local() and
                 settings.REFINERY_AUXILIARY_FILE_GENERATION ==
@@ -547,19 +563,27 @@ class Node(models.Model):
 
             datafile_path = file_store_item.get_absolute_path()
 
+            # Create an empty FileStoreItem (we do the datafile association
+            # within the generate_auxiliary_file task
             auxiliary_file_store_item = FileStoreItem.objects.create(
                 source='auxiliary_file')
 
-            aux_node = self.create_and_associate_auxiliary_node(
+            auxiliary_node = self.create_and_associate_auxiliary_node(
                 auxiliary_file_store_item.uuid)
 
             result = data_set_manager.tasks.generate_auxiliary_file.delay(
-                aux_node, datafile_path, file_store_item)
+                auxiliary_node, datafile_path, file_store_item)
 
             auxiliary_file_store_item.import_task_id = result.task_id
             auxiliary_file_store_item.save()
 
     def get_auxiliary_file_generation_task_state(self):
+        """
+        Return the generate_auxiliary_file task state for a given auxiliary
+        Node.
+
+        Return None if a regular Node
+        """
         if self.is_auxiliary_node:
             return AsyncResult(self.get_file_store_item().import_task_id).state
         else:

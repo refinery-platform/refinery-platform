@@ -25,6 +25,7 @@ from celery.task import task
 
 from core.models import DataSet, FileStoreItem, ExtendedGroup
 from core.utils import update_data_set_index, add_data_set_to_neo4j
+from file_store.models import FileExtension
 from .isa_tab_parser import IsaTabParser
 from .models import Investigation, Node, \
     initialize_attribute_order
@@ -526,27 +527,26 @@ def generate_auxiliary_file(auxiliary_node, datafile_path,
     :type auxiliary_node: Node
     :param datafile_path: relative path to datafile used to generate aux file
     :type datafile_path: String
+    :param parent_node_file_store_item: FileStoreItem associated with the
+    parent Node
+    :type parent_node_file_store_item: FileStoreItem
     """
 
-    generate_auxiliary_file.update_state(
-        state=celery.states.STARTED,
-        meta="Auxiliary file generation for {} has started.".format(
-            auxiliary_node)
-    )
+    generate_auxiliary_file.update_state(state=celery.states.STARTED)
+
     auxiliary_file_store_item = auxiliary_node.get_file_store_item()
 
     try:
         start_time = time.time()
         logger.debug("Starting auxiliary file gen. for %s" % datafile_path)
 
+        # Here we are checking for the FileExtension of the ParentNode's
+        # FileStoreItem because we will create auxiliary files based on what
+        # said value is
         if parent_node_file_store_item.get_file_extension().lower() == "bam":
             generate_bam_index(auxiliary_file_store_item, datafile_path)
 
-        generate_auxiliary_file.update_state(
-            state=celery.states.SUCCESS,
-            meta="Auxiliary file generation for {} has succeeded.".format(
-                auxiliary_node)
-        )
+        generate_auxiliary_file.update_state(state=celery.states.SUCCESS)
 
         logger.debug("Auxiliary file for %s generated in %s "
                      "seconds." % (datafile_path, time.time() - start_time))
@@ -556,20 +556,43 @@ def generate_auxiliary_file(auxiliary_node, datafile_path,
             "Something went wrong while trying to generate the auxiliary file "
             "for %s. %s" % (datafile_path, e))
 
-        generate_auxiliary_file.update_state(
-            state=celery.states.FAILURE,
-            meta="Auxiliary file generation for {} has failed.".format(
-                auxiliary_node)
-        )
+        generate_auxiliary_file.update_state(state=celery.states.FAILURE)
+
         raise celery.exceptions.Ignore()
 
 
-def generate_bam_index(auxiliary_file_store_item, datafile_path):
-    bam_index_file_extension = "bai"
+def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
+    """
+    Generate a bam_index file and associate it with the auxiliary
+    FileStoreItem from our generate_auxiliary_file task
+    :param auxiliary_file_store_item_uuid: uuid of FileStoreItem to generate
+    auxiliary file for
+    :type auxiliary_file_store_item_uuid: string
+    :param datafile_path: Full path on disk to the datafile that we want to
+    generate a bam index file for
+    :type datafile_path: string
+    """
+
+    # Try and fetch the bam_index FileExtension
+    # NOTE: that we are not handling the normal errors for an orm.get()s below
+    # because we want the task from which this function is called within to
+    # fail if we can't get what we want http://bit.ly/1KSbazM
+    bam_index_file_extension = FileExtension.objects.get(name="bai").name
+    auxiliary_file_store_item = FileStoreItem.objects.get(
+        uuid=auxiliary_file_store_item_uuid)
+
+    # Leverage pysam library to generate bam index file
+    # FIXME: This should be refactored once we don't have a need for
+    # Standalone IGV because this is creating a bam_index file in the same
+    # directory as it's bam file
     pysam.index(bytes(datafile_path))
+
+    # Map source field of FileStoreItem to path of newly created bam index file
     auxiliary_file_store_item.source = "{}.{}".format(
         datafile_path, bam_index_file_extension)
+
     auxiliary_file_store_item.set_filetype(bam_index_file_extension)
     auxiliary_file_store_item.save()
-    logger.debug("Source set to: %s", auxiliary_file_store_item.source)
+
+    # Symlink the newly created bam index datafile
     auxiliary_file_store_item.symlink_datafile()
