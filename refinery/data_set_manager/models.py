@@ -512,9 +512,12 @@ class Node(models.Model):
         child_nodes = self.get_children()
         aux_nodes = []
         for uuid in child_nodes:
-            node = Node.objects.get(uuid=uuid)
-            if node.is_auxiliary_node:
-                aux_nodes.append(node.uuid)
+            try:
+                node = Node.objects.get(uuid=uuid)
+                if node.is_auxiliary_node:
+                    aux_nodes.append(node.uuid)
+            except (Node.DoesNotExist, Node.MultipleObjectsReturned) as e:
+                logger.error(e)
 
         return aux_nodes
 
