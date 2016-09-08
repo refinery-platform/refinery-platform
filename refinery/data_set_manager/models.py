@@ -540,7 +540,7 @@ class Node(models.Model):
         if (file_store_item.filetype.used_for_visualization and
             file_store_item.is_local() and
                 settings.REFINERY_AUXILIARY_FILE_GENERATION ==
-                "upon_file_import"):
+                "on_file_import"):
 
             datafile_path = file_store_item.get_absolute_path()
 
