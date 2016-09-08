@@ -483,11 +483,14 @@ class Node(models.Model):
             # get_or_create() returns a tuple:
             # (<Node_object>, Boolean: <created>)
             # So, if this Node is newly created, we will associate it as a
-            # child to its parent
+            # child to its parent, otherwise nothing happens
             # See here for reference: http://bit.ly/2bL0PH5
-            if node[1]:
-                self.add_child(node[0])
-                return node[0]
+            node_object = node[0]
+            is_newly_created_node = node[1]
+
+            if is_newly_created_node:
+                self.add_child(node_object)
+                return node_object
 
     def get_children(self):
         """
