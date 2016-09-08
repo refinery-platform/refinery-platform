@@ -4,7 +4,6 @@ import errno
 import glob
 import logging
 import os
-import pysam
 import re
 import shutil
 import string
@@ -13,15 +12,16 @@ import subprocess
 import sys
 import tempfile
 import traceback
+
 import requests
+import pysam
 import celery
+from celery.task import task
 from requests.exceptions import HTTPError
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.management import call_command
-
-from celery.task import task
 
 from core.models import DataSet, FileStoreItem, ExtendedGroup
 from core.utils import update_data_set_index, add_data_set_to_neo4j
@@ -544,7 +544,7 @@ def generate_auxiliary_file(auxiliary_node, datafile_path,
         # FileStoreItem because we will create auxiliary files based on what
         # said value is
         if parent_node_file_store_item.get_file_extension().lower() == "bam":
-            generate_bam_index(auxiliary_file_store_item, datafile_path)
+            generate_bam_index(auxiliary_file_store_item.uuid, datafile_path)
 
         generate_auxiliary_file.update_state(state=celery.states.SUCCESS)
 
@@ -585,7 +585,7 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
     # FIXME: This should be refactored once we don't have a need for
     # Standalone IGV because this is creating a bam_index file in the same
     # directory as it's bam file
-    pysam.index(bytes(datafile_path))
+    pysam.index(datafile_path)
 
     # Map source field of FileStoreItem to path of newly created bam index file
     auxiliary_file_store_item.source = "{}.{}".format(
