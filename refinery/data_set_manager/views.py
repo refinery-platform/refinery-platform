@@ -612,7 +612,7 @@ class Assays(APIView):
                 uuid=study_uuid)
             return Assay.objects.filter(study=study_obj)
         except (data_set_manager.models.Study.DoesNotExist,
-                MultipleObjectsReturned):
+                data_set_manager.models.Study.MultipleObjectsReturned):
             raise Http404
 
     def get(self, request, format=None):
