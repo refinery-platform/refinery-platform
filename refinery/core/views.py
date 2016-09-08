@@ -25,7 +25,6 @@ from guardian.shortcuts import get_perms
 import requests
 from requests.exceptions import HTTPError
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -1046,7 +1045,7 @@ class NodeViewSet(viewsets.ModelViewSet):
     serializer_class = NodeSerializer
     lookup_field = 'uuid'
     http_method_names = ['get']
-    permission_classes = (IsAuthenticated,)
+    # permission_classes = (IsAuthenticated,)
 
 
 class CustomRegistrationView(RegistrationView):
