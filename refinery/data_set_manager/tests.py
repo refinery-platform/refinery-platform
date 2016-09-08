@@ -1412,6 +1412,11 @@ class NodeClassMethodTests(TestCase):
         self.node = Node.objects.create(assay=self.assay, study=self.study)
         self.another_node = Node.objects.create(assay=self.assay,
                                                 study=self.study)
+        self.file_node = Node.objects.create(
+            assay=self.assay,
+            study=self.study,
+            file_uuid=self.filestore_item_1.uuid
+        )
 
     def tearDown(self):
         FileStoreItem.objects.all().delete()
@@ -1467,6 +1472,20 @@ class NodeClassMethodTests(TestCase):
                              uuid=Node.objects.get(
                                  file_uuid=self.filestore_item.uuid).file_uuid
                          ).get_datafile_url())
+
+    def test_get_file_store_item(self):
+        self.assertEqual(self.file_node.get_file_store_item(),
+                         self.filestore_item_1)
+        self.assertEqual(self.node.get_file_store_item(),
+                         None)
+
+    def test_get_relative_file_store_item_url(self):
+        relative_url = self.file_node.get_relative_file_store_item_url()
+        self.assertEqual(relative_url, self.file_node.get_file_store_item(
+            ).get_datafile_url())
+
+    def test_get_auxiliary_file_generation_task_state(self):
+        self.assertIsNone(self.node.get_auxiliary_file_generation_task_state())
 
 
 class NodeApiV2Tests(APITestCase):
