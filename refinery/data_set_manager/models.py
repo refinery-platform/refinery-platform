@@ -588,7 +588,7 @@ class Node(models.Model):
         Return None if a regular Node
         """
         if self.is_auxiliary_node:
-            return AsyncResult(self.get_file_store_item().import_task_id)
+            return AsyncResult(self.get_file_store_item().import_task_id).state
         else:
             return None
 
