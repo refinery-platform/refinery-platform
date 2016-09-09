@@ -14,6 +14,7 @@
       <i class="fa fa-download"> </i>
       Download an example tabular metadata file.
     </a>
+    The first row needs to contain column headers.
   </p>
   <p>
     Choose delimiter and then select tabular metadata table.
@@ -43,7 +44,8 @@
       ng-if="metadataTable.isErrored">
       <div class="text-centered">
         <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
-        Oh no! We apologize. Something went terribly wrong. Please call your admin.
+        Import of this data set failed. Please ensure that the structure
+        of your metadata file matches that of the example metadata file.
       </div>
     </div>
 
@@ -166,6 +168,7 @@
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
             The title of the data set to be imported.
+            This will be shown in the data set browser.
           </div>
         </div>
 
@@ -185,10 +188,12 @@
             </select>
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
-            Columns to be used for source grouping. Values in the columns
-            indicated by the list of columns provided for the Source
-            ColumnIndex will be concatenated to create an identifier for
-            the "source" of the sample.
+            Columns to be used for source grouping. Values in the
+            selected columns will be concatenated to create an identifier for
+            the "source" of the data. Each unique value will be treated as
+            a separate source idenifier. If necessary, up to three columns
+            can be selected and concatenated to create unique source names.
+            <br>At least one column needs to be selected.</br>
           </div>
         </div>
 
@@ -206,8 +211,8 @@
             </select>
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
-            Column that contains the path to or the URL of the file associated
-            with this sample.
+            Column that contains the path to or the URL of a data file.
+            If URLs are provided, they have to be publicly accessible.
           </div>
         </div>
 
@@ -225,7 +230,8 @@
             </select>
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
-            Column containing species names or IDs.
+            Column containing species names or identifiers,
+            e.g. "Human", "Homo sapiens", or "H. sapiens".
           </div>
         </div>
       </div>
@@ -246,10 +252,10 @@
               ng-model="metadataTable.slug">
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
-            Shortcut name to access the data set to be imported by URL. Can only
-            contain alpha-numeric characters and <em>_</em>. (E.g. A data set with
-            the shortcut <em>abbr</em> would be accessible under
-            <em>http://example.com/data_sets/abbr</em>.)
+            Shortcut name to access the data set via a direct URL.
+            Can only contain alphanumeric characters and "_". A data set
+            with the shortcut <em>my_experiment</em> would be accessible under
+            <em>http://example.com/data_sets/my_experiment</em>.
           </div>
         </div>
 
@@ -264,8 +270,9 @@
               ng-model="metadataTable.makePublic"/>
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
-            If selected the data set to be imported will be made publicely
-            avaibale immediately after the import.
+            If selected, the data set will be made publicly
+            viewable when the import has completed. 
+            <br>Use this feature with care.</br>
           </div>
         </div>
       </div>
@@ -288,8 +295,11 @@
             </select>
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
-            Column that contains the path to an auxiliary file (e.g. for
-            visualization) associated with the input file.
+            Column that contains the path to or URL of an auxiliary file
+            associated with the data file. For example, for visualization,
+            this could be a BigWig file for a WIG data file or a BAM index file
+            for a BAM data file. If URLs are provided, they have
+            to be publicly accessible.
           </div>
         </div>
 
@@ -323,8 +333,8 @@
             </select>
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
-            Column containing boolean flag to indicate whether the data file in
-            this row should be treated as an annotation file.
+            Column containing either "true" or "false" to indicate whether the data file in
+            this row should be treated as an annotation file rather than a data file.
           </div>
         </div>
 
@@ -342,7 +352,7 @@
             </select>
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
-            Column containing genome build IDs. E.g. HG-19.
+            Column containing genome build identifiers such as "hg19" or "mm10".
           </div>
         </div>
 
@@ -357,8 +367,8 @@
               ng-model="metadataTable.dataFilePermanent"/>
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
-            Flag for whether data files should be permanently on the system
-            or cached.
+            Flag for whether data files should be permanently imported into
+            the system or just cached.
           </div>
         </div>
       </div>
