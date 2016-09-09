@@ -724,6 +724,7 @@ def solr_select(request, core):
         response = full_response.content
     except HTTPError as e:
         logger.error(e)
+        response = json.dumps({})
 
     return HttpResponse(response, mimetype='application/json')
 
