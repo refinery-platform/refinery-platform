@@ -3,6 +3,8 @@ import os
 import stat
 import logging
 import requests
+from celery.signals import task_success
+
 from requests.exceptions import ContentDecodingError, HTTPError, \
     ConnectionError
 
@@ -13,6 +15,7 @@ from celery.task import task
 
 from django.core.files import File
 
+import data_set_manager
 from .models import (FileStoreItem, get_temp_dir, file_path,
                      FILE_STORE_BASE_DIR)
 
@@ -226,6 +229,22 @@ def import_file(uuid, refresh=False, file_size=0):
         item.save()
 
     return item
+
+
+@task_success.connect(sender=import_file)
+def begin_auxiliary_node_generation(**kwargs):
+    # NOTE: Celery docs suggest to access these fields through kwargs as the
+    # structure of celery signal handlers changes often
+    # See: http://bit.ly/2cbTy3k
+
+    file_store_item = kwargs['result']
+    try:
+        data_set_manager.models.Node.objects.get(
+            file_uuid=file_store_item.uuid).run_generate_auxiliary_node_task()
+    except (data_set_manager.models.Node.DoesNotExist,
+            data_set_manager.models.Node.MultipleObjectsReturned) \
+            as e:
+        logger.error(e)
 
 
 @task()

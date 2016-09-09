@@ -1045,6 +1045,7 @@ class NodeViewSet(viewsets.ModelViewSet):
     serializer_class = NodeSerializer
     lookup_field = 'uuid'
     http_method_names = ['get']
+    # permission_classes = (IsAuthenticated,)
 
 
 class CustomRegistrationView(RegistrationView):

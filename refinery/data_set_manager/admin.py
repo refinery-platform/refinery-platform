@@ -15,7 +15,7 @@ class NodeAdmin(ForeignKeyAutocompleteAdmin):
     list_display = ["__unicode__", "file_uuid", "study", "assay",
                     "analysis_uuid", "name",
                     "subanalysis", "workflow_output", "genome_build",
-                    "species"]
+                    "species", "is_auxiliary_node"]
 
 
 class AnnotatedNodeAdmin(ForeignKeyAutocompleteAdmin):
