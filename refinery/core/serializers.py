@@ -1,4 +1,6 @@
 import logging
+
+import celery
 from rest_framework import serializers
 
 import file_store
@@ -132,7 +134,7 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
                     return False
 
                 state = node.get_auxiliary_file_generation_task_state()
-                if not state.successful():
+                if not state == celery.states.SUCCESS:
                     ready_for_igv_detail_view = False
 
             return ready_for_igv_detail_view
