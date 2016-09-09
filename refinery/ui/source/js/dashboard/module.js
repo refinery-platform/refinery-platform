@@ -9,5 +9,6 @@ angular
     'tooltip',
     'treemap',
     'dataSet',
-    'listGraph'
+    'listGraph',
+    'angular-intro'
   ]);

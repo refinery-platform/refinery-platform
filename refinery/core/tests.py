@@ -22,7 +22,7 @@ from core.models import (
     NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,
     ExtendedGroup, DataSet, InvestigationLink, Project,
     Analysis, Workflow, WorkflowEngine, UserProfile, invalidate_cached_object,
-    AnalysisNodeConnection, NodeGroup)
+    AnalysisNodeConnection, NodeGroup, Tutorials)
 from core.utils import (get_aware_local_time,
                         create_current_selection_node_group,
                         filter_nodes_uuids_in_solr, move_obj_to_front)
@@ -1833,3 +1833,26 @@ class UtilitiesTest(TestCase):
                                                              'Selection')
         self.assertEqual(response_arr[0].get('name'),
                          nodes_list[0].get('name'))
+
+
+class UserTutorialsTest(TestCase):
+    """
+    This test ensures that whenever a UserProfile instance is created,
+    there is a Tutorial object associated with it
+    """
+    def setUp(self):
+        self.username = self.password = 'user'
+        self.user = User.objects.create_user(
+            self.username, '', self.password
+        )
+        self.userprofile = UserProfile.objects.get(user=self.user)
+
+    def tearDown(self):
+        User.objects.all().delete()
+        UserProfile.objects.all().delete()
+        Tutorials.objects.all().delete()
+
+    def test_tutorial_creation(self):
+        self.assertIsNotNone(
+            Tutorials.objects.get(user_profile=self.userprofile)
+        )

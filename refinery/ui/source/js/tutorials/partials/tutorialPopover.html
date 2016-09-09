@@ -1,0 +1,102 @@
+<div ng-controller="launchpadTutorialCtrl">
+  <div>
+    <h4> {{ dynamicPopover.title }} <br><small>{{ dynamicPopover.content
+    }}</small></h4>
+    <div  ng-intro-options="launchpadIntroOptions"
+         ng-intro-method="launchpadStart"
+         ng-intro-oncomplete="launchpadCompletedEvent"
+         ng-intro-onexit="launchpadExitEvent"
+         ng-intro-onchange="launchpadChangeEvent"
+         ng-intro-onbeforechange="launchpadBeforeChangeEvent"
+         ng-intro-onafterchange="launchpadAfterChangeEvent">
+
+          <li>
+            <div ng-show="tutorials_viewed.launchpad=='False'">
+            <i class="fa fa-square-o"></i>
+            <a ng-if="isOnHomepage" class="black clickable"
+                 ng-click="launchpadStart();">
+              Start Launchpad tutorial</a>
+            <a ng-if="isntOnHomepage"class="black clickable"
+                  ng-click="startHandler();">
+              Start Launchpad tutorial</a>
+            </div>
+            <div ng-show="tutorials_viewed.launchpad=='True'">
+            <i class="fa fa-check-square-o"></i>
+            <a ng-if="isOnHomepage" class="black clickable"
+                 ng-click="launchpadStart();">
+              Start Launchpad tutorial</a>
+            <a ng-if="isntOnHomepage"class="black clickable"
+                  ng-click="startHandler();">
+              Start Launchpad tutorial</a>
+            </div>
+          </li>
+
+
+    </div>
+    <div ng-controller="dataUploadTutorialCtrl">
+      <div ng-intro-options="dataUploadIntroOptions"
+         ng-intro-method="dataUploadStart"
+         ng-intro-oncomplete="dataUploadCompletedEvent"
+         ng-intro-onexit="dataUploadExitEvent"
+         ng-intro-onchange="dataUploadChangeEvent"
+         ng-intro-onbeforechange="dataUploadBeforeChangeEvent"
+         ng-intro-onafterchange="dataUploadAfterChangeEvent">
+
+          <li>
+            <div ng-show="tutorials_viewed.data_upload=='False'">
+              <i class="fa fa-square-o"></i>
+              <a ng-if="isOnHomepage" class="black clickable"
+                 ng-click="dataUploadStart();">
+              Start Data Upload tutorial</a>
+              <a ng-if="isntOnHomepage"class="black clickable"
+                  ng-click="startHandler();">
+              Start Data Upload tutorial</a>
+              </div>
+              <div ng-show="tutorials_viewed.data_upload=='True'">
+              <i class="fa fa-check-square-o"></i>
+              <a ng-if="isOnHomepage" class="black clickable"
+                 ng-click="dataUploadStart();">
+              Start Data Upload tutorial</a>
+              <a ng-if="isntOnHomepage" class="black clickable"
+                 ng-click="startHandler();">
+              Start Data Upload tutorial</a>
+              </div>
+          </li>
+
+      </div>
+    </div>
+    <div ng-controller="collaborationTutorialCtrl">
+         <div ng-intro-options="collabIntroOptions"
+         ng-intro-method="collaborationStart"
+         ng-intro-oncomplete="collabCompletedEvent"
+         ng-intro-onexit="collabExitEvent"
+         ng-intro-onchange="collabChangeEvent"
+         ng-intro-onbeforechange="collabBeforeChangeEvent"
+         ng-intro-onafterchange="collabAfterChangeEvent">
+
+        <li>
+          <div ng-show="tutorials_viewed.collaboration=='False'">
+            <i class="fa fa-square-o"></i>
+            <a ng-if="isOnHomepage" class="black clickable"
+               ng-click="collaborationStart();">
+              Start Collaboration tutorial</a>
+            <a ng-if="isntOnHomepage" class="black clickable"
+               ng-click="startHandler();">
+              Start Collaboration tutorial</a>
+          </div>
+          <div ng-show="tutorials_viewed.collaboration=='True'">
+            <i class="fa fa-check-square-o"></i>
+            <a ng-if="isOnHomepage" class="black clickable"
+               ng-click="collaborationStart();">
+              Start Collaboration tutorial</a>
+            <a ng-if="isntOnHomepage" class="black clickable"
+               ng-click="startHandler();">
+              Start Collaboration tutorial</a>
+          </div>
+        </li>
+        </div>
+
+    </div>
+    <br><br><br>
+  </div>
+</div>

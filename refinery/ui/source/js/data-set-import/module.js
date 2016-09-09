@@ -6,5 +6,6 @@ angular
     'blueimp.fileupload',
     'ui.grid',
     'ui.grid.edit',
-    'ui.grid.resizeColumns'
+    'ui.grid.resizeColumns',
+    'angular-intro'
   ]);

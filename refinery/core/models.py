@@ -89,6 +89,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User)
     affiliation = models.CharField(max_length=100, blank=True)
     catch_all_project = models.ForeignKey('Project', blank=True, null=True)
+    login_count = models.IntegerField(default=0)
 
     def __unicode__(self):
         return (
@@ -97,6 +98,18 @@ class UserProfile(models.Model):
             str(self.affiliation) + "): " +
             str(self.user.email)
         )
+
+    def has_viewed_launchpad_tut(self):
+        return Tutorials.objects.get(
+            user_profile=self).launchpad_tutorial_viewed
+
+    def has_viewed_data_upload_tut(self):
+        return Tutorials.objects.get(
+            user_profile=self).data_upload_tutorial_viewed
+
+    def has_viewed_collaboration_tut(self):
+        return Tutorials.objects.get(
+            user_profile=self).collaboration_tutorial_viewed
 
 
 def get_user_import_dir(user):
@@ -113,6 +126,7 @@ def create_user_profile(sender, instance, created, **kwargs):
     """
     if created:
         UserProfile.objects.get_or_create(user=instance)
+        Tutorials.objects.get_or_create(user_profile=instance.userprofile)
 
 
 post_save.connect(create_user_profile, sender=User)
@@ -134,6 +148,7 @@ def add_new_user_to_public_group(sender, instance, created, **kwargs):
 
 def create_user_profile_registered(sender, user, request, **kwargs):
     UserProfile.objects.get_or_create(user=user)
+    Tutorials.objects.get_or_create(user_profile=user.userprofile)
 
     logger.info(
         "user profile for user %s has been created after registration",
@@ -183,8 +198,38 @@ def create_catch_all_project(sender, user, request, **kwargs):
         )  # needed to avoid MessageFailure when running tests
 
 
+def iterate_user_login_count(sender, user, request, **kwargs):
+    user.userprofile.login_count += 1
+    user.userprofile.save()
+
+
 # create catch all project for user if none exists
 user_logged_in.connect(create_catch_all_project)
+
+# Iterate `login_count` to keep track of user's logins
+user_logged_in.connect(iterate_user_login_count)
+
+
+class Tutorials(models.Model):
+    """
+        Model to keep track of the tutorials that a
+        User has viewed
+    """
+    user_profile = models.ForeignKey(UserProfile)
+    launchpad_tutorial_viewed = models.BooleanField(default=False)
+    collaboration_tutorial_viewed = models.BooleanField(default=False)
+    data_upload_tutorial_viewed = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        return (
+            "User: {} | Launchpad: {}, Collaboration: {}, DataUpload:"
+            " {}".format(
+             self.user_profile.user.username,
+             self.launchpad_tutorial_viewed,
+             self.collaboration_tutorial_viewed,
+             self.data_upload_tutorial_viewed
+            )
+        )
 
 
 class BaseResource(models.Model):

@@ -15,6 +15,10 @@
   rel="stylesheet"
   type="text/css"
   href="{% static "vendor/jquery-file-upload/css/jquery.fileupload-ui.css" %}">
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="{% static "vendor/intro.js/minified/introjs.min.css" %}">
 {% endblock head_html %}
 
 {% block title %}
@@ -27,28 +31,42 @@
     <small id="import-message"></small>
   </h1>
 </div>
+
 {% endblock %}
 
 {% block content %}
 {% if not REFINERY_REPOSITORY_MODE or request.user.is_staff %}
 {% verbatim %}
-<div ng-controller="RefineryImportWrapperCtrl as importWrapper">
-  <div class="refinery-panel-tabs">
-    <div class="row">
-      <div class="col-md-10">
-        <ul class="nav nav-tabs" id="tabs">
-          <li ui-sref-active="active">
-            <a ui-sref="import">Tabular Metadata</a>
-          </li>
-          <li ui-sref-active="active">
-            <a ui-sref="isaTabImport">ISA-Tab Metadata</a>
-          </li>
-        </ul>
+
+<div ng-controller="dataUploadTutorialCtrl2">
+
+  <div ng-intro-options="dataUploadIntroOptions"
+       ng-intro-method="dataUploadStart"
+       ng-intro-oncomplete="dataUploadCompletedEvent"
+       ng-intro-onexit="dataUploadExitEvent"
+       ng-intro-onchange="dataUploadChangeEvent"
+       ng-intro-onbeforechange="dataUploadBeforeChangeEvent"
+       ng-intro-onafterchange="dataUploadAfterChangeEvent">
+
+    <div class="refinery-panel-tabs">
+      <div class="row">
+        <div class="col-md-10">
+          <ul class="nav nav-tabs" id="tabs">
+            <li id="dataUploadTutorialStep1" ui-sref-active="active">
+              <a ui-sref="import">Tabular Metadata</a>
+            </li>
+            <li id="dataUploadTutorialStep2" ui-sref-active="active">
+              <a id="dataUploadTutorial_click"
+                 ui-sref="isaTabImport">ISA-Tab Metadata</a>
+            </li>
+          </ul>
+
+        </div>
+      </div>
+      <div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
+        <div ui-view></div>
       </div>
     </div>
-  </div>
-  <div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
-    <div ui-view></div>
   </div>
 </div>
 {% endverbatim %}
@@ -75,6 +93,7 @@ Sorry! Not allowed in repository mode. Cheers.
 
 <!-- spinner -->
 <script src="{% static "js/spin/spin.min.js" %}"></script>
+
 {% endblock %}
 
 {% block script %}

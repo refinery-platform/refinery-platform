@@ -54,5 +54,9 @@ describe('Dashboard.module: unit tests', function () {
     it('should have "listGraph" as a dependency', function () {
       expect(hasModule('listGraph')).toEqual(true);
     });
+
+    it('should have "angular-intro" as a dependency', function () {
+      expect(hasModule('angular-intro')).toEqual(true);
+    });
   });
 });
