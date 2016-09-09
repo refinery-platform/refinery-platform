@@ -585,7 +585,7 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
     # FIXME: This should be refactored once we don't have a need for
     # Standalone IGV because this is creating a bam_index file in the same
     # directory as it's bam file
-    pysam.index(datafile_path)
+    pysam.index(bytes(datafile_path))
 
     # Map source field of FileStoreItem to path of newly created bam index file
     auxiliary_file_store_item.source = "{}.{}".format(
