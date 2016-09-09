@@ -1,15 +1,16 @@
-Commit: 
+* Specific code commit: 
+* Version of the web browser and OS: 
+* Environment where the error occured (Vagrant VM and site conf mode or AWS instance): 
 
 ### Steps to reproduce
-1. Version of browser and OS
-2. Location of error produced (test site, locally in dev mode, locally in prod mode, etc)
-3. Data set or file used
-4. 
+Please list all the actions and the input data used:
+1. 
 
 ### Observed behavior
-1. Console error (include traceback)
-2. Server errors
-3. Refinery log errors
-4. Images or gifs
+* Any unexpected output or action produced by steps above (or lack of expected output or action)
+* Web browser console errors (including tracebacks)
+* Server errors (relevant messages and tracebacks from Django dev server or Apache/mod_wsgi logs, and Celery worker logs)
+* Static or animated images showing the UI behavior
 
 ### Expected behavior
+* 
