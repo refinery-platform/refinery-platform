@@ -3,6 +3,16 @@
   class="content-container"
   ng-class="{'hidden': !visWrapper.active, 'invisible': visWrapper.invisible}">
   <div ng-if="visWrapper.active">
+    <!-- Intro.js Overview of SATORI -->
+    <div
+      ng-intro-options="visWrapper.satoriIntros.overviewOptions"
+      ng-intro-method="visWrapper.satoriIntros.overviewStart"
+      ng-intro-oncomplete="visWrapper.satoriIntros.overviewCompletedEvent"
+      ng-intro-onexit="visWrapper.satoriIntros.overviewExitEvent"
+      ng-intro-onbeforechange="visWrapper.satoriIntros.overviewBeforeChangeEvent"
+      ng-intro-onafterchange="visWrapper.satoriIntros.overviewAfterChangeEvent"
+      ng-intro-autostart="visWrapper.satoriIntros.overviewShouldAutoStart">
+
     <div
       class="refinery-panel-topbar"
       ng-class="{'allow-overflow': visWrapper.ready}">
