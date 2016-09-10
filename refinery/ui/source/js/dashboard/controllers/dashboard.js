@@ -27,7 +27,7 @@ function DashboardCtrl (
   treemapContext,
   dashboardVisData,
   dataCart,
-  dashboardSatoriIntros
+  DashboardSatoriIntros
 ) {
   var that = this;
 
@@ -58,7 +58,7 @@ function DashboardCtrl (
   this.treemapContext = treemapContext;
   this.dashboardVisData = dashboardVisData;
   this.dataCart = dataCart;
-  this.satoriIntros = dashboardSatoriIntros;
+  this.satoriIntros = new DashboardSatoriIntros(this);
 
   this.searchQueryDataSets = '';
 
@@ -1600,6 +1600,6 @@ angular
     'treemapContext',
     'dashboardVisData',
     'dataCart',
-    'dashboardSatoriIntros',
+    'DashboardSatoriIntros',
     DashboardCtrl
   ]);

@@ -1,12 +1,12 @@
 'use strict';
 
-function VisWrapperCtrl ($q, pubSub, dashboardVisData, dashboardSatoriIntros) {
+function VisWrapperCtrl ($q, pubSub, dashboardVisData, DashboardSatoriIntros) {
   var self = this;
 
   self.$q = $q;
   self.pubSub = pubSub;
   self.dashboardVisData = dashboardVisData;
-  self.satoriIntros = dashboardSatoriIntros;
+  self.satoriIntros = new DashboardSatoriIntros(this);
 
   // Absolute root node: OWL:Thing
   // The absolute root node is used for pruning the graph as it acts as a
@@ -178,6 +178,6 @@ angular
     '$q',
     'pubSub',
     'dashboardVisData',
-    'dashboardSatoriIntros',
+    'DashboardSatoriIntros',
     VisWrapperCtrl
   ]);
