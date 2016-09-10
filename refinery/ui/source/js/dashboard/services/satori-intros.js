@@ -1,7 +1,9 @@
 'use strict';
 
-function DashboardSatoriIntros (introJsDefaultOptions) {
-  function SatoriIntros () {
+function DashboardSatoriIntros (
+  introJsDefaultOptions, introJsBeforeChangeEvent
+) {
+  function SatoriIntros (context) {
     // Intro.js
     this.overviewOptions = angular.copy(introJsDefaultOptions);
     this.overviewOptions.steps = [
@@ -75,38 +77,37 @@ function DashboardSatoriIntros (introJsDefaultOptions) {
       // console.log('Exit Event called');
     };
 
-    this.overviewChangeEvent = function (/* targetElement */) {
-      // Triggered before a new tip is shown.
-
-      // console.log('Change Event called');
-      // console.log(targetElement);  // The target element
-      // console.log(this);  // The IntroJS object
-    };
-
-    this.overviewBeforeChangeEvent = function (/* targetElement */) {
-      // console.log('Before Change Event called');
-      // console.log(targetElement);
-    };
-
-    this.overviewAfterChangeEvent = function (/* targetElement */) {
-      // console.log('After Change Event called');
-      // console.log(targetElement);
-    };
+    this.overviewBeforeChangeEvent = introJsBeforeChangeEvent();
 
     this.dataSetViewOptions = angular.copy(introJsDefaultOptions);
     this.dataSetViewOptions.steps = [
       {
         element: '#intro-js-data-set-view',
         intro:
-        'This tour guides you through all details of the data set view.',
+        'This tour guides you through all details of the ' +
+        '<em>data set view</em>.',
         position: 'right'
       },
       {
         element: '#intro-js-search-interface',
         intro:
-        'The search interface starts querying as you type. Its design has ' +
-        'been kept at a minimum.',
+        'The search interface\'s design has been kept at a minimum, so there ' +
+        'are advanced options.<br/>With a short delay, the queries are ' +
+        'issued as you type. There is no need to hit <em>enter</em>.',
         position: 'right'
+      },
+      {
+        element: '#intro-js-search-interface',
+        intro:
+        'See! We just searched for <em>RNA-Seq</em>.',
+        position: 'right',
+        beforeExecutives: function () {
+          context.searchQueryDataSets = 'RNA-Seq';
+          context.searchDataSets(context.searchQueryDataSets);
+        },
+        afterExecutives: function () {
+          context.resetDataSetSearch();
+        }
       },
       {
         element: '#intro-js-data-set-num',
@@ -131,37 +132,29 @@ function DashboardSatoriIntros (introJsDefaultOptions) {
         position: 'right'
       },
       {
-        element: document.querySelectorAll(
-          '.intro-js-data-set-surrogate'
-        )[0],
+        dynamicElement: function () {
+          return document.querySelectorAll(
+            '.intro-js-data-set-surrogate'
+          )[0];
+        },
+        dynamicElementPosition: 'right',
         intro:
           'This a data set snippet holding the data sets title, sharing ' +
           'information, and a button to add the data set to the data cart.',
-        position: 'right'
       }
     ];
 
     this.dataSetViewShouldAutoStart = false;
-
-    this.dataSetViewChangeEvent = function () {
-      // Triggered before a new tip is shown.
-
-      // This is pretty hacky but there is no other way to dynamically pick a
-      // target element.
-      if (this._currentStep === 5) {
-        this._introItems[this._currentStep].element =
-          document.querySelectorAll('.intro-js-data-set-surrogate')[0];
-        this._introItems[this._currentStep].position = 'right';
-      }
-    };
+    this.dataSetViewBeforeChangeEvent = introJsBeforeChangeEvent();
   }
 
-  return new SatoriIntros();
+  return SatoriIntros;
 }
 
 angular
   .module('refineryDashboard')
-  .factory('dashboardSatoriIntros', [
+  .factory('DashboardSatoriIntros', [
     'introJsDefaultOptions',
+    'introJsBeforeChangeEvent',
     DashboardSatoriIntros
   ]);

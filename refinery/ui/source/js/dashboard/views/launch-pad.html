@@ -889,7 +889,6 @@
   ng-intro-method="dashboard.satoriIntros.overviewStart"
   ng-intro-oncomplete="dashboard.satoriIntros.overviewCompletedEvent"
   ng-intro-onexit="dashboard.satoriIntros.overviewExitEvent"
-  ng-intro-onchange="dashboard.satoriIntros.overviewChangeEvent"
   ng-intro-onbeforechange="dashboard.satoriIntros.overviewBeforeChangeEvent"
   ng-intro-onafterchange="dashboard.satoriIntros.overviewAfterChangeEvent"
   ng-intro-autostart="dashboard.satoriIntros.overviewShouldAutoStart">
@@ -898,5 +897,6 @@
 <div
   ng-intro-options="dashboard.satoriIntros.dataSetViewOptions"
   ng-intro-method="dashboard.satoriIntros.dataSetViewStart"
-  ng-intro-onchange="dashboard.satoriIntros.dataSetViewChangeEvent"
+  ng-intro-onbeforechange="dashboard.satoriIntros.dataSetViewBeforeChangeEvent"
+  ng-intro-onafterchange="dashboard.satoriIntros.dataSetViewAfterChangeEvent"
   ng-intro-autostart="dashboard.satoriIntros.dataSetViewShouldAutoStart">
