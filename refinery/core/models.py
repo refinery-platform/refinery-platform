@@ -1162,11 +1162,10 @@ class Analysis(OwnableResource):
                     delete = False
 
         if delete:
-
             # Delete associated FileStoreItems
             for node in nodes:
                 if node.file_uuid:
-                    node.get_file_store_items().delete()
+                    node.get_file_store_item().delete()
 
             # Delete associated AnalysisResults
             self.get_analysis_results().delete()
