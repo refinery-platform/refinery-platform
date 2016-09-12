@@ -161,14 +161,18 @@
             <tr>
 
             <tr>
-              <td>Data file permanent</td>
+              <td>Make Import Permanent</td>
               <td>
                 <input type="checkbox" ng-model="dataFilePermanent"
                        name="data_file_permanent"/>
               </td>
               <td>
-                flag for whether data files should be permanently on the system
-                or cached
+                If selected, data files located on remote servers
+                (referenced by URL) or located on the file system of the
+                server (referenced by a relative or absolute path in
+                addition to a filename) will be imported into the system upon
+                creation of the data set. If not selected, such files will only
+                be imported into the system if selected for analysis.
               </td>
             </tr>
 
