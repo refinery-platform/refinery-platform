@@ -20,7 +20,8 @@ class FileStoreItemAdmin(admin.ModelAdmin):
 
 
 class FileTypeAdmin(admin.ModelAdmin):
-    list_display = ['__unicode__', 'id', 'name', 'description']
+    list_display = ['__unicode__', 'id', 'name', 'description',
+                    'used_for_visualization']
 
 
 class FileExtensionAdmin(admin.ModelAdmin):

@@ -83,6 +83,10 @@ def main():
     config_uri = save_s3_config(config, unique_suffix)
     sys.stderr.write("Configuration saved to {}\n".format(config_uri))
 
+    tls_rewrite = "false"
+    if 'TLS_CERTIFICATE' in config:
+        tls_rewrite = "true"
+
     # The userdata script is executed via CloudInit.
     # It's made by concatenating a block of parameter variables,
     # with the bootstrap.sh script,
@@ -106,6 +110,7 @@ def main():
         "DEFAULT_FROM_EMAIL=", config['DEFAULT_FROM_EMAIL'], "\n",
         "SERVER_EMAIL=", config['SERVER_EMAIL'], "\n",
         "IAM_SMTP_USER=", functions.ref('RefinerySMTPUser'), "\n",
+        "export FACTER_TLS_REWRITE=", tls_rewrite, "\n",
         "S3_CONFIG_URI=", config['S3_CONFIG_URI'], "\n",
         "SITE_URL=", config['SITE_URL'], "\n",
         # May contain spaces, but can't contain "'"
@@ -268,6 +273,72 @@ def main():
             'VolumeId': functions.ref('RefineryData'),
         })
     )
+
+    cft.resources.elbsg = core.Resource(
+        'ELBSecurityGroup', 'AWS::EC2::SecurityGroup',
+        core.Properties({
+            'GroupDescription': "Refinery ELB",
+            'SecurityGroupEgress':  [],
+            'SecurityGroupIngress': [
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": "80",
+                    "ToPort": "80",
+                    "CidrIp": "0.0.0.0/0",
+                },
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": "443",
+                    "ToPort": "443",
+                    "CidrIp": "0.0.0.0/0",
+                },
+            ],
+        })
+    )
+
+    # ELB per
+    # http://cfn-pyplates.readthedocs.io/en/latest/examples/options/template.html
+
+    # Insecure, Port 80, HTTP listener
+    http_listener = {
+        'LoadBalancerPort': '80',
+        'Protocol': 'HTTP',
+        'InstanceProtocol': 'HTTP',
+        'InstancePort': '80',
+        'PolicyNames': []
+    }
+    listeners = [http_listener]
+
+    if 'TLS_CERTIFICATE' in config:
+        # Secure, Port 443, HTTPS listener
+        https_listener = {
+            'LoadBalancerPort': '443',
+            'Protocol': 'HTTPS',
+            'InstanceProtocol': 'HTTP',
+            'InstancePort': '80',
+            'PolicyNames': [],
+            'SSLCertificateId': config['TLS_CERTIFICATE']
+        }
+        listeners.append(https_listener)
+
+    cft.resources.elb = core.Resource(
+        'LoadBalancer', 'AWS::ElasticLoadBalancing::LoadBalancer',
+        {
+            'AvailabilityZones': [config['AVAILABILITY_ZONE']],
+            'HealthCheck': {
+                'HealthyThreshold': '2',
+                'Interval': '30',
+                'Target': 'HTTP:80/',
+                'Timeout': '5',
+                'UnhealthyThreshold': '4'
+            },
+            'Instances': [functions.ref('WebInstance')],
+
+            'Listeners': listeners,
+            'SecurityGroups': [
+                functions.get_att('ELBSecurityGroup', 'GroupId')],
+            "Tags": instance_tags,  # todo: Should be different?
+        })
 
     print(str(cft))
 

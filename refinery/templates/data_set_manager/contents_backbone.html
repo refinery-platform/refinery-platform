@@ -8,12 +8,14 @@
     <script type="text/javascript" src="{% static "js/underscore/underscore.js" %}"></script>
     <script type="text/javascript" src="{% static "js/backbone/backbone.js" %}"></script>
 
+  <!-- Le styles -->
+  {% for css_file in REFINERY_CSS %}
+  <link href="{% static css_file %}" rel="stylesheet">
+  {% endfor %}
+
 	<!-- Refinery libraries -->
     <script type="text/javascript" src="{% static "js/refinery/contents.js" %}"></script>
 
-    <style type="text/css">
- 
-    </style>
 {% endblock %}
 
 {% block title %}
@@ -39,7 +41,7 @@
     </footer>
 
  </div>
- 
+
    <!-- Templates -->
 
   <script type="text/template" id="facet-template">

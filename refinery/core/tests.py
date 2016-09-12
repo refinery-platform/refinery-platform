@@ -22,7 +22,7 @@ from core.models import (
     NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,
     ExtendedGroup, DataSet, InvestigationLink, Project,
     Analysis, Workflow, WorkflowEngine, UserProfile, invalidate_cached_object,
-    AnalysisNodeConnection, NodeGroup)
+    AnalysisNodeConnection, NodeGroup, Tutorials)
 from core.utils import (get_aware_local_time,
                         create_current_selection_node_group,
                         filter_nodes_uuids_in_solr, move_obj_to_front)
@@ -1733,10 +1733,10 @@ class UtilitiesTest(TestCase):
             ]
         return {'nodes': response_node_uuids}
 
-    @mock.patch("core.utils.generate_solr_params",
+    @mock.patch("data_set_manager.utils.generate_solr_params",
                 fake_generate_solr_params)
-    @mock.patch("core.utils.search_solr", fake_search_solr)
-    @mock.patch("core.utils.format_solr_response",
+    @mock.patch("data_set_manager.utils.search_solr", fake_search_solr)
+    @mock.patch("data_set_manager.utils.format_solr_response",
                 fake_format_solr_response)
     def test_filter_nodes_uuids_in_solr_with_uuids(self):
         response_node_uuids = [
@@ -1752,10 +1752,11 @@ class UtilitiesTest(TestCase):
         response = filter_nodes_uuids_in_solr(self.valid_uuid, self.node_uuids)
         self.assertItemsEqual(response, response_node_uuids)
 
-    @mock.patch("core.utils.generate_solr_params",
+    @mock.patch("data_set_manager.utils.generate_solr_params",
                 fake_generate_solr_params)
-    @mock.patch("core.utils.search_solr", fake_search_solr)
-    @mock.patch("core.utils.format_solr_response", fake_format_solr_response)
+    @mock.patch("data_set_manager.utils.search_solr", fake_search_solr)
+    @mock.patch("data_set_manager.utils.format_solr_response",
+                fake_format_solr_response)
     def test_filter_nodes_uuids_in_solr_no_uuids(self):
         response_node_uuids = [
             '1a50204d-49fa-4082-a708-26ee93fb0f86',
@@ -1832,3 +1833,26 @@ class UtilitiesTest(TestCase):
                                                              'Selection')
         self.assertEqual(response_arr[0].get('name'),
                          nodes_list[0].get('name'))
+
+
+class UserTutorialsTest(TestCase):
+    """
+    This test ensures that whenever a UserProfile instance is created,
+    there is a Tutorial object associated with it
+    """
+    def setUp(self):
+        self.username = self.password = 'user'
+        self.user = User.objects.create_user(
+            self.username, '', self.password
+        )
+        self.userprofile = UserProfile.objects.get(user=self.user)
+
+    def tearDown(self):
+        User.objects.all().delete()
+        UserProfile.objects.all().delete()
+        Tutorials.objects.all().delete()
+
+    def test_tutorial_creation(self):
+        self.assertIsNotNone(
+            Tutorials.objects.get(user_profile=self.userprofile)
+        )

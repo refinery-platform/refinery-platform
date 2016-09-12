@@ -724,6 +724,7 @@ def solr_select(request, core):
         response = full_response.content
     except HTTPError as e:
         logger.error(e)
+        response = json.dumps({})
 
     return HttpResponse(response, mimetype='application/json')
 
@@ -1045,6 +1046,7 @@ class NodeViewSet(viewsets.ModelViewSet):
     serializer_class = NodeSerializer
     lookup_field = 'uuid'
     http_method_names = ['get']
+    # permission_classes = (IsAuthenticated,)
 
 
 class CustomRegistrationView(RegistrationView):

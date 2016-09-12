@@ -3,10 +3,11 @@ Created on May 10, 2012
 
 @author: nils
 '''
-
 from datetime import datetime
 import logging
+
 import requests
+from celery.result import AsyncResult
 from requests.exceptions import HTTPError
 
 from django.conf import settings
@@ -15,8 +16,9 @@ from django_extensions.db.fields import UUIDField
 
 import core
 import file_store
-from data_set_manager.genomes import map_species_id_to_default_genome_build
+import data_set_manager
 
+from file_store.models import FileStoreItem
 
 logger = logging.getLogger(__name__)
 
@@ -307,8 +309,10 @@ class NodeManager(models.Manager):
             if (item["genome_build"] is None and
                     item["species"] is not None and
                     default_fallback is True):
-                item["genome_build"] = map_species_id_to_default_genome_build(
-                    item["species"])
+                item["genome_build"] = \
+                    data_set_manager.genomes.\
+                    map_species_id_to_default_genome_build(
+                            item["species"])
             if item["genome_build"] not in result:
                 result[item["genome_build"]] = []
             result[item["genome_build"]].append(item["file_uuid"])
@@ -401,6 +405,7 @@ class Node(models.Model):
     species = models.IntegerField(db_index=True, null=True)
     is_annotation = models.BooleanField(default=False)
     analysis_uuid = UUIDField(default=None, blank=True, null=True, auto=False)
+    is_auxiliary_node = models.BooleanField(default=False)
     subanalysis = models.IntegerField(null=True, blank=False)
     workflow_output = models.CharField(null=True, blank=False, max_length=100)
 
@@ -447,23 +452,144 @@ class Node(models.Model):
     def get_analysis_node_connections_for_node(self):
         return core.models.AnalysisNodeConnection.objects.filter(node=self)
 
-    def get_file_store_items(self):
-        return file_store.models.FileStoreItem.objects.filter(
-            uuid=self.file_uuid)
+    def get_file_store_item(self):
+        """
+        Returns the FileStoreItem associated with a given Node or None if
+        there isn't one
+        """
+        try:
+            return file_store.models.FileStoreItem.objects.get(
+                uuid=self.file_uuid)
+        except (file_store.models.FileStoreItem.DoesNotExist,
+                file_store.models.FileStoreItem.MultipleObjectsReturned) as e:
+            logger.error(e)
+            return None
 
-    def full_file_store_item_url(self):
+    def create_and_associate_auxiliary_node(self, filestore_item_uuid):
+            """
+            Tries to create and associate an auxiliary Node with a parent
+            node.
+
+            If said auxiliary Node already exists, we just do a get()
+            and do not re-add it as a child
+            """
+            node = Node.objects.get_or_create(
+                study=self.study,
+                assay=self.assay,
+                name="auxiliary Node for: {}".format(self.name),
+                is_auxiliary_node=True,
+                file_uuid=filestore_item_uuid
+            )
+
+            # get_or_create() returns a tuple:
+            # (<Node_object>, Boolean: <created>)
+            # So, if this Node is newly created, we will associate it as a
+            # child to its parent, otherwise nothing happens
+            # See here for reference: http://bit.ly/2bL0PH5
+            node_object = node[0]
+            is_newly_created_node = node[1]
+
+            if is_newly_created_node:
+                self.add_child(node_object)
+                return node_object
+
+    def get_children(self):
+        """
+        Return a list of child Node's uuids for a given Node
+        """
+        return [child.uuid for child in self.children.all()]
+
+    def get_parents(self):
+        """
+        Return a list of parent Node's uuids for a given Node
+        """
+        return [parent.uuid for parent in self.parents.all()]
+
+    def get_auxiliary_nodes(self):
+        """
+        Return a list of uuids of auxiliary Nodes for a Given Node
+        """
+        child_nodes = self.get_children()
+        aux_nodes = []
+        for uuid in child_nodes:
+            try:
+                node = Node.objects.get(uuid=uuid)
+                if node.is_auxiliary_node:
+                    aux_nodes.append(node.uuid)
+            except (Node.DoesNotExist, Node.MultipleObjectsReturned) as e:
+                logger.error(e)
+
+        return aux_nodes
+
+    def get_relative_file_store_item_url(self):
+        """
+        Return relative path to a Node's FileStoreItem's
+        datafile if one exists, otherwise return None
+        """
         try:
             file_store_item = file_store.models.FileStoreItem.objects.get(
                 uuid=self.file_uuid
             )
-            return core.utils.get_full_url(
-                file_store_item.get_datafile_url()
-            )
-        except (
-                file_store.models.FileStoreItem.DoesNotExist,
-                file_store.models.FileStoreItem.MultipleObjectsReturned
-        ) as e:
+            return file_store_item.get_datafile_url()
+
+        except (file_store.models.FileStoreItem.DoesNotExist,
+                file_store.models.FileStoreItem.MultipleObjectsReturned) as e:
             logger.error(e)
+            return None
+
+    def run_generate_auxiliary_node_task(self):
+        """
+        This method is initiated after a task_success signal is returned
+        from the `import_file` task.
+
+        Here we check if the imported FileStoreItem returned from the
+        `import_file` task is in need of the creation of some auxiliary
+        File/Node. If this is the case, we create auxiliary Node and
+        FileStoreItem objects, and then proceed to run the
+        generate_auxiliary_file task, and associate said task's id with the
+        newly created FileStoreItems `import_task_id` field so that we can
+        monitor the task state.
+
+        """
+
+        # Check if the Django setting to generate auxiliary file has been
+        # set to run when FileStoreItems are imported into Refinery
+        logger.debug("Checking if some auxiliary Node should be generated")
+
+        file_store_item = self.get_file_store_item()
+
+        # Check if we pass the logic to generate aux. Files/Nodes
+        if (file_store_item.filetype.used_for_visualization and
+            file_store_item.is_local() and
+                settings.REFINERY_AUXILIARY_FILE_GENERATION ==
+                "on_file_import"):
+
+            datafile_path = file_store_item.get_absolute_path()
+
+            # Create an empty FileStoreItem (we do the datafile association
+            # within the generate_auxiliary_file task
+            auxiliary_file_store_item = FileStoreItem.objects.create(
+                source='auxiliary_file')
+
+            auxiliary_node = self.create_and_associate_auxiliary_node(
+                auxiliary_file_store_item.uuid)
+
+            result = data_set_manager.tasks.generate_auxiliary_file.delay(
+                auxiliary_node, datafile_path, file_store_item)
+
+            auxiliary_file_store_item.import_task_id = result.task_id
+            auxiliary_file_store_item.save()
+
+    def get_auxiliary_file_generation_task_state(self):
+        """
+        Return the generate_auxiliary_file task state for a given auxiliary
+        Node.
+
+        Return None if a regular Node
+        """
+        if self.is_auxiliary_node:
+            return AsyncResult(self.get_file_store_item().import_task_id).state
+        else:
             return None
 
 
