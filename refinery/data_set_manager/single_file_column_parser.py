@@ -8,6 +8,8 @@ import file_server
 import logging
 import operator
 
+from django.conf import settings
+
 from annotation_server.models import species_to_taxon_id, Taxon
 from data_set_manager.models import (Investigation, Study, Node, Attribute,
                                      Assay)
@@ -261,24 +263,37 @@ class SingleFileColumnParser:
                         value=row[column_index].strip()
                     )
 
-        # Start remote file import tasks if `Data File Permanent` flag set
+        # Start remote file import tasks if `Make Import Permanent:` flag set
         # by the user
-        # Likewise, we'll import these files if they already exist on disk (
-        # This *should* be the case when users are uploading data associated
-        # with a metadata file)
+        # Likewise, we'll import these files if they already exist on disk
+        # and their source begins with our REFINERY_DATA_IMPORT_DIR setting
+        # (This will be the case if users upload datafiles associated with
+        # their metadata)
+
+        automatically_import = False
 
         for uuid in data_files:
             try:
                 file_store_item = FileStoreItem.objects.get(
                         uuid=uuid)
-                file_object = get_file_object(file_store_item.source)
-
-                if self.file_permanent or file_object is not None:
-                    import_file.delay(uuid)
-
             except (FileStoreItem.DoesNotExist,
                     FileStoreItem.MultipleObjectsReturned) as e:
                 logger.error("Couldn't properly fetch FileStoreItem! %s", e)
+
+            try:
+                file_object = get_file_object(file_store_item.source)
+
+                if (file_store_item.source.startswith(
+                        settings.REFINERY_DATA_IMPORT_DIR) and
+                        file_object is not None):
+
+                    automatically_import = True
+
+            except NameError as e:
+                logger.error(e)
+
+            if self.file_permanent or automatically_import:
+                import_file.delay(uuid)
 
         return investigation
 
