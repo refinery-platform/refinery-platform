@@ -14,8 +14,7 @@ from annotation_server.models import species_to_taxon_id, Taxon
 from data_set_manager.models import (Investigation, Study, Node, Attribute,
                                      Assay)
 from data_set_manager.tasks import create_dataset
-from file_store.models import generate_file_source_translator, FileStoreItem, \
-    get_file_object
+from file_store.models import generate_file_source_translator, FileStoreItem
 from file_store.tasks import create, import_file
 
 
@@ -265,12 +264,9 @@ class SingleFileColumnParser:
 
         # Start remote file import tasks if `Make Import Permanent:` flag set
         # by the user
-        # Likewise, we'll import these files if they already exist on disk
-        # and their source begins with our REFINERY_DATA_IMPORT_DIR setting
-        # (This will be the case if users upload datafiles associated with
-        # their metadata)
-
-        automatically_import = False
+        # Likewise, we'll try to import these files if their source begins with
+        # our REFINERY_DATA_IMPORT_DIR setting (This will be the case if
+        # users upload datafiles associated with their metadata)
 
         for uuid in data_files:
             try:
@@ -279,21 +275,11 @@ class SingleFileColumnParser:
             except (FileStoreItem.DoesNotExist,
                     FileStoreItem.MultipleObjectsReturned) as e:
                 logger.error("Couldn't properly fetch FileStoreItem! %s", e)
+            else:
 
-            try:
-                file_object = get_file_object(file_store_item.source)
-
-                if (file_store_item.source.startswith(
-                        settings.REFINERY_DATA_IMPORT_DIR) and
-                        file_object is not None):
-
-                    automatically_import = True
-
-            except NameError as e:
-                logger.error(e)
-
-            if self.file_permanent or automatically_import:
-                import_file.delay(uuid)
+                if self.file_permanent or file_store_item.source.startswith(
+                        settings.REFINERY_DATA_IMPORT_DIR):
+                    import_file.delay(uuid)
 
         return investigation
 
