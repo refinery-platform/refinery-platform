@@ -510,7 +510,9 @@ class CheckDataFilesView(View):
         # check if files are available
         try:
             for file_path in file_data["list"]:
-                if not isinstance(file_path, str):
+                # Explicitly check if file_path here is a string or unicode
+                # string
+                if not isinstance(file_path, unicode):
                     bad_file_list.append(file_path)
                 else:
                     file_path = translate_file_source(file_path)
