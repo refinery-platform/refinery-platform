@@ -204,7 +204,7 @@ def run(request):
             return HttpResponse(status='500')
 
         try:
-            curr_workflow = Workflow.objects.get(uuid=workflow_uuid)[0]
+            curr_workflow = Workflow.objects.get(uuid=workflow_uuid)
         except Workflow.DoesNotExist:
             logger.error("WorkFlow with UUID '{}' does not exist".format(
                 workflow_uuid))

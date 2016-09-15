@@ -6,6 +6,7 @@ angular
      * Angular modules
      */
     'ngResource',
+    'ngMessages',
 
     /*
      * Third party modules
@@ -13,6 +14,7 @@ angular
     'ui.router',
     'ngWebworker',
     'file-model',
+    'angular-intro',
 
     /*
      * Angular App globals

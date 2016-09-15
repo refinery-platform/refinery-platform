@@ -1,8 +1,10 @@
-<div id="isa-tab-import-form">
-  <p>
+ <div id="dataUploadTutorialStep6">
+   <div id="isa-tab-import-form">
+    <p>
     Please provide <code>.zip</code> archive containing an investigation, study, and assay
     file.
   </p>
+  </div>
 
   <div class="relative">
     <div
@@ -18,8 +20,8 @@
       ng-if="isaTabImport.isSuccessfullyImported">
       <div class="text-centered">
         <i class="fa fa-check" aria-hidden="true"></i>
-        Data set has been successfully imported. You will be redirected sortly.
-        Otherwise click <a ng-href="/data_sets/{{ isaTabImport.importedDataSetUuid }}">here</a>.
+        Data set has been successfully imported. You will be redirected shortly.
+        Otherwise click <a ng-href="/data_sets/{{ isaTabImport.importedDataSetUuid }}/">here</a>.
       </div>
     </div>
 

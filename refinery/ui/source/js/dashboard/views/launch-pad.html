@@ -1,4 +1,4 @@
-<div
+<div id="launchpadStep0"
   class="col-md-4"
   refinery-expandable-panel>
   <div class="refinery-panel">
@@ -9,37 +9,56 @@
         </h3>
       </span>
       <span class="refinery-header-right">
-        <a
-          href="./data_set_manager/import/"
-          class="no-underline btn"
-          ng-if="dashboard.showUploadButton()">
-          <i class="fa fa-plus-circle"></i> Upload
-        </a>
-        <button
-          class="no-underline btn"
-          ng-class="{'active': dashboard.dataSetExploration}"
-          ng-click="dashboard.toggleDataSetsExploration()"
-          ng-if="dashboard.explorationEnabled">
-          <i class="fa fa-compass" title="Explore data sets"></i> Explore
-        </button>
+        <div ng-controller="dataUploadTutorialCtrl">
+          <div ng-intro-options="dataUploadIntroOptions"
+               ng-intro-method="dataUploadStart"
+               ng-intro-oncomplete="dataUploadCompletedEvent" ng-intro-onexit="dataUploadExitEvent"
+               ng-intro-onchange="dataUploadChangeEvent" ng-intro-onbeforechange="dataUploadBeforeChangeEvent"
+               ng-intro-onafterchange="dataUploadAfterChangeEvent">
+            <div>
+              <button
+                class="no-underline btn"
+                ng-class="{'active': dashboard.dataSetExploration}"
+                ng-click="dashboard.toggleDataSetsExploration()"
+                ng-if="dashboard.explorationEnabled">
+                <i class="fa fa-compass" title="Explore data sets"></i> Explore
+              </button>
+              <span id="dataUploadTutorialStep0">
+               <a
+                href="./data_set_manager/import/"
+                class="no-underline btn"
+                id="import-button"
+                ng-if="dashboard.showUploadButton()">
+                <i class="fa fa-plus-circle"></i> Upload
+              </a>
+             </span>
+            </div>
+          </div>
+        </div>
+
+
       </span>
     </div>
 
-    <div
+    <div id="launchpadStep1Fix"
       class="refinery-sub-panel"
       ng-class="{'border': dashboard.expandedDataSetPanelBorder}"
       refinery-width-fixer>
+
       <form class="navbar-search form-group">
+        <div id="launchpadStep1">
         <i class="fa fa-search"></i>
         <i class="fa fa-times-circle"
           ng-if="dashboard.searchQueryDataSets"
           ng-click="dashboard.resetDataSetSearch()"></i>
         <input
+
           type="text"
           class="search-query form-control"
           placeholder="Search"
           ng-model="dashboard.searchQueryDataSets"
           ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)">
+          </div>
       </form>
 
       <div class="refinery-panel-header">
@@ -72,7 +91,7 @@
           </div>
         </div>
         <div class="floatbox">
-          <div class="floatbox-min-right">
+          <div id="launchpadStep2" class="floatbox-min-right">
             <button
               class="fa fa-shopping-cart is-mirrored icon-only disabled-default"
               title="Data Cart"
@@ -224,7 +243,7 @@
           </label>
         </div>
       </div>
-      <div refinery-panel-ref-offset>
+      <div id="launchpadStep3" refinery-panel-ref-offset>
         <div
           class="data-cart"
           ng-class="{ 'active': dashboard.showDataCart }"
@@ -276,7 +295,7 @@
                   refinery-tooltip-container="body"
                   refinery-tooltip-placement="right"
                   refinery-tooltip-hide-on-click="true">
-                  <i class="fa fa-table"></i>
+                  <i class="primary-text-color fa fa-table"></i>
                 </a>
                 <button
                   class="zoom-out"
@@ -407,7 +426,7 @@
                 refinery-tooltip-delay-show="750"
                 refinery-tooltip-delay-hide="150"
                 refinery-tooltip-hide-on-click="true">
-                <i class="fa fa-table"></i>
+                <i class="primary-text-color fa fa-table"></i>
               </a>
               <button
                 class="zoom-out"
@@ -559,7 +578,7 @@
   ng-if="dashboard.expandedDataSetPanelBorder">
 </div>
 
-<div
+<div id="launchpadStep4"
   class="col-md-4 pushable"
   ng-class="{'pushed': dashboard.expandDataSetPanel}"
   ng-if="!dashboard.repoMode">
@@ -767,7 +786,7 @@
   </div>
 </div>
 
-<div
+<div id="launchpadStep5"
   class="col-md-4 pushable"
   ng-class="{'pushed': dashboard.expandDataSetPanel}"
   ng-if="!dashboard.repoMode">

@@ -14,8 +14,8 @@ from core.models import (
     ExtendedGroup, InvestigationLink, NodePair, NodeRelationship, NodeSet,
     Project, UserProfile, Workflow, WorkflowDataInput, WorkflowDataInputMap,
     WorkflowEngine, WorkflowFilesDL, WorkflowInputRelationships, Download,
-    Invitation, Ontology
-)
+    Invitation, Ontology,
+    Tutorials)
 from core.utils import admin_ui_deletion
 
 
@@ -155,7 +155,27 @@ class NodeSetAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
 
 class UserProfileAdmin(GuardedModelAdmin):
     list_display = ['__unicode__', 'id', 'uuid', 'user', 'affiliation',
-                    'catch_all_project']
+                    'catch_all_project', 'login_count',
+                    'get_date_joined', 'get_is_active']
+
+    def get_date_joined(self, obj):
+        return obj.user.date_joined
+
+    def get_is_active(self, obj):
+        return obj.user.is_active
+
+    get_is_active.short_description = 'Is active'
+    get_is_active.admin_order_field = 'user__is_active'
+
+    get_date_joined.short_description = 'Date joined'
+    get_date_joined.admin_order_field = 'user__date_joined'
+
+
+class TutorialsAdmin(GuardedModelAdmin):
+    list_display = ['__unicode__', 'id', 'user_profile',
+                    'launchpad_tutorial_viewed',
+                    'collaboration_tutorial_viewed',
+                    'data_upload_tutorial_viewed']
 
 
 class OntologyAdmin(GuardedModelAdmin):
@@ -182,6 +202,7 @@ admin.site.register(NodeRelationship, NodeRelationshipAdmin)
 admin.site.register(NodeSet, NodeSetAdmin)
 admin.site.register(Invitation, InvitationAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
+admin.site.register(Tutorials, TutorialsAdmin)
 admin.site.register(WorkflowInputRelationships,
                     WorkflowInputRelationshipsAdmin)
 admin.site.register(Ontology, OntologyAdmin)

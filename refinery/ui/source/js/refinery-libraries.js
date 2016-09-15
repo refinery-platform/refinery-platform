@@ -10,4 +10,5 @@ angular
   .constant('humanize', window.humanize)
   .constant('bootbox', window.bootbox)
   .constant('SparkMD5', window.SparkMD5)
-  .constant('ListGraphVis', window.ListGraph);
+  .constant('ListGraphVis', window.ListGraph)
+  .constant('angular-intro', window['angular-intro']);

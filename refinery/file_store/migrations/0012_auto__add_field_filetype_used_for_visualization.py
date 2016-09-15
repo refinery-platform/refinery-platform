@@ -1,17 +1,23 @@
 # -*- coding: utf-8 -*-
 from south.utils import datetime_utils as datetime
 from south.db import db
-from south.v2 import DataMigration
-from django.core import serializers
-from django.core.management import call_command
-class Migration(DataMigration):
+from south.v2 import SchemaMigration
+from django.db import models
+
+
+class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        "Write your forwards methods here."
-        call_command('loaddata', 'file_store/fixtures/initial_data.json')
+        # Adding field 'FileType.used_for_visualization'
+        db.add_column(u'file_store_filetype', 'used_for_visualization',
+                      self.gf('django.db.models.fields.BooleanField')(default=False),
+                      keep_default=False)
+
 
     def backwards(self, orm):
-        "Write your backwards methods here."
+        # Deleting field 'FileType.used_for_visualization'
+        db.delete_column(u'file_store_filetype', 'used_for_visualization')
+
 
     models = {
         u'file_store.fileextension': {
@@ -36,9 +42,9 @@ class Migration(DataMigration):
             'Meta': {'object_name': 'FileType'},
             'description': ('django.db.models.fields.CharField', [], {'max_length': '250'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'})
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'}),
+            'used_for_visualization': ('django.db.models.fields.BooleanField', [], {'default': 'False'})
         }
     }
 
     complete_apps = ['file_store']
-    symmetrical = True

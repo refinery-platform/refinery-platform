@@ -117,13 +117,12 @@ def update_refinery():
     """Perform full update of a Refinery Platform instance"""
     puts("Updating Refinery")
     with cd(env.refinery_project_dir):
-        run("git fetch")
         run("git checkout {branch}".format(**env))
         # avoid explaining automatic merge commits with both new and old git
         # versions running on different VMs
         # https://raw.githubusercontent.com/gitster/git/master/Documentation/RelNotes/1.7.10.txt
         with shell_env(GIT_MERGE_AUTOEDIT='no'):
-            run("git merge {branch}".format(**env))
+            run("git pull".format(**env))
     with cd(env.refinery_ui_dir):
         run("npm prune --progress false")
         run("npm update --progress false")

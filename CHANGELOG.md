@@ -1,10 +1,65 @@
 # Change Log
 
-## [v1.3.0](https://github.com/parklab/refinery-platform/tree/v1.3.0) (2016-08-05)
+## [v1.4.0](https://github.com/parklab/refinery-platform/tree/v1.4.0) (2016-09-13)
+[Full Changelog](https://github.com/parklab/refinery-platform/compare/v1.3.0...v1.4.0)
+
+**Implemented enhancements:**
+
+- Waving help in banner is distracting after a while [\#1393](https://github.com/parklab/refinery-platform/issues/1393)
+- Handle multiple admins, rather than just taking the first email [\#1388](https://github.com/parklab/refinery-platform/issues/1388)
+- Data Set 2 Browser - Refactor Display Button [\#1373](https://github.com/parklab/refinery-platform/issues/1373)
+- Data Set 2 - New Run Analysis Launch [\#1372](https://github.com/parklab/refinery-platform/issues/1372)
+- Data Set 2 - Remove Orange Button Nav [\#1371](https://github.com/parklab/refinery-platform/issues/1371)
+- Upload Raw Data - UI Clarity [\#1299](https://github.com/parklab/refinery-platform/issues/1299)
+- Duplicate About in header and file browser tab [\#1245](https://github.com/parklab/refinery-platform/issues/1245)
+- Explore IGV.js and pileup.js integration options [\#1237](https://github.com/parklab/refinery-platform/issues/1237)
+- Tutorial overlays for end users [\#1226](https://github.com/parklab/refinery-platform/issues/1226)
+- Reword tabular file import instructions and add more help [\#1111](https://github.com/parklab/refinery-platform/issues/1111)
+- Two import buttons are confusing [\#797](https://github.com/parklab/refinery-platform/issues/797)
+- Jkmarx/dataset2 launch analysis [\#1385](https://github.com/parklab/refinery-platform/pull/1385) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/dataset2 display refactor [\#1382](https://github.com/parklab/refinery-platform/pull/1382) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/dataset2 remove orange nav [\#1375](https://github.com/parklab/refinery-platform/pull/1375) ([jkmarx](https://github.com/jkmarx))
+
+**Fixed bugs:**
+
+- Data Import Bug in Safari [\#1361](https://github.com/parklab/refinery-platform/issues/1361)
+- System Administrator email missing [\#1340](https://github.com/parklab/refinery-platform/issues/1340)
+- UI suggests Data set files can be reordered, but they can't [\#1313](https://github.com/parklab/refinery-platform/issues/1313)
+- Metadata table preview does not persist [\#1291](https://github.com/parklab/refinery-platform/issues/1291)
+- DataSet2 - UI Grid Bug [\#1268](https://github.com/parklab/refinery-platform/issues/1268)
+- Jkmarx/data import safari fix [\#1383](https://github.com/parklab/refinery-platform/pull/1383) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/dataset2 analysis bug [\#1368](https://github.com/parklab/refinery-platform/pull/1368) ([jkmarx](https://github.com/jkmarx))
+
+**Closed issues:**
+
+- For the time being, support both old and new IGV [\#1356](https://github.com/parklab/refinery-platform/issues/1356)
+- Enable viewing BAM files in IGV [\#1264](https://github.com/parklab/refinery-platform/issues/1264)
+
+**Merged pull requests:**
+
+- Scottx611x/check datafile availability fix [\#1398](https://github.com/parklab/refinery-platform/pull/1398) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/tutorial overlay [\#1392](https://github.com/parklab/refinery-platform/pull/1392) ([scottx611x](https://github.com/scottx611x))
+- Revised help text for upload fields. [\#1391](https://github.com/parklab/refinery-platform/pull/1391) ([ngehlenborg](https://github.com/ngehlenborg))
+- Scottx611x/enable viewing bam in igv [\#1390](https://github.com/parklab/refinery-platform/pull/1390) ([scottx611x](https://github.com/scottx611x))
+- ADMIN was not being used consistently in the templates [\#1381](https://github.com/parklab/refinery-platform/pull/1381) ([mccalluc](https://github.com/mccalluc))
+- Mccalluc/pytest selenium [\#1380](https://github.com/parklab/refinery-platform/pull/1380) ([mccalluc](https://github.com/mccalluc))
+- Change file browser link color when in preview mode. [\#1374](https://github.com/parklab/refinery-platform/pull/1374) ([jkmarx](https://github.com/jkmarx))
+- Rename data-set2 about tab to details tab. [\#1369](https://github.com/parklab/refinery-platform/pull/1369) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/dataset2 refactor [\#1367](https://github.com/parklab/refinery-platform/pull/1367) ([jkmarx](https://github.com/jkmarx))
+- Elastic Load Balancer [\#1319](https://github.com/parklab/refinery-platform/pull/1319) ([drj11](https://github.com/drj11))
+
+## [v1.3.0](https://github.com/parklab/refinery-platform/tree/v1.3.0) (2016-08-26)
 [Full Changelog](https://github.com/parklab/refinery-platform/compare/v1.2.0...v1.3.0)
 
 **Implemented enhancements:**
 
+- Data Import Alert [\#1352](https://github.com/parklab/refinery-platform/issues/1352)
+- Data Import - Reorganize Tab and Content [\#1336](https://github.com/parklab/refinery-platform/issues/1336)
+- Data Import - Pre-select column selection [\#1323](https://github.com/parklab/refinery-platform/issues/1323)
+- Data Import Add Link to Metadata sample [\#1322](https://github.com/parklab/refinery-platform/issues/1322)
+- Data Import Update Text Order [\#1321](https://github.com/parklab/refinery-platform/issues/1321)
+- Upload Button Enhancement [\#1301](https://github.com/parklab/refinery-platform/issues/1301)
+- Add support for BCL files and .fq extension [\#1280](https://github.com/parklab/refinery-platform/issues/1280)
 - Data Set2 Browser: Prevent Empty Node Groups and Launch Analyses [\#1278](https://github.com/parklab/refinery-platform/issues/1278)
 - Data Set 2: Clear button should also reset attribute filters [\#1269](https://github.com/parklab/refinery-platform/issues/1269)
 - Update BackEnd to Strip WhiteSpaces in tab delimited metadata file generated as output from R [\#1260](https://github.com/parklab/refinery-platform/issues/1260)
@@ -14,7 +69,6 @@
 - NodeGroup API Update - Select All Nodes [\#1223](https://github.com/parklab/refinery-platform/issues/1223)
 - Integrate NodeGroup Api in Data Set 2 UI [\#1213](https://github.com/parklab/refinery-platform/issues/1213)
 - Create proof of concept for a tutorial/more verbose help for users throughout Refinery [\#1212](https://github.com/parklab/refinery-platform/issues/1212)
-- Data Set / share API Adjustment [\#1191](https://github.com/parklab/refinery-platform/issues/1191)
 - DataSet API - Add Fields [\#1190](https://github.com/parklab/refinery-platform/issues/1190)
 - Django Rest - Node Set API [\#1175](https://github.com/parklab/refinery-platform/issues/1175)
 - Dashboard - Data Set List Add Tooltip [\#1154](https://github.com/parklab/refinery-platform/issues/1154)
@@ -28,13 +82,28 @@
 - caching in file server backend [\#351](https://github.com/parklab/refinery-platform/issues/351)
 - Bring unit tests for file store up to date [\#339](https://github.com/parklab/refinery-platform/issues/339)
 - Create development documentation using Sphinx. [\#304](https://github.com/parklab/refinery-platform/issues/304)
+- Recolor import button and file browser link. [\#1366](https://github.com/parklab/refinery-platform/pull/1366) ([jkmarx](https://github.com/jkmarx))
+- Update ISSUE\_TEMPLATE.md [\#1359](https://github.com/parklab/refinery-platform/pull/1359) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data import reorganize tabs [\#1345](https://github.com/parklab/refinery-platform/pull/1345) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data import sample file [\#1335](https://github.com/parklab/refinery-platform/pull/1335) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data import default selection [\#1334](https://github.com/parklab/refinery-platform/pull/1334) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data import text update [\#1331](https://github.com/parklab/refinery-platform/pull/1331) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/node group ui update [\#1286](https://github.com/parklab/refinery-platform/pull/1286) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/node group api reformat [\#1263](https://github.com/parklab/refinery-platform/pull/1263) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/metadata upload stripped file [\#1261](https://github.com/parklab/refinery-platform/pull/1261) ([jkmarx](https://github.com/jkmarx))
 
 **Fixed bugs:**
 
+- Error importing tabular metadata [\#1351](https://github.com/parklab/refinery-platform/issues/1351)
+- remote files get imported into file store despite 404 response [\#1318](https://github.com/parklab/refinery-platform/issues/1318)
+- Permission Editor not available for unshared data sets [\#1315](https://github.com/parklab/refinery-platform/issues/1315)
+- stalls if required fields on import not given [\#1308](https://github.com/parklab/refinery-platform/issues/1308)
+- Upload Raw Data  [\#1298](https://github.com/parklab/refinery-platform/issues/1298)
 - Impossible to upload more than one data file [\#1292](https://github.com/parklab/refinery-platform/issues/1292)
 - Error during npm update [\#1283](https://github.com/parklab/refinery-platform/issues/1283)
 - Data file uploads failing [\#1282](https://github.com/parklab/refinery-platform/issues/1282)
 - DataSet2: Bug with Filters and Complement Nodes [\#1275](https://github.com/parklab/refinery-platform/issues/1275)
+- DataSet2 Analyze - Workflow Select Resets to Placeholder [\#1272](https://github.com/parklab/refinery-platform/issues/1272)
 - Update BackEnd to Strip WhiteSpaces in tab delimited metadata file generated as output from R [\#1260](https://github.com/parklab/refinery-platform/issues/1260)
 - Unhandled UnicodeEncodeError in visualization\_manager [\#1254](https://github.com/parklab/refinery-platform/issues/1254)
 - Unable to launch IGV for RNA-seq's tophat\_accepted\_hits file \(bam format\) [\#1251](https://github.com/parklab/refinery-platform/issues/1251)
@@ -43,9 +112,11 @@
 - DataSet2 Infinite Scroll - Select All [\#1235](https://github.com/parklab/refinery-platform/issues/1235)
 - Can't import the massive dataset [\#1233](https://github.com/parklab/refinery-platform/issues/1233)
 - Incorrect message displayed when admin approves user account [\#1228](https://github.com/parklab/refinery-platform/issues/1228)
+- javascript spark-md5 error in firefox [\#1222](https://github.com/parklab/refinery-platform/issues/1222)
 - DataSet2 - Extra Input Box under UI-Select Drop-down [\#1217](https://github.com/parklab/refinery-platform/issues/1217)
 - Incorrect message displayed when deleting data sets [\#1216](https://github.com/parklab/refinery-platform/issues/1216)
 - Node Set Button - Reset Broken [\#1215](https://github.com/parklab/refinery-platform/issues/1215)
+- Workflow API V2 Exposes All Workflows [\#1207](https://github.com/parklab/refinery-platform/issues/1207)
 - Inactive workflows included in the total on Statistics page [\#1205](https://github.com/parklab/refinery-platform/issues/1205)
 - Error in browser console when viewing data set summary [\#1202](https://github.com/parklab/refinery-platform/issues/1202)
 - Admin user does not belong to the Public Group [\#1182](https://github.com/parklab/refinery-platform/issues/1182)
@@ -63,12 +134,21 @@
 - DataSet 2 - Assay Attribute API -- Ranks Initially 0 [\#1035](https://github.com/parklab/refinery-platform/issues/1035)
 - Unable to using latest Debian [\#1024](https://github.com/parklab/refinery-platform/issues/1024)
 - figure out why Read the Docs can’t find the djcelery package [\#467](https://github.com/parklab/refinery-platform/issues/467)
+- Jkmarx/data import md5 fix [\#1358](https://github.com/parklab/refinery-platform/pull/1358) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data import form valid [\#1355](https://github.com/parklab/refinery-platform/pull/1355) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set import remove overall bar [\#1354](https://github.com/parklab/refinery-platform/pull/1354) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 workflow fix [\#1320](https://github.com/parklab/refinery-platform/pull/1320) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/display view fix [\#1297](https://github.com/parklab/refinery-platform/pull/1297) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data upload multiple file error [\#1296](https://github.com/parklab/refinery-platform/pull/1296) ([jkmarx](https://github.com/jkmarx))
+- Fix conditional for updating current selection. [\#1285](https://github.com/parklab/refinery-platform/pull/1285) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 attribute filter fix [\#1279](https://github.com/parklab/refinery-platform/pull/1279) ([jkmarx](https://github.com/jkmarx))
 
 **Closed issues:**
 
 - Analysis Node-Group Run - Update Exception Handling [\#1277](https://github.com/parklab/refinery-platform/issues/1277)
 - DataSet2 - Node Group Selection [\#1273](https://github.com/parklab/refinery-platform/issues/1273)
 - Remove `share\_list` field from API endpoints [\#1238](https://github.com/parklab/refinery-platform/issues/1238)
+- Django settings cannot be controlled from config.yaml on AWS [\#1232](https://github.com/parklab/refinery-platform/issues/1232)
 - This is just scott testing the slack integration [\#1230](https://github.com/parklab/refinery-platform/issues/1230)
 - Data Set 2 - Update Select-All Event [\#1224](https://github.com/parklab/refinery-platform/issues/1224)
 - AWS install breaks trying to install librarian-puppet [\#1220](https://github.com/parklab/refinery-platform/issues/1220)
@@ -81,6 +161,24 @@
 - DataSet2 - Implement Launch Analysis Single Input Workflows [\#1038](https://github.com/parklab/refinery-platform/issues/1038)
 - Attribute Order Model Update  [\#891](https://github.com/parklab/refinery-platform/issues/891)
 - Resource performance tests [\#365](https://github.com/parklab/refinery-platform/issues/365)
+
+**Merged pull requests:**
+
+- Jkmarx/dataset2 attribute fix [\#1363](https://github.com/parklab/refinery-platform/pull/1363) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data import preview alert [\#1357](https://github.com/parklab/refinery-platform/pull/1357) ([jkmarx](https://github.com/jkmarx))
+- Mccalluc/igvjs visualization [\#1349](https://github.com/parklab/refinery-platform/pull/1349) ([mccalluc](https://github.com/mccalluc))
+- Scottx611x/adjust workflow api v2 [\#1328](https://github.com/parklab/refinery-platform/pull/1328) ([scottx611x](https://github.com/scottx611x))
+- Add support for `.fq` FileExtension and `.BCL` FileType/FileExtension [\#1327](https://github.com/parklab/refinery-platform/pull/1327) ([scottx611x](https://github.com/scottx611x))
+- Jkmarx/data set2 prevent empty nodes [\#1290](https://github.com/parklab/refinery-platform/pull/1290) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/analysis run node group [\#1284](https://github.com/parklab/refinery-platform/pull/1284) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 reset fix [\#1281](https://github.com/parklab/refinery-platform/pull/1281) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 analyze [\#1274](https://github.com/parklab/refinery-platform/pull/1274) ([jkmarx](https://github.com/jkmarx))
+- Disable spinner and progress bar when running npm and bower [\#1270](https://github.com/parklab/refinery-platform/pull/1270) ([hackdna](https://github.com/hackdna))
+- Override django config [\#1266](https://github.com/parklab/refinery-platform/pull/1266) ([drj11](https://github.com/drj11))
+- On metadata file upload, remove leading/trailing white spaces on all … [\#1259](https://github.com/parklab/refinery-platform/pull/1259) ([jkmarx](https://github.com/jkmarx))
+- Add default to whitelist on reset. [\#1257](https://github.com/parklab/refinery-platform/pull/1257) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set name bug [\#1256](https://github.com/parklab/refinery-platform/pull/1256) ([jkmarx](https://github.com/jkmarx))
+- Add Private IP to ALLOWED\_HOSTS [\#1249](https://github.com/parklab/refinery-platform/pull/1249) ([drj11](https://github.com/drj11))
 
 ## [v1.2.0](https://github.com/parklab/refinery-platform/tree/v1.2.0) (2016-05-23)
 [Full Changelog](https://github.com/parklab/refinery-platform/compare/v1.1.0...v1.2.0)
@@ -376,6 +474,7 @@
 - Galaxy Database File Cleanup, Post Analysis [\#567](https://github.com/parklab/refinery-platform/issues/567)
 - ISA archive is imported even if it has been imported previously [\#562](https://github.com/parklab/refinery-platform/issues/562)
 - show error message when launching of IGV session fails [\#371](https://github.com/parklab/refinery-platform/issues/371)
+- Duplicate base resource slugs are possible [\#4](https://github.com/parklab/refinery-platform/issues/4)
 
 **Closed issues:**
 
@@ -406,6 +505,7 @@
 - create rst file for every Refinery app [\#329](https://github.com/parklab/refinery-platform/issues/329)
 - find a way to document javascript [\#327](https://github.com/parklab/refinery-platform/issues/327)
 - Upload data analysis workflows to the Galaxy toolshed. [\#290](https://github.com/parklab/refinery-platform/issues/290)
+- Clicking "View in IGV" multiple times in quick succession with lead to multiple sets of launch buttons in the dialog [\#7](https://github.com/parklab/refinery-platform/issues/7)
 
 ## [v1.0.0](https://github.com/parklab/refinery-platform/tree/v1.0.0) (2015-09-17)
 [Full Changelog](https://github.com/parklab/refinery-platform/compare/v0.0.4...v1.0.0)
@@ -648,6 +748,7 @@
 - Use $watch to get externalToolStatus service updates instead of polling with $timeout. [\#395](https://github.com/parklab/refinery-platform/issues/395)
 - Uncaught TypeError: Cannot call method 'getDocumentList' of null [\#392](https://github.com/parklab/refinery-platform/issues/392)
 - rewrite externalToolStatusService as a factory or as a proper service that does not return a value [\#375](https://github.com/parklab/refinery-platform/issues/375)
+- Assignment of data files to workflow inputs in the data set view is not working correctly [\#6](https://github.com/parklab/refinery-platform/issues/6)
 
 ## [v0.0.2](https://github.com/parklab/refinery-platform/tree/v0.0.2) (2014-11-05)
 [Full Changelog](https://github.com/parklab/refinery-platform/compare/v0.0.1...v0.0.2)
@@ -762,6 +863,7 @@
 - add help text to options for make\_metadata\_table [\#123](https://github.com/parklab/refinery-platform/issues/123)
 - Move REFINERY\_BASE\_URL and REFINERY\_INSTANCE\_NAME from settings to a param for the init\_refinery command. [\#122](https://github.com/parklab/refinery-platform/issues/122)
 - implement support for markup in descriptions of core data structures \(project, data set, workflow\) [\#121](https://github.com/parklab/refinery-platform/issues/121)
+- optparse support for import\_metadata\_table  [\#120](https://github.com/parklab/refinery-platform/issues/120)
 - Implement REST API for NodeSet model [\#119](https://github.com/parklab/refinery-platform/issues/119)
 - Extend the galaxy instance model with a field that indicates whether http or local download should be used [\#117](https://github.com/parklab/refinery-platform/issues/117)
 - add support for Array Data File and Derived Array Data File in ISA-Tab [\#114](https://github.com/parklab/refinery-platform/issues/114)
@@ -774,6 +876,7 @@
 - switch to using file server in sample selection view [\#101](https://github.com/parklab/refinery-platform/issues/101)
 - block bulk download when viewing annotation tracks [\#100](https://github.com/parklab/refinery-platform/issues/100)
 - allow user to choose how many table rows should be shown [\#99](https://github.com/parklab/refinery-platform/issues/99)
+- replace icon checkboxes with real checkboxes [\#97](https://github.com/parklab/refinery-platform/issues/97)
 - trim labels and add tool tips to matrix view [\#96](https://github.com/parklab/refinery-platform/issues/96)
 - make ISArchive \(and Pre-ISA\) available for download [\#95](https://github.com/parklab/refinery-platform/issues/95)
 - Make meta data table available as download [\#94](https://github.com/parklab/refinery-platform/issues/94)
@@ -792,6 +895,59 @@
 - disable "Download as Archive" button when user is not logged in [\#75](https://github.com/parklab/refinery-platform/issues/75)
 - optimize performance of TDF profile calculation [\#74](https://github.com/parklab/refinery-platform/issues/74)
 - add tgz as file format [\#73](https://github.com/parklab/refinery-platform/issues/73)
+- Remove "Solr Query" link from download page if running in non-debug mode. [\#71](https://github.com/parklab/refinery-platform/issues/71)
+- in repository mode replace "Analysis" with "Downloads" wherever possible [\#70](https://github.com/parklab/refinery-platform/issues/70)
+- limit number of files per zip download to 20 [\#69](https://github.com/parklab/refinery-platform/issues/69)
+- remove checkboxes from sample selection page [\#68](https://github.com/parklab/refinery-platform/issues/68)
+- make sequence length table \(e.g. chromosome lengths\) [\#67](https://github.com/parklab/refinery-platform/issues/67)
+- in repository mode only show contents of catch-all project [\#66](https://github.com/parklab/refinery-platform/issues/66)
+- clean up analysis results page for repository mode [\#65](https://github.com/parklab/refinery-platform/issues/65)
+- make "genome build" model [\#63](https://github.com/parklab/refinery-platform/issues/63)
+- Create django view for solr queries  [\#62](https://github.com/parklab/refinery-platform/issues/62)
+- send an email to admin when new user registers [\#61](https://github.com/parklab/refinery-platform/issues/61)
+- find library to provide proper command line flags for custom commands [\#60](https://github.com/parklab/refinery-platform/issues/60)
+- Bootbox js modals for opening up multiple igv instances [\#59](https://github.com/parklab/refinery-platform/issues/59)
+- replace "Unnamed" in name of analysis with name of the workflow [\#58](https://github.com/parklab/refinery-platform/issues/58)
+- add tag to galaxy workflows to mark them as templates for use with refinery [\#57](https://github.com/parklab/refinery-platform/issues/57)
+- create "Forgot Password" link and reset password [\#56](https://github.com/parklab/refinery-platform/issues/56)
+- use django-registration package and enforce unique email addresses for registration [\#55](https://github.com/parklab/refinery-platform/issues/55)
+- add species information to nodes [\#54](https://github.com/parklab/refinery-platform/issues/54)
+- Email notification when analysis has finished [\#53](https://github.com/parklab/refinery-platform/issues/53)
+- parser should implicitly add missing empty fields at the end of non-header rows [\#52](https://github.com/parklab/refinery-platform/issues/52)
+- make model for genes [\#51](https://github.com/parklab/refinery-platform/issues/51)
+- serve genome sequence in given window [\#50](https://github.com/parklab/refinery-platform/issues/50)
+- merge isa-tab importing backend code for view and command line input [\#49](https://github.com/parklab/refinery-platform/issues/49)
+- create logging monitor for admin [\#48](https://github.com/parklab/refinery-platform/issues/48)
+- put our Galaxy extensions into the main branch [\#47](https://github.com/parklab/refinery-platform/issues/47)
+- fix new converter extra tab at end [\#46](https://github.com/parklab/refinery-platform/issues/46)
+- ISA-Tab Logging [\#44](https://github.com/parklab/refinery-platform/issues/44)
+- edit process\_isatab command [\#43](https://github.com/parklab/refinery-platform/issues/43)
+- Remove References to Refinery Repository from data\_set\_manager views [\#42](https://github.com/parklab/refinery-platform/issues/42)
+- Correctly identify number of steps in workflow. Differs from number of steps defined in workflow file. [\#41](https://github.com/parklab/refinery-platform/issues/41)
+- Remove references to Refinery Repository in Analysis Manager [\#40](https://github.com/parklab/refinery-platform/issues/40)
+- Add ability to galaxy to download a collection of files, zip, and return a tar ball via the cluster [\#38](https://github.com/parklab/refinery-platform/issues/38)
+- web UI for importing ISA-Tab files [\#37](https://github.com/parklab/refinery-platform/issues/37)
+- accept ISArchives with and without subdirectories in the ISA-Tab parser [\#36](https://github.com/parklab/refinery-platform/issues/36)
+- refactor file store to use symlinks [\#35](https://github.com/parklab/refinery-platform/issues/35)
+- Finish galaxy analysis pipeline, download results to a stored directory [\#34](https://github.com/parklab/refinery-platform/issues/34)
+- use galaxy workflow output flag to indicate what files are output [\#33](https://github.com/parklab/refinery-platform/issues/33)
+- add support to file store to rename files [\#32](https://github.com/parklab/refinery-platform/issues/32)
+- version data sets [\#31](https://github.com/parklab/refinery-platform/issues/31)
+- add support for api keys [\#30](https://github.com/parklab/refinery-platform/issues/30)
+- extend parser to work with ISA-Tab files that are a combination of multiple studies [\#28](https://github.com/parklab/refinery-platform/issues/28)
+- implement basic file store API [\#27](https://github.com/parklab/refinery-platform/issues/27)
+- implement JavaScript tdf parser [\#25](https://github.com/parklab/refinery-platform/issues/25)
+- specify file store [\#24](https://github.com/parklab/refinery-platform/issues/24)
+- progress updates for Galaxy workflows [\#22](https://github.com/parklab/refinery-platform/issues/22)
+- get number of steps for a given Galaxy workflow [\#21](https://github.com/parklab/refinery-platform/issues/21)
+- add support to retrieve galaxy file type from history [\#20](https://github.com/parklab/refinery-platform/issues/20)
+- store analysis results in repository [\#19](https://github.com/parklab/refinery-platform/issues/19)
+- Figure out Expansion Factor of SPP workflow [\#18](https://github.com/parklab/refinery-platform/issues/18)
+- read through eXFrame's createISA.pl to get an idea of what they're doing [\#17](https://github.com/parklab/refinery-platform/issues/17)
+- add execute flag to workflow engines [\#16](https://github.com/parklab/refinery-platform/issues/16)
+- Create fixture for New ISA-Tab Model [\#15](https://github.com/parklab/refinery-platform/issues/15)
+- Put link to E-R diagram in Wiki [\#14](https://github.com/parklab/refinery-platform/issues/14)
+- store original isa-tab files and mage-tab files in file store [\#13](https://github.com/parklab/refinery-platform/issues/13)
 
 **Fixed bugs:**
 
@@ -840,12 +996,14 @@
 - Fix names of imported files produced by tools installed from Galaxy toolshed. [\#116](https://github.com/parklab/refinery-platform/issues/116)
 - unknown filetype produces error in file store [\#110](https://github.com/parklab/refinery-platform/issues/110)
 - file store produces URLs with duplicate "file\_store" component [\#107](https://github.com/parklab/refinery-platform/issues/107)
+- data\_set\_manager documentation is throwing errors [\#104](https://github.com/parklab/refinery-platform/issues/104)
 - No content in table until user changes filter in matrix [\#98](https://github.com/parklab/refinery-platform/issues/98)
 - commit error on loading a bigbed file as an auxiliary file [\#91](https://github.com/parklab/refinery-platform/issues/91)
 - Two Emails sent per user registration [\#90](https://github.com/parklab/refinery-platform/issues/90)
 - FileServer add is creating BAM items instead of WIG items \(calling create on wrong object\) [\#82](https://github.com/parklab/refinery-platform/issues/82)
 - fix naming of archive files downloaded from galaxy  [\#80](https://github.com/parklab/refinery-platform/issues/80)
 - fix problem with parentheses in filenames failing import into Galaxy [\#72](https://github.com/parklab/refinery-platform/issues/72)
+- fix problem with analysis completion emails not being sent [\#64](https://github.com/parklab/refinery-platform/issues/64)
 
 **Closed issues:**
 
@@ -879,11 +1037,32 @@
 - set up development VM [\#108](https://github.com/parklab/refinery-platform/issues/108)
 - document on wiki how to use Sphinx to generate documentation [\#105](https://github.com/parklab/refinery-platform/issues/105)
 - UI Testing for Repository Mode Alpha Release [\#85](https://github.com/parklab/refinery-platform/issues/85)
+- launch Refinery in debug mode [\#77](https://github.com/parklab/refinery-platform/issues/77)
+- move logger settings into settings.py from local settings [\#45](https://github.com/parklab/refinery-platform/issues/45)
+- add instructions on how to set up Sentry to wiki [\#39](https://github.com/parklab/refinery-platform/issues/39)
+- find out best practices for Python/Django documentation [\#29](https://github.com/parklab/refinery-platform/issues/29)
+- Update to Django 1.4 [\#26](https://github.com/parklab/refinery-platform/issues/26)
+- write Refinery architecture overview [\#23](https://github.com/parklab/refinery-platform/issues/23)
+- explore options for Django logging and monitoring [\#12](https://github.com/parklab/refinery-platform/issues/12)
+- explain to richard, psalm and ilya how pivotal tracker works [\#11](https://github.com/parklab/refinery-platform/issues/11)
+- Integration Refinery with Galaxy. Step 1: Creating a Galaxy Instance [\#10](https://github.com/parklab/refinery-platform/issues/10)
+- Instructions for creating django super user didn't work  [\#9](https://github.com/parklab/refinery-platform/issues/9)
+- readme file has incorrect git clone url [\#8](https://github.com/parklab/refinery-platform/issues/8)
+- Refinery doesn't work in Firefox \(or Internet Explorer\) [\#5](https://github.com/parklab/refinery-platform/issues/5)
 
 ## [preview02](https://github.com/parklab/refinery-platform/tree/preview02) (2012-08-31)
 [Full Changelog](https://github.com/parklab/refinery-platform/compare/preview01...preview02)
 
+**Closed issues:**
+
+- Error starting a workflow [\#3](https://github.com/parklab/refinery-platform/issues/3)
+- Test Issue 2 [\#2](https://github.com/parklab/refinery-platform/issues/2)
+
 ## [preview01](https://github.com/parklab/refinery-platform/tree/preview01) (2012-05-02)
+**Closed issues:**
+
+- Test Issue [\#1](https://github.com/parklab/refinery-platform/issues/1)
+
 
 
 \* *This Change Log was automatically generated by [github_changelog_generator](https://github.com/skywinder/Github-Changelog-Generator)*

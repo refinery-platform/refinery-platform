@@ -18,11 +18,7 @@ from rest_framework import status
 from urlparse import urlparse, urljoin
 
 import core
-from .search_indexes import DataSetIndex
-from data_set_manager.search_indexes import NodeIndex
-from data_set_manager.models import Assay
-from data_set_manager.utils import (generate_solr_params, search_solr,
-                                    format_solr_response)
+import data_set_manager
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +29,8 @@ def update_data_set_index(data_set):
 
     logger.info('Updated data set (uuid: %s) index', data_set.uuid)
     try:
-        DataSetIndex().update_object(data_set, using='core')
+        core.search_indexes.DataSetIndex().update_object(data_set,
+                                                         using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -222,7 +219,8 @@ def delete_data_set_index(data_set):
 
     logger.debug('Deleted data set (uuid: %s) index', data_set.uuid)
     try:
-        DataSetIndex().remove_object(data_set, using='core')
+        core.search_indexes.DataSetIndex().remove_object(data_set,
+                                                         using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -617,7 +615,8 @@ def delete_analysis_index(node_instance):
     """Remove a Analysis' related document from Solr's index.
     """
     try:
-        NodeIndex().remove_object(node_instance, using='data_set_manager')
+        data_set_manager.search_indexes.NodeIndex().remove_object(
+            node_instance, using='data_set_manager')
         logger.debug('Deleted Analysis\' NodeIndex with (uuid: %s)',
                      node_instance.uuid)
     except Exception as e:
@@ -736,10 +735,10 @@ def create_current_selection_node_group(assay_uuid):
     """
     # confirm an assay exists
     try:
-        assay = Assay.objects.get(uuid=assay_uuid)
-    except Assay.DoesNotExist as e:
+        assay = data_set_manager.models.Assay.objects.get(uuid=assay_uuid)
+    except data_set_manager.models.Assay.DoesNotExist as e:
         return Response(e, status=status.HTTP_404_NOT_FOUND)
-    except Assay.MultipleObjectsReturned as e:
+    except data_set_manager.models.Assay.MultipleObjectsReturned as e:
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     study_uuid = assay.study.uuid
@@ -794,15 +793,18 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
         else:
             params['facets'] = ','.join(filter_attribute.keys())
 
-    solr_params = generate_solr_params(params, assay_uuid)
+    solr_params = data_set_manager.utils.generate_solr_params(
+        params, assay_uuid)
     # Only require solr filters if exception uuids are passed
     if filter_out_uuids:
         # node_arr = str(filter_out_uuids).split(',')
         str_nodes = (' OR ').join(filter_out_uuids)
         field_filter = "&fq=-uuid:({})".format(str_nodes)
         solr_params = ''.join([solr_params, field_filter])
-    solr_response = search_solr(solr_params, 'data_set_manager')
-    solr_reponse_json = format_solr_response(solr_response)
+    solr_response = data_set_manager.utils.search_solr(
+        solr_params, 'data_set_manager')
+    solr_reponse_json = data_set_manager.utils.format_solr_response(
+        solr_response)
     uuid_list = []
     for node in solr_reponse_json.get('nodes'):
         uuid_list.append(node.get('uuid'))

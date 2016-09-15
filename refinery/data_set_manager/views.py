@@ -8,6 +8,7 @@ import logging
 import shutil
 import urlparse
 import json
+import os
 
 from django import forms
 from django.core.exceptions import MultipleObjectsReturned
@@ -30,7 +31,8 @@ from django.http import Http404
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
 
-from core.models import os, get_user_import_dir, DataSet, Study
+import data_set_manager
+from core.models import get_user_import_dir, DataSet
 from core.utils import get_full_url
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
@@ -508,7 +510,9 @@ class CheckDataFilesView(View):
         # check if files are available
         try:
             for file_path in file_data["list"]:
-                if not isinstance(file_path, str):
+                # Explicitly check if file_path here is a string or unicode
+                # string
+                if not isinstance(file_path, unicode):
                     bad_file_list.append(file_path)
                 else:
                     file_path = translate_file_source(file_path)
@@ -606,9 +610,11 @@ class Assays(APIView):
 
     def get_query_set(self, study_uuid):
         try:
-            study_obj = Study.objects.get(uuid=study_uuid)
+            study_obj = data_set_manager.models.Study.objects.get(
+                uuid=study_uuid)
             return Assay.objects.filter(study=study_obj)
-        except (Study.DoesNotExist, MultipleObjectsReturned):
+        except (data_set_manager.models.Study.DoesNotExist,
+                data_set_manager.models.Study.MultipleObjectsReturned):
             raise Http404
 
     def get(self, request, format=None):

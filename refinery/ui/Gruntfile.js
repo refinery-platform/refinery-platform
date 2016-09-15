@@ -200,6 +200,14 @@ module.exports = function (grunt) {
           dest: '<%= cfg.basePath.ui.build %>/images/'
         }]
       },
+      uiBuildSampleFiles: {
+        files: [{
+          expand: true,
+          cwd: '<%= cfg.basePath.ui.src %>/sample-files/',
+          src: ['**/*'],
+          dest: '<%= cfg.basePath.ui.build %>/sample-files/'
+        }]
+      },
       uiBuildScripts: {
         files: [{
           expand: true,
@@ -243,6 +251,14 @@ module.exports = function (grunt) {
           dest: '<%= cfg.basePath.ui.compile %>/images/'
         }]
       },
+      uiCompileSampleFiles: {
+        files: [{
+          expand: true,
+          cwd: '<%= cfg.basePath.ui.src %>/sample-files/',
+          src: ['**/*'],
+          dest: '<%= cfg.basePath.ui.compile %>/sample-files/'
+        }]
+      },
       uiCompileTemplates: {
         files: [{
           expand: true,
@@ -278,6 +294,11 @@ module.exports = function (grunt) {
           dest: '<%= cfg.basePath.static.build %>/images/'
         }, {
           expand: true,
+          cwd: '<%= cfg.basePath.static.src %>/sample-files/',
+          src: ['**/*'],
+          dest: '<%= cfg.basePath.static.build %>/sample-files/'
+        }, {
+          expand: true,
           cwd: '<%= cfg.basePath.static.src %>/js/',
           src: ['**/*'],
           dest: '<%= cfg.basePath.static.build %>/js/'
@@ -299,6 +320,11 @@ module.exports = function (grunt) {
           cwd: '<%= cfg.basePath.static.src %>/images/',
           src: ['**/*'],
           dest: '<%= cfg.basePath.static.compile %>/images/'
+        }, {
+          expand: true,
+          cwd: '<%= cfg.basePath.static.src %>/sample-files/',
+          src: ['**/*'],
+          dest: '<%= cfg.basePath.static.compile %>/sample-files/'
         }, {
           expand: true,
           cwd: '<%= cfg.basePath.static.src %>/js/',
@@ -371,6 +397,18 @@ module.exports = function (grunt) {
         ],
         tasks: [
           'newer:copy:uiBuildImages'
+        ]
+      },
+
+      /*
+       * When UI sample-files change we copy them over.
+       */
+      uiSampleFiles: {
+        files: [
+          '<%= cfg.basePath.ui.src %>/sample-files/**/*'
+        ],
+        tasks: [
+          'newer:copy:uiBuildSampleFiles'
         ]
       },
 
@@ -803,6 +841,7 @@ module.exports = function (grunt) {
     'clean:staticBuild',
     'newer:less:build',
     'newer:copy:uiBuildImages',
+    'newer:copy:uiBuildSampleFiles',
     'newer:copy:uiBuildScripts',
     'newer:copy:uiBuildTemplates',
     'newer:copy:uiBuildVendor',
@@ -825,6 +864,7 @@ module.exports = function (grunt) {
     'ngAnnotate',
     'uglify:ui',
     'copy:uiCompileImages',
+    'copy:uiCompileSampleFiles',
     'copy:uiCompileTemplates',
     'copy:uiCompileVendor',
     'copy:staticCompile',

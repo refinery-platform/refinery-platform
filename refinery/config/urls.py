@@ -21,7 +21,8 @@ from core.api import (AnalysisResource, ProjectResource, NodeSetResource,
                       UserAuthenticationResource, InvitationResource,
                       FastQCResource, UserProfileResource)
 from core.models import DataSet, AuthenticationFormUsernameOrEmail
-from core.views import WorkflowViewSet, CustomRegistrationView, NodeGroups
+from core.views import (WorkflowViewSet, NodeViewSet,
+                        CustomRegistrationView, NodeGroups)
 from file_store.views import FileStoreItems
 from data_set_manager.views import Assays, AssaysFiles, AssaysAttributes
 from data_set_manager.api import (AttributeOrderResource, StudyResource,
@@ -48,7 +49,7 @@ admin.autodiscover()
 # Django REST Framework urls
 router = routers.DefaultRouter()
 router.register(r'workflows', WorkflowViewSet)
-
+router.register(r'nodes', NodeViewSet)
 
 # NG: added for tastypie URL
 v1_api = Api(api_name='v1')
@@ -79,20 +80,6 @@ v1_api.register(AttributeResource())
 v1_api.register(ExtendedGroupResource())
 v1_api.register(FastQCResource())
 v1_api.register(UserProfileResource())
-# v1_api.register(TaxonResource())
-# v1_api.register(GenomeBuildResource())
-# v1_api.register(CytoBandResource())
-# v1_api.register(ChromInfoResource())
-# v1_api.register(GeneResource())
-# v1_api.register(GapRegionFileResource())
-# v1_api.register(WigDescriptionResource())
-# v1_api.register(EmpiricalMappabilityResource())
-# v1_api.register(TheoreticalMappabilityResource())
-# v1_api.register(GCContentResource())
-# v1_api.register(ConservationTrackResource())
-# v1_api.register(hg19_GenCodeResource())
-# v1_api.register(ce10_WormBaseResource())
-# v1_api.register(dm3_FlyBaseResource())
 
 
 # patterns for all of the different applications

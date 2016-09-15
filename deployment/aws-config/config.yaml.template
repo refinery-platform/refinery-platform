@@ -32,6 +32,10 @@
 SITE_NAME: Refinery
 SITE_URL: "192.168.50.50:8000"
 
+# the AWS ARN for the TLS certifcate that you wish to present.
+# TLS_CERTIFICATE: "arn:aws:acm:--region--:--acountnumber--:certificate/--id--"
+
+
 # Email addresses. It's usual to make these all the same.
 # The stack will launch correctly
 # even when these are set to nonsense values.

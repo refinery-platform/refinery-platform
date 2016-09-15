@@ -42,7 +42,7 @@ describe('DataSetImport.state:', function () {
 
     beforeEach(function () {
       mockTemplate('/static/partials/data-set-import/views/import.html');
-      mockTemplate('/static/partials/data-set-import/views/file-upload.html');
+      mockTemplate('/static/partials/data-set-import/views/isa-tab-import.html');
     });
 
     it('should be "import" when path is empty', function () {
@@ -56,10 +56,10 @@ describe('DataSetImport.state:', function () {
     });
 
     it(
-      'should be "fileUpload" when path is "/upload"',
+      'should be "isaTabImport" when path is "/isaTabImport"',
       function () {
-        goTo('/upload');
-        expect($state.current.name).toEqual('fileUpload');
+        goTo('/isa-tab-import');
+        expect($state.current.name).toEqual('isaTabImport');
       }
     );
 

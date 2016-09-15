@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+
+{% load humanize %}
+{% load static %}
+
+<html lang="en">
+<head>
+  <meta content="text/html">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!-- http://www.jonathantneal.com/blog/understand-the-favicon/ -->
+  <link rel="apple-touch-icon" href="{% static "images/touchicon.png" %}">
+  <link rel="icon" href="{% static "images/favicon.png" %}">
+  <!--[if IE]><link rel="shortcut icon" href="{% static "images/favicon.ico" %}"><![endif]-->
+  <!-- IE10 Win 8 -->
+  <meta name="msapplication-TileColor" content="#FFFFFF">
+  <meta name="msapplication-TileImage" content="{% static "images/tileicon.png" %}">
+
+  <title>{{ REFINERY_INSTANCE_NAME }}{% block title %}{% endblock %}</title>
+
+  {% block head %}
+  {% endblock %}
+</head>
+
+<body>
+
+    {% block content %}
+    {% endblock %}
+
+</body>
+</html>
