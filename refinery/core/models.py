@@ -818,7 +818,7 @@ def _dataset_delete(sender, instance, *args, **kwargs):
 
 
 @receiver(post_save, sender=DataSet)
-def _dataset_saved():
+def _dataset_saved(**kwargs):
     update_annotation_sets_neo4j()
 
 
