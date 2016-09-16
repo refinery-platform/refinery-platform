@@ -1,6 +1,3 @@
-/**
- * Created by scott on 7/18/16.
- */
 'use strict';
 
 function launchpadTutorialCtrl ($scope, updateUserTutorials, tutorialPageNavigation) {
