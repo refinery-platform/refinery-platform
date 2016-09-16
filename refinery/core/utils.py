@@ -238,6 +238,52 @@ def add_or_update_user_to_neo4j(user_id, username):
         )
 
 
+def delete_user_in_neo4j(user_id, user_name):
+    """
+    Delete a user and its annotation set in Neo4J
+    """
+
+    logger.info('Delete user (ID: %s Name: %s) in Neo4J', user_id, user_name)
+
+    graph = py2neo.Graph(urljoin(settings.NEO4J_BASE_URL, 'db/data'))
+
+    # Remove the user and all its relationships
+    statement = (
+        'MATCH (u:User {id:{id}}) OPTIONAL MATCH (u)-[r]-() DELETE u, r'
+    )
+
+    try:
+        graph.cypher.execute(statement, {'id': user_id})
+
+    except Exception as e:
+        """ Cypher queries are expected to fail and raise an exception when
+        Neo4J is not running or when transactional queries are not available
+        (e.g. Travis CI doesn't support transactional queries yet)
+        """
+        logger.error(
+            'Failed to delete user (%s). Exception: %s', user_id, e
+        )
+
+    # Remove the user's annotation set
+    statement = (
+        'MATCH (n:AnnotationSets{user}) REMOVE n:AnnotationSets{user}'
+        .format(user=user_name.capitalize())
+    )
+
+    try:
+        graph.cypher.execute(statement)
+
+    except Exception as e:
+        """ Cypher queries are expected to fail and raise an exception when
+        Neo4J is not running or when transactional queries are not available
+        (e.g. Travis CI doesn't support transactional queries yet)
+        """
+        logger.error(
+            'Failed to delete the user\'s (%s) annotation set. Exception: %s',
+            user_id, e
+        )
+
+
 def remove_read_access_in_neo4j(dataset_uuids, user_ids):
     """Remove read access for one or multiple users to one or more datasets.
     """
