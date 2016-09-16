@@ -180,12 +180,14 @@ def update_annotation_sets_neo4j(username=''):
     """
 
     logger.info(
-        'Updating annotation sets in Neo4J',
+        'Updating annotation sets for "%s" (If username is empty, updates for '
+        'all users) in Neo4J.',
+        username
     )
 
     try:
         requests.post(
-            urlparse.urljoin(
+            urljoin(
                 settings.NEO4J_BASE_URL, 'ontology/unmanaged/annotations/',
                 username
             )
