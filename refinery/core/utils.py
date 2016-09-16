@@ -4,6 +4,7 @@ import logging
 import py2neo
 import ast
 
+import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.models import Site
@@ -169,6 +170,30 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
         logger.error(
             'Failed to add read access for users (%s) to data sets '
             '(uuids: %s) to Neo4J. Exception: %s', user_ids, dataset_uuids, e
+        )
+
+
+def update_annotation_sets_neo4j(username=''):
+    """
+    Update annotation sets in Neo4J
+    AnnotationSets link Ontology classes from accessible DataSets with users
+    """
+
+    logger.info(
+        'Updating annotation sets in Neo4J',
+    )
+
+    try:
+        requests.post(
+            urlparse.urljoin(
+                settings.NEO4J_BASE_URL, 'ontology/unmanaged/annotations/',
+                username
+            )
+        )
+
+    except Exception as e:
+        logger.error(
+            'Neo4J couldn\'t prepare annotation sets. Error %s', e
         )
 
 
