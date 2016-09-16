@@ -188,8 +188,10 @@ def update_annotation_sets_neo4j(username=''):
     try:
         requests.post(
             urljoin(
-                settings.NEO4J_BASE_URL, 'ontology/unmanaged/annotations/',
-                username
+                urljoin(
+                    settings.NEO4J_BASE_URL,
+                    'ontology/unmanaged/annotations/'
+                ), username
             )
         )
 
