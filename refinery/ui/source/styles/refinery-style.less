@@ -1721,7 +1721,12 @@ body.is-screenshot-ready {
 }
 
 .pulse {
-  animation: blinker 1.7s cubic-bezier(.5, 0, 1, 1) infinite alternate;
+  animation-name: blinker;
+  animation-duration: 2s;
+  animation-iteration-count: 3;
+  animation-timing-function: cubic-bezier(.5, 0, 1, 1);
+  animation-direction: alternate;
+  animation-delay: 3s;
 }
 .pulse:hover {
   animation: none !important;
@@ -1729,23 +1734,13 @@ body.is-screenshot-ready {
 }
 @keyframes blinker { to { opacity: .5; } }
 
-.attention_grabber{
-  animation: attention ease-in-out 2s;
-  animation-iteration-count: infinite;
+.attention_grabber {
+  animation-name: attention;
+  animation-duration: 2s;
+  animation-iteration-count: 3;
   transform-origin: 50% 50%;
-  animation-fill-mode:forwards; /*when the spec is finished*/
-  -webkit-animation: attention ease-in-out 2s;
-  -webkit-animation-iteration-count: infinite;
-  -webkit-transform-origin: 50% 50%;
-  -webkit-animation-fill-mode:forwards; /*Chrome 16+, Safari 4+*/
-  -moz-animation: attention ease-in-out 2s;
-  -moz-animation-iteration-count: infinite;
-  -moz-transform-origin: 50% 50%;
-  -moz-animation-fill-mode:forwards; /*FF 5+*/
-  -o-animation: attention ease-in-out 2s;
-  -o-animation-iteration-count: infinite;
-  -o-transform-origin: 50% 50%;
-  -o-animation-fill-mode:forwards; /*Not implemented yet*/
+  animation-fill-mode: forwards;
+  animation-delay: 3s;
 }
 
 .attention_grabber:hover {
