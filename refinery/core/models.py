@@ -48,12 +48,13 @@ from guardian.shortcuts import (get_users_with_perms,
 from registration.models import RegistrationProfile, RegistrationManager
 from registration.signals import user_registered, user_activated
 
-from data_set_manager.models import Investigation, Node, Study, Assay, \
-    NodeCollection
-from data_set_manager.utils import (add_annotated_nodes_selection,
-                                    index_annotated_nodes_selection)
+
 from file_store.models import get_file_size, FileStoreItem, FileType
 from file_store.tasks import rename
+from data_set_manager.models import (Node, Study, Assay, Investigation,
+                                     NodeCollection)
+from data_set_manager.utils import (add_annotated_nodes_selection,
+                                    index_annotated_nodes_selection)
 from galaxy_connector.galaxy_workflow import (create_expanded_workflow_graph,
                                               countWorkflowSteps,
                                               configure_workflow)
@@ -62,7 +63,9 @@ from .utils import (update_data_set_index, delete_data_set_index,
                     add_read_access_in_neo4j, remove_read_access_in_neo4j,
                     delete_data_set_neo4j, delete_ontology_from_neo4j,
                     delete_analysis_index, invalidate_cached_object,
-                    get_aware_local_time, email_admin)
+                    get_aware_local_time, email_admin,
+                    add_or_update_user_to_neo4j, update_annotation_sets_neo4j,
+                    delete_user_in_neo4j)
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +91,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User)
     affiliation = models.CharField(max_length=100, blank=True)
     catch_all_project = models.ForeignKey('Project', blank=True, null=True)
+    login_count = models.IntegerField(default=0)
 
     def __unicode__(self):
         return (
@@ -96,6 +100,18 @@ class UserProfile(models.Model):
             str(self.affiliation) + "): " +
             str(self.user.email)
         )
+
+    def has_viewed_launchpad_tut(self):
+        return Tutorials.objects.get(
+            user_profile=self).launchpad_tutorial_viewed
+
+    def has_viewed_data_upload_tut(self):
+        return Tutorials.objects.get(
+            user_profile=self).data_upload_tutorial_viewed
+
+    def has_viewed_collaboration_tut(self):
+        return Tutorials.objects.get(
+            user_profile=self).collaboration_tutorial_viewed
 
 
 def get_user_import_dir(user):
@@ -112,6 +128,7 @@ def create_user_profile(sender, instance, created, **kwargs):
     """
     if created:
         UserProfile.objects.get_or_create(user=instance)
+        Tutorials.objects.get_or_create(user_profile=instance.userprofile)
 
 
 post_save.connect(create_user_profile, sender=User)
@@ -133,6 +150,7 @@ def add_new_user_to_public_group(sender, instance, created, **kwargs):
 
 def create_user_profile_registered(sender, user, request, **kwargs):
     UserProfile.objects.get_or_create(user=user)
+    Tutorials.objects.get_or_create(user_profile=user.userprofile)
 
     logger.info(
         "user profile for user %s has been created after registration",
@@ -182,8 +200,38 @@ def create_catch_all_project(sender, user, request, **kwargs):
         )  # needed to avoid MessageFailure when running tests
 
 
+def iterate_user_login_count(sender, user, request, **kwargs):
+    user.userprofile.login_count += 1
+    user.userprofile.save()
+
+
 # create catch all project for user if none exists
 user_logged_in.connect(create_catch_all_project)
+
+# Iterate `login_count` to keep track of user's logins
+user_logged_in.connect(iterate_user_login_count)
+
+
+class Tutorials(models.Model):
+    """
+        Model to keep track of the tutorials that a
+        User has viewed
+    """
+    user_profile = models.ForeignKey(UserProfile)
+    launchpad_tutorial_viewed = models.BooleanField(default=False)
+    collaboration_tutorial_viewed = models.BooleanField(default=False)
+    data_upload_tutorial_viewed = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        return (
+            "User: {} | Launchpad: {}, Collaboration: {}, DataUpload:"
+            " {}".format(
+             self.user_profile.user.username,
+             self.launchpad_tutorial_viewed,
+             self.collaboration_tutorial_viewed,
+             self.data_upload_tutorial_viewed
+            )
+        )
 
 
 class BaseResource(models.Model):
@@ -222,7 +270,7 @@ class BaseResource(models.Model):
         # If the slug isn't empty after stripping whitespace
         if self.slug:
             return bool(len(self.__class__.objects.filter(slug=self.slug).
-                        exclude(pk=self.pk)))
+                            exclude(pk=self.pk)))
         else:
             return False
 
@@ -541,9 +589,9 @@ class DataSet(SharableResource):
             # Prepare string to be displayed upon a failed deletion
             deletion_error_message = "Cannot delete DataSet: {}. It has " \
                                      "been used in these analyses: {}".format(
-                                                self,
-                                                str(self.get_analyses())
-                                            )
+                                            self,
+                                            str(self.get_analyses())
+                                        )
             logger.error(deletion_error_message)
 
             # Return a "falsey" value here so that the admin ui knows if the
@@ -669,8 +717,8 @@ class DataSet(SharableResource):
         for study in investigation.study_set.all():
             file_count += (
                 Node.objects
-                    .filter(study=study.id, file_uuid__isnull=False)
-                    .count()
+                .filter(study=study.id, file_uuid__isnull=False)
+                .count()
             )
 
         return file_count
@@ -697,8 +745,8 @@ class DataSet(SharableResource):
         """
         try:
             return FileStoreItem.objects.get(
-                 uuid=InvestigationLink.objects.get(
-                     data_set__uuid=self.uuid).investigation.isarchive_file)
+                uuid=InvestigationLink.objects.get(
+                    data_set__uuid=self.uuid).investigation.isarchive_file)
 
         except (FileStoreItem.DoesNotExist,
                 FileStoreItem.MultipleObjectsReturned,
@@ -715,9 +763,8 @@ class DataSet(SharableResource):
         """
         try:
             return FileStoreItem.objects.get(
-                 uuid=InvestigationLink.objects.get(
-                     data_set__uuid=self.uuid).investigation
-                                              .pre_isarchive_file)
+                uuid=InvestigationLink.objects.get(
+                    data_set__uuid=self.uuid).investigation.pre_isarchive_file)
 
         except (FileStoreItem.DoesNotExist,
                 FileStoreItem.MultipleObjectsReturned,
@@ -768,6 +815,12 @@ class DataSet(SharableResource):
 def _dataset_delete(sender, instance, *args, **kwargs):
     delete_data_set_index(instance)
     delete_data_set_neo4j(instance.uuid)
+    update_annotation_sets_neo4j()
+
+
+@receiver(post_save, sender=DataSet)
+def _dataset_saved(**kwargs):
+    update_annotation_sets_neo4j()
 
 
 class InvestigationLink(models.Model):
@@ -789,9 +842,10 @@ class InvestigationLink(models.Model):
 
     def get_node_collection(self):
         try:
-            return NodeCollection.objects.get(uuid=self.investigation.uuid)
+            return NodeCollection.objects.get(
+                uuid=self.investigation.uuid)
         except (ObjectDoesNotExist, MultipleObjectsReturned) as e:
-                        logger.error(("Could not fetch NodeCollection: " % e))
+            logger.error(("Could not fetch NodeCollection: " % e))
 
 
 class WorkflowDataInput(models.Model):
@@ -1166,7 +1220,8 @@ class Analysis(OwnableResource):
         return self.status
 
     def get_nodes(self):
-        return Node.objects.filter(analysis_uuid=self.uuid)
+        return Node.objects.filter(
+            analysis_uuid=self.uuid)
 
     def get_analysis_node_connections_for_analysis(self):
         return AnalysisNodeConnection.objects.filter(analysis=self)
@@ -1176,7 +1231,7 @@ class Analysis(OwnableResource):
 
     def optimize_solr_index(self):
         solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
-                           "data_set_manager"), timeout=10)
+                                   "data_set_manager"), timeout=10)
         '''
             solr.optimize() Tells Solr to streamline the number of segments
             used, essentially a defragmentation/ garbage collection
@@ -1334,7 +1389,7 @@ class Analysis(OwnableResource):
         cleanup = settings.REFINERY_GALAXY_ANALYSIS_CLEANUP
 
         if (cleanup == 'always' or
-            cleanup == 'on_success' and
+                cleanup == 'on_success' and
                 self.get_status() == self.SUCCESS_STATUS):
 
             connection = self.galaxy_connection()
@@ -1373,7 +1428,8 @@ class Analysis(OwnableResource):
         input_file_uuid_list = []
         for files in self.workflow_data_input_maps.all():
             cur_node_uuid = files.data_uuid
-            cur_fs_uuid = Node.objects.get(uuid=cur_node_uuid).file_uuid
+            cur_fs_uuid = Node.objects.get(
+                uuid=cur_node_uuid).file_uuid
             input_file_uuid_list.append(cur_fs_uuid)
         return input_file_uuid_list
 
@@ -1530,18 +1586,20 @@ class Analysis(OwnableResource):
                                      if graph.node[node_id]['type'] == "tool"]
         for data_transformation_node in data_transformation_nodes:
             # TODO: incorporate subanalysis id in tool name???
-            data_transformation_node['node'] = Node.objects.create(
-                study=study, assay=assay, analysis_uuid=self.uuid,
-                type=Node.DATA_TRANSFORMATION,
-                name=data_transformation_node['tool_id'] + '_' +
-                data_transformation_node['name'])
+            data_transformation_node['node'] = \
+                Node.objects.create(
+                    study=study, assay=assay, analysis_uuid=self.uuid,
+                    type=Node.DATA_TRANSFORMATION,
+                    name=data_transformation_node['tool_id'] + '_' +
+                    data_transformation_node['name']
+                )
         # 3. create connection from input nodes to first data transformation
         # nodes (input tool nodes in the graph are skipped)
         for input_connection in AnalysisNodeConnection.objects.filter(
                 analysis=self, direction=INPUT_CONNECTION):
             for edge in graph.edges_iter([input_connection.step]):
                 if (graph[edge[0]][edge[1]]['output_id'] ==
-                    str(input_connection.step) + '_' +
+                        str(input_connection.step) + '_' +
                         input_connection.filename):
                     input_node_id = edge[1]
                     data_transformation_node = \
@@ -1552,11 +1610,13 @@ class Analysis(OwnableResource):
         for output_connection in AnalysisNodeConnection.objects.filter(
                 analysis=self, direction=OUTPUT_CONNECTION):
             # create derived data file node
-            derived_data_file_node = Node.objects.create(
-                study=study, assay=assay, type=Node.DERIVED_DATA_FILE,
-                name=output_connection.name, analysis_uuid=self.uuid,
-                subanalysis=output_connection.subanalysis,
-                workflow_output=output_connection.name)
+            derived_data_file_node = \
+                Node.objects.create(
+                    study=study, assay=assay,
+                    type=Node.DERIVED_DATA_FILE,
+                    name=output_connection.name, analysis_uuid=self.uuid,
+                    subanalysis=output_connection.subanalysis,
+                    workflow_output=output_connection.name)
             # retrieve uuid of corresponding output file if exists
             logger.info("Results for '%s' and %s.%s: %s",
                         self.uuid,
@@ -1630,7 +1690,8 @@ class Analysis(OwnableResource):
             analysis=self, direction=OUTPUT_CONNECTION, is_refinery_file=True
         ).values_list('node__uuid', flat=True)
         add_annotated_nodes_selection(
-            node_uuids, Node.DERIVED_DATA_FILE, study.uuid, assay.uuid)
+            node_uuids, Node.DERIVED_DATA_FILE,
+            study.uuid, assay.uuid)
         index_annotated_nodes_selection(node_uuids)
 
     def attach_outputs_downloads(self):
@@ -1672,7 +1733,8 @@ class AnalysisNodeConnection(models.Model):
     # workflow template
     # (unique within the analysis)
     subanalysis = IntegerField(null=True, blank=False)
-    node = models.ForeignKey(Node, related_name="workflow_node_connections",
+    node = models.ForeignKey(Node,
+                             related_name="workflow_node_connections",
                              null=True, blank=True, default=None)
     # step id in the expanded workflow template, e.g. 10
     step = models.IntegerField(null=False, blank=False)
@@ -1824,7 +1886,8 @@ class NodeGroup(SharableResource, TemporaryResource):
     # The "current selection" node set for the associated study/assay
     is_current = models.BooleanField(default=False)
     # Nodes in the group, using uuids are foreign-key
-    nodes = models.ManyToManyField(Node, blank=True, null=True)
+    nodes = models.ManyToManyField(Node, blank=True,
+                                   null=True)
 
     class Meta:
         unique_together = ["assay", "name"]
@@ -2000,9 +2063,11 @@ class NodePair(models.Model):
     """Linking of specific node relationships for a given node relationship"""
     uuid = UUIDField(unique=True, auto=True)
     #: specific file node
-    node1 = models.ForeignKey(Node, related_name="node1")
+    node1 = models.ForeignKey(Node,
+                              related_name="node1")
     #: connected file node
-    node2 = models.ForeignKey(Node, related_name="node2", blank=True,
+    node2 = models.ForeignKey(Node,
+                              related_name="node2", blank=True,
                               null=True)
     # defines a grouping of node relationships i.e. replicate
     group = models.IntegerField(blank=True, null=True)
@@ -2177,6 +2242,9 @@ class FastQC(object):
 
 @receiver(post_save, sender=User)
 def _add_user_to_neo4j(sender, **kwargs):
+    user = kwargs['instance']
+
+    add_or_update_user_to_neo4j(user.id, user.username)
     add_read_access_in_neo4j(
         map(
             lambda ds: ds.uuid, get_objects_for_group(
@@ -2184,8 +2252,14 @@ def _add_user_to_neo4j(sender, **kwargs):
                 'core.read_dataset'
             )
         ),
-        [kwargs['instance'].id]
+        [user.id]
     )
+    update_annotation_sets_neo4j(user.username)
+
+
+@receiver(pre_delete, sender=User)
+def _delete_user_from_neo4J(sender, instance, *args, **kwargs):
+    delete_user_in_neo4j(instance.id, instance.username)
 
 
 class Ontology(models.Model):

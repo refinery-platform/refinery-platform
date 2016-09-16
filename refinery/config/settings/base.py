@@ -16,6 +16,12 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(__file__),
 
 local_settings_file_path = os.path.join(BASE_DIR,
                                         'refinery/config/config.json')
+
+tutorial_settings_file_path = os.path.join(
+    BASE_DIR,
+    'refinery/config/tutorial_steps.json'
+)
+
 override_path = os.path.join(BASE_DIR,
                              'refinery/config/override-config.yaml')
 
@@ -25,6 +31,17 @@ try:
         local_settings = json.load(f)
 except IOError as e:
     error_msg = "Could not open '{}': {}".format(local_settings_file_path, e)
+    raise ImproperlyConfigured(error_msg)
+
+
+# load tutorial_steps.json
+try:
+    with open(tutorial_settings_file_path, 'r') as f:
+        refinery_tutorial_settings = json.dumps(json.load(f))
+except IOError as e:
+    error_msg = "Could not open '{}': {}".format(
+        tutorial_settings_file_path, e
+    )
     raise ImproperlyConfigured(error_msg)
 
 # load (optional) override-config.yaml
@@ -558,3 +575,12 @@ SOLR_LIB_DIR = get_setting("SOLR_LIB_DIR")
 SOLR_CUSTOM_SYNONYMS_FILE = get_setting("SOLR_CUSTOM_SYNONYMS_FILE")
 
 REFINERY_URL_SCHEME = get_setting("REFINERY_URL_SCHEME")
+
+
+# Setting to determine when we should generate index files for
+# viszualization purposes. Possible values are "on_file_import" or
+# "never"
+REFINERY_AUXILIARY_FILE_GENERATION = get_setting(
+    "REFINERY_AUXILIARY_FILE_GENERATION")
+
+REFINERY_TUTORIAL_STEPS = refinery_tutorial_settings

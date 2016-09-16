@@ -4,6 +4,7 @@ import logging
 import py2neo
 import ast
 
+import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.models import Site
@@ -18,11 +19,7 @@ from rest_framework import status
 from urlparse import urlparse, urljoin
 
 import core
-from .search_indexes import DataSetIndex
-from data_set_manager.search_indexes import NodeIndex
-from data_set_manager.models import Assay
-from data_set_manager.utils import (generate_solr_params, search_solr,
-                                    format_solr_response)
+import data_set_manager
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +30,8 @@ def update_data_set_index(data_set):
 
     logger.info('Updated data set (uuid: %s) index', data_set.uuid)
     try:
-        DataSetIndex().update_object(data_set, using='core')
+        core.search_indexes.DataSetIndex().update_object(data_set,
+                                                         using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -158,7 +156,8 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
                     statement,
                     {
                         'dataset_uuid': dataset_uuid,
-                        'user_id': user_id
+                        'user_id': user_id,
+
                     }
                 )
 
@@ -171,6 +170,117 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
         logger.error(
             'Failed to add read access for users (%s) to data sets '
             '(uuids: %s) to Neo4J. Exception: %s', user_ids, dataset_uuids, e
+        )
+
+
+def update_annotation_sets_neo4j(username=''):
+    """
+    Update annotation sets in Neo4J
+    AnnotationSets link Ontology classes from accessible DataSets with users
+    """
+
+    logger.info(
+        'Updating annotation sets for "%s" (If username is empty, updates for '
+        'all users) in Neo4J.',
+        username
+    )
+
+    try:
+        requests.post(
+            urljoin(
+                urljoin(
+                    settings.NEO4J_BASE_URL,
+                    'ontology/unmanaged/annotations/'
+                ), username
+            )
+        )
+
+    except Exception as e:
+        logger.error(
+            'Neo4J couldn\'t prepare annotation sets. Error %s', e
+        )
+
+
+def add_or_update_user_to_neo4j(user_id, username):
+    """
+    Add or update a user in Neo4J
+    """
+
+    logger.info(
+        'Adding user (%s) with username (%s) in Neo4J',
+        user_id, username
+    )
+
+    graph = py2neo.Graph(urljoin(settings.NEO4J_BASE_URL, 'db/data'))
+
+    statement = (
+        "MERGE (u:User {id:{id}}) "
+        "SET u.name = {name}"
+    )
+
+    try:
+        graph.cypher.execute(
+            statement,
+            {
+                'id': user_id,
+                'name': username
+
+            }
+        )
+
+    except Exception as e:
+        """ Cypher queries are expected to fail and raise an exception when
+        Neo4J is not running or when transactional queries are not available
+        (e.g. Travis CI doesn't support transactional queries yet)
+        """
+        logger.error(
+            'Failed to add user (%s) Exception: %s', user_id, e
+        )
+
+
+def delete_user_in_neo4j(user_id, user_name):
+    """
+    Delete a user and its annotation set in Neo4J
+    """
+
+    logger.info('Delete user (ID: %s Name: %s) in Neo4J', user_id, user_name)
+
+    graph = py2neo.Graph(urljoin(settings.NEO4J_BASE_URL, 'db/data'))
+
+    # Remove the user and all its relationships
+    statement = (
+        'MATCH (u:User {id:{id}}) OPTIONAL MATCH (u)-[r]-() DELETE u, r'
+    )
+
+    try:
+        graph.cypher.execute(statement, {'id': user_id})
+
+    except Exception as e:
+        """ Cypher queries are expected to fail and raise an exception when
+        Neo4J is not running or when transactional queries are not available
+        (e.g. Travis CI doesn't support transactional queries yet)
+        """
+        logger.error(
+            'Failed to delete user (%s). Exception: %s', user_id, e
+        )
+
+    # Remove the user's annotation set
+    statement = (
+        'MATCH (n:AnnotationSets{user}) REMOVE n:AnnotationSets{user}'
+        .format(user=user_name.capitalize())
+    )
+
+    try:
+        graph.cypher.execute(statement)
+
+    except Exception as e:
+        """ Cypher queries are expected to fail and raise an exception when
+        Neo4J is not running or when transactional queries are not available
+        (e.g. Travis CI doesn't support transactional queries yet)
+        """
+        logger.error(
+            'Failed to delete the user\'s (%s) annotation set. Exception: %s',
+            user_id, e
         )
 
 
@@ -222,7 +332,8 @@ def delete_data_set_index(data_set):
 
     logger.debug('Deleted data set (uuid: %s) index', data_set.uuid)
     try:
-        DataSetIndex().remove_object(data_set, using='core')
+        core.search_indexes.DataSetIndex().remove_object(data_set,
+                                                         using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -617,7 +728,8 @@ def delete_analysis_index(node_instance):
     """Remove a Analysis' related document from Solr's index.
     """
     try:
-        NodeIndex().remove_object(node_instance, using='data_set_manager')
+        data_set_manager.search_indexes.NodeIndex().remove_object(
+            node_instance, using='data_set_manager')
         logger.debug('Deleted Analysis\' NodeIndex with (uuid: %s)',
                      node_instance.uuid)
     except Exception as e:
@@ -736,10 +848,10 @@ def create_current_selection_node_group(assay_uuid):
     """
     # confirm an assay exists
     try:
-        assay = Assay.objects.get(uuid=assay_uuid)
-    except Assay.DoesNotExist as e:
+        assay = data_set_manager.models.Assay.objects.get(uuid=assay_uuid)
+    except data_set_manager.models.Assay.DoesNotExist as e:
         return Response(e, status=status.HTTP_404_NOT_FOUND)
-    except Assay.MultipleObjectsReturned as e:
+    except data_set_manager.models.Assay.MultipleObjectsReturned as e:
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     study_uuid = assay.study.uuid
@@ -794,15 +906,18 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
         else:
             params['facets'] = ','.join(filter_attribute.keys())
 
-    solr_params = generate_solr_params(params, assay_uuid)
+    solr_params = data_set_manager.utils.generate_solr_params(
+        params, assay_uuid)
     # Only require solr filters if exception uuids are passed
     if filter_out_uuids:
         # node_arr = str(filter_out_uuids).split(',')
         str_nodes = (' OR ').join(filter_out_uuids)
         field_filter = "&fq=-uuid:({})".format(str_nodes)
         solr_params = ''.join([solr_params, field_filter])
-    solr_response = search_solr(solr_params, 'data_set_manager')
-    solr_reponse_json = format_solr_response(solr_response)
+    solr_response = data_set_manager.utils.search_solr(
+        solr_params, 'data_set_manager')
+    solr_reponse_json = data_set_manager.utils.format_solr_response(
+        solr_response)
     uuid_list = []
     for node in solr_reponse_json.get('nodes'):
         uuid_list.append(node.get('uuid'))

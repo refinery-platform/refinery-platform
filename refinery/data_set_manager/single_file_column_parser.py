@@ -8,11 +8,13 @@ import file_server
 import logging
 import operator
 
+from django.conf import settings
+
 from annotation_server.models import species_to_taxon_id, Taxon
 from data_set_manager.models import (Investigation, Study, Node, Attribute,
                                      Assay)
 from data_set_manager.tasks import create_dataset
-from file_store.models import generate_file_source_translator
+from file_store.models import generate_file_source_translator, FileStoreItem
 from file_store.tasks import create, import_file
 
 
@@ -260,11 +262,24 @@ class SingleFileColumnParser:
                         value=row[column_index].strip()
                     )
 
-        # Start remote file import tasks if `Data File Permanent` flag set
+        # Start remote file import tasks if `Make Import Permanent:` flag set
         # by the user
-        if self.file_permanent:
-            for uuid in data_files:
-                import_file.delay(uuid)
+        # Likewise, we'll try to import these files if their source begins with
+        # our REFINERY_DATA_IMPORT_DIR setting (This will be the case if
+        # users upload datafiles associated with their metadata)
+
+        for uuid in data_files:
+            try:
+                file_store_item = FileStoreItem.objects.get(
+                        uuid=uuid)
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as e:
+                logger.error("Couldn't properly fetch FileStoreItem! %s", e)
+            else:
+
+                if self.file_permanent or file_store_item.source.startswith(
+                        settings.REFINERY_DATA_IMPORT_DIR):
+                    import_file.delay(uuid)
 
         return investigation
 

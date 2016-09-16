@@ -66,6 +66,18 @@ describe('RefineryDataSetNav.state: unit tests', function () {
       '/static/partials/file-browser/partials' +
       '/assay-files.html'
     );
+    mockTemplate(
+      '/static/partials/data-set-nav/partials' +
+      '/analyses-tab.html'
+    );
+    mockTemplate(
+      '/static/partials/data-set-nav/partials' +
+      '/details-tab.html'
+    );
+    mockTemplate(
+      '/static/partials/data-set-nav/partials' +
+      '/files-tab.html'
+    );
   });
 
   describe('state "/data_set/<UUID>/"', function () {
@@ -144,34 +156,9 @@ describe('RefineryDataSetNav.state: unit tests', function () {
       };
     });
 
-    it('should be "browse" when path is empty', function () {
-      goTo('');
-      expect($state.current.name).toEqual('browse');
-    });
-
-    it('should be "browse" when path is "/"', function () {
-      goTo('/');
-      expect($state.current.name).toEqual('browse');
-    });
-
     it('should be "files" when path is "/files"', function () {
       goTo('/files');
       expect($state.current.name).toEqual('files');
-    });
-
-    it('should be "analyze" when path is "/files/analyze"', function () {
-      goTo('/files/analyze');
-      expect($state.current.name).toEqual('analyze');
-    });
-
-    it('should be "browse" when path is "/files/browse"', function () {
-      goTo('/files/browse');
-      expect($state.current.name).toEqual('browse');
-    });
-
-    it('should be "visualize" when path is "/files/visualize"', function () {
-      goTo('/files/visualize');
-      expect($state.current.name).toEqual('visualize');
     });
 
     it('should be "analyses" when path is "/analyses"', function () {
@@ -182,11 +169,6 @@ describe('RefineryDataSetNav.state: unit tests', function () {
     it('should be "details" when path is "/about"', function () {
       goTo('/about');
       expect($state.current.name).toEqual('about');
-    });
-
-    it('should be "browse" when path is not existing', function () {
-      goTo('/someNonExistentUrl');
-      expect($state.current.name).toEqual('browse');
     });
   });
 });

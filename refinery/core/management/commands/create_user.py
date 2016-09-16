@@ -22,7 +22,7 @@ class Command(BaseCommand):
     main program; run the command
     """
     def handle(self, username, password, email, first_name, last_name,
-               affiliation, **options):
+               affiliation, is_active=False, **options):
         """Create a user account for Refinery (user is inactive).
         """
 
@@ -38,7 +38,7 @@ class Command(BaseCommand):
 
         init_user(
             username, password, email, first_name, last_name, affiliation,
-            is_active=False)
+            is_active=bool(is_active))
 
 
 def init_user(username, password, email, first_name, last_name, affiliation,

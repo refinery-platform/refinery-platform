@@ -79,6 +79,7 @@ codekit-config.json
 .editorconfig
 /refinery/.coverage
 /refinery/coverage.xml
+.cache/
 
 # to be moved into refinery/ui
 refinery/static/styles/css/font-awesome*.css

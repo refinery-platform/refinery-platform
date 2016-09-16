@@ -1,4 +1,4 @@
-<div
+<div id="launch-pad"
   class="col-md-4"
   refinery-expandable-panel>
   <div class="refinery-panel">
@@ -9,41 +9,57 @@
         </h3>
       </span>
       <span class="refinery-header-right">
-        <a
-          href="./data_set_manager/import/"
-          class="no-underline btn"
-          id="import-button"
-          ng-if="dashboard.showUploadButton()">
-          <i class="fa fa-plus-circle"></i> Upload
-        </a>
-        <button
-          class="no-underline btn"
-          ng-class="{'active': dashboard.dataSetExploration}"
-          ng-click="dashboard.toggleDataSetsExploration()"
-          ng-if="dashboard.explorationEnabled">
-          <i class="fa fa-compass" title="Explore data sets"></i> Explore
-        </button>
+        <div ng-controller="dataUploadTutorialCtrl">
+          <div ng-intro-options="dataUploadIntroOptions"
+               ng-intro-method="dataUploadStart"
+               ng-intro-oncomplete="dataUploadCompletedEvent" ng-intro-onexit="dataUploadExitEvent"
+               ng-intro-onchange="dataUploadChangeEvent" ng-intro-onbeforechange="dataUploadBeforeChangeEvent"
+               ng-intro-onafterchange="dataUploadAfterChangeEvent">
+            <div>
+              <button
+                class="no-underline btn"
+                ng-class="{'active': dashboard.dataSetExploration}"
+                ng-click="dashboard.toggleDataSetsExploration()"
+                ng-if="dashboard.explorationEnabled">
+                <i class="fa fa-compass" title="Explore data sets"></i> Explore
+              </button>
+              <span id="dataUploadTutorialStep0">
+               <a
+                href="./data_set_manager/import/"
+                class="no-underline btn"
+                id="import-button"
+                ng-if="dashboard.showUploadButton()">
+                <i class="fa fa-plus-circle"></i> Upload
+              </a>
+             </span>
+            </div>
+          </div>
+        </div>
+
+
       </span>
     </div>
 
     <div
-      id="intro-js-data-set-view"
+      id="data-set-panel"
       class="refinery-sub-panel"
       ng-class="{'border': dashboard.expandedDataSetPanelBorder}"
       refinery-width-fixer>
       <form
-        id="intro-js-search-interface"
+        id="search-interface"
         class="navbar-search form-group">
         <i class="fa fa-search"></i>
         <i class="fa fa-times-circle"
           ng-if="dashboard.searchQueryDataSets"
           ng-click="dashboard.resetDataSetSearch()"></i>
         <input
+
           type="text"
           class="search-query form-control"
           placeholder="Search"
           ng-model="dashboard.searchQueryDataSets"
           ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)">
+          </div>
       </form>
 
       <div
@@ -79,7 +95,7 @@
         </div>
         <div class="floatbox">
           <div
-            id="intro-js-data-cart-filter-sort"
+            id="data-cart-filter-sort"
             class="floatbox-min-right">
             <button
               class="fa fa-info-circle icon-only"
@@ -245,7 +261,7 @@
         </div>
       </div>
       <div
-        id="intro-js-data-set-list"
+        id="data-set-list"
         refinery-panel-ref-offset>
         <div
           class="data-cart"
@@ -582,7 +598,7 @@
   ng-if="dashboard.expandedDataSetPanelBorder">
 </div>
 
-<div
+<div id="analyses-panel"
   class="col-md-4 pushable"
   ng-class="{'pushed': dashboard.expandDataSetPanel}"
   ng-if="!dashboard.repoMode">
@@ -790,7 +806,7 @@
   </div>
 </div>
 
-<div
+<div id="launchpadStep5"
   class="col-md-4 pushable"
   ng-class="{'pushed': dashboard.expandDataSetPanel}"
   ng-if="!dashboard.repoMode">

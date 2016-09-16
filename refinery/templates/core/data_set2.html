@@ -47,35 +47,9 @@
   <div ng-controller="DataSetUiModeCtrl">
 
     <div class="refinery-panel-tabs">
-
       <div class="row">
-
-        <div class="col-md-3">
-          <div class="btn-group" role="group" aria-label="...">
-          <!-- ng-hide if the file tab is not selected -->
-            <button type="button" class="btn btn-warning data-set-view-tabs"
-              ng-class="{active: $root.mode==='browse'}" ui-sref="browse"
-              ui-sref-active="active">
-              Browse
-            </button>
-            {% if has_change_dataset_permission %}
-              <button type="button" class="btn btn-warning data-set-view-tabs"
-                ng-class="{active:$root.mode==='analyze'}"
-                ui-sref="analyze" ui-sref-active="active">
-                Analyze
-              </button>
-            {% endif %}
-            <button type="button" id="visualizeTab" class="btn btn-warning
-            data-set-view-tabs"
-              ng-class="{active:$root.mode==='visualize'}" ui-sref="visualize"
-              ui-sref-active="active">
-              Visualize
-            </button>
-          </div>
-        </div>
-
-        <div class="col-md-9">
-          <ul class="nav nav-tabs" id="tabs" style="float: right;">
+        <div class="col-md-9 col-md-offset-3">
+          <ul class="nav nav-tabs float-right" id="tabs">
             <li ui-sref-active="active" id="filesTab">
               <a ui-sref="files" class="dataSetTabs">
                 Files
@@ -96,9 +70,7 @@
             </li>
           </ul>
         </div>
-
       </div>
-
     </div>
 
 
@@ -110,173 +82,12 @@
           <!-- pass study information into the receiving view when posting -->
           <input type="hidden" name="study_uuid" value="{{ study_uuid }}"/>
         </form>
-
-          <div class="dataSetTabContent ng-cloak" id="files">
-            <div class="row">
-
-              {% verbatim %}
-              <div class="{{ $root.ctrlTabSpanSize }}"
-                   ng-init="$root.ctrlTabSpanSize='col-md-2'"
-                   ng-show="showCtrlTab" ng-cloak
-                   style="background-color: #eaeaea; padding: 10px;">
-                <div ui-view></div>
-              </div>
-              {% endverbatim %}
-
-              {% verbatim %}
-                <div class="{{ $root.mainTabSpanSize }}"
-                     ng-init="$root.mainTabSpanSize='col-md-12'" ng-cloak>
-              {% endverbatim %}
-
-                  <div class="row" ng-if="$root.mode==='analyze'">
-                    <div ng-include="'/static/partials/data-set-nav/partials/data-set-ui-node-mapping.html'">
-                    </div>
-                    <div ui-view="data-set-ui-mapping-controls"></div>
-                  </div>
-
-                  <div class="row">
-                    <div class="col-md-2">
-                      {% if not REFINERY_REPOSITORY_MODE %}
-                        <div class="row">
-                          <div class="col-md-12">
-                            <rp-file-browser-node-group>
-                            </rp-file-browser-node-group>
-                            <rp-file-browser-node-group-buttons>
-                            </rp-file-browser-node-group-buttons>
-                          </div>
-                        </div>
-                      {% endif %}
-
-                      <div class="row y-scrollable">
-                        <div class="col-md-12">
-                          <rp-file-browser-assay-filters>
-                          </rp-file-browser-assay-filters>
-                        </div>
-                      </div>
-                    </div>
-
-                  {% verbatim %}
-                    <div class="col-md-10" id="main-area">
-                  {% endverbatim %}
-
-                    <div class="row" style="margin-bottom: 5px;">
-                      <div class="col-md-12">
-                        <div id="view-selector-div">
-                          <label id="label-display" for="s2id_autogen1">Display</label>
-                          <select id="view-selector">
-                            <option value="table-view-tab">Table</option>
-                            <option value="pivot-view-tab">Matrix</option>
-                            <option value="provenance-view-tab">Provenance
-                            </option>
-                          </select>
-                          <a
-                            id="help-view-selector"
-                            popover-placement="left"
-                            uib-popover="The collection of files in this data set can be displayed using different representations."
-                            popover-title="Select File Display Mode"
-                            popover-trigger="focus"
-                            popover-append-to-body="true"
-                            tabindex="0">
-                            <i class="fa fa-question-circle fa-lg"></i>
-                          </a>
-                        </div>
-
-                        <!-- the original tab pills: now remote controlled by the select2 -->
-                        <div class="tabbable" hidden>
-                          <ul class="nav nav-pills" id="navigation-tabs">
-                            <li class="active">
-                              <a href="#table-view-tab" data-toggle="pill">List</a>
-                            </li>
-                            <li>
-                              <a href="#pivot-view-tab" data-toggle="pill">Matrix</a>
-                            </li>
-                            <li>
-                              <a href="#provenance-view-tab" data-toggle="pill">Provenance</a>
-                            </li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="row">
-                      <div class="tabbable">
-                        <div class="tab-content">
-                          <div class="tab-pane active fade in" id="table-view-tab">
-                            <rp-file-browser-assay-files>
-                            </rp-file-browser-assay-files>
-                          </div>
-                          <div class="tab-pane fade in" id="pivot-view-tab">
-                            <div id="pivot-view"></div>
-                            <div id="solr-pivot-matrix">
-                              <!-- the matrix -->
-                            </div>
-                          </div>
-                          <div class="tab-pane fade in"
-                               id="provenance-view-tab"
-                               style="overflow: hidden;">
-                              <div class="refinery-panel-content">
-                                <div id="provenance-visualization">
-                                  <div id="provvis-nav-bar"
-                                       ng-controller="provvisNavbarController">
-                                      <div provvis-nav-bar></div>
-                                  </div>
-                                  <div id="provvis-canvas"
-                                       ng-controller="provvisCanvasController">
-                                      <div provvis-canvas></div>
-                                  </div>
-                                  <!-- the provenance graph -->
-                                </div>
-                              </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    </div>
-                  </div>
-                </div>
-            </div>
-            <!-- FileMappingCtrl -->
-          </div>
-
-          <div class="dataSetTabContent ng-cloak" id="analyses">
-            <div class="refinery-header">
-              <span class="refinery-header-left">
-                  <h3>Analyses</h3>
-              </span>
-            </div>
-            <p>
-              <div class="row">
-                <analysis-monitor-analyses-list></analysis-monitor-analyses-list>
-              </div>
-            </p>
-          </div>
-
-          <div class="dataSetTabContent ng-cloak" id="about">
-            <rp-data-set-about-details></rp-data-set-about-details>
-            <rp-data-set-about-sharing></rp-data-set-about-sharing>
-          </div>
-
-
+        <!-- Tab views -->
+        <div ui-view></div>
      {% else %}
         <p>No valid data set.</p>
       {% endif %}
     </div>
-
-    <!-- Modal -->
-    <div id="igvModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">√ó</button>
-        <h3 id="myModalLabel">Launch IGV.js</h3>
-      </div>
-      <div class="modal-body" id="myModalBody">
-      </div>
-      <div class="modal-footer">
-        <button class="refinery-base btn btn-default" data-dismiss="modal"
-          aria-hidden="true">Close</button>
-      </div>
-    </div>
-
   </div>
 </div>
 
@@ -387,11 +198,6 @@
           sizing();
       }, 750);
     $(document).ready(function () {
-      $( "#view-selector" ).select2({minimumResultsForSearch: -1});
-      $( "#view-selector" ).on("change", function(event) {
-        $( '#navigation-tabs a[href="#' + event.added.element[0].value + '"]').tab('show');
-      });
-
       $("#navigation-tabs a").on('shown', function (e) {
         sizing();
         $(window).trigger('refinery/floatThead/reflow');

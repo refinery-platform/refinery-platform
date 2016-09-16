@@ -17,7 +17,7 @@ Example: FILE_STORE_DIR = 'files'
 import os
 import re
 import logging
-from urlparse import urlparse, urljoin
+from urlparse import urljoin
 from celery.result import AsyncResult
 
 from django.conf import settings
@@ -28,8 +28,7 @@ from django_extensions.db.fields import UUIDField
 from django.core.files.storage import FileSystemStorage
 from django.utils import timezone
 
-from core.utils import is_url
-
+import core
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +130,7 @@ def generate_file_source_translator(username='', base_path=''):
         """
         source = map_source(source.strip())
         # ignore URLs and absolute file paths
-        if is_url(source) or os.path.isabs(source):
+        if core.utils.is_url(source) or os.path.isabs(source):
             return source
         # process relative path
         if base_path:
@@ -152,6 +151,7 @@ class FileType(models.Model):
     name = models.CharField(unique=True, max_length=50)
     #: short description of file extension
     description = models.CharField(max_length=250)
+    used_for_visualization = models.BooleanField(default=False)
 
     def __unicode__(self):
         return self.description
@@ -177,6 +177,17 @@ class _FileStoreItemManager(models.Manager):
         :type source: str.
         :returns: FileStoreItem -- if success, None if failure.
         """
+        # If we are generating an auxiliary file, we cannot assign a
+        # `source` yet since the file is being generated. We still want the
+        # benfeit of being able to track it's task state, so we will need to
+        #  create an `empty` FileStoreItem instance and utilize it's
+        # import_task_id field
+
+        if source == 'auxiliary_file':
+            logger.debug("Creating an auxiliary FileStoreItem")
+            item = self.create(sharename=sharename, filetype=filetype)
+            return item
+
         # it doesn't make sense to create a FileStoreItem without a file source
         if not source:
             logger.error("Source is required but was not provided")
@@ -294,17 +305,13 @@ class FileStoreItem(models.Model):
         :returns: str -- file extension that begins with a period.
 
         '''
-        # try to get extension from file on disk if exists
-        if self.datafile.name:
-            return get_extension_from_path(self.datafile.name)
-        else:  # otherwise get it from file source
-            if os.path.isabs(self.source):
-                return get_extension_from_path(self.source)
-            else:
-                # otherwise treat the source as URL
-                u = urlparse(self.source)
-                name = u.path.split('/')[-1]
-                return os.path.splitext(name)[-1]
+        try:
+
+            return FileExtension.objects.get(filetype=self.filetype).name
+        except (FileExtension.DoesNotExist,
+                FileExtension.MultipleObjectsReturned) as e:
+            logger.error("Error while trying to fetch FileExtension %s", e)
+            return None
 
     def get_file_object(self):
         '''Open data file.
@@ -420,7 +427,7 @@ class FileStoreItem(models.Model):
 
         :returns: bool -- True if deletion succeeded, False otherwise.
         """
-        if self.datafile.name:
+        if self.datafile:
             logger.debug("Deleting datafile '%s'", self.datafile.name)
             try:
                 self.datafile.delete()
