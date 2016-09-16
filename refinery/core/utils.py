@@ -155,7 +155,8 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
                     statement,
                     {
                         'dataset_uuid': dataset_uuid,
-                        'user_id': user_id
+                        'user_id': user_id,
+
                     }
                 )
 
@@ -168,6 +169,43 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
         logger.error(
             'Failed to add read access for users (%s) to data sets '
             '(uuids: %s) to Neo4J. Exception: %s', user_ids, dataset_uuids, e
+        )
+
+
+def add_or_update_user_to_neo4j(user_id, username):
+    """
+    Add or update a user in Neo4J
+    """
+
+    logger.info(
+        'Adding user (%s) with username (%s) in Neo4J',
+        user_id, username
+    )
+
+    graph = py2neo.Graph(urljoin(settings.NEO4J_BASE_URL, 'db/data'))
+
+    statement = (
+        "MERGE (u:User {id:{id}}) "
+        "SET u.name = {name}"
+    )
+
+    try:
+        graph.cypher.execute(
+            statement,
+            {
+                'id': user_id,
+                'name': username
+
+            }
+        )
+
+    except Exception as e:
+        """ Cypher queries are expected to fail and raise an exception when
+        Neo4J is not running or when transactional queries are not available
+        (e.g. Travis CI doesn't support transactional queries yet)
+        """
+        logger.error(
+            'Failed to add user (%s) Exception: %s', user_id, e
         )
 
 

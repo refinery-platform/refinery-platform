@@ -63,7 +63,8 @@ from .utils import (update_data_set_index, delete_data_set_index,
                     add_read_access_in_neo4j, remove_read_access_in_neo4j,
                     delete_data_set_neo4j, delete_ontology_from_neo4j,
                     delete_analysis_index, invalidate_cached_object,
-                    get_aware_local_time, email_admin)
+                    get_aware_local_time, email_admin,
+                    add_or_update_user_to_neo4j)
 
 logger = logging.getLogger(__name__)
 
@@ -2234,6 +2235,9 @@ class FastQC(object):
 
 @receiver(post_save, sender=User)
 def _add_user_to_neo4j(sender, **kwargs):
+    user = kwargs['instance']
+
+    add_or_update_user_to_neo4j(user.id, user.username)
     add_read_access_in_neo4j(
         map(
             lambda ds: ds.uuid, get_objects_for_group(
@@ -2241,7 +2245,7 @@ def _add_user_to_neo4j(sender, **kwargs):
                 'core.read_dataset'
             )
         ),
-        [kwargs['instance'].id]
+        [user.id]
     )
 
 
