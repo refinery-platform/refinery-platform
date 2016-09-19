@@ -145,30 +145,4 @@ describe('RefineryDataSetNav.state: unit tests', function () {
       expect($state.current.name).toEqual('browse');
     });
   });
-
-  describe('state "/data_set2/<UUID>/"', function () {
-    beforeEach(function () {
-      basePath = '/data_sets2/whatever/';
-      $window = {
-        location: {
-          pathname: basePath
-        }
-      };
-    });
-
-    it('should be "files" when path is "/files"', function () {
-      goTo('/files');
-      expect($state.current.name).toEqual('files');
-    });
-
-    it('should be "analyses" when path is "/analyses"', function () {
-      goTo('/analyses');
-      expect($state.current.name).toEqual('analyses');
-    });
-
-    it('should be "details" when path is "/about"', function () {
-      goTo('/about');
-      expect($state.current.name).toEqual('about');
-    });
-  });
 });
