@@ -1574,6 +1574,15 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
   this[reloadService].reload();
 };
 
+DashboardCtrl.prototype.openDataSetDeleteModal = function (dataSet) {
+  this.$rootScope.dataSet = dataSet;
+  this.$uibModal.open({
+    templateUrl:
+      '/static/partials/dashboard/partials/dataset-delete-dialog.html',
+    scope: this.$rootScope
+  });
+};
+
 angular
   .module('refineryDashboard')
   .controller('DashboardCtrl', [

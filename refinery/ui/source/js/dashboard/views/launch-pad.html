@@ -416,6 +416,20 @@
               ng-class="{'hovered': dataSet.hovered, 'locked': dataSet.locked, 'previewing': dashboard.dataSetIsPreviewed(dataSet.uuid)}"
               ng-mouseenter="dashboard.dataSetMouseEnter(dataSet)"
               ng-mouseleave="dashboard.dataSetMouseLeave(dataSet)">
+
+              <a
+                class="dataset-delete pointer"
+                title="Remove DataSet"
+                ng-if="dataSet.is_owner"
+                ng-click="dashboard.openDataSetDeleteModal(dataSet)"
+                refinery-tooltip
+                refinery-tooltip-container="body"
+                refinery-tooltip-placement="left"
+                refinery-tooltip-delay-show="750"
+                refinery-tooltip-delay-hide="150"
+                refinery-tooltip-hide-on-click="true">
+                <i class="delete-color fa fa-times"></i>
+              </a>
               <a
                 class="preview"
                 title="View content in File Browser"

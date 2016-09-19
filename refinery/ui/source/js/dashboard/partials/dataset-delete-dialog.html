@@ -1,10 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Title</title>
-</head>
-<body>
-
-</body>
-</html>
+<div class="modal-header">
+  <h3>Delete Dataset: </h3><p class="delete-dataset-name">{{dataSet.name}}</p>
+  <p>Are you sure you want to delete this?</p>
+</div>
+<div class="modal-body">
+  <form
+    class="navbar-form text-align-center"
+    ng-submit="">
+    <button
+      class="refinery-base btn btn-default"
+      ng-click="$close()">
+      Cancel
+    </button>
+    <button
+      type="submit"
+      class="btn btn-danger">
+      Delete Dataset
+    </button>
+  </form>
+</div>
