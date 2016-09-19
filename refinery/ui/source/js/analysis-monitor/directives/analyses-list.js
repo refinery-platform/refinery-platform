@@ -4,12 +4,6 @@ function analysisMonitorAnalysesList ($rootScope, $location) {
   return {
     restrict: 'E',
     templateUrl: '/static/partials/analysis-monitor/partials/analyses-list.html',
-    controller: 'AnalysisMonitorCtrl',
-    controllerAs: 'AMCtrl',
-    bindToController: {
-      analysesList: '@',
-      analysesDetail: '@'
-    },
     link: function (scope) {
       scope.stageTooltipInfo = {
         refineryImport: 'Downloading analysis input files into Refinery',

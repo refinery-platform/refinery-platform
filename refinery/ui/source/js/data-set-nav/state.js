@@ -94,7 +94,8 @@ function refineryDataSetNavConfig (
         url: '/analyses/',
         templateUrl:
           '/static/partials/analysis-monitor/views/analyses-tab.html',
-        controller: 'AnalysisMonitorCtrl'
+        controller: 'AnalysisMonitorCtrl',
+        controllerAs: 'AMCtrl'
       },
       '^\/data_sets2\/.*\/$',
       true
@@ -103,8 +104,9 @@ function refineryDataSetNavConfig (
       'about', {
         url: '/about/',
         templateUrl:
-          '/static/partials/data-set-nav/partials/details-tab.html',
-        controller: 'refineryDataSetNavBlueprintCtrl'
+          '/static/partials/data-set-about/views/details-tab.html',
+        controller: 'AboutDetailsCtrl',
+        controllerAs: 'ADCtrl'
       },
       '^\/data_sets2\/.*\/$',
       true
