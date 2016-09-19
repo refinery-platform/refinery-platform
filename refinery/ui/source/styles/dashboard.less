@@ -536,7 +536,7 @@
   }
 }
 
-.preview {
+.preview .dataset-delete {
   .content-container {
     transition: opacity @fast-transition-speed @ease-in-out-cubic;
 
@@ -869,7 +869,7 @@
           -webkit-line-clamp: 1;
         }
 
-        >em {
+        > em {
           font-weight: bold;
           font-style: normal;
           background: fade(lighten(@blue-light, 25%), 15%);
@@ -893,9 +893,9 @@
         }
       }
 
-      >li {
+      > li {
         position: relative;
-        padding: 5px 2.5rem 5px 0;
+        padding: 5px 4.75rem 5px 0;
         border-top: 1px solid @gray-lighter-rgba;
         transition: all @fast-transition-speed @ease-in-out-cubic;
 
@@ -982,10 +982,10 @@
           color: @black;
           border-top-color: #fff;
           box-shadow: inset .2rem 0 0 0 rgba(0, 0, 0, 0),
-                      inset .3rem 0 0 0 rgba(255, 255, 255, 0),
-                      inset .4rem 0 0 0 fadeout(@orange, 0%),
-                      inset .7rem 0 0 0 fadeout(@orange, 100%),
-                      0 1px 0 0 #fff;
+          inset .3rem 0 0 0 rgba(255, 255, 255, 0),
+          inset .4rem 0 0 0 fadeout(@orange, 0%),
+          inset .7rem 0 0 0 fadeout(@orange, 100%),
+          0 1px 0 0 #fff;
           background: lighten(@orange, 100%, relative);
 
           a {
@@ -1004,18 +1004,18 @@
           padding-left: .9rem;
           padding-right: 2.1rem;
           box-shadow: inset .2rem 0 0 0 rgba(0, 0, 0, 1),
-                      inset .3rem 0 0 0 rgba(255, 255, 255, 1),
-                      inset .4rem 0 0 0 fadeout(@orange, 0%),
-                      inset .7rem 0 0 0 fadeout(@orange, 0%),
-                      0 1px 0 0 #fff;
+          inset .3rem 0 0 0 rgba(255, 255, 255, 1),
+          inset .4rem 0 0 0 fadeout(@orange, 0%),
+          inset .7rem 0 0 0 fadeout(@orange, 0%),
+          0 1px 0 0 #fff;
         }
 
         &.previewing {
           z-index: 2;
           background: fade(@blue, 10%);
           box-shadow: 0 1px 0 0 @white,
-                      inset 0 1px 0 0 fade(@blue, 10%),
-                      inset 0 -1px 0 0 fade(@blue, 10%);
+          inset 0 1px 0 0 fade(@blue, 10%),
+          inset 0 -1px 0 0 fade(@blue, 10%);
           border-top-color: @white;
 
           .preview,
@@ -1025,9 +1025,10 @@
             color: @white !important;
             background: #326180;
           }
-          .fa-table {
-              color: #ffffff !important;
-            }
+
+          .fa-table{
+            color: #ffffff !important;
+          }
         }
 
         .preview {
@@ -1045,35 +1046,46 @@
           background: rgba(0, 0, 0, 0);
           transition: all @fast-transition-speed @ease-in-out-cubic;
           text-decoration: none;
-
-          &:focus {
-            color: @black;
-            background: @gray-lighter-rgba;
-          }
-
-          &:active,
-          &:focus {
-            outline: none;
-          }
         }
 
-        &:hover {
-
-          .preview {
-            color: @gray-light-rgba;
-            background: @gray-lighter-rgba;
-
-            &:hover {
-              color: @black;
-            }
-          }
-
-          &.previewing .preview {
-            color: white;
-            background: #326180;
-          }
+        .preview:hover {
+          background: @gray-lighter-rgba;
         }
+
+        &.previewing .preview {
+          color: white;
+          background: #326180;
+        }
+
+      .delete-dataset-name{
+        font-size: 1.2em;
+        color: @gray-lighter-rgba;
       }
+      .dataset-delete {
+        position: absolute;
+        top: 0;
+        right: 1.5em;
+        bottom: 0;
+        display: flex;
+        justify-content: center; /* align horizontal */
+        align-items: center; /* align vertical */
+        padding: 0 0.25em;
+        font-size: 1.2em;
+        color: @gray-lighter-rgba;
+        border: none;
+        background: rgba(0, 0, 0, 0);
+        transition: all @fast-transition-speed @ease-in-out-cubic;
+        text-decoration: none;
+      }
+      .dataset-delete:hover {
+        background: rgba(255, 1, 0, 0.2);
+      }
+
+      &.previewing .dataset-delete {
+          color: red;
+          background: rgba(255, 1, 0, 0.2);
+      }
+    }
 
       &.infinite-scrolling {
         // Hack because uiScroll adds another invisible first child to the list.
@@ -1506,4 +1518,8 @@ body.repo-mode .refinery-dashboard {
 
 .primary-text-color {
   color: #286090;
+}
+
+.delete-color{
+  color:red;
 }
