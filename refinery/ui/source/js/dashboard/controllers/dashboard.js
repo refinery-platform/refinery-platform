@@ -8,6 +8,7 @@ function DashboardCtrl (
   $timeout,
   $rootScope,
   $window,
+  $uibModal,
   // 3rd party library
   _,
   // Refinery modules
@@ -37,6 +38,7 @@ function DashboardCtrl (
   this.$stateParams = $stateParams;
   this.$timeout = $timeout;
   this.$window = $window;
+  this.$uibModal = $uibModal;
 
   // Construct 3rd party library
   this._ = _;
@@ -1581,6 +1583,7 @@ angular
     '$timeout',
     '$rootScope',
     '$window',
+    '$uibModal',
     '_',
     'pubSub',
     'settings',
