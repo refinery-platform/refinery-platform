@@ -3,7 +3,7 @@
 function rpDataSetAboutDetails () {
   return {
     restrict: 'E',
-    templateUrl: '/static/partials/data-set-about/views/details.html',
+    templateUrl: '/static/partials/data-set-about/partials/details.html',
   };
 }
 
