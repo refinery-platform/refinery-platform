@@ -36,9 +36,9 @@
     </ui-select-choices>
 	</ui-select>
     <button
-      class="btn btn-primary btn-xs ui-select-drop"
+      class="btn btn-primary btn-xs"
       ng-click="launchIgvJs()"
-      ng-disabled="speciesList.length == 0">
+      ng-disabled="ICtrl.areSelectedNodesEmpty() && speciesList.length == 0">
       Launch IGV
     </button>
 

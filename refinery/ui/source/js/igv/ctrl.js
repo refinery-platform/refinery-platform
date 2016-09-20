@@ -1,8 +1,10 @@
 'use strict';
 
 function IGVCtrl (
-  $scope, $http, $window, $log, $resource, $httpParamSerializer
+  $scope, $http, $window, $log, $resource, $httpParamSerializer, selectedNodesService
 ) {
+  var vm = this;
+
   $scope.igvConfig = {
     query: null,
     annotation: null,
@@ -25,6 +27,14 @@ function IGVCtrl (
   //  // detect species
   //  $scope.detectSpecies();
   // });
+
+  vm.areSelectedNodesEmpty = function () {
+    if (selectedNodesService.selectedNodesUuids.length > 0 ||
+      selectedNodesService.complementSelectedNodesUuids.length > 0) {
+      return false;
+    }
+    return true;
+  };
 
   $scope.detectSpecies = function () {
     $resource('/api/v1/nodeset/', {
@@ -147,5 +157,6 @@ angular
     '$log',
     '$resource',
     '$httpParamSerializer',
+    'selectedNodesService',
     IGVCtrl
   ]);
