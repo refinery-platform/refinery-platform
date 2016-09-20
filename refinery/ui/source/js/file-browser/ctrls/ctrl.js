@@ -489,6 +489,7 @@ function FileBrowserCtrl (
           vm.selectedField[field] = false;
         });
         selectedFilterService.resetAttributeFilter(vm.selectedField);
+        vm.selectNodesCount = 0;
         vm.filesParam.filter_attribute = {};
         vm.reset();
       }
