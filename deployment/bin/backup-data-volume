@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# backup-data-volume /dev/xvdr
+
+vol=${1:-/dev/xvdr}
+
+
+Region=$(cat /home/ubuntu/region)
+
+InstanceID=$(curl --silent http://169.254.169.254/latest/meta-data/instance-id)
+
+volumes_devices () {
+  # Outputs lines of form:
+  # VolumeId Device
+  aws --region "$Region" ec2 describe-volumes --filter Name=attachment.instance-id,Values=${InstanceID} |
+    jq -r '.Volumes[] | (.VolumeId + " " + (.Attachments[].Device))'
+}
+
+volume=$(volumes_devices | grep -e "$vol")
+
+# Get just the volume id by stripping everything after the space.
+volume=${volume% *}
+
+aws ec2 create-snapshot --region "$Region" --volume-id "$volume"
