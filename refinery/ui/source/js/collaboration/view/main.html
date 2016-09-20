@@ -1,11 +1,22 @@
 <div id="group-collab">
-
   <div class="col-md-4">
-    <div class="refinery-panel">
+    <div ng-controller="collaborationTutorialCtrl2">
+    <div ng-intro-options="collabIntroOptions"
+         ng-intro-method="collaborationStart"
+         ng-intro-oncomplete="collabCompletedEvent"
+         ng-intro-onexit="collabExitEvent"
+         ng-intro-onchange="collabChangeEvent"
+         ng-intro-onbeforechange="collabBeforeChangeEvent"
+         ng-intro-onafterchange="collabAfterChangeEvent"
+         ng-intro-autostart="false"
+         >
+    <div id="collaborationTutorialStep1" class="refinery-panel">
+
       <div class="refinery-header">
         <span class="refinery-header-left">
           <h3>
-            <i class="m-r-1-4 fa fa-users"></i>Groups
+            <i class="m-r-1-4 fa
+            fa-users"></i>Groups
           </h3>
         </span>
         <span class="refinery-header-right">
@@ -43,10 +54,11 @@
         </table>
       </div>
     </div>
+           </div></div>
   </div>
 
   <div class="col-md-4">
-    <div class="refinery-panel">
+    <div id="collaborationTutorialStep2" class="refinery-panel">
       <div class="refinery-header">
         <span class="refinery-header-left">
           <h3>
@@ -93,7 +105,7 @@
   </div>
 
   <div class="col-md-4">
-    <div class="refinery-panel">
+    <div id="collaborationTutorialStep3" class="refinery-panel">
       <div class="refinery-header">
         <span class="refinery-header-left">
           <h3>

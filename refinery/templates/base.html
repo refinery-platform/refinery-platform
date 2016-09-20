@@ -29,9 +29,14 @@
       debug: {{ DEBUG|yesno:"true,false,undefined" }},
       userId: '{{ user.id }}',
       userName: '{{ user.username }}',
+      userprofileUUID: '{{ user.userprofile.uuid|escapejs }}',
+      launchpad_tut_viewed: `{{ user.userprofile.has_viewed_launchpad_tut }}`,
+      collaboration_tut_viewed: `{{ user.userprofile.has_viewed_collaboration_tut}}`,
+      data_upload_tut_viewed: `{{ user.userprofile.has_viewed_data_upload_tut}}`,
       admins: '{{ ADMIN_EMAIL|safe }}',
       repositoryMode: {{ REFINERY_REPOSITORY_MODE|yesno:"true,false,undefined" }},
-      solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }}
+      solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
+      refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}'
     };
 
     if (window.djangoApp.userId === 'None' || window.djangoApp.userName === 'None') {
@@ -70,7 +75,15 @@
   <!-- header navigation bar -->
 
   <nav class="refinery-base navbar navbar-default navbar-fixed-top">
-    <div class="container-fluid">
+  <div ng-controller="launchpadTutorialCtrl">
+    <div ng-intro-options="launchpadIntroOptions"
+         ng-intro-method="launchpadStart"
+         ng-intro-oncomplete="launchpadCompletedEvent"
+         ng-intro-onexit="launchpadExitEvent"
+         ng-intro-onchange="launchpadChangeEvent"
+         ng-intro-onbeforechange="launchpadBeforeChangeEvent"
+         ng-intro-onafterchange="launchpadAfterChangeEvent">
+    <div id="launchpadStep" class="container-fluid">
 
       <div class="navbar-header pull-left">
 
@@ -108,6 +121,28 @@
       </div>
 
       <div class="navbar-text pull-right">
+       {% if user.is_authenticated %}
+          {% if user.userprofile.login_count == 1 %}
+            <li id="attentionGrabber" class="attention_grabber">
+             <a class="pulse pointer"
+               popover-placement="bottom" popover-trigger="click"
+                uib-popover-template="dynamicPopover.templateUrl">
+                <i class="fa
+                 fa-question-circle"></i> Help
+              </a>
+            </li>
+
+          {% else %}
+             <a class="pointer"
+               popover-placement="bottom" popover-trigger="click"
+                uib-popover-template="dynamicPopover.templateUrl">
+                <i class="fa
+                 fa-question-circle"></i> Help
+              </a>
+          {% endif %}
+         &nbsp;&nbsp;|&nbsp;&nbsp;
+      {% endif %}
+
         {% if user.is_authenticated %}
           <i class="fa fa-user"></i>
           <a href="{% url "user" user.get_profile.uuid %}" tabindex=5>
@@ -144,11 +179,19 @@
         </a>
       </span>
       </div>
-
-      <div class="collapse navbar-collapse" id="navbarMain">
+      <div class="collapse navbar-collapse" id="navbarMain"
+           ng-controller="collaborationTutorialCtrl">
+         <div ng-intro-options="collabIntroOptions"
+         ng-intro-method="collaborationStart"
+         ng-intro-oncomplete="collabCompletedEvent"
+         ng-intro-onexit="collabExitEvent"
+         ng-intro-onchange="collabChangeEvent"
+         ng-intro-onbeforechange="collabBeforeChangeEvent"
+         ng-intro-onafterchange="collabAfterChangeEvent">
         <ul class="nav navbar-nav">
-          <li class="{{ navbar_class_collaboration }}">
-            <a href="{% url "collaboration" %}" tabindex=2>Collaboration</a>
+          <li id="collaborationTutorialStep0" class="{{
+            navbar_class_collaboration }}">
+            <a id="collaborationTutorialStep0_click" href="{% url "collaboration" %}" tabindex=2>Collaboration</a>
           </li>
           <li class="{{ navbar_class_statistics }}">
             <a href="{% url "statistics" %}" tabindex=3>Statistics</a>
@@ -158,8 +201,10 @@
           </li>
         </ul>
       </div>
-
+      </div>
     </div>
+    </div>
+  </div>
     <div class="navbar-subheader">
       <div class="container-fluid">
         <div style="clear: left; display:block;">
@@ -204,7 +249,9 @@
   <script src="{% static "vendor/jquery/dist/jquery.min.js" %}"></script>
   <script src="{% static "js/jquery-ui/jquery-ui-1.10.0.custom.min.js" %}"></script>
   <script src="{% static "vendor/bootstrap/dist/js/bootstrap.min.js" %}"></script>
+  <script src="{% static "vendor/intro.js/minified/intro.min.js" %}"></script>
   <script src="{% static "vendor/angular/angular.min.js" %}"></script>
+  <script src="{% static "vendor/angular-intro.js/build/angular-intro.min.js" %}"></script>
   <script src="{% static "vendor/angular-animate/angular-animate.min.js" %}"></script>
   <script src="{% static "vendor/select2/select2.min.js" %}"></script>
   <script src="{% static "vendor/ui-select/dist/select.min.js" %}"></script>
@@ -310,6 +357,11 @@
     );
 
     $(document).ready( function(){
+
+      $('#attentionGrabber').on('click', function(){
+        $('#attentionGrabber').removeClass('attention_grabber');
+       });
+
       sizing();
 
       // detect IE: https://gist.github.com/527683

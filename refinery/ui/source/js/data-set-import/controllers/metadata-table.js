@@ -193,7 +193,7 @@ MetadataTableImportCtrl.prototype.checkFiles = function () {
   // Get the list of file references
   if (self.dataFileColumn) {
     self.metadata.forEach(function (row) {
-      fileData.list.push(row[self.metadataHeader[self.dataFileColumn]]);
+      fileData.list.push(row[self.dataFileColumn]);
     });
   }
 

@@ -1,0 +1,32 @@
+{
+  "LAUNCHPAD_TUTORIAL": {
+    "STEP0": "Here you can access features such as collaboration and an overview of the most recently launched analyses.",
+    "STEP1": "This panel shows information about data sets that you have access to. This includes data sets that you successfully uploaded and own, as well as data sets that have been shared with you.",
+    "STEP2": "Here you can launch a search across the meta data of all data sets that you have access to.",
+    "STEP3": "You can sort and filter your data sets using these controls.",
+    "STEP4": "Data sets are listed in this area.",
+    "STEP5": {
+      "a": "This panel shows information about analyses and the status of their execution.",
+      "b": "Analyses can have three states:",
+      "c": "<b>Failure</b>",
+      "d": "<b>Success</b>",
+      "e": "<b>Running</b>"
+    },
+    "STEP6": "This panel lists all workflows that are available to you."
+  },
+  "DATA_UPLOAD_TUTORIAL": {
+    "STEP0": "Click here to start uploading data sets.",
+    "STEP1": "Use this tab to import a delimited metadata table.",
+    "STEP2": "Use this tab to import an ISA-Tab archive (ZIP file).",
+    "STEP3": "Here you can upload a tabular file and specify its formatting.",
+    "STEP4": "Select a tabular file containing the meta data associated with the data files in the data set.",
+    "STEP5": "Here you can upload a ZIP archive that complies with the ISA-Tab standard from your local computer.",
+    "STEP6": "Here you can select a local or remote ISA-Tab archive."
+  },
+  "COLLABORATION_TUTORIAL": {
+    "STEP0": "Here you can create user groups to collaborate and share data with other users.",
+    "STEP1": "All groups that you are a member of appear in this panel. If you are the manager of a group, you can also modify its member list.",
+    "STEP2": "Members of the group highlighted in the panel to the left are shown here. If you are a manager, you can use the '+' icon to invite new users.",
+    "STEP3": "Here you can see pending invitations for the selected group. You can also revoke or resend pending invitations."
+  }
+}
