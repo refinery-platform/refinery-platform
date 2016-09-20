@@ -50,7 +50,10 @@ function NodeGroupCtrl (
   // RESET button: Clear selected nodes and node group selection
   vm.clearSelectedNodes = function () {
     // Deselects node group
+    console.log('in the reset action');
     vm.nodeGroups.selected = vm.nodeGroups.groups[0];
+    console.log(vm.nodeGroups);
+    console.log(vm.nodeGroups.selected);
     selectedNodesService.setSelectedAllFlags(false);
     resetGridService.setResetGridFlag(true);
   };

@@ -5,7 +5,7 @@ function rpFileBrowserSelectionReset () {
     restrict: 'AE',
     templateUrl: '/static/partials/file-browser/partials/selection-reset.html',
     controller: 'NodeGroupCtrl',
-    controllerAs: 'NGCtrl',
+    controllerAs: 'FBNGCtrl',
     bindToController: {
       nodeGroups: '=?'
     }
