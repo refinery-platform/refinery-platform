@@ -161,13 +161,10 @@ function FileBrowserCtrl (
         }
 
         // when not current selection, check if a new row was deselect/selected
-        console.log('select node group uuid');
-        console.log(selectedNodesService.selectedNodeGroupUuid);
         if (selectedNodesService.selectedNodeGroupUuid !==
           selectedNodesService.defaultCurrentSelectionUuid &&
           selectedNodesService.selectedNodesUuidsFromNodeGroup.length !==
           selectedNodesService.selectedNodes.length) {
-          console.log('when row selection updates, ng updates');
           // Reset the node group selection to current selection
           selectedNodesService.resetNodeGroupSelection(true);
         }
