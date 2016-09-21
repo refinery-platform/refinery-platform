@@ -222,6 +222,23 @@ def main():
                                 ]
                             }
                         ]
+                    },
+                },
+                {
+                    'PolicyName': "CreateSnapshot",
+                    'PolicyDocument': {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "ec2:CreateSnapshot"
+                                ],
+                                "Resource": [
+                                    "*"
+                                ]
+                            }
+                        ]
                     }
                 },
                 {
