@@ -8,6 +8,7 @@ cron { 'cron-backup':
   ensure => present,
   command => 'sh /srv/refinery-platform/deployment/bin/backup-data-volume',
   hour => ['0'],
+  minute => ['13'],     # arbitrary, but we need to pick one.
   target => 'root',
   user => 'root',
 }
