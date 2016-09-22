@@ -33,6 +33,7 @@ from core.forms import (
 )
 
 from data_set_manager.models import Node
+from data_set_manager.utils import generate_solr_params
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
@@ -745,6 +746,14 @@ def solr_igv(request):
 
         logger.debug('IGV data query: ' + str(igv_config['query']))
         logger.debug('IGV annotation query: ' + str(igv_config['annotation']))
+
+        if igv_config['query'] is None:
+            # generate solr_query method
+            # assay uuid
+            solr_query = generate_solr_params({}, igv_config['assay_uuid'])
+            url_portion = '/'.join(["data_set_manager", "select"])
+            url = urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
+            igv_config['query'] = ''.join([url, '/?', solr_query])
 
         # attributes associated with node selection from interface
         node_selection_blacklist_mode = igv_config[

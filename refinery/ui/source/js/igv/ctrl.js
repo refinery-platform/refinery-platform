@@ -35,70 +35,37 @@ function IGVCtrl (
     }
     return true;
   };
-
-  $scope.detectSpecies = function () {
-    $resource('/api/v1/nodeset/', {
-      format: 'json'
-    }).get({
-      uuid: $scope.currentNodeSet.uuid
-    }, function (response) {
-      $scope.isLoadingSpecies = true;
-
-      $log.info(response.objects[0].solr_query_components);
-      $log.info(
-        JSON
-          .parse(response.objects[0].solr_query_components)
-          .documentSelection
-      );
-      $log.info(
-        JSON
-          .parse(response.objects[0].solr_query_components)
-          .documentSelectionBlacklistMode
-      );
-
-      $scope.igvConfig.query = response.objects[0].solr_query;
-      $scope.igvConfig.node_selection = JSON.parse(
-        response.objects[0].solr_query_components
-      ).documentSelection;
-      $scope.igvConfig.node_selection_blacklist_mode = JSON.parse(
-        response.objects[0].solr_query_components
-      ).documentSelectionBlacklistMode;
-      $scope.igvConfig.annotation = null;  // response.objects[0].solr_query;
-
-      $scope.retrieveSpecies();
-    }, function (response) {
-      $scope.isLoadingSpecies = true;
-      $scope.messageType = 'error';
-      $scope.message = 'Sorry! Unable to get the contents of the selected file set.';
-      $log.info('Error accessing Node Set API. Attempting to read  from sessionStorage');
-
-      if ($window.sessionStorage) {
-        var currentSelectionSessionKey = $window.externalStudyUuid +
-          '_' +
-          $window.externalAssayUuid +
-          '_' +
-          'currentSelection';
-        response.objects = [
-          angular.fromJson(
-            $window.sessionStorage.getItem(currentSelectionSessionKey)
-          )
-        ];
-        $scope.igvConfig.query = response.objects[0].solr_query;
-        $scope.igvConfig.node_selection = JSON.parse(
-          response.objects[0].solr_query_components
-        ).documentSelection;
-        $scope.igvConfig.node_selection_blacklist_mode = JSON.parse(
-          response.objects[0].solr_query_components
-        ).documentSelectionBlacklistMode;
-        $scope.igvConfig.annotation = null;  // response.objects[0].solr_query;
-        $scope.retrieveSpecies();
-      } else {
-        $scope.isLoadingSpecies = false;
-      }
-    });
-  };
-
+  // vm.createIGVConfig = function () {
+  //  $scope.igvConfig.query = response.objects[0].solr_query;
+  //  $scope.igvConfig.node_selection = JSON.parse(
+  //    response.objects[0].solr_query_components
+  //  ).documentSelection;
+  //  $scope.igvConfig.node_selection_blacklist_mode = JSON.parse(
+  //    response.objects[0].solr_query_components
+  //  ).documentSelectionBlacklistMode;
+  //  $scope.igvConfig.annotation = null;
+  //  $scope.igvConfig.query = response.objects[0].solr_query;
+  //  $scope.igvConfig.node_selection = JSON.parse(
+  //    response.objects[0].solr_query_components
+  //  ).documentSelection;
+  //  $scope.igvConfig.node_selection_blacklist_mode = JSON.parse(
+  //    response.objects[0].solr_query_components
+  //  ).documentSelectionBlacklistMode;
+  //  $scope.igvConfig.annotation = null;
+  //  $scope.retrieveSpecies();
+  // };
   $scope.retrieveSpecies = function () {
+    console.log('in the retrieve species');
+    if (selectedNodesService.selectedAllFlag) {
+      $scope.igvConfig.node_selection = selectedNodesService.complementSelectedNodesUuids;
+      $scope.igvConfig.node_selection_blacklist_mode = true;
+    } else {
+      $scope.igvConfig.node_selection = ['1a354bf5-3b6e-4fcf-b9fb-b603d7433119'];
+      $scope.igvConfig.node_selection_blacklist_mode = false;
+      $scope.igvConfig.assay_uuid = $window.externalAssayUuid;
+      console.log($scope.igvConfig.assayUuid);
+    }
+
     $http({
       method: 'POST',
       url: '/solr/igv/',
@@ -146,6 +113,8 @@ function IGVCtrl (
     });
     $window.open('/visualize/genome?' + params);
   };
+
+  $scope.retrieveSpecies();
 }
 
 angular

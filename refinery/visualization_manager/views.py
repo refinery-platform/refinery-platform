@@ -395,20 +395,26 @@ def add_igv_resource(uuidlist, xml_res, xml_doc):
     # get paths to url
     for node_uuid in uuidlist:
         # gets filestore item
-        curr_name, curr_url = get_file_name(node_uuid)
-        logger.debug("add_igv_resource: name = %s, curr_url = %s",
-                     curr_name, curr_url)
-        # What to do if fs does not exist?
-        if curr_url:
-            # creates Resource element
-            res = xml_doc.createElement("Resource")
-            if (curr_name):
-                res.setAttribute("name", curr_name)
-            else:
-                res.setAttribute("name", curr_url)
+        try:
+            curr_name, curr_url = get_file_name(node_uuid)
+        except ValueError as e:
+            logger.error("Could not unpack file name of %s, "
+                         "%s" % (node_uuid, e))
 
-            res.setAttribute("path", curr_url)
-            xml_res.appendChild(res)
+        if curr_name or curr_url:
+            logger.debug("add_igv_resource: name = %s, curr_url = %s",
+                         curr_name, curr_url)
+            # What to do if fs does not exist?
+            if curr_url:
+                # creates Resource element
+                res = xml_doc.createElement("Resource")
+                if (curr_name):
+                    res.setAttribute("name", curr_name)
+                else:
+                    res.setAttribute("name", curr_url)
+
+                res.setAttribute("path", curr_url)
+                xml_res.appendChild(res)
 
 
 def add_igv_samples(fields, results_samp, annot_samples=None):
@@ -517,7 +523,11 @@ def get_file_name(nodeuuid, samp_file=None, is_file_uuid=False):
                 FileStoreItem.MultipleObjectsReturned) as e:
             logger.error("Could not fetch FileStoreItem: %s" % e)
 
-    return create_temp_filename_and_url(temp_fs, samp_file)
+    try:
+        return create_temp_filename_and_url(temp_fs, samp_file)
+    except AttributeError as e:
+        logger.error("Could not create temp filename and url %s" % (e))
+        return ''
 
 
 def create_temp_filename_and_url(temp_fs, samp_file):
@@ -557,14 +567,19 @@ def get_sample_lines(fields, results):
     # iterating over samples
     for row in results:
         # adding file_name to matrix as linking id
-        line, url = get_file_name(row["uuid"], samp_file=True)
-        # adding fields to sample information matrix
-        for k, v in fields.iteritems():
-            if k in row:
-                line = line + '\t' + row[k]
-            else:
-                line = line + '\t' + ''
+        try:
+            line, url = get_file_name(row["uuid"], samp_file=True)
+        except ValueError as e:
+            logger.error("Could unpack get_file_name,%s %s" % (row["uuid"], e))
 
-        output_mat = output_mat + line + '\n'
+        if line:
+            # adding fields to sample information matrix
+            for k, v in fields.iteritems():
+                if k in row:
+                    line = line + '\t' + row[k]
+                else:
+                    line = line + '\t' + ''
+
+            output_mat = output_mat + line + '\n'
     # returns matrix for given inputs
     return output_mat
