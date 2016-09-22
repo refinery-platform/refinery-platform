@@ -7,7 +7,7 @@ function rpIGVLaunch () {
     controller: 'IGVCtrl',
     controllerAs: 'ICtrl',
     bindToController: {
-      nodeGroups: '=?'
+      speciesList: '@'
     },
 
   };

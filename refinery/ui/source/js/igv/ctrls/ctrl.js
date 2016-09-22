@@ -55,7 +55,6 @@ function IGVCtrl (
   //  $scope.retrieveSpecies();
   // };
   $scope.retrieveSpecies = function () {
-    console.log('in the retrieve species');
     if (selectedNodesService.selectedAllFlag) {
       $scope.igvConfig.node_selection = selectedNodesService.complementSelectedNodesUuids;
       $scope.igvConfig.node_selection_blacklist_mode = true;
@@ -63,7 +62,6 @@ function IGVCtrl (
       $scope.igvConfig.node_selection = ['1a354bf5-3b6e-4fcf-b9fb-b603d7433119'];
       $scope.igvConfig.node_selection_blacklist_mode = false;
       $scope.igvConfig.assay_uuid = $window.externalAssayUuid;
-      console.log($scope.igvConfig.assayUuid);
     }
 
     $http({
@@ -77,8 +75,7 @@ function IGVCtrl (
     }).success(function (response) {
       // update message
       if (response.species_count === 0) {
-        $scope.message = 'Unable to detect species and genome build. ' +
-          'Please select the correct genome and launch IGV.';
+        $scope.message = 'Please select the correct genome and launch IGV.';
       } else if (response.species_count === 1) {
         $scope.message = null;
         $scope.selectedSpecies.select = $scope.speciesList[0];
