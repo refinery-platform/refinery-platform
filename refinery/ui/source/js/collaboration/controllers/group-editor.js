@@ -18,6 +18,7 @@ function GroupEditorCtrl (
   this.group = group;
   this.authService = authService;
   this.sessionService = sessionService;
+  this.errorFlag = false;
 
   this.close = function () {
     this.$uibModalInstance.dismiss();
@@ -26,6 +27,7 @@ function GroupEditorCtrl (
 
 GroupEditorCtrl.prototype.leaveGroup = function () {
   var that = this;
+  that.errorFlag = false;
 
   that.authService.isAuthenticated()
     .then(function (isAuthenticated) {
@@ -38,12 +40,13 @@ GroupEditorCtrl.prototype.leaveGroup = function () {
         .then(function () {
           that.groupDataService.update();
           that.$uibModalInstance.dismiss();
-        })
-        .catch(function () {
-          that.bootbox.alert('Are you the only member or manager left?');
+        }, function () {
+          that.errorFlag = true;
+          that.errorMessage = 'Error leaving group. If last member, delete' +
+            ' group.';
         });
       } else {
-        that.bootbox.alert('Sorry, you\'re not authenticated.');
+        that.bootbox.alert('Error: You are not authenticated.');
       }
     })
     .catch(function () {
@@ -53,6 +56,7 @@ GroupEditorCtrl.prototype.leaveGroup = function () {
 
 GroupEditorCtrl.prototype.deleteGroup = function () {
   var that = this;
+  that.errorFlag = false;
 
   that.groupExtendedService.delete({
     uuid: that.group.uuid
@@ -61,9 +65,9 @@ GroupEditorCtrl.prototype.deleteGroup = function () {
   .then(function () {
     that.groupDataService.update();
     that.$uibModalInstance.dismiss();
-  })
-  .catch(function () {
-    that.bootbox.alert('Group could not be deleted');
+  }, function () {
+    that.errorFlag = true;
+    that.errorMessage = 'Group could not be deleted.';
   });
 };
 

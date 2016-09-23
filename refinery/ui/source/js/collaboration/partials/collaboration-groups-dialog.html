@@ -23,13 +23,14 @@
       <td>
         {{ modal.group.name }}
       </td>
+
       <td>
         <button
           class="refinery-base btn btn-default"
           style="float:right"
           ng-click="modal.leaveGroup()"
           ng-class="{ disabled: modal.group.member_list.length===1 }"}
-          ng-disabled="modal.group.member_list.length===1">
+          ng-disabled="modal.group.member_list.length===1 || modal.group.can_edit">
           Leave
         </button>
       </td>
@@ -42,6 +43,12 @@
           Delete
         </button>
       </td>
+    </tr>
+    <tr>
+      <div class="text-warning" ng-if="modal.errorFlag">
+        <i class="fa fa-warning" aria-hidden="true"></i>
+          {{ modal.errorMessage }}
+      </div>
     </tr>
     </tbody>
   </table>
