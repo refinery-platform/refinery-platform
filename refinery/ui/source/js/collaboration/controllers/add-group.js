@@ -1,49 +1,37 @@
 'use strict';
 
 function AddGroupCtrl (
-  bootbox, $uibModalInstance, groupExtendedService, groupDataService
-) {
-  this.bootbox = bootbox;
-  this.$uibModalInstance = $uibModalInstance;
-  this.groupExtendedService = groupExtendedService;
-  this.groupDataService = groupDataService;
+  $scope,
+  bootbox,
+  $uibModalInstance,
+  groupExtendedService,
+  groupDataService) {
+  // Group name modal
+  $scope.ok = function () {
+    groupExtendedService.create({
+      name: $scope.groupName
+    })
+      .$promise
+      .then(function () {
+        groupDataService.update();
+        $uibModalInstance.dismiss();
+      })
+      .catch(function () {
+        bootbox.alert(
+          'This name probably already exists - try a different name.'
+        );
+      });
+  };
+
+  $scope.cancel = function () {
+    $uibModalInstance.dismiss('cancel');
+  };
 }
-
-function isEmptyOrSpaces (str) {
-  if (str.length === 0) {
-    return true;
-  }
-  return false;
-}
-
-AddGroupCtrl.prototype.createGroup = function (name) {
-  var that = this;
-  var groupName = name || '';
-
-  this.groupExtendedService.create({
-    name: groupName
-  })
-  .$promise
-  .then(function () {
-    that.groupDataService.update();
-    that.$uibModalInstance.dismiss();
-  })
-  .catch(function () {
-    if (isEmptyOrSpaces(groupName)) {
-      that.bootbox.alert(
-        'Group Name cannot be left blank - try a different name.'
-      );
-    } else {
-      that.bootbox.alert(
-        'This name probably already exists - try a different name.'
-      );
-    }
-  });
-};
 
 angular
   .module('refineryCollaboration')
   .controller('AddGroupCtrl', [
+    '$scope',
     'bootbox',
     '$uibModalInstance',
     'groupExtendedService',
