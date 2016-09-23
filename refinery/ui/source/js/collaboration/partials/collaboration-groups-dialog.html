@@ -28,7 +28,8 @@
           class="refinery-base btn btn-default"
           style="float:right"
           ng-click="modal.leaveGroup()"
-          ng-class="{ disabled: modal.group.member_list.length===1 }"}>
+          ng-class="{ disabled: modal.group.member_list.length===1 }"}
+          ng-disabled="modal.group.member_list.length===1">
           Leave
         </button>
       </td>
