@@ -126,9 +126,14 @@
           refinery-tooltip-hide-on-click="true">
         </i>
       </button>
-      <span class="text-warning" ng-if="!metadataTable.isSeparatorOk && !metadataTable.file">
+      <span class="text-warning" ng-if="!metadataTable.file">
         <i class="fa fa-warning" aria-hidden="true"></i>
         Please specify the custom separator <strong>prior</strong> to file selection.
+      </span>
+      <span class="text-warning"
+        ng-if="metadataTable.file && metadataTable.whiteSpaceStripFlag">
+        <i class="fa fa-warning" aria-hidden="true"></i>
+        Leading and/or trailing whitespaces were detected and removed.
       </span>
     </label>
 
