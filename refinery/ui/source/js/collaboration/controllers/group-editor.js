@@ -18,6 +18,10 @@ function GroupEditorCtrl (
   this.group = group;
   this.authService = authService;
   this.sessionService = sessionService;
+
+  this.close = function () {
+    this.$uibModalInstance.dismiss();
+  };
 }
 
 GroupEditorCtrl.prototype.leaveGroup = function () {
