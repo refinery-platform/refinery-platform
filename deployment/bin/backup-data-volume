@@ -21,4 +21,12 @@ volume=$(volumes_devices | grep -e "$vol")
 # Get just the volume id by stripping everything after the space.
 volume=${volume% *}
 
-aws ec2 create-snapshot --region "$Region" --volume-id "$volume"
+Output=$(aws ec2 create-snapshot --region "$Region" --volume-id "$volume")
+
+Snapshot=$(printf '%s' "$Output" | jq -r .SnapshotId)
+
+echo Created "$Snapshot"
+
+Tags=$(jq .tags /home/ubuntu/s3-config)
+
+aws ec2 create-tags --region "$Region" --resources "$Snapshot" --tags "$Tags"
