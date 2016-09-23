@@ -30,6 +30,10 @@ before_script:
   - bower install --config.interactive=false
   - cd ../
 script:
+  - this-should-not-cause-fail
+  - set -e
+  - but-this-should-fail
+
   - flake8 --exclude=migrations,ui ..
 
   - echo 'travis_fold:start:grunt'
