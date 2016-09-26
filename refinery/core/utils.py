@@ -4,6 +4,7 @@ import logging
 import py2neo
 import ast
 
+import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.models import Site
@@ -155,7 +156,8 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
                     statement,
                     {
                         'dataset_uuid': dataset_uuid,
-                        'user_id': user_id
+                        'user_id': user_id,
+
                     }
                 )
 
@@ -168,6 +170,117 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
         logger.error(
             'Failed to add read access for users (%s) to data sets '
             '(uuids: %s) to Neo4J. Exception: %s', user_ids, dataset_uuids, e
+        )
+
+
+def update_annotation_sets_neo4j(username=''):
+    """
+    Update annotation sets in Neo4J
+    AnnotationSets link Ontology classes from accessible DataSets with users
+    """
+
+    logger.info(
+        'Updating annotation sets for "%s" (If username is empty, updates for '
+        'all users) in Neo4J.',
+        username
+    )
+
+    try:
+        requests.post(
+            urljoin(
+                urljoin(
+                    settings.NEO4J_BASE_URL,
+                    'ontology/unmanaged/annotations/'
+                ), username
+            )
+        )
+
+    except Exception as e:
+        logger.error(
+            'Neo4J couldn\'t prepare annotation sets. Error %s', e
+        )
+
+
+def add_or_update_user_to_neo4j(user_id, username):
+    """
+    Add or update a user in Neo4J
+    """
+
+    logger.info(
+        'Adding user (%s) with username (%s) in Neo4J',
+        user_id, username
+    )
+
+    graph = py2neo.Graph(urljoin(settings.NEO4J_BASE_URL, 'db/data'))
+
+    statement = (
+        "MERGE (u:User {id:{id}}) "
+        "SET u.name = {name}"
+    )
+
+    try:
+        graph.cypher.execute(
+            statement,
+            {
+                'id': user_id,
+                'name': username
+
+            }
+        )
+
+    except Exception as e:
+        """ Cypher queries are expected to fail and raise an exception when
+        Neo4J is not running or when transactional queries are not available
+        (e.g. Travis CI doesn't support transactional queries yet)
+        """
+        logger.error(
+            'Failed to add user (%s) Exception: %s', user_id, e
+        )
+
+
+def delete_user_in_neo4j(user_id, user_name):
+    """
+    Delete a user and its annotation set in Neo4J
+    """
+
+    logger.info('Delete user (ID: %s Name: %s) in Neo4J', user_id, user_name)
+
+    graph = py2neo.Graph(urljoin(settings.NEO4J_BASE_URL, 'db/data'))
+
+    # Remove the user and all its relationships
+    statement = (
+        'MATCH (u:User {id:{id}}) OPTIONAL MATCH (u)-[r]-() DELETE u, r'
+    )
+
+    try:
+        graph.cypher.execute(statement, {'id': user_id})
+
+    except Exception as e:
+        """ Cypher queries are expected to fail and raise an exception when
+        Neo4J is not running or when transactional queries are not available
+        (e.g. Travis CI doesn't support transactional queries yet)
+        """
+        logger.error(
+            'Failed to delete user (%s). Exception: %s', user_id, e
+        )
+
+    # Remove the user's annotation set
+    statement = (
+        'MATCH (n:AnnotationSets{user}) REMOVE n:AnnotationSets{user}'
+        .format(user=user_name.capitalize())
+    )
+
+    try:
+        graph.cypher.execute(statement)
+
+    except Exception as e:
+        """ Cypher queries are expected to fail and raise an exception when
+        Neo4J is not running or when transactional queries are not available
+        (e.g. Travis CI doesn't support transactional queries yet)
+        """
+        logger.error(
+            'Failed to delete the user\'s (%s) annotation set. Exception: %s',
+            user_id, e
         )
 
 

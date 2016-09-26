@@ -1,12 +1,12 @@
 * Specific code commit: 
 * Version of the web browser and OS: 
-* Environment where the error occured (Vagrant VM and site conf mode or AWS instance): 
+* Environment where the error occurred (Vagrant VM and site conf mode or AWS instance): 
 
 ### Steps to reproduce
 Please list all the actions and the input data used:
 
 1. 
-1. 
+2. 
 
 ### Observed behavior
 * Any unexpected output or action produced by steps above (or lack of expected output or action)

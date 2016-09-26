@@ -15,25 +15,28 @@
                ng-intro-oncomplete="dataUploadCompletedEvent" ng-intro-onexit="dataUploadExitEvent"
                ng-intro-onchange="dataUploadChangeEvent" ng-intro-onbeforechange="dataUploadBeforeChangeEvent"
                ng-intro-onafterchange="dataUploadAfterChangeEvent">
-            <div id="dataUploadTutorialStep0">
-              <a
+            <div>
+              <button
+                class="no-underline btn"
+                ng-class="{'active': dashboard.dataSetExploration}"
+                ng-click="dashboard.toggleDataSetsExploration()"
+                ng-if="dashboard.explorationEnabled">
+                <i class="fa fa-compass" title="Explore data sets"></i> Explore
+              </button>
+              <span id="dataUploadTutorialStep0">
+               <a
                 href="./data_set_manager/import/"
                 class="no-underline btn"
                 id="import-button"
                 ng-if="dashboard.showUploadButton()">
                 <i class="fa fa-plus-circle"></i> Upload
               </a>
+             </span>
             </div>
           </div>
         </div>
 
-        <button
-          class="no-underline btn"
-          ng-class="{'active': dashboard.dataSetExploration}"
-          ng-click="dashboard.toggleDataSetsExploration()"
-          ng-if="dashboard.explorationEnabled">
-          <i class="fa fa-compass" title="Explore data sets"></i> Explore
-        </button>
+
       </span>
     </div>
 
