@@ -34,7 +34,7 @@ script:
 
   - echo 'travis_fold:start:grunt'
   - pushd ui
-  - grunt make
+  - grunt
   - popd
   - echo 'travis_fold:end:grunt'
 
