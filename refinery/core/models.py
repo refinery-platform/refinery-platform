@@ -2435,10 +2435,16 @@ class CustomRegistrationManager(RegistrationManager):
         new_user.last_name = last_name
         new_user.save()
 
-        new_user_profile = UserProfile.objects.get(user=new_user.id)
-        new_user_profile.affiliation = affiliation
-        new_user_profile.save()
-        new_user.userprofile = new_user_profile
+        try:
+            new_user_profile = UserProfile.objects.get(user=new_user.id)
+        except (UserProfile.DoesNotExist,
+                UserProfile.MultipleObjectsReturned) as e:
+            logger.error("Error while fetching Userprofile: %s" % e)
+
+        if new_user_profile:
+            new_user_profile.affiliation = affiliation
+            new_user_profile.save()
+            new_user.userprofile = new_user_profile
 
         registration_profile = self.create_profile(new_user)
 
