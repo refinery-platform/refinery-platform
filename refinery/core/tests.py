@@ -46,7 +46,6 @@ class UserCreateTest(unittest.TestCase):
         self.email = "test@example.com"
         self.first_name = "John"
         self.last_name = "Sample"
-        self.affiliation = "University"
 
         create_public_group()
 
