@@ -2433,8 +2433,12 @@ class CustomRegistrationManager(RegistrationManager):
         # Adding custom fields
         new_user.first_name = first_name
         new_user.last_name = last_name
-        new_user.affiliation = affiliation
         new_user.save()
+
+        new_user_profile = UserProfile.objects.get(user=new_user.id)
+        new_user_profile.affiliation = affiliation
+        new_user_profile.save()
+        new_user.userprofile = new_user_profile
 
         registration_profile = self.create_profile(new_user)
 
@@ -2502,7 +2506,8 @@ class CustomRegistrationProfile(RegistrationProfile):
                     'registered_user_username': self.user.username,
                     'registered_user_full_name': "{} {}".format(
                         self.user.first_name, self.user.last_name),
-                    'registered_user_affiliation': self.user.affiliation
+                    'registered_user_affiliation':
+                        self.user.userprofile.affiliation
 
                     }
         subject = render_to_string('registration/activation_email_subject.txt',
