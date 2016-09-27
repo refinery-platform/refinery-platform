@@ -144,6 +144,7 @@ function DashboardCtrl (
   this.dashboardDataSetsReloadService.setReload(function (hardReset) {
     if (hardReset) {
       this.dataSets.resetCache();
+      this.dataSet.reload();
     }
     // Reset current list and reload uiScroll
     if (this.dataSetsAdapter) {
@@ -1534,6 +1535,7 @@ DashboardCtrl.prototype.toggleSortOrder = function (source) {
   }
 };
 
+
 /**
  * Trigger sorting of data sets, analyses, or workflows.
  *
@@ -1574,12 +1576,31 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
   this[reloadService].reload();
 };
 
+/**
+ * Open the deletion modal.
+ *
+ * @method  openDataSetDeleteModal
+ * @author  Scott Ouellette
+ * @date    2016-9-20
+ */
 DashboardCtrl.prototype.openDataSetDeleteModal = function (dataSet) {
-  this.$rootScope.dataSet = dataSet;
+  this.collapseDataSetPreview();
+  this.collapseDatasetExploration();
   this.$uibModal.open({
-    templateUrl:
-      '/static/partials/dashboard/partials/dataset-delete-dialog.html',
-    scope: this.$rootScope
+    templateUrl: '/static/partials/dashboard/partials/dataset-delete-dialog.html',
+    controller: 'DataSetDeleteCtrl as modal',
+    resolve: {
+      config: function () {
+        return {
+          model: 'data_sets',
+          uuid: dataSet.uuid
+        };
+      },
+      dataSet: dataSet,
+      dataSets: this.dataSets,
+      analyses: this.analyses,
+      analysesReloadService: this.dashboardAnalysesReloadService
+    }
   });
 };
 
