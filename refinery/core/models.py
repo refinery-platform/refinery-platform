@@ -810,6 +810,29 @@ class DataSet(SharableResource):
                 user_ids
             )
 
+    def get_file_store_items(self):
+        investigation = self.get_investigation()
+
+        try:
+            study = Study.objects.get(investigation=investigation)
+            nodes = Node.objects.filter(study=study)
+        except (Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
+            logger.error("Could not fetch Study properly: %s", e)
+        else:
+            file_store_items = []
+
+            for node in nodes:
+                try:
+                    file_store_items.append(
+                        FileStoreItem.objects.get(uuid=node.file_uuid)
+                    )
+
+                except(FileStoreItem.DoesNotExist,
+                       FileStoreItem.MultipleObjectsReturned) as e:
+                    logger.error("Error while fetching FileStoreItem: %s", e)
+
+            return file_store_items
+
 
 @receiver(pre_delete, sender=DataSet)
 def _dataset_delete(sender, instance, *args, **kwargs):

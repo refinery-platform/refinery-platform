@@ -1980,3 +1980,97 @@ class DataSetResourceTest(ResourceTestCase):
         self.assertEqual(data['uuid'], self.dataset.uuid)
         self.assertEqual(data['analyses'], [])
         self.assertEqual(len(data['analyses']), 0)
+
+
+class DataSetClassMethodsTest(unittest.TestCase):
+    """ Testing of methods specific to the DataSet model
+    """
+
+    def setUp(self):
+        self.username = self.password = 'user'
+        self.user = User.objects.create_user(
+            self.username, '', self.password
+        )
+        self.username2 = self.password2 = 'user2'
+        self.user2 = User.objects.create_user(
+            self.username2, '', self.password2
+        )
+        self.project = Project.objects.create()
+        self.user_catch_all_project = UserProfile.objects.get(
+            user=self.user
+        ).catch_all_project
+        self.dataset = DataSet.objects.create()
+        self.dataset2 = DataSet.objects.create()
+        self.galaxy_instance = Instance.objects.create()
+        self.workflow_engine = WorkflowEngine.objects.create(
+            instance=self.galaxy_instance
+        )
+        self.workflow = Workflow.objects.create(
+            workflow_engine=self.workflow_engine
+        )
+        self.investigation = Investigation.objects.create()
+        self.study = Study.objects.create(investigation=self.investigation)
+        self.assay = Assay.objects.create(
+            study=self.study)
+        self.investigation_link = \
+            InvestigationLink.objects.create(
+                investigation=self.investigation,
+                data_set=self.dataset,
+                version=1
+            )
+
+        self.file_store_item = \
+            FileStoreItem.objects.create(
+                datafile=SimpleUploadedFile(
+                    'test_file.txt',
+                    'Coffee is delicious!')
+            )
+        self.file_store_item1 = \
+            FileStoreItem.objects.create(
+                datafile=SimpleUploadedFile(
+                    'test_file.txt',
+                    'Coffee is delicious!')
+            )
+        self.file_store_item2 = \
+            FileStoreItem.objects.create(
+                datafile=SimpleUploadedFile(
+                    'test_file.txt',
+                    'Coffee is delicious!')
+            )
+        self.node = Node.objects.create(
+            name="n0", assay=self.assay, study=self.study,
+            file_uuid=self.file_store_item.uuid)
+        self.node1 = Node.objects.create(
+            name="n1", assay=self.assay, study=self.study,
+            file_uuid=self.file_store_item1.uuid)
+        self.node2 = Node.objects.create(
+            name="n2", assay=self.assay, study=self.study,
+            file_uuid=self.file_store_item2.uuid)
+        self.node3 = Node.objects.create(
+            name="n3", assay=self.assay, study=self.study)
+        self.node4 = Node.objects.create(
+            name="n4", assay=self.assay, study=self.study)
+
+    def tearDown(self):
+        User.objects.all().delete()
+        Project.objects.all().delete()
+        WorkflowEngine.objects.all().delete()
+        Workflow.objects.all().delete()
+        DataSet.objects.all().delete()
+        Instance.objects.all().delete()
+        Analysis.objects.all().delete()
+        UserProfile.objects.all().delete()
+        Node.objects.all().delete()
+        Study.objects.all().delete()
+        Assay.objects.all().delete()
+        Investigation.objects.all().delete()
+        AnalysisNodeConnection.objects.all().delete()
+        InvestigationLink.objects.all().delete()
+        FileStoreItem.objects.all().delete()
+
+    def test_get_file_store_items(self):
+        file_store_items = self.dataset.get_file_store_items()
+        self.assertEqual(len(file_store_items), 3)
+        self.assertIn(self.file_store_item, file_store_items)
+        self.assertIn(self.file_store_item1, file_store_items)
+        self.assertIn(self.file_store_item2, file_store_items)
