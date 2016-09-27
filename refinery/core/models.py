@@ -2397,7 +2397,7 @@ class AuthenticationFormUsernameOrEmail(AuthenticationForm):
         if '@' in username:
             try:
                 username = User.objects.get(email=username).username
-            except ObjectDoesNotExist as e:
+            except User.ObjectDoesNotExist as e:
                 logger.error("Could not login with email %s, error: %s",
                              username, e)
                 raise ValidationError(
@@ -2406,7 +2406,7 @@ class AuthenticationFormUsernameOrEmail(AuthenticationForm):
                     code='invalid_login',
                     params={'username': self.username_field.verbose_name},
                 )
-            except MultipleObjectsReturned as e:
+            except User.MultipleObjectsReturned as e:
                 logger.error("Duplicate registration with email %s, error: "
                              "%s", username, e)
                 raise ValidationError(
