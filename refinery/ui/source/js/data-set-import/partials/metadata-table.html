@@ -126,9 +126,14 @@
           refinery-tooltip-hide-on-click="true">
         </i>
       </button>
-      <span class="text-warning" ng-if="!metadataTable.isSeparatorOk && !metadataTable.file">
+      <span class="text-warning" ng-if="!metadataTable.file">
         <i class="fa fa-warning" aria-hidden="true"></i>
         Please specify the custom separator <strong>prior</strong> to file selection.
+      </span>
+      <span class="text-warning"
+        ng-if="metadataTable.file && metadataTable.whiteSpaceStripFlag">
+        <i class="fa fa-warning" aria-hidden="true"></i>
+        Leading and/or trailing whitespaces were detected and removed.
       </span>
     </label>
 
@@ -167,7 +172,7 @@
               ng-model="metadataTable.title"/>
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
-            The title of the data set to be imported.
+            Update the title of the data set to be imported.
             This will be shown in the data set browser.
           </div>
         </div>
@@ -358,7 +363,7 @@
 
           <div class="row m-t-1-4 m-b-1-4">
           <div class="col-sm-6 col-md-3 col-lg-2">
-            Make Import Permanent
+            Import Now
           </div>
           <div class="col-sm-6 col-md-3 col-lg-2">
             <input
@@ -369,7 +374,7 @@
           <div class="col-sm-12 col-md-6 col-lg-8">
             If selected, data files located on remote servers (referenced by
             URL) or located on the file system of the server (referenced by
-            a relative or absolute path in addition to a filename) will be
+            an absolute file system path) will be
             imported into the system upon creation of the data set. If not
             selected, such files will only be imported into the system if
             selected for analysis.
@@ -391,7 +396,7 @@
               class="refinery-base btn btn-default"
               ng-click="metadataTable.checkFiles()"
               ng-disabled="!metadataTable.dataFileColumn">
-              Check Availability of Data File
+              Check Availability of Data Files
             </button>
             <button
               class="refinery-base btn btn-primary"

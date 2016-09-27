@@ -2417,13 +2417,18 @@ class AuthenticationFormUsernameOrEmail(AuthenticationForm):
         if '@' in username:
             try:
                 username = User.objects.get(email=username).username
-            except ObjectDoesNotExist:
+            except User.ObjectDoesNotExist as e:
+                logger.error("Could not login with email %s, error: %s",
+                             username, e)
                 raise ValidationError(
-                    self.error_messages['invalid_login'],
+                    'The email entered does not belong to any user account. '
+                    'Please check for typos or register below.',
                     code='invalid_login',
                     params={'username': self.username_field.verbose_name},
                 )
-            except MultipleObjectsReturned:
+            except User.MultipleObjectsReturned as e:
+                logger.error("Duplicate registration with email %s, error: "
+                             "%s", username, e)
                 raise ValidationError(
                     'You have registered twice with the same email. Hence, ' +
                     'we don\'t know under which user you want to log in. ' +
@@ -2453,8 +2458,18 @@ class CustomRegistrationManager(RegistrationManager):
         # Adding custom fields
         new_user.first_name = first_name
         new_user.last_name = last_name
-        new_user.affiliation = affiliation
         new_user.save()
+
+        try:
+            new_user_profile = UserProfile.objects.get(user=new_user.id)
+        except (UserProfile.DoesNotExist,
+                UserProfile.MultipleObjectsReturned) as e:
+            logger.error("Error while fetching Userprofile: %s" % e)
+
+        if new_user_profile:
+            new_user_profile.affiliation = affiliation
+            new_user_profile.save()
+            new_user.userprofile = new_user_profile
 
         registration_profile = self.create_profile(new_user)
 
@@ -2522,7 +2537,8 @@ class CustomRegistrationProfile(RegistrationProfile):
                     'registered_user_username': self.user.username,
                     'registered_user_full_name': "{} {}".format(
                         self.user.first_name, self.user.last_name),
-                    'registered_user_affiliation': self.user.affiliation
+                    'registered_user_affiliation':
+                        self.user.userprofile.affiliation
 
                     }
         subject = render_to_string('registration/activation_email_subject.txt',
