@@ -47,6 +47,7 @@ angular
     'refineryChart',
     'refineryFileBrowser',
     'refineryDataSetAbout',
+    'refineryVisualization',
     'refineryIGV'
   ])
   .run(['$', '$rootScope', function ($, $rootScope) {

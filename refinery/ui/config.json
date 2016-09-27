@@ -34,7 +34,8 @@
       "node-mapping",
       "node-relationship",
       "statistics",
-      "workflows"
+      "workflows",
+      "visualization"
     ],
     "vendor": {
       "css": [
