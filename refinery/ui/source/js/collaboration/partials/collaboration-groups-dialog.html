@@ -25,7 +25,6 @@
           class="refinery-base btn btn-default"
           style="float:right"
           ng-click="modal.leaveGroup()"
-          ng-class="{ disabled: modal.group.member_list.length===1 }"}
           ng-disabled="modal.group.member_list.length===1 || modal.group.can_edit">
           Leave
         </button>
@@ -37,6 +36,7 @@
           ng-click="modal.deleteGroup()"
           ng-disabled="!modal.group.can_edit">
           Delete
+
         </button>
       </td>
     </tr>
