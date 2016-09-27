@@ -1,21 +1,20 @@
 <div class="row">
   <ui-select
   append-to-body="true"
-  ng-model="selectedSpecies.select"
+  ng-model="selectedVisualization.select"
   theme="select2"
   class="ui-select-drop text-left">
   <ui-select-match placeholder="Select a species">
-      {{$select.selected.name}}
+      {{$select.selected}}
   </ui-select-match>
   <ui-select-choices
-    repeat="species in (speciesList | filter: $select.search)">
-      {{species.name}}
+    repeat="visualization in (visualizations | filter: $select.search)">
+      {{visualization}}
   </ui-select-choices>
 </ui-select>
   <button
     class="btn btn-primary btn-xs"
-    ng-click="launchIgvJs()"
-    ng-disabled="ICtrl.areSelectedNodesEmpty() && speciesList.length == 0">
+    ng-click="launchVisualization()">
     Launch Visualization
   </button>
 </div>
