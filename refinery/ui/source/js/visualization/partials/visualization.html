@@ -15,7 +15,23 @@
 </ui-select>
   <button
     class="btn btn-primary btn-xs"
-    ng-click="VCtrl.launchVisualization()">
+    ng-click="VCtrl.launchVisualization()"
+    ng-disabled="!VCtrl.selectedVisualization.select">
     Launch Visualization
   </button>
 </div>
+
+
+<!-- Add scripts for the different visualizations here. -->
+  <script type="text/ng-template" id='i-g-v-launch-modal.html'>
+    <rp-i-g-v-launch-modal-detail></rp-i-g-v-launch-modal-detail>
+  </script>
+
+  <select class="select" name="mode" ng-model="modes.mode" ng-dropdown required  >
+    <option ng-option value="i-g-v-launch-modal">IGV</option>
+  </select>
+
+ <button class="action_create" id="create" ng-model="button" ng-click="launch()
+ ">Launch</button>
+
+  </div>
