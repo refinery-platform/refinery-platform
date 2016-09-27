@@ -34,7 +34,7 @@ describe('DataSetImport.directive.isaTabImport: unit tests', function () {
 
   describe('DOM', function () {
     it('should replace custom element with template', function () {
-      expect(directiveEl.attr('id')).toBe('isa-tab-import-form');
+      expect(directiveEl.html()).toContain('isa-tab-import-form');
     });
   });
 });
