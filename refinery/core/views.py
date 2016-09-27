@@ -1049,6 +1049,53 @@ class NodeViewSet(viewsets.ModelViewSet):
     # permission_classes = (IsAuthenticated,)
 
 
+class DataSetsViewSet(APIView):
+    http_method_names = ['delete']
+
+    def delete(self, request, uuid):
+        if not request.user.is_authenticated():
+            return Response({
+                "status": status.HTTP_403_FORBIDDEN,
+                "data": "User {} is not authenticated".format(request.user)
+            })
+        else:
+            try:
+                dataset_deleted = DataSet.objects.get(uuid=uuid).delete()
+            except NameError as e:
+                logger.error(e)
+                return Response({
+                    "status": status.HTTP_400_BAD_REQUEST,
+                    "data": "Bad Request"
+                })
+            except DataSet.DoesNotExist as e:
+                logger.error(e)
+                return Response({
+                    "status": status.HTTP_404_NOT_FOUND,
+                    "data": "Dataset with UUID: {} not found.".format(uuid)
+                })
+            except DataSet.MultipleObjectsReturned as e:
+                logger.error(e)
+                return Response({
+                    "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "data": "Multiple Datasets returned for this request"
+                })
+            else:
+                if dataset_deleted[0]:
+                    return Response(
+                        {
+                            "data": dataset_deleted[1],
+                            "status": status.HTTP_200_OK
+                        }
+                    )
+                else:
+                    return Response(
+                        {
+                            "data": dataset_deleted[1],
+                            "status": status.HTTP_400_BAD_REQUEST
+                        }
+                    )
+
+
 class CustomRegistrationView(RegistrationView):
 
     def register(self, request, **cleaned_data):

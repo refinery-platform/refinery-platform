@@ -22,7 +22,7 @@ from core.api import (AnalysisResource, ProjectResource, NodeSetResource,
                       FastQCResource, UserProfileResource)
 from core.models import DataSet, AuthenticationFormUsernameOrEmail
 from core.views import (WorkflowViewSet, NodeViewSet,
-                        CustomRegistrationView, NodeGroups)
+                        CustomRegistrationView, NodeGroups, DataSetsViewSet)
 from file_store.views import FileStoreItems
 from data_set_manager.views import Assays, AssaysFiles, AssaysAttributes
 from data_set_manager.api import (AttributeOrderResource, StudyResource,
@@ -171,6 +171,11 @@ urlpatterns = patterns(
     url(r'^api/v2/file_store_items/(?P<uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
         r''r'12})/$', FileStoreItems.as_view()),
+
+    url(r'^api/v2/data_sets/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
+        r''r'12})/$',
+        DataSetsViewSet.as_view()),
 
     # (r'^favicon\.ico$',
     # 'django.views.generic.simple.redirect_to',

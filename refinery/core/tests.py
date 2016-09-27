@@ -1,4 +1,6 @@
 import json
+from urlparse import urljoin
+
 import mock
 
 from django.contrib.auth.models import User, Group
@@ -7,7 +9,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import unittest, timezone
 from django.test import TestCase
 
-from rest_framework.test import APIRequestFactory
+from rest_framework.test import APIRequestFactory, APIClient, \
+    force_authenticate
 from rest_framework.test import APITestCase
 from guardian.shortcuts import assign_perm
 import mockcache as memcache
@@ -26,7 +29,7 @@ from core.models import (
 from core.utils import (get_aware_local_time,
                         create_current_selection_node_group,
                         filter_nodes_uuids_in_solr, move_obj_to_front)
-from core.views import NodeGroups
+from core.views import NodeGroups, DataSetsViewSet
 from .serializers import NodeGroupSerializer
 from file_store.models import FileStoreItem
 from file_store.models import FileExtension
@@ -1863,7 +1866,7 @@ class UserTutorialsTest(TestCase):
 
 
 class DataSetResourceTest(ResourceTestCase):
-    """Test Analysis REST API operations"""
+    """Test DataSet V1 REST API operations"""
 
     def setUp(self):
         super(DataSetResourceTest, self).setUp()
@@ -2074,3 +2077,159 @@ class DataSetClassMethodsTest(unittest.TestCase):
         self.assertIn(self.file_store_item, file_store_items)
         self.assertIn(self.file_store_item1, file_store_items)
         self.assertIn(self.file_store_item2, file_store_items)
+
+
+class DataSetApiV2Tests(APITestCase):
+
+    def setUp(self):
+
+        create_public_group()
+
+        self.public_group_name = ExtendedGroup.objects.public_group().name
+        self.username = 'coffee_lover'
+        self.password = 'coffeecoffee'
+        self.user = User.objects.create_user(self.username, '',
+                                             self.password)
+
+        self.factory = APIRequestFactory()
+        self.client = APIClient()
+        self.view = DataSetsViewSet.as_view()
+
+        self.url_root = '/api/v2/data_sets/'
+
+        # Create Datasets
+        self.dataset = DataSet.objects.create(name="coffee dataset")
+        self.dataset2 = DataSet.objects.create(name="cool dataset")
+
+        # Create Investigation/InvestigationLinks for the DataSets
+        self.investigation = Investigation.objects.create()
+
+        # Create Studys and Assays
+        self.study = Study.objects.create(investigation=self.investigation)
+        self.assay = Assay.objects.create(study=self.study)
+
+        # Create Nodes
+        self.node = Node.objects.create(assay=self.assay, study=self.study)
+
+        self.node_json = json.dumps([{
+            "uuid": "cfb31cca-4f58-4ef0-b1e2-4469c804bf73",
+            "relative_file_store_item_url": None,
+            "parent_nodes": [],
+            "child_nodes": [
+                "1d9ee2ee-d804-4458-93b9-b1fb9a08a2c8"
+            ],
+            "auxiliary_nodes": [],
+            "is_auxiliary_node": False,
+            "file_extension": None,
+            "auxiliary_file_generation_task_state": None,
+            "ready_for_igv_detail_view": None
+        }])
+
+        self.client.login(username=self.username, password=self.password)
+
+        # Make reusable requests & responses
+        self.get_request = self.factory.get(self.url_root)
+        self.get_response = self.view(self.get_request)
+        self.put_request = self.factory.put(
+            self.url_root,
+            data=self.node_json,
+            format="json"
+        )
+        self.put_response = self.view(self.put_request)
+        self.patch_request = self.factory.patch(
+            self.url_root,
+            data=self.node_json,
+            format="json"
+        )
+        self.patch_response = self.view(self.patch_request)
+        self.options_request = self.factory.options(
+            self.url_root,
+            data=self.node_json,
+            format="json"
+        )
+        self.options_response = self.view(self.options_request)
+
+    def tearDown(self):
+        Node.objects.all().delete()
+        User.objects.all().delete()
+        Study.objects.all().delete()
+        Assay.objects.all().delete()
+        DataSet.objects.all().delete()
+        Investigation.objects.all().delete()
+        Group.objects.all().delete()
+        ExtendedGroup.objects.all().delete()
+
+    def test_unallowed_http_verbs(self):
+        self.assertEqual(
+            self.put_response.data['detail'], 'Method "PUT" not allowed.')
+        self.assertEqual(
+            self.patch_response.data['detail'], 'Method "PATCH" not allowed.')
+        self.assertEqual(
+            self.options_response.data['detail'], 'Method "OPTIONS" not '
+                                                  'allowed.')
+        self.assertEqual(
+            self.get_response.data['detail'], 'Method "GET" not allowed.')
+
+    def test_dataset_delete_successful(self):
+
+        self.assertEqual(DataSet.objects.all().count(), 2)
+
+        self.delete_request1 = self.factory.delete(
+           urljoin(self.url_root, self.dataset.uuid)
+        )
+
+        force_authenticate(self.delete_request1, user=self.user)
+
+        self.delete_response = self.view(self.delete_request1,
+                                         self.dataset.uuid)
+
+        self.assertEqual(self.delete_response.data['status'], 200)
+
+        self.assertEqual(DataSet.objects.all().count(), 1)
+
+        self.delete_request2 = self.factory.delete(
+          urljoin(self.url_root, self.dataset2.uuid)
+        )
+
+        force_authenticate(self.delete_request2, user=self.user)
+
+        self.delete_response = self.view(self.delete_request2,
+                                         self.dataset2.uuid)
+        self.assertEqual(self.delete_response.data['status'], 200)
+
+        self.assertEqual(DataSet.objects.all().count(), 0)
+
+    def test_dataset_delete_no_auth(self):
+        self.assertEqual(DataSet.objects.all().count(), 2)
+
+        self.delete_request = self.factory.delete(
+           urljoin(self.url_root, self.dataset.uuid)
+        )
+
+        self.delete_response = self.view(self.delete_request,
+                                         self.dataset.uuid)
+
+        self.assertEqual(self.delete_response.data['status'], 403)
+
+        self.assertEqual(DataSet.objects.all().count(), 2)
+
+    def test_dataset_delete_not_found(self):
+        self.assertEqual(DataSet.objects.all().count(), 2)
+
+        uuid = self.dataset.uuid
+
+        self.dataset.delete()
+
+        self.assertEqual(DataSet.objects.all().count(), 1)
+
+        self.delete_request = self.factory.delete(
+           urljoin(self.url_root, uuid)
+        )
+        force_authenticate(self.delete_request, user=self.user)
+
+        self.delete_response = self.view(self.delete_request,
+                                         uuid)
+
+        self.assertEqual(self.delete_response.data['status'], 404)
+
+        self.assertEqual(DataSet.objects.all().count(), 1)
