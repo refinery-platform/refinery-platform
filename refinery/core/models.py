@@ -2397,13 +2397,18 @@ class AuthenticationFormUsernameOrEmail(AuthenticationForm):
         if '@' in username:
             try:
                 username = User.objects.get(email=username).username
-            except ObjectDoesNotExist:
+            except User.ObjectDoesNotExist as e:
+                logger.error("Could not login with email %s, error: %s",
+                             username, e)
                 raise ValidationError(
-                    self.error_messages['invalid_login'],
+                    'The email entered does not belong to any user account. '
+                    'Please check for typos or register below.',
                     code='invalid_login',
                     params={'username': self.username_field.verbose_name},
                 )
-            except MultipleObjectsReturned:
+            except User.MultipleObjectsReturned as e:
+                logger.error("Duplicate registration with email %s, error: "
+                             "%s", username, e)
                 raise ValidationError(
                     'You have registered twice with the same email. Hence, ' +
                     'we don\'t know under which user you want to log in. ' +
