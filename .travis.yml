@@ -30,7 +30,7 @@ before_script:
   - bower install --config.interactive=false
   - cd ../
 script:
-  - set -e
+  - set -e # Any error will cause travis to exit early and report a failure.
 
   - flake8 --exclude=migrations,ui ..
 
@@ -61,7 +61,7 @@ script:
   - coverage run manage.py test
   - echo 'travis_fold:end:django-tests'
 
-  - set +e
+  - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
 after_success:
   - codecov
   - npm run codecov
