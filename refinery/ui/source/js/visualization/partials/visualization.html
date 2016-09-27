@@ -1,0 +1,21 @@
+<div class="row">
+  <ui-select
+  append-to-body="true"
+  search-enabled="false"
+  ng-model="VCtrl.selectedVisualization.select"
+  theme="select2"
+  class="ui-select-drop text-left">
+  <ui-select-match placeholder="Select a Visualization">
+    {{$select.selected}}
+  </ui-select-match>
+  <ui-select-choices
+    repeat="visualization in VCtrl.visualizations">
+      {{visualization}}
+  </ui-select-choices>
+</ui-select>
+  <button
+    class="btn btn-primary btn-xs"
+    ng-click="VCtrl.launchVisualization()">
+    Launch Visualization
+  </button>
+</div>

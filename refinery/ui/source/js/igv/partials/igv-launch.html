@@ -16,16 +16,6 @@
     class="btn btn-primary btn-xs"
     ng-click="launchIgvJs()"
     ng-disabled="ICtrl.areSelectedNodesEmpty() && speciesList.length == 0">
-    Launch IGV
+    Launch Visualization
   </button>
-</div>
-
-<div class="row">
-  <div ng-if="message">
-    <div class="alert alert-{{ messageType }} text-center">{{message}}</div>
-  </div>
-  <p ng-if="isLoadingSpecies">
-    <i class="fa fa-refresh fa-spin p-a-1-5"></i>
-    Detecting species ...
-  </p>
 </div>
