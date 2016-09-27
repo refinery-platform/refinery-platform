@@ -18,16 +18,6 @@ function IGVCtrl (
   $scope.messageType = 'info';
   $scope.isLoadingSpecies = false;
 
-  // $scope.$onRootScope('nodeSetChangedEvent', function () {
-  //  // reset
-  //  $scope.message = null;
-  //  $scope.messageType = 'info';
-  //  $scope.selectedSpecies.select = $scope.speciesList[0];
-  //
-  //  // detect species
-  //  $scope.detectSpecies();
-  // });
-
   vm.areSelectedNodesEmpty = function () {
     if (selectedNodesService.selectedNodesUuids.length > 0 ||
       selectedNodesService.complementSelectedNodesUuids.length > 0) {
@@ -35,25 +25,7 @@ function IGVCtrl (
     }
     return true;
   };
-  // vm.createIGVConfig = function () {
-  //  $scope.igvConfig.query = response.objects[0].solr_query;
-  //  $scope.igvConfig.node_selection = JSON.parse(
-  //    response.objects[0].solr_query_components
-  //  ).documentSelection;
-  //  $scope.igvConfig.node_selection_blacklist_mode = JSON.parse(
-  //    response.objects[0].solr_query_components
-  //  ).documentSelectionBlacklistMode;
-  //  $scope.igvConfig.annotation = null;
-  //  $scope.igvConfig.query = response.objects[0].solr_query;
-  //  $scope.igvConfig.node_selection = JSON.parse(
-  //    response.objects[0].solr_query_components
-  //  ).documentSelection;
-  //  $scope.igvConfig.node_selection_blacklist_mode = JSON.parse(
-  //    response.objects[0].solr_query_components
-  //  ).documentSelectionBlacklistMode;
-  //  $scope.igvConfig.annotation = null;
-  //  $scope.retrieveSpecies();
-  // };
+
   $scope.retrieveSpecies = function () {
     if (selectedNodesService.selectedAllFlag) {
       $scope.igvConfig.node_selection = selectedNodesService.complementSelectedNodesUuids;
