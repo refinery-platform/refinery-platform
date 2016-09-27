@@ -482,7 +482,11 @@ class ManageableResource:
 class DataSetQuerySet(models.query.QuerySet):
     def delete(self):
         for instance in self:
-            instance.delete()
+            try:
+                instance.delete()
+            except Exception as e:
+                return (False, "DataSet: {} could not be deleted! {}".format(
+                         self, e))
 
 
 class DataSetManager(models.Manager):
@@ -538,8 +542,7 @@ class DataSet(SharableResource):
         Overrides the DataSet model's delete method.
 
         Deletes NodeCollection and related object based on uuid of
-        Investigations linked to the DataSet as long as an
-        Analysis has not been run upon the DataSet.
+        Investigations linked to the DataSet.
         This deletes Studys, Assays and Investigations in
         addition to the related objects detected by Django.
 
@@ -547,57 +550,51 @@ class DataSet(SharableResource):
         pre_isa_archive associated with the DataSet if one exists.
         """
 
-        # First check to see if DataSet has been analyzed
-        if not self.get_analyses():
-            isa_archive = self.get_isa_archive()
-            if isa_archive:
-                try:
-                    isa_archive.delete()
+        isa_archive = self.get_isa_archive()
+        if isa_archive:
+            try:
+                isa_archive.delete()
 
-                except Exception as e:
-                    logger.error(
-                        "Couldn't delete DataSet's isa_archive: %s" % e)
+            except Exception as e:
+                logger.error(
+                    "Couldn't delete DataSet's isa_archive: %s" % e)
 
-            pre_isa_archive = self.get_pre_isa_archive()
-            if pre_isa_archive:
-                try:
-                    pre_isa_archive.delete()
+        pre_isa_archive = self.get_pre_isa_archive()
+        if pre_isa_archive:
+            try:
+                pre_isa_archive.delete()
 
-                except Exception as e:
-                    logger.error(
-                        "Couldn't delete DataSet's isa_archive: %s" % e)
+            except Exception as e:
+                logger.error(
+                    "Couldn't delete DataSet's isa_archive: %s" % e)
 
-            related_investigation_links = self.get_investigation_links()
+        related_investigation_links = self.get_investigation_links()
 
-            for investigation_link in related_investigation_links:
+        for investigation_link in related_investigation_links:
 
-                node_collection = investigation_link.get_node_collection()
+            node_collection = investigation_link.get_node_collection()
 
-                try:
-                    node_collection.delete()
-                except Exception as e:
-                    logger.error("Couldn't delete NodeCollection:", e)
+            try:
+                node_collection.delete()
+            except Exception as e:
+                logger.error("Couldn't delete NodeCollection:", e)
 
+        # Try to terminate any currently running FileImport tasks just to be
+        # safe
+        file_store_items = self.get_file_store_items()
+        if file_store_items is not None:
+            for file_store_item in file_store_items:
+                file_store_item.terminate_file_import_task()
+        try:
             super(DataSet, self).delete()
-
+        except Exception as e:
+            return False, "DataSet: {} could not be deleted! {}".format(
+                     self, e)
+        else:
             # Return a "truthy" value here so that the admin ui knows if the
             # deletion succeeded or not as well as the proper message to
             # display to the end user
             return True, "DataSet: {} was deleted successfully!".format(self)
-
-        else:
-            # Prepare string to be displayed upon a failed deletion
-            deletion_error_message = "Cannot delete DataSet: {}. It has " \
-                                     "been used in these analyses: {}".format(
-                                            self,
-                                            str(self.get_analyses())
-                                        )
-            logger.error(deletion_error_message)
-
-            # Return a "falsey" value here so that the admin ui knows if the
-            # deletion succeeded or not as well as the proper message to
-            # display to the end user
-            return False, deletion_error_message
 
     def get_analyses(self):
         return Analysis.objects.filter(data_set=self)
