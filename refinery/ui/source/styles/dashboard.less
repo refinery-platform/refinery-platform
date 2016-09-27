@@ -47,7 +47,7 @@
 
   .separator {
     margin: 0 0.2rem;
-    color: @gray-lighter-rgba;
+    color: @gray-light-rgba;
   }
 }
 
@@ -536,7 +536,7 @@
   }
 }
 
-.preview .dataset-delete {
+.preview {
   .content-container {
     transition: opacity @fast-transition-speed @ease-in-out-cubic;
 
@@ -895,7 +895,7 @@
 
       > li {
         position: relative;
-        padding: 5px 4.75rem 5px 0;
+        padding: 5px 2.5rem 5px 0;
         border-top: 1px solid @gray-lighter-rgba;
         transition: all @fast-transition-speed @ease-in-out-cubic;
 
@@ -1057,33 +1057,12 @@
           background: #326180;
         }
 
-      .delete-dataset-name{
-        font-size: 1.2em;
-        color: @gray-lighter-rgba;
-      }
       .dataset-delete {
-        position: absolute;
-        top: 0;
-        right: 1.5em;
-        bottom: 0;
-        display: flex;
-        justify-content: center; /* align horizontal */
-        align-items: center; /* align vertical */
-        padding: 0 0.25em;
-        font-size: 1.2em;
-        color: @gray-lighter-rgba;
-        border: none;
-        background: rgba(0, 0, 0, 0);
-        transition: all @fast-transition-speed @ease-in-out-cubic;
-        text-decoration: none;
+        padding: 2.5px;
       }
       .dataset-delete:hover {
-        background: rgba(255, 1, 0, 0.2);
-      }
-
-      &.previewing .dataset-delete {
-          color: red;
-          background: rgba(255, 1, 0, 0.2);
+        color:red !important;
+        background: rgba(255, 1, 0, 0.2) !important;
       }
     }
 
@@ -1520,6 +1499,11 @@ body.repo-mode .refinery-dashboard {
   color: #286090;
 }
 
-.delete-color{
-  color:red;
+#related-analyses {
+  max-height: 250px;
+  overflow: auto;
+}
+
+.deletion-message{
+  text-align: initial;
 }
