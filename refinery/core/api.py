@@ -502,6 +502,8 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         bundle.data["date"] = bundle.obj.get_version_details().date
         bundle.data["creation_date"] = bundle.obj.creation_date
         bundle.data["modification_date"] = bundle.obj.modification_date
+        bundle.data["analyses"] = [analysis.__dict__ for analysis in
+                                   bundle.obj.get_analyses()]
 
         return bundle
 

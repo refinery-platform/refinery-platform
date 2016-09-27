@@ -1343,9 +1343,13 @@ class DataSetDeletionTest(unittest.TestCase):
                           DataSet.objects.get,
                           name="dataset_without_analysis")
 
-    def test_verify_no_dataset_deletion_if_analysis_run_upon_it(self):
+    def test_verify_dataset_deletion_if_analysis_run_upon_it(self):
+        self.assertIsNotNone(
+            DataSet.objects.get(name="dataset_with_analysis"))
         self.dataset_with_analysis.delete()
-        self.assertIsNotNone(DataSet.objects.get(name="dataset_with_analysis"))
+        self.assertRaises(ObjectDoesNotExist,
+                          DataSet.objects.get,
+                          name="dataset_with_analysis")
 
     def test_isa_archive_deletion(self):
         self.assertIsNotNone(self.dataset_without_analysis.get_isa_archive())
@@ -1373,7 +1377,7 @@ class AnalysisDeletionTest(unittest.TestCase):
         self.project = Project.objects.create()
         self.project1 = Project.objects.create()
 
-        # Creae a galaxy Instance
+        # Create a galaxy Instance
         self.galaxy_instance = Instance.objects.create()
 
         # Create a WorkflowEngine
@@ -1856,3 +1860,123 @@ class UserTutorialsTest(TestCase):
         self.assertIsNotNone(
             Tutorials.objects.get(user_profile=self.userprofile)
         )
+
+
+class DataSetResourceTest(ResourceTestCase):
+    """Test Analysis REST API operations"""
+
+    def setUp(self):
+        super(DataSetResourceTest, self).setUp()
+        self.username = self.password = 'user'
+        self.user = User.objects.create_user(
+            self.username, '', self.password
+        )
+        self.username2 = self.password2 = 'user2'
+        self.user2 = User.objects.create_user(
+            self.username2, '', self.password2
+        )
+        self.get_credentials()
+        self.project = Project.objects.create()
+        self.user_catch_all_project = UserProfile.objects.get(
+            user=self.user
+        ).catch_all_project
+        self.dataset = DataSet.objects.create()
+        self.dataset2 = DataSet.objects.create()
+        self.galaxy_instance = Instance.objects.create()
+        self.workflow_engine = WorkflowEngine.objects.create(
+            instance=self.galaxy_instance
+        )
+        self.workflow = Workflow.objects.create(
+            workflow_engine=self.workflow_engine
+        )
+        self.investigation = Investigation.objects.create()
+        self.study = Study.objects.create(investigation=self.investigation)
+        self.assay = Assay.objects.create(
+            study=self.study)
+        self.investigation_link = \
+            InvestigationLink.objects.create(
+                investigation=self.investigation,
+                data_set=self.dataset,
+                version=1
+            )
+
+    def tearDown(self):
+        User.objects.all().delete()
+        Project.objects.all().delete()
+        WorkflowEngine.objects.all().delete()
+        Workflow.objects.all().delete()
+        DataSet.objects.all().delete()
+        Instance.objects.all().delete()
+        Analysis.objects.all().delete()
+        UserProfile.objects.all().delete()
+        Node.objects.all().delete()
+        Study.objects.all().delete()
+        Assay.objects.all().delete()
+        Investigation.objects.all().delete()
+        AnalysisNodeConnection.objects.all().delete()
+        InvestigationLink.objects.all().delete()
+
+    def get_credentials(self):
+        """Authenticate as self.user"""
+        # workaround required to use SessionAuthentication
+        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
+        return self.api_client.client.login(
+            username=self.username,
+            password=self.password
+        )
+
+    def test_get_dataset(self):
+        """Test retrieving an existing Dataset that belongs to a user who
+        created it
+        """
+
+        self.dataset.set_owner(self.user)
+
+        dataset_uri = make_api_uri(
+            "data_sets", self.dataset.uuid)
+        response = self.api_client.get(
+            dataset_uri,
+            format='json'
+        )
+        self.assertValidJSONResponse(response)
+        data = self.deserialize(response)
+        self.assertEqual(data['uuid'], self.dataset.uuid)
+
+    def test_get_dataset_expecting_analyses(self):
+        Analysis.objects.create(
+            name='a1',
+            project=self.user_catch_all_project,
+            data_set=self.dataset,
+            workflow=self.workflow
+        )
+        Analysis.objects.create(
+            name='a2',
+            project=self.user_catch_all_project,
+            data_set=self.dataset,
+            workflow=self.workflow
+        )
+
+        dataset_uri = make_api_uri("data_sets",
+                                   self.dataset.uuid)
+        response = self.api_client.get(
+            dataset_uri,
+            format='json'
+        )
+        self.assertValidJSONResponse(response)
+        data = self.deserialize(response)
+        self.assertEqual(data['uuid'], self.dataset.uuid)
+        self.assertIsNotNone(data['analyses'])
+        self.assertEqual(len(data['analyses']), 2)
+
+    def test_get_dataset_expecting_no_analyses(self):
+        dataset_uri = make_api_uri("data_sets",
+                                   self.dataset.uuid)
+        response = self.api_client.get(
+            dataset_uri,
+            format='json'
+        )
+        self.assertValidJSONResponse(response)
+        data = self.deserialize(response)
+        self.assertEqual(data['uuid'], self.dataset.uuid)
+        self.assertEqual(data['analyses'], [])
+        self.assertEqual(len(data['analyses']), 0)
