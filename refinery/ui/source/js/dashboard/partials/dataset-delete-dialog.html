@@ -1,20 +1,100 @@
 <div class="modal-header">
-  <h3>Delete Dataset: </h3><p class="delete-dataset-name">{{dataSet.name}}</p>
-  <p>Are you sure you want to delete this?</p>
+    <h3>Delete Dataset</h3>
 </div>
 <div class="modal-body">
-  <form
-    class="navbar-form text-align-center"
-    ng-submit="">
+  <h5><b>Title:</b> {{modal.dataSet.title}}</h5>
+  <h5><b>Total Files:</b> {{modal.dataSet.file_count}}</h5>
+  <div ng-if="modal.dataSet.analyses.length != 0">
+    <p ng-if="modal.deletionMessage == null" class="deletion-message">
+      <b>The following {{ modal.dataSet.analyses.length }} Analyses will be
+        deleted!</b>
+    </p>
+    <p ng-if="modal.deletionMessage != null" class="deletion-message">
+      <b>The following {{ modal.dataSet.analyses.length }} Analyses have successfully been deleted!</b>
+    </p>
+    <div id="related-analyses">
+      <ul>
+        <li id="modal-tooltip-container" ng-if="modal.deletionMessage == null"
+        ng-repeat="analysis in
+        modal.dataSet.analyses">
+          <span class="spinner">
+            <i
+              class="analyses-status {{ analysis.status | analysisStatusIcon }}"
+              title="{{ analysis.status | analysisStatusTitle }}"
+              refinery-tooltip
+              refinery-tooltip-placement="top"
+              >
+            </i>
+          </span>
+          <span ng-switch on="analysis.status">
+            <span ng-if="SUCCESS">
+              <a
+              ng-href="/data_sets/{{modal.dataSet.uuid}}/analysis/{{analysis
+              .uuid}}">
+              {{ analysis.name }}
+            </a>
+            </span>
+            <span ng-if="!SUCCESS">
+              <a
+              ng-href="/data_sets/{{modal.dataSet.uuid}}/#/analyses">
+              {{ analysis.name }}
+            </a>
+            </span>
+          </span>
+        </li>
+        <li ng-if="modal.deletionMessage != null" ng-repeat="analysis in
+        modal.dataSet.analyses">
+          <span class="spinner">
+              <i
+                class="analyses-status {{ analysis.status | analysisStatusIcon }}"
+                title="{{ analysis.status | analysisStatusTitle }}"
+                refinery-tooltip
+                refinery-tooltip-placement="top"
+                >
+              </i>
+            </span>
+            <span ng-switch on="analysis.status">
+              <span ng-if="SUCCESS">
+                <p>
+                {{ analysis.name }}
+              </p>
+              </span>
+              <span ng-if="!SUCCESS">
+                <p>
+                {{ analysis.name }}
+              </p>
+              </span>
+            </span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="modal-footer">
+  <div class="text-align-left">
+    <p class="deletion-message" ng-if="modal.deletionMessage != null">
+      <b>{{modal.deletionMessage}}</b>
+    </p>
+    <div class="refinery-spinner" ng-if="modal.isDeleting"></div>
+  </div>
+  <div class="text-align-right">
     <button
       class="refinery-base btn btn-default"
-      ng-click="$close()">
+      ng-if="modal.deletionMessage != null"
+      ng-click="modal.cancel()">
+      Close
+    </button>
+    <button
+      class="refinery-base btn btn-default"
+      ng-if="modal.deletionMessage == null"
+      ng-click="modal.cancel()">
       Cancel
     </button>
     <button
-      type="submit"
-      class="btn btn-danger">
-      Delete Dataset
+      class="btn btn-danger"
+      ng-if="modal.deletionMessage == null"
+      ng-click="modal.delete()">
+      Delete
     </button>
-  </form>
+  </div>
 </div>
