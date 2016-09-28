@@ -2,7 +2,6 @@ import os
 import yaml
 import pytest
 from django.core.management import call_command
-from .test_base import assert_body_text
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -30,6 +29,21 @@ def login(selenium):
     selenium.find_element_by_id('id_password').send_keys(creds['password'])
     selenium.find_element_by_xpath('//input[@type="submit"]').click()
     assert_body_text(selenium, 'Logout')
+
+
+def assert_body_text(selenium, *search_texts):
+    for search_text in search_texts:
+        try:
+            WebDriverWait(selenium, 5).until(
+                EC.text_to_be_present_in_element(
+                    (By.TAG_NAME, 'body'), search_text)
+            )
+        except TimeoutException:
+            raise AssertionError(
+                '"%s" not in body: \n%s' % (
+                    search_text,
+                    selenium.find_element_by_tag_name('body').text
+                ))
 
 
 # TESTS:
