@@ -130,8 +130,8 @@ def import_workflow(workflow, workflow_engine, workflow_dictionary):
     # extract names of workflow input (if input step defines more than one
     # input only the first one will be used)
     workflow_input_names = []
-    for input in workflow.inputs:
-        workflow_input_names.append(input.name)
+    for workflow_input in workflow.inputs:
+        workflow_input_names.append(workflow_input.name)
 
     # check workflow inputs for correct annotations
     workflow_input_issues = check_workflow_inputs(workflow_input_names)
@@ -165,42 +165,39 @@ def import_workflow(workflow, workflow_engine, workflow_dictionary):
         inputs = workflow.inputs
         # Adding workflowdatainputs i.e. inputs from workflow into database
         # models
-        for input in inputs:
-            input_dict = {
-                'name': input.name,
-                'internal_id': input.identifier
-            }
-            i = WorkflowDataInput(**input_dict)
-            i.save()
-            workflow_object.data_inputs.add(i)
+        for workflow_input in inputs:
+            workflow_data_input = WorkflowDataInput.objects.create(
+                name=workflow_input.name,
+                internal_id=workflow_input.identifier
+            )
+            workflow_object.data_inputs.add(workflow_data_input)
             # if workflow has only 1 input, input a default input relationship
             # type
             if len(inputs) == 1:
-                opt_single = {
-                    'category': TYPE_1_1,
-                    'set1': input.name
-                }
-                temp_relationship = WorkflowInputRelationships(**opt_single)
-                temp_relationship.save()
-                workflow_object.input_relationships.add(temp_relationship)
+                workflow_input_relationship = \
+                    WorkflowInputRelationships.objects.create(
+                        category=TYPE_1_1, set1=workflow_input.name
+                    )
+                workflow_input_relationship.save()
+                workflow_object.input_relationships.add(
+                    workflow_input_relationship)
 
         # check to input NodeRelationshipType
         # noderelationship types defined for workflows with greater than 1
         # input
         # refinery_relationship=[{"category":"N-1", "set1":"input_file"}]
         workflow_relationships = get_input_relationships(workflow_annotation)
-        if workflow_relationships is not None:
-            if len(inputs) > 1:
-                for opt_r in workflow_relationships:
-                    try:
-                        temp_relationship = WorkflowInputRelationships(**opt_r)
-                        temp_relationship.save()
-                        workflow_object.input_relationships.add(
-                            temp_relationship)
-                    except KeyError as e:
-                        logger.error(e)
-                        issues.append(
-                            "Input relationship option error: %s" % e)
+        if workflow_relationships and len(inputs) > 1:
+            for opt_r in workflow_relationships:
+                try:
+                    workflow_input_relationship = \
+                        WorkflowInputRelationships.objects.create(**opt_r)
+                    workflow_object.input_relationships.add(
+                        workflow_input_relationship)
+                except KeyError as e:
+                    logger.error(e)
+                    issues.append(
+                        "Input relationship option error: %s" % e)
     return issues
 
 
