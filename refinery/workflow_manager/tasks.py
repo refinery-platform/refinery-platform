@@ -201,22 +201,6 @@ def import_workflow(workflow, workflow_engine, workflow_dictionary):
     return issues
 
 
-@task()
-def get_workflow_inputs(workflow_uuid):
-    """Returns unique workflow inputs
-    i.e. {u'exp_file': None, u'input_file': None}
-    """
-    curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
-
-    # getting distinct workflow inputs
-    workflow_data_inputs = curr_workflow.data_inputs.all()
-    annot_inputs = {}
-    for data_input in workflow_data_inputs:
-        input_type = data_input.name
-        annot_inputs[input_type] = None
-    return annot_inputs
-
-
 def get_workflow_annotation(workflow_dictionary):
     if GALAXY_WORKFLOW_ANNOTATION not in workflow_dictionary:
         logger.info("No annotation ('%s') found for workflow. "
