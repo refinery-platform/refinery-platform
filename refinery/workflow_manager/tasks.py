@@ -281,29 +281,6 @@ def get_step_outputs(step_definition):
     return step_definition[GALAXY_TOOL_OUTPUTS]
 
 
-def get_step_inputs(step_definition):
-    """Return the inputs of the step or None."""
-    # no input field
-    if GALAXY_TOOL_INPUTS not in step_definition:
-        return None
-    # empty input field
-    if len(step_definition[GALAXY_TOOL_INPUTS]) == 0:
-        return None
-    return step_definition[GALAXY_TOOL_INPUTS]
-
-
-def get_input_steps(workflow_dictionary):
-    """Return the step definitions of the input steps of the workflow."""
-    steps = get_workflow_steps(workflow_dictionary)
-    if steps is None:
-        return None
-    input_steps = []
-    for step in steps:
-        if get_step_inputs(step) is not None:
-            input_steps.append(step)
-    return input_steps
-
-
 def check_step_annotation_syntax(annotation):
     """Check if step annotation contains all required fields and only required
     or optional fields (syntactic correctness).
