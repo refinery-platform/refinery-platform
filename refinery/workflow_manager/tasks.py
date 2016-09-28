@@ -162,34 +162,29 @@ def import_workflow(workflow, workflow_engine, workflow_dictionary):
     workflow_object.set_manager_group(workflow_engine.get_manager_group())
     workflow_object.share(
         workflow_engine.get_manager_group().get_managed_group())
-    # Adding workflowdatainputs i.e. inputs from workflow into database
-    # models
+    # Adding workflowdatainputs i.e. inputs from workflow into database models
     for workflow_input in workflow.inputs:
         workflow_data_input = WorkflowDataInput.objects.create(
             name=workflow_input.name, internal_id=workflow_input.identifier
         )
         workflow_object.data_inputs.add(workflow_data_input)
-        # if workflow has only 1 input, input a default input relationship
-        # type
+        # if workflow has only 1 input, input a default input relationship type
         if len(workflow.inputs) == 1:
             workflow_input_relationship = \
                 WorkflowInputRelationships.objects.create(
                     category=TYPE_1_1, set1=workflow_input.name
                 )
-            workflow_input_relationship.save()
             workflow_object.input_relationships.add(
                 workflow_input_relationship
             )
     # check to input NodeRelationshipType
-    # noderelationship types defined for workflows with greater than 1
-    # input
+    # noderelationship types defined for workflows with greater than 1 input
     # refinery_relationship=[{"category":"N-1", "set1":"input_file"}]
-    workflow_relationships = get_input_relationships(workflow_annotation)
-    if workflow_relationships and len(workflow.inputs) > 1:
-        for opt_r in workflow_relationships:
+    if input_relationships and len(workflow.inputs) > 1:
+        for relationship in input_relationships:
             try:
                 workflow_input_relationship = \
-                    WorkflowInputRelationships.objects.create(**opt_r)
+                    WorkflowInputRelationships.objects.create(**relationship)
                 workflow_object.input_relationships.add(
                     workflow_input_relationship
                 )
