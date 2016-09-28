@@ -38,7 +38,7 @@ function IGVCtrl (
       $scope.igvConfig.node_selection = selectedNodesService.complementSelectedNodesUuids;
       $scope.igvConfig.node_selection_blacklist_mode = true;
     } else {
-      $scope.igvConfig.node_selection = ['1a354bf5-3b6e-4fcf-b9fb-b603d7433119'];
+      $scope.igvConfig.node_selection = selectedNodesService.selectedNodesUuids;
       $scope.igvConfig.node_selection_blacklist_mode = false;
       $scope.igvConfig.assay_uuid = $window.externalAssayUuid;
     }
@@ -95,7 +95,6 @@ function IGVCtrl (
   };
 
   $scope.retrieveSpecies();
-  console.log('in the igv ctrl');
 }
 
 angular

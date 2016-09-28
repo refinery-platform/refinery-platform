@@ -16,7 +16,7 @@
   <button
     class="btn btn-primary btn-xs"
     ng-click="VCtrl.launchVisualization()"
-    ng-disabled="!VCtrl.selectedVisualization.select">
+    ng-disabled="!VCtrl.selectedVisualization.select || !VCtrl.areNodesSelected()">
     Launch Visualization
   </button>
 </div>
