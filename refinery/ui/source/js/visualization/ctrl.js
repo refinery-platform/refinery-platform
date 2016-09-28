@@ -2,25 +2,27 @@
 
 function VisualizationCtrl (
   $scope,
-  $uibModal
+  $uibModal,
+  $compile,
+  $templateCache
 ) {
   var vm = this;
 
+  // the visualizations model contains the modal partial
   vm.visualizations = [
     { name: 'IGV', template: 'i-g-v-launch-modal.html' }
   ];
   vm.selectedVisualization = { select: null };
 
   vm.launchVisualization = function () {
-    $scope.modal = $uibModal.open({
-     // templateUrl: $scope.modes.mode + '.html',
-      templateUrl: vm.selectedVisualization.select.template,
-      scope: $scope
-    });
-  };
+    var template = $templateCache.get(vm.selectedVisualization.select.template);
+    var modalContent = $compile(template)($scope);
 
-  $scope.cancel = function () {
-    $scope.modal.dismiss();
+    $uibModal.open({
+      template: modalContent,
+      controller: 'IGVCtrl',
+      controllerAs: 'ICtrl'
+    });
   };
 }
 
@@ -29,5 +31,7 @@ angular
   .controller('VisualizationCtrl', [
     '$scope',
     '$uibModal',
+    '$compile',
+    '$templateCache',
     VisualizationCtrl
   ]);

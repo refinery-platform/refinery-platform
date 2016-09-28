@@ -7,7 +7,8 @@ function IGVCtrl (
   $log,
   $resource,
   $httpParamSerializer,
-  selectedNodesService
+  selectedNodesService,
+  $uibModalInstance
 ) {
   var vm = this;
 
@@ -89,6 +90,10 @@ function IGVCtrl (
     $window.open('/visualize/genome?' + params);
   };
 
+  $scope.cancel = function () {
+    $uibModalInstance.dismiss('cancel');
+  };
+
   $scope.retrieveSpecies();
   console.log('in the igv ctrl');
 }
@@ -103,5 +108,6 @@ angular
     '$resource',
     '$httpParamSerializer',
     'selectedNodesService',
+    '$uibModalInstance',
     IGVCtrl
   ]);

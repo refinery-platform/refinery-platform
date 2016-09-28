@@ -17,12 +17,7 @@
           {{species.name}}
       </ui-select-choices>
     </ui-select>
-      <button
-        class="btn btn-primary btn-xs"
-        ng-click="launchIgvJs()"
-        ng-disabled="ICtrl.areSelectedNodesEmpty() && speciesList.length == 0">
-        Launch IGV
-      </button>
+
     </div>
 
   <div class="row">
@@ -35,7 +30,16 @@
     </p>
   </div>
   <div class="modal-footer" id="modal-launch-analysis-footer">
-    <button class="btn btn-default" ng-click="cancel()">Cancel</button>
-    <button class="btn btn-primary" ng-click="view()">Launch IGV</button>
+    <button
+      class="btn btn-default"
+      ng-click="cancel()">
+      Cancel
+    </button>
+    <button
+      class="btn btn-primary"
+      ng-click="launchIgvJs()"
+      ng-disabled="ICtrl.areSelectedNodesEmpty() && speciesList.length == 0">
+      Launch IGV
+    </button>
   </div>
 </div>
