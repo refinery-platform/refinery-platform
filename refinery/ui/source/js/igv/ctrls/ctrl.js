@@ -24,6 +24,7 @@ function IGVCtrl (
   vm.messageType = 'info';
   vm.isLoadingSpecies = true;
 
+  // Helper method to set alert message in modal
   var generateAlertMessage = function (infoType) {
     vm.messageType = infoType;
     if (infoType === 'error') {
@@ -39,6 +40,8 @@ function IGVCtrl (
     }
   };
 
+  /* Upon launch modal, method sets igvConfig based on selected nodes
+  and retrives species list */
   vm.retrieveSpecies = function () {
     if (selectedNodesService.selectedAllFlag) {
       vm.igvConfig.node_selection = selectedNodesService.complementSelectedNodesUuids;
@@ -57,10 +60,11 @@ function IGVCtrl (
     }, function () {
       vm.isLoadingSpecies = false;
       generateAlertMessage('error');
-      $log.error('Error creating IGV session URLs. (error status ' + status + ')');
+      $log.error('Error creating IGV session URLs.');
     });
   };
 
+  // Launches web based IGV and dismissed modal
   vm.launchIgvJs = function () {
     var params = $httpParamSerializer({
       species: vm.selectedSpecies.select.name,
@@ -71,10 +75,12 @@ function IGVCtrl (
     $window.open('/visualize/genome?' + params);
   };
 
+  // Modal method to cancel
   vm.cancel = function () {
     $uibModalInstance.dismiss('cancel');
   };
 
+  // Helper method for ui to see if any nodes are selected before launching igv
   vm.areSelectedNodesEmpty = function () {
     if (selectedNodesService.selectedNodesUuids.length > 0 ||
       selectedNodesService.complementSelectedNodesUuids.length > 0) {
