@@ -2,7 +2,7 @@ import os
 import yaml
 import pytest
 from django.core.management import call_command
-from test_base import assert_body_text
+from .test_base import assert_body_text
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
