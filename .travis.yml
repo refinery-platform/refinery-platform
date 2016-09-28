@@ -24,12 +24,13 @@ before_script:
   - python manage.py create_public_group
   - python manage.py syncdb --migrate --noinput
   - python manage.py create_user 'guest' 'guest' 'guest@example.com' 'GuestFirst' 'GuestLast' 'GuestAffiliation' 'active'
-  - python manage.py process_isatab guest /home/travis/build/parklab/refinery-platform/selenium/rfc-test.zip
   - npm install -g grunt-cli@0.1.13 bower@1.7.7 --progress false
   - cd ui
   - npm install --progress false
   - bower install --config.interactive=false
-  - cd ../
+  - cd ../../selenium/
+  - python ../refinery/manage.py process_isatab guest rfc-test.zip
+  - cd ../refienry/
 script:
   - set -e # Any error will cause travis to exit early and report a failure.
 
