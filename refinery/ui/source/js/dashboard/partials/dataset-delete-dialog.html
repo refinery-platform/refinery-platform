@@ -14,16 +14,13 @@
     </p>
     <div id="related-analyses">
       <ul>
-        <li id="modal-tooltip-container" ng-if="modal.deletionMessage == null"
-        ng-repeat="analysis in
-        modal.dataSet.analyses">
+        <li ng-if="modal.deletionMessage == null"
+        ng-repeat="analysis in modal.dataSet.analyses">
           <span class="spinner">
             <i
               class="analyses-status {{ analysis.status | analysisStatusIcon }}"
               title="{{ analysis.status | analysisStatusTitle }}"
-              refinery-tooltip
-              refinery-tooltip-placement="top"
-              >
+              refinery-tooltip refinery-tooltip-placement="top">
             </i>
           </span>
           <span ng-switch on="analysis.status">
@@ -42,27 +39,25 @@
             </span>
           </span>
         </li>
-        <li ng-if="modal.deletionMessage != null" ng-repeat="analysis in
-        modal.dataSet.analyses">
+        <li ng-if="modal.deletionMessage != null"
+        ng-repeat="analysis in modal.dataSet.analyses">
           <span class="spinner">
               <i
                 class="analyses-status {{ analysis.status | analysisStatusIcon }}"
                 title="{{ analysis.status | analysisStatusTitle }}"
-                refinery-tooltip
-                refinery-tooltip-placement="top"
-                >
+                refinery-tooltip refinery-tooltip-placement="top">
               </i>
             </span>
             <span ng-switch on="analysis.status">
               <span ng-if="SUCCESS">
-                <p>
+                <a class="no-link">
                 {{ analysis.name }}
-              </p>
+              </a>
               </span>
               <span ng-if="!SUCCESS">
-                <p>
+                <a class="no-link">
                 {{ analysis.name }}
-              </p>
+              </a>
               </span>
             </span>
         </li>
