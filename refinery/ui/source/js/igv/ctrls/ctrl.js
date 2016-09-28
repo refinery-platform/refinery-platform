@@ -2,28 +2,78 @@
 
 function IGVCtrl (
   $scope,
-  $http,
   $window,
   $log,
   $resource,
   $httpParamSerializer,
   selectedNodesService,
-  $uibModalInstance
+  $uibModalInstance,
+  IGVFactory
 ) {
   var vm = this;
-
-  $scope.igvConfig = {
+  vm.igvConfig = {
     query: null,
     annotation: null,
     node_selection: [],
     node_selection_blacklist_mode: true
   };
 
-  $scope.speciesList = [];
-  $scope.selectedSpecies = { select: $scope.speciesList[0] };
-  $scope.message = null;
-  $scope.messageType = 'info';
-  $scope.isLoadingSpecies = false;
+  vm.speciesList = [];
+  vm.selectedSpecies = { select: vm.speciesList[0] };
+  vm.message = null;
+  vm.messageType = 'info';
+  vm.isLoadingSpecies = true;
+
+  var generateAlertMessage = function (infoType) {
+    vm.messageType = infoType;
+    if (infoType === 'error') {
+      vm.message = 'Sorry! Unable to configure IGV for the selected file set.';
+    } else if (vm.speciesList.length === 0) {
+      vm.message = 'Please select the correct genome and launch IGV.';
+    } else if (vm.speciesList.length === 1) {
+      vm.message = null;
+      vm.selectedSpecies.select = vm.speciesList[0];
+    } else {
+      vm.message = 'Multiple species detected. Please select a ' +
+          'genome and launch IGV. You may repeat this step multiple times.';
+    }
+  };
+
+  vm.retrieveSpecies = function () {
+    if (selectedNodesService.selectedAllFlag) {
+      vm.igvConfig.node_selection = selectedNodesService.complementSelectedNodesUuids;
+      vm.igvConfig.node_selection_blacklist_mode = true;
+    } else {
+      vm.igvConfig.node_selection = selectedNodesService.selectedNodesUuids;
+      vm.igvConfig.node_selection_blacklist_mode = false;
+      vm.igvConfig.assay_uuid = $window.externalAssayUuid;
+    }
+
+    IGVFactory.getSpeciesList(vm.igvConfig).then(function () {
+      vm.isLoadingSpecies = false;
+      // update species list
+      vm.speciesList = IGVFactory.speciesList;
+      generateAlertMessage('info');
+    }, function () {
+      vm.isLoadingSpecies = false;
+      generateAlertMessage('error');
+      $log.error('Error creating IGV session URLs. (error status ' + status + ')');
+    });
+  };
+
+  vm.launchIgvJs = function () {
+    var params = $httpParamSerializer({
+      species: vm.selectedSpecies.select.name,
+      node_ids: vm.igvConfig.node_selection
+    });
+    // close modal
+    $uibModalInstance.dismiss();
+    $window.open('/visualize/genome?' + params);
+  };
+
+  vm.cancel = function () {
+    $uibModalInstance.dismiss('cancel');
+  };
 
   vm.areSelectedNodesEmpty = function () {
     if (selectedNodesService.selectedNodesUuids.length > 0 ||
@@ -33,80 +83,19 @@ function IGVCtrl (
     return true;
   };
 
-  $scope.retrieveSpecies = function () {
-    if (selectedNodesService.selectedAllFlag) {
-      $scope.igvConfig.node_selection = selectedNodesService.complementSelectedNodesUuids;
-      $scope.igvConfig.node_selection_blacklist_mode = true;
-    } else {
-      $scope.igvConfig.node_selection = selectedNodesService.selectedNodesUuids;
-      $scope.igvConfig.node_selection_blacklist_mode = false;
-      $scope.igvConfig.assay_uuid = $window.externalAssayUuid;
-    }
-
-    $http({
-      method: 'POST',
-      url: '/solr/igv/',
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      dataType: 'json',
-      data: $scope.igvConfig
-    }).success(function (response) {
-      // update message
-      if (response.species_count === 0) {
-        $scope.message = 'Please select the correct genome and launch IGV.';
-      } else if (response.species_count === 1) {
-        $scope.message = null;
-        $scope.selectedSpecies.select = $scope.speciesList[0];
-      } else {
-        $scope.message = 'Multiple species detected. Please select a ' +
-          'genome and launch IGV. You may repeat this step multiple times.';
-      }
-
-      // update species list
-      $scope.speciesList.length = 0;
-      for (var key in response.species) {
-        if (response.species.hasOwnProperty(key)) {
-          $scope.speciesList.push({
-            name: key,
-            url: response.species[key]
-          });
-        }
-      }
-      $scope.isLoadingSpecies = false;
-    }).error(function (response, status) {
-      $scope.isLoadingSpecies = false;
-      $scope.messageType = 'error';
-      $scope.message = 'Sorry! Unable to configure IGV for the selected file set.';
-      $log.error('Error creating IGV session URLs. (error status ' + status + ')');
-    });
-  };
-
-  $scope.launchIgvJs = function () {
-    var params = $httpParamSerializer({
-      species: $scope.selectedSpecies.select.name,
-      node_ids: $scope.igvConfig.node_selection
-    });
-    $window.open('/visualize/genome?' + params);
-  };
-
-  $scope.cancel = function () {
-    $uibModalInstance.dismiss('cancel');
-  };
-
-  $scope.retrieveSpecies();
+  vm.retrieveSpecies();
 }
 
 angular
   .module('refineryIGV')
   .controller('IGVCtrl', [
     '$scope',
-    '$http',
     '$window',
     '$log',
     '$resource',
     '$httpParamSerializer',
     'selectedNodesService',
     '$uibModalInstance',
+    'IGVFactory',
     IGVCtrl
   ]);
