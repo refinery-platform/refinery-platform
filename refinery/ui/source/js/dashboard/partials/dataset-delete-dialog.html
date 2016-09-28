@@ -73,7 +73,7 @@
 <div class="modal-footer">
   <div class="text-align-left">
     <p class="deletion-message" ng-if="modal.deletionMessage != null">
-      <b>{{modal.deletionMessage}}</b>
+      <b id="deletion-message-text">{{modal.deletionMessage}}</b>
     </p>
     <div class="refinery-spinner" ng-if="modal.isDeleting"></div>
   </div>
@@ -84,13 +84,13 @@
       ng-click="modal.cancel()">
       Close
     </button>
-    <button
+    <button id="dataset-delete-cancel-button"
       class="refinery-base btn btn-default"
       ng-if="modal.deletionMessage == null"
       ng-click="modal.cancel()">
       Cancel
     </button>
-    <button
+    <button id="dataset-delete-button"
       class="btn btn-danger"
       ng-if="modal.deletionMessage == null"
       ng-click="modal.delete()">
