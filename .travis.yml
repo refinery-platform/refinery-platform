@@ -29,6 +29,7 @@ before_script:
   - cd ui
   - npm install --progress false
   - bower install --config.interactive=false
+  - cd ../
 script:
   - set -e # Any error will cause travis to exit early and report a failure.
 

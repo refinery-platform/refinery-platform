@@ -50,7 +50,9 @@ def assert_body_text(selenium, *search_texts):
 def test_dataset_upload_and_deletion(selenium):
     login(selenium)
 
-    assert_body_text(selenium, "Request for Comments (RFC) Test")
+    assert_body_text(selenium, "Selenium Test DataSet1")
+    assert_body_text(selenium, "Selenium Test DataSet2")
+
     selenium.find_element_by_class_name('dataset-delete-button').click()
 
     search_id = 'deletion-message-text'
