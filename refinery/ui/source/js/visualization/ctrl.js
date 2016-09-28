@@ -2,8 +2,7 @@
 
 function VisualizationCtrl (
   $scope,
-  $uibModal,
-  launchVisualizationService
+  $uibModal
 ) {
   var vm = this;
 
@@ -13,7 +12,6 @@ function VisualizationCtrl (
   vm.selectedVisualization = { select: null };
 
   vm.launchVisualization = function () {
-    console.log(launchVisualizationService.visualizationSelection);
     $scope.modal = $uibModal.open({
      // templateUrl: $scope.modes.mode + '.html',
       templateUrl: vm.selectedVisualization.select.template,
@@ -35,6 +33,5 @@ angular
   .controller('VisualizationCtrl', [
     '$scope',
     '$uibModal',
-    'launchVisualizationService',
     VisualizationCtrl
   ]);

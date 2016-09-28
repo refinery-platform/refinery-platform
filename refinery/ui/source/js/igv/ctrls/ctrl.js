@@ -7,8 +7,7 @@ function IGVCtrl (
   $log,
   $resource,
   $httpParamSerializer,
-  selectedNodesService,
-  launchVisualizationService
+  selectedNodesService
 ) {
   var vm = this;
 
@@ -90,21 +89,6 @@ function IGVCtrl (
     $window.open('/visualize/genome?' + params);
   };
 
-  console.log('in igv ctrl');
-  console.log(launchVisualizationService.visualizationSelection);
-  $scope.$watch(
-    function () {
-      return launchVisualizationService.visualizationSelection;
-    },
-    function (newVal) {
-      console.log('in the watcher');
-      console.log(newVal);
-      if (launchVisualizationService.visualizationSelection === 'IGV') {
-        console.log('in the IGV Ctrl');
-      }
-    }
-  );
-
   $scope.retrieveSpecies();
 }
 
@@ -118,6 +102,5 @@ angular
     '$resource',
     '$httpParamSerializer',
     'selectedNodesService',
-    'launchVisualizationService',
     IGVCtrl
   ]);
