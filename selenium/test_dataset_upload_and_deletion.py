@@ -52,7 +52,7 @@ def test_dataset_deletion(selenium):
     login(selenium)
 
     subprocess.Popen(
-        "../refinery/manage.py process_isatab {} {}".format(
+        "../refinery-platform/manage.py process_isatab {} {}".format(
             creds['username'],
             os.path.abspath("rfc-test.zip")
         )
