@@ -1,7 +1,8 @@
 import os
 import yaml
 import pytest
-from django.core.management import call_command
+import subprocess
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -49,8 +50,13 @@ def assert_body_text(selenium, *search_texts):
 # TESTS:
 def test_dataset_deletion(selenium):
     login(selenium)
-    call_command("process_isatab", creds['username'], os.path.abspath(
-        "rfc-test.zip"))
+
+    subprocess.Popen(
+        "../refinery/manage.py process_isatab {} {}".format(
+            creds['username'],
+            os.path.abspath("rfc-test.zip")
+        )
+    )
     selenium.refresh()
     assert_body_text(selenium, "Request for Comments (RFC) Test")
     selenium.find_element_by_class_name('dataset-delete-button').click()

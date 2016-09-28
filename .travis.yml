@@ -51,7 +51,7 @@ script:
   # https://github.com/pytest-dev/pytest-selenium/issues/53
   - export SAUCELABS_USERNAME=$SAUCE_USERNAME SAUCELABS_API_KEY=$SAUCE_ACCESS_KEY
   - printenv | sort | grep SAUCE | perl -pne 's/=(...).+/=$1.../' # Debug helper
-  - export BASE_URL=http://localhost:8000 CREDS_YML=guest_creds.yml UPLOAD=gff3.csv DJANGO_SETTINGS_MODULE=config.settings.dev
+  - export BASE_URL=http://localhost:8000 CREDS_YML=guest_creds.yml UPLOAD=gff3.csv
   - pytest --driver SauceLabs --capability browserName Firefox --capability tunnelIdentifier $TRAVIS_JOB_NUMBER
   - popd
   - echo 'travis_fold:end:selenium'
