@@ -120,26 +120,23 @@ def import_workflow(workflow, workflow_engine, workflow_dictionary):
         issues.append("Workflow type not found")
         return issues
 
-    input_steps = get_input_steps(workflow_dictionary)
-    if not input_steps:
+    if not workflow.inputs:
         issues.append("Workflow does not define inputs")
         return issues
 
-    input_relationships = get_input_relationships(workflow_annotation)
     # single input workflows don't define input relationships
+    input_relationships = get_input_relationships(workflow_annotation)
 
     # extract names of workflow input (if input step defines more than one
     # input only the first one will be used)
     workflow_input_names = []
-    for step in input_steps:
-        step_inputs = get_step_inputs(step)
-        if step_inputs and 'name' in step_inputs[0]:
-            workflow_input_names.append(step_inputs[0]['name'])
+    for input in workflow.inputs:
+        workflow_input_names.append(input.name)
 
     # check workflow inputs for correct annotations
     workflow_input_issues = check_workflow_inputs(workflow_input_names)
     workflow_input_relationship_issues = check_workflow_input_relationships(
-        input_steps, input_relationships, workflow_input_names)
+        workflow.inputs, input_relationships, workflow_input_names)
     if workflow_input_issues or workflow_input_relationship_issues:
         issues += workflow_input_issues + workflow_input_relationship_issues
         return issues
@@ -462,15 +459,14 @@ def get_input_relationships(workflow_annotation):
 
 
 def check_workflow_inputs(workflow_input_names):
+    """Check if workflow input names are unique"""
+    #TODO: check if workflow input names match workflow annotation
     issues = []
-
-    # are workflow input names unique?
     unique_workflow_input_names = {}
     map(unique_workflow_input_names.__setitem__, workflow_input_names, [])
     if len(unique_workflow_input_names.keys()) < len(workflow_input_names):
         issues.append('Workflow input names are not unique: ' +
                       ', '.join(workflow_input_names))
-
     return issues
 
 

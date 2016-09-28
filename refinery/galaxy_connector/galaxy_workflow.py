@@ -83,9 +83,8 @@ def createStepsAnnot(file_list, workflow):
             curr_id = str(len(temp_steps) * i + j)
             curr_step = str(j)
             curr_workflow_step = copy.deepcopy(temp_steps[curr_step])
-            # 1. Update steps: id
             curr_workflow_step["id"] = int(curr_id)
-            # 2. Update any connecting input_ids
+            # update any connecting input_ids
             input_dict = curr_workflow_step["input_connections"]
             if input_dict:
                 for key in input_dict.keys():
@@ -94,15 +93,34 @@ def createStepsAnnot(file_list, workflow):
                         input_id_new = (
                             len(temp_steps) * i + int(input_id_old))
                         input_dict[key]['id'] = input_id_new
-            # 3. Update positions
+            # update positions
             pos_dict = curr_workflow_step["position"]
             if pos_dict:
                 top_pos = pos_dict["top"]
                 # TODO: find a better way of defining positions
                 pos_dict["top"] = top_pos * (i + 1)
-            # 4. Updating post job actions for renaming datasets
+
             input_type = map[int(curr_step)]
-            if len(curr_workflow_step['inputs']) == 0:
+            # adding node uuid for each input step
+            if curr_workflow_step["type"] == "data_input":
+                # adding node uuid to input description field
+                if input_type in file_list[i].keys():
+                    curr_node = str(
+                        removeFileExt(file_list[i][input_type]['node_uuid']))
+                    curr_workflow_step['inputs'][0]['description'] = str(
+                        curr_node)
+                    curr_workflow_step['annotation'] = str(curr_node)
+                    connections.append(
+                        {'node_uuid': curr_node,
+                         'step': int(curr_workflow_step['id']),
+                         'filename': curr_workflow_step['inputs'][0]['name'],
+                         'name': curr_workflow_step['inputs'][0]['name'],
+                         'subanalysis': i,
+                         'filetype': None,
+                         'direction': 'in',
+                         'is_refinery_file': True})
+            # Updating post job actions for renaming datasets
+            elif curr_workflow_step["type"] == "tool":
                 # getting current filename for workflow
                 curr_filename = ''
                 if input_type in file_list[i].keys():
@@ -220,25 +238,10 @@ def createStepsAnnot(file_list, workflow):
                             new_rename_dict = ast.literal_eval(
                                 new_rename_action)
                             pja_dict[temp_key] = new_rename_dict
-            # 5. adding node uuid for each input step
-            elif len(curr_workflow_step['inputs']) > 0:
-                # adding node uuid to input description field
-                if input_type in file_list[i].keys():
-                    curr_node = str(
-                        removeFileExt(file_list[i][input_type]['node_uuid']))
-                    curr_workflow_step['inputs'][0]['description'] = str(
-                        curr_node)
-                    curr_workflow_step['annotation'] = str(curr_node)
-                    connections.append(
-                        {'node_uuid': curr_node,
-                         'step': int(curr_workflow_step['id']),
-                         'filename': curr_workflow_step['inputs'][0]['name'],
-                         'name': curr_workflow_step['inputs'][0]['name'],
-                         'subanalysis': i,
-                         'filetype': None,
-                         'direction': 'in',
-                         'is_refinery_file': True})
-                    # Adds updated module
+            else:
+                logger.critical("Workflow step type '%s' is not recognized",
+                             curr_workflow_step["type"])
+
             updated_dict[curr_id] = curr_workflow_step
 
             # Assign a uuid that is unique to each step (allow multiple
