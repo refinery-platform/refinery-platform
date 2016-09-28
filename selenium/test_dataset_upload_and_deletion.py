@@ -1,7 +1,6 @@
 import os
 import yaml
 import pytest
-import subprocess
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -48,16 +47,9 @@ def assert_body_text(selenium, *search_texts):
 
 
 # TESTS:
-def test_dataset_deletion(selenium):
+def test_dataset_upload_and_deletion(selenium):
     login(selenium)
 
-    subprocess.Popen(
-        "../refinery-platform/manage.py process_isatab {} {}".format(
-            creds['username'],
-            "rfc-test.zip"
-        )
-    )
-    selenium.refresh()
     assert_body_text(selenium, "Request for Comments (RFC) Test")
     selenium.find_element_by_class_name('dataset-delete-button').click()
 
