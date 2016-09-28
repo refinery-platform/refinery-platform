@@ -6,11 +6,11 @@
   theme="select2"
   class="ui-select-drop text-left">
   <ui-select-match placeholder="Select a visualization">
-    {{$select.selected}}
+    {{$select.selected.name}}
   </ui-select-match>
   <ui-select-choices
     repeat="visualization in VCtrl.visualizations">
-      {{visualization}}
+      {{visualization.name}}
   </ui-select-choices>
 </ui-select>
   <button
@@ -21,17 +21,7 @@
   </button>
 </div>
 
-
 <!-- Add scripts for the different visualizations here. -->
   <script type="text/ng-template" id='i-g-v-launch-modal.html'>
     <rp-i-g-v-launch-modal-detail></rp-i-g-v-launch-modal-detail>
   </script>
-
-  <select class="select" name="mode" ng-model="modes.mode" ng-dropdown required  >
-    <option ng-option value="i-g-v-launch-modal">IGV</option>
-  </select>
-
- <button class="action_create" id="create" ng-model="button" ng-click="launch()
- ">Launch</button>
-
-  </div>

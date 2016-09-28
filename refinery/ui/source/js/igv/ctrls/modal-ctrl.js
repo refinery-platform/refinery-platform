@@ -1,6 +1,8 @@
 'use strict';
 
 function IGVLaunchModalCtrl (
+  $scope,
+  $uibModal,
   $uibModalInstance
 ) {
   var vm = this;
@@ -13,6 +15,8 @@ function IGVLaunchModalCtrl (
 angular
   .module('refineryIGV')
   .controller('IGVLaunchModalCtrl', [
+    '$scope',
+    '$uibModal',
     '$uibModalInstance',
     IGVLaunchModalCtrl
   ]);

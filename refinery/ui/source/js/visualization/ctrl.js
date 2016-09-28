@@ -7,29 +7,16 @@ function VisualizationCtrl (
 ) {
   var vm = this;
 
-  vm.visualizations = ['IGV'];
+  vm.visualizations = [
+    { name: 'IGV', template: 'i-g-v-launch-modal.html' }
+  ];
   vm.selectedVisualization = { select: null };
 
   vm.launchVisualization = function () {
-    if (vm.selectedVisualization.select === 'IGV') {
-      console.log('visualize ctrl');
-      launchVisualizationService.setVisualizationSelection('IGV');
-    }
-  };
-
-  $scope.launch = function () {
-    $scope.showModal('launch');
-  };
-
-  $scope.modes = { mode: '' };
-
-  $scope.showModal = function (action) {
-    if (!$scope.modes.mode) {
-      return;
-    }
-    $scope.action = action;
+    console.log(launchVisualizationService.visualizationSelection);
     $scope.modal = $uibModal.open({
-      templateUrl: $scope.modes.mode + '.html',
+     // templateUrl: $scope.modes.mode + '.html',
+      templateUrl: vm.selectedVisualization.select.template,
       scope: $scope
     });
   };
