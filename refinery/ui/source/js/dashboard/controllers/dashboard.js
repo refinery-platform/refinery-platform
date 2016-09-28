@@ -1577,7 +1577,7 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
 };
 
 /**
- * Open the deletion modal.
+ * Open the deletion modal for a given Datset.
  *
  * @method  openDataSetDeleteModal
  * @author  Scott Ouellette
@@ -1598,6 +1598,31 @@ DashboardCtrl.prototype.openDataSetDeleteModal = function (dataSet) {
       },
       dataSet: dataSet,
       dataSets: this.dataSets,
+      analyses: this.analyses,
+      analysesReloadService: this.dashboardAnalysesReloadService
+    }
+  });
+};
+
+/**
+ * Open the deletion modal for a given Analysis.
+ *
+ * @method  openAnalysisDeleteModal
+ * @author  Scott Ouellette
+ * @date    2016-9-28
+ */
+DashboardCtrl.prototype.openAnalysisDeleteModal = function (analysis) {
+  this.$uibModal.open({
+    templateUrl: '/static/partials/dashboard/partials/analysis-delete-dialog.html',
+    controller: 'AnalysisDeleteCtrl as modal',
+    resolve: {
+      config: function () {
+        return {
+          model: 'analyses',
+          uuid: analysis.uuid
+        };
+      },
+      analysis: analysis,
       analyses: this.analyses,
       analysesReloadService: this.dashboardAnalysesReloadService
     }

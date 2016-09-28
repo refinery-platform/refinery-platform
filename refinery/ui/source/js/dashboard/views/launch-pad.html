@@ -804,6 +804,19 @@
                 {{ analysis.name }}
               </a>
               </span>
+              <a
+                class="indicator analysis-delete pointer"
+                title="Delete Analysis"
+                ng-if="analysis.is_owner"
+                ng-click="dashboard.openAnalysisDeleteModal(analysis)"
+                refinery-tooltip
+                refinery-tooltip-container="body"
+                refinery-tooltip-placement="right"
+                refinery-tooltip-delay-show="750"
+                refinery-tooltip-delay-hide="150"
+                refinery-tooltip-hide-on-click="true">
+                <i class="fa fa-trash-o"></i>
+              </a>
             </span>
           </li>
           <li ng-if="dashboard.analysesAdapter.isLoading">

@@ -1096,6 +1096,53 @@ class DataSetsViewSet(APIView):
                     )
 
 
+class AnalysesViewSet(APIView):
+    http_method_names = ['delete']
+
+    def delete(self, request, uuid):
+        if not request.user.is_authenticated():
+            return Response({
+                "status": status.HTTP_403_FORBIDDEN,
+                "data": "User {} is not authenticated".format(request.user)
+            })
+        else:
+            try:
+                analysis_deleted = Analysis.objects.get(uuid=uuid).delete()
+            except NameError as e:
+                logger.error(e)
+                return Response({
+                    "status": status.HTTP_400_BAD_REQUEST,
+                    "data": "Bad Request"
+                })
+            except Analysis.DoesNotExist as e:
+                logger.error(e)
+                return Response({
+                    "status": status.HTTP_404_NOT_FOUND,
+                    "data": "Analysis with UUID: {} not found.".format(uuid)
+                })
+            except Analysis.MultipleObjectsReturned as e:
+                logger.error(e)
+                return Response({
+                    "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "data": "Multiple Analyses returned for this request"
+                })
+            else:
+                if analysis_deleted[0]:
+                    return Response(
+                        {
+                            "data": analysis_deleted[1],
+                            "status": status.HTTP_200_OK
+                        }
+                    )
+                else:
+                    return Response(
+                        {
+                            "data": analysis_deleted[1],
+                            "status": status.HTTP_400_BAD_REQUEST
+                        }
+                    )
+
+
 class CustomRegistrationView(RegistrationView):
 
     def register(self, request, **cleaned_data):
