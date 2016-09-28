@@ -19,10 +19,6 @@ function VisualizationCtrl (
     });
   };
 
-  $scope.ok = function () {
-    $scope.modal.close();
-  };
-
   $scope.cancel = function () {
     $scope.modal.dismiss();
   };

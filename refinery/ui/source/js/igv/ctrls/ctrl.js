@@ -90,6 +90,7 @@ function IGVCtrl (
   };
 
   $scope.retrieveSpecies();
+  console.log('in the igv ctrl');
 }
 
 angular
