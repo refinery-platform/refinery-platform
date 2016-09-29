@@ -225,12 +225,9 @@ def createStepsAnnot(file_list, workflow):
                              curr_workflow_step["type"])
 
             updated_dict[curr_id] = curr_workflow_step
-
-            # Assign a uuid that is unique to each step (allow multiple
+            # assign a uuid that is unique to each step (allow multiple
             # inputs for a workflow)
-            for item in updated_dict:
-                updated_dict[item]['uuid'] = unicode(str(
-                    uuid.uuid4()))
+            updated_dict[curr_id]['uuid'] = unicode(str(uuid.uuid4()))
 
     return updated_dict, history_download, connections
 
