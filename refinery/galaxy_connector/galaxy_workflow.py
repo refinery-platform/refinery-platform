@@ -525,20 +525,6 @@ def configure_workflow(workflow_dict, ret_list):
     return new_workflow, history_download, analysis_node_connections
 
 
-def parse_tool_name(toolname):
-    """Creates a simpler tool name when dealing with Galaxy Toolshed tool names
-    :param toolname: Tool name defined from Galaxy i.e.
-    toolshed.g2.bx.psu.edu/repos/jjohnson/igvtools/igvtools_tile/1.0
-    :type toolname: string.
-    :returns: parsed tool name i.e. igvtools
-    """
-    temp = toolname.split("/")
-    if len(temp) > 1:
-        return temp[len(temp) - 2]
-    else:
-        return toolname
-
-
 def create_expanded_workflow_graph(dictionary):
     graph = nx.MultiDiGraph()
     steps = dictionary["steps"]
