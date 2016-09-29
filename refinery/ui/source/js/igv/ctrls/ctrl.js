@@ -6,18 +6,18 @@ function IGVCtrl (
   $log,
   $resource,
   $httpParamSerializer,
-  selectedNodesService,
   $uibModalInstance,
+  selectedNodesService,
   IGVFactory
 ) {
   var vm = this;
+  // includes unused fields to accomodate current igv backend
   vm.igvConfig = {
     query: null,
     annotation: null,
     node_selection: [],
     node_selection_blacklist_mode: true
   };
-
   vm.speciesList = [];
   vm.selectedSpecies = { select: vm.speciesList[0] };
   vm.message = null;
@@ -40,9 +40,8 @@ function IGVCtrl (
     }
   };
 
-  /* Upon launch modal, method sets igvConfig based on selected nodes
-  and retrives species list */
-  vm.retrieveSpecies = function () {
+  // Helper method set igvConfig based on selected nodes
+  var setIGVConfig = function () {
     if (selectedNodesService.selectedAllFlag) {
       vm.igvConfig.node_selection = selectedNodesService.complementSelectedNodesUuids;
       vm.igvConfig.node_selection_blacklist_mode = true;
@@ -51,6 +50,11 @@ function IGVCtrl (
       vm.igvConfig.node_selection_blacklist_mode = false;
       vm.igvConfig.assay_uuid = $window.externalAssayUuid;
     }
+  };
+
+  // Upon launch modal, method retrives species list
+  vm.retrieveSpecies = function () {
+    setIGVConfig();
 
     IGVFactory.getSpeciesList(vm.igvConfig).then(function () {
       vm.isLoadingSpecies = false;
@@ -100,8 +104,8 @@ angular
     '$log',
     '$resource',
     '$httpParamSerializer',
-    'selectedNodesService',
     '$uibModalInstance',
+    'selectedNodesService',
     'IGVFactory',
     IGVCtrl
   ]);
