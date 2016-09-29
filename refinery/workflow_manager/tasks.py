@@ -337,9 +337,8 @@ def check_step(step_definition):
         if outputs is None:
             return None
         else:
-            issues = issues + check_step_annotation_syntax(annotation)
-            issues = issues + check_step_annotation_semantics(annotation,
-                                                              outputs)
+            issues += check_step_annotation_syntax(annotation)
+            issues += check_step_annotation_semantics(annotation, outputs)
     return issues
 
 
@@ -358,21 +357,21 @@ def check_steps(workflow_dictionary):
                 correct_step_found = True
             else:
                 incorrect_step_found = True
-                issues.append(
-                    'Workflow step "' + step_definition['name'] +
-                    '" contains at least one incorrectly declared output.')
-                issues = issues + step_issues
+                issues.append("Workflow step {} contains at least one "
+                              "incorrectly declared output"
+                              .format(step_definition['name']))
+                issues += step_issues
 
     if incorrect_step_found:
         logger.warning(
-            'Workflow "' + workflow_dictionary['name'] +
-            '" contains incorrectly declared outputs for at least one step '
-            'and will be ignored: ' + "\n".join(issues))
+            "Workflow {} contains incorrectly declared outputs for at least "
+            "one step and will be ignored: {}"
+            .format(workflow_dictionary['name'], ", ".join(issues))
+        )
         return issues
     if not correct_step_found:
-        logger.warning(
-            'Workflow "' + workflow_dictionary['name'] +
-            '" does not declare outputs and will be ignored.')
+        logger.warning("Workflow {} does not declare outputs and will be "
+                       "ignored".format(workflow_dictionary['name']))
         raise RuntimeError
 
     return issues
