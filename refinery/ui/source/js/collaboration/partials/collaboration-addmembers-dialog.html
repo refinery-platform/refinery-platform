@@ -11,29 +11,31 @@
       ng-model="email"
       name="recipientEmail"
       required>
-      <button type="submit" class="refinery-base btn btn-default"
-        ng-click="$close()">Cancel</button>
-    <button
-      type="submit"
-      class="btn btn-primary"
-      ng-click="modal.sendInvite(email)"
-      ng-disabled="!inviteNewMemberForm.$valid">
-      Send Invite
-    </button>
   </ng-form>
+
+  <div
+    class='p-t-1-2 text-warning'
+    ng-show="inviteNewMemberForm.email.$error.required">
+    <i class="fa fa-warning" aria-hidden="true"></i>
+      Email address required.
+  </div>
+
+  <div
+    class='p-t-1-2 text-warning'
+    ng-show="inviteNewMemberForm.recipientEmail.$error.email">
+    <i class="fa fa-warning" aria-hidden="true"></i>
+      Incorrect format for email address. example@test.com
+  </div>
 </div>
 
-<div
-  class='p-l-1-3 text-warning'
-  ng-show="inviteNewMemberForm.email.$error.required">
-  <i class="fa fa-warning" aria-hidden="true"></i>
-    Email address required.
+<div class="modal-footer">
+  <button type="submit" class="refinery-base btn btn-default"
+    ng-click="$close()">Cancel</button>
+  <button
+    type="submit"
+    class="btn btn-primary"
+    ng-click="modal.sendInvite(email)"
+    ng-disabled="!inviteNewMemberForm.$valid">
+    Send Invite
+  </button>
 </div>
-
-<div
-  class='p-l-1-3 text-warning'
-  ng-show="inviteNewMemberForm.recipientEmail.$error.email">
-  <i class="fa fa-warning" aria-hidden="true"></i>
-    Incorrect format for email address. example@test.com
-</div>
-

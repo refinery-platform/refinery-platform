@@ -2,7 +2,7 @@
   <h3>Add new groups</h3>
   <p>No two groups in Refinery may have the same name.</p>
 </div>
-<div class="modal-body" novalidate>
+<div class="modal-body">
   <ng-form name="groupCreationForm" class="navbar-form text-align-center">
     <input
       autofocus
@@ -12,7 +12,19 @@
       placeholder="Group name"
       ng-model="groupName"
       ng-minlength="3" required>
-    <button
+  </ng-form>
+
+  <div
+    class='p-t-1-2 text-warning'
+    ng-show="groupCreationForm.groupName.$error.minlength ||
+    groupCreationForm.groupName.$error.required">
+    <i class="fa fa-warning" aria-hidden="true"></i>
+    Names must be 3 characters long.
+  </div>
+</div>
+
+<div class="modal-footer">
+   <button
       class="refinery-base btn btn-default"
       ng-click="cancel()">
       Cancel
@@ -24,13 +36,4 @@
       ng-disabled="!groupCreationForm.$valid">
       Create group
     </button>
-  </ng-form>
-</div>
-
-<div
-  class='p-l-1-3 text-warning'
-  ng-show="groupCreationForm.groupName.$error.minlength ||
-  groupCreationForm.groupName.$error.required">
-  <i class="fa fa-warning" aria-hidden="true"></i>
-  Names must be 3 characters long.
 </div>
