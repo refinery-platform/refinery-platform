@@ -121,24 +121,6 @@ def createStepsAnnot(file_list, workflow):
                          'is_refinery_file': True})
             # Updating post job actions for renaming datasets
             elif curr_workflow_step["type"] == "tool":
-                # getting current filename for workflow
-                curr_filename = ''
-                if input_type in file_list[i].keys():
-                    curr_filename = removeFileExt(
-                        file_list[i][input_type]['node_uuid'])
-                else:
-                    curr_filename = ''
-                    curr_nodelist = []
-                    for itypes in file_list[i].keys():
-                        temp_name = removeFileExt(
-                            file_list[i][itypes]['node_uuid'])
-                        # array of node_uuids associated with the current
-                        # toolset
-                        curr_nodelist.append(temp_name)
-                        if curr_filename == '':
-                            curr_filename += temp_name
-                        else:
-                            curr_filename += ',' + temp_name
                 # getting "keep" flag to keep track of files to be saved from
                 # workflow
                 # parsing annotation field in galaxy workflows to parse output
