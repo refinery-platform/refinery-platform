@@ -1,5 +1,6 @@
 import os
 import yaml
+import time
 import pytest
 
 from selenium.webdriver.common.by import By
@@ -46,44 +47,57 @@ def assert_body_text(selenium, *search_texts):
                 ))
 
 
+def assert_text_within_id(selenium, search_id, *search_texts):
+    for search_text in search_texts:
+        try:
+            WebDriverWait(selenium, 5).until(
+                EC.text_to_be_present_in_element(
+                    (By.ID, search_id), search_text)
+            )
+        except TimeoutException:
+            raise AssertionError(
+                '"%s" not in %s: \n%s' % (
+                    search_text,
+                    search_id,
+                    selenium.find_element_by_id(search_id).text
+                ))
+
+
+def wait_until_id_clickable(selenium, search_id, wait_duration):
+    return WebDriverWait(selenium, wait_duration).until(
+        EC.element_to_be_clickable((By.ID, search_id)))
+
+
 # TESTS:
 def test_dataset_deletion(selenium):
     login(selenium)
 
-    assert_body_text(selenium, "Selenium Test DataSet1")
-    assert_body_text(selenium, "Selenium Test DataSet2")
+    assert_text_within_id(selenium, "launchpadStep0", "Selenium Test DataSet1")
+    assert_text_within_id(selenium, "launchpadStep0", "Selenium Test DataSet2")
+    assert_text_within_id(selenium, "total-datasets", "2 data sets")
 
-    selenium.find_element_by_class_name('dataset-delete')[0].click()
-    selenium.find_element_by_id('dataset-delete-button').click()
+    selenium.find_elements_by_class_name('dataset-delete')[0].click()
 
-    search_id = 'deletion-message-text'
-    search_text = "was deleted successfully!"
-    try:
-        WebDriverWait(selenium, 5).until(
-            EC.text_to_be_present_in_element(
-                (By.ID, search_id), search_text
-            )
-        )
-    except TimeoutException:
-        raise AssertionError(
-            '"{}" not in {}: \n{}'.format(
-                search_text,
-                search_id,
-                selenium.find_element_by_id(search_id).text)
-        )
-    else:
-        selenium.find_element_by_id('dataset-delete-cancel-button').click()
-        try:
-            WebDriverWait(selenium, 5).until(
-                EC.text_to_be_present_in_element(
-                    (By.TAG_NAME, 'body'), "Selenium Test DataSet1"
-                )
-            )
-        except TimeoutException:
-            pass
+    wait_until_id_clickable(selenium, 'dataset-delete-button', 3).click()
 
-        except Exception as e:
-            raise AssertionError("Something unepected happened: {}".format(e))
+    wait_until_id_clickable(selenium, 'dataset-delete-close-button', 3).click()
+
+    assert_text_within_id(selenium, "launchpadStep0", "Selenium Test DataSet2")
+
+    assert_text_within_id(selenium, "total-datasets", "1 data sets")
+
+    time.sleep(2)
+
+    selenium.find_elements_by_class_name('dataset-delete')[0].click()
+
+    wait_until_id_clickable(selenium, 'dataset-delete-button', 3).click()
+
+    wait_until_id_clickable(selenium, 'dataset-delete-close-button', 3).click()
+
+    time.sleep(2)
+
+    assert_text_within_id(
+        selenium, "launchpadStep0", "Info No data sets available.")
 
     if not_travis:
         pytest.set_trace()
