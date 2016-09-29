@@ -24,7 +24,6 @@ before_script:
   - python manage.py create_public_group
   - python manage.py syncdb --migrate --noinput
   - python manage.py create_user 'guest' 'guest' 'guest@example.com' 'GuestFirst' 'GuestLast' 'GuestAffiliation' 'active'
-  - python manage.py loaddata core ../selenium/fixtures/sample_datasets.json
   - npm install -g grunt-cli@0.1.13 bower@1.7.7 --progress false
   - cd ui
   - npm install --progress false
@@ -33,7 +32,7 @@ before_script:
 script:
   - set -e # Any error will cause travis to exit early and report a failure.
 
-  - flake8 --exclude=migrations,ui ..
+  - flake8 --exclude=migrations,ui,selenium ..
 
   - echo 'travis_fold:start:grunt'
   - pushd ui

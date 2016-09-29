@@ -1,17 +1,23 @@
-import os
-import yaml
 import time
+
+import os
+import sys
 import pytest
-
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+import yaml
 from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
+sys.path.append("../refinery/")
+
+from factory_boy.model_factories import make_datasets
+
+global TOTAL_DATASETS
+TOTAL_DATASETS = 2
 
 base_url = os.environ['BASE_URL']
 not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
-
 creds = yaml.load(open(os.environ['CREDS_YML']))
 
 
@@ -70,29 +76,32 @@ def wait_until_id_clickable(selenium, search_id, wait_duration):
 
 # TESTS:
 def test_dataset_deletion(selenium):
-    login(selenium)
+    global TOTAL_DATASETS
 
-    assert_text_within_id(selenium, "launchpadStep0", "Selenium Test DataSet1")
-    assert_text_within_id(selenium, "launchpadStep0", "Selenium Test DataSet2")
-    assert_text_within_id(selenium, "total-datasets", "2 data sets")
-
-    selenium.find_elements_by_class_name('dataset-delete')[0].click()
-
-    wait_until_id_clickable(selenium, 'dataset-delete-button', 3).click()
-
-    wait_until_id_clickable(selenium, 'dataset-delete-close-button', 3).click()
-
-    assert_text_within_id(selenium, "launchpadStep0", "Selenium Test DataSet2")
-
-    assert_text_within_id(selenium, "total-datasets", "1 data sets")
+    # Create sample Data
+    make_datasets(TOTAL_DATASETS)
 
     time.sleep(2)
 
-    selenium.find_elements_by_class_name('dataset-delete')[0].click()
+    login(selenium)
 
-    wait_until_id_clickable(selenium, 'dataset-delete-button', 3).click()
+    assert_text_within_id(
+            selenium, "total-datasets", "{} data sets".format(TOTAL_DATASETS)
+    )
 
-    wait_until_id_clickable(selenium, 'dataset-delete-close-button', 3).click()
+    while TOTAL_DATASETS:
+        selenium.find_elements_by_class_name('dataset-delete')[0].click()
+
+        wait_until_id_clickable(selenium, 'dataset-delete-button', 3).click()
+
+        wait_until_id_clickable(
+            selenium, 'dataset-delete-close-button', 3).click()
+
+        assert_text_within_id(
+            selenium, "total-datasets", "{} data sets".format(TOTAL_DATASETS)
+        )
+
+        TOTAL_DATASETS -= 1
 
     time.sleep(2)
 
