@@ -1,7 +1,7 @@
 // Unit test for visualization spec
 'use strict';
 
-describe('rpVisualization directive unit test', function () {
+describe('rpIGVLaunchModalDetail directive unit test', function () {
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryVisualization'));
 

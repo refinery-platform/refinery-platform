@@ -45,6 +45,7 @@ function IGVCtrl (
     if (selectedNodesService.selectedAllFlag) {
       vm.igvConfig.node_selection = selectedNodesService.complementSelectedNodesUuids;
       vm.igvConfig.node_selection_blacklist_mode = true;
+      vm.igvConfig.assay_uuid = $window.externalAssayUuid;
     } else {
       vm.igvConfig.node_selection = selectedNodesService.selectedNodesUuids;
       vm.igvConfig.node_selection_blacklist_mode = false;
