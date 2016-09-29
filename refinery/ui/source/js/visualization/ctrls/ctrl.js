@@ -14,6 +14,7 @@ function VisualizationCtrl (
   ];
   vm.selectedVisualization = { select: null };
 
+  // Main method which launches modal depending on visualization selection
   vm.launchVisualization = function () {
     var template = $templateCache.get(vm.selectedVisualization.select.template);
     var modalContent = $compile(template)($scope);
