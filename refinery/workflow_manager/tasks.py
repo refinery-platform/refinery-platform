@@ -143,15 +143,15 @@ def import_workflow(workflow, workflow_engine, workflow_dictionary):
 
     # check workflow steps for correct annotations and skip import if problems
     # are detected
-    workflow_step_issues = check_steps(workflow_dictionary)
-    if workflow_step_issues is None:
+    try:
+        workflow_step_issues = check_steps(workflow_dictionary)
+    except RuntimeError:
         # no error in parsing but no outputs defined
-        issues.append("Workflow does not declare outputs.")
+        issues.append("Workflow does not declare outputs")
         return issues
-    else:
-        if workflow_step_issues:
-            issues += workflow_step_issues
-            return issues
+    if workflow_step_issues:
+        issues += workflow_step_issues
+        return issues
 
     # import workflow
     workflow_object = Workflow.objects.create(
@@ -346,7 +346,7 @@ def check_step(step_definition):
 def check_steps(workflow_dictionary):
     steps = get_workflow_steps(workflow_dictionary)
     if steps is None:
-        return None
+        raise RuntimeError
     correct_step_found = False
     incorrect_step_found = False
     issues = []
@@ -373,7 +373,7 @@ def check_steps(workflow_dictionary):
         logger.warning(
             'Workflow "' + workflow_dictionary['name'] +
             '" does not declare outputs and will be ignored.')
-        return None
+        raise RuntimeError
 
     return issues
 
