@@ -6,6 +6,7 @@ function IGVFactory (
   $log) {
   var speciesList = [];
 
+  // Generate species list from key value pair in api response
   var generateSpeciesList = function (responseList) {
     angular.forEach(responseList.species, function (value, key) {
       speciesList.push({
@@ -15,6 +16,7 @@ function IGVFactory (
     });
   };
 
+  // Grab species list from igv api
   var getSpeciesList = function (igvConfig) {
     return $http({
       method: 'POST',
