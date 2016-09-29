@@ -2,25 +2,35 @@
   <h3>Add new groups</h3>
   <p>No two groups in Refinery may have the same name.</p>
 </div>
-<div class="modal-body">
-  <form
-    class="navbar-form text-align-center"
-    ng-submit="modal.createGroup(modal.groupName)">
+<div class="modal-body" novalidate>
+  <ng-form name="groupCreationForm" class="navbar-form text-align-center">
     <input
       autofocus
       type="text"
       class="form-control"
+      name="groupName"
       placeholder="Group name"
-      ng-model="modal.groupName">
+      ng-model="groupName"
+      ng-minlength="3" required>
     <button
       class="refinery-base btn btn-default"
-      ng-click="$close()">
+      ng-click="cancel()">
       Cancel
     </button>
     <button
       type="submit"
-      class="btn btn-primary">
+      class="btn btn-primary"
+      ng-click="ok()"
+      ng-disabled="!groupCreationForm.$valid">
       Create group
     </button>
-  </form>
+  </ng-form>
+</div>
+
+<div
+  class='p-l-1-3 text-warning'
+  ng-show="groupCreationForm.groupName.$error.minlength ||
+  groupCreationForm.groupName.$error.required">
+  <i class="fa fa-warning" aria-hidden="true"></i>
+  Names must be 3 characters long.
 </div>

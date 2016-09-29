@@ -2063,6 +2063,11 @@ class ExtendedGroupResource(ModelResource):
         elif request.method == 'DELETE':
             # Removing yourself - must delete to leave if last member.
             if user.id == int(kwargs['user_id']):
+
+                # Prevent users from leaving default public group
+                if ext_group.name == 'Public':
+                    return HttpForbidden('Members may not leave Public group')
+
                 if ext_group.user_set.count() == 1:
                     return HttpForbidden('Last member - must delete group')
 
