@@ -46,7 +46,7 @@ describe('Controller: IGV Ctrl', function () {
       expect(angular.isFunction(ctrl.retrieveSpecies)).toBe(true);
     });
 
-    it('refreshNodeGroupList calls on correct factory method', function () {
+    it('getSpeciesList calls on correct factory method', function () {
       var mockResponse = false;
       spyOn(factory, 'getSpeciesList').and.callFake(function () {
         return {
