@@ -639,16 +639,16 @@
           <div class="floatbox-min-right">
             <span ng-if="dashboard.userIsAuthenticated">
               <button
-              class="icon-only fa fa-filter"
-              title="Filter &amp; Sort"
-              ng-class="{'showing': dashboard.showAnalysesFilterSort, 'active': dashboard.analysesFilterSort}"
-              ng-click="dashboard.showAnalysesFilterSort = !!!dashboard.showAnalysesFilterSort"
-              ng-if="dashboard.analysesIsFilterable"
-              close-on-outer-click-external-trigger="dashboard.analysesFilterSort"
-              refinery-tooltip
-              refinery-tooltip-container="body"
-              refinery-tooltip-placement="right">
-            </button>
+                class="icon-only fa fa-filter"
+                title="Filter &amp; Sort"
+                ng-class="{'showing': dashboard.showAnalysesFilterSort, 'active': dashboard.analysesFilterSort}"
+                ng-click="dashboard.showAnalysesFilterSort = !!!dashboard.showAnalysesFilterSort"
+                ng-if="dashboard.analysesIsFilterable"
+                close-on-outer-click-external-trigger="dashboard.analysesFilterSort"
+                refinery-tooltip
+                refinery-tooltip-container="body"
+                refinery-tooltip-placement="right">
+              </button>
             </span>
           </div>
           <div class="floatbox-max-left">
