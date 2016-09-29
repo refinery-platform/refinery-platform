@@ -9,16 +9,27 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+from core.models import UserProfile
+
 sys.path.append("../refinery/")
 
 from factory_boy.dataset_factory import make_datasets
 
 global TOTAL_DATASETS
+
+# Total number of Datasets to create for the test run
 TOTAL_DATASETS = 2
 
 base_url = os.environ['BASE_URL']
 not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
 creds = yaml.load(open(os.environ['CREDS_YML']))
+
+try:
+    user = UserProfile.objects.get(username=creds["username"]).user
+except (UserProfile.DoesNotExist, UserProfile.MultipleObjectsReturned) as e:
+    sys.stdout.write(e)
+    sys.stdout.flush()
+    sys.exit(1)
 
 
 @pytest.fixture
@@ -79,7 +90,7 @@ def test_dataset_deletion(selenium):
     global TOTAL_DATASETS
 
     # Create sample Data
-    make_datasets(TOTAL_DATASETS)
+    make_datasets(TOTAL_DATASETS, user)
 
     time.sleep(2)
 
@@ -103,10 +114,8 @@ def test_dataset_deletion(selenium):
 
         TOTAL_DATASETS -= 1
 
-    time.sleep(2)
-
     assert_text_within_id(
-        selenium, "launchpadStep0", "Info No data sets available.")
+        selenium, "total-datasets", "{} data sets".format(TOTAL_DATASETS))
 
     if not_travis:
         pytest.set_trace()

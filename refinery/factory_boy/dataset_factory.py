@@ -5,6 +5,8 @@ from datetime import datetime
 
 import factory
 
+from core.models import DataSet
+
 sys.path.append("../refinery/")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.dev")
 
@@ -46,7 +48,7 @@ class InvestigationLinkFactory(factory.django.DjangoModelFactory):
     date = datetime.now()
 
 
-def make_datasets(number_to_create):
+def make_datasets(number_to_create, user_instance):
     """Create some DataSets"""
     while number_to_create >= 1:
 
@@ -71,3 +73,7 @@ def make_datasets(number_to_create):
         )
 
         number_to_create -= 1
+
+    for dataset in DataSet.objects.all():
+        dataset.set_owner(user_instance)
+        dataset.save()
