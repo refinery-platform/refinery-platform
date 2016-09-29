@@ -11,7 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 sys.path.append("../refinery/")
 
-from factory_boy.model_factories import make_datasets
+from factory_boy.dataset_factory import make_datasets
 
 global TOTAL_DATASETS
 TOTAL_DATASETS = 2
