@@ -107,20 +107,22 @@
                 {{ dashboard.dataCart.length }}
               </span>
             </button>
-            <button
-              class="fa fa-filter icon-only"
-              title="Filter data sets"
-              ng-class="{'showing': dashboard.showDataSetsFilter, 'is-glowing-yellow-text': dashboard.dataSetsFilter}"
-              ng-click="dashboard.toggleDataSetsFilter()"
-              ng-if="!dashboard.searchQueryDataSets.length"
-              close-on-outer-click-external-trigger="dashboard.dataSetsFilter"
-              refinery-tooltip
-              refinery-tooltip-container="body"
-              refinery-tooltip-placement="top"
-              refinery-tooltip-delay-show="750"
-              refinery-tooltip-delay-hide="150"
-              refinery-tooltip-hide-on-click="true">
-            </button>
+             <span ng-if="dashboard.userIsAuthenticated">
+              <button
+                class="fa fa-filter icon-only"
+                title="Filter data sets"
+                ng-class="{'showing': dashboard.showDataSetsFilter, 'is-glowing-yellow-text': dashboard.dataSetsFilter}"
+                ng-click="dashboard.toggleDataSetsFilter()"
+                ng-if="!dashboard.searchQueryDataSets.length"
+                close-on-outer-click-external-trigger="dashboard.dataSetsFilter"
+                refinery-tooltip
+                refinery-tooltip-container="body"
+                refinery-tooltip-placement="top"
+                refinery-tooltip-delay-show="750"
+                refinery-tooltip-delay-hide="150"
+                refinery-tooltip-hide-on-click="true">
+              </button>
+             </span>
             <button
               class="fa fa-sort icon-only"
               title="Sort data sets"
@@ -635,7 +637,8 @@
         </div>
         <div class="floatbox">
           <div class="floatbox-min-right">
-            <button
+            <span ng-if="dashboard.userIsAuthenticated">
+              <button
               class="icon-only fa fa-filter"
               title="Filter &amp; Sort"
               ng-class="{'showing': dashboard.showAnalysesFilterSort, 'active': dashboard.analysesFilterSort}"
@@ -646,6 +649,7 @@
               refinery-tooltip-container="body"
               refinery-tooltip-placement="right">
             </button>
+            </span>
           </div>
           <div class="floatbox-max-left">
             <h4>
@@ -810,17 +814,19 @@
         </div>
         <div class="floatbox">
           <div class="floatbox-min-right">
-            <button
-              class="icon-only fa fa-filter"
-              title="Filter &amp; Sort"
-              ng-class="{'showing': dashboard.showWorkflowsFilterSort, 'active': dashboard.workflowsFilterSort}"
-              ng-click="dashboard.showWorkflowsFilterSort = !!!dashboard.showWorkflowsFilterSort"
-              ng-if="dashboard.workflows.totalReadable"
-              close-on-outer-click-external-trigger="dashboard.workflowsFilterSort"
-              refinery-tooltip
-              refinery-tooltip-container="body"
-              refinery-tooltip-placement="left">
-            </button>
+            <span ng-if="dashboard.userIsAuthenticated">
+              <button
+                class="icon-only fa fa-filter"
+                title="Filter &amp; Sort"
+                ng-class="{'showing': dashboard.showWorkflowsFilterSort, 'active': dashboard.workflowsFilterSort}"
+                ng-click="dashboard.showWorkflowsFilterSort = !!!dashboard.showWorkflowsFilterSort"
+                ng-if="dashboard.workflows.totalReadable"
+                close-on-outer-click-external-trigger="dashboard.workflowsFilterSort"
+                refinery-tooltip
+                refinery-tooltip-container="body"
+                refinery-tooltip-placement="left">
+              </button>
+            </span>
           </div>
           <div class="floatbox-max-left">
             <h4>
