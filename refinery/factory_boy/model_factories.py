@@ -29,7 +29,7 @@ class NodeCollectionFactory(factory.django.DjangoModelFactory):
     uuid = uuid.uuid4()
 
 
-class InvestigationFactory(factory.django.DjangoModelFactory):
+class InvestigationFactory(factory.Factory):
     """Minimal representation of an Investigation for testing purposes"""
     class Meta:
         model = "core.Investigation"
