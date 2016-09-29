@@ -84,15 +84,6 @@ function IGVCtrl (
     $uibModalInstance.dismiss('cancel');
   };
 
-  // Helper method for ui to see if any nodes are selected before launching igv
-  vm.areSelectedNodesEmpty = function () {
-    if (selectedNodesService.selectedNodesUuids.length > 0 ||
-      selectedNodesService.complementSelectedNodesUuids.length > 0) {
-      return false;
-    }
-    return true;
-  };
-
   vm.retrieveSpecies();
 }
 

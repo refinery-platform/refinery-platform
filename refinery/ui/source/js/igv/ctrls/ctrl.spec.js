@@ -5,7 +5,6 @@ describe('Controller: IGV Ctrl', function () {
   var scope;
   var factory;
   var $controller;
-  var service;
   var $uibModalInstance = { open: function () {}, dismiss: function () {} };
 
   beforeEach(module('refineryApp'));
@@ -13,8 +12,7 @@ describe('Controller: IGV Ctrl', function () {
   beforeEach(inject(function (
     $rootScope,
     _$controller_,
-    _IGVFactory_,
-    _selectedNodesService_
+    _IGVFactory_
   ) {
     scope = $rootScope.$new();
     $controller = _$controller_;
@@ -23,10 +21,9 @@ describe('Controller: IGV Ctrl', function () {
       $uibModalInstance: $uibModalInstance
     });
     factory = _IGVFactory_;
-    service = _selectedNodesService_;
   }));
 
-  it('FileBrowserCtrl ctrl should exist', function () {
+  it('IGVCtrl ctrl should exist', function () {
     expect(ctrl).toBeDefined();
   });
 
@@ -42,9 +39,7 @@ describe('Controller: IGV Ctrl', function () {
   it('Helper Methods exist', function () {
     expect(angular.isFunction(ctrl.launchIgvJs)).toBe(true);
     expect(angular.isFunction(ctrl.cancel)).toBe(true);
-    expect(angular.isFunction(ctrl.areSelectedNodesEmpty)).toBe(true);
   });
-
 
   describe('Test RetrieveSpecies', function () {
     it('refreshNodeGroupList is method', function () {
@@ -63,18 +58,6 @@ describe('Controller: IGV Ctrl', function () {
       expect(mockResponse).toEqual(false);
       ctrl.retrieveSpecies();
       expect(mockResponse).toEqual(true);
-    });
-  });
-
-  describe('areSelectedNodesEmpty', function () {
-    it('saveNodeGroup is method', function () {
-      expect(angular.isFunction(ctrl.areSelectedNodesEmpty)).toBe(true);
-    });
-
-    it('areSelectedNodesEmpty calls on service for node count', function () {
-      expect(ctrl.areSelectedNodesEmpty()).toEqual(true);
-      service.selectedNodesUuids = ['x508x83x-x9xx-4740-x9x7-x7x0x631280x'];
-      expect(ctrl.areSelectedNodesEmpty()).toEqual(false);
     });
   });
 });
