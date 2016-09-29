@@ -410,7 +410,7 @@ def get_input_relationships(workflow_annotation):
 
 def check_workflow_inputs(workflow_input_names):
     """Check if workflow input names are unique"""
-    #TODO: check if workflow input names match workflow annotation
+    # TODO: check if workflow input names match workflow annotation
     issues = []
     unique_workflow_input_names = {}
     map(unique_workflow_input_names.__setitem__, workflow_input_names, [])

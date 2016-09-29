@@ -222,7 +222,7 @@ def createStepsAnnot(file_list, workflow):
                             pja_dict[temp_key] = new_rename_dict
             else:
                 logger.critical("Workflow step type '%s' is not recognized",
-                             curr_workflow_step["type"])
+                                curr_workflow_step["type"])
 
             updated_dict[curr_id] = curr_workflow_step
             # assign a uuid that is unique to each step (allow multiple
