@@ -32,6 +32,7 @@
           <tbody>
             <tr ng-repeat="group in modal.permissions.groups track by $index">
               <td>
+                {{ group }}
                 <a href="/collaboration/#/{{ group.uuid }}">
                   {{ group.name }}
                 </a>
