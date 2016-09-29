@@ -247,6 +247,7 @@ DataSetPreviewCtrl.prototype.getPermissions = function (uuid) {
         groups.push({
           id: data.share_list[i].group_id,
           name: data.share_list[i].group_name,
+          uuid: data.share_list[i].uuid,
           permission: this.getPermissionLevel(data.share_list[i].perms)
         });
       }
