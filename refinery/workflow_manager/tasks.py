@@ -363,15 +363,13 @@ def check_steps(workflow_dictionary):
                 issues += step_issues
 
     if incorrect_step_found:
-        logger.warning(
-            "Workflow {} contains incorrectly declared outputs for at least "
-            "one step and will be ignored: {}"
-            .format(workflow_dictionary['name'], ", ".join(issues))
-        )
+        logger.warning("Workflow %s contains incorrectly declared outputs for "
+                       "at least one step and will be ignored: %s",
+                       workflow_dictionary['name'], ", ".join(issues))
         return issues
     if not correct_step_found:
-        logger.warning("Workflow {} does not declare outputs and will be "
-                       "ignored".format(workflow_dictionary['name']))
+        logger.warning("Workflow %s does not declare outputs and will be "
+                       "ignored", workflow_dictionary['name'])
         raise RuntimeError
 
     return issues
