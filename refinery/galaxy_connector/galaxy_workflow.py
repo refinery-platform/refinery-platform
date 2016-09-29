@@ -501,19 +501,19 @@ def configure_workflow(workflow_dict, ret_list):
     # does it have  "annotation": "type=COMPACT", in the workflow annotation
     # field
     work_type = getStepOptions(workflow_dict["annotation"])
-    COMPACT_WORKFLOW = False
+    compact_workflow = False
 
     for k, v in work_type.iteritems():
         if k.upper() == 'TYPE':
             try:
                 if v[0].upper() == 'COMPACT':
-                    COMPACT_WORKFLOW = True
+                    compact_workflow = True
             except:
                 logger.exception("Malformed workflow tag, cannot parse: %s",
                                  work_type)
                 return
     # if workflow is tagged w/ type=COMPACT tag,
-    if COMPACT_WORKFLOW:
+    if compact_workflow:
         logger.debug("Workflow processing: COMPACT")
         new_workflow["steps"], history_download, analysis_node_connections = \
             createStepsCompact(ret_list, workflow_dict)
