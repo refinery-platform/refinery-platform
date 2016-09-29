@@ -5,10 +5,10 @@ from datetime import datetime
 
 import factory
 
-from core.models import DataSet
-
 sys.path.append("../refinery/")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.dev")
+
+from core.models import DataSet
 
 
 class DataSetFactory(factory.django.DjangoModelFactory):

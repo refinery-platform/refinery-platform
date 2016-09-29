@@ -4,15 +4,15 @@ import os
 import sys
 import pytest
 import yaml
+
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from core.models import UserProfile
-
 sys.path.append("../refinery/")
 
+from django.contrib.auth.models import User
 from factory_boy.dataset_factory import make_datasets
 
 global TOTAL_DATASETS
@@ -25,8 +25,8 @@ not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
 creds = yaml.load(open(os.environ['CREDS_YML']))
 
 try:
-    user = UserProfile.objects.get(username=creds["username"]).user
-except (UserProfile.DoesNotExist, UserProfile.MultipleObjectsReturned) as e:
+    user = User.objects.get(username=creds["username"])
+except (User.DoesNotExist, User.MultipleObjectsReturned) as e:
     sys.stdout.write(e)
     sys.stdout.flush()
     sys.exit(1)
