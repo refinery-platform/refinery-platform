@@ -10,21 +10,21 @@ function EmailInviteCtrl (
 }
 
 EmailInviteCtrl.prototype.sendInvite = function (email) {
-  var that = this;
+  var vm = this;
 
-  that.groupInviteService.send({
+  vm.groupInviteService.send({
     email: email,
-    group_id: that.groupDataService.activeGroup.id
+    group_id: vm.groupDataService.activeGroup.id
   })
   .$promise
   .then(
     function () {
-      that.bootbox.alert('Invitation successfully sent to ' + email);
-      that.groupDataService.update();
-      that.$uibModalInstance.dismiss();
+      vm.bootbox.alert('Invitation successfully sent to ' + email);
+      vm.groupDataService.update();
+      vm.$uibModalInstance.dismiss();
     }
   ).catch(function () {
-    that.bootbox.alert(
+    vm.bootbox.alert(
       'Oh no, something went terribly wrong. We\'re very sorry but the ' +
       'invitation couldn\'t be send out.'
     );
