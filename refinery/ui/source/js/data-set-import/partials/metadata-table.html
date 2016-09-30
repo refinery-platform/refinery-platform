@@ -443,10 +443,10 @@
               ng-messages="importMetadataTableForm.slug.$error"
               role="alert"
               class="text-danger">
+              <div ng-message="pattern">
                 <i class="fa fa-warning" aria-hidden="true"></i>
-                Invalid URL shortcut. It can only contain alphanumeric
-                characters
-                and "_".
+                Invalid URL shortcut, can only contain alphanumeric
+                characters and "_".
             </span>
           </div>
         </div>
