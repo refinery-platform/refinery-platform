@@ -23,7 +23,7 @@
           <i class="fa fa-angle-double-left"></i>
           Back to exploration
         </button>
-        <span class="separator">&middot;</span>
+        <span class="separator" ng-if="preview.exploration">&middot;</span>
         <a
           class="btn btn-important"
           ng-href="data_sets/{{ preview.dataSetUuid }}">
