@@ -105,14 +105,14 @@ def test_dataset_deletion(selenium):
 
         wait_until_id_clickable(selenium, 'dataset-delete-button', 3).click()
 
+        TOTAL_DATASETS -= 1
+
         wait_until_id_clickable(
             selenium, 'dataset-delete-close-button', 3).click()
 
         assert_text_within_id(
             selenium, "total-datasets", "{} data sets".format(TOTAL_DATASETS)
         )
-
-        TOTAL_DATASETS -= 1
 
     assert_text_within_id(
         selenium, "total-datasets", "{} data sets".format(TOTAL_DATASETS))
