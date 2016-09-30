@@ -9,7 +9,7 @@
 </div>
 <div class="modal-body">
   <form
-    ng-submit="modal.ok()"
+    ng-submit="modal.createGroup()"
     name="groupCreationForm"
     class="navbar-form text-align-center">
     <input
@@ -49,7 +49,7 @@
     <button
       type="submit"
       class="btn btn-primary"
-      ng-click="modal.ok()"
+      ng-click="modal.createGroup()"
       ng-disabled="!groupCreationForm.$valid">
       Create group
     </button>

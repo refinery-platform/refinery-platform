@@ -23,7 +23,7 @@ function AddGroupCtrl (
     }
   };
 
-  vm.ok = function () {
+  vm.createGroup = function () {
     groupExtendedService.create({
       name: vm.groupName
     })
