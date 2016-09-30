@@ -51,17 +51,15 @@
           ng-if="dashboard.searchQueryDataSets"
           ng-click="dashboard.resetDataSetSearch()"></i>
         <input
-
           type="text"
           class="search-query form-control"
           placeholder="Search"
           ng-model="dashboard.searchQueryDataSets"
           ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)">
-          </div>
       </form>
 
       <div
-        id="intro-js-data-set-header"
+        id="data-set-panel-header"
         class="refinery-panel-header">
         <div
           class="refinery-notification"
@@ -98,7 +96,7 @@
             <button
               class="fa fa-info-circle icon-only"
               title="Introduction to the Data Set View"
-              ng-click="dashboard.satoriIntros.dataSetViewStart()"
+              ng-click="dashboard.introsSatoriDataSetView.start()"
               ng-if="dashboard.dataSetExploration"
               refinery-tooltip
               refinery-tooltip-container="body"
@@ -152,7 +150,7 @@
             </button>
           </div>
           <div class="floatbox-max-left">
-            <h4 id="intro-js-data-set-num">
+            <h4 id="data-set-num">
               <span ng-if="dashboard.searchQueryDataSets.length">
                 Found
               </span>
@@ -427,7 +425,7 @@
             class="results no-list-style infinite-scrolling"
             ng-class="{'search': dashboard.searchDataSet}">
             <li
-              class="intro-js-data-set-surrogate"
+              class="data-set-surrogate"
               ui-scroll="dataSet in dashboard.dataSets"
               buffer-size="50"
               adapter="dashboard.dataSetsAdapter"
@@ -804,7 +802,7 @@
   </div>
 </div>
 
-<div id="launchpadStep5"
+<div id="workflows-panel"
   class="col-md-4 pushable"
   ng-class="{'pushed': dashboard.expandDataSetPanel}"
   ng-if="!dashboard.repoMode">
@@ -899,8 +897,10 @@
 
 <!-- Intro.js Details of the Data Set View -->
 <div
-  ng-intro-options="dashboard.satoriIntros.dataSetViewOptions"
-  ng-intro-method="dashboard.satoriIntros.dataSetViewStart"
-  ng-intro-onbeforechange="dashboard.satoriIntros.dataSetViewBeforeChangeEvent"
-  ng-intro-onafterchange="dashboard.satoriIntros.dataSetViewAfterChangeEvent"
-  ng-intro-autostart="dashboard.satoriIntros.dataSetViewShouldAutoStart">
+  ng-intro-options="dashboard.introsSatoriDataSetView.options"
+  ng-intro-method="dashboard.introsSatoriDataSetView._start"
+  ng-intro-exit-method="dashboard.introsSatoriDataSetView._exit"
+  ng-intro-onbeforechange="dashboard.introsSatoriDataSetView.beforeChangeEvent"
+  ng-intro-autostart="dashboard.introsSatoriDataSetView.autoStart"
+  ng-intro-oncomplete="dashboard.introsSatoriDataSetView.complete"
+  ng-intro-onexit="dashboard.introsSatoriDataSetView.exit">
