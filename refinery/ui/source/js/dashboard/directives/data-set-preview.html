@@ -1,4 +1,4 @@
-<div class="content-container" ng-class="{'hidden': !preview.active}">
+<div id="data-set-preview" class="content-container" ng-class="{'hidden': !preview.active}">
   <div ng-if="preview.active">
   <div
     class="refinery-panel-topbar"
@@ -15,6 +15,15 @@
         </button>
       </div>
       <div class="floatbox-max-left">
+        <button
+          id="back-to-satori"
+          class="btn btn-super-important clickable"
+          ng-click="preview.close()"
+          ng-if="preview.exploration">
+          <i class="fa fa-angle-double-left"></i>
+          Back to exploration
+        </button>
+        <span class="separator">&middot;</span>
         <a
           class="btn btn-important"
           ng-href="data_sets/{{ preview.dataSetUuid }}">

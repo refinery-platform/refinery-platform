@@ -3,8 +3,9 @@
 function refineryDataSetPreview () {
   return {
     bindToController: {
+      active: '=',
       close: '&',
-      active: '='
+      exploration: '='
     },
     controller: 'DataSetPreviewCtrl',
     controllerAs: 'preview',
