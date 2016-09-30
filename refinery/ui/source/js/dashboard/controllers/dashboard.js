@@ -27,7 +27,7 @@ function DashboardCtrl (
   treemapContext,
   dashboardVisData,
   dataCart,
-  DashboardSatoriIntros
+  DashboardIntrosDataSetView
 ) {
   var that = this;
 
@@ -58,7 +58,7 @@ function DashboardCtrl (
   this.treemapContext = treemapContext;
   this.dashboardVisData = dashboardVisData;
   this.dataCart = dataCart;
-  this.satoriIntros = new DashboardSatoriIntros(this);
+  this.introsSatoriDataSetView = new DashboardIntrosDataSetView(this);
 
   this.searchQueryDataSets = '';
 
@@ -144,6 +144,7 @@ function DashboardCtrl (
   this.dashboardDataSetsReloadService.setReload(function (hardReset) {
     if (hardReset) {
       this.dataSets.resetCache();
+      this.dataSet.reload();
     }
     // Reset current list and reload uiScroll
     if (this.dataSetsAdapter) {
@@ -154,7 +155,10 @@ function DashboardCtrl (
   // This is a pseudo service just to have consistent naming with
   // `dashboardDataSetsReloadService`.
   this.dashboardAnalysesReloadService = {
-    reload: function () {
+    reload: function (hardReset) {
+      if (hardReset) {
+        this.analyses.resetCache();
+      }
       if (that.analysesAdapter) {
         that.analysesAdapter.reload();
       }
@@ -1600,6 +1604,6 @@ angular
     'treemapContext',
     'dashboardVisData',
     'dataCart',
-    'DashboardSatoriIntros',
+    'DashboardIntrosDataSetView',
     DashboardCtrl
   ]);

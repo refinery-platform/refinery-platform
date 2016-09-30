@@ -1,17 +1,14 @@
 <div
-  id="intro-js-exploration-view"
+  id="exploration-view"
   class="content-container"
   ng-class="{'hidden': !visWrapper.active, 'invisible': visWrapper.invisible}">
   <div ng-if="visWrapper.active">
     <!-- Intro.js Overview of SATORI -->
     <div
-      ng-intro-options="visWrapper.satoriIntros.overviewOptions"
-      ng-intro-method="visWrapper.satoriIntros.overviewStart"
-      ng-intro-oncomplete="visWrapper.satoriIntros.overviewCompletedEvent"
-      ng-intro-onexit="visWrapper.satoriIntros.overviewExitEvent"
-      ng-intro-onbeforechange="visWrapper.satoriIntros.overviewBeforeChangeEvent"
-      ng-intro-onafterchange="visWrapper.satoriIntros.overviewAfterChangeEvent"
-      ng-intro-autostart="visWrapper.satoriIntros.overviewShouldAutoStart">
+      ng-intro-options="visWrapper.introsSatoriOverview.options"
+      ng-intro-method="visWrapper.introsSatoriOverview.start"
+      ng-intro-onbeforechange="visWrapper.introsSatoriOverview.beforeChangeEvent"
+      ng-intro-autostart="visWrapper.introsSatoriOverview.autoStart">
 
     <div
       class="refinery-panel-topbar"
@@ -90,7 +87,8 @@
           <span
             id="intro-js-satori-overview-start"
             class="btn"
-            ng-click="visWrapper.satoriIntros.overviewStart()">
+            ng-click="visWrapper.introsSatoriOverview.start()"
+            ng-if="visWrapper.noData !== true">
             <span class="fa fa-info-circle"></span>
             Introduction
           </span>
@@ -98,7 +96,7 @@
       </div>
     </div>
     <div class="full-without-topbar">
-      <div id="intro-js-list-graph" class="top-half">
+      <div id="list-graph-wrapper" class="top-half">
         <div class="refinery-global-notifier" ng-if="visWrapper.loading !== false">
           <div class="refinery-notifier-icon refinery-spinner"></div>
         </div>
@@ -121,7 +119,7 @@
             value-property-name="visWrapper.propertyValue"></list-graph>
         </div>
       </div>
-      <div id="intro-js-treemap" class="bottom-half">
+      <div id="treemap-wrapper" class="bottom-half">
         <div class="refinery-global-notifier" ng-if="visWrapper.loading !== false">
           <div class="refinery-notifier-icon refinery-spinner"></div>
         </div>
