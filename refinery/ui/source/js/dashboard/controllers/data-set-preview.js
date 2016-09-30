@@ -19,7 +19,8 @@ function DataSetPreviewCtrl (
   dashboardExpandablePanelService,
   dataSetTakeOwnershipService,
   dashboardDataSetsReloadService,
-  filesize
+  filesize,
+  DashboardIntrosDataSetSummary
 ) {
   this.$log = $log;
   this.$q = $q;
@@ -40,6 +41,7 @@ function DataSetPreviewCtrl (
   this.dataSetTakeOwnershipService = dataSetTakeOwnershipService;
   this.dashboardDataSetsReloadService = dashboardDataSetsReloadService;
   this.filesize = filesize;
+  this.introsSatoriDataSetSummary = new DashboardIntrosDataSetSummary(this);
 
   this.maxBadges = this.settings.dashboard.preview.maxBadges;
   this.infinity = Number.POSITIVE_INFINITY;
@@ -478,5 +480,6 @@ angular
     'dataSetTakeOwnershipService',
     'dashboardDataSetsReloadService',
     'filesize',
+    'DashboardIntrosDataSetSummary',
     DataSetPreviewCtrl
   ]);
