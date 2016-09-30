@@ -11,6 +11,7 @@ function EmailInviteCtrl (
   vm.responseMessage = '';
   vm.alertType = 'info';
 
+  // After invite is sent, an alert pops up with following message
   vm.generateAlertMessage = function (infoType, email) {
     if (infoType === 'info') {
       vm.alertType = 'info';
@@ -21,6 +22,7 @@ function EmailInviteCtrl (
     }
   };
 
+  // Post email invite to group api
   vm.sendInvite = function (email) {
     groupInviteService.send({
       email: email,
@@ -31,6 +33,7 @@ function EmailInviteCtrl (
       function () {
         vm.generateAlertMessage('info', email);
         groupDataService.update();
+        // Automatically dismisses modal
         $timeout(function () {
           $uibModalInstance.dismiss();
         }, 3000);
@@ -41,6 +44,7 @@ function EmailInviteCtrl (
     );
   };
 
+  // UI helper methods to cancel and close modal instance
   vm.cancel = function () {
     $uibModalInstance.dismiss('cancel');
   };
