@@ -1,42 +1,62 @@
 'use strict';
 
 function EmailInviteCtrl (
-  bootbox, $uibModalInstance, groupInviteService, groupDataService
+  $uibModalInstance,
+  groupInviteService,
+  groupDataService,
+  $timeout,
+  $log
 ) {
   var vm = this;
-  vm.bootbox = bootbox;
-  vm.$uibModalInstance = $uibModalInstance;
-  vm.groupInviteService = groupInviteService;
-  vm.groupDataService = groupDataService;
   vm.responseMessage = '';
+  vm.alertType = 'info';
+
+  vm.generateAlertMessage = function (infoType, email) {
+    if (infoType === 'info') {
+      vm.alertType = 'info';
+      vm.responseMessage = 'Invitation successfully sent to ' + email;
+    } else if (infoType === 'error') {
+      vm.alertType = 'error';
+      vm.responseMessage = 'Invitiation could not be sent to' + email;
+    }
+  };
 
   vm.sendInvite = function (email) {
-    vm.groupInviteService.send({
+    groupInviteService.send({
       email: email,
-      group_id: vm.groupDataService.activeGroup.id
+      group_id: groupDataService.activeGroup.id
     })
     .$promise
     .then(
       function () {
-        vm.responseMessage = 'Invitation successfully sent to ' + email;
-        vm.groupDataService.update();
+        vm.generateAlertMessage('info', email);
+        groupDataService.update();
+        $timeout(function () {
+          $uibModalInstance.dismiss();
+        }, 3000);
       }, function (error) {
-        vm.responseMessage = 'Invitiation could not be sent.' + error;
+        vm.generateAlertMessage('error', email);
+        $log.error(error);
       }
     );
   };
 
+  vm.cancel = function () {
+    $uibModalInstance.dismiss('cancel');
+  };
+
   vm.close = function () {
-    vm.$uibModalInstance.dismiss();
+    $uibModalInstance.dismiss();
   };
 }
 
 angular
   .module('refineryCollaboration')
   .controller('EmailInviteCtrl', [
-    'bootbox',
     '$uibModalInstance',
     'groupInviteService',
     'groupDataService',
+    '$timeout',
+    '$log',
     EmailInviteCtrl
   ]);
