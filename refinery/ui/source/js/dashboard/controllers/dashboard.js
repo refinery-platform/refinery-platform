@@ -1115,24 +1115,29 @@ DashboardCtrl.prototype.getOriginalUri = function (eventData) {
  * Turns an unreadable date into a readable date string.
  *
  * @method  readableDate
- * @author  Fritz Lekschas
- * @date    2016-05-09
- * @param   {Object}  dataSet   Data set object of interest.
+ * @author  Fritz Lekschas & Scott Ouellette
+ * @date    2016-09-30
+ * @param   {Object}  object   DataSet or Analysis object of interest.
  * @param   {String}  property  Name of the date property to be made readable.
  * @return  {String}            Readable date string.
  */
-DashboardCtrl.prototype.readableDate = function (dataSet, property) {
+DashboardCtrl.prototype.readableDate = function (object, property) {
   var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
     'Sep', 'Oct', 'Nov', 'Dec'];
 
-  if (dataSet[property] && !dataSet[property + 'Readable']) {
-    dataSet[property + 'Readable'] =
-      months[dataSet[property].getMonth()] + ' ' +
-      dataSet[property].getDate() + ', ' +
-      dataSet[property].getFullYear();
+
+  // Analyes' modification_date field is not an actual Javascript Date so we
+  // need to convert it
+  object[property] = new Date(object[property]);
+
+  if (object[property] && !object[property + 'Readable']) {
+    object[property + 'Readable'] =
+      months[object[property].getMonth()] + ' ' +
+      object[property].getDate() + ', ' +
+      object[property].getFullYear();
   }
 
-  return dataSet[property + 'Readable'];
+  return object[property + 'Readable'];
 };
 
 /**
