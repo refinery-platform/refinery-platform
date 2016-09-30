@@ -8,6 +8,7 @@ function EmailInviteCtrl (
   vm.$uibModalInstance = $uibModalInstance;
   vm.groupInviteService = groupInviteService;
   vm.groupDataService = groupDataService;
+  vm.responseMessage = '';
 
   vm.sendInvite = function (email) {
     vm.groupInviteService.send({
@@ -17,16 +18,16 @@ function EmailInviteCtrl (
     .$promise
     .then(
       function () {
-        vm.bootbox.alert('Invitation successfully sent to ' + email);
+        vm.responseMessage = 'Invitation successfully sent to ' + email;
         vm.groupDataService.update();
-        vm.$uibModalInstance.dismiss();
+      }, function (error) {
+        vm.responseMessage = 'Invitiation could not be sent.' + error;
       }
-    ).catch(function () {
-      vm.bootbox.alert(
-        'Oh no, something went terribly wrong. We\'re very sorry but the ' +
-        'invitation couldn\'t be send out.'
-      );
-    });
+    );
+  };
+
+  vm.close = function () {
+    vm.$uibModalInstance.dismiss();
   };
 }
 

@@ -1,5 +1,10 @@
 <div class="modal-header">
-  <h3>Add new groups</h3>
+  <div class="float-right">
+    <a ng-click="modal.close()">
+      <i class="fa fa-times close" aria-hidden="true"></i>
+    </a>
+  </div>
+  <h3 class="text-left">Add new groups</h3>
   <p>No two groups in Refinery may have the same name.</p>
 </div>
 <div class="modal-body">
@@ -26,13 +31,13 @@
 <div class="modal-footer">
    <button
       class="refinery-base btn btn-default"
-      ng-click="cancel()">
+      ng-click="modal.cancel()">
       Cancel
     </button>
     <button
       type="submit"
       class="btn btn-primary"
-      ng-click="ok()"
+      ng-click="modal.ok()"
       ng-disabled="!groupCreationForm.$valid">
       Create group
     </button>

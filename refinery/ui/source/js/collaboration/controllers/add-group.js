@@ -7,7 +7,9 @@ function AddGroupCtrl (
   groupExtendedService,
   groupDataService) {
   // Group name modal
-  $scope.ok = function () {
+
+  var vm = this;
+  vm.ok = function () {
     groupExtendedService.create({
       name: $scope.groupName
     })
@@ -23,8 +25,12 @@ function AddGroupCtrl (
       });
   };
 
-  $scope.cancel = function () {
+  vm.cancel = function () {
     $uibModalInstance.dismiss('cancel');
+  };
+
+  vm.close = function () {
+    vm.$uibModalInstance.dismiss();
   };
 }
 
