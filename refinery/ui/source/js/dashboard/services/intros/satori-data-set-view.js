@@ -3,7 +3,8 @@
 function DashboardIntrosDataSetView (
   introJsDefaultOptions,
   introJsBeforeChangeEvent,
-  dashboardIntroStarter
+  dashboardIntroStarter,
+  dashboardIntroSatoriEasterEgg
 ) {
   /**
    * Constructor
@@ -15,22 +16,42 @@ function DashboardIntrosDataSetView (
    *   the context of the controller to trigger certain actions.
    */
   function Intros (/* context */) {
-    dashboardIntroStarter.register('data-set-view', this.start);
+    var self = this;
 
-    this.autoStart = false;
-    this.beforeChangeEvent = introJsBeforeChangeEvent();
-    this.start = function () {
-      document.introJsSatoriDataSetView = this.clickHandler;
+    self.id = 'satori-data-set-view';
+
+    self.clickHandler = function (id) {
+      self.complete();
+      self._exit();
+      dashboardIntroStarter.start(id);
+    };
+
+    self.start = function () {
+      document.introJsSatoriDataSetView = self.clickHandler;
 
       // Call the start method of Intro.js
-      this._start();
+      self._start();
     };
-    this.exit = function () {
+
+    dashboardIntroStarter.register(self.id, self.start);
+    dashboardIntroSatoriEasterEgg.register(self.id);
+
+    self.complete = function () {
+      console.log('Nice! ' + self.id + ' finished!');
+      dashboardIntroSatoriEasterEgg.completed(self.id);
+      self.exit();
+    };
+
+    self.exit = function () {
       document.introJsSatoriDataSetView = null;
-      console.log('Und schon ist der spaß vorbei');
     };
-    this.options = angular.copy(introJsDefaultOptions);
-    this.options.steps = [
+
+    self.autoStart = false;
+
+    self.beforeChangeEvent = introJsBeforeChangeEvent();
+
+    self.options = angular.copy(introJsDefaultOptions);
+    self.options.steps = [
       {
         element: '#data-set-panel',
         intro:
@@ -108,16 +129,17 @@ function DashboardIntrosDataSetView (
         element: '#data-set-panel',
         intro:
         'That\'s all you for the data set view.<br/><br/>There are 3 more ' +
-        'intros for the:<ul><li onclick="introJsSatoriDataSetView(1)" ' +
-        'refinery-intro-js-id="1">data set summary page<li/>' +
-        '<li>node-link diagram<li/><li>treemap<li/><ul/>',
+        'intros for the:<ul>' +
+        '<li class="clickable" onclick="introJsSatoriDataSetView' +
+          '(\'satori-list-graph\')">List graph visualization</li>' +
+        '<li class="clickable" onclick="introJsSatoriDataSetView' +
+          '(\'satori-treemap\')">Treemap visualization</li>' +
+        '<li class="clickable" onclick="introJsSatoriDataSetView' +
+          '(\'satori-data-set-summary\')">Data set summary</li>' +
+        '</ul>',
         position: 'right'
       }
     ];
-
-    this.clickHandler = function (id) {
-      console.log('wooord: ' + id);
-    };
   }
 
   return Intros;
@@ -129,5 +151,6 @@ angular
     'introJsDefaultOptions',
     'introJsBeforeChangeEvent',
     'dashboardIntroStarter',
+    'dashboardIntroSatoriEasterEgg',
     DashboardIntrosDataSetView
   ]);

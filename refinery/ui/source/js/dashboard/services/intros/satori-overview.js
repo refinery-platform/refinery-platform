@@ -1,7 +1,10 @@
 'use strict';
 
 function DashboardIntrosSatoriOverview (
-  introJsDefaultOptions, introJsBeforeChangeEvent, dashboardIntroStarter
+  introJsDefaultOptions,
+  introJsBeforeChangeEvent,
+  dashboardIntroStarter,
+  dashboardIntroSatoriEasterEgg
 ) {
   /**
    * Constructor
@@ -11,12 +14,42 @@ function DashboardIntrosSatoriOverview (
    * @date    2016-09-16
    */
   function Intros () {
-    dashboardIntroStarter.register('overview', this.start);
+    var self = this;
 
-    this.autoStart = false;
-    this.beforeChangeEvent = introJsBeforeChangeEvent();
-    this.options = angular.copy(introJsDefaultOptions);
-    this.options.steps = [
+    self.id = 'satori-overview';
+
+    self.clickHandler = function (id) {
+      self.complete();
+      self._exit();
+      dashboardIntroStarter.start(id);
+    };
+
+    self.autoStart = false;
+
+    self.start = function () {
+      document.introJsSatoriOverview = self.clickHandler;
+
+      // Call the start method of Intro.js
+      self._start();
+    };
+
+    dashboardIntroStarter.register(self.id, self.start);
+    dashboardIntroSatoriEasterEgg.register(self.id);
+
+    self.complete = function () {
+      console.log('Nice! ' + self.id + ' finished!');
+      dashboardIntroSatoriEasterEgg.completed(self.id);
+      self.exit();
+    };
+
+    self.exit = function () {
+      document.introJsSatoriOverview = null;
+    };
+
+    self.beforeChangeEvent = introJsBeforeChangeEvent();
+
+    self.options = angular.copy(introJsDefaultOptions);
+    self.options.steps = [
       {
         element: '#intro-js-satori-overview-start',
         intro:
@@ -74,6 +107,22 @@ function DashboardIntrosSatoriOverview (
         intro:
           'This is the treemap.',
         position: 'left'
+      },
+      {
+        element: '#intro-js-satori-overview-start',
+        intro:
+          'This was a quick over. If you want to dive in deeper you can check' +
+          'out the following guides that explain a bit more details: <ul>' +
+          '<li class="clickable" onclick="introJsSatoriOverview' +
+            '(\'satori-data-set-view\')">Data set list</li>' +
+          '<li class="clickable" onclick="introJsSatoriOverview' +
+            '(\'satori-list-graph\')">List graph visualization</li>' +
+          '<li class="clickable" onclick="introJsSatoriOverview' +
+            '(\'satori-treemap\')">Tree map visualization</li>' +
+          '<li class="clickable" onclick="introJsSatoriOverview' +
+            '(\'satori-data-set-summary\')">Data set summary</li>' +
+          '</ul>',
+        position: 'left'
       }
     ];
   }
@@ -87,5 +136,6 @@ angular
     'introJsDefaultOptions',
     'introJsBeforeChangeEvent',
     'dashboardIntroStarter',
+    'dashboardIntroSatoriEasterEgg',
     DashboardIntrosSatoriOverview
   ]);

@@ -1,7 +1,12 @@
 'use strict';
 
 function VisWrapperCtrl (
-  $q, pubSub, dashboardVisData, DashboardIntrosSatoriOverview
+  $q,
+  pubSub,
+  dashboardVisData,
+  DashboardIntrosSatoriOverview,
+  DashboardIntrosSatoriListGraph,
+  DashboardIntrosSatoriTreemap
 ) {
   var self = this;
 
@@ -9,6 +14,8 @@ function VisWrapperCtrl (
   self.pubSub = pubSub;
   self.dashboardVisData = dashboardVisData;
   self.introsSatoriOverview = new DashboardIntrosSatoriOverview(this);
+  self.introsSatoriListGraph = new DashboardIntrosSatoriListGraph();
+  self.introsSatoriTreemap = new DashboardIntrosSatoriTreemap();
 
   // Absolute root node: OWL:Thing
   // The absolute root node is used for pruning the graph as it acts as a
@@ -181,5 +188,7 @@ angular
     'pubSub',
     'dashboardVisData',
     'DashboardIntrosSatoriOverview',
+    'DashboardIntrosSatoriListGraph',
+    'DashboardIntrosSatoriTreemap',
     VisWrapperCtrl
   ]);

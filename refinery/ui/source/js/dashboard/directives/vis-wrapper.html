@@ -6,9 +6,30 @@
     <!-- Intro.js Overview of SATORI -->
     <div
       ng-intro-options="visWrapper.introsSatoriOverview.options"
-      ng-intro-method="visWrapper.introsSatoriOverview.start"
+      ng-intro-method="visWrapper.introsSatoriOverview._start"
+      ng-intro-exit-method="visWrapper.introsSatoriOverview._exit"
       ng-intro-onbeforechange="visWrapper.introsSatoriOverview.beforeChangeEvent"
-      ng-intro-autostart="visWrapper.introsSatoriOverview.autoStart">
+      ng-intro-autostart="visWrapper.introsSatoriOverview.autoStart"
+      ng-intro-oncomplete="visWrapper.introsSatoriOverview.complete"
+      ng-intro-onexit="visWrapper.introsSatoriOverview.exit">
+    <!-- Intro.js Overview of SATORI's list graph -->
+    <div
+      ng-intro-options="visWrapper.introsSatoriListGraph.options"
+      ng-intro-method="visWrapper.introsSatoriListGraph._start"
+      ng-intro-exit-method="visWrapper.introsSatoriListGraph._exit"
+      ng-intro-onbeforechange="visWrapper.introsSatoriListGraph.beforeChangeEvent"
+      ng-intro-autostart="visWrapper.introsSatoriListGraph.autoStart"
+      ng-intro-oncomplete="visWrapper.introsSatoriListGraph.complete"
+      ng-intro-onexit="visWrapper.introsSatoriListGraph.exit">
+    <!-- Intro.js Overview of SATORI's treemap -->
+    <div
+      ng-intro-options="visWrapper.introsSatoriTreemap.options"
+      ng-intro-method="visWrapper.introsSatoriTreemap._start"
+      ng-intro-exit-method="visWrapper.introsSatoriTreemap._exit"
+      ng-intro-onbeforechange="visWrapper.introsSatoriTreemap.beforeChangeEvent"
+      ng-intro-autostart="visWrapper.introsSatoriTreemap.autoStart"
+      ng-intro-oncomplete="visWrapper.introsSatoriTreemap.complete"
+      ng-intro-onexit="visWrapper.introsSatoriTreemap.exit">
 
     <div
       class="refinery-panel-topbar"
