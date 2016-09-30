@@ -1,44 +1,61 @@
 'use strict';
 
 function AddGroupCtrl (
-  $scope,
-  bootbox,
+  $timeout,
+  $log,
   $uibModalInstance,
   groupExtendedService,
   groupDataService) {
   // Group name modal
 
   var vm = this;
+  vm.responseMessage = '';
+  vm.alertType = 'info';
+  // After invite is sent, an alert pops up with following message
+  var generateAlertMessage = function (infoType, groupName) {
+    if (infoType === 'info') {
+      vm.alertType = 'info';
+      vm.responseMessage = 'Successfully created group' + groupName;
+    } else if (infoType === 'error') {
+      vm.alertType = 'error';
+      vm.responseMessage = 'Error creating group. Check for group name' +
+        ' duplication.';
+    }
+  };
+
   vm.ok = function () {
     groupExtendedService.create({
-      name: $scope.groupName
+      name: vm.groupName
     })
       .$promise
       .then(function () {
+        generateAlertMessage('info', vm.groupName);
         groupDataService.update();
-        $uibModalInstance.dismiss();
-      })
-      .catch(function () {
-        bootbox.alert(
-          'This name probably already exists - try a different name.'
-        );
+        // Automatically dismisses modal
+        $timeout(function () {
+          $uibModalInstance.dismiss();
+        }, 2000);
+      }, function (error) {
+        generateAlertMessage('error', vm.groupName);
+        $log.error(error);
       });
   };
 
+  // UI helper methods to cancel and close modal instance
   vm.cancel = function () {
     $uibModalInstance.dismiss('cancel');
   };
 
   vm.close = function () {
-    vm.$uibModalInstance.dismiss();
+    $uibModalInstance.dismiss();
   };
 }
 
 angular
   .module('refineryCollaboration')
   .controller('AddGroupCtrl', [
-    '$scope',
-    'bootbox',
+    '$timeout',
+    '$log',
     '$uibModalInstance',
     'groupExtendedService',
     'groupDataService',

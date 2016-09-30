@@ -15,7 +15,7 @@
       class="form-control"
       name="groupName"
       placeholder="Group name"
-      ng-model="groupName"
+      ng-model="modal.groupName"
       ng-minlength="3" required>
   </ng-form>
 
@@ -25,6 +25,14 @@
     groupCreationForm.groupName.$error.required">
     <i class="fa fa-warning" aria-hidden="true"></i>
     Names must be 3 characters long.
+  </div>
+
+  <div
+    class='p-t-1-2'
+    ng-show="modal.responseMessage">
+     <div class="alert alert-{{ modal.alertType }} text-center">
+       {{modal.responseMessage}}
+     </div>
   </div>
 </div>
 
