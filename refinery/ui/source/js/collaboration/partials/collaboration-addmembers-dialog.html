@@ -7,18 +7,21 @@
   <h3 class="text-left">Invite New Member</h3>
 </div>
 <div class="modal-body">
-  <form
-    ng-submit="modal.sendInvite(email)"
-    name="inviteNewMemberForm"
-    class="navbar-form text-center">
-    <input
-      type="email"
-      class="form-control"
-      placeholder="Recipient email"
-      ng-model="email"
-      name="recipientEmail"
-      required>
-  </form>
+  <div class="row">
+    <form
+      ng-submit="modal.sendInvite(email)"
+      name="inviteNewMemberForm"
+      class="navbar-form float-left">
+      <input
+        autofocus
+        type="email"
+        class="form-control"
+        placeholder="Recipient email"
+        ng-model="email"
+        name="recipientEmail"
+        required>
+    </form>
+  </div>
 
   <div
     class='p-t-1-2 text-warning'

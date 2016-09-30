@@ -8,19 +8,21 @@
   <p>No two groups in Refinery may have the same name.</p>
 </div>
 <div class="modal-body">
-  <form
-    ng-submit="modal.createGroup()"
-    name="groupCreationForm"
-    class="navbar-form text-align-center">
-    <input
-      autofocus
-      type="text"
-      class="form-control"
-      name="groupName"
-      placeholder="Group name"
-      ng-model="modal.groupName"
-      ng-minlength="3" required>
-  </form>
+  <div class='row'>
+    <form
+      ng-submit="modal.createGroup()"
+      name="groupCreationForm"
+      class="navbar-form text-align-center float-left">
+      <input
+        autofocus
+        type="text"
+        class="form-control"
+        name="groupName"
+        placeholder="Group name"
+        ng-model="modal.groupName"
+        ng-minlength="3" required>
+    </form>
+  </div>
 
   <div
     class='p-t-1-2 text-warning'

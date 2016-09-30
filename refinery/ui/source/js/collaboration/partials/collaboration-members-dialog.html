@@ -8,17 +8,39 @@
   <p>If you are the last manager in a group, you must delete the group in order to remove yourself or assign another manager first.</p>
 </div>
 <div class="modal-body">
-  <div class="p-a-1/2">
-    {{modal.member.username}}
+  <h3 class="row">
+    <h3 class="text-left">
+      Member Username
+    </h3>
+  </div>
+  <div class="row">
+    <div class="col-sm-4 text-left">
+      {{modal.member.username}}
+    </div>
 
-    <button type="button" class="refinery-base btn btn-default"
-      ng-click="modal.remove()" style="float:right;margin-left:10px">Remove</button>
-    
-    <button ng-if="modal.member.is_manager" type="button"
-      class="refinery-base btn btn-default" ng-click="modal.demote()" style="float:right">Demote</button>
-    
-    <button ng-if="!modal.member.is_manager" type="button"
-      class="refinery-base btn btn-default"ng-click="modal.promote()" style="float:right">Promote</button>
-    
+    <div class="col-sm-8">
+      <button
+        ng-if="modal.member.is_manager"
+        type="button"
+        class="refinery-base btn btn-default"
+        ng-click="modal.demote()">
+        Demote
+      </button>
+
+      <button
+        ng-if="!modal.member.is_manager"
+        type="button"
+        class="refinery-base btn btn-default"
+        ng-click="modal.promote()">
+        Promote
+      </button>
+
+      <button
+        type="button"
+        class="refinery-base btn btn-default"
+        ng-click="modal.remove()">
+        Remove
+      </button>
+    </div>
   </div>
 </div>
