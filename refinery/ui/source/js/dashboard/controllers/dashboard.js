@@ -144,7 +144,7 @@ function DashboardCtrl (
   this.dashboardDataSetsReloadService.setReload(function (hardReset) {
     if (hardReset) {
       this.dataSets.resetCache();
-      this.dataSet.reload();
+      this.dataSet.clearCache();
     }
     // Reset current list and reload uiScroll
     if (this.dataSetsAdapter) {
