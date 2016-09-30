@@ -498,12 +498,31 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         if pre_isa_archive:
             bundle.data["pre_isa_archive"] = pre_isa_archive.uuid
 
+        analyses = []
+        for analysis in bundle.obj.get_analyses():
+
+            analysis.__dict__['is_owner'] = False
+            owner = analysis.get_owner()
+            if owner:
+                try:
+                    analysis.__dict__['owner'] = owner.userprofile.uuid
+                    user = bundle.request.user
+                    if (hasattr(user, 'userprofile') and
+                       user.userprofile.uuid == analysis.__dict__['owner']):
+                        analysis.__dict__['is_owner'] = True
+                except:
+                    analysis.__dict__['owner'] = None
+
+            else:
+                analysis.__dict__['owner'] = None
+
+            analyses.append(analysis.__dict__)
+
         bundle.data["version"] = bundle.obj.get_version_details().version
         bundle.data["date"] = bundle.obj.get_version_details().date
         bundle.data["creation_date"] = bundle.obj.creation_date
         bundle.data["modification_date"] = bundle.obj.modification_date
-        bundle.data["analyses"] = [analysis.__dict__ for analysis in
-                                   bundle.obj.get_analyses()]
+        bundle.data["analyses"] = analyses
 
         return bundle
 
