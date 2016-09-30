@@ -36,7 +36,7 @@ function EmailInviteCtrl (
         // Automatically dismisses modal
         $timeout(function () {
           $uibModalInstance.dismiss();
-        }, 2000);
+        }, 1500);
       }, function (error) {
         vm.generateAlertMessage('error', email);
         $log.error(error);

@@ -34,7 +34,7 @@ function AddGroupCtrl (
         // Automatically dismisses modal
         $timeout(function () {
           $uibModalInstance.dismiss();
-        }, 2000);
+        }, 1500);
       }, function (error) {
         generateAlertMessage('error', vm.groupName);
         $log.error(error);
