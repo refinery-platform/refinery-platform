@@ -2,8 +2,52 @@
     <h3>Delete Analysis</h3>
 </div>
 <div class="modal-body">
-  <h5><b>Title:</b> {{modal.analysis.name}}</h5>
-  <h5><b>Status:</b> {{modal.analysis.status}}</h5>
+  <ul>
+    <li>
+      <i
+        class="analyses-status {{ modal.analysis.status | analysisStatusIcon }}"
+        title="{{ modal.analysis.status | analysisStatusTitle }}"
+        refinery-tooltip
+        refinery-tooltip-container="body"
+        refinery-tooltip-placement="left">
+      </i>
+      <i
+        class="fa fa-user"
+        title="You ran this analysis"
+        ng-if="modal.isOwner"
+        refinery-tooltip
+        refinery-tooltip-placement="top">
+
+      </i>
+      <i
+        class="fa fa-users icon-shared-in"
+        title="Some collaborator ran this analysis"
+        ng-if="!modal.isOwner"
+        refinery-tooltip
+        refinery-tooltip-placement="top">
+
+      </i>
+      <span ng-switch on="analysis.status" ng-if="modal.deletionMessage == null">
+        <span ng-if="modal.analysis.status == 'SUCCESS'">
+          <a
+          ng-href="/data_sets/{{modal.analysis
+          .data_set__uuid}}/analysis/{{modal.analysis.uuid}}">
+          {{ modal.analysis.name }}
+        </a>
+        </span>
+        <span ng-if="modal.analysis.status != 'SUCCESS'">
+          <a
+          ng-href="/data_sets/{{modal.analysis.data_set__uuid}}/#/analyses">
+          {{ modal.analysis.name }}
+        </a>
+        </span>
+      </span>
+      <span ng-if="modal.deletionMessage != null">
+        {{ modal.analysis.name }}
+      </span>
+    </li>
+  </ul>
+
 </div>
 
 <div class="modal-footer">

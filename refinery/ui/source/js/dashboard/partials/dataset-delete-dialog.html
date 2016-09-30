@@ -16,28 +16,45 @@
       <ul>
         <li ng-if="modal.deletionMessage == null"
         ng-repeat="analysis in modal.dataSet.analyses">
-          <span class="spinner">
+            <span class="spinner">
+              <i
+                class="analyses-status {{ analysis.status | analysisStatusIcon }}"
+                title="{{ analysis.status | analysisStatusTitle }}"
+                refinery-tooltip
+                refinery-tooltip-placement="left">
+              </i>
+            </span>
             <i
-              class="analyses-status {{ analysis.status | analysisStatusIcon }}"
-              title="{{ analysis.status | analysisStatusTitle }}"
-              refinery-tooltip refinery-tooltip-placement="top">
+              class="fa fa-user"
+              title="You ran this analysis"
+              ng-if="analysis.is_owner"
+              refinery-tooltip
+              refinery-tooltip-placement="top">
+
             </i>
-          </span>
+            <i
+              class="fa fa-users icon-shared-in"
+              title="Some collaborator ran this analysis"
+              ng-if="!analysis.is_owner"
+              refinery-tooltip
+              refinery-tooltip-placement="top">
+
+            </i>
           <span ng-switch on="analysis.status">
-            <span ng-if="SUCCESS">
-              <a
-              ng-href="/data_sets/{{modal.dataSet.uuid}}/analysis/{{analysis
-              .uuid}}">
-              {{ analysis.name }}
-            </a>
+              <span ng-if="SUCCESS">
+                <a
+                ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
+                {{ analysis.name }}
+              </a>
+              </span>
+              <span ng-if="!SUCCESS">
+                <a
+                ng-href="/data_sets/{{analysis.data_set__uuid}}/#/analyses">
+                {{ analysis.name }}
+              </a>
+              </span>
             </span>
-            <span ng-if="!SUCCESS">
-              <a
-              ng-href="/data_sets/{{modal.dataSet.uuid}}/#/analyses">
-              {{ analysis.name }}
-            </a>
-            </span>
-          </span>
+
         </li>
         <li ng-if="modal.deletionMessage != null"
         ng-repeat="analysis in modal.dataSet.analyses">
@@ -45,21 +62,30 @@
               <i
                 class="analyses-status {{ analysis.status | analysisStatusIcon }}"
                 title="{{ analysis.status | analysisStatusTitle }}"
-                refinery-tooltip refinery-tooltip-placement="top">
+                refinery-tooltip
+                refinery-tooltip-placement="left">
               </i>
             </span>
-            <span ng-switch on="analysis.status">
-              <span ng-if="SUCCESS">
-                <a class="no-link">
+            <i
+              class="fa fa-user"
+              title="You ran this analysis"
+              ng-if="analysis.is_owner"
+              refinery-tooltip
+              refinery-tooltip-placement="top">
+
+            </i>
+            <i
+              class="fa fa-users icon-shared-in"
+              title="Some collaborator ran this analysis"
+              ng-if="!analysis.is_owner"
+              refinery-tooltip
+              refinery-tooltip-placement="top">
+
+            </i>
+            <span>
                 {{ analysis.name }}
-              </a>
-              </span>
-              <span ng-if="!SUCCESS">
-                <a class="no-link">
-                {{ analysis.name }}
-              </a>
-              </span>
             </span>
+
         </li>
       </ul>
     </div>
