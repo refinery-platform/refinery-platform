@@ -8,7 +8,10 @@
   <p>No two groups in Refinery may have the same name.</p>
 </div>
 <div class="modal-body">
-  <ng-form name="groupCreationForm" class="navbar-form text-align-center">
+  <form
+    ng-submit="modal.ok()"
+    name="groupCreationForm"
+    class="navbar-form text-align-center">
     <input
       autofocus
       type="text"
@@ -17,7 +20,7 @@
       placeholder="Group name"
       ng-model="modal.groupName"
       ng-minlength="3" required>
-  </ng-form>
+  </form>
 
   <div
     class='p-t-1-2 text-warning'
@@ -38,6 +41,7 @@
 
 <div class="modal-footer">
    <button
+      type="button"
       class="refinery-base btn btn-default"
       ng-click="modal.cancel()">
       Cancel

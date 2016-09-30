@@ -7,8 +7,10 @@
   <h3 class="text-left">Invite New Member</h3>
 </div>
 <div class="modal-body">
-  <ng-form name="inviteNewMemberForm" class="navbar-form"
-    style="text-align:center">
+  <form
+    ng-submit="modal.sendInvite(email)"
+    name="inviteNewMemberForm"
+    class="navbar-form text-center">
     <input
       type="email"
       class="form-control"
@@ -16,7 +18,7 @@
       ng-model="email"
       name="recipientEmail"
       required>
-  </ng-form>
+  </form>
 
   <div
     class='p-t-1-2 text-warning'
@@ -33,15 +35,20 @@
   <div
     class='p-t-1-2'
     ng-show="modal.responseMessage">
-     <div class="alert alert-{{ modal.alertType }} text-center">
+     <div
+       class="alert alert-{{ modal.alertType }} text-center">
        {{modal.responseMessage}}
      </div>
   </div>
 </div>
 
 <div class="modal-footer">
-  <button type="submit" class="refinery-base btn btn-default"
-    ng-click="modal.cancel()">Cancel</button>
+  <button
+    type="button"
+    class="refinery-base btn btn-default"
+    ng-click="modal.cancel()">
+    Cancel
+  </button>
   <button
     type="submit"
     class="btn btn-primary"
