@@ -30,7 +30,9 @@ function IntroStarter () {
    * @param   {String}  name  Name of the intro to start.
    */
   function start (name) {
-    starters[name]();
+    if (typeof starters[name] === 'function') {
+      starters[name]();
+    }
   }
 
   return {
