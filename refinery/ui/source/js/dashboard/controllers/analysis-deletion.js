@@ -13,6 +13,7 @@ function AnalysisDeleteCtrl (
   analysis,
   analyses,
   analysesReloadService,
+  isOwner,
   dashboardDataSetsReloadService
 ) {
   this.$log = $log;
@@ -23,6 +24,7 @@ function AnalysisDeleteCtrl (
   this.$uibModalInstance = $uibModalInstance;
   this.deletionService = deletionService;
   this.analysesReloadService = analysesReloadService;
+  this.isOwner = isOwner;
   this.dashboardDataSetsReloadService = dashboardDataSetsReloadService;
 }
 
@@ -81,6 +83,7 @@ angular
     'analysis',
     'analyses',
     'analysesReloadService',
+    'isOwner',
     'dashboardDataSetsReloadService',
     AnalysisDeleteCtrl
   ]);

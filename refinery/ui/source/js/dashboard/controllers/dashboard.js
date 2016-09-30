@@ -1624,7 +1624,8 @@ DashboardCtrl.prototype.openAnalysisDeleteModal = function (analysis) {
       },
       analysis: analysis,
       analyses: this.analyses,
-      analysesReloadService: this.dashboardAnalysesReloadService
+      analysesReloadService: this.dashboardAnalysesReloadService,
+      isOwner: analysis.is_owner
     }
   });
 };
