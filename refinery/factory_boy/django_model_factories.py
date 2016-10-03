@@ -127,7 +127,7 @@ def make_datasets_with_analyses(number_to_create, user_instance):
                 uuid=analysis_uuid,
                 name="Test Analysis - {}".format(analysis_uuid),
                 project=project,
-                dataset=dataset
+                data_set=dataset
             )
 
         number_to_create -= 1
