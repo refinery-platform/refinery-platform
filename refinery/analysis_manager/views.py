@@ -254,8 +254,8 @@ def run(request):
             workflow=curr_workflow,
             time_start=timezone.now()
         )
-        analysis.save()
         analysis.set_owner(request.user)
+        analysis.save()
 
         # getting distinct workflow inputs
         try:
@@ -408,8 +408,8 @@ def run(request):
             workflow=curr_workflow,
             time_start=timezone.now()
         )
-        analysis.save()
         analysis.set_owner(request.user)
+        analysis.save()
 
         # getting distinct workflow inputs
         workflow_data_inputs = curr_workflow.data_inputs.all()
