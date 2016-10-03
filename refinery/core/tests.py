@@ -1946,18 +1946,21 @@ class DataSetResourceTest(ResourceTestCase):
         self.assertEqual(data['uuid'], self.dataset.uuid)
 
     def test_get_dataset_expecting_analyses(self):
-        Analysis.objects.create(
+        a1 = Analysis.objects.create(
             name='a1',
             project=self.user_catch_all_project,
             data_set=self.dataset,
             workflow=self.workflow
         )
-        Analysis.objects.create(
+        a2 = Analysis.objects.create(
             name='a2',
             project=self.user_catch_all_project,
             data_set=self.dataset,
             workflow=self.workflow
         )
+
+        a1.set_owner(self.user)
+        a2.set_owner(self.user)
 
         dataset_uri = make_api_uri("data_sets",
                                    self.dataset.uuid)
@@ -1970,6 +1973,12 @@ class DataSetResourceTest(ResourceTestCase):
         self.assertEqual(data['uuid'], self.dataset.uuid)
         self.assertIsNotNone(data['analyses'])
         self.assertEqual(len(data['analyses']), 2)
+
+        self.assertIsNotNone(data['analyses'][0]['is_owner'])
+        self.assertTrue(data['analyses'][0]['is_owner'])
+        self.assertIsNotNone(data['analyses'][0]['owner'])
+        self.assertEqual(data['analyses'][0]['owner'],
+                         UserProfile.objects.get(user=self.user).uuid)
 
     def test_get_dataset_expecting_no_analyses(self):
         dataset_uri = make_api_uri("data_sets",
