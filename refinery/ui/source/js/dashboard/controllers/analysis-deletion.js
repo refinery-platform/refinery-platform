@@ -43,9 +43,9 @@ AnalysisDeleteCtrl.prototype.cancel = function () {
  */
 AnalysisDeleteCtrl.prototype.delete = function () {
   var that = this;
-
   that.isDeleting = true;
   that.deletionMessage = null;
+  that.deleteSuccessful = false;
 
   this
     .deletionService
@@ -57,10 +57,12 @@ AnalysisDeleteCtrl.prototype.delete = function () {
     .then(function (response) {
       that.deletionMessage = response.data;
       if (response.status === 200) {
+        that.deleteSuccessful = true;
         that.dashboardDataSetsReloadService.reload(true);
         that.analyses.newOrCachedCache(undefined, true);
         that.analysesReloadService.reload();
       } else {
+        that.deleteSuccessful = false;
         that.deletionMessage = response.data;
       }
     })
