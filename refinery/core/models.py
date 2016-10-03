@@ -589,12 +589,13 @@ class DataSet(SharableResource):
             super(DataSet, self).delete()
         except Exception as e:
             return False, "DataSet: {} could not be deleted! {}".format(
-                     self, e)
+                     self.name, e)
         else:
             # Return a "truthy" value here so that the admin ui and
             # front-end ui knows if the deletion succeeded or not as well as
             # the proper message to  display to the end user
-            return True, "DataSet: {} was deleted successfully!".format(self)
+            return True, "DataSet: {} was deleted successfully!".format(
+                self.name)
 
     def get_analyses(self):
         return Analysis.objects.filter(data_set=self)
@@ -1001,7 +1002,7 @@ class Workflow(SharableResource, ManageableResource):
                                      "These Analyses have been run " \
                                      "utilizing it: {}. Setting it as " \
                                      "'inactive'".format(
-                                            self, self.get_analyses()
+                                            self.name, self.get_analyses()
                                         )
             logger.error(deletion_error_message)
 
@@ -1031,7 +1032,8 @@ class Workflow(SharableResource, ManageableResource):
             # Return a "truthy" value here so that the admin ui knows if the
             # deletion succeeded or not as well as the proper message to
             # display to the end user
-            return True, "Workflow: {} was deleted successfully!".format(self)
+            return True, "Workflow: {} was deleted successfully!".format(
+                self.name)
 
 
 class Project(SharableResource):
@@ -1191,6 +1193,9 @@ class Analysis(OwnableResource):
 
         if delete:
 
+            # Cancel Analysis (galaxy cleanup also happens here)
+            self.cancel()
+
             # Delete associated AnalysisResults
             self.get_analysis_results().delete()
 
@@ -1217,13 +1222,16 @@ class Analysis(OwnableResource):
             # Return a "truthy" value here so that the admin ui and
             # front-end ui knows if the deletion succeeded or not as well as
             # the proper message to display to the end user
-            return True, "Analysis: {} was deleted successfully!".format(self)
+            return True, "Analysis: {} was deleted successfully!".format(
+                self.name)
 
         else:
             # Prepare string to be displayed upon a failed deletion
-            deletion_error_message = "Cannot delete Analysis: {} because  " \
-                                     "one or more of it's Nodes have been  " \
-                                     "further analyzed.".format(self)
+            deletion_error_message = "Cannot delete Analysis: {} because " \
+                                     "it's results have been used to run " \
+                                     "further Analyses. Please delete all " \
+                                     "downstream Analyses before you delete " \
+                                     "this one!".format(self.name)
 
             logger.error(deletion_error_message)
 
