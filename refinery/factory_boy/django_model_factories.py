@@ -126,7 +126,6 @@ def make_datasets_with_analyses(number_to_create, user_instance):
         analysis_uuid = uid.uuid4()
         AnalysisFactory(
                 uuid=analysis_uuid,
-                title="Test Analysis - {}".format(analysis_uuid),
                 name="Test Analysis - {}".format(analysis_uuid),
                 project=project,
                 dataset=dataset
