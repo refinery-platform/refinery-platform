@@ -54,7 +54,6 @@ class AnalysisFactory(factory.django.DjangoModelFactory):
         model = "core.Analysis"
 
     uuid = uid.uuid4()
-    title = "Test Analysis - {}".format(uuid)
     name = "Test Analysis - {}".format(uuid)
     creation_date = datetime.now()
     modification_date = datetime.now()
