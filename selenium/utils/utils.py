@@ -36,5 +36,12 @@ def assert_text_within_id(selenium, search_id, *search_texts):
 
 
 def wait_until_id_clickable(selenium, search_id, wait_duration):
-    return WebDriverWait(selenium, wait_duration).until(
-        EC.element_to_be_clickable((By.ID, search_id)))
+    try:
+        return WebDriverWait(selenium, wait_duration).until(
+            EC.element_to_be_clickable((By.ID, search_id)))
+    except TimeoutException:
+            raise AssertionError(
+                '"%s" not in: \n%s' % (
+                    search_id,
+                    selenium.find_element_by_id(search_id).text
+                ))

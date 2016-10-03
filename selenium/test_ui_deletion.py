@@ -69,8 +69,7 @@ def test_dataset_deletion(selenium, total_datasets=TOTAL_DATASETS):
 
     # Create sample Data
     make_datasets(total_datasets, user)
-
-    time.sleep(2)
+    time.sleep(5)
 
     login(selenium)
 
@@ -79,6 +78,7 @@ def test_dataset_deletion(selenium, total_datasets=TOTAL_DATASETS):
     )
 
     while total_datasets:
+        sys.stdout.write("Deleting Dataset...")
         selenium.find_elements_by_class_name('dataset-delete')[0].click()
 
         wait_until_id_clickable(selenium, 'dataset-delete-button', 3).click()
@@ -106,8 +106,7 @@ def test_analysis_deletion(selenium, total_analyses=TOTAL_ANALYSES):
 
     # Create sample Data
     make_datasets_with_analyses(total_analyses, user)
-
-    time.sleep(2)
+    time.sleep(5)
 
     login(selenium)
 
@@ -118,12 +117,12 @@ def test_analysis_deletion(selenium, total_analyses=TOTAL_ANALYSES):
     while total_analyses:
         selenium.find_elements_by_class_name('analysis-delete')[0].click()
 
-        wait_until_id_clickable(selenium, 'analysis-delete-button', 3).click()
+        wait_until_id_clickable(selenium, 'analysis-delete-button', 5).click()
 
         total_analyses -= 1
 
         wait_until_id_clickable(
-            selenium, 'analysis-delete-close-button', 3).click()
+            selenium, 'analysis-delete-close-button', 5).click()
 
         if total_analyses == 1:
             assert_text_within_id(
