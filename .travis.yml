@@ -26,7 +26,7 @@ before_script:
   - python manage.py create_user 'guest' 'guest' 'guest@example.com' 'GuestFirst' 'GuestLast' 'GuestAffiliation' 'active'
   - npm install -g grunt-cli@0.1.13 bower@1.7.7 --progress false
   - cd ui
-  - npm install --progress false
+  - npm install --progress false --silent
   - bower install --config.interactive=false
   - cd ../
 script:
