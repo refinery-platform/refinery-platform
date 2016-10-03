@@ -48,6 +48,7 @@
     "grunt-karma": "^0.12.2",
     "grunt-newer": "^1.1.1",
     "grunt-ng-annotate": "^2.0.1",
+    "grunt-optimize-js": "0.4.0",
     "hasbin": "^1.1.1",
     "isbinaryfile": "^3.0.0",
     "jasmine-core": "^2.3.4",
