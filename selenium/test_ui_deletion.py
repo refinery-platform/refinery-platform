@@ -4,12 +4,16 @@ import time
 import yaml
 import pytest
 
+from data_set_manager.models import Investigation
+
 sys.path.append("../refinery/")
 
 from django.contrib.auth.models import User
 
-from core.models import DataSet, Analysis
-from factory_boy.django_model_factories import make_datasets, make_datasets_with_analyses
+from core.models import DataSet, Analysis, Workflow, Project, WorkflowEngine
+from galaxy_connector.models import Instance
+from factory_boy.django_model_factories import (make_datasets,
+                                                make_datasets_with_analyses)
 from utils.utils import (assert_text_within_id, assert_body_text,
                          wait_until_id_clickable)
 
@@ -54,6 +58,10 @@ def cleanup():
     """Remove objects and Logout of Refinery"""
     DataSet.objects.all().delete()
     Analysis.objects.all().delete()
+    Workflow.objects.all().delete()
+    Project.objects.all().delete()
+    WorkflowEngine.objects.all().delete()
+    Instance.objects.all().delete()
 
     logout(selenium)
 

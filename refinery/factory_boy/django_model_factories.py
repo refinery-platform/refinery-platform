@@ -55,6 +55,7 @@ class AnalysisFactory(factory.django.DjangoModelFactory):
 
     uuid = uid.uuid4()
     name = "Test Analysis - {}".format(uuid)
+    summary = "Summary for {}".format(name)
     creation_date = datetime.now()
     modification_date = datetime.now()
 
@@ -63,6 +64,30 @@ class ProjectFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a Project for testing purposes"""
     class Meta:
         model = "core.Project"
+
+
+class GalaxyInstanceFactory(factory.DjangoModelFactory):
+    """Minimal representation of a GalaxyInstance for testing purposes"""
+    class Meta:
+        model = "galaxy_connector.Instance"
+
+
+class WorkflowEngineFactory(factory.DjangoModelFactory):
+    """Minimal representation of a WorkflowEngine for testing purposes"""
+    class Meta:
+        model = "core.WorkflowEngine"
+
+    instance = GalaxyInstanceFactory()
+
+
+class WorkflowFactory(factory.DjangoModelFactory):
+    """Minimal representation of a Workflow for testing purposes"""
+    class Meta:
+        model = "core.Workflow"
+
+    uuid = uid.uuid4()
+    name = "Test Workflow - {}".format(uuid)
+    workflow_engine = WorkflowEngineFactory()
 
 
 def make_datasets(number_to_create, user_instance):
@@ -99,6 +124,7 @@ def make_datasets(number_to_create, user_instance):
 def make_datasets_with_analyses(number_to_create, user_instance):
     """Create some minimal Datasets and Analyses"""
     project = ProjectFactory(is_catch_all=True)
+    workflow = WorkflowFactory()
 
     while number_to_create >= 1:
 
@@ -127,7 +153,8 @@ def make_datasets_with_analyses(number_to_create, user_instance):
                 uuid=analysis_uuid,
                 name="Test Analysis - {}".format(analysis_uuid),
                 project=project,
-                data_set=dataset
+                data_set=dataset,
+                workflow=workflow
             )
 
         number_to_create -= 1
