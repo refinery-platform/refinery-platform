@@ -1225,9 +1225,9 @@ class Analysis(OwnableResource):
 
         else:
             # Prepare string to be displayed upon a failed deletion
-            deletion_error_message = "Cannot delete Analysis: %s because  " \
+            deletion_error_message = "Cannot delete Analysis: {} because  " \
                                      "one or more of it's Nodes have been  " \
-                                     "further analyzed".format(self)
+                                     "further analyzed.".format(self)
 
             logger.error(deletion_error_message)
 
