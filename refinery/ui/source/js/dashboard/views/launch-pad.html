@@ -377,6 +377,19 @@
                     </li>
                     <li class="separator">|</li>
                     <li class="indicator">
+                      <a id="analyses-indicator" class="pointer"
+                      ng-if="dataSet.analyses.length != 0"
+                      ng-href="/data_sets/{{ dataSet.uuid }}/#/analyses"
+                      title="{{ dataSet.analyses.length }} Analyses have been run
+                       on this Dataset"
+                      refinery-tooltip
+                      refinery-tooltip-container="body"
+                      refinery-tooltip-placement="right">
+                        <i class="fa fa-bar-chart-o"></i> {{ dataSet
+                        .analyses.length }}
+                      </a>
+                    </li>
+                    <li class="indicator">
                       <i class="fa fa-star is-glowing-yellow-text pointer"
                         title="Added to data cart. Click to remove."
                         ng-if="dashboard.dataCart.added(dataSet)"
@@ -521,6 +534,19 @@
                     {{ dashboard.readableDate(dataSet, 'modificationDate') }}
                   </li>
                   <li class="separator">|</li>
+                  <li class="indicator">
+                      <a id="analyses-indicator" class="pointer"
+                      ng-if="dataSet.analyses.length != 0"
+                      ng-href="/data_sets/{{ dataSet.uuid }}/#/analyses"
+                      title="{{ dataSet.analyses.length }} Analyses have been run
+                       on this Dataset"
+                      refinery-tooltip
+                      refinery-tooltip-container="body"
+                      refinery-tooltip-placement="right">
+                        <i class="fa fa-bar-chart-o"></i> {{ dataSet
+                        .analyses.length }}
+                      </a>
+                  </li>
                   <li class="indicator">
                     <i class="fa fa-star is-glowing-yellow-text pointer"
                       title="Added to data cart. Click to remove."
