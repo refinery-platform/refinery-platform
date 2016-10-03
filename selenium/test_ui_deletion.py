@@ -4,8 +4,6 @@ import time
 import yaml
 import pytest
 
-from data_set_manager.models import Investigation
-
 sys.path.append("../refinery/")
 
 from django.contrib.auth.models import User
