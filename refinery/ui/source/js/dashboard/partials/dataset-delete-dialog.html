@@ -2,15 +2,31 @@
     <h3>Delete Dataset</h3>
 </div>
 <div class="modal-body">
-  <h5><b>Title:</b> {{modal.dataSet.title}}</h5>
-  <h5><b>Total Files:</b> {{modal.dataSet.file_count}}</h5>
+  <li>
+    <h5>
+      <a
+          class="preview"
+          title="View content in File Browser"
+          ng-href="data_sets/{{ modal.dataSet.uuid }}"
+          ng-bind-html="modal.dataSet.title"
+          refinery-tooltip
+          refinery-tooltip-placement="right"
+          refinery-tooltip-delay-show="750"
+          refinery-tooltip-delay-hide="150"
+          refinery-tooltip-hide-on-click="true">
+      </a>
+    </h5>
+  </li>
   <div ng-if="modal.dataSet.analyses.length != 0">
     <p ng-if="modal.deletionMessage == null" class="deletion-message">
-      <b>The following {{ modal.dataSet.analyses.length }} Analyses will be
+      <b>The following {{ modal.dataSet.analyses.length }} {{ modal.dataSet
+      .analyses.length > 1 ? 'Analyses' : 'Analysis' }} will be
         deleted!</b>
     </p>
     <p ng-if="modal.deletionMessage != null" class="deletion-message">
-      <b>The following {{ modal.dataSet.analyses.length }} Analyses have successfully been deleted!</b>
+      <b>The following {{ modal.dataSet.analyses.length }} {{ modal.dataSet
+      .analyses.length > 1 ? 'Analyses have' : 'Analysis has' }} successfully
+        been deleted!</b>
     </p>
     <div id="related-analyses">
       <ul>
