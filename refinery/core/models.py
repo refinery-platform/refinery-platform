@@ -591,9 +591,9 @@ class DataSet(SharableResource):
             return False, "DataSet: {} could not be deleted! {}".format(
                      self, e)
         else:
-            # Return a "truthy" value here so that the admin ui knows if the
-            # deletion succeeded or not as well as the proper message to
-            # display to the end user
+            # Return a "truthy" value here so that the admin ui and
+            # front-end ui knows if the deletion succeeded or not as well as
+            # the proper message to  display to the end user
             return True, "DataSet: {} was deleted successfully!".format(self)
 
     def get_analyses(self):
@@ -1183,7 +1183,7 @@ class Analysis(OwnableResource):
         for node in nodes:
 
             analysis_node_connections_for_node = \
-                node.get_analysis_node_connections_for_node()
+                node.get_analysis_node_connections()
 
             for analysis_node_connection in analysis_node_connections_for_node:
                 if analysis_node_connection.direction == 'in':
@@ -1191,24 +1191,20 @@ class Analysis(OwnableResource):
 
         if delete:
 
-            # Delete associated FileStoreItems
-            for node in nodes:
-                if node.file_uuid:
-                    node.get_file_store_item().delete()
-
             # Delete associated AnalysisResults
             self.get_analysis_results().delete()
 
-            # Delete objects from Solr's index
-            for item in self.get_analysis_node_connections_for_analysis():
-                if item.node and item.node.is_derived():
+            for node in nodes:
+                # Delete associated FileStoreItems
+                if node.file_uuid:
+                    node.get_file_store_item().delete()
 
-                    try:
-                        delete_analysis_index(item.node)
-                    except Exception as e:
-                        logger.debug("No NodeIndex exists in Solr with id "
-                                     "%s:  %s",
-                                     item.id, e)
+                # Remove Nodes from Solr's Index
+                try:
+                    delete_analysis_index(node)
+                except Exception as e:
+                    logger.debug("No NodeIndex exists in Solr with id "
+                                 "%s:  %s", node.id, e)
 
             # Optimize Solr's index to get rid of any traces of the Analysis
             self.optimize_solr_index()
@@ -1218,9 +1214,9 @@ class Analysis(OwnableResource):
 
             super(Analysis, self).delete()
 
-            # Return a "truthy" value here so that the admin ui knows if the
-            # deletion succeeded or not as well as the proper message to
-            # display to the end user
+            # Return a "truthy" value here so that the admin ui and
+            # front-end ui knows if the deletion succeeded or not as well as
+            # the proper message to display to the end user
             return True, "Analysis: {} was deleted successfully!".format(self)
 
         else:
@@ -1231,9 +1227,9 @@ class Analysis(OwnableResource):
 
             logger.error(deletion_error_message)
 
-            # Return a "falsey" value here so that the admin ui knows if the
-            # deletion succeeded or not as well as the proper message to
-            # display to the end user
+            # Return a "falsey" value here so that the admin ui and
+            # front-end ui knows if the deletion succeeded or not as well as
+            # the proper message to display to the end user
             return False, deletion_error_message
 
     def get_status(self):
@@ -1243,7 +1239,7 @@ class Analysis(OwnableResource):
         return Node.objects.filter(
             analysis_uuid=self.uuid)
 
-    def get_analysis_node_connections_for_analysis(self):
+    def get_analysis_node_connections(self):
         return AnalysisNodeConnection.objects.filter(analysis=self)
 
     def get_analysis_results(self):

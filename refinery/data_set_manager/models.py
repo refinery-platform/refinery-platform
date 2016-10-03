@@ -449,7 +449,7 @@ class Node(models.Model):
         if self.type in self.get_derived_node_types():
             return True
 
-    def get_analysis_node_connections_for_node(self):
+    def get_analysis_node_connections(self):
         return core.models.AnalysisNodeConnection.objects.filter(node=self)
 
     def get_file_store_item(self):
