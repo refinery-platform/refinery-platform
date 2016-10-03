@@ -1591,6 +1591,8 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
 DashboardCtrl.prototype.openDataSetDeleteModal = function (dataSet) {
   this.collapseDataSetPreview();
   this.collapseDatasetExploration();
+  this.removeFromDataCart(dataSet);
+
   this.$uibModal.open({
     templateUrl: '/static/partials/dashboard/partials/dataset-delete-dialog.html',
     controller: 'DataSetDeleteCtrl as modal',
