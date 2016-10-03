@@ -78,15 +78,14 @@ def test_dataset_deletion(selenium, total_datasets=TOTAL_DATASETS):
     )
 
     while total_datasets:
-        sys.stdout.write("Deleting Dataset...")
         selenium.find_elements_by_class_name('dataset-delete')[0].click()
 
-        wait_until_id_clickable(selenium, 'dataset-delete-button', 3).click()
+        wait_until_id_clickable(selenium, 'dataset-delete-button', 5).click()
 
         total_datasets -= 1
 
         wait_until_id_clickable(
-            selenium, 'dataset-delete-close-button', 3).click()
+            selenium, 'dataset-delete-close-button', 5).click()
 
         assert_text_within_id(
             selenium, "total-datasets", "{} data sets".format(total_datasets)
@@ -124,7 +123,7 @@ def test_analysis_deletion(selenium, total_analyses=TOTAL_ANALYSES):
         wait_until_id_clickable(
             selenium, 'analysis-delete-close-button', 5).click()
 
-        if total_analyses == 1:
+        if total_analyses <= 1:
             assert_text_within_id(
                 selenium, "total-analyses", "{} analysis".format(
                     total_analyses)
