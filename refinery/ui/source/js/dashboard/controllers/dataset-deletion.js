@@ -61,7 +61,7 @@ DataSetDeleteCtrl.prototype.delete = function () {
         that.analyses.newOrCachedCache(undefined, true);
         that.analysesReloadService.reload();
       } else {
-        that.deletionMessage = response.status + ': ' + response.data;
+        that.deletionMessage = response.data;
       }
     })
     .catch(function (error) {
