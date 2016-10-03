@@ -1,22 +1,43 @@
-<div class="modal-header">
+<div class="modal-header" xmlns="http://www.w3.org/1999/html">
     <h3>Delete Dataset</h3>
 </div>
 <div class="modal-body">
-  <li>
+  <span>
     <h5>
+       <i class="fa fa-user"
+          title="You own this data set"
+          refinery-tooltip
+          refinery-tooltip-placement="top">
+
+       </i>
       <a
           class="preview"
           title="View content in File Browser"
+          ng-if="modal.deletionMessage == null"
           ng-href="data_sets/{{ modal.dataSet.uuid }}"
           ng-bind-html="modal.dataSet.title"
           refinery-tooltip
-          refinery-tooltip-placement="right"
+          refinery-tooltip-placement="top"
           refinery-tooltip-delay-show="750"
           refinery-tooltip-delay-hide="150"
           refinery-tooltip-hide-on-click="true">
       </a>
+      <span
+        ng-if="modal.deletionMessage != null"
+        ng-bind-html="modal.dataSet.title">
+      </span>
     </h5>
-  </li>
+
+  </span>
+   <h5>
+     <b>Total files: </b>{{ modal.dataSet.file_count }}
+   </h5>
+  <div ng-if="modal.dataSet.analyses.length == 0">
+    <p class="deletion-message">
+      <b>There have been {{ modal.dataSet.analyses.length }} Analyses run
+        on this Dataset.</b>
+    </p>
+  </div>
   <div ng-if="modal.dataSet.analyses.length != 0">
     <p ng-if="modal.deletionMessage == null" class="deletion-message">
       <b>The following {{ modal.dataSet.analyses.length }} {{ modal.dataSet
@@ -109,7 +130,7 @@
 </div>
 <div class="modal-footer">
   <div class="text-align-left">
-    <p class="deletion-message" ng-if="modal.deletionMessage != null">
+    <p class="deletion-message alert alert-success fade in" ng-if="modal.deletionMessage != null">
       <b id="deletion-message-text">{{modal.deletionMessage}}</b>
     </p>
     <div class="refinery-spinner" ng-if="modal.isDeleting"></div>
