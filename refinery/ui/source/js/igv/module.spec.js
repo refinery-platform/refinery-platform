@@ -26,9 +26,5 @@ describe('RefineryIGV.module: unit tests', function () {
     it('should have "ui-select" as a dependency', function () {
       expect(hasModule('ui.select')).toEqual(true);
     });
-
-    it('should have "ngSanitize" as a dependency', function () {
-      expect(hasModule('ngSanitize')).toEqual(true);
-    });
   });
 });

@@ -1,4 +1,4 @@
 'use strict';
 
 angular
-  .module('refineryVisualization', ['ui.select', 'ngSanitize']);
+  .module('refineryVisualization', ['ui.select']);
