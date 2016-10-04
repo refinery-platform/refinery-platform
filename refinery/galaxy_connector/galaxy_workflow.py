@@ -16,29 +16,6 @@ import core
 logger = logging.getLogger(__name__)
 
 
-class GalaxyWorkflow(object):
-    def __init__(self, name, identifier):
-        self.name = name
-        self.identifier = identifier
-        self.inputs = []
-
-    def __unicode__(self):
-        return self.name + " (" + self.identifier + "): " + str(
-            len(self.inputs)) + " inputs"
-
-    def add_input(self, workflow_input):
-        self.inputs.append(workflow_input)
-
-
-class GalaxyWorkflowInput(object):
-    def __init__(self, name, identifier):
-        self.name = name
-        self.identifier = identifier
-
-    def __unicode__(self):
-        return self.name + " (" + self.identifier + ")"
-
-
 # Helper functions
 def createBaseWorkflow(workflow_name):
     """Creates base template workflow"""
@@ -106,9 +83,8 @@ def createStepsAnnot(file_list, workflow):
             curr_id = str(len(temp_steps) * i + j)
             curr_step = str(j)
             curr_workflow_step = copy.deepcopy(temp_steps[curr_step])
-            # 1. Update steps: id
             curr_workflow_step["id"] = int(curr_id)
-            # 2. Update any connecting input_ids
+            # update any connecting input_ids
             input_dict = curr_workflow_step["input_connections"]
             if input_dict:
                 for key in input_dict.keys():
@@ -117,33 +93,34 @@ def createStepsAnnot(file_list, workflow):
                         input_id_new = (
                             len(temp_steps) * i + int(input_id_old))
                         input_dict[key]['id'] = input_id_new
-            # 3. Update positions
+            # update positions
             pos_dict = curr_workflow_step["position"]
             if pos_dict:
                 top_pos = pos_dict["top"]
                 # TODO: find a better way of defining positions
                 pos_dict["top"] = top_pos * (i + 1)
-            # 4. Updating post job actions for renaming datasets
+
             input_type = map[int(curr_step)]
-            if len(curr_workflow_step['inputs']) == 0:
-                # getting current filename for workflow
-                curr_filename = ''
+            # adding node uuid for each input step
+            if curr_workflow_step["type"] == "data_input":
+                # adding node uuid to input description field
                 if input_type in file_list[i].keys():
-                    curr_filename = removeFileExt(
-                        file_list[i][input_type]['node_uuid'])
-                else:
-                    curr_filename = ''
-                    curr_nodelist = []
-                    for itypes in file_list[i].keys():
-                        temp_name = removeFileExt(
-                            file_list[i][itypes]['node_uuid'])
-                        # array of node_uuids associated with the current
-                        # toolset
-                        curr_nodelist.append(temp_name)
-                        if curr_filename == '':
-                            curr_filename += temp_name
-                        else:
-                            curr_filename += ',' + temp_name
+                    curr_node = str(
+                        removeFileExt(file_list[i][input_type]['node_uuid']))
+                    curr_workflow_step['inputs'][0]['description'] = str(
+                        curr_node)
+                    curr_workflow_step['annotation'] = str(curr_node)
+                    connections.append(
+                        {'node_uuid': curr_node,
+                         'step': int(curr_workflow_step['id']),
+                         'filename': curr_workflow_step['inputs'][0]['name'],
+                         'name': curr_workflow_step['inputs'][0]['name'],
+                         'subanalysis': i,
+                         'filetype': None,
+                         'direction': 'in',
+                         'is_refinery_file': True})
+            # Updating post job actions for renaming datasets
+            elif curr_workflow_step["type"] == "tool":
                 # getting "keep" flag to keep track of files to be saved from
                 # workflow
                 # parsing annotation field in galaxy workflows to parse output
@@ -243,32 +220,14 @@ def createStepsAnnot(file_list, workflow):
                             new_rename_dict = ast.literal_eval(
                                 new_rename_action)
                             pja_dict[temp_key] = new_rename_dict
-            # 5. adding node uuid for each input step
-            elif len(curr_workflow_step['inputs']) > 0:
-                # adding node uuid to input description field
-                if input_type in file_list[i].keys():
-                    curr_node = str(
-                        removeFileExt(file_list[i][input_type]['node_uuid']))
-                    curr_workflow_step['inputs'][0]['description'] = str(
-                        curr_node)
-                    curr_workflow_step['annotation'] = str(curr_node)
-                    connections.append(
-                        {'node_uuid': curr_node,
-                         'step': int(curr_workflow_step['id']),
-                         'filename': curr_workflow_step['inputs'][0]['name'],
-                         'name': curr_workflow_step['inputs'][0]['name'],
-                         'subanalysis': i,
-                         'filetype': None,
-                         'direction': 'in',
-                         'is_refinery_file': True})
-                    # Adds updated module
-            updated_dict[curr_id] = curr_workflow_step
+            else:
+                logger.critical("Workflow step type '%s' is not recognized",
+                                curr_workflow_step["type"])
 
-            # Assign a uuid that is unique to each step (allow multiple
+            updated_dict[curr_id] = curr_workflow_step
+            # assign a uuid that is unique to each step (allow multiple
             # inputs for a workflow)
-            for item in updated_dict:
-                updated_dict[item]['uuid'] = unicode(str(
-                    uuid.uuid4()))
+            updated_dict[curr_id]['uuid'] = unicode(str(uuid.uuid4()))
 
     return updated_dict, history_download, connections
 
@@ -542,19 +501,19 @@ def configure_workflow(workflow_dict, ret_list):
     # does it have  "annotation": "type=COMPACT", in the workflow annotation
     # field
     work_type = getStepOptions(workflow_dict["annotation"])
-    COMPACT_WORKFLOW = False
+    compact_workflow = False
 
     for k, v in work_type.iteritems():
         if k.upper() == 'TYPE':
             try:
                 if v[0].upper() == 'COMPACT':
-                    COMPACT_WORKFLOW = True
+                    compact_workflow = True
             except:
                 logger.exception("Malformed workflow tag, cannot parse: %s",
                                  work_type)
                 return
     # if workflow is tagged w/ type=COMPACT tag,
-    if COMPACT_WORKFLOW:
+    if compact_workflow:
         logger.debug("Workflow processing: COMPACT")
         new_workflow["steps"], history_download, analysis_node_connections = \
             createStepsCompact(ret_list, workflow_dict)
@@ -564,20 +523,6 @@ def configure_workflow(workflow_dict, ret_list):
         new_workflow["steps"], history_download, analysis_node_connections = \
             createStepsAnnot(ret_list, workflow_dict)
     return new_workflow, history_download, analysis_node_connections
-
-
-def parse_tool_name(toolname):
-    """Creates a simpler tool name when dealing with Galaxy Toolshed tool names
-    :param toolname: Tool name defined from Galaxy i.e.
-    toolshed.g2.bx.psu.edu/repos/jjohnson/igvtools/igvtools_tile/1.0
-    :type toolname: string.
-    :returns: parsed tool name i.e. igvtools
-    """
-    temp = toolname.split("/")
-    if len(temp) > 1:
-        return temp[len(temp) - 2]
-    else:
-        return toolname
 
 
 def create_expanded_workflow_graph(dictionary):

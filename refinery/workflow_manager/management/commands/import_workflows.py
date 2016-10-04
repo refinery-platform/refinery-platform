@@ -3,8 +3,9 @@ Created on Jun 29, 2012
 
 @author: nils
 '''
-from core.models import WorkflowEngine
 from django.core.management.base import BaseCommand
+
+from core.models import WorkflowEngine
 from workflow_manager.tasks import get_workflows
 
 
