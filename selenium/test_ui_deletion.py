@@ -8,8 +8,6 @@ sys.path.append("../refinery/")
 
 from django.contrib.auth.models import User
 
-from core.models import DataSet, Analysis, Workflow, Project, WorkflowEngine
-from galaxy_connector.models import Instance
 from factory_boy.django_model_factories import (make_datasets,
                                                 make_datasets_with_analyses)
 from utils.utils import (assert_text_within_id, assert_body_text,
@@ -46,15 +44,6 @@ def login(selenium):
     selenium.find_element_by_id('id_password').send_keys(creds['password'])
     selenium.find_element_by_xpath('//input[@type="submit"]').click()
     assert_body_text(selenium, 'Logout')
-
-
-def cleanup():
-    """Remove Django objects"""
-    DataSet.objects.all().delete()
-    Analysis.objects.all().delete()
-    Workflow.objects.all().delete()
-    WorkflowEngine.objects.all().delete()
-    Instance.objects.all().delete()
 
 
 def test_dataset_deletion(selenium, login, total_datasets=TOTAL_DATASETS):
@@ -97,8 +86,6 @@ def test_dataset_deletion(selenium, login, total_datasets=TOTAL_DATASETS):
 
     assert_text_within_id(
         selenium, "total-datasets", "{} data sets".format(total_datasets))
-
-    cleanup()
 
     if not_travis:
         pytest.set_trace()
@@ -151,9 +138,5 @@ def test_analysis_deletion(selenium, login, total_analyses=TOTAL_ANALYSES):
     assert_text_within_id(
         selenium, "total-analyses", "{} analysis".format(total_analyses))
 
-    cleanup()
-
     if not_travis:
         pytest.set_trace()
-
-

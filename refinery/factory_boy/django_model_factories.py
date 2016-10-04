@@ -77,8 +77,6 @@ class WorkflowEngineFactory(factory.DjangoModelFactory):
     class Meta:
         model = "core.WorkflowEngine"
 
-    instance = GalaxyInstanceFactory()
-
 
 class WorkflowFactory(factory.DjangoModelFactory):
     """Minimal representation of a Workflow for testing purposes"""
@@ -87,7 +85,6 @@ class WorkflowFactory(factory.DjangoModelFactory):
 
     uuid = uid.uuid4()
     name = "Test Workflow - {}".format(uuid)
-    workflow_engine = WorkflowEngineFactory()
 
 
 def make_datasets(number_to_create, user_instance):
@@ -123,8 +120,10 @@ def make_datasets(number_to_create, user_instance):
 
 def make_datasets_with_analyses(number_to_create, user_instance):
     """Create some minimal Datasets and Analyses"""
+    instance = GalaxyInstanceFactory()
+    workflow_engine = WorkflowEngineFactory(instance=instance)
+    workflow = WorkflowFactory(workflow_engine=workflow_engine)
     project = ProjectFactory(is_catch_all=True)
-    workflow = WorkflowFactory()
 
     while number_to_create >= 1:
 
@@ -166,5 +165,3 @@ def make_datasets_with_analyses(number_to_create, user_instance):
     for analysis in Analysis.objects.all():
         analysis.set_owner(user_instance)
         analysis.save()
-
-
