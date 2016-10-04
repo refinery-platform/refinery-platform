@@ -58,8 +58,10 @@ def cleanup():
     Instance.objects.all().delete()
 
 
-def test_dataset_deletion(selenium, total_datasets=TOTAL_DATASETS):
+def test_dataset_deletion(selenium, login, total_datasets=TOTAL_DATASETS):
     """Delete some datasets and make sure the ui updates properly"""
+
+    assert_body_text(selenium, 'Logout')
 
     # Create sample Data
     make_datasets(total_datasets, user)
@@ -100,6 +102,8 @@ def test_analysis_deletion(selenium, total_analyses=TOTAL_ANALYSES):
     # Create sample Data
     make_datasets_with_analyses(total_analyses, user)
     selenium.implicitly_wait(5)
+
+    selenium.refresh()
 
     assert_text_within_id(
             selenium, "total-analyses", "{} analyses".format(total_analyses)
