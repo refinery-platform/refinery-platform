@@ -37,7 +37,6 @@ function DashboardIntrosDataSetView (
     dashboardIntroSatoriEasterEgg.register(self.id);
 
     self.complete = function () {
-      console.log('Nice! ' + self.id + ' finished!');
       dashboardIntroSatoriEasterEgg.completed(self.id);
       self.exit();
     };
