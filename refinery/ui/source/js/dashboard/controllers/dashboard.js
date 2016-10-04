@@ -8,6 +8,7 @@ function DashboardCtrl (
   $timeout,
   $rootScope,
   $window,
+  $log,
   // 3rd party library
   _,
   // Refinery modules
@@ -37,6 +38,7 @@ function DashboardCtrl (
   this.$stateParams = $stateParams;
   this.$timeout = $timeout;
   this.$window = $window;
+  this.$log = $log;
 
   // Construct 3rd party library
   this._ = _;
@@ -998,6 +1000,7 @@ DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
         // This is weird. We should never run into here unless the whole app
         // initialization failed even after 75ms.
         // See `services/width-fixer.js` for details.
+        this.$log.error('App failed to initialized after 75ms.');
       });
   } else {
     this.$timeout(function () {
@@ -1050,6 +1053,7 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
           // This is weird. We should never run into here unless the whole app
           // initialization failed even after 75ms.
           // See `services/width-fixer.js` for details.
+          this.$log.error('App failed to initialized after 75ms.');
         });
     }
     this.dashboardDataSetPreviewService.preview(dataSetUuid);
@@ -1599,6 +1603,7 @@ angular
     '$timeout',
     '$rootScope',
     '$window',
+    '$log',
     '_',
     'pubSub',
     'settings',
