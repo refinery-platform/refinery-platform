@@ -1,6 +1,5 @@
 import os
 import sys
-import time
 import yaml
 import pytest
 
@@ -28,23 +27,6 @@ except (User.DoesNotExist, User.MultipleObjectsReturned) as e:
     sys.exit(1)
 
 
-@pytest.fixture
-def selenium(selenium):
-    selenium.maximize_window()
-    return selenium
-
-
-@pytest.fixture
-def login(selenium):
-    creds = yaml.load(open(os.environ['CREDS_YML']))
-    selenium.get(base_url)
-    selenium.find_element_by_link_text('Login').click()
-    selenium.find_element_by_id('id_username').send_keys(creds['username'])
-    selenium.find_element_by_id('id_password').send_keys(creds['password'])
-    selenium.find_element_by_xpath('//input[@type="submit"]').click()
-    assert_body_text(selenium, 'Logout')
-
-
 def test_dataset_deletion(selenium, login, total_datasets=TOTAL_DATASETS):
     """Delete some datasets and make sure the ui updates properly"""
 
@@ -53,35 +35,41 @@ def test_dataset_deletion(selenium, login, total_datasets=TOTAL_DATASETS):
     # Create sample Data
     make_datasets(total_datasets, user)
 
-    time.sleep(5)
-
+    selenium.implicitly_wait(3)
     selenium.refresh()
-
-    time.sleep(5)
+    selenium.implicitly_wait(3)
 
     assert_text_within_id(
             selenium, "total-datasets", "{} data sets".format(total_datasets)
     )
 
+    # Delete individual Datasets until there are none left
     while total_datasets:
         selenium.find_elements_by_class_name('dataset-delete')[0].click()
 
-        time.sleep(5)
+        selenium.implicitly_wait(3)
 
         wait_until_id_clickable(selenium, 'dataset-delete-button', 5).click()
+
+        selenium.implicitly_wait(1)
+
+        # Simulate a user rapidly clicking the delete button (which should
+        # be handled properly already)
+        for i in range(5):
+            selenium.find_element_by_id('dataset-delete-button').click()
 
         total_datasets -= 1
 
         wait_until_id_clickable(
             selenium, 'dataset-delete-close-button', 5).click()
 
-        time.sleep(5)
+        selenium.implicitly_wait(3)
 
         assert_text_within_id(
             selenium, "total-datasets", "{} data sets".format(total_datasets)
         )
 
-    time.sleep(5)
+    selenium.implicitly_wait(3)
 
     assert_text_within_id(
         selenium, "total-datasets", "{} data sets".format(total_datasets))
@@ -96,12 +84,12 @@ def test_analysis_deletion(selenium, login, total_analyses=TOTAL_ANALYSES):
     assert_body_text(selenium, 'Logout')
 
     # Create sample Data
-    make_datasets_with_analyses(total_analyses, user)
-    time.sleep(5)
+    make_analyses_with_single_dataset(total_analyses, user)
+    selenium.implicitly_wait(3)
 
     selenium.refresh()
 
-    time.sleep(5)
+    selenium.implicitly_wait(3)
 
     assert_text_within_id(
             selenium, "total-analyses", "{} analyses".format(total_analyses)
@@ -110,16 +98,26 @@ def test_analysis_deletion(selenium, login, total_analyses=TOTAL_ANALYSES):
     while total_analyses:
         selenium.find_elements_by_class_name('analysis-delete')[0].click()
 
-        time.sleep(5)
+        selenium.implicitly_wait(3)
 
         wait_until_id_clickable(selenium, 'analysis-delete-button', 5).click()
+
+        selenium.implicitly_wait(1)
+
+        # Simulate a user rapidly clicking the delete button (which should
+        # be handled properly already)
+        for i in range(5):
+            selenium.find_element_by_id('analysis-delete-button').click()
 
         total_analyses -= 1
 
         wait_until_id_clickable(
             selenium, 'analysis-delete-close-button', 5).click()
 
-        time.sleep(5)
+        selenium.implicitly_wait(3)
+
+        # Make sure the number of analyses indicator displays the correct info
+        assert_text_within_id("analyses-indicator", total_analyses)
 
         if total_analyses <= 1:
             assert_text_within_id(
@@ -132,10 +130,65 @@ def test_analysis_deletion(selenium, login, total_analyses=TOTAL_ANALYSES):
                     total_analyses)
             )
 
-    time.sleep(5)
+    selenium.implicitly_wait(3)
 
     assert_text_within_id(
         selenium, "total-analyses", "{} analysis".format(total_analyses))
+
+    selenium.find_elements_by_class_name('dataset-delete')[0].click()
+
+    selenium.implicitly_wait(3)
+
+    wait_until_id_clickable(selenium, 'dataset-delete-button', 5).click()
+
+    selenium.implicitly_wait(3)
+
+    assert_text_within_id(
+        selenium, "total-datasets", "{} data sets".format(0))
+
+    if not_travis:
+        pytest.set_trace()
+
+
+def test_cascading_deletion_of_analyses(
+        selenium, login, total_analyses=TOTAL_ANALYSES):
+    """Delete a Dataset and make sure its Analyses are removed from
+    the UI as well"""
+
+    assert_body_text(selenium, 'Logout')
+
+    # Create sample Data
+    make_analyses_with_single_dataset(total_analyses, user)
+    selenium.implicitly_wait(3)
+
+    selenium.refresh()
+
+    selenium.implicitly_wait(3)
+
+    assert_text_within_id(
+            selenium, "total-analyses", "{} analyses".format(total_analyses)
+    )
+
+    assert_text_within_id(
+            selenium, "total-datasets", "{} data sets".format(1)
+    )
+
+    selenium.find_elements_by_class_name('dataset-delete')[0].click()
+
+    selenium.implicitly_wait(3)
+
+    wait_until_id_clickable(selenium, 'dataset-delete-button', 5).click()
+
+    wait_until_id_clickable(
+        selenium, 'dataset-delete-close-button', 5).click()
+
+    selenium.implicitly_wait(3)
+
+    assert_text_within_id(
+        selenium, "total-analyses", "{} analysis".format(0))
+
+    assert_text_within_id(
+        selenium, "total-datasets", "{} data sets".format(0))
 
     if not_travis:
         pytest.set_trace()
