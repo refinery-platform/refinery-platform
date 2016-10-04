@@ -15,6 +15,7 @@ class DataSetFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a DataSet for testing purposes"""
     class Meta:
         model = "core.DataSet"
+        django_get_or_create = ('uuid',)
 
     uuid = uid.uuid4()
     title = "Test DataSet - {}".format(uuid)
@@ -125,13 +126,6 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
     workflow = WorkflowFactory(workflow_engine=workflow_engine)
     project = ProjectFactory(is_catch_all=True)
 
-    dataset_uuid = uid.uuid4()
-    dataset = DataSetFactory(
-            uuid=dataset_uuid,
-            title="Test DataSet - {}".format(dataset_uuid),
-            name="Test DataSet - {}".format(dataset_uuid)
-        )
-
     while number_to_create >= 1:
 
         investigation_uuid = uid.uuid4()
@@ -152,7 +146,7 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
                 uuid=analysis_uuid,
                 name="Test Analysis - {}".format(analysis_uuid),
                 project=project,
-                data_set=dataset,
+                data_set=DataSetFactory(),
                 workflow=workflow
             )
 
