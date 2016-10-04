@@ -63,6 +63,7 @@ AnalysisDeleteCtrl.prototype.delete = function () {
         that.analyses.newOrCachedCache(undefined, true);
         that.analysesReloadService.reload();
       } else {
+        that.deleteSuccessful = false;
         that.deletionMessage = response.data;
       }
     })
