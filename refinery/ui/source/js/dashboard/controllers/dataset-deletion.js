@@ -46,6 +46,7 @@ DataSetDeleteCtrl.prototype.delete = function () {
 
   that.isDeleting = true;
   that.deletionMessage = null;
+  that.deleteSuccessful = false;
 
   this
     .deletionService
@@ -56,7 +57,10 @@ DataSetDeleteCtrl.prototype.delete = function () {
     .$promise
     .then(function (response) {
       that.deletionMessage = response.data;
+      that.isDeleting = false;
+
       if (response.status === 200) {
+        that.deleteSuccessful = true;
         that.dashboardDataSetsReloadService.reload(true);
         that.analyses.newOrCachedCache(undefined, true);
         that.analysesReloadService.reload();
@@ -68,7 +72,6 @@ DataSetDeleteCtrl.prototype.delete = function () {
       that.$log.error(error);
     })
     .finally(function () {
-      that.isDeleting = false;
     });
 };
 
