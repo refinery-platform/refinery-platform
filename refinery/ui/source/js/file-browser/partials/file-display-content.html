@@ -1,0 +1,50 @@
+ <!-- the original tab pills: now remote controlled by the select2 -->
+          <div class="tabbable" hidden>
+            <ul class="nav nav-pills" id="navigation-tabs">
+              <li class="active">
+                <a href="#table-view-tab" data-toggle="pill">List</a>
+              </li>
+              <li>
+                <a href="#pivot-view-tab" data-toggle="pill">Matrix</a>
+              </li>
+              <li>
+                <a href="#provenance-view-tab" data-toggle="pill">Provenance</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="tabbable">
+          <div class="tab-content">
+            <div class="tab-pane active fade in" id="table-view-tab">
+              <rp-file-browser-assay-files>
+              </rp-file-browser-assay-files>
+            </div>
+            <div class="tab-pane fade in" id="pivot-view-tab">
+              <div id="pivot-view"></div>
+              <div id="solr-pivot-matrix">
+                <!-- the matrix -->
+              </div>
+            </div>
+            <div class="tab-pane fade in"
+                 id="provenance-view-tab"
+                 style="overflow: hidden;">
+                <div class="refinery-panel-content">
+                  <div id="provenance-visualization">
+                    <div id="provvis-nav-bar"
+                         ng-controller="provvisNavbarController">
+                        <div provvis-nav-bar></div>
+                    </div>
+                    <div id="provvis-canvas"
+                         ng-controller="provvisCanvasController">
+                        <div provvis-canvas></div>
+                    </div>
+                    <!-- the provenance graph -->
+                  </div>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>

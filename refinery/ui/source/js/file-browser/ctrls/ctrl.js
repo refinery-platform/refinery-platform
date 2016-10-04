@@ -29,8 +29,8 @@ function FileBrowserCtrl (
   vm.customColumnName = [];
   vm.queryKeys = Object.keys($location.search());
   vm.selectedField = {};
- // vm.selectedFieldList = {};
   vm.selectNodesCount = 0;
+  vm.assayFilesTotal = 0;
   vm.gridOptions = {
     appScopeProvider: vm,
     infiniteScrollRowsFromEnd: 40,
@@ -45,8 +45,6 @@ function FileBrowserCtrl (
     enableSelectionBatchEvent: true,
     multiSelect: true
   };
-  // Total file size in data set, sent from api
-  vm.assayFilesTotal = 0;
   // variables supporting dynamic scrolling
   vm.firstPage = 0;
   vm.lastPage = 0;
@@ -333,16 +331,17 @@ function FileBrowserCtrl (
             selectedNodesService.setSelectedNodesFromNodeGroup(
               selectedNodesService.selectedNodesUuidsFromNodeGroup
             );
-            vm.selectNodesCount = selectedNodesService.selectedNodesUuidsFromNodeGroup.length;
+            selectedNodesService.selectNodesCount = selectedNodesService
+              .selectedNodesUuidsFromNodeGroup.length;
             correctRowSelectionInUI();
             vm.afterNodeGroupUpdate = true;
           } else if (selectedNodesService.selectedNodes.length > 0) {
             vm.setGridSelectedRows(selectedNodesService.selectedNodes);
-            vm.selectNodesCount = selectedNodesService.selectedNodesUuids.length;
+            selectedNodesService.selectNodesCount = selectedNodesService.selectedNodesUuids.length;
             correctRowSelectionInUI();
           } else {
             vm.gridApi.selection.clearSelectedRows();
-            vm.selectNodesCount = 0;
+            selectedNodesService.selectNodesCount = 0;
           }
         });
       });
@@ -490,11 +489,18 @@ function FileBrowserCtrl (
           vm.selectedField[field] = false;
         });
         selectedFilterService.resetAttributeFilter(vm.selectedField);
+        vm.selectNodesCount = 0;
         vm.filesParam.filter_attribute = {};
         vm.reset();
       }
     }
   );
+
+  // initialize the dataset
+  vm.checkDataSetOwnership();
+  vm.refreshAssayFiles().then(function () {
+    vm.checkUrlQueryFilters();
+  });
 }
 
 angular
