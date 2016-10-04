@@ -751,8 +751,8 @@ def solr_igv(request):
             # generate solr_query method
             # assay uuid
             solr_query = generate_solr_params({}, igv_config['assay_uuid'])
-            url_portion = '/'.join(["data_set_manager", "select"])
-            url = urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
+            url_path = '/'.join(["data_set_manager", "select"])
+            url = urljoin(settings.REFINERY_SOLR_BASE_URL, url_path)
             igv_config['query'] = ''.join([url, '/?', solr_query])
 
         # attributes associated with node selection from interface
