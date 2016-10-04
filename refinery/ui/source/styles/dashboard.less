@@ -497,6 +497,36 @@
     stroke: @orange;
   }
 
+  .node.lock-directly {
+    .bg {
+      fill: @orange;
+    }
+
+    .border {
+      stroke: @orange;
+    }
+  }
+
+  .node.hovering-directly .bg {
+    fill: @black;
+  }
+
+  .node.hovering-directly .border,
+  .node.hovering-indirectly .border,
+  .column.active .node.hovering-directly .border,
+  .column.active .node.hovering-indirectly .border,
+  .node.rooted.hovering-directly .border,
+  .node.rooted.hovering-indirectly .border,
+  .column.active .node.rooted.hovering-directly .border,
+  .column.active .node.rooted.hovering-indirectly .border {
+    stroke: @black;
+  }
+
+  .node.focus-directly .border,
+  .column.active .node.focus-directly .border {
+    stroke: @orange;
+  }
+
   .bar-indicator,
   .node.focus-directly .bg,
   .node.hovering-directly .active .bar-magnitude,
