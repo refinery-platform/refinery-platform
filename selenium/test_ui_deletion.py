@@ -51,13 +51,6 @@ def test_dataset_deletion(selenium, login, total_datasets=TOTAL_DATASETS):
 
         wait_until_id_clickable(selenium, 'dataset-delete-button', 5).click()
 
-        selenium.implicitly_wait(1)
-
-        # Simulate a user rapidly clicking the delete button (which should
-        # be handled properly already)
-        for i in range(5):
-            selenium.find_element_by_id('dataset-delete-button').click()
-
         total_datasets -= 1
 
         wait_until_id_clickable(
@@ -92,6 +85,9 @@ def test_analysis_deletion(selenium, login, total_analyses=TOTAL_ANALYSES):
     selenium.implicitly_wait(3)
 
     assert_text_within_id(
+        selenium, "total-datasets", "{} data sets".format(1))
+
+    assert_text_within_id(
             selenium, "total-analyses", "{} analyses".format(total_analyses)
     )
 
@@ -101,13 +97,6 @@ def test_analysis_deletion(selenium, login, total_analyses=TOTAL_ANALYSES):
         selenium.implicitly_wait(3)
 
         wait_until_id_clickable(selenium, 'analysis-delete-button', 5).click()
-
-        selenium.implicitly_wait(1)
-
-        # Simulate a user rapidly clicking the delete button (which should
-        # be handled properly already)
-        for i in range(5):
-            selenium.find_element_by_id('analysis-delete-button').click()
 
         total_analyses -= 1
 
@@ -166,11 +155,10 @@ def test_cascading_deletion_of_analyses(
     selenium.implicitly_wait(3)
 
     assert_text_within_id(
-            selenium, "total-analyses", "{} analyses".format(total_analyses)
-    )
+        selenium, "total-datasets", "{} data sets".format(1))
 
     assert_text_within_id(
-            selenium, "total-datasets", "{} data sets".format(1)
+            selenium, "total-analyses", "{} analyses".format(total_analyses)
     )
 
     selenium.find_elements_by_class_name('dataset-delete')[0].click()
@@ -182,7 +170,7 @@ def test_cascading_deletion_of_analyses(
     wait_until_id_clickable(
         selenium, 'dataset-delete-close-button', 5).click()
 
-    selenium.implicitly_wait(3)
+    selenium.implicitly_wait(5)
 
     assert_text_within_id(
         selenium, "total-analyses", "{} analysis".format(0))
