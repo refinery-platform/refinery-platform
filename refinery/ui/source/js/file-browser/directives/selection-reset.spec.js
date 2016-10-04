@@ -1,7 +1,7 @@
-// Unit test for assay filter
+// Unit test for reset button directive
 'use strict';
 
-describe('rpFileBrowserNodeGroupButtons directive unit test', function () {
+describe('rpFileBrowserSelectionReset directive unit test', function () {
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryFileBrowser'));
 
@@ -17,19 +17,20 @@ describe('rpFileBrowserNodeGroupButtons directive unit test', function () {
     $templateCache
   ) {
     $templateCache.put(
-      '/static/partials/file-browser/partials/node-group-buttons.html',
-      '<button class="btn btn-default btn-xs"></button>'
+      '/static/partials/file-browser/partials/selection-reset.html',
+      '<button class="btn btn-default btn-xs" id="reset"></button>'
     );
     compile = _$compile_;
     rootScope = _$rootScope_;
     scope = rootScope.$new();
-    template = '<rp-file-browser-node-group-buttons></rp-file-browser-node-group-buttons>';
+    template = '<rp-file-browser-selection-reset></rp-file-browser-selection-reset>';
     directiveElement = compile(template)(scope);
     scope.$digest();
   }));
 
   it('called the correct partial', function () {
     expect(directiveElement.html()).toContain('btn btn-default');
+    expect(directiveElement.html()).toContain('reset');
     expect(directiveElement.html()).toContain('</button>');
   });
 });
