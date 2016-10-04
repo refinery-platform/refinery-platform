@@ -35,7 +35,6 @@ function DashboardIntrosDataSetSummary (
     dashboardIntroSatoriEasterEgg.register(self.id);
 
     self.complete = function () {
-      console.log('Nice! ' + self.id + ' finished!');
       dashboardIntroSatoriEasterEgg.completed(self.id);
       self.exit();
     };
@@ -53,43 +52,49 @@ function DashboardIntrosDataSetSummary (
       {
         element: '#data-set-summary',
         intro:
-        'This tour guides you through all details of the ' +
-        '<em>data set view</em>.',
+          'This tour guides you through all details of this ' +
+          '<em>data set summary / preview</em> page.<br/><br/><em>Note: ' +
+          'whether the panels described in the following contain data or not ' +
+          'depends on the current data set you are looking at.',
         position: 'left'
       },
       {
         element: '#data-set-summary-topbar',
         intro:
-        'This tour guides you through all details of the ' +
-        '<em>data set view</em>.',
+          'The topbar contains navigational and data set related actions: ' +
+          'e.g., going back to the exploration view, opening the data set on ' +
+          'the file browser, or sharing the data set with others.',
         position: 'left'
       },
       {
         element: '#data-set-summary-summary',
         intro:
-        'This tour guides you through all details of the ' +
-        '<em>data set view</em>.',
+          'The summary panel consists of the title, a short description, the ' +
+          'underlying technology used for generating the data, the data ' +
+          'sources, the number of associated files and the overall file size ' +
+          'if available, and the owner.',
         position: 'left'
       },
       {
         element: '#data-set-summary-analyses',
         intro:
-        'This tour guides you through all details of the ' +
-        '<em>data set view</em>.',
+          'The analyses panel holds links to all analyses that have been run ' +
+          'on this data sets, including the analysis name, date, and an ' +
+          'indicator if the analysis ran successfully.',
         position: 'left'
       },
       {
         element: '#data-set-summary-references',
         intro:
-        'This tour guides you through all details of the ' +
-        '<em>data set view</em>.',
+          'This panel lists all references pulled directly from PubMed. ' +
+          'Links to PubMed and the journal website are provided as well.',
         position: 'left'
       },
       {
         element: '#data-set-summary-protocols',
         intro:
-        'This tour guides you through all details of the ' +
-        '<em>data set view</em>.',
+          'The protocol panel lists the data generation protocol as ' +
+          'specified in the ISA-Tab of the data set.',
         position: 'left'
       },
       {
