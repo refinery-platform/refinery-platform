@@ -92,6 +92,7 @@ class SharableResourceAPIInterface(object):
             lambda g: {
                 'group_id': g.id,
                 'group_name': g.name,
+                'group_uuid': g.extendedgroup.uuid,
                 'perms': self.get_perms(res, g)},
             groups_in)
 

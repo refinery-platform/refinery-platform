@@ -8,6 +8,10 @@ function MemberEditorCtrl (
   this.groupDataService = groupDataService;
   this.groupMemberService = groupMemberService;
   this.member = member;
+
+  this.close = function () {
+    this.$uibModalInstance.dismiss();
+  };
 }
 
 MemberEditorCtrl.prototype.promote = function () {
