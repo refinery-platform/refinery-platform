@@ -53,7 +53,6 @@ def cleanup():
     DataSet.objects.all().delete()
     Analysis.objects.all().delete()
     Workflow.objects.all().delete()
-    Project.objects.all().delete()
     WorkflowEngine.objects.all().delete()
     Instance.objects.all().delete()
 
