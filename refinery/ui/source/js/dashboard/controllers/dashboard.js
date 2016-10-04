@@ -1000,7 +1000,8 @@ DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
         // This is weird. We should never run into here unless the whole app
         // initialization failed even after 75ms.
         // See `services/width-fixer.js` for details.
-        this.$log.error('App failed to initialized after 75ms.');
+        this.$log.error('Dashboard expand dataset exploration error,' +
+          ' possibly due to the Refinery App failing to initialized.');
       });
   } else {
     this.$timeout(function () {
@@ -1053,7 +1054,8 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
           // This is weird. We should never run into here unless the whole app
           // initialization failed even after 75ms.
           // See `services/width-fixer.js` for details.
-          this.$log.error('App failed to initialized after 75ms.');
+          this.$log.error('Dashboard expand dataset exploration error,' +
+          ' possibly due to the Refinery App failing to initialized.');
         });
     }
     this.dashboardDataSetPreviewService.preview(dataSetUuid);
