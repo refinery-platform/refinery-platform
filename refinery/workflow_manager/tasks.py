@@ -37,155 +37,163 @@ GALAXY_INPUT_RELATIONSHIP_OPTIONAL_FIELDS = []  # [(field, type), ...]
 GALAXY_INPUT_RELATIONSHIP_CATEGORIES = [category[0] for category in NR_TYPES]
 
 
+class GalaxyWorkflow(object):
+    def __init__(self, name, identifier):
+        self.name = name
+        self.identifier = identifier
+        self.inputs = []
+
+    def __unicode__(self):
+        return self.name + " (" + self.identifier + "): " + str(
+            len(self.inputs)) + " inputs"
+
+    def add_input(self, workflow_input):
+        self.inputs.append(workflow_input)
+
+
+class GalaxyWorkflowInput(object):
+    def __init__(self, name, identifier):
+        self.name = name
+        self.identifier = identifier
+
+    def __unicode__(self):
+        return self.name + " (" + self.identifier + ")"
+
+
 @task()
 def get_workflows(workflow_engine):
-    workflows = []
+    """Retrieve workflows from Galaxy and import into Refinery"""
+    workflow_list = []
     issues = []
     connection = workflow_engine.instance.galaxy_connection()
+
     try:
-        # get all workflows
-        workflows = workflow_engine.instance.get_complete_workflows()
-    except galaxy.client.ConnectionError as e:
+        workflow_list = connection.workflows.get_workflows()
+    except galaxy.client.ConnectionError as exc:
         logger.error("Unable to retrieve workflows from '%s' - skipping - %s",
-                     workflow_engine.instance.base_url, e)
+                     workflow_engine.instance.base_url, exc)
+    else:
+        # deactivate existing workflows for this workflow engine: deleting
+        # workflows would lead to loss of the provenance information
+        Workflow.objects.filter(
+            workflow_engine=workflow_engine).update(is_active=False)
 
-    # make existing workflows for this workflow engine inactive
-    # (deleting the workflows would remove provenance information
-    # and also lead to the deletion of the corresponding analyses)
-    Workflow.objects.filter(
-        workflow_engine=workflow_engine).update(is_active=False)
-
-    # for each workflow, create a core Workflow object and its associated
-    # WorkflowDataInput objects
-    for workflow in workflows:
-        logger.info("Importing workflow %s ...", workflow.name)
+    for workflow_entry in workflow_list:
+        workflow_object = GalaxyWorkflow(workflow_entry['name'],
+                                         workflow_entry['id'])
+        workflow_inputs = connection.workflows.show_workflow(
+            workflow_object.identifier)['inputs']
+        for input_identifier, input_description in workflow_inputs.items():
+            workflow_input = GalaxyWorkflowInput(input_description['label'],
+                                                 input_identifier)
+            workflow_object.add_input(workflow_input)
+        logger.info("Importing workflow %s ...", workflow_object.name)
         try:
             workflow_dictionary = connection.workflows.export_workflow_json(
-                workflow.identifier)
+                workflow_object.identifier)
         except galaxy.client.ConnectionError as exc:
             logger.error("Unable to retrieve workflow '%s' from '%s'"
-                         " - skipping ... (%s)", workflow.identifier,
+                         " - skipping ... (%s)", workflow_object.identifier,
                          workflow_engine.instance.base_url, exc)
-
-        if workflow_dictionary is not None:
+        else:
             workflow_issues = import_workflow(
-                workflow, workflow_engine, workflow_dictionary
-            )
-
-            if len(workflow_issues) > 0:
-                msg = "\nUnable to import workflow '{}' " \
-                      "due to the following issues:"
-                msg = msg.format(workflow.name)
-                issues.append(msg)
+                workflow_object, workflow_engine, workflow_dictionary)
+            if workflow_issues:
+                issues.append("Unable to import workflow '{}' due to the "
+                              "following issues:".format(workflow_object.name))
                 issues += workflow_issues
 
     return issues
 
 
 def import_workflow(workflow, workflow_engine, workflow_dictionary):
+    """Create a Workflow object and its associated WorkflowDataInput objects"""
     issues = []
-    has_step_issues = False
-    has_input_issues = False
 
     workflow_annotation = get_workflow_annotation(workflow_dictionary)
-
-    if workflow_annotation is None:
-        issues.append("Workflow annotation not found.")
+    if not workflow_annotation:
+        issues.append("Workflow annotation not found")
         return issues
 
     workflow_type = get_workflow_type(workflow_annotation)
-
-    if workflow_type is None:
-        issues.append("Workflow type not found.")
+    if not workflow_type:
+        issues.append("Workflow type not found")
         return issues
 
+    if not workflow.inputs:
+        issues.append("Workflow does not define inputs")
+        return issues
+
+    # single input workflows don't define input relationships
+    input_relationships = get_input_relationships(workflow_annotation)
+
+    # extract names of workflow input (if input step defines more than one
+    # input only the first one will be used)
+    workflow_input_names = []
+    for workflow_input in workflow.inputs:
+        workflow_input_names.append(workflow_input.name)
+
     # check workflow inputs for correct annotations
-    workflow_input_issues = check_workflow_inputs(workflow_dictionary)
-    if len(workflow_input_issues) > 0:
-        has_input_issues = True
-        issues = issues + workflow_input_issues
+    workflow_input_issues = check_workflow_inputs(workflow_input_names)
+    workflow_input_relationship_issues = check_workflow_input_relationships(
+        workflow.inputs, input_relationships, workflow_input_names)
+    if workflow_input_issues or workflow_input_relationship_issues:
+        issues += workflow_input_issues + workflow_input_relationship_issues
+        return issues
 
     # check workflow steps for correct annotations and skip import if problems
     # are detected
-    workflow_step_issues = check_steps(workflow_dictionary)
-    if workflow_step_issues is None:
+    try:
+        workflow_step_issues = check_steps(workflow_dictionary)
+    except RuntimeError:
         # no error in parsing but no outputs defined
-        issues.append("Workflow does not declare outputs.")
-        has_step_issues = True
-    else:
-        if len(workflow_step_issues) > 0:
-            has_step_issues = True
-            issues = issues + workflow_step_issues
-
-    # skip import if workflow has incorrect input annotations or step
-    # annotation
-    if has_step_issues or has_input_issues:
+        issues.append("Workflow does not declare outputs")
         return issues
+    if workflow_step_issues:
+        issues += workflow_step_issues
+        return issues
+
     # import workflow
-    if workflow_type is not None:  # if workflow is meant for refinery
-        workflow_object = Workflow.objects.create(
-            name=workflow.name, internal_id=workflow.identifier,
-            workflow_engine=workflow_engine, is_active=True,
-            type=workflow_type, graph=json.dumps(workflow_dictionary))
-        workflow_object.set_manager_group(workflow_engine.get_manager_group())
-        workflow_object.share(
-            workflow_engine.get_manager_group().get_managed_group())
-        inputs = workflow.inputs
-        # Adding workflowdatainputs i.e. inputs from workflow into database
-        # models
-        for input in inputs:
-            input_dict = {
-                'name': input.name,
-                'internal_id': input.identifier
-            }
-            i = WorkflowDataInput(**input_dict)
-            i.save()
-            workflow_object.data_inputs.add(i)
-            # if workflow has only 1 input, input a default input relationship
-            # type
-            if len(inputs) == 1:
-                opt_single = {
-                    'category': TYPE_1_1,
-                    'set1': input.name
-                }
-                temp_relationship = WorkflowInputRelationships(**opt_single)
-                temp_relationship.save()
-                workflow_object.input_relationships.add(temp_relationship)
-
-        # check to input NodeRelationshipType
-        # noderelationship types defined for workflows with greater than 1
-        # input
-        # refinery_relationship=[{"category":"N-1", "set1":"input_file"}]
-        workflow_relationships = get_input_relationships(workflow_annotation)
-        if workflow_relationships is not None:
-            if len(inputs) > 1:
-                for opt_r in workflow_relationships:
-                    try:
-                        temp_relationship = WorkflowInputRelationships(**opt_r)
-                        temp_relationship.save()
-                        workflow_object.input_relationships.add(
-                            temp_relationship)
-                    except KeyError as e:
-                        logger.error(e)
-                        issues.append(
-                            "Input relationship option error: %s" % e)
+    workflow_object = Workflow.objects.create(
+        name=workflow.name, internal_id=workflow.identifier,
+        workflow_engine=workflow_engine, is_active=True,
+        type=workflow_type, graph=json.dumps(workflow_dictionary)
+    )
+    workflow_object.set_manager_group(workflow_engine.get_manager_group())
+    workflow_object.share(
+        workflow_engine.get_manager_group().get_managed_group())
+    # Adding workflowdatainputs i.e. inputs from workflow into database models
+    for workflow_input in workflow.inputs:
+        workflow_data_input = WorkflowDataInput.objects.create(
+            name=workflow_input.name, internal_id=workflow_input.identifier
+        )
+        workflow_object.data_inputs.add(workflow_data_input)
+        # if workflow has only 1 input, input a default input relationship type
+        if len(workflow.inputs) == 1:
+            workflow_input_relationship = \
+                WorkflowInputRelationships.objects.create(
+                    category=TYPE_1_1, set1=workflow_input.name
+                )
+            workflow_object.input_relationships.add(
+                workflow_input_relationship
+            )
+    # check to input NodeRelationshipType
+    # noderelationship types defined for workflows with greater than 1 input
+    # refinery_relationship=[{"category":"N-1", "set1":"input_file"}]
+    if input_relationships and len(workflow.inputs) > 1:
+        for relationship in input_relationships:
+            try:
+                workflow_input_relationship = \
+                    WorkflowInputRelationships.objects.create(**relationship)
+                workflow_object.input_relationships.add(
+                    workflow_input_relationship
+                )
+            except KeyError as exc:
+                logger.error(exc)
+                issues.append(
+                    "Input relationship option error: {}".format(exc)
+                )
     return issues
-
-
-@task()
-def get_workflow_inputs(workflow_uuid):
-    """Returns unique workflow inputs
-    i.e. {u'exp_file': None, u'input_file': None}
-    """
-    curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
-
-    # getting distinct workflow inputs
-    workflow_data_inputs = curr_workflow.data_inputs.all()
-    annot_inputs = {}
-    for data_input in workflow_data_inputs:
-        input_type = data_input.name
-        annot_inputs[input_type] = None
-    return annot_inputs
 
 
 def get_workflow_annotation(workflow_dictionary):
@@ -247,29 +255,6 @@ def get_step_outputs(step_definition):
     if len(step_definition[GALAXY_TOOL_OUTPUTS]) == 0:
         return None
     return step_definition[GALAXY_TOOL_OUTPUTS]
-
-
-def get_step_inputs(step_definition):
-    """Return the inputs of the step or None."""
-    # no input field
-    if GALAXY_TOOL_INPUTS not in step_definition:
-        return None
-    # empty input field
-    if len(step_definition[GALAXY_TOOL_INPUTS]) == 0:
-        return None
-    return step_definition[GALAXY_TOOL_INPUTS]
-
-
-def get_input_steps(workflow_dictionary):
-    """Return the step definitions of the input steps of the workflow."""
-    steps = get_workflow_steps(workflow_dictionary)
-    if steps is None:
-        return None
-    input_steps = []
-    for step in steps:
-        if get_step_inputs(step) is not None:
-            input_steps.append(step)
-    return input_steps
 
 
 def check_step_annotation_syntax(annotation):
@@ -352,16 +337,15 @@ def check_step(step_definition):
         if outputs is None:
             return None
         else:
-            issues = issues + check_step_annotation_syntax(annotation)
-            issues = issues + check_step_annotation_semantics(annotation,
-                                                              outputs)
+            issues += check_step_annotation_syntax(annotation)
+            issues += check_step_annotation_semantics(annotation, outputs)
     return issues
 
 
 def check_steps(workflow_dictionary):
     steps = get_workflow_steps(workflow_dictionary)
     if steps is None:
-        return None
+        raise RuntimeError
     correct_step_found = False
     incorrect_step_found = False
     issues = []
@@ -373,22 +357,20 @@ def check_steps(workflow_dictionary):
                 correct_step_found = True
             else:
                 incorrect_step_found = True
-                issues.append(
-                    'Workflow step "' + step_definition['name'] +
-                    '" contains at least one incorrectly declared output.')
-                issues = issues + step_issues
+                issues.append("Workflow step {} contains at least one "
+                              "incorrectly declared output"
+                              .format(step_definition['name']))
+                issues += step_issues
 
     if incorrect_step_found:
-        logger.warning(
-            'Workflow "' + workflow_dictionary['name'] +
-            '" contains incorrectly declared outputs for at least one step '
-            'and will be ignored: ' + "\n".join(issues))
+        logger.warning("Workflow %s contains incorrectly declared outputs for "
+                       "at least one step and will be ignored: %s",
+                       workflow_dictionary['name'], ", ".join(issues))
         return issues
     if not correct_step_found:
-        logger.warning(
-            'Workflow "' + workflow_dictionary['name'] +
-            '" does not declare outputs and will be ignored.')
-        return None
+        logger.warning("Workflow %s does not declare outputs and will be "
+                       "ignored", workflow_dictionary['name'])
+        raise RuntimeError
 
     return issues
 
@@ -426,43 +408,23 @@ def get_input_relationships(workflow_annotation):
     return workflow_annotation[GALAXY_WORKFLOW_RELATIONSHIPS]
 
 
-def check_workflow_inputs(workflow_dictionary):
+def check_workflow_inputs(workflow_input_names):
+    """Check if workflow input names are unique"""
+    # TODO: check if workflow input names match workflow annotation
     issues = []
-    # -------------------------------------------------------------------------
-    # TESTS FOR WORKFLOW INPUTS
-    # -------------------------------------------------------------------------
-    workflow_annotation = get_workflow_annotation(workflow_dictionary)
-
-    # TEST: if workflow has annotation
-    if workflow_annotation is None:
-        issues.append('Workflow annotation not found.')
-        return issues
-    input_steps = get_input_steps(workflow_dictionary)
-
-    # TEST: if workflow defines inputs
-    if input_steps is None:
-        issues.append('Workflow does not define inputs.')
-        return issues
-    # extract names of workflow input (if input step defines more than one
-    # input only the first one will be used)
-    workflow_input_names = []
-    for step in input_steps:
-        step_inputs = get_step_inputs(step)
-        if step_inputs is not None and 'name' in step_inputs[0]:
-            workflow_input_names.append(step_inputs[0]['name'])
-
-    # TEST: are workflow input names unique?
     unique_workflow_input_names = {}
     map(unique_workflow_input_names.__setitem__, workflow_input_names, [])
     if len(unique_workflow_input_names.keys()) < len(workflow_input_names):
         issues.append('Workflow input names are not unique: ' +
                       ', '.join(workflow_input_names))
-    # -------------------------------------------------------------------------
-    # TESTS FOR INPUT RELATIONSHIPS
-    # -------------------------------------------------------------------------
-    input_relationships = get_input_relationships(workflow_annotation)
+    return issues
 
-    # TEST: if workflow define more than one input relationship if there is
+
+def check_workflow_input_relationships(
+        input_steps, input_relationships, workflow_input_names):
+    issues = []
+
+    # if workflow defines more than one input relationship if there is
     # only one input
     if len(input_steps) == 1:
         if input_relationships is not None and len(input_relationships) > 1:

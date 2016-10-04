@@ -1192,7 +1192,6 @@ class Analysis(OwnableResource):
                     delete = False
 
         if delete:
-
             # Cancel Analysis (galaxy cleanup also happens here)
             self.cancel()
 

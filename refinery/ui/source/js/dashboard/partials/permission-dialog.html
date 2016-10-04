@@ -1,6 +1,24 @@
 <div class="modal-header">
-    <h3>Permission Editor</h3>
-    <h4 id="modal-description"></h4>
+  <h3>Permission Editor</h3>
+  <div class="modal-description">
+    <h4>
+      Select which groups you are a member of should have access
+      to this data set. Assign either Read-only or Modify permissions.
+    </h4>
+    <p>
+      <strong>Read-only permissions</strong> allows other group members to view
+      the data set and the results of all analyses executed on the data.
+      <br>
+     <strong>Modify permissions</strong> additionally allows other group
+      members to run analyses on the data that will become part of the data set.
+      <br>
+      <strong>None</strong> revokes all permissions.
+    </p>
+    <p>
+      <em>Note that by sharing this data set with the "Public" group, anyone
+        who visits the site will be able to view this data set.</em>
+    </p>
+  </div>
 </div>
 <div class="modal-body">
     <div ng-if="modal.permissions.groups.length > 0" ng-cloak>
@@ -10,13 +28,15 @@
               <th>Group</th>
               <th>None</th>
               <th>Read-only</th>
-              <th>Edit</th>
+              <th>Modify</th>
             </tr>
           </thead>
           <tbody>
             <tr ng-repeat="group in modal.permissions.groups track by $index">
               <td>
-                {{ group.name }}
+                <a href="/collaboration/#/{{ group.uuid }}">
+                  {{ group.name }}
+                </a>
               </td>
               <td>
                 <input
