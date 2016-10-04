@@ -144,8 +144,13 @@
     </button>
     <button id="dataset-delete-cancel-button"
       class="refinery-base btn btn-default"
-      ng-if="modal.deletionMessage == null"
+      ng-if="modal.deletionMessage == null && !modal.isDeleting"
       ng-click="modal.cancel()">
+      Cancel
+    </button>
+    <button id="dataset-delete-cancel-button"
+      class="refinery-base btn btn-disabled disabled"
+      ng-if="modal.deletionMessage == null && modal.isDeleting">
       Cancel
     </button>
     <button id="dataset-delete-button"

@@ -1594,6 +1594,8 @@ DashboardCtrl.prototype.openDataSetDeleteModal = function (dataSet) {
   this.removeFromDataCart(dataSet);
 
   this.$uibModal.open({
+    backdrop: 'static',
+    keyboard: false,
     templateUrl: '/static/partials/dashboard/partials/dataset-delete-dialog.html',
     controller: 'DataSetDeleteCtrl as modal',
     resolve: {
@@ -1620,6 +1622,8 @@ DashboardCtrl.prototype.openDataSetDeleteModal = function (dataSet) {
  */
 DashboardCtrl.prototype.openAnalysisDeleteModal = function (analysis) {
   this.$uibModal.open({
+    backdrop: 'static',
+    keyboard: false,
     templateUrl: '/static/partials/dashboard/partials/analysis-delete-dialog.html',
     controller: 'AnalysisDeleteCtrl as modal',
     resolve: {
