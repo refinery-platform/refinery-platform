@@ -135,7 +135,7 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
         study = StudyFactory(uuid=study_uuid, investigation=investigation)
 
         InvestigationLinkFactory(
-            data_set=dataset,
+            data_set=DataSetFactory(),
             investigation=study.investigation,
             version=1,
             date=datetime.now()
