@@ -423,12 +423,18 @@
     background: @blue-shadow;
   }
 
+  .top-bar .control-btn .icon,
   .top-bar .control-btn [class*=' icon-'],
   .top-bar .control-btn [class^=icon-] {
     top: 4px;
     right: 8px;
     width: 16px;
     height: 16px;
+    line-height: 16px;
+
+    &.fa-info-circle {
+      font-size: 14px;
+    }
   }
 
   >.wrapper {

@@ -72,7 +72,8 @@ function ListGraphCtrl (
           property: function (_data) {
             return _data.uri;
           }
-        }]
+        }],
+        customTopbarButtons: this.customTopbarButtons || []
       });
     }.bind(this));
   }

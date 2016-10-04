@@ -111,7 +111,7 @@
             ng-click="visWrapper.introsSatoriOverview.start()"
             ng-if="visWrapper.noData !== true">
             <span class="fa fa-info-circle"></span>
-            Introduction
+            Intro Tour
           </span>
         </div>
       </div>
@@ -137,7 +137,8 @@
           <list-graph
             ng-if="visWrapper.ready"
             graph="visWrapper.graph"
-            value-property-name="visWrapper.propertyValue"></list-graph>
+            value-property-name="visWrapper.propertyValue"
+            custom-topbar-buttons="visWrapper.customTopbarButtons"></list-graph>
         </div>
       </div>
       <div id="treemap-wrapper" class="bottom-half">

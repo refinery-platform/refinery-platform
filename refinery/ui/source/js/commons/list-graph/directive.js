@@ -4,16 +4,13 @@ function listGraphDirective () {
   return {
     bindToController: {
       graphData: '=graph',
-      valuePropertyName: '=valuePropertyName'
+      valuePropertyName: '=valuePropertyName',
+      customTopbarButtons: '=customTopbarButtons'
     },
     controller: 'ListGraphCtrl',
     controllerAs: 'listGraph',
     restrict: 'E',
     replace: true,
-    scope: {
-      graphData: '=graph',
-      valuePropertyName: '=valuePropertyName'
-    },
     templateUrl: '/static/partials/commons/list-graph/template.html'
   };
 }

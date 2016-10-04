@@ -6,7 +6,8 @@ function VisWrapperCtrl (
   dashboardVisData,
   DashboardIntrosSatoriOverview,
   DashboardIntrosSatoriListGraph,
-  DashboardIntrosSatoriTreemap
+  DashboardIntrosSatoriTreemap,
+  dashboardIntroStarter
 ) {
   var self = this;
 
@@ -128,6 +129,14 @@ function VisWrapperCtrl (
   self.$q.all([self.treemapLoading.promise]).then(function () {
     self.loading = false;
   });
+
+  this.customTopbarButtons = [{
+    label: 'Tour',
+    callback: function () {
+      dashboardIntroStarter.start('satori-list-graph');
+    },
+    iconSpan: 'fa fa-info-circle'
+  }];
 }
 
 Object.defineProperty(
@@ -190,5 +199,6 @@ angular
     'DashboardIntrosSatoriOverview',
     'DashboardIntrosSatoriListGraph',
     'DashboardIntrosSatoriTreemap',
+    'dashboardIntroStarter',
     VisWrapperCtrl
   ]);
