@@ -48,20 +48,14 @@ def login(selenium):
     assert_body_text(selenium, 'Logout')
 
 
-def logout(selenium):
-    selenium.find_element_by_link_text('Logout').click()
-
-
 def cleanup():
-    """Remove objects and Logout of Refinery"""
+    """Remove Django objects"""
     DataSet.objects.all().delete()
     Analysis.objects.all().delete()
     Workflow.objects.all().delete()
     Project.objects.all().delete()
     WorkflowEngine.objects.all().delete()
     Instance.objects.all().delete()
-
-    logout(selenium)
 
 
 def test_dataset_deletion(selenium, total_datasets=TOTAL_DATASETS):
@@ -70,8 +64,6 @@ def test_dataset_deletion(selenium, total_datasets=TOTAL_DATASETS):
     # Create sample Data
     make_datasets(total_datasets, user)
     selenium.implicitly_wait(5)
-
-    login(selenium)
 
     assert_text_within_id(
             selenium, "total-datasets", "{} data sets".format(total_datasets)
@@ -108,8 +100,6 @@ def test_analysis_deletion(selenium, total_analyses=TOTAL_ANALYSES):
     # Create sample Data
     make_datasets_with_analyses(total_analyses, user)
     selenium.implicitly_wait(5)
-
-    login(selenium)
 
     assert_text_within_id(
             selenium, "total-analyses", "{} analyses".format(total_analyses)
