@@ -65,9 +65,12 @@ def test_dataset_deletion(selenium, login, total_datasets=TOTAL_DATASETS):
 
     # Create sample Data
     make_datasets(total_datasets, user)
+
     time.sleep(5)
 
     selenium.refresh()
+
+    time.sleep(5)
 
     assert_text_within_id(
             selenium, "total-datasets", "{} data sets".format(total_datasets)
@@ -85,9 +88,13 @@ def test_dataset_deletion(selenium, login, total_datasets=TOTAL_DATASETS):
         wait_until_id_clickable(
             selenium, 'dataset-delete-close-button', 5).click()
 
+        time.sleep(5)
+
         assert_text_within_id(
             selenium, "total-datasets", "{} data sets".format(total_datasets)
         )
+
+    time.sleep(5)
 
     assert_text_within_id(
         selenium, "total-datasets", "{} data sets".format(total_datasets))
@@ -98,7 +105,7 @@ def test_dataset_deletion(selenium, login, total_datasets=TOTAL_DATASETS):
         pytest.set_trace()
 
 
-def test_analysis_deletion(selenium, total_analyses=TOTAL_ANALYSES):
+def test_analysis_deletion(selenium, login, total_analyses=TOTAL_ANALYSES):
     """Delete some analyses and make sure the ui updates properly"""
 
     assert_body_text(selenium, 'Logout')
@@ -108,6 +115,8 @@ def test_analysis_deletion(selenium, total_analyses=TOTAL_ANALYSES):
     time.sleep(5)
 
     selenium.refresh()
+
+    time.sleep(5)
 
     assert_text_within_id(
             selenium, "total-analyses", "{} analyses".format(total_analyses)
@@ -125,6 +134,8 @@ def test_analysis_deletion(selenium, total_analyses=TOTAL_ANALYSES):
         wait_until_id_clickable(
             selenium, 'analysis-delete-close-button', 5).click()
 
+        time.sleep(5)
+
         if total_analyses <= 1:
             assert_text_within_id(
                 selenium, "total-analyses", "{} analysis".format(
@@ -135,6 +146,8 @@ def test_analysis_deletion(selenium, total_analyses=TOTAL_ANALYSES):
                 selenium, "total-analyses", "{} analyses".format(
                     total_analyses)
             )
+
+    time.sleep(5)
 
     assert_text_within_id(
         selenium, "total-analyses", "{} analysis".format(total_analyses))
