@@ -151,15 +151,20 @@
       ng-click="modal.cancel()">
       Cancel
     </button>
+    <button id="dataset-delete-button"
+      class="btn btn-danger"
+      ng-if="modal.deletionMessage == null && !modal.isDeleting"
+      ng-click="modal.delete()">
+      Delete
+    </button>
     <button id="dataset-delete-cancel-button"
       class="refinery-base btn btn-disabled disabled"
       ng-if="modal.deletionMessage == null && modal.isDeleting">
       Cancel
     </button>
     <button id="dataset-delete-button"
-      class="btn btn-danger"
-      ng-if="modal.deletionMessage == null"
-      ng-click="modal.delete()">
+      class="refinery-base btn btn-danger disabled"
+      ng-if="modal.deletionMessage == null && modal.isDeleting">
       Delete
     </button>
   </div>
