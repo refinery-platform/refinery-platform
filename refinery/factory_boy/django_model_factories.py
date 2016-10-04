@@ -53,6 +53,7 @@ class AnalysisFactory(factory.django.DjangoModelFactory):
     """Minimal representation of an Analysis for testing purposes"""
     class Meta:
         model = "core.Analysis"
+        django_get_or_create = ('uuid',)
 
     uuid = uid.uuid4()
     name = "Test Analysis - {}".format(uuid)
