@@ -8,16 +8,15 @@ sys.path.append("../refinery/")
 
 from django.contrib.auth.models import User
 
-from factory_boy.django_model_factories import (make_datasets,
-                                                make_datasets_with_analyses)
+from factory_boy.django_model_factories import (
+    make_datasets, make_analyses_with_single_dataset)
 from utils.utils import (assert_text_within_id, assert_body_text,
-                         wait_until_id_clickable)
+                         wait_until_id_clickable, login, selenium)
 
 # Total number of objects to create for the test run
 TOTAL_DATASETS = 5
 TOTAL_ANALYSES = 5
 
-base_url = os.environ['BASE_URL']
 not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
 creds = yaml.load(open(os.environ['CREDS_YML']))
 

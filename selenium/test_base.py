@@ -1,29 +1,11 @@
 import os
-import yaml
 import pytest
 from time import time
 
-from utils.utils import assert_body_text
+from utils.utils import assert_body_text, selenium, login
 
 base_url = os.environ['BASE_URL']
 not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
-
-
-@pytest.fixture
-def selenium(selenium):
-    selenium.maximize_window()
-    return selenium
-
-
-@pytest.fixture
-def login(selenium):
-    creds = yaml.load(open(os.environ['CREDS_YML']))
-    selenium.get(base_url)
-    selenium.find_element_by_link_text('Login').click()
-    selenium.find_element_by_id('id_username').send_keys(creds['username'])
-    selenium.find_element_by_id('id_password').send_keys(creds['password'])
-    selenium.find_element_by_xpath('//input[@type="submit"]').click()
-    assert_body_text(selenium, 'Logout')
 
 
 def test_login_not_required(selenium):
