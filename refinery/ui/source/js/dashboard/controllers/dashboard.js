@@ -10,6 +10,7 @@ function DashboardCtrl (
   $window,
   // 3rd party library
   _,
+  $uibModal,
   // Refinery modules
   pubSub,
   settings,
@@ -27,7 +28,8 @@ function DashboardCtrl (
   treemapContext,
   dashboardVisData,
   dataCart,
-  DashboardIntrosDataSetView
+  DashboardIntrosDataSetView,
+  dashboardIntroSatoriEasterEgg
 ) {
   var that = this;
 
@@ -41,6 +43,7 @@ function DashboardCtrl (
 
   // Construct 3rd party library
   this._ = _;
+  this.$uibModal = $uibModal;
 
   // Construct Refinery modules
   this.pubSub = pubSub;
@@ -80,6 +83,10 @@ function DashboardCtrl (
   this.authService.isAdmin().then(function (isAdmin) {
     this.userIsAdmin = isAdmin;
   }.bind(this));
+
+  dashboardIntroSatoriEasterEgg.celebrate(
+    this.openSatoriIntroEasterEgg.bind(this)
+  );
 
   // Set up dataSets for `uiScroll`
   this.dataSets = new UiScrollSource(
@@ -1596,6 +1603,20 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
   this[reloadService].reload();
 };
 
+/**
+ * Open easter egg congratulation dialog
+ *
+ * @method  openSatoriIntroEasterEgg
+ * @author  Fritz Lekschas
+ * @date    2015-08-21
+ */
+DashboardCtrl.prototype.openSatoriIntroEasterEgg = function () {
+  this.$uibModal.open({
+    templateUrl: '/static/partials/dashboard/partials/intro-satori-easteregg.html',
+    controller: 'IntroSatoriEasterEggCtrl as modal'
+  });
+};
+
 angular
   .module('refineryDashboard')
   .controller('DashboardCtrl', [
@@ -1606,6 +1627,7 @@ angular
     '$rootScope',
     '$window',
     '_',
+    '$uibModal',
     'pubSub',
     'settings',
     'dataSet',
@@ -1623,5 +1645,6 @@ angular
     'dashboardVisData',
     'dataCart',
     'DashboardIntrosDataSetView',
+    'dashboardIntroSatoriEasterEgg',
     DashboardCtrl
   ]);

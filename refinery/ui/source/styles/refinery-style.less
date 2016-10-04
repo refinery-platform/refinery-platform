@@ -1094,6 +1094,10 @@ button.icon-only {
   text-align: right !important;
 }
 
+.full-width {
+  width: 100%;
+}
+
 .full-height {
   height: 100%;
 }
@@ -1906,4 +1910,31 @@ body.is-screenshot-ready {
 #check_availability_overflow{
   overflow: auto;
   text-overflow: ellipsis;
+}
+
+h1, h2, h3, h4, h5, h5,
+.h1, .h2, .h3, .h4, .h5, .h5 {
+  &.strong {
+    text-transform: uppercase;
+    font-weight: bold;
+  }
+}
+
+.youtube {
+  position: relative;
+
+  &:before {
+    display: block;
+    content: "";
+    width: 100%;
+    padding-top: 55.35714%;
+  }
+
+  iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
 }
