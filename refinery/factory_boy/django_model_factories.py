@@ -118,21 +118,21 @@ def make_datasets(number_to_create, user_instance):
         dataset.save()
 
 
-def make_datasets_with_analyses(number_to_create, user_instance):
-    """Create some minimal Datasets and Analyses"""
+def make_analyses_with_single_dataset(number_to_create, user_instance):
+    """Create some minimal Analyses"""
     instance = GalaxyInstanceFactory()
     workflow_engine = WorkflowEngineFactory(instance=instance)
     workflow = WorkflowFactory(workflow_engine=workflow_engine)
     project = ProjectFactory(is_catch_all=True)
 
-    while number_to_create >= 1:
+    dataset_uuid = uid.uuid4()
+    dataset = DataSetFactory(
+            uuid=dataset_uuid,
+            title="Test DataSet - {}".format(dataset_uuid),
+            name="Test DataSet - {}".format(dataset_uuid)
+        )
 
-        dataset_uuid = uid.uuid4()
-        dataset = DataSetFactory(
-                uuid=dataset_uuid,
-                title="Test DataSet - {}".format(dataset_uuid),
-                name="Test DataSet - {}".format(dataset_uuid)
-            )
+    while number_to_create >= 1:
 
         investigation_uuid = uid.uuid4()
         investigation = InvestigationFactory(uuid=investigation_uuid)
