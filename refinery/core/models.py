@@ -1227,7 +1227,7 @@ class Analysis(OwnableResource):
         else:
             # Prepare string to be displayed upon a failed deletion
             deletion_error_message = "Cannot delete Analysis: {} because " \
-                                     "it's results have been used to run " \
+                                     "its results have been used to run " \
                                      "further Analyses. Please delete all " \
                                      "downstream Analyses before you delete " \
                                      "this one!".format(self.name)
