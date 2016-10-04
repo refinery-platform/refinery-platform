@@ -126,27 +126,33 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
     workflow = WorkflowFactory(workflow_engine=workflow_engine)
     project = ProjectFactory(is_catch_all=True)
 
-    while number_to_create >= 1:
-
-        investigation_uuid = uid.uuid4()
-        investigation = InvestigationFactory(uuid=investigation_uuid)
-
-        study_uuid = uid.uuid4()
-        study = StudyFactory(uuid=study_uuid, investigation=investigation)
-
-        InvestigationLinkFactory(
-            data_set=DataSetFactory(),
-            investigation=study.investigation,
-            version=1,
-            date=datetime.now()
+    dataset_uuid = uid.uuid4()
+    dataset = DataSetFactory(
+            uuid=dataset_uuid,
+            title="Test DataSet - {}".format(dataset_uuid),
+            name="Test DataSet - {}".format(dataset_uuid)
         )
 
+    investigation_uuid = uid.uuid4()
+    investigation = InvestigationFactory(uuid=investigation_uuid)
+
+    study_uuid = uid.uuid4()
+    study = StudyFactory(uuid=study_uuid, investigation=investigation)
+
+    InvestigationLinkFactory(
+        data_set=dataset,
+        investigation=study.investigation,
+        version=1,
+        date=datetime.now()
+    )
+
+    while number_to_create >= 1:
         analysis_uuid = uid.uuid4()
         AnalysisFactory(
                 uuid=analysis_uuid,
                 name="Test Analysis - {}".format(analysis_uuid),
                 project=project,
-                data_set=DataSetFactory(),
+                data_set=dataset,
                 workflow=workflow
             )
 
