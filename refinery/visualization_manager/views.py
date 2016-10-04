@@ -26,7 +26,7 @@ def igv_session(request):
     try:
         uuids = query["uuids"].split(",")
     except Exception as e:
-        logger.error("Error formatting uuids: %s" % e)
+        logger.error("Error formatting uuids: %s", e)
         uuids = []
 
     logger.info(str(len(uuids)) + " file uuids received: " + ", ".join(uuids))
@@ -399,7 +399,7 @@ def add_igv_resource(uuidlist, xml_res, xml_doc):
             curr_name, curr_url = get_file_name(node_uuid)
         except ValueError as e:
             logger.error("Could not unpack file name of %s, "
-                         "%s" % (node_uuid, e))
+                         "%s", node_uuid, e)
 
         if curr_name or curr_url:
             logger.debug("add_igv_resource: name = %s, curr_url = %s",
@@ -451,7 +451,7 @@ def add_igv_samples(fields, results_samp, annot_samples=None):
     except UnicodeEncodeError as e:
         logger.error("Could not write results to file: %s. "
                      "Trying again with the content to write encoded "
-                     "properly." % e)
+                     "properly.", e)
         temp_sample_name.write(pheno_results.encode("utf-8"))
 
     # if annotations are not null
@@ -495,7 +495,7 @@ def get_file_name(nodeuuid, samp_file=None, is_file_uuid=False):
         # getting the current file_uuid from the given node_uuid
         curr_file_uuid = Node.objects.get(uuid=nodeuuid).file_uuid
     except(Node.DoesNotExist, Node.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch Node from %s: %s" % (nodeuuid, e))
+            logger.error("Could not fetch Node from %s: %s", nodeuuid, e)
 
     # if uuid is a file_store uuid (associated w/ analysis results)
     if is_file_uuid:
@@ -503,15 +503,15 @@ def get_file_name(nodeuuid, samp_file=None, is_file_uuid=False):
             temp_fs = FileStoreItem.objects.get(uuid=nodeuuid)
         except (FileStoreItem.DoesNotExist,
                 FileStoreItem.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch FileStoreItem from %s: %s" % (
-                nodeuuid, e))
+            logger.error("Could not fetch FileStoreItem from %s: %s",
+                         nodeuuid, e)
     else:
         try:
             # checking to see if it has a file_server item
             temp_fs = get_aux_file_item(curr_file_uuid)
         except Exception as e:
-            logger.error("Could not fetch aux_file_item from %s: %s" % (
-                curr_file_uuid, e))
+            logger.error("Could not fetch aux_file_item from %s: %s",
+                         curr_file_uuid, e)
 
     # If no associated file_server auxiliary file then use main data file for
     # IGV
@@ -521,12 +521,12 @@ def get_file_name(nodeuuid, samp_file=None, is_file_uuid=False):
             temp_fs = FileStoreItem.objects.get(uuid=curr_file_uuid)
         except (FileStoreItem.DoesNotExist,
                 FileStoreItem.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch FileStoreItem: %s" % e)
+            logger.error("Could not fetch FileStoreItem: %s", e)
 
     try:
         return create_temp_filename_and_url(temp_fs, samp_file)
     except AttributeError as e:
-        logger.error("Could not create temp filename and url %s" % (e))
+        logger.error("Could not create temp filename and url %s", e)
         return ''
 
 
@@ -570,7 +570,7 @@ def get_sample_lines(fields, results):
         try:
             line, url = get_file_name(row["uuid"], samp_file=True)
         except ValueError as e:
-            logger.error("Could unpack get_file_name,%s %s" % (row["uuid"], e))
+            logger.error("Could unpack get_file_name, %s %s", row["uuid"], e)
 
         if line:
             # adding fields to sample information matrix
