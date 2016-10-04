@@ -98,8 +98,10 @@ def test_dataset_deletion(selenium, login, total_datasets=TOTAL_DATASETS):
         pytest.set_trace()
 
 
-def test_analysis_deletion(selenium, login, total_analyses=TOTAL_ANALYSES):
+def test_analysis_deletion(selenium, total_analyses=TOTAL_ANALYSES):
     """Delete some analyses and make sure the ui updates properly"""
+
+    assert_body_text(selenium, 'Logout')
 
     # Create sample Data
     make_datasets_with_analyses(total_analyses, user)
