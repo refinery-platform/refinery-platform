@@ -1,6 +1,6 @@
 'use strict';
 
-function WidthFixerFactory (_) {
+function WidthFixerFactory ($q, $timeout, _) {
   var fixedWidth = 0;
   var listeners = {
     fixer: [],
@@ -22,8 +22,51 @@ function WidthFixerFactory (_) {
     }
   }
 
+  /**
+   * Trigger the width fixers as soon as more than 1 method is on the stack.
+   *
+   * @description
+   * This method needs refactoring at some point. There are two steps in fixing
+   * the width, added separately to the fixer stack. If one of them is missing
+   * the whole width fixing is broken.
+   * Generally this shouldn't happen anyways because the fixing is delayed by
+   * one digest cycle of Angular but it seems like this doesn't guarantee that
+   * all controllers have been initialized yet.
+   *
+   * @method  fixWidth
+   * @author  Fritz Lekschas
+   * @date    2016-09-30
+   * @param   {Number}    counter  Integer counter that keeps track of the
+   *   number of recursive executions.
+   * @return  {Object}             Promise resolving to `true` if the width is
+   *   successfully fixed.
+   */
+  function fixWidth (counter) {
+    var _counter = counter || 1;
+    var deferred = $q.defer();
+
+    if (listeners.fixer.length > 1) {
+      trigger('fixer');
+      deferred.resolve();
+    } else {
+      // Try 5 more times and increase the waiting time.
+      if (_counter <= 5) {
+        $timeout(function () {
+          fixWidth(++_counter)
+            .then(deferred.resolve)
+            .catch(deferred.reject);
+        }, 5 * _counter, true, ++_counter);
+      } else {
+        deferred.reject();
+      }
+    }
+
+    return deferred.promise;
+  }
+
   return {
     trigger: trigger,
+    fixWidth: fixWidth,
     fixedWidth: fixedWidth,
     fixer: listeners.fixer,
     resetter: listeners.resetter
@@ -32,4 +75,9 @@ function WidthFixerFactory (_) {
 
 angular
   .module('refineryDashboard')
-  .factory('dashboardWidthFixerService', ['_', WidthFixerFactory]);
+  .factory('dashboardWidthFixerService', [
+    '$q',
+    '$timeout',
+    '_',
+    WidthFixerFactory
+  ]);

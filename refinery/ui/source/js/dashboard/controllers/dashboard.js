@@ -8,6 +8,7 @@ function DashboardCtrl (
   $timeout,
   $rootScope,
   $window,
+  $log,
   // 3rd party library
   _,
   // Refinery modules
@@ -37,6 +38,7 @@ function DashboardCtrl (
   this.$stateParams = $stateParams;
   this.$timeout = $timeout;
   this.$window = $window;
+  this.$log = $log;
 
   // Construct 3rd party library
   this._ = _;
@@ -359,7 +361,7 @@ function DashboardCtrl (
     if (this.repoMode) {
       this.expandDataSetPanel = true;
       this.expandedDataSetPanelBorder = true;
-      this.dashboardWidthFixerService.trigger('fixer');
+      this.dashboardWidthFixerService.fixWidth();
       this.dashboardExpandablePanelService.trigger('lockFullWith');
     }
   }.bind(this), 0);
@@ -972,6 +974,8 @@ DashboardCtrl.prototype.deselectDataSets = function () {
  * @param   {Object}  fromStateEvent  UI-router previous state object.
  */
 DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
+  var self = this;
+
   if (!fromStateEvent) {
     this.$state.transitionTo(
       'launchPad.exploration',
@@ -986,10 +990,19 @@ DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
   this.dataSetExploration = true;
 
   if (!this.expandDataSetPanel) {
-    this.expandDataSetPanel = true;
-    this.expandedDataSetPanelBorder = true;
-    this.dashboardWidthFixerService.trigger('fixer');
-    this.dashboardExpandablePanelService.trigger('expander');
+    this.dashboardWidthFixerService.fixWidth()
+      .then(function () {
+        self.expandDataSetPanel = true;
+        self.expandedDataSetPanelBorder = true;
+        self.dashboardExpandablePanelService.trigger('expander');
+      })
+      .catch(function () {
+        // This is weird. We should never run into here unless the whole app
+        // initialization failed even after 75ms.
+        // See `services/width-fixer.js` for details.
+        this.$log.error('Dashboard expand dataset exploration error,' +
+          ' possibly due to the Refinery App failing to initialized.');
+      });
   } else {
     this.$timeout(function () {
       this.pubSub.trigger('vis.show');
@@ -1009,6 +1022,8 @@ DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
 DashboardCtrl.prototype.expandDataSetPreview = function (
   dataSetUuid, fromStateEvent
 ) {
+  var self = this;
+
   if (this.dataSetExploration) {
     this.dataSetExplorationTempHidden = true;
     this.pubSub.trigger('vis.tempHide');
@@ -1029,10 +1044,19 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
 
   function startExpansion () {
     if (!this.expandDataSetPanel) {
-      this.expandDataSetPanel = true;
-      this.expandedDataSetPanelBorder = true;
-      this.dashboardWidthFixerService.trigger('fixer');
-      this.dashboardExpandablePanelService.trigger('expander');
+      this.dashboardWidthFixerService.fixWidth()
+        .then(function () {
+          self.expandDataSetPanel = true;
+          self.expandedDataSetPanelBorder = true;
+          self.dashboardExpandablePanelService.trigger('expander');
+        })
+        .catch(function () {
+          // This is weird. We should never run into here unless the whole app
+          // initialization failed even after 75ms.
+          // See `services/width-fixer.js` for details.
+          this.$log.error('Dashboard expand dataset exploration error,' +
+          ' possibly due to the Refinery App failing to initialized.');
+        });
     }
     this.dashboardDataSetPreviewService.preview(dataSetUuid);
     this.dataSetPreview = true;
@@ -1581,6 +1605,7 @@ angular
     '$timeout',
     '$rootScope',
     '$window',
+    '$log',
     '_',
     'pubSub',
     'settings',
