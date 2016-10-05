@@ -280,7 +280,7 @@ class BaseResource(models.Model):
 
         if self.duplicate_slug_exists():
             raise forms.ValidationError("%s with slug: %s "
-                                        "already exists!"
+                                        "already exists"
                                         % (self.__class__.__name__,
                                            self.slug))
 
@@ -288,7 +288,7 @@ class BaseResource(models.Model):
     def save(self, *args, **kwargs):
 
         if self.duplicate_slug_exists():
-            logger.error("%s with slug: %s already exists!" % (
+            logger.error("%s with slug: %s already exists" % (
                 self.__class__.__name__, self.slug))
         else:
             try:
@@ -485,8 +485,8 @@ class DataSetQuerySet(models.query.QuerySet):
             try:
                 instance.delete()
             except Exception as e:
-                return (False, "DataSet: {} could not be deleted! {}".format(
-                         self, e))
+                return False, "Something unexpected happened. DataSet: {} " \
+                              "could not be deleted. {}".format(self, e)
 
 
 class DataSetManager(models.Manager):
@@ -588,13 +588,13 @@ class DataSet(SharableResource):
         try:
             super(DataSet, self).delete()
         except Exception as e:
-            return False, "DataSet: {} could not be deleted! {}".format(
-                     self.name, e)
+            return False, "Something unexpected happened. DataSet: {} could " \
+                          "not be deleted. {}".format(self.name, e)
         else:
             # Return a "truthy" value here so that the admin ui and
             # front-end ui knows if the deletion succeeded or not as well as
             # the proper message to  display to the end user
-            return True, "DataSet: {} was deleted successfully!".format(
+            return True, "DataSet: {} was deleted successfully".format(
                 self.name)
 
     def get_analyses(self):
@@ -1032,7 +1032,7 @@ class Workflow(SharableResource, ManageableResource):
             # Return a "truthy" value here so that the admin ui knows if the
             # deletion succeeded or not as well as the proper message to
             # display to the end user
-            return True, "Workflow: {} was deleted successfully!".format(
+            return True, "Workflow: {} was deleted successfully".format(
                 self.name)
 
 
@@ -1221,7 +1221,7 @@ class Analysis(OwnableResource):
             # Return a "truthy" value here so that the admin ui and
             # front-end ui knows if the deletion succeeded or not as well as
             # the proper message to display to the end user
-            return True, "Analysis: {} was deleted successfully!".format(
+            return True, "Analysis: {} was deleted successfully".format(
                 self.name)
 
         else:
@@ -1230,7 +1230,7 @@ class Analysis(OwnableResource):
                                      "its results have been used to run " \
                                      "further Analyses. Please delete all " \
                                      "downstream Analyses before you delete " \
-                                     "this one!".format(self.name)
+                                     "this one".format(self.name)
 
             logger.error(deletion_error_message)
 

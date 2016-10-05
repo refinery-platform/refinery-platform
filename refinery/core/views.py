@@ -125,7 +125,7 @@ def group_invite(request, token):
         'core/group_invite.html',
         {
             'site': get_current_site(request),
-            'message': '%s has been added to the group %s!' %
+            'message': '%s has been added to the group %s.' %
                        (user.username, ext_group.name),
             'user': user,
             'ext_group': ext_group

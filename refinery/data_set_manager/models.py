@@ -93,7 +93,7 @@ class NodeCollection(models.Model):
         except ValueError:
             # ignore - date either in correct format or in format not supported
             # (will cause a validation error handled separately)
-            logger.info("Failed to convert date " + str(dateString) + "!")
+            logger.info("Failed to convert date " + str(dateString))
             return dateString
 
 
