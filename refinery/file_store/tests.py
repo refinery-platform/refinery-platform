@@ -299,9 +299,6 @@ class FileStoreItemTest(SimpleTestCase):
         self.assertEqual(item_from_url.get_file_extension(),
                          self.filename.split(".")[-1])
 
-    def test_terminate_file_import_task(self):
-        self.assertIn("terminate_file_import_task", dir(FileStoreItem))
-
 
 class FileStoreItemManagerTest(SimpleTestCase):
     """FileStoreItemManager methods test"""
