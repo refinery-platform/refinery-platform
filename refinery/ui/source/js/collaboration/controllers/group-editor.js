@@ -2,6 +2,7 @@
 
 function GroupEditorCtrl (
   $uibModalInstance,
+  $timeout,
   groupExtendedService,
   groupMemberService,
   groupDataService,
@@ -10,13 +11,15 @@ function GroupEditorCtrl (
   sessionService
 ) {
   this.$uibModalInstance = $uibModalInstance;
+  this.$timeout = $timeout;
   this.groupExtendedService = groupExtendedService;
   this.groupMemberService = groupMemberService;
   this.groupDataService = groupDataService;
   this.group = group;
   this.authService = authService;
   this.sessionService = sessionService;
-  this.errorFlag = false;
+  this.responseMessage = '';
+  this.alertType = 'info';
 
   this.close = function () {
     this.$uibModalInstance.dismiss();
@@ -25,7 +28,6 @@ function GroupEditorCtrl (
 
 GroupEditorCtrl.prototype.leaveGroup = function () {
   var that = this;
-  that.errorFlag = false;
 
   that.authService.isAuthenticated()
     .then(function (isAuthenticated) {
@@ -37,26 +39,27 @@ GroupEditorCtrl.prototype.leaveGroup = function () {
         .$promise
         .then(function () {
           that.groupDataService.update();
-          that.$uibModalInstance.dismiss();
+          that.$timeout(function () {
+            that.$uibModalInstance.dismiss();
+          }, 1500);
         }, function () {
-          that.errorFlag = true;
-          that.errorMessage = 'Error leaving group. If last member, delete' +
-            ' group.';
+          that.alertType = 'error';
+          that.responseMessage = 'Error leaving group. If last member,' +
+            ' delete group.';
         });
       } else {
-        that.errorFlag = true;
-        that.errorMessage = 'Error, please log in.';
+        that.alertType = 'error';
+        that.responseMessage = 'Error, please log in.';
       }
     })
     .catch(function () {
-      that.errorFlag = true;
-      that.errorMessage = 'Error, please try again.';
+      that.alertType = 'error';
+      that.responseMessage = 'Error, please try again.';
     });
 };
 
 GroupEditorCtrl.prototype.deleteGroup = function () {
   var that = this;
-  that.errorFlag = false;
 
   that.groupExtendedService.delete({
     uuid: that.group.uuid
@@ -64,10 +67,12 @@ GroupEditorCtrl.prototype.deleteGroup = function () {
   .$promise
   .then(function () {
     that.groupDataService.update();
-    that.$uibModalInstance.dismiss();
+    that.$timeout(function () {
+      that.$uibModalInstance.dismiss();
+    }, 1500);
   }, function () {
-    that.errorFlag = true;
-    that.errorMessage = 'Group could not be deleted.';
+    that.alertType = 'error';
+    that.responseMessage = 'Group could not be deleted.';
   });
 };
 
@@ -75,6 +80,7 @@ angular
   .module('refineryCollaboration')
   .controller('GroupEditorCtrl', [
     '$uibModalInstance',
+    '$timeout',
     'groupExtendedService',
     'groupMemberService',
     'groupDataService',
