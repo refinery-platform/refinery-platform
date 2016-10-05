@@ -1,5 +1,5 @@
 import os
-import uuid as uid
+import uuid as uuid_builtin
 from datetime import datetime
 
 import factory
@@ -16,7 +16,7 @@ class DataSetFactory(factory.django.DjangoModelFactory):
         model = "core.DataSet"
         django_get_or_create = ('uuid',)
 
-    uuid = uid.uuid4()
+    uuid = uuid_builtin.uuid4()
     title = "Test DataSet - {}".format(uuid)
     name = "Test DataSet - {}".format(uuid)
     creation_date = datetime.now()
@@ -28,7 +28,7 @@ class InvestigationFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = "data_set_manager.Investigation"
 
-    uuid = uid.uuid4()
+    uuid = uuid_builtin.uuid4()
 
 
 class StudyFactory(factory.django.DjangoModelFactory):
@@ -36,7 +36,7 @@ class StudyFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = "data_set_manager.Study"
 
-    uuid = uid.uuid4()
+    uuid = uuid_builtin.uuid4()
 
 
 class InvestigationLinkFactory(factory.django.DjangoModelFactory):
@@ -54,7 +54,7 @@ class AnalysisFactory(factory.django.DjangoModelFactory):
         model = "core.Analysis"
         django_get_or_create = ('uuid',)
 
-    uuid = uid.uuid4()
+    uuid = uuid_builtin.uuid4()
     name = "Test Analysis - {}".format(uuid)
     summary = "Summary for {}".format(name)
     creation_date = datetime.now()
@@ -84,7 +84,7 @@ class WorkflowFactory(factory.DjangoModelFactory):
     class Meta:
         model = "core.Workflow"
 
-    uuid = uid.uuid4()
+    uuid = uuid_builtin.uuid4()
     name = "Test Workflow - {}".format(uuid)
 
 
@@ -92,17 +92,17 @@ def make_datasets(number_to_create, user_instance):
     """Create some minimal DataSets"""
     while number_to_create >= 1:
 
-        dataset_uuid = uid.uuid4()
+        dataset_uuid = uuid_builtin.uuid4()
         dataset = DataSetFactory(
                 uuid=dataset_uuid,
                 title="Test DataSet - {}".format(dataset_uuid),
                 name="Test DataSet - {}".format(dataset_uuid)
             )
 
-        investigation_uuid = uid.uuid4()
+        investigation_uuid = uuid_builtin.uuid4()
         investigation = InvestigationFactory(uuid=investigation_uuid)
 
-        study_uuid = uid.uuid4()
+        study_uuid = uuid_builtin.uuid4()
         study = StudyFactory(uuid=study_uuid, investigation=investigation)
 
         InvestigationLinkFactory(
@@ -123,22 +123,22 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
     """Create some minimal Analyses"""
     instance = GalaxyInstanceFactory()
     workflow_engine = WorkflowEngineFactory(instance=instance)
-    workflow_uuid = uid.uuid4()
+    workflow_uuid = uuid_builtin.uuid4()
     workflow = WorkflowFactory(uuid=workflow_uuid,
                                workflow_engine=workflow_engine)
     project = ProjectFactory(is_catch_all=True)
 
-    dataset_uuid = uid.uuid4()
+    dataset_uuid = uuid_builtin.uuid4()
     dataset = DataSetFactory(
             uuid=dataset_uuid,
             title="Test DataSet - {}".format(dataset_uuid),
             name="Test DataSet - {}".format(dataset_uuid)
         )
 
-    investigation_uuid = uid.uuid4()
+    investigation_uuid = uuid_builtin.uuid4()
     investigation = InvestigationFactory(uuid=investigation_uuid)
 
-    study_uuid = uid.uuid4()
+    study_uuid = uuid_builtin.uuid4()
     study = StudyFactory(uuid=study_uuid, investigation=investigation)
 
     InvestigationLinkFactory(
@@ -149,7 +149,7 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
     )
 
     while number_to_create >= 1:
-        analysis_uuid = uid.uuid4()
+        analysis_uuid = uuid_builtin.uuid4()
         AnalysisFactory(
                 uuid=analysis_uuid,
                 name="Test Analysis - {}".format(analysis_uuid),
