@@ -32,7 +32,7 @@ before_script:
 script:
   - set -e # Any error will cause travis to exit early and report a failure.
 
-  - flake8 --exclude=migrations,ui,selenium,factory_boy ..
+  - flake8 --exclude=migrations,ui ..
 
   - echo 'travis_fold:start:grunt'
   - pushd ui
