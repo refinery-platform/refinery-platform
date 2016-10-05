@@ -40,7 +40,6 @@ def selenium(selenium):
 
 @pytest.fixture
 def login(selenium):
-    creds = yaml.load(open(os.environ['CREDS_YML']))
     selenium.get(base_url)
     selenium.find_element_by_link_text('Login').click()
     selenium.find_element_by_id('id_username').send_keys(creds['username'])
