@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 import logging
 
-import os
 import ast
+import os
 import py2neo
 
 import requests
