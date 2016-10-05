@@ -13,8 +13,8 @@ function AddGroupCtrl (
   vm.alertType = 'info';
   // After invite is sent, an alert pops up with following message
   var generateAlertMessage = function (infoType, groupName) {
-    if (infoType === 'info') {
-      vm.alertType = 'info';
+    if (infoType === 'success') {
+      vm.alertType = 'success';
       vm.responseMessage = 'Successfully created group' + groupName;
     } else if (infoType === 'error') {
       vm.alertType = 'error';
@@ -29,7 +29,7 @@ function AddGroupCtrl (
     })
       .$promise
       .then(function () {
-        generateAlertMessage('info', vm.groupName);
+        generateAlertMessage('success', vm.groupName);
         groupDataService.update();
         // Automatically dismisses modal
         $timeout(function () {
