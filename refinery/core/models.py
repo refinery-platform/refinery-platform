@@ -550,23 +550,19 @@ class DataSet(SharableResource):
         pre_isa_archive associated with the DataSet if one exists.
         """
 
-        isa_archive = self.get_isa_archive()
-        if isa_archive:
-            try:
-                isa_archive.delete()
+        try:
+            self.get_isa_archive().delete()
 
-            except Exception as e:
-                logger.error(
-                    "Couldn't delete DataSet's isa_archive: %s" % e)
+        except Exception as e:
+            logger.error(
+                "Couldn't delete DataSet's isa_archive: %s" % e)
 
-        pre_isa_archive = self.get_pre_isa_archive()
-        if pre_isa_archive:
-            try:
-                pre_isa_archive.delete()
+        try:
+            self.get_pre_isa_archive().delete()
 
-            except Exception as e:
-                logger.error(
-                    "Couldn't delete DataSet's isa_archive: %s" % e)
+        except Exception as e:
+            logger.error(
+                "Couldn't delete DataSet's pre_isa_archive: %s" % e)
 
         related_investigation_links = self.get_investigation_links()
 
@@ -752,7 +748,6 @@ class DataSet(SharableResource):
                 InvestigationLink.MultipleObjectsReturned) as e:
             logger.error("Error while fetching FileStoreItem or "
                          "InvestigationLink: %s" % e)
-            return None
 
     def get_pre_isa_archive(self):
         """
@@ -770,7 +765,6 @@ class DataSet(SharableResource):
                 InvestigationLink.MultipleObjectsReturned) as e:
             logger.error("Error while fetching FileStoreItem or "
                          "InvestigationLink: %s" % e)
-            return None
 
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
