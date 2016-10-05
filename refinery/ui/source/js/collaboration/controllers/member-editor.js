@@ -72,6 +72,7 @@ MemberEditorCtrl.prototype.remove = function () {
   }).$promise.then(
     function () {
       that.groupDataService.update();
+      that.alertType = 'success';
       that.responseMessage = 'Successfully removed member' + that.member.username;
       that.$timeout(function () {
         that.$uibModalInstance.dismiss();
