@@ -20,4 +20,7 @@ echo Created "$Snapshot"
 
 Tags=$(jq .tags /home/ubuntu/s3-config)
 
-aws ec2 create-tags --region "$Region" --resources "$Snapshot" --tags "$Tags"
+# You can't tag a DB Snapshot like this.
+# On the other hand, drj wasn't able to find out
+# how to tag a DB Snapshot.
+# aws ec2 create-tags --region "$Region" --resources "$Snapshot" --tags "$Tags"
