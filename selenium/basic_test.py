@@ -31,7 +31,7 @@ def login(selenium):
 def assert_body_text(selenium, *search_texts):
     for search_text in search_texts:
         try:
-            WebDriverWait(selenium, 5).until(
+            WebDriverWait(selenium, 10).until(
                 EC.text_to_be_present_in_element(
                     (By.TAG_NAME, 'body'), search_text)
             )
