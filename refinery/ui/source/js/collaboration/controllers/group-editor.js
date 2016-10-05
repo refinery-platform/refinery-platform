@@ -1,7 +1,6 @@
 'use strict';
 
 function GroupEditorCtrl (
-  bootbox,
   $uibModalInstance,
   groupExtendedService,
   groupMemberService,
@@ -10,7 +9,6 @@ function GroupEditorCtrl (
   authService,
   sessionService
 ) {
-  this.bootbox = bootbox;
   this.$uibModalInstance = $uibModalInstance;
   this.groupExtendedService = groupExtendedService;
   this.groupMemberService = groupMemberService;
@@ -46,11 +44,13 @@ GroupEditorCtrl.prototype.leaveGroup = function () {
             ' group.';
         });
       } else {
-        that.bootbox.alert('Error: You are not authenticated.');
+        that.errorFlag = true;
+        that.errorMessage = 'Error, please log in.';
       }
     })
     .catch(function () {
-      that.bootbox.alert('Something went wrong. Please try again');
+      that.errorFlag = true;
+      that.errorMessage = 'Error, please try again.';
     });
 };
 
@@ -74,7 +74,6 @@ GroupEditorCtrl.prototype.deleteGroup = function () {
 angular
   .module('refineryCollaboration')
   .controller('GroupEditorCtrl', [
-    'bootbox',
     '$uibModalInstance',
     'groupExtendedService',
     'groupMemberService',
