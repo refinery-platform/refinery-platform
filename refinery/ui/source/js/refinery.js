@@ -27,6 +27,7 @@ angular
     'focusOn',
     'clearFileInput',
     'replaceWhiteSpaceWithHyphen',
+    'triggerSvgEvent',
 
     /*
      * Refinery modules
