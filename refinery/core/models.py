@@ -1246,9 +1246,6 @@ class Analysis(OwnableResource):
         return Node.objects.filter(
             analysis_uuid=self.uuid)
 
-    def get_analysis_node_connections(self):
-        return AnalysisNodeConnection.objects.filter(analysis=self)
-
     def get_analysis_results(self):
         return AnalysisResult.objects.filter(analysis_uuid=self.uuid)
 
