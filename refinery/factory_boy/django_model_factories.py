@@ -124,7 +124,9 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
     """Create some minimal Analyses"""
     instance = GalaxyInstanceFactory()
     workflow_engine = WorkflowEngineFactory(instance=instance)
-    workflow = WorkflowFactory(workflow_engine=workflow_engine)
+    workflow_uuid = uid.uuid4()
+    workflow = WorkflowFactory(uuid=workflow_uuid,
+                               workflow_engine=workflow_engine)
     project = ProjectFactory(is_catch_all=True)
 
     dataset_uuid = uid.uuid4()
