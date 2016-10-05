@@ -8,7 +8,7 @@ services:
   - postgresql
   - neo4j
 install:
-  - pip install -r requirements.txt --quiet
+  - pip install -r requirements.txt
 env:
   - DJANGO_SETTINGS_MODULE=config.settings.dev
 before_script:
@@ -24,10 +24,10 @@ before_script:
   - python manage.py create_public_group
   - python manage.py syncdb --migrate --noinput
   - python manage.py create_user 'guest' 'guest' 'guest@example.com' 'GuestFirst' 'GuestLast' 'GuestAffiliation' 'active'
-  - npm install -g grunt-cli@0.1.13 bower@1.7.7 --progress false --silent
+  - npm install -g grunt-cli@0.1.13 bower@1.7.7 --progress false
   - cd ui
-  - npm install --progress false --silent
-  - bower install --config.interactive=false --silent
+  - npm install --progress false
+  - bower install --config.interactive=false
   - cd ../
 script:
   - set -e # Any error will cause travis to exit early and report a failure.
