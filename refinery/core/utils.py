@@ -31,10 +31,11 @@ def skip(func):
     """
     def func_wrapper(*args, **kwargs):
         try:
-            if (os.environ['REDUCE_TEST_OUTPUT'] == "true"):
+            if os.environ['REDUCE_TEST_OUTPUT'] == "true":
                 return
         except KeyError:
-            return func(*args, **kwargs)
+            logger.error('REDUCE_TEST_OUTPUT .env var not set.')
+        return func(*args, **kwargs)
     return func_wrapper
 
 
