@@ -1990,8 +1990,8 @@ class DataSetResourceTest(ResourceTestCase):
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)
         self.assertEqual(data['uuid'], self.dataset.uuid)
-        self.assertEqual(data['analyses'], [])
-        self.assertEqual(len(data['analyses']), 0)
+        with self.assertRaises(KeyError):
+            data['analyses']
 
 
 class DataSetClassMethodsTest(unittest.TestCase):

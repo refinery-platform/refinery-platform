@@ -501,29 +501,31 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
         analyses = []
         for analysis in bundle.obj.get_analyses():
-            analysis = analysis.__dict__
-            analysis['is_owner'] = False
+            analysis_dict = analysis.__dict__
+            analysis_dict['is_owner'] = False
             owner = analysis.get_owner()
             if owner:
                 try:
-                    analysis['owner'] = owner.userprofile.uuid
+                    analysis_dict['owner'] = owner.userprofile.uuid
                     user = bundle.request.user
                     if (hasattr(user, 'userprofile') and
-                       user.userprofile.uuid == analysis['owner']):
-                        analysis['is_owner'] = True
+                       user.userprofile.uuid == analysis_dict['owner']):
+                        analysis_dict['is_owner'] = True
                 except:
-                    analysis['owner'] = None
+                    analysis_dict['owner'] = None
 
             else:
-                analysis['owner'] = None
+                analysis_dict['owner'] = None
 
-            analyses.append(analysis)
+            analyses.append(analysis_dict)
+
+        if analyses:
+            bundle.data["analyses"] = analyses
 
         bundle.data["version"] = bundle.obj.get_version_details().version
         bundle.data["date"] = bundle.obj.get_version_details().date
         bundle.data["creation_date"] = bundle.obj.creation_date
         bundle.data["modification_date"] = bundle.obj.modification_date
-        bundle.data["analyses"] = analyses
 
         return bundle
 
