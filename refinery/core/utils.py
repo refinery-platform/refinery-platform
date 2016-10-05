@@ -31,7 +31,8 @@ def pass_if_travis(func):
     output
     """
     def func_wrapper(*args, **kwargs):
-        if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':
+        if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true' or \
+                os.environ["LOCAL_TESTING"]:
             return
         return func(*args, **kwargs)
     return func_wrapper
