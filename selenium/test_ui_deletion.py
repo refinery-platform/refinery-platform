@@ -30,8 +30,9 @@ except (User.DoesNotExist, User.MultipleObjectsReturned) as e:
     sys.exit(1)
 
 
-def test_dataset_deletion(selenium, login, total_datasets=TOTAL_DATASETS):
+def test_dataset_deletion(total_datasets=TOTAL_DATASETS):
     """Delete some datasets and make sure the ui updates properly"""
+    login()
 
     # Create sample Data
     make_datasets(total_datasets, user)
@@ -72,8 +73,10 @@ def test_dataset_deletion(selenium, login, total_datasets=TOTAL_DATASETS):
         pytest.set_trace()
 
 
-def test_analysis_deletion(selenium, login, total_analyses=TOTAL_ANALYSES):
+def test_analysis_deletion(total_analyses=TOTAL_ANALYSES):
     """Delete some analyses and make sure the ui updates properly"""
+
+    login()
 
     # Create sample Data
     make_analyses_with_single_dataset(total_analyses, user)
@@ -138,10 +141,11 @@ def test_analysis_deletion(selenium, login, total_analyses=TOTAL_ANALYSES):
         pytest.set_trace()
 
 
-def test_cascading_deletion_of_analyses(
-        selenium, login, total_analyses=TOTAL_ANALYSES):
+def test_cascading_deletion_of_analyses(total_analyses=TOTAL_ANALYSES):
     """Delete a Dataset and make sure its Analyses are removed from
     the UI as well"""
+
+    login()
 
     # Create sample Data
     make_analyses_with_single_dataset(total_analyses, user)

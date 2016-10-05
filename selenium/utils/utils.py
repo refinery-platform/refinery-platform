@@ -4,7 +4,7 @@ import pytest
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support import expected_conditions as ec
 from selenium.common.exceptions import TimeoutException
 
 base_url = os.environ['BASE_URL']
@@ -31,7 +31,7 @@ def assert_body_text(selenium, *search_texts):
     for search_text in search_texts:
         try:
             WebDriverWait(selenium, 5).until(
-                EC.text_to_be_present_in_element(
+                ec.text_to_be_present_in_element(
                     (By.TAG_NAME, 'body'), search_text)
             )
         except TimeoutException:
@@ -46,7 +46,7 @@ def assert_text_within_id(selenium, search_id, *search_texts):
     for search_text in search_texts:
         try:
             WebDriverWait(selenium, 5).until(
-                EC.text_to_be_present_in_element(
+                ec.text_to_be_present_in_element(
                     (By.ID, search_id), search_text)
             )
         except TimeoutException:
@@ -61,7 +61,7 @@ def assert_text_within_id(selenium, search_id, *search_texts):
 def wait_until_id_clickable(selenium, search_id, wait_duration):
     try:
         return WebDriverWait(selenium, wait_duration).until(
-            EC.element_to_be_clickable((By.ID, search_id)))
+            ec.element_to_be_clickable((By.ID, search_id)))
     except TimeoutException:
             raise AssertionError(
                 '"%s" not in: \n%s' % (

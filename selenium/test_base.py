@@ -8,7 +8,8 @@ base_url = os.environ['BASE_URL']
 not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
 
 
-def test_login_not_required(selenium):
+def test_login_not_required():
+    login()
     selenium.get(base_url)
     assert_body_text(
         selenium, 'Collaboration', 'Statistics', 'About',
@@ -60,7 +61,7 @@ def test_login_not_required(selenium):
         pytest.set_trace()
 
 
-def test_upload(selenium, login):
+def test_upload():
     assert_body_text(selenium, 'Upload', 'Logout')
 
     selenium.find_element_by_link_text('Upload').click()
