@@ -19,6 +19,8 @@ from utils.utils import (assert_text_within_id, wait_until_id_clickable,
 TOTAL_DATASETS = 5
 TOTAL_ANALYSES = 5
 
+selenium = selenium()
+
 not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
 creds = yaml.load(open(os.environ['CREDS_YML']))
 
@@ -32,7 +34,7 @@ except (User.DoesNotExist, User.MultipleObjectsReturned) as e:
 
 def test_dataset_deletion(total_datasets=TOTAL_DATASETS):
     """Delete some datasets and make sure the ui updates properly"""
-    login()
+    login(selenium)
 
     # Create sample Data
     make_datasets(total_datasets, user)
@@ -76,7 +78,7 @@ def test_dataset_deletion(total_datasets=TOTAL_DATASETS):
 def test_analysis_deletion(total_analyses=TOTAL_ANALYSES):
     """Delete some analyses and make sure the ui updates properly"""
 
-    login()
+    login(selenium)
 
     # Create sample Data
     make_analyses_with_single_dataset(total_analyses, user)
@@ -145,7 +147,7 @@ def test_cascading_deletion_of_analyses(total_analyses=TOTAL_ANALYSES):
     """Delete a Dataset and make sure its Analyses are removed from
     the UI as well"""
 
-    login()
+    login(selenium)
 
     # Create sample Data
     make_analyses_with_single_dataset(total_analyses, user)

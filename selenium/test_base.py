@@ -7,9 +7,11 @@ from utils.utils import assert_body_text, selenium, login
 base_url = os.environ['BASE_URL']
 not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
 
+selenium = selenium()
+
 
 def test_login_not_required():
-    login()
+    login(selenium)
     selenium.get(base_url)
     assert_body_text(
         selenium, 'Collaboration', 'Statistics', 'About',
