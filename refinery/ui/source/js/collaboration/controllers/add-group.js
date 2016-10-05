@@ -15,7 +15,7 @@ function AddGroupCtrl (
   var generateAlertMessage = function (infoType, groupName) {
     if (infoType === 'success') {
       vm.alertType = 'success';
-      vm.responseMessage = 'Successfully created group' + groupName;
+      vm.responseMessage = 'Successfully created group ' + groupName;
     } else if (infoType === 'error') {
       vm.alertType = 'error';
       vm.responseMessage = 'Error creating group. Check for group name' +
