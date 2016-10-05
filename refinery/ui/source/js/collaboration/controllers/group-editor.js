@@ -39,6 +39,7 @@ GroupEditorCtrl.prototype.leaveGroup = function () {
         .$promise
         .then(function () {
           that.groupDataService.update();
+          that.alertType = 'success';
           that.$timeout(function () {
             that.$uibModalInstance.dismiss();
           }, 1500);
@@ -67,6 +68,7 @@ GroupEditorCtrl.prototype.deleteGroup = function () {
   .$promise
   .then(function () {
     that.groupDataService.update();
+    that.alertType = 'success';
     that.$timeout(function () {
       that.$uibModalInstance.dismiss();
     }, 1500);
