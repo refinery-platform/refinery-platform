@@ -5,6 +5,7 @@ import yaml
 import pytest
 
 sys.path.append("../refinery/")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.dev")
 
 from django.contrib.auth.models import User
 
@@ -12,15 +13,14 @@ from core.models import DataSet, Analysis
 from factory_boy.django_model_factories import (
     make_datasets, make_analyses_with_single_dataset)
 from utils.utils import (assert_text_within_id, wait_until_id_clickable,
-                         login, selenium)
+                         assert_body_text)
 
 
 # Total number of objects to create for the test run
 TOTAL_DATASETS = 5
 TOTAL_ANALYSES = 5
 
-selenium = selenium()
-
+base_url = os.environ['BASE_URL']
 not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
 creds = yaml.load(open(os.environ['CREDS_YML']))
 
@@ -32,7 +32,24 @@ except (User.DoesNotExist, User.MultipleObjectsReturned) as e:
     sys.exit(1)
 
 
-def test_dataset_deletion(total_datasets=TOTAL_DATASETS):
+@pytest.fixture
+def selenium(selenium):
+    selenium.maximize_window()
+    return selenium
+
+
+@pytest.fixture
+def login(selenium):
+    creds = yaml.load(open(os.environ['CREDS_YML']))
+    selenium.get(base_url)
+    selenium.find_element_by_link_text('Login').click()
+    selenium.find_element_by_id('id_username').send_keys(creds['username'])
+    selenium.find_element_by_id('id_password').send_keys(creds['password'])
+    selenium.find_element_by_xpath('//input[@type="submit"]').click()
+    assert_body_text(selenium, 'Logout')
+
+
+def test_dataset_deletion(selenium, total_datasets=TOTAL_DATASETS):
     """Delete some datasets and make sure the ui updates properly"""
     login(selenium)
 
@@ -75,7 +92,7 @@ def test_dataset_deletion(total_datasets=TOTAL_DATASETS):
         pytest.set_trace()
 
 
-def test_analysis_deletion(total_analyses=TOTAL_ANALYSES):
+def test_analysis_deletion(selenium, total_analyses=TOTAL_ANALYSES):
     """Delete some analyses and make sure the ui updates properly"""
 
     login(selenium)
@@ -143,7 +160,8 @@ def test_analysis_deletion(total_analyses=TOTAL_ANALYSES):
         pytest.set_trace()
 
 
-def test_cascading_deletion_of_analyses(total_analyses=TOTAL_ANALYSES):
+def test_cascading_deletion_of_analyses(selenium,
+                                        total_analyses=TOTAL_ANALYSES):
     """Delete a Dataset and make sure its Analyses are removed from
     the UI as well"""
 
@@ -185,10 +203,12 @@ def test_cascading_deletion_of_analyses(total_analyses=TOTAL_ANALYSES):
         pytest.set_trace()
 
 
-def test_that_404s_are_handled(selenium, login, total_analyses=TOTAL_ANALYSES):
+def test_that_404s_are_handled(selenium, total_analyses=TOTAL_ANALYSES):
     """Test use case where objects are deleted (for example by an admin)
     while a user is about to delete said object(s) themselves
     User should receive a "Not Found" message"""
+
+    login(selenium)
 
     # Create sample Data
     make_analyses_with_single_dataset(total_analyses, user)

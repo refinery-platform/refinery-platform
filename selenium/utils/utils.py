@@ -1,6 +1,4 @@
 import os
-import yaml
-import pytest
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -8,23 +6,6 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.common.exceptions import TimeoutException
 
 base_url = os.environ['BASE_URL']
-
-
-@pytest.fixture
-def selenium(selenium):
-    selenium.maximize_window()
-    return selenium
-
-
-@pytest.fixture
-def login(selenium):
-    creds = yaml.load(open(os.environ['CREDS_YML']))
-    selenium.get(base_url)
-    selenium.find_element_by_link_text('Login').click()
-    selenium.find_element_by_id('id_username').send_keys(creds['username'])
-    selenium.find_element_by_id('id_password').send_keys(creds['password'])
-    selenium.find_element_by_xpath('//input[@type="submit"]').click()
-    assert_body_text(selenium, 'Logout')
 
 
 def assert_body_text(selenium, *search_texts):
