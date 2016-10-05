@@ -1,15 +1,13 @@
-# flake8: noqa E402
 import os
-import sys
 import uuid as uid
 from datetime import datetime
 
 import factory
 
-sys.path.append("../refinery/")
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.dev")
-
 from core.models import DataSet, Analysis
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", os.environ[
+    "DJANGO_SETTINGS_MODULE"])
 
 
 class DataSetFactory(factory.django.DjangoModelFactory):

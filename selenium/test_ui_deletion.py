@@ -1,11 +1,7 @@
-# flake8: noqa E402
 import os
 import sys
 import yaml
 import pytest
-
-sys.path.append("../refinery/")
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.dev")
 
 from django.contrib.auth.models import User
 
@@ -16,12 +12,16 @@ from utils.utils import (assert_text_within_id, wait_until_id_clickable,
                          assert_body_text)
 
 
+os.environ.setdefault(
+    "DJANGO_SETTINGS_MODULE", os.environ["DJANGO_SETTINGS_MODULE"])
+
 # Total number of objects to create for the test run
 TOTAL_DATASETS = 5
 TOTAL_ANALYSES = 5
 
 base_url = os.environ['BASE_URL']
 not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
+
 creds = yaml.load(open(os.environ['CREDS_YML']))
 
 try:
