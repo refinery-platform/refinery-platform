@@ -378,7 +378,7 @@
                       {{ dashboard.readableDate(dataSet, 'modificationDate') }}
                     </li>
                     <li class="separator">&middot;</li>
-                    <li class="indicator" ng-if="dataSet.analyses.length != 0">
+                    <li class="indicator" ng-if="dataSet.analyses">
                       <a id="analyses-indicator" class="pointer"
                       ng-href="/data_sets/{{ dataSet.uuid }}/#/analyses"
                       title="{{ dataSet.analyses.length }} {{ dataSet.analyses.length > 1 ? 'Analyses
@@ -387,8 +387,7 @@
                       refinery-tooltip
                       refinery-tooltip-container="body"
                       refinery-tooltip-placement="right">
-                        <i class="fa fa-bar-chart-o"></i> {{ dataSet
-                        .analyses.length }}
+                        <i class="fa fa-bar-chart-o"></i> {{ dataSet.analyses.length }}
                       </a>
                     </li>
                     <li class="indicator">
@@ -534,7 +533,7 @@
                     {{ dashboard.readableDate(dataSet, 'modificationDate') }}
                   </li>
                   <li class="separator">&middot;</li>
-                  <li class="indicator" ng-if="dataSet.analyses.length != 0">
+                  <li class="indicator" ng-if="dataSet.analyses">
                       <a id="analyses-indicator" class="pointer"
                       ng-href="/data_sets/{{ dataSet.uuid }}/#/analyses"
                       title="{{ dataSet.analyses.length }} {{
