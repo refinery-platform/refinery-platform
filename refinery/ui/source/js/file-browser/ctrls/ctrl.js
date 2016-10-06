@@ -498,8 +498,18 @@ function FileBrowserCtrl (
 
   // initialize the dataset
   vm.checkDataSetOwnership();
+
   vm.refreshAssayFiles().then(function () {
     vm.checkUrlQueryFilters();
+    // if selected field list isn't empty update url and filter ui, tab switch
+    if (!_.isEmpty(selectedFilterService.selectedFieldList)) {
+      angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr, internalName) {
+        for (var i = 0; i < fieldArr.length; i++) {
+          vm.selectedField[fieldArr[i]] = true;
+          vm.updateSelectionList(internalName, fieldArr[i]);
+        }
+      });
+    }
   });
 }
 
