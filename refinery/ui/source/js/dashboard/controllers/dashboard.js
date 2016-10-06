@@ -1145,23 +1145,23 @@ DashboardCtrl.prototype.getOriginalUri = function (eventData) {
  * @param   {String}  property  Name of the date property to be made readable.
  * @return  {String}            Readable date string.
  */
-DashboardCtrl.prototype.readableDate = function (object, property) {
+DashboardCtrl.prototype.readableDate = function (dataObj, property) {
   var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
     'Sep', 'Oct', 'Nov', 'Dec'];
 
 
   // Analyes' modification_date field is not an actual Javascript Date so we
   // need to convert it
-  object[property] = new Date(object[property]);
+  dataObj[property] = new Date(dataObj[property]);
 
-  if (object[property] && !object[property + 'Readable']) {
-    object[property + 'Readable'] =
-      months[object[property].getMonth()] + ' ' +
-      object[property].getDate() + ', ' +
-      object[property].getFullYear();
+  if (dataObj[property] && !dataObj[property + 'Readable']) {
+    dataObj[property + 'Readable'] =
+      months[dataObj[property].getMonth()] + ' ' +
+      dataObj[property].getDate() + ', ' +
+      dataObj[property].getFullYear();
   }
 
-  return object[property + 'Readable'];
+  return dataObj[property + 'Readable'];
 };
 
 /**
