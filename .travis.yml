@@ -42,7 +42,7 @@ script:
 
   - echo 'travis_fold:start:selenium'
   # NOTE: Redirect runserver output since it's polluting logs
-  - python manage.py runserver & >/dev/null 2>&1
+  - python manage.py runserver > /dev/null 2>&1 &
   - pushd ../selenium
   # NOTE: Sauce Connect needs SAUCE_USERNAME and SAUCE_ACCESS_KEY
   # (https://docs.travis-ci.com/user/sauce-connect/),
