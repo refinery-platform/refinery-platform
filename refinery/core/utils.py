@@ -1,8 +1,9 @@
 from __future__ import absolute_import
 import logging
 
-import py2neo
 import ast
+import os
+import py2neo
 
 import requests
 from django.conf import settings
@@ -24,6 +25,21 @@ import data_set_manager
 logger = logging.getLogger(__name__)
 
 
+def skip(func):
+    """Decorator to be used on function calls that don't necessarily need to
+    be run on CI i.e. Neo4J and Solr stuff tend to pollute log output
+    """
+    def func_wrapper(*args, **kwargs):
+        try:
+            if os.environ['REDUCE_TEST_OUTPUT'] == "true":
+                return
+        except KeyError:
+            logger.error('REDUCE_TEST_OUTPUT .env var not set.')
+        return func(*args, **kwargs)
+    return func_wrapper
+
+
+@skip
 def update_data_set_index(data_set):
     """Update a dataset's corresponding document in Solr.
     """
@@ -40,6 +56,7 @@ def update_data_set_index(data_set):
         logger.error("Could not update DataSetIndex:", e)
 
 
+@skip
 def add_data_set_to_neo4j(dataset_uuid, user_id):
     """Add a node in Neo4J for a dataset and give the owner read access.
     Note: Neo4J manages read access only.
@@ -130,6 +147,7 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
         )
 
 
+@skip
 def add_read_access_in_neo4j(dataset_uuids, user_ids):
     """Give one or more user read access to one or more datasets.
     """
@@ -173,6 +191,7 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
         )
 
 
+@skip
 def update_annotation_sets_neo4j(username=''):
     """
     Update annotation sets in Neo4J
@@ -201,6 +220,7 @@ def update_annotation_sets_neo4j(username=''):
         )
 
 
+@skip
 def add_or_update_user_to_neo4j(user_id, username):
     """
     Add or update a user in Neo4J
@@ -238,6 +258,7 @@ def add_or_update_user_to_neo4j(user_id, username):
         )
 
 
+@skip
 def delete_user_in_neo4j(user_id, user_name):
     """
     Delete a user and its annotation set in Neo4J
@@ -284,6 +305,7 @@ def delete_user_in_neo4j(user_id, user_name):
         )
 
 
+@skip
 def remove_read_access_in_neo4j(dataset_uuids, user_ids):
     """Remove read access for one or multiple users to one or more datasets.
     """
@@ -326,6 +348,7 @@ def remove_read_access_in_neo4j(dataset_uuids, user_ids):
         )
 
 
+@skip
 def delete_data_set_index(data_set):
     """Remove a dataset's related document from Solr's index.
     """
@@ -342,6 +365,7 @@ def delete_data_set_index(data_set):
         logger.error("Could not delete from DataSetIndex:", e)
 
 
+@skip
 def delete_data_set_neo4j(dataset_uuid):
     """Remove a dataset's related node in Neo4J.
     """
@@ -374,6 +398,7 @@ def delete_data_set_neo4j(dataset_uuid):
         )
 
 
+@skip
 def delete_ontology_from_neo4j(acronym):
     """Remove ontology and all class nodes that belong exclusively to an
     ontology.
@@ -724,6 +749,7 @@ def create_update_ontology(name, acronym, uri, version, owl2neo4j_version):
         logger.info('Updated %s', ontology)
 
 
+@skip
 def delete_analysis_index(node_instance):
     """Remove a Analysis' related document from Solr's index.
     """

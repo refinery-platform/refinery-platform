@@ -8,6 +8,7 @@ function DashboardCtrl (
   $timeout,
   $rootScope,
   $window,
+  $uibModal,
   $log,
   // 3rd party library
   _,
@@ -38,6 +39,7 @@ function DashboardCtrl (
   this.$stateParams = $stateParams;
   this.$timeout = $timeout;
   this.$window = $window;
+  this.$uibModal = $uibModal;
   this.$log = $log;
 
   // Construct 3rd party library
@@ -144,6 +146,7 @@ function DashboardCtrl (
   this.dashboardDataSetsReloadService.setReload(function (hardReset) {
     if (hardReset) {
       this.dataSets.resetCache();
+      this.dataSet.reload();
     }
     // Reset current list and reload uiScroll
     if (this.dataSetsAdapter) {
@@ -1136,24 +1139,29 @@ DashboardCtrl.prototype.getOriginalUri = function (eventData) {
  * Turns an unreadable date into a readable date string.
  *
  * @method  readableDate
- * @author  Fritz Lekschas
- * @date    2016-05-09
- * @param   {Object}  dataSet   Data set object of interest.
+ * @author  Fritz Lekschas & Scott Ouellette
+ * @date    2016-09-30
+ * @param   {Object}  object   DataSet or Analysis object of interest.
  * @param   {String}  property  Name of the date property to be made readable.
  * @return  {String}            Readable date string.
  */
-DashboardCtrl.prototype.readableDate = function (dataSet, property) {
+DashboardCtrl.prototype.readableDate = function (dataObj, property) {
   var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
     'Sep', 'Oct', 'Nov', 'Dec'];
 
-  if (dataSet[property] && !dataSet[property + 'Readable']) {
-    dataSet[property + 'Readable'] =
-      months[dataSet[property].getMonth()] + ' ' +
-      dataSet[property].getDate() + ', ' +
-      dataSet[property].getFullYear();
+
+  // Analyes' modification_date field is not an actual Javascript Date so we
+  // need to convert it
+  dataObj[property] = new Date(dataObj[property]);
+
+  if (dataObj[property] && !dataObj[property + 'Readable']) {
+    dataObj[property + 'Readable'] =
+      months[dataObj[property].getMonth()] + ' ' +
+      dataObj[property].getDate() + ', ' +
+      dataObj[property].getFullYear();
   }
 
-  return dataSet[property + 'Readable'];
+  return dataObj[property + 'Readable'];
 };
 
 /**
@@ -1556,6 +1564,7 @@ DashboardCtrl.prototype.toggleSortOrder = function (source) {
   }
 };
 
+
 /**
  * Trigger sorting of data sets, analyses, or workflows.
  *
@@ -1596,6 +1605,66 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
   this[reloadService].reload();
 };
 
+/**
+ * Open the deletion modal for a given Datset.
+ *
+ * @method  openDataSetDeleteModal
+ * @author  Scott Ouellette
+ * @date    2016-9-20
+ */
+DashboardCtrl.prototype.openDataSetDeleteModal = function (dataSet) {
+  this.collapseDataSetPreview();
+  this.collapseDatasetExploration();
+  this.removeFromDataCart(dataSet);
+
+  this.$uibModal.open({
+    backdrop: 'static',
+    keyboard: false,
+    templateUrl: '/static/partials/dashboard/partials/dataset-delete-dialog.html',
+    controller: 'DataSetDeleteCtrl as modal',
+    resolve: {
+      config: function () {
+        return {
+          model: 'data_sets',
+          uuid: dataSet.uuid
+        };
+      },
+      dataSet: dataSet,
+      dataSets: this.dataSets,
+      analyses: this.analyses,
+      analysesReloadService: this.dashboardAnalysesReloadService
+    }
+  });
+};
+
+/**
+ * Open the deletion modal for a given Analysis.
+ *
+ * @method  openAnalysisDeleteModal
+ * @author  Scott Ouellette
+ * @date    2016-9-28
+ */
+DashboardCtrl.prototype.openAnalysisDeleteModal = function (analysis) {
+  this.$uibModal.open({
+    backdrop: 'static',
+    keyboard: false,
+    templateUrl: '/static/partials/dashboard/partials/analysis-delete-dialog.html',
+    controller: 'AnalysisDeleteCtrl as modal',
+    resolve: {
+      config: function () {
+        return {
+          model: 'analyses',
+          uuid: analysis.uuid
+        };
+      },
+      analysis: analysis,
+      analyses: this.analyses,
+      analysesReloadService: this.dashboardAnalysesReloadService,
+      isOwner: analysis.is_owner
+    }
+  });
+};
+
 angular
   .module('refineryDashboard')
   .controller('DashboardCtrl', [
@@ -1605,6 +1674,7 @@ angular
     '$timeout',
     '$rootScope',
     '$window',
+    '$uibModal',
     '$log',
     '_',
     'pubSub',

@@ -2,10 +2,8 @@ import os
 import yaml
 import pytest
 from time import time
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+
+from utils.utils import assert_body_text
 
 base_url = os.environ['BASE_URL']
 not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
@@ -28,33 +26,17 @@ def login(selenium):
     assert_body_text(selenium, 'Logout')
 
 
-def assert_body_text(selenium, *search_texts):
-    for search_text in search_texts:
-        try:
-            WebDriverWait(selenium, 5).until(
-                EC.text_to_be_present_in_element(
-                    (By.TAG_NAME, 'body'), search_text)
-            )
-        except TimeoutException:
-            raise AssertionError(
-                '"%s" not in body: \n%s' % (
-                    search_text,
-                    selenium.find_element_by_tag_name('body').text
-                ))
-
-
-# TESTS:
-
-
 def test_login_not_required(selenium):
     selenium.get(base_url)
-    assert_body_text(selenium, 'Collaboration', 'Statistics', 'About',
-                     'Register', 'Login', 'Launch Pad', 'Data Sets',
-                     'Analyses', 'Workflows')
+    assert_body_text(
+        selenium, 'Collaboration', 'Statistics', 'About',
+        'Register', 'Login', 'Launch Pad', 'Data Sets',
+        'Analyses', 'Workflows')
 
     selenium.find_element_by_link_text('Statistics').click()
-    assert_body_text(selenium, 'Users', 'Groups', 'Files',
-                     'Data Sets', 'Workflows', 'Projects')
+    assert_body_text(
+        selenium, 'Users', 'Groups', 'Files', 'Data Sets', 'Workflows',
+        'Projects')
 
     selenium.find_element_by_link_text('About').click()
     assert_body_text(selenium, 'Background', 'Contact', 'Funding', 'Team',
@@ -62,20 +44,23 @@ def test_login_not_required(selenium):
     # TODO: All sections are empty right now
 
     selenium.find_element_by_link_text('Register').click()
-    assert_body_text(selenium, 'Sign Up', 'Register for an account',
-                     'Indicates a required field',
-                     'USERNAME', 'FIRST NAME', 'LAST NAME',
-                     'AFFILIATION', 'EMAIL ADDRESS',
-                     'PASSWORD (AGAIN)')
+    assert_body_text(
+        selenium, 'Sign Up', 'Register for an account',
+        'Indicates a required field',
+        'USERNAME', 'FIRST NAME', 'LAST NAME',
+        'AFFILIATION', 'EMAIL ADDRESS',
+        'PASSWORD (AGAIN)')
 
     selenium.find_element_by_name('username').send_keys('guest')
     selenium.find_element_by_xpath('//input[@type="submit"]').click()
-    assert_body_text(selenium, 'Please correct the errors below',
-                     'A user with that username already exists',
-                     'You must provide a First Name',
-                     'You must provide a Last Name',
-                     'You must provide an Affiliation',
-                     'This field is required')
+    assert_body_text(
+        selenium,
+        'Please correct the errors below',
+        'A user with that username already exists',
+        'You must provide a First Name',
+        'You must provide a Last Name',
+        'You must provide an Affiliation',
+        'This field is required')
 
     stamp = str(time())  # Helps  prevent collisions when running locally.
     selenium.find_element_by_name('username').send_keys(stamp)
@@ -93,14 +78,17 @@ def test_login_not_required(selenium):
         pytest.set_trace()
 
 
-def test_upload(selenium, login):
+def test_upload(selenium):
+    login(selenium)
+
     assert_body_text(selenium, 'Upload', 'Logout')
 
     selenium.find_element_by_link_text('Upload').click()
-    assert_body_text(selenium, 'Data Set Import',
-                     'Tabular Metadata', 'ISA-Tab Metadata',
-                     'PROVIDE METADATA FILE',
-                     'Download an example', 'Choose delimiter', 'Select file')
+    assert_body_text(
+        selenium, 'Data Set Import',
+        'Tabular Metadata', 'ISA-Tab Metadata',
+        'PROVIDE METADATA FILE',
+        'Download an example', 'Choose delimiter', 'Select file')
 
     path = os.environ['UPLOAD']
 

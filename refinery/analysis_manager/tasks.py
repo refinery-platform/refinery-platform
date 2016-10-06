@@ -240,14 +240,14 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
                 curr_file_uuid = Node.objects.get(
                     uuid=cur_item['node_uuid']).file_uuid
             except Node.DoesNotExist:
-                logger.error("Couldn't fetch Node!")
+                logger.error("Couldn't fetch Node")
                 return None
 
             try:
                 current_filestore_item = FileStoreItem.objects.get_item(
                     uuid=curr_file_uuid)
             except FileStoreItem.DoesNotExist:
-                logger.error("Couldn't fetch FileStoreItem!")
+                logger.error("Couldn't fetch FileStoreItem")
                 return None
 
             # Create url based on filestore_item's location (local file or

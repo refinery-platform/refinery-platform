@@ -474,6 +474,11 @@ function UiScrollSourceFactory ($cacheFactory, $q) {
 
         // Initialize a cache again
         this.cache.initialize();
+
+        this.initializedWithData = false;
+        this.total = Number.POSITIVE_INFINITY;
+        this.totalReadable = 0;
+        this.totalUpperBound = undefined;
       },
 
       /**

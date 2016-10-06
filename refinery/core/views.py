@@ -125,7 +125,7 @@ def group_invite(request, token):
         'core/group_invite.html',
         {
             'site': get_current_site(request),
-            'message': '%s has been added to the group %s!' %
+            'message': '%s has been added to the group %s.' %
                        (user.username, ext_group.name),
             'user': user,
             'ext_group': ext_group
@@ -1056,6 +1056,100 @@ class NodeViewSet(viewsets.ModelViewSet):
     lookup_field = 'uuid'
     http_method_names = ['get']
     # permission_classes = (IsAuthenticated,)
+
+
+class DataSetsViewSet(APIView):
+    http_method_names = ['delete']
+
+    def delete(self, request, uuid):
+        if not request.user.is_authenticated():
+            return Response({
+                "status": status.HTTP_403_FORBIDDEN,
+                "data": "User {} is not authenticated".format(request.user)
+            })
+        else:
+            try:
+                dataset_deleted = DataSet.objects.get(uuid=uuid).delete()
+            except NameError as e:
+                logger.error(e)
+                return Response({
+                    "status": status.HTTP_400_BAD_REQUEST,
+                    "data": "Bad Request"
+                })
+            except DataSet.DoesNotExist as e:
+                logger.error(e)
+                return Response({
+                    "status": status.HTTP_404_NOT_FOUND,
+                    "data": "Dataset with UUID: {} not found.".format(uuid)
+                })
+            except DataSet.MultipleObjectsReturned as e:
+                logger.error(e)
+                return Response({
+                    "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "data": "Multiple Datasets returned for this request"
+                })
+            else:
+                if dataset_deleted[0]:
+                    return Response(
+                        {
+                            "data": dataset_deleted[1],
+                            "status": status.HTTP_200_OK
+                        }
+                    )
+                else:
+                    return Response(
+                        {
+                            "data": dataset_deleted[1],
+                            "status": status.HTTP_400_BAD_REQUEST
+                        }
+                    )
+
+
+class AnalysesViewSet(APIView):
+    http_method_names = ['delete']
+
+    def delete(self, request, uuid):
+        if not request.user.is_authenticated():
+            return Response({
+                "status": status.HTTP_403_FORBIDDEN,
+                "data": "User {} is not authenticated".format(request.user)
+            })
+        else:
+            try:
+                analysis_deleted = Analysis.objects.get(uuid=uuid).delete()
+            except NameError as e:
+                logger.error(e)
+                return Response({
+                    "status": status.HTTP_400_BAD_REQUEST,
+                    "data": "Bad Request"
+                })
+            except Analysis.DoesNotExist as e:
+                logger.error(e)
+                return Response({
+                    "status": status.HTTP_404_NOT_FOUND,
+                    "data": "Analysis with UUID: {} not found.".format(uuid)
+                })
+            except Analysis.MultipleObjectsReturned as e:
+                logger.error(e)
+                return Response({
+                    "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "data": "Multiple Analyses returned for this request"
+                })
+            else:
+                if analysis_deleted[0]:
+                    return Response(
+                        {
+                            "data": analysis_deleted[1],
+                            "status": status.HTTP_200_OK
+                        }
+                    )
+                else:
+                    return Response(
+                        {
+                            "data": analysis_deleted[1],
+                            "status": status.HTTP_400_BAD_REQUEST
+                        }
+                    )
 
 
 class CustomRegistrationView(RegistrationView):

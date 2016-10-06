@@ -274,7 +274,7 @@ class SingleFileColumnParser:
                         uuid=uuid)
             except (FileStoreItem.DoesNotExist,
                     FileStoreItem.MultipleObjectsReturned) as e:
-                logger.error("Couldn't properly fetch FileStoreItem! %s", e)
+                logger.error("Couldn't properly fetch FileStoreItem %s", e)
             else:
 
                 if self.file_permanent or file_store_item.source.startswith(
