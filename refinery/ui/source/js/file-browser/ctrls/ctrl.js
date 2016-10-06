@@ -17,9 +17,9 @@ function FileBrowserCtrl (
   ) {
   var vm = this;
   vm.assayFiles = [];
-  vm.assayAttributes = [];
-  vm.attributeFilter = [];
-  vm.analysisFilter = [];
+  vm.assayAttributes = fileBrowserFactory.assayAttributes;
+  vm.attributeFilter = fileBrowserFactory.attributeFilter;
+  vm.analysisFilter = fileBrowserFactory.analysisFilter;
   vm.filesParam = {
     uuid: $window.externalAssayUuid
   };
