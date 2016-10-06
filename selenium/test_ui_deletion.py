@@ -298,7 +298,7 @@ def test_that_analysis_404s_are_handled(
         selenium, "total-analyses", "{} analysis".format(0))
 
     assert_text_within_id(
-        selenium, "total-datasets", "{} data sets".format(0))
+        selenium, "total-datasets", "{} data sets".format(1))
 
     if not_travis:
         pytest.set_trace()
