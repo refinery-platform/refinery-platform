@@ -188,7 +188,7 @@ def run_analysis(analysis_uuid):
         run_analysis.retry(countdown=RETRY_INTERVAL)
     # all tasks must have succeeded or failed
     elif not galaxy_export.successful():
-        error_msg = "Analysis '%s' failed while downloading results from  " \
+        error_msg = "Analysis '{}' failed while downloading results from  " \
                     "Galaxy".format(analysis)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
