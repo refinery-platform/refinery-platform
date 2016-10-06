@@ -1,7 +1,3 @@
-/**
- * Created by scott on 9/20/16.
- */
-
 'use strict';
 
 function DataSetDeleteCtrl (
@@ -58,21 +54,15 @@ DataSetDeleteCtrl.prototype.delete = function () {
     .then(function (response) {
       that.deletionMessage = response.data;
       that.isDeleting = false;
-
-      if (response.status === 200) {
-        that.deleteSuccessful = true;
-        that.dashboardDataSetsReloadService.reload(true);
-        that.analyses.newOrCachedCache(undefined, true);
-        that.analysesReloadService.reload();
-      } else {
-        that.deleteSuccessful = false;
-        that.deletionMessage = response.data;
-      }
+      that.deleteSuccessful = true;
+      that.dashboardDataSetsReloadService.reload(true);
+      that.analyses.newOrCachedCache(undefined, true);
+      that.analysesReloadService.reload();
     })
     .catch(function (error) {
+      that.deleteSuccessful = false;
+      that.deletionMessage = error.data;
       that.$log.error(error);
-    })
-    .finally(function () {
     });
 };
 
