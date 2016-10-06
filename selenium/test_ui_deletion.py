@@ -239,25 +239,6 @@ def test_that_404s_are_handled(selenium, total_analyses=TOTAL_ANALYSES):
 
     selenium.implicitly_wait(5)
 
-    selenium.find_elements_by_class_name('analysis-delete')[0].click()
-
-    selenium.implicitly_wait(3)
-
-    wait_until_id_clickable(selenium, 'analysis-delete-button', 5).click()
-
-    selenium.implicitly_wait(3)
-
-    assert_text_within_id(selenium, "deletion-message-text", "not found.")
-
-    wait_until_id_clickable(
-        selenium, 'analysis-delete-close-button', 5).click()
-
-    selenium.implicitly_wait(5)
-
-    selenium.refresh()
-
-    selenium.implicitly_wait(3)
-
     # Ensure that ui displays proper info after a refresh
     assert_text_within_id(
         selenium, "total-analyses", "{} analysis".format(0))
