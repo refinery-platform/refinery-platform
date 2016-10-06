@@ -13,6 +13,15 @@ cron { 'cron-backup':
   user => 'root',
 }
 
+cron { 'cron-backup-rds':
+  ensure => present,
+  command => 'sh /srv/refinery-platform/deployment/bin/backup-rds',
+  hour => ['0'],
+  minute => ['14'],     # arbitrary, but we need to pick one.
+  target => 'root',
+  user => 'root',
+}
+
 # Ensure formatted filesystem
 # https://forge.puppetlabs.com/puppetlabs/lvm
 # http://docs.puppetlabs.com/puppet/4.3/reference/types/mount.html
