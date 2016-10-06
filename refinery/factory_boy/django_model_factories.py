@@ -1,13 +1,9 @@
-import os
 import uuid as uuid_builtin
 from datetime import datetime
 
 import factory
 
 from core.models import DataSet, Analysis
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", os.environ[
-    "DJANGO_SETTINGS_MODULE"])
 
 
 class DataSetFactory(factory.django.DjangoModelFactory):

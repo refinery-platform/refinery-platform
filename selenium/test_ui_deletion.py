@@ -11,10 +11,6 @@ from factory_boy.django_model_factories import (
 from utils.utils import (assert_text_within_id, wait_until_id_clickable,
                          assert_body_text)
 
-
-os.environ.setdefault(
-    "DJANGO_SETTINGS_MODULE", os.environ["DJANGO_SETTINGS_MODULE"])
-
 # Total number of objects to create for the test run
 TOTAL_DATASETS = 5
 TOTAL_ANALYSES = 5
