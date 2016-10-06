@@ -184,7 +184,8 @@ MetadataTableImportCtrl.prototype.makeColumnDefs = function () {
     }
     columnDefs.push({
       field: columnName,
-      width: columnWidth + '%'
+      width: columnWidth + '%',
+      displayName: columnName
     });
   });
   return columnDefs;
