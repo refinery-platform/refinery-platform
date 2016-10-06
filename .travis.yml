@@ -8,7 +8,7 @@ services:
   - postgresql
   - neo4j
 install:
-  - pip install -r requirements.txt
+  - pip install -r requirements.txt --quiet
 env:
   - DJANGO_SETTINGS_MODULE=config.settings.dev REDUCE_TEST_OUTPUT=true PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
 before_script:
@@ -18,16 +18,16 @@ before_script:
 # See http://www.stuartellis.eu/articles/erb/#running-erb-from-the-command-line
   - erb config/config.json.erb > config/config.json
   - python manage.py syncdb --noinput
-  - python manage.py migrate registration
-  - python manage.py migrate core
-  - python manage.py migrate guardian
+  - python manage.py migrate registration -v 0
+  - python manage.py migrate core -v 0
+  - python manage.py migrate guardian -v 0
   - python manage.py create_public_group
-  - python manage.py syncdb --migrate --noinput
+  - python manage.py syncdb --migrate --noinput -v 0
   - python manage.py create_user 'guest' 'guest' 'guest@example.com' 'GuestFirst' 'GuestLast' 'GuestAffiliation' 'active'
-  - npm install -g grunt-cli@0.1.13 bower@1.7.7 --progress false
+  - npm install -g grunt-cli@0.1.13 bower@1.7.7 --progress false --quiet
   - cd ui
-  - npm install --progress false
-  - bower install --config.interactive=false
+  - npm install --progress false --quiet
+  - bower install --config.interactive=false --quiet
   - cd ../
 script:
   - set -e # Any error will cause travis to exit early and report a failure.
