@@ -111,6 +111,8 @@ function FileBrowserCtrl (
 
   // Updates selection field list and url
   vm.updateSelectionList = function (internalName, field) {
+    console.log('update selection list');
+    console.log(vm.selectedField);
     selectedFilterService.updateSelectedFilters(vm.selectedField, internalName, field);
   };
 
@@ -498,8 +500,20 @@ function FileBrowserCtrl (
 
   // initialize the dataset
   vm.checkDataSetOwnership();
+
   vm.refreshAssayFiles().then(function () {
     vm.checkUrlQueryFilters();
+    console.log(selectedFilterService.selectedFieldList);
+    if (!_.isEmpty(selectedFilterService.selectedFieldList)) {
+      angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr, internalName) {
+        for (var i = 0; i < fieldArr.length; i++) {
+          console.log('in the forEach for loop');
+          vm.selectedField[fieldArr[i]] = true;
+          console.log(vm.selectedField);
+          vm.attributeSelectionUpdate(internalName, fieldArr[i]);
+        }
+      });
+    }
   });
 }
 

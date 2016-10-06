@@ -41,18 +41,28 @@ function selectedFilterService ($location) {
    */
   vm.updateSelectedFilters = function (activeFields, attribute, field) {
     // Check if attribute already exists in selectedFieldList
+    console.log(vm.selectedFieldList);
     if (activeFields[field] && vm.selectedFieldList[attribute]) {
-      vm.selectedFieldList[attribute].push(field);
-      updateUrlQuery(field, activeFields[field]);
+      if (vm.selectedFieldList[attribute].indexOf(field) > -1) {
+        updateUrlQuery(field, activeFields[field]);
+      } else {
+        vm.selectedFieldList[attribute].push(field);
+        updateUrlQuery(field, activeFields[field]);
+        console.log('add attribute to already exists');
+      }
     // Add new attribute to selectedFieldList
     } else if (activeFields[field]) {
       vm.selectedFieldList[attribute] = [field];
       updateUrlQuery(field, activeFields[field]);
+      console.log('add new attribute to selected field list');
     // remove empty fields
     } else if (vm.selectedFieldList[attribute]) {
+      console.log('removes empty fields');
       removeSelectedField(attribute, field);
       updateUrlQuery(field, null);
     }
+    console.log('in update selected filters');
+    console.log(vm.selectedFieldList);
     return vm.selectedFieldList;
   };
 
