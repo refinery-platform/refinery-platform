@@ -442,10 +442,6 @@ def calculate_checksum(f, algorithm='md5', bufsize=8192):
     return hasher.hexdigest()
 
 
-def add_annotated_nodes(node_type, study_uuid, assay_uuid=None):
-    _add_annotated_nodes(node_type, study_uuid, assay_uuid, None)
-
-
 def add_annotated_nodes_selection(
         node_uuids,
         node_type,
