@@ -59,6 +59,7 @@ function IgvCtrl (
         response.objects[0].solr_query_components
       ).documentSelectionBlacklistMode;
       $scope.igvConfig.annotation = null;  // response.objects[0].solr_query;
+      // Grab facets for filtering nodes
       $scope.facetSelection = JSON.parse(response.objects[0].solr_query_components).facetSelection;
       $scope.retrieveSpecies();
     }, function (response) {
@@ -125,16 +126,19 @@ function IgvCtrl (
           });
         }
       }
+
+      /* Temp code to accomodate web-based igv when in blacklist mode
+       Need to subtract complement nodes from full filtered list nodes */
       if ($scope.igvConfig.node_selection_blacklist_mode) {
+        // params needed to grab assay files
         var params = {
           uuid: $window.externalAssayUuid,
           include_facet_count: false,
           attributes: 'uuid',
           facets: ['uuid']
         };
-        console.log('in the igvConfig query');
-        console.log($scope.igvConfig.query);
         params.filter_attribute = {};
+        // grab filter facets fields
         angular.forEach($scope.facetSelection, function (fieldsObj, attributeName) {
           var fieldArr = [];
           angular.forEach(fieldsObj, function (valueObj, fieldName) {
@@ -148,15 +152,18 @@ function IgvCtrl (
             params.facets.push(attributeName);
           }
         });
+        // grab all filtered assay files uuid
         var assayFiles = assayFileService.query(params);
         assayFiles.$promise.then(function (nodeList) {
           var selectedNodes = [];
           var complementNodes = $scope.igvConfig.node_selection;
+          // if not a complement node, add to selected nodes list
           angular.forEach(nodeList.nodes, function (uuidObj) {
             if (complementNodes.indexOf(uuidObj.uuid) === -1) {
               selectedNodes.push(uuidObj.uuid);
             }
           });
+          // update node_selection with selected nodes
           angular.copy(selectedNodes, $scope.igvConfig.node_selection);
         }, function (error) {
           $log.error('Error generating complement nodes, ' + error);
