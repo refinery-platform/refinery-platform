@@ -1,7 +1,7 @@
 'use strict';
 
 function IgvCtrl (
-  $scope, $http, $window, $log, $resource, $httpParamSerializer
+  $scope, $http, $window, $log, $resource, $httpParamSerializer, assayFileService
 ) {
   $scope.igvConfig = {
     query: null,
@@ -45,7 +45,6 @@ function IgvCtrl (
           .parse(response.objects[0].solr_query_components)
           .documentSelectionBlacklistMode
       );
-
       $scope.igvConfig.query = response.objects[0].solr_query;
       $scope.igvConfig.node_selection = JSON.parse(
         response.objects[0].solr_query_components
@@ -54,7 +53,7 @@ function IgvCtrl (
         response.objects[0].solr_query_components
       ).documentSelectionBlacklistMode;
       $scope.igvConfig.annotation = null;  // response.objects[0].solr_query;
-
+      $scope.facetSelection = JSON.parse(response.objects[0].solr_query_components).facetSelection;
       $scope.retrieveSpecies();
     }, function (response) {
       $scope.isLoadingSpecies = true;
@@ -120,6 +119,47 @@ function IgvCtrl (
           });
         }
       }
+      if ($scope.igvConfig.node_selection_blacklist_mode) {
+        var params = {
+          uuid: $window.externalAssayUuid,
+          include_facet_count: false,
+          attributes: 'uuid',
+          facets: ['uuid']
+        };
+        console.log('in the igvConfig query');
+        console.log($scope.igvConfig.query);
+        params.filter_attribute = {};
+        angular.forEach($scope.facetSelection, function (fieldsObj, attributeName) {
+          var fieldArr = [];
+          angular.forEach(fieldsObj, function (valueObj, fieldName) {
+            if (valueObj.isSelected) {
+              fieldArr.push(fieldName);
+            }
+          });
+          if (fieldArr.length > 0) {
+            params.filter_attribute[attributeName] = fieldArr;
+            params.facets.push(attributeName);
+          }
+        });
+        console.log('params');
+        console.log(params);
+
+        var assayFiles = assayFileService.query(params);
+        assayFiles.$promise.then(function (nodeList) {
+          var selectedNodes = [];
+          var complementNodes = $scope.igvConfig.node_selection;
+          angular.forEach(nodeList.nodes, function (uuidObj) {
+            if (complementNodes.indexOf(uuidObj.uuid) === -1) {
+              selectedNodes.push(uuidObj.uuid);
+            }
+          });
+          angular.copy(selectedNodes, $scope.igvConfig.node_selection);
+          console.log('selected NOdes');
+          console.log(selectedNodes);
+        }, function (error) {
+          $log.error('Error generating complement nodes, ' + error);
+        });
+      }
       $scope.isLoadingSpecies = false;
     }).error(function (response, status) {
       $scope.isLoadingSpecies = false;
@@ -151,5 +191,6 @@ angular
     '$log',
     '$resource',
     '$httpParamSerializer',
+    'assayFileService',
     IgvCtrl
   ]);
