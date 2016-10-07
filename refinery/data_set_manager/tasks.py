@@ -396,15 +396,20 @@ def annotate_nodes(investigation_uuid):
     faster lookup
     """
     investigation = Investigation.objects.get(uuid=investigation_uuid)
+
     studies = investigation.study_set.all()
+
     for study in studies:
         assays = study.assay_set.all()
+
         for assay in assays:
             node_types = get_node_types(
-                study.uuid, assay.uuid,
+                study.uuid,
+                assay.uuid,
                 files_only=True,
                 filter_set=Node.FILES
             )
+
             for node_type in node_types:
                 update_annotated_nodes(
                     node_type,
@@ -412,7 +417,9 @@ def annotate_nodes(investigation_uuid):
                     assay.uuid,
                     update=True
                 )
+
                 index_annotated_nodes(node_type, study.uuid, assay.uuid)
+
             # initialize attribute order for this assay
             initialize_attribute_order(study, assay)
 
