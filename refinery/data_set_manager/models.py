@@ -353,6 +353,7 @@ class Node(models.Model):
     PTM_ASSIGNMENT_FILE = "Post Translational Modification Assignment File"
     FREE_INDUCTION_DECAY_DATA_FILE = "Free Induction Decay Data File"
     ACQUISITION_PARAMETER_DATA_FILE = "Aquisition Parameter Data File"
+    METABOLITE_ASSIGNMENT_FILE = "Metabolite Assignment File"
 
     ASSAYS = {
         ASSAY,
@@ -379,7 +380,8 @@ class Node(models.Model):
         PROTEIN_ASSIGNMENT_FILE,
         PTM_ASSIGNMENT_FILE,
         FREE_INDUCTION_DECAY_DATA_FILE,
-        ACQUISITION_PARAMETER_DATA_FILE
+        ACQUISITION_PARAMETER_DATA_FILE,
+        METABOLITE_ASSIGNMENT_FILE
     }
 
     TYPES = ASSAYS | FILES | {
