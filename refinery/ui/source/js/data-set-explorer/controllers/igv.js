@@ -100,8 +100,8 @@ function IgvCtrl (
     var params = {
       uuid: $window.externalAssayUuid,
       include_facet_count: false,
-      attributes: ['uuid'],
-      facets: ['uuid']
+      attributes: 'uuid',
+      facets: 'uuid'
     };
     params.filter_attribute = {};
     // grab filter facets fields
@@ -115,8 +115,8 @@ function IgvCtrl (
       });
       if (fieldArr.length > 0) {
         params.filter_attribute[attributeName] = fieldArr;
-        params.facets.push(attributeName);
-        params.attributes.push(attributeName);
+        params.facets = params.facets.concat(',', attributeName);
+        params.attributes = params.attributes.concat(',', attributeName);
       }
     });
     // grab all filtered assay files uuid
