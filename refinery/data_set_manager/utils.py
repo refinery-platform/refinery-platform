@@ -320,10 +320,12 @@ def update_annotated_nodes(node_type, study_uuid, assay_uuid=None,
                            update=False):
     # retrieve study and assay ids
     study = Study.objects.filter(uuid=study_uuid)[0]
+
     if assay_uuid is not None:
         assay = Assay.objects.filter(uuid=assay_uuid)[0]
     else:
         assay = None
+
     # check if this combination of node_type, study_uuid and assay_uuid already
     # exists
     if assay is None:
@@ -332,42 +334,47 @@ def update_annotated_nodes(node_type, study_uuid, assay_uuid=None,
     else:
         registry, created = AnnotatedNodeRegistry.objects.get_or_create(
             study_id=study.id, assay_id=assay.id, node_type=node_type)
+
     # update registry entry
     registry.save()
     if not created and not update:
         # registry entry exists and no updating requested
         return
+
     # remove existing annotated node objects for this node_type in this
     # study/assay
     if assay_uuid is None:
+        # The following line can be deleted
         counter = AnnotatedNode.objects.filter(
             Q(study__uuid=study_uuid, assay__uuid__isnull=True),
             node_type=node_type).count()
+
         AnnotatedNode.objects.filter(
             Q(study__uuid=study_uuid, assay__uuid__isnull=True),
             node_type=node_type).delete()
     else:
+        # The following line can be deleted
         counter = AnnotatedNode.objects.filter(
             Q(study__uuid=study_uuid, assay__uuid__isnull=True) |
             Q(study__uuid=study_uuid, assay__uuid=assay_uuid),
             node_type=node_type).count()
+
         AnnotatedNode.objects.filter(
             Q(study__uuid=study_uuid, assay__uuid__isnull=True) |
             Q(study__uuid=study_uuid, assay__uuid=assay_uuid),
             node_type=node_type).delete()
+
     logger.info(str(counter) + " annotated nodes deleted.")
+
     # retrieve annotated nodes
     nodes = _retrieve_nodes(study_uuid, assay_uuid, True)
-
-    # Disabled because it creates super large log message.
-    # a = [node["attributes"] for node_id, node in nodes.iteritems()]
-    # logger.info(a)
 
     # insert node and attribute information
     start = time.time()
     counter = 0
     skipped_attributes = 0
     bulk_list = []
+
     for node_id, node in nodes.iteritems():
         if node["type"] == node_type:
             # save attributes (attribute[1], etc. are based on
@@ -384,6 +391,7 @@ def update_annotated_nodes(node_type, study_uuid, assay_uuid=None,
                     continue
 
                 counter += 1
+
                 bulk_list.append(
                     AnnotatedNode(
                         node_id=node["id"],
@@ -397,24 +405,24 @@ def update_annotated_nodes(node_type, study_uuid, assay_uuid=None,
                         attribute_type=attribute[1],
                         attribute_subtype=attribute[2],
                         attribute_value=attribute[3],
-                        attribute_value_unit=attribute[4]))
-
-                # Position zero represents the attribute ID.
-                check_list[attribute[0]] = True
+                        attribute_value_unit=attribute[4]
+                    )
+                )
 
                 if len(bulk_list) == MAX_BULK_LIST_SIZE:
                     AnnotatedNode.objects.bulk_create(bulk_list)
                     bulk_list = []
+
     if len(bulk_list) > 0:
         AnnotatedNode.objects.bulk_create(bulk_list)
         bulk_list = []
+
     end = time.time()
+
     logger.info(
-        "Skipped creating %s duplicated annotated nodes",
-        str(skipped_attributes)
-    )
-    logger.info(
-        "%s annotated nodes generated in %s", str(counter), str(end - start)
+        "%s annotated nodes generated in %s",
+        str(counter),
+        str(end - start)
     )
 
 
@@ -438,26 +446,37 @@ def add_annotated_nodes(node_type, study_uuid, assay_uuid=None):
     _add_annotated_nodes(node_type, study_uuid, assay_uuid, None)
 
 
-def add_annotated_nodes_selection(node_uuids, node_type, study_uuid,
-                                  assay_uuid=None):
+def add_annotated_nodes_selection(
+        node_uuids,
+        node_type,
+        study_uuid,
+        assay_uuid=None):
     _add_annotated_nodes(node_type, study_uuid, assay_uuid, node_uuids)
 
 
-def _add_annotated_nodes(node_type, study_uuid, assay_uuid=None,
-                         node_uuids=None):
+def _add_annotated_nodes(
+        node_type,
+        study_uuid,
+        assay_uuid=None,
+        node_uuids=None):
+    # Get the first study with study UUID
     study = Study.objects.filter(uuid=study_uuid)[0]
+
     if assay_uuid is not None:
         assay = Assay.objects.filter(uuid=assay_uuid)[0]
     else:
         assay = None
-    # retrieve annotated nodes
+
+    # Retrieve annotated nodes
     nodes = _retrieve_nodes(study_uuid, assay_uuid, True)
     logger.info("%s retrieved from data set", str(len(nodes)))
-    # insert node and attribute information
-    import time
+
+    # Insert node and attribute information
     start = time.time()
+
     counter = 0
     bulk_list = []
+
     for node_id, node in nodes.iteritems():
         if node["type"] == node_type:
             if node_uuids is not None and (node["uuid"] in node_uuids):
@@ -481,16 +500,24 @@ def _add_annotated_nodes(node_type, study_uuid, assay_uuid=None,
                             attribute_type=attribute[1],
                             attribute_subtype=attribute[2],
                             attribute_value=attribute[3],
-                            attribute_value_unit=attribute[4]))
+                            attribute_value_unit=attribute[4]
+                        )
+                    )
+
                     if len(bulk_list) == MAX_BULK_LIST_SIZE:
                         AnnotatedNode.objects.bulk_create(bulk_list)
                         bulk_list = []
+
     if len(bulk_list) > 0:
         AnnotatedNode.objects.bulk_create(bulk_list)
         bulk_list = []
+
     end = time.time()
-    logger.info("%s annotated nodes generated in %s",
-                str(counter), str(end - start))
+
+    logger.info(
+        "%s annotated nodes generated in %s msec",
+        str(counter), str(end - start)
+    )
 
 
 def index_annotated_nodes(node_type, study_uuid, assay_uuid=None):
