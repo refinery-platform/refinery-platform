@@ -100,7 +100,7 @@ function IgvCtrl (
     var params = {
       uuid: $window.externalAssayUuid,
       include_facet_count: false,
-      attributes: 'uuid',
+      attributes: ['uuid'],
       facets: ['uuid']
     };
     params.filter_attribute = {};
