@@ -377,7 +377,7 @@ class IsaTabParser:
         # remove the node from the row
         row.popleft()
         # read until we hit the next node
-        while not self.is_node(headers[-len(row)]):
+        while len(row) > 0 and not self.is_node(headers[-len(row)]):
             if self._current_node is not None:
                 if self.is_attribute(headers[-len(row)]):
                     self._parse_attribute(headers, row)
