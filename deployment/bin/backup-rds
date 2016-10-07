@@ -4,6 +4,11 @@ set -e
 
 # backup-data-volume /dev/xvdr
 
+# Extract RDS_ID, the identifier of the RDS instance to backup.
+# The stack.py inserts this into
+# the instance user data shell script
+# as a variable assignment of the form RDS_ID=... .
+# User grep to extract this.
 RDS_ID=$(wget -q -O - http://instance-data/latest/user-data | grep 'RDS_ID=')
 RDS_ID=${RDS_ID#*=}
 
