@@ -154,8 +154,16 @@ def _get_assay_name(result, node):
     return None
 
 
-def _retrieve_nodes(study_uuid, assay_uuid=None,
-                    ontology_attribute_fields=False, node_uuids=None):
+def _retrieve_nodes(
+        study_uuid,
+        assay_uuid=None,
+        ontology_attribute_fields=False,
+        node_uuids=None):
+    """Retrieve all nodes associated to a study and optionally associated to an
+    assay.
+
+    If `node_uuids` is `None` query nodes (both from assay and from study only)
+    """
     node_fields = [
         "id",
         "uuid",
@@ -165,7 +173,7 @@ def _retrieve_nodes(study_uuid, assay_uuid=None,
         "parents",
         "attribute"
     ]
-    # if node_uuids is none: query nodes (both from assay and from study only)
+
     if node_uuids is None:
         if assay_uuid is None:
             node_list = Node.objects.filter(
@@ -186,12 +194,19 @@ def _retrieve_nodes(study_uuid, assay_uuid=None,
                 .order_by("id", "attribute")
                 .values(*node_fields)
         )
+
     if ontology_attribute_fields:
         attribute_fields = Attribute.ALL_FIELDS
     else:
         attribute_fields = Attribute.NON_ONTOLOGY_FIELDS
-    attribute_list = Attribute.objects.filter().order_by("id").values_list(
-        *attribute_fields)
+
+    attribute_list = (
+        Attribute.objects
+                 .filter()
+                 .order_by("id")
+                 .values_list(*attribute_fields)
+    )
+
     attributes = {}
     current_id = None
     current_node = None
@@ -199,12 +214,14 @@ def _retrieve_nodes(study_uuid, assay_uuid=None,
 
     for attribute in attribute_list:
         attributes[attribute[0]] = attribute
+
     for node in node_list:
         if current_id is None or current_id != node["id"]:
             # save current node
             if current_node is not None:
                 current_node["parents"] = uniquify(current_node["parents"])
                 nodes[current_id] = current_node
+
             # new node, start merging
             current_id = node["id"]
             current_node = {
@@ -217,18 +234,23 @@ def _retrieve_nodes(study_uuid, assay_uuid=None,
                 "file_uuid": node["file_uuid"]
             }
 
+        # Fritz: Do the parents really differ or is this overhead?
         if node["parents"] is not None:
             current_node["parents"].append(node["parents"])
+
         if node["attribute"] is not None:
             try:
                 current_node["attributes"].append(
-                    attributes[node["attribute"]])
+                    attributes[node["attribute"]]
+                )
             except:
                 pass
+
     # save last node
     if current_node is not None:
         current_node["parents"] = uniquify(current_node["parents"])
         nodes[current_id] = current_node
+
     return nodes
 
 
