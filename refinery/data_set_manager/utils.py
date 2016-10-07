@@ -174,26 +174,28 @@ def _retrieve_nodes(
         "attribute"
     ]
 
-    if node_uuids is None:
-        if assay_uuid is None:
-            node_list = Node.objects.filter(
-                Q(study__uuid=study_uuid, assay__uuid__isnull=True)
-            ).prefetch_related("attribute_set").order_by(
-                "id", "attribute").values(*node_fields)
-        else:
-            node_list = Node.objects.filter(
-                Q(study__uuid=study_uuid, assay__uuid__isnull=True) |
-                Q(study__uuid=study_uuid, assay__uuid=assay_uuid)
-            ).prefetch_related("attribute_set").order_by(
-                "id", "attribute").values(*node_fields)
+    # Build filters
+    filters = {}
+    q_filters = []
+
+    if node_uuids is not None:
+        filters['uuid__in'] = node_uuids
     else:
-        node_list = (
-            Node.objects
-                .filter(uuid__in=node_uuids)
-                .prefetch_related("attribute_set")
-                .order_by("id", "attribute")
-                .values(*node_fields)
-        )
+        q_filters_1 = Q(study__uuid=study_uuid, assay__uuid__isnull=True)
+        if assay_uuid is not None:
+            q_filters_1 = (
+                q_filters_1 | Q(study__uuid=study_uuid, assay__uuid=assay_uuid)
+            )
+        q_filters.append(q_filters_1)
+
+    # Query for notes
+    node_list = (
+        Node.objects
+            .filter(*q_filters, **filters)
+            .prefetch_related("attribute_set")
+            .order_by("id", "attribute")
+            .values(*node_fields)
+    )
 
     if ontology_attribute_fields:
         attribute_fields = Attribute.ALL_FIELDS
