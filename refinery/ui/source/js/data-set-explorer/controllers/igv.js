@@ -1,7 +1,13 @@
 'use strict';
 
 function IgvCtrl (
-  $scope, $http, $window, $log, $resource, $httpParamSerializer, assayFileService
+  $scope,
+  $http,
+  $window,
+  $log,
+  $resource,
+  $httpParamSerializer,
+  assayFileService
 ) {
   $scope.igvConfig = {
     query: null,
@@ -133,7 +139,8 @@ function IgvCtrl (
           var fieldArr = [];
           angular.forEach(fieldsObj, function (valueObj, fieldName) {
             if (valueObj.isSelected) {
-              fieldArr.push(fieldName);
+              // encode field name
+              fieldArr.push($window.encodeURIComponent(fieldName));
             }
           });
           if (fieldArr.length > 0) {
@@ -141,9 +148,6 @@ function IgvCtrl (
             params.facets.push(attributeName);
           }
         });
-        console.log('params');
-        console.log(params);
-
         var assayFiles = assayFileService.query(params);
         assayFiles.$promise.then(function (nodeList) {
           var selectedNodes = [];
@@ -154,8 +158,6 @@ function IgvCtrl (
             }
           });
           angular.copy(selectedNodes, $scope.igvConfig.node_selection);
-          console.log('selected NOdes');
-          console.log(selectedNodes);
         }, function (error) {
           $log.error('Error generating complement nodes, ' + error);
         });
