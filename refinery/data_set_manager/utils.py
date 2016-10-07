@@ -99,13 +99,16 @@ def get_node_types(study_uuid, assay_uuid=None, files_only=False,
         # 1. find a node without children
         nodes = Node.objects.filter(study__uuid=study_uuid,
                                     assay__uuid=assay_uuid)
+
         for n in nodes:
             if n.children_set.count() == 0:
                 node = n
                 break
+
         # 2. recursively follow until reaching a source node
         sequence = _get_node_types_recursion(node)
         sequence.reverse()
+
         if filter_set is None:
             return sequence
         else:
@@ -141,6 +144,28 @@ def _get_parent_attributes(nodes, node_id):
         attributes.extend(_get_parent_attributes(nodes, parent_id))
 
     attributes.extend(nodes[node_id]["attributes"])
+    return attributes
+
+
+def _get_unique_parent_attributes(nodes, node_id):
+    """Recursively collects attributes from the current node and each parent
+    node until no more parents are available and make sure that the final list
+    of attributes is unique.
+    """
+    attributes = {}
+
+    if len(nodes[node_id]["parents"]) == 0:
+        for attr in nodes[node_id]["attributes"]:
+            attributes[attr[0]] = attr
+
+        return attributes
+
+    for parent_id in nodes[node_id]["parents"]:
+        attributes.update(_get_unique_parent_attributes(nodes, parent_id))
+
+    for attr in nodes[node_id]["attributes"]:
+        attributes[attr[0]] = attr
+
     return attributes
 
 
@@ -316,17 +341,64 @@ def get_matrix(node_type, study_uuid, assay_uuid=None,
     return results
 
 
-def update_annotated_nodes(node_type, study_uuid, assay_uuid=None,
-                           update=False):
-    # retrieve study and assay ids
-    study = Study.objects.filter(uuid=study_uuid)[0]
+def _create_annotated_node_objs(
+        bulk_list=[],
+        node=None,
+        study=None,
+        assay=None,
+        attrs=None):
+    """Helper method to bulk create annotated nodes.
+    """
+    counter = 0
+    if (node is not None and
+            study is not None and
+            assay is not None and
+            attrs is not None):
+        for attr_key in attrs:
+            counter += 1
+            bulk_list.append(
+                AnnotatedNode(
+                    node_id=node["id"],
+                    attribute_id=attrs[attr_key][0],
+                    study=study,
+                    assay=assay,
+                    node_uuid=node["uuid"],
+                    node_file_uuid=node["file_uuid"],
+                    node_type=node["type"],
+                    node_name=node["name"],
+                    attribute_type=attrs[attr_key][1],
+                    attribute_subtype=attrs[attr_key][2],
+                    attribute_value=attrs[attr_key][3],
+                    attribute_value_unit=attrs[attr_key][4]
+                )
+            )
+
+            if len(bulk_list) == MAX_BULK_LIST_SIZE:
+                AnnotatedNode.objects.bulk_create(bulk_list)
+                # Reset list
+                bulk_list = []
+
+    elif len(bulk_list) > 0:
+        # Create remaining annotated nodes
+        AnnotatedNode.objects.bulk_create(bulk_list)
+
+    return bulk_list, counter
+
+
+def update_annotated_nodes(
+        node_type,
+        study_uuid,
+        assay_uuid=None,
+        update=False):
+    # Retrieve first study and assay ids
+    study = Study.objects.get(uuid=study_uuid)
 
     if assay_uuid is not None:
-        assay = Assay.objects.filter(uuid=assay_uuid)[0]
+        assay = Assay.objects.get(uuid=assay_uuid)
     else:
         assay = None
 
-    # check if this combination of node_type, study_uuid and assay_uuid already
+    # Check if this combination of node_type, study_uuid and assay_uuid already
     # exists
     if assay is None:
         registry, created = AnnotatedNodeRegistry.objects.get_or_create(
@@ -335,93 +407,86 @@ def update_annotated_nodes(node_type, study_uuid, assay_uuid=None,
         registry, created = AnnotatedNodeRegistry.objects.get_or_create(
             study_id=study.id, assay_id=assay.id, node_type=node_type)
 
-    # update registry entry
+    # Update registry entry
     registry.save()
     if not created and not update:
         # registry entry exists and no updating requested
         return
 
-    # remove existing annotated node objects for this node_type in this
+    # Remove existing annotated node objects for this node_type in this
     # study/assay
     if assay_uuid is None:
-        # The following line can be deleted
-        counter = AnnotatedNode.objects.filter(
-            Q(study__uuid=study_uuid, assay__uuid__isnull=True),
-            node_type=node_type).count()
-
         AnnotatedNode.objects.filter(
             Q(study__uuid=study_uuid, assay__uuid__isnull=True),
             node_type=node_type).delete()
     else:
-        # The following line can be deleted
-        counter = AnnotatedNode.objects.filter(
-            Q(study__uuid=study_uuid, assay__uuid__isnull=True) |
-            Q(study__uuid=study_uuid, assay__uuid=assay_uuid),
-            node_type=node_type).count()
-
         AnnotatedNode.objects.filter(
             Q(study__uuid=study_uuid, assay__uuid__isnull=True) |
             Q(study__uuid=study_uuid, assay__uuid=assay_uuid),
             node_type=node_type).delete()
 
-    logger.info(str(counter) + " annotated nodes deleted.")
-
-    # retrieve annotated nodes
+    # Retrieve _all_ annotated nodes associated to the given study and assay
     nodes = _retrieve_nodes(study_uuid, assay_uuid, True)
 
-    # insert node and attribute information
+    # Start timer
     start = time.time()
-    counter = 0
-    skipped_attributes = 0
+
+    # Holds AnnotatedNodes objects for bulk db entry creation
     bulk_list = []
+
+    # Total number of associated nodes of the given node type.
+    num_nodes_of_type = 0
+
+    # Sum of attributes of all `num_nodes_of_type`
+    total_attrs = 0
+
+    # Total number of unique attributes of `num_nodes`
+    total_unique_attrs = 0
+
+    # To avoid exponential node creation, count the number of nodes to be
+    # created first.
+    for node_id, node in nodes.iteritems():
+        total_unique_attrs += len(
+            nodes[node_id]["attributes"]
+        )
+
+        if node["type"] == node_type:
+            num_nodes_of_type += 1
+
+            attrs = _get_unique_parent_attributes(nodes, node_id)
+
+            u_len = len(attrs)
+
+            total_attrs += u_len
+
+    if total_attrs / num_nodes_of_type == total_unique_attrs:
+        logger.error(
+            "Exponential explosion! Creation of %s annotated nodes for %s "
+            "nodes of type %s is stopped!",
+            str(total_attrs),
+            str(num_nodes_of_type),
+            str(node_type)
+        )
+        return
 
     for node_id, node in nodes.iteritems():
         if node["type"] == node_type:
-            # save attributes (attribute[1], etc. are based on
-            # Attribute.ALL_FIELDS)
-            attributes = _get_parent_attributes(nodes, node_id)
+            bulk_list, counter = _create_annotated_node_objs(
+                bulk_list,
+                node,
+                study,
+                assay,
+                _get_unique_parent_attributes(nodes, node_id)
+            )
 
-            # List to keep track which attributes have already been added
-            check_list = {}
-
-            for attribute in attributes:
-                # Skip if we've seen the attribute already
-                if attribute[0] in check_list:
-                    skipped_attributes += 1
-                    continue
-
-                counter += 1
-
-                bulk_list.append(
-                    AnnotatedNode(
-                        node_id=node["id"],
-                        attribute_id=attribute[0],
-                        study=study,
-                        assay=assay,
-                        node_uuid=node["uuid"],
-                        node_file_uuid=node["file_uuid"],
-                        node_type=node["type"],
-                        node_name=node["name"],
-                        attribute_type=attribute[1],
-                        attribute_subtype=attribute[2],
-                        attribute_value=attribute[3],
-                        attribute_value_unit=attribute[4]
-                    )
-                )
-
-                if len(bulk_list) == MAX_BULK_LIST_SIZE:
-                    AnnotatedNode.objects.bulk_create(bulk_list)
-                    bulk_list = []
-
-    if len(bulk_list) > 0:
-        AnnotatedNode.objects.bulk_create(bulk_list)
-        bulk_list = []
+    _create_annotated_node_objs(bulk_list)
 
     end = time.time()
 
     logger.info(
-        "%s annotated nodes generated in %s",
-        str(counter),
+        "Created %s annotated nodes from %s nodes in %s msec",
+        str(total_attrs),
+        str(len(nodes)),
         str(end - start)
     )
 
@@ -484,33 +549,16 @@ def _add_annotated_nodes(
     for node_id, node in nodes.iteritems():
         if node["type"] == node_type:
             if node["uuid"] in node_uuids:
-                # save attributes (attribute[1], etc. are based on
-                # Attribute.ALL_FIELDS)
-                attributes = _get_parent_attributes(nodes, node_id)
+                bulk_list, num_created = _create_annotated_node_objs(
+                    bulk_list,
+                    node,
+                    study,
+                    assay,
+                    _get_unique_parent_attributes(nodes, node_id)
+                )
+                counter += num_created
 
-                for attribute in attributes:
-                    counter += 1
-
-                    bulk_list.append(
-                        AnnotatedNode(
-                            node_id=node["id"],
-                            attribute_id=attribute[0],
-                            study=study,
-                            assay=assay,
-                            node_uuid=node["uuid"],
-                            node_file_uuid=node["file_uuid"],
-                            node_type=node["type"],
-                            node_name=node["name"],
-                            attribute_type=attribute[1],
-                            attribute_subtype=attribute[2],
-                            attribute_value=attribute[3],
-                            attribute_value_unit=attribute[4]
-                        )
-                    )
-
-                    if len(bulk_list) == MAX_BULK_LIST_SIZE:
-                        AnnotatedNode.objects.bulk_create(bulk_list)
-                        bulk_list = []
+    _create_annotated_node_objs(bulk_list)
 
     if len(bulk_list) > 0:
         AnnotatedNode.objects.bulk_create(bulk_list)
@@ -519,8 +567,10 @@ def _add_annotated_nodes(
     end = time.time()
 
     logger.info(
-        "%s annotated nodes generated in %s msec",
-        str(counter), str(end - start)
+        "Added %s annotated nodes from %s nodes in %s msec",
+        str(counter),
+        str(len(nodes)),
+        str(end - start)
     )
 
 
