@@ -455,6 +455,14 @@ def _add_annotated_nodes(
         study_uuid,
         assay_uuid=None,
         node_uuids=None):
+    """Add annotated nodes.
+
+    If `node_uuids=None` nothing is happeneing. This should be checked right
+    away.
+    """
+    if node_uuids is None:
+        return
+
     # Get the first study with study UUID
     study = Study.objects.filter(uuid=study_uuid)[0]
 
@@ -475,7 +483,7 @@ def _add_annotated_nodes(
 
     for node_id, node in nodes.iteritems():
         if node["type"] == node_type:
-            if node_uuids is not None and (node["uuid"] in node_uuids):
+            if node["uuid"] in node_uuids:
                 # save attributes (attribute[1], etc. are based on
                 # Attribute.ALL_FIELDS)
                 attributes = _get_parent_attributes(nodes, node_id)
