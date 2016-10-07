@@ -699,31 +699,31 @@ class AttributeOrder(models.Model):
 
 
 class AnnotatedNodeRegistry(models.Model):
-    study = models.ForeignKey(Study, db_index=True)
-    assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
-    node_type = models.TextField(db_index=True)
+    study = models.ForeignKey(Study)
+    assay = models.ForeignKey(Assay, blank=True, null=True)
+    node_type = models.TextField()
     creation_date = models.DateTimeField(auto_now_add=True)
     modification_date = models.DateTimeField(auto_now=True)
 
 
 class AnnotatedNode(models.Model):
     node = models.ForeignKey(Node, db_index=True)
-    attribute = models.ForeignKey(Attribute, db_index=True)
-    study = models.ForeignKey(Study, db_index=True)
-    assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
+    attribute = models.ForeignKey(Attribute)
+    study = models.ForeignKey(Study)
+    assay = models.ForeignKey(Assay, blank=True, null=True)
     node_uuid = UUIDField()
     node_file_uuid = UUIDField(blank=True, null=True)
-    node_type = models.TextField(db_index=True)
-    node_name = models.TextField(db_index=True)
-    attribute_type = models.TextField(db_index=True)
+    node_type = models.TextField()
+    node_name = models.TextField()
+    attribute_type = models.TextField()
     # subtype further qualifies the attribute type, e.g. type = factor value
     # and subtype = age
-    attribute_subtype = models.TextField(blank=True, null=True, db_index=True)
-    attribute_value = models.TextField(blank=True, null=True, db_index=True)
+    attribute_subtype = models.TextField(blank=True, null=True)
+    attribute_value = models.TextField(blank=True, null=True)
     attribute_value_unit = models.TextField(blank=True, null=True)
     # genome information
-    node_species = models.IntegerField(db_index=True, null=True)
-    node_genome_build = models.TextField(db_index=True, null=True)
+    node_species = models.IntegerField(null=True)
+    node_genome_build = models.TextField(null=True)
     node_analysis_uuid = UUIDField(
         default=None,
         blank=True,
