@@ -9,7 +9,8 @@ set -e
 # the instance user data shell script
 # as a variable assignment of the form RDS_ID=... .
 # User grep to extract this.
-RDS_ID=$(wget -q -O - http://instance-data/latest/user-data | grep 'RDS_ID=')
+RDS_ID=$(wget -q -O - http://169.254.169.254/latest/user-data |
+  grep 'RDS_ID=')
 RDS_ID=${RDS_ID#*=}
 
 
