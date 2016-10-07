@@ -116,6 +116,7 @@ function IgvCtrl (
       if (fieldArr.length > 0) {
         params.filter_attribute[attributeName] = fieldArr;
         params.facets.push(attributeName);
+        params.attributes.push(attributeName);
       }
     });
     // grab all filtered assay files uuid
