@@ -94,6 +94,48 @@ function IgvCtrl (
     });
   };
 
+  // Helper method to correctly set node selection for igv web launch
+  var setNodeSelectionWithBlackList = function () {
+   // params needed to grab assay files
+    var params = {
+      uuid: $window.externalAssayUuid,
+      include_facet_count: false,
+      attributes: 'uuid',
+      facets: ['uuid']
+    };
+    params.filter_attribute = {};
+    // grab filter facets fields
+    angular.forEach($scope.facetSelection, function (fieldsObj, attributeName) {
+      var fieldArr = [];
+      angular.forEach(fieldsObj, function (valueObj, fieldName) {
+        if (valueObj.isSelected) {
+          // encode field name
+          fieldArr.push($window.encodeURIComponent(fieldName));
+        }
+      });
+      if (fieldArr.length > 0) {
+        params.filter_attribute[attributeName] = fieldArr;
+        params.facets.push(attributeName);
+      }
+    });
+    // grab all filtered assay files uuid
+    var assayFiles = assayFileService.query(params);
+    assayFiles.$promise.then(function (nodeList) {
+      var selectedNodes = [];
+      var complementNodes = $scope.igvConfig.node_selection;
+      // if not a complement node, add to selected nodes list
+      angular.forEach(nodeList.nodes, function (uuidObj) {
+        if (complementNodes.indexOf(uuidObj.uuid) === -1) {
+          selectedNodes.push(uuidObj.uuid);
+        }
+      });
+      // update node_selection with selected nodes
+      angular.copy(selectedNodes, $scope.igvConfig.node_selection);
+    }, function (error) {
+      $log.error('Error generating complement nodes, ' + error);
+    });
+  };
+
   $scope.retrieveSpecies = function () {
     $http({
       method: 'POST',
@@ -130,45 +172,9 @@ function IgvCtrl (
       /* Temp code to accomodate web-based igv when in blacklist mode
        Need to subtract complement nodes from full filtered list nodes */
       if ($scope.igvConfig.node_selection_blacklist_mode) {
-        // params needed to grab assay files
-        var params = {
-          uuid: $window.externalAssayUuid,
-          include_facet_count: false,
-          attributes: 'uuid',
-          facets: ['uuid']
-        };
-        params.filter_attribute = {};
-        // grab filter facets fields
-        angular.forEach($scope.facetSelection, function (fieldsObj, attributeName) {
-          var fieldArr = [];
-          angular.forEach(fieldsObj, function (valueObj, fieldName) {
-            if (valueObj.isSelected) {
-              // encode field name
-              fieldArr.push($window.encodeURIComponent(fieldName));
-            }
-          });
-          if (fieldArr.length > 0) {
-            params.filter_attribute[attributeName] = fieldArr;
-            params.facets.push(attributeName);
-          }
-        });
-        // grab all filtered assay files uuid
-        var assayFiles = assayFileService.query(params);
-        assayFiles.$promise.then(function (nodeList) {
-          var selectedNodes = [];
-          var complementNodes = $scope.igvConfig.node_selection;
-          // if not a complement node, add to selected nodes list
-          angular.forEach(nodeList.nodes, function (uuidObj) {
-            if (complementNodes.indexOf(uuidObj.uuid) === -1) {
-              selectedNodes.push(uuidObj.uuid);
-            }
-          });
-          // update node_selection with selected nodes
-          angular.copy(selectedNodes, $scope.igvConfig.node_selection);
-        }, function (error) {
-          $log.error('Error generating complement nodes, ' + error);
-        });
+        setNodeSelectionWithBlackList();
       }
+
       $scope.isLoadingSpecies = false;
     }).error(function (response, status) {
       $scope.isLoadingSpecies = false;
