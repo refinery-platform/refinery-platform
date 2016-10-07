@@ -808,7 +808,9 @@ def _is_facet_attribute(attribute, study, assay):
         'wt': 'json'
     }
 
-    logger.debug('Query parameters: %s', params)
+    # This log tends to be massive and spams the log file. Turn on only when
+    # needed.
+    # logger.debug('Query parameters: %s', params)
 
     headers = {'Accept': 'application/json'}
     try:
@@ -819,7 +821,9 @@ def _is_facet_attribute(attribute, study, assay):
 
     results = response.json()
 
-    logger.debug('Query results: %s', results)
+    # This log tends to be massive and spams the log file. Turn on only when
+    # needed.
+    # logger.debug('Query results: %s', results)
 
     if results['response']['numFound'] == 0:
         raise ValueError('No facets found.')
