@@ -60,7 +60,7 @@ Log in to Refinery (<http://192.168.50.50:8000/>) with the default guest user ac
 
 Log in to Django admin UI (<http://192.168.50.50:8000/admin/>) with the default superuser account (username: admin, password: refinery).
 
-Please see [installation notes] for more details, including information on how to configure Galaxy for this setup.
+Please see [installation notes](https://github.com/parklab/refinery-platform/wiki/setting-up-galaxy) for more details, including information on how to configure Galaxy for this setup.
 
 ## Troubleshooting
 
