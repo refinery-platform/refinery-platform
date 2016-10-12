@@ -1141,7 +1141,7 @@ DashboardCtrl.prototype.getOriginalUri = function (eventData) {
  * @method  readableDate
  * @author  Fritz Lekschas & Scott Ouellette
  * @date    2016-09-30
- * @param   {Object}  object   DataSet or Analysis object of interest.
+ * @param   {Object}  dataObj  DataSet or Analysis object of interest.
  * @param   {String}  property  Name of the date property to be made readable.
  * @return  {String}            Readable date string.
  */
@@ -1149,18 +1149,18 @@ DashboardCtrl.prototype.readableDate = function (dataObj, property) {
   var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
     'Sep', 'Oct', 'Nov', 'Dec'];
 
-
-  // Analyes' modification_date field is not an actual Javascript Date so we
-  // need to convert it
-  dataObj[property] = new Date(dataObj[property]);
-
+  if (property === 'modification_date') {
+    // Analyses' modification_date field is not a date string that Safari
+    // can handle so we need to convert it. See: http://bit.ly/2dXs5Ho
+    var dateParts = dataObj[property].split(/[^0-9]/);
+    dataObj[property] = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+  }
   if (dataObj[property] && !dataObj[property + 'Readable']) {
     dataObj[property + 'Readable'] =
       months[dataObj[property].getMonth()] + ' ' +
       dataObj[property].getDate() + ', ' +
       dataObj[property].getFullYear();
   }
-
   return dataObj[property + 'Readable'];
 };
 
