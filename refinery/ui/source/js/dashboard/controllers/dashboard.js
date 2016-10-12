@@ -1152,7 +1152,7 @@ DashboardCtrl.prototype.readableDate = function (dataObj, property) {
   if (property === 'modification_date') {
     // Analyses' modification_date field is not a date string that Safari
     // can handle so we need to convert it. See: http://bit.ly/2dXs5Ho
-    var dateParts = dataObj[property].split(/[^0-9]/);
+    var dateParts = dataObj[property].toString().split(/[^0-9]/);
     dataObj[property] = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
   }
   if (dataObj[property] && !dataObj[property + 'Readable']) {
