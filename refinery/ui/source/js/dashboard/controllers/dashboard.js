@@ -8,6 +8,8 @@ function DashboardCtrl (
   $timeout,
   $rootScope,
   $window,
+  $uibModal,
+  $log,
   // 3rd party library
   _,
   // Refinery modules
@@ -37,6 +39,8 @@ function DashboardCtrl (
   this.$stateParams = $stateParams;
   this.$timeout = $timeout;
   this.$window = $window;
+  this.$uibModal = $uibModal;
+  this.$log = $log;
 
   // Construct 3rd party library
   this._ = _;
@@ -142,6 +146,7 @@ function DashboardCtrl (
   this.dashboardDataSetsReloadService.setReload(function (hardReset) {
     if (hardReset) {
       this.dataSets.resetCache();
+      this.dataSet.reload();
     }
     // Reset current list and reload uiScroll
     if (this.dataSetsAdapter) {
@@ -359,7 +364,7 @@ function DashboardCtrl (
     if (this.repoMode) {
       this.expandDataSetPanel = true;
       this.expandedDataSetPanelBorder = true;
-      this.dashboardWidthFixerService.trigger('fixer');
+      this.dashboardWidthFixerService.fixWidth();
       this.dashboardExpandablePanelService.trigger('lockFullWith');
     }
   }.bind(this), 0);
@@ -972,6 +977,8 @@ DashboardCtrl.prototype.deselectDataSets = function () {
  * @param   {Object}  fromStateEvent  UI-router previous state object.
  */
 DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
+  var self = this;
+
   if (!fromStateEvent) {
     this.$state.transitionTo(
       'launchPad.exploration',
@@ -986,10 +993,19 @@ DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
   this.dataSetExploration = true;
 
   if (!this.expandDataSetPanel) {
-    this.expandDataSetPanel = true;
-    this.expandedDataSetPanelBorder = true;
-    this.dashboardWidthFixerService.trigger('fixer');
-    this.dashboardExpandablePanelService.trigger('expander');
+    this.dashboardWidthFixerService.fixWidth()
+      .then(function () {
+        self.expandDataSetPanel = true;
+        self.expandedDataSetPanelBorder = true;
+        self.dashboardExpandablePanelService.trigger('expander');
+      })
+      .catch(function () {
+        // This is weird. We should never run into here unless the whole app
+        // initialization failed even after 75ms.
+        // See `services/width-fixer.js` for details.
+        this.$log.error('Dashboard expand dataset exploration error,' +
+          ' possibly due to the Refinery App failing to initialized.');
+      });
   } else {
     this.$timeout(function () {
       this.pubSub.trigger('vis.show');
@@ -1009,6 +1025,8 @@ DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
 DashboardCtrl.prototype.expandDataSetPreview = function (
   dataSetUuid, fromStateEvent
 ) {
+  var self = this;
+
   if (this.dataSetExploration) {
     this.dataSetExplorationTempHidden = true;
     this.pubSub.trigger('vis.tempHide');
@@ -1029,10 +1047,19 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
 
   function startExpansion () {
     if (!this.expandDataSetPanel) {
-      this.expandDataSetPanel = true;
-      this.expandedDataSetPanelBorder = true;
-      this.dashboardWidthFixerService.trigger('fixer');
-      this.dashboardExpandablePanelService.trigger('expander');
+      this.dashboardWidthFixerService.fixWidth()
+        .then(function () {
+          self.expandDataSetPanel = true;
+          self.expandedDataSetPanelBorder = true;
+          self.dashboardExpandablePanelService.trigger('expander');
+        })
+        .catch(function () {
+          // This is weird. We should never run into here unless the whole app
+          // initialization failed even after 75ms.
+          // See `services/width-fixer.js` for details.
+          this.$log.error('Dashboard expand dataset exploration error,' +
+          ' possibly due to the Refinery App failing to initialized.');
+        });
     }
     this.dashboardDataSetPreviewService.preview(dataSetUuid);
     this.dataSetPreview = true;
@@ -1112,24 +1139,29 @@ DashboardCtrl.prototype.getOriginalUri = function (eventData) {
  * Turns an unreadable date into a readable date string.
  *
  * @method  readableDate
- * @author  Fritz Lekschas
- * @date    2016-05-09
- * @param   {Object}  dataSet   Data set object of interest.
+ * @author  Fritz Lekschas & Scott Ouellette
+ * @date    2016-09-30
+ * @param   {Object}  dataObj  DataSet or Analysis object of interest.
  * @param   {String}  property  Name of the date property to be made readable.
  * @return  {String}            Readable date string.
  */
-DashboardCtrl.prototype.readableDate = function (dataSet, property) {
+DashboardCtrl.prototype.readableDate = function (dataObj, property) {
   var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
     'Sep', 'Oct', 'Nov', 'Dec'];
 
-  if (dataSet[property] && !dataSet[property + 'Readable']) {
-    dataSet[property + 'Readable'] =
-      months[dataSet[property].getMonth()] + ' ' +
-      dataSet[property].getDate() + ', ' +
-      dataSet[property].getFullYear();
+  if (property === 'modification_date') {
+    // Analyses' modification_date field is not a date string that Safari
+    // can handle so we need to convert it. See: http://bit.ly/2dXs5Ho
+    var dateParts = dataObj[property].toString().split(/[^0-9]/);
+    dataObj[property] = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
   }
-
-  return dataSet[property + 'Readable'];
+  if (dataObj[property] && !dataObj[property + 'Readable']) {
+    dataObj[property + 'Readable'] =
+      months[dataObj[property].getMonth()] + ' ' +
+      dataObj[property].getDate() + ', ' +
+      dataObj[property].getFullYear();
+  }
+  return dataObj[property + 'Readable'];
 };
 
 /**
@@ -1532,6 +1564,7 @@ DashboardCtrl.prototype.toggleSortOrder = function (source) {
   }
 };
 
+
 /**
  * Trigger sorting of data sets, analyses, or workflows.
  *
@@ -1572,6 +1605,66 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
   this[reloadService].reload();
 };
 
+/**
+ * Open the deletion modal for a given Datset.
+ *
+ * @method  openDataSetDeleteModal
+ * @author  Scott Ouellette
+ * @date    2016-9-20
+ */
+DashboardCtrl.prototype.openDataSetDeleteModal = function (dataSet) {
+  this.collapseDataSetPreview();
+  this.collapseDatasetExploration();
+  this.removeFromDataCart(dataSet);
+
+  this.$uibModal.open({
+    backdrop: 'static',
+    keyboard: false,
+    templateUrl: '/static/partials/dashboard/partials/dataset-delete-dialog.html',
+    controller: 'DataSetDeleteCtrl as modal',
+    resolve: {
+      config: function () {
+        return {
+          model: 'data_sets',
+          uuid: dataSet.uuid
+        };
+      },
+      dataSet: dataSet,
+      dataSets: this.dataSets,
+      analyses: this.analyses,
+      analysesReloadService: this.dashboardAnalysesReloadService
+    }
+  });
+};
+
+/**
+ * Open the deletion modal for a given Analysis.
+ *
+ * @method  openAnalysisDeleteModal
+ * @author  Scott Ouellette
+ * @date    2016-9-28
+ */
+DashboardCtrl.prototype.openAnalysisDeleteModal = function (analysis) {
+  this.$uibModal.open({
+    backdrop: 'static',
+    keyboard: false,
+    templateUrl: '/static/partials/dashboard/partials/analysis-delete-dialog.html',
+    controller: 'AnalysisDeleteCtrl as modal',
+    resolve: {
+      config: function () {
+        return {
+          model: 'analyses',
+          uuid: analysis.uuid
+        };
+      },
+      analysis: analysis,
+      analyses: this.analyses,
+      analysesReloadService: this.dashboardAnalysesReloadService,
+      isOwner: analysis.is_owner
+    }
+  });
+};
+
 angular
   .module('refineryDashboard')
   .controller('DashboardCtrl', [
@@ -1581,6 +1674,8 @@ angular
     '$timeout',
     '$rootScope',
     '$window',
+    '$uibModal',
+    '$log',
     '_',
     'pubSub',
     'settings',

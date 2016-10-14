@@ -33,6 +33,7 @@ from core.forms import (
 )
 
 from data_set_manager.models import Node
+from data_set_manager.utils import generate_solr_params
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem
@@ -124,7 +125,7 @@ def group_invite(request, token):
         'core/group_invite.html',
         {
             'site': get_current_site(request),
-            'message': '%s has been added to the group %s!' %
+            'message': '%s has been added to the group %s.' %
                        (user.username, ext_group.name),
             'user': user,
             'ext_group': ext_group
@@ -746,6 +747,14 @@ def solr_igv(request):
         logger.debug('IGV data query: ' + str(igv_config['query']))
         logger.debug('IGV annotation query: ' + str(igv_config['annotation']))
 
+        if igv_config['query'] is None:
+            # generate solr_query method
+            # assay uuid
+            solr_query = generate_solr_params({}, igv_config['assay_uuid'])
+            url_path = '/'.join(["data_set_manager", "select"])
+            url = urljoin(settings.REFINERY_SOLR_BASE_URL, url_path)
+            igv_config['query'] = ''.join([url, '/?', solr_query])
+
         # attributes associated with node selection from interface
         node_selection_blacklist_mode = igv_config[
             'node_selection_blacklist_mode']
@@ -1047,6 +1056,100 @@ class NodeViewSet(viewsets.ModelViewSet):
     lookup_field = 'uuid'
     http_method_names = ['get']
     # permission_classes = (IsAuthenticated,)
+
+
+class DataSetsViewSet(APIView):
+    http_method_names = ['delete']
+
+    def delete(self, request, uuid):
+        if not request.user.is_authenticated():
+            return Response({
+                "status": status.HTTP_403_FORBIDDEN,
+                "data": "User {} is not authenticated".format(request.user)
+            })
+        else:
+            try:
+                dataset_deleted = DataSet.objects.get(uuid=uuid).delete()
+            except NameError as e:
+                logger.error(e)
+                return Response({
+                    "status": status.HTTP_400_BAD_REQUEST,
+                    "data": "Bad Request"
+                })
+            except DataSet.DoesNotExist as e:
+                logger.error(e)
+                return Response({
+                    "status": status.HTTP_404_NOT_FOUND,
+                    "data": "Dataset with UUID: {} not found.".format(uuid)
+                })
+            except DataSet.MultipleObjectsReturned as e:
+                logger.error(e)
+                return Response({
+                    "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "data": "Multiple Datasets returned for this request"
+                })
+            else:
+                if dataset_deleted[0]:
+                    return Response(
+                        {
+                            "data": dataset_deleted[1],
+                            "status": status.HTTP_200_OK
+                        }
+                    )
+                else:
+                    return Response(
+                        {
+                            "data": dataset_deleted[1],
+                            "status": status.HTTP_400_BAD_REQUEST
+                        }
+                    )
+
+
+class AnalysesViewSet(APIView):
+    http_method_names = ['delete']
+
+    def delete(self, request, uuid):
+        if not request.user.is_authenticated():
+            return Response({
+                "status": status.HTTP_403_FORBIDDEN,
+                "data": "User {} is not authenticated".format(request.user)
+            })
+        else:
+            try:
+                analysis_deleted = Analysis.objects.get(uuid=uuid).delete()
+            except NameError as e:
+                logger.error(e)
+                return Response({
+                    "status": status.HTTP_400_BAD_REQUEST,
+                    "data": "Bad Request"
+                })
+            except Analysis.DoesNotExist as e:
+                logger.error(e)
+                return Response({
+                    "status": status.HTTP_404_NOT_FOUND,
+                    "data": "Analysis with UUID: {} not found.".format(uuid)
+                })
+            except Analysis.MultipleObjectsReturned as e:
+                logger.error(e)
+                return Response({
+                    "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "data": "Multiple Analyses returned for this request"
+                })
+            else:
+                if analysis_deleted[0]:
+                    return Response(
+                        {
+                            "data": analysis_deleted[1],
+                            "status": status.HTTP_200_OK
+                        }
+                    )
+                else:
+                    return Response(
+                        {
+                            "data": analysis_deleted[1],
+                            "status": status.HTTP_400_BAD_REQUEST
+                        }
+                    )
 
 
 class CustomRegistrationView(RegistrationView):

@@ -92,6 +92,7 @@ class SharableResourceAPIInterface(object):
             lambda g: {
                 'group_id': g.id,
                 'group_name': g.name,
+                'group_uuid': g.extendedgroup.uuid,
                 'perms': self.get_perms(res, g)},
             groups_in)
 
@@ -497,6 +498,29 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
         if pre_isa_archive:
             bundle.data["pre_isa_archive"] = pre_isa_archive.uuid
+
+        analyses = []
+        for analysis in bundle.obj.get_analyses():
+            analysis_dict = analysis.__dict__
+            analysis_dict['is_owner'] = False
+            owner = analysis.get_owner()
+            if owner:
+                try:
+                    analysis_dict['owner'] = owner.userprofile.uuid
+                    user = bundle.request.user
+                    if (hasattr(user, 'userprofile') and
+                       user.userprofile.uuid == analysis_dict['owner']):
+                        analysis_dict['is_owner'] = True
+                except:
+                    analysis_dict['owner'] = None
+
+            else:
+                analysis_dict['owner'] = None
+
+            analyses.append(analysis_dict)
+
+        if analyses:
+            bundle.data["analyses"] = analyses
 
         bundle.data["version"] = bundle.obj.get_version_details().version
         bundle.data["date"] = bundle.obj.get_version_details().date
@@ -2063,6 +2087,11 @@ class ExtendedGroupResource(ModelResource):
         elif request.method == 'DELETE':
             # Removing yourself - must delete to leave if last member.
             if user.id == int(kwargs['user_id']):
+
+                # Prevent users from leaving default public group
+                if ext_group.name == 'Public':
+                    return HttpForbidden('Members may not leave Public group')
+
                 if ext_group.user_set.count() == 1:
                     return HttpForbidden('Last member - must delete group')
 

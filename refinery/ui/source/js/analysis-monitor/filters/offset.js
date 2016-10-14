@@ -3,7 +3,10 @@
 function analysisMonitorOffset () {
   return function (input, _start_) {
     var start = parseInt(_start_, 10);
-    return input.slice(start);
+    if (start) {
+      return input.slice(start);
+    }
+    return input;
   };
 }
 

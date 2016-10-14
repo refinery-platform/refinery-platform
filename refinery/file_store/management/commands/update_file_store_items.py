@@ -80,6 +80,6 @@ class Command(BaseCommand):
 
         print "%s FileStoreItem objects updated." % num_updated
         print "%s FileStoreItem objects with unknown extensions." % unknown_ext
-        print "Updating index... This may take awhile!"
+        print "Updating index... This may take awhile"
         time.sleep(1)
         management.call_command('update_index', 'data_set_manager', b=25)

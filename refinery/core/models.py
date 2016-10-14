@@ -63,7 +63,9 @@ from .utils import (update_data_set_index, delete_data_set_index,
                     add_read_access_in_neo4j, remove_read_access_in_neo4j,
                     delete_data_set_neo4j, delete_ontology_from_neo4j,
                     delete_analysis_index, invalidate_cached_object,
-                    get_aware_local_time, email_admin)
+                    get_aware_local_time, email_admin,
+                    add_or_update_user_to_neo4j, update_annotation_sets_neo4j,
+                    delete_user_in_neo4j)
 
 logger = logging.getLogger(__name__)
 
@@ -278,7 +280,7 @@ class BaseResource(models.Model):
 
         if self.duplicate_slug_exists():
             raise forms.ValidationError("%s with slug: %s "
-                                        "already exists!"
+                                        "already exists"
                                         % (self.__class__.__name__,
                                            self.slug))
 
@@ -286,7 +288,7 @@ class BaseResource(models.Model):
     def save(self, *args, **kwargs):
 
         if self.duplicate_slug_exists():
-            logger.error("%s with slug: %s already exists!" % (
+            logger.error("%s with slug: %s already exists" % (
                 self.__class__.__name__, self.slug))
         else:
             try:
@@ -480,7 +482,11 @@ class ManageableResource:
 class DataSetQuerySet(models.query.QuerySet):
     def delete(self):
         for instance in self:
-            instance.delete()
+            try:
+                instance.delete()
+            except Exception as e:
+                return False, "Something unexpected happened. DataSet: {} " \
+                              "could not be deleted. {}".format(self, e)
 
 
 class DataSetManager(models.Manager):
@@ -536,8 +542,7 @@ class DataSet(SharableResource):
         Overrides the DataSet model's delete method.
 
         Deletes NodeCollection and related object based on uuid of
-        Investigations linked to the DataSet as long as an
-        Analysis has not been run upon the DataSet.
+        Investigations linked to the DataSet.
         This deletes Studys, Assays and Investigations in
         addition to the related objects detected by Django.
 
@@ -545,57 +550,48 @@ class DataSet(SharableResource):
         pre_isa_archive associated with the DataSet if one exists.
         """
 
-        # First check to see if DataSet has been analyzed
-        if not self.get_analyses():
-            isa_archive = self.get_isa_archive()
-            if isa_archive:
-                try:
-                    isa_archive.delete()
+        try:
+            self.get_isa_archive().delete()
 
-                except Exception as e:
-                    logger.error(
-                        "Couldn't delete DataSet's isa_archive: %s" % e)
+        except Exception as e:
+            logger.error(
+                "Couldn't delete DataSet's isa_archive: %s" % e)
 
-            pre_isa_archive = self.get_pre_isa_archive()
-            if pre_isa_archive:
-                try:
-                    pre_isa_archive.delete()
+        try:
+            self.get_pre_isa_archive().delete()
 
-                except Exception as e:
-                    logger.error(
-                        "Couldn't delete DataSet's isa_archive: %s" % e)
+        except Exception as e:
+            logger.error(
+                "Couldn't delete DataSet's pre_isa_archive: %s" % e)
 
-            related_investigation_links = self.get_investigation_links()
+        related_investigation_links = self.get_investigation_links()
 
-            for investigation_link in related_investigation_links:
+        for investigation_link in related_investigation_links:
 
-                node_collection = investigation_link.get_node_collection()
+            node_collection = investigation_link.get_node_collection()
 
-                try:
-                    node_collection.delete()
-                except Exception as e:
-                    logger.error("Couldn't delete NodeCollection:", e)
+            try:
+                node_collection.delete()
+            except Exception as e:
+                logger.error("Couldn't delete NodeCollection:", e)
 
+        # Try to terminate any currently running FileImport tasks just to be
+        # safe
+        file_store_items = self.get_file_store_items()
+        if file_store_items is not None:
+            for file_store_item in file_store_items:
+                file_store_item.terminate_file_import_task()
+        try:
             super(DataSet, self).delete()
-
-            # Return a "truthy" value here so that the admin ui knows if the
-            # deletion succeeded or not as well as the proper message to
-            # display to the end user
-            return True, "DataSet: {} was deleted successfully!".format(self)
-
+        except Exception as e:
+            return False, "Something unexpected happened. DataSet: {} could " \
+                          "not be deleted. {}".format(self.name, e)
         else:
-            # Prepare string to be displayed upon a failed deletion
-            deletion_error_message = "Cannot delete DataSet: {}. It has " \
-                                     "been used in these analyses: {}".format(
-                                            self,
-                                            str(self.get_analyses())
-                                        )
-            logger.error(deletion_error_message)
-
-            # Return a "falsey" value here so that the admin ui knows if the
-            # deletion succeeded or not as well as the proper message to
-            # display to the end user
-            return False, deletion_error_message
+            # Return a "truthy" value here so that the admin ui and
+            # front-end ui knows if the deletion succeeded or not as well as
+            # the proper message to  display to the end user
+            return True, "DataSet: {} was deleted successfully".format(
+                self.name)
 
     def get_analyses(self):
         return Analysis.objects.filter(data_set=self)
@@ -752,7 +748,6 @@ class DataSet(SharableResource):
                 InvestigationLink.MultipleObjectsReturned) as e:
             logger.error("Error while fetching FileStoreItem or "
                          "InvestigationLink: %s" % e)
-            return None
 
     def get_pre_isa_archive(self):
         """
@@ -770,7 +765,6 @@ class DataSet(SharableResource):
                 InvestigationLink.MultipleObjectsReturned) as e:
             logger.error("Error while fetching FileStoreItem or "
                          "InvestigationLink: %s" % e)
-            return None
 
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
@@ -808,11 +802,40 @@ class DataSet(SharableResource):
                 user_ids
             )
 
+    def get_file_store_items(self):
+        investigation = self.get_investigation()
+
+        try:
+            study = Study.objects.get(investigation=investigation)
+            nodes = Node.objects.filter(study=study)
+        except (Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
+            logger.error("Could not fetch Study properly: %s", e)
+        else:
+            file_store_items = []
+
+            for node in nodes:
+                try:
+                    file_store_items.append(
+                        FileStoreItem.objects.get(uuid=node.file_uuid)
+                    )
+
+                except(FileStoreItem.DoesNotExist,
+                       FileStoreItem.MultipleObjectsReturned) as e:
+                    logger.error("Error while fetching FileStoreItem: %s", e)
+
+            return file_store_items
+
 
 @receiver(pre_delete, sender=DataSet)
 def _dataset_delete(sender, instance, *args, **kwargs):
     delete_data_set_index(instance)
     delete_data_set_neo4j(instance.uuid)
+    update_annotation_sets_neo4j()
+
+
+@receiver(post_save, sender=DataSet)
+def _dataset_saved(**kwargs):
+    update_annotation_sets_neo4j()
 
 
 class InvestigationLink(models.Model):
@@ -973,7 +996,7 @@ class Workflow(SharableResource, ManageableResource):
                                      "These Analyses have been run " \
                                      "utilizing it: {}. Setting it as " \
                                      "'inactive'".format(
-                                            self, self.get_analyses()
+                                            self.name, self.get_analyses()
                                         )
             logger.error(deletion_error_message)
 
@@ -1003,7 +1026,8 @@ class Workflow(SharableResource, ManageableResource):
             # Return a "truthy" value here so that the admin ui knows if the
             # deletion succeeded or not as well as the proper message to
             # display to the end user
-            return True, "Workflow: {} was deleted successfully!".format(self)
+            return True, "Workflow: {} was deleted successfully".format(
+                self.name)
 
 
 class Project(SharableResource):
@@ -1155,32 +1179,30 @@ class Analysis(OwnableResource):
         for node in nodes:
 
             analysis_node_connections_for_node = \
-                node.get_analysis_node_connections_for_node()
+                node.get_analysis_node_connections()
 
             for analysis_node_connection in analysis_node_connections_for_node:
                 if analysis_node_connection.direction == 'in':
                     delete = False
 
         if delete:
-
-            # Delete associated FileStoreItems
-            for node in nodes:
-                if node.file_uuid:
-                    node.get_file_store_items().delete()
+            # Cancel Analysis (galaxy cleanup also happens here)
+            self.cancel()
 
             # Delete associated AnalysisResults
             self.get_analysis_results().delete()
 
-            # Delete objects from Solr's index
-            for item in self.get_analysis_node_connections_for_analysis():
-                if item.node and item.node.is_derived():
+            for node in nodes:
+                # Delete associated FileStoreItems
+                if node.file_uuid:
+                    node.get_file_store_item().delete()
 
-                    try:
-                        delete_analysis_index(item.node)
-                    except Exception as e:
-                        logger.debug("No NodeIndex exists in Solr with id "
-                                     "%s:  %s",
-                                     item.id, e)
+                # Remove Nodes from Solr's Index
+                try:
+                    delete_analysis_index(node)
+                except Exception as e:
+                    logger.debug("No NodeIndex exists in Solr with id "
+                                 "%s:  %s", node.id, e)
 
             # Optimize Solr's index to get rid of any traces of the Analysis
             self.optimize_solr_index()
@@ -1190,22 +1212,25 @@ class Analysis(OwnableResource):
 
             super(Analysis, self).delete()
 
-            # Return a "truthy" value here so that the admin ui knows if the
-            # deletion succeeded or not as well as the proper message to
-            # display to the end user
-            return True, "Analysis: {} was deleted successfully!".format(self)
+            # Return a "truthy" value here so that the admin ui and
+            # front-end ui knows if the deletion succeeded or not as well as
+            # the proper message to display to the end user
+            return True, "Analysis: {} was deleted successfully".format(
+                self.name)
 
         else:
             # Prepare string to be displayed upon a failed deletion
-            deletion_error_message = "Cannot delete Analysis: %s because  " \
-                                     "one or more of it's Nodes have been  " \
-                                     "further analyzed".format(self)
+            deletion_error_message = "Cannot delete Analysis: {} because " \
+                                     "its results have been used to run " \
+                                     "further Analyses. Please delete all " \
+                                     "downstream Analyses before you delete " \
+                                     "this one".format(self.name)
 
             logger.error(deletion_error_message)
 
-            # Return a "falsey" value here so that the admin ui knows if the
-            # deletion succeeded or not as well as the proper message to
-            # display to the end user
+            # Return a "falsey" value here so that the admin ui and
+            # front-end ui knows if the deletion succeeded or not as well as
+            # the proper message to display to the end user
             return False, deletion_error_message
 
     def get_status(self):
@@ -1214,9 +1239,6 @@ class Analysis(OwnableResource):
     def get_nodes(self):
         return Node.objects.filter(
             analysis_uuid=self.uuid)
-
-    def get_analysis_node_connections_for_analysis(self):
-        return AnalysisNodeConnection.objects.filter(analysis=self)
 
     def get_analysis_results(self):
         return AnalysisResult.objects.filter(analysis_uuid=self.uuid)
@@ -2234,6 +2256,9 @@ class FastQC(object):
 
 @receiver(post_save, sender=User)
 def _add_user_to_neo4j(sender, **kwargs):
+    user = kwargs['instance']
+
+    add_or_update_user_to_neo4j(user.id, user.username)
     add_read_access_in_neo4j(
         map(
             lambda ds: ds.uuid, get_objects_for_group(
@@ -2241,8 +2266,14 @@ def _add_user_to_neo4j(sender, **kwargs):
                 'core.read_dataset'
             )
         ),
-        [kwargs['instance'].id]
+        [user.id]
     )
+    update_annotation_sets_neo4j(user.username)
+
+
+@receiver(pre_delete, sender=User)
+def _delete_user_from_neo4J(sender, instance, *args, **kwargs):
+    delete_user_in_neo4j(instance.id, instance.username)
 
 
 class Ontology(models.Model):
@@ -2380,13 +2411,18 @@ class AuthenticationFormUsernameOrEmail(AuthenticationForm):
         if '@' in username:
             try:
                 username = User.objects.get(email=username).username
-            except ObjectDoesNotExist:
+            except User.DoesNotExist as e:
+                logger.error("Could not login with email %s, error: %s",
+                             username, e)
                 raise ValidationError(
-                    self.error_messages['invalid_login'],
+                    'The email entered does not belong to any user account. '
+                    'Please check for typos or register below.',
                     code='invalid_login',
                     params={'username': self.username_field.verbose_name},
                 )
-            except MultipleObjectsReturned:
+            except User.MultipleObjectsReturned as e:
+                logger.error("Duplicate registration with email %s, error: "
+                             "%s", username, e)
                 raise ValidationError(
                     'You have registered twice with the same email. Hence, ' +
                     'we don\'t know under which user you want to log in. ' +
@@ -2416,8 +2452,18 @@ class CustomRegistrationManager(RegistrationManager):
         # Adding custom fields
         new_user.first_name = first_name
         new_user.last_name = last_name
-        new_user.affiliation = affiliation
         new_user.save()
+
+        try:
+            new_user_profile = UserProfile.objects.get(user=new_user.id)
+        except (UserProfile.DoesNotExist,
+                UserProfile.MultipleObjectsReturned) as e:
+            logger.error("Error while fetching Userprofile: %s" % e)
+
+        if new_user_profile:
+            new_user_profile.affiliation = affiliation
+            new_user_profile.save()
+            new_user.userprofile = new_user_profile
 
         registration_profile = self.create_profile(new_user)
 
@@ -2485,7 +2531,8 @@ class CustomRegistrationProfile(RegistrationProfile):
                     'registered_user_username': self.user.username,
                     'registered_user_full_name': "{} {}".format(
                         self.user.first_name, self.user.last_name),
-                    'registered_user_affiliation': self.user.affiliation
+                    'registered_user_affiliation':
+                        self.user.userprofile.affiliation
 
                     }
         subject = render_to_string('registration/activation_email_subject.txt',

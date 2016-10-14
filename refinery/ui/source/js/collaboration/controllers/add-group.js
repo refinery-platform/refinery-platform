@@ -1,50 +1,61 @@
 'use strict';
 
 function AddGroupCtrl (
-  bootbox, $uibModalInstance, groupExtendedService, groupDataService
-) {
-  this.bootbox = bootbox;
-  this.$uibModalInstance = $uibModalInstance;
-  this.groupExtendedService = groupExtendedService;
-  this.groupDataService = groupDataService;
-}
+  $timeout,
+  $log,
+  $uibModalInstance,
+  groupExtendedService,
+  groupDataService) {
+  // Group name modal
 
-function isEmptyOrSpaces (str) {
-  if (str.length === 0) {
-    return true;
-  }
-  return false;
-}
-
-AddGroupCtrl.prototype.createGroup = function (name) {
-  var that = this;
-  var groupName = name || '';
-
-  this.groupExtendedService.create({
-    name: groupName
-  })
-  .$promise
-  .then(function () {
-    that.groupDataService.update();
-    that.$uibModalInstance.dismiss();
-  })
-  .catch(function () {
-    if (isEmptyOrSpaces(groupName)) {
-      that.bootbox.alert(
-        'Group Name cannot be left blank - try a different name.'
-      );
-    } else {
-      that.bootbox.alert(
-        'This name probably already exists - try a different name.'
-      );
+  var vm = this;
+  vm.responseMessage = '';
+  vm.alertType = 'info';
+  // After invite is sent, an alert pops up with following message
+  var generateAlertMessage = function (infoType, groupName) {
+    if (infoType === 'success') {
+      vm.alertType = 'success';
+      vm.responseMessage = 'Successfully created group ' + groupName;
+    } else if (infoType === 'error') {
+      vm.alertType = 'error';
+      vm.responseMessage = 'Error creating group. Check for group name' +
+        ' duplication.';
     }
-  });
-};
+  };
+
+  vm.createGroup = function () {
+    groupExtendedService.create({
+      name: vm.groupName
+    })
+      .$promise
+      .then(function () {
+        generateAlertMessage('success', vm.groupName);
+        groupDataService.update();
+        // Automatically dismisses modal
+        $timeout(function () {
+          $uibModalInstance.dismiss();
+        }, 1500);
+      }, function (error) {
+        generateAlertMessage('error', vm.groupName);
+        $log.error(error);
+      });
+  };
+
+  // UI helper methods to cancel and close modal instance
+  vm.cancel = function () {
+    $uibModalInstance.dismiss('cancel');
+  };
+
+  vm.close = function () {
+    $uibModalInstance.dismiss();
+  };
+}
 
 angular
   .module('refineryCollaboration')
   .controller('AddGroupCtrl', [
-    'bootbox',
+    '$timeout',
+    '$log',
     '$uibModalInstance',
     'groupExtendedService',
     'groupDataService',

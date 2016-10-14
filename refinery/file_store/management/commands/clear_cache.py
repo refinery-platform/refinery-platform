@@ -22,6 +22,6 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         try:
             cache.clear()
-            print "Cache successfully cleared!"
+            print "Cache successfully cleared"
         except Exception as e:
             logger.debug(e)

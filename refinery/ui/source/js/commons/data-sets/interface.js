@@ -974,6 +974,22 @@ function DataSetFactory (
   };
 
   /**
+   * Reset the cached order of data sets.
+   *
+   * @description
+   * Call this method whenever the retrieved data sets differ but the request
+   * method is still the same. E.g., after a search for 'cancen' and deletion of
+   * one of the data sets returned.
+   *
+   * @method  reload
+   * @author  Fritz Lekschas
+   * @date    2016-09-23
+   */
+  DataSet.prototype.reload = function () {
+    _clearOrderCache();
+  };
+
+  /**
    * Set the data source to the search endpoint.
    *
    * @method  search

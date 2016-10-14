@@ -1,9 +1,11 @@
 from __future__ import absolute_import
 import logging
 
-import py2neo
 import ast
+import os
+import py2neo
 
+import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.models import Site
@@ -23,6 +25,21 @@ import data_set_manager
 logger = logging.getLogger(__name__)
 
 
+def skip(func):
+    """Decorator to be used on function calls that don't necessarily need to
+    be run on CI i.e. Neo4J and Solr stuff tend to pollute log output
+    """
+    def func_wrapper(*args, **kwargs):
+        try:
+            if os.environ['REDUCE_TEST_OUTPUT'] == "true":
+                return
+        except KeyError:
+            logger.error('REDUCE_TEST_OUTPUT .env var not set.')
+        return func(*args, **kwargs)
+    return func_wrapper
+
+
+@skip
 def update_data_set_index(data_set):
     """Update a dataset's corresponding document in Solr.
     """
@@ -39,6 +56,7 @@ def update_data_set_index(data_set):
         logger.error("Could not update DataSetIndex:", e)
 
 
+@skip
 def add_data_set_to_neo4j(dataset_uuid, user_id):
     """Add a node in Neo4J for a dataset and give the owner read access.
     Note: Neo4J manages read access only.
@@ -129,6 +147,7 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
         )
 
 
+@skip
 def add_read_access_in_neo4j(dataset_uuids, user_ids):
     """Give one or more user read access to one or more datasets.
     """
@@ -155,7 +174,8 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
                     statement,
                     {
                         'dataset_uuid': dataset_uuid,
-                        'user_id': user_id
+                        'user_id': user_id,
+
                     }
                 )
 
@@ -171,6 +191,121 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
         )
 
 
+@skip
+def update_annotation_sets_neo4j(username=''):
+    """
+    Update annotation sets in Neo4J
+    AnnotationSets link Ontology classes from accessible DataSets with users
+    """
+
+    logger.info(
+        'Updating annotation sets for "%s" (If username is empty, updates for '
+        'all users) in Neo4J.',
+        username
+    )
+
+    try:
+        requests.post(
+            urljoin(
+                urljoin(
+                    settings.NEO4J_BASE_URL,
+                    'ontology/unmanaged/annotations/'
+                ), username
+            )
+        )
+
+    except Exception as e:
+        logger.error(
+            'Neo4J couldn\'t prepare annotation sets. Error %s', e
+        )
+
+
+@skip
+def add_or_update_user_to_neo4j(user_id, username):
+    """
+    Add or update a user in Neo4J
+    """
+
+    logger.info(
+        'Adding user (%s) with username (%s) in Neo4J',
+        user_id, username
+    )
+
+    graph = py2neo.Graph(urljoin(settings.NEO4J_BASE_URL, 'db/data'))
+
+    statement = (
+        "MERGE (u:User {id:{id}}) "
+        "SET u.name = {name}"
+    )
+
+    try:
+        graph.cypher.execute(
+            statement,
+            {
+                'id': user_id,
+                'name': username
+
+            }
+        )
+
+    except Exception as e:
+        """ Cypher queries are expected to fail and raise an exception when
+        Neo4J is not running or when transactional queries are not available
+        (e.g. Travis CI doesn't support transactional queries yet)
+        """
+        logger.error(
+            'Failed to add user (%s) Exception: %s', user_id, e
+        )
+
+
+@skip
+def delete_user_in_neo4j(user_id, user_name):
+    """
+    Delete a user and its annotation set in Neo4J
+    """
+
+    logger.info('Delete user (ID: %s Name: %s) in Neo4J', user_id, user_name)
+
+    graph = py2neo.Graph(urljoin(settings.NEO4J_BASE_URL, 'db/data'))
+
+    # Remove the user and all its relationships
+    statement = (
+        'MATCH (u:User {id:{id}}) OPTIONAL MATCH (u)-[r]-() DELETE u, r'
+    )
+
+    try:
+        graph.cypher.execute(statement, {'id': user_id})
+
+    except Exception as e:
+        """ Cypher queries are expected to fail and raise an exception when
+        Neo4J is not running or when transactional queries are not available
+        (e.g. Travis CI doesn't support transactional queries yet)
+        """
+        logger.error(
+            'Failed to delete user (%s). Exception: %s', user_id, e
+        )
+
+    # Remove the user's annotation set
+    statement = (
+        'MATCH (n:AnnotationSets{user}) REMOVE n:AnnotationSets{user}'
+        .format(user=user_name.capitalize())
+    )
+
+    try:
+        graph.cypher.execute(statement)
+
+    except Exception as e:
+        """ Cypher queries are expected to fail and raise an exception when
+        Neo4J is not running or when transactional queries are not available
+        (e.g. Travis CI doesn't support transactional queries yet)
+        """
+        logger.error(
+            'Failed to delete the user\'s (%s) annotation set. Exception: %s',
+            user_id, e
+        )
+
+
+@skip
 def remove_read_access_in_neo4j(dataset_uuids, user_ids):
     """Remove read access for one or multiple users to one or more datasets.
     """
@@ -213,6 +348,7 @@ def remove_read_access_in_neo4j(dataset_uuids, user_ids):
         )
 
 
+@skip
 def delete_data_set_index(data_set):
     """Remove a dataset's related document from Solr's index.
     """
@@ -229,6 +365,7 @@ def delete_data_set_index(data_set):
         logger.error("Could not delete from DataSetIndex:", e)
 
 
+@skip
 def delete_data_set_neo4j(dataset_uuid):
     """Remove a dataset's related node in Neo4J.
     """
@@ -261,6 +398,7 @@ def delete_data_set_neo4j(dataset_uuid):
         )
 
 
+@skip
 def delete_ontology_from_neo4j(acronym):
     """Remove ontology and all class nodes that belong exclusively to an
     ontology.
@@ -611,6 +749,7 @@ def create_update_ontology(name, acronym, uri, version, owl2neo4j_version):
         logger.info('Updated %s', ontology)
 
 
+@skip
 def delete_analysis_index(node_instance):
     """Remove a Analysis' related document from Solr's index.
     """

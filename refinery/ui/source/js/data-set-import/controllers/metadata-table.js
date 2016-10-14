@@ -20,6 +20,7 @@ function MetadataTableImportCtrl (
   this.fileSources = fileSources;
   this.tabularFileImportApi = tabularFileImportApi;
   this.metadataStatusService = metadataStatusService;
+  this.whiteSpaceStripFlag = false;
 
   this.gridOptions = {
     resizeable: true
@@ -107,12 +108,20 @@ MetadataTableImportCtrl.prototype.renderTable = function () {
 
   var reader = new FileReader();
   reader.onload = function (event) {
+    self.whiteSpaceStripFlag = false;
+
     self.$rootScope.$apply(function () {
-      // trim whitespaces before and after the entire str then split on newline
-      var dataArr = event.target.result.trim().split(/\r\n|\r|\n/g);
-       // remove any white spaces before/after each row
+      // split on newline
+      var dataArr = event.target.result.split(/\r\n|\r|\n/g);
+
+      // remove any white spaces before/after each row
       for (var i = 0; i < dataArr.length; i++) {
-        dataArr[i] = dataArr[i].trim();
+        var trimmedDataArr = dataArr[i].trim();
+        // Flag for ui to display strip warning.
+        if (!self.whiteSpaceStripFlag && trimmedDataArr !== dataArr[i]) {
+          self.whiteSpaceStripFlag = true;
+        }
+        dataArr[i] = trimmedDataArr;
       }
       // rejoin rows with new line
       var fileStr = dataArr.join('\r\n');
@@ -175,7 +184,8 @@ MetadataTableImportCtrl.prototype.makeColumnDefs = function () {
     }
     columnDefs.push({
       field: columnName,
-      width: columnWidth + '%'
+      width: columnWidth + '%',
+      displayName: columnName
     });
   });
   return columnDefs;

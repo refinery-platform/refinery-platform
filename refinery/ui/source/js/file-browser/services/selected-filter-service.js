@@ -42,8 +42,13 @@ function selectedFilterService ($location) {
   vm.updateSelectedFilters = function (activeFields, attribute, field) {
     // Check if attribute already exists in selectedFieldList
     if (activeFields[field] && vm.selectedFieldList[attribute]) {
-      vm.selectedFieldList[attribute].push(field);
-      updateUrlQuery(field, activeFields[field]);
+      // checks if selected fields exists in the attibute object
+      if (vm.selectedFieldList[attribute].indexOf(field) > -1) {
+        updateUrlQuery(field, activeFields[field]);
+      } else {
+        vm.selectedFieldList[attribute].push(field);
+        updateUrlQuery(field, activeFields[field]);
+      }
     // Add new attribute to selectedFieldList
     } else if (activeFields[field]) {
       vm.selectedFieldList[attribute] = [field];
