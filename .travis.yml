@@ -26,8 +26,6 @@ env:
     - BROWSER_NAME=Chrome  OPERATING_SYSTEM="Windows 10"
     - BROWSER_NAME=Chrome  OPERATING_SYSTEM="Linux"
     - BROWSER_NAME=Safari  OPERATING_SYSTEM="OS X 10.11"
-    - BROWSER_NAME=Safari  OPERATING_SYSTEM="Windows 10"
-    - BROWSER_NAME=Safari  OPERATING_SYSTEM="Linux"
 before_script:
   - createuser --createdb --no-superuser --no-createrole vagrant
   - createdb -O vagrant refinery
