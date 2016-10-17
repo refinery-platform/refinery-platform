@@ -37,9 +37,7 @@ function MetadataTableImportCtrl (
 
   // Helper method to exit out of error alert
   this.closeError = function () {
-    if (this.isErrored) {
-      this.isErrored = false;
-    }
+    this.isErrored = false;
   };
 }
 
