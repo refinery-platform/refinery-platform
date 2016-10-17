@@ -124,7 +124,7 @@ def download_http_file(url, out_dir, accession, new_name=None,
             else:
                 status = r"%10d  [%3.2f%%]" % (file_size_dl, downloaded)
                 status += chr(8) * (len(status) + 1)
-                print status,
+                logger.debug(status)
         f.close()
 
 

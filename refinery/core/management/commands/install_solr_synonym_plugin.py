@@ -1,7 +1,9 @@
 import logging
 import time
 import shutil
+import sys
 from optparse import make_option
+
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
@@ -27,7 +29,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if not settings.SOLR_SYNONYMS:
-            print(
+            sys.stdout.write(
                 u'\033[91m' +
                 u'Enable synonym search in settings first' +
                 u'\033[0m'
@@ -35,14 +37,14 @@ class Command(BaseCommand):
             exit()
 
         if not options['jar']:
-            print(
+            sys.stderr.write(
                 u'\033[91m' +
                 u'JAR file not given' +
                 u'\033[0m'
             )
             exit()
 
-        print('Install Solr Plugin...')
+        sys.stdout.write('Install Solr Plugin...')
         start = time.time()
 
         shutil.copy(options['jar'], settings.SOLR_LIB_DIR + '/')
@@ -50,7 +52,7 @@ class Command(BaseCommand):
         end = time.time()
         minutes = int(round((end - start) // 60))
         seconds = int(round((end - start) % 60))
-        print(
+        sys.stdout.write(
             u'Install Solr Plugin... ' +
             u'\033[32m\u2713\033[0m ' +
             u'\033[2m({} min and {} sec)\033[22m'.format(
@@ -58,7 +60,7 @@ class Command(BaseCommand):
                 seconds
             )
         )
-        print(
+        sys.stdout.write(
             u'\033[93m' +
             u'\033[4m\033[1mIMPORTANT\033[21m\033[24m  ' +
             u'Restart Solr now: `sudo service solr restart`' +

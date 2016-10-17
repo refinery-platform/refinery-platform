@@ -1,7 +1,9 @@
 import logging
 import time
 import os
+import sys
 from optparse import make_option
+
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
@@ -27,7 +29,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if settings.SOLR_SYNONYMS:
-            print(
+            sys.stderr.write(
                 u'\033[91m' +
                 u'Disable synonym search in settings first' +
                 u'\033[0m'
@@ -35,20 +37,20 @@ class Command(BaseCommand):
             exit()
 
         if not options['name']:
-            print(
+            sys.stderr.write(
                 u'\033[91m' +
                 u'Filename of plugin not given' +
                 u'\033[0m'
             )
             exit()
 
-        print('Uninstall Solr Plugin...')
+        sys.stdout.write('Uninstall Solr Plugin...')
         start = time.time()
 
         try:
             os.remove(settings.SOLR_LIB_DIR + '/' + options['name'])
         except OSError:
-            print(
+            sys.stderr.write(
                 u'\033[91m' +
                 u'File not found' +
                 u'\033[0m'
@@ -58,7 +60,7 @@ class Command(BaseCommand):
         end = time.time()
         minutes = int(round((end - start) // 60))
         seconds = int(round((end - start) % 60))
-        print(
+        sys.stdout.write(
             u'Install Solr Plugin... ' +
             u'\033[32m\u2713\033[0m ' +
             u'\033[2m({} min and {} sec)\033[22m'.format(
@@ -66,7 +68,7 @@ class Command(BaseCommand):
                 seconds
             )
         )
-        print(
+        sys.stdout.write(
             u'\033[93m' +
             u'\033[4m\033[1mIMPORTANT\033[21m\033[24m  ' +
             u'Restart Solr now: `sudo service solr restart`' +

@@ -147,7 +147,7 @@ class Investigation(NodeCollection):
 
     """easily retrieves the proper NodeCollection fields"""
     def get_identifier(self):
-        print type(self.identifier)
+        logger.info(type(self.identifier))
         if (self.identifier is None) or (self.identifier.strip() == ""):
             # if there's no investigation identifier, then there's only 1 study
             study = self.study_set.all()[0]
