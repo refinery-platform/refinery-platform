@@ -126,9 +126,11 @@ MetadataTableImportCtrl.prototype.renderTable = function () {
       // rejoin rows with new line
       var fileStr = dataArr.join('\r\n');
       /* Create a new file with the modified data and the originial file props.
-      * Safari does not support the File API Constructor.
+      * Safari has issues with the File API Constructor.
       * */
-      if (typeof self.$window.File === 'function') {
+      if (self.$window.navigator.userAgent.indexOf('Safari') > 0) {
+        self.strippedFile = new Blob([fileStr], { type: 'application/json' });
+      } else if (typeof self.$window.File === 'function') {
         self.strippedFile = new File([fileStr], self.file.name, self.file);
       } else {
         self.strippedFile = new Blob([fileStr], { type: 'application/json' });
