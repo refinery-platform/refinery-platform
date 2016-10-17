@@ -34,6 +34,13 @@ function MetadataTableImportCtrl (
   // `this.customSeparator` is an empty String.
   this.isSeparatorOk = true;
   this.setParser();
+
+  // Helper method to exit out of error alert
+  this.closeError = function () {
+    if (this.isErrored) {
+      this.isErrored = false;
+    }
+  };
 }
 
 Object.defineProperty(
