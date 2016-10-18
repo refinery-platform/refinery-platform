@@ -40,19 +40,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if not settings.SOLR_SYNONYMS:
-            sys.stdout.write(
-                u'\033[91m' +
-                u'Enable synonym search in settings first' +
-                u'\033[0m'
-            )
+            sys.stdout.write('Enable synonym search in settings first')
             exit()
 
         if not options['identifier']:
-            sys.stderr.write(
-                u'\033[91m' +
-                u'Identifier file not given' +
-                u'\033[0m'
-            )
+            sys.stderr.write('Identifier file not given')
             exit()
 
         id = options['identifier'].lower()
@@ -113,11 +105,5 @@ class Command(BaseCommand):
         else:
             message = 'added'
 
-        sys.stdout.write(
-            u'Solr synonyms have been ' + message + '. '
-            u'\033[32m\u2713\033[0m ' +
-            u'\033[2m({} min and {} sec)\033[22m'.format(
-                minutes,
-                seconds
-            )
-        )
+        sys.stdout.write('Solr synonyms have been {}. {} min and {} sec'
+                         .format(message, minutes, seconds))

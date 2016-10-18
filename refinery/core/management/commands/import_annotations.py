@@ -184,12 +184,8 @@ class Command(BaseCommand):
             minutes = int(round((end - start) // 60))
             seconds = int(round((end - start) % 60))
             sys.stdout.write(
-                u'Clear existing annotations and users... ' +
-                u'\033[32m\u2713\033[0m ' +
-                u'\033[2m({} min and {} sec)\033[22m'.format(
-                    minutes,
-                    seconds
-                )
+                'Clear existing annotations and users... {} min and {} sec'
+                .format(minutes, seconds)
             )
 
         sys.stdout.write('Import annotations...')
@@ -217,9 +213,7 @@ class Command(BaseCommand):
         seconds = int(round((end - start) % 60))
 
         sys.stdout.write(
-            u'Import annotations... \033[32m\u2713\033[0m ' +
-            u'\033[2m({} min and {} sec)\033[22m'.format(
-                minutes,
-                seconds
+            'Import annotations... {} min and {} sec'.format(
+                minutes, seconds
             )
         )
