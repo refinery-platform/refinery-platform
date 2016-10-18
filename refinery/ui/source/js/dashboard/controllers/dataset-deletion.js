@@ -55,6 +55,7 @@ DataSetDeleteCtrl.prototype.delete = function () {
       that.deletionMessage = response.data;
       that.isDeleting = false;
       that.deleteSuccessful = true;
+      that.dataSets.newOrCachedCache(undefined, true);
       that.dashboardDataSetsReloadService.reload(true);
       that.analyses.newOrCachedCache(undefined, true);
       that.analysesReloadService.reload();
