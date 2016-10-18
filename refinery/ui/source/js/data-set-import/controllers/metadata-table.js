@@ -126,9 +126,11 @@ MetadataTableImportCtrl.prototype.renderTable = function () {
       // rejoin rows with new line
       var fileStr = dataArr.join('\r\n');
       /* Create a new file with the modified data and the originial file props.
-      * Safari has issues with the File API Constructor.
+      * Safari supports File API Constructor but has issues with appending the
+      * file. Symptoms show up with content-type errors and file size 0 on
+      * back end. userAgent contains browser info
       * */
-      if (self.$window.navigator.userAgent.indexOf('Safari') > 0) {
+      if (self.$window.navigator.userAgent.indexOf('Safari') > -1) {
         self.strippedFile = new Blob([fileStr], { type: 'application/json' });
       } else if (typeof self.$window.File === 'function') {
         self.strippedFile = new File([fileStr], self.file.name, self.file);
