@@ -61,6 +61,7 @@ function DashboardCtrl (
   this.treemapContext = treemapContext;
   this.dashboardVisData = dashboardVisData;
   this.dataCart = dataCart;
+  // variable to track filters selected in ui for data set api query
   this.dataSetFilters = {};
 
   this.searchQueryDataSets = '';
