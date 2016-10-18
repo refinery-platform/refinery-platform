@@ -61,6 +61,7 @@ function DashboardCtrl (
   this.treemapContext = treemapContext;
   this.dashboardVisData = dashboardVisData;
   this.dataCart = dataCart;
+  this.dataSetFilters = {};
 
   this.searchQueryDataSets = '';
 
@@ -442,11 +443,13 @@ Object.defineProperty(
 
       this._dataSetsFilterGroup = value;
       if (typeof groupId === 'number') {
-        this.dataSet.filter({
-          group: groupId
-        });
+        this.dataSetFilters.group = groupId;
+        this.dataSet.filter(this.dataSetFilters);
       } else {
-        this.dataSet.all();
+        // remove group property
+        delete this.dataSetFilters.group;
+        this.dataSet.filter(this.dataSetFilters);
+       // this.dataSet.all();
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
@@ -465,11 +468,12 @@ Object.defineProperty(
     set: function (value) {
       this._dataSetsFilterOwner = value;
       if (value) {
-        this.dataSet.filter({
-          is_owner: 'True'
-        });
+        this.dataSetFilters.is_owner = 'True';
+        this.dataSet.filter(this.dataSetFilters);
       } else {
-        this.dataSet.all();
+        delete this.dataSetFilters.is_owner;
+        this.dataSet.filter(this.dataSetFilters);
+       // this.dataSet.all();
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
@@ -488,11 +492,11 @@ Object.defineProperty(
     set: function (value) {
       this._dataSetsFilterPublic = value;
       if (value) {
-        this.dataSet.filter({
-          public: 'True'
-        });
+        this.dataSetFilters.public = 'True';
+        this.dataSet.filter(this.dataSetFilters);
       } else {
-        this.dataSet.all();
+        delete this.dataSetFilters.public;
+        this.dataSet.filter(this.dataSetFilters);
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
@@ -666,6 +670,7 @@ DashboardCtrl.prototype.checkAnalysesFilterSort = function () {
  * @date    2016-05-09
  */
 DashboardCtrl.prototype.checkDataSetsFilter = function () {
+  console.log('in check data sets filter');
   if (this.dataSetsFilterOwner) {
     this.dataSetsFilter = true;
     return;
