@@ -1,10 +1,11 @@
 import logging
+from optparse import make_option
 import py2neo
 import requests
 import sys
 import time
 import urlparse
-from optparse import make_option
+
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
