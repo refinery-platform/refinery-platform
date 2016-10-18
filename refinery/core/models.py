@@ -1659,6 +1659,10 @@ class Analysis(OwnableResource):
                     analysis_results[0].file_store_uuid,
                     derived_data_file_node.name,
                     derived_data_file_node.uuid)
+                derived_data_file_node.save()
+                # Try to generate an auxiliary node for visualization purposes
+                derived_data_file_node.run_generate_auxiliary_node_task()
+
             if analysis_results.count() > 1:
                 logger.warning("Multiple output files returned for '%s.%s'." +
                                "No assignment to output node was made.",
