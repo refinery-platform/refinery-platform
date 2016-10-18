@@ -449,7 +449,6 @@ Object.defineProperty(
         // remove group property
         delete this.dataSetFilters.group;
         this.dataSet.filter(this.dataSetFilters);
-       // this.dataSet.all();
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
@@ -471,9 +470,9 @@ Object.defineProperty(
         this.dataSetFilters.is_owner = 'True';
         this.dataSet.filter(this.dataSetFilters);
       } else {
+        // remove is_owner property, avoids searching for non-owned data sets
         delete this.dataSetFilters.is_owner;
         this.dataSet.filter(this.dataSetFilters);
-       // this.dataSet.all();
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
@@ -495,6 +494,7 @@ Object.defineProperty(
         this.dataSetFilters.public = 'True';
         this.dataSet.filter(this.dataSetFilters);
       } else {
+         // remove is_owner property, avoids searching for non-public data sets
         delete this.dataSetFilters.public;
         this.dataSet.filter(this.dataSetFilters);
       }
