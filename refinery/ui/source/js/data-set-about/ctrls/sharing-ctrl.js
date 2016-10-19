@@ -30,7 +30,7 @@ function AboutSharingCtrl (
     dataSetAboutFactory
       .getOwnerName(userUuid)
       .then(function () {
-        vm.ownerName = dataSetAboutFactory.ownerProfile.fullName;
+        vm.ownerName = dataSetAboutFactory.ownerName;
       }, function (error) {
         $log.error(error);
       });

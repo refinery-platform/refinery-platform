@@ -94,7 +94,6 @@ function dataSetAboutFactory (
     fileStoreItem: fileStoreItem,
     investigation: investigation,
     isaTab: isaTab,
-    ownerProfile: ownerProfile,
     ownerName: ownerName,
     studies: studies,
     getDataSet: getDataSet,
