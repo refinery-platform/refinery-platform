@@ -1557,7 +1557,22 @@ class Analysis(OwnableResource):
                 else:
                     if item.get_filetype() == zipfile:
                         new_file_name = ''.join([root, '.zip'])
-            rename(result.file_store_uuid, new_file_name)
+            renamed_file_store_item = rename(
+                result.file_store_uuid, new_file_name)
+
+            # Try to generate an auxiliary node for visualization purposes
+            # NOTE: We have to do this after renaming happens because before
+            #  renaming, said FileStoreItems's datafile field does not point
+            #  to an actual file
+            if renamed_file_store_item:
+                try:
+                    node = Node.objects.get(
+                        file_uuid=renamed_file_store_item.uuid)
+                except (Node.DoesNotExist, Node.MultipleObjectsReturned) as e:
+                    logger.error("Error Fetching Node: %s", e)
+                else:
+                    if node.is_derived():
+                        node.run_generate_auxiliary_node_task()
 
     def get_config(self):
         # TEST RECREATING RET_LIST DICTIONARY FROM ANALYSIS MODEL
@@ -1659,9 +1674,6 @@ class Analysis(OwnableResource):
                     analysis_results[0].file_store_uuid,
                     derived_data_file_node.name,
                     derived_data_file_node.uuid)
-                derived_data_file_node.save()
-                # Try to generate an auxiliary node for visualization purposes
-                derived_data_file_node.run_generate_auxiliary_node_task()
 
             if analysis_results.count() > 1:
                 logger.warning("Multiple output files returned for '%s.%s'." +
