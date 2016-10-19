@@ -724,8 +724,8 @@ def solr_select(request, core):
         # full_response.content has no facet_fields. Handling
         # this one-off case for now since the way data_sets 2 filebrowser
         # interacts with Solr doesn't produce this extra 400 error
-        if (full_response.status_code != 200 and "Pivot Facet needs at least "
-           "one field name" not in full_response.content):
+        if ("Pivot Facet needs at least one field name"
+           not in full_response.content):
             full_response.raise_for_status()
         response = full_response.content
     except HTTPError as e:
