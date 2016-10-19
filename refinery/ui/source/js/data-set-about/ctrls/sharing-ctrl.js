@@ -8,7 +8,7 @@ function AboutSharingCtrl (
   $log
   ) {
   var vm = this;
-  vm.dataSetSharing = dataSetAboutFactory.dataSetSharing.share_list;
+  vm.dataSetSharing = dataSetAboutFactory.dataSetSharing;
   vm.ownerName = dataSetAboutFactory.ownerName;
   vm.groupList = dataSetAboutFactory.dataSetSharing.share_list;
 
@@ -18,6 +18,7 @@ function AboutSharingCtrl (
     dataSetAboutFactory
       .getDataSetSharing(dataSetUuid)
       .then(function () {
+        vm.dataSetSharing = dataSetAboutFactory.dataSetSharing;
         vm.groupList = dataSetAboutFactory.dataSetSharing.share_list;
         vm.refreshOwnerName(vm.dataSetSharing.owner);
       }, function (error) {
