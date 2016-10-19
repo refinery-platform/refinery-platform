@@ -35,8 +35,6 @@
             </div>
           </div>
         </div>
-
-
       </span>
     </div>
 
@@ -51,8 +49,11 @@
         <i class="fa fa-times-circle"
           ng-if="dashboard.searchQueryDataSets"
           ng-click="dashboard.resetDataSetSearch()"></i>
-        <input
 
+        <!--The 'metadata-search' id below is used to define custom
+          styling to address a padding issue observed in Firefox-->
+        <input
+          id="metadata-search"
           type="text"
           class="search-query form-control"
           placeholder="Search"
@@ -139,7 +140,7 @@
             </button>
           </div>
           <div class="floatbox-max-left">
-            <h4>
+            <h4 id="total-datasets">
               <span ng-if="dashboard.searchQueryDataSets.length">
                 Found
               </span>
@@ -281,6 +282,7 @@
           </div>
           <div
             class="refinery-panel-content scrollable adjustable-height">
+
             <ul
               class="results no-list-style">
               <li
@@ -289,6 +291,7 @@
                 ng-class="{'hovered': dataSet.hovered, 'locked': dataSet.locked, 'previewing': dashboard.dataSetIsPreviewed(dataSet.uuid)}"
                 ng-mouseenter="dashboard.dataSetMouseEnter(dataSet)"
                 ng-mouseleave="dashboard.dataSetMouseLeave(dataSet)">
+
                 <a
                   class="preview"
                   title="View content in File Browser"
@@ -373,11 +376,22 @@
                       refinery-tooltip
                       refinery-tooltip-container="body"
                       refinery-tooltip-placement="top">
-                      <i class="fa fa-calendar-o"
-                        ng-click="dashboard.dataCart.add(dataSet)"></i>
+                      <i class="fa fa-calendar-o"></i>
                       {{ dashboard.readableDate(dataSet, 'modificationDate') }}
                     </li>
                     <li class="separator">&middot;</li>
+                    <li class="indicator" ng-if="dataSet.analyses">
+                      <a id="analyses-indicator" class="pointer"
+                      ng-href="/data_sets/{{ dataSet.uuid }}/#/analyses"
+                      title="{{ dataSet.analyses.length }} {{ dataSet.analyses.length > 1 ? 'Analyses
+                       have' : 'Analysis has' }} been run
+                       on this Dataset"
+                      refinery-tooltip
+                      refinery-tooltip-container="body"
+                      refinery-tooltip-placement="right">
+                        <i class="fa fa-bar-chart-o"></i> {{ dataSet.analyses.length }}
+                      </a>
+                    </li>
                     <li class="indicator">
                       <i class="fa fa-star is-glowing-yellow-text pointer"
                         title="Added to data cart. Click to remove."
@@ -395,6 +409,18 @@
                         refinery-tooltip-container="body"
                         refinery-tooltip-placement="top"
                         refinery-tooltip-hide-on-click="true"></i>
+                    </li>
+                    <li>
+                      <i
+                        class="fa fa-trash-o indicator dataset-delete pointer"
+                        title="Delete Dataset"
+                        ng-if="dataSet.is_owner"
+                        ng-click="dashboard.openDataSetDeleteModal(dataSet)"
+                        refinery-tooltip
+                        refinery-tooltip-container="body"
+                        refinery-tooltip-placement="right"
+                        refinery-tooltip-hide-on-click="true">
+                      </i>
                     </li>
                   </ul>
                 </div>
@@ -504,11 +530,24 @@
                     refinery-tooltip
                     refinery-tooltip-container="body"
                     refinery-tooltip-placement="top">
-                    <i class="fa fa-calendar-o"
-                      ng-click="dashboard.dataCart.add(dataSet)"></i>
+                    <i class="fa fa-calendar-o"></i>
                     {{ dashboard.readableDate(dataSet, 'modificationDate') }}
                   </li>
                   <li class="separator">&middot;</li>
+                  <li class="indicator" ng-if="dataSet.analyses">
+                      <a id="analyses-indicator" class="pointer"
+                      ng-href="/data_sets/{{ dataSet.uuid }}/#/analyses"
+                      title="{{ dataSet.analyses.length }} {{
+                      dataSet.analyses.length > 1 ? 'Analyses
+                       have' : 'Analysis has' }} been run
+                       on this Dataset"
+                      refinery-tooltip
+                      refinery-tooltip-container="body"
+                      refinery-tooltip-placement="right">
+                        <i class="fa fa-bar-chart-o"></i> {{ dataSet
+                        .analyses.length }}
+                      </a>
+                  </li>
                   <li class="indicator">
                     <i class="fa fa-star is-glowing-yellow-text pointer"
                       title="Added to data cart. Click to remove."
@@ -526,6 +565,18 @@
                       refinery-tooltip-container="body"
                       refinery-tooltip-placement="top"
                       refinery-tooltip-hide-on-click="true"></i>
+                  </li>
+                  <li>
+                    <i
+                      class="fa fa-trash-o indicator dataset-delete pointer"
+                      title="Delete Dataset"
+                      ng-if="dataSet.is_owner"
+                      ng-click="dashboard.openDataSetDeleteModal(dataSet)"
+                      refinery-tooltip
+                      refinery-tooltip-container="body"
+                      refinery-tooltip-placement="right"
+                      refinery-tooltip-hide-on-click="true">
+                    </i>
                   </li>
                 </ul>
               </div>
@@ -652,7 +703,7 @@
             </span>
           </div>
           <div class="floatbox-max-left">
-            <h4>
+            <h4 id="total-analyses">
               {{ dashboard.analyses.totalReadable }}
               {{ dashboard.analyses.totalReadable > 1 ? 'analyses' : 'analysis' }}
             </h4>
@@ -673,7 +724,7 @@
               ng-click="dashboard.toogleRadio()"
               ng-model="dashboard.analysesFilterStatus">
               Running
-              <i class="info-icon analyses-status fa fa-cog fa-spin"></i>
+              <i class="info-icon analyses-status fa fa-cog"></i>
           </label>
         </div>
         <div class="entry">
@@ -741,29 +792,6 @@
             ui-scroll="analysis in dashboard.analyses"
             buffer-size="50"
             adapter="dashboard.analysesAdapter">
-            <span class="spinner">
-              <i
-                class="analyses-status {{ analysis.status | analysisStatusIcon }}"
-                title="{{ analysis.status | analysisStatusTitle }}"
-                refinery-tooltip
-                refinery-tooltip-container="body"
-                refinery-tooltip-placement="left">
-              </i>
-            </span>
-            <i
-              class="fa fa-user"
-              title="You ran this analysis"
-              ng-if="analysis.is_owner"
-              refinery-tooltip
-              refinery-tooltip-container="body"
-              refinery-tooltip-placement="top"></i>
-            <i
-              class="fa fa-users icon-shared-in"
-              title="Some collaborator ran this analysis"
-              ng-if="!analysis.is_owner"
-              refinery-tooltip
-              refinery-tooltip-container="body"
-              refinery-tooltip-placement="top"></i>
             <span ng-switch on="analysis.status">
               <span ng-if="SUCCESS">
                 <a
@@ -778,6 +806,54 @@
               </a>
               </span>
             </span>
+            <div class="flex-box indicators">
+                <ul class="flex-item-two flex-left no-list-style">
+                  <li>
+                    <i
+                      class="analyses-status {{ analysis.status | analysisStatusIcon }}"
+                      title="{{ analysis.status | analysisStatusTitle }}"
+                      refinery-tooltip
+                      refinery-tooltip-container="body"
+                      refinery-tooltip-placement="left">
+                    </i>
+                  </li>
+                  <li class="indicator">
+                    <i
+                      class="fa fa-user"
+                      title="You ran this analysis"
+                      ng-if="analysis.is_owner"
+                      refinery-tooltip
+                      refinery-tooltip-container="body"
+                      refinery-tooltip-placement="top"></i>
+                    <i
+                      class="fa fa-users icon-shared-in"
+                      title="Some collaborator ran this analysis"
+                      ng-if="!analysis.is_owner"
+                      refinery-tooltip
+                      refinery-tooltip-container="body"
+                      refinery-tooltip-placement="top"></i>
+                  </li>
+                  <li class="indicator"
+                    title="Modification Date"
+                    refinery-tooltip
+                    refinery-tooltip-container="body"
+                    refinery-tooltip-placement="top">
+                    <i class="fa fa-calendar-o"></i>
+                    {{ dashboard.readableDate(analysis, 'modification_date') }}
+                  </li>
+                  <li class="separator" ng-if="analysis.is_owner">&middot;</li>
+                  <li class="indicator" ng-if="analysis.is_owner">
+                    <i class="fa fa-trash-o analysis-delete pointer"
+                      title="Delete Analysis"
+                      ng-click="dashboard.openAnalysisDeleteModal(analysis)"
+                      refinery-tooltip
+                      refinery-tooltip-container="body"
+                      refinery-tooltip-placement="right"
+                      refinery-tooltip-hide-on-click="true">
+                    </i>
+                  </li>
+                </ul>
+              </div>
           </li>
           <li ng-if="dashboard.analysesAdapter.isLoading">
             <div class="refinery-request-loading">

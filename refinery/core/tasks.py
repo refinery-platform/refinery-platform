@@ -178,7 +178,7 @@ def copy_dataset(dataset, owner, versions=None, copy_files=False):
     dataset_copy = None
     data_sets = DataSet.objects.filter(name="%s (copy)" % dataset.name)
     for data_set in data_sets:
-        print data_set
+        logger.debug("DataSet: %s", data_set)
         if data_set.get_owner() == owner:
             dataset_copy = data_set
     # if after checking all datasets there one with this name owned by the

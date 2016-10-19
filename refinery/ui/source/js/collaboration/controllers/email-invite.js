@@ -13,12 +13,12 @@ function EmailInviteCtrl (
 
   // After invite is sent, an alert pops up with following message
   var generateAlertMessage = function (infoType, email) {
-    if (infoType === 'info') {
-      vm.alertType = 'info';
-      vm.responseMessage = 'Invitation successfully sent to ' + email;
+    if (infoType === 'success') {
+      vm.alertType = 'success';
+      vm.responseMessage = 'Successfully sent invitation to ' + email;
     } else if (infoType === 'error') {
       vm.alertType = 'error';
-      vm.responseMessage = 'Invitiation could not be sent to' + email;
+      vm.responseMessage = 'Error, invitiation could not be sent to' + email;
     }
   };
 
@@ -31,7 +31,7 @@ function EmailInviteCtrl (
     .$promise
     .then(
       function () {
-        generateAlertMessage('info', email);
+        generateAlertMessage('success', email);
         groupDataService.update();
         // Automatically dismisses modal
         $timeout(function () {

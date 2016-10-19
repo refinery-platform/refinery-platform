@@ -322,7 +322,7 @@ class TDFFile(object):
 
         # assumes that the number of tiles is equal across all window functions
         for tile_index in range(len(tiles[window_functions[0]])):
-            print "Tile: " + str(tile_index)
+            logger.info("Tile: %s", tile_index)
             # TODO: compute correct start position
             # (first tile_index is usually > 0)
             location = {}

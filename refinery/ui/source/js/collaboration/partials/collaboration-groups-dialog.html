@@ -34,16 +34,18 @@
           ng-click="modal.deleteGroup()"
           ng-disabled="!modal.group.can_edit">
           Delete
-
         </button>
       </td>
     </tr>
-    <tr>
-      <div class="text-warning" ng-if="modal.errorFlag">
-        <i class="fa fa-warning" aria-hidden="true"></i>
-          {{ modal.errorMessage }}
-      </div>
-    </tr>
     </tbody>
   </table>
+</div>
+<div class="modal-footer">
+  <div
+    class='p-t-1-2'
+    ng-show="modal.responseMessage">
+     <div class="alert alert-{{ modal.alertType }} text-center">
+       {{modal.responseMessage}}
+     </div>
+  </div>
 </div>

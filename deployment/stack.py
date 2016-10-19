@@ -227,6 +227,40 @@ def main():
                                 ]
                             }
                         ]
+                    },
+                },
+                {
+                    'PolicyName': "CreateSnapshot",
+                    'PolicyDocument': {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "ec2:CreateSnapshot"
+                                ],
+                                "Resource": [
+                                    "*"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                {
+                    'PolicyName': "CreateDBSnapshot",
+                    'PolicyDocument': {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "rds:CreateDBSnapshot"
+                                ],
+                                "Resource": [
+                                    "*"
+                                ]
+                            }
+                        ]
                     }
                 },
                 {
@@ -340,7 +374,7 @@ def main():
             "Tags": instance_tags,  # todo: Should be different?
         })
 
-    print(str(cft))
+    sys.stdout.write(str(cft))
 
 
 def load_config():
