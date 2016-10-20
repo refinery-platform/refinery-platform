@@ -1,5 +1,17 @@
 # Change Log
 
+## [v1.5.1](https://github.com/parklab/refinery-platform/tree/v1.5.1) (2016-10-20)
+[Full Changelog](https://github.com/parklab/refinery-platform/compare/v1.5.0...v1.5.1)
+
+**Hotfixes for [Release v1.5.0](https://github.com/parklab/refinery-platform/tree/v1.5.0)**
+
+- Specifically set blob api for safari. [#1482](https://github.com/parklab/refinery-platform/pull/1482)
+- Fix search text placement to work in Firefox as well [#1480](https://github.com/parklab/refinery-platform/pull/1480)
+- Fix caching bug where # of Analyses run on a DataSet wasn't updated after an Analysis deletion [#1481](https://github.com/parklab/refinery-platform/pull/1481)
+- Remove add data set method. [#1485](https://github.com/parklab/refinery-platform/pull/1485)
+- Remove unneccessary cog animation. [#1488](https://github.com/parklab/refinery-platform/pull/1488)
+- Hotfix for issue [#1491](https://github.com/parklab/refinery-platform/commit/f98014a40d94a31c9c55701e6215dd7af428b981)
+
 ## [v1.5.0](https://github.com/parklab/refinery-platform/tree/v1.5.0) (2016-10-07)
 [Full Changelog](https://github.com/parklab/refinery-platform/compare/v1.4.0...v1.5.0)
 
