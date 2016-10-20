@@ -158,7 +158,7 @@ function fileBrowserFactory (
 
   // helper method to trim assayFiles data for caching purposes
   var trimAssayFiles = function (sliceCount, startInd) {
-    if (startInd === -1) {
+    if (!startInd) {
       assayFiles = assayFiles.slice(sliceCount);
     } else {
       assayFiles = assayFiles.slice(startInd, sliceCount);

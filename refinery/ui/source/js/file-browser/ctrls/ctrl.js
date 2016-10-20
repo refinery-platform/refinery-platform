@@ -286,7 +286,7 @@ function FileBrowserCtrl (
       vm.gridApi.infiniteScroll.saveScrollPercentage();
 
       if (discardDirection === 'up') {
-        fileBrowserFactory.trimAssayFiles(vm.rowCount, -1);
+        fileBrowserFactory.trimAssayFiles(vm.rowCount);
         vm.firstPage++;
         $timeout(function () {
           // wait for grid to ingest data changes
