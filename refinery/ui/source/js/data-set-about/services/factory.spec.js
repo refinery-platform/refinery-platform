@@ -18,7 +18,6 @@ describe('Data Set About Factory', function () {
     expect(factory.dataSet).toEqual({ });
     expect(factory.studies).toEqual([]);
     expect(factory.assays).toEqual([]);
-    expect(factory.ownerProfile).toEqual({});
   });
 
   describe('getDataSet', function () {
