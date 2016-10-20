@@ -8,6 +8,7 @@ function AnalysisDeleteCtrl (
   config,
   analysis,
   analyses,
+  dataSets,
   analysesReloadService,
   isOwner,
   dashboardDataSetsReloadService
@@ -17,6 +18,7 @@ function AnalysisDeleteCtrl (
   this.config = config;
   this.analysis = analysis;
   this.analyses = analyses;
+  this.dataSets = dataSets;
   this.$uibModalInstance = $uibModalInstance;
   this.deletionService = deletionService;
   this.analysesReloadService = analysesReloadService;
@@ -54,6 +56,7 @@ AnalysisDeleteCtrl.prototype.delete = function () {
       that.deletionMessage = response.data;
       that.isDeleting = false;
       that.deleteSuccessful = true;
+      that.dataSets.newOrCachedCache(undefined, true);
       that.dashboardDataSetsReloadService.reload(true);
       that.analyses.newOrCachedCache(undefined, true);
       that.analysesReloadService.reload();
@@ -75,6 +78,7 @@ angular
     'config',
     'analysis',
     'analyses',
+    'dataSets',
     'analysesReloadService',
     'isOwner',
     'dashboardDataSetsReloadService',

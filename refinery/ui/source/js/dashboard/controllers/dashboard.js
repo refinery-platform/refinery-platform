@@ -1659,6 +1659,7 @@ DashboardCtrl.prototype.openAnalysisDeleteModal = function (analysis) {
       },
       analysis: analysis,
       analyses: this.analyses,
+      dataSets: this.dataSets,
       analysesReloadService: this.dashboardAnalysesReloadService,
       isOwner: analysis.is_owner
     }
