@@ -7,6 +7,7 @@ function fileBrowserFactory (
   assayAttributeService,
   $window,
   $log) {
+  // assayfiles has max 300 rows, ctrl adds/subtracts rows to maintain count
   var assayFiles = [];
   var assayAttributes = [];
   var assayAttributeOrder = [];
@@ -124,6 +125,7 @@ function fileBrowserFactory (
 
   var getAssayFiles = function (unencodeParams) {
     var params = {};
+    var additionalAssayFiles = [];
     angular.copy(unencodeParams, params);
 
     // encodes all field names to avoid issues with escape characters.
@@ -140,7 +142,9 @@ function fileBrowserFactory (
       angular.copy(culledAttributes, assayAttributes);
       // Add file_download column first
       assayAttributes.unshift({ display_name: 'Url', internal_name: 'Url' });
-      angular.copy(response.nodes, assayFiles);
+      angular.copy(response.nodes, additionalAssayFiles);
+      // require a deep copy
+      angular.copy(assayFiles.concat(additionalAssayFiles), assayFiles);
       addNodeDetailtoAssayFiles();
       assayFilesTotalItems.count = response.nodes_count;
       var filterObj = generateFilters(response.attributes, response.facet_field_counts);
@@ -150,6 +154,15 @@ function fileBrowserFactory (
       $log.error(error);
     });
     return assayFile.$promise;
+  };
+
+  // helper method to trim assayFiles data for caching purposes
+  var trimAssayFiles = function (sliceCount, startInd) {
+    if (startInd === -1) {
+      assayFiles = assayFiles.slice(sliceCount);
+    } else {
+      assayFiles = assayFiles.slice(startInd, sliceCount);
+    }
   };
 
   var getAssayAttributeOrder = function (uuid) {
@@ -207,7 +220,8 @@ function fileBrowserFactory (
     getAssayAttributeOrder: getAssayAttributeOrder,
     postAssayAttributeOrder: postAssayAttributeOrder,
     getNodeGroupList: getNodeGroupList,
-    encodeAttributeFields: encodeAttributeFields
+    encodeAttributeFields: encodeAttributeFields,
+    trimAssayFiles: trimAssayFiles
   };
 }
 
