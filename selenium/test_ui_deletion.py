@@ -37,10 +37,13 @@ def selenium(selenium):
 @pytest.fixture
 def login(selenium):
     selenium.get(base_url)
+    selenium.implicitly_wait(5)
     selenium.find_element_by_link_text('Login').click()
+    selenium.implicitly_wait(5)
     selenium.find_element_by_id('id_username').send_keys(creds['username'])
     selenium.find_element_by_id('id_password').send_keys(creds['password'])
     selenium.find_element_by_xpath('//input[@type="submit"]').click()
+    selenium.implicitly_wait(5)
     assert_body_text(selenium, 'Logout')
 
 
