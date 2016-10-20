@@ -31,7 +31,6 @@ describe('Controller: FileBrowserCtrl', function () {
   });
 
   it('Data & UI displays variables should exist for views', function () {
-    expect(ctrl.assayFiles).toEqual([]);
     expect(ctrl.assayAttributes).toEqual([]);
     expect(ctrl.attributeFilter).toEqual({});
     expect(ctrl.analysisFilter).toEqual({});
