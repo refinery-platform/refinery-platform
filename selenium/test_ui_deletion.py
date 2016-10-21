@@ -6,9 +6,9 @@ import pytest
 from django.contrib.auth.models import User
 
 from core.models import DataSet, Analysis
-from factory_boy.django_model_factories import (
-    make_datasets, make_analyses_with_single_dataset)
-from factory_boy.utils import cleanup
+
+from factory_boy.utils import cleanup, make_datasets, \
+    make_analyses_with_single_dataset
 from utils.utils import (assert_text_within_id, wait_until_id_clickable,
                          assert_body_text)
 
