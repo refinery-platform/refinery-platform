@@ -19,13 +19,13 @@ env:
   matrix:
   # Each row within `matrix` will spawn a separate Travis build with the env
   # vars specified in said row while inheriting all vars defined in `global`
-    - BROWSER_NAME=Firefox  OPERATING_SYSTEM="OS X 10.10"
+    - BROWSER_NAME=Firefox  OPERATING_SYSTEM="OS X 10.11"
     - BROWSER_NAME=Firefox  OPERATING_SYSTEM="Windows 10"
     - BROWSER_NAME=Firefox  OPERATING_SYSTEM="Linux"
-    - BROWSER_NAME=Chrome  OPERATING_SYSTEM="OS X 10.10"
+    - BROWSER_NAME=Chrome  OPERATING_SYSTEM="OS X 10.11"
     - BROWSER_NAME=Chrome  OPERATING_SYSTEM="Windows 10"
     - BROWSER_NAME=Chrome  OPERATING_SYSTEM="Linux"
-    - BROWSER_NAME=Safari  OPERATING_SYSTEM="OS X 10.10"
+    - BROWSER_NAME=Safari  OPERATING_SYSTEM="OS X 10.11"
 before_script:
   - createuser --createdb --no-superuser --no-createrole vagrant
   - createdb -O vagrant refinery
