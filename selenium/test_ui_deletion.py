@@ -10,7 +10,7 @@ from core.models import DataSet, Analysis
 from factory_boy.utils import cleanup, make_datasets, \
     make_analyses_with_single_dataset
 from utils.utils import (assert_text_within_id, wait_until_id_clickable,
-                         assert_body_text)
+                         assert_body_text, cleanup_on_error)
 
 base_url = os.environ['BASE_URL']
 not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
@@ -44,6 +44,7 @@ def login(selenium):
     assert_body_text(selenium, 'Logout')
 
 
+@cleanup_on_error
 def test_dataset_deletion(selenium, total_datasets=5):
     """Delete some datasets and make sure the ui updates properly"""
     login(selenium)
@@ -89,6 +90,7 @@ def test_dataset_deletion(selenium, total_datasets=5):
         pytest.set_trace()
 
 
+@cleanup_on_error
 def test_analysis_deletion(selenium, total_analyses=5):
     """Delete some analyses and make sure the ui updates properly"""
 
@@ -159,6 +161,7 @@ def test_analysis_deletion(selenium, total_analyses=5):
         pytest.set_trace()
 
 
+@cleanup_on_error
 def test_cascading_deletion_of_analyses(selenium, total_analyses=5):
     """Delete a Dataset and make sure its Analyses are removed from
     the UI as well"""
@@ -203,6 +206,7 @@ def test_cascading_deletion_of_analyses(selenium, total_analyses=5):
         pytest.set_trace()
 
 
+@cleanup_on_error
 def test_that_dataset_404s_are_handled(selenium, total_analyses=5):
     """Test use case where DataSet objects are deleted (for example by an
     admin, or a user inbetween multiple windows) while a user is about to
@@ -257,6 +261,7 @@ def test_that_dataset_404s_are_handled(selenium, total_analyses=5):
         pytest.set_trace()
 
 
+@cleanup_on_error
 def test_that_analysis_404s_are_handled(selenium, total_analyses=5):
     """Test use case where Analysis objects are deleted (for example by an
     admin, or a user inbetween multiple windows) while a user is about to

@@ -89,5 +89,5 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
         analysis.save()
 
 
-def cleanup():
+def factory_boy_cleanup():
     DataSet.objects.all().delete()  # Will take care of Analysis deletion
