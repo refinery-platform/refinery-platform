@@ -1,16 +1,14 @@
 import os
+import pytest
 import sys
 import yaml
-import pytest
-
 from django.contrib.auth.models import User
 
 from core.models import DataSet, Analysis
-
 from factory_boy.utils import make_datasets, make_analyses_with_single_dataset
-from utils.utils import (assert_text_within_id, wait_until_id_clickable,
-                         assert_body_text, cleanup_on_error,
-                         wait_until_id_visible, DEFAULT_WAIT)
+from selenium.utils import (assert_text_within_id, wait_until_id_clickable,
+                            cleanup_on_error, wait_until_id_visible, DEFAULT_WAIT,
+                            login)
 
 base_url = os.environ['BASE_URL']
 not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
@@ -28,20 +26,6 @@ except (User.DoesNotExist, User.MultipleObjectsReturned) as e:
 def selenium(selenium):
     selenium.maximize_window()
     return selenium
-
-
-@pytest.fixture
-def login(selenium):
-    creds = yaml.load(open(os.environ['CREDS_YML']))
-    selenium.get(base_url)
-    wait_until_id_visible(selenium, "refinery-login", DEFAULT_WAIT)
-    selenium.find_element_by_link_text('Login').click()
-    wait_until_id_visible(selenium, "id_username", DEFAULT_WAIT)
-    selenium.find_element_by_id('id_username').send_keys(creds['username'])
-    selenium.find_element_by_id('id_password').send_keys(creds['password'])
-    selenium.find_element_by_xpath('//input[@type="submit"]').click()
-    wait_until_id_visible(selenium, "refinery-logout", DEFAULT_WAIT)
-    assert_body_text(selenium, 'Logout')
 
 
 @cleanup_on_error

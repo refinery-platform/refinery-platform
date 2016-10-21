@@ -1,4 +1,6 @@
 import os
+import pytest
+import yaml
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -9,6 +11,21 @@ from factory_boy.utils import factory_boy_cleanup
 
 DEFAULT_WAIT = 5
 base_url = os.environ['BASE_URL']
+creds = yaml.load(open(os.environ['CREDS_YML']))
+
+
+@pytest.fixture
+def login(selenium):
+    creds = yaml.load(open(os.environ['CREDS_YML']))
+    selenium.get(base_url)
+    wait_until_id_visible(selenium, "refinery-login", DEFAULT_WAIT)
+    selenium.find_element_by_link_text('Login').click()
+    wait_until_id_visible(selenium, "id_username", DEFAULT_WAIT)
+    selenium.find_element_by_id('id_username').send_keys(creds['username'])
+    selenium.find_element_by_id('id_password').send_keys(creds['password'])
+    selenium.find_element_by_xpath('//input[@type="submit"]').click()
+    wait_until_id_visible(selenium, "refinery-logout", DEFAULT_WAIT)
+    assert_body_text(selenium, 'Logout')
 
 
 def assert_body_text(selenium, *search_texts):
