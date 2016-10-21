@@ -252,7 +252,7 @@ def test_that_dataset_404s_are_handled(selenium, total_analyses=5):
         selenium, "total-datasets", "{} data sets".format(0))
 
     cleanup()
-    
+
     if not_travis:
         pytest.set_trace()
 
