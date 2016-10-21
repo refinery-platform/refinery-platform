@@ -1,6 +1,95 @@
 # Change Log
 
-## [v1.4.0](https://github.com/parklab/refinery-platform/tree/v1.4.0) (2016-09-13)
+## [v1.5.1](https://github.com/parklab/refinery-platform/tree/v1.5.1) (2016-10-20)
+[Full Changelog](https://github.com/parklab/refinery-platform/compare/v1.5.0...v1.5.1)
+
+**Hotfixes for [Release v1.5.0](https://github.com/parklab/refinery-platform/tree/v1.5.0)**
+
+- Specifically set blob api for safari. [#1482](https://github.com/parklab/refinery-platform/pull/1482)
+- Fix search text placement to work in Firefox as well [#1480](https://github.com/parklab/refinery-platform/pull/1480)
+- Fix caching bug where # of Analyses run on a DataSet wasn't updated after an Analysis deletion [#1481](https://github.com/parklab/refinery-platform/pull/1481)
+- Remove add data set method. [#1485](https://github.com/parklab/refinery-platform/pull/1485)
+- Remove unneccessary cog animation. [#1488](https://github.com/parklab/refinery-platform/pull/1488)
+- Hotfix for issue [#1491](https://github.com/parklab/refinery-platform/commit/f98014a40d94a31c9c55701e6215dd7af428b981)
+
+## [v1.5.0](https://github.com/parklab/refinery-platform/tree/v1.5.0) (2016-10-07)
+[Full Changelog](https://github.com/parklab/refinery-platform/compare/v1.4.0...v1.5.0)
+
+**Implemented enhancements:**
+
+- Data Set Import Update [\#1430](https://github.com/parklab/refinery-platform/issues/1430)
+- UI - Help Animation [\#1414](https://github.com/parklab/refinery-platform/issues/1414)
+- Make sure we have a desired reference genomes for IGV [\#1411](https://github.com/parklab/refinery-platform/issues/1411)
+- Shortcut not validated for being alphanumeric + "\_" [\#1395](https://github.com/parklab/refinery-platform/issues/1395)
+- Data Set 2 Browser - Implement New Layout [\#1384](https://github.com/parklab/refinery-platform/issues/1384)
+- Separate selectors for UI state and actions could be confusing [\#1339](https://github.com/parklab/refinery-platform/issues/1339)
+- Redundant error messages when given email is invalid [\#1332](https://github.com/parklab/refinery-platform/issues/1332)
+- Data sets filter not available when not logged in [\#1316](https://github.com/parklab/refinery-platform/issues/1316)
+- Tabular Upload: Add a strip warning [\#1262](https://github.com/parklab/refinery-platform/issues/1262)
+- Data Set Preview -- Sharing Modal Needs more text [\#1246](https://github.com/parklab/refinery-platform/issues/1246)
+- Implement automatic backups on AWS [\#1053](https://github.com/parklab/refinery-platform/issues/1053)
+- Easy-to-usify collaboration [\#1017](https://github.com/parklab/refinery-platform/issues/1017)
+- Ui-Grid Multi-sorting Feature Unneccessary [\#936](https://github.com/parklab/refinery-platform/issues/936)
+- Provide Deletion controls for DataSets and Analyses [\#866](https://github.com/parklab/refinery-platform/issues/866)
+- Jkmarx/data import slug validation [\#1441](https://github.com/parklab/refinery-platform/pull/1441) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/collaboration add member enhancements [\#1440](https://github.com/parklab/refinery-platform/pull/1440) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/sharing modal enhancements [\#1436](https://github.com/parklab/refinery-platform/pull/1436) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/dataset2 igv [\#1433](https://github.com/parklab/refinery-platform/pull/1433) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/file upload text update [\#1432](https://github.com/parklab/refinery-platform/pull/1432) ([jkmarx](https://github.com/jkmarx))
+- Add warning of file strip. [\#1422](https://github.com/parklab/refinery-platform/pull/1422) ([jkmarx](https://github.com/jkmarx))
+
+**Fixed bugs:**
+
+- UI - Failed Unit Test, Locally [\#1427](https://github.com/parklab/refinery-platform/issues/1427)
+- Analysis Redirect UI Bug  [\#1415](https://github.com/parklab/refinery-platform/issues/1415)
+- DataSet2 - Persist Files URL when Filters Selected [\#1412](https://github.com/parklab/refinery-platform/issues/1412)
+- Ontology Explorer doesn't work from dashboard when logged in? [\#1402](https://github.com/parklab/refinery-platform/issues/1402)
+- Strange completion percentage [\#1394](https://github.com/parklab/refinery-platform/issues/1394)
+- CSRF Error upon datafile upload \(Only in Windows\) [\#1370](https://github.com/parklab/refinery-platform/issues/1370)
+- "Invite New Member" with bad email / hit return / no error [\#1333](https://github.com/parklab/refinery-platform/issues/1333)
+- Progress percentages for analyses need to be trimmed [\#1317](https://github.com/parklab/refinery-platform/issues/1317)
+- Firefox: Dataset "preview" URLs do not load preview [\#1312](https://github.com/parklab/refinery-platform/issues/1312)
+- "Permission Editor" "Save" does not close modal [\#1311](https://github.com/parklab/refinery-platform/issues/1311)
+- Users should not be able to remove themselves from "Public" group [\#1304](https://github.com/parklab/refinery-platform/issues/1304)
+- Affiliation not saved during account creation [\#1303](https://github.com/parklab/refinery-platform/issues/1303)
+- Workflow input names are not unique error during workflow import [\#1265](https://github.com/parklab/refinery-platform/issues/1265)
+- Reset password form should check if the email exists in the system [\#1250](https://github.com/parklab/refinery-platform/issues/1250)
+- Inconsistent UI behavior and server error when canceling group creation [\#1248](https://github.com/parklab/refinery-platform/issues/1248)
+- Incorrect number of samples displayed in the sample browser during import [\#1241](https://github.com/parklab/refinery-platform/issues/1241)
+- handle node blacklist/whitelist in IGV launch [\#386](https://github.com/parklab/refinery-platform/issues/386)
+- Jkmarx/data set web igv fix [\#1456](https://github.com/parklab/refinery-platform/pull/1456) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set 2 persist filter url [\#1450](https://github.com/parklab/refinery-platform/pull/1450) ([jkmarx](https://github.com/jkmarx))
+- Remove unused code, which may be causing login bug. [\#1449](https://github.com/parklab/refinery-platform/pull/1449) ([jkmarx](https://github.com/jkmarx))
+- Round percentages. [\#1442](https://github.com/parklab/refinery-platform/pull/1442) ([jkmarx](https://github.com/jkmarx))
+- Fix \#1312 [\#1439](https://github.com/parklab/refinery-platform/pull/1439) ([flekschas](https://github.com/flekschas))
+- Show filters only for logged in users. [\#1437](https://github.com/parklab/refinery-platform/pull/1437) ([jkmarx](https://github.com/jkmarx))
+- Enable share button only for data set owners. [\#1434](https://github.com/parklab/refinery-platform/pull/1434) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/account affiliation bug [\#1429](https://github.com/parklab/refinery-platform/pull/1429) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/public group bug fix [\#1424](https://github.com/parklab/refinery-platform/pull/1424) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/group create bug [\#1420](https://github.com/parklab/refinery-platform/pull/1420) ([jkmarx](https://github.com/jkmarx))
+- Update error message for missing emails. [\#1419](https://github.com/parklab/refinery-platform/pull/1419) ([jkmarx](https://github.com/jkmarx))
+
+**Closed issues:**
+
+- Delete Sphinx docs directory [\#1431](https://github.com/parklab/refinery-platform/issues/1431)
+- "Group Editor" dialog is missing cancel button [\#1305](https://github.com/parklab/refinery-platform/issues/1305)
+- DataSet2: IGV [\#1271](https://github.com/parklab/refinery-platform/issues/1271)
+- Remove infrastructure and code for Sphinx docs [\#1240](https://github.com/parklab/refinery-platform/issues/1240)
+- The dataset nav feature needs refactoring [\#639](https://github.com/parklab/refinery-platform/issues/639)
+- Convert documentation from reStructuredText to Markdown [\#482](https://github.com/parklab/refinery-platform/issues/482)
+
+**Merged pull requests:**
+
+- Jkmarx/unify alert appearance [\#1448](https://github.com/parklab/refinery-platform/pull/1448) ([jkmarx](https://github.com/jkmarx))
+- Remove wobbly Help animation upon User's first login [\#1447](https://github.com/parklab/refinery-platform/pull/1447) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/deletion from ui [\#1445](https://github.com/parklab/refinery-platform/pull/1445) ([scottx611x](https://github.com/scottx611x))
+- Hackdna/workflow import [\#1443](https://github.com/parklab/refinery-platform/pull/1443) ([hackdna](https://github.com/hackdna))
+- Mccalluc/remove sphinx [\#1438](https://github.com/parklab/refinery-platform/pull/1438) ([mccalluc](https://github.com/mccalluc))
+- Mccalluc/travis fast fail [\#1423](https://github.com/parklab/refinery-platform/pull/1423) ([mccalluc](https://github.com/mccalluc))
+- AWS backups [\#1418](https://github.com/parklab/refinery-platform/pull/1418) ([drj11](https://github.com/drj11))
+- Jkmarx/dataset2 new layout [\#1413](https://github.com/parklab/refinery-platform/pull/1413) ([jkmarx](https://github.com/jkmarx))
+
+## [v1.4.0](https://github.com/parklab/refinery-platform/tree/v1.4.0) (2016-09-15)
 [Full Changelog](https://github.com/parklab/refinery-platform/compare/v1.3.0...v1.4.0)
 
 **Implemented enhancements:**
@@ -22,6 +111,7 @@
 
 **Fixed bugs:**
 
+- Upload + Explore button should be in one row [\#1399](https://github.com/parklab/refinery-platform/issues/1399)
 - Data Import Bug in Safari [\#1361](https://github.com/parklab/refinery-platform/issues/1361)
 - System Administrator email missing [\#1340](https://github.com/parklab/refinery-platform/issues/1340)
 - UI suggests Data set files can be reordered, but they can't [\#1313](https://github.com/parklab/refinery-platform/issues/1313)
@@ -33,10 +123,13 @@
 **Closed issues:**
 
 - For the time being, support both old and new IGV [\#1356](https://github.com/parklab/refinery-platform/issues/1356)
+- Firefox: "Search" placeholder positioned too low [\#1306](https://github.com/parklab/refinery-platform/issues/1306)
 - Enable viewing BAM files in IGV [\#1264](https://github.com/parklab/refinery-platform/issues/1264)
+- Integrate ELB with the CloudFormation stack [\#1170](https://github.com/parklab/refinery-platform/issues/1170)
 
 **Merged pull requests:**
 
+- Fix for \#1399 and \#1306 [\#1407](https://github.com/parklab/refinery-platform/pull/1407) ([scottx611x](https://github.com/scottx611x))
 - Scottx611x/check datafile availability fix [\#1398](https://github.com/parklab/refinery-platform/pull/1398) ([scottx611x](https://github.com/scottx611x))
 - Scottx611x/tutorial overlay [\#1392](https://github.com/parklab/refinery-platform/pull/1392) ([scottx611x](https://github.com/scottx611x))
 - Revised help text for upload fields. [\#1391](https://github.com/parklab/refinery-platform/pull/1391) ([ngehlenborg](https://github.com/ngehlenborg))
@@ -91,6 +184,14 @@
 - Jkmarx/node group ui update [\#1286](https://github.com/parklab/refinery-platform/pull/1286) ([jkmarx](https://github.com/jkmarx))
 - Jkmarx/node group api reformat [\#1263](https://github.com/parklab/refinery-platform/pull/1263) ([jkmarx](https://github.com/jkmarx))
 - Jkmarx/metadata upload stripped file [\#1261](https://github.com/parklab/refinery-platform/pull/1261) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 select all update [\#1234](https://github.com/parklab/refinery-platform/pull/1234) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/node group api update [\#1227](https://github.com/parklab/refinery-platform/pull/1227) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/node group api v2 [\#1214](https://github.com/parklab/refinery-platform/pull/1214) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 sharing details merge [\#1193](https://github.com/parklab/refinery-platform/pull/1193) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 fastqc viewer [\#1180](https://github.com/parklab/refinery-platform/pull/1180) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/analysis cancel owner check [\#1177](https://github.com/parklab/refinery-platform/pull/1177) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/add tooltip data set preview [\#1174](https://github.com/parklab/refinery-platform/pull/1174) ([jkmarx](https://github.com/jkmarx))
+- Flekschas/angularize import [\#1167](https://github.com/parklab/refinery-platform/pull/1167) ([flekschas](https://github.com/flekschas))
 
 **Fixed bugs:**
 
@@ -142,6 +243,12 @@
 - Jkmarx/data upload multiple file error [\#1296](https://github.com/parklab/refinery-platform/pull/1296) ([jkmarx](https://github.com/jkmarx))
 - Fix conditional for updating current selection. [\#1285](https://github.com/parklab/refinery-platform/pull/1285) ([jkmarx](https://github.com/jkmarx))
 - Jkmarx/data set2 attribute filter fix [\#1279](https://github.com/parklab/refinery-platform/pull/1279) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 select all fix [\#1243](https://github.com/parklab/refinery-platform/pull/1243) ([jkmarx](https://github.com/jkmarx))
+- Fix error in service import. [\#1203](https://github.com/parklab/refinery-platform/pull/1203) ([jkmarx](https://github.com/jkmarx))
+- Add no wrap class to attribute filter count. [\#1178](https://github.com/parklab/refinery-platform/pull/1178) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/analysis timezone bug [\#1173](https://github.com/parklab/refinery-platform/pull/1173) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 attribute rank bug [\#1169](https://github.com/parklab/refinery-platform/pull/1169) ([jkmarx](https://github.com/jkmarx))
+- Flekschas/satori fixes [\#1165](https://github.com/parklab/refinery-platform/pull/1165) ([flekschas](https://github.com/flekschas))
 
 **Closed issues:**
 
@@ -179,6 +286,30 @@
 - Add default to whitelist on reset. [\#1257](https://github.com/parklab/refinery-platform/pull/1257) ([jkmarx](https://github.com/jkmarx))
 - Jkmarx/data set name bug [\#1256](https://github.com/parklab/refinery-platform/pull/1256) ([jkmarx](https://github.com/jkmarx))
 - Add Private IP to ALLOWED\_HOSTS [\#1249](https://github.com/parklab/refinery-platform/pull/1249) ([drj11](https://github.com/drj11))
+- Scottx611x/incorrect message fix [\#1236](https://github.com/parklab/refinery-platform/pull/1236) ([scottx611x](https://github.com/scottx611x))
+- Use Django production settings for AWS [\#1231](https://github.com/parklab/refinery-platform/pull/1231) ([drj11](https://github.com/drj11))
+- Scottx611x/dataset api adjustment [\#1229](https://github.com/parklab/refinery-platform/pull/1229) ([scottx611x](https://github.com/scottx611x))
+- Jkmarx/data set2 node group [\#1225](https://github.com/parklab/refinery-platform/pull/1225) ([jkmarx](https://github.com/jkmarx))
+- Bump librarian-puppet version [\#1221](https://github.com/parklab/refinery-platform/pull/1221) ([drj11](https://github.com/drj11))
+- Handle the usual `get` errors and make viz\_manager/views PEP8 compliant [\#1218](https://github.com/parklab/refinery-platform/pull/1218) ([scottx611x](https://github.com/scottx611x))
+- Add users with SSH\_USERS [\#1211](https://github.com/parklab/refinery-platform/pull/1211) ([drj11](https://github.com/drj11))
+- Scottx611x/gzipped files fix [\#1210](https://github.com/parklab/refinery-platform/pull/1210) ([scottx611x](https://github.com/scottx611x))
+- Jkmarx/data set2 about more unit tests [\#1206](https://github.com/parklab/refinery-platform/pull/1206) ([jkmarx](https://github.com/jkmarx))
+- Fix location of solr plugin in AWS [\#1204](https://github.com/parklab/refinery-platform/pull/1204) ([drj11](https://github.com/drj11))
+- Jkmarx/file store api add field [\#1201](https://github.com/parklab/refinery-platform/pull/1201) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 about updates2 [\#1200](https://github.com/parklab/refinery-platform/pull/1200) ([jkmarx](https://github.com/jkmarx))
+- Add fields to `DataSetResource` [\#1197](https://github.com/parklab/refinery-platform/pull/1197) ([scottx611x](https://github.com/scottx611x))
+- Jkmarx/file store api updates [\#1196](https://github.com/parklab/refinery-platform/pull/1196) ([jkmarx](https://github.com/jkmarx))
+- Scottx611x/gzipped files fix [\#1194](https://github.com/parklab/refinery-platform/pull/1194) ([scottx611x](https://github.com/scottx611x))
+- Get RDS endpoint directly from CloudFormation [\#1189](https://github.com/parklab/refinery-platform/pull/1189) ([drj11](https://github.com/drj11))
+- Scottx611x/auto import of data fix [\#1188](https://github.com/parklab/refinery-platform/pull/1188) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/delete related pre isa archives [\#1186](https://github.com/parklab/refinery-platform/pull/1186) ([scottx611x](https://github.com/scottx611x))
+- Provide simple strings that are configurable at the time of deployment [\#1184](https://github.com/parklab/refinery-platform/pull/1184) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/admin public group fix [\#1183](https://github.com/parklab/refinery-platform/pull/1183) ([scottx611x](https://github.com/scottx611x))
+- Celery amqp import error [\#1179](https://github.com/parklab/refinery-platform/pull/1179) ([hackdna](https://github.com/hackdna))
+- Scottx611x/empty duplicate slug fix [\#1172](https://github.com/parklab/refinery-platform/pull/1172) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/manual changes from release 1.2.0 [\#1168](https://github.com/parklab/refinery-platform/pull/1168) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/delete related isa archvies [\#1160](https://github.com/parklab/refinery-platform/pull/1160) ([scottx611x](https://github.com/scottx611x))
 
 ## [v1.2.0](https://github.com/parklab/refinery-platform/tree/v1.2.0) (2016-05-23)
 [Full Changelog](https://github.com/parklab/refinery-platform/compare/v1.1.0...v1.2.0)
@@ -244,6 +375,26 @@
 - \*\[4\]\* stop requiring page reloads in sample selection interface [\#301](https://github.com/parklab/refinery-platform/issues/301)
 - \*\[8\]\* correct notifications about error states [\#298](https://github.com/parklab/refinery-platform/issues/298)
 - allow user to view only those table rows selected with node selection [\#259](https://github.com/parklab/refinery-platform/issues/259)
+- Jkmarx/paired analysis enhance properties [\#1162](https://github.com/parklab/refinery-platform/pull/1162) ([jkmarx](https://github.com/jkmarx))
+- Download files in new tab. [\#1131](https://github.com/parklab/refinery-platform/pull/1131) ([jkmarx](https://github.com/jkmarx))
+- Flekschas/satori fixes [\#1120](https://github.com/parklab/refinery-platform/pull/1120) ([flekschas](https://github.com/flekschas))
+- Flekschas/email login [\#1115](https://github.com/parklab/refinery-platform/pull/1115) ([flekschas](https://github.com/flekschas))
+- Flekschas/upload fixes [\#1088](https://github.com/parklab/refinery-platform/pull/1088) ([flekschas](https://github.com/flekschas))
+- Webworkerify MD5 calculation to keep the UI usable when a large file is checked. [\#1087](https://github.com/parklab/refinery-platform/pull/1087) ([flekschas](https://github.com/flekschas))
+- Swap caret to table for data-set-explorer link. [\#1065](https://github.com/parklab/refinery-platform/pull/1065) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/add file download tool tip [\#1045](https://github.com/parklab/refinery-platform/pull/1045) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/add file download data set2 [\#1042](https://github.com/parklab/refinery-platform/pull/1042) ([jkmarx](https://github.com/jkmarx))
+- Flekschas/repo mode [\#1040](https://github.com/parklab/refinery-platform/pull/1040) ([flekschas](https://github.com/flekschas))
+- Tag the root EBS [\#1037](https://github.com/parklab/refinery-platform/pull/1037) ([drj11](https://github.com/drj11))
+- Flekschas/dashboard preview tweaks [\#1033](https://github.com/parklab/refinery-platform/pull/1033) ([flekschas](https://github.com/flekschas))
+- Flekschas/rex paper [\#994](https://github.com/parklab/refinery-platform/pull/994) ([flekschas](https://github.com/flekschas))
+- Jkmarx/data set fix solr params [\#977](https://github.com/parklab/refinery-platform/pull/977) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set encode facet filters [\#974](https://github.com/parklab/refinery-platform/pull/974) ([jkmarx](https://github.com/jkmarx))
+- Flekschas/node relationship refactoring [\#948](https://github.com/parklab/refinery-platform/pull/948) ([flekschas](https://github.com/flekschas))
+- Flekschas/node mapping refactoring [\#947](https://github.com/parklab/refinery-platform/pull/947) ([flekschas](https://github.com/flekschas))
+- Flekschas/ontology unit annotation fix [\#940](https://github.com/parklab/refinery-platform/pull/940) ([flekschas](https://github.com/flekschas))
+- Flake8 [\#905](https://github.com/parklab/refinery-platform/pull/905) ([flekschas](https://github.com/flekschas))
+- Dashboard exploration neo4j outsourcing [\#882](https://github.com/parklab/refinery-platform/pull/882) ([flekschas](https://github.com/flekschas))
 
 **Fixed bugs:**
 
@@ -322,6 +473,22 @@
 - Analyses successfully completed in Galaxy are stuck at 100% in the execution stage. [\#408](https://github.com/parklab/refinery-platform/issues/408)
 - Analysis monitoring checks analysis status before a history is created in Galaxy. [\#282](https://github.com/parklab/refinery-platform/issues/282)
 - files with file extensions not registered in Refinery will not be assigned to new derived data file nodes [\#250](https://github.com/parklab/refinery-platform/issues/250)
+- Fix viewing property bug with correcting data scope. [\#1143](https://github.com/parklab/refinery-platform/pull/1143) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/analyze pair mapping bug [\#1129](https://github.com/parklab/refinery-platform/pull/1129) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/analyze modal delete template [\#1127](https://github.com/parklab/refinery-platform/pull/1127) ([jkmarx](https://github.com/jkmarx))
+- Add button styling which resolves issue \#1123. [\#1126](https://github.com/parklab/refinery-platform/pull/1126) ([jkmarx](https://github.com/jkmarx))
+- Flekschas/satori fixes [\#1120](https://github.com/parklab/refinery-platform/pull/1120) ([flekschas](https://github.com/flekschas))
+- Jkmarx/analysis monitor bug2 [\#1119](https://github.com/parklab/refinery-platform/pull/1119) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/dashboard analysis link [\#1105](https://github.com/parklab/refinery-platform/pull/1105) ([jkmarx](https://github.com/jkmarx))
+- Flekschas/upload prod fix [\#1096](https://github.com/parklab/refinery-platform/pull/1096) ([flekschas](https://github.com/flekschas))
+- Jkmarx/analysis disable emails [\#1084](https://github.com/parklab/refinery-platform/pull/1084) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/analysis cancel bug [\#1060](https://github.com/parklab/refinery-platform/pull/1060) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/fix igv bug [\#1059](https://github.com/parklab/refinery-platform/pull/1059) ([jkmarx](https://github.com/jkmarx))
+- Correct missing partial address. [\#1051](https://github.com/parklab/refinery-platform/pull/1051) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/analyses timeview bug [\#1049](https://github.com/parklab/refinery-platform/pull/1049) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/attribute api bug fix [\#1034](https://github.com/parklab/refinery-platform/pull/1034) ([jkmarx](https://github.com/jkmarx))
+- Flekschas/rex paper [\#994](https://github.com/parklab/refinery-platform/pull/994) ([flekschas](https://github.com/flekschas))
+- Flekschas/node mapping refactoring [\#947](https://github.com/parklab/refinery-platform/pull/947) ([flekschas](https://github.com/flekschas))
 
 **Closed issues:**
 
@@ -366,6 +533,71 @@
 - explore possibility of distributing Refinery \(+ Galaxy\) as an Amazon Machine Image [\#376](https://github.com/parklab/refinery-platform/issues/376)
 - explore advantages \(and disadvantages\) of using a model to manage file types [\#305](https://github.com/parklab/refinery-platform/issues/305)
 - Update to Celery 3.x [\#248](https://github.com/parklab/refinery-platform/issues/248)
+
+**Merged pull requests:**
+
+- Jkmarx/data set config button styling [\#1163](https://github.com/parklab/refinery-platform/pull/1163) ([jkmarx](https://github.com/jkmarx))
+- AWS Django settings [\#1156](https://github.com/parklab/refinery-platform/pull/1156) ([drj11](https://github.com/drj11))
+- Add configurations for data volume [\#1144](https://github.com/parklab/refinery-platform/pull/1144) ([drj11](https://github.com/drj11))
+- Add configuration for REFINERY\_DATA\_IMPORT\_DIR [\#1142](https://github.com/parklab/refinery-platform/pull/1142) ([drj11](https://github.com/drj11))
+- Cleaning up ADMIN\_PASSWORD [\#1141](https://github.com/parklab/refinery-platform/pull/1141) ([drj11](https://github.com/drj11))
+- Scottx611x/user registration edits [\#1132](https://github.com/parklab/refinery-platform/pull/1132) ([hackdna](https://github.com/hackdna))
+- Move AWS config into single file [\#1130](https://github.com/parklab/refinery-platform/pull/1130) ([drj11](https://github.com/drj11))
+- Scottx611x/own public datasets [\#1124](https://github.com/parklab/refinery-platform/pull/1124) ([scottx611x](https://github.com/scottx611x))
+- Jkmarx/server date time zone aware [\#1122](https://github.com/parklab/refinery-platform/pull/1122) ([jkmarx](https://github.com/jkmarx))
+- Add filter for analysis\_group column. [\#1112](https://github.com/parklab/refinery-platform/pull/1112) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 files number [\#1107](https://github.com/parklab/refinery-platform/pull/1107) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 attribute filter [\#1104](https://github.com/parklab/refinery-platform/pull/1104) ([jkmarx](https://github.com/jkmarx))
+- Make the AWS EC2 instance key name configurable [\#1102](https://github.com/parklab/refinery-platform/pull/1102) ([drj11](https://github.com/drj11))
+- Store stack name in file and use UTC [\#1101](https://github.com/parklab/refinery-platform/pull/1101) ([drj11](https://github.com/drj11))
+- Scottx611x/galaxy large file uploads [\#1095](https://github.com/parklab/refinery-platform/pull/1095) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/galaxy large file uploads [\#1092](https://github.com/parklab/refinery-platform/pull/1092) ([scottx611x](https://github.com/scottx611x))
+- Update analysis link on dashboard analysis list. [\#1091](https://github.com/parklab/refinery-platform/pull/1091) ([jkmarx](https://github.com/jkmarx))
+- Minor fixes for aws-config defaults [\#1086](https://github.com/parklab/refinery-platform/pull/1086) ([drj11](https://github.com/drj11))
+- Flekschas/datasets group filter [\#1085](https://github.com/parklab/refinery-platform/pull/1085) ([flekschas](https://github.com/flekschas))
+- Single CloudFormation stack [\#1080](https://github.com/parklab/refinery-platform/pull/1080) ([drj11](https://github.com/drj11))
+- Flekschas/ng strict di [\#1078](https://github.com/parklab/refinery-platform/pull/1078) ([flekschas](https://github.com/flekschas))
+- Jkmarx/analysis link removal [\#1075](https://github.com/parklab/refinery-platform/pull/1075) ([jkmarx](https://github.com/jkmarx))
+- Set `analysis\_status` properly to alleviate issue of overall state be… [\#1067](https://github.com/parklab/refinery-platform/pull/1067) ([scottx611x](https://github.com/scottx611x))
+- Refactoring how aws region is discovered [\#1036](https://github.com/parklab/refinery-platform/pull/1036) ([drj11](https://github.com/drj11))
+- Jkmarx/data set attribute util [\#1032](https://github.com/parklab/refinery-platform/pull/1032) ([jkmarx](https://github.com/jkmarx))
+- Flekschas/ui fixes [\#1031](https://github.com/parklab/refinery-platform/pull/1031) ([flekschas](https://github.com/flekschas))
+- Add a `Name` tag for EC2 Web UI [\#1029](https://github.com/parklab/refinery-platform/pull/1029) ([drj11](https://github.com/drj11))
+- Move solr data to persistent volume [\#1027](https://github.com/parklab/refinery-platform/pull/1027) ([drj11](https://github.com/drj11))
+- Flekschas/eslint [\#1023](https://github.com/parklab/refinery-platform/pull/1023) ([flekschas](https://github.com/flekschas))
+- Django superuser \(admin\) has configurable password [\#1004](https://github.com/parklab/refinery-platform/pull/1004) ([drj11](https://github.com/drj11))
+- Return only the relative url, but still use the full url in vizualiza… [\#993](https://github.com/parklab/refinery-platform/pull/993) ([scottx611x](https://github.com/scottx611x))
+- Jkmarx/data set infinite scroll [\#987](https://github.com/parklab/refinery-platform/pull/987) ([jkmarx](https://github.com/jkmarx))
+- Scottx611x/galaxy deletion [\#984](https://github.com/parklab/refinery-platform/pull/984) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/file extension rework [\#983](https://github.com/parklab/refinery-platform/pull/983) ([scottx611x](https://github.com/scottx611x))
+- create the guest account as an inactive account [\#979](https://github.com/parklab/refinery-platform/pull/979) ([drj11](https://github.com/drj11))
+- Configurable Site URL [\#976](https://github.com/parklab/refinery-platform/pull/976) ([drj11](https://github.com/drj11))
+- Fix Apache's MEDIA\_ROOT serving directory. [\#953](https://github.com/parklab/refinery-platform/pull/953) ([drj11](https://github.com/drj11))
+- Flekschas/update ui dependencies [\#951](https://github.com/parklab/refinery-platform/pull/951) ([flekschas](https://github.com/flekschas))
+- Fix typo in erb syntax for supervisord.conf [\#941](https://github.com/parklab/refinery-platform/pull/941) ([drj11](https://github.com/drj11))
+- Jkmarx/data set attribute filter [\#939](https://github.com/parklab/refinery-platform/pull/939) ([jkmarx](https://github.com/jkmarx))
+- template supervisord.conf for AWS [\#937](https://github.com/parklab/refinery-platform/pull/937) ([drj11](https://github.com/drj11))
+- Choose an availability zone at random [\#929](https://github.com/parklab/refinery-platform/pull/929) ([drj11](https://github.com/drj11))
+- Dataset table angularize [\#925](https://github.com/parklab/refinery-platform/pull/925) ([jkmarx](https://github.com/jkmarx))
+- Add aws-config template [\#922](https://github.com/parklab/refinery-platform/pull/922) ([drj11](https://github.com/drj11))
+- automatically create IAM user and get SMTP credentials [\#921](https://github.com/parklab/refinery-platform/pull/921) ([drj11](https://github.com/drj11))
+- Create fresh role for EC2 instance [\#913](https://github.com/parklab/refinery-platform/pull/913) ([drj11](https://github.com/drj11))
+- Use `file\_ext` in place of `data\_type` as per http://bit.ly/24pDamC [\#908](https://github.com/parklab/refinery-platform/pull/908) ([scottx611x](https://github.com/scottx611x))
+- Integrate with AWS SES [\#899](https://github.com/parklab/refinery-platform/pull/899) ([drj11](https://github.com/drj11))
+- Pre commit hook [\#898](https://github.com/parklab/refinery-platform/pull/898) ([flekschas](https://github.com/flekschas))
+- Analysis monitor ui [\#889](https://github.com/parklab/refinery-platform/pull/889) ([jkmarx](https://github.com/jkmarx))
+- Scottx611x/django 1.6 upgrade [\#886](https://github.com/parklab/refinery-platform/pull/886) ([scottx611x](https://github.com/scottx611x))
+- Put filesystem directly on external device [\#884](https://github.com/parklab/refinery-platform/pull/884) ([drj11](https://github.com/drj11))
+- Set the Availability Zone for the new EC2 instance [\#881](https://github.com/parklab/refinery-platform/pull/881) ([drj11](https://github.com/drj11))
+- Fix AWS issues with RDS [\#880](https://github.com/parklab/refinery-platform/pull/880) ([drj11](https://github.com/drj11))
+- tag AWS resources [\#874](https://github.com/parklab/refinery-platform/pull/874) ([drj11](https://github.com/drj11))
+- Fixing the postgresql rules on AWS [\#873](https://github.com/parklab/refinery-platform/pull/873) ([drj11](https://github.com/drj11))
+- Upgrade to Celery 3.1 and django-celery 3.1 [\#871](https://github.com/parklab/refinery-platform/pull/871) ([hackdna](https://github.com/hackdna))
+- Move AWS config into a directory [\#870](https://github.com/parklab/refinery-platform/pull/870) ([drj11](https://github.com/drj11))
+- Connect to pre-existing RDS [\#867](https://github.com/parklab/refinery-platform/pull/867) ([drj11](https://github.com/drj11))
+- Fix postgresql for "vagrant provision" [\#865](https://github.com/parklab/refinery-platform/pull/865) ([drj11](https://github.com/drj11))
+- fix the git repo clone on AWS [\#862](https://github.com/parklab/refinery-platform/pull/862) ([drj11](https://github.com/drj11))
+- Connect to pre-existing RDS [\#858](https://github.com/parklab/refinery-platform/pull/858) ([drj11](https://github.com/drj11))
 
 ## [v1.1.0](https://github.com/parklab/refinery-platform/tree/v1.1.0) (2016-01-14)
 [Full Changelog](https://github.com/parklab/refinery-platform/compare/v1.0.0...v1.1.0)
@@ -507,6 +739,12 @@
 - Upload data analysis workflows to the Galaxy toolshed. [\#290](https://github.com/parklab/refinery-platform/issues/290)
 - Clicking "View in IGV" multiple times in quick succession with lead to multiple sets of launch buttons in the dialog [\#7](https://github.com/parklab/refinery-platform/issues/7)
 
+**Merged pull requests:**
+
+- Document how to delete a stack [\#846](https://github.com/parklab/refinery-platform/pull/846) ([drj11](https://github.com/drj11))
+- All the puppet code in one place [\#828](https://github.com/parklab/refinery-platform/pull/828) ([drj11](https://github.com/drj11))
+- Deploy on Amazon AWS [\#798](https://github.com/parklab/refinery-platform/pull/798) ([drj11](https://github.com/drj11))
+
 ## [v1.0.0](https://github.com/parklab/refinery-platform/tree/v1.0.0) (2015-09-17)
 [Full Changelog](https://github.com/parklab/refinery-platform/compare/v0.0.4...v1.0.0)
 
@@ -614,6 +852,10 @@
 - Add attribution section to license [\#320](https://github.com/parklab/refinery-platform/issues/320)
 - explore django-pipeline for JavaScript and CSS packaging [\#272](https://github.com/parklab/refinery-platform/issues/272)
 - remove old styles in static/core & static/galaxy-connector [\#271](https://github.com/parklab/refinery-platform/issues/271)
+
+**Merged pull requests:**
+
+- Only issue warning when provisioning. [\#667](https://github.com/parklab/refinery-platform/pull/667) ([drj11](https://github.com/drj11))
 
 ## [v0.0.4](https://github.com/parklab/refinery-platform/tree/v0.0.4) (2015-08-11)
 [Full Changelog](https://github.com/parklab/refinery-platform/compare/v0.0.2...v0.0.4)

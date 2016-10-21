@@ -220,7 +220,7 @@ def run(request):
             logger.error("Study with UUID '{}' does not exist".format(
                 study_uuid))
             return HttpResponse(status='404')
-        except (Study.MultipleObjectsReturned):
+        except Study.MultipleObjectsReturned:
             logger.error("Study with UUID '{}' returns multiple objects"
                          .format(study_uuid))
             return HttpResponse(status='500')
@@ -246,7 +246,7 @@ def run(request):
             temp_name = custom_name
 
         summary_name = "None provided."
-        analysis = Analysis(
+        analysis = Analysis.objects.create(
             summary=summary_name,
             name=temp_name,
             project=request.user.get_profile().catch_all_project,
@@ -255,7 +255,6 @@ def run(request):
             time_start=timezone.now()
         )
         analysis.set_owner(request.user)
-        analysis.save()
 
         # getting distinct workflow inputs
         try:
@@ -269,12 +268,11 @@ def run(request):
         count = 0
         for node_file in curr_node_group.nodes.all():
             count += 1
-            temp_input = WorkflowDataInputMap(
+            temp_input = WorkflowDataInputMap.objects.create(
                 workflow_data_input_name=workflow_data_inputs.name,
                 data_uuid=node_file.uuid,
                 pair_id=count
             )
-            temp_input.save()
             analysis.workflow_data_input_maps.add(temp_input)
             analysis.save()
 
@@ -313,7 +311,7 @@ def run(request):
             temp_name = custom_name
 
         summary_name = "None provided."
-        analysis = Analysis(
+        analysis = Analysis.objects.create(
             summary=summary_name,
             name=temp_name,
             project=request.user.get_profile().catch_all_project,
@@ -321,7 +319,6 @@ def run(request):
             workflow=curr_workflow,
             time_start=timezone.now()
         )
-        analysis.save()
         analysis.set_owner(request.user)
 
         # getting distinct workflow inputs
@@ -331,12 +328,11 @@ def run(request):
         count = 0
         for file_uuid in solr_uuids:
             count += 1
-            temp_input = WorkflowDataInputMap(
+            temp_input = WorkflowDataInputMap.objects.create(
                 workflow_data_input_name=workflow_data_inputs.name,
                 data_uuid=file_uuid,
                 pair_id=count
             )
-            temp_input.save()
             analysis.workflow_data_input_maps.add(temp_input)
             analysis.save()
 
@@ -375,16 +371,15 @@ def run(request):
         count = 1
         for curr_pair in curr_relationship.node_pairs.all():
             temp_pair = copy.deepcopy(base_input)
-            print "curr_pair"
-            print temp_pair
-            print curr_pair
+            logger.debug("Temp Pair: %s", temp_pair)
+            logger.debug("Current Pair: %s", curr_pair)
             if curr_pair.node2:
                 temp_pair[input_keys[0]]['node_uuid'] = curr_pair.node1.uuid
                 temp_pair[input_keys[0]]['pair_id'] = count
                 temp_pair[input_keys[1]]['node_uuid'] = curr_pair.node2.uuid
                 temp_pair[input_keys[1]]['pair_id'] = count
                 ret_list.append(temp_pair)
-                print temp_pair
+                logger.debug("Temp Pair: %s", temp_pair)
                 count += 1
 
         logger.info("Associating analysis with data set %s (%s)",
@@ -400,7 +395,7 @@ def run(request):
 
         summary_name = "None provided."
 
-        analysis = Analysis(
+        analysis = Analysis.objects.create(
             summary=summary_name,
             name=temp_name,
             project=request.user.get_profile().catch_all_project,
@@ -409,7 +404,6 @@ def run(request):
             time_start=timezone.now()
         )
         analysis.set_owner(request.user)
-        analysis.save()
 
         # getting distinct workflow inputs
         workflow_data_inputs = curr_workflow.data_inputs.all()
@@ -424,11 +418,10 @@ def run(request):
         for samp in ret_list:
             count += 1
             for k, v in samp.items():
-                temp_input = WorkflowDataInputMap(
+                temp_input = WorkflowDataInputMap.objects.create(
                     workflow_data_input_name=k,
                     data_uuid=samp[k]["node_uuid"],
                     pair_id=count)
-                temp_input.save()
                 analysis.workflow_data_input_maps.add(temp_input)
                 analysis.save()
 

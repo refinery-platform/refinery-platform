@@ -429,6 +429,9 @@ class ProcessMetadataTableView(View):
             error = {'error_message': error_msg}
             if request.is_ajax():
                 return HttpResponseBadRequest(
+                    # TODO: make sure error_msg is JSON serializable, e.g.:
+                    # TypeError: IndexError('list index out of range',)
+                    # is not JSON serializable
                     json.dumps({'error': error_msg}), 'application/json'
                 )
             else:
@@ -476,6 +479,9 @@ class ProcessMetadataTableView(View):
             error = {'error_message': error_msg}
             if request.is_ajax():
                 return HttpResponseServerError(
+                    # TODO: make sure error_msg is JSON serializable, e.g.:
+                    # TypeError: IndexError('list index out of range',)
+                    # is not JSON serializable
                     json.dumps({'error': error_msg}), 'application/json'
                 )
             else:

@@ -3,6 +3,7 @@ Created on November 29, 2012
 
 @author: Psalm
 '''
+import sys
 from optparse import make_option
 
 from django.contrib.auth.models import User
@@ -71,7 +72,7 @@ class Command(BaseCommand):
                 password=user["password"])
             user_object.first_name = user["first_name"]
             user_object.save()
-            print 'Created User %s' % user_object
+            sys.stdout.write('Created User: {}'.format(user_object))
             # create group if you should
             if options['groups']:
                 group_name = "group_%s" % user['username']
@@ -88,5 +89,5 @@ class Command(BaseCommand):
                 group_object = ExtendedGroup.objects.create(name=group_name)
                 user_object.groups.add(group_object)
                 user_object.groups.add(group_object.manager_group)
-                print 'Created Group %s for User %s' % \
-                      (group_object, user_object)
+                sys.stdout.write('Created Group {} for User {}'.format(
+                    group_object, user_object))

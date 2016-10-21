@@ -374,7 +374,7 @@ def main():
             "Tags": instance_tags,  # todo: Should be different?
         })
 
-    print(str(cft))
+    sys.stdout.write(str(cft))
 
 
 def load_config():

@@ -27,10 +27,10 @@ def index(request):
     tdf_file.cache()
 
     for track_name in tdf_file.get_track_names():
-        print(track_name)
+        logger.info(track_name)
 
     for data_set_name in tdf_file.get_data_set_names():
-        print(data_set_name)
+        logger.info(data_set_name)
         window_function = ""
         if len(data_set_name.split("/")) == 4:
             window_function = data_set_name.split("/")[3]
@@ -38,34 +38,34 @@ def index(request):
                                          data_set_name.split("/")[2],
                                          window_function)
         data_set.read()
-        print("Tile Count: " + str(len(data_set.tile_index)))
-        print("Tile Width: " + str(data_set.tile_width))
+        logger.info("Tile Count: " + str(len(data_set.tile_index)))
+        logger.info("Tile Width: " + str(data_set.tile_width))
 
-    print(data_set)
+    logger.info(data_set)
 
     tile = data_set.get_tile(0)
-    print(tile)
+    logger.info(tile)
 
     tile = data_set.get_tile(1)
-    print(tile)
+    logger.info(tile)
 
     tile = data_set.get_tile(2)
-    print(tile)
+    logger.info(tile)
 
     tile = data_set.get_tile(3)
-    print(tile)
+    logger.info(tile)
 
     tile = data_set.get_tile(4)
-    print(tile)
+    logger.info(tile)
 
     tile = data_set.get_tile(5)
-    print(tile)
+    logger.info(tile)
 
     tile = data_set.get_tile(6)
-    print(tile)
+    logger.info(tile)
 
     tile = data_set.get_tile(7)
-    print(tile)
+    logger.info(tile)
 
     profile = tdf_file.get_profile("chr21", "z0", ["mean"],
                                    start_location=13591070,
@@ -169,17 +169,17 @@ def cache_tdf(request, uuid, refresh=False):
     file_store_item = file_store.tasks.read(uuid)
 
     if not _is_cached_tdf_file(request.session, uuid):
-        print("Caching file " + str(uuid) + " ...")
+        logger.debug("Caching file: %s ...", uuid)
         tdf = tdf_module.TDFFile(file_store_item.get_file_object())
         tdf.cache()
         _cache_tdf_file(request.session, uuid, tdf)
     else:
-        print("Retrieved file " + str(uuid) + " ...")
+        logger.debug("Retrieved file: %s ...", uuid)
         tdf = _get_tdf_file_from_cache(request.session, uuid)
 
     if not _is_cached_tdf_data_set_information(request.session,
                                                uuid) or refresh:
-        print("Caching data set information " + str(uuid) + " ...")
+        logger.debug("Caching data set information: %s ...", uuid)
 
         for data_set_name in tdf.get_data_set_names():
             # decompose data set name
@@ -195,9 +195,8 @@ def cache_tdf(request, uuid, refresh=False):
             _cache_tdf_data_set_information(request.session, uuid, components,
                                             data_set_information)
     else:
-        print(
-            str(uuid) +
-            " data set information is cached and refresh not requested")
+        logger.debug("%s data set information is cached and refresh not "
+                     "requested", uuid)
 
     return HttpResponse(json.dumps(
         _get_tdf_data_set_information_from_cache(request.session, uuid),
@@ -222,11 +221,11 @@ def get_tdf_profile(request, uuid, sequence_name, zoom_level, start_location,
     )[sequence_name][zoom_level][window_function]["data_set_name"]
 
     if _is_cached_tdf_data_set(request.session, uuid, data_set_name):
-        print("Retrieving TDF data set " + data_set_name + "...")
+        logger.debug("Retrieving TDF data set %s ...", data_set_name)
         data_set = _get_tdf_data_set_from_cache(request.session, uuid,
                                                 data_set_name)
     else:
-        print("Caching TDF data set " + data_set_name + "...")
+        logger.debug("Caching TDF data set %s ...", data_set_name)
         tdf_file = _get_tdf_file_from_cache(request.session, uuid)
         data_set = tdf_file.get_data_set(sequence_name, zoom_level, "mean")
         data_set.read()
