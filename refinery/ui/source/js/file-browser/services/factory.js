@@ -156,15 +156,6 @@ function fileBrowserFactory (
     return assayFile.$promise;
   };
 
-  // helper method to trim assayFiles data for caching purposes
-  var trimAssayFiles = function (sliceCount, startInd) {
-    if (!startInd) {
-      assayFiles = assayFiles.slice(sliceCount);
-    } else {
-      assayFiles = assayFiles.slice(startInd, sliceCount);
-    }
-  };
-
   var getAssayAttributeOrder = function (uuid) {
     var params = {
       uuid: uuid
@@ -205,6 +196,15 @@ function fileBrowserFactory (
       $log.error(error);
     });
     return assayAttributeUpdate.$promise;
+  };
+
+  // helper method to trim assayFiles data for caching purposes
+  var trimAssayFiles = function (sliceCount, startInd) {
+    if (startInd === undefined) {
+      angular.copy(assayFiles.slice(sliceCount), assayFiles);
+    } else {
+      angular.copy(assayFiles.slice(startInd, sliceCount), assayFiles);
+    }
   };
 
   return {

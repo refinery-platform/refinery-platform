@@ -281,4 +281,39 @@ describe('File Browser Factory', function () {
       expect(successData).toEqual(nodeGroup);
     });
   });
+
+  describe('trimAssayFiles', function () {
+    var tempAssayFiles = [
+      { name: 'Test1' },
+      { name: 'Test2' },
+      { name: 'Test3' },
+      { name: 'Test4' },
+      { name: 'Test5' },
+      { name: 'Test6' }
+    ];
+
+    it('trimAssayFiles is a method', function () {
+      expect(angular.isFunction(factory.trimAssayFiles)).toBe(true);
+    });
+
+    it('should slice assayFiles', function () {
+      angular.copy(tempAssayFiles, factory.assayFiles);
+      factory.trimAssayFiles(5, 0);
+      expect(factory.assayFiles[0].name).toEqual('Test1');
+      expect(factory.assayFiles.length).toEqual(5);
+    });
+
+    it('should trim assayFiles', function () {
+      angular.copy(tempAssayFiles, factory.assayFiles);
+      factory.trimAssayFiles(5);
+      expect(factory.assayFiles[0].name).toEqual('Test6');
+      expect(factory.assayFiles.length).toEqual(1);
+    });
+
+    it('should not trim assayFiles', function () {
+      angular.copy(tempAssayFiles, factory.assayFiles);
+      factory.trimAssayFiles(0);
+      expect(factory.assayFiles.length).toEqual(6);
+    });
+  });
 });
