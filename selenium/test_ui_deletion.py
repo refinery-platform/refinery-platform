@@ -2,11 +2,12 @@ import os
 import pytest
 import sys
 import yaml
+
 from django.contrib.auth.models import User
 
 from core.models import DataSet, Analysis
 from factory_boy.utils import make_datasets, make_analyses_with_single_dataset
-from selenium.utils import (assert_text_within_id, wait_until_id_clickable,
+from .utils import (assert_text_within_id, wait_until_id_clickable,
                             cleanup_on_error, wait_until_id_visible, DEFAULT_WAIT,
                             login)
 
