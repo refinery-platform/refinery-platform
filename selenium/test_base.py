@@ -3,7 +3,7 @@ import yaml
 import pytest
 from time import time
 
-from utils.utils import assert_body_text
+from utils.utils import assert_body_text, DEFAULT_WAIT, wait_until_id_visible
 
 base_url = os.environ['BASE_URL']
 not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
@@ -19,13 +19,13 @@ def selenium(selenium):
 def login(selenium):
     creds = yaml.load(open(os.environ['CREDS_YML']))
     selenium.get(base_url)
-    selenium.implicitly_wait(10)
+    wait_until_id_visible(selenium, "refinery-login", DEFAULT_WAIT)
     selenium.find_element_by_link_text('Login').click()
-    selenium.implicitly_wait(10)
+    wait_until_id_visible(selenium, "id_username", DEFAULT_WAIT)
     selenium.find_element_by_id('id_username').send_keys(creds['username'])
     selenium.find_element_by_id('id_password').send_keys(creds['password'])
     selenium.find_element_by_xpath('//input[@type="submit"]').click()
-    selenium.implicitly_wait(10)
+    wait_until_id_visible(selenium, "refinery-logout", DEFAULT_WAIT)
     assert_body_text(selenium, 'Logout')
 
 

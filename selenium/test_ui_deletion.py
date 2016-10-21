@@ -10,13 +10,11 @@ from core.models import DataSet, Analysis
 from factory_boy.utils import make_datasets, make_analyses_with_single_dataset
 from utils.utils import (assert_text_within_id, wait_until_id_clickable,
                          assert_body_text, cleanup_on_error,
-                         wait_until_id_visible)
+                         wait_until_id_visible, DEFAULT_WAIT)
 
 base_url = os.environ['BASE_URL']
 not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
 creds = yaml.load(open(os.environ['CREDS_YML']))
-
-DEFAULT_WAIT = 5
 
 try:
     user = User.objects.get(username=creds["username"])
@@ -34,14 +32,15 @@ def selenium(selenium):
 
 @pytest.fixture
 def login(selenium):
+    creds = yaml.load(open(os.environ['CREDS_YML']))
     selenium.get(base_url)
-    selenium.implicitly_wait(10)
+    wait_until_id_visible(selenium, "refinery-login", DEFAULT_WAIT)
     selenium.find_element_by_link_text('Login').click()
-    selenium.implicitly_wait(10)
+    wait_until_id_visible(selenium, "id_username", DEFAULT_WAIT)
     selenium.find_element_by_id('id_username').send_keys(creds['username'])
     selenium.find_element_by_id('id_password').send_keys(creds['password'])
     selenium.find_element_by_xpath('//input[@type="submit"]').click()
-    selenium.implicitly_wait(10)
+    wait_until_id_visible(selenium, "refinery-logout", DEFAULT_WAIT)
     assert_body_text(selenium, 'Logout')
 
 
