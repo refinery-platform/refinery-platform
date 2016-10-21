@@ -7,15 +7,16 @@ from django.contrib.auth.models import User
 
 from core.models import DataSet, Analysis
 
-from factory_boy.utils import cleanup, make_datasets, \
-    make_analyses_with_single_dataset
+from factory_boy.utils import make_datasets, make_analyses_with_single_dataset
 from utils.utils import (assert_text_within_id, wait_until_id_clickable,
-                         assert_body_text, cleanup_on_error)
+                         assert_body_text, cleanup_on_error,
+                         wait_until_id_visible)
 
 base_url = os.environ['BASE_URL']
 not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
-
 creds = yaml.load(open(os.environ['CREDS_YML']))
+
+DEFAULT_WAIT = 5
 
 try:
     user = User.objects.get(username=creds["username"])
@@ -47,44 +48,46 @@ def login(selenium):
 @cleanup_on_error
 def test_dataset_deletion(selenium, total_datasets=5):
     """Delete some datasets and make sure the ui updates properly"""
+
     login(selenium)
 
-    # Create sample Data
+    # Create sample Data & refresh page
     make_datasets(total_datasets, user)
-
-    selenium.implicitly_wait(5)
     selenium.refresh()
-    selenium.implicitly_wait(5)
 
+    wait_until_id_visible(
+        selenium, "total-datasets", DEFAULT_WAIT)
     assert_text_within_id(
-            selenium, "total-datasets", "{} data sets".format(total_datasets)
-    )
+        selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(
+            total_datasets))
 
     # Delete individual Datasets until there are none left
     while total_datasets:
         selenium.find_elements_by_class_name('dataset-delete')[0].click()
 
-        selenium.implicitly_wait(5)
-
-        wait_until_id_clickable(selenium, 'dataset-delete-button', 5).click()
+        wait_until_id_visible(
+            selenium, 'dataset-delete-button', DEFAULT_WAIT)
+        wait_until_id_clickable(
+            selenium, 'dataset-delete-button', DEFAULT_WAIT).click()
 
         total_datasets -= 1
 
+        wait_until_id_visible(
+            selenium, 'dataset-delete-close-button', DEFAULT_WAIT)
         wait_until_id_clickable(
-            selenium, 'dataset-delete-close-button', 5).click()
+            selenium, 'dataset-delete-close-button', DEFAULT_WAIT).click()
 
-        selenium.implicitly_wait(5)
-
+        wait_until_id_visible(
+            selenium, "total-datasets", DEFAULT_WAIT)
         assert_text_within_id(
-            selenium, "total-datasets", "{} data sets".format(total_datasets)
-        )
+            selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(
+                total_datasets))
 
-    selenium.implicitly_wait(5)
-
+    wait_until_id_visible(
+        selenium, "total-datasets", DEFAULT_WAIT)
     assert_text_within_id(
-        selenium, "total-datasets", "{} data sets".format(total_datasets))
-
-    cleanup()
+        selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(
+            total_datasets))
 
     if not_travis:
         pytest.set_trace()
@@ -98,64 +101,63 @@ def test_analysis_deletion(selenium, total_analyses=5):
 
     # Create sample Data
     make_analyses_with_single_dataset(total_analyses, user)
-    selenium.implicitly_wait(5)
-
     selenium.refresh()
 
-    selenium.implicitly_wait(5)
-
+    wait_until_id_visible(
+        selenium, "total-datasets", DEFAULT_WAIT)
     assert_text_within_id(
-        selenium, "total-datasets", "{} data sets".format(1))
-
+        selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(1))
     assert_text_within_id(
-            selenium, "total-analyses", "{} analyses".format(total_analyses)
-    )
+            selenium, "total-analyses", "{} analyses".format(total_analyses))
 
     while total_analyses:
         selenium.find_elements_by_class_name('analysis-delete')[0].click()
 
-        selenium.implicitly_wait(5)
-
-        wait_until_id_clickable(selenium, 'analysis-delete-button', 5).click()
+        wait_until_id_visible(
+            selenium, 'analysis-delete-button', DEFAULT_WAIT)
+        wait_until_id_clickable(
+            selenium, 'analysis-delete-button', DEFAULT_WAIT).click()
 
         total_analyses -= 1
 
+        wait_until_id_visible(
+            selenium, 'analysis-delete-close-button', DEFAULT_WAIT)
         wait_until_id_clickable(
-            selenium, 'analysis-delete-close-button', 5).click()
-
-        selenium.implicitly_wait(5)
+            selenium, 'analysis-delete-close-button', DEFAULT_WAIT).click()
 
         # Make sure the number of analyses indicator displays the correct info
-        assert_text_within_id("analyses-indicator", total_analyses)
+        wait_until_id_visible(
+            selenium, "analyses-indicator", DEFAULT_WAIT)
+        assert_text_within_id(
+            selenium, "analyses-indicator", DEFAULT_WAIT, total_analyses)
 
+        # Handle for the Pluralization of `analysis` done on the frontend
         if total_analyses <= 1:
             assert_text_within_id(
-                selenium, "total-analyses", "{} analysis".format(
+                selenium, "total-analyses", DEFAULT_WAIT, "{} analysis".format(
                     total_analyses)
             )
         else:
             assert_text_within_id(
-                selenium, "total-analyses", "{} analyses".format(
+                selenium, "total-analyses", DEFAULT_WAIT, "{} analyses".format(
                     total_analyses)
             )
-
-    selenium.implicitly_wait(5)
-
+    wait_until_id_visible(
+        selenium, "total-analyses", DEFAULT_WAIT)
     assert_text_within_id(
-        selenium, "total-analyses", "{} analysis".format(total_analyses))
+        selenium, "total-analyses", DEFAULT_WAIT, "{} analysis".format(
+            total_analyses))
 
     selenium.find_elements_by_class_name('dataset-delete')[0].click()
 
-    selenium.implicitly_wait(5)
+    wait_until_id_clickable(
+        selenium, 'dataset-delete-button', DEFAULT_WAIT).click()
+    wait_until_id_clickable(
+            selenium, 'dataset-delete-close-button', DEFAULT_WAIT).click()
 
-    wait_until_id_clickable(selenium, 'dataset-delete-button', 5).click()
-
-    selenium.implicitly_wait(5)
-
+    wait_until_id_visible(selenium, "total-datasets", DEFAULT_WAIT)
     assert_text_within_id(
-        selenium, "total-datasets", "{} data sets".format(0))
-
-    cleanup()
+        selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(0))
 
     if not_travis:
         pytest.set_trace()
@@ -177,11 +179,11 @@ def test_cascading_deletion_of_analyses(selenium, total_analyses=5):
     selenium.implicitly_wait(5)
 
     assert_text_within_id(
-        selenium, "total-datasets", "{} data sets".format(1))
+        selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(1))
 
     assert_text_within_id(
-            selenium, "total-analyses", "{} analyses".format(total_analyses)
-    )
+            selenium, "total-analyses", DEFAULT_WAIT, "{} analyses".format(
+                total_analyses))
 
     selenium.find_elements_by_class_name('dataset-delete')[0].click()
 
@@ -195,12 +197,10 @@ def test_cascading_deletion_of_analyses(selenium, total_analyses=5):
     selenium.implicitly_wait(5)
 
     assert_text_within_id(
-        selenium, "total-analyses", "{} analysis".format(0))
+        selenium, "total-analyses", DEFAULT_WAIT, "{} analysis".format(0))
 
     assert_text_within_id(
-        selenium, "total-datasets", "{} data sets".format(0))
-
-    cleanup()
+        selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(0))
 
     if not_travis:
         pytest.set_trace()
@@ -224,11 +224,11 @@ def test_that_dataset_404s_are_handled(selenium, total_analyses=5):
     selenium.implicitly_wait(5)
 
     assert_text_within_id(
-        selenium, "total-datasets", "{} data sets".format(1))
+        selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(1))
 
     assert_text_within_id(
-            selenium, "total-analyses", "{} analyses".format(total_analyses)
-    )
+            selenium, "total-analyses", DEFAULT_WAIT, "{} analyses".format(
+                total_analyses))
 
     # Simulate scenario where objects have been deleted on the backend
     DataSet.objects.all().delete()
@@ -241,7 +241,8 @@ def test_that_dataset_404s_are_handled(selenium, total_analyses=5):
 
     selenium.implicitly_wait(5)
 
-    assert_text_within_id(selenium, "deletion-message-text", "not found.")
+    assert_text_within_id(
+        selenium, "deletion-message-text", DEFAULT_WAIT, "not found.")
 
     wait_until_id_clickable(
         selenium, 'dataset-delete-close-button', 5).click()
@@ -250,12 +251,10 @@ def test_that_dataset_404s_are_handled(selenium, total_analyses=5):
 
     # Ensure that ui displays proper info after a refresh
     assert_text_within_id(
-        selenium, "total-analyses", "{} analysis".format(0))
+        selenium, "total-analyses", DEFAULT_WAIT, "{} analysis".format(0))
 
     assert_text_within_id(
-        selenium, "total-datasets", "{} data sets".format(0))
-
-    cleanup()
+        selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(0))
 
     if not_travis:
         pytest.set_trace()
@@ -279,11 +278,11 @@ def test_that_analysis_404s_are_handled(selenium, total_analyses=5):
     selenium.implicitly_wait(5)
 
     assert_text_within_id(
-        selenium, "total-datasets", "{} data sets".format(1))
+        selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(1))
 
     assert_text_within_id(
-            selenium, "total-analyses", "{} analyses".format(total_analyses)
-    )
+            selenium, "total-analyses", DEFAULT_WAIT, "{} analyses".format(
+                total_analyses))
 
     # Simulate scenario where objects have been deleted on the backend
     Analysis.objects.all().delete()
@@ -296,7 +295,8 @@ def test_that_analysis_404s_are_handled(selenium, total_analyses=5):
 
     selenium.implicitly_wait(5)
 
-    assert_text_within_id(selenium, "deletion-message-text", "not found.")
+    assert_text_within_id(
+        selenium, "deletion-message-text", DEFAULT_WAIT, "not found.")
 
     wait_until_id_clickable(
         selenium, 'analysis-delete-close-button', 5).click()
@@ -305,12 +305,10 @@ def test_that_analysis_404s_are_handled(selenium, total_analyses=5):
 
     # Ensure that ui displays proper info after a refresh
     assert_text_within_id(
-        selenium, "total-analyses", "{} analysis".format(0))
+        selenium, "total-analyses", DEFAULT_WAIT, "{} analysis".format(0))
 
     assert_text_within_id(
-        selenium, "total-datasets", "{} data sets".format(1))
-
-    cleanup()
+        selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(1))
 
     if not_travis:
         pytest.set_trace()
