@@ -43,7 +43,8 @@ function FileBrowserCtrl (
     showGridFooter: false,
     enableSelectionBatchEvent: true,
     multiSelect: true,
-    data: fileBrowserFactory.assayFiles
+    data: fileBrowserFactory.assayFiles,
+    columnDefs: fileBrowserFactory.customColumnName
   };
   // variables supporting dynamic scrolling
   vm.firstPage = 0;
@@ -69,7 +70,9 @@ function FileBrowserCtrl (
       vm.assayAttributes = fileBrowserFactory.assayAttributes;
       vm.attributeFilter = fileBrowserFactory.attributeFilter;
       vm.analysisFilter = fileBrowserFactory.analysisFilter;
+      // create column names
       vm.createColumnDefs();
+      vm.gridOptions.columnDefs = fileBrowserFactory.customColumnName;
       promise.resolve();
     });
     return promise.promise;
@@ -371,102 +374,6 @@ function FileBrowserCtrl (
           break;
       }
     }
-  };
-
-  // populates the ui-grid columns variable
-  vm.createColumnDefs = function () {
-    vm.customColumnName = [];
-
-    // some attributes will be duplicate in different fields, duplicate
-    // column names will throw an error. This prevents duplicates
-    var uniqAssayAttributes = _.uniq(vm.assayAttributes, true,
-      function (attributeObj) {
-        return attributeObj.display_name;
-      });
-    var totalChars = vm.assayAttributes.reduce(function (previousValue, facetObj) {
-      return previousValue + String(facetObj.display_name).length;
-    }, 0);
-
-    uniqAssayAttributes.forEach(function (attribute) {
-      var columnName = attribute.display_name;
-      var columnWidth = columnName.length / totalChars * 100;
-      if (columnWidth < 10) {  // make sure columns are wide enough
-        columnWidth = Math.round(columnWidth * 2);
-      }
-      var colProperty = {
-        name: columnName,
-        width: columnWidth + '%',
-        field: attribute.internal_name,
-        cellTooltip: true,
-        enableHiding: false
-      };
-      if (columnName === 'Url') {
-        // Url requires a custom template for downloading links
-        vm.customColumnName.push(vm.setCustomUrlColumnDef(columnName));
-      } else if (columnName === 'Analysis Group') {
-        // Analysis requires a custom template for filtering -1 entries
-        var _cellTemplate = '<div class="ngCellText text-align-center"' +
-        'ng-class="col.colIndex()">{{COL_FIELD |' +
-          ' analysisGroupNegativeOneWithNA: "Analysis Group"}}</div>';
-        colProperty.cellTemplate = _cellTemplate;
-        vm.customColumnName.push(colProperty);
-      } else {
-        vm.customColumnName.push(colProperty);
-      }
-    });
-    vm.gridOptions.columnDefs = vm.customColumnName;
-  };
-
-  /**
-   * Helper method for grabbing the internal name, in fastqc viewer template
-   * @param {obj} arrayOfObj - ui-grid data obj
-   */
-  var grabAnalysisInternalName = function (arrayOfObj) {
-    var internalName = '';
-    for (var i = 0; i < arrayOfObj.length; i ++) {
-      if (arrayOfObj[i].display_name === 'Analysis') {
-        internalName = arrayOfObj[i].internal_name;
-        break;
-      }
-    }
-    return internalName;
-  };
-
-   /**
-   * Helper method for file download column, requires unique template & fields.
-   * @param {string} _columnName - column name
-   */
-  vm.setCustomUrlColumnDef = function (_columnName) {
-    var internalName = grabAnalysisInternalName(vm.assayAttributes);
-    var _cellTemplate = '<div class="ngCellText text-align-center"' +
-          'ng-class="col.colIndex()">' +
-          '<div ng-if="COL_FIELD" title="Download File \{{COL_FIELD}}\">' +
-          '<a href="{{COL_FIELD}}" target="_blank">' +
-          '<i class="fa fa-arrow-circle-o-down"></i></a>' +
-          '<span class="fastqc-viewer" ' +
-          'ng-if="row.entity.Url.indexOf(' + "'fastqc_results'" + ') >= 0">' +
-          '&nbsp;<a title="View FastQC Result"' +
-          ' href="/fastqc_viewer/#/\{{row.entity.' + internalName + '}}\">' +
-          '<i class="fa fa-bar-chart-o"></i></a>' +
-          '</span></div>' +
-          '<div ng-if="!COL_FIELD"' +
-            'title="File not available for download">' +
-          '<i class="fa fa-bolt"></i>' +
-          '</div>' +
-          '</div>';
-
-    return {
-      name: _columnName,
-      field: _columnName,
-      cellTooltip: true,
-      width: 4 + '%',
-      displayName: '',
-      enableFiltering: false,
-      enableSorting: false,
-      enableColumnMenu: false,
-      enableColumnResizing: false,
-      cellTemplate: _cellTemplate
-    };
   };
 
   // Sets boolean for data set ownership

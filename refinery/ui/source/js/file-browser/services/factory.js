@@ -6,7 +6,8 @@ function fileBrowserFactory (
   nodeService,
   assayAttributeService,
   $window,
-  $log) {
+  $log,
+  _) {
   // assayfiles has max 300 rows, ctrl adds/subtracts rows to maintain count
   var assayFiles = [];
   var assayAttributes = [];
@@ -14,6 +15,7 @@ function fileBrowserFactory (
   var attributeFilter = {};
   var analysisFilter = {};
   var assayFilesTotalItems = {};
+  var customColumnName = [];
   var nodeUrl = {};
   var nodeGroupList = [];
   var csrfToken = $window.csrf_token;
@@ -198,6 +200,99 @@ function fileBrowserFactory (
     return assayAttributeUpdate.$promise;
   };
 
+  /**
+   * Helper method for grabbing the internal name, in fastqc viewer template
+   * @param {obj} arrayOfObj - ui-grid data obj
+   */
+  var grabAnalysisInternalName = function (arrayOfObj) {
+    var internalName = '';
+    for (var i = 0; i < arrayOfObj.length; i ++) {
+      if (arrayOfObj[i].display_name === 'Analysis') {
+        internalName = arrayOfObj[i].internal_name;
+        break;
+      }
+    }
+    return internalName;
+  };
+
+   /**
+   * Helper method for file download column, requires unique template & fields.
+   * @param {string} _columnName - column name
+   */
+  var setCustomUrlColumnDef = function (_columnName) {
+    var internalName = grabAnalysisInternalName(assayAttributes);
+    var _cellTemplate = '<div class="ngCellText text-align-center"' +
+          'ng-class="col.colIndex()">' +
+          '<div ng-if="COL_FIELD" title="Download File \{{COL_FIELD}}\">' +
+          '<a href="{{COL_FIELD}}" target="_blank">' +
+          '<i class="fa fa-arrow-circle-o-down"></i></a>' +
+          '<span class="fastqc-viewer" ' +
+          'ng-if="row.entity.Url.indexOf(' + "'fastqc_results'" + ') >= 0">' +
+          '&nbsp;<a title="View FastQC Result"' +
+          ' href="/fastqc_viewer/#/\{{row.entity.' + internalName + '}}\">' +
+          '<i class="fa fa-bar-chart-o"></i></a>' +
+          '</span></div>' +
+          '<div ng-if="!COL_FIELD"' +
+            'title="File not available for download">' +
+          '<i class="fa fa-bolt"></i>' +
+          '</div>' +
+          '</div>';
+
+    return {
+      name: _columnName,
+      field: _columnName,
+      cellTooltip: true,
+      width: 4 + '%',
+      displayName: '',
+      enableFiltering: false,
+      enableSorting: false,
+      enableColumnMenu: false,
+      enableColumnResizing: false,
+      cellTemplate: _cellTemplate
+    };
+  };
+
+   // populates the ui-grid columns variable
+  var createColumnDefs = function () {
+    // some attributes will be duplicate in different fields, duplicate
+    // column names will throw an error. This prevents duplicates
+    var uniqAssayAttributes = _.uniq(assayAttributes, true,
+      function (attributeObj) {
+        return attributeObj.display_name;
+      });
+    var totalChars = assayAttributes.reduce(function (previousValue, facetObj) {
+      return previousValue + String(facetObj.display_name).length;
+    }, 0);
+
+    uniqAssayAttributes.forEach(function (attribute) {
+      var columnName = attribute.display_name;
+      var columnWidth = columnName.length / totalChars * 100;
+      if (columnWidth < 10) {  // make sure columns are wide enough
+        columnWidth = Math.round(columnWidth * 2);
+      }
+      var colProperty = {
+        name: columnName,
+        width: columnWidth + '%',
+        field: attribute.internal_name,
+        cellTooltip: true,
+        enableHiding: false
+      };
+      if (columnName === 'Url') {
+        // Url requires a custom template for downloading links
+        customColumnName.push(setCustomUrlColumnDef(columnName));
+      } else if (columnName === 'Analysis Group') {
+        // Analysis requires a custom template for filtering -1 entries
+        var _cellTemplate = '<div class="ngCellText text-align-center"' +
+        'ng-class="col.colIndex()">{{COL_FIELD |' +
+          ' analysisGroupNegativeOneWithNA: "Analysis Group"}}</div>';
+        colProperty.cellTemplate = _cellTemplate;
+        customColumnName.push(colProperty);
+      } else {
+        customColumnName.push(colProperty);
+      }
+    });
+  };
+
   // helper method to trim assayFiles data for caching purposes
   var trimAssayFiles = function (sliceCount, startInd) {
     if (startInd === undefined) {
@@ -215,6 +310,7 @@ function fileBrowserFactory (
     analysisFilter: analysisFilter,
     assayFilesTotalItems: assayFilesTotalItems,
     nodeGroupList: nodeGroupList,
+    createColumnDefs: createColumnDefs,
     createNodeGroup: createNodeGroup,
     getAssayFiles: getAssayFiles,
     getAssayAttributeOrder: getAssayAttributeOrder,
@@ -234,6 +330,7 @@ angular
     'assayAttributeService',
     '$window',
     '$log',
+    '_',
     fileBrowserFactory
   ]
 );
