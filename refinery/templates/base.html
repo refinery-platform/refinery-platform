@@ -138,7 +138,7 @@
             {{ user.username }}
           {% endif %}
           </a>&nbsp;&nbsp;|&nbsp;&nbsp;
-          <i class="fa fa-sign-out"></i>&nbsp;
+          <i id="refinery-logout" class="fa fa-sign-out"></i>&nbsp;
           <a href="
            {% url "django.contrib.auth.views.logout" %}?next={% url "home" %}"
           tabindex=6>
