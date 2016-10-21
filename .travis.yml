@@ -60,6 +60,7 @@ script:
   # Run our acceptance tests
   - cd ../
   - sh acceptance_tests.sh
+  - cd refinery
 
   - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
 
