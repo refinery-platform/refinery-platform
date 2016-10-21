@@ -103,8 +103,7 @@ def test_analysis_deletion(selenium, total_analyses=5):
     make_analyses_with_single_dataset(total_analyses, user)
     selenium.refresh()
 
-    wait_until_id_visible(
-        selenium, "total-datasets", DEFAULT_WAIT)
+    wait_until_id_visible(selenium, "total-datasets", DEFAULT_WAIT)
     assert_text_within_id(
         selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(1))
     assert_text_within_id(
@@ -113,8 +112,7 @@ def test_analysis_deletion(selenium, total_analyses=5):
     while total_analyses:
         selenium.find_elements_by_class_name('analysis-delete')[0].click()
 
-        wait_until_id_visible(
-            selenium, 'analysis-delete-button', DEFAULT_WAIT)
+        wait_until_id_visible(selenium, 'analysis-delete-button', DEFAULT_WAIT)
         wait_until_id_clickable(
             selenium, 'analysis-delete-button', DEFAULT_WAIT).click()
 
@@ -126,12 +124,12 @@ def test_analysis_deletion(selenium, total_analyses=5):
             selenium, 'analysis-delete-close-button', DEFAULT_WAIT).click()
 
         # Make sure the number of analyses indicator displays the correct info
-        wait_until_id_visible(
-            selenium, "analyses-indicator", DEFAULT_WAIT)
+        wait_until_id_visible(selenium, "analyses-indicator", DEFAULT_WAIT)
         assert_text_within_id(
             selenium, "analyses-indicator", DEFAULT_WAIT, total_analyses)
 
-        # Handle for the Pluralization of `analysis` done on the frontend
+        # Handle case where the Pluralization of `analysis` done on the
+        # frontend
         if total_analyses <= 1:
             assert_text_within_id(
                 selenium, "total-analyses", DEFAULT_WAIT, "{} analysis".format(
@@ -142,8 +140,7 @@ def test_analysis_deletion(selenium, total_analyses=5):
                 selenium, "total-analyses", DEFAULT_WAIT, "{} analyses".format(
                     total_analyses)
             )
-    wait_until_id_visible(
-        selenium, "total-analyses", DEFAULT_WAIT)
+    wait_until_id_visible(selenium, "total-analyses", DEFAULT_WAIT)
     assert_text_within_id(
         selenium, "total-analyses", DEFAULT_WAIT, "{} analysis".format(
             total_analyses))
@@ -172,33 +169,30 @@ def test_cascading_deletion_of_analyses(selenium, total_analyses=5):
 
     # Create sample Data
     make_analyses_with_single_dataset(total_analyses, user)
-    selenium.implicitly_wait(5)
-
     selenium.refresh()
 
-    selenium.implicitly_wait(5)
-
+    wait_until_id_visible(selenium, "total-datasets", DEFAULT_WAIT)
     assert_text_within_id(
         selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(1))
-
+    wait_until_id_visible(selenium, "total-analyses", DEFAULT_WAIT)
     assert_text_within_id(
             selenium, "total-analyses", DEFAULT_WAIT, "{} analyses".format(
                 total_analyses))
 
     selenium.find_elements_by_class_name('dataset-delete')[0].click()
 
-    selenium.implicitly_wait(5)
-
-    wait_until_id_clickable(selenium, 'dataset-delete-button', 5).click()
-
+    wait_until_id_visible(
+            selenium, 'dataset-delete-button', DEFAULT_WAIT)
     wait_until_id_clickable(
-        selenium, 'dataset-delete-close-button', 5).click()
+        selenium, 'dataset-delete-button', DEFAULT_WAIT).click()
 
-    selenium.implicitly_wait(5)
-
+    # Make sure that there are no more Analyses left after the One Dataset is
+    # deleted
+    wait_until_id_visible(selenium, "total-analyses", DEFAULT_WAIT)
     assert_text_within_id(
         selenium, "total-analyses", DEFAULT_WAIT, "{} analysis".format(0))
-
+    wait_until_id_visible(
+        selenium, "total-datasets", DEFAULT_WAIT)
     assert_text_within_id(
         selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(0))
 
@@ -210,22 +204,19 @@ def test_cascading_deletion_of_analyses(selenium, total_analyses=5):
 def test_that_dataset_404s_are_handled(selenium, total_analyses=5):
     """Test use case where DataSet objects are deleted (for example by an
     admin, or a user inbetween multiple windows) while a user is about to
-    delete said object(s) themselves User should receive a "Not Found"
+    delete said object(s) themselves. User should receive a "Not Found"
     message"""
 
     login(selenium)
 
     # Create sample Data
     make_analyses_with_single_dataset(total_analyses, user)
-    selenium.implicitly_wait(5)
-
     selenium.refresh()
 
-    selenium.implicitly_wait(5)
-
+    wait_until_id_visible(selenium, "total-datasets", DEFAULT_WAIT)
     assert_text_within_id(
         selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(1))
-
+    wait_until_id_visible(selenium, "total-analyses", DEFAULT_WAIT)
     assert_text_within_id(
             selenium, "total-analyses", DEFAULT_WAIT, "{} analyses".format(
                 total_analyses))
@@ -235,24 +226,22 @@ def test_that_dataset_404s_are_handled(selenium, total_analyses=5):
 
     selenium.find_elements_by_class_name('dataset-delete')[0].click()
 
-    selenium.implicitly_wait(5)
+    wait_until_id_clickable(
+        selenium, 'dataset-delete-button', DEFAULT_WAIT).click()
+    wait_until_id_clickable(
+            selenium, 'dataset-delete-close-button', DEFAULT_WAIT).click()
 
-    wait_until_id_clickable(selenium, 'dataset-delete-button', 5).click()
-
-    selenium.implicitly_wait(5)
-
+    wait_until_id_visible(selenium, "deletion-message-text", DEFAULT_WAIT)
     assert_text_within_id(
         selenium, "deletion-message-text", DEFAULT_WAIT, "not found.")
-
     wait_until_id_clickable(
         selenium, 'dataset-delete-close-button', 5).click()
 
-    selenium.implicitly_wait(5)
-
-    # Ensure that ui displays proper info after a refresh
+    # Ensure that ui displays proper info
+    wait_until_id_visible(selenium, "total-analyses", DEFAULT_WAIT)
     assert_text_within_id(
         selenium, "total-analyses", DEFAULT_WAIT, "{} analysis".format(0))
-
+    wait_until_id_visible(selenium, "total-datasets", DEFAULT_WAIT)
     assert_text_within_id(
         selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(0))
 
@@ -271,15 +260,12 @@ def test_that_analysis_404s_are_handled(selenium, total_analyses=5):
 
     # Create sample Data
     make_analyses_with_single_dataset(total_analyses, user)
-    selenium.implicitly_wait(5)
-
     selenium.refresh()
 
-    selenium.implicitly_wait(5)
-
+    wait_until_id_visible(selenium, "total-datasets", DEFAULT_WAIT)
     assert_text_within_id(
         selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(1))
-
+    wait_until_id_visible(selenium, "total-analyses", DEFAULT_WAIT)
     assert_text_within_id(
             selenium, "total-analyses", DEFAULT_WAIT, "{} analyses".format(
                 total_analyses))
@@ -289,24 +275,21 @@ def test_that_analysis_404s_are_handled(selenium, total_analyses=5):
 
     selenium.find_elements_by_class_name('analysis-delete')[0].click()
 
-    selenium.implicitly_wait(5)
+    wait_until_id_visible(selenium, 'analysis-delete-button', DEFAULT_WAIT)
+    wait_until_id_clickable(
+        selenium, 'analysis-delete-button', DEFAULT_WAIT).click()
 
-    wait_until_id_clickable(selenium, 'analysis-delete-button', 5).click()
-
-    selenium.implicitly_wait(5)
-
+    wait_until_id_visible(selenium, "deletion-message-text", DEFAULT_WAIT)
     assert_text_within_id(
         selenium, "deletion-message-text", DEFAULT_WAIT, "not found.")
-
     wait_until_id_clickable(
         selenium, 'analysis-delete-close-button', 5).click()
 
-    selenium.implicitly_wait(5)
-
-    # Ensure that ui displays proper info after a refresh
+    # Ensure that ui displays proper info
+    wait_until_id_visible(selenium, "total-analyses", DEFAULT_WAIT)
     assert_text_within_id(
         selenium, "total-analyses", DEFAULT_WAIT, "{} analysis".format(0))
-
+    wait_until_id_visible(selenium, "total-datasets", DEFAULT_WAIT)
     assert_text_within_id(
         selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(1))
 
