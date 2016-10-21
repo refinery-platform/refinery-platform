@@ -1,13 +1,14 @@
 'use strict';
 
 function fileBrowserFactory (
+  $log,
+  $window,
+  _,
+  assayAttributeService,
   assayFileService,
   nodeGroupService,
-  nodeService,
-  assayAttributeService,
-  $window,
-  $log,
-  _) {
+  nodeService
+  ) {
   // assayfiles has max 300 rows, ctrl adds/subtracts rows to maintain count
   var assayFiles = [];
   var assayAttributes = [];
@@ -324,13 +325,13 @@ function fileBrowserFactory (
 angular
   .module('refineryFileBrowser')
   .factory('fileBrowserFactory', [
+    '$log',
+    '$window',
+    '_',
+    'assayAttributeService',
     'assayFileService',
     'nodeGroupService',
     'nodeService',
-    'assayAttributeService',
-    '$window',
-    '$log',
-    '_',
     fileBrowserFactory
   ]
 );
