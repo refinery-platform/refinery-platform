@@ -315,5 +315,11 @@ describe('File Browser Factory', function () {
       factory.trimAssayFiles(0);
       expect(factory.assayFiles.length).toEqual(6);
     });
+
+    it('should empty assayFiles', function () {
+      angular.copy(tempAssayFiles, factory.assayFiles);
+      factory.trimAssayFiles(0, 0);
+      expect(factory.assayFiles.length).toEqual(0);
+    });
   });
 });
