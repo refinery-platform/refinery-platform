@@ -154,7 +154,7 @@
             </a>&nbsp;&nbsp;
           &nbsp;&nbsp;|&nbsp;&nbsp;
           {% endif %}
-          <i class="fa fa-sign-in"></i>&nbsp;<a rel="tooltip"
+          <i id="refinery-login" class="fa fa-sign-in"></i>&nbsp;<a rel="tooltip"
           data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
         {% endif %}
         &nbsp;&nbsp;|&nbsp;&nbsp;
