@@ -25,7 +25,6 @@ function FileBrowserCtrl (
   vm.gridApi = undefined;
 
   // Ui-grid parameters
-  vm.customColumnName = [];
   vm.queryKeys = Object.keys($location.search());
   vm.selectedField = {};
   vm.selectNodesCount = 0;
@@ -44,7 +43,7 @@ function FileBrowserCtrl (
     enableSelectionBatchEvent: true,
     multiSelect: true,
     data: fileBrowserFactory.assayFiles,
-    columnDefs: fileBrowserFactory.customColumnName
+    columnDefs: fileBrowserFactory.customColumnNames
   };
   // variables supporting dynamic scrolling
   vm.firstPage = 0;
@@ -71,8 +70,8 @@ function FileBrowserCtrl (
       vm.attributeFilter = fileBrowserFactory.attributeFilter;
       vm.analysisFilter = fileBrowserFactory.analysisFilter;
       // create column names
-      vm.createColumnDefs();
-      vm.gridOptions.columnDefs = fileBrowserFactory.customColumnName;
+      fileBrowserFactory.createColumnDefs();
+      vm.gridOptions.columnDefs = fileBrowserFactory.customColumnNames;
       promise.resolve();
     });
     return promise.promise;
@@ -375,6 +374,7 @@ function FileBrowserCtrl (
       }
     }
   };
+
 
   // Sets boolean for data set ownership
   vm.checkDataSetOwnership = function () {
