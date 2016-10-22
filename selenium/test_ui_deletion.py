@@ -8,8 +8,8 @@ from django.contrib.auth.models import User
 from core.models import DataSet, Analysis
 from factory_boy.utils import make_datasets, make_analyses_with_single_dataset
 from .utils import (assert_text_within_id, wait_until_id_clickable,
-                            cleanup_on_error, wait_until_id_visible, DEFAULT_WAIT,
-                            login)
+                    cleanup_on_error, wait_until_id_visible,
+                    DEFAULT_WAIT, login)
 
 base_url = os.environ['BASE_URL']
 not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
