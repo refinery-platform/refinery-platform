@@ -45,6 +45,7 @@ function FileBrowserCtrl (
     data: fileBrowserFactory.assayFiles,
     columnDefs: fileBrowserFactory.customColumnNames
   };
+
   // variables supporting dynamic scrolling
   vm.firstPage = 0;
   vm.lastPage = 0;
@@ -317,10 +318,6 @@ function FileBrowserCtrl (
     // turn off the infinite scroll handling up and down
     if (typeof vm.gridApi !== 'undefined') {
       vm.gridApi.infiniteScroll.setScrollDirections(false, false);
-
-      // Reset Service Data
-      console.log('reseting service data');
-      fileBrowserFactory.assayFiles = [];
 
       vm.refreshAssayFiles().then(function () {
         $timeout(function () {
