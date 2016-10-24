@@ -16,7 +16,7 @@ function fileBrowserFactory (
   var attributeFilter = {};
   var analysisFilter = {};
   var assayFilesTotalItems = {};
-  var customColumnName = [];
+  var customColumnNames = [];
   var nodeUrl = {};
   var nodeGroupList = [];
   var csrfToken = $window.csrf_token;
@@ -257,6 +257,8 @@ function fileBrowserFactory (
   var createColumnDefs = function () {
     // some attributes will be duplicate in different fields, duplicate
     // column names will throw an error. This prevents duplicates
+    console.log('in create Custom Colm');
+    console.log(assayAttributes);
     var uniqAssayAttributes = _.uniq(assayAttributes, true,
       function (attributeObj) {
         return attributeObj.display_name;
@@ -280,16 +282,16 @@ function fileBrowserFactory (
       };
       if (columnName === 'Url') {
         // Url requires a custom template for downloading links
-        customColumnName.push(setCustomUrlColumnDef(columnName));
+        customColumnNames.push(setCustomUrlColumnDef(columnName));
       } else if (columnName === 'Analysis Group') {
         // Analysis requires a custom template for filtering -1 entries
         var _cellTemplate = '<div class="ngCellText text-align-center"' +
         'ng-class="col.colIndex()">{{COL_FIELD |' +
           ' analysisGroupNegativeOneWithNA: "Analysis Group"}}</div>';
         colProperty.cellTemplate = _cellTemplate;
-        customColumnName.push(colProperty);
+        customColumnNames.push(colProperty);
       } else {
-        customColumnName.push(colProperty);
+        customColumnNames.push(colProperty);
       }
     });
   };
@@ -310,6 +312,7 @@ function fileBrowserFactory (
     attributeFilter: attributeFilter,
     analysisFilter: analysisFilter,
     assayFilesTotalItems: assayFilesTotalItems,
+    customColumnNames: customColumnNames,
     nodeGroupList: nodeGroupList,
     createColumnDefs: createColumnDefs,
     createNodeGroup: createNodeGroup,
