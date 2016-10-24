@@ -257,7 +257,7 @@ function fileBrowserFactory (
     };
   };
 
-   // populates the ui-grid columns variable
+  // populates the ui-grid columns variable
   var createColumnDefs = function () {
     var tempCustomColumnNames = [];
 

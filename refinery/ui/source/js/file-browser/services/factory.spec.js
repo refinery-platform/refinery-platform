@@ -13,7 +13,6 @@ describe('File Browser Factory', function () {
   beforeEach(module('refineryFileBrowser'));
   beforeEach(inject(function (_fileBrowserFactory_, $window) {
     factory = _fileBrowserFactory_;
-
     $window.csrf_token = fakeToken;
   }));
 
@@ -26,6 +25,7 @@ describe('File Browser Factory', function () {
     expect(factory.analysisFilter).toEqual({});
     expect(factory.assayFilesTotalItems).toEqual({});
     expect(factory.nodeGroupList).toEqual([]);
+    expect(factory.customColumnNames).toEqual([]);
   });
 
   describe('getAssayFiles', function () {
@@ -279,6 +279,39 @@ describe('File Browser Factory', function () {
       rootScope.$apply();
       expect(typeof response.then).toEqual('function');
       expect(successData).toEqual(nodeGroup);
+    });
+  });
+
+  describe('createColumnDefs', function () {
+    var tempAssayAttributes = [
+      { display_name: 'Attribute1',
+        internal_name: '_Attribute1_s'
+      },
+      { display_name: 'Analysis Group',
+        internal_name: 'Analysis Group'
+      },
+      { display_name: 'Url',
+        internal_name: 'Url'
+      }
+    ];
+
+    it('createColumnDefs is a method', function () {
+      expect(angular.isFunction(factory.createColumnDefs)).toBe(true);
+    });
+
+    it('returns an array of same length', function () {
+      angular.copy(tempAssayAttributes, factory.assayAttributes);
+      var response = factory.createColumnDefs();
+      expect(response.length).toEqual(tempAssayAttributes.length);
+    });
+
+    it('returns corrent template for analysis group', function () {
+      var analysisGroupTemplate = '<div class="ngCellText text-align-center"' +
+        'ng-class="col.colIndex()">{{COL_FIELD |' +
+          ' analysisGroupNegativeOneWithNA: "Analysis Group"}}</div>';
+      angular.copy(tempAssayAttributes, factory.assayAttributes);
+      var response = factory.createColumnDefs();
+      expect(response[1].cellTemplate).toContain(analysisGroupTemplate);
     });
   });
 
