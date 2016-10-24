@@ -16,15 +16,17 @@ function FileBrowserCtrl (
   _
   ) {
   var vm = this;
+  // attribute list from api
   vm.assayAttributes = fileBrowserFactory.assayAttributes;
+  // objs used by ui to generate filters
   vm.attributeFilter = fileBrowserFactory.attributeFilter;
   vm.analysisFilter = fileBrowserFactory.analysisFilter;
+  // API params to get data
   vm.filesParam = {
     uuid: $window.externalAssayUuid
   };
-  vm.gridApi = undefined;
-
   // Ui-grid parameters
+  vm.gridApi = undefined; // avoids duplicate grid generation
   vm.queryKeys = Object.keys($location.search());
   vm.selectedField = {};
   vm.selectNodesCount = 0;
@@ -45,16 +47,21 @@ function FileBrowserCtrl (
     columnDefs: fileBrowserFactory.customColumnNames,
     data: fileBrowserFactory.assayFiles
   };
-
-  // variables supporting dynamic scrolling
+  // variables supporting ui-grid dynamic scrolling
   vm.firstPage = 0;
   vm.lastPage = 0;
   vm.rowCount = 100;
   vm.totalPages = 1;
   vm.cachePages = 2;
   vm.counter = 0;
-
+  // flag to help with timing issues when selecting node group
   vm.afterNodeGroupUpdate = false;
+
+  /*
+ * -----------------------------------------------------------------------------
+ * Methods
+ * -----------------------------------------------------------------------------
+ */
 
   vm.refreshAssayFiles = function () {
     vm.filesParam.offset = vm.lastPage * vm.rowCount;
