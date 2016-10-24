@@ -61,8 +61,8 @@ function DashboardCtrl (
   this.treemapContext = treemapContext;
   this.dashboardVisData = dashboardVisData;
   this.dataCart = dataCart;
-  // variable to track filters selected in ui for data set api query
-  this.dataSetFilters = {};
+  // variable to track filters and sorting selected in ui for data set api query
+  this.dataSetParams = {};
 
   this.searchQueryDataSets = '';
 
@@ -444,12 +444,12 @@ Object.defineProperty(
 
       this._dataSetsFilterGroup = value;
       if (typeof groupId === 'number') {
-        this.dataSetFilters.group = groupId;
-        this.dataSet.filter(this.dataSetFilters);
+        this.dataSetParams.group = groupId;
+        this.dataSet.filter(this.dataSetParams);
       } else {
         // remove group property
-        delete this.dataSetFilters.group;
-        this.dataSet.filter(this.dataSetFilters);
+        delete this.dataSetParams.group;
+        this.dataSet.filter(this.dataSetParams);
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
@@ -468,12 +468,12 @@ Object.defineProperty(
     set: function (value) {
       this._dataSetsFilterOwner = value;
       if (value) {
-        this.dataSetFilters.is_owner = 'True';
-        this.dataSet.filter(this.dataSetFilters);
+        this.dataSetParams.is_owner = 'True';
+        this.dataSet.filter(this.dataSetParams);
       } else {
         // remove is_owner property, avoids searching for non-owned data sets
-        delete this.dataSetFilters.is_owner;
-        this.dataSet.filter(this.dataSetFilters);
+        delete this.dataSetParams.is_owner;
+        this.dataSet.filter(this.dataSetParams);
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
@@ -492,12 +492,12 @@ Object.defineProperty(
     set: function (value) {
       this._dataSetsFilterPublic = value;
       if (value) {
-        this.dataSetFilters.public = 'True';
-        this.dataSet.filter(this.dataSetFilters);
+        this.dataSetParams.public = 'True';
+        this.dataSet.filter(this.dataSetParams);
       } else {
          // remove is_owner property, avoids searching for non-public data sets
-        delete this.dataSetFilters.public;
-        this.dataSet.filter(this.dataSetFilters);
+        delete this.dataSetParams.public;
+        this.dataSet.filter(this.dataSetParams);
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
