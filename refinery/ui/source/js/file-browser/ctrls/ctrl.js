@@ -315,11 +315,8 @@ function FileBrowserCtrl (
   vm.reset = function () {
     vm.firstPage = 0;
     vm.lastPage = 0;
-
-   // vm.gridOptions.data = [];
-   // vm.gridOptions.columnDefs = [];
-    // reset custom column names
-   // fileBrowserFactory.customColumnNames = [];
+    // reset service data
+    angular.copy([], fileBrowserFactory.assayFiles);
 
     // turn off the infinite scroll handling up and down
     if (typeof vm.gridApi !== 'undefined') {

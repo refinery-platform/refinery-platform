@@ -126,6 +126,10 @@ function fileBrowserFactory (
     return _arrayOfObjs;
   };
 
+  var resetAssayFiles = function () {
+    assayFiles = [];
+  };
+
   var getAssayFiles = function (unencodeParams) {
     var params = {};
     var additionalAssayFiles = [];
@@ -323,6 +327,7 @@ function fileBrowserFactory (
     postAssayAttributeOrder: postAssayAttributeOrder,
     getNodeGroupList: getNodeGroupList,
     encodeAttributeFields: encodeAttributeFields,
+    resetAssayFiles: resetAssayFiles,
     trimAssayFiles: trimAssayFiles
   };
 }
