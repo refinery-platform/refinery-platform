@@ -16,6 +16,7 @@ function FileBrowserCtrl (
   _
   ) {
   var vm = this;
+  vm.assayAttributes = fileBrowserFactory.assayAttributes;
   vm.attributeFilter = fileBrowserFactory.attributeFilter;
   vm.analysisFilter = fileBrowserFactory.analysisFilter;
   vm.filesParam = {
@@ -40,10 +41,13 @@ function FileBrowserCtrl (
     rowHeight: 35,
     showGridFooter: false,
     enableSelectionBatchEvent: true,
-    multiSelect: true,
-    data: fileBrowserFactory.assayFiles,
-    columnDefs: fileBrowserFactory.customColumnNames
+    multiSelect: true
   };
+
+  if (fileBrowserFactory.assayFiles.length > 0) {
+    vm.gridOptions.data = fileBrowserFactory.assayFiles;
+    vm.gridOptions.columnDefs = fileBrowserFactory.customColumnNames;
+  }
 
   // variables supporting dynamic scrolling
   vm.firstPage = 0;
@@ -56,6 +60,7 @@ function FileBrowserCtrl (
   vm.afterNodeGroupUpdate = false;
 
   vm.refreshAssayFiles = function () {
+    console.log('in the refresh Assay Files');
     vm.filesParam.offset = vm.lastPage * vm.rowCount;
     vm.filesParam.limit = vm.rowCount;
 
@@ -66,12 +71,15 @@ function FileBrowserCtrl (
       vm.gridOptions.data = fileBrowserFactory.assayFiles;
       vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
       vm.totalPages = Math.floor(vm.assayFilesTotal / vm.rowCount);
+      vm.assayAttributes = fileBrowserFactory.assayAttributes;
       vm.attributeFilter = fileBrowserFactory.attributeFilter;
       vm.analysisFilter = fileBrowserFactory.analysisFilter;
       // create column names
       fileBrowserFactory.createColumnDefs();
       vm.gridOptions.columnDefs = fileBrowserFactory.customColumnNames;
       promise.resolve();
+    }, function (error) {
+      $log.error(error);
     });
     return promise.promise;
   };
@@ -310,11 +318,16 @@ function FileBrowserCtrl (
 
   // Reset the data, selected rows, and scroll position in the grid
   vm.reset = function () {
+    console.log('in the reset');
     vm.firstPage = 0;
     vm.lastPage = 0;
 
+    vm.gridOptions.data = [];
+    vm.gridOptions.columnDefs = [];
+
     // turn off the infinite scroll handling up and down
     if (typeof vm.gridApi !== 'undefined') {
+      console.log('in the grid api');
       vm.gridApi.infiniteScroll.setScrollDirections(false, false);
 
       vm.refreshAssayFiles().then(function () {
@@ -385,6 +398,7 @@ function FileBrowserCtrl (
     },
     function () {
       if (resetGridService.resetGridFlag) {
+        console.log('in the watcher');
         // Have to set selected Fields in control due to service scope
         angular.forEach(vm.selectedField, function (value, field) {
           vm.selectedField[field] = false;
@@ -401,6 +415,7 @@ function FileBrowserCtrl (
   vm.checkDataSetOwnership();
 
   vm.refreshAssayFiles().then(function () {
+    console.log('in the refresh assay files');
     vm.checkUrlQueryFilters();
     // if selected field list isn't empty update url and filter ui, tab switch
     if (!_.isEmpty(selectedFilterService.selectedFieldList)) {
