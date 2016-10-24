@@ -68,7 +68,9 @@ function FileBrowserCtrl (
     fileBrowserFactory.getAssayFiles(vm.filesParam).then(function () {
       // Grabbing 100 files per request, keeping max of 300 at a time
       // Ui-grid rows generated from assay files
+      console.log('in the get then');
       vm.gridOptions.data = fileBrowserFactory.assayFiles;
+      console.log(vm.gridOptions.data);
       vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
       vm.totalPages = Math.floor(vm.assayFilesTotal / vm.rowCount);
       vm.assayAttributes = fileBrowserFactory.assayAttributes;
@@ -77,6 +79,7 @@ function FileBrowserCtrl (
       // create column names
       fileBrowserFactory.createColumnDefs();
       vm.gridOptions.columnDefs = fileBrowserFactory.customColumnNames;
+      console.log(vm.gridOptions.columnDefs);
       promise.resolve();
     }, function (error) {
       $log.error(error);
@@ -322,8 +325,8 @@ function FileBrowserCtrl (
     vm.firstPage = 0;
     vm.lastPage = 0;
 
-    vm.gridOptions.data = [];
-    vm.gridOptions.columnDefs = [];
+   // vm.gridOptions.data = [];
+   // vm.gridOptions.columnDefs = [];
 
     // turn off the infinite scroll handling up and down
     if (typeof vm.gridApi !== 'undefined') {
