@@ -518,11 +518,7 @@ Object.defineProperty(
       this.dataSetsSortOrder = 0;
       this.dataSetsSortDesc = false;
 
-      console.log(value);
       this.triggerSorting('dataSets');
-     // this.dataSetParams.order_by = this.value +
-      // this.dataSet.filter(this.dataSetParams);
-
       this.checkDataSetsSort();
     }
   });
@@ -1560,8 +1556,6 @@ DashboardCtrl.prototype.toggleSortOrder = function (source) {
   var sortBy = source + 'SortBy';
   var sortDesc = source + 'SortDesc';
   var sortOrder = source + 'SortOrder';
-  console.log('in toggle sort order');
-  console.log(source);
 
   this[sortOrder] = (this[sortOrder] + 1) % 3;
 
@@ -1600,8 +1594,8 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
     // Todo: Unify data sources. Currently datasets are handled nicely and
     // more generic than others e.g. analyses and workflows.
     if (source === 'dataSets') {
+      // Use api request params to tie in sorting & filtering
       this.dataSetParams.order_by = params;
-    //  this.dataSet.order(params);
       this.dataSet.filter(this.dataSetParams);
     } else {
       this[source].extraParameters.order_by = params;
@@ -1609,6 +1603,7 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
   } else {
     if (source === 'dataSets') {
       this.dataSet.all();
+      // Remove order_by param from api request params
       delete this.dataSetParams.order_by;
     } else {
       delete this[source].extraParameters.order_by;
