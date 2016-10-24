@@ -16,7 +16,6 @@ function FileBrowserCtrl (
   _
   ) {
   var vm = this;
-  vm.assayAttributes = fileBrowserFactory.assayAttributes;
   vm.attributeFilter = fileBrowserFactory.attributeFilter;
   vm.analysisFilter = fileBrowserFactory.analysisFilter;
   vm.filesParam = {
@@ -67,7 +66,6 @@ function FileBrowserCtrl (
       vm.gridOptions.data = fileBrowserFactory.assayFiles;
       vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
       vm.totalPages = Math.floor(vm.assayFilesTotal / vm.rowCount);
-      vm.assayAttributes = fileBrowserFactory.assayAttributes;
       vm.attributeFilter = fileBrowserFactory.attributeFilter;
       vm.analysisFilter = fileBrowserFactory.analysisFilter;
       // create column names
