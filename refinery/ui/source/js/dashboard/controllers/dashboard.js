@@ -671,7 +671,6 @@ DashboardCtrl.prototype.checkAnalysesFilterSort = function () {
  * @date    2016-05-09
  */
 DashboardCtrl.prototype.checkDataSetsFilter = function () {
-  console.log('in check data sets filter');
   if (this.dataSetsFilterOwner) {
     this.dataSetsFilter = true;
     return;
