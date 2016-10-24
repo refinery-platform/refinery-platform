@@ -255,10 +255,10 @@ function fileBrowserFactory (
 
    // populates the ui-grid columns variable
   var createColumnDefs = function () {
+    var tempCustomColumnNames = [];
+
     // some attributes will be duplicate in different fields, duplicate
     // column names will throw an error. This prevents duplicates
-    console.log('in create Custom Colm');
-    console.log(assayAttributes);
     var uniqAssayAttributes = _.uniq(assayAttributes, true,
       function (attributeObj) {
         return attributeObj.display_name;
@@ -282,18 +282,20 @@ function fileBrowserFactory (
       };
       if (columnName === 'Url') {
         // Url requires a custom template for downloading links
-        customColumnNames.push(setCustomUrlColumnDef(columnName));
+        tempCustomColumnNames.push(setCustomUrlColumnDef(columnName));
       } else if (columnName === 'Analysis Group') {
         // Analysis requires a custom template for filtering -1 entries
         var _cellTemplate = '<div class="ngCellText text-align-center"' +
         'ng-class="col.colIndex()">{{COL_FIELD |' +
           ' analysisGroupNegativeOneWithNA: "Analysis Group"}}</div>';
         colProperty.cellTemplate = _cellTemplate;
-        customColumnNames.push(colProperty);
+        tempCustomColumnNames.push(colProperty);
       } else {
-        customColumnNames.push(colProperty);
+        tempCustomColumnNames.push(colProperty);
       }
     });
+    angular.copy(tempCustomColumnNames, customColumnNames);
+    return customColumnNames;
   };
 
   // helper method to trim assayFiles data for caching purposes
