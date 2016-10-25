@@ -27,7 +27,7 @@ describe('Controller: DetailsCtrl', function () {
   it('Data & UI displays variables should exist for views', function () {
     expect(ctrl.dataSet).toEqual({});
     expect(ctrl.studies).toEqual([]);
-    expect(ctrl.assays).toEqual({});
+    expect(ctrl.assays).toEqual([]);
     expect(ctrl.fileStoreItem).toEqual({});
   });
 

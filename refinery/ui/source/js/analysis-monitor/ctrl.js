@@ -10,7 +10,7 @@ function AnalysisMonitorCtrl (
 ) {
   var vm = this;
   // Long list of analysis
-  vm.analysesList = [];
+  vm.analysesList = analysisMonitorFactory.analysesList;
   vm.analysesGlobalList = [];
   // Details for running analyses
   vm.analysesDetail = {};
