@@ -88,15 +88,16 @@ function FileBrowserCtrl (
 
   // checks url for params to update the filter
   vm.checkUrlQueryFilters = function () {
+    console.log('checkUrlQueryFilters');
     var allFilters = {};
     // Merge attribute and analysis filter data obj
     angular.copy(vm.attributeFilter, allFilters);
     if (typeof vm.analysisFilter.Analysis !== 'undefined') {
       allFilters.Analysis = vm.analysisFilter.Analysis;
     }
-
     // for attribute filter directive, drop panels in query
     $scope.$broadcast('rf/attributeFilter-ready');
+    console.log('should have broadcast');
     angular.forEach(allFilters, function (attributeObj) {
       vm.refreshSelectedFieldFromQuery(attributeObj);
     });
@@ -412,9 +413,25 @@ function FileBrowserCtrl (
   // initialize the dataset
   vm.checkDataSetOwnership();
 
-  vm.refreshAssayFiles().then(function () {
+  // Hard reset / url with query requires waiting for api response
+  if (fileBrowserFactory.assayFiles.length === 0) {
+    vm.refreshAssayFiles().then(function () {
+      vm.checkUrlQueryFilters();
+      console.log('in if');
+      // if selected field list isn't empty update url and filter ui, tab switch
+      if (!_.isEmpty(selectedFilterService.selectedFieldList)) {
+        angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr, internalName) {
+          for (var i = 0; i < fieldArr.length; i++) {
+            vm.selectedField[fieldArr[i]] = true;
+            vm.updateSelectionList(internalName, fieldArr[i]);
+          }
+        });
+      }
+    });
+  } else {
+    // Tabbing does not require api response wait
+    console.log('in else');
     vm.checkUrlQueryFilters();
-    // if selected field list isn't empty update url and filter ui, tab switch
     if (!_.isEmpty(selectedFilterService.selectedFieldList)) {
       angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr, internalName) {
         for (var i = 0; i < fieldArr.length; i++) {
@@ -423,7 +440,9 @@ function FileBrowserCtrl (
         }
       });
     }
-  });
+    // Refresh in case of new analyses
+    vm.refreshAssayFiles();
+  }
 }
 
 angular
