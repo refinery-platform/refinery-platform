@@ -429,6 +429,8 @@ function FileBrowserCtrl (
   } else {
     // Tabbing does not require api response wait
     vm.checkUrlQueryFilters();
+    console.log('ensure selection');
+    console.log(selectedNodesService.selectedNodes);
     if (!_.isEmpty(selectedFilterService.selectedFieldList)) {
       angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr, internalName) {
         for (var i = 0; i < fieldArr.length; i++) {
@@ -437,6 +439,14 @@ function FileBrowserCtrl (
         }
       });
     }
+    // $timeout required to allow grid generation
+    $timeout(function () {
+      if (selectedNodesService.selectedNodes.length > 0) {
+        vm.setGridSelectedRows(selectedNodesService.selectedNodes);
+        selectedNodesService.selectNodesCount = selectedNodesService.selectedNodesUuids.length;
+        correctRowSelectionInUI();
+      }
+    }, 0);
   }
 }
 
