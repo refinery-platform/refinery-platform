@@ -21,10 +21,7 @@ function FileBrowserCtrl (
   // objs used by ui to generate filters
   vm.attributeFilter = fileBrowserFactory.attributeFilter;
   vm.analysisFilter = fileBrowserFactory.analysisFilter;
-  // API params to get data
-  vm.filesParam = {
-    uuid: $window.externalAssayUuid
-  };
+
   // Ui-grid parameters
   vm.gridApi = undefined; // avoids duplicate grid generation
   vm.queryKeys = Object.keys($location.search());
@@ -64,11 +61,11 @@ function FileBrowserCtrl (
  */
 
   vm.refreshAssayFiles = function () {
-    vm.filesParam.offset = vm.lastPage * vm.rowCount;
-    vm.filesParam.limit = vm.rowCount;
+    fileBrowserFactory.filesParam.offset = vm.lastPage * vm.rowCount;
+    fileBrowserFactory.filesParam.limit = vm.rowCount;
 
     var promise = $q.defer();
-    fileBrowserFactory.getAssayFiles(vm.filesParam).then(function () {
+    fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam).then(function () {
       // create column names
       vm.gridOptions.columnDefs = fileBrowserFactory.createColumnDefs();
       // Grabbing 100 files per request, keeping max of 300 at a time
@@ -103,13 +100,10 @@ function FileBrowserCtrl (
     angular.forEach(allFilters, function (attributeObj) {
       vm.refreshSelectedFieldFromQuery(attributeObj);
     });
-    vm.filesParam.filter_attribute = {};
+    fileBrowserFactory.filesParam.filter_attribute = {};
 
-    angular.copy(selectedFilterService.selectedFieldList, vm.filesParam.filter_attribute);
-    // Grid only needs to reset if filters are applied
-    if (Object.keys(selectedFilterService.selectedFieldList).length > 0) {
-      vm.reset();
-    }
+    angular.copy(selectedFilterService.selectedFieldList,
+      fileBrowserFactory.filesParam.filter_attribute);
   };
 
   // helper method, upon refresh/load add fields to select data objs from query
@@ -130,8 +124,9 @@ function FileBrowserCtrl (
   // Updates which attribute filters are selected and the ui-grid data
   vm.attributeSelectionUpdate = function (_internalName, _field) {
     vm.updateSelectionList(_internalName, _field);
-    vm.filesParam.filter_attribute = {};
-    angular.copy(selectedFilterService.selectedFieldList, vm.filesParam.filter_attribute);
+    fileBrowserFactory.filesParam.filter_attribute = {};
+    angular.copy(selectedFilterService.selectedFieldList,
+      fileBrowserFactory.filesParam.filter_attribute);
     // Resets selection
     selectedNodesService.setSelectedAllFlags(false);
     // resets grid
@@ -237,10 +232,10 @@ function FileBrowserCtrl (
   // Helper method for dynamic scrolling, grabs data when scrolling down
   vm.getDataDown = function () {
     vm.lastPage++;
-    vm.filesParam.offset = vm.lastPage * vm.rowCount;
-    vm.filesParam.limit = vm.rowCount;
+    fileBrowserFactory.filesParam.offset = vm.lastPage * vm.rowCount;
+    fileBrowserFactory.filesParam.limit = vm.rowCount;
     var promise = $q.defer();
-    fileBrowserFactory.getAssayFiles(vm.filesParam)
+    fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam)
       .then(function () {
         vm.gridApi.infiniteScroll.saveScrollPercentage();
         vm.gridOptions.data = fileBrowserFactory.assayFiles;
@@ -267,10 +262,10 @@ function FileBrowserCtrl (
       vm.firstPage--;
     }
 
-    vm.filesParam.offset = vm.firstPage * vm.rowCount;
-    vm.filesParam.limit = vm.rowCount;
+    fileBrowserFactory.filesParam.offset = vm.firstPage * vm.rowCount;
+    fileBrowserFactory.filesParam.limit = vm.rowCount;
     var promise = $q.defer();
-    fileBrowserFactory.getAssayFiles(vm.filesParam)
+    fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam)
       .then(function () {
         vm.gridApi.infiniteScroll.saveScrollPercentage();
         vm.gridOptions.data = fileBrowserFactory.assayFiles;
@@ -327,13 +322,11 @@ function FileBrowserCtrl (
     // reset service data
     angular.copy([], fileBrowserFactory.assayFiles);
 
-    console.log('in the reset');
     // turn off the infinite scroll handling up and down
     if (typeof vm.gridApi !== 'undefined') {
-      console.log('vm grid api is defined');
       vm.gridApi.infiniteScroll.setScrollDirections(false, false);
 
-      vm.refreshAssayFiles().then(function () {
+      vm.refreshAssayFiles(fileBrowserFactory.filesParam).then(function () {
         $timeout(function () {
         // timeout needed to allow digest cycle to complete,and grid to finish ingesting the data
           vm.gridApi.infiniteScroll.resetScroll(vm.firstPage > 0, vm.lastPage < vm.totalPages);
@@ -372,11 +365,11 @@ function FileBrowserCtrl (
         typeof sortColumns[0].sort !== 'undefined') {
       switch (sortColumns[0].sort.direction) {
         case uiGridConstants.ASC:
-          vm.filesParam.sort = sortColumns[0].field + ' asc';
+          fileBrowserFactory.filesParam.sort = sortColumns[0].field + ' asc';
           vm.reset();
           break;
         case uiGridConstants.DESC:
-          vm.filesParam.sort = sortColumns[0].field + ' desc';
+          fileBrowserFactory.filesParam.sort = sortColumns[0].field + ' desc';
           vm.reset();
           break;
         default:
@@ -407,7 +400,7 @@ function FileBrowserCtrl (
         });
         selectedFilterService.resetAttributeFilter(vm.selectedField);
         vm.selectNodesCount = 0;
-        vm.filesParam.filter_attribute = {};
+        fileBrowserFactory.filesParam.filter_attribute = {};
         vm.reset();
       }
     }
@@ -419,7 +412,10 @@ function FileBrowserCtrl (
   // Hard reset / url with query requires waiting for api response
   if (fileBrowserFactory.assayFiles.length === 0) {
     vm.refreshAssayFiles().then(function () {
-      vm.checkUrlQueryFilters();
+      if (Object.keys($location.search()).length > 0) {
+        vm.checkUrlQueryFilters();
+        vm.reset();
+      }
       // if selected field list isn't empty update url and filter ui, tab switch
       if (!_.isEmpty(selectedFilterService.selectedFieldList)) {
         angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr, internalName) {
