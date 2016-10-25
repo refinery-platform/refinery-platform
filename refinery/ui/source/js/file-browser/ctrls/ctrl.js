@@ -1,19 +1,19 @@
 'use strict';
 
 function FileBrowserCtrl (
-  $scope,
   $location,
-  uiGridConstants,
-  fileBrowserFactory,
-  resetGridService,
-  isOwnerService,
-  selectedNodesService,
-  selectedFilterService,
-  $timeout,
-  $q,
   $log,
+  $q,
+  $scope,
+  $timeout,
+  uiGridConstants,
+  _,
   $window,
-  _
+  fileBrowserFactory,
+  isOwnerService,
+  resetGridService,
+  selectedFilterService,
+  selectedNodesService
   ) {
   var vm = this;
   // attribute list from api
@@ -463,19 +463,19 @@ angular
   .module('refineryFileBrowser')
   .controller('FileBrowserCtrl',
   [
-    '$scope',
     '$location',
-    'uiGridConstants',
-    'fileBrowserFactory',
-    'resetGridService',
-    'isOwnerService',
-    'selectedNodesService',
-    'selectedFilterService',
-    '$timeout',
-    '$q',
     '$log',
-    '$window',
+    '$q',
+    '$scope',
+    '$timeout',
+    'uiGridConstants',
     '_',
+    '$window',
+    'fileBrowserFactory',
+    'isOwnerService',
+    'resetGridService',
+    'selectedFilterService',
+    'selectedNodesService',
     FileBrowserCtrl
   ]);
 
