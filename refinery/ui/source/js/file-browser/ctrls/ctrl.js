@@ -95,7 +95,11 @@ function FileBrowserCtrl (
       allFilters.Analysis = vm.analysisFilter.Analysis;
     }
     // for attribute filter directive, drop panels in query
-    $scope.$broadcast('rf/attributeFilter-ready');
+    // timeout required due to loading issues
+    $timeout(function () {
+      $scope.$broadcast('rf/attributeFilter-ready');
+    }, 0);
+
     angular.forEach(allFilters, function (attributeObj) {
       vm.refreshSelectedFieldFromQuery(attributeObj);
     });
