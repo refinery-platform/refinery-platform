@@ -27,7 +27,7 @@ function FileBrowserCtrl (
   vm.queryKeys = Object.keys($location.search());
   vm.selectedField = {};
   vm.selectNodesCount = 0;
-  vm.assayFilesTotal = 0;
+  vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
   vm.gridOptions = {
     appScopeProvider: vm,
     infiniteScrollRowsFromEnd: 40,
