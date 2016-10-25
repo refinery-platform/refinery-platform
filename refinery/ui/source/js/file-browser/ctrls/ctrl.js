@@ -200,7 +200,6 @@ function FileBrowserCtrl (
     }
   };
 
-
   // Helper function: select rows on the ui-grid
   vm.setGridSelectedRows = function (uuidsList) {
     // If user scrolls quickly, there could be a delay for selected items
@@ -211,7 +210,7 @@ function FileBrowserCtrl (
     });
   };
 
-   // Helper function: select rows on the ui-grid
+   // Helper function: unselect rows on the ui-grid
   vm.setGridUnselectedRows = function (uuidsList) {
     // If user scrolls quickly, there could be a delay for selected items
     angular.forEach(vm.gridApi.grid.rows, function (gridRow) {
@@ -328,8 +327,10 @@ function FileBrowserCtrl (
     // reset service data
     angular.copy([], fileBrowserFactory.assayFiles);
 
+    console.log('in the reset');
     // turn off the infinite scroll handling up and down
     if (typeof vm.gridApi !== 'undefined') {
+      console.log('vm grid api is defined');
       vm.gridApi.infiniteScroll.setScrollDirections(false, false);
 
       vm.refreshAssayFiles().then(function () {
@@ -440,8 +441,6 @@ function FileBrowserCtrl (
         }
       });
     }
-    // Refresh in case of new analyses
-    vm.refreshAssayFiles();
   }
 }
 
