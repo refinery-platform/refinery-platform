@@ -19,6 +19,10 @@ function fileBrowserFactory (
   var customColumnNames = [];
   var nodeUrl = {};
   var nodeGroupList = [];
+  // params for the assays api
+  var filesParam = {
+    uuid: $window.externalAssayUuid
+  };
   var csrfToken = $window.csrf_token;
   // Helper function encodes field array in an obj
   var encodeAttributeFields = function (attributeObj) {
@@ -318,6 +322,7 @@ function fileBrowserFactory (
     attributeFilter: attributeFilter,
     analysisFilter: analysisFilter,
     assayFilesTotalItems: assayFilesTotalItems,
+    filesParam: filesParam,
     customColumnNames: customColumnNames,
     nodeGroupList: nodeGroupList,
     createColumnDefs: createColumnDefs,
