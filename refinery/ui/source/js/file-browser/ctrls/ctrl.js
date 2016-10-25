@@ -88,7 +88,6 @@ function FileBrowserCtrl (
 
   // checks url for params to update the filter
   vm.checkUrlQueryFilters = function () {
-    console.log('checkUrlQueryFilters');
     var allFilters = {};
     // Merge attribute and analysis filter data obj
     angular.copy(vm.attributeFilter, allFilters);
@@ -97,7 +96,6 @@ function FileBrowserCtrl (
     }
     // for attribute filter directive, drop panels in query
     $scope.$broadcast('rf/attributeFilter-ready');
-    console.log('should have broadcast');
     angular.forEach(allFilters, function (attributeObj) {
       vm.refreshSelectedFieldFromQuery(attributeObj);
     });
@@ -417,7 +415,6 @@ function FileBrowserCtrl (
   if (fileBrowserFactory.assayFiles.length === 0) {
     vm.refreshAssayFiles().then(function () {
       vm.checkUrlQueryFilters();
-      console.log('in if');
       // if selected field list isn't empty update url and filter ui, tab switch
       if (!_.isEmpty(selectedFilterService.selectedFieldList)) {
         angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr, internalName) {
@@ -430,7 +427,6 @@ function FileBrowserCtrl (
     });
   } else {
     // Tabbing does not require api response wait
-    console.log('in else');
     vm.checkUrlQueryFilters();
     if (!_.isEmpty(selectedFilterService.selectedFieldList)) {
       angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr, internalName) {
