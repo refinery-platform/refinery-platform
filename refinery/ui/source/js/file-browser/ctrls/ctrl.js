@@ -406,48 +406,57 @@ function FileBrowserCtrl (
     }
   );
 
-  // initialize the dataset
-  vm.checkDataSetOwnership();
-
-  // Hard reset / url with query requires waiting for api response
-  if (fileBrowserFactory.assayFiles.length === 0) {
-    vm.refreshAssayFiles().then(function () {
-      if (Object.keys($location.search()).length > 0) {
-        vm.checkUrlQueryFilters();
-        vm.reset();
-      }
-      // if selected field list isn't empty update url and filter ui, tab switch
+  // on the page load, check to refresh data, url query, and ui-grid
+  // selection update
+  var initializeDataOnPageLoad = function () {
+     // Hard reset / url with query requires waiting for api response
+    if (fileBrowserFactory.assayFiles.length === 0) {
+      vm.refreshAssayFiles().then(function () {
+        if (Object.keys($location.search()).length > 0) {
+          vm.checkUrlQueryFilters();
+          vm.reset();
+        }
+        // if selected field list isn't empty update url and filter ui, tab switch
+        if (!_.isEmpty(selectedFilterService.selectedFieldList)) {
+          angular.forEach(selectedFilterService.selectedFieldList, function (
+            fieldArr, internalName
+          ) {
+            for (var i = 0; i < fieldArr.length; i++) {
+              vm.selectedField[fieldArr[i]] = true;
+              vm.updateSelectionList(internalName, fieldArr[i]);
+            }
+          });
+        }
+      });
+    } else {
+      // Tabbing does not require api response wait
+      vm.checkUrlQueryFilters();
       if (!_.isEmpty(selectedFilterService.selectedFieldList)) {
-        angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr, internalName) {
+        angular.forEach(selectedFilterService.selectedFieldList, function (
+          fieldArr, internalName
+        ) {
           for (var i = 0; i < fieldArr.length; i++) {
             vm.selectedField[fieldArr[i]] = true;
             vm.updateSelectionList(internalName, fieldArr[i]);
           }
         });
       }
-    });
-  } else {
-    // Tabbing does not require api response wait
-    vm.checkUrlQueryFilters();
-    console.log('ensure selection');
-    console.log(selectedNodesService.selectedNodes);
-    if (!_.isEmpty(selectedFilterService.selectedFieldList)) {
-      angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr, internalName) {
-        for (var i = 0; i < fieldArr.length; i++) {
-          vm.selectedField[fieldArr[i]] = true;
-          vm.updateSelectionList(internalName, fieldArr[i]);
+      // $timeout required to allow grid generation
+      $timeout(function () {
+        if (selectedNodesService.selectedNodes.length > 0) {
+          vm.setGridSelectedRows(selectedNodesService.selectedNodes);
+          selectedNodesService.selectNodesCount = selectedNodesService
+            .selectedNodesUuids.length;
+          correctRowSelectionInUI();
         }
-      });
+      }, 0);
     }
-    // $timeout required to allow grid generation
-    $timeout(function () {
-      if (selectedNodesService.selectedNodes.length > 0) {
-        vm.setGridSelectedRows(selectedNodesService.selectedNodes);
-        selectedNodesService.selectNodesCount = selectedNodesService.selectedNodesUuids.length;
-        correctRowSelectionInUI();
-      }
-    }, 0);
-  }
+  };
+
+  // initialize the dataset
+  vm.checkDataSetOwnership();
+
+  initializeDataOnPageLoad();
 }
 
 angular
