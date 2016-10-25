@@ -1602,9 +1602,9 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
     }
   } else {
     if (source === 'dataSets') {
-      this.dataSet.all();
       // Remove order_by param from api request params
       delete this.dataSetParams.order_by;
+      this.dataSet.filter(this.dataSetParams);
     } else {
       delete this[source].extraParameters.order_by;
     }
