@@ -61,6 +61,8 @@ function DashboardCtrl (
   this.treemapContext = treemapContext;
   this.dashboardVisData = dashboardVisData;
   this.dataCart = dataCart;
+  // variable to track filters and sorting selected in ui for data set api query
+  this.dataSetParams = {};
 
   this.searchQueryDataSets = '';
 
@@ -442,11 +444,12 @@ Object.defineProperty(
 
       this._dataSetsFilterGroup = value;
       if (typeof groupId === 'number') {
-        this.dataSet.filter({
-          group: groupId
-        });
+        this.dataSetParams.group = groupId;
+        this.dataSet.filter(this.dataSetParams);
       } else {
-        this.dataSet.all();
+        // remove group property
+        delete this.dataSetParams.group;
+        this.dataSet.filter(this.dataSetParams);
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
@@ -465,11 +468,12 @@ Object.defineProperty(
     set: function (value) {
       this._dataSetsFilterOwner = value;
       if (value) {
-        this.dataSet.filter({
-          is_owner: 'True'
-        });
+        this.dataSetParams.is_owner = 'True';
+        this.dataSet.filter(this.dataSetParams);
       } else {
-        this.dataSet.all();
+        // remove is_owner property, avoids searching for non-owned data sets
+        delete this.dataSetParams.is_owner;
+        this.dataSet.filter(this.dataSetParams);
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
@@ -488,11 +492,12 @@ Object.defineProperty(
     set: function (value) {
       this._dataSetsFilterPublic = value;
       if (value) {
-        this.dataSet.filter({
-          public: 'True'
-        });
+        this.dataSetParams.public = 'True';
+        this.dataSet.filter(this.dataSetParams);
       } else {
-        this.dataSet.all();
+         // remove is_owner property, avoids searching for non-public data sets
+        delete this.dataSetParams.public;
+        this.dataSet.filter(this.dataSetParams);
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
@@ -1589,13 +1594,17 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
     // Todo: Unify data sources. Currently datasets are handled nicely and
     // more generic than others e.g. analyses and workflows.
     if (source === 'dataSets') {
-      this.dataSet.order(params);
+      // Use api request params to tie in sorting & filtering
+      this.dataSetParams.order_by = params;
+      this.dataSet.filter(this.dataSetParams);
     } else {
       this[source].extraParameters.order_by = params;
     }
   } else {
     if (source === 'dataSets') {
-      this.dataSet.all();
+      // Remove order_by param from api request params
+      delete this.dataSetParams.order_by;
+      this.dataSet.filter(this.dataSetParams);
     } else {
       delete this[source].extraParameters.order_by;
     }
