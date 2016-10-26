@@ -2,8 +2,8 @@
 
 function fileBrowserFactory (
   $log,
-  $window,
   _,
+  $window,
   assayAttributeService,
   assayFileService,
   nodeGroupService,
@@ -316,22 +316,22 @@ function fileBrowserFactory (
   };
 
   return {
-    assayFiles: assayFiles,
+    analysisFilter: analysisFilter,
     assayAttributes: assayAttributes,
     assayAttributeOrder: assayAttributeOrder,
-    attributeFilter: attributeFilter,
-    analysisFilter: analysisFilter,
+    assayFiles: assayFiles,
     assayFilesTotalItems: assayFilesTotalItems,
-    filesParam: filesParam,
+    attributeFilter: attributeFilter,
     customColumnNames: customColumnNames,
+    filesParam: filesParam,
     nodeGroupList: nodeGroupList,
     createColumnDefs: createColumnDefs,
     createNodeGroup: createNodeGroup,
+    encodeAttributeFields: encodeAttributeFields,
     getAssayFiles: getAssayFiles,
     getAssayAttributeOrder: getAssayAttributeOrder,
-    postAssayAttributeOrder: postAssayAttributeOrder,
     getNodeGroupList: getNodeGroupList,
-    encodeAttributeFields: encodeAttributeFields,
+    postAssayAttributeOrder: postAssayAttributeOrder,
     resetAssayFiles: resetAssayFiles,
     trimAssayFiles: trimAssayFiles
   };
@@ -341,8 +341,8 @@ angular
   .module('refineryFileBrowser')
   .factory('fileBrowserFactory', [
     '$log',
-    '$window',
     '_',
+    '$window',
     'assayAttributeService',
     'assayFileService',
     'nodeGroupService',
