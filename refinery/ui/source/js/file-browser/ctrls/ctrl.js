@@ -61,6 +61,10 @@ function FileBrowserCtrl (
  * -----------------------------------------------------------------------------
  */
 
+   /**
+   * A main method which grabs all the data set nodes, attributes, and updates
+   * ui-grid params.
+  */
   vm.refreshAssayFiles = function () {
     fileBrowserFactory.filesParam.offset = vm.lastPage * vm.rowCount;
     fileBrowserFactory.filesParam.limit = vm.rowCount;
@@ -217,7 +221,7 @@ function FileBrowserCtrl (
     });
   };
 
-  // Helper method to select/deselect rows programmically after dynamic
+  // Method to select/deselect rows programmically after dynamic
   // scroll adds more data, at reset and per 300 rows
   var correctRowSelectionInUI = function () {
     // select all event, track complements
@@ -287,6 +291,7 @@ function FileBrowserCtrl (
     return promise.promise;
   };
 
+  // Helper method to keep track when data should be discard or added
   vm.checkDataLength = function (discardDirection) {
     // work out whether we need to discard a page, if so discard from the
     // direction passed in
@@ -403,13 +408,11 @@ function FileBrowserCtrl (
       // Tabbing does not require api response wait and update query in URL
     } else {
       // updates view model's selected attribute filters
-      if (!_.isEmpty(selectedFilterService.selectedFieldList)) {
-        angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr) {
-          for (var i = 0; i < fieldArr.length; i++) {
-            vm.selectedField[fieldArr[i]] = true;
-          }
-        });
-      }
+      angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr) {
+        for (var i = 0; i < fieldArr.length; i++) {
+          vm.selectedField[fieldArr[i]] = true;
+        }
+      });
       console.log(vm.selectedField);
       console.log(vm.updateSelectionList);
       // $timeout required to allow grid generation
