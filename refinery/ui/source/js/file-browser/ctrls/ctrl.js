@@ -25,6 +25,7 @@ function FileBrowserCtrl (
   // Ui-grid parameters
   vm.gridApi = undefined; // avoids duplicate grid generation
   vm.queryKeys = Object.keys($location.search());
+  // used by ui to select/deselect
   vm.selectedField = {};
   vm.selectNodesCount = 0;
   vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
@@ -401,16 +402,16 @@ function FileBrowserCtrl (
       });
       // Tabbing does not require api response wait and update query in URL
     } else {
+      // updates view model's selected attribute filters
       if (!_.isEmpty(selectedFilterService.selectedFieldList)) {
-        angular.forEach(selectedFilterService.selectedFieldList, function (
-          fieldArr, internalName
-        ) {
+        angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr) {
           for (var i = 0; i < fieldArr.length; i++) {
             vm.selectedField[fieldArr[i]] = true;
-            vm.updateSelectionList(internalName, fieldArr[i]);
           }
         });
       }
+      console.log(vm.selectedField);
+      console.log(vm.updateSelectionList);
       // $timeout required to allow grid generation
       $timeout(function () {
         // for attribute filter directive, drop panels in query
