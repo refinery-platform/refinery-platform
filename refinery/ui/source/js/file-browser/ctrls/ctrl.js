@@ -341,7 +341,6 @@ function FileBrowserCtrl (
             correctRowSelectionInUI();
             vm.afterNodeGroupUpdate = true;
           } else if (selectedNodesService.selectedNodes.length > 0) {
-            vm.setGridSelectedRows(selectedNodesService.selectedNodes);
             selectedNodesService.selectNodesCount = selectedNodesService.selectedNodesUuids.length;
             correctRowSelectionInUI();
           } else {
@@ -416,11 +415,11 @@ function FileBrowserCtrl (
       $timeout(function () {
         // for attribute filter directive, drop panels in query
         $scope.$broadcast('rf/attributeFilter-ready');
-        // update selected rows and selected row count
+        // update selected rows in ui and set selected nodes count
         if (selectedNodesService.selectedNodes.length > 0) {
-          vm.setGridSelectedRows(selectedNodesService.selectedNodes);
           selectedNodesService.selectNodesCount = selectedNodesService
             .selectedNodesUuids.length;
+          correctRowSelectionInUI();
         }
       }, 0);
     }
