@@ -16,7 +16,13 @@ function NodeGroupCtrl (
   };
   vm.nodeGroups.selected = selectedNodeGroupService.selectedNodeGroup;
 
-  // Refresh attribute lists when modal opens
+/*
+ * -----------------------------------------------------------------------------
+ * Methods
+ * -----------------------------------------------------------------------------
+ */
+
+  // Main method to refresh attribute lists when modal opens
   vm.refreshNodeGroupList = function () {
     var assayUuid = $window.externalAssayUuid;
     fileBrowserFactory.getNodeGroupList(assayUuid).then(function () {
@@ -57,10 +63,16 @@ function NodeGroupCtrl (
     resetGridService.setResetGridFlag(true);
   };
 
+  // helper method checking if any nodes are selected
   vm.isNodeGroupSelectionEmpty = function () {
     return selectedNodesService.isNodeSelectionEmpty();
   };
 
+/*
+ * -----------------------------------------------------------------------------
+ * Watchers and Method Calls
+ * -----------------------------------------------------------------------------
+ */
   $scope.$watch(
     function () {
       return selectedNodesService.resetNodeGroup;
