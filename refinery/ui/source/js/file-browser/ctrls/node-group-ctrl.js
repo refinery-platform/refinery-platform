@@ -7,13 +7,14 @@ function NodeGroupCtrl (
   $window,
   $scope,
   resetGridService,
+  selectedNodeGroupService,
   selectedNodesService
   ) {
   var vm = this;
   vm.nodeGroups = {
     groups: []
   };
-  vm.nodeGroups.selected = vm.nodeGroups.groups[0];
+  vm.nodeGroups.selected = selectedNodeGroupService.selectedNodeGroup;
 
   // Refresh attribute lists when modal opens
   vm.refreshNodeGroupList = function () {
@@ -21,7 +22,7 @@ function NodeGroupCtrl (
     fileBrowserFactory.getNodeGroupList(assayUuid).then(function () {
       vm.nodeGroups.groups = fileBrowserFactory.nodeGroupList;
       // Current Selection node is first returned
-      vm.nodeGroups.selected = vm.nodeGroups.groups[0];
+      vm.nodeGroups.selected = selectedNodeGroupService.selectedNodeGroup;
       selectedNodesService.defaultCurrentSelectionUuid = vm.nodeGroups.groups[0].uuid;
       selectedNodesService.selectedNodeGroupUuid = selectedNodesService.defaultCurrentSelectionUuid;
     }, function (error) {
@@ -50,7 +51,8 @@ function NodeGroupCtrl (
   // RESET button: Clear selected nodes and node group selection
   vm.clearSelectedNodes = function () {
     // Deselects node group
-    vm.nodeGroups.selected = vm.nodeGroups.groups[0];
+    selectedNodeGroupService.setSelectedNodeGroup(vm.nodeGroups.groups[0]);
+    vm.nodeGroups.selected = selectedNodeGroupService.selectedNodeGroup;
     selectedNodesService.setSelectedAllFlags(false);
     resetGridService.setResetGridFlag(true);
   };
@@ -65,11 +67,15 @@ function NodeGroupCtrl (
     },
     function () {
       if (selectedNodesService.resetNodeGroup) {
-        vm.nodeGroups.selected = vm.nodeGroups.groups[0];
+        selectedNodeGroupService.setSelectedNodeGroup(vm.nodeGroups.groups[0]);
+        vm.nodeGroups.selected = selectedNodeGroupService.selectedNodeGroup;
         selectedNodesService.resetNodeGroupSelection(false);
       }
     }
   );
+
+  // initialize service data
+  selectedNodeGroupService.setSelectedNodeGroup(vm.nodeGroups.groups[0]);
 }
 
 angular
@@ -82,6 +88,7 @@ angular
     '$window',
     '$scope',
     'resetGridService',
+    'selectedNodeGroupService',
     'selectedNodesService',
     NodeGroupCtrl
   ]);
