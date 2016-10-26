@@ -416,12 +416,11 @@ function FileBrowserCtrl (
       $timeout(function () {
         // for attribute filter directive, drop panels in query
         $scope.$broadcast('rf/attributeFilter-ready');
-        // update selected rows
+        // update selected rows and selected row count
         if (selectedNodesService.selectedNodes.length > 0) {
           vm.setGridSelectedRows(selectedNodesService.selectedNodes);
           selectedNodesService.selectNodesCount = selectedNodesService
             .selectedNodesUuids.length;
-          correctRowSelectionInUI();
         }
       }, 0);
     }
