@@ -89,23 +89,17 @@ function FileBrowserCtrl (
   };
 
   // checks url for params to update the filter
-  vm.checkUrlQueryFilters = function () {
+  vm.updateFiltersFromUrlQuery = function () {
     var allFilters = {};
     // Merge attribute and analysis filter data obj
     angular.copy(vm.attributeFilter, allFilters);
     if (typeof vm.analysisFilter.Analysis !== 'undefined') {
       allFilters.Analysis = vm.analysisFilter.Analysis;
     }
-    // for attribute filter directive, drop panels in query
-    // timeout required due to loading issues
-    $timeout(function () {
-      $scope.$broadcast('rf/attributeFilter-ready');
-    }, 0);
 
     angular.forEach(allFilters, function (attributeObj) {
       vm.refreshSelectedFieldFromQuery(attributeObj);
     });
-
     fileBrowserFactory.filesParam.filter_attribute = {};
     angular.copy(selectedFilterService.selectedFieldList,
       fileBrowserFactory.filesParam.filter_attribute);
@@ -116,19 +110,19 @@ function FileBrowserCtrl (
     angular.forEach(_attributeObj.facetObj, function (fieldObj) {
       if (vm.queryKeys.indexOf(fieldObj.name) > -1) {
         vm.selectedField[fieldObj.name] = true;
-        vm.updateSelectionList(_attributeObj.internal_name, fieldObj.name);
+        selectedFilterService.updateFilterSelectionList(_attributeObj.internal_name, fieldObj.name);
       }
     });
   };
 
   // Updates selection field list and url
-  vm.updateSelectionList = function (internalName, field) {
+  vm.updateFilterSelectionList = function (internalName, field) {
     selectedFilterService.updateSelectedFilters(vm.selectedField, internalName, field);
   };
 
-  // Updates which attribute filters are selected and the ui-grid data
+  // Used by ui, Updates which attribute filters are selected and ui-grid data
   vm.attributeSelectionUpdate = function (_internalName, _field) {
-    vm.updateSelectionList(_internalName, _field);
+    vm.updateFilterSelectionList(_internalName, _field);
     fileBrowserFactory.filesParam.filter_attribute = {};
     angular.copy(selectedFilterService.selectedFieldList,
       fileBrowserFactory.filesParam.filter_attribute);
@@ -401,7 +395,9 @@ function FileBrowserCtrl (
     if (fileBrowserFactory.assayFiles.length === 0) {
       vm.refreshAssayFiles().then(function () {
         if (Object.keys($location.search()).length > 0) {
-          vm.checkUrlQueryFilters();
+          vm.updateFiltersFromUrlQuery();
+          // drop panels in ui from query
+          $scope.$broadcast('rf/attributeFilter-ready');
           vm.reset();
         }
       });
@@ -413,8 +409,6 @@ function FileBrowserCtrl (
           vm.selectedField[fieldArr[i]] = true;
         }
       });
-      console.log(vm.selectedField);
-      console.log(vm.updateSelectionList);
       // $timeout required to allow grid generation
       $timeout(function () {
         // for attribute filter directive, drop panels in query
@@ -434,7 +428,7 @@ function FileBrowserCtrl (
  * Watchers and Method Calls
  * -----------------------------------------------------------------------------
  */
-  // Reset grid flag is set to true, grid, params, filters, and nodes resets
+  // Reset grid flag if set to true, grid, params, filters, and nodes resets
   $scope.$watch(
     function () {
       return resetGridService.resetGridFlag;
