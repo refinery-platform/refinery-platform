@@ -110,12 +110,12 @@ function FileBrowserCtrl (
     angular.forEach(_attributeObj.facetObj, function (fieldObj) {
       if (vm.queryKeys.indexOf(fieldObj.name) > -1) {
         vm.selectedField[fieldObj.name] = true;
-        selectedFilterService.updateFilterSelectionList(_attributeObj.internal_name, fieldObj.name);
+        vm.updateFilterSelectionList(_attributeObj.internal_name, fieldObj.name);
       }
     });
   };
 
-  // Updates selection field list and url
+  // Updates selection filter field list and url
   vm.updateFilterSelectionList = function (internalName, field) {
     selectedFilterService.updateSelectedFilters(vm.selectedField, internalName, field);
   };
