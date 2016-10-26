@@ -519,9 +519,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
             analyses.append(analysis_dict)
 
-        if analyses:
-            bundle.data["analyses"] = analyses
-
+        bundle.data["analyses"] = analyses
         bundle.data["version"] = bundle.obj.get_version_details().version
         bundle.data["date"] = bundle.obj.get_version_details().date
         bundle.data["creation_date"] = bundle.obj.creation_date
