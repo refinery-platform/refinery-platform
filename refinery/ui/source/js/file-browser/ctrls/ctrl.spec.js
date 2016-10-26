@@ -36,7 +36,7 @@ describe('Controller: FileBrowserCtrl', function () {
     expect(ctrl.analysisFilter).toEqual({});
   });
 
-  it('Test checkUrlQueryFilters', function () {
+  it('Test updateFiltersFromUrlQuery', function () {
     ctrl.analysisFilter.Analysis = undefined;
     ctrl.attributeFilter = {
       Title: { facet_obj: [
@@ -54,7 +54,7 @@ describe('Controller: FileBrowserCtrl', function () {
     spyOn(scope, '$broadcast');
     spyOn(ctrl, 'refreshSelectedFieldFromQuery');
     expect(ctrl.refreshSelectedFieldFromQuery).not.toHaveBeenCalled();
-    ctrl.checkUrlQueryFilters();
+    ctrl.updateFiltersFromUrlQuery();
     expect(ctrl.refreshSelectedFieldFromQuery).toHaveBeenCalled();
   });
 
