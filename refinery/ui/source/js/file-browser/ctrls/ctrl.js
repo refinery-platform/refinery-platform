@@ -387,25 +387,6 @@ function FileBrowserCtrl (
     });
   };
 
-  // Reset grid flag is set to true, grid, params, filters, and nodes resets
-  $scope.$watch(
-    function () {
-      return resetGridService.resetGridFlag;
-    },
-    function () {
-      if (resetGridService.resetGridFlag) {
-        // Have to set selected Fields in control due to service scope
-        angular.forEach(vm.selectedField, function (value, field) {
-          vm.selectedField[field] = false;
-        });
-        selectedFilterService.resetAttributeFilter(vm.selectedField);
-        vm.selectNodesCount = 0;
-        fileBrowserFactory.filesParam.filter_attribute = {};
-        vm.reset();
-      }
-    }
-  );
-
   // on the page load, check to refresh data, url query, and ui-grid
   // selection update
   var initializeDataOnPageLoad = function () {
@@ -453,9 +434,33 @@ function FileBrowserCtrl (
     }
   };
 
-  // initialize the dataset
-  vm.checkDataSetOwnership();
+/*
+ * -----------------------------------------------------------------------------
+ * Watchers and Method Calls
+ * -----------------------------------------------------------------------------
+ */
+  // Reset grid flag is set to true, grid, params, filters, and nodes resets
+  $scope.$watch(
+    function () {
+      return resetGridService.resetGridFlag;
+    },
+    function () {
+      if (resetGridService.resetGridFlag) {
+        // Have to set selected Fields in control due to service scope
+        angular.forEach(vm.selectedField, function (value, field) {
+          vm.selectedField[field] = false;
+        });
+        selectedFilterService.resetAttributeFilter(vm.selectedField);
+        vm.selectNodesCount = 0;
+        fileBrowserFactory.filesParam.filter_attribute = {};
+        vm.reset();
+      }
+    }
+  );
 
+  // Ensure data owner
+  vm.checkDataSetOwnership();
+  // initialize the dataset and updates ui-grid selection, filters, and url
   initializeDataOnPageLoad();
 }
 
