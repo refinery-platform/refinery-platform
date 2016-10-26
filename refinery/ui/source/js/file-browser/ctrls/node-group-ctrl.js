@@ -1,11 +1,11 @@
 'use strict';
 
 function NodeGroupCtrl (
-  fileBrowserFactory,
-  $q,
   $log,
-  $window,
+  $q,
   $scope,
+  $window,
+  fileBrowserFactory,
   resetGridService,
   selectedNodeGroupService,
   selectedNodesService
@@ -94,11 +94,11 @@ angular
   .module('refineryFileBrowser')
   .controller('NodeGroupCtrl',
   [
-    'fileBrowserFactory',
-    '$q',
     '$log',
-    '$window',
+    '$q',
     '$scope',
+    '$window',
+    'fileBrowserFactory',
     'resetGridService',
     'selectedNodeGroupService',
     'selectedNodesService',
