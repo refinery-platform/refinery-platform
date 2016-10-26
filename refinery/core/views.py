@@ -715,18 +715,24 @@ def solr_core_search(request):
 def solr_select(request, core):
     # core format is <name_of_core>
     # query.GET is a querydict containing all parts of the query
-    # TODO: handle runtime errors when making GET request
-
     url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
     data = request.GET.urlencode()
     try:
         full_response = requests.get(url, params=data)
-        full_response.raise_for_status()
-        response = full_response.content
+        # FIXME:
+        # Solr sends back an additional 400 here in the data_sets 1 filebrowser
+        # when there is only one row defined in the metadata since
+        # full_response.content has no facet_fields. Handling
+        # this one-off case for now since the way data_sets 2 filebrowser
+        # interacts with Solr doesn't produce this extra 400 error
+        if ("Pivot Facet needs at least one field name"
+                not in full_response.content):
+            full_response.raise_for_status()
     except HTTPError as e:
         logger.error(e)
         response = json.dumps({})
-
+    else:
+        response = full_response.content
     return HttpResponse(response, mimetype='application/json')
 
 
