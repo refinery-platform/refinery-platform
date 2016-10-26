@@ -100,8 +100,8 @@ function FileBrowserCtrl (
     angular.forEach(allFilters, function (attributeObj) {
       vm.refreshSelectedFieldFromQuery(attributeObj);
     });
-    fileBrowserFactory.filesParam.filter_attribute = {};
 
+    fileBrowserFactory.filesParam.filter_attribute = {};
     angular.copy(selectedFilterService.selectedFieldList,
       fileBrowserFactory.filesParam.filter_attribute);
   };
@@ -387,8 +387,10 @@ function FileBrowserCtrl (
     });
   };
 
-  // on the page load, check to refresh data, url query, and ui-grid
-  // selection update
+  /**
+   * Checks whether the page requires data (hard/soft page load) and
+   * updates data, filters, ui-grid selections, and url query
+  */
   var initializeDataOnPageLoad = function () {
      // Hard reset / url with query requires waiting for api response
     if (fileBrowserFactory.assayFiles.length === 0) {
@@ -397,21 +399,9 @@ function FileBrowserCtrl (
           vm.checkUrlQueryFilters();
           vm.reset();
         }
-        // if selected field list isn't empty update url and filter ui, tab switch
-        if (!_.isEmpty(selectedFilterService.selectedFieldList)) {
-          angular.forEach(selectedFilterService.selectedFieldList, function (
-            fieldArr, internalName
-          ) {
-            for (var i = 0; i < fieldArr.length; i++) {
-              vm.selectedField[fieldArr[i]] = true;
-              vm.updateSelectionList(internalName, fieldArr[i]);
-            }
-          });
-        }
       });
+      // Tabbing does not require api response wait and update query in URL
     } else {
-      // Tabbing does not require api response wait
-      vm.checkUrlQueryFilters();
       if (!_.isEmpty(selectedFilterService.selectedFieldList)) {
         angular.forEach(selectedFilterService.selectedFieldList, function (
           fieldArr, internalName
@@ -424,6 +414,9 @@ function FileBrowserCtrl (
       }
       // $timeout required to allow grid generation
       $timeout(function () {
+        // for attribute filter directive, drop panels in query
+        $scope.$broadcast('rf/attributeFilter-ready');
+        // update selected rows
         if (selectedNodesService.selectedNodes.length > 0) {
           vm.setGridSelectedRows(selectedNodesService.selectedNodes);
           selectedNodesService.selectNodesCount = selectedNodesService
