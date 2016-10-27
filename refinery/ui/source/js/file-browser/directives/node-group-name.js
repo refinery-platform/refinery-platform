@@ -1,5 +1,5 @@
 'use strict';
-
+// Directive for creating new node groups.
 
 function rpFileBrowserNodeGroupName (
   bootbox,
@@ -29,14 +29,19 @@ function rpFileBrowserNodeGroupName (
         params.name = name;
         var assayUuid = $window.externalAssayUuid;
         fileBrowserFactory.createNodeGroup(params).then(function () {
+          // update node group list
           fileBrowserFactory.getNodeGroupList(assayUuid).then(function () {
+            // Set the selected node group as the latest
             selectedNodeGroupService.setSelectedNodeGroup(_.last(fileBrowserFactory.nodeGroupList));
+            // update selected node group uuid
+            selectedNodesService.selectedNodeGroupUuid = selectedNodeGroupService
+              .selectedNodeGroup.uuid;
           });
         });
-        console.log('complete save node group');
       };
 
       var msg = '<h3>Type a new group name.</h3>';
+      // New node group modal
       element.bind('click', function () {
         bootbox.prompt(msg, function (name) {
           if (name && isUniqueName(name)) {
