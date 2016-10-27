@@ -36,7 +36,7 @@ describe('Controller: Node Group Ctrl', function () {
 
   it('Data & UI displays variables should exist for views', function () {
     expect(ctrl.nodeGroups.groups).toEqual([]);
-    expect(ctrl.nodeGroups.selected).toEqual(undefined);
+    expect(ctrl.nodeGroups.selected).toEqual({});
   });
 
   it('Helper methods are method', function () {
