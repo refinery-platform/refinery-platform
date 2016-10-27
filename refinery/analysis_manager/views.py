@@ -249,7 +249,7 @@ def run(request):
         analysis = Analysis.objects.create(
             summary=summary_name,
             name=temp_name,
-            project=request.user.get_profile().catch_all_project,
+            project=request.user.profile.catch_all_project,
             data_set=data_set,
             workflow=curr_workflow,
             time_start=timezone.now()
@@ -314,7 +314,7 @@ def run(request):
         analysis = Analysis.objects.create(
             summary=summary_name,
             name=temp_name,
-            project=request.user.get_profile().catch_all_project,
+            project=request.user.profile.catch_all_project,
             data_set=data_set,
             workflow=curr_workflow,
             time_start=timezone.now()
@@ -398,7 +398,7 @@ def run(request):
         analysis = Analysis.objects.create(
             summary=summary_name,
             name=temp_name,
-            project=request.user.get_profile().catch_all_project,
+            project=request.user.profile.catch_all_project,
             data_set=data_set,
             workflow=curr_workflow,
             time_start=timezone.now()

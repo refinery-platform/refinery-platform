@@ -222,10 +222,6 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 # (id can be set to any value apparently)
 ANONYMOUS_USER_ID = -1
 
-# NG: added to enable user profiles
-# (recommended way to extend Django user model)
-AUTH_PROFILE_MODULE = 'core.UserProfile'
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,

@@ -88,7 +88,7 @@ class UserProfile(models.Model):
 
     """
     uuid = UUIDField(unique=True, auto=True)
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, related_name='profile')
     affiliation = models.CharField(max_length=100, blank=True)
     catch_all_project = models.ForeignKey('Project', blank=True, null=True)
     login_count = models.IntegerField(default=0)
@@ -183,14 +183,14 @@ user_activated.connect(register_handler, dispatch_uid='activated')
 
 # check if user has a catch all project and create one if not
 def create_catch_all_project(sender, user, request, **kwargs):
-    if user.get_profile().catch_all_project is None:
+    if user.profile.catch_all_project is None:
         project = Project.objects.create(
             name="Catch-All Project",
             is_catch_all=True
         )
         project.set_owner(user)
-        user.get_profile().catch_all_project = project
-        user.get_profile().save()
+        user.profile.catch_all_project = project
+        user.profile.save()
         messages.success(
             request,
             "If you don't want to fill your profile out now, you can go to "
@@ -440,7 +440,7 @@ class SharableResource(OwnableResource):
         abstract = True
 
 
-class TemporaryResource:
+class TemporaryResource(models.Model):
     """Mix-in class for temporary resources like NodeSet instances"""
     # Expiration time and date of the instance
     expiration = models.DateTimeField()
@@ -452,7 +452,7 @@ class TemporaryResource:
         abstract = True
 
 
-class ManageableResource:
+class ManageableResource(models.Model):
     """Abstract base class for manageable resources such as disk space and
     workflow engines
     """
