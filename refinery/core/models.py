@@ -128,7 +128,7 @@ def create_user_profile(sender, instance, created, **kwargs):
     """
     if created:
         UserProfile.objects.get_or_create(user=instance)
-        Tutorials.objects.get_or_create(user_profile=instance.userprofile)
+        Tutorials.objects.get_or_create(user_profile=instance.profile)
 
 
 post_save.connect(create_user_profile, sender=User)
@@ -150,7 +150,7 @@ def add_new_user_to_public_group(sender, instance, created, **kwargs):
 
 def create_user_profile_registered(sender, user, request, **kwargs):
     UserProfile.objects.get_or_create(user=user)
-    Tutorials.objects.get_or_create(user_profile=user.userprofile)
+    Tutorials.objects.get_or_create(user_profile=user.profile)
 
     logger.info(
         "user profile for user %s has been created after registration",
@@ -201,8 +201,8 @@ def create_catch_all_project(sender, user, request, **kwargs):
 
 
 def iterate_user_login_count(sender, user, request, **kwargs):
-    user.userprofile.login_count += 1
-    user.userprofile.save()
+    user.profile.login_count += 1
+    user.profile.save()
 
 
 # create catch all project for user if none exists
@@ -2479,7 +2479,7 @@ class CustomRegistrationManager(RegistrationManager):
         if new_user_profile:
             new_user_profile.affiliation = affiliation
             new_user_profile.save()
-            new_user.userprofile = new_user_profile
+            new_user.profile = new_user_profile
 
         registration_profile = self.create_profile(new_user)
 
@@ -2548,7 +2548,7 @@ class CustomRegistrationProfile(RegistrationProfile):
                     'registered_user_full_name': "{} {}".format(
                         self.user.first_name, self.user.last_name),
                     'registered_user_affiliation':
-                        self.user.userprofile.affiliation
+                        self.user.profile.affiliation
 
                     }
         subject = render_to_string('registration/activation_email_subject.txt',

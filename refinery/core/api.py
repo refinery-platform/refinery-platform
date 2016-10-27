@@ -132,7 +132,7 @@ class SharableResourceAPIInterface(object):
     def transform_res_list(self, user, res_list, request, **kwargs):
 
         try:
-            user_uuid = user.userprofile.uuid
+            user_uuid = user.profile.uuid
         except AttributeError:
             logger.error('User\'s UUID not available.')
             user_uuid = None
@@ -486,7 +486,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         if not bundle.data['owner']:
             owner = bundle.obj.get_owner()
             try:
-                bundle.data['owner'] = owner.userprofile.uuid
+                bundle.data['owner'] = owner.profile.uuid
             except:
                 pass
 
@@ -506,10 +506,10 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             owner = analysis.get_owner()
             if owner:
                 try:
-                    analysis_dict['owner'] = owner.userprofile.uuid
+                    analysis_dict['owner'] = owner.profile.uuid
                     user = bundle.request.user
-                    if (hasattr(user, 'userprofile') and
-                       user.userprofile.uuid == analysis_dict['owner']):
+                    if (hasattr(user, 'profile') and
+                       user.profile.uuid == analysis_dict['owner']):
                         analysis_dict['is_owner'] = True
                 except:
                     analysis_dict['owner'] = None
@@ -694,7 +694,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         )
 
         try:
-            user_uuid = request.user.userprofile.uuid
+            user_uuid = request.user.profile.uuid
         except:
             user_uuid = None
 
@@ -945,10 +945,10 @@ class AnalysisResource(ModelResource):
         owner = bundle.obj.get_owner()
         if owner:
             try:
-                bundle.data['owner'] = owner.userprofile.uuid
+                bundle.data['owner'] = owner.profile.uuid
                 user = bundle.request.user
-                if (hasattr(user, 'userprofile') and
-                        user.userprofile.uuid == bundle.data['owner']):
+                if (hasattr(user, 'profile') and
+                        user.profile.uuid == bundle.data['owner']):
                     bundle.data['is_owner'] = True
             except:
                 bundle.data['owner'] = None
@@ -1959,7 +1959,7 @@ class ExtendedGroupResource(ModelResource):
         return map(
             lambda u: {
                 'user_id': u.id,
-                'uuid': u.userprofile.uuid,
+                'uuid': u.profile.uuid,
                 'username': u.username,
                 'first_name': u.first_name,
                 'last_name': u.last_name,
