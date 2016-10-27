@@ -12,7 +12,7 @@ function NodeGroupCtrl (
   ) {
   var vm = this;
   vm.nodeGroups = {
-    groups: []
+    groups: fileBrowserFactory.nodeGroupList
   };
   vm.nodeGroups.selected = selectedNodeGroupService.selectedNodeGroup;
 
@@ -25,15 +25,20 @@ function NodeGroupCtrl (
   // Main method to refresh attribute lists when modal opens
   vm.refreshNodeGroupList = function () {
     var assayUuid = $window.externalAssayUuid;
+
+    var promise = $q.defer();
     fileBrowserFactory.getNodeGroupList(assayUuid).then(function () {
       vm.nodeGroups.groups = fileBrowserFactory.nodeGroupList;
       // Current Selection node is first returned
-      vm.nodeGroups.selected = selectedNodeGroupService.selectedNodeGroup;
+   //   selectedNodeGroupService.setSelectedNodeGroup(vm.nodeGroups.groups[0]);
+    //  vm.nodeGroups.selected = selectedNodeGroupService.selectedNodeGroup;
       selectedNodesService.defaultCurrentSelectionUuid = vm.nodeGroups.groups[0].uuid;
       selectedNodesService.selectedNodeGroupUuid = selectedNodesService.defaultCurrentSelectionUuid;
+      promise.resolve();
     }, function (error) {
       $log.error(error);
     });
+    return promise.promise;
   };
 
   // Update selected nodes when new node group is selected
@@ -67,12 +72,22 @@ function NodeGroupCtrl (
   vm.isNodeGroupSelectionEmpty = function () {
     return selectedNodesService.isNodeSelectionEmpty();
   };
-
 /*
  * -----------------------------------------------------------------------------
  * Watchers and Method Calls
  * -----------------------------------------------------------------------------
  */
+  // Watcher to update service with selected node group
+  $scope.$watch(
+    function () {
+      return vm.nodeGroups.selected;
+    },
+    function () {
+      selectedNodeGroupService.setSelectedNodeGroup(vm.nodeGroups.selected);
+    }
+  );
+
+  // Watcher to reset node group when flag triggers
   $scope.$watch(
     function () {
       return selectedNodesService.resetNodeGroup;
@@ -87,7 +102,11 @@ function NodeGroupCtrl (
   );
 
   // initialize service data
-  selectedNodeGroupService.setSelectedNodeGroup(vm.nodeGroups.groups[0]);
+  if (fileBrowserFactory.nodeGroupList.length === 0) {
+    vm.refreshNodeGroupList().then(function () {
+      selectedNodeGroupService.setSelectedNodeGroup(vm.nodeGroups.groups[0]);
+    });
+  }
 }
 
 angular

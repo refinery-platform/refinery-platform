@@ -1,6 +1,6 @@
 'use strict';
 
-function selectedNodeGroupService () {
+function selectedNodeGroupService (_) {
   var vm = this;
   vm.selectedNodeGroup = {};
 
@@ -9,12 +9,16 @@ function selectedNodeGroupService () {
    * @param {obj} group - node group object
    */
   vm.setSelectedNodeGroup = function (group) {
-    angular.copy(vm.selectedNodeGroup, group);
+    // angular copy throws error if objects are identical
+    if (!_.isEqual(group, vm.selectedNodeGroup)) {
+      angular.copy(group, vm.selectedNodeGroup);
+    }
   };
 }
 
 angular.module('refineryFileBrowser')
   .service('selectedNodeGroupService', [
+    '_',
     selectedNodeGroupService
   ]
 );
