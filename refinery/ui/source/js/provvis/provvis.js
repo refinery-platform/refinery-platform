@@ -430,7 +430,7 @@ var provvis = (function (  // eslint-disable-line no-unused-vars
           /* TODO: Refine to only redraw affected canvas components. */
           /* Switch filter action. */
           $('#prov-layering-method').on('click', '.btn', function () {
-            layerMethod = $(this).prop('value');
+            layerMethod = $(this).children().prop('value');
 
             showProvvisLoaderIcon();
 
