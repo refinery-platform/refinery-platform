@@ -9,7 +9,7 @@ import json
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from django.http import QueryDict
 
 from rest_framework.test import APIRequestFactory
@@ -1560,8 +1560,6 @@ class NodeApiV2Tests(APITestCase):
         Study.objects.all().delete()
         Assay.objects.all().delete()
         Investigation.objects.all().delete()
-        Group.objects.all().delete()
-        ExtendedGroup.objects.all().delete()
 
     def test_get_request(self):
         self.assertIsNotNone(self.get_response.data[0])

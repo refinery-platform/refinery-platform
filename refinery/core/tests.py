@@ -19,7 +19,6 @@ from tastypie.test import ResourceTestCase
 from core.api import AnalysisResource
 
 from core.management.commands.create_user import init_user
-from core.management.commands.create_public_group import create_public_group
 
 from core.models import (
     NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,
@@ -50,14 +49,10 @@ class UserCreateTest(unittest.TestCase):
         self.first_name = "John"
         self.last_name = "Sample"
         self.affiliation = "University"
-
-        create_public_group()
-
         self.public_group_name = ExtendedGroup.objects.public_group().name
 
     def tearDown(self):
         User.objects.all().delete()
-        Group.objects.all().delete()
 
     def test_add_new_user_to_public_group(self):
         """Test if User accounts are added to Public group"""
@@ -1133,7 +1128,6 @@ class CachingTest(unittest.TestCase):
         self.user1 = User.objects.create_user(
             self.username1, '', self.password1
         )
-        create_public_group()
         self.public_group_name = ExtendedGroup.objects.public_group().name
         for index, item in enumerate(range(0, 6)):
             DataSet.objects.create(slug="TestSlug%d" % index)
@@ -1148,8 +1142,6 @@ class CachingTest(unittest.TestCase):
             slug="TestSlug1"), True)
         DataSet.objects.all().delete()
         User.objects.all().delete()
-        Group.objects.all().delete()
-        ExtendedGroup.objects.all().delete()
 
     def test_verify_cache_invalidation(self):
         # Grab a DataSet and see if we can invalidate the cache
@@ -2090,9 +2082,6 @@ class DataSetClassMethodsTest(unittest.TestCase):
 class DataSetApiV2Tests(APITestCase):
 
     def setUp(self):
-
-        create_public_group()
-
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
@@ -2164,8 +2153,6 @@ class DataSetApiV2Tests(APITestCase):
         Assay.objects.all().delete()
         DataSet.objects.all().delete()
         Investigation.objects.all().delete()
-        Group.objects.all().delete()
-        ExtendedGroup.objects.all().delete()
 
     def test_unallowed_http_verbs(self):
         self.assertEqual(
@@ -2246,9 +2233,6 @@ class DataSetApiV2Tests(APITestCase):
 class AnalysisApiV2Tests(APITestCase):
 
     def setUp(self):
-
-        create_public_group()
-
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
@@ -2347,9 +2331,7 @@ class AnalysisApiV2Tests(APITestCase):
         Assay.objects.all().delete()
         DataSet.objects.all().delete()
         Investigation.objects.all().delete()
-        Group.objects.all().delete()
         Analysis.objects.all().delete()
-        ExtendedGroup.objects.all().delete()
 
     def test_unallowed_http_verbs(self):
         self.assertEqual(
