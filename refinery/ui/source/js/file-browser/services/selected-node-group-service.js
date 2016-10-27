@@ -13,6 +13,7 @@ function selectedNodeGroupService (_) {
     if (!_.isEqual(group, vm.selectedNodeGroup)) {
       angular.copy(group, vm.selectedNodeGroup);
     }
+    return vm.selectedNodeGroup;
   };
 }
 

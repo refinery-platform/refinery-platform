@@ -30,8 +30,6 @@ function NodeGroupCtrl (
     fileBrowserFactory.getNodeGroupList(assayUuid).then(function () {
       vm.nodeGroups.groups = fileBrowserFactory.nodeGroupList;
       // Current Selection node is first returned
-   //   selectedNodeGroupService.setSelectedNodeGroup(vm.nodeGroups.groups[0]);
-    //  vm.nodeGroups.selected = selectedNodeGroupService.selectedNodeGroup;
       selectedNodesService.defaultCurrentSelectionUuid = vm.nodeGroups.groups[0].uuid;
       selectedNodesService.selectedNodeGroupUuid = selectedNodesService.defaultCurrentSelectionUuid;
       promise.resolve();
