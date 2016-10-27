@@ -43,10 +43,6 @@ sqs = (SearchQuerySet().using("core")
                        .facet('technology')
                        .highlight())
 
-# Uncomment the next two lines to enable the admin:
-admin.autodiscover()
-
-
 # Django REST Framework urls
 router = routers.DefaultRouter()
 router.register(r'workflows', WorkflowViewSet)
