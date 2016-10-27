@@ -10,6 +10,8 @@ function selectedNodeGroupService (_) {
    */
   vm.setSelectedNodeGroup = function (group) {
     // angular copy throws error if objects are identical
+    // current selection is selected upon page load, which
+    // triggers watcher causing dupliation
     if (!_.isEqual(group, vm.selectedNodeGroup)) {
       angular.copy(group, vm.selectedNodeGroup);
     }

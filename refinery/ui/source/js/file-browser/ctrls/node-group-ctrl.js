@@ -48,15 +48,6 @@ function NodeGroupCtrl (
     resetGridService.setResetGridFlag(true);
   };
 
-  // Create a new node group
-  vm.saveNodeGroup = function (name) {
-    var params = selectedNodesService.getNodeGroupParams();
-    params.name = name;
-    fileBrowserFactory.createNodeGroup(params).then(function () {
-      vm.refreshNodeGroupList();
-    });
-  };
-
   // RESET button: Clear selected nodes and node group selection
   vm.clearSelectedNodes = function () {
     // Deselects node group
@@ -82,6 +73,7 @@ function NodeGroupCtrl (
     },
     function () {
       selectedNodeGroupService.setSelectedNodeGroup(vm.nodeGroups.selected);
+      selectedNodesService.selectedNodeGroupUuid = vm.nodeGroups.selected.uuid;
     }
   );
 
@@ -94,6 +86,7 @@ function NodeGroupCtrl (
       if (selectedNodesService.resetNodeGroup) {
         selectedNodeGroupService.setSelectedNodeGroup(vm.nodeGroups.groups[0]);
         vm.nodeGroups.selected = selectedNodeGroupService.selectedNodeGroup;
+        selectedNodesService.selectedNodeGroupUuid = vm.nodeGroups.selected.uuid;
         selectedNodesService.resetNodeGroupSelection(false);
       }
     }
