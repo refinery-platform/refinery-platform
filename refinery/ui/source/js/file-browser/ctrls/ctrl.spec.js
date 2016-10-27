@@ -31,14 +31,12 @@ describe('Controller: FileBrowserCtrl', function () {
   });
 
   it('Data & UI displays variables should exist for views', function () {
-    expect(ctrl.assayFiles).toEqual([]);
     expect(ctrl.assayAttributes).toEqual([]);
     expect(ctrl.attributeFilter).toEqual({});
     expect(ctrl.analysisFilter).toEqual({});
-    expect(ctrl.filesParam).toBeDefined();
   });
 
-  it('Test checkUrlQueryFilters', function () {
+  it('Test updateFiltersFromUrlQuery', function () {
     ctrl.analysisFilter.Analysis = undefined;
     ctrl.attributeFilter = {
       Title: { facet_obj: [
@@ -55,15 +53,9 @@ describe('Controller: FileBrowserCtrl', function () {
     };
     spyOn(scope, '$broadcast');
     spyOn(ctrl, 'refreshSelectedFieldFromQuery');
-    spyOn(ctrl, 'reset');
     expect(ctrl.refreshSelectedFieldFromQuery).not.toHaveBeenCalled();
-    expect(scope.$broadcast).not.toHaveBeenCalled();
-    expect(ctrl.reset).not.toHaveBeenCalled();
-    ctrl.checkUrlQueryFilters();
-    expect(service.selectedFieldList).toEqual(ctrl.filesParam.filter_attribute);
+    ctrl.updateFiltersFromUrlQuery();
     expect(ctrl.refreshSelectedFieldFromQuery).toHaveBeenCalled();
-    expect(scope.$broadcast).toHaveBeenCalled();
-    expect(ctrl.reset).toHaveBeenCalled();
   });
 
   it('Test RefreshSelectedFieldFromQuery', function () {
