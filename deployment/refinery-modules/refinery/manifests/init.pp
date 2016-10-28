@@ -91,6 +91,10 @@ exec { "migrate":
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
+  require     => [
+    Python::Requirements[$requirements],
+    Postgresql::Server::Db["refinery"]
+  ],
 }
 ->
 exec { "set_up_refinery_site_name":
