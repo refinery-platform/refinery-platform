@@ -21,7 +21,6 @@ function NodeGroupCtrl (
  * Methods
  * -----------------------------------------------------------------------------
  */
-
   // Main method to refresh attribute lists when modal opens
   vm.refreshNodeGroupList = function () {
     var assayUuid = $window.externalAssayUuid;
