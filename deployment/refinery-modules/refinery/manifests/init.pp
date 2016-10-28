@@ -86,15 +86,8 @@ file { "${django_root}/config/config.json":
   replace => false,
 }
 ->
-exec { "migrate_registration":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate registration",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-->
-exec { "migrate_core":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate core",
+exec { "migrate":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate --noinput",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
@@ -102,20 +95,6 @@ exec { "migrate_core":
 ->
 exec { "set_up_refinery_site_name":
   command     => "${virtualenv}/bin/python ${django_root}/manage.py set_up_site_name '${site_name}' '${site_url}'",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-->
-exec { "migrate_guardian":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate guardian",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-->
-exec { "create_public_group":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py create_public_group",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
@@ -137,13 +116,6 @@ exec { "add_admin_to_public_group":
 ->
 exec { "create_user":
   command     => "${virtualenv}/bin/python ${django_root}/manage.py create_user 'guest' 'guest' 'guest@example.com' 'Guest' '' ''",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-->
-exec { "migrate_final":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate --noinput",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
