@@ -13,7 +13,7 @@ from django.contrib.sites.models import get_current_site, Site
 from django.contrib.sites.models import RequestSite
 from django.core.urlresolvers import reverse
 from django.http import (
-    HttpResponse, HttpResponseForbidden, HttpResponseRedirect)
+    HttpResponse, HttpResponseForbidden, HttpResponseRedirect, JsonResponse)
 from django.http import Http404
 
 from django.shortcuts import render_to_response, get_object_or_404
@@ -709,7 +709,7 @@ def solr_core_search(request):
 
             response = json.dumps(response)
 
-    return HttpResponse(response, mimetype='application/json')
+    return JsonResponse(response)
 
 
 def solr_select(request, core):
@@ -733,7 +733,7 @@ def solr_select(request, core):
         response = json.dumps({})
     else:
         response = full_response.content
-    return HttpResponse(response, mimetype='application/json')
+    return JsonResponse(response)
 
 
 def solr_igv(request):
@@ -786,8 +786,7 @@ def solr_igv(request):
         logger.debug("session_urls")
         logger.debug(json.dumps(session_urls, indent=4))
 
-        return HttpResponse(json.dumps(session_urls),
-                            mimetype='application/json')
+        return JsonResponse(json.dumps(session_urls))
 
 
 def get_solr_results(query, facets=False, jsonp=False, annotation=False,
@@ -903,7 +902,7 @@ def doi(request, id):
     except requests.exceptions.ConnectionError:
         return HttpResponse('Service currently unavailable', status=503)
 
-    return HttpResponse(response, mimetype='application/json')
+    return JsonResponse(response)
 
 
 def pubmed_abstract(request, id):
@@ -935,10 +934,7 @@ def pubmed_abstract(request, id):
     except ExpatError:
         return HttpResponse('Service currently unavailable', status=503)
 
-    return HttpResponse(
-        json.dumps(response_dict),
-        mimetype='application/json'
-    )
+    return JsonResponse(json.dumps(response_dict))
 
 
 def pubmed_search(request, term):
@@ -968,7 +964,7 @@ def pubmed_search(request, term):
     except requests.exceptions.ConnectionError:
         return HttpResponse('Service currently unavailable', status=503)
 
-    return HttpResponse(response, mimetype='application/json')
+    return JsonResponse(response)
 
 
 def pubmed_summary(request, id):
@@ -994,7 +990,7 @@ def pubmed_summary(request, id):
     except requests.exceptions.ConnectionError:
         return HttpResponse('Service currently unavailable', status=503)
 
-    return HttpResponse(response, mimetype='application/json')
+    return JsonResponse(response)
 
 
 def fastqc_viewer(request):
@@ -1041,7 +1037,7 @@ def neo4j_dataset_annotations(request):
             status=503
         )
 
-    return HttpResponse(response, mimetype='application/json')
+    return JsonResponse(response)
 
 
 class WorkflowViewSet(viewsets.ModelViewSet):
