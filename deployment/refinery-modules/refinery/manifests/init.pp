@@ -111,13 +111,6 @@ exec { "create_superuser":
   group       => $app_group,
 }
 ->
-exec { "add_admin_to_public_group":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py add_admin_to_public_group",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-->
 exec { "create_user":
   command     => "${virtualenv}/bin/python ${django_root}/manage.py create_user 'guest' 'guest' 'guest@example.com' 'Guest' '' ''",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
@@ -217,7 +210,7 @@ class neo4j {
     location    => 'http://debian.neo4j.org/repo',
     release     => 'stable/',
     repos       => '',
-    key         => '66D34E951A8C53D90242132B26C95CF201182252',
+    key         => '1EEFB8767D4924B86EAD08A459D700E4D37F5F19',
     key_source  => 'https://debian.neo4j.org/neotechnology.gpg.key',
     include_src => false,
   }
