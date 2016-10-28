@@ -112,24 +112,4 @@ describe('Controller: Node Group Ctrl', function () {
       expect(mockResponse).toEqual(true);
     });
   });
-
-  describe('Test saveNodeGroup', function () {
-    it('saveNodeGroup is method', function () {
-      expect(angular.isFunction(ctrl.saveNodeGroup)).toBe(true);
-    });
-
-    it('saveNodeGroup is method', function () {
-      var mockResponse = false;
-      spyOn(factory, 'createNodeGroup').and.callFake(function () {
-        return {
-          then: function () {
-            mockResponse = true;
-          }
-        };
-      });
-      expect(mockResponse).toEqual(false);
-      ctrl.saveNodeGroup('Group Name');
-      expect(mockResponse).toEqual(true);
-    });
-  });
 });
