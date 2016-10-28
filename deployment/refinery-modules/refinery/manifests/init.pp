@@ -86,17 +86,6 @@ file { "${django_root}/config/config.json":
   replace => false,
 }
 ->
-exec { "syncdb_initial":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py syncdb --noinput",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-  require     => [
-    Python::Requirements[$requirements],
-    Postgresql::Server::Db["refinery"]
-  ],
-}
-->
 exec { "migrate_registration":
   command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate registration",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
@@ -153,8 +142,8 @@ exec { "create_user":
   group       => $app_group,
 }
 ->
-exec { "syncdb_final":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py syncdb --migrate --noinput",
+exec { "migrate_final":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate --noinput",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
