@@ -12,7 +12,6 @@ class Migration(migrations.Migration):
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('galaxy_connector', '0001_initial'),
-        ('registration', '0001_initial'),
         ('data_set_manager', '0001_initial'),
         ('auth', '0001_initial'),
         ('file_store', '0001_initial'),
