@@ -2,6 +2,7 @@
 
 function NodeGroupModalCtrl (
   $log,
+  $timeout,
   $uibModalInstance,
   _,
   $window,
@@ -57,7 +58,10 @@ function NodeGroupModalCtrl (
           selectedNodesService.selectedNodeGroupUuid = selectedNodeGroupService
             .selectedNodeGroup.uuid;
         });
-        $uibModalInstance.dismiss();
+        // Pause to display creation success.
+        $timeout(function () {
+          $uibModalInstance.dismiss();
+        }, 1500);
       }, function (error) {
         generateAlertMessage('error', vm.groupName);
         $log.error(error);
@@ -80,6 +84,7 @@ angular
   .controller('NodeGroupModalCtrl',
   [
     '$log',
+    '$timeout',
     '$uibModalInstance',
     '_',
     '$window',
