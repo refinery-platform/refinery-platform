@@ -1,7 +1,7 @@
 'use strict';
 // Directive for creating new node groups.
 
-function rpFileBrowserNodeGroupName (
+function rpFileBrowserNodeGroupModal (
   $uibModal
 ) {
   return {
@@ -20,7 +20,7 @@ function rpFileBrowserNodeGroupName (
 
 angular
   .module('refineryFileBrowser')
-  .directive('rpFileBrowserNodeGroupName', [
+  .directive('rpFileBrowserNodeGroupModal', [
     '$uibModal',
-    rpFileBrowserNodeGroupName
+    rpFileBrowserNodeGroupModal
   ]);
