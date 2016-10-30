@@ -11,11 +11,23 @@ function NodeGroupModalCtrl (
   ) {
   var vm = this;
   vm.nodeGroupName = '';
+  vm.responseMessage = '';
+  vm.alertType = 'info';
 /*
  * -----------------------------------------------------------------------------
  * Methods
  * -----------------------------------------------------------------------------
  */
+  // After invite is sent, an alert pops up with following message
+  var generateAlertMessage = function (infoType, groupName) {
+    if (infoType === 'success') {
+      vm.alertType = 'success';
+      vm.responseMessage = 'Successfully created group ' + groupName;
+    } else if (infoType === 'danger') {
+      vm.alertType = 'danger';
+      vm.responseMessage = 'Error creating group.';
+    }
+  };
   var isUniqueName = function (name) {
     var flag = true;
     for (var i = 0; i < fileBrowserFactory.nodeGroupList.length; i ++) {
@@ -46,6 +58,9 @@ function NodeGroupModalCtrl (
             .selectedNodeGroup.uuid;
         });
         $uibModalInstance.dismiss();
+      }, function (error) {
+        generateAlertMessage('error', vm.groupName);
+        $log.error(error);
       });
     }
   };
