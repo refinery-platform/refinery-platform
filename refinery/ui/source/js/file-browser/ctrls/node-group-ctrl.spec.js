@@ -30,7 +30,7 @@ describe('Controller: Node Group Ctrl', function () {
     $window.externalStudyUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
   }));
 
-  it('FileBrowserCtrl ctrl should exist', function () {
+  it('Node Group ctrl should exist', function () {
     expect(ctrl).toBeDefined();
   });
 
