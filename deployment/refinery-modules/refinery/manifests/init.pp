@@ -111,6 +111,13 @@ exec { "create_users":
   group       => $app_group,
 }
 ->
+exec { "create_guest":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py create_user 'guest' 'guest' 'guest@example.com' 'Guest' '' ''",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+}
+
 file { "/opt":
   ensure => directory,
 }

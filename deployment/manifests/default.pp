@@ -27,7 +27,7 @@ exec { "activate_user":
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
-  require     => Exec['create_user'],
+  require     => Exec['create_guest'],
 }
 
 # See code in refinery-modules/refinery/...
