@@ -51,7 +51,8 @@ SolrAnalysisView = function( parentElementId, idPrefix, solrQuery, configurator,
 			"is_annotation",
 			"species",
 			"genome_build",
-			"name" ]; // TODO: make these regexes;
+			"name"
+		]; // TODO: make these regexes;
 };	
 	
 	
