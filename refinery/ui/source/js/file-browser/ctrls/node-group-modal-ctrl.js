@@ -50,13 +50,21 @@ function NodeGroupModalCtrl (
       fileBrowserFactory.createNodeGroup(params).then(function () {
         // update node group list
         fileBrowserFactory.getNodeGroupList(assayUuid).then(function () {
-          // Set the selected node group as the latest
-          selectedNodeGroupService.setSelectedNodeGroup(
-            _.last(fileBrowserFactory.nodeGroupList
-            ));
-          // update selected node group uuid
-          selectedNodesService.selectedNodeGroupUuid = selectedNodeGroupService
+          // Find index of of new name in the node group list
+          var newNameIndex = _.findLastIndex(
+            fileBrowserFactory.nodeGroupList,
+            { name: name }
+          );
+
+          if (newNameIndex > -1) {
+            // Set the selected node group as the latest
+            selectedNodeGroupService.setSelectedNodeGroup(
+              fileBrowserFactory.nodeGroupList[newNameIndex]
+            );
+            // update selected node group uuid
+            selectedNodesService.selectedNodeGroupUuid = selectedNodeGroupService
             .selectedNodeGroup.uuid;
+          }
         });
         // Pause to display creation success.
         $timeout(function () {
