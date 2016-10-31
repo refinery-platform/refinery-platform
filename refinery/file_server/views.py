@@ -7,7 +7,7 @@ Created on Apr 21, 2012
 import json
 import logging
 
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 
@@ -73,7 +73,7 @@ def index(request):
 
     file_object.close()
 
-    return JsonResponse(json.dumps(profile))
+    return HttpResponse(json.dumps(profile), mimetype='application/json')
 
 
 def _get_cache(session, uuid):
@@ -197,10 +197,10 @@ def cache_tdf(request, uuid, refresh=False):
     else:
         logger.debug("%s data set information is cached and refresh not "
                      "requested", uuid)
-    response = json.dumps(
+
+    return HttpResponse(json.dumps(
         _get_tdf_data_set_information_from_cache(request.session, uuid),
-        sort_keys=True, indent=4)
-    return JsonResponse(response)
+        sort_keys=True, indent=4), mimetype='application/json')
 
 
 def get_tdf_profile(request, uuid, sequence_name, zoom_level, start_location,
@@ -237,9 +237,9 @@ def get_tdf_profile(request, uuid, sequence_name, zoom_level, start_location,
                                                    int(end_location),
                                                    file_object)
 
-    logger.debug("Profile Length: %s", len(profile))
+    print("Profile Length: " + str(len(profile)))
 
-    return JsonResponse(json.dumps(profile))
+    return HttpResponse(json.dumps(profile), mimetype='application/json')
 
 
 def get_zoom_levels(request, uuid, sequence_name):
@@ -273,9 +273,9 @@ def get_zoom_levels(request, uuid, sequence_name):
 
         zoom_level_ranges[zoom_level] = [lower_bound, upper_bound]
 
-    return JsonResponse(
-        json.dumps(zoom_level_ranges, sort_keys=True, indent=4)
-    )
+    return HttpResponse(
+        json.dumps(zoom_level_ranges, sort_keys=True, indent=4),
+        mimetype='application/json')
 
 
 def profile_viewer(request, uuid, sequence_name, start_location, end_location):
@@ -355,4 +355,4 @@ def profile(request):
     except AttributeError as e:
         return HttpResponse(e.message)
 
-    return JsonResponse(profile)
+    return HttpResponse(profile, mimetype='application/json')

@@ -9,8 +9,7 @@ from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.http import (
     HttpResponse, HttpResponseServerError,
-    HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden,
-    JsonResponse
+    HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden
 )
 from django.utils import timezone
 from django.shortcuts import render_to_response
@@ -517,7 +516,8 @@ def create_noderelationship(request):
             new_pair.save()
             new_relationship.node_pairs.add(new_pair)
 
-        return JsonResponse(json.dumps(match_info, indent=4))
+        return HttpResponse(json.dumps(match_info, indent=4),
+                            mimetype='application/json')
 
 
 class DictDiffer(object):
