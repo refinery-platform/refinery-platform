@@ -20,7 +20,7 @@ function NodeGroupModalCtrl (
  * Methods
  * -----------------------------------------------------------------------------
  */
-  // After invite is sent, an alert pops up with following message
+  // Helper Method, after invite is sent, alert pops up with following message
   var generateAlertMessage = function (infoType, groupName) {
     if (infoType === 'success') {
       vm.alertType = 'success';
@@ -30,6 +30,8 @@ function NodeGroupModalCtrl (
       vm.responseMessage = 'Error creating group.';
     }
   };
+
+  // Helper method checking if name does not exist in the group list
   var isUniqueName = function (name) {
     var flag = true;
     for (var i = 0; i < fileBrowserFactory.nodeGroupList.length; i ++) {
@@ -43,6 +45,7 @@ function NodeGroupModalCtrl (
 
   // Create a new node group
   vm.saveNodeGroup = function () {
+    // names needs to exist and be unique
     if (vm.nodeGroupName && isUniqueName(vm.nodeGroupName)) {
       vm.dataLoading = true;
       var params = selectedNodesService.getNodeGroupParams();
