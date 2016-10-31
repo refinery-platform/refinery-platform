@@ -243,7 +243,7 @@ class ProcessISATabView(View):
                             json.dumps({
                                 'error': response.message
                             }),
-                            'application/json'
+                            content_type='application/json'
                         )
 
                     return render_to_response(
@@ -264,7 +264,7 @@ class ProcessISATabView(View):
                             json.dumps({
                                 'error': response.message
                             }),
-                            'application/json'
+                            content_type='application/json'
                         )
 
                     return render_to_response(
@@ -299,7 +299,7 @@ class ProcessISATabView(View):
                                 'new_data_set_uuid': dataset_uuid
                             }
                         }),
-                        'application/json'
+                        content_type='application/json'
                     )
 
                 return HttpResponseRedirect(
@@ -312,7 +312,7 @@ class ProcessISATabView(View):
                         json.dumps({
                             'error': error
                         }),
-                        'application/json'
+                        content_type='application/json'
                     )
 
                 context = RequestContext(
@@ -490,7 +490,7 @@ class ProcessMetadataTableView(View):
         if request.is_ajax():
             return HttpResponse(
                 json.dumps({'new_data_set_uuid': dataset_uuid}),
-                'application/json'
+                content_type='application/json'
             )
         else:
             return HttpResponseRedirect(
