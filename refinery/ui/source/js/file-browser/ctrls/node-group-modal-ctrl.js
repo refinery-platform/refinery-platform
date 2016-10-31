@@ -78,7 +78,7 @@ function NodeGroupModalCtrl (
         }, 1500);
       }, function (error) {
         vm.dataLoading = false;
-        generateAlertMessage('error', vm.nodeGroupName);
+        generateAlertMessage('danger', vm.nodeGroupName);
         $log.error(error);
       });
       // For duplicate group names, don't make an api call.
