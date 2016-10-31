@@ -14,6 +14,7 @@ function NodeGroupModalCtrl (
   vm.nodeGroupName = '';
   vm.responseMessage = '';
   vm.alertType = 'info';
+  vm.dataLoading = false;
 /*
  * -----------------------------------------------------------------------------
  * Methods
@@ -21,6 +22,8 @@ function NodeGroupModalCtrl (
  */
   // After invite is sent, an alert pops up with following message
   var generateAlertMessage = function (infoType, groupName) {
+    console.log('in generate alert message');
+    console.log(infoType);
     if (infoType === 'success') {
       vm.alertType = 'success';
       vm.responseMessage = 'Successfully created group ' + groupName;
@@ -42,6 +45,7 @@ function NodeGroupModalCtrl (
 
   // Create a new node group
   vm.saveNodeGroup = function () {
+    vm.dataLoading = true;
     var name = vm.nodeGroupName;
     if (vm.nodeGroupName && isUniqueName(name)) {
       var params = selectedNodesService.getNodeGroupParams();
@@ -66,11 +70,14 @@ function NodeGroupModalCtrl (
             .selectedNodeGroup.uuid;
           }
         });
+        vm.dataLoading = false;
+        generateAlertMessage('success', name);
         // Pause to display creation success.
         $timeout(function () {
           $uibModalInstance.dismiss();
         }, 1500);
       }, function (error) {
+        vm.dataLoading = false;
         generateAlertMessage('error', vm.groupName);
         $log.error(error);
       });

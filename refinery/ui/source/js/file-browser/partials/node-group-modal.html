@@ -34,9 +34,15 @@
   <div
     class='p-t-1-2'
     ng-show="modal.responseMessage">
-     <div class="alert alert-{{ alertType }} text-center">
-       {{responseMessage}}
+     <div class="alert alert-{{ modal.alertType }} text-center">
+       {{modal.responseMessage}}
      </div>
+  </div>
+
+  <div
+    class='p-t-1-2'
+    ng-show="modal.dataLoading">
+     <span class="refinery-spinner"></span>
   </div>
 </div>
 
@@ -44,14 +50,16 @@
    <button
       type="button"
       class="refinery-base btn btn-default"
-      ng-click="modal.cancel()">
+      ng-click="modal.cancel()"
+      ng-disabled="modal.dataLoading || modal.alertType === 'success'">
       Cancel
     </button>
     <button
       type="submit"
       class="btn btn-primary"
       ng-disabled="!nodeGroupCreationForm.$valid"
-      ng-click="modal.saveNodeGroup()">
+      ng-click="modal.saveNodeGroup()"
+      ng-disabled="modal.dataLoading || modal.alertType === 'success'">
       Create group
     </button>
 </div>
