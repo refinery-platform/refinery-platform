@@ -22,8 +22,6 @@ function NodeGroupModalCtrl (
  */
   // After invite is sent, an alert pops up with following message
   var generateAlertMessage = function (infoType, groupName) {
-    console.log('in generate alert message');
-    console.log(infoType);
     if (infoType === 'success') {
       vm.alertType = 'success';
       vm.responseMessage = 'Successfully created group ' + groupName;
@@ -45,11 +43,10 @@ function NodeGroupModalCtrl (
 
   // Create a new node group
   vm.saveNodeGroup = function () {
-    vm.dataLoading = true;
-    var name = vm.nodeGroupName;
-    if (vm.nodeGroupName && isUniqueName(name)) {
+    if (vm.nodeGroupName && isUniqueName(vm.nodeGroupName)) {
+      vm.dataLoading = true;
       var params = selectedNodesService.getNodeGroupParams();
-      params.name = name;
+      params.name = vm.nodeGroupName;
       var assayUuid = $window.externalAssayUuid;
       fileBrowserFactory.createNodeGroup(params).then(function () {
         // update node group list
@@ -57,11 +54,10 @@ function NodeGroupModalCtrl (
           // Find index of of new name in the node group list
           var newNameIndex = _.findLastIndex(
             fileBrowserFactory.nodeGroupList,
-            { name: name }
+            { name: vm.nodeGroupName }
           );
-
+           // Set the selected node group as the latest
           if (newNameIndex > -1) {
-            // Set the selected node group as the latest
             selectedNodeGroupService.setSelectedNodeGroup(
               fileBrowserFactory.nodeGroupList[newNameIndex]
             );
@@ -71,16 +67,23 @@ function NodeGroupModalCtrl (
           }
         });
         vm.dataLoading = false;
-        generateAlertMessage('success', name);
-        // Pause to display creation success.
+        generateAlertMessage('success', vm.nodeGroupName);
+
+        // Pause to display creation success message.
         $timeout(function () {
           $uibModalInstance.dismiss();
         }, 1500);
       }, function (error) {
         vm.dataLoading = false;
-        generateAlertMessage('error', vm.groupName);
+        generateAlertMessage('error', vm.nodeGroupName);
         $log.error(error);
       });
+      // For duplicate group names, don't make an api call.
+    } else {
+      vm.dataLoading = false;
+      vm.alertType = 'danger';
+      vm.responseMessage = 'Error, duplicate group name. Please try another' +
+        ' name.';
     }
   };
 
