@@ -225,7 +225,7 @@ SolrAnalysisView.prototype._generateTree = function( solrResponse ) {
 						};
 						
 			    		selectedItems.push(
-								"<tr class=\"facet-value\" id=\"" + self._composeFacetValueId( facet, facetValue )"\">" +
+								"<tr class=\"facet-value\" id=\"" + self._composeFacetValueId( facet, facetValue ) + "\">" +
 								"<td>" + '<input type="checkbox" checked>' + "</td>" +
 								"<td width=100%>" + analysisName + "</td>" +
 								"<td class='facet-value-count' align=right>" + facetValueCount + "</td>"  + "</tr>"
