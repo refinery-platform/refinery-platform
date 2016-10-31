@@ -252,7 +252,7 @@ class neo4j {
     location    => 'http://debian.neo4j.org/repo',
     release     => 'stable/',
     repos       => '',
-    key         => '66D34E951A8C53D90242132B26C95CF201182252',
+    key         => '1EEFB8767D4924B86EAD08A459D700E4D37F5F19',
     key_source  => 'https://debian.neo4j.org/neotechnology.gpg.key',
     include_src => false,
   }
