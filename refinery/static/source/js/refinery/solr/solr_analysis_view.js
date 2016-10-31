@@ -195,8 +195,19 @@ SolrAnalysisView.prototype._generateTree = function( solrResponse ) {
 					if ( self._query._facetSelection[facet][facetValue].isSelected ) {						
 						self._query._facetSelection[facet][facetValue] = { count: facetValueCount, isSelected: self._query._facetSelection[facet][facetValue].isSelected };
 						
-			    		selectedItems.push("<tr class=\"facet-value\" id=\"" + self._composeFacetValueId( facet, facetValue ) + "\"><td>" + '<input type="checkbox" checked>' + "</td><td width=100%>" + analysisName + "</td><td class='facet-value-count' align=right>" + facetValueCount + "</td>"  + "</tr>" );
-		    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + self._composeFacetValueId( facet, facetValue ) + "\"><td>" + '<input type="checkbox" checked>' + "</td><td width=100%>" + analysisName + "</td><td class='facet-value-count align=right>" + facetValueCount + "</td>"  + "</tr>" );
+			    		selectedItems.push(
+								"<tr class=\"facet-value\" id=\"" + self._composeFacetValueId( facet, facetValue )"\">" +
+								"<td>" + '<input type="checkbox" checked>' + "</td>" +
+								"<td width=100%>" + analysisName + "</td>" +
+								"<td class='facet-value-count' align=right>" + facetValueCount + "</td>"  + "</tr>"
+							);
+		    			unselectedItems.push(
+								"<tr class=\"facet-value\" " +
+								"id=\"" + self._composeFacetValueId( facet, facetValue ) + "\">" +
+								"<td>" + '<input type="checkbox" checked>' + "</td>" +
+								"<td width=100%>" + analysisName + "</td>" +
+								"<td class='facet-value-count align=right>" + facetValueCount + "</td>"  + "</tr>"
+							);
 					}
 					else {
 						self._query._facetSelection[facet][facetValue] = { count: facetValueCount, isSelected: self._query._facetSelection[facet][facetValue].isSelected };
