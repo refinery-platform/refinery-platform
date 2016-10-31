@@ -15,6 +15,8 @@ function RefineryFileUploadCtrl (
   $uibModal,
   getCookie
 ) {
+  $scope.fileStatus = fileUploadStatusService.fileUploadStatus;
+
   var csrftoken = getCookie('csrftoken');
 
   // The next function and jQuery call ensure that the `csrftoken` is used for
@@ -216,10 +218,12 @@ function RefineryFileUploadCtrl (
         $scope.uploadActive = true;
         $scope.uploadInProgress = true;
         fileUploadStatusService.setFileUploadStatus('running');
+        $scope.fileStatus = fileUploadStatusService.fileUploadStatus;
       } else {
         $scope.uploadActive = false;
         $scope.uploadInProgress = false;
         fileUploadStatusService.setFileUploadStatus('queuing');
+        $scope.fileStatus = fileUploadStatusService.fileUploadStatus;
       }
 
       if (totalNumFilesUploaded === totalNumFilesQueued) {
@@ -227,6 +231,7 @@ function RefineryFileUploadCtrl (
         $scope.uploadActive = false;
         $scope.uploadInProgress = false;
         fileUploadStatusService.setFileUploadStatus('none');
+        $scope.fileStatus = fileUploadStatusService.fileUploadStatus;
       }
 
       $timeout(function () {
@@ -284,6 +289,7 @@ function RefineryFileUploadCtrl (
     $scope.queuedFiles.push(data.files[0]);
     fileCache[data.files[0].name] = true;
     fileUploadStatusService.setFileUploadStatus('queuing');
+    $scope.fileStatus = fileUploadStatusService.fileUploadStatus;
     return true;
   });
 
@@ -303,8 +309,10 @@ function RefineryFileUploadCtrl (
     $timeout(function () {
       if (totalNumFilesQueued === 0) {
         fileUploadStatusService.setFileUploadStatus('none');
+        $scope.fileStatus = fileUploadStatusService.fileUploadStatus;
       } else if ($element.fileupload('active') === 0) {
         fileUploadStatusService.setFileUploadStatus('queuing');
+        $scope.fileStatus = fileUploadStatusService.fileUploadStatus;
       }
     }, 110);
   });
@@ -316,6 +324,7 @@ function RefineryFileUploadCtrl (
     }
     currentUploadFile++;
     fileUploadStatusService.setFileUploadStatus('running');
+    $scope.fileStatus = fileUploadStatusService.fileUploadStatus;
     return true;
   });
 
