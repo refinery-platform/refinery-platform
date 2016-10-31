@@ -104,20 +104,13 @@ exec { "set_up_refinery_site_name":
   group       => $app_group,
 }
 ->
-exec { "create_superuser":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata superuser.json",
+exec { "create_users":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata default-users.json",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
 }
 ->
-exec { "create_user":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py create_user 'guest' 'guest' 'guest@example.com' 'Guest' '' ''",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-
 file { "/opt":
   ensure => directory,
 }
