@@ -52,7 +52,7 @@ DataSetDeleteCtrl.prototype.delete = function () {
     })
     .$promise
     .then(function (response) {
-      that.deletionMessage = response.data;
+      that.deletionMessage = response.content;
       that.isDeleting = false;
       that.deleteSuccessful = true;
       that.dataSets.newOrCachedCache(undefined, true);
@@ -61,8 +61,9 @@ DataSetDeleteCtrl.prototype.delete = function () {
       that.analysesReloadService.reload();
     })
     .catch(function (error) {
-      that.deleteSuccessful = false;
       that.deletionMessage = error.data;
+      that.isDeleting = false;
+      that.deleteSuccessful = false;
       that.$log.error(error);
     });
 };

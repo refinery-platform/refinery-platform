@@ -1065,97 +1065,79 @@ class NodeViewSet(viewsets.ModelViewSet):
 
 
 class DataSetsViewSet(APIView):
+    """
+    API endpoint that allows for DataSets to be deleted
+    """
     http_method_names = ['delete']
 
     def delete(self, request, uuid):
         if not request.user.is_authenticated():
-            return Response({
-                "status": status.HTTP_403_FORBIDDEN,
-                "data": "User {} is not authenticated".format(request.user)
-            })
+            return HttpResponse(
+                status=status.HTTP_403_FORBIDDEN,
+                content="User {} is not authenticated".format(request.user))
         else:
             try:
                 dataset_deleted = DataSet.objects.get(uuid=uuid).delete()
             except NameError as e:
                 logger.error(e)
-                return Response({
-                    "status": status.HTTP_400_BAD_REQUEST,
-                    "data": "Bad Request"
-                })
+                return HttpResponse(status=status.HTTP_400_BAD_REQUEST,
+                                    content="Bad Request")
             except DataSet.DoesNotExist as e:
                 logger.error(e)
-                return Response({
-                    "status": status.HTTP_404_NOT_FOUND,
-                    "data": "Dataset with UUID: {} not found.".format(uuid)
-                })
+                return HttpResponse(
+                    status=status.HTTP_404_NOT_FOUND,
+                    content="DataSet with UUID: {} not found.".format(uuid))
             except DataSet.MultipleObjectsReturned as e:
                 logger.error(e)
-                return Response({
-                    "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    "data": "Multiple Datasets returned for this request"
-                })
+                return HttpResponse(
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    content="Multiple Datasets returned for this request")
             else:
                 if dataset_deleted[0]:
-                    return Response(
-                        {
-                            "data": dataset_deleted[1],
-                            "status": status.HTTP_200_OK
-                        }
-                    )
+                    return Response({
+                        "status": status.HTTP_200_OK,
+                        "content": dataset_deleted[1]})
                 else:
-                    return Response(
-                        {
-                            "data": dataset_deleted[1],
-                            "status": status.HTTP_400_BAD_REQUEST
-                        }
-                    )
+                    return HttpResponse(status=status.HTTP_400_BAD_REQUEST,
+                                        content=dataset_deleted[1])
 
 
 class AnalysesViewSet(APIView):
+    """
+    API endpoint that allows for Analyses to be deleted
+    """
     http_method_names = ['delete']
 
     def delete(self, request, uuid):
         if not request.user.is_authenticated():
-            return Response({
-                "status": status.HTTP_403_FORBIDDEN,
-                "data": "User {} is not authenticated".format(request.user)
-            })
+            return HttpResponse(
+                status=status.HTTP_403_FORBIDDEN,
+                content="User {} is not authenticated".format(request.user))
         else:
             try:
                 analysis_deleted = Analysis.objects.get(uuid=uuid).delete()
             except NameError as e:
                 logger.error(e)
-                return Response({
-                    "status": status.HTTP_400_BAD_REQUEST,
-                    "data": "Bad Request"
-                })
+                return HttpResponse(status=status.HTTP_400_BAD_REQUEST,
+                                    content="Bad Request")
             except Analysis.DoesNotExist as e:
                 logger.error(e)
-                return Response({
-                    "status": status.HTTP_404_NOT_FOUND,
-                    "data": "Analysis with UUID: {} not found.".format(uuid)
-                })
+                return HttpResponse(
+                    status=status.HTTP_404_NOT_FOUND,
+                    content="Analysis with UUID: {} not found.".format(uuid))
             except Analysis.MultipleObjectsReturned as e:
                 logger.error(e)
-                return Response({
-                    "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    "data": "Multiple Analyses returned for this request"
-                })
+                return HttpResponse(
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    content="Multiple Analyses returned for this request")
             else:
                 if analysis_deleted[0]:
-                    return Response(
-                        {
-                            "data": analysis_deleted[1],
-                            "status": status.HTTP_200_OK
-                        }
-                    )
+                    return Response({
+                        "status": status.HTTP_200_OK,
+                        "content": analysis_deleted[1]})
                 else:
-                    return Response(
-                        {
-                            "data": analysis_deleted[1],
-                            "status": status.HTTP_400_BAD_REQUEST
-                        }
-                    )
+                    return HttpResponse(status=status.HTTP_400_BAD_REQUEST,
+                                        content=analysis_deleted[1])
 
 
 class CustomRegistrationView(RegistrationView):
