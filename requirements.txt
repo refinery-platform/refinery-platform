@@ -1,7 +1,7 @@
 # workaround for https://github.com/celery/celery/issues/3225
 amqp>1.4,<2.0
 amqplib==1.0.2
-anyjson==0.3.1
+anyjson==0.3.3
 argh==0.23.1
 bioblend==0.5.0
 bitstring==3.0.2
