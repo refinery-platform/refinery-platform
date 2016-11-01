@@ -61,7 +61,7 @@ def import_file(uuid, refresh=False, file_size=0):
     :type refresh: bool.
     :param file_size: size of the remote file.
     :type file_size: int.
-    :returns: FileStoreItem -- model instance or None if importing failed.
+    :returns: FileStoreItem UUID or None if importing failed.
 
     """
     logger.debug("Importing FileStoreItem with UUID '%s'", uuid)
@@ -82,7 +82,7 @@ def import_file(uuid, refresh=False, file_size=0):
             item.delete_datafile()
         else:
             logger.info("File already exists: '%s'", item.get_absolute_path())
-            return item
+            return item.uuid
 
     # if source is an absolute file system path then copy,
     # otherwise assume it is a URL and download
@@ -228,7 +228,7 @@ def import_file(uuid, refresh=False, file_size=0):
         # save the model instance
         item.save()
 
-    return item
+    return item.uuid
 
 
 @task_success.connect(sender=import_file)
@@ -237,14 +237,21 @@ def begin_auxiliary_node_generation(**kwargs):
     # structure of celery signal handlers changes often
     # See: http://bit.ly/2cbTy3k
 
-    file_store_item = kwargs['result']
+    file_store_item_uuid = kwargs['result']
     try:
-        data_set_manager.models.Node.objects.get(
-            file_uuid=file_store_item.uuid).run_generate_auxiliary_node_task()
-    except (data_set_manager.models.Node.DoesNotExist,
-            data_set_manager.models.Node.MultipleObjectsReturned) \
-            as e:
-        logger.error(e)
+        file_store_item = FileStoreItem.objects.get(uuid=file_store_item_uuid)
+    except(FileStoreItem.DoesNotExist,
+           FileStoreItem.MultipleObjectsReturned) as e:
+        logger.error("Couldn't properly fetch FileStoreItem: %s", e)
+    else:
+        try:
+            data_set_manager.models.Node.objects.get(
+                file_uuid=file_store_item.uuid
+            ).run_generate_auxiliary_node_task()
+        except (data_set_manager.models.Node.DoesNotExist,
+                data_set_manager.models.Node.MultipleObjectsReturned) \
+                as e:
+            logger.error("Couldn't properly fetch Node: %s", e)
 
 
 @task()
@@ -257,7 +264,7 @@ def read(uuid):
     None if failed.
 
     '''
-    return FileStoreItem.objects.get_item(uuid)
+    return FileStoreItem.objects.get_item(uuid).uuid
 
 
 @task()
@@ -289,7 +296,7 @@ def update(uuid, source):
     :type uuid: str.
     :param source: New source of the FileStoreItem.
     :type source: str.
-    :returns: FileStoreItem -- model instance if update succeeded, None if
+    :returns: FileStoreItem UUID if update succeeded, None if
     failed.
     """
     # TODO: check for number of affected rows to determine if there was an
@@ -305,13 +312,13 @@ def update(uuid, source):
 @task()
 def rename(uuid, name):
     """Change name of the file on disk and return the updated FileStoreItem
-    instance.
+    UUID.
 
     :param uuid: UUID of a FileStoreItem.
     :type uuid: str.
     :param name: New name of the FileStoreItem specified by the UUID.
     :type name: str.
-    :returns: FileStoreItem - updated FileStoreItem instance or None if there
+    :returns: FileStoreItem UUID or None if there
         was an error.
     """
 
@@ -321,7 +328,7 @@ def rename(uuid, name):
         logger.error("Failed to rename FileStoreItem with UUID '%s'", uuid)
         return None
     if item.rename_datafile(name):
-        return item
+        return item.uuid
     else:
         return None
 
@@ -337,8 +344,6 @@ def download_file(url, target_path, file_size=1):
     :type target_path: str
     :param file_size: Size of the remote file.
     :type file_size: int.
-    :returns: bool -- True if success, False if failure.
-
     '''
     # TODO: handle out of disk space condition
     logger.debug("Downloading file from '%s'", url)
