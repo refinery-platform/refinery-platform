@@ -30,7 +30,7 @@ describe('Controller: Node Group Ctrl', function () {
     $window.externalStudyUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
   }));
 
-  it('FileBrowserCtrl ctrl should exist', function () {
+  it('Node Group ctrl should exist', function () {
     expect(ctrl).toBeDefined();
   });
 
@@ -109,26 +109,6 @@ describe('Controller: Node Group Ctrl', function () {
       });
       expect(mockResponse).toEqual(false);
       ctrl.refreshNodeGroupList();
-      expect(mockResponse).toEqual(true);
-    });
-  });
-
-  describe('Test saveNodeGroup', function () {
-    it('saveNodeGroup is method', function () {
-      expect(angular.isFunction(ctrl.saveNodeGroup)).toBe(true);
-    });
-
-    it('saveNodeGroup is method', function () {
-      var mockResponse = false;
-      spyOn(factory, 'createNodeGroup').and.callFake(function () {
-        return {
-          then: function () {
-            mockResponse = true;
-          }
-        };
-      });
-      expect(mockResponse).toEqual(false);
-      ctrl.saveNodeGroup('Group Name');
       expect(mockResponse).toEqual(true);
     });
   });
