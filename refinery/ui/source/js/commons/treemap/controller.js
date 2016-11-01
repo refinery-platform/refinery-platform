@@ -70,6 +70,24 @@ function endAll (transition, callback) {
 }
 
 /**
+ * Internal method for getting the correct URI from an event data object.
+ *
+ * @method  _getUri
+ * @author  Fritz Lekschas
+ * @date    2016-10-31
+ * @param   {Object}  data  Event data object.
+ * @return  {String}        URI.
+ */
+function _getUri (data) {
+  var uri = data.nodeUri;
+  if (data.clone) {
+    uri = data.clonedFromUri;
+  }
+
+  return uri;
+}
+
+/**
  * TreeMap controller constructor.
  *
  * @method  TreemapCtrl
@@ -185,7 +203,7 @@ function TreemapCtrl (
   this.nodeIndex = {};
 
   this.currentlyLockedNodes = {};
-  this.prevEvent = {};
+  this.prevEventDataSets = {};
 
   if (this.graph) {
     this.graph.then(function (data) {
@@ -328,7 +346,9 @@ TreemapCtrl.prototype.addEventListeners = function () {
      * data = data
      */
 
-    that.highlightByTerm(that.d3.select(this).datum(), false, false, true);
+    that.storeEmitHighlightDataSets(
+      that.d3.select(this).datum(), false, false, true
+    );
     that.transition(that.d3.select(this).datum());
   });
 
@@ -347,7 +367,9 @@ TreemapCtrl.prototype.addEventListeners = function () {
         return;
       }
 
-      that.highlightByTerm(that.d3.select(this).datum(), false, false, true);
+      that.storeEmitHighlightDataSets(
+        that.d3.select(this).datum(), false, false, true
+      );
       that.transition(that.d3.select(this).datum());
     }
   );
@@ -356,7 +378,9 @@ TreemapCtrl.prototype.addEventListeners = function () {
     'mouseenter',
     '.node',
     function () {
-      that.highlightByTerm(that.d3.select(this).datum(), false, true, false);
+      that.storeEmitHighlightDataSets(
+        that.d3.select(this).datum(), false, true, false
+      );
     }
   );
 
@@ -364,7 +388,9 @@ TreemapCtrl.prototype.addEventListeners = function () {
     'mouseleave',
     '.node',
     function () {
-      that.highlightByTerm(that.d3.select(this).datum(), false, true, true);
+      that.storeEmitHighlightDataSets(
+        that.d3.select(this).datum(), false, true, true
+      );
     }
   );
 
@@ -376,10 +402,10 @@ TreemapCtrl.prototype.addEventListeners = function () {
 
       // Mac OS X's command key is down
       if (e.metaKey) {
-        that.highlightByTerm(that.d3.select(this).datum(), false, false, true);
+        that.storeEmitHighlightDataSets(data, false, false, true);
         that.transition(data);
       } else {
-        that.lockNode(this, data);
+        that.nodeLockToggleHandler(data);
       }
     }
   );
@@ -480,29 +506,17 @@ TreemapCtrl.prototype.addEventListeners = function () {
     }
   }.bind(this));
 
-  this.$rootScope.$on('dashboardVisNodeLock', function (event, data) {
-    if (data.source !== 'treeMap') {
-      var uri = data.nodeUri;
-      if (data.clone) {
-        uri = data.clonedFromUri;
+  this.$rootScope.$on(
+    'dashboardVisNodeLock', function (event, data) {
+      if (data.source !== 'treeMap') {
+        this.nodeLockHandler(_getUri(data), true);
       }
-      var selection = this.getD3NodeByUri(uri);
-      if (!selection.empty()) {
-        this.lockNode(selection.node(), selection.datum(), true);
-      }
-    }
-  }.bind(this));
+    }.bind(this)
+  );
 
   this.$rootScope.$on('dashboardVisNodeUnlock', function (event, data) {
     if (data.source !== 'treeMap') {
-      var uri = data.nodeUri;
-      if (data.clone) {
-        uri = data.clonedFromUri;
-      }
-      var selection = this.getD3NodeByUri(uri);
-      if (!selection.empty()) {
-        this.lockNode(selection.node(), selection.datum(), true);
-      }
+      this.nodeUnlockHandler(true);
     }
   }.bind(this));
 
@@ -512,6 +526,86 @@ TreemapCtrl.prototype.addEventListeners = function () {
       this.visibleDepth = data.visibleDepth;
     }
   }.bind(this));
+};
+
+/**
+ * Handles node lock toggling
+ *
+ * @method  nodeLockToggleHandler
+ * @author  Fritz Lekschas
+ * @date    2016-10-31
+ * @param   {Object}  data  D3 data object of the element.
+ */
+TreemapCtrl.prototype.nodeLockToggleHandler = function (data) {
+  if (this.lockedNodeUri) {
+    if (this.lockedNodeUri === data.uri) {
+      this.nodeUnlockHandler();
+    } else {
+      this.nodeUnlockHandler();
+      this.nodeLockHandler(data.uri);
+    }
+  } else {
+    this.nodeLockHandler(data.uri);
+  }
+};
+
+/**
+ * Handles node locking
+ *
+ * @method  nodeLockHandler
+ * @author  Fritz Lekschas
+ * @date    2016-10-31
+ * @param   {Object}   uri             URI of the node to be locked.
+ * @param   {Boolean}  noNotification  If `true` no notification will be emitted
+ */
+TreemapCtrl.prototype.nodeLockHandler = function (uri, noNotification) {
+  this.lockedNodeUri = uri;
+
+  this.checkNodesLocked();
+  this.storeEmitHighlightDataSets(
+    this.getDataByUri(this.lockedNodeUri), false, false, false, noNotification
+  );
+};
+
+/**
+ * Handles node unlocking
+ *
+ * @method  nodeUnlockHandler
+ * @author  Fritz Lekschas
+ * @date    2016-10-31
+ * @param   {Boolean}  noNotification  If `true` no notification will be emitted
+ */
+TreemapCtrl.prototype.nodeUnlockHandler = function (noNotification) {
+  if (this.lockedNodeUri) {
+    this.checkNodesLocked(true);
+    this.storeEmitHighlightDataSets(
+      this.getDataByUri(this.lockedNodeUri), false, false, true, noNotification
+    );
+
+    this.lockedNodeUri = undefined;
+  }
+};
+
+/**
+ * Checks if locked nodes needs to be visually locked.
+ *
+ * @method  checkNodesLocked
+ * @author  Fritz Lekschas
+ * @date    2016-10-31
+ * @param   {Boolean}  unlocked  If `true` will check for unlocking.
+ */
+TreemapCtrl.prototype.checkNodesLocked = function (unlocked) {
+  if (this.lockedNodeUri) {
+    var selection = this.getD3NodeByUri(this.lockedNodeUri);
+
+    if (!selection.empty()) {
+      if (unlocked) {
+        this.unlockNode(selection);
+      } else {
+        this.lockNode(selection);
+      }
+    }
+  }
 };
 
 /**
@@ -562,14 +656,33 @@ TreemapCtrl.prototype.findNodesToHighlight = function (uri, dehighlight) {
  * @method  lockNode
  * @author  Fritz Lekschas
  * @date    2016-05-06
- * @param   {Object}    element         DOM element.
- * @param   {Object}    data            The D3 data object associated to
- *   `element`.
+ * @param   {Object}    selection       D3 selection of elements.
  * @param   {Boolean}   noNotification  If `true` no events will be emmited.
  */
-TreemapCtrl.prototype.lockNode = function (element, data, noNotification) {
-  this.highlightByTerm(data, undefined, undefined, undefined, noNotification);
-  this.lockHighlightEl(element);
+TreemapCtrl.prototype.lockNode = function (selection) {
+  var self = this;
+
+  selection.each(function () {
+    self.lockHighlightEl(this);
+  });
+};
+
+/**
+ * Visually unlock a node (i.e. rectangle)
+ *
+ * @description
+ * This means resetting the filling of the currently locked node.
+ *
+ * @method  unlockNode
+ * @author  Fritz Lekschas
+ * @date    2016-10-30
+ */
+TreemapCtrl.prototype.unlockNode = function (selection) {
+  var self = this;
+
+  selection.each(function () {
+    self.unlockHighlightEl(this);
+  });
 };
 
 /**
@@ -601,6 +714,27 @@ TreemapCtrl.prototype.getD3NodeByUri = function (uri) {
   return this.treemap.element.selectAll('.node').filter(function (data) {
     return data.uri === uri;
   });
+};
+
+/**
+ * Get a DOM element's data by a node's URI.
+ *
+ * @method  getDataByUri
+ * @author  Fritz Lekschas
+ * @date    2016-10-31
+ * @param   {String}  uri  Node's URI.
+ * @return  {Object}       D3 data of the DOM element.
+ */
+TreemapCtrl.prototype.getDataByUri = function (uri) {
+  // This feels inefficient. There should be a way to cache node references so
+  // that the DOM doesn't need to be queried all the time.
+  var els = this.treemap.element.selectAll('.node').filter(function (data) {
+    return data.uri === uri;
+  });
+
+  var data = els.data();
+
+  return data[0];
 };
 
 /**
@@ -891,6 +1025,7 @@ TreemapCtrl.prototype.adjustLevelDepth = function (oldVisibleDepth) {
 
   return transition.then(function () {
     this.checkLabelReadbility();
+    this.checkNodesLocked();
     return true;
   }.bind(this));
 };
@@ -1170,7 +1305,7 @@ TreemapCtrl.prototype.fadeIn = function (selection, firstTime) {
 /**
  * Highlight datasets associated to a term.
  *
- * @method  highlightByTerm
+ * @method  storeEmitHighlightDataSets
  * @author  Fritz Lekschas
  * @date    2015-12-21
  *
@@ -1181,15 +1316,14 @@ TreemapCtrl.prototype.fadeIn = function (selection, firstTime) {
  * @param   {Boolean}  hover           If `true` reports only mouse over related
  *   highlighting.
  * @param   {Boolean}  reset           If `true` resets highlighting.
- * @param   {Boolean}  noNotification  If `true` suppressed event emiting.
  */
-TreemapCtrl.prototype.highlightByTerm = function (
+TreemapCtrl.prototype.storeEmitHighlightDataSets = function (
   data, multiple, hover, reset, noNotification
 ) {
   var dataSetIds = getAssociatedDataSets(data);
   var eventName;
   var mode = hover ? 'hover' : 'lock';
-  var prevData = this.prevEvent[mode + 'Terms'];
+  var prevData = this.prevEventDataSets[mode + 'Terms'];
   var set = false;
 
   if (prevData && reset !== true) {
@@ -1222,7 +1356,7 @@ TreemapCtrl.prototype.highlightByTerm = function (
     }
 
     if (prevData.nodeUri === data.uri) {
-      this.prevEvent[mode + 'Terms'] = undefined;
+      this.prevEventDataSets[mode + 'Terms'] = undefined;
     } else {
       if (!reset) {
         set = true;
@@ -1240,13 +1374,13 @@ TreemapCtrl.prototype.highlightByTerm = function (
     } else {
       eventName = 'dashboardVisNodeLock';
     }
-    this.prevEvent[mode + 'Terms'] = {
+    this.prevEventDataSets[mode + 'Terms'] = {
       nodeUri: data.uri,
       dataSetIds: dataSetIds,
       source: 'treeMap'
     };
     if (!noNotification) {
-      this.$rootScope.$emit(eventName, this.prevEvent[mode + 'Terms']);
+      this.$rootScope.$emit(eventName, this.prevEventDataSets[mode + 'Terms']);
     }
   }
 };
@@ -1294,33 +1428,31 @@ TreemapCtrl.prototype.initialize = function (data) {
  */
 TreemapCtrl.prototype.lockHighlightEl = function (element) {
   var d3El = this.d3.select(element);
-  var className = d3El.datum().meta.leaf ? '.leaf' : '.bg';
 
-  if (this.currentlyLockedNode) {
-    this.currentlyLockedNode.classed('locked', false)
-      .select(this.currentlyLockedNode.datum().meta.leaf ? '.leaf' : '.bg')
-      .attr('fill', function (data) {
-        return this.color.call(this, data);
-      }.bind(this));
+  d3El.classed('locked', true)
+    .select(d3El.datum().meta.leaf ? '.leaf' : '.bg')
+    .attr('fill', function (data, index) {
+      return this.color.call(this, data, index, undefined, true);
+    }.bind(this));
+};
 
-    if (this.currentlyLockedNode.datum().uri === d3El.datum().uri) {
-      this.currentlyLockedNode = undefined;
-    } else {
-      d3El.classed('locked', true).select(className)
-        .attr('fill', function (data, index) {
-          return this.color.call(this, data, index, undefined, true);
-        }.bind(this));
+/**
+ * Unhighlight locked state of a rectangle.
+ *
+ * @method  unlockHighlightEl
+ * @author  Fritz Lekschas
+ * @date    2016-10-31
+ *
+ * @param   {Object}  element  DOM element.
+ */
+TreemapCtrl.prototype.unlockHighlightEl = function (element) {
+  var d3El = this.d3.select(element);
 
-      this.currentlyLockedNode = d3El;
-    }
-  } else {
-    d3El.classed('locked', true).select(className)
-      .attr('fill', function (data, index) {
-        return this.color.call(this, data, index, undefined, true);
-      }.bind(this));
-
-    this.currentlyLockedNode = d3El;
-  }
+  d3El.classed('locked', false)
+    .select(d3El.datum().meta.leaf ? '.leaf' : '.bg')
+    .attr('fill', function (data) {
+      return this.color.call(this, data);
+    }.bind(this));
 };
 
 /**
