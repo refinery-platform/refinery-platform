@@ -238,20 +238,15 @@ def begin_auxiliary_node_generation(**kwargs):
     # See: http://bit.ly/2cbTy3k
 
     file_store_item_uuid = kwargs['result']
+
     try:
-        file_store_item = FileStoreItem.objects.get(uuid=file_store_item_uuid)
-    except(FileStoreItem.DoesNotExist,
-           FileStoreItem.MultipleObjectsReturned) as e:
-        logger.error("Couldn't properly fetch FileStoreItem: %s", e)
-    else:
-        try:
-            data_set_manager.models.Node.objects.get(
-                file_uuid=file_store_item.uuid
-            ).run_generate_auxiliary_node_task()
-        except (data_set_manager.models.Node.DoesNotExist,
-                data_set_manager.models.Node.MultipleObjectsReturned) \
-                as e:
-            logger.error("Couldn't properly fetch Node: %s", e)
+        data_set_manager.models.Node.objects.get(
+            file_uuid=file_store_item_uuid
+        ).run_generate_auxiliary_node_task()
+    except (data_set_manager.models.Node.DoesNotExist,
+            data_set_manager.models.Node.MultipleObjectsReturned) \
+            as e:
+        logger.error("Couldn't properly fetch Node: %s", e)
 
 
 @task()
