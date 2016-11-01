@@ -57,9 +57,9 @@ script:
   - coverage run manage.py test
   - echo 'travis_fold:end:django-tests'
 
-  # Run our acceptance tests
+  # Only run our acceptance tests in builds from Pull Requests
   - cd ../
-  - sh acceptance_tests.sh
+  - if [ ${TRAVIS_PULL_REQUEST} != false ]; then sh acceptance_tests.sh;
   - cd refinery
 
   - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
