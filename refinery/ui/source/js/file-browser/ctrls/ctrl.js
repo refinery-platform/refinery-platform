@@ -407,6 +407,8 @@ function FileBrowserCtrl (
       angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr) {
         for (var i = 0; i < fieldArr.length; i++) {
           vm.selectedField[fieldArr[i]] = true;
+          // update url with selected fields(filters)
+          $location.search(fieldArr[i], true);
         }
       });
       // $timeout required to allow grid generation
