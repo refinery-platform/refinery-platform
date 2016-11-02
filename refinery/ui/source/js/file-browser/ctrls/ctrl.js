@@ -408,7 +408,7 @@ function FileBrowserCtrl (
         for (var i = 0; i < fieldArr.length; i++) {
           vm.selectedField[fieldArr[i]] = true;
           // update url with selected fields(filters)
-          $location.search(fieldArr[i], true);
+          selectedFilterService.updateUrlQuery(fieldArr[i], true);
         }
       });
       // $timeout required to allow grid generation
