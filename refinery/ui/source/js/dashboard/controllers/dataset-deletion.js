@@ -63,7 +63,10 @@ DataSetDeleteCtrl.prototype.delete = function () {
     .catch(function (error) {
       that.deletionMessage = error.data;
       that.isDeleting = false;
-      that.deleteSuccessful = false;
+      that.dataSets.newOrCachedCache(undefined, true);
+      that.dashboardDataSetsReloadService.reload(true);
+      that.analyses.newOrCachedCache(undefined, true);
+      that.analysesReloadService.reload();
       that.$log.error(error);
     });
 };
