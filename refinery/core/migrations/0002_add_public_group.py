@@ -23,7 +23,7 @@ def backwards(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0003_auto_20161027_1433'),
+        ('core', '0001_initial'),
     ]
 
     operations = [

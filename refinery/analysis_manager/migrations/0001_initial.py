@@ -8,6 +8,7 @@ import django_extensions.db.fields
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('core', '0001_initial'),
     ]
 
     operations = [
@@ -24,5 +25,11 @@ class Migration(migrations.Migration):
             options={
             },
             bases=(models.Model,),
+        ),
+        migrations.AddField(
+            model_name='analysisstatus',
+            name='analysis',
+            field=models.ForeignKey(to='core.Analysis'),
+            preserve_default=True,
         ),
     ]
