@@ -252,13 +252,16 @@ class neo4j {
     location    => 'http://debian.neo4j.org/repo',
     release     => 'stable/',
     repos       => '',
-    key         => '1EEFB8767D4924B86EAD08A459D700E4D37F5F19',
-    key_source  => 'https://debian.neo4j.org/neotechnology.gpg.key',
-    include_src => false,
+    key         => {
+      'id'     => '1EEFB8767D4924B86EAD08A459D700E4D37F5F19',
+      'source' => 'https://debian.neo4j.org/neotechnology.gpg.key',
+    },
   }
   ->
   package { 'neo4j':
-    ensure => '2.3.1',
+    ensure  => '2.3.1',
+    # https://forge.puppet.com/puppetlabs/apt/readme#adding-new-sources-or-ppas
+    require => Class['apt::update'],
   }
   ->
   limits::fragment {
@@ -336,7 +339,7 @@ include owl2neo4j
 include apt
 # workaround for https://github.com/parklab/refinery-platform/issues/1181
 apt::key { 'rabbitmq':
-  key    => '0A9AF2115F4687BD29803A206B73A36E6026DFCA',
+  id     => '0A9AF2115F4687BD29803A206B73A36E6026DFCA',
   before => Class['::rabbitmq']
 }
 
@@ -349,16 +352,21 @@ class ui {
     location    => 'https://deb.nodesource.com/node_6.x',
     release     => 'trusty',
     repos       => 'main',
-    key         => '9FD3B784BC1C6FC31A8A0A1C1655A0AB68576280',
-    key_server  => 'keyserver.ubuntu.com',
-    include_src => true,
-    include_deb => true
+    key         => {
+      'id'     => '9FD3B784BC1C6FC31A8A0A1C1655A0AB68576280',
+      'server' => 'keyserver.ubuntu.com',
+    },
+    include => {
+      'src' => true,
+      'deb' => true,
+    },
   }
-
+  ->
   package { 'nodejs':
     name    => 'nodejs',
     ensure  => latest,
-    require => Apt::Source['nodejs']
+    # https://forge.puppet.com/puppetlabs/apt/readme#adding-new-sources-or-ppas
+    require => Class['apt::update'],
   }
   ->
   package {
