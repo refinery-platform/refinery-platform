@@ -131,7 +131,7 @@
 
         {% if user.is_authenticated %}
           <i class="fa fa-user"></i>
-          <a href="{% url "user" user.get_profile.uuid %}" tabindex=5>
+          <a id="refinery-user" href="{% url "user" user.get_profile.uuid %}" tabindex=5>
           {% if user.first_name != "" or user.last_name != "" %}
             {{ user.first_name }} {{ user.last_name }}
           {% else %}
