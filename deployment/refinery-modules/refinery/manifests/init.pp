@@ -97,26 +97,30 @@ exec { "migrate":
   ],
 }
 ->
+exec { "create_superuser":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata superuser.json",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+  require     => Exec['migrate'],
+}
+->
+exec { "create_default_users":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata default-users.json",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+  require     => Exec['migrate'],
+}
+->
 exec { "set_up_refinery_site_name":
   command     => "${virtualenv}/bin/python ${django_root}/manage.py set_up_site_name '${site_name}' '${site_url}'",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
+  require     => Exec['migrate'],
 }
 ->
-exec { "create_users":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata default-users.json",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-->
-exec { "create_guest":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py create_user 'guest' 'guest' 'guest@example.com' 'Guest' '' ''",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
 
 file { "/opt":
   ensure => directory,

@@ -8,24 +8,23 @@
     "is_active": true,
     "is_superuser": false,
     "is_staff": false,
-    "groups": [100],
+    "groups": [],
     "user_permissions": []
   }
 },
 {
-  "pk": 1,
+  "pk": 2,
   "model": "auth.user",
   "fields": {
-    "username": "admin",
-    "first_name": "",
-    "last_name": "",
-    "is_active": true,
-    "is_superuser": true,
-    "is_staff": true,
-    "groups": [100],
+    "username": "guest",
+    "first_name": "GuestFirst",
+    "last_name": "GuestLast",
+    "is_active": false,
+    "is_superuser": false,
+    "is_staff": false,
+    "groups": [],
     "user_permissions": [],
-    "password": "pbkdf2_sha256$10000$cBxZCHhDBREZ$tFzoC6SdTQlE59Pw8M86w+s+P5ecCXpoReKJvlGurtk=",
-    "email": "admin@example.com"
+    "password": "pbkdf2_sha256$15000$XbHNZbtNuXEB$Gb0MCWcC04JI8DSNDTQSEmtnEmP64/BcrFmRjlPCqr4=",
+    "email": "guest@example.com"
   }
-}
-]
+}]
