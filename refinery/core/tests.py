@@ -2191,7 +2191,7 @@ class DataSetApiV2Tests(APITestCase):
         self.delete_response = self.view(self.delete_request1,
                                          self.dataset.uuid)
 
-        self.assertEqual(self.delete_response.data['status'], 200)
+        self.assertEqual(self.delete_response.status_code, 200)
 
         self.assertEqual(DataSet.objects.all().count(), 1)
 
@@ -2203,7 +2203,7 @@ class DataSetApiV2Tests(APITestCase):
 
         self.delete_response = self.view(self.delete_request2,
                                          self.dataset2.uuid)
-        self.assertEqual(self.delete_response.data['status'], 200)
+        self.assertEqual(self.delete_response.status_code, 200)
 
         self.assertEqual(DataSet.objects.all().count(), 0)
 
@@ -2375,7 +2375,7 @@ class AnalysisApiV2Tests(APITestCase):
         self.delete_response = self.view(self.delete_request1,
                                          self.analysis.uuid)
 
-        self.assertEqual(self.delete_response.data['status'], 200)
+        self.assertEqual(self.delete_response.status_code, 200)
 
         self.assertEqual(Analysis.objects.all().count(), 1)
 
@@ -2387,7 +2387,7 @@ class AnalysisApiV2Tests(APITestCase):
 
         self.delete_response = self.view(self.delete_request2,
                                          self.analysis2.uuid)
-        self.assertEqual(self.delete_response.data['status'], 200)
+        self.assertEqual(self.delete_response.status_code, 200)
 
         self.assertEqual(Analysis.objects.all().count(), 0)
 
