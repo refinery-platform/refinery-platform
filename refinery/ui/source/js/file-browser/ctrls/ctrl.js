@@ -25,7 +25,7 @@ function FileBrowserCtrl (
   // Ui-grid parameters
   vm.gridApi = undefined; // avoids duplicate grid generation
   vm.queryKeys = Object.keys($location.search());
-  // used by ui to select/deselect
+  // used by ui to select/deselect, each attribute has a list of filter fields
   vm.selectedField = {};
   vm.selectNodesCount = 0;
   vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
@@ -416,11 +416,7 @@ function FileBrowserCtrl (
         // for attribute filter directive, drop panels in query
         $scope.$broadcast('rf/attributeFilter-ready');
         // update selected rows in ui and set selected nodes count
-        if (selectedNodesService.selectedNodes.length > 0) {
-          selectedNodesService.selectNodesCount = selectedNodesService
-            .selectedNodesUuids.length;
-          correctRowSelectionInUI();
-        }
+        correctRowSelectionInUI();
       }, 0);
     }
   };
