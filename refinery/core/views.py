@@ -13,7 +13,8 @@ from django.contrib.sites.models import get_current_site, Site
 from django.contrib.sites.models import RequestSite
 from django.core.urlresolvers import reverse
 from django.http import (
-    HttpResponse, HttpResponseForbidden, HttpResponseRedirect)
+    HttpResponse, HttpResponseForbidden, HttpResponseRedirect,
+    HttpResponseBadRequest, HttpResponseNotFound, HttpResponseServerError)
 from django.http import Http404
 
 from django.shortcuts import render_to_response, get_object_or_404
@@ -1072,34 +1073,27 @@ class DataSetsViewSet(APIView):
 
     def delete(self, request, uuid):
         if not request.user.is_authenticated():
-            return HttpResponse(
-                status=status.HTTP_403_FORBIDDEN,
+            return HttpResponseForbidden(
                 content="User {} is not authenticated".format(request.user))
         else:
             try:
                 dataset_deleted = DataSet.objects.get(uuid=uuid).delete()
             except NameError as e:
                 logger.error(e)
-                return HttpResponse(status=status.HTTP_400_BAD_REQUEST,
-                                    content="Bad Request")
+                return HttpResponseBadRequest(content="Bad Request")
             except DataSet.DoesNotExist as e:
                 logger.error(e)
-                return HttpResponse(
-                    status=status.HTTP_404_NOT_FOUND,
-                    content="DataSet with UUID: {} not found.".format(uuid))
+                return HttpResponseNotFound(content="DataSet with UUID: {} "
+                                                    "not found.".format(uuid))
             except DataSet.MultipleObjectsReturned as e:
                 logger.error(e)
-                return HttpResponse(
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    content="Multiple Datasets returned for this request")
+                return HttpResponseServerError(
+                    content="Multiple DataSets returned for this request")
             else:
                 if dataset_deleted[0]:
-                    return Response({
-                        "status": status.HTTP_200_OK,
-                        "content": dataset_deleted[1]})
+                    return Response({"data": dataset_deleted[1]})
                 else:
-                    return HttpResponse(status=status.HTTP_400_BAD_REQUEST,
-                                        content=dataset_deleted[1])
+                    return HttpResponseBadRequest(content=dataset_deleted[1])
 
 
 class AnalysesViewSet(APIView):
@@ -1110,34 +1104,27 @@ class AnalysesViewSet(APIView):
 
     def delete(self, request, uuid):
         if not request.user.is_authenticated():
-            return HttpResponse(
-                status=status.HTTP_403_FORBIDDEN,
+            return HttpResponseForbidden(
                 content="User {} is not authenticated".format(request.user))
         else:
             try:
                 analysis_deleted = Analysis.objects.get(uuid=uuid).delete()
             except NameError as e:
                 logger.error(e)
-                return HttpResponse(status=status.HTTP_400_BAD_REQUEST,
-                                    content="Bad Request")
+                return HttpResponseBadRequest(content="Bad Request")
             except Analysis.DoesNotExist as e:
                 logger.error(e)
-                return HttpResponse(
-                    status=status.HTTP_404_NOT_FOUND,
-                    content="Analysis with UUID: {} not found.".format(uuid))
+                return HttpResponseNotFound(content="Analysis with UUID: {} "
+                                                    "not found.".format(uuid))
             except Analysis.MultipleObjectsReturned as e:
                 logger.error(e)
-                return HttpResponse(
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                return HttpResponseServerError(
                     content="Multiple Analyses returned for this request")
             else:
                 if analysis_deleted[0]:
-                    return Response({
-                        "status": status.HTTP_200_OK,
-                        "content": analysis_deleted[1]})
+                    return Response({"data": analysis_deleted[1]})
                 else:
-                    return HttpResponse(status=status.HTTP_400_BAD_REQUEST,
-                                        content=analysis_deleted[1])
+                    return HttpResponseBadRequest(content=analysis_deleted[1])
 
 
 class CustomRegistrationView(RegistrationView):

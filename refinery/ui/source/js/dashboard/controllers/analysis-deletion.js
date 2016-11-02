@@ -53,7 +53,7 @@ AnalysisDeleteCtrl.prototype.delete = function () {
     })
     .$promise
     .then(function (response) {
-      that.deletionMessage = response.content;
+      that.deletionMessage = response.data;
       that.isDeleting = false;
       that.deleteSuccessful = true;
       that.dataSets.newOrCachedCache(undefined, true);
