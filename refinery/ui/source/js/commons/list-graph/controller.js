@@ -317,6 +317,29 @@ function ListGraphCtrl (
     }
   }.bind(this));
 
+  this.$rootScope.$on('dashboardVisNodeQuery', function (event, data) {
+    // List graph might not be ready yet when a user hovers over a data set form
+    // the list of data sets.
+    if (this.listGraph && data.source !== 'listGraph' && !data.init) {
+      this.updatePrecisionRecall(Object.keys(this.graph[data.nodeUri].dataSets));
+      this.listGraph.trigger('d3ListGraphNodeQuery', {
+        id: data.nodeUri,
+        mode: data.mode
+      });
+    }
+  }.bind(this));
+
+  this.$rootScope.$on('dashboardVisNodeUnquery', function (event, data) {
+    // List graph might not be ready yet when a user hovers over a data set form
+    // the list of data sets.
+    if (this.listGraph && data.source !== 'listGraph' && !data.init) {
+      this.updatePrecisionRecall(Object.keys(this.graph[data.nodeUri].dataSets));
+      this.listGraph.trigger('d3ListGraphNodeUnquery', {
+        id: data.nodeUri
+      });
+    }
+  }.bind(this));
+
   this.$rootScope.$on('dashboardVisVisibleDepth', function (event, data) {
     // List graph might not be ready yet when a user hovers over a data set form
     // the list of data sets.
