@@ -1134,7 +1134,7 @@ DashboardCtrl.prototype.getDataSetsPanelHeight = function () {
  * @return  {String}             Original URI.
  */
 DashboardCtrl.prototype.getOriginalUri = function (eventData) {
-  return eventData.clone ? eventData.clonedFromUri : eventData.nodeUri;
+  return eventData.nodeUri;
 };
 
 /* ----------------------------------- R ------------------------------------ */

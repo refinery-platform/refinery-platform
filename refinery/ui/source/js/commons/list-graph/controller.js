@@ -82,12 +82,8 @@ function ListGraphCtrl (
   pubSub.on('d3ListGraphNodeEnter', function (data) {
     this.$rootScope.$emit(
       'dashboardVisNodeEnter', {
-        clone: data.clone,
-        clonedFromUri: data.clonedFromId,
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSetsIds(
-          this.graph[data.clone ? data.clonedFromId : data.id]
-        ),
+        dataSetIds: this.getAssociatedDataSetsIds(this.graph[data.id]),
         source: 'listGraph'
       }
     );
@@ -96,12 +92,8 @@ function ListGraphCtrl (
   pubSub.on('d3ListGraphNodeLeave', function (data) {
     this.$rootScope.$emit(
       'dashboardVisNodeLeave', {
-        clone: data.clone,
-        clonedFromUri: data.clonedFromId,
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSetsIds(
-          this.graph[data.clone ? data.clonedFromId : data.id]
-        ),
+        dataSetIds: this.getAssociatedDataSetsIds(this.graph[data.id]),
         source: 'listGraph'
       }
     );
@@ -110,12 +102,8 @@ function ListGraphCtrl (
   pubSub.on('d3ListGraphNodeLock', function (data) {
     this.$rootScope.$emit(
       'dashboardVisNodeLock', {
-        clone: data.clone,
-        clonedFromUri: data.clonedFromId,
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSetsIds(
-          this.graph[data.clone ? data.clonedFromId : data.id]
-        ),
+        dataSetIds: this.getAssociatedDataSetsIds(this.graph[data.id]),
         source: 'listGraph'
       }
     );
@@ -124,12 +112,8 @@ function ListGraphCtrl (
   pubSub.on('d3ListGraphNodeUnlock', function (data) {
     this.$rootScope.$emit(
       'dashboardVisNodeUnlock', {
-        clone: data.clone,
-        clonedFromUri: data.clonedFromId,
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSetsIds(
-          this.graph[data.clone ? data.clonedFromId : data.id]
-        ),
+        dataSetIds: this.getAssociatedDataSetsIds(this.graph[data.id]),
         source: 'listGraph'
       }
     );
@@ -139,22 +123,12 @@ function ListGraphCtrl (
     this.$rootScope.$emit(
       'dashboardVisNodeLockChange', {
         lock: {
-          clone: data.lock.clone,
-          clonedFromUri: data.lock.clonedFromId,
           nodeUri: data.lock.id,
-          dataSetIds: this.getAssociatedDataSetsIds(
-            this.graph[data.lock.clone ? data.lock.clonedFromId : data.lock.id]
-          )
+          dataSetIds: this.getAssociatedDataSetsIds(this.graph[data.lock.id])
         },
         unlock: {
-          clone: data.unlock.clone,
-          clonedFromUri: data.unlock.clonedFromId,
           nodeUri: data.unlock.id,
-          dataSetIds: this.getAssociatedDataSetsIds(
-            this.graph[
-              data.unlock.clone ? data.unlock.clonedFromId : data.unlock.id
-              ]
-          )
+          dataSetIds: this.getAssociatedDataSetsIds(this.graph[data.unlock.id])
         },
         source: 'listGraph'
       }
@@ -164,12 +138,8 @@ function ListGraphCtrl (
   pubSub.on('d3ListGraphNodeRoot', function (data) {
     this.$rootScope.$emit(
       'dashboardVisNodeRoot', {
-        clone: data.clone,
-        clonedFromUri: data.clonedFromId,
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSetsIds(
-          this.graph[data.clone ? data.clonedFromId : data.id]
-        ),
+        dataSetIds: this.getAssociatedDataSetsIds(this.graph[data.id]),
         source: 'listGraph'
       }
     );
@@ -178,12 +148,8 @@ function ListGraphCtrl (
   pubSub.on('d3ListGraphNodeUnroot', function (data) {
     this.$rootScope.$emit(
       'dashboardVisNodeUnroot', {
-        clone: data.clone,
-        clonedFromUri: data.clonedFromId,
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSetsIds(
-          this.graph[data.clone ? data.clonedFromId : data.id]
-        ),
+        dataSetIds: this.getAssociatedDataSetsIds(this.graph[data.id]),
         source: 'listGraph'
       }
     );
@@ -192,14 +158,8 @@ function ListGraphCtrl (
   pubSub.on('d3ListGraphNodeReroot', function (data) {
     this.$rootScope.$emit(
       'dashboardVisNodeReroot', {
-        clone: data.rooted.clone,
-        clonedFromUri: data.rooted.clonedFromId,
         nodeUri: data.rooted.id,
-        dataSetIds: this.getAssociatedDataSetsIds(
-          this.graph[
-            data.rooted.clone ? data.rooted.clonedFromId : data.rooted.id
-            ]
-        ),
+        dataSetIds: this.getAssociatedDataSetsIds(this.graph[data.rooted.id]),
         source: 'listGraph'
       }
     );
@@ -208,12 +168,8 @@ function ListGraphCtrl (
   pubSub.on('d3ListGraphNodeQuery', function (data) {
     this.$rootScope.$emit(
       'dashboardVisNodeQuery', {
-        clone: data.clone,
-        clonedFromUri: data.clonedFromId,
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSetsIds(
-          this.graph[data.clone ? data.clonedFromId : data.id]
-        ),
+        dataSetIds: this.getAssociatedDataSetsIds(this.graph[data.id]),
         mode: data.mode,
         source: 'listGraph'
       }
@@ -223,12 +179,8 @@ function ListGraphCtrl (
   pubSub.on('d3ListGraphNodeUnquery', function (data) {
     this.$rootScope.$emit(
       'dashboardVisNodeUnquery', {
-        clone: data.clone,
-        clonedFromUri: data.clonedFromId,
         nodeUri: data.id,
-        dataSetIds: this.getAssociatedDataSetsIds(
-          this.graph[data.clone ? data.clonedFromId : data.id]
-        ),
+        dataSetIds: this.getAssociatedDataSetsIds(this.graph[data.id]),
         source: 'listGraph'
       }
     );
@@ -239,14 +191,8 @@ function ListGraphCtrl (
 
     for (var i = data.length; i--;) {
       terms.push({
-        clone: data[i].data.clone,
-        clonedFromUri: data[i].data.clonedFromId,
         nodeUri: data[i].data.id,
-        dataSetIds: this.getAssociatedDataSetsIds(
-          this.graph[
-            data[i].data.clone ? data[i].data.clonedFromId : data[i].data.id
-            ]
-        ),
+        dataSetIds: this.getAssociatedDataSetsIds(this.graph[data[i].data.id]),
         mode: data[i].data.mode,
         query: data[i].name === 'd3ListGraphNodeQuery'
       });
@@ -264,7 +210,7 @@ function ListGraphCtrl (
     var uri = this.rootIds[0];
 
     if (data.id) {
-      uri = data.clone ? data.clonedFromId : data.id;
+      uri = data.id;
     }
 
     this.updatePrecisionRecall(Object.keys(this.graph[uri].dataSets));

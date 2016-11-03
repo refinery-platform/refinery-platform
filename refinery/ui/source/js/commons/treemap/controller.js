@@ -70,24 +70,6 @@ function endAll (transition, callback) {
 }
 
 /**
- * Internal method for getting the correct URI from an event data object.
- *
- * @method  _getUri
- * @author  Fritz Lekschas
- * @date    2016-10-31
- * @param   {Object}  data  Event data object.
- * @return  {String}        URI.
- */
-function _getUri (data) {
-  var uri = data.nodeUri;
-  if (data.clone) {
-    uri = data.clonedFromUri;
-  }
-
-  return uri;
-}
-
-/**
  * TreeMap controller constructor.
  *
  * @method  TreemapCtrl
@@ -417,19 +399,11 @@ TreemapCtrl.prototype.addEventListeners = function () {
 
   // Listen to triggers from outside
   this.$rootScope.$on('dashboardVisNodeEnter', function (event, data) {
-    var uri = data.nodeUri;
-    if (data.clone) {
-      uri = data.clonedFromUri;
-    }
-    this.findNodesToHighlight(uri);
+    this.findNodesToHighlight(data.nodeUri);
   }.bind(this));
 
   this.$rootScope.$on('dashboardVisNodeLeave', function (event, data) {
-    var uri = data.nodeUri;
-    if (data.clone) {
-      uri = data.clonedFromUri;
-    }
-    this.findNodesToHighlight(uri, true);
+    this.findNodesToHighlight(data.nodeUri, true);
   }.bind(this));
 
   this.$rootScope.$on('dashboardVisNodeFocus', function (event, data) {
@@ -459,9 +433,6 @@ TreemapCtrl.prototype.addEventListeners = function () {
   this.$rootScope.$on('dashboardVisNodeRoot', function (event, data) {
     if (data.source !== 'treeMap') {
       var uri = data.nodeUri;
-      if (data.clone) {
-        uri = data.clonedFromUri;
-      }
       if (!this.nodeIndex[uri]) {
         this.$log.error('Node not found: ', uri);
       } else {
@@ -478,22 +449,17 @@ TreemapCtrl.prototype.addEventListeners = function () {
 
   this.$rootScope.$on('dashboardVisNodeUnroot', function (event, data) {
     if (data.source !== 'treeMap') {
-      if (!data.clone) {
-        this.setRootNode({
-          ontId: this.absRootNode.ontId,
-          uri: this.absRootNode.uri,
-          branchId: 0
-        }, true);
-      }
+      this.setRootNode({
+        ontId: this.absRootNode.ontId,
+        uri: this.absRootNode.uri,
+        branchId: 0
+      }, true);
     }
   }.bind(this));
 
   this.$rootScope.$on('dashboardVisNodeReroot', function (event, data) {
     if (data.source !== 'treeMap') {
       var uri = data.nodeUri;
-      if (data.clone) {
-        uri = data.clonedFromUri;
-      }
       if (!this.nodeIndex[uri]) {
         this.$log.error('Node not found: ', uri);
       } else {
@@ -509,7 +475,7 @@ TreemapCtrl.prototype.addEventListeners = function () {
   this.$rootScope.$on(
     'dashboardVisNodeLock', function (event, data) {
       if (data.source !== 'treeMap') {
-        this.nodeLockHandler(_getUri(data), true);
+        this.nodeLockHandler(data.nodeUri, true);
       }
     }.bind(this)
   );
