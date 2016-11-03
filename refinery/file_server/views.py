@@ -166,10 +166,8 @@ def _get_tdf_file_from_cache(session, uuid):
 
 
 def cache_tdf(request, uuid, refresh=False):
-    # TODO: call asynchronously
-    file_store_item_uuid = file_store.tasks.read(uuid)
     try:
-        file_store_item = FileStoreItem.objects.get(uuid=file_store_item_uuid)
+        file_store_item = FileStoreItem.objects.get(uuid=uuid)
     except (FileStoreItem.DoesNotExist,
             FileStoreItem.MultipleObjectsReturned) as e:
         logger.error("Couldn't properly fetch FileStoreItem: %s", e)
@@ -219,10 +217,8 @@ def get_tdf_profile(request, uuid, sequence_name, zoom_level, start_location,
     if start_location < 1:
         start_location = 1
 
-    file_store_item_uuid = file_store.tasks.read(uuid)
-
     try:
-        file_store_item = FileStoreItem.objects.get(uuid=file_store_item_uuid)
+        file_store_item = FileStoreItem.objects.get(uuid=uuid)
     except(FileStoreItem.DoesNotExist,
            FileStoreItem.MultipleObjectsReturned) as e:
         logger.error("Couldn't properly fetch FileStoreItem: %s", e)

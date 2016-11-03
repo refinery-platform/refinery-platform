@@ -250,61 +250,6 @@ def begin_auxiliary_node_generation(**kwargs):
 
 
 @task()
-def read(uuid):
-    '''Return a FileStoreItem model instance given a UUID.
-
-    :param uuid: UUID of a FileStoreItem.
-    :type uuid: str.
-    :returns: FileStoreItem -- Model instance if reading the file succeeded,
-    None if failed.
-
-    '''
-    return FileStoreItem.objects.get_item(uuid).uuid
-
-
-@task()
-def delete(uuid):
-    '''Delete FileStoreItem given a UUID.
-
-    :param uuid: UUID of a FileStoreItem.
-    :type uuid: str.
-    :returns: bool - True if deletion succeeded, False if failed.
-
-    '''
-    logger.debug("Deleting FileStoreItem with UUID '%s'", uuid)
-
-    item = FileStoreItem.objects.get_item(uuid)
-    if item:
-        item.delete()
-        logger.info("FileStoreItem deleted")
-        return True
-    else:
-        logger.error("Could not delete FileStoreItem with UUID '%s'", uuid)
-        return False
-
-
-@task()
-def update(uuid, source):
-    """Replace the file using the new source while keeping the same UUID.
-
-    :param uuid: UUID of a FileStoreItem.
-    :type uuid: str.
-    :param source: New source of the FileStoreItem.
-    :type source: str.
-    :returns: FileStoreItem UUID if update succeeded, None if
-    failed.
-    """
-    # TODO: check for number of affected rows to determine if there was an
-    # error
-    # https://docs.djangoproject.com/en/dev/ref/models/querysets/#django.db.models.query.QuerySet.update
-    FileStoreItem.objects.filter(uuid=uuid).update(source=source)
-
-    # import new file from updated source
-    # TODO: call import_file as subtask?
-    return import_file(uuid, refresh=True)
-
-
-@task()
 def rename(uuid, name):
     """Change name of the file on disk and return the updated FileStoreItem
     UUID.
