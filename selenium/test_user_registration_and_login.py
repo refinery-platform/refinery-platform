@@ -3,8 +3,8 @@ import pytest
 from time import time
 from django.contrib.auth.models import User
 
-from .utils import assert_body_text, wait_until_id_visible, DEFAULT_WAIT, \
-    wait_until_id_clickable
+from utils.selenium_utils import (assert_body_text, wait_until_id_visible,
+                                  DEFAULT_WAIT, wait_until_id_clickable)
 
 base_url = os.environ['BASE_URL']
 not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')

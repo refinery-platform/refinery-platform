@@ -1,6 +1,6 @@
 import os
 import pytest
-from .utils import assert_body_text
+from utils.selenium_utils import assert_body_text
 
 base_url = os.environ['BASE_URL']
 not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
