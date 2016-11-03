@@ -336,13 +336,6 @@ class owl2neo4j {
 }
 include owl2neo4j
 
-include apt
-# workaround for https://github.com/parklab/refinery-platform/issues/1181
-apt::key { 'rabbitmq':
-  id     => '0A9AF2115F4687BD29803A206B73A36E6026DFCA',
-  before => Class['::rabbitmq']
-}
-
 include '::rabbitmq'
 
 class ui {
