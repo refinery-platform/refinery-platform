@@ -75,6 +75,10 @@ function ListGraphCtrl (
         }],
         customTopbarButtons: this.customTopbarButtons || []
       });
+
+      this.initVisDepth.then(function (depth) {
+        this.listGraph.trigger('d3ListGraphActiveLevel', depth);
+      }.bind(this));
     }.bind(this));
   }
 

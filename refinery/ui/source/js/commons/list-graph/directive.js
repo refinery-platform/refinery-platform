@@ -5,7 +5,8 @@ function listGraphDirective () {
     bindToController: {
       graphData: '=graph',
       valuePropertyName: '=valuePropertyName',
-      customTopbarButtons: '=customTopbarButtons'
+      customTopbarButtons: '=customTopbarButtons',
+      initVisDepth: '=initVisDepth'
     },
     controller: 'ListGraphCtrl',
     controllerAs: 'listGraph',

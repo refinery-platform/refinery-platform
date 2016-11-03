@@ -7,7 +7,8 @@ function VisWrapperCtrl (
   DashboardIntrosSatoriOverview,
   DashboardIntrosSatoriListGraph,
   DashboardIntrosSatoriTreemap,
-  dashboardIntroStarter
+  dashboardIntroStarter,
+  treemapContext
 ) {
   var self = this;
 
@@ -17,6 +18,8 @@ function VisWrapperCtrl (
   self.introsSatoriOverview = new DashboardIntrosSatoriOverview(this);
   self.introsSatoriListGraph = new DashboardIntrosSatoriListGraph();
   self.introsSatoriTreemap = new DashboardIntrosSatoriTreemap();
+
+  self.initVisDepth = treemapContext.get('initVisDepth');
 
   // Absolute root node: OWL:Thing
   // The absolute root node is used for pruning the graph as it acts as a
@@ -200,5 +203,6 @@ angular
     'DashboardIntrosSatoriListGraph',
     'DashboardIntrosSatoriTreemap',
     'dashboardIntroStarter',
+    'treemapContext',
     VisWrapperCtrl
   ]);

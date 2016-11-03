@@ -74,6 +74,9 @@ function DashboardCtrl (
   this.dataSetsPanelHeight = 1;
   this.dataCartPanelHeight = 0;
 
+  this.initVisDepth = this.$q.defer();
+  this.treemapContext.set('initVisDepth', this.initVisDepth.promise);
+
   // Check authentication
   // This should ideally be moved to the global APP controller, which we don't
   // have right now.
@@ -221,6 +224,7 @@ function DashboardCtrl (
             ontId: toParams.context,
             visibleDepth: toParams.visibleDepth
           };
+          this.initVisDepth.resolve(toParams.visibleDepth);
         }
         // Need to wait another digestion cycle to ensure the layout is set
         // properly.
