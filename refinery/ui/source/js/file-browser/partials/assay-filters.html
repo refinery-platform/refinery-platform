@@ -9,9 +9,6 @@
       <div class="panel panel-default">
         <div class="panel-heading" role="tab">
           <h4 class="panel-title">
-            <i class="fa fa-caret-right fa-pull-left"
-              id="attribute-panel-{{attribute | replaceWhiteSpaceWithHyphen}}"
-              aria-hidden="true"></i>
           <div
             role="button"
             data-toggle="collapse"
@@ -19,6 +16,9 @@
             ng-click="dropAttributePanel($event, attribute, fields)"
             aria-expanded="true"
             aria-controls="{{ attribute }}">
+             <i class="fa fa-caret-right fa-pull-left"
+              id="attribute-panel-{{attribute | replaceWhiteSpaceWithHyphen}}"
+              aria-hidden="true"></i>
              {{ attribute }} &nbsp; ({{ fields.facetObj.length }})
           </div>
           </h4>
@@ -75,9 +75,6 @@
       <div class="panel panel-default">
         <div class="panel-heading" role="tab">
           <h4 class="panel-title">
-            <i class="fa fa-caret-right fa-pull-left"
-              id="attribute-panel-Analysis"
-              aria-hidden="true"></i>
           <div
             role="button"
             data-toggle="collapse"
@@ -85,6 +82,9 @@
             ng-click="dropAttributePanel($event, 'Analysis', fields)"
             aria-expanded="true"
             aria-controls="Analysis">
+             <i class="fa fa-caret-right fa-pull-left"
+              id="attribute-panel-Analysis"
+              aria-hidden="true"></i>
             {{ analysis }}
           </div>
           </h4>

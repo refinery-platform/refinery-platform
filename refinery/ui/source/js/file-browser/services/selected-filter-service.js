@@ -26,7 +26,7 @@ function selectedFilterService ($location) {
    * @param {string} fieldName - name of field
    * @param {string} value - True adds name or null removes name
   */
-  var updateUrlQuery = function (fieldName, value) {
+  vm.updateUrlQuery = function (fieldName, value) {
     $location.search(fieldName, value);
   };
 
@@ -44,19 +44,19 @@ function selectedFilterService ($location) {
     if (activeFields[field] && vm.selectedFieldList[attribute]) {
       // checks if selected fields exists in the attibute object
       if (vm.selectedFieldList[attribute].indexOf(field) > -1) {
-        updateUrlQuery(field, activeFields[field]);
+        vm.updateUrlQuery(field, activeFields[field]);
       } else {
         vm.selectedFieldList[attribute].push(field);
-        updateUrlQuery(field, activeFields[field]);
+        vm.updateUrlQuery(field, activeFields[field]);
       }
     // Add new attribute to selectedFieldList
     } else if (activeFields[field]) {
       vm.selectedFieldList[attribute] = [field];
-      updateUrlQuery(field, activeFields[field]);
+      vm.updateUrlQuery(field, activeFields[field]);
     // remove empty fields
     } else if (vm.selectedFieldList[attribute]) {
       removeSelectedField(attribute, field);
-      updateUrlQuery(field, null);
+      vm.updateUrlQuery(field, null);
     }
     return vm.selectedFieldList;
   };
