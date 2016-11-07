@@ -6,7 +6,9 @@ import django
 
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.dev")
-    os.environ["DJANGO_SETTINGS_MODULE"] = 'config.settings.dev'
+
+    os.environ["DJANGO_SETTINGS_MODULE"] = os.environ.get(
+        "DJANGO_SETTINGS_MODULE", '')
 
     from django.core.management import execute_from_command_line
 
