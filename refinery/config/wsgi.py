@@ -1,13 +1,14 @@
-import os
+"""
+WSGI config for a Django 1.7 project.
 
-# This application object is used by the development server as well as any WSGI
-# server configured to use this file.
+It exposes the WSGI callable as a module-level variable named ``application``.
+
+For more information on this file, see
+https://docs.djangoproject.com/en/1.7/howto/deployment/wsgi/
+"""
+
+import os
 from django.core.wsgi import get_wsgi_application
 
-os.environ["DJANGO_SETTINGS_MODULE"] = 'config.settings.prod'
-_application = get_wsgi_application()
-
-
-def application(environ, start_response):
-    # pass the WSGI environment variable on through to os.environ
-    return _application(environ, start_response)
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.dev")
+application = get_wsgi_application()
