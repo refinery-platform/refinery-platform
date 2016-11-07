@@ -115,7 +115,7 @@ function DashboardIntrosDataSetView (
             '.data-set-surrogate'
           )[0];
         },
-        dynamicElementPosition: 'right',
+        dynamicPosition: 'right',
         intro:
           'Each data set is represented by a small snippet, called ' +
           '<em>surrogate</em>, showing the data set\'s title, sharing ' +

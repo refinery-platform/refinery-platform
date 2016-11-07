@@ -5,7 +5,8 @@ function DashboardIntrosSatoriListGraph (
   introJsBeforeChangeEvent,
   dashboardIntroStarter,
   dashboardIntroSatoriEasterEgg,
-  triggerSvgEvent
+  triggerSvgEvent,
+  $
 ) {
   /**
    * Constructor
@@ -48,59 +49,75 @@ function DashboardIntrosSatoriListGraph (
 
     self.beforeChangeEvent = introJsBeforeChangeEvent();
 
+    function icon (name) {
+      return (
+        '<svg class="icon-inline">' +
+        '  <use' +
+        '    xmlns:xlink="http://www.w3.org/1999/xlink"' +
+        '    xlink:href="/static/vendor/d3-list-graph/dist/icons.svg#' + name + '">' +
+        '  </use>' +
+        '</svg>'
+      );
+    }
+
+
     self.options = angular.copy(introJsDefaultOptions);
     self.options.steps = [
       {
         element: '#list-graph-wrapper',
         intro:
-        'This is the list graph showing the ontological relationships of' +
-        'annotation terms.',
+        'This is the list graph showing the relationships of data set ' +
+        'attributes. The relationships are defined by multiple ontologies.',
         position: 'left'
       },
       {
         element: '#list-graph-wrapper .top-bar',
         intro:
-          'This is the global that lets you sort the nodes by ' +
+          'This is the global top-bar that lets you sort nodes by ' +
           '<em>precision</em>, <em>recall</em>, and <em>name</em>.<br/><br/>' +
           'You can also change the way precision and recall are displayed by ' +
-          'clicking on <em>one bar</em> or <em>two bars</em>.<br/><br/>A ' +
-          'click on the <em>zoom out</em> button shows the complete graph.' +
-          '<br/><br/>Finally, a click on the button on the very right ' +
-          'switches to the local column controls, as you will see next&hellip;',
+          'clicking on <em>one bar ' + icon('one-bar') + '</em> or ' +
+          '<em>two bars ' + icon('two-bars') + '</em>.<br/><br/>A ' +
+          'click on the <em>zoom out ' + icon('zoom-out') + '</em> button ' +
+          'shows the complete graph.<br/><br/>Finally, a click on the button ' +
+          'on the very right ' + icon('arrow-down') + ' switches to the ' +
+          'local column-wise controls, as you will see next&hellip;',
         position: 'left'
       },
       {
         element: '#list-graph-wrapper .top-bar',
         intro:
-          '&hellip;now you see the column control that let you sort each ' +
-          'column individually by <em>precision</em> and<em>recall</em>.',
+          '&hellip;now you can sort each column individually by ' +
+          '<em>precision</em> and<em>recall</em>.',
         position: 'left',
         beforeExecutives: function () {
           angular
-            .element('#satori-list-graph .top-bar .control-switch')
+            .element('#list-graph-wrapper .top-bar .control-switch')
             .trigger('click');
         },
         afterExecutives: function () {
           angular
-            .element('#satori-list-graph .top-bar .control-switch')
+            .element('#list-graph-wrapper .top-bar .control-switch')
             .trigger('click');
         }
       },
       {
         element: '#list-graph-wrapper .global-controls .sort-precision',
         intro:
-          'Precision is defined as the number of retrieved data sets ' +
-          'annotated with an ontology term divided by the total number of ' +
-          'retrieved data sets.<br/><br/>E.g., if 6 out of 12 data sets ' +
-          'annotated with <em>cancer</em> have been returned in a search for ' +
-          '<em>liver</em> than the precision of <em>cancer</em> is 0.5. In ' +
-          'other words, half of all retrieved data sets are related to ' +
-          '<em>cancer</em>.',
+          '<strong>Precision</strong> (highlighted in blue) is defined as ' +
+          'the number of retrieved ' +
+          'data sets annotated with an ontology term divided by the total ' +
+          'number of retrieved data sets.<br/><br/>E.g., if 6 out of 12 ' +
+          'data sets annotated with <em>cancer</em> have been returned in a ' +
+          'search for <em>liver</em> than the precision of <em>cancer</em> ' +
+          'is 0.5. In other words, half of all retrieved data sets are ' +
+          'related to <em>cancer</em> (See figure below).' +
+          '<br/><img src="/static/images/intro-js-precision.png" class="m-t-1"/>',
         position: 'left',
         beforeExecutives: function () {
           triggerSvgEvent(
             document.querySelector(
-              '#satori-list-graph .global-controls .sort-precision'
+              '#list-graph-wrapper .global-controls .sort-precision'
             ),
             'mouseenter'
           );
@@ -108,7 +125,7 @@ function DashboardIntrosSatoriListGraph (
         afterExecutives: function () {
           triggerSvgEvent(
             document.querySelector(
-              '#satori-list-graph .global-controls .sort-precision'
+              '#list-graph-wrapper .global-controls .sort-precision'
             ),
             'mouseleave'
           );
@@ -117,19 +134,22 @@ function DashboardIntrosSatoriListGraph (
       {
         element: '#list-graph-wrapper .global-controls .sort-recall',
         intro:
-          'Recall is defined as the number of retrieved data sets ' +
+          '<strong>Recall</strong> (highlighted in blue) is defined as the ' +
+          'number of retrieved data sets ' +
           'annotated with an ontology term divided by the total number of ' +
           'data sets annotated with this term.<br/><br/>E.g., if 6 of all 8 ' +
           'data sets annotated with <em>cancer</em> have been returned in a ' +
           'search for <em>liver</em> the recall of <em>cancer</em> is 0.75. ' +
           'In other words, 75% of all <em>cancer</em>-related data sets have ' +
-          'been found with the search.<br/><br/><em>Note: if you haven\'t ' +
-          'filtered or search for anything the recall is always one.</em>',
+          'been found with the search (See figure below).' +
+          '<br/><img src="/static/images/intro-js-recall.png" class="m-t-1 m-b-1" /><br/>' +
+          '<em>Note: We haven\'t filtered or search for anything so the ' +
+          'recall is always one.</em>',
         position: 'left',
         beforeExecutives: function () {
           triggerSvgEvent(
             document.querySelector(
-              '#satori-list-graph .global-controls .sort-recall'
+              '#list-graph-wrapper .global-controls .sort-recall'
             ),
             'mouseenter'
           );
@@ -137,10 +157,33 @@ function DashboardIntrosSatoriListGraph (
         afterExecutives: function () {
           triggerSvgEvent(
             document.querySelector(
-              '#satori-list-graph .global-controls .sort-recall'
+              '#list-graph-wrapper .global-controls .sort-recall'
             ),
             'mouseleave'
           );
+        }
+      },
+      {
+        dynamicSvgElement: function () {
+          return document.querySelector(
+            '#list-graph-wrapper .visible-node'
+          );
+        },
+        dynamicPosition: 'bottom',
+        intro:
+          'Hovering over an attribute highlight parent and child terms and ' +
+          'data sets associated with this attribute',
+        beforeExecutives: function () {
+          $(document.querySelector(
+            '#list-graph-wrapper .visible-node'
+          )).trigger('mouseenter');
+          $(document.body).addClass('introjs-svg-el');
+        },
+        afterExecutives: function () {
+          $(document.querySelector(
+            '#list-graph-wrapper .visible-node'
+          )).trigger('mouseleave');
+          $(document.body).removeClass('introjs-svg-el');
         }
       },
       {
@@ -173,5 +216,6 @@ angular
     'dashboardIntroStarter',
     'dashboardIntroSatoriEasterEgg',
     'triggerSvgEvent',
+    '$',
     DashboardIntrosSatoriListGraph
   ]);
