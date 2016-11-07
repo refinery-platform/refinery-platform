@@ -18,16 +18,4 @@ class Migration(migrations.Migration):
             field=models.OneToOneField(related_name='profile', to=settings.AUTH_USER_MODEL),
             preserve_default=True,
         ),
-        migrations.RemoveField(
-            model_name='download',
-            name='expiration',
-        ),
-        migrations.RemoveField(
-            model_name='nodegroup',
-            name='expiration',
-        ),
-        migrations.RemoveField(
-            model_name='nodeset',
-            name='expiration',
-        ),
     ]

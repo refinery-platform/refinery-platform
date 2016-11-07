@@ -439,10 +439,10 @@ class SharableResource(OwnableResource):
         abstract = True
 
 
-class TemporaryResource:
+class TemporaryResource(models.Model):
     """Mix-in class for temporary resources like NodeSet instances"""
     # Expiration time and date of the instance
-    expiration = models.DateTimeField()
+    expiration = models.DateTimeField(null=True, blank=True)
 
     def __unicode__(self):
         return self.name + " (" + self.uuid + ")"
@@ -451,7 +451,7 @@ class TemporaryResource:
         abstract = True
 
 
-class ManageableResource:
+class ManageableResource(models.Model):
     """Abstract base class for manageable resources such as disk space and
     workflow engines
     """
