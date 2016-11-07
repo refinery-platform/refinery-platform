@@ -27,11 +27,31 @@ angular
           // Reassign element based on selector function.
           this._introItems[this._currentStep].element =
             currentStep.dynamicElement();
-          if (currentStep.dynamicElementPosition) {
-            // Reassign position
-            this._introItems[this._currentStep].position =
-              currentStep.dynamicElementPosition;
-          }
+        }
+
+        if (currentStep.dynamicSvgElement) {
+          var el = currentStep.dynamicSvgElement();
+          var clientRect = el.getBoundingClientRect();
+
+          // Manually assign offset values as these are not available for SVG
+          // elements but Intro.js needs those values.
+          el.offsetWidth = clientRect.width;
+          el.offsetHeight = clientRect.height;
+          el.offsetTop = clientRect.top;
+          el.offsetLeft = clientRect.left;
+
+          // To avoid an exception being raised when going back as intro.js
+          // expects `el.className.replace` to be valid.
+          el.className = '';
+
+          // Reassign element
+          this._introItems[this._currentStep].element = el;
+        }
+
+        if (currentStep.dynamicPosition) {
+          // Reassign position
+          this._introItems[this._currentStep].position =
+            currentStep.dynamicPosition;
         }
 
         if (
