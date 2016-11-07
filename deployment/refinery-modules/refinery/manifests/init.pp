@@ -105,8 +105,8 @@ exec { "create_superuser":
   require     => Exec['migrate'],
 }
 ->
-exec { "create_default_users":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata default-users.json",
+exec { "create_guest":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata guest.json",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,

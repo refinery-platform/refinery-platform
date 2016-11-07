@@ -1,17 +1,4 @@
-[{
-  "pk": -1,
-  "model": "auth.user",
-  "fields": {
-    "username": "AnonymousUser",
-    "first_name": "",
-    "last_name": "",
-    "is_active": true,
-    "is_superuser": false,
-    "is_staff": false,
-    "groups": [],
-    "user_permissions": []
-  }
-},
+[
 {
   "pk": 2,
   "model": "auth.user",
@@ -27,4 +14,5 @@
     "password": "pbkdf2_sha256$15000$XbHNZbtNuXEB$Gb0MCWcC04JI8DSNDTQSEmtnEmP64/BcrFmRjlPCqr4=",
     "email": "guest@example.com"
   }
-}]
+}
+]

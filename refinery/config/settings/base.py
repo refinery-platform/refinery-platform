@@ -171,7 +171,9 @@ TEMPLATE_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
 )
 
+# NOTE: the order of INSTALLED_APPS matters in some instances
 INSTALLED_APPS = (
+    'core',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -194,7 +196,6 @@ INSTALLED_APPS = (
     'guardian',
     'djangular',
     'galaxy_connector',
-    'core',
     'analysis_manager',
     'workflow_manager',
     'file_store',
