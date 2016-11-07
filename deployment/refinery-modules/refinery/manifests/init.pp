@@ -112,6 +112,14 @@ exec { "create_default_users":
   group       => $app_group,
   require     => Exec['migrate'],
 }
+  ->
+exec { "add_users_to_public_group":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py add_users_to_public_group",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+  require     => Exec['migrate'],
+}
 ->
 exec { "set_up_refinery_site_name":
   command     => "${virtualenv}/bin/python ${django_root}/manage.py set_up_site_name '${site_name}' '${site_url}'",
