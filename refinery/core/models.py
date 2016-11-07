@@ -135,17 +135,16 @@ post_save.connect(create_user_profile, sender=User)
 
 
 @receiver(post_save, sender=User)
-def add_new_user_to_public_group(sender, instance, created, **kwargs):
-    """Add new users to Public group automatically
+def add_user_to_public_group(sender, instance, created, **kwargs):
+    """Add users to Public group automatically
 
     """
-    if created:
-        public_group = ExtendedGroup.objects.public_group()
-        # need to check if Public group exists to avoid errors when creating
-        # user accounts (like superuser and AnonymousUser) before the group
-        # is created by init_refinery command
-        if public_group:
-            instance.groups.add(public_group)
+    public_group = ExtendedGroup.objects.public_group()
+    # need to check if Public group exists to avoid errors when creating
+    # user accounts (like superuser and AnonymousUser) before the group
+    # is created by init_refinery command
+    if public_group:
+        instance.groups.add(public_group)
 
 
 def create_user_profile_registered(sender, user, request, **kwargs):
