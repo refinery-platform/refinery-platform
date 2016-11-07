@@ -220,7 +220,7 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 
 # For Django 1.7 compatibility
 AUTH_USER_MODEL = 'auth.User'
-ANONYMOUS_USER_NAME = None
+ANONYMOUS_USER_NAME = 'AnonymousUser'
 
 LOGGING = {
     'version': 1,
