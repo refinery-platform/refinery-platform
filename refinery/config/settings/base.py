@@ -171,7 +171,10 @@ TEMPLATE_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
 )
 
-# NOTE: the order of INSTALLED_APPS matters in some instances
+# NOTE: the order of INSTALLED_APPS matters in some instances. For example:
+# `core` needs to proceed `django.contrib.auth` here due to an
+# auth.post_migrate signal depending on a core.post_migrate signal being
+# run prior
 INSTALLED_APPS = (
     'core',
     'django.contrib.auth',
