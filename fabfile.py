@@ -133,6 +133,9 @@ def update_refinery():
         run("pip install -r {refinery_project_dir}/requirements.txt"
             .format(**env))
         run("find . -name '*.pyc' -delete")
+        run("{refinery_app_dir}/manage.py migrate --fake annotation_server "
+            "0001_initial"
+            .format(**env))
         run("{refinery_app_dir}/manage.py migrate --noinput"
             .format(**env))
         run("{refinery_app_dir}/manage.py collectstatic --clear --noinput"
