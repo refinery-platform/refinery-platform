@@ -13,7 +13,6 @@ from django.conf import settings
 from haystack import indexes
 
 from data_set_manager.models import Node, AnnotatedNode
-import file_store
 from file_store.models import FileStoreItem
 
 logger = logging.getLogger(__name__)
@@ -131,10 +130,9 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             data[NodeIndex.WORKFLOW_OUTPUT_PREFIX + "_" + uuid + "_s"] = "N/A"
         # add file type as facet value
-        file_store_item_uuid = file_store.tasks.read(object.file_uuid)
         try:
             file_store_item = FileStoreItem.objects.get(
-                uuid=file_store_item_uuid)
+                uuid=object.file_uuid)
         except(FileStoreItem.DoesNotExist,
                FileStoreItem.MultipleObjectsReturned) as e:
             logger.error("Couldn't properly fetch FileStoreItem: %s", e)
