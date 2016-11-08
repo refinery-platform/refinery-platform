@@ -1005,8 +1005,7 @@ def fastqc_viewer(request):
 
 @gzip_page
 def neo4j_dataset_annotations(request):
-    """Query Neo4J for dataset annotations per user
-    """
+    """Query Neo4J for dataset annotations per user"""
 
     if request.user.username:
         user_name = request.user.username
@@ -1046,18 +1045,14 @@ def neo4j_dataset_annotations(request):
 
 
 class WorkflowViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows Workflows to be viewed
-    """
+    """API endpoint that allows Workflows to be viewed"""
     queryset = Workflow.objects.all()
     serializer_class = WorkflowSerializer
     http_method_names = ['get']
 
 
 class NodeViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows Nodes to be viewed
-    """
+    """API endpoint that allows Nodes to be viewed"""
     queryset = Node.objects.all()
     serializer_class = NodeSerializer
     lookup_field = 'uuid'
@@ -1066,9 +1061,7 @@ class NodeViewSet(viewsets.ModelViewSet):
 
 
 class DataSetsViewSet(APIView):
-    """
-    API endpoint that allows for DataSets to be deleted
-    """
+    """API endpoint that allows for DataSets to be deleted"""
     http_method_names = ['delete']
 
     def delete(self, request, uuid):
@@ -1097,9 +1090,7 @@ class DataSetsViewSet(APIView):
 
 
 class AnalysesViewSet(APIView):
-    """
-    API endpoint that allows for Analyses to be deleted
-    """
+    """API endpoint that allows for Analyses to be deleted"""
     http_method_names = ['delete']
 
     def delete(self, request, uuid):
