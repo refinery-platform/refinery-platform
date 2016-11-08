@@ -12,15 +12,11 @@ function rpAssayFilesUtilModal (
       var modalInstance;
 
       element.bind('click', function () {
-        var template = $templateCache.get('assayfilesutilmodal.html');
-        var modalContent = $compile(template)(scope);
-
         modalInstance = $uibModal.open({
-          template: modalContent,
+          templateUrl: '/static/partials/file-browser/partials/assay-files-util-modal-detail.html',
           controller: 'AssayFilesUtilModalCtrl',
           controllerAs: 'AFUMCtrl'
         });
-
         modalInstance.result.then(function () {
           resetGridService.setRefreshGridFlag(true);
         }, function () {
