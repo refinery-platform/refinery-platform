@@ -70,6 +70,8 @@ urlpatterns = patterns(
         'workflow_engine', name="workflow_engine"),
     url(r'^fastqc_viewer/$', 'fastqc_viewer', name='fastqc_viewer'),
     url(r'^visualize/genome/$', 'visualize_genome', name='visualize_genome'),
+    url(r'^visualizations/higlass', 'visualizations_higlass',
+        name='visualizations_higlass'),
     url(r'^solr/igv/$', 'solr_igv'),
     url(r'^solr/core/select/$', 'solr_core_search', name="solr_core_search"),
     url(r'^solr/(?P<core>.+)/select/$', 'solr_select', name="solr_select"),

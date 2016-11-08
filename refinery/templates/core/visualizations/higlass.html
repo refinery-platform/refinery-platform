@@ -1,0 +1,40 @@
+{% extends "plain.html" %}
+
+{% block title %}
+    {{ block.super }} - Visualization
+{% endblock %}
+
+{% block head %}
+    <!-- HiGlass CSS -->
+    <link rel="stylesheet" type="text/css" href="TODO">
+
+    <!-- HiGlass JS-->
+    <script type="text/javascript" src="TODO"></script>
+{% endblock %}
+
+{% block content %}
+
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+            var uuids = {{ uuids_json|safe }};
+            var promises = $.map(uuids, function(uuid) {
+                return Promise.resolve($.getJSON('/api/v2/nodes/' + uuid + '/?format=json'));
+            });
+
+            Promise.all(promises).then(function(promises) {
+                var tracks = $.map(promises, function(promise){
+                  var higlass_track = {
+                        url: promise.relative_file_store_item_url
+                  };
+
+                  return higlass_track;
+
+                });
+                // TODO
+            });
+        });
+
+    </script>
+
+{% endblock %}

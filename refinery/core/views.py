@@ -622,6 +622,20 @@ def visualize_genome(request):
           context_instance=RequestContext(request))
 
 
+def visualizations_higlass(request):
+    """Provide HiGlass visualization of requested nodes
+    """
+    uuids = request.GET.getlist('uuids')
+    uuids_json = json.dumps(uuids)
+
+    return render_to_response(
+        'core/visualizations/higlass.html',
+        {
+            'uuids_json': uuids_json
+        },
+        context_instance=RequestContext(request))
+
+
 def solr_core_search(request):
     """Query Solr's core index for search.
 
