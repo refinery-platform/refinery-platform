@@ -9,30 +9,50 @@
     <link rel="stylesheet" type="text/css" href="TODO">
 
     <!-- HiGlass JS-->
-    <script type="text/javascript" src="TODO"></script>
+    <script type="text/javascript" src="https://rawgit.com/hms-dbmi/higlass/hgref/dist/scripts/higlass.js"></script>
 {% endblock %}
 
 {% block content %}
 
+    <div id="higlass-component" style="width: 400px;"></div>
+
     <script type="text/javascript">
 
-        $(document).ready(function () {
             var uuids = {{ uuids_json|safe }};
-            var promises = $.map(uuids, function(uuid) {
+            var promises = uuids.map(function(uuid) {
                 return Promise.resolve($.getJSON('/api/v2/nodes/' + uuid + '/?format=json'));
             });
 
             Promise.all(promises).then(function(promises) {
                 var tracks = $.map(promises, function(promise){
-                  var higlass_track = {
-                        url: promise.relative_file_store_item_url
-                  };
-
-                  return higlass_track;
-
+                    return  {
+                      source: promise.relative_file_store_item_url,
+                      type: 'heatmap',
+                      height: 300
+                    };
                 });
-                // TODO
-            });
+
+                var rectangularOneWindow =
+                    {"views":
+                        [
+                          {
+                            "chromInfoPath": "//s3.amazonaws.com/pkerp/data/hg19/chromInfo.txt",
+                            "domain": [
+                              0,
+                              3000000000
+                            ],
+                            "viewStyle": {
+                              "float": "left",
+                              "padding": "5px",
+                              "width": "100%"
+                            },
+                            "tracks": tracks
+                          }
+                        ],
+                        "editable": true
+                    };
+
+                higlass.HiGlassContainer('higlass-component', JSON.stringify(rectangularOneWindow));
         });
 
     </script>
