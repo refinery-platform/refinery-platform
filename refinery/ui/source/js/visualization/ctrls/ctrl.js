@@ -1,15 +1,15 @@
 'use strict';
 
 function VisualizationCtrl (
-  $scope,
-  $uibModal,
   $compile,
+  $scope,
   $templateCache,
+  $uibModal,
+  $window,
   fileBrowserFactory,
-  selectedNodesService,
   nodeGroupService,
   selectedFilterService,
-  $window
+  selectedNodesService
 ) {
   var vm = this;
   // the visualizations model contains the modal partial
@@ -80,14 +80,14 @@ function VisualizationCtrl (
 angular
   .module('refineryVisualization')
   .controller('VisualizationCtrl', [
-    '$scope',
-    '$uibModal',
     '$compile',
+    '$scope',
     '$templateCache',
+    '$uibModal',
+    '$window',
     'fileBrowserFactory',
-    'selectedNodesService',
     'nodeGroupService',
     'selectedFilterService',
-    '$window',
+    'selectedNodesService',
     VisualizationCtrl
   ]);
