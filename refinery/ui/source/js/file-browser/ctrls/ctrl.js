@@ -445,7 +445,10 @@ function FileBrowserCtrl (
     }
   );
 
-  // Reset grid flag if set to true, grid, params, filters, and nodes resets
+  /**
+   *  Refresh grid flag if set to true, grid, but keep params, filters, & nodes
+   *  Require for utils modal as it lives in this parent ctrl scope.
+   */
   $scope.$watch(
     function () {
       return resetGridService.refreshGridFlag;
