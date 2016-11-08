@@ -57,7 +57,7 @@
         </div>
         <div class="col-xs-2">
           <h4>
-            <div class="checkbox" id="util-{{solr_field}}-expose">
+            <div class="checkbox" id="util-{{AFUMCtrl.solr_field}}-expose">
             <label>
               <input
                 type="checkbox"
@@ -65,12 +65,13 @@
                 ng-model= "attributeObj.is_exposed"
                 ng-change="AFUMCtrl.updateAssayAttributes
                 (attributeObj)"
-                value="{{ attributeObj.is_exposed }}">
+                value="{{ attributeObj.is_exposed }}"
+                ng-disabled="AFUMCtrl.isAttributeSelected(attributeObj.solr_field)">
             </label>
             </div>
           </h4>
           </div>
-          <div class="col-xs-2" id="util-{{solr_field}}-facet">
+          <div class="col-xs-2" id="util-{{AFUMCtrl.solr_field}}-facet">
             <h4>
               <div class="check">
                 <label>
@@ -86,7 +87,7 @@
           <div class="col-xs-2">
             <h4>
               <div class="checkbox"
-                 id="util-{{solr_field}}-default">
+                 id="util-{{AFUMCtrl.solr_field}}-default">
                 <label>
                   <input
                     type="checkbox"

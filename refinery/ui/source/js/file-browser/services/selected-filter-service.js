@@ -11,14 +11,21 @@ function selectedFilterService ($location) {
   */
   var removeSelectedField = function (attributeName, fieldName) {
     // remove attribute field
+    console.log('in the remove selected field');
     var fieldIndex = vm.selectedFieldList[attributeName].indexOf(fieldName);
+    console.log(fieldIndex);
     if (fieldIndex > -1) {
-      vm.selectedFieldList[attributeName].splice(fieldIndex, 1);
+      var removed = vm.selectedFieldList[attributeName].splice(fieldIndex, 1);
+      console.log('in the field index');
+      console.log(removed);
+      console.log(vm.selectedFieldList);
     }
     // If attribute has no field, remove the attribute key
     if (vm.selectedFieldList[attributeName].length === 0) {
       delete vm.selectedFieldList[attributeName];
     }
+    console.log('leaving the remove');
+    console.log(vm.selectedFieldList);
   };
 
   /**
@@ -55,7 +62,11 @@ function selectedFilterService ($location) {
       vm.updateUrlQuery(field, activeFields[field]);
     // remove empty fields
     } else if (vm.selectedFieldList[attribute]) {
+      console.log('should remove selected field');
+      console.log(attribute);
       removeSelectedField(attribute, field);
+      console.log('in the conditional, post helper');
+      console.log(vm.selectedFieldList);
       vm.updateUrlQuery(field, null);
     }
     return vm.selectedFieldList;

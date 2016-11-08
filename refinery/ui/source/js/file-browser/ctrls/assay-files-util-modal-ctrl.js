@@ -5,6 +5,7 @@ function AssayFilesUtilModalCtrl (
   $log,
   $q,
   $scope,
+  selectedFilterService,
   $uibModalInstance,
   $window
 ) {
@@ -47,6 +48,14 @@ function AssayFilesUtilModalCtrl (
     }
   };
 
+  vm.isAttributeSelected = function (internalName) {
+   // console.log(selectedFilterService.selectedFieldList);
+    if (selectedFilterService.selectedFieldList.hasOwnProperty(internalName)) {
+      return true;
+    }
+    return false;
+  };
+
   vm.refreshAssayAttributes();
 }
 
@@ -59,6 +68,7 @@ angular
     '$log',
     '$q',
     '$scope',
+    'selectedFilterService',
     '$uibModalInstance',
     '$window',
     AssayFilesUtilModalCtrl
