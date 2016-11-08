@@ -64,7 +64,6 @@ function VisualizationCtrl (
     //  node_uuids: vm.hiGlassConfig.node_selection
     // });
    // $window.open('/visualize/genome?' + params);
-    console.log(vm.higlassConfig.node_selection);
   };
 
   // Helper method for UI to check if any nodes are selected
