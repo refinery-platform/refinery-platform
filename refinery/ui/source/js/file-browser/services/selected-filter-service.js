@@ -68,11 +68,7 @@ function selectedFilterService ($location) {
       vm.updateUrlQuery(field, activeFields[field]);
     // remove empty fields
     } else if (vm.selectedFieldList[attribute]) {
-      console.log('should remove selected field');
-      console.log(attribute);
       removeSelectedField(attribute, field);
-      console.log('in the conditional, post helper');
-      console.log(vm.selectedFieldList);
       vm.updateUrlQuery(field, null);
     }
     return vm.selectedFieldList;
