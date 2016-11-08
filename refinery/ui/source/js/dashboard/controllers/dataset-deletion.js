@@ -54,8 +54,7 @@ DataSetDeleteCtrl.prototype.delete = function () {
       vm.isDeleting = false;
       vm.deleteSuccessful = true;
       vm.invalidateUiScrollCache();
-    })
-    .catch(function (error) {
+    }, function (error) {
       vm.deletionMessage = error.data;
       vm.isDeleting = false;
       vm.invalidateUiScrollCache();
