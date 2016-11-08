@@ -8,6 +8,7 @@ function VisualizationCtrl (
   fileBrowserFactory,
   selectedNodesService,
   nodeGroupService,
+  selectedFilterService,
   $window
 ) {
   var vm = this;
@@ -45,21 +46,25 @@ function VisualizationCtrl (
 
   // Launches web based higlass
   vm.launchHiglass = function () {
+    // update current select node group
     var nodeGroupParams = {
       uuid: selectedNodesService.defaultCurrentSelectionUuid,
       assay: $window.externalAssayUuid,
       nodes: setHiglassConfig(),
-      use_complement_nodes: selectedNodesService.selectedAllFlag
+      use_complement_nodes: selectedNodesService.selectedAllFlag,
+      filter_attribute: selectedFilterService.selectedFieldList
     };
 
     var nodeGroupUpdate = nodeGroupService.update(nodeGroupParams);
     nodeGroupUpdate.$promise.then(function (response) {
+      // update higlass config with actual node selection (not complements)
       angular.copy(response.nodes, vm.higlassConfig.node_selection);
     });
     // var params = $httpParamSerializer({
     //  node_uuids: vm.hiGlassConfig.node_selection
     // });
    // $window.open('/visualize/genome?' + params);
+    console.log(vm.higlassConfig.node_selection);
   };
 
   // Helper method for UI to check if any nodes are selected
@@ -83,6 +88,7 @@ angular
     'fileBrowserFactory',
     'selectedNodesService',
     'nodeGroupService',
+    'selectedFilterService',
     '$window',
     VisualizationCtrl
   ]);
