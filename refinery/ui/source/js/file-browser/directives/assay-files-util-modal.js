@@ -2,9 +2,9 @@
 
 function rpAssayFilesUtilModal (
   $compile,
+  resetGridService,
   $templateCache,
-  $uibModal,
-  resetGridService
+  $uibModal
 ) {
   return {
     restrict: 'AE',
@@ -33,9 +33,9 @@ angular
   'rpAssayFilesUtilModal',
   [
     '$compile',
+    'resetGridService',
     '$templateCache',
     '$uibModal',
-    'resetGridService',
     rpAssayFilesUtilModal
   ]
   );

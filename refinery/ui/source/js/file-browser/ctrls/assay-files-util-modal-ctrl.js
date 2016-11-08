@@ -1,12 +1,12 @@
 'use strict';
 
 function AssayFilesUtilModalCtrl (
+  fileBrowserFactory,
+  $log,
+  $q,
   $scope,
   $uibModalInstance,
-  $window,
-  $q,
-  $log,
-  fileBrowserFactory
+  $window
 ) {
   var vm = this;
   vm.assayAttributeOrder = [];
@@ -55,12 +55,12 @@ angular
   .controller(
   'AssayFilesUtilModalCtrl',
   [
+    'fileBrowserFactory',
+    '$log',
+    '$q',
     '$scope',
     '$uibModalInstance',
     '$window',
-    '$q',
-    '$log',
-    'fileBrowserFactory',
     AssayFilesUtilModalCtrl
   ]
   );
