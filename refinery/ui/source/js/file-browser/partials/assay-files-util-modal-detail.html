@@ -63,8 +63,7 @@
                 type="checkbox"
                 name="utilsCheckboxes"
                 ng-model= "attributeObj.is_exposed"
-                ng-change="AFUMCtrl.updateAssayAttributes
-                (attributeObj)"
+                ng-change="AFUMCtrl.updateAssayAttributes(attributeObj)"
                 value="{{ attributeObj.is_exposed }}"
                 ng-disabled="AFUMCtrl.isAttributeSelected(attributeObj.solr_field)">
             </label>
@@ -75,11 +74,12 @@
             <h4>
               <div class="check">
                 <label>
-                  <input type="checkbox"
+                  <input
+                    type="checkbox"
                     ng-model="attributeObj.is_facet"
-                    ng-change="AFUMCtrl.updateAssayAttributes
-                    (attributeObj)"
-                    value={{ attributeObj.is_facet }}>
+                    ng-change="AFUMCtrl.updateAssayAttributes(attributeObj)"
+                    value="{{ attributeObj.is_facet }}"
+                    ng-disabled="AFUMCtrl.isAttributeSelected(attributeObj.solr_field)">
                 </label>
               </div>
              </h4>
