@@ -5,12 +5,11 @@ function DataSetDeleteCtrl (
   $uibModalInstance,
   _,
   deletionService,
-  dashboardDataSetsReloadService,
   config,
   dataSet,
   dataSets,
   analyses,
-  analysesReloadService
+  invalidateUiScrollCache
 ) {
   this.$log = $log;
   this._ = _;
@@ -20,8 +19,7 @@ function DataSetDeleteCtrl (
   this.analyses = analyses;
   this.$uibModalInstance = $uibModalInstance;
   this.deletionService = deletionService;
-  this.analysesReloadService = analysesReloadService;
-  this.dashboardDataSetsReloadService = dashboardDataSetsReloadService;
+  this.invalidateUiScrollCache = invalidateUiScrollCache;
 }
 
 /**
@@ -34,17 +32,17 @@ DataSetDeleteCtrl.prototype.cancel = function () {
 };
 
 /**
- * Delete a DataSet
+ * Delete a DataSet using the deletionService and invalidate UiScroll cache
  * @type   {function}
  */
 DataSetDeleteCtrl.prototype.delete = function () {
-  var that = this;
+  var vm = this;
 
-  that.isDeleting = true;
-  that.deletionMessage = null;
-  that.deleteSuccessful = false;
+  vm.isDeleting = true;
+  vm.deletionMessage = null;
+  vm.deleteSuccessful = false;
 
-  this
+  vm
     .deletionService
     .delete({
       model: this.config.model,
@@ -52,22 +50,16 @@ DataSetDeleteCtrl.prototype.delete = function () {
     })
     .$promise
     .then(function (response) {
-      that.deletionMessage = response.data;
-      that.isDeleting = false;
-      that.deleteSuccessful = true;
-      that.dataSets.newOrCachedCache(undefined, true);
-      that.dashboardDataSetsReloadService.reload(true);
-      that.analyses.newOrCachedCache(undefined, true);
-      that.analysesReloadService.reload();
+      vm.deletionMessage = response.data;
+      vm.isDeleting = false;
+      vm.deleteSuccessful = true;
+      vm.invalidateUiScrollCache();
     })
     .catch(function (error) {
-      that.deletionMessage = error.data;
-      that.isDeleting = false;
-      that.dataSets.newOrCachedCache(undefined, true);
-      that.dashboardDataSetsReloadService.reload(true);
-      that.analyses.newOrCachedCache(undefined, true);
-      that.analysesReloadService.reload();
-      that.$log.error(error);
+      vm.deletionMessage = error.data;
+      vm.isDeleting = false;
+      vm.invalidateUiScrollCache();
+      vm.$log.error(error);
     });
 };
 
@@ -78,11 +70,10 @@ angular
     '$uibModalInstance',
     '_',
     'deletionService',
-    'dashboardDataSetsReloadService',
     'config',
     'dataSet',
     'dataSets',
     'analyses',
-    'analysesReloadService',
+    'invalidateUiScrollCache',
     DataSetDeleteCtrl
   ]);
