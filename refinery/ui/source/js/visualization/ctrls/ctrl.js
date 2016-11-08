@@ -35,8 +35,8 @@ function VisualizationCtrl (
     }
   };
 
-  // Helper method set highGlassConfig based on selected nodes
-  var setHiglassConfig = function () {
+  // Helper method to return correct active nodes whether complement or selected
+  var getActiveNodes = function () {
     if (selectedNodesService.selectedAllFlag) {
       return selectedNodesService.complementSelectedNodesUuids;
     }
@@ -50,7 +50,7 @@ function VisualizationCtrl (
     var nodeGroupParams = {
       uuid: selectedNodesService.defaultCurrentSelectionUuid,
       assay: $window.externalAssayUuid,
-      nodes: setHiglassConfig(),
+      nodes: getActiveNodes(),
       use_complement_nodes: selectedNodesService.selectedAllFlag,
       filter_attribute: selectedFilterService.selectedFieldList
     };
