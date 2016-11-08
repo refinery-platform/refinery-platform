@@ -60,14 +60,13 @@ function VisualizationCtrl (
     //  node_uuids: vm.hiGlassConfig.node_selection
     // });
    // $window.open('/visualize/genome?' + params);
-    console.log('launching higlass');
-    console.log(vm.higlassConfig);
   };
 
   // Helper method for UI to check if any nodes are selected
   vm.areNodesSelected = function () {
     if (selectedNodesService.complementSelectedNodesUuids.length === 0 &&
-      selectedNodesService.selectedNodesUuids.length === 0) {
+      selectedNodesService.selectedNodesUuids.length === 0 &&
+      !selectedNodesService.selectedAllFlag) {
       return false;
     }
     return true;
