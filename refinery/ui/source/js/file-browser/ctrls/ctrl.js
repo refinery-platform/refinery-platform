@@ -445,6 +445,21 @@ function FileBrowserCtrl (
     }
   );
 
+  // Reset grid flag if set to true, grid, params, filters, and nodes resets
+  $scope.$watch(
+    function () {
+      return resetGridService.refreshGridFlag;
+    },
+    function () {
+      if (resetGridService.refreshGridFlag) {
+        // reset assayFiles
+        angular.copy([], fileBrowserFactory.assayFiles);
+        initializeDataOnPageLoad();
+        resetGridService.setRefreshGridFlag(false);
+      }
+    }
+  );
+
   // Ensure data owner
   vm.checkDataSetOwnership();
   // initialize the dataset and updates ui-grid selection, filters, and url

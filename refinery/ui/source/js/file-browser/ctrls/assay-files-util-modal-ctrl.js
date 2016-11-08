@@ -12,8 +12,8 @@ function AssayFilesUtilModalCtrl (
   vm.assayAttributeOrder = [];
 
   // modal close button
-  $scope.close = function () {
-    resetGridService.setResetGridFlag(true);
+  vm.close = function () {
+    resetGridService.setRefreshGridFlag(true);
     $uibModalInstance.close('close');
   };
 

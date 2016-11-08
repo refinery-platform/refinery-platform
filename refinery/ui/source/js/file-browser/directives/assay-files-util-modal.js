@@ -22,9 +22,9 @@ function rpAssayFilesUtilModal (
         });
 
         modalInstance.result.then(function () {
-          resetGridService.setResetGridFlag(true);
+          resetGridService.setRefreshGridFlag(true);
         }, function () {
-          resetGridService.setResetGridFlag(true);
+          resetGridService.setRefreshGridFlag(true);
         });
       });
     }
