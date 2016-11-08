@@ -11,21 +11,27 @@ function selectedFilterService ($location) {
   */
   var removeSelectedField = function (attributeName, fieldName) {
     // remove attribute field
-    console.log('in the remove selected field');
     var fieldIndex = vm.selectedFieldList[attributeName].indexOf(fieldName);
-    console.log(fieldIndex);
     if (fieldIndex > -1) {
-      var removed = vm.selectedFieldList[attributeName].splice(fieldIndex, 1);
-      console.log('in the field index');
-      console.log(removed);
-      console.log(vm.selectedFieldList);
+      vm.selectedFieldList[attributeName].splice(fieldIndex, 1);
     }
     // If attribute has no field, remove the attribute key
     if (vm.selectedFieldList[attributeName].length === 0) {
       delete vm.selectedFieldList[attributeName];
     }
-    console.log('leaving the remove');
-    console.log(vm.selectedFieldList);
+  };
+
+  /**
+   * Helper method which removes selected Field and deletes empty attributes
+   * @param {string} attributeName - internal name,'Month_Characteristics_10_5_s'
+   * @param {string} fieldName - field name
+  */
+  vm.addSelectedField = function (attributeName, fieldName) {
+    // check to see if it already exists
+    var fieldIndex = vm.selectedFieldList[attributeName].indexOf(fieldName);
+    if (fieldIndex === -1) {
+      vm.selectedFieldList[attributeName].push(fieldName);
+    }
   };
 
   /**

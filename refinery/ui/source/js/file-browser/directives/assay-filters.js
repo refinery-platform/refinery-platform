@@ -76,9 +76,9 @@ function rpFileBrowserAssayFilters ($timeout, $location, selectedFilterService) 
               document.querySelector('#' + escapeAttributeName)).addClass('in');
               attributeTitle.removeClass('fa-caret-right');
               attributeTitle.addClass('fa-caret-down');
-              selectedFilterService.selectedFieldList[attributeInternalName] = [allFields[ind]];
+              selectedFilterService.addSelectedField(attributeInternalName, allFields[ind]);
             } else {
-              selectedFilterService.selectedFieldList[attributeInternalName].push(allFields[ind]);
+              selectedFilterService.addSelectedField(attributeInternalName, allFields[ind]);
             }
           }
         }
