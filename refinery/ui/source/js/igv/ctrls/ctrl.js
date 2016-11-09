@@ -71,9 +71,10 @@ function IGVCtrl (
     });
   };
 
-  // Launches web based IGV and dismissed modal
+  // Launches web based IGV and dismiss modal
   vm.launchIgvJs = function () {
-    // update current select node group
+    // update current select node group and used to get the
+    // correct select node uuids
     var nodeGroupParams = {
       uuid: selectedNodesService.defaultCurrentSelectionUuid,
       assay: $window.externalAssayUuid,
