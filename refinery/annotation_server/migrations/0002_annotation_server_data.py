@@ -452,7 +452,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": None,
                 "source_name": "GRCh37 Genome Reference Consortium Human Reference 37 (GCA_000001405.1)",
                 "name": "hg19",
                 "default_build": True,
@@ -467,7 +466,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": 1,
                 "source_name": None,
                 "name": "Genome Reference Consortium GRCh37",
                 "default_build": False,
@@ -482,7 +480,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": None,
                 "source_name": "NCBI Build 36.1",
                 "name": "hg18",
                 "default_build": False,
@@ -497,7 +494,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": 3,
                 "source_name": None,
                 "name": "NCBI Build 36.1",
                 "default_build": False,
@@ -512,7 +508,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": None,
                 "source_name": "NCBI Build 36",
                 "name": "mm8",
                 "default_build": False,
@@ -527,7 +522,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": 5,
                 "source_name": None,
                 "name": "NCBI Build 36",
                 "default_build": False,
@@ -542,7 +536,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": None,
                 "source_name": "NCBI Build 37",
                 "name": "mm9",
                 "default_build": True,
@@ -557,7 +550,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": 7,
                 "source_name": None,
                 "name": "NCBI Build 37",
                 "default_build": False,
@@ -572,7 +564,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": None,
                 "source_name": "Genome Reference Consortium Mouse Build 38 (GCA_000001635.2)",
                 "name": "mm10",
                 "default_build": False,
@@ -587,7 +578,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": 9,
                 "source_name": None,
                 "name": "Genome Reference Consortium GRCm38",
                 "default_build": False,
@@ -602,7 +592,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": None,
                 "source_name": "BDGP Release 5",
                 "name": "dm3",
                 "default_build": True,
@@ -617,7 +606,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": 11,
                 "source_name": None,
                 "name": "BDGP Release 5",
                 "default_build": False,
@@ -632,7 +620,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": None,
                 "source_name": "BDGP v. 4 / DHGP v. 3.2",
                 "name": "dm2",
                 "default_build": False,
@@ -647,7 +634,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": 13,
                 "source_name": None,
                 "name": "BDGP Release 4",
                 "default_build": False,
@@ -662,7 +648,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": None,
                 "source_name": "BDGP v. 3",
                 "name": "dm1",
                 "default_build": False,
@@ -677,7 +662,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": 15,
                 "source_name": None,
                 "name": "BDGP Release 3",
                 "default_build": False,
@@ -692,7 +676,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": None,
                 "source_name": "Washington University School of Medicine GSC and Sanger Institute WS220",
                 "name": "ce10",
                 "default_build": False,
@@ -707,7 +690,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": 17,
                 "source_name": None,
                 "name": "WormBase v. WS220",
                 "default_build": False,
@@ -722,7 +704,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": None,
                 "source_name": "Washington University School of Medicine GSC and Sanger Institute WS190",
                 "name": "ce6",
                 "default_build": True,
@@ -737,7 +718,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": 19,
                 "source_name": None,
                 "name": "WormBase v. WS190",
                 "default_build": False,
@@ -752,7 +732,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": None,
                 "source_name": None,
                 "name": "spombe_1.55",
                 "default_build": True,
@@ -767,7 +746,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": False,
-                "ucsc_equivalent": None,
                 "source_name": "Sanger Institute",
                 "name": "danRer7",
                 "default_build": True,
@@ -782,7 +760,6 @@ def forwards(apps, schema_editor):
               "model": "annotation_server.genomebuild",
               "fields": {
                 "available": True,
-                "ucsc_equivalent": 22,
                 "source_name": "",
                 "name": "Zv9",
                 "default_build": False,
