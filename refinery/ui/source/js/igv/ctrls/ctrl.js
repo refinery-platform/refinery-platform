@@ -7,6 +7,8 @@ function IGVCtrl (
   $resource,
   $httpParamSerializer,
   $uibModalInstance,
+  nodeGroupService,
+  selectedFilterService,
   selectedNodesService,
   IGVFactory
 ) {
@@ -71,13 +73,26 @@ function IGVCtrl (
 
   // Launches web based IGV and dismissed modal
   vm.launchIgvJs = function () {
-    var params = $httpParamSerializer({
-      species: vm.selectedSpecies.select.name,
-      node_ids: vm.igvConfig.node_selection
+    // update current select node group
+    var nodeGroupParams = {
+      uuid: selectedNodesService.defaultCurrentSelectionUuid,
+      assay: $window.externalAssayUuid,
+      nodes: vm.igvConfig.node_selection,
+      use_complement_nodes: selectedNodesService.selectedAllFlag,
+      filter_attribute: selectedFilterService.selectedFieldList
+    };
+
+    var nodeGroupUpdate = nodeGroupService.update(nodeGroupParams);
+    nodeGroupUpdate.$promise.then(function (response) {
+      // update igv config with actual node selection (not complements)
+      var params = $httpParamSerializer({
+        species: vm.selectedSpecies.select.name,
+        node_ids: response.nodes
+      });
+      // close modal
+      $uibModalInstance.dismiss();
+      $window.open('/visualize/genome?' + params);
     });
-    // close modal
-    $uibModalInstance.dismiss();
-    $window.open('/visualize/genome?' + params);
   };
 
   // Modal method to cancel
@@ -97,6 +112,8 @@ angular
     '$resource',
     '$httpParamSerializer',
     '$uibModalInstance',
+    'nodeGroupService',
+    'selectedFilterService',
     'selectedNodesService',
     'IGVFactory',
     IGVCtrl
