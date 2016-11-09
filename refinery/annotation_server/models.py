@@ -31,7 +31,6 @@ class GenomeBuild(models.Model):
     source_name = models.CharField(max_length=1024, blank=True, null=True)
     available = models.BooleanField(default=True)
     default_build = models.BooleanField(default=False)
-    ucsc_equivalent = models.ForeignKey('GenomeBuild', blank=True, null=True)
 
     def __unicode__(self):
         return "%s: %s" % (self.name, self.description)
