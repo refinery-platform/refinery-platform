@@ -105,26 +105,6 @@ def species_to_genome_build(species_name):
     return ret_list
 
 
-def resolve_to_ucsc_genome_build(alt_genome_build):
-    """returns the UCSC equivalent of a non-UCSC genome build name if an
-    equivalent exists
-    :param alt_genome_build: non-UCSC genome build name
-    :type alt_genome_build: string
-    :returns: string -- returns the UCSC equivalent genome build name
-    :raises: GenomeBuild.DoesNotExist
-    """
-    try:
-        genome_build = GenomeBuild.objects.exclude(affiliation='UCSC').get(
-            name__icontains=alt_genome_build)
-    except:
-        raise
-
-    try:
-        return genome_build.ucsc_equivalent.name
-    except:
-        raise GenomeBuild.DoesNotExist
-
-
 def genome_build_to_species(genome_build):
     """Returns the NCBI taxon ID of the species associated with the genome
     build provided
