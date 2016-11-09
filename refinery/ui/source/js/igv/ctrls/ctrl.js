@@ -1,16 +1,16 @@
 'use strict';
 
 function IGVCtrl (
-  $scope,
-  $window,
+  $httpParamSerializer,
   $log,
   $resource,
-  $httpParamSerializer,
+  $scope,
   $uibModalInstance,
+  $window,
+  IGVFactory,
   nodeGroupService,
   selectedFilterService,
-  selectedNodesService,
-  IGVFactory
+  selectedNodesService
 ) {
   var vm = this;
   // includes unused fields to accomodate current igv backend
@@ -106,15 +106,15 @@ function IGVCtrl (
 angular
   .module('refineryIGV')
   .controller('IGVCtrl', [
-    '$scope',
-    '$window',
     '$log',
-    '$resource',
     '$httpParamSerializer',
+    '$resource',
+    '$scope',
     '$uibModalInstance',
+    '$window',
+    'IGVFactory',
     'nodeGroupService',
     'selectedFilterService',
     'selectedNodesService',
-    'IGVFactory',
     IGVCtrl
   ]);
