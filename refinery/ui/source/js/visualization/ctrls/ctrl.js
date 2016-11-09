@@ -28,7 +28,8 @@ function VisualizationCtrl (
   // Helper method for UI to check if any nodes are selected
   vm.areNodesSelected = function () {
     if (selectedNodesService.complementSelectedNodesUuids.length === 0 &&
-      selectedNodesService.selectedNodesUuids.length === 0) {
+      selectedNodesService.selectedNodesUuids.length === 0 &&
+      !selectedNodesService.selectedAllFlag) {
       return false;
     }
     return true;
