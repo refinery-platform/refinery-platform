@@ -292,12 +292,6 @@ class Migration(migrations.Migration):
             preserve_default=True,
         ),
         migrations.AddField(
-            model_name='genomebuild',
-            name='ucsc_equivalent',
-            field=models.ForeignKey(blank=True, to='annotation_server.GenomeBuild', null=True),
-            preserve_default=True,
-        ),
-        migrations.AddField(
             model_name='gene',
             name='genomebuild',
             field=models.ForeignKey(default=None, to='annotation_server.GenomeBuild', null=True),
