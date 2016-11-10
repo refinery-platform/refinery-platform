@@ -445,6 +445,24 @@ function FileBrowserCtrl (
     }
   );
 
+  /**
+   *  Refresh grid flag if set to true, grid, but keep params, filters, & nodes
+   *  Require for utils modal as it lives in this parent ctrl scope.
+   */
+  $scope.$watch(
+    function () {
+      return resetGridService.refreshGridFlag;
+    },
+    function () {
+      if (resetGridService.refreshGridFlag) {
+        // reset assayFiles
+        angular.copy([], fileBrowserFactory.assayFiles);
+        initializeDataOnPageLoad();
+        resetGridService.setRefreshGridFlag(false);
+      }
+    }
+  );
+
   // Ensure data owner
   vm.checkDataSetOwnership();
   // initialize the dataset and updates ui-grid selection, filters, and url

@@ -22,6 +22,19 @@ function selectedFilterService ($location) {
   };
 
   /**
+   * Helper method which removes selected Field and deletes empty attributes
+   * @param {string} attributeName - internal name,'Month_Characteristics_10_5_s'
+   * @param {string} fieldName - field name
+  */
+  vm.addSelectedField = function (attributeName, fieldName) {
+    // check to see if it already exists
+    var fieldIndex = vm.selectedFieldList[attributeName].indexOf(fieldName);
+    if (fieldIndex === -1) {
+      vm.selectedFieldList[attributeName].push(fieldName);
+    }
+  };
+
+  /**
    * Helper method which updates the url query with fields
    * @param {string} fieldName - name of field
    * @param {string} value - True adds name or null removes name
