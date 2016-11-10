@@ -617,6 +617,8 @@ def visualize_genome(request):
               "fasta_url": url_base + genome + ".fa",
               "index_url": url_base + genome + ".fa.fai",
               "cytoband_url": url_base + "cytoBand.txt",
+              "bed_url": url_base + "refGene.bed",
+              "tbi_url": url_base + "refGene.bed.tbi",
               "node_ids_json": node_ids_json
           },
           context_instance=RequestContext(request))
