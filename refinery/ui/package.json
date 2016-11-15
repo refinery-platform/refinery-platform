@@ -33,7 +33,7 @@
     "eslint-config-airbnb": "6.1.0",
     "eslint-plugin-react": "4.2.3",
     "grunt": "1.0.1",
-    "grunt-autoprefixer": "^3.0.1",
+    "grunt-autoprefixer": "3.0.1",
     "grunt-contrib-clean": "1.0.0",
     "grunt-contrib-concat": "1.0.1",
     "grunt-contrib-copy": "1.0.0",
