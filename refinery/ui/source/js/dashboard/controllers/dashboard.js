@@ -1615,21 +1615,6 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
 };
 
 /**
- * Function to handle cache invalidation & reloading of UiScrolls for
- * DataSets and Analyses upon deletion from the UI
- *
- * @method  invalidateUiScrollCache
- * @author  Scott Ouellette
- * @date    2016-11-8
- */
-DashboardCtrl.prototype.invalidateUiScrollCache = function () {
-  this.dataSets.newOrCachedCache(undefined, true);
-  this.dashboardDataSetsReloadService.reload(true);
-  this.analyses.newOrCachedCache(undefined, true);
-  this.dashboardAnalysesReloadService.reload();
-};
-
-/**
  * Open the deletion modal for a given Datset.
  *
  * @method  openDataSetDeleteModal
@@ -1656,8 +1641,7 @@ DashboardCtrl.prototype.openDataSetDeleteModal = function (dataSet) {
       dataSet: dataSet,
       dataSets: this.dataSets,
       analyses: this.analyses,
-      invalidateUiScrollCache: this.invalidateUiScrollCache
-
+      analysesReloadService: this.dashboardAnalysesReloadService
     }
   });
 };
@@ -1685,8 +1669,8 @@ DashboardCtrl.prototype.openAnalysisDeleteModal = function (analysis) {
       analysis: analysis,
       analyses: this.analyses,
       dataSets: this.dataSets,
-      isOwner: analysis.is_owner,
-      invalidateUiScrollCache: this.invalidateUiScrollCache
+      analysesReloadService: this.dashboardAnalysesReloadService,
+      isOwner: analysis.is_owner
     }
   });
 };
