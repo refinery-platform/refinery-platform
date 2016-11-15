@@ -5,11 +5,12 @@ function DataSetDeleteCtrl (
   $uibModalInstance,
   _,
   deletionService,
+  dashboardDataSetsReloadService,
   config,
   dataSet,
   dataSets,
   analyses,
-  invalidateUiScrollCache
+  analysesReloadService
 ) {
   this.$log = $log;
   this._ = _;
@@ -19,7 +20,8 @@ function DataSetDeleteCtrl (
   this.analyses = analyses;
   this.$uibModalInstance = $uibModalInstance;
   this.deletionService = deletionService;
-  this.invalidateUiScrollCache = invalidateUiScrollCache;
+  this.analysesReloadService = analysesReloadService;
+  this.dashboardDataSetsReloadService = dashboardDataSetsReloadService;
 }
 
 /**
@@ -42,7 +44,7 @@ DataSetDeleteCtrl.prototype.delete = function () {
   vm.deletionMessage = null;
   vm.deleteSuccessful = false;
 
-  vm
+  this
     .deletionService
     .delete({
       model: this.config.model,
@@ -51,14 +53,17 @@ DataSetDeleteCtrl.prototype.delete = function () {
     .$promise
     .then(function (response) {
       vm.deletionMessage = response.data;
-      vm.isDeleting = false;
       vm.deleteSuccessful = true;
-      vm.invalidateUiScrollCache();
     }, function (error) {
       vm.deletionMessage = error.data;
+      vm.$log.error(error.data);
+    })
+    .finally(function () {
       vm.isDeleting = false;
-      vm.invalidateUiScrollCache();
-      vm.$log.error(error);
+      vm.dataSets.newOrCachedCache(undefined, true);
+      vm.dashboardDataSetsReloadService.reload(true);
+      vm.analyses.newOrCachedCache(undefined, true);
+      vm.analysesReloadService.reload();
     });
 };
 
@@ -69,10 +74,11 @@ angular
     '$uibModalInstance',
     '_',
     'deletionService',
+    'dashboardDataSetsReloadService',
     'config',
     'dataSet',
     'dataSets',
     'analyses',
-    'invalidateUiScrollCache',
+    'analysesReloadService',
     DataSetDeleteCtrl
   ]);
