@@ -46,7 +46,7 @@
     "grunt-eslint": "18.0.0",
     "grunt-jsdoc": "^2.1.0",
     "grunt-karma": "1.0.0",
-    "grunt-newer": "1.1.0",
+    "grunt-newer": "^1.1.0",
     "grunt-ng-annotate": "^2.0.1",
     "hasbin": "1.1.1",
     "isbinaryfile": "3.0.0",
