@@ -53,7 +53,7 @@ def update_data_set_index(data_set):
         it is not running.
         (e.g. Travis CI doesn't support solr yet)
         """
-        logger.error("Could not update DataSetIndex:", e)
+        logger.error("Could not update DataSetIndex: %s", e)
 
 
 @skip
