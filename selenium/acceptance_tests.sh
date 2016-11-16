@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Fail script if error occurs at any step
+set -e
+
 echo "Setting up env vars..."
 # Add some directories to PYTHON_PATH
 export PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
