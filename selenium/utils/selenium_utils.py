@@ -9,7 +9,7 @@ from selenium.common.exceptions import TimeoutException
 
 from factory_boy.utils import factory_boy_cleanup
 
-DEFAULT_WAIT = 5
+DEFAULT_WAIT = 2
 base_url = os.environ['BASE_URL']
 creds = yaml.load(open(os.environ['CREDS_YML']))
 
