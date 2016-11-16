@@ -10,10 +10,11 @@ services:
 install:
   - pip install -r requirements.txt --quiet
 env:
-  - REDUCE_TEST_OUTPUT=true
-  - PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
-  - DJANGO_SETTINGS_MODULE=config.settings.dev
-  - BROWSER_VERSION=latest
+  global:
+    # These env vars are available to every build
+    - REDUCE_TEST_OUTPUT=true
+    - PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
+    - DJANGO_SETTINGS_MODULE=config.settings.dev
 
 before_script:
   - createuser --createdb --no-superuser --no-createrole vagrant
