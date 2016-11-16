@@ -57,7 +57,7 @@ function permissionService (sharingService) {
   };
 }
 
-angular.module('c')
+angular.module('refineryDashboard')
   .service('permissionService', [
     'sharingService',
     permissionService
