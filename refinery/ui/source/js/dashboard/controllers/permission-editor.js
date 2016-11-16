@@ -72,11 +72,10 @@ PermissionEditorCtrl.prototype.save = function () {
     .then(function () {
       that.dashboardDataSetsReloadService.reload(true);
       that.$uibModalInstance.dismiss('saved');
-    })
-    .catch(function (error) {
+    }, function (error) {
+      this.permissionService.getPermissions(that._currentUuid);
       that.$log.error(error);
-    })
-    .finally(function () {
+    }, function () {
       that.isSaving = false;
     });
 };

@@ -15,7 +15,6 @@ function permissionService (sharingService) {
    * @return  {Object}         Angular promise.
    */
   vm.getPermissions = function (uuid) {
-    console.log('in the get');
     return sharingService.get({
       model: 'data_sets',
       uuid: uuid
@@ -34,7 +33,6 @@ function permissionService (sharingService) {
           isOwner: data.is_owner,
           groups: groups
         };
-        console.log(vm.permissions);
       });
   };
 
