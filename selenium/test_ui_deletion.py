@@ -7,7 +7,8 @@ from django.contrib.auth.models import User
 
 from core.models import DataSet, Analysis
 from factory_boy.utils import make_datasets, make_analyses_with_single_dataset
-from utils.selenium_utils import (assert_text_within_id, wait_until_id_clickable,
+from utils.selenium_utils import (assert_text_within_id,
+                                  wait_until_id_clickable,
                                   cleanup_on_error, wait_until_id_visible,
                                   DEFAULT_WAIT, login)
 
@@ -175,7 +176,6 @@ def test_cascading_deletion_of_analyses(selenium, total_analyses=5):
         selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(0))
 
 
-
 @cleanup_on_error
 def test_that_dataset_404s_are_handled(selenium, total_analyses=5):
     """Test use case where DataSet objects are deleted (for example by an
@@ -220,7 +220,6 @@ def test_that_dataset_404s_are_handled(selenium, total_analyses=5):
     wait_until_id_visible(selenium, "total-datasets", DEFAULT_WAIT)
     assert_text_within_id(
         selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(0))
-
 
 
 @cleanup_on_error
