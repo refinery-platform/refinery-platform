@@ -4,7 +4,7 @@ function permissionService (sharingService) {
   var vm = this;
   vm.permissions = {};
 
-    /**
+  /**
    * Load permissions for this dataset.
    *
    * @method  getPermissions
@@ -13,7 +13,7 @@ function permissionService (sharingService) {
    *
    * @param   {String}  uuid   UUID of the exact model entity.
    * @return  {Object}         Angular promise.
-   */
+   * */
   vm.getPermissions = function (uuid) {
     return sharingService.get({
       model: 'data_sets',
@@ -57,7 +57,7 @@ function permissionService (sharingService) {
   };
 }
 
-angular.module('refineryDashboard')
+angular.module('c')
   .service('permissionService', [
     'sharingService',
     permissionService
