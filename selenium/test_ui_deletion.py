@@ -73,9 +73,6 @@ def test_dataset_deletion(selenium, total_datasets=5):
         selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(
             total_datasets))
 
-    if not_travis:
-        pytest.set_trace()
-
 
 @cleanup_on_error
 def test_analysis_deletion(selenium, total_analyses=5):
@@ -140,9 +137,6 @@ def test_analysis_deletion(selenium, total_analyses=5):
     assert_text_within_id(
         selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(0))
 
-    if not_travis:
-        pytest.set_trace()
-
 
 @cleanup_on_error
 def test_cascading_deletion_of_analyses(selenium, total_analyses=5):
@@ -180,8 +174,6 @@ def test_cascading_deletion_of_analyses(selenium, total_analyses=5):
     assert_text_within_id(
         selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(0))
 
-    if not_travis:
-        pytest.set_trace()
 
 
 @cleanup_on_error
@@ -229,8 +221,6 @@ def test_that_dataset_404s_are_handled(selenium, total_analyses=5):
     assert_text_within_id(
         selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(0))
 
-    if not_travis:
-        pytest.set_trace()
 
 
 @cleanup_on_error
@@ -276,6 +266,3 @@ def test_that_analysis_404s_are_handled(selenium, total_analyses=5):
     wait_until_id_visible(selenium, "total-datasets", DEFAULT_WAIT)
     assert_text_within_id(
         selenium, "total-datasets", DEFAULT_WAIT, "{} data sets".format(1))
-
-    if not_travis:
-        pytest.set_trace()

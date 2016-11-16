@@ -4,7 +4,8 @@ from time import time
 from django.contrib.auth.models import User
 
 from utils.selenium_utils import (assert_body_text, wait_until_id_visible,
-                                  DEFAULT_WAIT, wait_until_id_clickable)
+                                  DEFAULT_WAIT, wait_until_id_clickable,
+                                  cleanup_on_error)
 
 base_url = os.environ['BASE_URL']
 not_travis = not('TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true')
@@ -17,12 +18,14 @@ def selenium(selenium):
     return selenium
 
 
-def test_user_registration(selenium):
+@cleanup_on_error
+def test_user_registration_and_login(selenium):
     """
     Test registering a new Refinery user
-
     NOTE: this includes checks for valid form data
     """
+    selenium.get(base_url)
+    wait_until_id_clickable(selenium, "refinery-login", DEFAULT_WAIT)
     selenium.find_element_by_link_text('Register').click()
     assert_body_text(
         selenium, 'Sign Up', 'Register for an account',
@@ -43,7 +46,7 @@ def test_user_registration(selenium):
         'This field is required')
 
     selenium.find_element_by_name('username').send_keys(time_stamp)
-    selenium.find_element_by_name('first_name').send_keys('first')
+    selenium.find_element_by_name('first_name').send_keys('Test User')
     selenium.find_element_by_name('last_name').send_keys('last')
     selenium.find_element_by_name('affiliation').send_keys('affiliation')
     selenium.find_element_by_name('email').send_keys('%s@example.org' %
@@ -55,7 +58,7 @@ def test_user_registration(selenium):
     assert_body_text(selenium, 'Registration complete')
 
     try:
-        registered_user = User.objects.get(first_name='first')
+        registered_user = User.objects.get(first_name='Test User')
     except(User.DoesNotExist, User.MultipleObjectsReturned) as e:
         raise AssertionError("Error while fetching newly registered User: {"
                              "}".format(e))
@@ -66,24 +69,20 @@ def test_user_registration(selenium):
         registered_user.is_active = True
         registered_user.save()
 
-    if not_travis:
-        pytest.set_trace()
-
-
-def test_login(selenium):
     """
-    Test logging into Refinery with our newly created user as well as
-    editing said User's profile
+        Test logging into Refinery with our newly created user as well as
+        editing said User's profile
     """
+
     # Test login
     selenium.get(base_url)
-    wait_until_id_visible(selenium, "refinery-login", DEFAULT_WAIT)
+    wait_until_id_clickable(selenium, "refinery-login", DEFAULT_WAIT)
     selenium.find_element_by_link_text('Login').click()
-    wait_until_id_visible(selenium, "id_username", DEFAULT_WAIT)
+    wait_until_id_clickable(selenium, "id_username", DEFAULT_WAIT)
     selenium.find_element_by_id('id_username').send_keys(time_stamp)
     selenium.find_element_by_id('id_password').send_keys('password')
     selenium.find_element_by_xpath('//input[@type="submit"]').click()
-    wait_until_id_visible(selenium, "refinery-logout", DEFAULT_WAIT)
+    wait_until_id_clickable(selenium, "refinery-logout", DEFAULT_WAIT)
     assert_body_text(selenium, 'Logout')
 
     # Try and edit user profile
@@ -98,14 +97,11 @@ def test_login(selenium):
     wait_until_id_visible(selenium, "user-profile-name", DEFAULT_WAIT)
     assert_body_text(selenium, "Edit Your User Information",
                      "Profile for {}".format(time_stamp),
-                     "first", "last", "affiliation")
+                     "Test User", "last", "affiliation")
 
     selenium.find_element_by_id('id_affiliation').send_keys("COFFEE")
     wait_until_id_clickable(selenium, "submit-link", DEFAULT_WAIT).click()
 
     wait_until_id_visible(selenium, "user-profile-name", DEFAULT_WAIT)
     assert_body_text(selenium, "Profile for {}".format(time_stamp),
-                     "first", "last", "COFFEE")
-
-    if not_travis:
-        pytest.set_trace()
+                     "Test User", "last", "COFFEE")

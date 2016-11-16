@@ -28,6 +28,3 @@ def test_login_not_required(selenium):
     assert_body_text(selenium, 'Background', 'Contact', 'Funding', 'Team',
                      'Most Recent Code for this Instance')
     # TODO: All sections are empty right now
-
-    if not_travis:
-        pytest.set_trace()

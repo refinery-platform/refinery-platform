@@ -1,6 +1,8 @@
 import uuid as uuid_builtin
 from datetime import datetime
 
+from django.contrib.auth.models import User
+
 from core.models import DataSet, Analysis
 
 from factory_boy.django_model_factories import DataSetFactory, \
@@ -90,4 +92,6 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
 
 
 def factory_boy_cleanup():
-    DataSet.objects.all().delete()  # Will take care of Analysis deletion
+    # Will take care of Analysis deletion as well
+    DataSet.objects.filter(name__startswith="Test DataSet -").delete()
+    User.objects.filter(first_name="Test User").delete()
