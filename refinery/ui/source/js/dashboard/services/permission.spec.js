@@ -4,6 +4,7 @@
 describe('Permission Service', function () {
   var deferred;
   var service;
+  var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryDashboard'));
@@ -17,14 +18,50 @@ describe('Permission Service', function () {
   });
 
   describe('getPermissions', function () {
-    beforeEach(inject(function (sharingService, $q) {
-      var responseData = { objects: [{ is_owner: true }] };
-      spyOn(sharingService, 'query').and.callFake(function () {
+    var apiResponse;
+    var rootScope;
+    var expectedPermission;
+    beforeEach(inject(function (_sharingService_, $q, _$rootScope_) {
+      var sharingService = _sharingService_;
+      rootScope = _$rootScope_;
+      apiResponse = {
+        is_owner: true,
+        share_list: [
+          {
+            group_id: 5,
+            group_name: 'Public',
+            group_uuid: fakeUuid,
+            perms: {
+              read: true,
+              change: false
+            }
+          }
+        ]
+      };
+      expectedPermission = {
+        isOwner: true,
+        groups: [
+          {
+            id: 5,
+            name: 'Public',
+            uuid: fakeUuid,
+            permission: 'read'
+          }
+        ]
+      };
+      spyOn(sharingService, 'get').and.callFake(function () {
         deferred = $q.defer();
-        deferred.resolve(responseData);
+        deferred.resolve(apiResponse);
         return { $promise: deferred.promise };
       });
     }));
+
+    it('getPermissions sets permissions', function () {
+      service.getPermissions(fakeUuid);
+      expect(service.permissions).toEqual({});
+      rootScope.$apply();
+      expect(service.permissions).toEqual(expectedPermission);
+    });
   });
 
   describe('getPermissionLevel', function () {
