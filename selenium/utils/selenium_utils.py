@@ -87,7 +87,8 @@ def cleanup_on_error(func):
     """Decorator to be used on function calls that could potentially
     generate many exceptions across different browsers. Rather than having a
     bunch of try/catches, we can decorate a test function and have objects
-    created through factory boy cleaned up upon an unexpected test failure
+    created through factory boy cleaned up upon an unexpected test failure,
+    as to not interfere with other test runs.
     """
     def func_wrapper(*args, **kwargs):
         try:
