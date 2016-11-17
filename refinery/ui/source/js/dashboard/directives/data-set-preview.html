@@ -109,16 +109,19 @@
       </div>
       <div class="inline-container" ng-if="preview.numAssays > 0">
         <h6>Technology &amp; Measurement</h6>
-        <ul>
-          <li
-            ng-repeat="assay in preview.assays | limitTo: preview.maxBadges track by $index"
-            class="badge-list">
-            {{ assay.technology }}
-            <span
-              class="badge-characteristic"
-              ng-if="assay.measurement.length > 0">
-              {{ assay.measurement }}
-            </span>
+        <ul class="badge-list">
+          <li ng-repeat="assay in preview.assays | limitTo: preview.maxBadges track by $index">
+            <div ng-if="assay.technology">
+              {{ assay.technology }}
+              <span
+                class="badge-characteristic"
+                ng-if="assay.measurement.length > 0">
+                {{ assay.measurement }}
+              </span>
+            </div>
+            <div ng-if="!assay.technology">
+              <em>None</em>
+            </div>
           </li>
         </ul>
         <button
