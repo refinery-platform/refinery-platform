@@ -18,13 +18,13 @@ creds = yaml.load(open(os.environ['CREDS_YML']))
 def login(selenium):
     creds = yaml.load(open(os.environ['CREDS_YML']))
     selenium.get(base_url)
-    wait_until_id_visible(selenium, "refinery-login", DEFAULT_WAIT)
+    wait_until_id_clickable(selenium, "refinery-login", DEFAULT_WAIT)
     selenium.find_element_by_link_text('Login').click()
-    wait_until_id_visible(selenium, "id_username", DEFAULT_WAIT)
+    wait_until_id_clickable(selenium, "id_username", DEFAULT_WAIT)
     selenium.find_element_by_id('id_username').send_keys(creds['username'])
     selenium.find_element_by_id('id_password').send_keys(creds['password'])
     selenium.find_element_by_xpath('//input[@type="submit"]').click()
-    wait_until_id_visible(selenium, "refinery-logout", DEFAULT_WAIT)
+    wait_until_id_clickable(selenium, "refinery-logout", DEFAULT_WAIT)
     assert_body_text(selenium, 'Logout')
 
 
