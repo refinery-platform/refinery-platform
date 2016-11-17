@@ -43,6 +43,9 @@ def make_datasets(number_to_create, user_instance):
 
 def make_analyses_with_single_dataset(number_to_create, user_instance):
     """Create some minimal Analyses"""
+
+    status_choices = Analysis.STATUS_CHOICES
+
     instance = GalaxyInstanceFactory()
     workflow_engine = WorkflowEngineFactory(instance=instance)
     workflow_uuid = uuid_builtin.uuid4()
@@ -70,6 +73,7 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
         date=datetime.now()
     )
 
+    analysis_status_counter = len(status_choices) - 1
     while number_to_create >= 1:
         analysis_uuid = uuid_builtin.uuid4()
         AnalysisFactory(
@@ -77,10 +81,16 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
             name="Test Analysis - {}".format(analysis_uuid),
             project=project,
             data_set=dataset,
-            workflow=workflow
+            workflow=workflow,
+            status=status_choices[analysis_status_counter][0]
         )
 
         number_to_create -= 1
+        analysis_status_counter -= 1
+
+        # Reset counter for picking analyses' status
+        if analysis_status_counter == 0:
+            analysis_status_counter = len(status_choices) - 1
 
     for dataset in DataSet.objects.all():
         dataset.set_owner(user_instance)
