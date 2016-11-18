@@ -2,29 +2,25 @@
 
 function rpAssayFilesUtilModal (
   $compile,
+  resetGridService,
   $templateCache,
-  $uibModal,
-  resetGridService
+  $uibModal
 ) {
   return {
     restrict: 'AE',
     link: function (scope, element) {
       var modalInstance;
-
       element.bind('click', function () {
-        var template = $templateCache.get('assayfilesutilmodal.html');
-        var modalContent = $compile(template)(scope);
-
         modalInstance = $uibModal.open({
-          template: modalContent,
+          templateUrl: '/static/partials/file-browser/partials/assay-files-util-modal-detail.html',
           controller: 'AssayFilesUtilModalCtrl',
           controllerAs: 'AFUMCtrl'
         });
-
+        // default calls when modal closes or dismisses
         modalInstance.result.then(function () {
-          resetGridService.setResetGridFlag(true);
+          resetGridService.setRefreshGridFlag(true);
         }, function () {
-          resetGridService.setResetGridFlag(true);
+          resetGridService.setRefreshGridFlag(true);
         });
       });
     }
@@ -37,9 +33,9 @@ angular
   'rpAssayFilesUtilModal',
   [
     '$compile',
+    'resetGridService',
     '$templateCache',
     '$uibModal',
-    'resetGridService',
     rpAssayFilesUtilModal
   ]
   );

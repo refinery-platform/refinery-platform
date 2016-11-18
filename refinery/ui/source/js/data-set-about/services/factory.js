@@ -13,10 +13,10 @@ function dataSetAboutFactory (
   var dataSet = {};
   var dataSetSharing = {};
   var fileStoreItem = {};
-  var group = {};
   var investigation = {};
   var isaTab = {};
   var ownerProfile = {};
+  var ownerName = '';
   var studies = [];
 
   var getDataSet = function (dataSetUuid) {
@@ -54,31 +54,11 @@ function dataSetAboutFactory (
     return dataSetRequest.$promise;
   };
 
-  var generateGroupObj = function (dataObj, permissions) {
-    return {
-      name: dataObj.name,
-      id: dataObj.id,
-      uuid: dataObj.uuid,
-      canEdit: permissions.change,
-      canRead: permissions.read
-    };
-  };
-
-  var getGroup = function (shareObj) {
-    var params = {
-      id: shareObj.groupId
-    };
-    var groupRequest = groupMemberService.query(params);
-    groupRequest.$promise.then(function (response) {
-      angular.copy(generateGroupObj(response.objects[0], shareObj.perms), group);
-    });
-    return groupRequest.$promise;
-  };
-
   var getOwnerName = function (userUuid) {
     var ownerService = userService.get(userUuid);
     ownerService.then(function (response) {
       angular.copy(response, ownerProfile);
+      ownerName = ownerProfile.fullName;
     });
     return ownerService;
   };
@@ -112,15 +92,13 @@ function dataSetAboutFactory (
     dataSet: dataSet,
     dataSetSharing: dataSetSharing,
     fileStoreItem: fileStoreItem,
-    group: group,
     investigation: investigation,
     isaTab: isaTab,
-    ownerProfile: ownerProfile,
+    ownerName: ownerName,
     studies: studies,
     getDataSet: getDataSet,
     getDataSetSharing: getDataSetSharing,
     getFileStoreItem: getFileStoreItem,
-    getGroup: getGroup,
     getOwnerName: getOwnerName,
     getStudies: getStudies,
     getStudysAssays: getStudysAssays

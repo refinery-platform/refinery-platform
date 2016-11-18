@@ -44,17 +44,17 @@ GroupEditorCtrl.prototype.leaveGroup = function () {
             that.$uibModalInstance.dismiss();
           }, 1500);
         }, function () {
-          that.alertType = 'error';
+          that.alertType = 'danger';
           that.responseMessage = 'Error leaving group. If last member,' +
             ' delete group.';
         });
       } else {
-        that.alertType = 'error';
+        that.alertType = 'danger';
         that.responseMessage = 'Error, please log in.';
       }
     })
     .catch(function () {
-      that.alertType = 'error';
+      that.alertType = 'danger';
       that.responseMessage = 'Error, please try again.';
     });
 };
@@ -73,7 +73,7 @@ GroupEditorCtrl.prototype.deleteGroup = function () {
       that.$uibModalInstance.dismiss();
     }, 1500);
   }, function () {
-    that.alertType = 'error';
+    that.alertType = 'danger';
     that.responseMessage = 'Group could not be deleted.';
   });
 };

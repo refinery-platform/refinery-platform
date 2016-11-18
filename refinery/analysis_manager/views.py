@@ -371,16 +371,15 @@ def run(request):
         count = 1
         for curr_pair in curr_relationship.node_pairs.all():
             temp_pair = copy.deepcopy(base_input)
-            print "curr_pair"
-            print temp_pair
-            print curr_pair
+            logger.debug("Temp Pair: %s", temp_pair)
+            logger.debug("Current Pair: %s", curr_pair)
             if curr_pair.node2:
                 temp_pair[input_keys[0]]['node_uuid'] = curr_pair.node1.uuid
                 temp_pair[input_keys[0]]['pair_id'] = count
                 temp_pair[input_keys[1]]['node_uuid'] = curr_pair.node2.uuid
                 temp_pair[input_keys[1]]['pair_id'] = count
                 ret_list.append(temp_pair)
-                print temp_pair
+                logger.debug("Temp Pair: %s", temp_pair)
                 count += 1
 
         logger.info("Associating analysis with data set %s (%s)",
