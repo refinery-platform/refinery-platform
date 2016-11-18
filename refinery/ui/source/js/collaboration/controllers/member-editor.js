@@ -1,13 +1,23 @@
 'use strict';
 
 function MemberEditorCtrl (
-  bootbox, $uibModalInstance, groupDataService, groupMemberService, member
+  $timeout,
+  $uibModalInstance,
+  groupDataService,
+  groupMemberService,
+  member
 ) {
-  this.bootbox = bootbox;
+  this.$timeout = $timeout;
   this.$uibModalInstance = $uibModalInstance;
   this.groupDataService = groupDataService;
   this.groupMemberService = groupMemberService;
   this.member = member;
+  this.alertType = 'info';
+  this.responseMessage = '';
+
+  this.close = function () {
+    this.$uibModalInstance.dismiss();
+  };
 }
 
 MemberEditorCtrl.prototype.promote = function () {
@@ -19,10 +29,15 @@ MemberEditorCtrl.prototype.promote = function () {
   }).$promise.then(
     function () {
       that.groupDataService.update();
-      that.$uibModalInstance.dismiss();
+      that.alertType = 'success';
+      that.responseMessage = 'Successfully promoted member ' + that.member.username;
+      that.$timeout(function () {
+        that.$uibModalInstance.dismiss();
+      }, 1500);
     }
   ).catch(function () {
-    that.bootbox.alert('Could not promote member');
+    that.alertType = 'danger';
+    that.responseMessage = 'Error Could not promote member ' + that.member.username;
   });
 };
 
@@ -35,10 +50,16 @@ MemberEditorCtrl.prototype.demote = function () {
   }).$promise.then(
     function () {
       that.groupDataService.update();
-      that.$uibModalInstance.dismiss();
+      that.alertType = 'success';
+      that.responseMessage = 'Successfully demoted member ' + that.member.username;
+      that.$timeout(function () {
+        that.$uibModalInstance.dismiss();
+      }, 1500);
     }
   ).catch(function () {
-    that.bootbox.alert('Are you the only member or manager left?');
+    that.alertType = 'danger';
+    that.responseMessage = 'Error, could not demote member ' +
+      that.member.username + '. Last member and manager can not leave';
   });
 };
 
@@ -51,17 +72,23 @@ MemberEditorCtrl.prototype.remove = function () {
   }).$promise.then(
     function () {
       that.groupDataService.update();
-      that.$uibModalInstance.dismiss();
+      that.alertType = 'success';
+      that.responseMessage = 'Successfully removed member' + that.member.username;
+      that.$timeout(function () {
+        that.$uibModalInstance.dismiss();
+      }, 1500);
     }
   ).catch(function () {
-    that.bootbox.alert('Are you the only member or manager left?');
+    that.alertType = 'danger';
+    that.responseMessage = 'Error, could not remove member'
+      + that.member.username + '. Last member and manager can not leave';
   });
 };
 
 angular
   .module('refineryCollaboration')
   .controller('MemberEditorCtrl', [
-    'bootbox',
+    '$timeout',
     '$uibModalInstance',
     'groupDataService',
     'groupMemberService',

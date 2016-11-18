@@ -1,0 +1,27 @@
+<div class="row">
+  <ui-select
+  append-to-body="true"
+  search-enabled="false"
+  ng-model="VCtrl.selectedVisualization.select"
+  theme="select2"
+  class="ui-select-drop text-left">
+  <ui-select-match placeholder="Select a visualization">
+    {{$select.selected.name}}
+  </ui-select-match>
+  <ui-select-choices
+    repeat="visualization in VCtrl.visualizations">
+      {{visualization.name}}
+  </ui-select-choices>
+</ui-select>
+  <button
+    class="btn btn-primary btn-xs"
+    ng-click="VCtrl.launchVisualization()"
+    ng-disabled="!VCtrl.selectedVisualization.select || !VCtrl.areNodesSelected()">
+    Launch Visualization
+  </button>
+</div>
+
+<!-- Add scripts for the different visualizations here. -->
+  <script type="text/ng-template" id='i-g-v-launch-modal.html'>
+    <rp-i-g-v-launch-modal-detail></rp-i-g-v-launch-modal-detail>
+  </script>

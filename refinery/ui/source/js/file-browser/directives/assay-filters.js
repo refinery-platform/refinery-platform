@@ -4,12 +4,6 @@ function rpFileBrowserAssayFilters ($timeout, $location, selectedFilterService) 
   return {
     restrict: 'E',
     templateUrl: '/static/partials/file-browser/partials/assay-filters.html',
-    controller: 'FileBrowserCtrl',
-    controllerAs: 'FBCtrl',
-    bindToController: {
-      attributeFilter: '@',
-      analysisFilter: '@'
-    },
     link: function (scope) {
       // ng-click event for attribute filter panels
       scope.dropAttributePanel = function (e, attributeName, attributeObj) {
@@ -82,9 +76,9 @@ function rpFileBrowserAssayFilters ($timeout, $location, selectedFilterService) 
               document.querySelector('#' + escapeAttributeName)).addClass('in');
               attributeTitle.removeClass('fa-caret-right');
               attributeTitle.addClass('fa-caret-down');
-              selectedFilterService.selectedFieldList[attributeInternalName] = [allFields[ind]];
+              selectedFilterService.addSelectedField(attributeInternalName, allFields[ind]);
             } else {
-              selectedFilterService.selectedFieldList[attributeInternalName].push(allFields[ind]);
+              selectedFilterService.addSelectedField(attributeInternalName, allFields[ind]);
             }
           }
         }

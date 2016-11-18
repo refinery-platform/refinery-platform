@@ -34,6 +34,11 @@ function MetadataTableImportCtrl (
   // `this.customSeparator` is an empty String.
   this.isSeparatorOk = true;
   this.setParser();
+
+  // Helper method to exit out of error alert
+  this.closeError = function () {
+    this.isErrored = false;
+  };
 }
 
 Object.defineProperty(
@@ -126,9 +131,13 @@ MetadataTableImportCtrl.prototype.renderTable = function () {
       // rejoin rows with new line
       var fileStr = dataArr.join('\r\n');
       /* Create a new file with the modified data and the originial file props.
-      * Safari does not support the File API Constructor.
+      * Safari supports File API Constructor but has issues with appending the
+      * file. Symptoms show up with content-type errors and file size 0 on
+      * back end. userAgent contains browser info
       * */
-      if (typeof self.$window.File === 'function') {
+      if (self.$window.navigator.userAgent.indexOf('Safari') > -1) {
+        self.strippedFile = new Blob([fileStr], { type: 'application/json' });
+      } else if (typeof self.$window.File === 'function') {
         self.strippedFile = new File([fileStr], self.file.name, self.file);
       } else {
         self.strippedFile = new Blob([fileStr], { type: 'application/json' });
@@ -184,7 +193,8 @@ MetadataTableImportCtrl.prototype.makeColumnDefs = function () {
     }
     columnDefs.push({
       field: columnName,
-      width: columnWidth + '%'
+      width: columnWidth + '%',
+      displayName: columnName
     });
   });
   return columnDefs;

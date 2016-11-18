@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -e
+
+# backup-data-volume /dev/xvdr
+
+# Extract RDS_ID, the identifier of the RDS instance to backup.
+# The stack.py inserts this into
+# the instance user data shell script
+# as a variable assignment of the form RDS_ID=... .
+# User grep to extract this.
+RDS_ID=$(wget -q -O - http://169.254.169.254/latest/user-data |
+  grep 'RDS_ID=')
+RDS_ID=${RDS_ID#*=}
+
+
+Region=$(cat /home/ubuntu/region)
+
+iso_today=$(date --rfc-3339=date)
+
+Output=$(aws rds create-db-snapshot --region "$Region" --db-snapshot-identifier "refinery-${iso_today}-$RDS_ID" --db-instance-identifier "$RDS_ID")
+
+Snapshot=$(printf '%s' "$Output" | jq -r .[].DBSnapshotIdentifier)
+
+echo Created "$Snapshot"
+
+Tags=$(jq .tags /home/ubuntu/s3-config)
+
+# You can't tag a DB Snapshot like this.
+# On the other hand, drj wasn't able to find out
+# how to tag a DB Snapshot.
+# aws ec2 create-tags --region "$Region" --resources "$Snapshot" --tags "$Tags"

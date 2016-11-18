@@ -188,7 +188,7 @@ def run_analysis(analysis_uuid):
         run_analysis.retry(countdown=RETRY_INTERVAL)
     # all tasks must have succeeded or failed
     elif not galaxy_export.successful():
-        error_msg = "Analysis '%s' failed while downloading results from  " \
+        error_msg = "Analysis '{}' failed while downloading results from " \
                     "Galaxy".format(analysis)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
@@ -240,14 +240,14 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
                 curr_file_uuid = Node.objects.get(
                     uuid=cur_item['node_uuid']).file_uuid
             except Node.DoesNotExist:
-                logger.error("Couldn't fetch Node!")
+                logger.error("Couldn't fetch Node")
                 return None
 
             try:
                 current_filestore_item = FileStoreItem.objects.get_item(
                     uuid=curr_file_uuid)
             except FileStoreItem.DoesNotExist:
-                logger.error("Couldn't fetch FileStoreItem!")
+                logger.error("Couldn't fetch FileStoreItem")
                 return None
 
             # Create url based on filestore_item's location (local file or

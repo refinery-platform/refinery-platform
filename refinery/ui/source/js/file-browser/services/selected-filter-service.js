@@ -22,11 +22,24 @@ function selectedFilterService ($location) {
   };
 
   /**
+   * Helper method which removes selected Field and deletes empty attributes
+   * @param {string} attributeName - internal name,'Month_Characteristics_10_5_s'
+   * @param {string} fieldName - field name
+  */
+  vm.addSelectedField = function (attributeName, fieldName) {
+    // check to see if it already exists
+    var fieldIndex = vm.selectedFieldList[attributeName].indexOf(fieldName);
+    if (fieldIndex === -1) {
+      vm.selectedFieldList[attributeName].push(fieldName);
+    }
+  };
+
+  /**
    * Helper method which updates the url query with fields
    * @param {string} fieldName - name of field
    * @param {string} value - True adds name or null removes name
   */
-  var updateUrlQuery = function (fieldName, value) {
+  vm.updateUrlQuery = function (fieldName, value) {
     $location.search(fieldName, value);
   };
 
@@ -42,16 +55,21 @@ function selectedFilterService ($location) {
   vm.updateSelectedFilters = function (activeFields, attribute, field) {
     // Check if attribute already exists in selectedFieldList
     if (activeFields[field] && vm.selectedFieldList[attribute]) {
-      vm.selectedFieldList[attribute].push(field);
-      updateUrlQuery(field, activeFields[field]);
+      // checks if selected fields exists in the attibute object
+      if (vm.selectedFieldList[attribute].indexOf(field) > -1) {
+        vm.updateUrlQuery(field, activeFields[field]);
+      } else {
+        vm.selectedFieldList[attribute].push(field);
+        vm.updateUrlQuery(field, activeFields[field]);
+      }
     // Add new attribute to selectedFieldList
     } else if (activeFields[field]) {
       vm.selectedFieldList[attribute] = [field];
-      updateUrlQuery(field, activeFields[field]);
+      vm.updateUrlQuery(field, activeFields[field]);
     // remove empty fields
     } else if (vm.selectedFieldList[attribute]) {
       removeSelectedField(attribute, field);
-      updateUrlQuery(field, null);
+      vm.updateUrlQuery(field, null);
     }
     return vm.selectedFieldList;
   };

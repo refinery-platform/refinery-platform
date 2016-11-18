@@ -11,7 +11,6 @@ describe('rpAssayFiles directive unit test', function () {
   var template;
   var directiveElement;
   var jQuery;
-  var $timeout;
   var service;
 
   beforeEach(inject(function (
@@ -19,7 +18,6 @@ describe('rpAssayFiles directive unit test', function () {
     _$rootScope_,
     $templateCache,
     _$_,
-    _$timeout_,
     _selectedFilterService_
   ) {
     $templateCache.put(
@@ -35,7 +33,6 @@ describe('rpAssayFiles directive unit test', function () {
     scope = rootScope.$new();
     service = _selectedFilterService_;
     jQuery = _$_;
-    $timeout = _$timeout_;
     template = '<rp-file-browser-assay-filters></rp-file-browser-assay-filters>';
     directiveElement = compile(template)(scope);
     angular.element(document.body).append(directiveElement);
@@ -105,32 +102,6 @@ describe('rpAssayFiles directive unit test', function () {
     response = scope.showField(
       'notSelectedAnalysis', 'REFINERY_ANALYSIS_UUID_92_46_s', 'Analysis');
     expect(response).toEqual(true);
-  });
-
-  it('test generate Filter Drop Selection, ensure updateDomDropdown', function () {
-    scope.FBCtrl.analysisFilter.Analysis = undefined;
-    scope.FBCtrl.attributeFilter = {
-      Title: { facet_obj: [
-        {
-          count: 129,
-          name: 'Device independent graphical display description'
-        }, {
-          count: 18,
-          name: 'Graphics Facilities at Ames Research Center'
-        }],
-          internal_name: 'Title_Characteristics_92_46_s' } };
-
-
-    var filters = scope.generateFilterDropSelection();
-    $timeout.flush();
-    // test filters response
-    expect(filters).toEqual(scope.FBCtrl.attributeFilter);
-    scope.FBCtrl.analysisFilter.Analysis = [{
-      count: 5, name: 'Test Work Analysis' }];
-    // test filters merge
-    filters = scope.generateFilterDropSelection();
-    scope.FBCtrl.attributeFilter.Analysis = scope.FBCtrl.analysisFilter.Analysis;
-    expect(filters).toEqual(scope.FBCtrl.attributeFilter);
   });
 
   it('test broadcast triggers watcher', function () {

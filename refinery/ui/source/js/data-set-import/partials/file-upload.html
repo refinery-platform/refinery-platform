@@ -46,7 +46,8 @@
         <!-- <span class="fileupload-process"></span> -->
       </div>
       <div class="col-lg-4">
-        <div class="v-center" ng-if="processing() || loadingFiles">
+        <div class="v-center" ng-if="fileStatus !='none' && (processing() ||
+        loadingFiles)">
           <span>Calculating MD5</span>
           <button class="icon-only" ng-click="openHelpMd5()">
             <i class="fa fa-question-circle" aria-hidden="true"></i>

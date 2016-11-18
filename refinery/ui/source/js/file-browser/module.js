@@ -7,6 +7,5 @@ angular
     'ui.grid.infiniteScroll',
     'ui.grid.resizeColumns',
     'dndLists',
-    'ui.select',
-    'ngSanitize'
+    'ui.select'
   ]);

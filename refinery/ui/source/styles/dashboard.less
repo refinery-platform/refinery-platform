@@ -47,7 +47,8 @@
 
   .separator {
     margin: 0 0.2rem;
-    color: @gray-lighter-rgba;
+    color: @gray-light-rgba;
+    font-size: 1.2em !important;
   }
 }
 
@@ -909,7 +910,7 @@
           -webkit-line-clamp: 1;
         }
 
-        >em {
+        > em {
           font-weight: bold;
           font-style: normal;
           background: fade(lighten(@blue-light, 25%), 15%);
@@ -933,7 +934,7 @@
         }
       }
 
-      >li {
+      > li {
         position: relative;
         padding: 5px 3rem 5px 0;
         border-top: 1px solid @gray-lighter-rgba;
@@ -1054,8 +1055,8 @@
           z-index: 2;
           background: fade(@blue, 10%);
           box-shadow: 0 1px 0 0 @white,
-                      inset 0 1px 0 0 fade(@blue, 10%),
-                      inset 0 -1px 0 0 fade(@blue, 10%);
+          inset 0 1px 0 0 fade(@blue, 10%),
+          inset 0 -1px 0 0 fade(@blue, 10%);
           border-top-color: @white;
 
           .preview,
@@ -1065,9 +1066,10 @@
             color: @white !important;
             background: #326180;
           }
-          .fa-table {
-              color: #ffffff !important;
-            }
+
+          .fa-table{
+            color: #ffffff !important;
+          }
         }
 
         .preview {
@@ -1085,35 +1087,26 @@
           background: rgba(0, 0, 0, 0);
           transition: all @fast-transition-speed @ease-in-out-cubic;
           text-decoration: none;
-
-          &:focus {
-            color: @black;
-            background: @gray-lighter-rgba;
-          }
-
-          &:active,
-          &:focus {
-            outline: none;
-          }
         }
 
-        &:hover {
-
-          .preview {
-            color: @gray-light-rgba;
-            background: @gray-lighter-rgba;
-
-            &:hover {
-              color: @black;
-            }
-          }
-
-          &.previewing .preview {
-            color: white;
-            background: #326180;
-          }
+        .preview:hover {
+          background: @gray-lighter-rgba;
         }
+
+        &.previewing .preview {
+          color: white;
+          background: #326180;
+        }
+
+      .dataset-delete, .analysis-delete {
+        padding: 2.5px;
       }
+      .dataset-delete:hover, .analysis-delete:hover {
+        color:red !important;
+        background: rgba(255, 1, 0, 0.2) !important;
+        border-radius: 15px;
+      }
+    }
 
       &.infinite-scrolling {
         // Hack because uiScroll adds another invisible first child to the list.
@@ -1559,3 +1552,30 @@ body.repo-mode .refinery-dashboard {
 }
 
 @import "intro-js.less";
+
+#related-analyses {
+  max-height: 250px;
+  overflow: auto;
+}
+
+.deletion-message {
+  text-align: initial;
+}
+
+.no-link {
+ text-decoration: none !important;
+ color: black !important;
+}
+
+#analyses-indicator {
+  color: @gray-light-rgba !important;
+  text-decoration: none;
+
+  &:hover {
+    color: @gray  !important;
+  }
+}
+
+#metadata-search {
+  padding:2px 25px;
+}

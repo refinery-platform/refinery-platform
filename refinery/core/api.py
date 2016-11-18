@@ -92,6 +92,7 @@ class SharableResourceAPIInterface(object):
             lambda g: {
                 'group_id': g.id,
                 'group_name': g.name,
+                'group_uuid': g.extendedgroup.uuid,
                 'perms': self.get_perms(res, g)},
             groups_in)
 
@@ -498,6 +499,27 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         if pre_isa_archive:
             bundle.data["pre_isa_archive"] = pre_isa_archive.uuid
 
+        analyses = []
+        for analysis in bundle.obj.get_analyses():
+            analysis_dict = analysis.__dict__
+            analysis_dict['is_owner'] = False
+            owner = analysis.get_owner()
+            if owner:
+                try:
+                    analysis_dict['owner'] = owner.userprofile.uuid
+                    user = bundle.request.user
+                    if (hasattr(user, 'userprofile') and
+                       user.userprofile.uuid == analysis_dict['owner']):
+                        analysis_dict['is_owner'] = True
+                except:
+                    analysis_dict['owner'] = None
+
+            else:
+                analysis_dict['owner'] = None
+
+            analyses.append(analysis_dict)
+
+        bundle.data["analyses"] = analyses
         bundle.data["version"] = bundle.obj.get_version_details().version
         bundle.data["date"] = bundle.obj.get_version_details().date
         bundle.data["creation_date"] = bundle.obj.creation_date

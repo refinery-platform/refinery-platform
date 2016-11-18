@@ -1,8 +1,8 @@
 'use strict';
 
 function GroupEditorCtrl (
-  bootbox,
   $uibModalInstance,
+  $timeout,
   groupExtendedService,
   groupMemberService,
   groupDataService,
@@ -10,15 +10,16 @@ function GroupEditorCtrl (
   authService,
   sessionService
 ) {
-  this.bootbox = bootbox;
   this.$uibModalInstance = $uibModalInstance;
+  this.$timeout = $timeout;
   this.groupExtendedService = groupExtendedService;
   this.groupMemberService = groupMemberService;
   this.groupDataService = groupDataService;
   this.group = group;
   this.authService = authService;
   this.sessionService = sessionService;
-  this.errorFlag = false;
+  this.responseMessage = '';
+  this.alertType = 'info';
 
   this.close = function () {
     this.$uibModalInstance.dismiss();
@@ -27,7 +28,6 @@ function GroupEditorCtrl (
 
 GroupEditorCtrl.prototype.leaveGroup = function () {
   var that = this;
-  that.errorFlag = false;
 
   that.authService.isAuthenticated()
     .then(function (isAuthenticated) {
@@ -39,24 +39,28 @@ GroupEditorCtrl.prototype.leaveGroup = function () {
         .$promise
         .then(function () {
           that.groupDataService.update();
-          that.$uibModalInstance.dismiss();
+          that.alertType = 'success';
+          that.$timeout(function () {
+            that.$uibModalInstance.dismiss();
+          }, 1500);
         }, function () {
-          that.errorFlag = true;
-          that.errorMessage = 'Error leaving group. If last member, delete' +
-            ' group.';
+          that.alertType = 'danger';
+          that.responseMessage = 'Error leaving group. If last member,' +
+            ' delete group.';
         });
       } else {
-        that.bootbox.alert('Error: You are not authenticated.');
+        that.alertType = 'danger';
+        that.responseMessage = 'Error, please log in.';
       }
     })
     .catch(function () {
-      that.bootbox.alert('Something went wrong. Please try again');
+      that.alertType = 'danger';
+      that.responseMessage = 'Error, please try again.';
     });
 };
 
 GroupEditorCtrl.prototype.deleteGroup = function () {
   var that = this;
-  that.errorFlag = false;
 
   that.groupExtendedService.delete({
     uuid: that.group.uuid
@@ -64,18 +68,21 @@ GroupEditorCtrl.prototype.deleteGroup = function () {
   .$promise
   .then(function () {
     that.groupDataService.update();
-    that.$uibModalInstance.dismiss();
+    that.alertType = 'success';
+    that.$timeout(function () {
+      that.$uibModalInstance.dismiss();
+    }, 1500);
   }, function () {
-    that.errorFlag = true;
-    that.errorMessage = 'Group could not be deleted.';
+    that.alertType = 'danger';
+    that.responseMessage = 'Group could not be deleted.';
   });
 };
 
 angular
   .module('refineryCollaboration')
   .controller('GroupEditorCtrl', [
-    'bootbox',
     '$uibModalInstance',
+    '$timeout',
     'groupExtendedService',
     'groupMemberService',
     'groupDataService',

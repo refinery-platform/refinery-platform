@@ -7,7 +7,6 @@ function analysisMonitorAnalysesList ($rootScope, $location) {
     controller: 'AnalysisMonitorCtrl',
     controllerAs: 'AMCtrl',
     bindToController: {
-      analysesList: '@',
       analysesDetail: '@'
     },
     link: function (scope) {

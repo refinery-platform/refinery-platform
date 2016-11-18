@@ -50,7 +50,13 @@
   </div>
 
   <div ng-repeat="study in ADCtrl.studies track by $index">
-    <strong>{{study.identifier}}</strong>: {{study.title}}
+    <span ng-if="study.identifier">
+      <strong>{{study.identifier}}</strong>
+    </span>
+    <span ng-if="study.title">
+      : {{study.title}}
+    </span>
+
     <ul ng-repeat="assay in ADCtrl.assays[study.uuid] track by $index">
       Assay -
       <span ng-if="assay.measurement">

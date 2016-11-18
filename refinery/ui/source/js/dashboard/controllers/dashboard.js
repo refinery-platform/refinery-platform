@@ -8,6 +8,7 @@ function DashboardCtrl (
   $timeout,
   $rootScope,
   $window,
+  $log,
   // 3rd party library
   _,
   $uibModal,
@@ -40,6 +41,8 @@ function DashboardCtrl (
   this.$stateParams = $stateParams;
   this.$timeout = $timeout;
   this.$window = $window;
+  this.$uibModal = $uibModal;
+  this.$log = $log;
 
   // Construct 3rd party library
   this._ = _;
@@ -62,6 +65,10 @@ function DashboardCtrl (
   this.dashboardVisData = dashboardVisData;
   this.dataCart = dataCart;
   this.introsSatoriDataSetView = new DashboardIntrosDataSetView(this);
+
+  // variable to track filters and sorting selected in ui for data set api query
+  this.dataSetParams = {};
+
 
   this.searchQueryDataSets = '';
 
@@ -454,11 +461,12 @@ Object.defineProperty(
 
       this._dataSetsFilterGroup = value;
       if (typeof groupId === 'number') {
-        this.dataSet.filter({
-          group: groupId
-        });
+        this.dataSetParams.group = groupId;
+        this.dataSet.filter(this.dataSetParams);
       } else {
-        this.dataSet.all();
+        // remove group property
+        delete this.dataSetParams.group;
+        this.dataSet.filter(this.dataSetParams);
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
@@ -477,11 +485,12 @@ Object.defineProperty(
     set: function (value) {
       this._dataSetsFilterOwner = value;
       if (value) {
-        this.dataSet.filter({
-          is_owner: 'True'
-        });
+        this.dataSetParams.is_owner = 'True';
+        this.dataSet.filter(this.dataSetParams);
       } else {
-        this.dataSet.all();
+        // remove is_owner property, avoids searching for non-owned data sets
+        delete this.dataSetParams.is_owner;
+        this.dataSet.filter(this.dataSetParams);
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
@@ -500,11 +509,12 @@ Object.defineProperty(
     set: function (value) {
       this._dataSetsFilterPublic = value;
       if (value) {
-        this.dataSet.filter({
-          public: 'True'
-        });
+        this.dataSetParams.public = 'True';
+        this.dataSet.filter(this.dataSetParams);
       } else {
-        this.dataSet.all();
+         // remove is_owner property, avoids searching for non-public data sets
+        delete this.dataSetParams.public;
+        this.dataSet.filter(this.dataSetParams);
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
@@ -1015,6 +1025,8 @@ DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
         // This is weird. We should never run into here unless the whole app
         // initialization failed even after 75ms.
         // See `services/width-fixer.js` for details.
+        this.$log.error('Dashboard expand dataset exploration error,' +
+          ' possibly due to the Refinery App failing to initialized.');
       });
   } else {
     this.$timeout(function () {
@@ -1067,6 +1079,8 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
           // This is weird. We should never run into here unless the whole app
           // initialization failed even after 75ms.
           // See `services/width-fixer.js` for details.
+          this.$log.error('Dashboard expand dataset exploration error,' +
+          ' possibly due to the Refinery App failing to initialized.');
         });
     }
     this.dashboardDataSetPreviewService.preview(dataSetUuid);
@@ -1147,24 +1161,29 @@ DashboardCtrl.prototype.getOriginalUri = function (eventData) {
  * Turns an unreadable date into a readable date string.
  *
  * @method  readableDate
- * @author  Fritz Lekschas
- * @date    2016-05-09
- * @param   {Object}  dataSet   Data set object of interest.
+ * @author  Fritz Lekschas & Scott Ouellette
+ * @date    2016-09-30
+ * @param   {Object}  dataObj  DataSet or Analysis object of interest.
  * @param   {String}  property  Name of the date property to be made readable.
  * @return  {String}            Readable date string.
  */
-DashboardCtrl.prototype.readableDate = function (dataSet, property) {
+DashboardCtrl.prototype.readableDate = function (dataObj, property) {
   var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
     'Sep', 'Oct', 'Nov', 'Dec'];
 
-  if (dataSet[property] && !dataSet[property + 'Readable']) {
-    dataSet[property + 'Readable'] =
-      months[dataSet[property].getMonth()] + ' ' +
-      dataSet[property].getDate() + ', ' +
-      dataSet[property].getFullYear();
+  if (property === 'modification_date') {
+    // Analyses' modification_date field is not a date string that Safari
+    // can handle so we need to convert it. See: http://bit.ly/2dXs5Ho
+    var dateParts = dataObj[property].toString().split(/[^0-9]/);
+    dataObj[property] = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
   }
-
-  return dataSet[property + 'Readable'];
+  if (dataObj[property] && !dataObj[property + 'Readable']) {
+    dataObj[property + 'Readable'] =
+      months[dataObj[property].getMonth()] + ' ' +
+      dataObj[property].getDate() + ', ' +
+      dataObj[property].getFullYear();
+  }
+  return dataObj[property + 'Readable'];
 };
 
 /**
@@ -1567,6 +1586,7 @@ DashboardCtrl.prototype.toggleSortOrder = function (source) {
   }
 };
 
+
 /**
  * Trigger sorting of data sets, analyses, or workflows.
  *
@@ -1591,13 +1611,17 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
     // Todo: Unify data sources. Currently datasets are handled nicely and
     // more generic than others e.g. analyses and workflows.
     if (source === 'dataSets') {
-      this.dataSet.order(params);
+      // Use api request params to tie in sorting & filtering
+      this.dataSetParams.order_by = params;
+      this.dataSet.filter(this.dataSetParams);
     } else {
       this[source].extraParameters.order_by = params;
     }
   } else {
     if (source === 'dataSets') {
-      this.dataSet.all();
+      // Remove order_by param from api request params
+      delete this.dataSetParams.order_by;
+      this.dataSet.filter(this.dataSetParams);
     } else {
       delete this[source].extraParameters.order_by;
     }
@@ -1621,6 +1645,67 @@ DashboardCtrl.prototype.openSatoriIntroEasterEgg = function () {
   });
 };
 
+/*
+ * Open the deletion modal for a given Datset.
+ *
+ * @method  openDataSetDeleteModal
+ * @author  Scott Ouellette
+ * @date    2016-9-20
+ */
+DashboardCtrl.prototype.openDataSetDeleteModal = function (dataSet) {
+  this.collapseDataSetPreview();
+  this.collapseDatasetExploration();
+  this.removeFromDataCart(dataSet);
+
+  this.$uibModal.open({
+    backdrop: 'static',
+    keyboard: false,
+    templateUrl: '/static/partials/dashboard/partials/dataset-delete-dialog.html',
+    controller: 'DataSetDeleteCtrl as modal',
+    resolve: {
+      config: function () {
+        return {
+          model: 'data_sets',
+          uuid: dataSet.uuid
+        };
+      },
+      dataSet: dataSet,
+      dataSets: this.dataSets,
+      analyses: this.analyses,
+      analysesReloadService: this.dashboardAnalysesReloadService
+    }
+  });
+};
+
+/**
+ * Open the deletion modal for a given Analysis.
+ *
+ * @method  openAnalysisDeleteModal
+ * @author  Scott Ouellette
+ * @date    2016-9-28
+ */
+DashboardCtrl.prototype.openAnalysisDeleteModal = function (analysis) {
+  this.$uibModal.open({
+    backdrop: 'static',
+    keyboard: false,
+    templateUrl: '/static/partials/dashboard/partials/analysis-delete-dialog.html',
+    controller: 'AnalysisDeleteCtrl as modal',
+    resolve: {
+      config: function () {
+        return {
+          model: 'analyses',
+          uuid: analysis.uuid
+        };
+      },
+      analysis: analysis,
+      analyses: this.analyses,
+      dataSets: this.dataSets,
+      analysesReloadService: this.dashboardAnalysesReloadService,
+      isOwner: analysis.is_owner
+    }
+  });
+};
+
 angular
   .module('refineryDashboard')
   .controller('DashboardCtrl', [
@@ -1630,6 +1715,8 @@ angular
     '$timeout',
     '$rootScope',
     '$window',
+    '$uibModal',
+    '$log',
     '_',
     '$uibModal',
     'pubSub',

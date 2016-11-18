@@ -1,0 +1,48 @@
+<div class="modal hide"></div>
+  <div class="modal-header">
+    Launch IGV
+  </div>
+
+  <div class="modal-body">
+    <div class="row">
+      <ui-select
+      append-to-body="true"
+      ng-model="ICtrl.selectedSpecies.select"
+      theme="select2"
+      class="ui-select-drop text-left">
+      <ui-select-match placeholder="Select a species">
+          {{$select.selected.name}}
+      </ui-select-match>
+      <ui-select-choices
+        repeat="species in (ICtrl.speciesList | filter: $select.search)">
+          {{species.name}}
+      </ui-select-choices>
+    </ui-select>
+    </div>
+    <div class="row p-t-1">
+      <div ng-if="ICtrl.message">
+        <div class="alert alert-{{ ICtrl.messageType }}
+        text-center">{{ICtrl.message}}</div>
+      </div>
+      <p ng-if="ICtrl.isLoadingSpecies">
+        <i class="fa fa-refresh fa-spin p-a-1-5"></i>
+        Detecting species ...
+      </p>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <div class="row">
+      <button
+        class="btn btn-default"
+        ng-click="ICtrl.cancel()">
+        Cancel
+      </button>
+      <button
+        class="btn btn-primary"
+        ng-click="ICtrl.launchIgvJs()"
+        ng-disabled="ICtrl.areSelectedNodesEmpty() && speciesList.length == 0">
+        Launch IGV
+      </button>
+    </div>
+  </div>
+</div>

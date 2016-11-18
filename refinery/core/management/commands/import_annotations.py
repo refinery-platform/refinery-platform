@@ -1,13 +1,15 @@
 import logging
+from optparse import make_option
 import py2neo
+import requests
+import sys
 import time
 import urlparse
-import requests
 
-from optparse import make_option
+
 from django.conf import settings
-
 from django.core.management.base import BaseCommand
+
 from core.models import DataSet, ExtendedGroup
 from core.utils import (normalize_annotation_ont_ids, get_data_set_annotations,
                         get_anonymous_user)
@@ -163,7 +165,7 @@ class Command(BaseCommand):
             root_logger.setLevel(logging.DEBUG)
 
         if options['clear']:
-            print('Clear existing annotations and users...')
+            sys.stdout.write('Clear existing annotations and users...')
             start = time.time()
 
             graph = py2neo.Graph(
@@ -181,16 +183,12 @@ class Command(BaseCommand):
             end = time.time()
             minutes = int(round((end - start) // 60))
             seconds = int(round((end - start) % 60))
-            print(
-                u'Clear existing annotations and users... ' +
-                u'\033[32m\u2713\033[0m ' +
-                u'\033[2m({} min and {} sec)\033[22m'.format(
-                    minutes,
-                    seconds
-                )
+            sys.stdout.write(
+                'Clear existing annotations and users... {} min and {} sec'
+                .format(minutes, seconds)
             )
 
-        print('Import annotations...')
+        sys.stdout.write('Import annotations...')
 
         start = time.time()
 
@@ -214,10 +212,8 @@ class Command(BaseCommand):
         minutes = int(round((end - start) // 60))
         seconds = int(round((end - start) % 60))
 
-        print(
-            u'Import annotations... \033[32m\u2713\033[0m ' +
-            u'\033[2m({} min and {} sec)\033[22m'.format(
-                minutes,
-                seconds
+        sys.stdout.write(
+            'Import annotations... {} min and {} sec'.format(
+                minutes, seconds
             )
         )

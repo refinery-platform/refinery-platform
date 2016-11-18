@@ -94,7 +94,7 @@
         </button>
         <button
           class="btn clickable spinnable"
-          ng-class="{ 'disabled':!preview.permissions }"
+          ng-disabled="!preview.dataSetDetails.is_owner"
           ng-click="preview.openPermissionEditor()">
           <div
             class="refinery-spinner-bg"

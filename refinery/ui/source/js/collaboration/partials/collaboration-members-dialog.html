@@ -1,19 +1,54 @@
 <div class="modal-header">
-  <h3>Member Editor</h3>
+  <div class="float-right">
+    <a ng-click="modal.close()">
+      <i class="fa fa-times close" aria-hidden="true"></i>
+    </a>
+  </div>
+  <h3 class="text-left">Member Editor</h3>
   <p>If you are the last manager in a group, you must delete the group in order to remove yourself or assign another manager first.</p>
 </div>
 <div class="modal-body">
-  <div>
-    {{modal.member.username}}
+  <h4 class="text-left">
+    Member Username
+  </h4>
+  <div class="row">
+    <div class="col-sm-4 col-sm-offset-1 text-left">
+      {{modal.member.username}}
+    </div>
 
-    <button type="button" class="refinery-base btn btn-default"
-      ng-click="modal.remove()" style="float:right;margin-left:10px">Remove</button>
-    
-    <button ng-if="modal.member.is_manager" type="button"
-      class="refinery-base btn btn-default" ng-click="modal.demote()" style="float:right">Demote</button>
-    
-    <button ng-if="!modal.member.is_manager" type="button"
-      class="refinery-base btn btn-default"ng-click="modal.promote()" style="float:right">Promote</button>
-    
+    <div class="col-sm-2 col-sm-offset-3">
+      <button
+        type="button"
+        class="refinery-base btn btn-warning"
+        ng-click="modal.remove()">
+        Remove
+      </button>
+    </div>
+    <div col-sm-2>
+      <button
+        ng-if="modal.member.is_manager"
+        type="button"
+        class="refinery-base btn btn-default"
+        ng-click="modal.demote()">
+        Demote
+      </button>
+
+      <button
+        ng-if="!modal.member.is_manager"
+        type="button"
+        class="refinery-base btn btn-primary"
+        ng-click="modal.promote()">
+        Promote
+      </button>
+    </div>
+  </div>
+</div>
+<div class="modal-footer">
+   <div
+    class='p-t-1-2'
+    ng-show="modal.responseMessage">
+     <div class="alert alert-{{ modal.alertType }} text-center">
+       {{modal.responseMessage}}
+     </div>
   </div>
 </div>

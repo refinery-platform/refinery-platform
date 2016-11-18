@@ -43,13 +43,21 @@
                         url: promise.relative_file_store_item_url,
                         format: promise.file_extension
                   };
-
                   if (promise.file_extension === "bam") {
                     igv_track.indexURL = promise.auxiliary_nodes[0];
                   }
-
                   return igv_track;
-
+                });
+                tracks.push({
+                    name: "Genes",
+                    type: "annotation",
+                    format: "bed",
+                    sourceType: "file",
+                    url: "{{ bed_url|escapejs }}",
+                    indexURL: "{{ tbi_url|escapejs }}",
+                    order: Number.MAX_VALUE,
+                    visibilityWindow: 300000000,
+                    displayMode: "EXPANDED"
                 });
                 var div = $("#igv")[0];
                 var options = {

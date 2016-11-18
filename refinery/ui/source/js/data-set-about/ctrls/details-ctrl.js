@@ -8,11 +8,11 @@ function AboutDetailsCtrl (
   $log
   ) {
   var vm = this;
-  vm.dataSet = {};
-  vm.studies = [];
-  vm.assays = {};
+  vm.dataSet = dataSetAboutFactory.dataSet;
+  vm.studies = dataSetAboutFactory.studies;
+  vm.assays = dataSetAboutFactory.assays;
   vm.dataSetUuid = $window.dataSetUuid;
-  vm.fileStoreItem = {};
+  vm.fileStoreItem = dataSetAboutFactory.fileStoreItem;
 
   vm.refreshDataSetStats = function () {
     dataSetAboutFactory

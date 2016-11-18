@@ -1,42 +1,66 @@
 'use strict';
 
 function EmailInviteCtrl (
-  bootbox, $uibModalInstance, groupInviteService, groupDataService
+  $uibModalInstance,
+  groupInviteService,
+  groupDataService,
+  $timeout,
+  $log
 ) {
-  this.bootbox = bootbox;
-  this.$uibModalInstance = $uibModalInstance;
-  this.groupInviteService = groupInviteService;
-  this.groupDataService = groupDataService;
-}
+  var vm = this;
+  vm.responseMessage = '';
+  vm.alertType = 'info';
 
-EmailInviteCtrl.prototype.sendInvite = function (email) {
-  var that = this;
-
-  that.groupInviteService.send({
-    email: email,
-    group_id: that.groupDataService.activeGroup.id
-  })
-  .$promise
-  .then(
-    function () {
-      that.bootbox.alert('Invitation successfully sent to ' + email);
-      that.groupDataService.update();
-      that.$uibModalInstance.dismiss();
+  // After invite is sent, an alert pops up with following message
+  var generateAlertMessage = function (infoType, email) {
+    if (infoType === 'success') {
+      vm.alertType = 'success';
+      vm.responseMessage = 'Successfully sent invitation to ' + email;
+    } else if (infoType === 'danger') {
+      vm.alertType = 'danger';
+      vm.responseMessage = 'Error, invitiation could not be sent to' + email;
     }
-  ).catch(function () {
-    that.bootbox.alert(
-      'Oh no, something went terribly wrong. We\'re very sorry but the ' +
-      'invitation couldn\'t be send out.'
+  };
+
+  // Post email invite to group api
+  vm.sendInvite = function (email) {
+    groupInviteService.send({
+      email: email,
+      group_id: groupDataService.activeGroup.id
+    })
+    .$promise
+    .then(
+      function () {
+        generateAlertMessage('success', email);
+        groupDataService.update();
+        // Automatically dismisses modal
+        $timeout(function () {
+          $uibModalInstance.dismiss();
+        }, 1500);
+      }, function (error) {
+        vm.generateAlertMessage('danger', email);
+        $log.error(error);
+      }
     );
-  });
-};
+  };
+
+  // UI helper methods to cancel and close modal instance
+  vm.cancel = function () {
+    $uibModalInstance.dismiss('cancel');
+  };
+
+  vm.close = function () {
+    $uibModalInstance.dismiss();
+  };
+}
 
 angular
   .module('refineryCollaboration')
   .controller('EmailInviteCtrl', [
-    'bootbox',
     '$uibModalInstance',
     'groupInviteService',
     'groupDataService',
+    '$timeout',
+    '$log',
     EmailInviteCtrl
   ]);
