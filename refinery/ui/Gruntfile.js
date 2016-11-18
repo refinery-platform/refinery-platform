@@ -722,7 +722,7 @@ module.exports = function (grunt) {
             expand: true,
             cwd: '<%= cfg.basePath.ui.tmp %>/js/',
             src: '**/*.js',
-            dest: '<%= cfg.basePath.ui.tmp %>/js/'
+            dest: '<%= cfg.basePath.ui.compile %>/js/'
           },
           {
             expand: true,
