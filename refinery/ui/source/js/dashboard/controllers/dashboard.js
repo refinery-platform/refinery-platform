@@ -1715,7 +1715,6 @@ angular
     '$timeout',
     '$rootScope',
     '$window',
-    '$uibModal',
     '$log',
     '_',
     '$uibModal',
