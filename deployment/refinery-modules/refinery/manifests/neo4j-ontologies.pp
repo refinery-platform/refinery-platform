@@ -4,8 +4,12 @@ class refinery::neo4j-ontologies {
     ensure      => latest,
     require     => Class['apt::update'],
   }
-  service { 'neo4j-service':
-    ensure => 'stopped',
+  exec { "stop neo4j service":
+    command     => "sudo service neo4j-service stop",
+    user        => $app_user,
+    group       => $app_group,
+    path        => ['/usr/bin/'],
+    require     => Service["neo4j-service"],
   }
   exec { "remove old db":
     command     => "sudo rm -rf graph.db",
@@ -13,13 +17,15 @@ class refinery::neo4j-ontologies {
     user        => $app_user,
     group       => $app_group,
     path        => ['/usr/bin/'],
+    require     => Exec["stop neo4j service"],
   }
-  exec { "fetch_pre-generated db":
-    command     => "wget http://data.cloud.refinery-platform.org.s3.amazonaws.com/data/stem-cell-commons/neo4j/2015/graph.db.zip && sudo unzip graph.db.zip",
+  exec { "fetch pre-generated db":
+    command     => "sudo wget -q http://data.cloud.refinery-platform.org.s3.amazonaws.com/data/stem-cell-commons/neo4j/2015/graph.db.zip && yes | sudo unzip graph.db.zip",
     cwd         => "/var/lib/neo4j/data/",
     user        => $app_user,
     group       => $app_group,
     path        => ['/usr/bin/'],
+    timeout     => 1800,
     require     => [
       Class['neo4j'],
       Package['unzip'],
@@ -31,28 +37,34 @@ class refinery::neo4j-ontologies {
     user        => $app_user,
     group       => $app_group,
     path        => ['/usr/bin/', '/bin/'],
-    require     => Exec["fetch_pre-generated db"],
+    require     => Exec["fetch pre-generated db"],
   }
-  service { 'neo4j-service':
-    ensure      => 'started',
+  exec { "start neo4j service":
+    command     => "sudo service neo4j-service start",
+    user        => $app_user,
+    group       => $app_group,
+    path        => ['/usr/bin/'],
+    require     => [Exec["change db ownership"], Service["neo4j-service"]],
   }
   exec { "fetch neo4j fixture":
-    command     => "wget https://raw.githubusercontent.com/refinery-platform/ontology-imports/master/django-fixure-stemcellcommons.json ontologies.json",
-    environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+    command     => "sudo wget -q https://raw.githubusercontent.com/refinery-platform/ontology-imports/master/django-fixure-stemcellcommons.json",
     cwd         => $django_root,
-    creates     => "$django_root/ontologies.json",
+    creates     => "$django_root/django-fixure-stemcellcommons.json",
     path        => ['/usr/bin/'],
     user        => $app_user,
     group       => $app_group,
+    timeout     => 1800,
+    require     => Exec["start neo4j service"]
   }
   exec { "install neo4j fixture":
-    command     => "${virtualenv}/bin/python manage.py loaddata ontologies.json",
+    command     => "${virtualenv}/bin/python manage.py loaddata django-fixure-stemcellcommons.json",
     environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
     cwd         => $django_root,
     user        => $app_user,
     group       => $app_group,
     require     => [
       Exec["fetch neo4j fixture"],
+      Exec["start neo4j service"],
       Python::Requirements[$requirements],
       Postgresql::Server::Db["refinery"]
     ],
@@ -64,6 +76,14 @@ class refinery::neo4j-ontologies {
     user        => $app_user,
     group       => $app_group,
     require     => Exec["install neo4j fixture"],
+  }
+  exec { "remove neo4j fixture":
+    command     => "rm -rf django-fixure-stemcellcommons.json",
+    cwd         => $django_root,
+    user        => $app_user,
+    group       => $app_group,
+    path        => ['/bin/'],
+    require     => Exec["install neo4j annotations"],
   }
 
 }
