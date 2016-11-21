@@ -51,106 +51,14 @@ function RefineryFileUploadCtrl (
   $scope.uploadActive = true;
   $scope.loadingFiles = false;
 
-  var worker = false;
-
-  function workerCode () {
-    // Default setting
-    var chunkSize = 2097152;
-
-    function calcMD5 (file) {
-      var slice;
-      if (self.File) {
-        slice = (
-          self.File.prototype.slice ||
-          self.File.prototype.mozSlice ||
-          self.File.prototype.webkitSlice
-        );
-      }
-      if (self.Blob) {
-        slice = (
-          self.Blob.prototype.slice ||
-          self.Blob.prototype.mozSlice ||
-          self.Blob.prototype.webkitSlice
-        );
-      }
-
-      if (!slice) {
-        postMessage({
-          name: file.name,
-          error: 'Neither the File API nor the Blob API are supported.'
-        });
-        return;
-      }
-
-      var chunks = self.Math.ceil(file.size / chunkSize);
-      var spark = new self.SparkMD5.ArrayBuffer();
-      var currentChunk = 0;
-
-      var reader = new FileReader();
-
-      function readNextChunk () {
-        reader.onload = function onload (event) {
-          spark.append(event.target.result);  // append chunk
-          currentChunk++;
-          if (currentChunk < chunks) {
-            readNextChunk();
-          } else {
-            postMessage({
-              name: file.name,
-              md5: spark.end()
-            });
-          }
-        };
-
-        reader.onerror = function (event) {
-          postMessage({ name: file.name, error: event.message });
-        };
-
-        var startIndex = currentChunk * chunkSize;
-        var end = Math.min(startIndex + chunkSize, file.size);
-        reader.readAsArrayBuffer(slice.call(file, startIndex, end));
-      }
-
-      readNextChunk();
-    }
-
-    onmessage = function (event) {  // eslint-disable-line no-undef
-      // importScripts only works with absolute URLs when the worker is
-      // created inline. Find out more here:
-      // http://www.html5rocks.com/en/tutorials/workers/basics/
-      importScripts(  // eslint-disable-line no-undef
-        event.data[0] +
-        '/static/vendor/spark-md5/spark-md5.min.js'
-      );
-
-      chunkSize = event.data[2];
-
-      calcMD5(event.data[1]);
-    };
-  }
-
-  if (window.Worker) {
-    var code = workerCode.toString();
-    code = code.substring(code.indexOf('{') + 1, code.lastIndexOf('}'));
-
-    var blob = new Blob([code], { type: 'application/javascript' });
-
-    worker = new Worker(URL.createObjectURL(blob));
-  }
-
   $scope.readNextChunk = function (file) {
     var reader = new FileReader();
 
     reader.onload = function onload (event) {
-      console.log('reader onload');
-      console.log(event);
       $scope.spark.append(event.target.result);  // append chunk
       $scope.currentChunk++;
       if ($scope.currentChunk >= $scope.chunks) {
-        md5[file.name] = $scope.spark.end();  // This piece
-        // calculates the MD5
-        // hash
-      //  dfd.resolveWith(that, [data]);
+        md5[file.name] = $scope.spark.end();  // This piece calculates the MD5
       }
     };
 
@@ -188,28 +96,8 @@ function RefineryFileUploadCtrl (
       $scope.chunks = Math.ceil(file.size / options.chunkSize);
       $scope.currentChunk = 0;
       $scope.spark = new SparkMD5.ArrayBuffer();
-      console.log('in the upload thing');
-      console.log($scope.spark);
-      if (worker) {
-        console.log('worker defined');
-      }
 
-      // if (worker) {
-      //  worker.postMessage([
-      //    $window.location.origin + settings.appRoot,
-      //    file,
-      //    options.chunkSize
-      //  ]);
-
-        // worker.onmessage = function (event) {
-        //  md5[file.name] = event.data.md5;
-        //  dfd.resolveWith(that, [data]);
-        // };
-     // } else {
-      // readNextChunk();
-     // }
       return 0;
-  //    return dfd.promise();
     }
   };
 
