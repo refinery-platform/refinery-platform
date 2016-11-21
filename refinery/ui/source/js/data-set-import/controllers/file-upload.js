@@ -138,71 +138,78 @@ function RefineryFileUploadCtrl (
     worker = new Worker(URL.createObjectURL(blob));
   }
 
+  $scope.readNextChunk = function (file) {
+    var reader = new FileReader();
+
+    reader.onload = function onload (event) {
+      console.log('reader onload');
+      console.log(event);
+      $scope.spark.append(event.target.result);  // append chunk
+      $scope.currentChunk++;
+      if ($scope.currentChunk >= $scope.chunks) {
+        md5[file.name] = $scope.spark.end();  // This piece
+        // calculates the MD5
+        // hash
+      //  dfd.resolveWith(that, [data]);
+      }
+    };
+
+    var startIndex = $scope.currentChunk * $scope.options.chunkSize;
+    var end = Math.min(startIndex + $scope.options.chunkSize, file.size);
+    reader.readAsArrayBuffer($scope.slice.call(file, startIndex, end));
+  };
+
   $.blueimp.fileupload.prototype.processActions = {
     calculate_checksum: function (data, options) {
-      var that = this;
-      var dfd = $.Deferred();  // eslint-disable-line new-cap
+      $scope.options = options;
+      $scope.currentChunk = 0;
+    //  var dfd = $.Deferred();  // eslint-disable-line new-cap
       var file = data.files[data.index];
-      var slice;
       if (window.File) {
-        slice = (
+        $scope.slice = (
           window.File.prototype.slice ||
           window.File.prototype.mozSlice ||
           window.File.prototype.webkitSlice
         );
       }
-      if (!slice && window.Blob) {
-        slice = (
+      if (!$scope.slice && window.Blob) {
+        $scope.slice = (
           window.Blob.prototype.slice ||
           window.Blob.prototype.mozSlice ||
           window.Blob.prototype.webkitSlice
         );
       }
 
-      if (!slice) {
+      if (!$scope.slice) {
         $log.error('Neither the File API nor the Blob API are supported.');
         return undefined;
       }
 
-      var chunks = Math.ceil(file.size / options.chunkSize);
-      var currentChunk = 0;
-      var spark = new SparkMD5.ArrayBuffer();
-
-      function readNextChunk () {
-        var reader = new FileReader();
-
-        reader.onload = function onload (event) {
-          spark.append(event.target.result);  // append chunk
-          currentChunk++;
-          if (currentChunk < chunks) {
-            readNextChunk();
-          } else {
-            md5[file.name] = spark.end();  // This piece calculates the MD5 hash
-            dfd.resolveWith(that, [data]);
-          }
-        };
-
-        var startIndex = currentChunk * options.chunkSize;
-        var end = Math.min(startIndex + options.chunkSize, file.size);
-        reader.readAsArrayBuffer(slice.call(file, startIndex, end));
-      }
-
+      $scope.chunks = Math.ceil(file.size / options.chunkSize);
+      $scope.currentChunk = 0;
+      $scope.spark = new SparkMD5.ArrayBuffer();
+      console.log('in the upload thing');
+      console.log($scope.spark);
       if (worker) {
-        worker.postMessage([
-          $window.location.origin + settings.appRoot,
-          file,
-          options.chunkSize
-        ]);
-
-        worker.onmessage = function (event) {
-          md5[file.name] = event.data.md5;
-          dfd.resolveWith(that, [data]);
-        };
-      } else {
-        readNextChunk();
+        console.log('worker defined');
       }
 
-      return dfd.promise();
+      // if (worker) {
+      //  worker.postMessage([
+      //    $window.location.origin + settings.appRoot,
+      //    file,
+      //    options.chunkSize
+      //  ]);
+
+        // worker.onmessage = function (event) {
+        //  md5[file.name] = event.data.md5;
+        //  dfd.resolveWith(that, [data]);
+        // };
+     // } else {
+      // readNextChunk();
+     // }
+      return 0;
+  //    return dfd.promise();
     }
   };
 
@@ -243,6 +250,8 @@ function RefineryFileUploadCtrl (
       $log.error('Error uploading file!', errorMessage);
     }
 
+    console.log(md5[file.name]);
+
     chunkedUploadService.save({
       upload_id: data.result.upload_id,
       md5: md5[file.name]
@@ -267,6 +276,12 @@ function RefineryFileUploadCtrl (
 
   var chunkFail = function (event, data) {
     $log.error('Error uploading file:', data.errorThrown, '-', data.textStatus);
+  };
+
+  var chunkSend = function (event, data) {
+    console.log('chunksend');
+    console.log(data);
+    $scope.readNextChunk(data.files[0]);
   };
 
   var uploadAlways = function () {
@@ -357,6 +372,7 @@ function RefineryFileUploadCtrl (
     always: uploadAlways,
     chunkdone: chunkDone,
     chunkfail: chunkFail,
+    chunksend: chunkSend,
     done: uploadDone,
     formData: getFormData
   };
