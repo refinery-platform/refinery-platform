@@ -138,8 +138,6 @@ function RefineryFileUploadCtrl (
       $log.error('Error uploading file!', errorMessage);
     }
 
-    console.log(md5[file.name]);
-
     chunkedUploadService.save({
       upload_id: data.result.upload_id,
       md5: md5[file.name]
@@ -167,8 +165,6 @@ function RefineryFileUploadCtrl (
   };
 
   var chunkSend = function (event, data) {
-    console.log('chunksend');
-    console.log(data);
     $scope.readNextChunk(data.files[0]);
   };
 
