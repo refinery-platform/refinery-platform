@@ -43,7 +43,9 @@ function RefineryFileUploadCtrl (
   // Caches file names to avoid uploading multiple times the same file.
   var fileCache = {};
   var chunkSize = dataSetImportSettings.chunkSize;
+  // objects containing each files current chunk index for md5 calculation
   var chunkIndex = {};
+  // objects containing each files chunk length
   var chunkLength = {};
 
   vm.queuedFiles = [];
@@ -53,6 +55,28 @@ function RefineryFileUploadCtrl (
   // progresses but the stripes are not displayed
   vm.uploadActive = true;
   vm.loadingFiles = false;
+
+  var setBrowserSliceProperty = function () {
+    if (window.File) {
+      vm.slice = (
+        window.File.prototype.slice ||
+        window.File.prototype.mozSlice ||
+        window.File.prototype.webkitSlice
+      );
+    }
+
+    if (!vm.slice && window.Blob) {
+      vm.slice = (
+        window.Blob.prototype.slice ||
+        window.Blob.prototype.mozSlice ||
+        window.Blob.prototype.webkitSlice
+      );
+    }
+
+    if (!vm.slice) {
+      $log.error('Neither the File API nor the Blob API are supported.');
+    }
+  };
 
   var calculateMD5 = function (file) {
     var deferred = $q.defer();
@@ -91,28 +115,6 @@ function RefineryFileUploadCtrl (
       var file = data.files[data.index];
       // Set chunk index
       chunkIndex[file.name] = 0;
-
-      if (window.File) {
-        vm.slice = (
-          window.File.prototype.slice ||
-          window.File.prototype.mozSlice ||
-          window.File.prototype.webkitSlice
-        );
-      }
-      if (!vm.slice && window.Blob) {
-        vm.slice = (
-          window.Blob.prototype.slice ||
-          window.Blob.prototype.mozSlice ||
-          window.Blob.prototype.webkitSlice
-        );
-      }
-
-      if (!vm.slice) {
-        $log.error('Neither the File API nor the Blob API are supported.');
-        return undefined;
-      }
-
-      return file;
     }
   };
 
@@ -272,6 +274,8 @@ function RefineryFileUploadCtrl (
     done: uploadDone,
     formData: getFormData
   };
+
+  setBrowserSliceProperty();
 }
 
 angular
