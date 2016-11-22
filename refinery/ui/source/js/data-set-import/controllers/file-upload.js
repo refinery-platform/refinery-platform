@@ -42,6 +42,7 @@ function RefineryFileUploadCtrl (
   var currentUploadFile = -1;
   // Caches file names to avoid uploading multiple times the same file.
   var fileCache = {};
+  var chunkSize = dataSetImportSettings.chunkSize;
 
   $scope.queuedFiles = [];
   // This is set to true by default because this var is used to apply an
@@ -51,8 +52,12 @@ function RefineryFileUploadCtrl (
   $scope.uploadActive = true;
   $scope.loadingFiles = false;
 
-  $scope.readNextChunk = function (file) {
+  var readNextChunk = function (file) {
     var reader = new FileReader();
+    if ($scope.currentChunk === 0) {
+      $scope.chunks = Math.ceil(file.size / chunkSize);
+      $scope.spark = new SparkMD5.ArrayBuffer();
+    }
 
     reader.onload = function onload (event) {
       $scope.spark.append(event.target.result);  // append chunk
@@ -62,16 +67,14 @@ function RefineryFileUploadCtrl (
       }
     };
 
-    var startIndex = $scope.currentChunk * $scope.options.chunkSize;
-    var end = Math.min(startIndex + $scope.options.chunkSize, file.size);
+    var startIndex = $scope.currentChunk * chunkSize;
+    var end = Math.min(startIndex + chunkSize, file.size);
     reader.readAsArrayBuffer($scope.slice.call(file, startIndex, end));
   };
 
   $.blueimp.fileupload.prototype.processActions = {
-    calculate_checksum: function (data, options) {
-      $scope.options = options;
+    calculate_checksum: function (data) {
       $scope.currentChunk = 0;
-    //  var dfd = $.Deferred();  // eslint-disable-line new-cap
       var file = data.files[data.index];
       if (window.File) {
         $scope.slice = (
@@ -92,12 +95,7 @@ function RefineryFileUploadCtrl (
         $log.error('Neither the File API nor the Blob API are supported.');
         return undefined;
       }
-
-      $scope.chunks = Math.ceil(file.size / options.chunkSize);
-      $scope.currentChunk = 0;
-      $scope.spark = new SparkMD5.ArrayBuffer();
-
-      return 0;
+      return file;
     }
   };
 
@@ -138,6 +136,7 @@ function RefineryFileUploadCtrl (
       $log.error('Error uploading file!', errorMessage);
     }
 
+    $scope.currentChunk = 0;
     chunkedUploadService.save({
       upload_id: data.result.upload_id,
       md5: md5[file.name]
@@ -165,7 +164,7 @@ function RefineryFileUploadCtrl (
   };
 
   var chunkSend = function (event, data) {
-    $scope.readNextChunk(data.files[0]);
+    readNextChunk(data.files[0]);
   };
 
   var uploadAlways = function () {
