@@ -3,9 +3,10 @@
     <h3>Optional: Upload Data Files</h3>
   </div>
   <form id="fileupload" method="POST" enctype="multipart/form-data"
-        ng-controller="RefineryFileUploadCtrl"
-        data-file-upload="options"
-        ng-class="{'fileupload-processing': processing() || loadingFiles}">
+        ng-controller="RefineryFileUploadCtrl as FileCtrl"
+        data-file-upload="FileCtrl.options"
+        ng-class="{'fileupload-processing': processing() ||
+          FileCtrl.loadingFiles}">
 
     <!-- Redirect browsers with JavaScript disabled to the origin page -->
     <noscript>
@@ -31,14 +32,15 @@
         <button
           class="active-group btn btn-default start"
           ng-click="submit()"
-          ng-disabled="numUnfinishedUploads() === 0 || processing() || loadingFiles">
+          ng-disabled="FileCtrl.numUnfinishedUploads() === 0 || processing()
+          || FileCtrl.loadingFiles">
           <i class="fa fa-upload"></i>
           <span>Start upload</span>
         </button>
         <button
           class="btn btn-warning cancel"
           ng-click="cancel()"
-          ng-disabled="numUnfinishedUploads() === 0">
+          ng-disabled="FileCtrl.numUnfinishedUploads() === 0">
           <i class="fa fa-ban"></i>
           <span>Cancel upload</span>
         </button>
@@ -85,8 +87,9 @@
             <button
               class="active-group btn btn-default start"
               ng-click="file.$submit()"
-              ng-hide="!file.$submit || options.autoUpload"
-              ng-disabled="file.$state() == 'pending' || file.$state() == 'rejected' || loadingFiles">
+              ng-hide="!file.$submit || FileCtrl.options.autoUpload"
+              ng-disabled="file.$state() == 'pending' ||
+                 file.$state() == 'rejected' || FileCtrl.loadingFiles">
               <i class="fa fa-upload"></i>
               <span>Start</span>
             </button>

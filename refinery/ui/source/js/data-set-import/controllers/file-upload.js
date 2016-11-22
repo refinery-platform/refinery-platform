@@ -15,7 +15,8 @@ function RefineryFileUploadCtrl (
   dataSetImportSettings,
   getCookie
 ) {
-  $scope.fileStatus = fileUploadStatusService.fileUploadStatus;
+  var vm = this;
+  vm.fileStatus = fileUploadStatusService.fileUploadStatus;
 
   var csrftoken = getCookie('csrftoken');
 
@@ -45,27 +46,27 @@ function RefineryFileUploadCtrl (
   var currentChunk;
   var chunks = 0;
 
-  $scope.queuedFiles = [];
+  vm.queuedFiles = [];
   // This is set to true by default because this var is used to apply an
   // _active_ class to the progress bar so that it displays the moving stripes.
   // Setting it to false by default leads to an ugly flickering while the bar
   // progresses but the stripes are not displayed
-  $scope.uploadActive = true;
-  $scope.loadingFiles = false;
+  vm.uploadActive = true;
+  vm.loadingFiles = false;
 
   var calculateMD5 = function (file) {
     var reader = new FileReader();
 
     if (currentChunk === 0) {
       chunks = Math.ceil(file.size / chunkSize);
-      $scope.spark = new SparkMD5.ArrayBuffer();
+      vm.spark = new SparkMD5.ArrayBuffer();
     }
 
     reader.onload = function onload (event) {
-      $scope.spark.append(event.target.result);  // append chunk
+      vm.spark.append(event.target.result);  // append chunk
       currentChunk++;
       if (currentChunk >= chunks) {
-        md5[file.name] = $scope.spark.end();  // This piece calculates the MD5
+        md5[file.name] = vm.spark.end();  // This piece calculates the MD5
       }
     };
 
@@ -75,7 +76,7 @@ function RefineryFileUploadCtrl (
 
     var startIndex = currentChunk * chunkSize;
     var end = Math.min(startIndex + chunkSize, file.size);
-    reader.readAsArrayBuffer($scope.slice.call(file, startIndex, end));
+    reader.readAsArrayBuffer(vm.slice.call(file, startIndex, end));
   };
 
   // occurs after files are adding to the queue
@@ -84,21 +85,21 @@ function RefineryFileUploadCtrl (
       currentChunk = 0;
       var file = data.files[data.index];
       if (window.File) {
-        $scope.slice = (
+        vm.slice = (
           window.File.prototype.slice ||
           window.File.prototype.mozSlice ||
           window.File.prototype.webkitSlice
         );
       }
-      if (!$scope.slice && window.Blob) {
-        $scope.slice = (
+      if (!vm.slice && window.Blob) {
+        vm.slice = (
           window.Blob.prototype.slice ||
           window.Blob.prototype.mozSlice ||
           window.Blob.prototype.webkitSlice
         );
       }
 
-      if (!$scope.slice) {
+      if (!vm.slice) {
         $log.error('Neither the File API nor the Blob API are supported.');
         return undefined;
       }
@@ -122,20 +123,20 @@ function RefineryFileUploadCtrl (
       file.uploaded = true;
 
       if ($element.fileupload('active') > 0) {
-        $scope.uploadActive = true;
-        $scope.uploadInProgress = true;
-        $scope.fileStatus = fileUploadStatusService.setFileUploadStatus('running');
+        vm.uploadActive = true;
+        vm.uploadInProgress = true;
+        vm.fileStatus = fileUploadStatusService.setFileUploadStatus('running');
       } else {
-        $scope.uploadActive = false;
-        $scope.uploadInProgress = false;
-        $scope.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
+        vm.uploadActive = false;
+        vm.uploadInProgress = false;
+        vm.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
       }
 
       if (totalNumFilesUploaded === totalNumFilesQueued) {
-        $scope.allUploaded = true;
-        $scope.uploadActive = false;
-        $scope.uploadInProgress = false;
-        $scope.fileStatus = fileUploadStatusService.setFileUploadStatus('none');
+        vm.allUploaded = true;
+        vm.uploadActive = false;
+        vm.uploadInProgress = false;
+        vm.fileStatus = fileUploadStatusService.setFileUploadStatus('none');
       }
 
       $timeout(function () {
@@ -196,17 +197,17 @@ function RefineryFileUploadCtrl (
       return false;
     }
     totalNumFilesQueued++;
-    $scope.queuedFiles.push(data.files[0]);
+    vm.queuedFiles.push(data.files[0]);
     fileCache[data.files[0].name] = true;
-    $scope.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
+    vm.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
     return true;
   });
 
   // Triggered either when an upload failed or the user cancelled
   $element.on('fileuploadfail', function submit (e, data) {
-    for (var i = $scope.queuedFiles.length; i--;) {
-      if ($scope.queuedFiles[i].name === data.files[0].name) {
-        $scope.queuedFiles.splice(i, 1);
+    for (var i = vm.queuedFiles.length; i--;) {
+      if (vm.queuedFiles[i].name === data.files[0].name) {
+        vm.queuedFiles.splice(i, 1);
       }
     }
     totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
@@ -217,9 +218,9 @@ function RefineryFileUploadCtrl (
     // wait for digest to complete
     $timeout(function () {
       if (totalNumFilesQueued === 0) {
-        $scope.fileStatus = fileUploadStatusService.setFileUploadStatus('none');
+        vm.fileStatus = fileUploadStatusService.setFileUploadStatus('none');
       } else if ($element.fileupload('active') === 0) {
-        $scope.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
+        vm.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
       }
     }, 110);
   });
@@ -230,11 +231,11 @@ function RefineryFileUploadCtrl (
       return false;
     }
     currentUploadFile++;
-    $scope.fileStatus = fileUploadStatusService.setFileUploadStatus('running');
+    vm.fileStatus = fileUploadStatusService.setFileUploadStatus('running');
     return true;
   });
 
-  $scope.globalReadableProgress = function (progress, index) {
+  vm.globalReadableProgress = function (progress, index) {
     if (index < currentUploadFile) {
       return 100;
     }
@@ -244,7 +245,7 @@ function RefineryFileUploadCtrl (
     return 0;
   };
 
-  $scope.globalToIndividualProgress = function (progress, index) {
+  vm.globalToIndividualProgress = function (progress, index) {
     if (index < currentUploadFile) {
       return +(100 / totalNumFilesQueued).toFixed(3);
     }
@@ -254,11 +255,11 @@ function RefineryFileUploadCtrl (
     return 0;
   };
 
-  $scope.numUnfinishedUploads = function () {
+  vm.numUnfinishedUploads = function () {
     return totalNumFilesQueued - totalNumFilesUploaded;
   };
 
-  $scope.options = {
+  vm.options = {
     always: uploadAlways,
     chunkdone: chunkDone,
     chunkfail: chunkFail,
