@@ -69,6 +69,10 @@ function RefineryFileUploadCtrl (
       }
     };
 
+    reader.onerror = function (event) {
+      postMessage({ name: file.name, error: event.message });
+    };
+
     var startIndex = currentChunk * chunkSize;
     var end = Math.min(startIndex + chunkSize, file.size);
     reader.readAsArrayBuffer($scope.slice.call(file, startIndex, end));
