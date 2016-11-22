@@ -111,7 +111,7 @@ function RefineryFileUploadCtrl (
 
   // occurs after files are adding to the queue
   $.blueimp.fileupload.prototype.processActions = {
-    calculate_checksum: function (data) {
+    initializeChunkIndex: function (data) {
       var file = data.files[data.index];
       // Set chunk index
       chunkIndex[file.name] = 0;
