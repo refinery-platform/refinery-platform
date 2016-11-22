@@ -3,6 +3,7 @@
 function RefineryFileUploadCtrl (
   $element,
   $log,
+  $q,
   $scope,
   SparkMD5,
   $timeout,
@@ -42,8 +43,8 @@ function RefineryFileUploadCtrl (
   // Caches file names to avoid uploading multiple times the same file.
   var fileCache = {};
   var chunkSize = dataSetImportSettings.chunkSize;
-  var currentChunk;
-  var chunks = 0;
+  var chunkIndex = {};
+  var chunkLength = {};
 
   vm.queuedFiles = [];
   // This is set to true by default because this var is used to apply an
@@ -54,35 +55,46 @@ function RefineryFileUploadCtrl (
   vm.loadingFiles = false;
 
   var calculateMD5 = function (file) {
+    var deferred = $q.defer();
+
     var reader = new FileReader();
 
-    if (currentChunk === 0) {
-      chunks = Math.ceil(file.size / chunkSize);
+    if (chunkIndex[file.name] === 0) {
+      chunkLength[file.name] = Math.ceil(file.size / chunkSize);
       vm.spark = new SparkMD5.ArrayBuffer();
     }
+    console.log(file.name);
+    console.log(chunkIndex[file.name]);
+    console.log(chunkLength[file.name]);
 
     reader.onload = function onload (event) {
       vm.spark.append(event.target.result);  // append chunk
-      currentChunk++;
-      if (currentChunk >= chunks) {
+      chunkIndex[file.name]++;
+      if (chunkIndex[file.name] >= chunkLength[file.name]) {
         md5[file.name] = vm.spark.end();  // This piece calculates the MD5
+        console.log(md5[file.name]);
+        console.log('issue in the md5');
       }
+      deferred.resolve();
     };
 
     reader.onerror = function (event) {
       postMessage({ name: file.name, error: event.message });
     };
 
-    var startIndex = currentChunk * chunkSize;
+    var startIndex = chunkIndex[file.name] * chunkSize;
     var end = Math.min(startIndex + chunkSize, file.size);
     reader.readAsArrayBuffer(vm.slice.call(file, startIndex, end));
+
+    return deferred.promise;
   };
 
   // occurs after files are adding to the queue
   $.blueimp.fileupload.prototype.processActions = {
     calculate_checksum: function (data) {
-      currentChunk = 0;
       var file = data.files[data.index];
+      // Set chunk index
+      chunkIndex[file.name] = 0;
       if (window.File) {
         vm.slice = (
           window.File.prototype.slice ||
@@ -101,12 +113,6 @@ function RefineryFileUploadCtrl (
       if (!vm.slice) {
         $log.error('Neither the File API nor the Blob API are supported.');
         return undefined;
-      }
-
-      // Calculates MD5 for smaller files otherwise they are calculated
-      // after each chunk is sent, see chunkSend()
-      if (file.size < chunkSize) {
-        calculateMD5(file);
       }
 
       return file;
@@ -150,14 +156,25 @@ function RefineryFileUploadCtrl (
       $log.error('Error uploading file!', errorMessage);
     }
 
-    // Reset chunk index
-    currentChunk = 0;
-    chunkedUploadService.save({
-      upload_id: data.result.upload_id,
-      md5: md5[file.name]
-    })
-    .$promise
-    .then(success, error);
+    // Calculates MD5 for smaller files otherwise they are calculated
+    // after each chunk is sent, see chunkSend()
+    if (file.size <= chunkSize) {
+      calculateMD5(file).then(function () {
+        console.log(md5[file.name]);
+        console.log('in the calculatemd5 success for small files');
+        chunkedUploadService.save({
+          upload_id: data.result.upload_id,
+          md5: md5[file.name]
+        }).$promise.then(success, error);
+      });
+    } else {
+      console.log('in the chunk else');
+      console.log(md5[file.name]);
+      chunkedUploadService.save({
+        upload_id: data.result.upload_id,
+        md5: md5[file.name]
+      }).$promise.then(success, error);
+    }
   };
 
   var getFormData = function () {
@@ -179,6 +196,7 @@ function RefineryFileUploadCtrl (
 
   // MD5 calculate after chunks are sent successfully
   var chunkSend = function (event, data) {
+    console.log('chunk send');
     calculateMD5(data.files[0]);
   };
 
@@ -273,6 +291,7 @@ angular
   .controller('RefineryFileUploadCtrl', [
     '$element',
     '$log',
+    '$q',
     '$scope',
     'SparkMD5',
     '$timeout',
