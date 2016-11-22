@@ -34,7 +34,6 @@ function RefineryFileUploadCtrl (
     }
   });
 
-  // var csrf = '';
   var formData = [];
   var md5 = {};
   var totalNumFilesQueued = 0;
@@ -43,6 +42,8 @@ function RefineryFileUploadCtrl (
   // Caches file names to avoid uploading multiple times the same file.
   var fileCache = {};
   var chunkSize = dataSetImportSettings.chunkSize;
+  var currentChunk;
+  var chunks = 0;
 
   $scope.queuedFiles = [];
   // This is set to true by default because this var is used to apply an
@@ -54,27 +55,28 @@ function RefineryFileUploadCtrl (
 
   var calculateMD5 = function (file) {
     var reader = new FileReader();
-    if ($scope.currentChunk === 0) {
-      $scope.chunks = Math.ceil(file.size / chunkSize);
+
+    if (currentChunk === 0) {
+      chunks = Math.ceil(file.size / chunkSize);
       $scope.spark = new SparkMD5.ArrayBuffer();
     }
 
     reader.onload = function onload (event) {
       $scope.spark.append(event.target.result);  // append chunk
-      $scope.currentChunk++;
-      if ($scope.currentChunk >= $scope.chunks) {
+      currentChunk++;
+      if (currentChunk >= chunks) {
         md5[file.name] = $scope.spark.end();  // This piece calculates the MD5
       }
     };
 
-    var startIndex = $scope.currentChunk * chunkSize;
+    var startIndex = currentChunk * chunkSize;
     var end = Math.min(startIndex + chunkSize, file.size);
     reader.readAsArrayBuffer($scope.slice.call(file, startIndex, end));
   };
 
   $.blueimp.fileupload.prototype.processActions = {
     calculate_checksum: function (data) {
-      $scope.currentChunk = 0;
+      currentChunk = 0;
       var file = data.files[data.index];
       if (window.File) {
         $scope.slice = (
@@ -141,7 +143,8 @@ function RefineryFileUploadCtrl (
       $log.error('Error uploading file!', errorMessage);
     }
 
-    $scope.currentChunk = 0;
+    // Reset chunk index
+    currentChunk = 0;
     chunkedUploadService.save({
       upload_id: data.result.upload_id,
       md5: md5[file.name]
