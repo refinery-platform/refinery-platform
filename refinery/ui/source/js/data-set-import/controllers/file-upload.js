@@ -63,17 +63,12 @@ function RefineryFileUploadCtrl (
       chunkLength[file.name] = Math.ceil(file.size / chunkSize);
       vm.spark = new SparkMD5.ArrayBuffer();
     }
-    console.log(file.name);
-    console.log(chunkIndex[file.name]);
-    console.log(chunkLength[file.name]);
 
     reader.onload = function onload (event) {
       vm.spark.append(event.target.result);  // append chunk
       chunkIndex[file.name]++;
       if (chunkIndex[file.name] >= chunkLength[file.name]) {
         md5[file.name] = vm.spark.end();  // This piece calculates the MD5
-        console.log(md5[file.name]);
-        console.log('issue in the md5');
       }
       deferred.resolve();
     };
@@ -82,6 +77,7 @@ function RefineryFileUploadCtrl (
       postMessage({ name: file.name, error: event.message });
     };
 
+    // loads next chunk
     var startIndex = chunkIndex[file.name] * chunkSize;
     var end = Math.min(startIndex + chunkSize, file.size);
     reader.readAsArrayBuffer(vm.slice.call(file, startIndex, end));
@@ -95,6 +91,7 @@ function RefineryFileUploadCtrl (
       var file = data.files[data.index];
       // Set chunk index
       chunkIndex[file.name] = 0;
+
       if (window.File) {
         vm.slice = (
           window.File.prototype.slice ||
@@ -156,25 +153,13 @@ function RefineryFileUploadCtrl (
       $log.error('Error uploading file!', errorMessage);
     }
 
-    // Calculates MD5 for smaller files otherwise they are calculated
-    // after each chunk is sent, see chunkSend()
-    if (file.size <= chunkSize) {
-      calculateMD5(file).then(function () {
-        console.log(md5[file.name]);
-        console.log('in the calculatemd5 success for small files');
-        chunkedUploadService.save({
-          upload_id: data.result.upload_id,
-          md5: md5[file.name]
-        }).$promise.then(success, error);
-      });
-    } else {
-      console.log('in the chunk else');
-      console.log(md5[file.name]);
+    // calculate md5 before complete file save (for last chunk or small files)
+    calculateMD5(file).then(function () {
       chunkedUploadService.save({
         upload_id: data.result.upload_id,
         md5: md5[file.name]
       }).$promise.then(success, error);
-    }
+    });
   };
 
   var getFormData = function () {
@@ -196,8 +181,11 @@ function RefineryFileUploadCtrl (
 
   // MD5 calculate after chunks are sent successfully
   var chunkSend = function (event, data) {
-    console.log('chunk send');
-    calculateMD5(data.files[0]);
+    var file = data.files[0];
+    // final md5 calculated in upload done with the chunkedUploadComplete.
+    if (chunkIndex[file.name] === 0 || chunkIndex[file.name] < chunkLength[file.name]) {
+      calculateMD5(file);
+    }
   };
 
   var uploadAlways = function () {
