@@ -4,15 +4,15 @@ function RefineryFileUploadCtrl (
   $element,
   $log,
   $scope,
+  SparkMD5,
   $timeout,
+  $uibModal,
   $window,
   $,
   chunkedUploadService,
   fileUploadStatusService,
   settings,
-  SparkMD5,
   dataSetImportSettings,
-  $uibModal,
   getCookie
 ) {
   $scope.fileStatus = fileUploadStatusService.fileUploadStatus;
@@ -59,8 +59,6 @@ function RefineryFileUploadCtrl (
       $scope.spark = new SparkMD5.ArrayBuffer();
     }
 
-    console.log($scope.currentChunk);
-    console.log($scope.chunks);
     reader.onload = function onload (event) {
       $scope.spark.append(event.target.result);  // append chunk
       $scope.currentChunk++;
@@ -170,6 +168,7 @@ function RefineryFileUploadCtrl (
     $log.error('Error uploading file:', data.errorThrown, '-', data.textStatus);
   };
 
+  // MD5 calculate after chunks are sent successfully
   var chunkSend = function (event, data) {
     calculateMD5(data.files[0]);
   };
@@ -274,15 +273,15 @@ angular
     '$element',
     '$log',
     '$scope',
+    'SparkMD5',
     '$timeout',
+    '$uibModal',
     '$window',
     '$',
     'chunkedUploadService',
     'fileUploadStatusService',
     'settings',
-    'SparkMD5',
     'dataSetImportSettings',
-    '$uibModal',
     'getCookie',
     RefineryFileUploadCtrl
   ]);
