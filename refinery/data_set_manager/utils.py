@@ -530,6 +530,7 @@ def generate_solr_params(params, assay_uuid):
     is_annotation = params.get('is_annotation', 'false')
     facet_count = params.get('include_facet_count', 'true')
     start = params.get('offset', '0')
+    # row number suggested by solr docs, since there's no unlimited option
     row = params.get('limit', '10000000')
     field_limit = params.get('attributes', None)
     facet_field = params.get('facets', None)
