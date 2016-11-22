@@ -78,6 +78,7 @@ function RefineryFileUploadCtrl (
     reader.readAsArrayBuffer($scope.slice.call(file, startIndex, end));
   };
 
+  // occurs after files are adding to the queue
   $.blueimp.fileupload.prototype.processActions = {
     calculate_checksum: function (data) {
       currentChunk = 0;
@@ -102,6 +103,8 @@ function RefineryFileUploadCtrl (
         return undefined;
       }
 
+      // Calculates MD5 for smaller files otherwise they are calculated
+      // after each chunk is sent, see chunkSend()
       if (file.size < chunkSize) {
         calculateMD5(file);
       }
@@ -154,8 +157,7 @@ function RefineryFileUploadCtrl (
       md5: md5[file.name]
     })
     .$promise
-    .then(success)
-    .catch(error);
+    .then(success, error);
   };
 
   var getFormData = function () {
