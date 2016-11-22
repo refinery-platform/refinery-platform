@@ -52,13 +52,15 @@ function RefineryFileUploadCtrl (
   $scope.uploadActive = true;
   $scope.loadingFiles = false;
 
-  var readNextChunk = function (file) {
+  var calculateMD5 = function (file) {
     var reader = new FileReader();
     if ($scope.currentChunk === 0) {
       $scope.chunks = Math.ceil(file.size / chunkSize);
       $scope.spark = new SparkMD5.ArrayBuffer();
     }
 
+    console.log($scope.currentChunk);
+    console.log($scope.chunks);
     reader.onload = function onload (event) {
       $scope.spark.append(event.target.result);  // append chunk
       $scope.currentChunk++;
@@ -95,8 +97,9 @@ function RefineryFileUploadCtrl (
         $log.error('Neither the File API nor the Blob API are supported.');
         return undefined;
       }
+
       if (file.size < chunkSize) {
-        readNextChunk(file);
+        calculateMD5(file);
       }
 
       return file;
@@ -168,7 +171,7 @@ function RefineryFileUploadCtrl (
   };
 
   var chunkSend = function (event, data) {
-    readNextChunk(data.files[0]);
+    calculateMD5(data.files[0]);
   };
 
   var uploadAlways = function () {
