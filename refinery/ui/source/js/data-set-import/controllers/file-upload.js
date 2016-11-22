@@ -95,6 +95,10 @@ function RefineryFileUploadCtrl (
         $log.error('Neither the File API nor the Blob API are supported.');
         return undefined;
       }
+      if (file.size < chunkSize) {
+        readNextChunk(file);
+      }
+
       return file;
     }
   };
