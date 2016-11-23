@@ -169,7 +169,7 @@ function RefineryFileUploadCtrl (
 
     function error (errorMessage) {
       $log.error('Error uploading file!', errorMessage);
-      file.error = 'Upload failed, readd file to retry upload.';
+      file.error = 'Upload failed, re-add file to retry upload.';
       // Remove the error file from cache, so user can readd and upload
       removeFileFromQueue(file);
     }
