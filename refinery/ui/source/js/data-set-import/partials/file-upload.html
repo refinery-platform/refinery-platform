@@ -5,8 +5,7 @@
   <form id="fileupload" method="POST" enctype="multipart/form-data"
         ng-controller="RefineryFileUploadCtrl as FileCtrl"
         data-file-upload="FileCtrl.options"
-        ng-class="{'fileupload-processing': processing() ||
-          FileCtrl.loadingFiles}">
+        ng-class="{'fileupload-processing': processing()">
 
     <!-- Redirect browsers with JavaScript disabled to the origin page -->
     <noscript>
@@ -32,8 +31,7 @@
         <button
           class="active-group btn btn-default start"
           ng-click="submit()"
-          ng-disabled="FileCtrl.numUnfinishedUploads() === 0 || processing()
-          || FileCtrl.loadingFiles">
+          ng-disabled="FileCtrl.numUnfinishedUploads() === 0 || processing()">
           <i class="fa fa-upload"></i>
           <span>Start upload</span>
         </button>
@@ -83,8 +81,6 @@
           </div>
         </div>
         <div class="col-xs-4">
-          {{ FileCtrl.fileStatus }}
-          {{ FileCtrl.uploadActive }}
           <div ng-if="!file.uploaded && !file.error">
             <button
               class="active-group btn btn-default start"
@@ -92,7 +88,7 @@
               ng-hide="!file.$submit || FileCtrl.options.autoUpload"
               ng-disabled="file.$state() == 'pending' ||
                  file.$state() == 'rejected' ||
-                 FileCtrl.uploadActive">
+                 !FileCtrl.uploadActive">
               <i class="fa fa-upload"></i>
               <span>Start</span>
             </button>

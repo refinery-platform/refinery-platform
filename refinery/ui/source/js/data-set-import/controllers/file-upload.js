@@ -54,7 +54,6 @@ function RefineryFileUploadCtrl (
   // Setting it to false by default leads to an ugly flickering while the bar
   // progresses but the stripes are not displayed
   vm.uploadActive = true;
-  vm.loadingFiles = false;
 
   var setBrowserSliceProperty = function () {
     if (window.File) {
