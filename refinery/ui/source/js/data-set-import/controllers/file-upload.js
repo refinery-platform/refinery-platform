@@ -157,8 +157,18 @@ function RefineryFileUploadCtrl (
 
     function error (errorMessage) {
       $log.error('Error uploading file!', errorMessage);
-      file.error = errorMessage.statusText;
+      file.error = 'Upload failed, readd file to retry upload.';
+      // Remove the error file from cache, so user can readd and upload
+      for (var i = vm.queuedFiles.length; i--;) {
+        if (vm.queuedFiles[i].name === file.name) {
+          vm.queuedFiles.splice(i, 1);
+        }
+      }
+      totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
+      fileCache[file.name] = undefined;
+      delete fileCache[file.name];
     }
+
 
     // calculate md5 before complete file save (for last chunk or small files)
     calculateMD5(file).then(function () {
