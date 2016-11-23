@@ -91,7 +91,7 @@ function RefineryFileUploadCtrl (
     reader.onload = function onload (event) {
       vm.spark.append(event.target.result);  // append chunk
       chunkIndex[file.name]++;
-      if (chunkIndex[file.name] > chunkLength[file.name]) {
+      if (chunkIndex[file.name] === chunkLength[file.name]) {
         $log.info('in final calculate');
         $log.info(file.name);
         $log.info(chunkIndex[file.name]);
@@ -136,6 +136,7 @@ function RefineryFileUploadCtrl (
 
   var uploadDone = function (event, data) {
     var file = data.files[0];
+    vm.fileStatus = fileUploadStatusService.setFileUploadStatus('waitingOnServerMD5');
 
     function success () {
       totalNumFilesUploaded++;
