@@ -113,6 +113,18 @@ function RefineryFileUploadCtrl (
     return deferred.promise;
   };
 
+  // Helper method to remove file from queue and cache
+  var removeFileFromQueue = function (file) {
+    for (var i = vm.queuedFiles.length; i--;) {
+      if (vm.queuedFiles[i].name === file.name) {
+        vm.queuedFiles.splice(i, 1);
+      }
+    }
+    totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
+    fileCache[file.name] = undefined;
+    delete fileCache[file.name];
+  };
+
   // occurs after files are adding to the queue
   $.blueimp.fileupload.prototype.processActions = {
     initializeChunkIndex: function (data) {
@@ -159,16 +171,8 @@ function RefineryFileUploadCtrl (
       $log.error('Error uploading file!', errorMessage);
       file.error = 'Upload failed, readd file to retry upload.';
       // Remove the error file from cache, so user can readd and upload
-      for (var i = vm.queuedFiles.length; i--;) {
-        if (vm.queuedFiles[i].name === file.name) {
-          vm.queuedFiles.splice(i, 1);
-        }
-      }
-      totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
-      fileCache[file.name] = undefined;
-      delete fileCache[file.name];
+      removeFileFromQueue(file);
     }
-
 
     // calculate md5 before complete file save (for last chunk or small files)
     calculateMD5(file).then(function () {
@@ -227,15 +231,7 @@ function RefineryFileUploadCtrl (
 
   // Triggered either when an upload failed or the user cancelled
   $element.on('fileuploadfail', function submit (e, data) {
-    for (var i = vm.queuedFiles.length; i--;) {
-      if (vm.queuedFiles[i].name === data.files[0].name) {
-        vm.queuedFiles.splice(i, 1);
-      }
-    }
-    totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
-
-    fileCache[data.files[0].name] = undefined;
-    delete fileCache[data.files[0].name];
+    removeFileFromQueue(data.files[0]);
 
     // wait for digest to complete
     $timeout(function () {
