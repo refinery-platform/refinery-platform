@@ -91,7 +91,11 @@ function RefineryFileUploadCtrl (
     reader.onload = function onload (event) {
       vm.spark.append(event.target.result);  // append chunk
       chunkIndex[file.name]++;
-      if (chunkIndex[file.name] === chunkLength[file.name]) {
+      if (chunkIndex[file.name] > chunkLength[file.name]) {
+        $log.info('in final calculate');
+        $log.info(file.name);
+        $log.info(chunkIndex[file.name]);
+        $log.info(chunkLength[file.name]);
         md5[file.name] = vm.spark.end();  // This piece calculates the MD5
       }
       deferred.resolve();
@@ -153,6 +157,7 @@ function RefineryFileUploadCtrl (
 
     function error (errorMessage) {
       $log.error('Error uploading file!', errorMessage);
+      file.error = errorMessage.statusText;
     }
 
     // calculate md5 before complete file save (for last chunk or small files)
