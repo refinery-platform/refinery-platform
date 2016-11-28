@@ -200,7 +200,7 @@ function RefineryFileUploadCtrl (
   var chunkSend = function (event, data) {
     var file = data.files[0];
     // final md5 calculated in upload done with the chunkedUploadComplete.
-    if (chunkIndex[file.name] === 0 || chunkIndex[file.name] < chunkLength[file.name]) {
+    if (chunkIndex[file.name] === 0 || chunkIndex[file.name] <= chunkLength[file.name]) {
       calculateMD5(file);
     }
   };
@@ -221,6 +221,7 @@ function RefineryFileUploadCtrl (
     totalNumFilesQueued++;
     vm.queuedFiles.push(data.files[0]);
     fileCache[data.files[0].name] = true;
+    vm.uploadActive = true;
     vm.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
     return true;
   });
