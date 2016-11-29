@@ -11,7 +11,7 @@ function fileUploadStatusService () {
    * @param { string } status - none, queuing, running
    */
   vm.setFileUploadStatus = function (status) {
-    var statusOptions = ['none', 'queuing', 'running', 'waitingOnServerMD5'];
+    var statusOptions = ['none', 'queuing', 'running'];
     if (statusOptions.indexOf(status) > -1) {
       vm.fileUploadStatus = status;
     }

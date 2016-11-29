@@ -131,12 +131,12 @@ function RefineryFileUploadCtrl (
 
   var uploadDone = function (event, data) {
     var file = data.files[0];
-    vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('waitingOnServerMD5');
+    vm.fileCache[data.files[0].name].status = 'waitingOnMD5';
 
     function success () {
       totalNumFilesUploaded++;
       file.uploaded = true; // used to prevent duplicate uploads
-      vm.fileCache[data.files[0].name].isRunning = false;
+      vm.fileCache[data.files[0].name].status = 'uploaded';
       if ($element.fileupload('active') > 0) {
         vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('running');
       } else if (totalNumFilesUploaded === totalNumFilesQueued) {
@@ -224,7 +224,7 @@ function RefineryFileUploadCtrl (
     }
     totalNumFilesQueued++;
     vm.queuedFiles.push(data.files[0]);
-    vm.fileCache[data.files[0].name] = { isRunning: false };
+    vm.fileCache[data.files[0].name] = { status: 'queued' };
     vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
     return true;
   });
@@ -261,7 +261,7 @@ function RefineryFileUploadCtrl (
     }
     currentUploadFile++;
     vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('running');
-    vm.fileCache[data.files[0].name].isRunning = true;
+    vm.fileCache[data.files[0].name].status = 'running';
     return true;
   });
 
