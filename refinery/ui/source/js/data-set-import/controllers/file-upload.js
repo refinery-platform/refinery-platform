@@ -131,22 +131,18 @@ function RefineryFileUploadCtrl (
 
   var uploadDone = function (event, data) {
     var file = data.files[0];
+    console.log(file);
     vm.fileStatus = fileUploadStatusService.setFileUploadStatus('waitingOnServerMD5');
 
     function success () {
       totalNumFilesUploaded++;
 
-      file.uploaded = true;
-      console.log('in success');
-
       if ($element.fileupload('active') > 0) {
         vm.fileStatus = fileUploadStatusService.setFileUploadStatus('running');
+      } else if (totalNumFilesUploaded === totalNumFilesQueued) {
+        vm.fileStatus = fileUploadStatusService.setFileUploadStatus('none');
       } else {
         vm.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
-      }
-
-      if (totalNumFilesUploaded === totalNumFilesQueued) {
-        vm.fileStatus = fileUploadStatusService.setFileUploadStatus('none');
       }
 
       $timeout(function () {
@@ -158,6 +154,7 @@ function RefineryFileUploadCtrl (
     }
 
     function error (errorMessage) {
+      totalNumFilesQueued--;
       // delete partial chunked file
       chunkedUploadService.remove({
         upload_id: data.result.upload_id
@@ -234,6 +231,7 @@ function RefineryFileUploadCtrl (
 
   // Triggered either when an upload failed or the user cancelled
   $element.on('fileuploadfail', function submit (e, data) {
+    totalNumFilesQueued--;
     // delete partial chunked file
     if (fileCache[data.files[0].name].hasOwnProperty('upload_id')) {
       chunkedUploadService.remove({
