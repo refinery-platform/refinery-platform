@@ -548,7 +548,8 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
             upload_id = request.GET['upload_id']
         except KeyError:
             logger.error("Upload ID is missing from deletion request")
-            return HttpResponseBadRequest("Upload ID missing from request")
+            return HttpResponseBadRequest(json.dumps({'error': 'KeyError'}),
+                                          'application/json')
 
         try:
             chunked = ChunkedUpload.objects.get(upload_id=upload_id)
@@ -556,12 +557,13 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
             logger.error(
                 "Error retrieving file upload instance with ID '%s': '%s'",
                 upload_id, e)
-            return HttpResponseBadRequest(
-                'Error retrieving file upload with ID %s', upload_id)
-        chunked.delete()
+            return HttpResponseBadRequest(json.dumps({'error': e}),
+                                          'application/json')
 
-        return HttpResponse('Chunked upload with ID  %s deleted successfully.',
-                            upload_id)
+        chunked.delete()
+        return HttpResponse(json.dumps({'status': 'Successfully deleted.',
+                                        'upload_id': upload_id}),
+                            'application/json')
 
     def on_completion(self, uploaded_file, request):
         """Move file to the user's import directory"""
