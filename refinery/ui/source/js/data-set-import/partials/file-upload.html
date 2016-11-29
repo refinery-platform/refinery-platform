@@ -31,7 +31,9 @@
         <button
           class="active-group btn btn-default start"
           ng-click="submit()"
-          ng-disabled="FileCtrl.numUnfinishedUploads() === 0 || processing()">
+          ng-disabled="FileCtrl.numUnfinishedUploads() === 0 ||
+                       processing() ||
+                      FileCtrl.fileStatus != 'queuing'">
           <i class="fa fa-upload"></i>
           <span>Start upload</span>
         </button>
@@ -88,7 +90,7 @@
               ng-hide="!file.$submit || FileCtrl.options.autoUpload"
               ng-disabled="file.$state() == 'pending' ||
                  file.$state() == 'rejected' ||
-                 !FileCtrl.uploadActive">
+                 FileCtrl.fileCache[file.name].isRunning">
               <i class="fa fa-upload"></i>
               <span>Start</span>
             </button>
