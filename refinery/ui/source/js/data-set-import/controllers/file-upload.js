@@ -116,7 +116,8 @@ function RefineryFileUploadCtrl (
       }
     }
     totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
-    fileCache[file.name] = undefined;
+    fileCache[file.name].status = undefined;
+    fileCache[file.name].upload_id = undefined;
     delete fileCache[file.name];
   };
 
@@ -164,10 +165,13 @@ function RefineryFileUploadCtrl (
     }
 
     function error (errorMessage) {
+      // delete partial chunked file
       chunkedUploadService.remove({
         upload_id: data.result.upload_id
       }).$promise.then(function (response) {
         $log.info(response);
+      }, function (response) {
+        $log.error(response);
       });
       $log.error('Error uploading file!', errorMessage);
       file.error = 'Upload failed, re-add file to retry upload.';
@@ -195,6 +199,11 @@ function RefineryFileUploadCtrl (
         value: data.result.upload_id
       });
     }
+
+    if (data.hasOwnProperty('result') &&
+      !fileCache[data.files[0].name].hasOwnProperty('upload_id')) {
+      fileCache[data.files[0].name].upload_id = data.result.upload_id;
+    }
   };
 
   var chunkFail = function (event, data) {
@@ -216,7 +225,7 @@ function RefineryFileUploadCtrl (
 
   // Tiggered when a new file is uploaded
   $element.on('fileuploadadd', function add (e, data) {
-    if (fileCache[data.files[0].name]) {
+    if (fileCache.hasOwnProperty(data.files[0].name)) {
       $log.error(
         'We currently do not support uploading multiple files with the same ' +
         'file name.'
@@ -225,7 +234,7 @@ function RefineryFileUploadCtrl (
     }
     totalNumFilesQueued++;
     vm.queuedFiles.push(data.files[0]);
-    fileCache[data.files[0].name] = true;
+    fileCache[data.files[0].name] = { status: true };
     vm.uploadActive = true;
     vm.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
     return true;
@@ -233,6 +242,14 @@ function RefineryFileUploadCtrl (
 
   // Triggered either when an upload failed or the user cancelled
   $element.on('fileuploadfail', function submit (e, data) {
+    // delete partial chunked file
+    chunkedUploadService.remove({
+      upload_id: fileCache[data.files[0].name].upload_id
+    }).$promise.then(function (response) {
+      $log.info(response);
+    }, function (response) {
+      $log.error(response);
+    });
     removeFileFromQueue(data.files[0]);
 
     // wait for digest to complete
