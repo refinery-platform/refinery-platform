@@ -136,7 +136,7 @@ function RefineryFileUploadCtrl (
 
     function success () {
       totalNumFilesUploaded++;
-
+      file.uploaded = true; // used to prevent duplicate uploads
       if ($element.fileupload('active') > 0) {
         vm.fileStatus = fileUploadStatusService.setFileUploadStatus('running');
       } else if (totalNumFilesUploaded === totalNumFilesQueued) {
@@ -189,7 +189,7 @@ function RefineryFileUploadCtrl (
         value: data.result.upload_id
       });
     }
-
+    // add upload id to fileCache object for possible cancelation/deletion
     if (data.hasOwnProperty('result') &&
       !fileCache[data.files[0].name].hasOwnProperty('upload_id')) {
       fileCache[data.files[0].name].upload_id = data.result.upload_id;
