@@ -164,6 +164,11 @@ function RefineryFileUploadCtrl (
     }
 
     function error (errorMessage) {
+      chunkedUploadService.remove({
+        upload_id: data.result.upload_id
+      }).$promise.then(function (response) {
+        $log.info(response);
+      });
       $log.error('Error uploading file!', errorMessage);
       file.error = 'Upload failed, re-add file to retry upload.';
       // Remove the error file from cache, so user can readd and upload
