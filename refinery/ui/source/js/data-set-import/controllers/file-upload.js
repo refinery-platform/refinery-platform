@@ -243,13 +243,15 @@ function RefineryFileUploadCtrl (
   // Triggered either when an upload failed or the user cancelled
   $element.on('fileuploadfail', function submit (e, data) {
     // delete partial chunked file
-    chunkedUploadService.remove({
-      upload_id: fileCache[data.files[0].name].upload_id
-    }).$promise.then(function (response) {
-      $log.info(response);
-    }, function (response) {
-      $log.error(response);
-    });
+    if (fileCache[data.files[0].name].hasOwnProperty('upload_id')) {
+      chunkedUploadService.remove({
+        upload_id: fileCache[data.files[0].name].upload_id
+      }).$promise.then(function (response) {
+        $log.info(response);
+      }, function (response) {
+        $log.error(response);
+      });
+    }
     removeFileFromQueue(data.files[0]);
 
     // wait for digest to complete
