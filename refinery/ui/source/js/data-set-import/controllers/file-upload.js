@@ -104,7 +104,8 @@ function RefineryFileUploadCtrl (
     return deferred.promise;
   };
 
-  // Helper method to remove file from queue and cache
+  /* Helper method removes file from queue & cache, and deducts/resets
+  totalNumFilesQueued */
   var removeFileFromQueue = function (file) {
     for (var i = vm.queuedFiles.length; i--;) {
       if (vm.queuedFiles[i].name === file.name) {
@@ -126,6 +127,7 @@ function RefineryFileUploadCtrl (
     }
   };
 
+  // Triggers when upload chunks are done but before complete(md5) confirmation
   var uploadDone = function (event, data) {
     var file = data.files[0];
     vm.fileCache[data.files[0].name].status = 'waitingOnMD5';
@@ -178,6 +180,7 @@ function RefineryFileUploadCtrl (
     return formData;
   };
 
+  // API callback when confimation recieved
   var chunkDone = function (event, data) {
     if (formData.length < 2) {
       formData.push({
@@ -196,7 +199,8 @@ function RefineryFileUploadCtrl (
     $log.error('Error uploading file:', data.errorThrown, '-', data.textStatus);
   };
 
-  // MD5 calculate after chunks are sent successfully
+  /* API Callback when chunk is sent and MD5s are calculate after chunks are
+  sent successfully */
   var chunkSend = function (event, data) {
     var file = data.files[0];
     // final md5 calculated in upload done with the chunkedUploadComplete.
@@ -220,7 +224,7 @@ function RefineryFileUploadCtrl (
     }
     totalNumFilesQueued++;
     vm.queuedFiles.push(data.files[0]);
-    vm.fileCache[data.files[0].name] = { status: 'queued' };
+    vm.fileCache[data.files[0].name] = { status: 'queued' }; // used by UI
     vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
     return true;
   });
