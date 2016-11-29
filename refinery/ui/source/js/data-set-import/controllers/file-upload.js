@@ -3,19 +3,20 @@
 function RefineryFileUploadCtrl (
   $element,
   $log,
+  $q,
   $scope,
+  SparkMD5,
   $timeout,
   $window,
   $,
   chunkedUploadService,
   fileUploadStatusService,
   settings,
-  SparkMD5,
   dataSetImportSettings,
-  $uibModal,
   getCookie
 ) {
-  $scope.fileStatus = fileUploadStatusService.fileUploadStatus;
+  var vm = this;
+  vm.fileStatus = fileUploadStatusService.fileUploadStatus;
 
   var csrftoken = getCookie('csrftoken');
 
@@ -34,7 +35,6 @@ function RefineryFileUploadCtrl (
     }
   });
 
-  // var csrf = '';
   var formData = [];
   var md5 = {};
   var totalNumFilesQueued = 0;
@@ -42,172 +42,96 @@ function RefineryFileUploadCtrl (
   var currentUploadFile = -1;
   // Caches file names to avoid uploading multiple times the same file.
   var fileCache = {};
+  var chunkSize = dataSetImportSettings.chunkSize;
+  // objects containing each files current chunk index for md5 calculation
+  var chunkIndex = {};
+  // objects containing each files chunk length
+  var chunkLength = {};
 
-  $scope.queuedFiles = [];
+  vm.queuedFiles = [];
   // This is set to true by default because this var is used to apply an
   // _active_ class to the progress bar so that it displays the moving stripes.
   // Setting it to false by default leads to an ugly flickering while the bar
   // progresses but the stripes are not displayed
-  $scope.uploadActive = true;
-  $scope.loadingFiles = false;
+  vm.uploadActive = true;
 
-  var worker = false;
-
-  function workerCode () {
-    // Default setting
-    var chunkSize = 2097152;
-
-    function calcMD5 (file) {
-      var slice;
-      if (self.File) {
-        slice = (
-          self.File.prototype.slice ||
-          self.File.prototype.mozSlice ||
-          self.File.prototype.webkitSlice
-        );
-      }
-      if (self.Blob) {
-        slice = (
-          self.Blob.prototype.slice ||
-          self.Blob.prototype.mozSlice ||
-          self.Blob.prototype.webkitSlice
-        );
-      }
-
-      if (!slice) {
-        postMessage({
-          name: file.name,
-          error: 'Neither the File API nor the Blob API are supported.'
-        });
-        return;
-      }
-
-      var chunks = self.Math.ceil(file.size / chunkSize);
-      var spark = new self.SparkMD5.ArrayBuffer();
-      var currentChunk = 0;
-
-      var reader = new FileReader();
-
-      function readNextChunk () {
-        reader.onload = function onload (event) {
-          spark.append(event.target.result);  // append chunk
-          currentChunk++;
-          if (currentChunk < chunks) {
-            readNextChunk();
-          } else {
-            postMessage({
-              name: file.name,
-              md5: spark.end()
-            });
-          }
-        };
-
-        reader.onerror = function (event) {
-          postMessage({ name: file.name, error: event.message });
-        };
-
-        var startIndex = currentChunk * chunkSize;
-        var end = Math.min(startIndex + chunkSize, file.size);
-        reader.readAsArrayBuffer(slice.call(file, startIndex, end));
-      }
-
-      readNextChunk();
+  var setBrowserSliceProperty = function () {
+    if (window.File) {
+      vm.slice = (
+        window.File.prototype.slice ||
+        window.File.prototype.mozSlice ||
+        window.File.prototype.webkitSlice
+      );
     }
 
-    onmessage = function (event) {  // eslint-disable-line no-undef
-      // importScripts only works with absolute URLs when the worker is
-      // created inline. Find out more here:
-      // http://www.html5rocks.com/en/tutorials/workers/basics/
-      importScripts(  // eslint-disable-line no-undef
-        event.data[0] +
-        '/static/vendor/spark-md5/spark-md5.min.js'
+    if (!vm.slice && window.Blob) {
+      vm.slice = (
+        window.Blob.prototype.slice ||
+        window.Blob.prototype.mozSlice ||
+        window.Blob.prototype.webkitSlice
       );
+    }
 
-      chunkSize = event.data[2];
+    if (!vm.slice) {
+      $log.error('Neither the File API nor the Blob API are supported.');
+    }
+  };
 
-      calcMD5(event.data[1]);
+  var calculateMD5 = function (file) {
+    var deferred = $q.defer();
+
+    var reader = new FileReader();
+
+    if (chunkIndex[file.name] === 0) {
+      chunkLength[file.name] = Math.ceil(file.size / chunkSize);
+      vm.spark = new SparkMD5.ArrayBuffer();
+    }
+
+    reader.onload = function onload (event) {
+      vm.spark.append(event.target.result);  // append chunk
+      chunkIndex[file.name]++;
+      if (chunkIndex[file.name] === chunkLength[file.name]) {
+        md5[file.name] = vm.spark.end();  // This piece calculates the MD5
+      }
+      deferred.resolve();
     };
-  }
 
-  if (window.Worker) {
-    var code = workerCode.toString();
-    code = code.substring(code.indexOf('{') + 1, code.lastIndexOf('}'));
+    reader.onerror = function (event) {
+      postMessage({ name: file.name, error: event.message });
+    };
 
-    var blob = new Blob([code], { type: 'application/javascript' });
+    // loads next chunk
+    var startIndex = chunkIndex[file.name] * chunkSize;
+    var end = Math.min(startIndex + chunkSize, file.size);
+    reader.readAsArrayBuffer(vm.slice.call(file, startIndex, end));
 
-    worker = new Worker(URL.createObjectURL(blob));
-  }
+    return deferred.promise;
+  };
 
+  // Helper method to remove file from queue and cache
+  var removeFileFromQueue = function (file) {
+    for (var i = vm.queuedFiles.length; i--;) {
+      if (vm.queuedFiles[i].name === file.name) {
+        vm.queuedFiles.splice(i, 1);
+      }
+    }
+    totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
+    fileCache[file.name] = undefined;
+    delete fileCache[file.name];
+  };
+
+  // occurs after files are adding to the queue
   $.blueimp.fileupload.prototype.processActions = {
-    calculate_checksum: function (data, options) {
-      var that = this;
-      var dfd = $.Deferred();  // eslint-disable-line new-cap
+    initializeChunkIndex: function (data) {
       var file = data.files[data.index];
-      var slice;
-      if (window.File) {
-        slice = (
-          window.File.prototype.slice ||
-          window.File.prototype.mozSlice ||
-          window.File.prototype.webkitSlice
-        );
-      }
-      if (!slice && window.Blob) {
-        slice = (
-          window.Blob.prototype.slice ||
-          window.Blob.prototype.mozSlice ||
-          window.Blob.prototype.webkitSlice
-        );
-      }
-
-      if (!slice) {
-        $log.error('Neither the File API nor the Blob API are supported.');
-        return undefined;
-      }
-
-      var chunks = Math.ceil(file.size / options.chunkSize);
-      var currentChunk = 0;
-      var spark = new SparkMD5.ArrayBuffer();
-
-      function readNextChunk () {
-        var reader = new FileReader();
-
-        reader.onload = function onload (event) {
-          spark.append(event.target.result);  // append chunk
-          currentChunk++;
-          if (currentChunk < chunks) {
-            readNextChunk();
-          } else {
-            md5[file.name] = spark.end();  // This piece calculates the MD5 hash
-            dfd.resolveWith(that, [data]);
-          }
-        };
-
-        var startIndex = currentChunk * options.chunkSize;
-        var end = Math.min(startIndex + options.chunkSize, file.size);
-        reader.readAsArrayBuffer(slice.call(file, startIndex, end));
-      }
-
-      if (worker) {
-        worker.postMessage([
-          $window.location.origin + settings.appRoot,
-          file,
-          options.chunkSize
-        ]);
-
-        worker.onmessage = function (event) {
-          md5[file.name] = event.data.md5;
-          dfd.resolveWith(that, [data]);
-        };
-      } else {
-        readNextChunk();
-      }
-
-      return dfd.promise();
+      // Set chunk index
+      chunkIndex[file.name] = 0;
     }
   };
 
   var uploadDone = function (event, data) {
     var file = data.files[0];
+    vm.fileStatus = fileUploadStatusService.setFileUploadStatus('waitingOnServerMD5');
 
     function success () {
       totalNumFilesUploaded++;
@@ -215,20 +139,20 @@ function RefineryFileUploadCtrl (
       file.uploaded = true;
 
       if ($element.fileupload('active') > 0) {
-        $scope.uploadActive = true;
-        $scope.uploadInProgress = true;
-        $scope.fileStatus = fileUploadStatusService.setFileUploadStatus('running');
+        vm.uploadActive = true;
+        vm.uploadInProgress = true;
+        vm.fileStatus = fileUploadStatusService.setFileUploadStatus('running');
       } else {
-        $scope.uploadActive = false;
-        $scope.uploadInProgress = false;
-        $scope.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
+        vm.uploadActive = false;
+        vm.uploadInProgress = false;
+        vm.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
       }
 
       if (totalNumFilesUploaded === totalNumFilesQueued) {
-        $scope.allUploaded = true;
-        $scope.uploadActive = false;
-        $scope.uploadInProgress = false;
-        $scope.fileStatus = fileUploadStatusService.setFileUploadStatus('none');
+        vm.allUploaded = true;
+        vm.uploadActive = false;
+        vm.uploadInProgress = false;
+        vm.fileStatus = fileUploadStatusService.setFileUploadStatus('none');
       }
 
       $timeout(function () {
@@ -241,15 +165,18 @@ function RefineryFileUploadCtrl (
 
     function error (errorMessage) {
       $log.error('Error uploading file!', errorMessage);
+      file.error = 'Upload failed, re-add file to retry upload.';
+      // Remove the error file from cache, so user can readd and upload
+      removeFileFromQueue(file);
     }
 
-    chunkedUploadService.save({
-      upload_id: data.result.upload_id,
-      md5: md5[file.name]
-    })
-    .$promise
-    .then(success)
-    .catch(error);
+    // calculate md5 before complete file save (for last chunk or small files)
+    calculateMD5(file).then(function () {
+      chunkedUploadService.save({
+        upload_id: data.result.upload_id,
+        md5: md5[file.name]
+      }).$promise.then(success, error);
+    });
   };
 
   var getFormData = function () {
@@ -269,6 +196,15 @@ function RefineryFileUploadCtrl (
     $log.error('Error uploading file:', data.errorThrown, '-', data.textStatus);
   };
 
+  // MD5 calculate after chunks are sent successfully
+  var chunkSend = function (event, data) {
+    var file = data.files[0];
+    // final md5 calculated in upload done with the chunkedUploadComplete.
+    if (chunkIndex[file.name] === 0 || chunkIndex[file.name] < chunkLength[file.name]) {
+      calculateMD5(file);
+    }
+  };
+
   var uploadAlways = function () {
     formData = [];  // clear formData, including upload_id for the next upload
   };
@@ -283,30 +219,23 @@ function RefineryFileUploadCtrl (
       return false;
     }
     totalNumFilesQueued++;
-    $scope.queuedFiles.push(data.files[0]);
+    vm.queuedFiles.push(data.files[0]);
     fileCache[data.files[0].name] = true;
-    $scope.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
+    vm.uploadActive = true;
+    vm.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
     return true;
   });
 
   // Triggered either when an upload failed or the user cancelled
   $element.on('fileuploadfail', function submit (e, data) {
-    for (var i = $scope.queuedFiles.length; i--;) {
-      if ($scope.queuedFiles[i].name === data.files[0].name) {
-        $scope.queuedFiles.splice(i, 1);
-      }
-    }
-    totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
-
-    fileCache[data.files[0].name] = undefined;
-    delete fileCache[data.files[0].name];
+    removeFileFromQueue(data.files[0]);
 
     // wait for digest to complete
     $timeout(function () {
       if (totalNumFilesQueued === 0) {
-        $scope.fileStatus = fileUploadStatusService.setFileUploadStatus('none');
+        vm.fileStatus = fileUploadStatusService.setFileUploadStatus('none');
       } else if ($element.fileupload('active') === 0) {
-        $scope.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
+        vm.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
       }
     }, 110);
   });
@@ -317,11 +246,11 @@ function RefineryFileUploadCtrl (
       return false;
     }
     currentUploadFile++;
-    $scope.fileStatus = fileUploadStatusService.setFileUploadStatus('running');
+    vm.fileStatus = fileUploadStatusService.setFileUploadStatus('running');
     return true;
   });
 
-  $scope.globalReadableProgress = function (progress, index) {
+  vm.globalReadableProgress = function (progress, index) {
     if (index < currentUploadFile) {
       return 100;
     }
@@ -331,7 +260,7 @@ function RefineryFileUploadCtrl (
     return 0;
   };
 
-  $scope.globalToIndividualProgress = function (progress, index) {
+  vm.globalToIndividualProgress = function (progress, index) {
     if (index < currentUploadFile) {
       return +(100 / totalNumFilesQueued).toFixed(3);
     }
@@ -341,25 +270,20 @@ function RefineryFileUploadCtrl (
     return 0;
   };
 
-  $scope.numUnfinishedUploads = function () {
+  vm.numUnfinishedUploads = function () {
     return totalNumFilesQueued - totalNumFilesUploaded;
   };
 
-  $scope.openHelpMd5 = function () {
-    $uibModal.open({
-      templateUrl:
-        '/static/partials/data-set-import/partials/dialog-help-md5.html',
-      controller: 'RefineryFileUploadMD5HelpCtrl as modal'
-    });
-  };
-
-  $scope.options = {
+  vm.options = {
     always: uploadAlways,
     chunkdone: chunkDone,
     chunkfail: chunkFail,
+    chunksend: chunkSend,
     done: uploadDone,
     formData: getFormData
   };
+
+  setBrowserSliceProperty();
 }
 
 angular
@@ -367,16 +291,16 @@ angular
   .controller('RefineryFileUploadCtrl', [
     '$element',
     '$log',
+    '$q',
     '$scope',
+    'SparkMD5',
     '$timeout',
     '$window',
     '$',
     'chunkedUploadService',
     'fileUploadStatusService',
     'settings',
-    'SparkMD5',
     'dataSetImportSettings',
-    '$uibModal',
     'getCookie',
     RefineryFileUploadCtrl
   ]);
