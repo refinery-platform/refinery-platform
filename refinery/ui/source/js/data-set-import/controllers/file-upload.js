@@ -16,7 +16,7 @@ function RefineryFileUploadCtrl (
   getCookie
 ) {
   var vm = this;
-  vm.fileStatus = fileUploadStatusService.fileUploadStatus;
+  vm.overallFileStatus = fileUploadStatusService.fileUploadStatus;
 
   var csrftoken = getCookie('csrftoken');
 
@@ -131,18 +131,18 @@ function RefineryFileUploadCtrl (
 
   var uploadDone = function (event, data) {
     var file = data.files[0];
-    vm.fileStatus = fileUploadStatusService.setFileUploadStatus('waitingOnServerMD5');
+    vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('waitingOnServerMD5');
 
     function success () {
       totalNumFilesUploaded++;
       file.uploaded = true; // used to prevent duplicate uploads
       vm.fileCache[data.files[0].name].isRunning = false;
       if ($element.fileupload('active') > 0) {
-        vm.fileStatus = fileUploadStatusService.setFileUploadStatus('running');
+        vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('running');
       } else if (totalNumFilesUploaded === totalNumFilesQueued) {
-        vm.fileStatus = fileUploadStatusService.setFileUploadStatus('none');
+        vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('none');
       } else {
-        vm.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
+        vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
       }
 
       $timeout(function () {
@@ -225,7 +225,7 @@ function RefineryFileUploadCtrl (
     totalNumFilesQueued++;
     vm.queuedFiles.push(data.files[0]);
     vm.fileCache[data.files[0].name] = { isRunning: false };
-    vm.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
+    vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
     return true;
   });
 
@@ -260,7 +260,7 @@ function RefineryFileUploadCtrl (
       return false;
     }
     currentUploadFile++;
-    vm.fileStatus = fileUploadStatusService.setFileUploadStatus('running');
+    vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('running');
     vm.fileCache[data.files[0].name].isRunning = true;
     return true;
   });
