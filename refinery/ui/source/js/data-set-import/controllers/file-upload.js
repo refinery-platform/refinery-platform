@@ -41,7 +41,7 @@ function RefineryFileUploadCtrl (
   var totalNumFilesUploaded = 0;
   var currentUploadFile = -1;
   // Caches file names to avoid uploading multiple times the same file.
-  var fileCache = {};
+  vm.fileCache = {};
   var chunkSize = dataSetImportSettings.chunkSize;
   // objects containing each files current chunk index for md5 calculation
   var chunkIndex = {};
@@ -115,9 +115,9 @@ function RefineryFileUploadCtrl (
       }
     }
     totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
-    fileCache[file.name].status = undefined;
-    fileCache[file.name].upload_id = undefined;
-    delete fileCache[file.name];
+    vm.fileCache[file.name].isRunning = undefined;
+    vm.fileCache[file.name].upload_id = undefined;
+    delete vm.fileCache[file.name];
   };
 
   // occurs after files are adding to the queue
@@ -131,12 +131,12 @@ function RefineryFileUploadCtrl (
 
   var uploadDone = function (event, data) {
     var file = data.files[0];
-    console.log(file);
     vm.fileStatus = fileUploadStatusService.setFileUploadStatus('waitingOnServerMD5');
 
     function success () {
       totalNumFilesUploaded++;
       file.uploaded = true; // used to prevent duplicate uploads
+      vm.fileCache[data.files[0].name].isRunning = false;
       if ($element.fileupload('active') > 0) {
         vm.fileStatus = fileUploadStatusService.setFileUploadStatus('running');
       } else if (totalNumFilesUploaded === totalNumFilesQueued) {
@@ -191,8 +191,8 @@ function RefineryFileUploadCtrl (
     }
     // add upload id to fileCache object for possible cancelation/deletion
     if (data.hasOwnProperty('result') &&
-      !fileCache[data.files[0].name].hasOwnProperty('upload_id')) {
-      fileCache[data.files[0].name].upload_id = data.result.upload_id;
+      !vm.fileCache[data.files[0].name].hasOwnProperty('upload_id')) {
+      vm.fileCache[data.files[0].name].upload_id = data.result.upload_id;
     }
   };
 
@@ -215,7 +215,7 @@ function RefineryFileUploadCtrl (
 
   // Tiggered when a new file is uploaded
   $element.on('fileuploadadd', function add (e, data) {
-    if (fileCache.hasOwnProperty(data.files[0].name)) {
+    if (vm.fileCache.hasOwnProperty(data.files[0].name)) {
       $log.error(
         'We currently do not support uploading multiple files with the same ' +
         'file name.'
@@ -224,7 +224,7 @@ function RefineryFileUploadCtrl (
     }
     totalNumFilesQueued++;
     vm.queuedFiles.push(data.files[0]);
-    fileCache[data.files[0].name] = { status: true };
+    vm.fileCache[data.files[0].name] = { isRunning: false };
     vm.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
     return true;
   });
@@ -233,9 +233,9 @@ function RefineryFileUploadCtrl (
   $element.on('fileuploadfail', function submit (e, data) {
     totalNumFilesQueued--;
     // delete partial chunked file
-    if (fileCache[data.files[0].name].hasOwnProperty('upload_id')) {
+    if (vm.fileCache[data.files[0].name].hasOwnProperty('upload_id')) {
       chunkedUploadService.remove({
-        upload_id: fileCache[data.files[0].name].upload_id
+        upload_id: vm.fileCache[data.files[0].name].upload_id
       }).$promise.then(function (response) {
         $log.info(response);
       }, function (response) {
@@ -261,6 +261,7 @@ function RefineryFileUploadCtrl (
     }
     currentUploadFile++;
     vm.fileStatus = fileUploadStatusService.setFileUploadStatus('running');
+    vm.fileCache[data.files[0].name].isRunning = true;
     return true;
   });
 
