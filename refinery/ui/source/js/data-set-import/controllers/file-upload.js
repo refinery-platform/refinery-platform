@@ -53,7 +53,6 @@ function RefineryFileUploadCtrl (
   // _active_ class to the progress bar so that it displays the moving stripes.
   // Setting it to false by default leads to an ugly flickering while the bar
   // progresses but the stripes are not displayed
-  vm.uploadActive = true;
 
   var setBrowserSliceProperty = function () {
     if (window.File) {
@@ -138,21 +137,15 @@ function RefineryFileUploadCtrl (
       totalNumFilesUploaded++;
 
       file.uploaded = true;
+      console.log('in success');
 
       if ($element.fileupload('active') > 0) {
-        vm.uploadActive = true;
-        vm.uploadInProgress = true;
         vm.fileStatus = fileUploadStatusService.setFileUploadStatus('running');
       } else {
-        vm.uploadActive = false;
-        vm.uploadInProgress = false;
         vm.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
       }
 
       if (totalNumFilesUploaded === totalNumFilesQueued) {
-        vm.allUploaded = true;
-        vm.uploadActive = false;
-        vm.uploadInProgress = false;
         vm.fileStatus = fileUploadStatusService.setFileUploadStatus('none');
       }
 
@@ -235,7 +228,6 @@ function RefineryFileUploadCtrl (
     totalNumFilesQueued++;
     vm.queuedFiles.push(data.files[0]);
     fileCache[data.files[0].name] = { status: true };
-    vm.uploadActive = true;
     vm.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
     return true;
   });
