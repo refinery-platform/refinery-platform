@@ -19,7 +19,6 @@ function RefineryFileUploadCtrl (
   vm.overallFileStatus = fileUploadStatusService.fileUploadStatus;
 
   var csrftoken = getCookie('csrftoken');
-
   // The next function and jQuery call ensure that the `csrftoken` is used for
   // every request. This is needed because the _jQuery file upload_ plugin uses
   // jQuery's internal AJAX methods.
@@ -49,11 +48,8 @@ function RefineryFileUploadCtrl (
   var chunkLength = {};
 
   vm.queuedFiles = [];
-  // This is set to true by default because this var is used to apply an
-  // _active_ class to the progress bar so that it displays the moving stripes.
-  // Setting it to false by default leads to an ugly flickering while the bar
-  // progresses but the stripes are not displayed
 
+  // Helper method checks if browser has File or Blob API capabilities
   var setBrowserSliceProperty = function () {
     if (window.File) {
       vm.slice = (
@@ -76,6 +72,7 @@ function RefineryFileUploadCtrl (
     }
   };
 
+  // Helper method which calculates MD5 sequentially
   var calculateMD5 = function (file) {
     var deferred = $q.defer();
 
@@ -154,7 +151,6 @@ function RefineryFileUploadCtrl (
     }
 
     function error (errorMessage) {
-      totalNumFilesQueued--;
       // delete partial chunked file
       chunkedUploadService.remove({
         upload_id: data.result.upload_id
@@ -231,7 +227,6 @@ function RefineryFileUploadCtrl (
 
   // Triggered either when an upload failed or the user cancelled
   $element.on('fileuploadfail', function submit (e, data) {
-    totalNumFilesQueued--;
     // delete partial chunked file
     if (vm.fileCache[data.files[0].name].hasOwnProperty('upload_id')) {
       chunkedUploadService.remove({
