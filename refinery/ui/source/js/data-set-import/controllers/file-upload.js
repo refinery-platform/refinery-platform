@@ -87,7 +87,8 @@ function RefineryFileUploadCtrl (
       vm.spark.append(event.target.result);  // append chunk
       chunkIndex[file.name]++;
       if (chunkIndex[file.name] === chunkLength[file.name]) {
-        md5[file.name] = vm.spark.end();  // This piece calculates the MD5
+     //   md5[file.name] = vm.spark.end();  // This piece calculates the MD5
+        console.log(event);
       }
       deferred.resolve();
     };
@@ -121,7 +122,13 @@ function RefineryFileUploadCtrl (
   // occurs after files are adding to the queue
   $.blueimp.fileupload.prototype.processActions = {
     initializeChunkIndex: function (data) {
-      var file = data.files[data.index];
+      console.log('in the initialize chunk index');
+      console.log(data);
+      /* Data object contains a data.index = 0. From the blueimp docs:
+      Option singleFileUploads by default is set to true, so multiple
+      selects/drops get split up into single add calls. The index will
+      always be 0.*/
+      var file = data.files[0];
       // Set chunk index
       chunkIndex[file.name] = 0;
     }
