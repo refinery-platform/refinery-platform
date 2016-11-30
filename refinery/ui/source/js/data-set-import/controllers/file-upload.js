@@ -17,8 +17,21 @@ function RefineryFileUploadCtrl (
 ) {
   var vm = this;
   vm.overallFileStatus = fileUploadStatusService.fileUploadStatus;
-
+  // Caches file names to avoid uploading multiple times the same file and
+  // ui for statuses.
+  vm.fileCache = {};
   var csrftoken = getCookie('csrftoken');
+  var formData = [];
+  var md5 = {};
+  var totalNumFilesQueued = 0;
+  var totalNumFilesUploaded = 0;
+  var currentUploadFile = -1;
+  var chunkSize = dataSetImportSettings.chunkSize;
+  // objects containing each files current chunk index for md5 calculation
+  var chunkIndex = {};
+  // objects containing each files chunk length
+  var chunkLength = {};
+
   // The next function and jQuery call ensure that the `csrftoken` is used for
   // every request. This is needed because the _jQuery file upload_ plugin uses
   // jQuery's internal AJAX methods.
@@ -33,19 +46,6 @@ function RefineryFileUploadCtrl (
       }
     }
   });
-
-  var formData = [];
-  var md5 = {};
-  var totalNumFilesQueued = 0;
-  var totalNumFilesUploaded = 0;
-  var currentUploadFile = -1;
-  // Caches file names to avoid uploading multiple times the same file.
-  vm.fileCache = {};
-  var chunkSize = dataSetImportSettings.chunkSize;
-  // objects containing each files current chunk index for md5 calculation
-  var chunkIndex = {};
-  // objects containing each files chunk length
-  var chunkLength = {};
 
   // Helper method checks if browser has File or Blob API capabilities
   var setBrowserSliceProperty = function () {
