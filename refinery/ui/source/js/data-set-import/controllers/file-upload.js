@@ -28,7 +28,7 @@ function RefineryFileUploadCtrl (
   var currentUploadFile = -1;
   var chunkSize = dataSetImportSettings.chunkSize;
   // objects containing each files current chunk index for md5 calculation
-  var chunkIndex = {};
+  var currentChunkIndex = {};
   // objects containing each files chunk length
   var chunkLength = {};
 
@@ -76,15 +76,15 @@ function RefineryFileUploadCtrl (
 
     var reader = new FileReader();
 
-    if (chunkIndex[file.name] === 0) {
+    if (currentChunkIndex[file.name] === 0) {
       chunkLength[file.name] = Math.ceil(file.size / chunkSize);
       vm.spark = new SparkMD5.ArrayBuffer();
     }
 
     reader.onload = function onload (event) {
       vm.spark.append(event.target.result);  // append chunk
-      chunkIndex[file.name]++;
-      if (chunkIndex[file.name] === chunkLength[file.name]) {
+      currentChunkIndex[file.name]++;
+      if (currentChunkIndex[file.name] === chunkLength[file.name]) {
         md5[file.name] = vm.spark.end();  // This piece calculates the MD5
       }
       deferred.resolve();
@@ -95,7 +95,7 @@ function RefineryFileUploadCtrl (
     };
 
     // loads next chunk
-    var startIndex = chunkIndex[file.name] * chunkSize;
+    var startIndex = currentChunkIndex[file.name] * chunkSize;
     var end = Math.min(startIndex + chunkSize, file.size);
     reader.readAsArrayBuffer(vm.slice.call(file, startIndex, end));
 
@@ -120,7 +120,7 @@ function RefineryFileUploadCtrl (
       always be 0.*/
       var file = data.files[0];
       // Set chunk index
-      chunkIndex[file.name] = 0;
+      currentChunkIndex[file.name] = 0;
     }
   };
 
@@ -201,7 +201,8 @@ function RefineryFileUploadCtrl (
   var chunkSend = function (event, data) {
     var file = data.files[0];
     // final md5 calculated in upload done with the chunkedUploadComplete.
-    if (chunkIndex[file.name] === 0 || chunkIndex[file.name] < chunkLength[file.name]) {
+    if (currentChunkIndex[file.name] === 0 ||
+        currentChunkIndex[file.name] < chunkLength[file.name]) {
       calculateMD5(file);
     }
   };
