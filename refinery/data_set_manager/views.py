@@ -11,7 +11,6 @@ import json
 import os
 
 from django import forms
-from django.core.exceptions import MultipleObjectsReturned
 from django.core.urlresolvers import reverse
 from django.http import (
     HttpResponseRedirect,
@@ -635,7 +634,7 @@ class Assays(APIView):
     def get_object(self, uuid):
         try:
             return Assay.objects.get(uuid=uuid)
-        except (Assay.DoesNotExist, MultipleObjectsReturned):
+        except (Assay.DoesNotExist, Assay.MultipleObjectsReturned):
             raise Http404
 
     def get_query_set(self, study_uuid):
