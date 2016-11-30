@@ -131,7 +131,7 @@ function RefineryFileUploadCtrl (
 
     function success () {
       totalNumFilesUploaded++;
-      file.uploaded = true; // used to prevent duplicate uploads
+      file.uploaded = true; // used by ui to reset progress bars
       vm.fileCache[data.files[0].name].status = 'uploaded';
       if ($element.fileupload('active') > 0) {
         vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('running');
