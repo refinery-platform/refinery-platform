@@ -98,7 +98,7 @@
               class="btn btn-warning cancel"
               ng-click="file.$cancel()"
               ng-hide="!file.$cancel"
-              ng-disabled="FileCtrl.overallFileStatus != 'waitingOnMD5'">
+              ng-disabled="FileCtrl.fileCache[file.name].status == 'waitingOnMD5'">
               <i class="fa fa-ban"></i>
               <span>Cancel</span>
             </button>
