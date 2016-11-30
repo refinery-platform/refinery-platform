@@ -47,8 +47,6 @@ function RefineryFileUploadCtrl (
   // objects containing each files chunk length
   var chunkLength = {};
 
-  vm.queuedFiles = [];
-
   // Helper method checks if browser has File or Blob API capabilities
   var setBrowserSliceProperty = function () {
     if (window.File) {
@@ -108,11 +106,6 @@ function RefineryFileUploadCtrl (
   /* Helper method removes file from queue & cache, and deducts/resets
   totalNumFilesQueued */
   var removeFileFromQueue = function (file) {
-    for (var i = vm.queuedFiles.length; i--;) {
-      if (vm.queuedFiles[i].name === file.name) {
-        vm.queuedFiles.splice(i, 1);
-      }
-    }
     totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
     vm.fileCache[file.name].status = undefined;
     vm.fileCache[file.name].upload_id = undefined;
@@ -124,6 +117,7 @@ function RefineryFileUploadCtrl (
     initializeChunkIndex: function (data) {
       console.log('in the initialize chunk index');
       console.log(data);
+      console.log($element.fileupload('active'));
       /* Data object contains a data.index = 0. From the blueimp docs:
       Option singleFileUploads by default is set to true, so multiple
       selects/drops get split up into single add calls. The index will
@@ -230,7 +224,6 @@ function RefineryFileUploadCtrl (
       return false;
     }
     totalNumFilesQueued++;
-    vm.queuedFiles.push(data.files[0]);
     vm.fileCache[data.files[0].name] = { status: 'queued' }; // used by UI
     vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
     return true;
