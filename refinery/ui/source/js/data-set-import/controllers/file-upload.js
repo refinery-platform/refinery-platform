@@ -113,7 +113,7 @@ function RefineryFileUploadCtrl (
       }
     }
     totalNumFilesQueued = Math.max(totalNumFilesQueued - 1, 0);
-    vm.fileCache[file.name].isRunning = undefined;
+    vm.fileCache[file.name].status = undefined;
     vm.fileCache[file.name].upload_id = undefined;
     delete vm.fileCache[file.name];
   };
