@@ -553,7 +553,8 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
 
         try:
             chunked = ChunkedUpload.objects.get(upload_id=upload_id)
-        except (ChunkedUpload.DoesNotExist, MultipleObjectsReturned) as e:
+        except (ChunkedUpload.DoesNotExist,
+                ChunkedUpload.MultipleObjectsReturned) as e:
             logger.error(
                 "Error retrieving file upload instance with ID '%s': '%s'",
                 upload_id, e)
