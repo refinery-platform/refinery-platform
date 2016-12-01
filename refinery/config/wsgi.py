@@ -17,6 +17,11 @@ class WSGIEnvironment(WSGIHandler):
         os.environ['DJANGO_SETTINGS_MODULE'] = environ[
             'DJANGO_SETTINGS_MODULE']
 
+        # Regarding the SO post from above and the caveat of losing the
+        # "future-proofness" of Django's get_wsgi_application() it is good
+        # to note that method does not change until Django 1.10, and said
+        # change is very minor
+        # See: http://bit.ly/2fQmPSw for the change
         django.setup()
         return super(WSGIEnvironment, self).__call__(environ, start_response)
 
