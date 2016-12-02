@@ -207,6 +207,12 @@ function RefineryFileUploadCtrl (
     }
   };
 
+  var uploadAlways = function () {
+     /* clear formData, including upload_id for the next
+     upload */
+    formData = [];
+  };
+
   // Tiggered when a new file is uploaded
   $element.on('fileuploadadd', function add (e, data) {
     if (vm.fileCache.hasOwnProperty(data.files[0].name)) {
@@ -288,6 +294,7 @@ function RefineryFileUploadCtrl (
   };
 
   vm.options = {
+    always: uploadAlways,
     chunkdone: chunkDone,
     chunkfail: chunkFail,
     chunksend: chunkSend,
