@@ -208,9 +208,10 @@ function RefineryFileUploadCtrl (
   };
 
   var uploadAlways = function () {
-     /* clear formData, including upload_id for the next
-     upload */
     formData = [];
+    /* After uploads, clear formData, including upload_id for the next
+     upload. This reset require for mutliple large files
+    */
   };
 
   // Tiggered when a new file is uploaded
