@@ -207,10 +207,6 @@ function RefineryFileUploadCtrl (
     }
   };
 
-  var uploadAlways = function () {
-    formData = [];  // clear formData, including upload_id for the next upload
-  };
-
   // Tiggered when a new file is uploaded
   $element.on('fileuploadadd', function add (e, data) {
     if (vm.fileCache.hasOwnProperty(data.files[0].name)) {
@@ -251,6 +247,12 @@ function RefineryFileUploadCtrl (
   });
 
   $element.on('fileuploadsubmit', function submit (event, data) {
+    /* clear formData, including upload_id for the next upload
+    Previously cleared formData in uploadAlways callback but suspect due to
+    timing, we ran into issues submitting smaller files during large files
+    uploads. See Issue #1542 */
+    formData = [];
+
     if (data.files[0].uploaded) {
       // don't upload again
       return false;
@@ -286,7 +288,6 @@ function RefineryFileUploadCtrl (
   };
 
   vm.options = {
-    always: uploadAlways,
     chunkdone: chunkDone,
     chunkfail: chunkFail,
     chunksend: chunkSend,
