@@ -230,9 +230,9 @@ function DashboardCtrl (
   this.workflowsSorting = settings.dashboard.workflowsSorting;
 
   pubSub.on('resize', function () {
-    this.dataSetsAdapter.reload();
-    this.analysesAdapter.reload();
-    this.workflowsAdapter.reload();
+    if (this.dataSetsAdapter) this.dataSetsAdapter.reload();
+    if (this.analysesAdapter) this.analysesAdapter.reload();
+    if (this.workflowsAdapter) this.workflowsAdapter.reload();
   }.bind(this));
 
   this.treemapContext.on('root', function (root) {
