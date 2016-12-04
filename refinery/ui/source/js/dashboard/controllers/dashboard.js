@@ -366,8 +366,18 @@ function DashboardCtrl (
     if (this.repoMode) {
       this.expandDataSetPanel = true;
       this.expandedDataSetPanelBorder = true;
-      this.dashboardWidthFixerService.fixWidth();
-      this.dashboardExpandablePanelService.trigger('lockFullWith');
+      this.dashboardWidthFixerService
+        .fixWidth()
+        .then(function () {
+          this.dashboardExpandablePanelService.trigger('lockFullWith');
+        }.bind(this))
+        .catch(function () {
+          // This is weird. We should never run into here unless the whole app
+          // initialization failed even after 75ms.
+          // See `services/width-fixer.js` for details.
+          this.$log.error('Dashboard expand dataset exploration error,' +
+            ' possibly due to the Refinery App failing to initialized.');
+        });
     }
   }.bind(this), 0);
 
@@ -998,7 +1008,8 @@ DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
   this.dataSetExploration = true;
 
   if (!this.expandDataSetPanel) {
-    this.dashboardWidthFixerService.fixWidth()
+    this.dashboardWidthFixerService
+      .fixWidth()
       .then(function () {
         self.expandDataSetPanel = true;
         self.expandedDataSetPanelBorder = true;
@@ -1052,7 +1063,8 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
 
   function startExpansion () {
     if (!this.expandDataSetPanel) {
-      this.dashboardWidthFixerService.fixWidth()
+      this.dashboardWidthFixerService
+        .fixWidth()
         .then(function () {
           self.expandDataSetPanel = true;
           self.expandedDataSetPanelBorder = true;
