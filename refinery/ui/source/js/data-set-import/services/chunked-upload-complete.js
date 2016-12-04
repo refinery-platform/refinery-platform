@@ -16,7 +16,16 @@ function ChunkedUploadFactory (
         transformRequest: function (data) {
           return $httpParamSerializerJQLike(data);
         }
-      }
+      },
+      remove: {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        transformRequest: function (data) {
+          return $httpParamSerializerJQLike(data);
+        }
+      },
     }
   );
 }

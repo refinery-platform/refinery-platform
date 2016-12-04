@@ -20,7 +20,8 @@ function DataSetPreviewCtrl (
   dataSetTakeOwnershipService,
   dashboardDataSetsReloadService,
   filesize,
-  DashboardIntrosDataSetSummary
+  DashboardIntrosDataSetSummary,
+  permissionService
 ) {
   this.$log = $log;
   this.$q = $q;
@@ -40,6 +41,7 @@ function DataSetPreviewCtrl (
   this.dashboardExpandablePanelService = dashboardExpandablePanelService;
   this.dataSetTakeOwnershipService = dataSetTakeOwnershipService;
   this.dashboardDataSetsReloadService = dashboardDataSetsReloadService;
+  this.permissionService = permissionService;
   this.filesize = filesize;
   this.introsSatoriDataSetSummary = new DashboardIntrosDataSetSummary(this);
 
@@ -229,58 +231,6 @@ DataSetPreviewCtrl.prototype.getDataSetDetails = function (uuid) {
 };
 
 /**
- * Load permissions for this dataset.
- *
- * @method  getPermissions
- * @author  Fritz Lekschas
- * @date    2015-08-21
- *
- * @param   {String}  uuid   UUID of the exact model entity.
- * @return  {Object}         Angular promise.
- */
-DataSetPreviewCtrl.prototype.getPermissions = function (uuid) {
-  return this.sharingService.get({
-    model: 'data_sets',
-    uuid: uuid
-  }).$promise
-    .then(function (data) {
-      var groups = [];
-      for (var i = 0, len = data.share_list.length; i < len; i++) {
-        groups.push({
-          id: data.share_list[i].group_id,
-          name: data.share_list[i].group_name,
-          uuid: data.share_list[i].group_uuid,
-          permission: this.getPermissionLevel(data.share_list[i].perms)
-        });
-      }
-      this.permissions = {
-        isOwner: data.is_owner,
-        groups: groups
-      };
-    }.bind(this));
-};
-
-/**
- * Turns permission object into a simple string.
- *
- * @method  getPermissions
- * @author  Fritz Lekschas
- * @date    2015-08-21
- *
- * @param   {Object}  perms  Object of the precise permissions.
- * @return  {String}         Permission's name.
- */
-DataSetPreviewCtrl.prototype.getPermissionLevel = function (perms) {
-  if (perms.read === false) {
-    return 'none';
-  }
-  if (perms.change === true) {
-    return 'edit';
-  }
-  return 'read';
-};
-
-/**
  * Import data set from public into private space.
  *
  * @method  importDataSet
@@ -361,7 +311,7 @@ DataSetPreviewCtrl.prototype.loadData = function (dataSetUuid) {
   permissions = this.user.isAuthenticated()
     .then(function (authenticated) {
       if (authenticated) {
-        return this.getPermissions(dataSetUuid);
+        return this.permissionService.getPermissions(dataSetUuid);
       }
       return false;
     }.bind(this));
@@ -392,24 +342,21 @@ DataSetPreviewCtrl.prototype.loadData = function (dataSetUuid) {
  */
 DataSetPreviewCtrl.prototype.openPermissionEditor = function () {
   var that = this;
-
-  if (this.permissions) {
-    this.$uibModal.open({
-      templateUrl: '/static/partials/dashboard/partials/permission-dialog.html',
-      controller: 'PermissionEditorCtrl as modal',
-      resolve: {
-        config: function () {
-          return {
-            model: 'data_sets',
-            uuid: that._currentUuid
-          };
-        },
-        permissions: function () {
-          return that.permissions;
-        }
+  this.$uibModal.open({
+    templateUrl: '/static/partials/dashboard/partials/permission-dialog.html',
+    controller: 'PermissionEditorCtrl as modal',
+    resolve: {
+      config: function () {
+        return {
+          model: 'data_sets',
+          uuid: that._currentUuid
+        };
       }
-    });
-  }
+    }
+  }).result.catch(function () {
+    // refresh data when user dismisses by clicking on the background
+    that.permissionService.getPermissions(that._currentUuid);
+  });
 };
 
 /**
@@ -482,5 +429,6 @@ angular
     'dashboardDataSetsReloadService',
     'filesize',
     'DashboardIntrosDataSetSummary',
+    'permissionService',
     DataSetPreviewCtrl
   ]);
