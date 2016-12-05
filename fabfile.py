@@ -86,9 +86,11 @@ def conf(mode=None):
     env.shell_before = "export DJANGO_SETTINGS_MODULE=config.settings.*"
     env.shell_after = \
         "export DJANGO_SETTINGS_MODULE=config.settings.{}".format(mode)
-    env.apache_before = "SetEnv DJANGO_SETTINGS_MODULE config.settings.*"
-    env.apache_after = \
-        "SetEnv DJANGO_SETTINGS_MODULE config.settings.{}".format(mode)
+    env.apache_before = "wsgi_.*.py"
+    if mode == "prod":
+        env.apache_after = "wsgi_prod.py"
+    else:
+        env.apache_after = "wsgi_dev.py"
     # stop supervisord and Apache
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("supervisorctl shutdown")
@@ -96,9 +98,10 @@ def conf(mode=None):
     # update DJANGO_SETTINGS_MODULE
     sed('/home/vagrant/.profile', before=env.shell_before,
         after=env.shell_after, backup='')
+    # update WSGIScriptAlias value
     sed('/etc/apache2/sites-available/001-refinery.conf',
-        before=env.apache_before, after=env.apache_after, use_sudo=True,
-        backup='')
+        before=env.apache_before, after=env.apache_after, backup='',
+        use_sudo=True)
     # update static files
     with cd(env.refinery_ui_dir):
         run("grunt make")
@@ -138,8 +141,7 @@ def update_refinery():
         run("{refinery_app_dir}/manage.py collectstatic --clear --noinput"
             .format(**env))
         run("supervisorctl reload")
-    with cd(env.refinery_project_dir):
-        run("touch {refinery_app_dir}/config/wsgi.py".format(**env))
+        run("touch {refinery_app_dir}/config/wsgi_*.py".format(**env))
 
 
 @task(alias="relaunch")
@@ -166,4 +168,4 @@ def relaunch_refinery(dependencies=False, migrations=False):
             .format(**env))
         run("supervisorctl restart all")
     with cd(env.refinery_project_dir):
-        run("touch {refinery_app_dir}/config/wsgi.py".format(**env))
+        run("touch {refinery_app_dir}/config/wsgi_*.py".format(**env))
