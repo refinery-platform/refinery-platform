@@ -4,7 +4,6 @@ import os
 import gzip
 
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand, CommandError
 
 from annotation_server import models
@@ -187,10 +186,11 @@ class Command(BaseCommand):
                             annotation_type=annot_type
                         )
                         item.delete()
-                    except ObjectDoesNotExist:
-                        logger.debug("WigDescription does not exist for "
-                                     "genome: %s, annotation_type: %s",
-                                     self.GENOME_BUILD, annot_type)
+                    except (models.WigDescription.DoesNotExist,
+                            models.WigDescription.MultipleObjectsReturned) \
+                            as e:
+                        logger.error("%s for genome: %s, annotation_type: %s",
+                                     e, self.GENOME_BUILD, annot_type)
 
                     ret_attr = parse_wig_attribute(line)
                     table_vals = ['name', 'altColor', 'color', 'visibility',
