@@ -33,7 +33,7 @@
     "graphlib": "1.0.5",
     "humanize": "0.0.9",
     "jquery": "2.1.1",
-    "jquery-file-upload": "9.10.4",
+    "jquery-file-upload": "9.14.1",
     "jquery-mousewheel": "3.1.13",
     "lodash": "3.10.1",
     "lodash-migrate": "0.2.6",
