@@ -1,11 +1,14 @@
+import logging
+
 from django.http import Http404
-from django.core.exceptions import MultipleObjectsReturned
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from .models import FileStoreItem
 from .serializers import FileStoreItemSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class FileStoreItems(APIView):
@@ -32,7 +35,9 @@ class FileStoreItems(APIView):
     def get_object(self, uuid):
         try:
             return FileStoreItem.objects.get(uuid=uuid)
-        except (FileStoreItem.DoesNotExist, MultipleObjectsReturned):
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned) as e:
+            logger.error(e)
             raise Http404
 
     def get(self, request, uuid, format=None):
