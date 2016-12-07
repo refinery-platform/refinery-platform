@@ -36,7 +36,7 @@ MemberEditorCtrl.prototype.promote = function () {
       }, 1500);
     }
   ).catch(function () {
-    that.alertType = 'error';
+    that.alertType = 'danger';
     that.responseMessage = 'Error Could not promote member ' + that.member.username;
   });
 };
@@ -57,7 +57,7 @@ MemberEditorCtrl.prototype.demote = function () {
       }, 1500);
     }
   ).catch(function () {
-    that.alertType = 'error';
+    that.alertType = 'danger';
     that.responseMessage = 'Error, could not demote member ' +
       that.member.username + '. Last member and manager can not leave';
   });
@@ -79,7 +79,7 @@ MemberEditorCtrl.prototype.remove = function () {
       }, 1500);
     }
   ).catch(function () {
-    that.alertType = 'error';
+    that.alertType = 'danger';
     that.responseMessage = 'Error, could not remove member'
       + that.member.username + '. Last member and manager can not leave';
   });

@@ -26,7 +26,6 @@ describe('Controller: AboutSharingCtrl', function () {
   it('Data & UI displays variables should exist for views', function () {
     expect(ctrl.dataSetSharing).toEqual({});
     expect(ctrl.ownerName).toEqual('');
-    expect(ctrl.groupList).toEqual([]);
   });
 
   describe('RefreshDataSetSharing', function () {
@@ -46,26 +45,6 @@ describe('Controller: AboutSharingCtrl', function () {
       expect(mockDataSets).toEqual(false);
       ctrl.refreshDataSetSharing();
       expect(mockDataSets).toEqual(true);
-    });
-  });
-
-  describe('refreshGroup', function () {
-    it('refreshGroup is method', function () {
-      expect(angular.isFunction(ctrl.refreshGroup)).toBe(true);
-    });
-
-    it('RefreshGroup returns calls Factory and updates mock item', function () {
-      var mockGroup = false;
-      spyOn(factory, 'getGroup').and.callFake(function () {
-        return {
-          then: function () {
-            mockGroup = true;
-          }
-        };
-      });
-      expect(mockGroup).toEqual(false);
-      ctrl.refreshGroup();
-      expect(mockGroup).toEqual(true);
     });
   });
 

@@ -824,7 +824,7 @@ class UtilitiesTest(TestCase):
                          '%22 OR %22Derived Array Data File%22 OR %22'
                          'Array Data Matrix File%22 OR%22Derived Array '
                          'Data Matrix File%22%29&fq=is_annotation%3A'
-                         'false&start=0&rows=20&q=django_ct%3A'
+                         'false&start=0&rows=10000000&q=django_ct%3A'
                          'data_set_manager.node&wt=json&facet=true&'
                          'facet.limit=-1'.format(
                                  self.valid_uuid))

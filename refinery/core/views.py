@@ -13,7 +13,8 @@ from django.contrib.sites.models import get_current_site, Site
 from django.contrib.sites.models import RequestSite
 from django.core.urlresolvers import reverse
 from django.http import (
-    HttpResponse, HttpResponseForbidden, HttpResponseRedirect)
+    HttpResponse, HttpResponseForbidden, HttpResponseRedirect,
+    HttpResponseBadRequest, HttpResponseNotFound, HttpResponseServerError)
 from django.http import Http404
 
 from django.shortcuts import render_to_response, get_object_or_404
@@ -617,6 +618,8 @@ def visualize_genome(request):
               "fasta_url": url_base + genome + ".fa",
               "index_url": url_base + genome + ".fa.fai",
               "cytoband_url": url_base + "cytoBand.txt",
+              "bed_url": url_base + "refGene.bed",
+              "tbi_url": url_base + "refGene.bed.tbi",
               "node_ids_json": node_ids_json
           },
           context_instance=RequestContext(request))
@@ -715,18 +718,24 @@ def solr_core_search(request):
 def solr_select(request, core):
     # core format is <name_of_core>
     # query.GET is a querydict containing all parts of the query
-    # TODO: handle runtime errors when making GET request
-
     url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
     data = request.GET.urlencode()
     try:
         full_response = requests.get(url, params=data)
-        full_response.raise_for_status()
-        response = full_response.content
+        # FIXME:
+        # Solr sends back an additional 400 here in the data_sets 1 filebrowser
+        # when there is only one row defined in the metadata since
+        # full_response.content has no facet_fields. Handling
+        # this one-off case for now since the way data_sets 2 filebrowser
+        # interacts with Solr doesn't produce this extra 400 error
+        if ("Pivot Facet needs at least one field name"
+                not in full_response.content):
+            full_response.raise_for_status()
     except HTTPError as e:
         logger.error(e)
         response = json.dumps({})
-
+    else:
+        response = full_response.content
     return HttpResponse(response, mimetype='application/json')
 
 
@@ -998,8 +1007,7 @@ def fastqc_viewer(request):
 
 @gzip_page
 def neo4j_dataset_annotations(request):
-    """Query Neo4J for dataset annotations per user
-    """
+    """Query Neo4J for dataset annotations per user"""
 
     if request.user.username:
         user_name = request.user.username
@@ -1039,18 +1047,14 @@ def neo4j_dataset_annotations(request):
 
 
 class WorkflowViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows Workflows to be viewed
-    """
+    """API endpoint that allows Workflows to be viewed"""
     queryset = Workflow.objects.all()
     serializer_class = WorkflowSerializer
     http_method_names = ['get']
 
 
 class NodeViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows Nodes to be viewed
-    """
+    """API endpoint that allows Nodes to be viewed"""
     queryset = Node.objects.all()
     serializer_class = NodeSerializer
     lookup_field = 'uuid'
@@ -1059,97 +1063,61 @@ class NodeViewSet(viewsets.ModelViewSet):
 
 
 class DataSetsViewSet(APIView):
+    """API endpoint that allows for DataSets to be deleted"""
     http_method_names = ['delete']
 
     def delete(self, request, uuid):
         if not request.user.is_authenticated():
-            return Response({
-                "status": status.HTTP_403_FORBIDDEN,
-                "data": "User {} is not authenticated".format(request.user)
-            })
+            return HttpResponseForbidden(
+                content="User {} is not authenticated".format(request.user))
         else:
             try:
                 dataset_deleted = DataSet.objects.get(uuid=uuid).delete()
             except NameError as e:
                 logger.error(e)
-                return Response({
-                    "status": status.HTTP_400_BAD_REQUEST,
-                    "data": "Bad Request"
-                })
+                return HttpResponseBadRequest(content="Bad Request")
             except DataSet.DoesNotExist as e:
                 logger.error(e)
-                return Response({
-                    "status": status.HTTP_404_NOT_FOUND,
-                    "data": "Dataset with UUID: {} not found.".format(uuid)
-                })
+                return HttpResponseNotFound(content="DataSet with UUID: {} "
+                                                    "not found.".format(uuid))
             except DataSet.MultipleObjectsReturned as e:
                 logger.error(e)
-                return Response({
-                    "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    "data": "Multiple Datasets returned for this request"
-                })
+                return HttpResponseServerError(
+                    content="Multiple DataSets returned for this request")
             else:
                 if dataset_deleted[0]:
-                    return Response(
-                        {
-                            "data": dataset_deleted[1],
-                            "status": status.HTTP_200_OK
-                        }
-                    )
+                    return Response({"data": dataset_deleted[1]})
                 else:
-                    return Response(
-                        {
-                            "data": dataset_deleted[1],
-                            "status": status.HTTP_400_BAD_REQUEST
-                        }
-                    )
+                    return HttpResponseBadRequest(content=dataset_deleted[1])
 
 
 class AnalysesViewSet(APIView):
+    """API endpoint that allows for Analyses to be deleted"""
     http_method_names = ['delete']
 
     def delete(self, request, uuid):
         if not request.user.is_authenticated():
-            return Response({
-                "status": status.HTTP_403_FORBIDDEN,
-                "data": "User {} is not authenticated".format(request.user)
-            })
+            return HttpResponseForbidden(
+                content="User {} is not authenticated".format(request.user))
         else:
             try:
                 analysis_deleted = Analysis.objects.get(uuid=uuid).delete()
             except NameError as e:
                 logger.error(e)
-                return Response({
-                    "status": status.HTTP_400_BAD_REQUEST,
-                    "data": "Bad Request"
-                })
+                return HttpResponseBadRequest(content="Bad Request")
             except Analysis.DoesNotExist as e:
                 logger.error(e)
-                return Response({
-                    "status": status.HTTP_404_NOT_FOUND,
-                    "data": "Analysis with UUID: {} not found.".format(uuid)
-                })
+                return HttpResponseNotFound(content="Analysis with UUID: {} "
+                                                    "not found.".format(uuid))
             except Analysis.MultipleObjectsReturned as e:
                 logger.error(e)
-                return Response({
-                    "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    "data": "Multiple Analyses returned for this request"
-                })
+                return HttpResponseServerError(
+                    content="Multiple Analyses returned for this request")
             else:
                 if analysis_deleted[0]:
-                    return Response(
-                        {
-                            "data": analysis_deleted[1],
-                            "status": status.HTTP_200_OK
-                        }
-                    )
+                    return Response({"data": analysis_deleted[1]})
                 else:
-                    return Response(
-                        {
-                            "data": analysis_deleted[1],
-                            "status": status.HTTP_400_BAD_REQUEST
-                        }
-                    )
+                    return HttpResponseBadRequest(content=analysis_deleted[1])
 
 
 class CustomRegistrationView(RegistrationView):

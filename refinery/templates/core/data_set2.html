@@ -27,22 +27,6 @@
 {% block content %}
   <!-- tab headers -->
 
-  <!-- analysis status messages -->
-  {% if analysis_uuid and messages %}
-    {% for message in messages %}
-      <p {% if message.tags %} class="alert alert-{{ message.tags }} text-center"{% endif %}>
-        {{ message }}
-      </p>
-    {% endfor %}
-  {% endif %}
-
-
-  <span ng-controller="AnalysisMonitorCtrl">
-    <div ng-if="checkAnalysesViewFlag()">
-      <span rp-analysis-monitor-alert-msg></span>
-    </div>
-  </span>
-
 <div ng-controller="DataSetNavCtrl" ng-cloak>
   <div ng-controller="DataSetUiModeCtrl">
 
@@ -188,10 +172,6 @@
   <script type="text/javascript" src="{% static "js/provvis/provvis-motifs.js" %}"></script>
   <script type="text/javascript" src="{% static "js/provvis/provvis-render.js" %}"></script>
   <script type="text/javascript" src="{% static "js/provvis/provvis.js" %}"></script>
-
-  <script type="text/ng-template" id='assayfilesutilmodal.html'>
-    <rp-assay-files-util-modal-detail></rp-assay-files-util-modal-detail>
-   </script>
 
   <script type="application/javascript">
     setTimeout(function() {

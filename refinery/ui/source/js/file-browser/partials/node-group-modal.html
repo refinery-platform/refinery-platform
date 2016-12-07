@@ -1,0 +1,65 @@
+<div class="modal-header">
+  <div class="float-right">
+    <a ng-click="modal.close()">
+      <i class="fa fa-times close" aria-hidden="true"></i>
+    </a>
+  </div>
+  <h3 class="text-left">Add a new node group</h3>
+</div>
+<div class="modal-body">
+  <div class='row'>
+    <form
+      ng-submit="modal.saveNodeGroup()"
+      name="nodeGroupCreationForm"
+      class="navbar-form text-align-center float-left">
+      <input
+        autofocus
+        type="text"
+        class="form-control"
+        name="groupName"
+        placeholder="Group name"
+        ng-model="modal.nodeGroupName"
+        ng-minlength="3" required>
+    </form>
+  </div>
+
+  <div
+    class='p-t-1-2 text-warning'
+    ng-show="nodeGroupCreationForm.nodeGroupName.$error.minlength ||
+    nodeGroupCreationForm.groupName.$error.required">
+    <i class="fa fa-warning" aria-hidden="true"></i>
+    Names must be 3 characters long.
+  </div>
+
+  <div
+    class='p-t-1-2'
+    ng-show="modal.responseMessage">
+     <div class="alert alert-{{ modal.alertType }} text-center">
+       {{modal.responseMessage}}
+     </div>
+  </div>
+
+  <div
+    class='p-t-1-2'
+    ng-show="modal.dataLoading">
+     <span class="refinery-spinner"></span>
+  </div>
+</div>
+
+<div class="modal-footer">
+   <button
+      type="button"
+      class="refinery-base btn btn-default"
+      ng-click="modal.cancel()"
+      ng-disabled="modal.dataLoading || modal.alertType === 'success'">
+      Cancel
+    </button>
+    <button
+      type="submit"
+      class="btn btn-primary"
+      ng-disabled="!nodeGroupCreationForm.$valid"
+      ng-click="modal.saveNodeGroup()"
+      ng-disabled="modal.dataLoading || modal.alertType === 'success'">
+      Create group
+    </button>
+</div>

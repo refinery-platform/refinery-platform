@@ -5,12 +5,11 @@ function AnalysisMonitorCtrl (
   $scope,
   $timeout,
   $window,
-  analysisMonitorFactory,
-  analysisMonitorAlertService
+  analysisMonitorFactory
 ) {
   var vm = this;
   // Long list of analysis
-  vm.analysesList = [];
+  vm.analysesList = analysisMonitorFactory.analysesList;
   vm.analysesGlobalList = [];
   // Details for running analyses
   vm.analysesDetail = {};
@@ -260,28 +259,6 @@ function AnalysisMonitorCtrl (
     }
     return false;
   };
-
-  // Alert message which show on analysis view filtered page
-  vm.setAnalysesAlertMsg = function () {
-    var uuid = window.analysisUuid;
-    analysisMonitorAlertService.setAnalysesMsg(uuid);
-    vm.analysesMsg = analysisMonitorAlertService.getAnalysesMsg();
-  };
-
-  // checks url to see if view is filtered by analysis in data_set.html. Used
-  // with analyses alert msg.
-  $scope.checkAnalysesViewFlag = function () {
-    var flag;
-    if (
-      typeof window.analysisUuid === 'undefined' ||
-      window.analysisUuid === 'None'
-    ) {
-      flag = false;
-    } else {
-      flag = true;
-    }
-    return flag;
-  };
 }
 
 angular
@@ -292,6 +269,5 @@ angular
     '$timeout',
     '$window',
     'analysisMonitorFactory',
-    'analysisMonitorAlertService',
     AnalysisMonitorCtrl
   ]);
