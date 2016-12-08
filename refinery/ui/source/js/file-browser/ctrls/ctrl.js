@@ -390,7 +390,6 @@ function FileBrowserCtrl (
     });
   };
 
-  // FIX BUG FOR DUPLICATE DATA CALLS!!!!
   // Helper method which check for any data updates during soft loads-tabbing
   var checkAndUpdateGridData = function () {
     fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam)
