@@ -34,7 +34,7 @@ function fileBrowserFactory (
     });
     return (attributeObj);
   };
-  var minFileCount = fileBrowserSettings.nimFileCount;
+  var maxFileRequest = fileBrowserSettings.maxFileRequest;
 
   /** Configures the attribute and analysis filter data by adding the display
    * name from the assay files attributes display_name. The attributes returns
@@ -161,7 +161,7 @@ function fileBrowserFactory (
       assayFilesTotalItems.count = response.nodes_count;
 
       // Not concat data when under minimun file order, replace assay files
-      if (assayFilesTotalItems.count < minFileCount) {
+      if (assayFilesTotalItems.count < maxFileRequest) {
         angular.copy(additionalAssayFiles, assayFiles);
       } else {
         angular.copy(assayFiles.concat(additionalAssayFiles), assayFiles);

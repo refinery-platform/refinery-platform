@@ -16,7 +16,7 @@ function FileBrowserCtrl (
   selectedFilterService,
   selectedNodesService
   ) {
-  var minFileCount = fileBrowserSettings.minFileCount;
+  var maxFileRequest = fileBrowserSettings.maxFileRequest;
   var vm = this;
   // attribute list from api
   vm.assayAttributes = fileBrowserFactory.assayAttributes;
@@ -50,7 +50,7 @@ function FileBrowserCtrl (
   // variables supporting ui-grid dynamic scrolling
   vm.firstPage = 0;
   vm.lastPage = 0;
-  vm.rowCount = minFileCount;
+  vm.rowCount = maxFileRequest;
   vm.totalPages = 1;
   vm.cachePages = 2;
   vm.counter = 0;
@@ -394,7 +394,7 @@ function FileBrowserCtrl (
     fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam)
       .then(function () {
         if (vm.assayFilesTotal !== fileBrowserFactory.assayFilesTotalItems.count) {
-          if (vm.assayFilesTotal < minFileCount) {
+          if (vm.assayFilesTotal < maxFileRequest) {
             vm.gridOptions.data.push(
               fileBrowserFactory.assayFiles.slice(
                 vm.assayFilesTotal - 1,

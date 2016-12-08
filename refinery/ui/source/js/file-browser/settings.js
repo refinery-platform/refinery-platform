@@ -3,5 +3,5 @@
 angular
   .module('refineryFileBrowser')
   .constant('fileBrowserSettings', {
-    minFileCount: '100'
+    maxFileRequest: '100' // max number of files in API request
   });
