@@ -33,4 +33,4 @@ exec { "activate_user":
 # See code in refinery-modules/refinery/...
 include refinery
 include refinery::pg
-include refinery::neo4j-ontologies
+include refinery::neo4j
