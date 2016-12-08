@@ -145,6 +145,8 @@ function fileBrowserFactory (
     }
 
     var assayFile = assayFileService.query(params);
+    console.log('in factory');
+    console.log(params);
     assayFile.$promise.then(function (response) {
       /** Api returns uuid field, which is needed to retrieve the
        *  download file_url for nodeset api. It should be hidden in the data
@@ -154,10 +156,15 @@ function fileBrowserFactory (
       // Add file_download column first
       assayAttributes.unshift({ display_name: 'Url', internal_name: 'Url' });
       angular.copy(response.nodes, additionalAssayFiles);
-      // require a deep copy
-      angular.copy(assayFiles.concat(additionalAssayFiles), assayFiles);
-      addNodeDetailtoAssayFiles();
       assayFilesTotalItems.count = response.nodes_count;
+
+      // Not concat data when under minimun file order, replace assay files
+      if (assayFilesTotalItems.count < 100) {
+        angular.copy(additionalAssayFiles, assayFiles);
+      } else {
+        angular.copy(assayFiles.concat(additionalAssayFiles), assayFiles);
+      }
+      addNodeDetailtoAssayFiles();
       var filterObj = generateFilters(response.attributes, response.facet_field_counts);
       angular.copy(filterObj.attributeFilter, attributeFilter);
       angular.copy(filterObj.analysisFilter, analysisFilter);
