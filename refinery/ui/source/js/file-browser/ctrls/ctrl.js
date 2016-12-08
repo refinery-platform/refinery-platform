@@ -390,7 +390,7 @@ function FileBrowserCtrl (
     });
   };
 
-  // Helper method which check for any data updates during soft loads-tabbing
+  // Helper method which check for any data updates during soft loads (tabbing)
   var checkAndUpdateGridData = function () {
     fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam)
       .then(function () {
