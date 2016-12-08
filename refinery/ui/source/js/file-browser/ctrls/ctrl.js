@@ -394,7 +394,8 @@ function FileBrowserCtrl (
           if (vm.assayFilesTotal < 100) {
             vm.gridOptions.data.push(
               fileBrowserFactory.assayFiles.slice(
-                vm.assayFilesTotal, fileBrowserFactory.assayFilesTotalItems.count
+                vm.assayFilesTotal - 1,
+                fileBrowserFactory.assayFilesTotalItems.count - 1
               )
             );
           }
