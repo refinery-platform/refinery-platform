@@ -140,8 +140,11 @@ function FileBrowserCtrl (
     if (!vm.gridApi) {
       vm.gridApi = gridApi;
        // Infinite Grid Load
-      gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
-      gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
+      // watchers only required for large data files > maxFileRequest
+      if (vm.assayFilesTotal > maxFileRequest) {
+        gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
+        gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
+      }
 
       // Sort events
       vm.gridApi.core.on.sortChanged(null, vm.sortChanged);
@@ -395,12 +398,7 @@ function FileBrowserCtrl (
       .then(function () {
         if (vm.assayFilesTotal !== fileBrowserFactory.assayFilesTotalItems.count) {
           if (vm.assayFilesTotal < maxFileRequest) {
-            vm.gridOptions.data.push(
-              fileBrowserFactory.assayFiles.slice(
-                vm.assayFilesTotal - 1,
-                fileBrowserFactory.assayFilesTotalItems.count - 1
-              )
-            );
+            vm.gridOptions.data = fileBrowserFactory.assayFiles;
           }
           vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
         }

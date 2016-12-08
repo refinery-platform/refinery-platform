@@ -147,8 +147,6 @@ function fileBrowserFactory (
     }
 
     var assayFile = assayFileService.query(params);
-    console.log('in factory');
-    console.log(params);
     assayFile.$promise.then(function (response) {
       /** Api returns uuid field, which is needed to retrieve the
        *  download file_url for nodeset api. It should be hidden in the data
@@ -161,7 +159,7 @@ function fileBrowserFactory (
       assayFilesTotalItems.count = response.nodes_count;
 
       // Not concat data when under minimun file order, replace assay files
-      if (assayFilesTotalItems.count < maxFileRequest) {
+      if (assayFilesTotalItems.count < maxFileRequest && params.offset === 0) {
         angular.copy(additionalAssayFiles, assayFiles);
       } else {
         angular.copy(assayFiles.concat(additionalAssayFiles), assayFiles);
