@@ -10,11 +10,13 @@ function FileBrowserCtrl (
   _,
   $window,
   fileBrowserFactory,
+  fileBrowserSettings,
   isOwnerService,
   resetGridService,
   selectedFilterService,
   selectedNodesService
   ) {
+  var minFileCount = fileBrowserSettings.minFileCount;
   var vm = this;
   // attribute list from api
   vm.assayAttributes = fileBrowserFactory.assayAttributes;
@@ -48,7 +50,7 @@ function FileBrowserCtrl (
   // variables supporting ui-grid dynamic scrolling
   vm.firstPage = 0;
   vm.lastPage = 0;
-  vm.rowCount = 100;
+  vm.rowCount = minFileCount;
   vm.totalPages = 1;
   vm.cachePages = 2;
   vm.counter = 0;
@@ -386,12 +388,13 @@ function FileBrowserCtrl (
     });
   };
 
+  // FIX BUG FOR DUPLICATE DATA CALLS!!!!
   // Helper method which check for any data updates during soft loads-tabbing
   var checkAndUpdateGridData = function () {
     fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam)
       .then(function () {
         if (vm.assayFilesTotal !== fileBrowserFactory.assayFilesTotalItems.count) {
-          if (vm.assayFilesTotal < 100) {
+          if (vm.assayFilesTotal < minFileCount) {
             vm.gridOptions.data.push(
               fileBrowserFactory.assayFiles.slice(
                 vm.assayFilesTotal - 1,
@@ -501,6 +504,7 @@ angular
     '_',
     '$window',
     'fileBrowserFactory',
+    'fileBrowserSettings',
     'isOwnerService',
     'resetGridService',
     'selectedFilterService',
