@@ -139,8 +139,7 @@ function FileBrowserCtrl (
     // prevent scoping issues, after reset or initial generation
     if (!vm.gridApi) {
       vm.gridApi = gridApi;
-       // Infinite Grid Load
-      // watchers only required for large data files > maxFileRequest
+       // Infinite Grid Load, watchers required for large files > maxFileRequest
       if (vm.assayFilesTotal > maxFileRequest) {
         gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
         gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
