@@ -386,6 +386,23 @@ function FileBrowserCtrl (
     });
   };
 
+  // Helper method which check for any data updates during soft loads-tabbing
+  var checkAndUpdateGridData = function () {
+    fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam)
+      .then(function () {
+        if (vm.assayFilesTotal !== fileBrowserFactory.assayFilesTotalItems.count) {
+          if (vm.assayFilesTotal < 100) {
+            vm.gridOptions.data.push(
+              fileBrowserFactory.assayFiles.slice(
+                vm.assayFilesTotal, fileBrowserFactory.assayFilesTotalItems.count
+              )
+            );
+          }
+          vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
+        }
+      });
+  };
+
   /**
    * Checks whether the page requires data (hard/soft page load) and
    * updates data, filters, ui-grid selections, and url query
@@ -403,19 +420,7 @@ function FileBrowserCtrl (
       });
       // Tabbing does not require api response wait and update query in URL
     } else {
-      fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam)
-        .then(function () {
-          if (vm.assayFilesTotal !== fileBrowserFactory.assayFilesTotalItems.count) {
-            if (vm.assayFilesTotal < 100) {
-              vm.gridOptions.data.push(
-                fileBrowserFactory.assayFiles.slice(
-                  vm.assayFilesTotal, fileBrowserFactory.assayFilesTotalItems.count
-                )
-              );
-            }
-            vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
-          }
-        });
+      checkAndUpdateGridData();
       // updates view model's selected attribute filters
       angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr) {
         for (var i = 0; i < fieldArr.length; i++) {
