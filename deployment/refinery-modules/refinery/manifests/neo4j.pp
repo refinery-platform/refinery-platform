@@ -47,6 +47,7 @@ class refinery::neo4j {
       hasrestart => true,
     }
   }
+  include neo4jFetch
 
   class neo4jOntology {
     $neo4j_config = '/etc/neo4j/neo4j-server.properties'
@@ -73,6 +74,7 @@ class refinery::neo4j {
         require => Package['neo4j'],
     }
   }
+  include neo4jOntology
 
   class owl2neo4j {
     $owl2neo4j_version = "0.6.1"
@@ -89,9 +91,15 @@ class refinery::neo4j {
       timeout => 120,  # downloading can take some time
     }
   }
+  include owl2neo4j
 
   class neo4jPrePopulatedDB {
-
+    package { 'unzip':
+      name        => 'unzip',
+      ensure      => latest,
+      require     => Class['apt::update'],
+    }
+    ->
     exec { "stop neo4j service":
       command     => "sudo service neo4j-service stop",
       user        => $app_user,
@@ -109,7 +117,7 @@ class refinery::neo4j {
     }
     ->
     exec { "fetch pre-generated db":
-      command     => "sudo wget -q http://data.cloud.refinery-platform.org.s3.amazonaws.com/data/stem-cell-commons/neo4j/2015/graph.db.zip && yes | sudo gunzip graph.db.zip",
+      command     => "sudo wget -q http://data.cloud.refinery-platform.org.s3.amazonaws.com/data/stem-cell-commons/neo4j/2015/graph.db.zip && yes | sudo unzip graph.db.zip",
       cwd         => "/var/lib/neo4j/data/",
       user        => $app_user,
       group       => $app_group,
@@ -171,4 +179,5 @@ class refinery::neo4j {
       path        => ['/bin/'],
     }
   }
+  include neo4jPrePopulatedDB
 }
