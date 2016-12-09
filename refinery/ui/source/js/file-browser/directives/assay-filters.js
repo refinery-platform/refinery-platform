@@ -68,8 +68,12 @@ function rpFileBrowserAssayFilters ($timeout, $location, selectedFilterService) 
             var attributeTitle = angular.element(
             document.querySelector('#attribute-panel-' + escapeAttributeName)
             );
+            // prevents sets of undefined obj error
+            if (! scope.FBCtrl.attributeSelectedFields.hasOwnProperty(attributeInternalName)) {
+              scope.FBCtrl.attributeSelectedFields[attributeInternalName] = {};
+            }
             // mark checkbox for selected item
-            scope.FBCtrl.selectedField[allFields[ind]] = true;
+            scope.FBCtrl.attributeSelectedFields[attributeInternalName][allFields[ind]] = true;
 
             if (attributeTitle.hasClass('fa-caret-right')) {
               angular.element(

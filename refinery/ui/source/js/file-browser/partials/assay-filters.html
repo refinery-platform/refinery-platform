@@ -30,7 +30,7 @@
         <div class="panel-body">
           <div ng-repeat="field in fields.facetObj track by $index">
             <div class="checkbox container"
-                ng-show="showField(field.name, fields.internal_name,
+                ng-show="showField(field.name, attribute,
                 attribute)">
                 <div class="row">
                   <div class="col-xs-1">
@@ -96,7 +96,7 @@
           <div class="panel-body">
             <div ng-repeat="fieldObj in fields.facetObj track by $index">
               <div class="checkbox container"
-                ng-show="showField(fieldObj, fields.internal_name, 'Analysis')">
+                ng-show="showField(fieldObj, attribute, 'Analysis')">
                 <div class="row">
                   <div class="col-xs-1">
                     <input
