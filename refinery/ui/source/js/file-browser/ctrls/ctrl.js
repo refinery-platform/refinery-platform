@@ -27,6 +27,7 @@ function FileBrowserCtrl (
   vm.queryKeys = Object.keys($location.search());
   // used by ui to select/deselect, each attribute has a list of filter fields
   vm.selectedField = {};
+  vm.attributeSelectedFields = {};
   vm.selectNodesCount = 0;
   vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
   vm.gridOptions = {
@@ -109,7 +110,7 @@ function FileBrowserCtrl (
   vm.refreshSelectedFieldFromQuery = function (_attributeObj) {
     angular.forEach(_attributeObj.facetObj, function (fieldObj) {
       if (vm.queryKeys.indexOf(fieldObj.name) > -1) {
-        vm.selectedField[fieldObj.name] = true;
+        vm.attributeSelectedFields[_attributeObj][fieldObj.name] = true;
         vm.updateFilterSelectionList(_attributeObj.internal_name, fieldObj.name);
       }
     });
@@ -117,13 +118,19 @@ function FileBrowserCtrl (
 
   // Updates selection filter field list and url
   vm.updateFilterSelectionList = function (internalName, field) {
-    selectedFilterService.updateSelectedFilters(vm.selectedField, internalName, field);
+    console.log('in the update filter selection list');
+    console.log(vm.attributeSelectedFields);
+    angular.forEach(vm.attributeSelectedFields, function (fieldsObj) {
+      selectedFilterService.updateSelectedFilters(fieldsObj, internalName, field);
+    });
   };
 
   // Used by ui, Updates which attribute filters are selected and ui-grid data
   vm.attributeSelectionUpdate = function (_internalName, _field) {
     vm.updateFilterSelectionList(_internalName, _field);
     fileBrowserFactory.filesParam.filter_attribute = {};
+    console.log('in attribute selection update');
+    console.log(selectedFilterService.selectedFieldList);
     angular.copy(selectedFilterService.selectedFieldList,
       fileBrowserFactory.filesParam.filter_attribute);
     // Resets selection
@@ -404,9 +411,9 @@ function FileBrowserCtrl (
       // Tabbing does not require api response wait and update query in URL
     } else {
       // updates view model's selected attribute filters
-      angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr) {
+      angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr, attributeName) {
         for (var i = 0; i < fieldArr.length; i++) {
-          vm.selectedField[fieldArr[i]] = true;
+          vm.attributeSelectedFields[attributeName][fieldArr[i]] = true;
           // update url with selected fields(filters)
           selectedFilterService.updateUrlQuery(fieldArr[i], true);
         }
@@ -432,6 +439,7 @@ function FileBrowserCtrl (
       return resetGridService.resetGridFlag;
     },
     function () {
+      console.log('in the reset grid watcher');
       if (resetGridService.resetGridFlag) {
         // Have to set selected Fields in control due to service scope
         angular.forEach(vm.selectedField, function (value, field) {
