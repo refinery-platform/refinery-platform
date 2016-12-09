@@ -124,6 +124,7 @@ class refinery::neo4j {
       path        => ['/usr/bin/'],
       timeout     => 1800,
       require     => [
+        Package['unzip'],
         Class['neo4jFetch'],
       ],
     }
