@@ -39,9 +39,9 @@ function fileBrowserFactory (
     for (var inInd = outInd + 1; inInd < assayAttributes.length; inInd++) {
       if (assayAttributes[outInd].display_name === assayAttributes[inInd].display_name) {
         assayAttributes[outInd].display_name = assayAttributes[outInd]
-            .display_name + ' (' + assayAttributes[outInd].attribute_type + ')';
+            .display_name + '-' + assayAttributes[outInd].attribute_type;
         assayAttributes[inInd].display_name = assayAttributes[inInd]
-            .display_name + ' (' + assayAttributes[inInd].attribute_type + ')';
+            .display_name + '-' + assayAttributes[inInd].attribute_type;
       }
     }
   };
