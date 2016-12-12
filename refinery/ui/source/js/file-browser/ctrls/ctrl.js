@@ -410,9 +410,12 @@ function FileBrowserCtrl (
       // Tabbing does not require api response wait and update query in URL
     } else {
       // updates view model's selected attribute filters
-      angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr, attributeName) {
+      angular.forEach(selectedFilterService.selectedFieldList, function (
+        fieldArr,
+        attributeInternalName
+      ) {
         for (var i = 0; i < fieldArr.length; i++) {
-          vm.attributeSelectedFields[attributeName][fieldArr[i]] = true;
+          vm.attributeSelectedFields[attributeInternalName][fieldArr[i]] = true;
           // update url with selected fields(filters)
           selectedFilterService.updateUrlQuery(fieldArr[i], true);
         }
