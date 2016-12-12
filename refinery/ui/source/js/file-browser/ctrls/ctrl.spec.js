@@ -75,10 +75,10 @@ describe('Controller: FileBrowserCtrl', function () {
     ctrl.queryKeys = ['March', 'April', 'Conner'];
     expect(service.selectedFieldList.Month_Characteristics_92_46_s)
       .not.toBeDefined();
-    expect(ctrl.selectedField.March).not.toBeDefined();
+    expect(ctrl.attributeSelectedFields.Month_Characteristics_92_46_s).not.toBeDefined();
     ctrl.refreshSelectedFieldFromQuery(attributeObj);
-    expect(ctrl.selectedField.March).toEqual(true);
-    expect(ctrl.selectedField.June).not.toBeDefined();
+    expect(ctrl.attributeSelectedFields.Month_Characteristics_92_46_s.March).toEqual(true);
+    expect(ctrl.attributeSelectedFields.Month_Characteristics_92_46_s.June).not.toBeDefined();
     expect(service.selectedFieldList.Month_Characteristics_92_46_s)
       .toEqual(['March', 'April']);
   });
