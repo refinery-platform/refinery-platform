@@ -70,7 +70,9 @@ function rpFileBrowserAssayFilters ($timeout, $location, selectedFilterService) 
             );
 
             // mark checkbox for selected item
-            scope.FBCtrl.attributeSelectedFields[attributeInternalName] = {};
+            if (scope.FBCtrl.attributeSelectedFields.hasOwnProperty(attributeInternalName)) {
+              scope.FBCtrl.attributeSelectedFields[attributeInternalName] = {};
+            }
             scope.FBCtrl.attributeSelectedFields[attributeInternalName][allFields[ind]] = true;
 
             if (attributeTitle.hasClass('fa-caret-right')) {
