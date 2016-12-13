@@ -6,6 +6,7 @@ function fileBrowserFactory (
   $window,
   assayAttributeService,
   assayFileService,
+  fileBrowserSettings,
   nodeGroupService,
   nodeService
   ) {
@@ -33,6 +34,7 @@ function fileBrowserFactory (
     });
     return (attributeObj);
   };
+  var maxFileRequest = fileBrowserSettings.maxFileRequest;
 
   /** Configures the attribute and analysis filter data by adding the display
    * name from the assay files attributes display_name. The attributes returns
@@ -154,10 +156,15 @@ function fileBrowserFactory (
       // Add file_download column first
       assayAttributes.unshift({ display_name: 'Url', internal_name: 'Url' });
       angular.copy(response.nodes, additionalAssayFiles);
-      // require a deep copy
-      angular.copy(assayFiles.concat(additionalAssayFiles), assayFiles);
-      addNodeDetailtoAssayFiles();
       assayFilesTotalItems.count = response.nodes_count;
+
+      // Not concat data when under minimun file order, replace assay files
+      if (assayFilesTotalItems.count < maxFileRequest && params.offset === 0) {
+        angular.copy(additionalAssayFiles, assayFiles);
+      } else {
+        angular.copy(assayFiles.concat(additionalAssayFiles), assayFiles);
+      }
+      addNodeDetailtoAssayFiles();
       var filterObj = generateFilters(response.attributes, response.facet_field_counts);
       angular.copy(filterObj.attributeFilter, attributeFilter);
       angular.copy(filterObj.analysisFilter, analysisFilter);
@@ -345,6 +352,7 @@ angular
     '$window',
     'assayAttributeService',
     'assayFileService',
+    'fileBrowserSettings',
     'nodeGroupService',
     'nodeService',
     fileBrowserFactory
