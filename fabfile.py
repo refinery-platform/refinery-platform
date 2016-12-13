@@ -86,11 +86,9 @@ def conf(mode=None):
     env.shell_before = "export DJANGO_SETTINGS_MODULE=config.settings.*"
     env.shell_after = \
         "export DJANGO_SETTINGS_MODULE=config.settings.{}".format(mode)
-    env.apache_before = "wsgi_.*.py"
-    if mode == "prod":
-        env.apache_after = "wsgi_prod.py"
-    else:
-        env.apache_after = "wsgi_dev.py"
+    env.apache_before = "wsgi.*.py"
+    env.apache_after = "wsgi_{}.py".format(mode)
+
     # stop supervisord and Apache
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("supervisorctl shutdown")
