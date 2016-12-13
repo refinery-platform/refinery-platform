@@ -28,7 +28,7 @@ function FileBrowserCtrl (
   vm.gridApi = undefined; // avoids duplicate grid generation
   vm.queryKeys = Object.keys($location.search());
   // used by ui to select/deselect, each attribute has a list of filter fields
-  vm.selectedField = {};
+  vm.attributeSelectedFields = {};
   vm.selectNodesCount = 0;
   vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
   vm.gridOptions = {
@@ -111,7 +111,10 @@ function FileBrowserCtrl (
   vm.refreshSelectedFieldFromQuery = function (_attributeObj) {
     angular.forEach(_attributeObj.facetObj, function (fieldObj) {
       if (vm.queryKeys.indexOf(fieldObj.name) > -1) {
-        vm.selectedField[fieldObj.name] = true;
+        if (!vm.attributeSelectedFields.hasOwnProperty(_attributeObj.internal_name)) {
+          vm.attributeSelectedFields[_attributeObj.internal_name] = {};
+        }
+        vm.attributeSelectedFields[_attributeObj.internal_name][fieldObj.name] = true;
         vm.updateFilterSelectionList(_attributeObj.internal_name, fieldObj.name);
       }
     });
@@ -119,7 +122,9 @@ function FileBrowserCtrl (
 
   // Updates selection filter field list and url
   vm.updateFilterSelectionList = function (internalName, field) {
-    selectedFilterService.updateSelectedFilters(vm.selectedField, internalName, field);
+    angular.forEach(vm.attributeSelectedFields, function (fieldsObj) {
+      selectedFilterService.updateSelectedFilters(fieldsObj, internalName, field);
+    });
   };
 
   // Used by ui, Updates which attribute filters are selected and ui-grid data
@@ -422,9 +427,12 @@ function FileBrowserCtrl (
     } else {
       checkAndUpdateGridData();
       // updates view model's selected attribute filters
-      angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr) {
+      angular.forEach(selectedFilterService.selectedFieldList, function (
+        fieldArr,
+        attributeInternalName
+      ) {
         for (var i = 0; i < fieldArr.length; i++) {
-          vm.selectedField[fieldArr[i]] = true;
+          vm.attributeSelectedFields[attributeInternalName][fieldArr[i]] = true;
           // update url with selected fields(filters)
           selectedFilterService.updateUrlQuery(fieldArr[i], true);
         }
@@ -452,10 +460,12 @@ function FileBrowserCtrl (
     function () {
       if (resetGridService.resetGridFlag) {
         // Have to set selected Fields in control due to service scope
-        angular.forEach(vm.selectedField, function (value, field) {
-          vm.selectedField[field] = false;
+        angular.forEach(vm.attributeSelectedFields, function (fieldsObj, attributeInternalName) {
+          angular.forEach(fieldsObj, function (value, fieldName) {
+            vm.attributeSelectedFields[attributeInternalName][fieldName] = false;
+          });
+          selectedFilterService.resetAttributeFilter(fieldsObj);
         });
-        selectedFilterService.resetAttributeFilter(vm.selectedField);
         vm.selectNodesCount = 0;
         fileBrowserFactory.filesParam.filter_attribute = {};
         vm.reset();

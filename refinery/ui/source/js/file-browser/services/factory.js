@@ -36,6 +36,18 @@ function fileBrowserFactory (
   };
   var maxFileRequest = fileBrowserSettings.maxFileRequest;
 
+  // Helper method which makes display_names uniquey by adding attribute_type
+  var createUniqueDisplayNames = function (outInd) {
+    for (var inInd = outInd + 1; inInd < assayAttributes.length; inInd++) {
+      if (assayAttributes[outInd].display_name === assayAttributes[inInd].display_name) {
+        assayAttributes[outInd].display_name = assayAttributes[outInd]
+            .display_name + '-' + assayAttributes[outInd].attribute_type;
+        assayAttributes[inInd].display_name = assayAttributes[inInd]
+            .display_name + '-' + assayAttributes[inInd].attribute_type;
+      }
+    }
+  };
+
   /** Configures the attribute and analysis filter data by adding the display
    * name from the assay files attributes display_name. The attributes returns
    * all fields, while the counts will return only the faceted fields. **/
@@ -155,6 +167,11 @@ function fileBrowserFactory (
       angular.copy(culledAttributes, assayAttributes);
       // Add file_download column first
       assayAttributes.unshift({ display_name: 'Url', internal_name: 'Url' });
+      // some attributes will be duplicate in different fields, duplicate
+      // column names will throw an error. This prevents duplicates
+      for (var ind = 0; ind < assayAttributes.length; ind++) {
+        createUniqueDisplayNames(ind);
+      }
       angular.copy(response.nodes, additionalAssayFiles);
       assayFilesTotalItems.count = response.nodes_count;
 
@@ -272,17 +289,11 @@ function fileBrowserFactory (
   var createColumnDefs = function () {
     var tempCustomColumnNames = [];
 
-    // some attributes will be duplicate in different fields, duplicate
-    // column names will throw an error. This prevents duplicates
-    var uniqAssayAttributes = _.uniq(assayAttributes, true,
-      function (attributeObj) {
-        return attributeObj.display_name;
-      });
     var totalChars = assayAttributes.reduce(function (previousValue, facetObj) {
       return previousValue + String(facetObj.display_name).length;
     }, 0);
 
-    uniqAssayAttributes.forEach(function (attribute) {
+    assayAttributes.forEach(function (attribute) {
       var columnName = attribute.display_name;
       var columnWidth = columnName.length / totalChars * 100;
       if (columnWidth < 10) {  // make sure columns are wide enough
