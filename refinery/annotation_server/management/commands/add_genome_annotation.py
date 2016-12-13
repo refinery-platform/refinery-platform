@@ -6,8 +6,8 @@ import gzip
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
-from annotation_server import models
-from annotation_server import utils
+from annotation_server.models import WigDescription
+from annotation_server.utils import SUPPORTED_GENOMES
 from file_store.models import _mkdir
 
 
@@ -123,7 +123,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['genome']:
             self.GENOME_BUILD = options['genome'].strip()
-            if self.GENOME_BUILD in utils.SUPPORTED_GENOMES:
+            if self.GENOME_BUILD in SUPPORTED_GENOMES:
                 # temp dir should be located on the same file system as the
                 # base dir
                 self.ANNOTATION_TEMP_DIR = os.path.join(
@@ -181,13 +181,13 @@ class Command(BaseCommand):
                 if t1[0] == 'track':
                     # overwrite if already entered into db
                     try:
-                        item = models.WigDescription.objects.get(
+                        item = WigDescription.objects.get(
                             genome_build=self.GENOME_BUILD,
                             annotation_type=annot_type
                         )
                         item.delete()
-                    except (models.WigDescription.DoesNotExist,
-                            models.WigDescription.MultipleObjectsReturned) \
+                    except (WigDescription.DoesNotExist,
+                            WigDescription.MultipleObjectsReturned) \
                             as e:
                         logger.error("%s for genome: %s, annotation_type: %s",
                                      e, self.GENOME_BUILD, annot_type)
