@@ -95,7 +95,7 @@
           <div class="panel-body">
             <div ng-repeat="fieldObj in attributeObj.facetObj track by $index">
               <div class="checkbox container"
-                ng-show="showField(fieldObj, attribute, 'Analysis')">
+                ng-show="showField(fieldObj, attributeObj.internal_name, 'Analysis')">
                 <div class="row">
                   <div class="col-xs-1">
                     <input
