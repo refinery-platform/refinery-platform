@@ -70,7 +70,7 @@ function rpFileBrowserAssayFilters ($timeout, $location, selectedFilterService) 
             );
 
             // mark checkbox for selected item
-            if (scope.FBCtrl.attributeSelectedFields.hasOwnProperty(attributeInternalName)) {
+            if (!scope.FBCtrl.attributeSelectedFields.hasOwnProperty(attributeInternalName)) {
               scope.FBCtrl.attributeSelectedFields[attributeInternalName] = {};
             }
             scope.FBCtrl.attributeSelectedFields[attributeInternalName][allFields[ind]] = true;

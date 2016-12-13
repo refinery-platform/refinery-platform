@@ -111,7 +111,7 @@ function FileBrowserCtrl (
   vm.refreshSelectedFieldFromQuery = function (_attributeObj) {
     angular.forEach(_attributeObj.facetObj, function (fieldObj) {
       if (vm.queryKeys.indexOf(fieldObj.name) > -1) {
-        if (vm.attributeSelectedFields.hasOwnProperty(_attributeObj.internal_name)) {
+        if (!vm.attributeSelectedFields.hasOwnProperty(_attributeObj.internal_name)) {
           vm.attributeSelectedFields[_attributeObj.internal_name] = {};
         }
         vm.attributeSelectedFields[_attributeObj.internal_name][fieldObj.name] = true;
