@@ -141,6 +141,7 @@ def update_refinery():
         run("{refinery_app_dir}/manage.py collectstatic --clear --noinput"
             .format(**env))
         run("supervisorctl reload")
+    with cd(env.refinery_project_dir):
         run("touch {refinery_app_dir}/config/wsgi_*.py".format(**env))
 
 
