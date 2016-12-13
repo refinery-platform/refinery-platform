@@ -10,11 +10,13 @@ function FileBrowserCtrl (
   _,
   $window,
   fileBrowserFactory,
+  fileBrowserSettings,
   isOwnerService,
   resetGridService,
   selectedFilterService,
   selectedNodesService
   ) {
+  var maxFileRequest = fileBrowserSettings.maxFileRequest;
   var vm = this;
   // attribute list from api
   vm.assayAttributes = fileBrowserFactory.assayAttributes;
@@ -48,7 +50,7 @@ function FileBrowserCtrl (
   // variables supporting ui-grid dynamic scrolling
   vm.firstPage = 0;
   vm.lastPage = 0;
-  vm.rowCount = 100;
+  vm.rowCount = maxFileRequest;
   vm.totalPages = 1;
   vm.cachePages = 2;
   vm.counter = 0;
@@ -140,9 +142,11 @@ function FileBrowserCtrl (
     // prevent scoping issues, after reset or initial generation
     if (!vm.gridApi) {
       vm.gridApi = gridApi;
-       // Infinite Grid Load
-      gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
-      gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
+       // Infinite Grid Load, watchers required for large files > maxFileRequest
+      if (vm.assayFilesTotal > maxFileRequest) {
+        gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
+        gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
+      }
 
       // Sort events
       vm.gridApi.core.on.sortChanged(null, vm.sortChanged);
@@ -389,6 +393,19 @@ function FileBrowserCtrl (
     });
   };
 
+  // Helper method which check for any data updates during soft loads (tabbing)
+  var checkAndUpdateGridData = function () {
+    fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam)
+      .then(function () {
+        if (vm.assayFilesTotal !== fileBrowserFactory.assayFilesTotalItems.count) {
+          if (vm.assayFilesTotal < maxFileRequest) {
+            vm.gridOptions.data = fileBrowserFactory.assayFiles;
+          }
+          vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
+        }
+      });
+  };
+
   /**
    * Checks whether the page requires data (hard/soft page load) and
    * updates data, filters, ui-grid selections, and url query
@@ -406,6 +423,7 @@ function FileBrowserCtrl (
       });
       // Tabbing does not require api response wait and update query in URL
     } else {
+      checkAndUpdateGridData();
       // updates view model's selected attribute filters
       angular.forEach(selectedFilterService.selectedFieldList, function (
         fieldArr,
@@ -490,6 +508,7 @@ angular
     '_',
     '$window',
     'fileBrowserFactory',
+    'fileBrowserSettings',
     'isOwnerService',
     'resetGridService',
     'selectedFilterService',
