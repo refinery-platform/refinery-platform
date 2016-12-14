@@ -7,6 +7,7 @@ function CollaborationCtrl (
   $location,
   bootbox,
   $uibModal,
+  activeMemberService,
   groupInviteService,
   groupDataService
 ) {
@@ -17,6 +18,7 @@ function CollaborationCtrl (
   this.$uibModal = $uibModal;
   this.groupInviteService = groupInviteService;
   this.groupDataService = groupDataService;
+  this.activeService = activeMemberService;
 
   this.groupDataService.update(this.$stateParams);
 
@@ -120,16 +122,14 @@ CollaborationCtrl.prototype.openGroupEditor = function (group) {
   });
 };
 
-CollaborationCtrl.prototype.openMemberEditor = function (member) {
+CollaborationCtrl.prototype.openMemberEditor = function (member, totalMembers) {
+  this.activeService.setActiveMember(member);
+  this.activeService.setTotalMembers(totalMembers);
+
   this.$uibModal.open({
     templateUrl:
       '/static/partials/collaboration/partials/collaboration-members-dialog.html',
-    controller: 'MemberEditorCtrl as modal',
-    resolve: {
-      member: function () {
-        return member;
-      }
-    }
+    controller: 'MemberEditorCtrl as modal'
   });
 };
 
@@ -150,6 +150,7 @@ angular
     '$location',
     'bootbox',
     '$uibModal',
+    'activeMemberService',
     'groupInviteService',
     'groupDataService',
     CollaborationCtrl
