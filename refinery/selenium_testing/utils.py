@@ -1,28 +1,21 @@
-import os
 import pytest
-import yaml
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.common.exceptions import TimeoutException
 
-from factory_boy.utils import factory_boy_cleanup
-
-DEFAULT_WAIT = 3
-base_url = os.environ['BASE_URL']
-creds = yaml.load(open(os.environ['CREDS_YML']))
+DEFAULT_WAIT = 5
 
 
 @pytest.fixture
-def login(selenium):
-    creds = yaml.load(open(os.environ['CREDS_YML']))
-    selenium.get(base_url)
+def login(selenium, live_server_url):
+    selenium.get(live_server_url)
     wait_until_id_clickable(selenium, "refinery-login", DEFAULT_WAIT)
     selenium.find_element_by_link_text('Login').click()
     wait_until_id_clickable(selenium, "id_username", DEFAULT_WAIT)
-    selenium.find_element_by_id('id_username').send_keys(creds['username'])
-    selenium.find_element_by_id('id_password').send_keys(creds['password'])
+    selenium.find_element_by_id('id_username').send_keys('guest')
+    selenium.find_element_by_id('id_password').send_keys('guest')
     selenium.find_element_by_xpath('//input[@type="submit"]').click()
     wait_until_id_clickable(selenium, "refinery-logout", DEFAULT_WAIT)
     assert_body_text(selenium, 'Logout')
@@ -81,19 +74,3 @@ def wait_until_id_visible(selenium, search_id, wait_duration):
                     search_id,
                     selenium.find_element_by_id(search_id).text
                 ))
-
-
-def cleanup_on_error(func):
-    """Decorator to be used on function calls that could potentially
-    generate many exceptions across different browsers. Rather than having a
-    bunch of try/catches, we can decorate a test function and have objects
-    created through factory boy cleaned up upon an unexpected test failure,
-    as to not interfere with other test runs.
-    """
-    def func_wrapper(*args, **kwargs):
-        try:
-            func(*args, **kwargs)
-        except Exception:
-            factory_boy_cleanup()
-
-    return func_wrapper

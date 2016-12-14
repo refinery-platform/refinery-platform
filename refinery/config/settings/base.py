@@ -201,6 +201,7 @@ INSTALLED_APPS = (
     'visualization_manager',
     'data_set_manager',
     'annotation_server',
+    'selenium_testing',
     'registration',
     'flatblocks',
     # RP: added for database migration between builds

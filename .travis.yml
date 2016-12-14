@@ -9,12 +9,20 @@ services:
   - neo4j
 install:
   - pip install -r requirements.txt --quiet
+  # Install geckodriver required for selenium testing
+  - TAR=geckodriver-v0.11.1-linux64.tar
+  - wget https://github.com/mozilla/geckodriver/releases/download/v0.11.1/$TAR.gz
+  - gunzip $TAR.gz
+  - tar -xvf $TAR
+  - rm $TAR # Tar file hides binary on Travis: https://github.com/SeleniumHQ/selenium/issues/2966
+  - chmod a+x geckodriver
+  - export PATH=$PATH:`pwd
 env:
   global:
     # These env vars are available to every build
     - REDUCE_TEST_OUTPUT=true
     - PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
-    - DJANGO_SETTINGS_MODULE=config.settings.dev
+    - DJANGO_SETTINGS_MODULE=config.settings.prod
 
 before_script:
   - createuser --createdb --no-superuser --no-createrole vagrant
@@ -40,23 +48,12 @@ script:
   - flake8 --exclude=migrations,ui ..
 
   - echo 'travis_fold:start:grunt'
-  - pushd ui
-  - grunt
-  - popd
+  - pushd ui && grunt && popd
   - echo 'travis_fold:end:grunt'
 
   - echo 'travis_fold:start:django-tests'
-  - coverage run manage.py test
+  - coverage run manage.py test --liveserver=localhost:1234
   - echo 'travis_fold:end:django-tests'
-
-  # Run our acceptance tests
-  - echo 'travis_fold:start:selenium'
-  # NOTE: Redirect runserver output since it's polluting logs
-  - python manage.py runserver > /dev/null 2>&1 &
-  - pushd ../selenium
-  - sh acceptance_tests.sh
-  - popd
-  - echo 'travis_fold:end:selenium'
 
   - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
 
