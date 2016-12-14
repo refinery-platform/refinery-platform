@@ -10,7 +10,6 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.models import Site
 from django.contrib.auth.models import User
-from django.core.exceptions import MultipleObjectsReturned
 from django.core.mail import send_mail
 from django.core.cache import cache
 from django.db import connection
@@ -53,7 +52,7 @@ def update_data_set_index(data_set):
         it is not running.
         (e.g. Travis CI doesn't support solr yet)
         """
-        logger.error("Could not update DataSetIndex:", e)
+        logger.error("Could not update DataSetIndex: %s", e)
 
 
 @skip
@@ -859,7 +858,7 @@ def get_anonymous_user():
             )
         return anonymous_user
 
-    except (User.DoesNotExist, MultipleObjectsReturned) as e:
+    except (User.DoesNotExist, User.MultipleObjectsReturned) as e:
         logger.error("Could not fetch Anonymous User: %s" % e)
         return None
 

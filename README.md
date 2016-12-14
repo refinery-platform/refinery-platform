@@ -2,7 +2,7 @@
 
 * Additional information about how to administer and develop Refinery can be found in the [wiki](http://github.com/parklab/refinery-platform/wiki)
 * [Production deployments](https://github.com/parklab/refinery-platform/wiki/AWS-installation) require access to Amazon Web Services
-* Supported web browsers: Chrome 53 (Linux and OS X), Firefox 49 (Linux and OS X), Safari 9.0.0 (OS X)
+* Supported web browsers: Chrome 54 (Linux and OS X), Firefox 49 (Linux and OS X), Safari 9.0.0 (OS X)
 
 ## Installing and Launching for Development
 

@@ -4,7 +4,6 @@ from urlparse import urljoin
 import mock
 
 from django.contrib.auth.models import User, Group
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import unittest, timezone
 from django.test import TestCase
@@ -1085,7 +1084,7 @@ class BaseResourceSlugTest(unittest.TestCase):
     def test_save_slug_when_same_model_with_same_slug_exists(self):
         Project.objects.create(name="project", slug="TestSlug4")
         Project.objects.create(name="project_duplicate", slug="TestSlug4")
-        self.assertRaises(ObjectDoesNotExist,
+        self.assertRaises(Project.DoesNotExist,
                           Project.objects.get,
                           name="project_duplicate")
 
@@ -1259,7 +1258,7 @@ class WorkflowDeletionTest(unittest.TestCase):
         self.assertIsNotNone(Workflow.objects.get(
             name="workflow_not_used_by_analyses"))
         self.workflow_not_used_by_analyses.delete()
-        self.assertRaises(ObjectDoesNotExist,
+        self.assertRaises(Workflow.DoesNotExist,
                           Workflow.objects.get,
                           name="workflow_not_used_by_analyses")
 
@@ -1334,7 +1333,7 @@ class DataSetDeletionTest(unittest.TestCase):
         self.assertIsNotNone(
             DataSet.objects.get(name="dataset_without_analysis"))
         self.dataset_without_analysis.delete()
-        self.assertRaises(ObjectDoesNotExist,
+        self.assertRaises(DataSet.DoesNotExist,
                           DataSet.objects.get,
                           name="dataset_without_analysis")
 
@@ -1342,7 +1341,7 @@ class DataSetDeletionTest(unittest.TestCase):
         self.assertIsNotNone(
             DataSet.objects.get(name="dataset_with_analysis"))
         self.dataset_with_analysis.delete()
-        self.assertRaises(ObjectDoesNotExist,
+        self.assertRaises(DataSet.DoesNotExist,
                           DataSet.objects.get,
                           name="dataset_with_analysis")
 
@@ -1472,7 +1471,7 @@ class AnalysisDeletionTest(unittest.TestCase):
             name='analysis_without_node_analyzed_further')
         self.assertIsNotNone(query)
         self.analysis.delete()
-        self.assertRaises(ObjectDoesNotExist, Analysis.objects.get,
+        self.assertRaises(Analysis.DoesNotExist, Analysis.objects.get,
                           name='analysis_without_node_analyzed_further')
 
     def test_verify_analysis_remains_if_nodes_analyzed_further(self):
@@ -2178,7 +2177,7 @@ class DataSetApiV2Tests(APITestCase):
         self.delete_response = self.view(self.delete_request1,
                                          self.dataset.uuid)
 
-        self.assertEqual(self.delete_response.data['status'], 200)
+        self.assertEqual(self.delete_response.status_code, 200)
 
         self.assertEqual(DataSet.objects.all().count(), 1)
 
@@ -2190,7 +2189,7 @@ class DataSetApiV2Tests(APITestCase):
 
         self.delete_response = self.view(self.delete_request2,
                                          self.dataset2.uuid)
-        self.assertEqual(self.delete_response.data['status'], 200)
+        self.assertEqual(self.delete_response.status_code, 200)
 
         self.assertEqual(DataSet.objects.all().count(), 0)
 
@@ -2204,7 +2203,7 @@ class DataSetApiV2Tests(APITestCase):
         self.delete_response = self.view(self.delete_request,
                                          self.dataset.uuid)
 
-        self.assertEqual(self.delete_response.data['status'], 403)
+        self.assertEqual(self.delete_response.status_code, 403)
 
         self.assertEqual(DataSet.objects.all().count(), 2)
 
@@ -2225,7 +2224,7 @@ class DataSetApiV2Tests(APITestCase):
         self.delete_response = self.view(self.delete_request,
                                          uuid)
 
-        self.assertEqual(self.delete_response.data['status'], 404)
+        self.assertEqual(self.delete_response.status_code, 404)
 
         self.assertEqual(DataSet.objects.all().count(), 1)
 
@@ -2357,7 +2356,7 @@ class AnalysisApiV2Tests(APITestCase):
         self.delete_response = self.view(self.delete_request1,
                                          self.analysis.uuid)
 
-        self.assertEqual(self.delete_response.data['status'], 200)
+        self.assertEqual(self.delete_response.status_code, 200)
 
         self.assertEqual(Analysis.objects.all().count(), 1)
 
@@ -2369,7 +2368,7 @@ class AnalysisApiV2Tests(APITestCase):
 
         self.delete_response = self.view(self.delete_request2,
                                          self.analysis2.uuid)
-        self.assertEqual(self.delete_response.data['status'], 200)
+        self.assertEqual(self.delete_response.status_code, 200)
 
         self.assertEqual(Analysis.objects.all().count(), 0)
 
@@ -2383,7 +2382,7 @@ class AnalysisApiV2Tests(APITestCase):
         self.delete_response = self.view(self.delete_request,
                                          self.analysis.uuid)
 
-        self.assertEqual(self.delete_response.data['status'], 403)
+        self.assertEqual(self.delete_response.status_code, 403)
 
         self.assertEqual(Analysis.objects.all().count(), 2)
 
@@ -2404,6 +2403,6 @@ class AnalysisApiV2Tests(APITestCase):
         self.delete_response = self.view(self.delete_request,
                                          uuid)
 
-        self.assertEqual(self.delete_response.data['status'], 404)
+        self.assertEqual(self.delete_response.status_code, 404)
 
         self.assertEqual(Analysis.objects.all().count(), 1)

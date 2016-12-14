@@ -14,7 +14,6 @@ import json
 from django.db.models import Q
 from django.utils.http import (urlquote, urlunquote)
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
 
 import core
 from data_set_manager.search_indexes import NodeIndex
@@ -530,7 +529,8 @@ def generate_solr_params(params, assay_uuid):
     is_annotation = params.get('is_annotation', 'false')
     facet_count = params.get('include_facet_count', 'true')
     start = params.get('offset', '0')
-    row = params.get('limit', '20')
+    # row number suggested by solr docs, since there's no unlimited option
+    row = params.get('limit', '10000000')
     field_limit = params.get('attributes', None)
     facet_field = params.get('facets', None)
     facet_pivot = params.get('pivots', None)
@@ -712,7 +712,9 @@ def get_owner_from_assay(uuid):
 
     try:
         investigation_key = Study.objects.get(assay__uuid=uuid).investigation
-    except ObjectDoesNotExist:
+    except (Study.DoesNotExist,
+            Study.MultipleObjectsReturned) as e:
+        logger.error(e)
         return "Error: Invalid uuid"
 
     investigation_link = core.models.InvestigationLink.objects.get(

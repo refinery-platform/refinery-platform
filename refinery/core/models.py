@@ -25,7 +25,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages
 from django.contrib.messages import info
 from django.contrib.sites.models import Site
-from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.models import Max
@@ -858,7 +857,8 @@ class InvestigationLink(models.Model):
         try:
             return NodeCollection.objects.get(
                 uuid=self.investigation.uuid)
-        except (ObjectDoesNotExist, MultipleObjectsReturned) as e:
+        except (NodeCollection.DoesNotExist,
+                NodeCollection.MultipleObjectsReturned) as e:
             logger.error(("Could not fetch NodeCollection: " % e))
 
 
@@ -1977,11 +1977,8 @@ def get_current_node_set(study_uuid, assay_uuid):
             is_implicit=True,
             is_current=True
         )
-    except MultipleObjectsReturned:
-        logger.error(
-            "Multiple current node sets for study " + study_uuid + "/assay " +
-            assay_uuid + "."
-        )
+    except NodeSet.MultipleObjectsReturned as e:
+        logger.error("%s for %s/assay/%s", e, study_uuid, assay_uuid)
     finally:
         return node_set
 
@@ -2140,11 +2137,8 @@ def get_current_node_relationship(study_uuid, assay_uuid):
             assay__uuid=assay_uuid,
             is_current=True
         )
-    except MultipleObjectsReturned:
-        logger.error(
-            "Multiple current node relationships for study " + study_uuid +
-            "/assay " + assay_uuid + "."
-        )
+    except NodeSet.MultipleObjectsReturned as e:
+        logger.error("%s for %s/assay/%s", e, study_uuid, assay_uuid)
     finally:
         return relationship
 

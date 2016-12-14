@@ -210,102 +210,7 @@ class solrSynonymAnalyzer {
 }
 include solrSynonymAnalyzer
 
-class neo4j {
-  $neo4j_config_file = '/etc/neo4j/neo4j-server.properties'
 
-  apt::source { 'neo4j':
-    ensure      => 'present',
-    comment     => 'Neo Technology Neo4j repo',
-    location    => 'http://debian.neo4j.org/repo',
-    release     => 'stable/',
-    repos       => '',
-    key         => '66D34E951A8C53D90242132B26C95CF201182252',
-    key_source  => 'https://debian.neo4j.org/neotechnology.gpg.key',
-    include_src => false,
-  }
-  ->
-  package { 'neo4j':
-    ensure => '2.3.1',
-  }
-  ->
-  limits::fragment {
-    "${app_user}/soft/nofile":
-      value => "40000";
-    "${app_user}/hard/nofile":
-      value => "40000";
-  }
-  ->
-  file_line {
-    'neo4j_no_authentication':
-      path  => $neo4j_config_file,
-      line  => 'dbms.security.auth_enabled=false',
-      match => 'dbms.security.auth_enabled=';
-    'neo4j_all_ips':
-      path  => $neo4j_config_file,
-      line  => 'org.neo4j.server.webserver.address=0.0.0.0',
-      match => 'org.neo4j.server.webserver.address=';
-    'neo4j_increase_transaction_timeout':
-      path  => $neo4j_config_file,
-      line  => 'org.neo4j.server.transaction.timeout=600';
-  }
-  ~>
-  service { 'neo4j-service':
-    ensure     => running,
-    hasrestart => true,
-  }
-}
-include neo4j
-
-class neo4jOntology {
-  $neo4j_config = '/etc/neo4j/neo4j-server.properties'
-  $version = "0.5.0"
-  $url = "https://github.com/refinery-platform/neo4j-ontology/releases/download/v${version}/ontology.jar"
-
-  # Need to remove the old file manually as wget throws a weird
-  # `HTTP request sent, awaiting response... 403 Forbidden` error when the file
-  # already exists.
-
-  exec { "neo4j-ontology-plugin-download":
-    command => "rm -f /var/lib/neo4j/plugins/ontology.jar && wget -P /var/lib/neo4j/plugins/ ${url}",
-    creates => "/var/lib/neo4j/plugins/ontology.jar",
-    path    => "/usr/bin:/bin",
-    timeout => 120,  # downloading can take some time
-    notify => Service['neo4j-service'],
-  }
-  ->
-  file_line {
-    'org.neo4j.server.thirdparty_jaxrs_classes':
-      path  => $neo4j_config,
-      line  => 'org.neo4j.server.thirdparty_jaxrs_classes=org.neo4j.ontology.server.unmanaged=/ontology/unmanaged',
-      notify => Service['neo4j-service'],
-      require => Package['neo4j'],
-  }
-}
-include neo4jOntology
-
-class owl2neo4j {
-  $owl2neo4j_version = "0.6.1"
-  $owl2neo4j_url = "https://github.com/flekschas/owl2neo4j/releases/download/v${owl2neo4j_version}/owl2neo4j.jar"
-
-  # Need to remove the old file manually as wget throws a weird
-  # `HTTP request sent, awaiting response... 403 Forbidden` error when the file
-  # already exists.
-
-  exec { "owl2neo4j_wget":
-    command => "rm -f /opt/owl2neo4j.jar && wget -P /opt/ ${owl2neo4j_url}",
-    creates => "/opt/owl2neo4j",
-    path    => "/usr/bin:/bin",
-    timeout => 120,  # downloading can take some time
-  }
-}
-include owl2neo4j
-
-include apt
-# workaround for https://github.com/parklab/refinery-platform/issues/1181
-apt::key { 'rabbitmq':
-  key    => '0A9AF2115F4687BD29803A206B73A36E6026DFCA',
-  before => Class['::rabbitmq']
-}
 
 include '::rabbitmq'
 
@@ -316,16 +221,21 @@ class ui {
     location    => 'https://deb.nodesource.com/node_6.x',
     release     => 'trusty',
     repos       => 'main',
-    key         => '9FD3B784BC1C6FC31A8A0A1C1655A0AB68576280',
-    key_server  => 'keyserver.ubuntu.com',
-    include_src => true,
-    include_deb => true
+    key         => {
+      'id'     => '9FD3B784BC1C6FC31A8A0A1C1655A0AB68576280',
+      'server' => 'keyserver.ubuntu.com',
+    },
+    include => {
+      'src' => true,
+      'deb' => true,
+    },
   }
-
+  ->
   package { 'nodejs':
     name    => 'nodejs',
     ensure  => latest,
-    require => Apt::Source['nodejs']
+    # https://forge.puppet.com/puppetlabs/apt/readme#adding-new-sources-or-ppas
+    require => Class['apt::update'],
   }
   ->
   package {

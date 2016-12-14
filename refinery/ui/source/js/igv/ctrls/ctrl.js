@@ -1,14 +1,16 @@
 'use strict';
 
 function IGVCtrl (
-  $scope,
-  $window,
+  $httpParamSerializer,
   $log,
   $resource,
-  $httpParamSerializer,
+  $scope,
   $uibModalInstance,
-  selectedNodesService,
-  IGVFactory
+  $window,
+  IGVFactory,
+  nodeGroupService,
+  selectedFilterService,
+  selectedNodesService
 ) {
   var vm = this;
   // includes unused fields to accomodate current igv backend
@@ -69,15 +71,29 @@ function IGVCtrl (
     });
   };
 
-  // Launches web based IGV and dismissed modal
+  // Launches web based IGV and dismiss modal
   vm.launchIgvJs = function () {
-    var params = $httpParamSerializer({
-      species: vm.selectedSpecies.select.name,
-      node_ids: vm.igvConfig.node_selection
+    // update current select node group and used to get the
+    // correct select node uuids
+    var nodeGroupParams = {
+      uuid: selectedNodesService.defaultCurrentSelectionUuid,
+      assay: $window.externalAssayUuid,
+      nodes: vm.igvConfig.node_selection,
+      use_complement_nodes: selectedNodesService.selectedAllFlag,
+      filter_attribute: selectedFilterService.selectedFieldList
+    };
+
+    var nodeGroupUpdate = nodeGroupService.update(nodeGroupParams);
+    nodeGroupUpdate.$promise.then(function (response) {
+      // update igv config with actual node selection (not complements)
+      var params = $httpParamSerializer({
+        species: vm.selectedSpecies.select.name,
+        node_ids: response.nodes
+      });
+      // close modal
+      $uibModalInstance.dismiss();
+      $window.open('/visualize/genome?' + params);
     });
-    // close modal
-    $uibModalInstance.dismiss();
-    $window.open('/visualize/genome?' + params);
   };
 
   // Modal method to cancel
@@ -91,13 +107,15 @@ function IGVCtrl (
 angular
   .module('refineryIGV')
   .controller('IGVCtrl', [
-    '$scope',
-    '$window',
     '$log',
-    '$resource',
     '$httpParamSerializer',
+    '$resource',
+    '$scope',
     '$uibModalInstance',
-    'selectedNodesService',
+    '$window',
     'IGVFactory',
+    'nodeGroupService',
+    'selectedFilterService',
+    'selectedNodesService',
     IGVCtrl
   ]);

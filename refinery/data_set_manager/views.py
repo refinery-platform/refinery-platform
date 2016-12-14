@@ -11,7 +11,6 @@ import json
 import os
 
 from django import forms
-from django.core.exceptions import MultipleObjectsReturned
 from django.core.urlresolvers import reverse
 from django.http import (
     HttpResponseRedirect,
@@ -543,6 +542,29 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
 
     model = ChunkedUpload
 
+    def delete(self, request):
+        try:
+            upload_id = request.GET['upload_id']
+        except KeyError:
+            logger.error("Upload ID is missing from deletion request")
+            return HttpResponseBadRequest(json.dumps({'error': 'KeyError'}),
+                                          'application/json')
+
+        try:
+            chunked = ChunkedUpload.objects.get(upload_id=upload_id)
+        except (ChunkedUpload.DoesNotExist,
+                ChunkedUpload.MultipleObjectsReturned) as e:
+            logger.error(
+                "Error retrieving file upload instance with ID '%s': '%s'",
+                upload_id, e)
+            return HttpResponseBadRequest(json.dumps({'error': e}),
+                                          'application/json')
+
+        chunked.delete()
+        return HttpResponse(json.dumps({'status': 'Successfully deleted.',
+                                        'upload_id': upload_id}),
+                            'application/json')
+
     def on_completion(self, uploaded_file, request):
         """Move file to the user's import directory"""
         try:
@@ -552,7 +574,8 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
             return
         try:
             chunked_upload = ChunkedUpload.objects.get(upload_id=upload_id)
-        except (ChunkedUpload.DoesNotExist, MultipleObjectsReturned) as exc:
+        except (ChunkedUpload.DoesNotExist,
+                ChunkedUpload.MultipleObjectsReturned) as exc:
             logger.error(
                 "Error retrieving file upload instance with ID '%s': '%s'",
                 upload_id, exc)
@@ -611,7 +634,7 @@ class Assays(APIView):
     def get_object(self, uuid):
         try:
             return Assay.objects.get(uuid=uuid)
-        except (Assay.DoesNotExist, MultipleObjectsReturned):
+        except (Assay.DoesNotExist, Assay.MultipleObjectsReturned):
             raise Http404
 
     def get_query_set(self, study_uuid):

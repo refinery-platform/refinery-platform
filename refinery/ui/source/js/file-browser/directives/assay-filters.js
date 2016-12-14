@@ -68,17 +68,21 @@ function rpFileBrowserAssayFilters ($timeout, $location, selectedFilterService) 
             var attributeTitle = angular.element(
             document.querySelector('#attribute-panel-' + escapeAttributeName)
             );
+
             // mark checkbox for selected item
-            scope.FBCtrl.selectedField[allFields[ind]] = true;
+            if (!scope.FBCtrl.attributeSelectedFields.hasOwnProperty(attributeInternalName)) {
+              scope.FBCtrl.attributeSelectedFields[attributeInternalName] = {};
+            }
+            scope.FBCtrl.attributeSelectedFields[attributeInternalName][allFields[ind]] = true;
 
             if (attributeTitle.hasClass('fa-caret-right')) {
               angular.element(
               document.querySelector('#' + escapeAttributeName)).addClass('in');
               attributeTitle.removeClass('fa-caret-right');
               attributeTitle.addClass('fa-caret-down');
-              selectedFilterService.selectedFieldList[attributeInternalName] = [allFields[ind]];
+              selectedFilterService.addSelectedField(attributeInternalName, allFields[ind]);
             } else {
-              selectedFilterService.selectedFieldList[attributeInternalName].push(allFields[ind]);
+              selectedFilterService.addSelectedField(attributeInternalName, allFields[ind]);
             }
           }
         }
