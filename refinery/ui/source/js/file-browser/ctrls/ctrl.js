@@ -103,7 +103,7 @@ function FileBrowserCtrl (
       vm.refreshSelectedFieldFromQuery(attributeObj);
     });
     fileBrowserFactory.filesParam.filter_attribute = {};
-    angular.copy(selectedFilterService.selectedFieldList,
+    angular.copy(selectedFilterService.attributeSelectedFields,
       fileBrowserFactory.filesParam.filter_attribute);
   };
 
@@ -131,7 +131,7 @@ function FileBrowserCtrl (
   vm.attributeSelectionUpdate = function (_internalName, _field) {
     vm.updateFilterSelectionList(_internalName, _field);
     fileBrowserFactory.filesParam.filter_attribute = {};
-    angular.copy(selectedFilterService.selectedFieldList,
+    angular.copy(selectedFilterService.attributeSelectedFields,
       fileBrowserFactory.filesParam.filter_attribute
     );
     // Resets selection
@@ -428,7 +428,7 @@ function FileBrowserCtrl (
     } else {
       checkAndUpdateGridData();
       // updates view model's selected attribute filters
-      angular.forEach(selectedFilterService.selectedFieldList, function (
+      angular.forEach(selectedFilterService.attributeSelectedFields, function (
         fieldArr,
         attributeInternalName
       ) {

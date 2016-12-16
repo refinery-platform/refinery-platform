@@ -15,7 +15,7 @@ function rpFileBrowserAssayFilters ($timeout, $location, selectedFilterService) 
         var attribute = angular.element(
           document.querySelector('#' + escapeAttributeName)
         );
-        var selectedKeys = Object.keys(selectedFilterService.selectedFieldList);
+        var selectedKeys = Object.keys(selectedFilterService.attributeSelectedFields);
         var selectedAttributeIndex = selectedKeys.indexOf(attributeObj.internal_name);
         if (attributeTitle.hasClass('fa-caret-right')) {
           // open panel
@@ -47,8 +47,9 @@ function rpFileBrowserAssayFilters ($timeout, $location, selectedFilterService) 
       scope.showField = function (field, internalName, attributeName) {
         var escapedAttributeName = attributeName.replace(' ', '-');
         var selectedIndex = -1;
-        if (selectedFilterService.selectedFieldList[internalName] !== undefined) {
-          selectedIndex = selectedFilterService.selectedFieldList[internalName].indexOf(field);
+        if (selectedFilterService.attributeSelectedFields[internalName] !== undefined) {
+          selectedIndex = selectedFilterService
+            .attributeSelectedFields[internalName].indexOf(field);
         }
         if (!isMinimized(escapedAttributeName)) {
           return true;

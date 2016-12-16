@@ -14,7 +14,7 @@ describe('Selected-Filter-Service', function () {
 
   it('service variables should exist', function () {
     expect(service).toBeDefined();
-    expect(service.selectedFieldList).toEqual({});
+    expect(service.attributeSelectedFields).toEqual({});
   });
 
   it('all methods exist', function () {
@@ -36,7 +36,7 @@ describe('Selected-Filter-Service', function () {
   });
 
   it('updateSelectedFilters handles adding new field', function () {
-    service.selectedFieldList = {
+    service.attributeSelectedFields = {
       Month_Characteristics_10_5_s: ['January', 'March', 'April'],
       REFINERY_WORKFLOW_OUTPUT_10_5_s: ['1', '2']
     };
@@ -56,7 +56,7 @@ describe('Selected-Filter-Service', function () {
   });
 
   it('updateSelectedFilters deletes field', function () {
-    service.selectedFieldList = {
+    service.attributeSelectedFields = {
       Month_Characteristics_10_5_s: ['January', 'March', 'April'],
       REFINERY_WORKFLOW_OUTPUT_10_5_s: ['1', '2']
     };
@@ -76,7 +76,7 @@ describe('Selected-Filter-Service', function () {
   });
 
   it('resetAttributeFilter calls updateSelectedFilters', function () {
-    service.selectedFieldList = {
+    service.attributeSelectedFields = {
       Month_Characteristics_10_5_s: ['January', 'March', 'April'],
       REFINERY_WORKFLOW_OUTPUT_10_5_s: ['1', '2']
     };
@@ -94,8 +94,8 @@ describe('Selected-Filter-Service', function () {
     );
   });
 
-  it('resetAttributeFilter integration test, updates selectedFieldList', function () {
-    service.selectedFieldList = {
+  it('resetAttributeFilter integration test, updates attributeSelectedFields', function () {
+    service.attributeSelectedFields = {
       Month_Characteristics_10_5_s: ['January', 'March', 'April'],
       REFINERY_WORKFLOW_OUTPUT_10_5_s: ['1', '2']
     };
@@ -107,7 +107,7 @@ describe('Selected-Filter-Service', function () {
       2: false };
 
     service.resetAttributeFilter(selectedField);
-    expect(service.selectedFieldList).toEqual({});
+    expect(service.attributeSelectedFields).toEqual({});
     expect(location.search.calls.count()).toEqual(Object.keys(selectedField).length);
   });
 });

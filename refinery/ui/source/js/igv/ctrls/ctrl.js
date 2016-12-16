@@ -80,7 +80,7 @@ function IGVCtrl (
       assay: $window.externalAssayUuid,
       nodes: vm.igvConfig.node_selection,
       use_complement_nodes: selectedNodesService.selectedAllFlag,
-      filter_attribute: selectedFilterService.selectedFieldList
+      filter_attribute: selectedFilterService.attributeSelectedFields
     };
 
     var nodeGroupUpdate = nodeGroupService.update(nodeGroupParams);

@@ -2,7 +2,6 @@
 
 function selectedFilterService ($location, $window) {
   var vm = this;
-  vm.selectedFieldList = {};
   vm.attributeSelectedFields = {};
 
   // Helper function encodes field array in an obj
@@ -22,13 +21,13 @@ function selectedFilterService ($location, $window) {
   */
   var removeSelectedField = function (attributeName, fieldName) {
     // remove attribute field
-    var fieldIndex = vm.selectedFieldList[attributeName].indexOf(fieldName);
+    var fieldIndex = vm.attributeSelectedFields[attributeName].indexOf(fieldName);
     if (fieldIndex > -1) {
-      vm.selectedFieldList[attributeName].splice(fieldIndex, 1);
+      vm.attributeSelectedFields[attributeName].splice(fieldIndex, 1);
     }
     // If attribute has no field, remove the attribute key
-    if (vm.selectedFieldList[attributeName].length === 0) {
-      delete vm.selectedFieldList[attributeName];
+    if (vm.attributeSelectedFields[attributeName].length === 0) {
+      delete vm.attributeSelectedFields[attributeName];
     }
   };
 
@@ -39,9 +38,9 @@ function selectedFilterService ($location, $window) {
   */
   vm.addSelectedField = function (attributeName, fieldName) {
     // check to see if it already exists
-    var fieldIndex = vm.selectedFieldList[attributeName].indexOf(fieldName);
+    var fieldIndex = vm.attributeSelectedFields[attributeName].indexOf(fieldName);
     if (fieldIndex === -1) {
-      vm.selectedFieldList[attributeName].push(fieldName);
+      vm.attributeSelectedFields[attributeName].push(fieldName);
     }
   };
 
@@ -68,25 +67,25 @@ function selectedFilterService ($location, $window) {
     attributeFieldSelected[attributeInternalName] = [field];
     var encodedSelection = vm.encodeAttributeFields(attributeFieldSelected);
 
-    // Check if attribute already exists in selectedFieldList
-    if (activeFields[field] && vm.selectedFieldList[attributeInternalName]) {
+    // Check if attribute already exists in attributeSelectedFields
+    if (activeFields[field] && vm.attributeSelectedFields[attributeInternalName]) {
       // checks if selected fields exists in the attibute object
-      if (vm.selectedFieldList[attributeInternalName].indexOf(field) > -1) {
+      if (vm.attributeSelectedFields[attributeInternalName].indexOf(field) > -1) {
         vm.updateUrlQuery(JSON.stringify(encodedSelection), activeFields[field]);
       } else {
-        vm.selectedFieldList[attributeInternalName].push(field);
+        vm.attributeSelectedFields[attributeInternalName].push(field);
         vm.updateUrlQuery(JSON.stringify(encodedSelection), activeFields[field]);
       }
-    // Add new attribute to selectedFieldList
+    // Add new attribute to attributeSelectedFields
     } else if (activeFields[field]) {
-      vm.selectedFieldList[attributeInternalName] = [field];
+      vm.attributeSelectedFields[attributeInternalName] = [field];
       vm.updateUrlQuery(JSON.stringify(encodedSelection), activeFields[field]);
     // remove empty fields
-    } else if (vm.selectedFieldList[attributeInternalName]) {
+    } else if (vm.attributeSelectedFields[attributeInternalName]) {
       removeSelectedField(attributeInternalName, field);
       vm.updateUrlQuery(JSON.stringify(encodedSelection), null);
     }
-    return vm.selectedFieldList;
+    return vm.attributeSelectedFields;
   };
 
    /**
@@ -95,7 +94,7 @@ function selectedFilterService ($location, $window) {
     * field_names, {name: false}
    */
   vm.resetAttributeFilter = function (deselectedFields) {
-    angular.forEach(vm.selectedFieldList, function (fieldList, attribute) {
+    angular.forEach(vm.attributeSelectedFields, function (fieldList, attribute) {
       var len = fieldList.length;
       for (var i = 0; i < len; i++) {
         vm.updateSelectedFilters(deselectedFields, attribute, fieldList[0]);
