@@ -5,8 +5,14 @@ function selectedFilterService ($location, $window) {
   vm.selectedFieldList = {};
   vm.attributeSelectedFields = {};
 
-  vm.setAttributeSelectedFields = function (attributeObj) {
-    angular.copy(selectedFilterService.attributeSelectedFieldList, attributeObj);
+  // Helper function encodes field array in an obj
+  vm.encodeAttributeFields = function (attributeObj) {
+    angular.forEach(attributeObj, function (fieldArray) {
+      for (var ind = 0; ind < fieldArray.length; ind++) {
+        fieldArray[ind] = $window.encodeURIComponent(fieldArray[ind]);
+      }
+    });
+    return (attributeObj);
   };
 
   /**
@@ -58,19 +64,28 @@ function selectedFilterService ($location, $window) {
    * @param {string} field - Field name, 'March'
    */
   vm.updateSelectedFilters = function (activeFields, attributeInternalName, field) {
+    console.log('updateSelectedFilters');
+    console.log(activeFields);
     // Check if attribute already exists in selectedFieldList
     if (activeFields[field] && vm.selectedFieldList[attributeInternalName]) {
+      var attributeFieldSelected = {};
+      attributeFieldSelected[attributeInternalName] = [field];
+      var encodedSelection = vm.encodeAttributeFields(attributeFieldSelected);
       // checks if selected fields exists in the attibute object
       if (vm.selectedFieldList[attributeInternalName].indexOf(field) > -1) {
-        vm.updateUrlQuery(field, activeFields[field]);
+        vm.updateUrlQuery(JSON.stringify(encodedSelection), activeFields[field]);
       } else {
         vm.selectedFieldList[attributeInternalName].push(field);
-        vm.updateUrlQuery(field, activeFields[field]);
+        vm.updateUrlQuery(JSON.stringify(encodedSelection), activeFields[field]);
       }
     // Add new attribute to selectedFieldList
     } else if (activeFields[field]) {
+      console.log('in the else if');
       vm.selectedFieldList[attributeInternalName] = [field];
-      vm.updateUrlQuery(field, activeFields[field]);
+      var attributeFieldSelected2 = {};
+      attributeFieldSelected2[attributeInternalName] = [field];
+      var encodedSelection2 = vm.encodeAttributeFields(attributeFieldSelected2);
+      vm.updateUrlQuery(JSON.stringify(encodedSelection2), activeFields[field]);
     // remove empty fields
     } else if (vm.selectedFieldList[attributeInternalName]) {
       removeSelectedField(attributeInternalName, field);
@@ -91,16 +106,6 @@ function selectedFilterService ($location, $window) {
         vm.updateSelectedFilters(deselectedFields, attribute, fieldList[0]);
       }
     });
-  };
-
-     // Helper function encodes field array in an obj
-  vm.encodeAttributeFields = function (attributeObj) {
-    angular.forEach(attributeObj, function (fieldArray) {
-      for (var ind = 0; ind < fieldArray.length; ind++) {
-        fieldArray[ind] = $window.encodeURIComponent(fieldArray[ind]);
-      }
-    });
-    return (attributeObj);
   };
 }
 
