@@ -132,7 +132,8 @@ function FileBrowserCtrl (
     vm.updateFilterSelectionList(_internalName, _field);
     fileBrowserFactory.filesParam.filter_attribute = {};
     angular.copy(selectedFilterService.selectedFieldList,
-      fileBrowserFactory.filesParam.filter_attribute);
+      fileBrowserFactory.filesParam.filter_attribute
+    );
     // Resets selection
     selectedNodesService.setSelectedAllFlags(false);
     // resets grid

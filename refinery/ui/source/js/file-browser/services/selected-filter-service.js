@@ -64,13 +64,12 @@ function selectedFilterService ($location, $window) {
    * @param {string} field - Field name, 'March'
    */
   vm.updateSelectedFilters = function (activeFields, attributeInternalName, field) {
-    console.log('updateSelectedFilters');
-    console.log(activeFields);
+    var attributeFieldSelected = {};
+    attributeFieldSelected[attributeInternalName] = [field];
+    var encodedSelection = vm.encodeAttributeFields(attributeFieldSelected);
+
     // Check if attribute already exists in selectedFieldList
     if (activeFields[field] && vm.selectedFieldList[attributeInternalName]) {
-      var attributeFieldSelected = {};
-      attributeFieldSelected[attributeInternalName] = [field];
-      var encodedSelection = vm.encodeAttributeFields(attributeFieldSelected);
       // checks if selected fields exists in the attibute object
       if (vm.selectedFieldList[attributeInternalName].indexOf(field) > -1) {
         vm.updateUrlQuery(JSON.stringify(encodedSelection), activeFields[field]);
@@ -80,16 +79,12 @@ function selectedFilterService ($location, $window) {
       }
     // Add new attribute to selectedFieldList
     } else if (activeFields[field]) {
-      console.log('in the else if');
       vm.selectedFieldList[attributeInternalName] = [field];
-      var attributeFieldSelected2 = {};
-      attributeFieldSelected2[attributeInternalName] = [field];
-      var encodedSelection2 = vm.encodeAttributeFields(attributeFieldSelected2);
-      vm.updateUrlQuery(JSON.stringify(encodedSelection2), activeFields[field]);
+      vm.updateUrlQuery(JSON.stringify(encodedSelection), activeFields[field]);
     // remove empty fields
     } else if (vm.selectedFieldList[attributeInternalName]) {
       removeSelectedField(attributeInternalName, field);
-      vm.updateUrlQuery(field, null);
+      vm.updateUrlQuery(JSON.stringify(encodedSelection), null);
     }
     return vm.selectedFieldList;
   };
