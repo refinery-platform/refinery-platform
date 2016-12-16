@@ -13,7 +13,7 @@ from selenium_testing.utils import assert_body_text, login, \
 
 
 # Start a pyvirtualdisplay for geckodriver to interact with
-display = Display(visible=0, size=(1600, 900))
+display = Display(visible=0, size=(1900, 1080))
 display.start()
 
 
