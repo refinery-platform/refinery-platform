@@ -98,10 +98,12 @@ function selectedFilterService ($location, $window) {
     * field_names, {name: false}
    */
   vm.resetAttributeFilter = function (deselectedFields) {
-    angular.forEach(vm.attributeSelectedFields, function (fieldList, attribute) {
-      var len = fieldList.length;
-      for (var i = 0; i < len; i++) {
-        vm.updateSelectedFilters(deselectedFields, attribute, fieldList[0]);
+    angular.forEach(vm.attributeSelectedFields, function (
+      fieldList,
+      attributeInternalName
+    ) {
+      for (var i = 0; i < fieldList.length; i++) {
+        vm.updateSelectedFilters(deselectedFields, attributeInternalName, fieldList[0]);
       }
     });
   };
