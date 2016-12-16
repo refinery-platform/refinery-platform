@@ -1,14 +1,11 @@
-import pytest
-
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.common.exceptions import TimeoutException
 
-DEFAULT_WAIT = 5
+DEFAULT_WAIT = 10
 
 
-@pytest.fixture
 def login(selenium, live_server_url):
     selenium.get(live_server_url)
     wait_until_id_clickable(selenium, "refinery-login", DEFAULT_WAIT)
@@ -18,7 +15,14 @@ def login(selenium, live_server_url):
     selenium.find_element_by_id('id_password').send_keys('guest')
     selenium.find_element_by_xpath('//input[@type="submit"]').click()
     wait_until_id_clickable(selenium, "refinery-logout", DEFAULT_WAIT)
-    assert_body_text(selenium, 'Logout')
+    assert_body_text(selenium, 'Guest', 'Logout')
+    selenium.refresh()
+    selenium.implicitly_wait(DEFAULT_WAIT)
+
+
+def refresh(selenium):
+    selenium.refresh()
+    selenium.implicitly_wait(DEFAULT_WAIT)
 
 
 def assert_body_text(selenium, *search_texts):
@@ -67,7 +71,7 @@ def wait_until_id_clickable(selenium, search_id, wait_duration):
 def wait_until_id_visible(selenium, search_id, wait_duration):
     try:
         return WebDriverWait(selenium, wait_duration).until(
-            ec.visibility_of((By.ID, search_id)))
+            ec.visibility_of((By.ID, search_id)[1]))
     except TimeoutException:
             raise AssertionError(
                 '"%s" not in: \n%s' % (
