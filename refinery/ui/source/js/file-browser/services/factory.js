@@ -8,7 +8,8 @@ function fileBrowserFactory (
   assayFileService,
   fileBrowserSettings,
   nodeGroupService,
-  nodeService
+  nodeService,
+  selectedFilterService
   ) {
   // assayfiles has max 300 rows, ctrl adds/subtracts rows to maintain count
   var assayFiles = [];
@@ -25,15 +26,6 @@ function fileBrowserFactory (
     uuid: $window.externalAssayUuid
   };
   var csrfToken = $window.csrf_token;
-  // Helper function encodes field array in an obj
-  var encodeAttributeFields = function (attributeObj) {
-    angular.forEach(attributeObj, function (fieldArray) {
-      for (var ind = 0; ind < fieldArray.length; ind++) {
-        fieldArray[ind] = $window.encodeURIComponent(fieldArray[ind]);
-      }
-    });
-    return (attributeObj);
-  };
   var maxFileRequest = fileBrowserSettings.maxFileRequest;
 
   // Helper method which makes display_names uniquey by adding attribute_type
@@ -155,7 +147,8 @@ function fileBrowserFactory (
 
     // encodes all field names to avoid issues with escape characters.
     if (typeof params.filter_attribute !== 'undefined') {
-      params.filter_attribute = encodeAttributeFields(params.filter_attribute);
+      params.filter_attribute = selectedFilterService
+        .encodeAttributeFields(params.filter_attribute);
     }
 
     var assayFile = assayFileService.query(params);
@@ -345,7 +338,6 @@ function fileBrowserFactory (
     nodeGroupList: nodeGroupList,
     createColumnDefs: createColumnDefs,
     createNodeGroup: createNodeGroup,
-    encodeAttributeFields: encodeAttributeFields,
     getAssayFiles: getAssayFiles,
     getAssayAttributeOrder: getAssayAttributeOrder,
     getNodeGroupList: getNodeGroupList,
@@ -366,6 +358,7 @@ angular
     'fileBrowserSettings',
     'nodeGroupService',
     'nodeService',
+    'selectedFilterService',
     fileBrowserFactory
   ]
 );

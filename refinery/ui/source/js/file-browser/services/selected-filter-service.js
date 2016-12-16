@@ -1,6 +1,6 @@
 'use strict';
 
-function selectedFilterService ($location) {
+function selectedFilterService ($location, $window) {
   var vm = this;
   vm.selectedFieldList = {};
 
@@ -82,16 +82,27 @@ function selectedFilterService ($location) {
   vm.resetAttributeFilter = function (deselectedFields) {
     angular.forEach(vm.selectedFieldList, function (fieldList, attribute) {
       var len = fieldList.length;
-      for (var i = 0; i < len; i ++) {
+      for (var i = 0; i < len; i++) {
         vm.updateSelectedFilters(deselectedFields, attribute, fieldList[0]);
       }
     });
+  };
+
+     // Helper function encodes field array in an obj
+  vm.encodeAttributeFields = function (attributeObj) {
+    angular.forEach(attributeObj, function (fieldArray) {
+      for (var ind = 0; ind < fieldArray.length; ind++) {
+        fieldArray[ind] = $window.encodeURIComponent(fieldArray[ind]);
+      }
+    });
+    return (attributeObj);
   };
 }
 
 angular.module('refineryFileBrowser')
   .service('selectedFilterService', [
     '$location',
+    '$window',
     selectedFilterService
   ]
 );
