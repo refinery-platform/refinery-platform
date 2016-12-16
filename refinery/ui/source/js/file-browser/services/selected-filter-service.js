@@ -3,6 +3,11 @@
 function selectedFilterService ($location, $window) {
   var vm = this;
   vm.selectedFieldList = {};
+  vm.attributeSelectedFields = {};
+
+  vm.setAttributeSelectedFields = function (attributeObj) {
+    angular.copy(selectedFilterService.attributeSelectedFieldList, attributeObj);
+  };
 
   /**
    * Helper method which removes selected Field and deletes empty attributes
@@ -36,11 +41,11 @@ function selectedFilterService ($location, $window) {
 
   /**
    * Helper method which updates the url query with fields
-   * @param {string} fieldName - name of field
+   * @param {string} fieldObj - attribute obj with a the name of a field
    * @param {string} value - True adds name or null removes name
   */
-  vm.updateUrlQuery = function (fieldName, value) {
-    $location.search(fieldName, value);
+  vm.updateUrlQuery = function (fieldObj, value) {
+    $location.search(fieldObj, value);
   };
 
   /**
@@ -52,23 +57,23 @@ function selectedFilterService ($location, $window) {
    * 'Month_Characteristics_10_5_s'
    * @param {string} field - Field name, 'March'
    */
-  vm.updateSelectedFilters = function (activeFields, attribute, field) {
+  vm.updateSelectedFilters = function (activeFields, attributeInternalName, field) {
     // Check if attribute already exists in selectedFieldList
-    if (activeFields[field] && vm.selectedFieldList[attribute]) {
+    if (activeFields[field] && vm.selectedFieldList[attributeInternalName]) {
       // checks if selected fields exists in the attibute object
-      if (vm.selectedFieldList[attribute].indexOf(field) > -1) {
+      if (vm.selectedFieldList[attributeInternalName].indexOf(field) > -1) {
         vm.updateUrlQuery(field, activeFields[field]);
       } else {
-        vm.selectedFieldList[attribute].push(field);
+        vm.selectedFieldList[attributeInternalName].push(field);
         vm.updateUrlQuery(field, activeFields[field]);
       }
     // Add new attribute to selectedFieldList
     } else if (activeFields[field]) {
-      vm.selectedFieldList[attribute] = [field];
+      vm.selectedFieldList[attributeInternalName] = [field];
       vm.updateUrlQuery(field, activeFields[field]);
     // remove empty fields
-    } else if (vm.selectedFieldList[attribute]) {
-      removeSelectedField(attribute, field);
+    } else if (vm.selectedFieldList[attributeInternalName]) {
+      removeSelectedField(attributeInternalName, field);
       vm.updateUrlQuery(field, null);
     }
     return vm.selectedFieldList;
