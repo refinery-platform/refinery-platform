@@ -44,6 +44,13 @@ function selectedFilterService ($location, $window) {
     }
   };
 
+  vm.stringifyAndEncodeAttributeObj = function (attributeInternalName, field) {
+    var attributeFieldSelected = {};
+    attributeFieldSelected[attributeInternalName] = [field];
+    var encodedAttribute = vm.encodeAttributeFields(attributeFieldSelected);
+    return JSON.stringify(encodedAttribute);
+  };
+
   /**
    * Helper method which updates the url query with fields
    * @param {string} fieldObj - attribute obj with a the name of a field
@@ -63,27 +70,24 @@ function selectedFilterService ($location, $window) {
    * @param {string} field - Field name, 'March'
    */
   vm.updateSelectedFilters = function (activeFields, attributeInternalName, field) {
-    var attributeFieldSelected = {};
-    attributeFieldSelected[attributeInternalName] = [field];
-    var encodedSelection = vm.encodeAttributeFields(attributeFieldSelected);
-
+    var encodedSelection = vm.stringifyAndEncodeAttributeObj(attributeInternalName, field);
     // Check if attribute already exists in attributeSelectedFields
     if (activeFields[field] && vm.attributeSelectedFields[attributeInternalName]) {
       // checks if selected fields exists in the attibute object
       if (vm.attributeSelectedFields[attributeInternalName].indexOf(field) > -1) {
-        vm.updateUrlQuery(JSON.stringify(encodedSelection), activeFields[field]);
+        vm.updateUrlQuery(encodedSelection, activeFields[field]);
       } else {
         vm.attributeSelectedFields[attributeInternalName].push(field);
-        vm.updateUrlQuery(JSON.stringify(encodedSelection), activeFields[field]);
+        vm.updateUrlQuery(encodedSelection, activeFields[field]);
       }
     // Add new attribute to attributeSelectedFields
     } else if (activeFields[field]) {
       vm.attributeSelectedFields[attributeInternalName] = [field];
-      vm.updateUrlQuery(JSON.stringify(encodedSelection), activeFields[field]);
+      vm.updateUrlQuery(encodedSelection, activeFields[field]);
     // remove empty fields
     } else if (vm.attributeSelectedFields[attributeInternalName]) {
       removeSelectedField(attributeInternalName, field);
-      vm.updateUrlQuery(JSON.stringify(encodedSelection), null);
+      vm.updateUrlQuery(encodedSelection, null);
     }
     return vm.attributeSelectedFields;
   };

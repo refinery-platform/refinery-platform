@@ -110,7 +110,11 @@ function FileBrowserCtrl (
   // helper method, upon refresh/load add fields to select data objs from query
   vm.refreshSelectedFieldFromQuery = function (_attributeObj) {
     angular.forEach(_attributeObj.facetObj, function (fieldObj) {
-      if (vm.queryKeys.indexOf(fieldObj.name) > -1) {
+      var encodedField = selectedFilterService.stringifyAndEncodeAttributeObj(
+        _attributeObj.internal_name,
+        fieldObj.name
+      );
+      if (vm.queryKeys.indexOf(encodedField) > -1) {
         if (!vm.uiSelectedFields.hasOwnProperty(_attributeObj.internal_name)) {
           vm.uiSelectedFields[_attributeObj.internal_name] = {};
         }
@@ -129,7 +133,6 @@ function FileBrowserCtrl (
 
   // Used by ui, Updates which attribute filters are selected and ui-grid data
   vm.attributeSelectionUpdate = function (_internalName, _field) {
-    console.log('in the attribute selection update');
     vm.updateFilterSelectionList(_internalName, _field);
     fileBrowserFactory.filesParam.filter_attribute = {};
     angular.copy(selectedFilterService.attributeSelectedFields,
