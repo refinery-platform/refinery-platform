@@ -25,7 +25,9 @@ def refresh(selenium):
     selenium.implicitly_wait(DEFAULT_WAIT)
 
 
-def assert_body_text(selenium, *search_texts):
+def assert_body_text(selenium, search_array=None, *search_texts):
+    if search_array:
+        search_texts = search_array
     for search_text in search_texts:
         try:
             WebDriverWait(selenium, 10).until(
