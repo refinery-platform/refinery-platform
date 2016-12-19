@@ -7,6 +7,11 @@ DEFAULT_WAIT = 10
 
 
 def login(selenium, live_server_url):
+    """
+    Helper method to login to the LiveServerTestCase Refinery instance
+    :param selenium: selenium webdriver Instance
+    :param live_server_url: Url of the current LiveServerTestCase instance
+    """
     selenium.get(live_server_url)
     wait_until_id_clickable(selenium, "refinery-login", DEFAULT_WAIT)
     selenium.find_element_by_link_text('Login').click()
@@ -21,11 +26,22 @@ def login(selenium, live_server_url):
 
 
 def refresh(selenium):
+    """
+    Helper method to refresh the current page
+    :param selenium: selenium webdriver Instance
+    """
     selenium.refresh()
     selenium.implicitly_wait(DEFAULT_WAIT)
 
 
 def assert_body_text(selenium, search_array=None, *search_texts):
+    """
+    Ensure that some text exists within <body>
+    :param selenium: selenium webdriver Instance
+    :param search_array: option array of strings to ensure exist within the
+    <body>
+    :param search_texts: extra words to search for, provided as *args
+    """
     if search_array:
         search_texts = search_array
     for search_text in search_texts:
@@ -43,6 +59,13 @@ def assert_body_text(selenium, search_array=None, *search_texts):
 
 
 def assert_text_within_id(selenium, search_id, wait_duration, *search_texts):
+    """
+    Ensure that some text exists within a DOM id
+    :param selenium: selenium webdriver Instance
+    :param search_id: DOM element id to search for
+    :param wait_duration: time limit to be used in WebDriverWait()
+    :param search_texts: extra words to search for, provided as *args
+    """
     for search_text in search_texts:
         try:
             WebDriverWait(selenium, wait_duration).until(
@@ -59,6 +82,12 @@ def assert_text_within_id(selenium, search_id, wait_duration, *search_texts):
 
 
 def wait_until_id_clickable(selenium, search_id, wait_duration):
+    """
+    Wait for a DOM element to be clickable
+    :param selenium: selenium webdriver Instance
+    :param search_id: DOM element id to search for
+    :param wait_duration: time limit to be used in WebDriverWait()
+    """
     try:
         return WebDriverWait(selenium, wait_duration).until(
             ec.element_to_be_clickable((By.ID, search_id)))
@@ -71,6 +100,12 @@ def wait_until_id_clickable(selenium, search_id, wait_duration):
 
 
 def wait_until_id_visible(selenium, search_id, wait_duration):
+    """
+    Wait for a DOM element to be visible
+    :param selenium: selenium webdriver Instance
+    :param search_id: DOM element id to search for
+    :param wait_duration: time limit to be used in WebDriverWait()
+    """
     try:
         return WebDriverWait(selenium, wait_duration).until(
             ec.visibility_of((By.ID, search_id)))
