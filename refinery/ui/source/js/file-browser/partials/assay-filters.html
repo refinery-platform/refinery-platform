@@ -101,7 +101,7 @@
                     <input
                       type="checkbox"
                       name="optionsCheckboxes"
-                      ng-model="FBCtrl.uiSelectedFields[attributeObj.internal_name][field.name]"
+                      ng-model="FBCtrl.uiSelectedFields[attributeObj.internal_name][fieldObj.name]"
                       ng-change="FBCtrl.attributeSelectionUpdate(
                       attributeObj.internal_name, fieldObj.name)"
                       id="analysis-filter-{{ $index }}">
