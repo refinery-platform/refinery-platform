@@ -4,7 +4,10 @@ function selectedFilterService ($location, $window) {
   var vm = this;
   vm.attributeSelectedFields = {};
 
-  // Helper function encodes field array in an obj
+  /**
+   * Helper function encodes field array in an obj
+   * @param {obj} attributeObj - {internalName: [fields]}
+   */
   vm.encodeAttributeFields = function (attributeObj) {
     angular.forEach(attributeObj, function (fieldArray) {
       for (var ind = 0; ind < fieldArray.length; ind++) {
@@ -12,6 +15,19 @@ function selectedFilterService ($location, $window) {
       }
     });
     return (attributeObj);
+  };
+
+
+  /**
+   * Stringify and encodes an object with the internal name and field (urlquery)
+   * @param {string} attributeInternalName - internal name, 'Month_Characteristics_10_5_s'
+   * @param {string} field - fiendName
+   */
+  vm.stringifyAndEncodeAttributeObj = function (attributeInternalName, field) {
+    var attributeFieldSelected = {};
+    attributeFieldSelected[attributeInternalName] = [field];
+    var encodedAttribute = vm.encodeAttributeFields(attributeFieldSelected);
+    return JSON.stringify(encodedAttribute);
   };
 
   /**
@@ -42,13 +58,6 @@ function selectedFilterService ($location, $window) {
     if (fieldIndex === -1) {
       vm.attributeSelectedFields[attributeName].push(fieldName);
     }
-  };
-
-  vm.stringifyAndEncodeAttributeObj = function (attributeInternalName, field) {
-    var attributeFieldSelected = {};
-    attributeFieldSelected[attributeInternalName] = [field];
-    var encodedAttribute = vm.encodeAttributeFields(attributeFieldSelected);
-    return JSON.stringify(encodedAttribute);
   };
 
   /**

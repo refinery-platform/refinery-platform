@@ -27,7 +27,8 @@ function FileBrowserCtrl (
   // Ui-grid parameters
   vm.gridApi = undefined; // avoids duplicate grid generation
   vm.queryKeys = Object.keys($location.search());
-  // used by ui to select/deselect, attributes have an object of filter fields
+  /** used by ui to select/deselect, attributes have an object of filter fields
+   * attributeInternalName: {fieldName: boolean, fieldName: boolean} */
   vm.uiSelectedFields = {};
   vm.selectNodesCount = 0;
   vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
@@ -109,6 +110,7 @@ function FileBrowserCtrl (
 
   // helper method, upon refresh/load add fields to select data objs from query
   vm.refreshSelectedFieldFromQuery = function (_attributeObj) {
+    // stringify/encode attributeInternalName:fieldName for url query comparison
     angular.forEach(_attributeObj.facetObj, function (fieldObj) {
       var encodedField = selectedFilterService.stringifyAndEncodeAttributeObj(
         _attributeObj.internal_name,
@@ -132,7 +134,7 @@ function FileBrowserCtrl (
     });
   };
 
-  // Used by ui, Updates which attribute filters are selected and ui-grid data
+  // Used by ui, updates which attribute filters are selected and ui-grid data
   vm.attributeSelectionUpdate = function (_internalName, _field) {
     vm.updateFilterSelectionList(_internalName, _field);
     fileBrowserFactory.filesParam.filter_attribute = {};

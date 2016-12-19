@@ -7,7 +7,6 @@ function rpFileBrowserAssayFilters ($timeout, $location, selectedFilterService) 
     link: function (scope) {
       // ng-click event for attribute filter panels
       scope.dropAttributePanel = function (e, attributeName, attributeObj) {
-        console.log('drop attribute panel');
         e.preventDefault();
         var escapeAttributeName = attributeName.replace(' ', '-');
         var attributeTitle = angular.element(
