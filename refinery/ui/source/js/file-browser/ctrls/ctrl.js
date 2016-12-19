@@ -127,16 +127,13 @@ function FileBrowserCtrl (
     });
   };
 
-  // Updates selection filter field list and url
-  vm.updateFilterSelectionList = function (internalName, field) {
-    angular.forEach(vm.uiSelectedFields, function (fieldsObj) {
-      selectedFilterService.updateSelectedFilters(fieldsObj, internalName, field);
-    });
-  };
-
   // Used by ui, updates which attribute filters are selected and ui-grid data
   vm.attributeSelectionUpdate = function (_internalName, _field) {
-    vm.updateFilterSelectionList(_internalName, _field);
+    selectedFilterService.updateSelectedFilters(
+      vm.uiSelectedFields[_internalName],
+      _internalName,
+      _field
+    );
     fileBrowserFactory.filesParam.filter_attribute = {};
     angular.copy(selectedFilterService.attributeSelectedFields,
       fileBrowserFactory.filesParam.filter_attribute
