@@ -24,9 +24,8 @@ function selectedFilterService ($location, $window) {
    */
   vm.stringifyAndEncodeAttributeObj = function (internalName, field) {
     var attributeFieldSelected = {};
-    attributeFieldSelected[internalName] = [field];
-    var encodedAttribute = vm.encodeAttributeFields(attributeFieldSelected);
-    return JSON.stringify(encodedAttribute);
+    attributeFieldSelected[internalName] = $window.encodeURIComponent(field);
+    return JSON.stringify(attributeFieldSelected);
   };
 
   /**

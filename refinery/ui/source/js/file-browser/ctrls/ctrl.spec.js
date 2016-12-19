@@ -72,9 +72,9 @@ describe('Controller: FileBrowserCtrl', function () {
       ],
       internal_name: 'Month_Characteristics_92_46_s'
     };
-    ctrl.queryKeys = ['{"Month_Characteristics_92_46_s":["March"]}',
-      '{"Month_Characteristics_92_46_s":["April"]}', +
-      '{"Author_Characteristics_82_36_s":["Conner"]}'];
+    ctrl.queryKeys = ['{"Month_Characteristics_92_46_s":"March"}',
+      '{"Month_Characteristics_92_46_s":"April"}', +
+      '{"Author_Characteristics_82_36_s":"Conner"}'];
 
     expect(service.attributeSelectedFields.Month_Characteristics_92_46_s)
       .not.toBeDefined();

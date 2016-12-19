@@ -30,7 +30,7 @@ describe('Selected-Filter-Service', function () {
     var selectedField = { February: true };
     var name = 'Month_Characteristics_10_5_s';
     var field = 'February';
-    var encodeAttribute = '{"Month_Characteristics_10_5_s":["February"]}';
+    var encodeAttribute = '{"Month_Characteristics_10_5_s":"February"}';
     var response = service.updateSelectedFilters(selectedField, name, field);
     expect(response).toEqual({ Month_Characteristics_10_5_s: [field] });
     expect(location.search).toHaveBeenCalledWith(encodeAttribute, selectedField[field]);
@@ -48,7 +48,7 @@ describe('Selected-Filter-Service', function () {
       February: true };
     var name = 'Month_Characteristics_10_5_s';
     var field = 'February';
-    var encodeAttribute = '{"Month_Characteristics_10_5_s":["February"]}';
+    var encodeAttribute = '{"Month_Characteristics_10_5_s":"February"}';
     var response = service.updateSelectedFilters(selectedField, name, field);
     expect(response).toEqual({
       Month_Characteristics_10_5_s: ['January', 'March', 'April', 'February'],
@@ -68,7 +68,7 @@ describe('Selected-Filter-Service', function () {
       April: true,
       February: false };
     var name = 'Month_Characteristics_10_5_s';
-    var encodeAttribute = '{"Month_Characteristics_10_5_s":["February"]}';
+    var encodeAttribute = '{"Month_Characteristics_10_5_s":"February"}';
     var field = 'February';
     var response = service.updateSelectedFilters(selectedField, name, field);
     expect(response).toEqual({
