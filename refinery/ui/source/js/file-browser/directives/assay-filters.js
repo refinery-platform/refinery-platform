@@ -7,6 +7,7 @@ function rpFileBrowserAssayFilters ($timeout, $location, selectedFilterService) 
     link: function (scope) {
       // ng-click event for attribute filter panels
       scope.dropAttributePanel = function (e, attributeName, attributeObj) {
+        console.log('drop attribute panel');
         e.preventDefault();
         var escapeAttributeName = attributeName.replace(' ', '-');
         var attributeTitle = angular.element(
@@ -64,18 +65,19 @@ function rpFileBrowserAssayFilters ($timeout, $location, selectedFilterService) 
       var updateDomDropdown = function (allFields, attributeName, attributeInternalName) {
         var queryFields = Object.keys($location.search());
         for (var ind = 0; ind < allFields.length; ind++) {
-          if (queryFields.indexOf(allFields[ind]) > -1) {
+          var encodedAttribute = selectedFilterService
+            .stringifyAndEncodeAttributeObj(attributeInternalName, allFields[ind]);
+          if (queryFields.indexOf(encodedAttribute) > -1) {
             var escapeAttributeName = attributeName.replace(' ', '-');
             var attributeTitle = angular.element(
             document.querySelector('#attribute-panel-' + escapeAttributeName)
             );
 
             // mark checkbox for selected item
-            if (!scope.FBCtrl.attributeSelectedFields.hasOwnProperty(attributeInternalName)) {
-              scope.FBCtrl.attributeSelectedFields[attributeInternalName] = {};
+            if (!scope.FBCtrl.uiSelectedFields.hasOwnProperty(attributeInternalName)) {
+              scope.FBCtrl.uiSelectedFields[attributeInternalName] = {};
             }
-            scope.FBCtrl.attributeSelectedFields[attributeInternalName][allFields[ind]] = true;
-
+            scope.FBCtrl.uiSelectedFields[attributeInternalName][allFields[ind]] = true;
             if (attributeTitle.hasClass('fa-caret-right')) {
               angular.element(
               document.querySelector('#' + escapeAttributeName)).addClass('in');

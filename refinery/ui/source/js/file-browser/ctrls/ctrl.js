@@ -27,7 +27,7 @@ function FileBrowserCtrl (
   // Ui-grid parameters
   vm.gridApi = undefined; // avoids duplicate grid generation
   vm.queryKeys = Object.keys($location.search());
-  // used by ui to select/deselect, each attribute has a list of filter fields
+  // used by ui to select/deselect, attributes have an object of filter fields
   vm.uiSelectedFields = {};
   vm.selectNodesCount = 0;
   vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
