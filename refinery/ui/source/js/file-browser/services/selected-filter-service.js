@@ -17,7 +17,6 @@ function selectedFilterService ($location, $window) {
     return (attributeObj);
   };
 
-
   /**
    * Stringify and encodes an object with the internal name and field (urlquery)
    * @param {string} attributeInternalName - internal name, 'Month_Characteristics_10_5_s'
