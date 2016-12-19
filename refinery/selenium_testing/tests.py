@@ -1,6 +1,5 @@
 import time
 from django.contrib.auth.models import User, Group
-from django.db import transaction, connection
 from django.test import LiveServerTestCase
 from pyvirtualdisplay import Display
 from selenium import webdriver
@@ -13,7 +12,7 @@ from factory_boy.utils import make_analyses_with_single_dataset, make_datasets
 from file_store.models import FileStoreItem
 from selenium_testing.utils import (
     assert_body_text, login, wait_until_id_clickable, DEFAULT_WAIT,
-    assert_text_within_id, refresh)
+    assert_text_within_id, refresh, delete_from_ui)
 
 # Start a pyvirtualdisplay for geckodriver to interact with
 display = Display(visible=0, size=(1900, 1080))
@@ -21,7 +20,10 @@ display.start()
 
 
 class NoLoginTestCase(LiveServerTestCase):
-
+    """
+    Ensure that Refinery looks like it should when there is no currently
+    logged in user
+    """
     def setUp(self):
         self.browser = webdriver.Firefox()
         self.browser.maximize_window()
@@ -37,7 +39,7 @@ class NoLoginTestCase(LiveServerTestCase):
             'Analyses', 'Workflows')
 
         self.browser.find_element_by_link_text('Statistics').click()
-
+        self.browser.implicitly_wait(DEFAULT_WAIT)
         assert_body_text(
             self.browser,
             str(User.objects.count()),
@@ -61,7 +63,10 @@ class NoLoginTestCase(LiveServerTestCase):
 
 
 class DataSetsPanelTestCase(LiveServerTestCase):
-
+    """
+    Ensure that the DataSet upload button and DataSet Preview look like
+    they're behaving normally
+    """
     def setUp(self):
         create_public_group()
         self.browser = webdriver.Firefox()
@@ -112,7 +117,9 @@ class DataSetsPanelTestCase(LiveServerTestCase):
 
 
 class UiDeletionTestCase(LiveServerTestCase):
-
+    """
+    Ensure proper deletion of DataSets and Analyses from the UI
+    """
     def setUp(self):
         create_public_group()
         self.browser = webdriver.Firefox()
@@ -127,17 +134,14 @@ class UiDeletionTestCase(LiveServerTestCase):
         DataSet.objects.all().delete()
         self.browser.quit()
 
-    def test_dataset_deletion(self, total_datasets=5):
+    def test_dataset_deletion(self, total_datasets=2):
         """Delete some datasets and make sure the ui updates properly"""
 
         # Create sample Data & refresh page
         make_datasets(total_datasets, self.user)
-        transaction.commit()
-        connection.close()
         refresh(self.browser)
 
-        wait_until_id_clickable(
-            self.browser, "total-datasets", DEFAULT_WAIT)
+        wait_until_id_clickable(self.browser, "total-datasets", DEFAULT_WAIT)
         assert_text_within_id(
             self.browser,
             "total-datasets",
@@ -145,34 +149,9 @@ class UiDeletionTestCase(LiveServerTestCase):
             "{} data sets".format(total_datasets)
         )
 
-        # Delete individual Datasets until there are none left
-        while total_datasets:
-            self.browser.find_elements_by_class_name('dataset-delete')[
-                0].click()
-            self.browser.save_screenshot("dataset-deletion.png")
-            wait_until_id_clickable(
-                self.browser, 'dataset-delete-button', DEFAULT_WAIT).click()
+        delete_from_ui(self.browser, "dataset", total_datasets)
 
-            total_datasets -= 1
-
-            self.browser.implicitly_wait(DEFAULT_WAIT)
-            wait_until_id_clickable(
-                self.browser, 'dataset-delete-close-button',
-                DEFAULT_WAIT).click()
-
-            assert_text_within_id(
-                self.browser, "total-datasets", DEFAULT_WAIT,
-                "{} data sets".format(
-                    total_datasets))
-
-        assert_text_within_id(
-            self.browser,
-            "total-datasets",
-            DEFAULT_WAIT,
-            "{} data sets".format(total_datasets)
-        )
-
-    def test_analysis_deletion(self, total_analyses=5):
+    def test_analysis_deletion(self, total_analyses=2):
         """Delete some analyses and make sure the ui updates properly"""
 
         # Create sample Data
@@ -180,71 +159,12 @@ class UiDeletionTestCase(LiveServerTestCase):
         refresh(self.browser)
 
         wait_until_id_clickable(self.browser, "total-datasets", DEFAULT_WAIT)
-        assert_text_within_id(
-            self.browser,
-            "total-datasets",
-            DEFAULT_WAIT,
-            "{} data sets".format(1))
-        assert_text_within_id(
-            self.browser, "total-analyses", "{} analyses".format(
-                total_analyses))
+        assert_text_within_id(self.browser, "total-datasets", DEFAULT_WAIT,
+                              "{} data sets".format(1))
+        assert_text_within_id(self.browser, "total-analyses",
+                              "{} analyses".format(total_analyses))
 
-        while total_analyses:
-            self.browser.find_elements_by_class_name('analysis-delete')[
-                0].click()
-            self.browser.save_screenshot("analysis-deletion.png")
-            wait_until_id_clickable(
-                self.browser, 'analysis-delete-button', DEFAULT_WAIT).click()
-
-            total_analyses -= 1
-            self.browser.save_screenshot("test_analysis_deletion{"
-                                         "}.png".format(total_analyses))
-            self.browser.implicitly_wait(DEFAULT_WAIT)
-            wait_until_id_clickable(
-                self.browser, 'analysis-delete-close-button',
-                DEFAULT_WAIT).click()
-
-            # Make sure the number of analyses indicator
-            # displays the correct info
-            wait_until_id_clickable(
-                self.browser, "analyses-indicator", DEFAULT_WAIT)
-            assert_text_within_id(
-                self.browser, "analyses-indicator", DEFAULT_WAIT,
-                str(total_analyses))
-
-            # Handle case where the Pluralization of `analysis` done on the
-            # frontend
-            if total_analyses <= 1:
-                assert_text_within_id(
-                    self.browser, "total-analyses", DEFAULT_WAIT,
-                    "{} analysis".format(
-                        total_analyses)
-                )
-            else:
-                assert_text_within_id(
-                    self.browser, "total-analyses", DEFAULT_WAIT,
-                    "{} analyses".format(
-                        total_analyses)
-                )
-        wait_until_id_clickable(self.browser, "total-analyses", DEFAULT_WAIT)
-        assert_text_within_id(
-            self.browser, "total-analyses", DEFAULT_WAIT,
-            "{} analysis".format(
-                total_analyses))
-
-        self.browser.find_elements_by_class_name('dataset-delete')[0].click()
-
-        wait_until_id_clickable(
-            self.browser, 'dataset-delete-button', DEFAULT_WAIT).click()
-        wait_until_id_clickable(
-            self.browser, 'dataset-delete-close-button', DEFAULT_WAIT).click()
-
-        wait_until_id_clickable(self.browser, "total-datasets", DEFAULT_WAIT)
-        assert_text_within_id(
-            self.browser,
-            "total-datasets",
-            DEFAULT_WAIT,
-            "{} data sets".format(0))
+        delete_from_ui(self.browser, "analysis", total_analyses)
 
     def test_cascading_deletion_of_analyses(self, total_analyses=5):
         """Delete a Dataset and make sure its Analyses are removed from
