@@ -80,7 +80,6 @@ describe('Controller: FileBrowserCtrl', function () {
       .not.toBeDefined();
     expect(ctrl.uiSelectedFields.Month_Characteristics_92_46_s).not.toBeDefined();
     ctrl.refreshSelectedFieldFromQuery(attributeObj);
-    console.log(ctrl.uiSelectedFields);
     expect(ctrl.uiSelectedFields.Month_Characteristics_92_46_s.March).toEqual(true);
     expect(ctrl.uiSelectedFields.Month_Characteristics_92_46_s.June).not.toBeDefined();
     expect(service.attributeSelectedFields.Month_Characteristics_92_46_s)
