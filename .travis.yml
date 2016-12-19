@@ -15,7 +15,7 @@ install:
   - gunzip $TAR.gz
   - tar -xvf $TAR
   - chmod a+x geckodriver
-  - export PATH=$PATH:`pwd
+  - export PATH=$PATH:`pwd`
 env:
   global:
     # These env vars are available to every build
