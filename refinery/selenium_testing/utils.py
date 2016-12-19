@@ -115,3 +115,69 @@ def wait_until_id_visible(selenium, search_id, wait_duration):
                     search_id,
                     selenium.find_element_by_id(search_id).text
                 ))
+
+
+def delete_from_ui(selenium, object_name, total_objects):
+    """
+    Delete some objects by interacting with Refinery's ui
+    :param selenium: selenium webdriver Instance
+    :param object_name: name of object to delete (dataset or analysis)
+    :param total_objects: number of objects that are to be deleted
+    """
+    if object_name == "analysis":
+        object_name_plural = "analyses"
+    elif object_name == "dataset":
+        object_name_plural = "datasets"
+
+    # Delete until there are none left
+    while total_objects:
+        selenium.save_screenshot("{}-delete{}a.png".format(
+            object_name, total_objects))
+        selenium.find_elements_by_class_name('{}-delete'.format(object_name))[
+            0].click()
+        wait_until_id_clickable(selenium,
+                                '{}-delete-button'.format(object_name),
+                                DEFAULT_WAIT).click()
+
+        wait_until_id_clickable(selenium, "deletion-message-text",
+                                DEFAULT_WAIT)
+        assert_text_within_id(selenium, "deletion-message-text",
+                              DEFAULT_WAIT, "successfully")
+
+        wait_until_id_clickable(selenium, '{}-delete-close-button'.format(
+            object_name), DEFAULT_WAIT).click()
+
+        total_objects -= 1
+
+        selenium.implicitly_wait(DEFAULT_WAIT)
+
+        if object_name == "analysis":
+            wait_until_id_clickable(selenium, "{}-indicator".format(
+                object_name_plural), DEFAULT_WAIT)
+            assert_text_within_id(selenium, "{}-indicator".format(
+                object_name_plural), DEFAULT_WAIT, str(total_objects))
+
+            if total_objects <= 1:
+                assert_text_within_id(
+                    selenium,
+                    "total-{}".format(object_name_plural),
+                    DEFAULT_WAIT,
+                    "{} {}".format(total_objects, object_name))
+            else:
+                assert_text_within_id(
+                    selenium,
+                    "total-{}".format(object_name_plural),
+                    DEFAULT_WAIT,
+                    "{} {}".format(total_objects, object_name_plural)
+                )
+        else:
+            assert_text_within_id(
+                selenium,
+                "total-{}".format(object_name_plural),
+                DEFAULT_WAIT,
+                "{} {}".format(total_objects, object_name_plural)
+            )
+
+        selenium.save_screenshot(
+            "{}-delete{}b.png".format(object_name, total_objects + 1))
+        selenium.implicitly_wait(DEFAULT_WAIT)
