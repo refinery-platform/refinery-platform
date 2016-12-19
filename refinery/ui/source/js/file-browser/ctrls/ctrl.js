@@ -122,7 +122,11 @@ function FileBrowserCtrl (
           vm.uiSelectedFields[_attributeObj.internal_name] = {};
         }
         vm.uiSelectedFields[_attributeObj.internal_name][fieldObj.name] = true;
-        vm.updateFilterSelectionList(_attributeObj.internal_name, fieldObj.name);
+        selectedFilterService.updateSelectedFilters(
+          vm.uiSelectedFields[_attributeObj.internal_name],
+          _attributeObj.internal_name,
+          fieldObj.name
+        );
       }
     });
   };
