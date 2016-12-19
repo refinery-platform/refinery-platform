@@ -108,7 +108,7 @@ def wait_until_id_visible(selenium, search_id, wait_duration):
     """
     try:
         return WebDriverWait(selenium, wait_duration).until(
-            ec.visibility_of((By.ID, search_id)))
+            ec.visibility_of(selenium.find_element_by_id(search_id)))
     except TimeoutException:
             raise AssertionError(
                 '"%s" not in: \n%s' % (
