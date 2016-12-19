@@ -1,28 +1,27 @@
 class refinery::geckodriver {
-  exec { "fetch geckodriver":
-      command     => "sudo wget -q https://github.com/mozilla/geckodriver/releases/download/v0.11.1/geckodriver-v0.11.1-linux32.tar.gz",
-      cwd         => "/usr/bin/",
-      user        => $app_user,
-      group       => $app_group,
-      path        => ['/usr/bin/'],
-      timeout     => 1800,
+  $geckodriver_version = 'v0.11.1'
+  $geckodriver = "geckodriver-${geckodriver_version}-linux32.tar.gz"
+  $install_path = "/opt/geckodriver"
+
+  file { $install_path:
+    ensure => directory,
+    owner  => $app_user,
+    group  => $app_group,
+    mode   => '0755',
   }
   ->
-  exec { "decompress geckodriver":
-      command     => "yes n | sudo gunzip geckodriver-v0.11.1-linux32.tar.gz && tar -xvf geckodriver-v0.11.1-linux32.tar",
-      cwd         => "/usr/bin/",
-      path        => ['/usr/bin/', '/bin/'],
-  }
-  ->
-  exec { "remove geckdriver tarball":
-      command     => "sudo rm -rf geckodriver-v0.11.1-linux32.tar",
-      cwd         => "/usr/bin/",
-      path        => ['/usr/bin/', '/bin/'],
-    }
-  ->
-  exec { "chmod geckodriver":
-      command     => "sudo chmod a+x geckodriver",
-      cwd         => "/usr/bin/",
-      path        => ['/usr/bin/', '/bin/'],
+  archive { $geckodriver:
+    path          => "/tmp/${geckodriver}",
+    source        => "https://github.com/mozilla/geckodriver/releases/download/${geckodriver_version}/${geckodriver}",
+    extract       => true,
+    extract_path  => '/opt',
+    creates       => "${install_path}/bin",
+    cleanup       => true,
+    user          => $app_user,
+    group         => $app_group,
   }
 }
+
+
+
+
