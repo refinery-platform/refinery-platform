@@ -124,12 +124,13 @@ def main():
 
     rds_properties = {
         "AllocatedStorage": "5",
+        "AutoMinorVersionUpgrade": False,
         "AvailabilityZone": config['AVAILABILITY_ZONE'],
         "BackupRetentionPeriod": "0",
         "DBInstanceClass": "db.t2.small",       # todo:?
         "DBInstanceIdentifier": config['RDS_NAME'],
         "Engine": "postgres",
-        "EngineVersion": "9.3.10",
+        "EngineVersion": "9.3.14",
         # "KmsKeyId" ?
         "MasterUsername": "root",
         "MasterUserPassword": "mypassword",
