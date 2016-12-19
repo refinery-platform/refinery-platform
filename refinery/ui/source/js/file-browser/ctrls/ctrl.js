@@ -128,11 +128,9 @@ function FileBrowserCtrl (
   };
 
   // Used by ui, updates which attribute filters are selected and ui-grid data
-  vm.attributeSelectionUpdate = function (_internalName, _field) {
+  vm.attributeSelectionUpdate = function (internalName, field) {
     selectedFilterService.updateSelectedFilters(
-      vm.uiSelectedFields[_internalName],
-      _internalName,
-      _field
+      vm.uiSelectedFields[internalName], internalName, field
     );
     fileBrowserFactory.filesParam.filter_attribute = {};
     angular.copy(selectedFilterService.attributeSelectedFields,
