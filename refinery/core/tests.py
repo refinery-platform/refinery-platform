@@ -4,7 +4,6 @@ from urlparse import urljoin
 import mock
 
 from django.contrib.auth.models import User, Group
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import unittest, timezone
 from django.test import TestCase
@@ -1090,7 +1089,7 @@ class BaseResourceSlugTest(unittest.TestCase):
     def test_save_slug_when_same_model_with_same_slug_exists(self):
         Project.objects.create(name="project", slug="TestSlug4")
         Project.objects.create(name="project_duplicate", slug="TestSlug4")
-        self.assertRaises(ObjectDoesNotExist,
+        self.assertRaises(Project.DoesNotExist,
                           Project.objects.get,
                           name="project_duplicate")
 
@@ -1267,7 +1266,7 @@ class WorkflowDeletionTest(unittest.TestCase):
         self.assertIsNotNone(Workflow.objects.get(
             name="workflow_not_used_by_analyses"))
         self.workflow_not_used_by_analyses.delete()
-        self.assertRaises(ObjectDoesNotExist,
+        self.assertRaises(Workflow.DoesNotExist,
                           Workflow.objects.get,
                           name="workflow_not_used_by_analyses")
 
@@ -1342,7 +1341,7 @@ class DataSetDeletionTest(unittest.TestCase):
         self.assertIsNotNone(
             DataSet.objects.get(name="dataset_without_analysis"))
         self.dataset_without_analysis.delete()
-        self.assertRaises(ObjectDoesNotExist,
+        self.assertRaises(DataSet.DoesNotExist,
                           DataSet.objects.get,
                           name="dataset_without_analysis")
 
@@ -1350,7 +1349,7 @@ class DataSetDeletionTest(unittest.TestCase):
         self.assertIsNotNone(
             DataSet.objects.get(name="dataset_with_analysis"))
         self.dataset_with_analysis.delete()
-        self.assertRaises(ObjectDoesNotExist,
+        self.assertRaises(DataSet.DoesNotExist,
                           DataSet.objects.get,
                           name="dataset_with_analysis")
 
@@ -1480,7 +1479,7 @@ class AnalysisDeletionTest(unittest.TestCase):
             name='analysis_without_node_analyzed_further')
         self.assertIsNotNone(query)
         self.analysis.delete()
-        self.assertRaises(ObjectDoesNotExist, Analysis.objects.get,
+        self.assertRaises(Analysis.DoesNotExist, Analysis.objects.get,
                           name='analysis_without_node_analyzed_further')
 
     def test_verify_analysis_remains_if_nodes_analyzed_further(self):
