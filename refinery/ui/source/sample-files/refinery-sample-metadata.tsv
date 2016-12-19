@@ -1,1 +1,5 @@
-Sample Name	Data File	Organism	CellType	Technology	Additional Attribute 1	Additional Attribute 2	Additional Attribute nSox2_IP_rep1	Sox2_IP_rep1.fastq.gz	Mouse	Neural precursor cell	ChIP-seq	Attribute 1 Value A	Attribute 2 Value C	Attribute n Value FInput_rep1	Input_rep1.fastq.gz	Mouse	Neural precursor cell	ChIP-seq	Attribute 1 Value A	Attribute 2 Value D	Attribute n Value FWT_sample1	WT_sample1.fastq.gz	Mouse	Neural precursor cell	RNA-seq	Attribute 1 Value A	Attribute 2 Value E	Attribute n Value GWT_sample2	WT_sample2.fastq.gz	Mouse	Neural precursor cell	RNA-seq	Attribute 1 Value B	Attribute 2 Value E	Attribute n Value G
+Sample Name	Data File	Organism	CellType	Technology	Additional Attribute 1	Additional Attribute 2	Additional Attribute n
+Sox2_IP_rep1	Sox2_IP_rep1.fastq.gz	Mouse	Neural precursor cell	ChIP-seq	Attribute 1 Value A	Attribute 2 Value C	Attribute n Value n
+Input_rep1	Input_rep1.fastq.gz	Mouse	Neural precursor cell	ChIP-seq	Attribute 1 Value A	Attribute 2 Value D	Attribute n Value F
+WT_sample1	WT_sample1.fastq.gz	Mouse	Neural precursor cell	RNA-seq	Attribute 1 Value A	Attribute 2 Value E	Attribute n Value G
+WT_sample2	WT_sample2.fastq.gz	Mouse	Neural precursor cell	RNA-seq	Attribute 1 Value B	Attribute 2 Value E	Attribute n Value G

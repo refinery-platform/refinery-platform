@@ -17,7 +17,6 @@ from django.utils import timezone
 from django.contrib.auth.models import User, Group
 from django.contrib.sites.models import get_current_site
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMessage
 from django.template import loader, Context
 from django.core.cache import cache
@@ -728,7 +727,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     def get_investigation(self, request, **kwargs):
         try:
             data_set = DataSet.objects.get(uuid=kwargs['uuid'])
-        except ObjectDoesNotExist:
+        except (DataSet.DoesNotExist,
+                DataSet.MultipleObjectsReturned) as e:
+            logger.error(e)
             return HttpGone()
 
         # Assuming 1 to 1 relationship between DataSet and Investigation
@@ -740,7 +741,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     def get_studies(self, request, **kwargs):
         try:
             data_set = DataSet.objects.get(uuid=kwargs['uuid'])
-        except ObjectDoesNotExist:
+        except (DataSet.DoesNotExist,
+                DataSet.MultipleObjectsReturned) as e:
+            logger.error(e)
             return HttpGone()
 
         return StudyResource().get_list(
@@ -752,7 +755,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         try:
             data_set = DataSet.objects.get(uuid=kwargs['uuid'])
             assays = data_set.get_assays()
-        except ObjectDoesNotExist:
+        except (DataSet.DoesNotExist,
+                DataSet.MultipleObjectsReturned) as e:
+            logger.error(e)
             return HttpGone()
 
         # Unfortunately Tastypie doesn't allow `get_list` to run on a list of
@@ -777,7 +782,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     def get_analyses(self, request, **kwargs):
         try:
             DataSet.objects.get(uuid=kwargs['uuid'])
-        except ObjectDoesNotExist:
+        except (DataSet.DoesNotExist,
+                DataSet.MultipleObjectsReturned) as e:
+            logger.error(e)
             return HttpGone()
 
         return AnalysisResource().get_list(
@@ -788,8 +795,16 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     def get_study_assays(self, request, **kwargs):
         try:
             DataSet.objects.get(uuid=kwargs['uuid'])
+        except (DataSet.DoesNotExist,
+                DataSet.MultipleObjectsReturned) as e:
+            logger.error(e)
+            return HttpGone()
+
+        try:
             Study.objects.get(uuid=kwargs['study_uuid'])
-        except ObjectDoesNotExist:
+        except (Study.DoesNotExist,
+                Study.MultipleObjectsReturned) as e:
+            logger.error(e)
             return HttpGone()
 
         return AssayResource().get_list(
