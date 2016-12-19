@@ -114,6 +114,7 @@ function FileBrowserCtrl (
         _attributeObj.internal_name,
         fieldObj.name
       );
+
       if (vm.queryKeys.indexOf(encodedField) > -1) {
         if (!vm.uiSelectedFields.hasOwnProperty(_attributeObj.internal_name)) {
           vm.uiSelectedFields[_attributeObj.internal_name] = {};

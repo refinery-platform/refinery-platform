@@ -102,7 +102,8 @@ function selectedFilterService ($location, $window) {
       fieldList,
       attributeInternalName
     ) {
-      for (var i = 0; i < fieldList.length; i++) {
+      var fieldCount = fieldList.length;
+      for (var i = 0; i < fieldCount; i++) {
         vm.updateSelectedFilters(deselectedFields, attributeInternalName, fieldList[0]);
       }
     });

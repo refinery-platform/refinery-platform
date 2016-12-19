@@ -72,13 +72,17 @@ describe('Controller: FileBrowserCtrl', function () {
       ],
       internal_name: 'Month_Characteristics_92_46_s'
     };
-    ctrl.queryKeys = ['March', 'April', 'Conner'];
+    ctrl.queryKeys = ['{"Month_Characteristics_92_46_s":["March"]}',
+      '{"Month_Characteristics_92_46_s":["April"]}', +
+      '{"Author_Characteristics_82_36_s":["Conner"]}'];
+
     expect(service.attributeSelectedFields.Month_Characteristics_92_46_s)
       .not.toBeDefined();
-    expect(ctrl.attributeSelectedFields.Month_Characteristics_92_46_s).not.toBeDefined();
+    expect(ctrl.uiSelectedFields.Month_Characteristics_92_46_s).not.toBeDefined();
     ctrl.refreshSelectedFieldFromQuery(attributeObj);
-    expect(ctrl.attributeSelectedFields.Month_Characteristics_92_46_s.March).toEqual(true);
-    expect(ctrl.attributeSelectedFields.Month_Characteristics_92_46_s.June).not.toBeDefined();
+    console.log(ctrl.uiSelectedFields);
+    expect(ctrl.uiSelectedFields.Month_Characteristics_92_46_s.March).toEqual(true);
+    expect(ctrl.uiSelectedFields.Month_Characteristics_92_46_s.June).not.toBeDefined();
     expect(service.attributeSelectedFields.Month_Characteristics_92_46_s)
       .toEqual(['March', 'April']);
   });
