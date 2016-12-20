@@ -177,8 +177,8 @@ TEMPLATE_DIRS = (
 # run prior
 INSTALLED_APPS = (
     'core',
-    'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.auth',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
