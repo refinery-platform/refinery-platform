@@ -333,10 +333,6 @@ file { "/etc/apache2/sites-available/001-refinery.conf":
   content => template("${deployment_root}/apache.conf.erb"),
 }
 ~>
-exec { 'apache2-default-disable':
-  command => '/usr/sbin/a2dissite 000-default',
-}
-~>
 exec { 'apache2-refinery-enable':
   command => '/usr/sbin/a2ensite 001-refinery',
 }
