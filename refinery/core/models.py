@@ -64,7 +64,7 @@ from .utils import (update_data_set_index, delete_data_set_index,
                     delete_analysis_index, invalidate_cached_object,
                     get_aware_local_time, email_admin,
                     add_or_update_user_to_neo4j, update_annotation_sets_neo4j,
-                    delete_user_in_neo4j, skip)
+                    delete_user_in_neo4j, skip_if_test_run)
 
 logger = logging.getLogger(__name__)
 
@@ -2263,7 +2263,7 @@ class FastQC(object):
 
 
 @receiver(post_save, sender=User)
-@skip
+@skip_if_test_run
 def _add_user_to_neo4j(sender, **kwargs):
     user = kwargs['instance']
 
