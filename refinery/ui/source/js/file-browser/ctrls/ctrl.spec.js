@@ -48,7 +48,7 @@ describe('Controller: FileBrowserCtrl', function () {
           name: 'Graphics Facilities at Ames Research Center'
         }],
           internal_name: 'Title_Characteristics_92_46_s' } };
-    service.selectedFieldList = {
+    service.attributeSelectedFields = {
       REFINERY_ANALYSIS_UUID_92_46_s: ['N/A', 'Test Workflow', '3']
     };
     spyOn(scope, '$broadcast');
@@ -72,14 +72,17 @@ describe('Controller: FileBrowserCtrl', function () {
       ],
       internal_name: 'Month_Characteristics_92_46_s'
     };
-    ctrl.queryKeys = ['March', 'April', 'Conner'];
-    expect(service.selectedFieldList.Month_Characteristics_92_46_s)
+    ctrl.queryKeys = ['{"Month_Characteristics_92_46_s":"March"}',
+      '{"Month_Characteristics_92_46_s":"April"}', +
+      '{"Author_Characteristics_82_36_s":"Conner"}'];
+
+    expect(service.attributeSelectedFields.Month_Characteristics_92_46_s)
       .not.toBeDefined();
-    expect(ctrl.attributeSelectedFields.Month_Characteristics_92_46_s).not.toBeDefined();
+    expect(ctrl.uiSelectedFields.Month_Characteristics_92_46_s).not.toBeDefined();
     ctrl.refreshSelectedFieldFromQuery(attributeObj);
-    expect(ctrl.attributeSelectedFields.Month_Characteristics_92_46_s.March).toEqual(true);
-    expect(ctrl.attributeSelectedFields.Month_Characteristics_92_46_s.June).not.toBeDefined();
-    expect(service.selectedFieldList.Month_Characteristics_92_46_s)
+    expect(ctrl.uiSelectedFields.Month_Characteristics_92_46_s.March).toEqual(true);
+    expect(ctrl.uiSelectedFields.Month_Characteristics_92_46_s.June).not.toBeDefined();
+    expect(service.attributeSelectedFields.Month_Characteristics_92_46_s)
       .toEqual(['March', 'April']);
   });
 
