@@ -141,7 +141,6 @@ def delete_from_ui(selenium, object_name, total_objects):
         selenium.implicitly_wait(DEFAULT_WAIT)
         wait_until_id_clickable(selenium, '{}-delete-close-button'.format(
             object_name), DEFAULT_WAIT).click()
-        selenium.save_screenshot("{}{}.png".format(object_name, total_objects))
 
         total_objects -= 1
 
