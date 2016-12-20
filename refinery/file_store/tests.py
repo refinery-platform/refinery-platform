@@ -16,7 +16,8 @@ from rest_framework.test import APITestCase
 from core.utils import get_full_url
 from .models import (file_path, get_temp_dir, get_file_object, FileStoreItem,
                      FileExtension, FILE_STORE_TEMP_DIR,
-                     generate_file_source_translator, FileType)
+                     generate_file_source_translator, FileType,
+                     SymlinkedFileSystemStorage)
 from .views import FileStoreItems
 from .serializers import FileStoreItemSerializer
 
@@ -444,3 +445,21 @@ class FileStoreItemsAPITests(APITestCase):
                                    % (self.url_root, self.invalid_format_uuid))
         response = self.view(request, self.invalid_format_uuid)
         self.assertEqual(response.status_code, 404)
+
+
+class SymlinkedFileSystemStorageTest(SimpleTestCase):
+    """SymlinkedFileSystemStorage test"""
+
+    def setUp(self):
+        self.symlinked_storage = SymlinkedFileSystemStorage()
+
+    def test_symlinked_storage(self):
+        self.assertIsNotNone(self.symlinked_storage)
+        self.assertEqual(
+            self.symlinked_storage.base_url,
+            urljoin(settings.MEDIA_URL, settings.FILE_STORE_DIR) + "/"
+        )
+        self.assertEqual(
+            self.symlinked_storage.location,
+            os.path.join(settings.MEDIA_ROOT, settings.FILE_STORE_DIR)
+        )

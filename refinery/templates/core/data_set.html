@@ -602,7 +602,7 @@
             <p>
               <span class="fa fa-user"></span>&nbsp;
               {% if data_set.get_owner %}
-                <a href="{% url "user" data_set.get_owner.get_profile.uuid %}">
+                <a href="{% url "user" data_set.get_owner.profile.uuid %}">
                   {{ data_set.get_owner_full_name }}
                 </a>
               {% else %}

@@ -1,7 +1,12 @@
 import uuid as uuid_builtin
 from datetime import datetime
 
+import django
 import factory
+
+# Call to django.setup() needed due to the new handling of the AppRegistry in
+# Django 1.7
+django.setup()
 
 
 class DataSetFactory(factory.django.DjangoModelFactory):
