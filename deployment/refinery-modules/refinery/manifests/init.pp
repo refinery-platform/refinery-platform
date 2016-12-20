@@ -86,8 +86,8 @@ file { "${django_root}/config/config.json":
   replace => false,
 }
 ->
-exec { "syncdb_initial":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py syncdb --noinput",
+exec { "migrate":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate --noinput",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
@@ -97,15 +97,23 @@ exec { "syncdb_initial":
   ],
 }
 ->
-exec { "migrate_registration":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate registration",
+exec { "create_superuser":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata superuser.json",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+  require     => Exec['migrate'],
+}
+->
+exec { "create_guest":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata guest.json",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
 }
-->
-exec { "migrate_core":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate core",
+  ->
+exec { "add_users_to_public_group":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py add_users_to_public_group",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
@@ -118,47 +126,6 @@ exec { "set_up_refinery_site_name":
   group       => $app_group,
 }
 ->
-exec { "migrate_guardian":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate guardian",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-->
-exec { "create_public_group":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py create_public_group",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-->
-exec { "create_superuser":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata superuser.json",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-->
-exec { "add_admin_to_public_group":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py add_admin_to_public_group",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-->
-exec { "create_user":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py create_user 'guest' 'guest' 'guest@example.com' 'Guest' '' ''",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-->
-exec { "syncdb_final":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py syncdb --migrate --noinput",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
 
 file { "/opt":
   ensure => directory,

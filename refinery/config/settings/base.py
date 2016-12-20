@@ -156,6 +156,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'core.middleware.DatabaseFailureMiddleware',
 )
@@ -170,7 +171,12 @@ TEMPLATE_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
 )
 
+# NOTE: the order of INSTALLED_APPS matters in some instances. For example:
+# `core` needs to proceed `django.contrib.auth` here due to an
+# auth.post_migrate signal depending on a core.post_migrate signal being
+# run prior
 INSTALLED_APPS = (
+    'core',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -193,7 +199,6 @@ INSTALLED_APPS = (
     'guardian',
     'djangular',
     'galaxy_connector',
-    'core',
     'analysis_manager',
     'workflow_manager',
     'file_store',
@@ -203,8 +208,6 @@ INSTALLED_APPS = (
     'annotation_server',
     'registration',
     'flatblocks',
-    # RP: added for database migration between builds
-    'south',
     'chunked_upload',
     'rest_framework',
     'rest_framework_swagger',
@@ -219,13 +222,8 @@ AUTHENTICATION_BACKENDS = (
 # NG: added to support sessions
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 
-# NG: added to support anonymous users through django-guardian
-# (id can be set to any value apparently)
-ANONYMOUS_USER_ID = -1
-
-# NG: added to enable user profiles
-# (recommended way to extend Django user model)
-AUTH_PROFILE_MODULE = 'core.UserProfile'
+# For Django 1.7 compatibility
+AUTH_USER_MODEL = 'auth.User'
 
 LOGGING = {
     'version': 1,
@@ -342,10 +340,6 @@ CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
 
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
-
-SOUTH_MIGRATION_MODULES = {
-    'djcelery': 'djcelery.south_migrations',
-}
 
 # === Refinery Settings ===
 

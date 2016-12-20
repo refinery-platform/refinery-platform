@@ -1,0 +1,18 @@
+[
+{
+  "pk": 2,
+  "model": "auth.user",
+  "fields": {
+    "username": "guest",
+    "first_name": "GuestFirst",
+    "last_name": "GuestLast",
+    "is_active": false,
+    "is_superuser": false,
+    "is_staff": false,
+    "groups": [],
+    "user_permissions": [],
+    "password": "pbkdf2_sha256$15000$XbHNZbtNuXEB$Gb0MCWcC04JI8DSNDTQSEmtnEmP64/BcrFmRjlPCqr4=",
+    "email": "guest@example.com"
+  }
+}
+]

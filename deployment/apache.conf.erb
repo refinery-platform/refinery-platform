@@ -3,8 +3,6 @@
 
 WSGIPythonHome <%= @virtualenv %>
 
-SetEnv DJANGO_SETTINGS_MODULE <%= @django_settings_module %>
-
 <VirtualHost *:80>
     ServerName <%= @site_url %>
 
@@ -16,12 +14,13 @@ SetEnv DJANGO_SETTINGS_MODULE <%= @django_settings_module %>
     <% end %>
 
     <Directory <%= @django_root %>/config>
-        <Files wsgi.py>
+        <Files wsgi*.py>
             Order deny,allow
             Require all granted
         </Files>
     </Directory>
-    WSGIScriptAlias / <%= @django_root %>/config/wsgi.py
+
+    WSGIScriptAlias / <%= @django_root %>/config/wsgi_<%= @django_settings_module.split('.')[-1] %>.py
 
     WSGIDaemonProcess refinery user=<%= @app_user %> group=<%= @app_group %> \
         python-path=<%= @django_root %>:<%= @virtualenv %>/lib/python2.7/site-packages

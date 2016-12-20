@@ -28,6 +28,7 @@ from django.db.models.signals import pre_delete
 from django_extensions.db.fields import UUIDField
 from django.core.files.storage import FileSystemStorage
 from django.utils import timezone
+from django.utils.deconstruct import deconstructible
 
 import core
 
@@ -224,18 +225,22 @@ class _FileStoreItemManager(models.Manager):
         return item
 
 
+@deconstructible
 class SymlinkedFileSystemStorage(FileSystemStorage):
-    '''Custom file system storage class with support for symlinked files.
+    """Custom file system storage class with support for symlinked files.
+    """
 
-    '''
+    # Allow for SymlinkedFileSystemStorage to be settings-agnostic
+    # SEE: http://stackoverflow.com/a/32349636/6031066
+    def __init__(self):
+        super(SymlinkedFileSystemStorage, self).__init__(
+            location=FILE_STORE_BASE_DIR,
+            base_url=FILE_STORE_BASE_URL
+        )
 
     def exists(self, name):
         # takes broken symlinks into account
         return os.path.lexists(self.path(name))
-
-
-symlinked_storage = SymlinkedFileSystemStorage(location=FILE_STORE_BASE_DIR,
-                                               base_url=FILE_STORE_BASE_URL)
 
 
 class FileStoreItem(models.Model):
@@ -245,7 +250,7 @@ class FileStoreItem(models.Model):
     #: file on disk
     datafile = models.FileField(
         upload_to=file_path,
-        storage=symlinked_storage,
+        storage=SymlinkedFileSystemStorage(),
         blank=True,
         max_length=1024
     )

@@ -87,7 +87,7 @@ class UserProfile(models.Model):
 
     """
     uuid = UUIDField(unique=True, auto=True)
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, related_name='profile')
     affiliation = models.CharField(max_length=100, blank=True)
     catch_all_project = models.ForeignKey('Project', blank=True, null=True)
     login_count = models.IntegerField(default=0)
@@ -127,29 +127,28 @@ def create_user_profile(sender, instance, created, **kwargs):
     """
     if created:
         UserProfile.objects.get_or_create(user=instance)
-        Tutorials.objects.get_or_create(user_profile=instance.userprofile)
+        Tutorials.objects.get_or_create(user_profile=instance.profile)
 
 
 post_save.connect(create_user_profile, sender=User)
 
 
 @receiver(post_save, sender=User)
-def add_new_user_to_public_group(sender, instance, created, **kwargs):
-    """Add new users to Public group automatically
+def add_user_to_public_group(sender, instance, created, **kwargs):
+    """Add users to Public group automatically
 
     """
-    if created:
-        public_group = ExtendedGroup.objects.public_group()
-        # need to check if Public group exists to avoid errors when creating
-        # user accounts (like superuser and AnonymousUser) before the group
-        # is created by init_refinery command
-        if public_group:
-            instance.groups.add(public_group)
+    public_group = ExtendedGroup.objects.public_group()
+    # need to check if Public group exists to avoid errors when creating
+    # user accounts (like superuser and AnonymousUser) before the group
+    # is created by init_refinery command
+    if public_group:
+        instance.groups.add(public_group)
 
 
 def create_user_profile_registered(sender, user, request, **kwargs):
     UserProfile.objects.get_or_create(user=user)
-    Tutorials.objects.get_or_create(user_profile=user.userprofile)
+    Tutorials.objects.get_or_create(user_profile=user.profile)
 
     logger.info(
         "user profile for user %s has been created after registration",
@@ -182,14 +181,14 @@ user_activated.connect(register_handler, dispatch_uid='activated')
 
 # check if user has a catch all project and create one if not
 def create_catch_all_project(sender, user, request, **kwargs):
-    if user.get_profile().catch_all_project is None:
+    if user.profile.catch_all_project is None:
         project = Project.objects.create(
             name="Catch-All Project",
             is_catch_all=True
         )
         project.set_owner(user)
-        user.get_profile().catch_all_project = project
-        user.get_profile().save()
+        user.profile.catch_all_project = project
+        user.profile.save()
         messages.success(
             request,
             "If you don't want to fill your profile out now, you can go to "
@@ -200,8 +199,8 @@ def create_catch_all_project(sender, user, request, **kwargs):
 
 
 def iterate_user_login_count(sender, user, request, **kwargs):
-    user.userprofile.login_count += 1
-    user.userprofile.save()
+    user.profile.login_count += 1
+    user.profile.save()
 
 
 # create catch all project for user if none exists
@@ -439,10 +438,10 @@ class SharableResource(OwnableResource):
         abstract = True
 
 
-class TemporaryResource:
+class TemporaryResource(models.Model):
     """Mix-in class for temporary resources like NodeSet instances"""
     # Expiration time and date of the instance
-    expiration = models.DateTimeField()
+    expiration = models.DateTimeField(null=True, blank=True)
 
     def __unicode__(self):
         return self.name + " (" + self.uuid + ")"
@@ -451,7 +450,7 @@ class TemporaryResource:
         abstract = True
 
 
-class ManageableResource:
+class ManageableResource(models.Model):
     """Abstract base class for manageable resources such as disk space and
     workflow engines
     """
@@ -1557,22 +1556,21 @@ class Analysis(OwnableResource):
                 else:
                     if item.get_filetype() == zipfile:
                         new_file_name = ''.join([root, '.zip'])
-            renamed_file_store_item = rename(
+            renamed_file_store_item_uuid = rename(
                 result.file_store_uuid, new_file_name)
 
             # Try to generate an auxiliary node for visualization purposes
             # NOTE: We have to do this after renaming happens because before
             #  renaming, said FileStoreItems's datafile field does not point
             #  to an actual file
-            if renamed_file_store_item:
-                try:
-                    node = Node.objects.get(
-                        file_uuid=renamed_file_store_item.uuid)
-                except (Node.DoesNotExist, Node.MultipleObjectsReturned) as e:
-                    logger.error("Error Fetching Node: %s", e)
-                else:
-                    if node.is_derived():
-                        node.run_generate_auxiliary_node_task()
+            try:
+                node = Node.objects.get(
+                    file_uuid=renamed_file_store_item_uuid)
+            except (Node.DoesNotExist, Node.MultipleObjectsReturned) as e:
+                logger.error("Error Fetching Node: %s", e)
+            else:
+                if node.is_derived():
+                    node.run_generate_auxiliary_node_task()
 
     def get_config(self):
         # TEST RECREATING RET_LIST DICTIONARY FROM ANALYSIS MODEL
@@ -2473,7 +2471,7 @@ class CustomRegistrationManager(RegistrationManager):
         if new_user_profile:
             new_user_profile.affiliation = affiliation
             new_user_profile.save()
-            new_user.userprofile = new_user_profile
+            new_user.profile = new_user_profile
 
         registration_profile = self.create_profile(new_user)
 
@@ -2542,7 +2540,7 @@ class CustomRegistrationProfile(RegistrationProfile):
                     'registered_user_full_name': "{} {}".format(
                         self.user.first_name, self.user.last_name),
                     'registered_user_affiliation':
-                        self.user.userprofile.affiliation
+                        self.user.profile.affiliation
 
                     }
         subject = render_to_string('registration/activation_email_subject.txt',
