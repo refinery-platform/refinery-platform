@@ -72,6 +72,12 @@ KEY_NAME: "id_rsa"
 # as it avoids clashes in the same AWS account).
 # RDS_NAME: rds-refinery-default
 
+EMAIL_SUBJECT_PREFIX: "[Refinery] "
+REFINERY_URL_SCHEME: "http"
+REFINERY_WELCOME_EMAIL_MESSAGE: "Please fill out your user profile"
+REFINERY_WELCOME_EMAIL_SUBJECT: "Welcome to Refinery"
+REFINERY_GOOGLE_ANALYTICS_ID: ""
+
 # == Rarely changed ==
 
 # The password for the RDS superuser account.
