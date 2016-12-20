@@ -131,11 +131,11 @@ class Command(BaseCommand):
 
                 # We need to add an anonymous user so that people who haven't
                 # logged in can still see some visualization.
-
+                anon_user = get_anonymous_user()
                 if group['group'].id is public_group_id:
                     users += [{
-                        'id': settings.ANONYMOUS_USER_ID,
-                        'name': get_anonymous_user().username
+                        'id': anon_user.id,
+                        'name': anon_user.username
                     }]
 
             for user in users:

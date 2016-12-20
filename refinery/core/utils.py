@@ -853,10 +853,7 @@ def get_anonymous_user():
     Trys to fetch the AnonymousUser otherwise returns None
     """
     try:
-        anonymous_user = User.objects.get(
-                id=settings.ANONYMOUS_USER_ID
-            )
-        return anonymous_user
+        return User.objects.get(username=settings.ANONYMOUS_USER_NAME)
 
     except (User.DoesNotExist, User.MultipleObjectsReturned) as e:
         logger.error("Could not fetch Anonymous User: %s" % e)
