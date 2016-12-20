@@ -1,6 +1,6 @@
 import time
 from django.contrib.auth.models import User, Group
-from django.test import LiveServerTestCase
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from pyvirtualdisplay import Display
 from selenium import webdriver
 
@@ -19,7 +19,7 @@ display = Display(visible=0, size=(1900, 1080))
 display.start()
 
 
-class NoLoginTestCase(LiveServerTestCase):
+class NoLoginTestCase(StaticLiveServerTestCase):
     """
     Ensure that Refinery looks like it should when there is no currently
     logged in user
@@ -62,7 +62,7 @@ class NoLoginTestCase(LiveServerTestCase):
         # TODO: All sections are empty right now
 
 
-class DataSetsPanelTestCase(LiveServerTestCase):
+class DataSetsPanelTestCase(StaticLiveServerTestCase):
     """
     Ensure that the DataSet upload button and DataSet Preview look like
     they're behaving normally
@@ -74,11 +74,10 @@ class DataSetsPanelTestCase(LiveServerTestCase):
         init_user("guest", "guest", "guest@coffee.com", "Guest", "Guest",
                   "Test User", is_active=True)
         self.user = User.objects.get(username="guest")
+        self.user.save()
         login(self.browser, self.live_server_url)
 
     def tearDown(self):
-        self.user.delete()
-        DataSet.objects.all().delete()
         self.browser.quit()
 
     def test_data_set_preview(self):
@@ -116,7 +115,7 @@ class DataSetsPanelTestCase(LiveServerTestCase):
         )
 
 
-class UiDeletionTestCase(LiveServerTestCase):
+class UiDeletionTestCase(StaticLiveServerTestCase):
     """
     Ensure proper deletion of DataSets and Analyses from the UI
     """
@@ -127,11 +126,10 @@ class UiDeletionTestCase(LiveServerTestCase):
         init_user("guest", "guest", "guest@coffee.com", "Guest", "Guest",
                   "Test User", is_active=True)
         self.user = User.objects.get(username="guest")
+        self.user.save()
         login(self.browser, self.live_server_url)
 
     def tearDown(self):
-        self.user.delete()
-        DataSet.objects.all().delete()
         self.browser.quit()
 
     def test_dataset_deletion(self, total_datasets=2):
