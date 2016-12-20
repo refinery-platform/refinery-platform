@@ -2023,6 +2023,17 @@ class ExtendedGroupResource(ModelResource):
         new_ext_group.manager_group.user_set.add(user)
         return bundle
 
+    def obj_delete(self, bundle, **kwargs):
+        user = bundle.request.user
+        ext_group = super(ExtendedGroupResource, self).obj_get(
+            bundle, **kwargs)
+        if not self.user_authorized(user, ext_group):
+            raise ImmediateHttpResponse(HttpForbidden(
+                'Only managers may delete groups.'
+            ))
+        ext_group.delete()
+        return HttpAccepted('Group deleted.')
+
     # Extra things
     def prepend_urls(self):
         return [
