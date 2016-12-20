@@ -3,7 +3,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.common.exceptions import TimeoutException
 
-DEFAULT_WAIT = 20
+DEFAULT_WAIT = 10
 
 
 def login(selenium, live_server_url):
@@ -131,23 +131,19 @@ def delete_from_ui(selenium, object_name, total_objects):
 
     # Delete until there are none left
     while total_objects:
+        refresh(selenium)
         selenium.find_elements_by_class_name('{}-delete'.format(object_name))[
             0].click()
+        selenium.implicitly_wait(DEFAULT_WAIT)
         wait_until_id_clickable(selenium,
                                 '{}-delete-button'.format(object_name),
                                 DEFAULT_WAIT).click()
-
-        wait_until_id_clickable(selenium, "deletion-message-text",
-                                DEFAULT_WAIT)
-        assert_text_within_id(selenium, "deletion-message-text",
-                              DEFAULT_WAIT, "successfully")
-
+        selenium.implicitly_wait(DEFAULT_WAIT)
         wait_until_id_clickable(selenium, '{}-delete-close-button'.format(
             object_name), DEFAULT_WAIT).click()
+        selenium.save_screenshot("{}{}.png".format(object_name, total_objects))
 
         total_objects -= 1
-
-        selenium.implicitly_wait(DEFAULT_WAIT)
 
         if object_name == "analysis":
 
@@ -171,4 +167,3 @@ def delete_from_ui(selenium, object_name, total_objects):
                 DEFAULT_WAIT,
                 "{} data sets".format(total_objects)
             )
-        selenium.implicitly_wait(DEFAULT_WAIT)
