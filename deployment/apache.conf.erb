@@ -26,9 +26,6 @@ WSGIPythonHome <%= @virtualenv %>
         python-path=<%= @django_root %>:<%= @virtualenv %>/lib/python2.7/site-packages
     WSGIProcessGroup refinery
 
-    #Alias /robots.txt /vagrant/refinery/static/robots.txt
-    #Alias /favicon.ico /vagrant/refinery/static/favicon.ico
-
     AliasMatch ^/([^/]*\.css) <%= @django_root %>/static/styles/$1
 
     Alias /static/ <%= @project_root %>/static/
