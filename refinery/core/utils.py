@@ -848,18 +848,6 @@ def email_admin(subject, message):
               [settings.ADMINS[0][1]])
 
 
-def get_anonymous_user():
-    """
-    Trys to fetch the AnonymousUser otherwise returns None
-    """
-    try:
-        return User.objects.get(username=settings.ANONYMOUS_USER_NAME)
-
-    except (User.DoesNotExist, User.MultipleObjectsReturned) as e:
-        logger.error("Could not fetch Anonymous User: %s" % e)
-        return None
-
-
 def create_current_selection_node_group(assay_uuid):
     """
     Helper method to create a current selection group which

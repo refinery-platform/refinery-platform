@@ -22,6 +22,7 @@ from django.template import RequestContext, loader
 from registration.views import RegistrationView
 from registration import signals
 
+from guardian.utils import get_anonymous_user
 from guardian.shortcuts import get_perms
 import requests
 from requests.exceptions import HTTPError
@@ -44,7 +45,7 @@ from core.models import (
     CustomRegistrationProfile)
 from core.serializers import (
     WorkflowSerializer, NodeGroupSerializer, NodeSerializer)
-from core.utils import (get_data_sets_annotations, get_anonymous_user,
+from core.utils import (get_data_sets_annotations,
                         create_current_selection_node_group,
                         filter_nodes_uuids_in_solr, move_obj_to_front)
 
