@@ -1,10 +1,12 @@
+import json
+import logging
 import os
 import re
+import requests
+from requests.exceptions import HTTPError
 import urllib
-import xmltodict
-import logging
-import json
 from urlparse import urljoin
+import xmltodict
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -12,46 +14,39 @@ from django.contrib.auth.models import User
 from django.contrib.sites.models import get_current_site, Site
 from django.contrib.sites.models import RequestSite
 from django.core.urlresolvers import reverse
-from django.http import (
-    HttpResponse, HttpResponseForbidden, HttpResponseRedirect,
-    HttpResponseBadRequest, HttpResponseNotFound, HttpResponseServerError)
-from django.http import Http404
+from django.http import (Http404, HttpResponse, HttpResponseForbidden,
+                         HttpResponseRedirect, HttpResponseBadRequest,
+                         HttpResponseNotFound, HttpResponseServerError)
 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext, loader
-from registration.views import RegistrationView
-from registration import signals
+from django.views.decorators.gzip import gzip_page
 
 from guardian.utils import get_anonymous_user
 from guardian.shortcuts import get_perms
-import requests
-from requests.exceptions import HTTPError
+from registration.views import RegistrationView
+from registration import signals
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from core.forms import (
-    ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
-)
+from xml.parsers.expat import ExpatError
 
-from data_set_manager.models import Node
-from data_set_manager.utils import generate_solr_params
-from visualization_manager.views import igv_multi_species
+from core.forms import (ProjectForm, UserForm, UserProfileForm,
+                        WorkflowForm,  DataSetForm)
 from annotation_server.models import GenomeBuild
-from file_store.models import FileStoreItem
-from core.models import (
-    ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
-    Analysis, Invitation, Ontology, NodeGroup,
-    CustomRegistrationProfile)
-from core.serializers import (
-    WorkflowSerializer, NodeGroupSerializer, NodeSerializer)
+from core.models import (ExtendedGroup, Project, DataSet, Workflow,
+                         UserProfile, WorkflowEngine, Analysis, Invitation,
+                         Ontology, NodeGroup, CustomRegistrationProfile)
+from core.serializers import (WorkflowSerializer, NodeGroupSerializer,
+                              NodeSerializer)
 from core.utils import (get_data_sets_annotations,
                         create_current_selection_node_group,
                         filter_nodes_uuids_in_solr, move_obj_to_front)
-
-from xml.parsers.expat import ExpatError
-
-from django.views.decorators.gzip import gzip_page
+from data_set_manager.models import Node
+from data_set_manager.utils import generate_solr_params
+from file_store.models import FileStoreItem
+from visualization_manager.views import igv_multi_species
 
 logger = logging.getLogger(__name__)
 
