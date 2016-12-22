@@ -29,4 +29,5 @@ $solr_core_data = "/data/solr/core"
 include refinery
 include refinery::pg
 include refinery::neo4j
+include refinery::apache2
 include refinery::aws

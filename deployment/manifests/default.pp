@@ -34,3 +34,4 @@ exec { "activate_user":
 include refinery
 include refinery::pg
 include refinery::neo4j
+include refinery::apache2

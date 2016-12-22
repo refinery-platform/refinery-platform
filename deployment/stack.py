@@ -373,6 +373,9 @@ def main():
             'SecurityGroups': [
                 functions.get_att('ELBSecurityGroup', 'GroupId')],
             "Tags": instance_tags,  # todo: Should be different?
+            'ConnectionSettings': {
+                'IdleTimeout': 1800  # seconds
+            }
         })
 
     sys.stdout.write(str(cft))
