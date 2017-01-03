@@ -86,18 +86,20 @@ def conf(mode=None):
     env.shell_before = "export DJANGO_SETTINGS_MODULE=config.settings.*"
     env.shell_after = \
         "export DJANGO_SETTINGS_MODULE=config.settings.{}".format(mode)
-    env.apache_before = "wsgi.*.py"
-    env.apache_after = "wsgi_{}.py".format(mode)
+    env.apache_before = "WSGIScriptAlias .*"
+    env.apache_after = "WSGIScriptAlias / {}/config/wsgi_{}.py".format(
+        env.refinery_app_dir, mode)
 
     # stop supervisord and Apache
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("supervisorctl shutdown")
     sudo("/usr/sbin/service apache2 stop")
     # update DJANGO_SETTINGS_MODULE
-    sed('/home/vagrant/.profile', before=env.shell_before,
+    home_dir = run("echo ~", quiet=True)
+    sed("{}/.profile".format(home_dir), before=env.shell_before,
         after=env.shell_after, backup='')
     # update WSGIScriptAlias value
-    sed('/etc/apache2/sites-available/001-refinery.conf',
+    sed('/etc/apache2/sites-available/25-refinery.conf',
         before=env.apache_before, after=env.apache_after, backup='',
         use_sudo=True)
     # update static files
