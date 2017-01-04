@@ -7,6 +7,7 @@ import time
 import urlparse
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 
 from guardian.utils import get_anonymous_user
@@ -131,7 +132,12 @@ class Command(BaseCommand):
 
                 # We need to add an anonymous user so that people who haven't
                 # logged in can still see some visualization.
-                anon_user = get_anonymous_user()
+                try:
+                    anon_user = get_anonymous_user()
+                except(User.DoesNotExist, User.MultipleObjectsReturned) as e:
+                    logger.error(
+                        "Could not properly fetch the AnonymousUser: %s", e)
+
                 if group['group'].id is public_group_id:
                     users += [{
                         'id': anon_user.id,

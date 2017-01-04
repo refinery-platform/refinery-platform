@@ -1008,7 +1008,10 @@ def neo4j_dataset_annotations(request):
     if request.user.username:
         user_name = request.user.username
     else:
-        user_name = get_anonymous_user().username
+        try:
+            user_name = get_anonymous_user().username
+        except(User.DoesNotExist, User.MultipleObjectsReturned) as e:
+            logger.error("Could not properly fetch the AnonymousUser: %s", e)
 
     url = urljoin(
         settings.NEO4J_BASE_URL,
