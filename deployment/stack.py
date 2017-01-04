@@ -373,6 +373,9 @@ def main():
             'SecurityGroups': [
                 functions.get_att('ELBSecurityGroup', 'GroupId')],
             "Tags": instance_tags,  # todo: Should be different?
+            'ConnectionSettings': {
+                'IdleTimeout': 1800  # seconds
+            }
         })
 
     sys.stdout.write(str(cft))
@@ -494,12 +497,9 @@ def save_s3_config(config, suffix):
 
 
 def report_missing_keys(config):
-    """
-    Collect and report list of missing keys.
-    """
+    """Collect and report list of missing keys"""
 
     required = [
-        'DJANGO_SETTINGS_MODULE',
         'KEY_NAME', 'RDS_SUPERUSER_PASSWORD',
         'SITE_NAME', 'SITE_URL', 'ADMIN_PASSWORD']
     bad = []
