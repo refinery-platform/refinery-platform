@@ -21,6 +21,7 @@ from django.core.mail import EmailMessage
 from django.template import loader, Context
 from django.core.cache import cache
 from django.core.signing import Signer
+from django.forms import ValidationError
 from guardian.shortcuts import get_objects_for_user, get_objects_for_group
 from guardian.models import GroupObjectPermission
 from tastypie import fields
@@ -2018,7 +2019,12 @@ class ExtendedGroupResource(ModelResource):
         user = bundle.request.user
         data = json.loads(bundle.request.body)
         new_ext_group = ExtendedGroup(name=data['name'])
-        new_ext_group.save()
+        try:
+            new_ext_group.save()
+        except ValidationError as e:
+            raise ImmediateHttpResponse(HttpBadRequest(
+                'Invalid group creation request: %s.' % e
+            ))
         new_ext_group.user_set.add(user)
         new_ext_group.manager_group.user_set.add(user)
         return bundle
