@@ -8,7 +8,7 @@ import urlparse
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 from guardian.utils import get_anonymous_user
 
@@ -135,8 +135,9 @@ class Command(BaseCommand):
                 try:
                     anon_user = get_anonymous_user()
                 except(User.DoesNotExist, User.MultipleObjectsReturned) as e:
-                    logger.error(
-                        "Could not properly fetch the AnonymousUser: %s", e)
+                    error_message = "Could not properly fetch the "
+                    "AnonymousUser: {}".format(e)
+                    raise CommandError(error_message)
 
                 if group['group'].id is public_group_id:
                     users += [{
