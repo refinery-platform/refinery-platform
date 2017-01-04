@@ -3,7 +3,6 @@ class refinery::apache2 {
   class { 'apache':
     # recommended for use with AWS ELB
     mpm_module => 'worker',
-    # recommended for use with AWS ELB
     # for chunked uploads of large files (MD5 calculation on the server can take a long time)
     # to be adjusted back to recommended values after adding support for S3
     timeout    => 1805,  # should be set higher than the ELB IdleTimeout
@@ -19,12 +18,26 @@ class refinery::apache2 {
     content => "AcceptFilter http none\nAcceptFilter https none",
   }
 
+  if $tls_rewrite == 'true' {
+    $rewrites = [
+      {
+        comment      => 'Redirect http to https unless AWS ELB terminated TLS',
+        rewrite_cond => [
+          '%{HTTP:X-Forwarded-Proto} !https',
+          "%{HTTP_HOST} ${site_url}",  # to allow ELB health checks
+        ],
+        rewrite_rule => ['^.*$ https://%{HTTP_HOST}%{REQUEST_URI} [R=302,L]'],
+      },
+    ]
+  }
+
   apache::vhost { 'refinery':
     servername                  => $site_url,
     vhost_name                  => '*',
     port                        => 80,
     docroot                     => false,
     manage_docroot              => false,
+    rewrites                    => $rewrites,
     wsgi_script_aliases         => { '/' => "${django_root}/config/wsgi_${conf_mode}.py" },
     wsgi_daemon_process         => 'refinery',
     wsgi_daemon_process_options => {
