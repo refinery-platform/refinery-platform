@@ -222,9 +222,6 @@ AUTHENTICATION_BACKENDS = (
 # NG: added to support sessions
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 
-# For Django 1.7 compatibility
-AUTH_USER_MODEL = 'auth.User'
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
@@ -578,3 +575,5 @@ REFINERY_AUXILIARY_FILE_GENERATION = get_setting(
     "REFINERY_AUXILIARY_FILE_GENERATION")
 
 REFINERY_TUTORIAL_STEPS = refinery_tutorial_settings
+
+ANONYMOUS_USER_ID = -1
