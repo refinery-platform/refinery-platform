@@ -1896,7 +1896,7 @@ class ExtendedGroup(Group):
         elif self.duplicate_group_name_exists():
             logger.error("Group name cannot be duplicates.")
             raise ValidationError(
-                    '"Group name cannot be duplicate."',
+                    "Group name cannot be duplicate.",
                     params={'name': self.name},
                 )
         else:
