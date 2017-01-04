@@ -1884,7 +1884,8 @@ class ExtendedGroup(Group):
             self.name = self.name.strip()
 
         if self.name:
-            return bool(len(ExtendedGroup.objects.filter(name=self.name)))
+            return bool(len(ExtendedGroup.objects.filter(name=self.name).
+                            exclude(pk=self.pk)))
         else:
             return False
 
