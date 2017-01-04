@@ -47,7 +47,7 @@ export S3_CONFIG_URI
  /srv/refinery-platform/deployment/bin/get-s3-config)
 
 # List of SSH users
-SSH_USERS=$(jq -r '"" + .SSH_USERS' < /home/ubuntu/s3-config) 
+SSH_USERS=$(jq -r '"" + .SSH_USERS' < /home/ubuntu/s3-config)
 # Deliberately field split to get several users.
 HOME=/home/ubuntu sh /srv/refinery-platform/deployment/bin/fetch-github-ssh-keys $SSH_USERS
 
@@ -69,9 +69,6 @@ export FACTER_RDS_ROLE="$RDS_ROLE"
 # Create SMTP credentials and
 # place them in (facter) environment variables.
 . bin/create-smtp-credentials
-
-export FACTER_DJANGO_SETTINGS_MODULE=$(
-  jq -r .DJANGO_SETTINGS_MODULE /home/ubuntu/s3-config)
 
 export FACTER_ADMIN="$ADMIN"
 export FACTER_DEFAULT_FROM_EMAIL="$DEFAULT_FROM_EMAIL"
