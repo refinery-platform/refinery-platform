@@ -13,6 +13,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.sites.models import get_current_site, Site
 from django.contrib.sites.models import RequestSite
+from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.http import (Http404, HttpResponse, HttpResponseForbidden,
                          HttpResponseRedirect, HttpResponseBadRequest,
@@ -1010,7 +1011,8 @@ def neo4j_dataset_annotations(request):
     else:
         try:
             user_name = get_anonymous_user().username
-        except(User.DoesNotExist, User.MultipleObjectsReturned) as e:
+        except(User.DoesNotExist, User.MultipleObjectsReturned,
+               ImproperlyConfigured) as e:
             error_message = \
                 "Could not properly fetch the AnonymousUser: {}".format(e)
             logger.error(error_message)

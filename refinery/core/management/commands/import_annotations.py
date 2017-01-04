@@ -8,6 +8,7 @@ import urlparse
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand, CommandError
 
 from guardian.utils import get_anonymous_user
@@ -134,10 +135,10 @@ class Command(BaseCommand):
                 # logged in can still see some visualization.
                 try:
                     anon_user = get_anonymous_user()
-                except(User.DoesNotExist, User.MultipleObjectsReturned) as e:
-                    error_message = "Could not properly fetch the "
-                    "AnonymousUser: {}".format(e)
-                    raise CommandError(error_message)
+                except(User.DoesNotExist, User.MultipleObjectsReturned,
+                       ImproperlyConfigured) as e:
+                    raise CommandError("Could not properly fetch the "
+                                       "AnonymousUser: {}".format(e))
 
                 if group['group'].id is public_group_id:
                     users += [{
