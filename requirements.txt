@@ -19,7 +19,7 @@ django-chunked-upload==1.0.5
 django-debug-toolbar==1.4
 django-extensions==1.3.3
 django-flatblocks==0.7.1
-django-guardian==1.4.6
+django-guardian==1.4.1
 django-haystack==2.4.0
 django-markwhat==1.5
 django-nose==1.4.3
@@ -57,15 +57,14 @@ Pygments==1.6rc1
 pyOpenSSL==0.15.1
 pysam==0.9.1.4
 pysolr==3.3.2
+pytest-selenium==1.3.1
 python-ldap==2.4.19
 python-magic==0.4.6
 python-memcached==1.57
 python-ptrace==0.6.4
-pyvirtualdisplay==0.2.1
 PyYAML==3.11
 readline==6.2.2
 requests==2.7.0
-selenium==3.0.2
 six==1.5.2
 sqlparse==0.1.19
 supervisor==3.1.3

@@ -54,12 +54,6 @@ DATA_VOLUME_SIZE: 500
 # See http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html
 DATA_VOLUME_TYPE: "st1"
 
-# Which Python module in `refinery/config/settings` to
-# import for the Django settings.
-# (For example, can switch between `dev` and `prod`)
-DJANGO_SETTINGS_MODULE: "config.settings.aws"
-
-
 # The name of the EC2 key pair to use for SSH.
 # (this key pair is required to already exist in the AWS account)
 KEY_NAME: "id_rsa"
@@ -71,6 +65,12 @@ KEY_NAME: "id_rsa"
 # and that is generally preferable,
 # as it avoids clashes in the same AWS account).
 # RDS_NAME: rds-refinery-default
+
+EMAIL_SUBJECT_PREFIX: "[Refinery] "
+REFINERY_URL_SCHEME: "http"
+REFINERY_WELCOME_EMAIL_MESSAGE: "Please fill out your user profile"
+REFINERY_WELCOME_EMAIL_SUBJECT: "Welcome to Refinery"
+REFINERY_GOOGLE_ANALYTICS_ID: ""
 
 # == Rarely changed ==
 

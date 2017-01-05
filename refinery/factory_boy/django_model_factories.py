@@ -8,6 +8,10 @@ import factory
 # Django 1.7
 django.setup()
 
+# Call to django.setup() needed due to the new handling of the AppRegistry in
+# Django 1.7
+django.setup()
+
 
 class DataSetFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a DataSet for testing purposes"""

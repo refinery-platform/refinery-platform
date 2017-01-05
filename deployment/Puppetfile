@@ -1,6 +1,7 @@
 forge "https://forgeapi.puppetlabs.com"
 
 mod 'puppet/nodejs', '2.1.0'
+mod 'puppetlabs-apache', '1.11.0'
 mod 'puppetlabs/apt', '2.3.0'
 mod 'puppetlabs/limits', '0.1.0'
 mod 'puppetlabs/lvm', '0.7.0'

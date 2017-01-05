@@ -314,36 +314,4 @@ exec { "supervisord":
     Service["memcached"],
   ],
 }
-
-package { 'libapache2-mod-wsgi': }
-package { 'apache2': }
-# required for the rewrite rules used in HTTP to HTTPS redirect
-exec { 'apache2-rewrite':
-  command   => '/usr/sbin/a2enmod rewrite',
-  subscribe => [ Package['apache2'] ],
-}
-->
-exec { 'apache2-wsgi':
-  command   => '/usr/sbin/a2enmod wsgi',
-  subscribe => [ Package['apache2'], Package['libapache2-mod-wsgi'] ],
-}
-->
-file { "/etc/apache2/sites-available/001-refinery.conf":
-  ensure  => file,
-  content => template("${deployment_root}/apache.conf.erb"),
-}
-~>
-exec { 'apache2-default-disable':
-  command => '/usr/sbin/a2dissite 000-default',
-}
-~>
-exec { 'apache2-refinery-enable':
-  command => '/usr/sbin/a2ensite 001-refinery',
-}
-~>
-service { 'apache2':
-  ensure     => running,
-  hasrestart => true,
-}
-
 }
