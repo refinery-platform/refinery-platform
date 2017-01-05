@@ -2020,9 +2020,10 @@ class ExtendedGroupResource(ModelResource):
         user = bundle.request.user
         data = json.loads(bundle.request.body)
         new_ext_group = ExtendedGroup(name=data['name'])
+
         try:
             new_ext_group.save()
-        except (ValidationError, IntegrityError) as e:
+        except (IntegrityError, ValidationError) as e:
             raise ImmediateHttpResponse(HttpBadRequest(
                 'Invalid group creation request: %s.' % e
             ))
