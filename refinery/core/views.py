@@ -836,7 +836,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
         return HttpResponseServerError(e)
 
     # converting results into json for python
-    results = json.loads(results.raw.read())
+    results = json.loads(results.content)
 
     # IF list of nodes to remove from query exists
     if selected_nodes:
