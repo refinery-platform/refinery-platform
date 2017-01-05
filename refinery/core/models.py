@@ -1872,33 +1872,10 @@ class ExtendedGroup(Group):
         except:
             return None
 
-    def duplicate_group_name_exists(self):
-        """
-        Checks if any other instance has duplicate name. Empty strings not
-        treated as duplicates
-
-        :returns: Boolean based on if a duplicate name exists
-        """
-        # Catches empty strings & removes trail/lead white spaces
-        if self.name:
-            self.name = self.name.strip()
-
-        if self.name:
-            return bool(len(ExtendedGroup.objects.filter(name=self.name).
-                            exclude(pk=self.pk)))
-        else:
-            return False
-
     def save(self, *args, **kwargs):
         if len(self.name) == 0:
             logger.error("Group name cannot be empty.")
             raise ValidationError('Group name cannot be empty')
-        elif self.duplicate_group_name_exists():
-            logger.error("Group name cannot be duplicates.")
-            raise ValidationError(
-                    "Group name cannot be duplicate.",
-                    params={'name': self.name},
-                )
         else:
             super(ExtendedGroup, self).save(*args, **kwargs)
 

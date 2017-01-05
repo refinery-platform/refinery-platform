@@ -21,6 +21,7 @@ from django.core.mail import EmailMessage
 from django.template import loader, Context
 from django.core.cache import cache
 from django.core.signing import Signer
+from django.db import IntegrityError
 from django.forms import ValidationError
 from guardian.shortcuts import get_objects_for_user, get_objects_for_group
 from guardian.models import GroupObjectPermission
@@ -2021,7 +2022,7 @@ class ExtendedGroupResource(ModelResource):
         new_ext_group = ExtendedGroup(name=data['name'])
         try:
             new_ext_group.save()
-        except ValidationError as e:
+        except (ValidationError, IntegrityError) as e:
             raise ImmediateHttpResponse(HttpBadRequest(
                 'Invalid group creation request: %s.' % e
             ))
