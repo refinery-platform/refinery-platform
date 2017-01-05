@@ -6,13 +6,15 @@ import sys
 import time
 import urlparse
 
-
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.contrib.auth.models import User
+from django.core.exceptions import ImproperlyConfigured
+from django.core.management.base import BaseCommand, CommandError
+
+from guardian.utils import get_anonymous_user
 
 from core.models import DataSet, ExtendedGroup
-from core.utils import (normalize_annotation_ont_ids, get_data_set_annotations,
-                        get_anonymous_user)
+from core.utils import (normalize_annotation_ont_ids, get_data_set_annotations)
 
 logger = logging.getLogger(__name__)
 root_logger = logging.getLogger()
@@ -131,11 +133,17 @@ class Command(BaseCommand):
 
                 # We need to add an anonymous user so that people who haven't
                 # logged in can still see some visualization.
+                try:
+                    anon_user = get_anonymous_user()
+                except(User.DoesNotExist, User.MultipleObjectsReturned,
+                       ImproperlyConfigured) as e:
+                    raise CommandError("Could not properly fetch the "
+                                       "AnonymousUser: {}".format(e))
 
                 if group['group'].id is public_group_id:
                     users += [{
-                        'id': settings.ANONYMOUS_USER_ID,
-                        'name': get_anonymous_user().username
+                        'id': anon_user.id,
+                        'name': anon_user.username
                     }]
 
             for user in users:
