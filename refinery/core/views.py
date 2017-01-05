@@ -833,6 +833,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
         results.raise_for_status()
     except HTTPError as e:
         logger.error(e)
+        return HttpResponseServerError(e)
 
     # converting results into json for python
     results = json.loads(results.raw.read())
