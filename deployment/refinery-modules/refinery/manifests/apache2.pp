@@ -40,7 +40,7 @@ class refinery::apache2 {
   }
 
   # change log format if deploying on AWS
-  if $::virtual != 'virtualbox' {
+  if $::domain == 'ec2.internal' {
     $log_format = 'aws-elb'
   }
 
