@@ -10,12 +10,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:parklab/refinery-platform.git"
+    "url": "git@github.com:refinery-platform/refinery-platform.git"
   },
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/parklab/refinery-platform/issues"
+    "url": "https://github.com/refinery-platform/refinery-platform/issues"
   },
   "devDependencies": {
     "codecov.io": "0.1.6",

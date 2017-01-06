@@ -1,5 +1,5 @@
 # AWS tags,
-# as per https://github.com/parklab/refinery-platform/issues/839
+# as per https://github.com/refinery-platform/refinery-platform/issues/839
 # Other groups may want to remove this file and use it as a
 # suggestion for their own tagging scheme.
 department: dbmi
