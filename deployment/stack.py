@@ -19,7 +19,8 @@ python stack.py > web.json
 # It generates one or more
 # CloudFormation JSON files.
 #
-# See https://github.com/parklab/refinery-platform/wiki/AWS-installation
+# See
+# https://github.com/refinery-platform/refinery-platform/wiki/AWS-installation
 # for notes on how to use this to deploy to Amazon AWS.
 #
 # Instances are configured using CloudInit.
