@@ -67,90 +67,12 @@
 		<div class="label">Analysis Outputs</div>
 
 		<div class = "row">
-			<form action="/visualization_manager/igv_result/" method="post" id="sampleForm">
-			{% csrf_token %}
-
-			<table class="table table-striped table-condensed" id="samples1">
-			<thead><tr><th>Select</th><th>File</th><th>Size</th><th>Visualize</th></tr></thead>
-
-			<tbody>
-
-			{% for result in analysis_results.all %}
-				<tr>
-				{% for fs in fs_files %}
-					{% ifequal result.file_store_uuid fs.uuid %}
-						<td>
-						{% if result.file_type|lower == 'igv.tdf' or result.file_type|lower == 'wig' %}
-							<input type="checkbox" name="igv_{{fs.uuid}}" id="{{fs.uuid}}" class="case"/>
-						{% endif %}
-						</td>
-
-						<td>
-							<a href="{{fs.get_datafile}}">{{result.file_name}}</a>
-						</td>
-
-						<td>
-							{{fs.get_file_size|filesizeformat}}
-						</td>
-
-						{% endifequal %}
-					{% endfor %}
-
-					<td>
-					{% if result.file_type|lower == 'igv.tdf' %}
-						{#: <a href="/file_server/profile_viewer/{{result.file_store_uuid}}/chr4/1/1000000/">Visualize</a>#}
-						: <a href="/file_server/profile_viewer/{{result.file_store_uuid}}/chr19/3000000/10000000/">Visualize</a>
-					{% endif %}
-					</td>
-				</tr>
-			{% endfor %}
-
-
-			</tbody>
-			</table>
-			</div>
-
-			<div class = "row">
-				<button class="refinery-base btn btn-default" id="submitIGV">
-					<i class="fa fa-road"></i> IGV
-			 	</button>
-			</div>
-			</form>
+			TODO: Is any of this still in use? The only content here was a link to the obsolete IGV.
+        </div>
 	</div>
 <!-- end default mode -->
 {% endif %}
 
 </div>
-
-{% endblock %}
-
-{% block script %}
-
-	<script>
-	/*
-
-	// validate form inputs: To ensure a workflow is chosen
-	$("#submitIGV").click( function() {
-		//event.preventDefault(); // cancel default behavior
-
-		$.ajax({
-			url : "/visualization_manager/igv_result/",
-			type : "POST",
-			dataType : "json",
-			data : {
-				csrfmiddlewaretoken : "{{ csrf_token }}"
-			},
-			success : function(result) {
-				console.log(result);
-
-				alert("IGV CALLED");
-			}
-		});
-		});
-		*/
-
-  	</script>
-
-
 
 {% endblock %}

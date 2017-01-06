@@ -1526,8 +1526,7 @@ class NodeApiV2Tests(APITestCase):
             "auxiliary_nodes": [],
             "is_auxiliary_node": False,
             "file_extension": None,
-            "auxiliary_file_generation_task_state": None,
-            "ready_for_igv_detail_view": None
+            "auxiliary_file_generation_task_state": None
         }])
 
         self.client.login(username=self.username, password=self.password)
