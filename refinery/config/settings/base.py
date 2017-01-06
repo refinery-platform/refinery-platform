@@ -203,7 +203,6 @@ INSTALLED_APPS = (
     'workflow_manager',
     'file_store',
     'file_server',
-    'visualization_manager',
     'data_set_manager',
     'annotation_server',
     'registration',
@@ -302,11 +301,6 @@ LOGGING = {
         'isa_tab_parser': {
             'level': 'DEBUG',
             'handlers': ['console'],
-            'propagate': False,
-        },
-        'visualization_manager': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
             'propagate': False,
         },
         'workflow_manager': {
