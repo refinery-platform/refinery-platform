@@ -15,7 +15,7 @@ function rpFileBrowserAssayFilters ($timeout, $location, selectedFilterService) 
         var attribute = angular.element(
           document.querySelector('#' + escapeAttributeName)
         );
-        var selectedKeys = Object.keys(selectedFilterService.selectedFieldList);
+        var selectedKeys = Object.keys(selectedFilterService.attributeSelectedFields);
         var selectedAttributeIndex = selectedKeys.indexOf(attributeObj.internal_name);
         if (attributeTitle.hasClass('fa-caret-right')) {
           // open panel
@@ -47,8 +47,9 @@ function rpFileBrowserAssayFilters ($timeout, $location, selectedFilterService) 
       scope.showField = function (field, internalName, attributeName) {
         var escapedAttributeName = attributeName.replace(' ', '-');
         var selectedIndex = -1;
-        if (selectedFilterService.selectedFieldList[internalName] !== undefined) {
-          selectedIndex = selectedFilterService.selectedFieldList[internalName].indexOf(field);
+        if (selectedFilterService.attributeSelectedFields[internalName] !== undefined) {
+          selectedIndex = selectedFilterService
+            .attributeSelectedFields[internalName].indexOf(field);
         }
         if (!isMinimized(escapedAttributeName)) {
           return true;
@@ -63,14 +64,19 @@ function rpFileBrowserAssayFilters ($timeout, $location, selectedFilterService) 
       var updateDomDropdown = function (allFields, attributeName, attributeInternalName) {
         var queryFields = Object.keys($location.search());
         for (var ind = 0; ind < allFields.length; ind++) {
-          if (queryFields.indexOf(allFields[ind]) > -1) {
+          var encodedAttribute = selectedFilterService
+            .stringifyAndEncodeAttributeObj(attributeInternalName, allFields[ind]);
+          if (queryFields.indexOf(encodedAttribute) > -1) {
             var escapeAttributeName = attributeName.replace(' ', '-');
             var attributeTitle = angular.element(
             document.querySelector('#attribute-panel-' + escapeAttributeName)
             );
-            // mark checkbox for selected item
-            scope.FBCtrl.selectedField[allFields[ind]] = true;
 
+            // mark checkbox for selected item
+            if (!scope.FBCtrl.uiSelectedFields.hasOwnProperty(attributeInternalName)) {
+              scope.FBCtrl.uiSelectedFields[attributeInternalName] = {};
+            }
+            scope.FBCtrl.uiSelectedFields[attributeInternalName][allFields[ind]] = true;
             if (attributeTitle.hasClass('fa-caret-right')) {
               angular.element(
               document.querySelector('#' + escapeAttributeName)).addClass('in');

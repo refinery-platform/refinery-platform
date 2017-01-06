@@ -44,6 +44,7 @@ function DataSetPreviewCtrl (
   this.permissionService = permissionService;
   this.filesize = filesize;
   this.introsSatoriDataSetSummary = new DashboardIntrosDataSetSummary(this);
+  this.importStatus = {};
 
   this.maxBadges = this.settings.dashboard.preview.maxBadges;
   this.infinity = Number.POSITIVE_INFINITY;
@@ -239,28 +240,30 @@ DataSetPreviewCtrl.prototype.getDataSetDetails = function (uuid) {
  */
 DataSetPreviewCtrl.prototype.importDataSet = function () {
   var self = this;
+  var dataSetUuid = this.dataSetDetails.uuid;
 
   // Only allow the user to click on the button once per page load.
   this.importDataSetStarted = true;
 
-  if (!this.isDataSetReImporting) {
+  if (!(this.importStatus.hasOwnProperty(dataSetUuid))) {
     this.isDataSetReImporting = true;
+    self.importStatus[dataSetUuid] = { isDataSetReImporting: true };
     this.dataSetTakeOwnershipService
       .save({
-        data_set_uuid: this.dataSetDetails.uuid
+        data_set_uuid: dataSetUuid
       })
       .$promise
       .then(function (data) {
-        self.isDataSetReImportSuccess = true;
+        self.importStatus[dataSetUuid] = { isDataSetReImportSuccess: true };
         self.dashboardDataSetsReloadService.reload(true);
         self.dashboardDataSetPreviewService.preview(data.new_data_set_uuid);
       })
       .catch(function (error) {
-        self.isDataSetReImportFail = true;
+        self.importStatus[this.dataSetDetails.uuid] = { isDataSetReImportFail: true };
         self.$log.error(error);
       })
       .finally(function () {
-        self.isDataSetReImporting = false;
+        self.importStatus[dataSetUuid].isDataSetReImporting = false;
       });
   }
 };

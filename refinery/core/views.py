@@ -1,56 +1,53 @@
+import json
+import logging
 import os
 import re
+import requests
+from requests.exceptions import HTTPError
 import urllib
-import xmltodict
-import logging
-import json
 from urlparse import urljoin
+import xmltodict
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.sites.models import get_current_site, Site
 from django.contrib.sites.models import RequestSite
+from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
-from django.http import (
-    HttpResponse, HttpResponseForbidden, HttpResponseRedirect,
-    HttpResponseBadRequest, HttpResponseNotFound, HttpResponseServerError)
-from django.http import Http404
+from django.http import (Http404, HttpResponse, HttpResponseForbidden,
+                         HttpResponseRedirect, HttpResponseBadRequest,
+                         HttpResponseNotFound, HttpResponseServerError)
 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext, loader
+from django.views.decorators.gzip import gzip_page
+
+from guardian.utils import get_anonymous_user
+from guardian.shortcuts import get_perms
 from registration.views import RegistrationView
 from registration import signals
-
-from guardian.shortcuts import get_perms
-import requests
-from requests.exceptions import HTTPError
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from core.forms import (
-    ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
-)
-
-from data_set_manager.models import Node
-from data_set_manager.utils import generate_solr_params
-from visualization_manager.views import igv_multi_species
-from annotation_server.models import GenomeBuild
-from file_store.models import FileStoreItem
-from core.models import (
-    ExtendedGroup, Project, DataSet, Workflow, UserProfile, WorkflowEngine,
-    Analysis, Invitation, Ontology, NodeGroup,
-    CustomRegistrationProfile)
-from core.serializers import (
-    WorkflowSerializer, NodeGroupSerializer, NodeSerializer)
-from core.utils import (get_data_sets_annotations, get_anonymous_user,
-                        create_current_selection_node_group,
-                        filter_nodes_uuids_in_solr, move_obj_to_front)
-
 from xml.parsers.expat import ExpatError
 
-from django.views.decorators.gzip import gzip_page
+from core.forms import (ProjectForm, UserForm, UserProfileForm,
+                        WorkflowForm,  DataSetForm)
+from annotation_server.models import GenomeBuild
+from core.models import (ExtendedGroup, Project, DataSet, Workflow,
+                         UserProfile, WorkflowEngine, Analysis, Invitation,
+                         Ontology, NodeGroup, CustomRegistrationProfile)
+from core.serializers import (WorkflowSerializer, NodeGroupSerializer,
+                              NodeSerializer)
+from core.utils import (get_data_sets_annotations,
+                        create_current_selection_node_group,
+                        filter_nodes_uuids_in_solr, move_obj_to_front)
+from data_set_manager.models import Node
+from data_set_manager.utils import generate_solr_params
+from file_store.models import FileStoreItem
+from visualization_manager.views import igv_multi_species
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +150,7 @@ def user(request, query):
 
 @login_required()
 def user_profile(request):
-    return user(request, request.user.get_profile().uuid)
+    return user(request, request.user.profile.uuid)
 
 
 @login_required()
@@ -183,7 +180,7 @@ def user_edit(request, uuid):
 
 @login_required()
 def user_profile_edit(request):
-    return user_edit(request, request.user.get_profile().uuid)
+    return user_edit(request, request.user.profile.uuid)
 
 
 @login_required()
@@ -712,7 +709,7 @@ def solr_core_search(request):
 
             response = json.dumps(response)
 
-    return HttpResponse(response, mimetype='application/json')
+    return HttpResponse(response, content_type='application/json')
 
 
 def solr_select(request, core):
@@ -736,7 +733,7 @@ def solr_select(request, core):
         response = json.dumps({})
     else:
         response = full_response.content
-    return HttpResponse(response, mimetype='application/json')
+    return HttpResponse(response, content_type='application/json')
 
 
 def solr_igv(request):
@@ -790,7 +787,7 @@ def solr_igv(request):
         logger.debug(json.dumps(session_urls, indent=4))
 
         return HttpResponse(json.dumps(session_urls),
-                            mimetype='application/json')
+                            content_type='application/json')
 
 
 def get_solr_results(query, facets=False, jsonp=False, annotation=False,
@@ -836,9 +833,10 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
         results.raise_for_status()
     except HTTPError as e:
         logger.error(e)
+        return HttpResponseServerError(e)
 
     # converting results into json for python
-    results = json.loads(results.raw.read())
+    results = json.loads(results.content)
 
     # IF list of nodes to remove from query exists
     if selected_nodes:
@@ -906,7 +904,7 @@ def doi(request, id):
     except requests.exceptions.ConnectionError:
         return HttpResponse('Service currently unavailable', status=503)
 
-    return HttpResponse(response, mimetype='application/json')
+    return HttpResponse(response, content_type='application/json')
 
 
 def pubmed_abstract(request, id):
@@ -940,7 +938,7 @@ def pubmed_abstract(request, id):
 
     return HttpResponse(
         json.dumps(response_dict),
-        mimetype='application/json'
+        content_type='application/json'
     )
 
 
@@ -971,7 +969,7 @@ def pubmed_search(request, term):
     except requests.exceptions.ConnectionError:
         return HttpResponse('Service currently unavailable', status=503)
 
-    return HttpResponse(response, mimetype='application/json')
+    return HttpResponse(response, content_type='application/json')
 
 
 def pubmed_summary(request, id):
@@ -997,7 +995,7 @@ def pubmed_summary(request, id):
     except requests.exceptions.ConnectionError:
         return HttpResponse('Service currently unavailable', status=503)
 
-    return HttpResponse(response, mimetype='application/json')
+    return HttpResponse(response, content_type='application/json')
 
 
 def fastqc_viewer(request):
@@ -1012,7 +1010,14 @@ def neo4j_dataset_annotations(request):
     if request.user.username:
         user_name = request.user.username
     else:
-        user_name = get_anonymous_user().username
+        try:
+            user_name = get_anonymous_user().username
+        except(User.DoesNotExist, User.MultipleObjectsReturned,
+               ImproperlyConfigured) as e:
+            error_message = \
+                "Could not properly fetch the AnonymousUser: {}".format(e)
+            logger.error(error_message)
+            return HttpResponseServerError(error_message)
 
     url = urljoin(
         settings.NEO4J_BASE_URL,
@@ -1039,11 +1044,11 @@ def neo4j_dataset_annotations(request):
         logger.error(e)
         return HttpResponse(
             'Neo4J seems to be offline.',
-            mimetype='text/plain',
+            content_type='text/plain',
             status=503
         )
 
-    return HttpResponse(response, mimetype='application/json')
+    return HttpResponse(response, content_type='application/json')
 
 
 class WorkflowViewSet(viewsets.ModelViewSet):

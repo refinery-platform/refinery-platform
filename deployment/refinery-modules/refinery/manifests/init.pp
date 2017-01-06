@@ -86,8 +86,8 @@ file { "${django_root}/config/config.json":
   replace => false,
 }
 ->
-exec { "syncdb_initial":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py syncdb --noinput",
+exec { "migrate":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate --noinput",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
@@ -97,15 +97,23 @@ exec { "syncdb_initial":
   ],
 }
 ->
-exec { "migrate_registration":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate registration",
+exec { "create_superuser":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata superuser.json",
+  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  user        => $app_user,
+  group       => $app_group,
+  require     => Exec['migrate'],
+}
+->
+exec { "create_guest":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata guest.json",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
 }
-->
-exec { "migrate_core":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate core",
+  ->
+exec { "add_users_to_public_group":
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py add_users_to_public_group",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
@@ -118,47 +126,6 @@ exec { "set_up_refinery_site_name":
   group       => $app_group,
 }
 ->
-exec { "migrate_guardian":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate guardian",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-->
-exec { "create_public_group":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py create_public_group",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-->
-exec { "create_superuser":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata superuser.json",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-->
-exec { "add_admin_to_public_group":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py add_admin_to_public_group",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-->
-exec { "create_user":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py create_user 'guest' 'guest' 'guest@example.com' 'Guest' '' ''",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-->
-exec { "syncdb_final":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py syncdb --migrate --noinput",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
 
 file { "/opt":
   ensure => directory,
@@ -243,98 +210,7 @@ class solrSynonymAnalyzer {
 }
 include solrSynonymAnalyzer
 
-class neo4j {
-  $neo4j_config_file = '/etc/neo4j/neo4j-server.properties'
 
-  apt::source { 'neo4j':
-    ensure      => 'present',
-    comment     => 'Neo Technology Neo4j repo',
-    location    => 'http://debian.neo4j.org/repo',
-    release     => 'stable/',
-    repos       => '',
-    key         => {
-      'id'     => '1EEFB8767D4924B86EAD08A459D700E4D37F5F19',
-      'source' => 'https://debian.neo4j.org/neotechnology.gpg.key',
-    },
-  }
-  ->
-  package { 'neo4j':
-    ensure  => '2.3.1',
-    # https://forge.puppet.com/puppetlabs/apt/readme#adding-new-sources-or-ppas
-    require => Class['apt::update'],
-  }
-  ->
-  limits::fragment {
-    "${app_user}/soft/nofile":
-      value => "40000";
-    "${app_user}/hard/nofile":
-      value => "40000";
-  }
-  ->
-  file_line {
-    'neo4j_no_authentication':
-      path  => $neo4j_config_file,
-      line  => 'dbms.security.auth_enabled=false',
-      match => 'dbms.security.auth_enabled=';
-    'neo4j_all_ips':
-      path  => $neo4j_config_file,
-      line  => 'org.neo4j.server.webserver.address=0.0.0.0',
-      match => 'org.neo4j.server.webserver.address=';
-    'neo4j_increase_transaction_timeout':
-      path  => $neo4j_config_file,
-      line  => 'org.neo4j.server.transaction.timeout=600';
-  }
-  ~>
-  service { 'neo4j-service':
-    ensure     => running,
-    hasrestart => true,
-  }
-}
-include neo4j
-
-class neo4jOntology {
-  $neo4j_config = '/etc/neo4j/neo4j-server.properties'
-  $version = "0.5.0"
-  $url = "https://github.com/refinery-platform/neo4j-ontology/releases/download/v${version}/ontology.jar"
-
-  # Need to remove the old file manually as wget throws a weird
-  # `HTTP request sent, awaiting response... 403 Forbidden` error when the file
-  # already exists.
-
-  exec { "neo4j-ontology-plugin-download":
-    command => "rm -f /var/lib/neo4j/plugins/ontology.jar && wget -P /var/lib/neo4j/plugins/ ${url}",
-    creates => "/var/lib/neo4j/plugins/ontology.jar",
-    path    => "/usr/bin:/bin",
-    timeout => 120,  # downloading can take some time
-    notify => Service['neo4j-service'],
-  }
-  ->
-  file_line {
-    'org.neo4j.server.thirdparty_jaxrs_classes':
-      path  => $neo4j_config,
-      line  => 'org.neo4j.server.thirdparty_jaxrs_classes=org.neo4j.ontology.server.unmanaged=/ontology/unmanaged',
-      notify => Service['neo4j-service'],
-      require => Package['neo4j'],
-  }
-}
-include neo4jOntology
-
-class owl2neo4j {
-  $owl2neo4j_version = "0.6.1"
-  $owl2neo4j_url = "https://github.com/flekschas/owl2neo4j/releases/download/v${owl2neo4j_version}/owl2neo4j.jar"
-
-  # Need to remove the old file manually as wget throws a weird
-  # `HTTP request sent, awaiting response... 403 Forbidden` error when the file
-  # already exists.
-
-  exec { "owl2neo4j_wget":
-    command => "rm -f /opt/owl2neo4j.jar && wget -P /opt/ ${owl2neo4j_url}",
-    creates => "/opt/owl2neo4j",
-    path    => "/usr/bin:/bin",
-    timeout => 120,  # downloading can take some time
-  }
-}
-include owl2neo4j
 
 include '::rabbitmq'
 
@@ -438,36 +314,4 @@ exec { "supervisord":
     Service["memcached"],
   ],
 }
-
-package { 'libapache2-mod-wsgi': }
-package { 'apache2': }
-# required for the rewrite rules used in HTTP to HTTPS redirect
-exec { 'apache2-rewrite':
-  command   => '/usr/sbin/a2enmod rewrite',
-  subscribe => [ Package['apache2'] ],
-}
-->
-exec { 'apache2-wsgi':
-  command   => '/usr/sbin/a2enmod wsgi',
-  subscribe => [ Package['apache2'], Package['libapache2-mod-wsgi'] ],
-}
-->
-file { "/etc/apache2/sites-available/001-refinery.conf":
-  ensure  => file,
-  content => template("${deployment_root}/apache.conf.erb"),
-}
-~>
-exec { 'apache2-default-disable':
-  command => '/usr/sbin/a2dissite 000-default',
-}
-~>
-exec { 'apache2-refinery-enable':
-  command => '/usr/sbin/a2ensite 001-refinery',
-}
-~>
-service { 'apache2':
-  ensure     => running,
-  hasrestart => true,
-}
-
 }

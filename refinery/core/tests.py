@@ -4,7 +4,6 @@ from urlparse import urljoin
 import mock
 
 from django.contrib.auth.models import User, Group
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import unittest, timezone
 from django.test import TestCase
@@ -19,7 +18,6 @@ from tastypie.test import ResourceTestCase
 from core.api import AnalysisResource
 
 from core.management.commands.create_user import init_user
-from core.management.commands.create_public_group import create_public_group
 
 from core.models import (
     NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,
@@ -50,14 +48,10 @@ class UserCreateTest(unittest.TestCase):
         self.first_name = "John"
         self.last_name = "Sample"
         self.affiliation = "University"
-
-        create_public_group()
-
         self.public_group_name = ExtendedGroup.objects.public_group().name
 
     def tearDown(self):
         User.objects.all().delete()
-        Group.objects.all().delete()
 
     def test_add_new_user_to_public_group(self):
         """Test if User accounts are added to Public group"""
@@ -429,7 +423,7 @@ class NodeSetResourceTest(ResourceTestCase):
         response = self.api_client.get(nodeset_uri, format='json')
         self.assertHttpUnauthorized(response)
 
-    # See https://github.com/parklab/refinery-platform/issues/586
+    # See https://github.com/refinery-platform/refinery-platform/issues/586
     # def test_get_nodeset_without_owner(self):
     #     """Test retrieving an existing NodeSet that belongs to no one.
     #     """
@@ -447,7 +441,7 @@ class NodeSetResourceTest(ResourceTestCase):
     #     )
     #     self.assertHttpNotFound(response)
 
-    # See https://github.com/parklab/refinery-platform/issues/586
+    # See https://github.com/refinery-platform/refinery-platform/issues/586
     # def test_get_nodeset_without_permission(self):
     #     """Test retrieving an existing NodeSet that belongs to a different
     #     user
@@ -1090,7 +1084,7 @@ class BaseResourceSlugTest(unittest.TestCase):
     def test_save_slug_when_same_model_with_same_slug_exists(self):
         Project.objects.create(name="project", slug="TestSlug4")
         Project.objects.create(name="project_duplicate", slug="TestSlug4")
-        self.assertRaises(ObjectDoesNotExist,
+        self.assertRaises(Project.DoesNotExist,
                           Project.objects.get,
                           name="project_duplicate")
 
@@ -1133,7 +1127,6 @@ class CachingTest(unittest.TestCase):
         self.user1 = User.objects.create_user(
             self.username1, '', self.password1
         )
-        create_public_group()
         self.public_group_name = ExtendedGroup.objects.public_group().name
         for index, item in enumerate(range(0, 6)):
             DataSet.objects.create(slug="TestSlug%d" % index)
@@ -1148,8 +1141,6 @@ class CachingTest(unittest.TestCase):
             slug="TestSlug1"), True)
         DataSet.objects.all().delete()
         User.objects.all().delete()
-        Group.objects.all().delete()
-        ExtendedGroup.objects.all().delete()
 
     def test_verify_cache_invalidation(self):
         # Grab a DataSet and see if we can invalidate the cache
@@ -1267,7 +1258,7 @@ class WorkflowDeletionTest(unittest.TestCase):
         self.assertIsNotNone(Workflow.objects.get(
             name="workflow_not_used_by_analyses"))
         self.workflow_not_used_by_analyses.delete()
-        self.assertRaises(ObjectDoesNotExist,
+        self.assertRaises(Workflow.DoesNotExist,
                           Workflow.objects.get,
                           name="workflow_not_used_by_analyses")
 
@@ -1342,7 +1333,7 @@ class DataSetDeletionTest(unittest.TestCase):
         self.assertIsNotNone(
             DataSet.objects.get(name="dataset_without_analysis"))
         self.dataset_without_analysis.delete()
-        self.assertRaises(ObjectDoesNotExist,
+        self.assertRaises(DataSet.DoesNotExist,
                           DataSet.objects.get,
                           name="dataset_without_analysis")
 
@@ -1350,7 +1341,7 @@ class DataSetDeletionTest(unittest.TestCase):
         self.assertIsNotNone(
             DataSet.objects.get(name="dataset_with_analysis"))
         self.dataset_with_analysis.delete()
-        self.assertRaises(ObjectDoesNotExist,
+        self.assertRaises(DataSet.DoesNotExist,
                           DataSet.objects.get,
                           name="dataset_with_analysis")
 
@@ -1480,7 +1471,7 @@ class AnalysisDeletionTest(unittest.TestCase):
             name='analysis_without_node_analyzed_further')
         self.assertIsNotNone(query)
         self.analysis.delete()
-        self.assertRaises(ObjectDoesNotExist, Analysis.objects.get,
+        self.assertRaises(Analysis.DoesNotExist, Analysis.objects.get,
                           name='analysis_without_node_analyzed_further')
 
     def test_verify_analysis_remains_if_nodes_analyzed_further(self):
@@ -2090,9 +2081,6 @@ class DataSetClassMethodsTest(unittest.TestCase):
 class DataSetApiV2Tests(APITestCase):
 
     def setUp(self):
-
-        create_public_group()
-
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
@@ -2164,8 +2152,6 @@ class DataSetApiV2Tests(APITestCase):
         Assay.objects.all().delete()
         DataSet.objects.all().delete()
         Investigation.objects.all().delete()
-        Group.objects.all().delete()
-        ExtendedGroup.objects.all().delete()
 
     def test_unallowed_http_verbs(self):
         self.assertEqual(
@@ -2246,9 +2232,6 @@ class DataSetApiV2Tests(APITestCase):
 class AnalysisApiV2Tests(APITestCase):
 
     def setUp(self):
-
-        create_public_group()
-
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
@@ -2347,9 +2330,7 @@ class AnalysisApiV2Tests(APITestCase):
         Assay.objects.all().delete()
         DataSet.objects.all().delete()
         Investigation.objects.all().delete()
-        Group.objects.all().delete()
         Analysis.objects.all().delete()
-        ExtendedGroup.objects.all().delete()
 
     def test_unallowed_http_verbs(self):
         self.assertEqual(

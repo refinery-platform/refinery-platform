@@ -1,564 +1,518 @@
 # -*- coding: utf-8 -*-
-import datetime
-from south.db import db
-from south.v2 import SchemaMigration
-from django.db import models
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+import django.utils.timezone
+from django.conf import settings
+import django_extensions.db.fields
 
 
-class Migration(SchemaMigration):
-    
-    depends_on = (
-        ("data_set_manager", "0001_initial"),
-        ("file_store", "0001_initial"),
-        ("galaxy_connector", "0001_initial"),
-    )    
+class Migration(migrations.Migration):
 
-    needed_by = (
-        ("guardian", "0005_auto__chg_field_groupobjectpermission_object_pk__chg_field_userobjectp"),
-    )
+    dependencies = [
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('galaxy_connector', '0001_initial'),
+        ('data_set_manager', '0001_initial'),
+        ('auth', '0001_initial'),
+        ('file_store', '0001_initial'),
+    ]
 
-    def forwards(self, orm):
-        # Adding model 'UserProfile'
-        db.create_table('core_userprofile', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('uuid', self.gf('django.db.models.fields.CharField')(unique=True, max_length=36, blank=True)),
-            ('user', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['auth.User'], unique=True)),
-            ('affiliation', self.gf('django.db.models.fields.CharField')(max_length=100, blank=True)),
-            ('catch_all_project', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['core.Project'], null=True, blank=True)),
-            ('is_public', self.gf('django.db.models.fields.BooleanField')(default=False)),
-        ))
-        db.send_create_signal('core', ['UserProfile'])
-
-        # Adding model 'DataSet'
-        db.create_table('core_dataset', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('uuid', self.gf('django.db.models.fields.CharField')(unique=True, max_length=36, blank=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=250)),
-            ('summary', self.gf('django.db.models.fields.CharField')(max_length=1000, blank=True)),
-            ('creation_date', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('modification_date', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-            ('description', self.gf('django.db.models.fields.TextField')(max_length=5000, blank=True)),
-            ('slug', self.gf('django.db.models.fields.CharField')(max_length=250, null=True, blank=True)),
-            ('file_count', self.gf('django.db.models.fields.IntegerField')(default=0, null=True, blank=True)),
-            ('file_size', self.gf('django.db.models.fields.BigIntegerField')(default=0, null=True, blank=True)),
-        ))
-        db.send_create_signal('core', ['DataSet'])
-
-        # Adding model 'InvestigationLink'
-        db.create_table('core_investigationlink', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('data_set', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['core.DataSet'])),
-            ('investigation', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['data_set_manager.Investigation'])),
-            ('version', self.gf('django.db.models.fields.IntegerField')(default=1)),
-            ('message', self.gf('django.db.models.fields.CharField')(max_length=500, null=True, blank=True)),
-            ('date', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-        ))
-        db.send_create_signal('core', ['InvestigationLink'])
-
-        # Adding model 'WorkflowDataInput'
-        db.create_table('core_workflowdatainput', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=200)),
-            ('internal_id', self.gf('django.db.models.fields.IntegerField')()),
-        ))
-        db.send_create_signal('core', ['WorkflowDataInput'])
-
-        # Adding model 'WorkflowEngine'
-        db.create_table('core_workflowengine', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('uuid', self.gf('django.db.models.fields.CharField')(unique=True, max_length=36, blank=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=250)),
-            ('summary', self.gf('django.db.models.fields.CharField')(max_length=1000, blank=True)),
-            ('creation_date', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('modification_date', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-            ('description', self.gf('django.db.models.fields.TextField')(max_length=5000, blank=True)),
-            ('slug', self.gf('django.db.models.fields.CharField')(max_length=250, null=True, blank=True)),
-            ('instance', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['galaxy_connector.Instance'], blank=True)),
-        ))
-        db.send_create_signal('core', ['WorkflowEngine'])
-
-        # Adding model 'DiskQuota'
-        db.create_table('core_diskquota', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('uuid', self.gf('django.db.models.fields.CharField')(unique=True, max_length=36, blank=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=250)),
-            ('summary', self.gf('django.db.models.fields.CharField')(max_length=1000, blank=True)),
-            ('creation_date', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('modification_date', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-            ('description', self.gf('django.db.models.fields.TextField')(max_length=5000, blank=True)),
-            ('slug', self.gf('django.db.models.fields.CharField')(max_length=250, null=True, blank=True)),
-            ('maximum', self.gf('django.db.models.fields.IntegerField')()),
-            ('current', self.gf('django.db.models.fields.IntegerField')()),
-        ))
-        db.send_create_signal('core', ['DiskQuota'])
-
-        # Adding model 'Workflow'
-        db.create_table('core_workflow', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('uuid', self.gf('django.db.models.fields.CharField')(unique=True, max_length=36, blank=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=250)),
-            ('summary', self.gf('django.db.models.fields.CharField')(max_length=1000, blank=True)),
-            ('creation_date', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('modification_date', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-            ('description', self.gf('django.db.models.fields.TextField')(max_length=5000, blank=True)),
-            ('slug', self.gf('django.db.models.fields.CharField')(max_length=250, null=True, blank=True)),
-            ('internal_id', self.gf('django.db.models.fields.CharField')(max_length=50)),
-            ('workflow_engine', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['core.WorkflowEngine'])),
-            ('show_in_repository_mode', self.gf('django.db.models.fields.BooleanField')(default=False)),
-        ))
-        db.send_create_signal('core', ['Workflow'])
-
-        # Adding unique constraint on 'Workflow', fields ['internal_id', 'workflow_engine']
-        db.create_unique('core_workflow', ['internal_id', 'workflow_engine_id'])
-
-        # Adding M2M table for field data_inputs on 'Workflow'
-        db.create_table('core_workflow_data_inputs', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('workflow', models.ForeignKey(orm['core.workflow'], null=False)),
-            ('workflowdatainput', models.ForeignKey(orm['core.workflowdatainput'], null=False))
-        ))
-        db.create_unique('core_workflow_data_inputs', ['workflow_id', 'workflowdatainput_id'])
-
-        # Adding model 'Project'
-        db.create_table('core_project', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('uuid', self.gf('django.db.models.fields.CharField')(unique=True, max_length=36, blank=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=250)),
-            ('summary', self.gf('django.db.models.fields.CharField')(max_length=1000, blank=True)),
-            ('creation_date', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('modification_date', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-            ('description', self.gf('django.db.models.fields.TextField')(max_length=5000, blank=True)),
-            ('slug', self.gf('django.db.models.fields.CharField')(max_length=250, null=True, blank=True)),
-            ('is_catch_all', self.gf('django.db.models.fields.BooleanField')(default=False)),
-        ))
-        db.send_create_signal('core', ['Project'])
-
-        # Adding model 'WorkflowFilesDL'
-        db.create_table('core_workflowfilesdl', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('step_id', self.gf('django.db.models.fields.TextField')()),
-            ('pair_id', self.gf('django.db.models.fields.TextField')()),
-            ('filename', self.gf('django.db.models.fields.TextField')()),
-        ))
-        db.send_create_signal('core', ['WorkflowFilesDL'])
-
-        # Adding model 'WorkflowDataInputMap'
-        db.create_table('core_workflowdatainputmap', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('workflow_data_input_name', self.gf('django.db.models.fields.CharField')(max_length=200)),
-            ('data_uuid', self.gf('django.db.models.fields.CharField')(max_length=36)),
-            ('pair_id', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
-        ))
-        db.send_create_signal('core', ['WorkflowDataInputMap'])
-
-        # Adding model 'AnalysisResult'
-        db.create_table('core_analysisresult', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('analysis_uuid', self.gf('django.db.models.fields.CharField')(max_length=36)),
-            ('file_store_uuid', self.gf('django.db.models.fields.CharField')(max_length=36)),
-            ('file_name', self.gf('django.db.models.fields.TextField')()),
-            ('file_type', self.gf('django.db.models.fields.TextField')()),
-        ))
-        db.send_create_signal('core', ['AnalysisResult'])
-
-        # Adding model 'Analysis'
-        db.create_table('core_analysis', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('uuid', self.gf('django.db.models.fields.CharField')(unique=True, max_length=36, blank=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=250)),
-            ('summary', self.gf('django.db.models.fields.CharField')(max_length=1000, blank=True)),
-            ('creation_date', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('modification_date', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-            ('description', self.gf('django.db.models.fields.TextField')(max_length=5000, blank=True)),
-            ('slug', self.gf('django.db.models.fields.CharField')(max_length=250, null=True, blank=True)),
-            ('project', self.gf('django.db.models.fields.related.ForeignKey')(related_name='analyses', to=orm['core.Project'])),
-            ('data_set', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['core.DataSet'], blank=True)),
-            ('workflow', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['core.Workflow'], blank=True)),
-            ('workflow_steps_num', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
-            ('workflow_copy', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('history_id', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('workflow_galaxy_id', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('library_id', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('time_start', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
-            ('time_end', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
-            ('status', self.gf('django.db.models.fields.TextField')(default='INITIALIZED', null=True, blank=True)),
-        ))
-        db.send_create_signal('core', ['Analysis'])
-
-        # Adding M2M table for field workflow_data_input_maps on 'Analysis'
-        db.create_table('core_analysis_workflow_data_input_maps', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('analysis', models.ForeignKey(orm['core.analysis'], null=False)),
-            ('workflowdatainputmap', models.ForeignKey(orm['core.workflowdatainputmap'], null=False))
-        ))
-        db.create_unique('core_analysis_workflow_data_input_maps', ['analysis_id', 'workflowdatainputmap_id'])
-
-        # Adding M2M table for field results on 'Analysis'
-        db.create_table('core_analysis_results', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('analysis', models.ForeignKey(orm['core.analysis'], null=False)),
-            ('analysisresult', models.ForeignKey(orm['core.analysisresult'], null=False))
-        ))
-        db.create_unique('core_analysis_results', ['analysis_id', 'analysisresult_id'])
-
-        # Adding M2M table for field workflow_dl_files on 'Analysis'
-        db.create_table('core_analysis_workflow_dl_files', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('analysis', models.ForeignKey(orm['core.analysis'], null=False)),
-            ('workflowfilesdl', models.ForeignKey(orm['core.workflowfilesdl'], null=False))
-        ))
-        db.create_unique('core_analysis_workflow_dl_files', ['analysis_id', 'workflowfilesdl_id'])
-
-        # Adding model 'ExtendedGroup'
-        db.create_table('core_extendedgroup', (
-            ('group_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['auth.Group'], unique=True, primary_key=True)),
-            ('manager_group', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='managed_group', null=True, to=orm['core.ExtendedGroup'])),
-            ('uuid', self.gf('django.db.models.fields.CharField')(unique=True, max_length=36, blank=True)),
-            ('is_public', self.gf('django.db.models.fields.BooleanField')(default=False)),
-        ))
-        db.send_create_signal('core', ['ExtendedGroup'])
-
-        # Adding model 'NodeSet'
-        db.create_table('core_nodeset', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('uuid', self.gf('django.db.models.fields.CharField')(unique=True, max_length=36, blank=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=250)),
-            ('summary', self.gf('django.db.models.fields.CharField')(max_length=1000, blank=True)),
-            ('creation_date', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('modification_date', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-            ('description', self.gf('django.db.models.fields.TextField')(max_length=5000, blank=True)),
-            ('slug', self.gf('django.db.models.fields.CharField')(max_length=250, null=True, blank=True)),
-            ('study', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['data_set_manager.Study'])),
-            ('assay', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['data_set_manager.Assay'])),
-        ))
-        db.send_create_signal('core', ['NodeSet'])
-
-        # Adding M2M table for field nodes on 'NodeSet'
-        db.create_table('core_nodeset_nodes', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('nodeset', models.ForeignKey(orm['core.nodeset'], null=False)),
-            ('node', models.ForeignKey(orm['data_set_manager.node'], null=False))
-        ))
-        db.create_unique('core_nodeset_nodes', ['nodeset_id', 'node_id'])
-
-
-    def backwards(self, orm):
-        # Removing unique constraint on 'Workflow', fields ['internal_id', 'workflow_engine']
-        db.delete_unique('core_workflow', ['internal_id', 'workflow_engine_id'])
-
-        # Deleting model 'UserProfile'
-        db.delete_table('core_userprofile')
-
-        # Deleting model 'DataSet'
-        db.delete_table('core_dataset')
-
-        # Deleting model 'InvestigationLink'
-        db.delete_table('core_investigationlink')
-
-        # Deleting model 'WorkflowDataInput'
-        db.delete_table('core_workflowdatainput')
-
-        # Deleting model 'WorkflowEngine'
-        db.delete_table('core_workflowengine')
-
-        # Deleting model 'DiskQuota'
-        db.delete_table('core_diskquota')
-
-        # Deleting model 'Workflow'
-        db.delete_table('core_workflow')
-
-        # Removing M2M table for field data_inputs on 'Workflow'
-        db.delete_table('core_workflow_data_inputs')
-
-        # Deleting model 'Project'
-        db.delete_table('core_project')
-
-        # Deleting model 'WorkflowFilesDL'
-        db.delete_table('core_workflowfilesdl')
-
-        # Deleting model 'WorkflowDataInputMap'
-        db.delete_table('core_workflowdatainputmap')
-
-        # Deleting model 'AnalysisResult'
-        db.delete_table('core_analysisresult')
-
-        # Deleting model 'Analysis'
-        db.delete_table('core_analysis')
-
-        # Removing M2M table for field workflow_data_input_maps on 'Analysis'
-        db.delete_table('core_analysis_workflow_data_input_maps')
-
-        # Removing M2M table for field results on 'Analysis'
-        db.delete_table('core_analysis_results')
-
-        # Removing M2M table for field workflow_dl_files on 'Analysis'
-        db.delete_table('core_analysis_workflow_dl_files')
-
-        # Deleting model 'ExtendedGroup'
-        db.delete_table('core_extendedgroup')
-
-        # Deleting model 'NodeSet'
-        db.delete_table('core_nodeset')
-
-        # Removing M2M table for field nodes on 'NodeSet'
-        db.delete_table('core_nodeset_nodes')
-
-
-    models = {
-        'auth.group': {
-            'Meta': {'object_name': 'Group'},
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '80'}),
-            'permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'})
-        },
-        'auth.permission': {
-            'Meta': {'ordering': "('content_type__app_label', 'content_type__model', 'codename')", 'unique_together': "(('content_type', 'codename'),)", 'object_name': 'Permission'},
-            'codename': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['contenttypes.ContentType']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
-        },
-        'auth.user': {
-            'Meta': {'object_name': 'User'},
-            'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
-            'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
-            'groups': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Group']", 'symmetrical': 'False', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            'is_staff': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'is_superuser': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'last_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
-            'password': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
-            'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'}),
-            'username': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '30'})
-        },
-        'contenttypes.contenttype': {
-            'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType', 'db_table': "'django_content_type'"},
-            'app_label': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
-        },
-        'core.analysis': {
-            'Meta': {'object_name': 'Analysis'},
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'data_set': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['core.DataSet']", 'blank': 'True'}),
-            'description': ('django.db.models.fields.TextField', [], {'max_length': '5000', 'blank': 'True'}),
-            'history_id': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'library_id': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'modification_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '250'}),
-            'project': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'analyses'", 'to': "orm['core.Project']"}),
-            'results': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['core.AnalysisResult']", 'symmetrical': 'False', 'blank': 'True'}),
-            'slug': ('django.db.models.fields.CharField', [], {'max_length': '250', 'null': 'True', 'blank': 'True'}),
-            'status': ('django.db.models.fields.TextField', [], {'default': "'INITIALIZED'", 'null': 'True', 'blank': 'True'}),
-            'summary': ('django.db.models.fields.CharField', [], {'max_length': '1000', 'blank': 'True'}),
-            'time_end': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'time_start': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'}),
-            'workflow': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['core.Workflow']", 'blank': 'True'}),
-            'workflow_copy': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'workflow_data_input_maps': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['core.WorkflowDataInputMap']", 'symmetrical': 'False', 'blank': 'True'}),
-            'workflow_dl_files': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['core.WorkflowFilesDL']", 'symmetrical': 'False', 'blank': 'True'}),
-            'workflow_galaxy_id': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'workflow_steps_num': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'})
-        },
-        'core.analysisresult': {
-            'Meta': {'object_name': 'AnalysisResult'},
-            'analysis_uuid': ('django.db.models.fields.CharField', [], {'max_length': '36'}),
-            'file_name': ('django.db.models.fields.TextField', [], {}),
-            'file_store_uuid': ('django.db.models.fields.CharField', [], {'max_length': '36'}),
-            'file_type': ('django.db.models.fields.TextField', [], {}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'})
-        },
-        'core.dataset': {
-            'Meta': {'object_name': 'DataSet'},
-            '_investigations': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['data_set_manager.Investigation']", 'through': "orm['core.InvestigationLink']", 'symmetrical': 'False'}),
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'description': ('django.db.models.fields.TextField', [], {'max_length': '5000', 'blank': 'True'}),
-            'file_count': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
-            'file_size': ('django.db.models.fields.BigIntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'modification_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '250'}),
-            'slug': ('django.db.models.fields.CharField', [], {'max_length': '250', 'null': 'True', 'blank': 'True'}),
-            'summary': ('django.db.models.fields.CharField', [], {'max_length': '1000', 'blank': 'True'}),
-            'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'})
-        },
-        'core.diskquota': {
-            'Meta': {'object_name': 'DiskQuota'},
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'current': ('django.db.models.fields.IntegerField', [], {}),
-            'description': ('django.db.models.fields.TextField', [], {'max_length': '5000', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'maximum': ('django.db.models.fields.IntegerField', [], {}),
-            'modification_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '250'}),
-            'slug': ('django.db.models.fields.CharField', [], {'max_length': '250', 'null': 'True', 'blank': 'True'}),
-            'summary': ('django.db.models.fields.CharField', [], {'max_length': '1000', 'blank': 'True'}),
-            'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'})
-        },
-        'core.extendedgroup': {
-            'Meta': {'object_name': 'ExtendedGroup', '_ormbases': ['auth.Group']},
-            'group_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['auth.Group']", 'unique': 'True', 'primary_key': 'True'}),
-            'is_public': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'manager_group': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'managed_group'", 'null': 'True', 'to': "orm['core.ExtendedGroup']"}),
-            'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'})
-        },
-        'core.investigationlink': {
-            'Meta': {'object_name': 'InvestigationLink'},
-            'data_set': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['core.DataSet']"}),
-            'date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'investigation': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['data_set_manager.Investigation']"}),
-            'message': ('django.db.models.fields.CharField', [], {'max_length': '500', 'null': 'True', 'blank': 'True'}),
-            'version': ('django.db.models.fields.IntegerField', [], {'default': '1'})
-        },
-        'core.nodeset': {
-            'Meta': {'object_name': 'NodeSet'},
-            'assay': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['data_set_manager.Assay']"}),
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'description': ('django.db.models.fields.TextField', [], {'max_length': '5000', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'modification_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '250'}),
-            'nodes': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': "orm['data_set_manager.Node']", 'null': 'True', 'blank': 'True'}),
-            'slug': ('django.db.models.fields.CharField', [], {'max_length': '250', 'null': 'True', 'blank': 'True'}),
-            'study': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['data_set_manager.Study']"}),
-            'summary': ('django.db.models.fields.CharField', [], {'max_length': '1000', 'blank': 'True'}),
-            'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'})
-        },
-        'core.project': {
-            'Meta': {'object_name': 'Project'},
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'description': ('django.db.models.fields.TextField', [], {'max_length': '5000', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'is_catch_all': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'modification_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '250'}),
-            'slug': ('django.db.models.fields.CharField', [], {'max_length': '250', 'null': 'True', 'blank': 'True'}),
-            'summary': ('django.db.models.fields.CharField', [], {'max_length': '1000', 'blank': 'True'}),
-            'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'})
-        },
-        'core.userprofile': {
-            'Meta': {'object_name': 'UserProfile'},
-            'affiliation': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'catch_all_project': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['core.Project']", 'null': 'True', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'is_public': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'user': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['auth.User']", 'unique': 'True'}),
-            'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'})
-        },
-        'core.workflow': {
-            'Meta': {'unique_together': "(('internal_id', 'workflow_engine'),)", 'object_name': 'Workflow'},
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'data_inputs': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['core.WorkflowDataInput']", 'symmetrical': 'False', 'blank': 'True'}),
-            'description': ('django.db.models.fields.TextField', [], {'max_length': '5000', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'internal_id': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
-            'modification_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '250'}),
-            'show_in_repository_mode': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'slug': ('django.db.models.fields.CharField', [], {'max_length': '250', 'null': 'True', 'blank': 'True'}),
-            'summary': ('django.db.models.fields.CharField', [], {'max_length': '1000', 'blank': 'True'}),
-            'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'}),
-            'workflow_engine': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['core.WorkflowEngine']"})
-        },
-        'core.workflowdatainput': {
-            'Meta': {'object_name': 'WorkflowDataInput'},
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'internal_id': ('django.db.models.fields.IntegerField', [], {}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '200'})
-        },
-        'core.workflowdatainputmap': {
-            'Meta': {'object_name': 'WorkflowDataInputMap'},
-            'data_uuid': ('django.db.models.fields.CharField', [], {'max_length': '36'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'pair_id': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'workflow_data_input_name': ('django.db.models.fields.CharField', [], {'max_length': '200'})
-        },
-        'core.workflowengine': {
-            'Meta': {'object_name': 'WorkflowEngine'},
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'description': ('django.db.models.fields.TextField', [], {'max_length': '5000', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'instance': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['galaxy_connector.Instance']", 'blank': 'True'}),
-            'modification_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '250'}),
-            'slug': ('django.db.models.fields.CharField', [], {'max_length': '250', 'null': 'True', 'blank': 'True'}),
-            'summary': ('django.db.models.fields.CharField', [], {'max_length': '1000', 'blank': 'True'}),
-            'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'})
-        },
-        'core.workflowfilesdl': {
-            'Meta': {'object_name': 'WorkflowFilesDL'},
-            'filename': ('django.db.models.fields.TextField', [], {}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'pair_id': ('django.db.models.fields.TextField', [], {}),
-            'step_id': ('django.db.models.fields.TextField', [], {})
-        },
-        'data_set_manager.assay': {
-            'Meta': {'object_name': 'Assay'},
-            'file_name': ('django.db.models.fields.TextField', [], {}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'measurement': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'measurement_accession': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'measurement_source': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'platform': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'study': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['data_set_manager.Study']"}),
-            'technology': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'technology_accession': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'technology_source': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'})
-        },
-        'data_set_manager.investigation': {
-            'Meta': {'object_name': 'Investigation', '_ormbases': ['data_set_manager.NodeCollection']},
-            'isarchive_file': ('django.db.models.fields.CharField', [], {'max_length': '36', 'null': 'True', 'blank': 'True'}),
-            'nodecollection_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['data_set_manager.NodeCollection']", 'unique': 'True', 'primary_key': 'True'}),
-            'pre_isarchive_file': ('django.db.models.fields.CharField', [], {'max_length': '36', 'null': 'True', 'blank': 'True'})
-        },
-        'data_set_manager.node': {
-            'Meta': {'object_name': 'Node'},
-            'assay': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['data_set_manager.Assay']", 'null': 'True', 'blank': 'True'}),
-            'children': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'parents_set'", 'symmetrical': 'False', 'to': "orm['data_set_manager.Node']"}),
-            'file_uuid': ('django.db.models.fields.CharField', [], {'default': 'None', 'max_length': '36', 'null': 'True', 'blank': 'True'}),
-            'genome_build': ('django.db.models.fields.TextField', [], {'null': 'True', 'db_index': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'is_annotation': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'name': ('django.db.models.fields.TextField', [], {'db_index': 'True'}),
-            'parents': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'children_set'", 'symmetrical': 'False', 'to': "orm['data_set_manager.Node']"}),
-            'species': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'db_index': 'True'}),
-            'study': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['data_set_manager.Study']"}),
-            'type': ('django.db.models.fields.TextField', [], {'db_index': 'True'}),
-            'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'})
-        },
-        'data_set_manager.nodecollection': {
-            'Meta': {'object_name': 'NodeCollection'},
-            'description': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'identifier': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'release_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            'submission_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            'title': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'})
-        },
-        'data_set_manager.study': {
-            'Meta': {'object_name': 'Study', '_ormbases': ['data_set_manager.NodeCollection']},
-            'file_name': ('django.db.models.fields.TextField', [], {}),
-            'investigation': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['data_set_manager.Investigation']"}),
-            'nodecollection_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['data_set_manager.NodeCollection']", 'unique': 'True', 'primary_key': 'True'})
-        },
-        'galaxy_connector.instance': {
-            'Meta': {'object_name': 'Instance'},
-            'api_key': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
-            'api_url': ('django.db.models.fields.CharField', [], {'default': "'api'", 'max_length': '100'}),
-            'base_url': ('django.db.models.fields.CharField', [], {'max_length': '2000'}),
-            'data_url': ('django.db.models.fields.CharField', [], {'default': "'datasets'", 'max_length': '100'}),
-            'description': ('django.db.models.fields.CharField', [], {'max_length': '500'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'})
-        }
-    }
-
-    complete_apps = ['core']
+    operations = [
+        migrations.CreateModel(
+            name='Analysis',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
+                ('name', models.CharField(max_length=250, null=True)),
+                ('summary', models.CharField(max_length=1000, blank=True)),
+                ('creation_date', models.DateTimeField(auto_now_add=True)),
+                ('modification_date', models.DateTimeField(auto_now=True)),
+                ('description', models.TextField(max_length=5000, blank=True)),
+                ('slug', models.CharField(max_length=250, null=True, blank=True)),
+                ('workflow_steps_num', models.IntegerField(null=True, blank=True)),
+                ('workflow_copy', models.TextField(null=True, blank=True)),
+                ('history_id', models.TextField(null=True, blank=True)),
+                ('workflow_galaxy_id', models.TextField(null=True, blank=True)),
+                ('library_id', models.TextField(null=True, blank=True)),
+                ('time_start', models.DateTimeField(null=True, blank=True)),
+                ('time_end', models.DateTimeField(null=True, blank=True)),
+                ('status', models.TextField(default=b'INITIALIZED', null=True, blank=True, choices=[(b'SUCCESS', b'Analysis finished successfully'), (b'FAILURE', b'Analysis terminated after errors'), (b'RUNNING', b'Analysis is running'), (b'INITIALIZED', b'Analysis was initialized')])),
+                ('status_detail', models.TextField(null=True, blank=True)),
+                ('canceled', models.BooleanField(default=False)),
+            ],
+            options={
+                'ordering': ['-time_end', '-time_start'],
+                'verbose_name': 'analysis',
+                'verbose_name_plural': 'analyses',
+                'permissions': (('read_analysis', 'Can read analysis'),),
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='AnalysisNodeConnection',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('subanalysis', models.IntegerField(null=True)),
+                ('step', models.IntegerField()),
+                ('name', models.CharField(max_length=100)),
+                ('filename', models.CharField(max_length=100)),
+                ('filetype', models.CharField(max_length=100, null=True, blank=True)),
+                ('direction', models.CharField(max_length=3, choices=[(b'in', b'in'), (b'out', b'out')])),
+                ('is_refinery_file', models.BooleanField(default=False)),
+                ('analysis', models.ForeignKey(related_name='workflow_node_connections', to='core.Analysis')),
+                ('node', models.ForeignKey(related_name='workflow_node_connections', default=None, blank=True, to='data_set_manager.Node', null=True)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='AnalysisResult',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('analysis_uuid', django_extensions.db.fields.UUIDField(max_length=36, editable=False, blank=True)),
+                ('file_store_uuid', django_extensions.db.fields.UUIDField(max_length=36, editable=False, blank=True)),
+                ('file_name', models.TextField()),
+                ('file_type', models.TextField()),
+            ],
+            options={
+                'verbose_name': 'analysis result',
+                'verbose_name_plural': 'analysis results',
+                'permissions': (('read_analysis result', 'Can read analysis result'),),
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='CustomRegistrationProfile',
+            fields=[
+                ('registrationprofile_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='registration.RegistrationProfile')),
+            ],
+            options={
+            },
+            bases=('registration.registrationprofile',),
+        ),
+        migrations.CreateModel(
+            name='DataSet',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
+                ('name', models.CharField(max_length=250, null=True)),
+                ('summary', models.CharField(max_length=1000, blank=True)),
+                ('creation_date', models.DateTimeField(auto_now_add=True)),
+                ('modification_date', models.DateTimeField(auto_now=True)),
+                ('description', models.TextField(max_length=5000, blank=True)),
+                ('slug', models.CharField(max_length=250, null=True, blank=True)),
+                ('file_count', models.IntegerField(default=0, null=True, blank=True)),
+                ('file_size', models.BigIntegerField(default=0, null=True, blank=True)),
+                ('accession', models.CharField(max_length=32, null=True, blank=True)),
+                ('accession_source', models.CharField(max_length=128, null=True, blank=True)),
+                ('title', models.CharField(default=b'Untitled data set', max_length=250)),
+            ],
+            options={
+                'verbose_name': 'dataset',
+                'permissions': (('read_dataset', 'Can read dataset'), ('share_dataset', 'Can share dataset')),
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='DiskQuota',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
+                ('name', models.CharField(max_length=250, null=True)),
+                ('summary', models.CharField(max_length=1000, blank=True)),
+                ('creation_date', models.DateTimeField(auto_now_add=True)),
+                ('modification_date', models.DateTimeField(auto_now=True)),
+                ('description', models.TextField(max_length=5000, blank=True)),
+                ('slug', models.CharField(max_length=250, null=True, blank=True)),
+                ('maximum', models.IntegerField()),
+                ('current', models.IntegerField()),
+            ],
+            options={
+                'verbose_name': 'diskquota',
+                'permissions': (('read_diskquota', 'Can read diskquota'), ('share_diskquota', 'Can share diskquota')),
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Download',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
+                ('name', models.CharField(max_length=250, null=True)),
+                ('summary', models.CharField(max_length=1000, blank=True)),
+                ('creation_date', models.DateTimeField(auto_now_add=True)),
+                ('modification_date', models.DateTimeField(auto_now=True)),
+                ('description', models.TextField(max_length=5000, blank=True)),
+                ('slug', models.CharField(max_length=250, null=True, blank=True)),
+                ('analysis', models.ForeignKey(default=None, to='core.Analysis', null=True)),
+                ('data_set', models.ForeignKey(to='core.DataSet')),
+                ('file_store_item', models.ForeignKey(default=None, to='file_store.FileStoreItem', null=True)),
+            ],
+            options={
+                'verbose_name': 'download',
+                'permissions': (('read_download', 'Can read download'),),
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='ExtendedGroup',
+            fields=[
+                ('group_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='auth.Group')),
+                ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
+                ('is_public', models.BooleanField(default=False)),
+                ('manager_group', models.ForeignKey(related_name='managed_group', blank=True, to='core.ExtendedGroup', null=True)),
+            ],
+            options={
+            },
+            bases=('auth.group',),
+        ),
+        migrations.CreateModel(
+            name='InvestigationLink',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('version', models.IntegerField(default=1)),
+                ('message', models.CharField(max_length=500, null=True, blank=True)),
+                ('date', models.DateTimeField(auto_now_add=True)),
+                ('data_set', models.ForeignKey(to='core.DataSet')),
+                ('investigation', models.ForeignKey(to='data_set_manager.Investigation')),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Invitation',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('token_uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
+                ('group_id', models.IntegerField(null=True, blank=True)),
+                ('created', models.DateTimeField(null=True, editable=False)),
+                ('expires', models.DateTimeField(null=True, editable=False)),
+                ('recipient_email', models.CharField(max_length=250, null=True)),
+                ('sender', models.ForeignKey(to=settings.AUTH_USER_MODEL, null=True)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='NodeGroup',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
+                ('name', models.CharField(max_length=250, null=True)),
+                ('summary', models.CharField(max_length=1000, blank=True)),
+                ('creation_date', models.DateTimeField(auto_now_add=True)),
+                ('modification_date', models.DateTimeField(auto_now=True)),
+                ('description', models.TextField(max_length=5000, blank=True)),
+                ('slug', models.CharField(max_length=250, null=True, blank=True)),
+                ('node_count', models.IntegerField(default=0)),
+                ('is_implicit', models.BooleanField(default=False)),
+                ('is_current', models.BooleanField(default=False)),
+                ('assay', models.ForeignKey(to='data_set_manager.Assay')),
+                ('nodes', models.ManyToManyField(to='data_set_manager.Node', null=True, blank=True)),
+                ('study', models.ForeignKey(to='data_set_manager.Study')),
+            ],
+            options={
+                'verbose_name': 'node group',
+                'permissions': (('read_node group', 'Can read node group'), ('share_node group', 'Can share node group')),
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='NodePair',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
+                ('group', models.IntegerField(null=True, blank=True)),
+                ('node1', models.ForeignKey(related_name='node1', to='data_set_manager.Node')),
+                ('node2', models.ForeignKey(related_name='node2', blank=True, to='data_set_manager.Node', null=True)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='NodeRelationship',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
+                ('name', models.CharField(max_length=250, null=True)),
+                ('summary', models.CharField(max_length=1000, blank=True)),
+                ('creation_date', models.DateTimeField(auto_now_add=True)),
+                ('modification_date', models.DateTimeField(auto_now=True)),
+                ('description', models.TextField(max_length=5000, blank=True)),
+                ('slug', models.CharField(max_length=250, null=True, blank=True)),
+                ('type', models.CharField(blank=True, max_length=15, choices=[(b'1-1', b'1-1'), (b'1-N', b'1-N'), (b'N-1', b'N-1'), (b'replicate', b'replicate')])),
+                ('is_current', models.BooleanField(default=False)),
+                ('assay', models.ForeignKey(to='data_set_manager.Assay')),
+                ('node_pairs', models.ManyToManyField(related_name='node_pairs', null=True, to='core.NodePair', blank=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='NodeSet',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
+                ('name', models.CharField(max_length=250, null=True)),
+                ('summary', models.CharField(max_length=1000, blank=True)),
+                ('creation_date', models.DateTimeField(auto_now_add=True)),
+                ('modification_date', models.DateTimeField(auto_now=True)),
+                ('description', models.TextField(max_length=5000, blank=True)),
+                ('slug', models.CharField(max_length=250, null=True, blank=True)),
+                ('solr_query', models.TextField(null=True, blank=True)),
+                ('solr_query_components', models.TextField(null=True, blank=True)),
+                ('node_count', models.IntegerField(null=True, blank=True)),
+                ('is_implicit', models.BooleanField(default=False)),
+                ('is_current', models.BooleanField(default=False)),
+                ('assay', models.ForeignKey(to='data_set_manager.Assay')),
+                ('study', models.ForeignKey(to='data_set_manager.Study')),
+            ],
+            options={
+                'verbose_name': 'nodeset',
+                'permissions': (('read_nodeset', 'Can read nodeset'), ('share_nodeset', 'Can share nodeset')),
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Ontology',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('import_date', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
+                ('name', models.CharField(max_length=64, blank=True)),
+                ('acronym', models.CharField(unique=True, max_length=8, blank=True)),
+                ('uri', models.CharField(unique=True, max_length=128, blank=True)),
+                ('update_date', models.DateTimeField(auto_now=True)),
+                ('version', models.CharField(max_length=256, null=True, blank=True)),
+                ('owl2neo4j_version', models.CharField(max_length=16, null=True)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Project',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
+                ('name', models.CharField(max_length=250, null=True)),
+                ('summary', models.CharField(max_length=1000, blank=True)),
+                ('creation_date', models.DateTimeField(auto_now_add=True)),
+                ('modification_date', models.DateTimeField(auto_now=True)),
+                ('description', models.TextField(max_length=5000, blank=True)),
+                ('slug', models.CharField(max_length=250, null=True, blank=True)),
+                ('is_catch_all', models.BooleanField(default=False)),
+            ],
+            options={
+                'verbose_name': 'project',
+                'permissions': (('read_project', 'Can read project'), ('share_project', 'Can share project')),
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Tutorials',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('launchpad_tutorial_viewed', models.BooleanField(default=False)),
+                ('collaboration_tutorial_viewed', models.BooleanField(default=False)),
+                ('data_upload_tutorial_viewed', models.BooleanField(default=False)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='UserProfile',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
+                ('affiliation', models.CharField(max_length=100, blank=True)),
+                ('login_count', models.IntegerField(default=0)),
+                ('catch_all_project', models.ForeignKey(blank=True, to='core.Project', null=True)),
+                ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Workflow',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
+                ('name', models.CharField(max_length=250, null=True)),
+                ('summary', models.CharField(max_length=1000, blank=True)),
+                ('creation_date', models.DateTimeField(auto_now_add=True)),
+                ('modification_date', models.DateTimeField(auto_now=True)),
+                ('description', models.TextField(max_length=5000, blank=True)),
+                ('slug', models.CharField(max_length=250, null=True, blank=True)),
+                ('internal_id', models.CharField(max_length=50)),
+                ('show_in_repository_mode', models.BooleanField(default=False)),
+                ('is_active', models.BooleanField(default=False)),
+                ('type', models.CharField(default=b'analysis', max_length=25, choices=[(b'analysis', b'Workflow performs data analysis tasks. Results are merged into dataset.'), (b'download', b"Workflow creates bulk downloads. Results are add to user's download list.")])),
+                ('graph', models.TextField(null=True, blank=True)),
+            ],
+            options={
+                'verbose_name': 'workflow',
+                'permissions': (('read_workflow', 'Can read workflow'), ('share_workflow', 'Can share workflow')),
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='WorkflowDataInput',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('name', models.CharField(max_length=200)),
+                ('internal_id', models.IntegerField()),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='WorkflowDataInputMap',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('workflow_data_input_name', models.CharField(max_length=200)),
+                ('data_uuid', django_extensions.db.fields.UUIDField(max_length=36, editable=False, blank=True)),
+                ('pair_id', models.IntegerField(null=True, blank=True)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='WorkflowEngine',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
+                ('name', models.CharField(max_length=250, null=True)),
+                ('summary', models.CharField(max_length=1000, blank=True)),
+                ('creation_date', models.DateTimeField(auto_now_add=True)),
+                ('modification_date', models.DateTimeField(auto_now=True)),
+                ('description', models.TextField(max_length=5000, blank=True)),
+                ('slug', models.CharField(max_length=250, null=True, blank=True)),
+                ('instance', models.ForeignKey(to='galaxy_connector.Instance', blank=True)),
+            ],
+            options={
+                'verbose_name': 'workflowengine',
+                'permissions': (('read_workflowengine', 'Can read workflowengine'),),
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='WorkflowFilesDL',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('step_id', models.TextField()),
+                ('pair_id', models.TextField()),
+                ('filename', models.TextField()),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='WorkflowInputRelationships',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('category', models.CharField(blank=True, max_length=15, choices=[(b'1-1', b'1-1'), (b'1-N', b'1-N'), (b'N-1', b'N-1'), (b'replicate', b'replicate')])),
+                ('set1', models.CharField(max_length=50)),
+                ('set2', models.CharField(max_length=50, null=True, blank=True)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.AddField(
+            model_name='workflow',
+            name='data_inputs',
+            field=models.ManyToManyField(to='core.WorkflowDataInput', blank=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='workflow',
+            name='input_relationships',
+            field=models.ManyToManyField(to='core.WorkflowInputRelationships', blank=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='workflow',
+            name='workflow_engine',
+            field=models.ForeignKey(to='core.WorkflowEngine'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='tutorials',
+            name='user_profile',
+            field=models.ForeignKey(to='core.UserProfile'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='noderelationship',
+            name='node_set_1',
+            field=models.ForeignKey(related_name='node_set_1', blank=True, to='core.NodeSet', null=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='noderelationship',
+            name='node_set_2',
+            field=models.ForeignKey(related_name='node_set_2', blank=True, to='core.NodeSet', null=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='noderelationship',
+            name='study',
+            field=models.ForeignKey(to='data_set_manager.Study'),
+            preserve_default=True,
+        ),
+        migrations.AlterUniqueTogether(
+            name='nodegroup',
+            unique_together=set([('assay', 'name')]),
+        ),
+        migrations.AlterUniqueTogether(
+            name='investigationlink',
+            unique_together=set([('data_set', 'investigation', 'version')]),
+        ),
+        migrations.AddField(
+            model_name='analysis',
+            name='data_set',
+            field=models.ForeignKey(to='core.DataSet', blank=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='analysis',
+            name='project',
+            field=models.ForeignKey(related_name='analyses', to='core.Project'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='analysis',
+            name='results',
+            field=models.ManyToManyField(to='core.AnalysisResult', blank=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='analysis',
+            name='workflow',
+            field=models.ForeignKey(to='core.Workflow', blank=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='analysis',
+            name='workflow_data_input_maps',
+            field=models.ManyToManyField(to='core.WorkflowDataInputMap', blank=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='analysis',
+            name='workflow_dl_files',
+            field=models.ManyToManyField(to='core.WorkflowFilesDL', blank=True),
+            preserve_default=True,
+        )
+    ]

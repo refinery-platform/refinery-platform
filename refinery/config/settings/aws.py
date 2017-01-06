@@ -1,6 +1,6 @@
 # Django settings specialised for the AWS environment.
 #
-# See https://github.com/parklab/refinery-platform/wiki/AWS for
+# See https://github.com/refinery-platform/refinery-platform/wiki/AWS for
 # more details.
 
 import requests
@@ -10,7 +10,7 @@ from .prod import *  # NOQA
 
 # Ensure that the AWS private IP is an Allowed Host.
 # (required for ELB pings to work,
-# see https://github.com/parklab/refinery-platform/issues/1239)
+# see https://github.com/refinery-platform/refinery-platform/issues/1239)
 
 # Not checking for exceptions: if we can't get EC2 instance metadata,
 # something horrible is wrong.

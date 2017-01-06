@@ -10,11 +10,13 @@ function FileBrowserCtrl (
   _,
   $window,
   fileBrowserFactory,
+  fileBrowserSettings,
   isOwnerService,
   resetGridService,
   selectedFilterService,
   selectedNodesService
   ) {
+  var maxFileRequest = fileBrowserSettings.maxFileRequest;
   var vm = this;
   // attribute list from api
   vm.assayAttributes = fileBrowserFactory.assayAttributes;
@@ -25,8 +27,9 @@ function FileBrowserCtrl (
   // Ui-grid parameters
   vm.gridApi = undefined; // avoids duplicate grid generation
   vm.queryKeys = Object.keys($location.search());
-  // used by ui to select/deselect, each attribute has a list of filter fields
-  vm.selectedField = {};
+  /** used by ui to select/deselect, attributes have an object of filter fields
+   * attributeInternalName: {fieldName: boolean, fieldName: boolean} */
+  vm.uiSelectedFields = {};
   vm.selectNodesCount = 0;
   vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
   vm.gridOptions = {
@@ -48,7 +51,7 @@ function FileBrowserCtrl (
   // variables supporting ui-grid dynamic scrolling
   vm.firstPage = 0;
   vm.lastPage = 0;
-  vm.rowCount = 100;
+  vm.rowCount = maxFileRequest;
   vm.totalPages = 1;
   vm.cachePages = 2;
   vm.counter = 0;
@@ -101,31 +104,42 @@ function FileBrowserCtrl (
       vm.refreshSelectedFieldFromQuery(attributeObj);
     });
     fileBrowserFactory.filesParam.filter_attribute = {};
-    angular.copy(selectedFilterService.selectedFieldList,
+    angular.copy(selectedFilterService.attributeSelectedFields,
       fileBrowserFactory.filesParam.filter_attribute);
   };
 
   // helper method, upon refresh/load add fields to select data objs from query
   vm.refreshSelectedFieldFromQuery = function (_attributeObj) {
+    // stringify/encode attributeInternalName:fieldName for url query comparison
     angular.forEach(_attributeObj.facetObj, function (fieldObj) {
-      if (vm.queryKeys.indexOf(fieldObj.name) > -1) {
-        vm.selectedField[fieldObj.name] = true;
-        vm.updateFilterSelectionList(_attributeObj.internal_name, fieldObj.name);
+      var encodedField = selectedFilterService.stringifyAndEncodeAttributeObj(
+        _attributeObj.internal_name,
+        fieldObj.name
+      );
+
+      if (vm.queryKeys.indexOf(encodedField) > -1) {
+        if (!vm.uiSelectedFields.hasOwnProperty(_attributeObj.internal_name)) {
+          vm.uiSelectedFields[_attributeObj.internal_name] = {};
+        }
+        vm.uiSelectedFields[_attributeObj.internal_name][fieldObj.name] = true;
+        selectedFilterService.updateSelectedFilters(
+          vm.uiSelectedFields[_attributeObj.internal_name],
+          _attributeObj.internal_name,
+          fieldObj.name
+        );
       }
     });
   };
 
-  // Updates selection filter field list and url
-  vm.updateFilterSelectionList = function (internalName, field) {
-    selectedFilterService.updateSelectedFilters(vm.selectedField, internalName, field);
-  };
-
-  // Used by ui, Updates which attribute filters are selected and ui-grid data
-  vm.attributeSelectionUpdate = function (_internalName, _field) {
-    vm.updateFilterSelectionList(_internalName, _field);
+  // Used by ui, updates which attribute filters are selected and ui-grid data
+  vm.attributeSelectionUpdate = function (internalName, field) {
+    selectedFilterService.updateSelectedFilters(
+      vm.uiSelectedFields[internalName], internalName, field
+    );
     fileBrowserFactory.filesParam.filter_attribute = {};
-    angular.copy(selectedFilterService.selectedFieldList,
-      fileBrowserFactory.filesParam.filter_attribute);
+    angular.copy(selectedFilterService.attributeSelectedFields,
+      fileBrowserFactory.filesParam.filter_attribute
+    );
     // Resets selection
     selectedNodesService.setSelectedAllFlags(false);
     // resets grid
@@ -137,9 +151,11 @@ function FileBrowserCtrl (
     // prevent scoping issues, after reset or initial generation
     if (!vm.gridApi) {
       vm.gridApi = gridApi;
-       // Infinite Grid Load
-      gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
-      gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
+       // Infinite Grid Load, watchers required for large files > maxFileRequest
+      if (vm.assayFilesTotal > maxFileRequest) {
+        gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
+        gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
+      }
 
       // Sort events
       vm.gridApi.core.on.sortChanged(null, vm.sortChanged);
@@ -386,6 +402,19 @@ function FileBrowserCtrl (
     });
   };
 
+  // Helper method which check for any data updates during soft loads (tabbing)
+  var checkAndUpdateGridData = function () {
+    fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam)
+      .then(function () {
+        if (vm.assayFilesTotal !== fileBrowserFactory.assayFilesTotalItems.count) {
+          if (vm.assayFilesTotal < maxFileRequest) {
+            vm.gridOptions.data = fileBrowserFactory.assayFiles;
+          }
+          vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
+        }
+      });
+  };
+
   /**
    * Checks whether the page requires data (hard/soft page load) and
    * updates data, filters, ui-grid selections, and url query
@@ -403,12 +432,18 @@ function FileBrowserCtrl (
       });
       // Tabbing does not require api response wait and update query in URL
     } else {
+      checkAndUpdateGridData();
       // updates view model's selected attribute filters
-      angular.forEach(selectedFilterService.selectedFieldList, function (fieldArr) {
+      angular.forEach(selectedFilterService.attributeSelectedFields, function (
+        fieldArr,
+        attributeInternalName
+      ) {
         for (var i = 0; i < fieldArr.length; i++) {
-          vm.selectedField[fieldArr[i]] = true;
+          vm.uiSelectedFields[attributeInternalName][fieldArr[i]] = true;
           // update url with selected fields(filters)
-          selectedFilterService.updateUrlQuery(fieldArr[i], true);
+          var encodedAttribute = selectedFilterService
+            .stringifyAndEncodeAttributeObj(attributeInternalName, fieldArr[i]);
+          selectedFilterService.updateUrlQuery(encodedAttribute, true);
         }
       });
       // $timeout required to allow grid generation
@@ -434,10 +469,12 @@ function FileBrowserCtrl (
     function () {
       if (resetGridService.resetGridFlag) {
         // Have to set selected Fields in control due to service scope
-        angular.forEach(vm.selectedField, function (value, field) {
-          vm.selectedField[field] = false;
+        angular.forEach(vm.uiSelectedFields, function (fieldsObj, attributeInternalName) {
+          angular.forEach(fieldsObj, function (value, fieldName) {
+            vm.uiSelectedFields[attributeInternalName][fieldName] = false;
+          });
+          selectedFilterService.resetAttributeFilter(fieldsObj);
         });
-        selectedFilterService.resetAttributeFilter(vm.selectedField);
         vm.selectNodesCount = 0;
         fileBrowserFactory.filesParam.filter_attribute = {};
         vm.reset();
@@ -482,6 +519,7 @@ angular
     '_',
     '$window',
     'fileBrowserFactory',
+    'fileBrowserSettings',
     'isOwnerService',
     'resetGridService',
     'selectedFilterService',

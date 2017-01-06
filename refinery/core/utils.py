@@ -10,7 +10,6 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.models import Site
 from django.contrib.auth.models import User
-from django.core.exceptions import MultipleObjectsReturned
 from django.core.mail import send_mail
 from django.core.cache import cache
 from django.db import connection
@@ -847,21 +846,6 @@ def email_admin(subject, message):
     """
     send_mail(subject, message, settings.SERVER_EMAIL,
               [settings.ADMINS[0][1]])
-
-
-def get_anonymous_user():
-    """
-    Trys to fetch the AnonymousUser otherwise returns None
-    """
-    try:
-        anonymous_user = User.objects.get(
-                id=settings.ANONYMOUS_USER_ID
-            )
-        return anonymous_user
-
-    except (User.DoesNotExist, MultipleObjectsReturned) as e:
-        logger.error("Could not fetch Anonymous User: %s" % e)
-        return None
 
 
 def create_current_selection_node_group(assay_uuid):

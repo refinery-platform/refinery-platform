@@ -14,7 +14,6 @@ import json
 from django.db.models import Q
 from django.utils.http import (urlquote, urlunquote)
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
 
 import core
 from data_set_manager.search_indexes import NodeIndex
@@ -713,7 +712,9 @@ def get_owner_from_assay(uuid):
 
     try:
         investigation_key = Study.objects.get(assay__uuid=uuid).investigation
-    except ObjectDoesNotExist:
+    except (Study.DoesNotExist,
+            Study.MultipleObjectsReturned) as e:
+        logger.error(e)
         return "Error: Invalid uuid"
 
     investigation_link = core.models.InvestigationLink.objects.get(

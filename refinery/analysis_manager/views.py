@@ -83,7 +83,7 @@ def analysis_status(request, uuid):
         logger.debug("Analysis status for '%s': %s",
                      analysis.name, json.dumps(ret_json))
         return HttpResponse(json.dumps(ret_json, indent=4),
-                            mimetype='application/javascript')
+                            content_type='application/javascript')
     else:
         return render_to_response(
             'analysis_manager/analysis_status.html',
@@ -146,7 +146,7 @@ def update_workflows(request):
         json_serializer = serializers.get_serializer("json")()
         return HttpResponse(
             json_serializer.serialize(workflows, ensure_ascii=False),
-            mimetype='application/javascript')
+            content_type='application/javascript')
     else:
         return HttpResponse(status=400)
 
@@ -158,9 +158,9 @@ def getWorkflowDataInputMap(request, workflow_uuid):
     curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
     data = serializers.serialize('json', curr_workflow.data_inputs.all())
     if request.is_ajax():
-        return HttpResponse(data, mimetype='application/javascript')
+        return HttpResponse(data, content_type='application/javascript')
     else:
-        return HttpResponse(data, mimetype='application/json')
+        return HttpResponse(data, content_type='application/json')
 
 
 def run(request):
@@ -249,7 +249,7 @@ def run(request):
         analysis = Analysis.objects.create(
             summary=summary_name,
             name=temp_name,
-            project=request.user.get_profile().catch_all_project,
+            project=request.user.profile.catch_all_project,
             data_set=data_set,
             workflow=curr_workflow,
             time_start=timezone.now()
@@ -314,7 +314,7 @@ def run(request):
         analysis = Analysis.objects.create(
             summary=summary_name,
             name=temp_name,
-            project=request.user.get_profile().catch_all_project,
+            project=request.user.profile.catch_all_project,
             data_set=data_set,
             workflow=curr_workflow,
             time_start=timezone.now()
@@ -398,7 +398,7 @@ def run(request):
         analysis = Analysis.objects.create(
             summary=summary_name,
             name=temp_name,
-            project=request.user.get_profile().catch_all_project,
+            project=request.user.profile.catch_all_project,
             data_set=data_set,
             workflow=curr_workflow,
             time_start=timezone.now()
@@ -517,38 +517,7 @@ def create_noderelationship(request):
             new_relationship.node_pairs.add(new_pair)
 
         return HttpResponse(json.dumps(match_info, indent=4),
-                            mimetype='application/json')
-
-
-class DictDiffer(object):
-    """A dictionary difference calculator
-    Originally posted as: http://stackoverflow.com/a/1165552
-    Calculate the difference between two dictionaries as:
-    (1) items added
-    (2) items removed
-    (3) keys same in both but changed values
-    (4) keys same in both and unchanged values
-    """
-    def __init__(self, current_dict, past_dict):
-        self.current_dict, self.past_dict = current_dict, past_dict
-        self.current_keys, self.past_keys = [
-            set(d.keys()) for d in (current_dict, past_dict)
-            ]
-        self.intersect = self.current_keys.intersection(self.past_keys)
-
-    def added(self):
-        return self.current_keys - self.intersect
-
-    def removed(self):
-        return self.past_keys - self.intersect
-
-    def changed(self):
-        return set(o for o in self.intersect
-                   if self.past_dict[o] != self.current_dict[o])
-
-    def unchanged(self):
-        return set(o for o in self.intersect
-                   if self.past_dict[o] == self.current_dict[o])
+                            content_type='application/json')
 
 
 def match_nodesets(ns1, ns2, diff_f, all_f, rel_type=None):

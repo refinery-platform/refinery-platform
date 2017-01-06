@@ -55,9 +55,9 @@
           title="Import this shared data set into your own space to run analyses"
           ng-if="!preview.dataSetDetails.is_owner && preview.dataSetDetails.isa_archive && app.settings.djangoApp.userId != undefined"
           ng-class="{
-            'disabled': preview.isDataSetReImporting,
-            'btn-success': preview.isDataSetReImportSuccess,
-            'btn-danger': preview.isDataSetReImportFail
+            'disabled': preview.importStatus[preview.dataSetUuid].isDataSetReImporting,
+            'btn-success': preview.importStatus[preview.dataSetUuid].isDataSetReImportSuccess,
+            'btn-danger': preview.importStatus[preview.dataSetUuid].isDataSetReImportFail
           }"
           ng-disabled="preview.importDataSetStarted"
           ng-click="preview.importDataSet()"
@@ -69,18 +69,19 @@
           refinery-tooltip-hide-when="preview.importDataSetStarted">
           <div
             class="refinery-spinner-bg"
-            ng-if="preview.isDataSetReImporting">
+            ng-if="preview.importStatus[preview.dataSetUuid].isDataSetReImporting">
             <div class="refinery-spinner"></div>
           </div>
-          <span ng-if="!preview.isDataSetReImportSuccess && !preview.isDataSetReImportFail">
+          <span ng-if="!preview.importStatus[preview.dataSetUuid].isDataSetReImportSuccess &&
+                       !preview.importStatus[preview.dataSetUuid].isDataSetReImportFail">
             <i class="fa fa-cloud-download" aria-hidden="true"></i>
             Import into Own Space
           </span>
-          <span ng-if="preview.isDataSetReImportSuccess">
+          <span ng-if="preview.importStatus[preview.dataSetUuid].isDataSetReImportSuccess">
             <i class="fa fa-check" aria-hidden="true"></i>
             Import successful!
           </span>
-          <span ng-if="preview.isDataSetReImportFail">
+          <span ng-if="preview.importStatus[preview.dataSetUuid].isDataSetReImportFail">
             <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
             Import failed!
           </span>

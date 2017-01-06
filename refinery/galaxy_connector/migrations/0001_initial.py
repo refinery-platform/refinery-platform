@@ -1,40 +1,28 @@
 # -*- coding: utf-8 -*-
-import datetime
-from south.db import db
-from south.v2 import SchemaMigration
-from django.db import models
+from __future__ import unicode_literals
+
+from django.db import models, migrations
 
 
-class Migration(SchemaMigration):
+class Migration(migrations.Migration):
 
-    def forwards(self, orm):
-        # Adding model 'Instance'
-        db.create_table('galaxy_connector_instance', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('base_url', self.gf('django.db.models.fields.CharField')(max_length=2000)),
-            ('data_url', self.gf('django.db.models.fields.CharField')(default='datasets', max_length=100)),
-            ('api_url', self.gf('django.db.models.fields.CharField')(default='api', max_length=100)),
-            ('api_key', self.gf('django.db.models.fields.CharField')(max_length=50)),
-            ('description', self.gf('django.db.models.fields.CharField')(max_length=500)),
-        ))
-        db.send_create_signal('galaxy_connector', ['Instance'])
+    dependencies = [
+    ]
 
-
-    def backwards(self, orm):
-        # Deleting model 'Instance'
-        db.delete_table('galaxy_connector_instance')
-
-
-    models = {
-        'galaxy_connector.instance': {
-            'Meta': {'object_name': 'Instance'},
-            'api_key': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
-            'api_url': ('django.db.models.fields.CharField', [], {'default': "'api'", 'max_length': '100'}),
-            'base_url': ('django.db.models.fields.CharField', [], {'max_length': '2000'}),
-            'data_url': ('django.db.models.fields.CharField', [], {'default': "'datasets'", 'max_length': '100'}),
-            'description': ('django.db.models.fields.CharField', [], {'max_length': '500'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'})
-        }
-    }
-
-    complete_apps = ['galaxy_connector']
+    operations = [
+        migrations.CreateModel(
+            name='Instance',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('base_url', models.CharField(max_length=2000)),
+                ('data_url', models.CharField(default=b'datasets', max_length=100)),
+                ('api_url', models.CharField(default=b'api', max_length=100)),
+                ('api_key', models.CharField(max_length=50)),
+                ('description', models.CharField(default=b'', max_length=500, null=True, blank=True)),
+                ('local_download', models.BooleanField(default=False)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+    ]

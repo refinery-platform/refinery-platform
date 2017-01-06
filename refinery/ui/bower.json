@@ -13,14 +13,14 @@
     "tests"
   ],
   "dependencies": {
-    "angular": "1.4.9",
-    "angular-animate": "1.4.9",
+    "angular": "1.5.9",
+    "angular-animate": "1.5.9",
     "angular-bootstrap": "0.14.3",
     "angular-intro-js": "angular-intro.js#2.1.1",
     "angular-file-model": "0.3.1",
-    "angular-mocks": "1.4.9",
-    "angular-resource": "1.4.9",
-    "angular-sanitize": "1.4.9",
+    "angular-mocks": "1.5.9",
+    "angular-resource": "1.5.9",
+    "angular-sanitize": "1.5.9",
     "angular-ui-grid": "3.2.1",
     "angular-ui-router": "0.2.18",
     "angular-ui-scroll": "flekschas/ui-scroll#visible-items",
@@ -36,7 +36,7 @@
     "intro-js": "intro.js#2.3.0",
     "humanize": "0.0.9",
     "jquery": "2.1.1",
-    "jquery-file-upload": "9.10.4",
+    "jquery-file-upload": "9.14.1",
     "jquery-mousewheel": "3.1.13",
     "lodash": "3.10.1",
     "lodash-migrate": "0.2.6",
@@ -54,6 +54,6 @@
   },
   "resolutions": {
     "d3": "3.5.16",
-    "angular": "1.4.9"
+    "angular": "1.5.9"
   }
 }

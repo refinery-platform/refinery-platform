@@ -19,7 +19,8 @@ python stack.py > web.json
 # It generates one or more
 # CloudFormation JSON files.
 #
-# See https://github.com/parklab/refinery-platform/wiki/AWS-installation
+# See
+# https://github.com/refinery-platform/refinery-platform/wiki/AWS-installation
 # for notes on how to use this to deploy to Amazon AWS.
 #
 # Instances are configured using CloudInit.
@@ -124,12 +125,13 @@ def main():
 
     rds_properties = {
         "AllocatedStorage": "5",
+        "AutoMinorVersionUpgrade": False,
         "AvailabilityZone": config['AVAILABILITY_ZONE'],
         "BackupRetentionPeriod": "0",
         "DBInstanceClass": "db.t2.small",       # todo:?
         "DBInstanceIdentifier": config['RDS_NAME'],
         "Engine": "postgres",
-        "EngineVersion": "9.3.10",
+        "EngineVersion": "9.3.14",
         # "KmsKeyId" ?
         "MasterUsername": "root",
         "MasterUserPassword": "mypassword",
@@ -372,6 +374,9 @@ def main():
             'SecurityGroups': [
                 functions.get_att('ELBSecurityGroup', 'GroupId')],
             "Tags": instance_tags,  # todo: Should be different?
+            'ConnectionSettings': {
+                'IdleTimeout': 1800  # seconds
+            }
         })
 
     sys.stdout.write(str(cft))
@@ -493,12 +498,9 @@ def save_s3_config(config, suffix):
 
 
 def report_missing_keys(config):
-    """
-    Collect and report list of missing keys.
-    """
+    """Collect and report list of missing keys"""
 
     required = [
-        'DJANGO_SETTINGS_MODULE',
         'KEY_NAME', 'RDS_SUPERUSER_PASSWORD',
         'SITE_NAME', 'SITE_URL', 'ADMIN_PASSWORD']
     bad = []

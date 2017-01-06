@@ -80,7 +80,7 @@ describe('rpAssayFiles directive unit test', function () {
   });
 
   it('test showFields', function () {
-    service.selectedFieldList = {
+    service.attributeSelectedFields = {
       REFINERY_ANALYSIS_UUID_92_46_s: ['N/A', 'Test Workflow', '3']
     };
     // Test default, panel is closed and not selected

@@ -6,8 +6,10 @@ function fileBrowserFactory (
   $window,
   assayAttributeService,
   assayFileService,
+  fileBrowserSettings,
   nodeGroupService,
-  nodeService
+  nodeService,
+  selectedFilterService
   ) {
   // assayfiles has max 300 rows, ctrl adds/subtracts rows to maintain count
   var assayFiles = [];
@@ -24,14 +26,18 @@ function fileBrowserFactory (
     uuid: $window.externalAssayUuid
   };
   var csrfToken = $window.csrf_token;
-  // Helper function encodes field array in an obj
-  var encodeAttributeFields = function (attributeObj) {
-    angular.forEach(attributeObj, function (fieldArray) {
-      for (var ind = 0; ind < fieldArray.length; ind++) {
-        fieldArray[ind] = $window.encodeURIComponent(fieldArray[ind]);
+  var maxFileRequest = fileBrowserSettings.maxFileRequest;
+
+  // Helper method which makes display_names uniquey by adding attribute_type
+  var createUniqueDisplayNames = function (outInd) {
+    for (var inInd = outInd + 1; inInd < assayAttributes.length; inInd++) {
+      if (assayAttributes[outInd].display_name === assayAttributes[inInd].display_name) {
+        assayAttributes[outInd].display_name = assayAttributes[outInd]
+            .display_name + '-' + assayAttributes[outInd].attribute_type;
+        assayAttributes[inInd].display_name = assayAttributes[inInd]
+            .display_name + '-' + assayAttributes[inInd].attribute_type;
       }
-    });
-    return (attributeObj);
+    }
   };
 
   /** Configures the attribute and analysis filter data by adding the display
@@ -141,7 +147,8 @@ function fileBrowserFactory (
 
     // encodes all field names to avoid issues with escape characters.
     if (typeof params.filter_attribute !== 'undefined') {
-      params.filter_attribute = encodeAttributeFields(params.filter_attribute);
+      params.filter_attribute = selectedFilterService
+        .encodeAttributeFields(params.filter_attribute);
     }
 
     var assayFile = assayFileService.query(params);
@@ -153,11 +160,21 @@ function fileBrowserFactory (
       angular.copy(culledAttributes, assayAttributes);
       // Add file_download column first
       assayAttributes.unshift({ display_name: 'Url', internal_name: 'Url' });
+      // some attributes will be duplicate in different fields, duplicate
+      // column names will throw an error. This prevents duplicates
+      for (var ind = 0; ind < assayAttributes.length; ind++) {
+        createUniqueDisplayNames(ind);
+      }
       angular.copy(response.nodes, additionalAssayFiles);
-      // require a deep copy
-      angular.copy(assayFiles.concat(additionalAssayFiles), assayFiles);
-      addNodeDetailtoAssayFiles();
       assayFilesTotalItems.count = response.nodes_count;
+
+      // Not concat data when under minimun file order, replace assay files
+      if (assayFilesTotalItems.count < maxFileRequest && params.offset === 0) {
+        angular.copy(additionalAssayFiles, assayFiles);
+      } else {
+        angular.copy(assayFiles.concat(additionalAssayFiles), assayFiles);
+      }
+      addNodeDetailtoAssayFiles();
       var filterObj = generateFilters(response.attributes, response.facet_field_counts);
       angular.copy(filterObj.attributeFilter, attributeFilter);
       angular.copy(filterObj.analysisFilter, analysisFilter);
@@ -265,17 +282,11 @@ function fileBrowserFactory (
   var createColumnDefs = function () {
     var tempCustomColumnNames = [];
 
-    // some attributes will be duplicate in different fields, duplicate
-    // column names will throw an error. This prevents duplicates
-    var uniqAssayAttributes = _.uniq(assayAttributes, true,
-      function (attributeObj) {
-        return attributeObj.display_name;
-      });
     var totalChars = assayAttributes.reduce(function (previousValue, facetObj) {
       return previousValue + String(facetObj.display_name).length;
     }, 0);
 
-    uniqAssayAttributes.forEach(function (attribute) {
+    assayAttributes.forEach(function (attribute) {
       var columnName = attribute.display_name;
       var columnWidth = columnName.length / totalChars * 100;
       if (columnWidth < 10) {  // make sure columns are wide enough
@@ -327,7 +338,6 @@ function fileBrowserFactory (
     nodeGroupList: nodeGroupList,
     createColumnDefs: createColumnDefs,
     createNodeGroup: createNodeGroup,
-    encodeAttributeFields: encodeAttributeFields,
     getAssayFiles: getAssayFiles,
     getAssayAttributeOrder: getAssayAttributeOrder,
     getNodeGroupList: getNodeGroupList,
@@ -345,8 +355,10 @@ angular
     '$window',
     'assayAttributeService',
     'assayFileService',
+    'fileBrowserSettings',
     'nodeGroupService',
     'nodeService',
+    'selectedFilterService',
     fileBrowserFactory
   ]
 );

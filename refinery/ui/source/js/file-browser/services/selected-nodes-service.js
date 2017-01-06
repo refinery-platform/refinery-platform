@@ -127,7 +127,7 @@ function selectedNodesService ($window, selectedFilterService) {
     if (vm.selectedAllFlag) {
       params.nodes = vm.complementSelectedNodesUuids;
       params.use_complement_nodes = true;
-      params.filter_attribute = selectedFilterService.selectedFieldList;
+      params.filter_attribute = selectedFilterService.attributeSelectedFields;
     } else {
       params.nodes = vm.selectedNodesUuids;
       params.use_complement_nodes = false;

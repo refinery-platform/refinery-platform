@@ -1,40 +1,69 @@
 # -*- coding: utf-8 -*-
-import datetime
-from south.db import db
-from south.v2 import SchemaMigration
-from django.db import models
+from __future__ import unicode_literals
+
+from django.conf import settings
+from django.db import models, migrations
+import django.utils.timezone
+import django_extensions.db.fields
+import file_store.models
 
 
-class Migration(SchemaMigration):
+class Migration(migrations.Migration):
 
-    def forwards(self, orm):
-        # Adding model 'FileStoreItem'
-        db.create_table('file_store_filestoreitem', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('datafile', self.gf('django.db.models.fields.files.FileField')(max_length=1024, blank=True)),
-            ('uuid', self.gf('django.db.models.fields.CharField')(unique=True, max_length=36, blank=True)),
-            ('source', self.gf('django.db.models.fields.CharField')(max_length=1024)),
-            ('sharename', self.gf('django.db.models.fields.CharField')(max_length=20, blank=True)),
-            ('filetype', self.gf('django.db.models.fields.CharField')(max_length=15, blank=True)),
-        ))
-        db.send_create_signal('file_store', ['FileStoreItem'])
+    dependencies = [
+    ]
 
-
-    def backwards(self, orm):
-        # Deleting model 'FileStoreItem'
-        db.delete_table('file_store_filestoreitem')
-
-
-    models = {
-        'file_store.filestoreitem': {
-            'Meta': {'object_name': 'FileStoreItem'},
-            'datafile': ('django.db.models.fields.files.FileField', [], {'max_length': '1024', 'blank': 'True'}),
-            'filetype': ('django.db.models.fields.CharField', [], {'max_length': '15', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'sharename': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
-            'source': ('django.db.models.fields.CharField', [], {'max_length': '1024'}),
-            'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'})
-        }
-    }
-
-    complete_apps = ['file_store']
+    operations = [
+        migrations.CreateModel(
+            name='FileExtension',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('name', models.CharField(unique=True, max_length=50)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='FileStoreItem',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('datafile', models.FileField(
+                    storage=file_store.models.SymlinkedFileSystemStorage(), max_length=1024,
+                    upload_to=file_store.models.file_path, blank=True)),
+                ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
+                ('source', models.CharField(max_length=1024)),
+                ('sharename', models.CharField(max_length=20, blank=True)),
+                ('import_task_id', django_extensions.db.fields.UUIDField(max_length=36, editable=False, blank=True)),
+                ('created', models.DateTimeField(default=django.utils.timezone.now, auto_now_add=True)),
+                ('updated', models.DateTimeField(default=django.utils.timezone.now, auto_now=True)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='FileType',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('name', models.CharField(unique=True, max_length=50)),
+                ('description', models.CharField(max_length=250)),
+                ('used_for_visualization', models.BooleanField(default=False)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.AddField(
+            model_name='filestoreitem',
+            name='filetype',
+            field=models.ForeignKey(to='file_store.FileType', null=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='fileextension',
+            name='filetype',
+            field=models.ForeignKey(to='file_store.FileType'),
+            preserve_default=True,
+        ),
+    ]
