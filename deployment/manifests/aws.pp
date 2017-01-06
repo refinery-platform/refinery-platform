@@ -28,7 +28,8 @@ $solr_core_data = "/data/solr/core"
 
 # See code in refinery-modules/refinery/...
 include refinery
-include refinery::pg
-include refinery::neo4j
 include refinery::apache2
 include refinery::aws
+include refinery::neo4j
+include refinery::pg
+
