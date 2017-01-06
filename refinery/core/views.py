@@ -35,7 +35,6 @@ from xml.parsers.expat import ExpatError
 
 from core.forms import (ProjectForm, UserForm, UserProfileForm,
                         WorkflowForm,  DataSetForm)
-from annotation_server.models import GenomeBuild
 from core.models import (ExtendedGroup, Project, DataSet, Workflow,
                          UserProfile, WorkflowEngine, Analysis, Invitation,
                          Ontology, NodeGroup, CustomRegistrationProfile)
@@ -45,7 +44,6 @@ from core.utils import (get_data_sets_annotations,
                         create_current_selection_node_group,
                         filter_nodes_uuids_in_solr, move_obj_to_front)
 from data_set_manager.models import Node
-from data_set_manager.utils import generate_solr_params
 from file_store.models import FileStoreItem
 
 logger = logging.getLogger(__name__)

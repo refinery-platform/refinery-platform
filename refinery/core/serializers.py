@@ -1,6 +1,5 @@
 import logging
 
-import celery
 from rest_framework import serializers
 
 import file_store
