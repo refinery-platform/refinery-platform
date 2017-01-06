@@ -29,7 +29,7 @@
       "file-browser",
       "data-set-about",
       "globals",
-      "igv", // TODO: This is igv.js?
+      "igv",
       "metadata-table-import",
       "node-mapping",
       "node-relationship",
