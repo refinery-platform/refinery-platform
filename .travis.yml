@@ -7,7 +7,6 @@ addons:
       - xvfb
 python:
   - 2.7
-  - 3.4
 services:
   - postgresql
   - neo4j
