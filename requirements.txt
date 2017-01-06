@@ -63,6 +63,7 @@ python-magic==0.4.6
 python-memcached==1.57
 python-ptrace==0.6.4
 PyYAML==3.11
+pyvirtualdisplay==0.2.1
 readline==6.2.2
 requests==2.7.0
 six==1.5.2
