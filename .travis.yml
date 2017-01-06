@@ -2,8 +2,12 @@ language: python
 cache: pip
 addons:
   firefox: "49.0.1"
+  apt:
+    packages:
+      - xvfb
 python:
   - 2.7
+  - 3.4
 services:
   - postgresql
   - neo4j
