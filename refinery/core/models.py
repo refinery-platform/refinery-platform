@@ -1845,13 +1845,6 @@ class ExtendedGroup(Group):
     can_edit = False
     manager_group_uuid = None
 
-    def clean(self):
-        # Don't allow only white spaces.
-        if len(self.name) == 0:
-            logger.error("Group name cannot be empty.")
-            raise ValidationError("Group name cannot be empty")
-        return self.name.strip()
-
     def delete(self):
         if self.is_manager_group():
             for i in self.managed_group.all():
@@ -1878,10 +1871,6 @@ class ExtendedGroup(Group):
             return (self.managed_group.all()[0])
         except:
             return None
-
-    def save(self, *args, **kwargs):
-        self.name = self.clean()
-        super(ExtendedGroup, self).save(*args, **kwargs)
 
 
 # automatic creation of a managed group when an extended group is created:
