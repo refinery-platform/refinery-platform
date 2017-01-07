@@ -1143,10 +1143,19 @@ button.icon-only {
   float: right;
 }
 
-.no-list-style {
+.no-list-style,
+.centered-list {
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.centered-list {
+  text-align: center;
+
+  li {
+    display:inline-block;
+  }
 }
 
 .numbered-list {

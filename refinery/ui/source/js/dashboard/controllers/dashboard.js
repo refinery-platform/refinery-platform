@@ -9,6 +9,9 @@ function DashboardCtrl (
   $rootScope,
   $window,
   $log,
+  $sce,
+  $compile,
+  $scope,
   // 3rd party library
   _,
   $uibModal,
@@ -69,7 +72,6 @@ function DashboardCtrl (
   // variable to track filters and sorting selected in ui for data set api query
   this.dataSetParams = {};
 
-
   this.searchQueryDataSets = '';
 
   this.repoMode = !!this.settings.djangoApp.repositoryMode;
@@ -92,6 +94,10 @@ function DashboardCtrl (
   }.bind(this));
   this.authService.isAdmin().then(function (isAdmin) {
     this.userIsAdmin = isAdmin;
+  }.bind(this));
+
+  this.authService.getUserId().then(function (userId) {
+    this.userId = userId;
   }.bind(this));
 
   dashboardIntroSatoriEasterEgg.celebrate(
@@ -378,6 +384,24 @@ function DashboardCtrl (
     );
   }.bind(this));
 
+  this.customRepoModeHtml = $sce.trustAsHtml(
+    settings.djangoApp.repositoryModeHomePageHtml
+  );
+
+  function checkDomEl (times) {
+    var el = document.querySelector('#custom-repo-mode-html');
+
+    if (!el && times < 10) {
+      this.$timeout(function () {
+        checkDomEl.call(this, times + 1);
+      }.bind(this), times * 5);
+    } else {
+      $compile(angular.element(el).contents())($scope);
+    }
+  }
+
+  checkDomEl.call(this, 0);
+
   this.$timeout(function () {
     // Expand panel to full with
     if (this.repoMode) {
@@ -394,7 +418,7 @@ function DashboardCtrl (
           // See `services/width-fixer.js` for details.
           this.$log.error('Dashboard expand dataset exploration error,' +
             ' possibly due to the Refinery App failing to initialized.');
-        });
+        }.bind(this));
     }
   }.bind(this), 0);
 
@@ -1728,6 +1752,9 @@ angular
     '$rootScope',
     '$window',
     '$log',
+    '$sce',
+    '$compile',
+    '$scope',
     '_',
     '$uibModal',
     'pubSub',

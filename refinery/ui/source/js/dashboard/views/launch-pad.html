@@ -629,8 +629,8 @@
         ng-if="dashboard.repoMode">
         <div class="content-container">
           <div class="refinery-panel-topbar"></div>
-          <div class="full-without-topbar">
-            <div class="refinery-global-notifier">
+          <div class="full-without-topbar" ng-class="{ 'custom-repo-mode-html': dashboard.customRepoModeHtml }">
+            <div class="refinery-global-notifier" ng-if="!dashboard.customRepoModeHtml">
               <div class="refinery-repo-mode">
                 <svg class="icon-refinery">
                   <use
@@ -639,6 +639,11 @@
                 </svg><br/>
                 Repository Mode
               </div>
+            </div>
+            <div
+              id="custom-repo-mode-html"
+              ng-if="dashboard.customRepoModeHtml"
+              ng-bind-html="dashboard.customRepoModeHtml">
             </div>
           </div>
         </div>
