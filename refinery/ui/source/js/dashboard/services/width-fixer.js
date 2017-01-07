@@ -55,7 +55,7 @@ function WidthFixerFactory ($q, $timeout, _) {
           fixWidth(_counter)
             .then(deferred.resolve)
             .catch(deferred.reject);
-        }, 5 * _counter, true, ++_counter);
+        }, 10 * _counter, true, ++_counter);
       } else {
         deferred.reject();
       }
