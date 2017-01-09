@@ -6,7 +6,7 @@ from selenium import webdriver
 
 from core.management.commands.create_public_group import create_public_group
 from core.management.commands.create_user import init_user
-from core.models import DataSet, Project, Analysis
+from core.models import DataSet, Project, Analysis, ExtendedGroup
 from core.models import Workflow
 from factory_boy.utils import make_analyses_with_single_dataset, make_datasets
 from file_store.models import FileStoreItem
@@ -75,6 +75,7 @@ class DataSetsPanelTestCase(StaticLiveServerTestCase):
                   "Test User", is_active=True)
         self.user = User.objects.get(username="guest")
         self.user.save()
+        ExtendedGroup.objects.public_group().save()
         login(self.browser, self.live_server_url)
 
     def tearDown(self):
@@ -127,6 +128,7 @@ class UiDeletionTestCase(StaticLiveServerTestCase):
                   "Test User", is_active=True)
         self.user = User.objects.get(username="guest")
         self.user.save()
+        ExtendedGroup.objects.public_group().save()
         login(self.browser, self.live_server_url)
 
     def tearDown(self):
