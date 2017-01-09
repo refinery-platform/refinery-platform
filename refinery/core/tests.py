@@ -16,7 +16,7 @@ import mockcache as memcache
 from tastypie.test import ResourceTestCase
 
 from core.api import AnalysisResource
-
+from core.management.commands.create_public_group import create_public_group
 from core.management.commands.create_user import init_user
 
 from core.models import (
@@ -42,6 +42,7 @@ class UserCreateTest(unittest.TestCase):
     """Test User instance creation"""
 
     def setUp(self):
+        create_public_group()
         self.username = "testuser"
         self.password = "password"
         self.email = "test@example.com"
@@ -52,6 +53,7 @@ class UserCreateTest(unittest.TestCase):
 
     def tearDown(self):
         User.objects.all().delete()
+        Group.objects.all().delete()
 
     def test_add_new_user_to_public_group(self):
         """Test if User accounts are added to Public group"""
@@ -1118,13 +1120,14 @@ class CachingTest(unittest.TestCase):
     """Testing the addition and deletion of cached objects"""
 
     def setUp(self):
+        create_public_group()
         # make some data
         self.username = self.password = 'Cool'
-        self.user = User.objects.create_user(
+        self.user = User.objects.get_or_create(
             self.username, '', self.password
         )
         self.username1 = self.password1 = 'Cool1'
-        self.user1 = User.objects.create_user(
+        self.user1 = User.objects.get_or_create(
             self.username1, '', self.password1
         )
         self.public_group_name = ExtendedGroup.objects.public_group().name
@@ -1140,6 +1143,7 @@ class CachingTest(unittest.TestCase):
         self.cache = invalidate_cached_object(DataSet.objects.get(
             slug="TestSlug1"), True)
         DataSet.objects.all().delete()
+        Group.objects.all().delete()
         User.objects.all().delete()
 
     def test_verify_cache_invalidation(self):
