@@ -1127,6 +1127,7 @@ class CachingTest(unittest.TestCase):
 
     def setUp(self):
         # make some data
+        create_public_group()
         self.username = self.password = 'Cool'
         self.user = User.objects.get_or_create(username=self.username,
                                                password=self.password)[0]
@@ -2087,7 +2088,6 @@ class DataSetClassMethodsTest(unittest.TestCase):
 class DataSetApiV2Tests(APITestCase):
 
     def setUp(self):
-        create_public_group()
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
