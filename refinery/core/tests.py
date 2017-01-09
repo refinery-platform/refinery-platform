@@ -16,6 +16,7 @@ import mockcache as memcache
 from tastypie.test import ResourceTestCase
 
 from core.api import AnalysisResource
+from core.management.commands.create_public_group import create_public_group
 from core.management.commands.create_user import init_user
 
 from core.models import (
@@ -2086,6 +2087,7 @@ class DataSetClassMethodsTest(unittest.TestCase):
 class DataSetApiV2Tests(APITestCase):
 
     def setUp(self):
+        create_public_group()
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
