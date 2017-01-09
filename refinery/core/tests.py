@@ -1124,10 +1124,10 @@ class CachingTest(unittest.TestCase):
         # make some data
         self.username = self.password = 'Cool'
         self.user = User.objects.get_or_create(username=self.username,
-                                               password=self.password)
+                                               password=self.password)[0]
         self.username1 = self.password1 = 'Cool1'
         self.user1 = User.objects.get_or_create(username=self.username1,
-                                                password=self.password1)
+                                                password=self.password1)[0]
         self.public_group_name = ExtendedGroup.objects.public_group().name
         for index, item in enumerate(range(0, 6)):
             DataSet.objects.create(slug="TestSlug%d" % index)
