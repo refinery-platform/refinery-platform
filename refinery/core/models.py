@@ -548,21 +548,15 @@ class DataSet(SharableResource):
         pre_isa_archive associated with the DataSet if one exists.
         """
 
-        try:
-            self.get_isa_archive().delete()
+        # Delete isa/pre-isa archives if said DataSet has any associated
+        isa_archive = self.get_isa_archive()
+        pre_isa_archive = self.get_pre_isa_archive()
 
-        except AttributeError as e:
-            logger.debug(
-                "Couldn't delete DataSet's isa_archive, it may not have one: "
-                "%s" % e)
+        if isa_archive:
+            isa_archive.delete()
 
-        try:
-            self.get_pre_isa_archive().delete()
-
-        except AttributeError as e:
-            logger.debug(
-                "Couldn't delete DataSet's pre_isa_archive, it may not have "
-                "one: %s" % e)
+        if pre_isa_archive:
+            pre_isa_archive.delete()
 
         related_investigation_links = self.get_investigation_links()
 
@@ -735,7 +729,7 @@ class DataSet(SharableResource):
     def get_isa_archive(self):
         """
         Returns the isa_archive that was used to create the
-        DataSet
+        DataSet or None if one isn't associated
         """
         try:
             return FileStoreItem.objects.get(
@@ -748,11 +742,12 @@ class DataSet(SharableResource):
                 InvestigationLink.MultipleObjectsReturned) as e:
             logger.debug("Could not fetch FileStoreItem or "
                          "InvestigationLink: %s" % e)
+            return None
 
     def get_pre_isa_archive(self):
         """
         Returns the pre_isa_archive that was used to create the
-        DataSet
+        DataSet or None if one isn't associated
         """
         try:
             return FileStoreItem.objects.get(
@@ -765,6 +760,7 @@ class DataSet(SharableResource):
                 InvestigationLink.MultipleObjectsReturned) as e:
             logger.debug("Could not fetch FileStoreItem or "
                          "InvestigationLink: %s" % e)
+            return None
 
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
