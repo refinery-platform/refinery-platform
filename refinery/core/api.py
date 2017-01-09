@@ -133,7 +133,8 @@ class SharableResourceAPIInterface(object):
         try:
             user_uuid = user.profile.uuid
         except AttributeError:
-            logger.error('User\'s UUID not available.')
+            logger.error("User: %s's profile or UUID not available.",
+                         user.username)
             user_uuid = None
 
         # Try and retrieve a cached resource based on model name
