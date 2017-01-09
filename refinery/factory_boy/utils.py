@@ -1,6 +1,8 @@
 import uuid as uuid_builtin
 from datetime import datetime
 
+from django.contrib.auth.models import Group
+
 from core.models import DataSet, Analysis
 
 from factory_boy.django_model_factories import DataSetFactory, \
@@ -92,6 +94,7 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
 
     for dataset in DataSet.objects.all():
         dataset.set_owner(user_instance)
+        dataset.share(group=Group.objects.get(name="Public"))
         dataset.save()
 
     for analysis in Analysis.objects.all():
