@@ -16,7 +16,6 @@ import mockcache as memcache
 from tastypie.test import ResourceTestCase
 
 from core.api import AnalysisResource
-from core.management.commands.create_public_group import create_public_group
 from core.management.commands.create_user import init_user
 
 from core.models import (
@@ -42,7 +41,6 @@ class UserCreateTest(unittest.TestCase):
     """Test User instance creation"""
 
     def setUp(self):
-        create_public_group()
         self.username = "testuser"
         self.password = "password"
         self.email = "test@example.com"
@@ -53,7 +51,6 @@ class UserCreateTest(unittest.TestCase):
 
     def tearDown(self):
         User.objects.all().delete()
-        Group.objects.all().delete()
 
     def test_add_new_user_to_public_group(self):
         """Test if User accounts are added to Public group"""
@@ -269,6 +266,10 @@ class NodeSetResourceTest(ResourceTestCase):
         self.username2 = self.password2 = 'user2'
         self.user2 = User.objects.create_user(self.username2, '',
                                               self.password2)
+
+    def tearDown(self):
+        self.user.delete()
+        self.user2.delete()
 
     def get_credentials(self):
         """Authenticate as self.user"""
@@ -630,6 +631,10 @@ class NodeSetListResourceTest(ResourceTestCase):
         self.user2 = User.objects.create_user(self.username2, '',
                                               self.password2)
         self.nodeset_uri = make_api_uri('nodesetlist')
+
+    def tearDown(self):
+        self.user.delete()
+        self.user2.delete()
 
     def get_credentials(self):
         """Authenticate as self.user"""
@@ -1120,7 +1125,6 @@ class CachingTest(unittest.TestCase):
     """Testing the addition and deletion of cached objects"""
 
     def setUp(self):
-        create_public_group()
         # make some data
         self.username = self.password = 'Cool'
         self.user = User.objects.get_or_create(username=self.username,
@@ -1141,7 +1145,6 @@ class CachingTest(unittest.TestCase):
         self.cache = invalidate_cached_object(DataSet.objects.get(
             slug="TestSlug1"), True)
         DataSet.objects.all().delete()
-        Group.objects.all().delete()
         User.objects.all().delete()
 
     def test_verify_cache_invalidation(self):
@@ -1315,14 +1318,13 @@ class DataSetDeletionTest(unittest.TestCase):
         self.analysis.set_owner(self.user)
 
     def tearDown(self):
-        User.objects.all().delete()
+        self.user.delete()
+        DataSet.objects.all().delete()
         Project.objects.all().delete()
         WorkflowEngine.objects.all().delete()
         Workflow.objects.all().delete()
         Instance.objects.all().delete()
         Analysis.objects.all().delete()
-        DataSet.objects.all().delete()
-        UserProfile.objects.all().delete()
         Node.objects.all().delete()
         FileStoreItem.objects.all().delete()
         Study.objects.all().delete()
@@ -1897,7 +1899,8 @@ class DataSetResourceTest(ResourceTestCase):
             )
 
     def tearDown(self):
-        User.objects.all().delete()
+        self.user.delete()
+        self.user2.delete()
         Project.objects.all().delete()
         WorkflowEngine.objects.all().delete()
         Workflow.objects.all().delete()

@@ -16,7 +16,6 @@ from rest_framework.test import APIRequestFactory
 from rest_framework.test import APITestCase
 from rest_framework.test import APIClient
 
-from core.management.commands.create_public_group import create_public_group
 from core.views import NodeViewSet
 from file_store.models import FileStoreItem
 from .models import AttributeOrder, Assay, Study, Investigation, Node
@@ -1491,8 +1490,6 @@ class NodeClassMethodTests(TestCase):
 class NodeApiV2Tests(APITestCase):
 
     def setUp(self):
-
-        create_public_group()
 
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
