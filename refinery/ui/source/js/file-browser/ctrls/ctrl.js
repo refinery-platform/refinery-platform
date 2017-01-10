@@ -82,7 +82,7 @@ function FileBrowserCtrl (
       vm.gridOptions.data = fileBrowserFactory.assayFiles;
       vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
       // turns off infinite scroll for data sets < 100 files
-      if (vm.assayFilesTotal < maxFileRequest) {
+      if (vm.assayFilesTotal < maxFileRequest && vm.gridApi) {
         vm.gridApi.infiniteScroll.setScrollDirections(false, false);
       }
       vm.totalPages = Math.floor(vm.assayFilesTotal / vm.rowCount);
