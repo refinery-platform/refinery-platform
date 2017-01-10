@@ -27,7 +27,7 @@ class Command(BaseCommand):
                 ds.title = inv.title
 
             try:
-                ds.name = '%s: %s' % (ds.identifier, ds.title)
+                ds.name = '%s: %s' % (ds.accession, ds.title)
             except Exception:
                 continue
 
