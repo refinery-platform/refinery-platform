@@ -76,10 +76,15 @@ function FileBrowserCtrl (
     fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam).then(function () {
       // create column names
       vm.gridOptions.columnDefs = fileBrowserFactory.createColumnDefs();
+
       // Grabbing 100 files per request, keeping max of 300 at a time
       // Ui-grid rows generated from assay files
       vm.gridOptions.data = fileBrowserFactory.assayFiles;
       vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
+      // turns off infinite scroll for data sets < 100 files
+      if (vm.assayFilesTotal < maxFileRequest) {
+        vm.gridApi.infiniteScroll.setScrollDirections(false, false);
+      }
       vm.totalPages = Math.floor(vm.assayFilesTotal / vm.rowCount);
       vm.assayAttributes = fileBrowserFactory.assayAttributes;
       vm.attributeFilter = fileBrowserFactory.attributeFilter;
@@ -151,11 +156,8 @@ function FileBrowserCtrl (
     // prevent scoping issues, after reset or initial generation
     if (!vm.gridApi) {
       vm.gridApi = gridApi;
-       // Infinite Grid Load, watchers required for large files > maxFileRequest
-      if (vm.assayFilesTotal > maxFileRequest) {
-        gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
-        gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
-      }
+      gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
+      gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
 
       // Sort events
       vm.gridApi.core.on.sortChanged(null, vm.sortChanged);
