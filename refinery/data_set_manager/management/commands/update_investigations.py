@@ -12,14 +12,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         for inv in Investigation.objects.all():
             try:
-                study = inv.study_set.all()[0]
+                study = inv.study_set.first()
             except Exception:
                 continue
 
-            if (
-                inv.identifier is None or
-                inv.identifier == ''
-            ):
+            if inv.identifier is None or inv.identifier == '':
                 inv.identifier = study.identifier
 
             if (
