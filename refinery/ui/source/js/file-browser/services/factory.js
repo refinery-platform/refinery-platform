@@ -21,10 +21,6 @@ function fileBrowserFactory (
   var customColumnNames = [];
   var nodeUrl = {};
   var nodeGroupList = [];
-  // params for the assays api
-  var filesParam = {
-    uuid: $window.externalAssayUuid
-  };
   var csrfToken = $window.csrf_token;
   var maxFileRequest = fileBrowserSettings.maxFileRequest;
 
@@ -153,6 +149,8 @@ function fileBrowserFactory (
 
     var assayFile = assayFileService.query(params);
     assayFile.$promise.then(function (response) {
+      console.log('assay files in factory');
+      console.log(response);
       /** Api returns uuid field, which is needed to retrieve the
        *  download file_url for nodeset api. It should be hidden in the data
        *  table first **/
@@ -171,6 +169,8 @@ function fileBrowserFactory (
       // Not concat data when under minimun file order, replace assay files
       if (assayFilesTotalItems.count < maxFileRequest && params.offset === 0) {
         angular.copy(additionalAssayFiles, assayFiles);
+      } else if ('move up') {
+        angular.copy(assayFiles.push(additionalAssayFiles), assayFiles);
       } else {
         angular.copy(assayFiles.concat(additionalAssayFiles), assayFiles);
       }
@@ -334,7 +334,6 @@ function fileBrowserFactory (
     assayFilesTotalItems: assayFilesTotalItems,
     attributeFilter: attributeFilter,
     customColumnNames: customColumnNames,
-    filesParam: filesParam,
     nodeGroupList: nodeGroupList,
     createColumnDefs: createColumnDefs,
     createNodeGroup: createNodeGroup,
