@@ -202,8 +202,12 @@
           </a>
         </p>
       </div>
+      <div class="inline-container" ng-if="preview.dataSetDetails.accession">
+        <h6>Accession</h6>
+        <p>{{ preview.dataSetDetails.accession }}</p>
       </div>
-      <div id="data-set-summary-analyses">
+    </div>
+    <div id="data-set-summary-analyses">
       <h5 class="refinery-subheader">
         Analyses
         <span
