@@ -26,6 +26,11 @@ class Command(BaseCommand):
             ):
                 ds.title = inv.title
 
+            try:
+                ds.name = '%s: %s' % (ds.identifier, ds.title)
+            except Exception:
+                continue
+
             if ds.description is None or ds.description == '':
                 ds.description = inv.description
 
