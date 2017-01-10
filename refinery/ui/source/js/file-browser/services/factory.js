@@ -136,7 +136,7 @@ function fileBrowserFactory (
     assayFiles = [];
   };
 
-  var getAssayFiles = function (unencodeParams) {
+  var getAssayFiles = function (unencodeParams, scrollDirection) {
     var params = {};
     var additionalAssayFiles = [];
     angular.copy(unencodeParams, params);
@@ -149,8 +149,6 @@ function fileBrowserFactory (
 
     var assayFile = assayFileService.query(params);
     assayFile.$promise.then(function (response) {
-      console.log('assay files in factory');
-      console.log(response);
       /** Api returns uuid field, which is needed to retrieve the
        *  download file_url for nodeset api. It should be hidden in the data
        *  table first **/
@@ -169,8 +167,8 @@ function fileBrowserFactory (
       // Not concat data when under minimun file order, replace assay files
       if (assayFilesTotalItems.count < maxFileRequest && params.offset === 0) {
         angular.copy(additionalAssayFiles, assayFiles);
-      } else if ('move up') {
-        angular.copy(assayFiles.push(additionalAssayFiles), assayFiles);
+      } else if (scrollDirection === 'up') {
+        angular.copy(additionalAssayFiles.concat(assayFiles), assayFiles);
       } else {
         angular.copy(assayFiles.concat(additionalAssayFiles), assayFiles);
       }

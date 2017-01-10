@@ -256,7 +256,7 @@ function FileBrowserCtrl (
     vm.filesParam.offset = vm.lastPage * vm.rowCount;
     vm.filesParam.limit = vm.rowCount;
     var promise = $q.defer();
-    fileBrowserFactory.getAssayFiles(vm.filesParam)
+    fileBrowserFactory.getAssayFiles(vm.filesParam, 'down')
       .then(function () {
         vm.gridApi.infiniteScroll.saveScrollPercentage();
         vm.gridOptions.data = fileBrowserFactory.assayFiles;
@@ -286,17 +286,10 @@ function FileBrowserCtrl (
     vm.filesParam.offset = vm.firstPage * vm.rowCount;
     vm.filesParam.limit = vm.rowCount;
     var promise = $q.defer();
-    fileBrowserFactory.getAssayFiles(vm.filesParam)
+    fileBrowserFactory.getAssayFiles(vm.filesParam, 'up')
       .then(function () {
-        console.log('get data up');
-        console.log('first page');
-        console.log(vm.firstPage);
-        console.log(vm.lastPage);
-        console.log(vm.totalPages);
-        console.log('first page');
         vm.gridApi.infiniteScroll.saveScrollPercentage();
         vm.gridOptions.data = fileBrowserFactory.assayFiles;
-        console.log(vm.gridOptions.data);
         vm.gridApi.infiniteScroll
           .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
           .then(function () {
