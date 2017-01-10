@@ -5,8 +5,8 @@ from data_set_manager.models import Investigation
 
 class Command(BaseCommand):
     help = (
-        "Helper command to update the investigation of MetaboLights data "
-        "sets."
+        'Helper command to update the investigation of MetaboLights data '
+        'sets.'
     )
 
     def handle(self, *args, **options):
@@ -17,9 +17,15 @@ class Command(BaseCommand):
                 continue
 
             if (
+                inv.identifier is None or
+                inv.identifier == ''
+            ):
+                inv.identifier = study.identifier
+
+            if (
                 inv.title is None or
                 inv.title == '' or
-                inv.title == "Investigation"
+                inv.title == 'Investigation'
             ):
                 inv.title = study.title
 
