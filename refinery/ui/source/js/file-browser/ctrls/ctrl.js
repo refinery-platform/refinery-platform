@@ -34,7 +34,7 @@ function FileBrowserCtrl (
   vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
   vm.gridOptions = {
     appScopeProvider: vm,
-    infiniteScrollRowsFromEnd: 40,
+    infiniteScrollRowsFromEnd: 20,
     infiniteScrollUp: true,
     infiniteScrollDown: true,
     useExternalSorting: true,
