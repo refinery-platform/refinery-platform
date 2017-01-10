@@ -5,8 +5,8 @@ from data_set_manager.models import Investigation
 
 class Command(BaseCommand):
     help = (
-        'Helper command to update the investigation of MetaboLights data '
-        'sets.'
+        'Helper command to pull missing information of investigations from '
+        'studies sets.'
     )
 
     def handle(self, *args, **options):
