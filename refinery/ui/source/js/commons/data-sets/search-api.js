@@ -15,6 +15,8 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
           // Alternative field for `title` when no highlights were
           // found
           'f.title.hl.alternateField': 'title',
+          // Do not truncate the highlighted title field
+          'f.title.hl.fragsize': '0',
           // Alternative field for `description` when no highlights were
           // found
           'f.description.hl.alternateField': 'description',
