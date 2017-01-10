@@ -19,8 +19,12 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
 ## 4. Launching Analyses
 
 - select files and:
-- run analyses: FASTQC and peak calling with MACS2
+- run analyses:
+  - FASTQC
+  - peak calling with MACS2
 - monitor analyses
+
+> This is a comment providing background on xyz.
 
 ## 5. Viewing Analysis Results
 - view FASTQC results and download FASTQC results
