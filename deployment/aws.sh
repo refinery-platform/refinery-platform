@@ -24,7 +24,7 @@ printf '%s' "${CONFIG_JSON}" | base64 -d > /home/ubuntu/config.json
 mkdir /srv/refinery-platform
 chown ubuntu:ubuntu /srv/refinery-platform
 sudo su -c '
-  git clone https://github.com/parklab/refinery-platform.git /srv/refinery-platform
+  git clone https://github.com/refinery-platform/refinery-platform.git /srv/refinery-platform
   cd /srv/refinery-platform
   git checkout '"$GIT_BRANCH"'
 ' ubuntu
