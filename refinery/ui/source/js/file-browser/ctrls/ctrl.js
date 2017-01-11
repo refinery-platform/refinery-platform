@@ -36,9 +36,10 @@ function FileBrowserCtrl (
   vm.uiSelectedFields = {};
   vm.selectNodesCount = 0;
   vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
+  vm.isDataLoading = true;
   vm.gridOptions = {
     appScopeProvider: vm,
-    infiniteScrollRowsFromEnd: 20,
+    infiniteScrollRowsFromEnd: 40,
     infiniteScrollUp: true,
     infiniteScrollDown: true,
     useExternalSorting: true,
@@ -46,11 +47,12 @@ function FileBrowserCtrl (
     enableSelectAll: true,
     selectionRowHeaderWidth: 35,
     rowHeight: 35,
-    showGridFooter: false,
     enableSelectionBatchEvent: true,
     multiSelect: true,
     columnDefs: fileBrowserFactory.customColumnNames,
-    data: fileBrowserFactory.assayFiles
+    data: fileBrowserFactory.assayFiles,
+    showGridFooter: true,
+    gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>'
   };
   // variables supporting ui-grid dynamic scrolling
   vm.firstPage = 0;
