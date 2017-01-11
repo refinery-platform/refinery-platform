@@ -21,11 +21,6 @@ class refinery::selenium {
     cleanup       => 'true',
   }
   ->
-  exec { "chmod geckodriver":
-      command     => "sudo chmod a+x $install_path",
-      path        => ['/usr/bin/', '/bin/'],
-  }
-  ->
   file { '/usr/bin/geckodriver':
     ensure => 'link',
     target => $install_path
