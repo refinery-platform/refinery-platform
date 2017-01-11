@@ -1,11 +1,6 @@
-<span
-  ng-if="isAssayFilesLoading"
-  title="More rows are loading......."
-  refinery-tooltip
-  refinery-tooltip-container="body"
-  refinery-tooltip-placement="top"
-  refinery-tooltip-delay-show="750"
-  refinery-tooltip-delay-hide="150"
-  refinery-tooltip-hide-on-click="true">
-  <span class="refinery-spinner"></span>
+<span ng-if="isAssayFilesLoading">
+  <h4 class="emphasized text-align-center m-t-1-5">
+    Additional rows loading.......
+    <span class="refinery-spinner refinery-spinner-inline"></span>
+  </h4>
 </span>

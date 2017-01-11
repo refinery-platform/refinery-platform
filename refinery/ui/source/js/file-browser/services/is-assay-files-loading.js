@@ -2,7 +2,7 @@
 
 function filesLoadingService () {
   var vm = this;
-  vm.isAssayFilesLoading = true;
+  vm.isAssayFilesLoading = false;
 
   vm.setIsAssayFilesLoading = function (status) {
     if (status === true) {

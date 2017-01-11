@@ -11,6 +11,7 @@ function FileBrowserCtrl (
   $window,
   fileBrowserFactory,
   fileBrowserSettings,
+  filesLoadingService,
   isOwnerService,
   resetGridService,
   selectedFilterService,
@@ -258,10 +259,12 @@ function FileBrowserCtrl (
     vm.filesParam.offset = vm.lastPage * vm.rowCount;
     vm.filesParam.limit = vm.rowCount;
     var promise = $q.defer();
+    filesLoadingService.setIsAssayFilesLoading(true);
     fileBrowserFactory.getAssayFiles(vm.filesParam, 'down')
       .then(function () {
         vm.gridApi.infiniteScroll.saveScrollPercentage();
         vm.gridOptions.data = fileBrowserFactory.assayFiles;
+        filesLoadingService.setIsAssayFilesLoading(false);
         vm.gridApi.infiniteScroll
           .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
           .then(function () {
@@ -288,10 +291,12 @@ function FileBrowserCtrl (
     vm.filesParam.offset = vm.firstPage * vm.rowCount;
     vm.filesParam.limit = vm.rowCount;
     var promise = $q.defer();
+    filesLoadingService.setIsAssayFilesLoading(true);
     fileBrowserFactory.getAssayFiles(vm.filesParam, 'up')
       .then(function () {
         vm.gridApi.infiniteScroll.saveScrollPercentage();
         vm.gridOptions.data = fileBrowserFactory.assayFiles;
+        filesLoadingService.setIsAssayFilesLoading(false);
         vm.gridApi.infiniteScroll
           .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
           .then(function () {
@@ -528,6 +533,7 @@ angular
     '$window',
     'fileBrowserFactory',
     'fileBrowserSettings',
+    'filesLoadingService',
     'isOwnerService',
     'resetGridService',
     'selectedFilterService',
