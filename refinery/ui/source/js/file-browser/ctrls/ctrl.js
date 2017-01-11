@@ -37,7 +37,6 @@ function FileBrowserCtrl (
   vm.uiSelectedFields = {};
   vm.selectNodesCount = 0;
   vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
-  vm.isDataLoading = true;
   vm.gridOptions = {
     appScopeProvider: vm,
     infiniteScrollRowsFromEnd: 40,
