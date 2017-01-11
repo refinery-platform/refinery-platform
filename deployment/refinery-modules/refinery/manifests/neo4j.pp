@@ -142,47 +142,13 @@ class refinery::neo4j {
       require     => Service["neo4j-service"],
     }
     ->
-    exec { "fetch neo4j fixture":
-      command     => "sudo wget -q https://raw.githubusercontent.com/refinery-platform/ontology-imports/master/django-fixure-stemcellcommons.json",
-      cwd         => $django_root,
-      creates     => "$django_root/django-fixure-stemcellcommons.json",
-      path        => ['/usr/bin/'],
-      user        => $app_user,
-      group       => $app_group,
-      timeout     => 1800,
-    }
-    ->
-    exec { "install neo4j fixture":
-      command     => "${virtualenv}/bin/python manage.py loaddata django-fixure-stemcellcommons.json",
-      environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-      cwd         => $django_root,
-      user        => $app_user,
-      group       => $app_group,
-      # Exit code 1 will occur the second time this command is run. This
-      # will turn into a DataMigration soon but I'm avoiding creating more
-      # Migrations in Django 1.6 and will address this once Django 1.7 is
-      # Merged
-      returns     => [0,1],
-      require     => [
-        Python::Requirements[$requirements],
-        Postgresql::Server::Db["refinery"]
-      ],
-    }
-    ->
     exec { "install neo4j annotations":
       command     => "${virtualenv}/bin/python manage.py import_annotations -c",
       environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
       cwd         => $django_root,
       user        => $app_user,
       group       => $app_group,
-    }
-    ->
-    exec { "remove neo4j fixture":
-      command     => "rm -rf django-fixure-stemcellcommons.json",
-      cwd         => $django_root,
-      user        => $app_user,
-      group       => $app_group,
-      path        => ['/bin/'],
+      require     => Exec['migrate'],
     }
   }
   include neo4jPrePopulatedDB
