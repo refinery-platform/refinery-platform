@@ -418,9 +418,16 @@ def annotate_nodes(investigation_uuid):
 
 
 @task()
-def parse_isatab(username, public, path,
-                 additional_raw_data_file_extension=None, isa_archive=None,
-                 pre_isa_archive=None, file_base_path=None):
+def parse_isatab(
+    username,
+    public,
+    path,
+    additional_raw_data_file_extension=None,
+    isa_archive=None,
+    pre_isa_archive=None,
+    file_base_path=None,
+    overwrite=False
+):
     """parses in an ISA-TAB file to create database entries and creates or
     updates a dataset for the investigation to belong to; returns the dataset
     UUID or None if something went wrong. Use like this: parse_isatab(username,
@@ -464,21 +471,26 @@ def parse_isatab(username, public, path,
             for ds in datasets:
                 own = ds.get_owner()
                 if own == user:
-                    # 3. Finally we need to get the checksum so that we can
-                    # compare that to our given file.
-                    investigation = ds.get_investigation()
-                    fileStoreItem = FileStoreItem.objects.get(
-                        uuid=investigation.isarchive_file)
-                    if fileStoreItem:
-                        try:
-                            logger.info("Get file: %s",
-                                        fileStoreItem.get_absolute_path())
-                            checksum = calculate_checksum(
-                                fileStoreItem.get_file_object())
-                        except IOError as e:
-                            logger.error(
-                                "Original isatab archive wasn't found. "
-                                "Error: '%s'", e)
+                    if overwrite:
+                        # Remove the existing data set first
+                        checksum = False
+                        ds.delete()
+                    else:
+                        # 3. Finally we need to get the checksum so that we can
+                        # compare that to our given file.
+                        investigation = ds.get_investigation()
+                        fileStoreItem = FileStoreItem.objects.get(
+                            uuid=investigation.isarchive_file)
+                        if fileStoreItem:
+                            try:
+                                logger.info("Get file: %s",
+                                            fileStoreItem.get_absolute_path())
+                                checksum = calculate_checksum(
+                                    fileStoreItem.get_file_object())
+                            except IOError as e:
+                                logger.error(
+                                    "Original isatab archive wasn't found. "
+                                    "Error: '%s'", e)
         # 4. Finally if we got a checksum for an existing file, we calculate
         # the checksum for the new file and compare them
         if checksum:
@@ -495,8 +507,11 @@ def parse_isatab(username, public, path,
                     os.path.basename(path),
                     True)
     try:
-        investigation = p.run(path, isa_archive=isa_archive,
-                              preisa_archive=pre_isa_archive)
+        investigation = p.run(
+            path,
+            isa_archive=isa_archive,
+            preisa_archive=pre_isa_archive
+        )
         data_uuid = create_dataset(investigation.uuid, username, public=public)
         return (data_uuid, os.path.basename(path), False)
     except:  # prints the error message without breaking things
