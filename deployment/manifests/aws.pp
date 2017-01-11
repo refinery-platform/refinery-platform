@@ -32,4 +32,5 @@ include refinery::apache2
 include refinery::aws
 include refinery::neo4j
 include refinery::pg
+include refinery::solr
 
