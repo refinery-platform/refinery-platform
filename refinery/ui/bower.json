@@ -46,7 +46,7 @@
     "spark-md5": "2.0.2",
     "spectrum": "1.7.0",
     "tipsy": "0.1.7",
-    "d3-list-graph": "flekschas/d3-list-graph#5d49e7cc2d2b954e79c43b86f151230377be8b52",
+    "d3-list-graph": "flekschas/d3-list-graph#v1.0.0",
     "angular-drag-and-drop-lists": "1.4.0",
     "ui-select": "angular-ui-select#0.18.0",
     "select2": "3.4.5",
