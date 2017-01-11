@@ -94,12 +94,12 @@ class refinery::neo4j {
   include owl2neo4j
 
   class neo4jPrePopulatedDB {
-    package { 'unzip':
-      name        => 'unzip',
-      ensure      => latest,
-      require     => Class['apt::update'],
-    }
-    ->
+    $neo4j_user = "neo4j"
+    $neo4j_group = "nogroup"
+    $dirname = "graph.db"
+    $filename = "${dirname}.zip"
+    $install_path = "/var/lib/neo4j/data/"
+
     exec { "stop neo4j service":
       command     => "sudo service neo4j-service stop",
       user        => $app_user,
@@ -116,22 +116,23 @@ class refinery::neo4j {
       path        => ['/usr/bin/'],
     }
     ->
-    exec { "fetch pre-generated db":
-      command     => "sudo wget -q http://data.cloud.refinery-platform.org.s3.amazonaws.com/data/stem-cell-commons/neo4j/2015/graph.db.zip && yes | sudo unzip graph.db.zip",
-      cwd         => "/var/lib/neo4j/data/",
-      user        => $app_user,
-      group       => $app_group,
-      path        => ['/usr/bin/'],
-      timeout     => 1800,
+    archive { "fetch pre-generated db":
+      path        => "/tmp/${filename}",
+      source      => "http://data.cloud.refinery-platform.org.s3.amazonaws.com/data/stem-cell-commons/neo4j/2015/${filename}",
+      extract       => true,
+      extract_path  => "${install_path}",
+      creates       => "${install_path}/${dirname}",
+      cleanup       => true,
+      user        => 'root',
+      group       => 'root',
       require     => [
-        Package['unzip'],
         Class['neo4jFetch'],
       ],
     }
     ->
-    exec { "change db ownership":
-      command     => "sudo chown -R neo4j:nogroup /var/lib/neo4j/data/graph.db",
-      path        => ['/usr/bin/', '/bin/'],
+    exec { 'neo4j permissions':
+      command   => "sudo chown -R $neo4j_user:$neo4j_group $install_path/$dirname",
+      path        => ['/usr/bin/'],
     }
     ->
     exec { "start neo4j service":
