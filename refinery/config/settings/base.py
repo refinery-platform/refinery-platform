@@ -578,5 +578,3 @@ REFINERY_AUXILIARY_FILE_GENERATION = get_setting(
 REFINERY_TUTORIAL_STEPS = refinery_tutorial_settings
 
 ANONYMOUS_USER_ID = -1
-
-TEST_RUNNER = "django.test.runner.DiscoverRunner"
