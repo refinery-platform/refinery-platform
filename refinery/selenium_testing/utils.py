@@ -8,9 +8,10 @@ DEFAULT_WAIT = 20
 
 def login(selenium, live_server_url):
     """
-    Helper method to login to the LiveServerTestCase Refinery instance
+    Helper method to login to the StaticLiveServerTestCase Refinery instance
     :param selenium: selenium webdriver Instance
-    :param live_server_url: Url of the current LiveServerTestCase instance
+    :param live_server_url: Url of the current StaticLiveServerTestCase
+    instance
     """
     selenium.get(live_server_url)
     wait_until_id_clickable(selenium, "refinery-login", DEFAULT_WAIT)
