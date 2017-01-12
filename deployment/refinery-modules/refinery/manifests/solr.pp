@@ -4,7 +4,6 @@ class refinery::solr {
     $solr_archive = "solr-${solr_version}.tgz"
     $download_path = "/tmp/${solr_archive}"
     $solr_url = "http://archive.apache.org/dist/lucene/solr/${solr_version}/${solr_archive}"
-    $install_path = "/opt/solr"
 
     package { 'java':
       name => 'openjdk-7-jdk',
