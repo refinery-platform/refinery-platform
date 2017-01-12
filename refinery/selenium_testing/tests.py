@@ -24,6 +24,7 @@ class NoLoginTestCase(StaticLiveServerTestCase):
     Ensure that Refinery looks like it should when there is no currently
     logged in user
     """
+
     def setUp(self):
         self.browser = webdriver.Firefox()
         self.browser.maximize_window()
@@ -68,14 +69,14 @@ class DataSetsPanelTestCase(StaticLiveServerTestCase):
     they're behaving normally
     """
     def setUp(self):
-        create_public_group()
         self.browser = webdriver.Firefox()
         self.browser.maximize_window()
         init_user("guest", "guest", "guest@coffee.com", "Guest", "Guest",
                   "Test User", is_active=True)
+        create_public_group()
+        ExtendedGroup.objects.public_group().save()
         self.user = User.objects.get(username="guest")
         self.user.save()
-        ExtendedGroup.objects.public_group().save()
         login(self.browser, self.live_server_url)
 
     def tearDown(self):
@@ -121,14 +122,14 @@ class UiDeletionTestCase(StaticLiveServerTestCase):
     Ensure proper deletion of DataSets and Analyses from the UI
     """
     def setUp(self):
-        create_public_group()
         self.browser = webdriver.Firefox()
         self.browser.maximize_window()
         init_user("guest", "guest", "guest@coffee.com", "Guest", "Guest",
                   "Test User", is_active=True)
+        create_public_group()
+        ExtendedGroup.objects.public_group().save()
         self.user = User.objects.get(username="guest")
         self.user.save()
-        ExtendedGroup.objects.public_group().save()
         login(self.browser, self.live_server_url)
 
     def tearDown(self):
