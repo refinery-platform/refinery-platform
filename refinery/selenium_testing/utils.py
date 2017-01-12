@@ -3,7 +3,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.common.exceptions import TimeoutException
 
-DEFAULT_WAIT = 20
+DEFAULT_WAIT = 5
 
 
 def login(selenium, live_server_url):
