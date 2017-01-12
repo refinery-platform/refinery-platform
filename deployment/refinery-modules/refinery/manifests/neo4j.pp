@@ -100,6 +100,10 @@ class refinery::neo4j {
     $filename = "${dirname}.zip"
     $install_path = "/var/lib/neo4j/data/"
 
+    package{"unzip":
+      ensure   => 'installed',
+    }
+
     exec { "stop neo4j service":
       command     => "sudo service neo4j-service stop",
       user        => $app_user,
@@ -126,6 +130,7 @@ class refinery::neo4j {
       user        => 'root',
       group       => 'root',
       require     => [
+        Package['unzip'],
         Class['neo4jFetch'],
       ],
     }
