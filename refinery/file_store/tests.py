@@ -311,7 +311,7 @@ class FileStoreItemManagerTest(TestCase):
         self.assertEqual(item.source, self.path_source)
 
 
-class FileSourceTranslationTest(SimpleTestCase):
+class FileSourceTranslationTest(TestCase):
     def setUp(self):
         self.username = 'guest'
         self.base_path = '/test/'
