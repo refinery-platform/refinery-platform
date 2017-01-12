@@ -362,7 +362,7 @@ def delete_data_set_index(data_set):
         it is not running.
         (e.g. Travis CI doesn't support solr yet)
         """
-        logger.error("Could not delete from DataSetIndex:", e)
+        logger.error("Could not delete from DataSetIndex: %s", e)
 
 
 @skip_if_test_run
