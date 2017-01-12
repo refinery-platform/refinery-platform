@@ -2,6 +2,7 @@
   env: {
     browser: true
   },
+  extends: "airbnb/legacy",
   globals: {
     angular: false,
     d3: false,
@@ -30,6 +31,7 @@
     space-before-function-paren: [2, "always"],
     keyword-spacing: 2,
     strict: [1, "safe"],
-    vars-on-top: 0
+    vars-on-top: 0,
+    wrap-iife: [2, "any"]
   }
 }

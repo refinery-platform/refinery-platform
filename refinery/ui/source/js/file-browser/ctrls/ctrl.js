@@ -39,6 +39,7 @@
     selectedNodesService
   ) {
     var maxFileRequest = fileBrowserSettings.maxFileRequest;
+    var nodesService = selectedNodesService;
     var vm = this;
     // flag to help with timing issues when selecting node group
     vm.afterNodeGroupUpdate = false;
@@ -95,7 +96,7 @@
         fileBrowserFactory.filesParam.filter_attribute
       );
       // Resets selection
-      selectedNodesService.setSelectedAllFlags(false);
+      nodesService.setSelectedAllFlags(false);
       // resets grid
       vm.reset();
     };
@@ -212,46 +213,46 @@
         // Checkbox selection events
         vm.gridApi.selection.on.rowSelectionChanged(null, function (row) {
           // When selected All, watching the deselect events for complement nodes
-          if (selectedNodesService.selectedNodeGroupUuid &&
-            selectedNodesService.selectedNodeGroupUuid !==
-            selectedNodesService.defaultCurrentSelectionUuid) {
+          if (nodesService.selectedNodeGroupUuid &&
+            nodesService.selectedNodeGroupUuid !==
+            nodesService.defaultCurrentSelectionUuid) {
             if (vm.afterNodeGroupUpdate) {
               vm.afterNodeGroupUpdate = false;
-              selectedNodesService.resetNodeGroupSelection(true);
+              nodesService.resetNodeGroupSelection(true);
             }
           }
 
-          if (selectedNodesService.selectedAllFlag) {
-            selectedNodesService.setComplementSeletedNodes(row);
+          if (nodesService.selectedAllFlag) {
+            nodesService.setComplementSeletedNodes(row);
             vm.selectNodesCount = vm.assayFilesTotal -
-              selectedNodesService.complementSelectedNodes.length;
+              nodesService.complementSelectedNodes.length;
           } else {
             // add or remove row to list
-            selectedNodesService.setSelectedNodes(row);
-            vm.selectNodesCount = selectedNodesService.selectedNodes.length;
+            nodesService.setSelectedNodes(row);
+            vm.selectNodesCount = nodesService.selectedNodes.length;
           }
 
           // when not current selection, check if a new row was deselect/selected
-          if (selectedNodesService.selectedNodeGroupUuid !==
-            selectedNodesService.defaultCurrentSelectionUuid &&
-            selectedNodesService.selectedNodesUuidsFromNodeGroup.length !==
-            selectedNodesService.selectedNodes.length) {
+          if (nodesService.selectedNodeGroupUuid !==
+            nodesService.defaultCurrentSelectionUuid &&
+            nodesService.selectedNodesUuidsFromNodeGroup.length !==
+            nodesService.selectedNodes.length) {
             // Reset the node group selection to current selection
-            selectedNodesService.resetNodeGroupSelection(true);
+            nodesService.resetNodeGroupSelection(true);
           }
         });
 
         // Event only occurs when checkbox is selected/deselected.
         vm.gridApi.selection.on.rowSelectionChangedBatch(null, function (eventRows) {
           // When event all occurs, the node group should be current selection
-          selectedNodesService.resetNodeGroupSelection(true);
+          nodesService.resetNodeGroupSelection(true);
           // Checking the first row selected, ensures it's a true select all
           if (eventRows[0].isSelected) {
-            selectedNodesService.setSelectedAllFlags(true);
+            nodesService.setSelectedAllFlags(true);
             // Need to manually set vm.selectNodesCount to count of all list
             vm.selectNodesCount = vm.assayFilesTotal;
           } else {
-            selectedNodesService.setSelectedAllFlags(false);
+            nodesService.setSelectedAllFlags(false);
             vm.selectNodesCount = 0;
           }
         });
@@ -325,20 +326,20 @@
             vm.gridApi.infiniteScroll.resetScroll(vm.firstPage > 0, vm.lastPage < vm.totalPages);
             resetGridService.setResetGridFlag(false);
             // Select rows either from node group lists or previously selected
-            if (selectedNodesService.selectedNodesUuidsFromNodeGroup.length > 0) {
-              selectedNodesService.setSelectedNodesFromNodeGroup(
-                selectedNodesService.selectedNodesUuidsFromNodeGroup
+            if (nodesService.selectedNodesUuidsFromNodeGroup.length > 0) {
+              nodesService.setSelectedNodesFromNodeGroup(
+                nodesService.selectedNodesUuidsFromNodeGroup
               );
-              selectedNodesService.selectNodesCount = selectedNodesService
+              nodesService.selectNodesCount = nodesService
                 .selectedNodesUuidsFromNodeGroup.length;
               correctRowSelectionInUI();
               vm.afterNodeGroupUpdate = true;
-            } else if (selectedNodesService.selectedNodes.length > 0) {
-              selectedNodesService.selectNodesCount = selectedNodesService.selectedNodesUuids.length;
+            } else if (nodesService.selectedNodes.length > 0) {
+              nodesService.selectNodesCount = nodesService.selectedNodesUuids.length;
               correctRowSelectionInUI();
             } else {
               vm.gridApi.selection.clearSelectedRows();
-              selectedNodesService.selectNodesCount = 0;
+              nodesService.selectNodesCount = 0;
             }
           });
         });
@@ -426,12 +427,12 @@
     // scroll adds more data, at reset and per 300 rows
     var correctRowSelectionInUI = function () {
       // select all event, track complements
-      if (selectedNodesService.selectedAllFlag) {
+      if (nodesService.selectedAllFlag) {
         // ensure complement nodes are deselected
-        vm.setGridUnselectedRows(selectedNodesService.complementSelectedNodesUuids);
+        vm.setGridUnselectedRows(nodesService.complementSelectedNodesUuids);
         // previous selected nodes maintained during infinite scrolling
-      } else if (selectedNodesService.selectedNodes.length > 0) {
-        vm.setGridSelectedRows(selectedNodesService.selectedNodesUuids);
+      } else if (nodesService.selectedNodes.length > 0) {
+        vm.setGridSelectedRows(nodesService.selectedNodesUuids);
       }
     };
 
