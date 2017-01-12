@@ -176,9 +176,12 @@ TEMPLATE_DIRS = (
 # due to an auth.post_migrate signal depending on a
 # django.contrib.contenttypes.post_migrate signal being run prior
 INSTALLED_APPS = (
+    'registration',
     'core',
-    'django.contrib.contenttypes',
+    'data_set_manager',
+    'guardian',
     'django.contrib.auth',
+    'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
@@ -196,7 +199,6 @@ INSTALLED_APPS = (
     'djcelery',  # django-celery
     # NG: added for API
     "tastypie",
-    'guardian',
     'djangular',
     'galaxy_connector',
     'analysis_manager',
@@ -204,10 +206,8 @@ INSTALLED_APPS = (
     'file_store',
     'file_server',
     'visualization_manager',
-    'data_set_manager',
     'annotation_server',
     'selenium_testing',
-    'registration',
     'flatblocks',
     'chunked_upload',
     'rest_framework',
