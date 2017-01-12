@@ -25,6 +25,7 @@
     no-new: 0,
     no-param-reassign: [2, { props: false }],
     no-unused-vars: [2, { vars: "all", "args": "after-used" }],
+    no-use-before-define: [1, 'nofunc'],
     quotes: [2, "single", "avoid-escape"],
     semi: [2, "always"],
     space-before-function-paren: [2, "always"],

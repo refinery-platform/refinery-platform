@@ -1,6 +1,7 @@
 {
   "curly": true,
   "immed": true,
+  "latedef": "nofunc",
   "newcap": true,
   "noarg": true,
   "sub": true,
