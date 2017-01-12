@@ -18,20 +18,21 @@ function FileBrowserCtrl (
   ) {
   var maxFileRequest = fileBrowserSettings.maxFileRequest;
   var vm = this;
+  // flag to help with timing issues when selecting node group
+  vm.afterNodeGroupUpdate = false;
+  vm.analysisFilter = fileBrowserFactory.analysisFilter;
   // attribute list from api
   vm.assayAttributes = fileBrowserFactory.assayAttributes;
+  vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
   // objs used by ui to generate filters
   vm.attributeFilter = fileBrowserFactory.attributeFilter;
-  vm.analysisFilter = fileBrowserFactory.analysisFilter;
-
-  // Ui-grid parameters
+  // variable supporting ui-grid dynamic scrolling
+  vm.cachePages = 2;
+  vm.counter = 0;
+  vm.firstPage = 0;
+  //
   vm.gridApi = undefined; // avoids duplicate grid generation
-  vm.queryKeys = Object.keys($location.search());
-  /** used by ui to select/deselect, attributes have an object of filter fields
-   * attributeInternalName: {fieldName: boolean, fieldName: boolean} */
-  vm.uiSelectedFields = {};
-  vm.selectNodesCount = 0;
-  vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
+  // Main ui-grid options
   vm.gridOptions = {
     appScopeProvider: vm,
     infiniteScrollRowsFromEnd: 40,
@@ -48,15 +49,14 @@ function FileBrowserCtrl (
     columnDefs: fileBrowserFactory.customColumnNames,
     data: fileBrowserFactory.assayFiles
   };
-  // variables supporting ui-grid dynamic scrolling
-  vm.firstPage = 0;
-  vm.lastPage = 0;
+  vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
+  vm.queryKeys = Object.keys($location.search()); // used for preset filters
   vm.rowCount = maxFileRequest;
-  vm.totalPages = 1;
-  vm.cachePages = 2;
-  vm.counter = 0;
-  // flag to help with timing issues when selecting node group
-  vm.afterNodeGroupUpdate = false;
+  vm.selectNodesCount = 0;
+  vm.totalPages = 1;  // variable supporting ui-grid dynamic scrolling
+  /** Used by ui to select/deselect, attributes have an object of filter fields
+   * attributeInternalName: {fieldName: boolean, fieldName: boolean} */
+  vm.uiSelectedFields = {};
 
   /*
  * -----------------------------------------------------------------------------
