@@ -28,7 +28,7 @@
     "esformatter-semicolons": "1.1.2",
     "esformatter-use-strict": "2.0.2",
     "esformatter-var-each": "2.1.0",
-    "eslint": "3.6.1",
+    "eslint": "3.13.1",
     "eslint-config-airbnb": "14.0.0",
     "eslint-plugin-react": "6.9.0",
     "grunt": "1.0.1",
