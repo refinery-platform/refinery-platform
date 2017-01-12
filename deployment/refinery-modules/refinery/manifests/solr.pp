@@ -32,7 +32,7 @@ class refinery::solr {
     }
     ->
     exec { "solr_install": # also starts the service
-      command => "sudo bash ./install_solr_service.sh ${solr_archive} -u ${app_user}",
+      command => "sudo bash ./install_solr_service.sh /tmp/${solr_archive} -u ${app_user}",
       cwd     => "/usr/local/src",
       creates => "/opt/solr-${solr_version}",
       path    => "/usr/bin:/bin",
