@@ -61,11 +61,6 @@ class AssaysAPITests(APITestCase):
         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
         self.invalid_format_uuid = "xxxxxxxx"
 
-    def tearDown(self):
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
-
     def test_get_valid_uuid(self):
         # valid_uuid
         request = self.factory.get('%s/?uuid=%s' % (
@@ -131,11 +126,6 @@ class AssaysAPITests(APITestCase):
 #         self.view = AssaysFiles.as_view()
 #         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
 #         self.invalid_format_uuid = "xxxxxxxx"
-#
-#     def tearDown(self):
-#         Assay.objects.all().delete()
-#         Study.objects.all().delete()
-#         Investigation.objects.all().delete()
 #
 #     def test_get(self):
 #         # valid_uuid, patch date in the module that uses it
@@ -299,14 +289,6 @@ class AssaysAttributesAPITests(APITestCase):
         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
         self.invalid_format_uuid = "xxxxxxxx"
         self.client.logout()
-
-    def tearDown(self):
-        User.objects.all().delete()
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
-        DataSet.objects.all().delete()
-        AttributeOrder.objects.all().delete()
 
     def test_get_valid_uuid(self):
         # valid_uuid
@@ -693,15 +675,6 @@ class UtilitiesTest(TestCase):
         self.url_root = '/api/v2/assays'
         self.valid_uuid = self.assay.uuid
         self.invalid_uuid = 'xxxxxxxx'
-
-    def tearDown(self):
-        User.objects.all().delete()
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
-        DataSet.objects.all().delete()
-        InvestigationLink.objects.all().delete()
-        AttributeOrder.objects.all().delete()
 
     def test_objectify_facet_field_counts(self):
         facet_field_array = {'WORKFLOW': ['1_test_04', 1,
@@ -1417,15 +1390,6 @@ class NodeClassMethodTests(TestCase):
             file_uuid=self.filestore_item_1.uuid
         )
 
-    def tearDown(self):
-        FileStoreItem.objects.all().delete()
-        InvestigationLink.objects.all().delete()
-        Investigation.objects.all().delete()
-        Node.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        DataSet.objects.all().delete()
-
     def test_create_and_associate_auxiliary_node(self):
         self.assertEqual(self.node.get_children(), [])
         self.node.create_and_associate_auxiliary_node(self.filestore_item.uuid)
@@ -1550,13 +1514,6 @@ class NodeApiV2Tests(APITestCase):
             format="json"
         )
         self.options_response = self.view(self.options_request)
-
-    def tearDown(self):
-        Node.objects.all().delete()
-        User.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        Investigation.objects.all().delete()
 
     def test_get_request(self):
         self.assertIsNotNone(self.get_response.data[0])
