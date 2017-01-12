@@ -1240,6 +1240,7 @@ class Analysis(OwnableResource):
     def get_analysis_results(self):
         return AnalysisResult.objects.filter(analysis_uuid=self.uuid)
 
+    @skip_if_test_run
     def optimize_solr_index(self):
         solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
                                    "data_set_manager"), timeout=10)
