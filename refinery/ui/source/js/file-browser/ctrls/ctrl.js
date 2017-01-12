@@ -63,74 +63,6 @@ function FileBrowserCtrl (
  * Methods
  * -----------------------------------------------------------------------------
  */
-
-   /**
-   * A main method which grabs all the data set nodes, attributes, and updates
-   * ui-grid params.
-  */
-  vm.refreshAssayFiles = function () {
-    fileBrowserFactory.filesParam.offset = vm.lastPage * vm.rowCount;
-    fileBrowserFactory.filesParam.limit = vm.rowCount;
-
-    var promise = $q.defer();
-    fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam).then(function () {
-      // create column names
-      vm.gridOptions.columnDefs = fileBrowserFactory.createColumnDefs();
-      // Grabbing 100 files per request, keeping max of 300 at a time
-      // Ui-grid rows generated from assay files
-      vm.gridOptions.data = fileBrowserFactory.assayFiles;
-      vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
-      vm.totalPages = Math.floor(vm.assayFilesTotal / vm.rowCount);
-      vm.assayAttributes = fileBrowserFactory.assayAttributes;
-      vm.attributeFilter = fileBrowserFactory.attributeFilter;
-      vm.analysisFilter = fileBrowserFactory.analysisFilter;
-      promise.resolve();
-    }, function (error) {
-      $log.error(error);
-    });
-    return promise.promise;
-  };
-
-  // checks url for params to update the filter
-  vm.updateFiltersFromUrlQuery = function () {
-    var allFilters = {};
-    // Merge attribute and analysis filter data obj
-    angular.copy(vm.attributeFilter, allFilters);
-    if (typeof vm.analysisFilter.Analysis !== 'undefined') {
-      allFilters.Analysis = vm.analysisFilter.Analysis;
-    }
-
-    angular.forEach(allFilters, function (attributeObj) {
-      vm.refreshSelectedFieldFromQuery(attributeObj);
-    });
-    fileBrowserFactory.filesParam.filter_attribute = {};
-    angular.copy(selectedFilterService.attributeSelectedFields,
-      fileBrowserFactory.filesParam.filter_attribute);
-  };
-
-  // helper method, upon refresh/load add fields to select data objs from query
-  vm.refreshSelectedFieldFromQuery = function (_attributeObj) {
-    // stringify/encode attributeInternalName:fieldName for url query comparison
-    angular.forEach(_attributeObj.facetObj, function (fieldObj) {
-      var encodedField = selectedFilterService.stringifyAndEncodeAttributeObj(
-        _attributeObj.internal_name,
-        fieldObj.name
-      );
-
-      if (vm.queryKeys.indexOf(encodedField) > -1) {
-        if (!vm.uiSelectedFields.hasOwnProperty(_attributeObj.internal_name)) {
-          vm.uiSelectedFields[_attributeObj.internal_name] = {};
-        }
-        vm.uiSelectedFields[_attributeObj.internal_name][fieldObj.name] = true;
-        selectedFilterService.updateSelectedFilters(
-          vm.uiSelectedFields[_attributeObj.internal_name],
-          _attributeObj.internal_name,
-          fieldObj.name
-        );
-      }
-    });
-  };
-
   // Used by ui, updates which attribute filters are selected and ui-grid data
   vm.attributeSelectionUpdate = function (internalName, field) {
     selectedFilterService.updateSelectedFilters(
@@ -144,6 +76,100 @@ function FileBrowserCtrl (
     selectedNodesService.setSelectedAllFlags(false);
     // resets grid
     vm.reset();
+  };
+
+  // Helper method to keep track when data should be discard or added
+  vm.checkDataLength = function (discardDirection) {
+    // work out whether we need to discard a page, if so discard from the
+    // direction passed in
+    if (vm.lastPage - vm.firstPage > vm.cachePages) {
+      // we want to remove a page
+      vm.gridApi.infiniteScroll.saveScrollPercentage();
+
+      if (discardDirection === 'up') {
+        fileBrowserFactory.trimAssayFiles(vm.rowCount);
+        vm.firstPage++;
+        $timeout(function () {
+          // wait for grid to ingest data changes
+          vm.gridApi.infiniteScroll.dataRemovedTop(
+            vm.firstPage > 0, vm.lastPage < vm.totalPages
+          );
+        });
+      } else {
+        fileBrowserFactory.trimAssayFiles(vm.rowCount * vm.cachePages, 0);
+        vm.lastPage--;
+        $timeout(function () {
+          // wait for grid to ingest data changes
+          vm.gridApi.infiniteScroll.dataRemovedBottom(
+            vm.firstPage > 0, vm.lastPage < vm.totalPages
+          );
+        });
+      }
+    }
+  };
+
+  // Sets boolean for data set ownership
+  vm.checkDataSetOwnership = function () {
+    isOwnerService.refreshDataSetOwner().then(function () {
+      vm.isOwner = isOwnerService.isOwner;
+    });
+  };
+
+  // Helper method for dynamic scrolling, grabs data when scrolling down
+  vm.getDataDown = function () {
+    vm.lastPage++;
+    fileBrowserFactory.filesParam.offset = vm.lastPage * vm.rowCount;
+    fileBrowserFactory.filesParam.limit = vm.rowCount;
+    var promise = $q.defer();
+    fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam)
+      .then(function () {
+        vm.gridApi.infiniteScroll.saveScrollPercentage();
+        vm.gridOptions.data = fileBrowserFactory.assayFiles;
+        vm.gridApi.infiniteScroll
+          .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
+          .then(function () {
+            vm.checkDataLength('up');
+            // programmically select/deselect due to new rows
+            correctRowSelectionInUI();
+          })
+          .then(function () {
+            promise.resolve();
+          });
+      }, function () {
+        vm.gridApi.infiniteScroll.dataLoaded();
+        promise.reject();
+      });
+    return promise.promise;
+  };
+
+  // Helper method for dynamic scrolling, grabs data when scrolling up
+  vm.getDataUp = function () {
+    if (vm.firstPage > 0) {
+      vm.firstPage--;
+    }
+
+    fileBrowserFactory.filesParam.offset = vm.firstPage * vm.rowCount;
+    fileBrowserFactory.filesParam.limit = vm.rowCount;
+    var promise = $q.defer();
+    fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam)
+      .then(function () {
+        vm.gridApi.infiniteScroll.saveScrollPercentage();
+        vm.gridOptions.data = fileBrowserFactory.assayFiles;
+        vm.gridApi.infiniteScroll
+          .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
+          .then(function () {
+            vm.checkDataLength('down');
+            // programmically select/deselect due to new rows
+            correctRowSelectionInUI();
+          })
+          .then(function () {
+            promise.resolve();
+          });
+      }, function () {
+        vm.gridApi.infiniteScroll.dataLoaded();
+        promise.reject();
+      });
+    return promise.promise;
   };
 
   // Ui-grid methods for catching grid events
@@ -210,125 +236,54 @@ function FileBrowserCtrl (
     }
   };
 
-  // Helper function: select rows on the ui-grid
-  vm.setGridSelectedRows = function (uuidsList) {
-    // If user scrolls quickly, there could be a delay for selected items
-    angular.forEach(vm.gridApi.grid.rows, function (gridRow) {
-      if (uuidsList.indexOf(gridRow.entity.uuid) > -1) {
-        vm.gridApi.selection.selectRow(gridRow.entity);
-      }
-    });
-  };
-
-   // Helper function: unselect rows on the ui-grid
-  vm.setGridUnselectedRows = function (uuidsList) {
-    // If user scrolls quickly, there could be a delay for selected items
-    angular.forEach(vm.gridApi.grid.rows, function (gridRow) {
-      // select rows if not in complement list
-      if (uuidsList.indexOf(gridRow.entity.uuid) === -1) {
-        vm.gridApi.selection.selectRow(gridRow.entity);
-      }
-    });
-  };
-
-  // Method to select/deselect rows programmically after dynamic
-  // scroll adds more data, at reset and per 300 rows
-  var correctRowSelectionInUI = function () {
-    // select all event, track complements
-    if (selectedNodesService.selectedAllFlag) {
-      // ensure complement nodes are deselected
-      vm.setGridUnselectedRows(selectedNodesService.complementSelectedNodesUuids);
-      // previous selected nodes maintained during infinite scrolling
-    } else if (selectedNodesService.selectedNodes.length > 0) {
-      vm.setGridSelectedRows(selectedNodesService.selectedNodesUuids);
-    }
-  };
-
-  // Helper method for dynamic scrolling, grabs data when scrolling down
-  vm.getDataDown = function () {
-    vm.lastPage++;
+  /**
+   * A main method which grabs all the data set nodes, attributes, and updates
+   * ui-grid params.
+  */
+  vm.refreshAssayFiles = function () {
     fileBrowserFactory.filesParam.offset = vm.lastPage * vm.rowCount;
     fileBrowserFactory.filesParam.limit = vm.rowCount;
+
     var promise = $q.defer();
-    fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam)
-      .then(function () {
-        vm.gridApi.infiniteScroll.saveScrollPercentage();
-        vm.gridOptions.data = fileBrowserFactory.assayFiles;
-        vm.gridApi.infiniteScroll
-          .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
-          .then(function () {
-            vm.checkDataLength('up');
-            // programmically select/deselect due to new rows
-            correctRowSelectionInUI();
-          })
-          .then(function () {
-            promise.resolve();
-          });
-      }, function () {
-        vm.gridApi.infiniteScroll.dataLoaded();
-        promise.reject();
-      });
+    fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam).then(function () {
+      // create column names
+      vm.gridOptions.columnDefs = fileBrowserFactory.createColumnDefs();
+      // Grabbing 100 files per request, keeping max of 300 at a time
+      // Ui-grid rows generated from assay files
+      vm.gridOptions.data = fileBrowserFactory.assayFiles;
+      vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
+      vm.totalPages = Math.floor(vm.assayFilesTotal / vm.rowCount);
+      vm.assayAttributes = fileBrowserFactory.assayAttributes;
+      vm.attributeFilter = fileBrowserFactory.attributeFilter;
+      vm.analysisFilter = fileBrowserFactory.analysisFilter;
+      promise.resolve();
+    }, function (error) {
+      $log.error(error);
+    });
     return promise.promise;
   };
 
-  // Helper method for dynamic scrolling, grabs data when scrolling up
-  vm.getDataUp = function () {
-    if (vm.firstPage > 0) {
-      vm.firstPage--;
-    }
+  // helper method, upon refresh/load add fields to select data objs from query
+  vm.refreshSelectedFieldFromQuery = function (_attributeObj) {
+    // stringify/encode attributeInternalName:fieldName for url query comparison
+    angular.forEach(_attributeObj.facetObj, function (fieldObj) {
+      var encodedField = selectedFilterService.stringifyAndEncodeAttributeObj(
+        _attributeObj.internal_name,
+        fieldObj.name
+      );
 
-    fileBrowserFactory.filesParam.offset = vm.firstPage * vm.rowCount;
-    fileBrowserFactory.filesParam.limit = vm.rowCount;
-    var promise = $q.defer();
-    fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam)
-      .then(function () {
-        vm.gridApi.infiniteScroll.saveScrollPercentage();
-        vm.gridOptions.data = fileBrowserFactory.assayFiles;
-        vm.gridApi.infiniteScroll
-          .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
-          .then(function () {
-            vm.checkDataLength('down');
-            // programmically select/deselect due to new rows
-            correctRowSelectionInUI();
-          })
-          .then(function () {
-            promise.resolve();
-          });
-      }, function () {
-        vm.gridApi.infiniteScroll.dataLoaded();
-        promise.reject();
-      });
-    return promise.promise;
-  };
-
-  // Helper method to keep track when data should be discard or added
-  vm.checkDataLength = function (discardDirection) {
-    // work out whether we need to discard a page, if so discard from the
-    // direction passed in
-    if (vm.lastPage - vm.firstPage > vm.cachePages) {
-      // we want to remove a page
-      vm.gridApi.infiniteScroll.saveScrollPercentage();
-
-      if (discardDirection === 'up') {
-        fileBrowserFactory.trimAssayFiles(vm.rowCount);
-        vm.firstPage++;
-        $timeout(function () {
-          // wait for grid to ingest data changes
-          vm.gridApi.infiniteScroll.dataRemovedTop(
-            vm.firstPage > 0, vm.lastPage < vm.totalPages
-          );
-        });
-      } else {
-        fileBrowserFactory.trimAssayFiles(vm.rowCount * vm.cachePages, 0);
-        vm.lastPage--;
-        $timeout(function () {
-          // wait for grid to ingest data changes
-          vm.gridApi.infiniteScroll.dataRemovedBottom(
-            vm.firstPage > 0, vm.lastPage < vm.totalPages
-          );
-        });
+      if (vm.queryKeys.indexOf(encodedField) > -1) {
+        if (!vm.uiSelectedFields.hasOwnProperty(_attributeObj.internal_name)) {
+          vm.uiSelectedFields[_attributeObj.internal_name] = {};
+        }
+        vm.uiSelectedFields[_attributeObj.internal_name][fieldObj.name] = true;
+        selectedFilterService.updateSelectedFilters(
+          vm.uiSelectedFields[_attributeObj.internal_name],
+          _attributeObj.internal_name,
+          fieldObj.name
+        );
       }
-    }
+    });
   };
 
   // Reset the data, selected rows, and scroll position in the grid
@@ -368,7 +323,28 @@ function FileBrowserCtrl (
     }
   };
 
-   /**
+  // Helper function: select rows on the ui-grid
+  vm.setGridSelectedRows = function (uuidsList) {
+    // If user scrolls quickly, there could be a delay for selected items
+    angular.forEach(vm.gridApi.grid.rows, function (gridRow) {
+      if (uuidsList.indexOf(gridRow.entity.uuid) > -1) {
+        vm.gridApi.selection.selectRow(gridRow.entity);
+      }
+    });
+  };
+
+  // Helper function: unselect rows on the ui-grid
+  vm.setGridUnselectedRows = function (uuidsList) {
+    // If user scrolls quickly, there could be a delay for selected items
+    angular.forEach(vm.gridApi.grid.rows, function (gridRow) {
+      // select rows if not in complement list
+      if (uuidsList.indexOf(gridRow.entity.uuid) === -1) {
+        vm.gridApi.selection.selectRow(gridRow.entity);
+      }
+    });
+  };
+
+  /**
    * Generates sort param for api call from ui-grid response and calls grid
     * reset
    * @param {obj} grid - ui-grid obj
@@ -394,12 +370,21 @@ function FileBrowserCtrl (
     }
   };
 
+  // checks url for params to update the filter
+  vm.updateFiltersFromUrlQuery = function () {
+    var allFilters = {};
+    // Merge attribute and analysis filter data obj
+    angular.copy(vm.attributeFilter, allFilters);
+    if (typeof vm.analysisFilter.Analysis !== 'undefined') {
+      allFilters.Analysis = vm.analysisFilter.Analysis;
+    }
 
-  // Sets boolean for data set ownership
-  vm.checkDataSetOwnership = function () {
-    isOwnerService.refreshDataSetOwner().then(function () {
-      vm.isOwner = isOwnerService.isOwner;
+    angular.forEach(allFilters, function (attributeObj) {
+      vm.refreshSelectedFieldFromQuery(attributeObj);
     });
+    fileBrowserFactory.filesParam.filter_attribute = {};
+    angular.copy(selectedFilterService.attributeSelectedFields,
+      fileBrowserFactory.filesParam.filter_attribute);
   };
 
   // Helper method which check for any data updates during soft loads (tabbing)
@@ -413,6 +398,19 @@ function FileBrowserCtrl (
           vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
         }
       });
+  };
+
+  // Method to select/deselect rows programmically after dynamic
+  // scroll adds more data, at reset and per 300 rows
+  var correctRowSelectionInUI = function () {
+    // select all event, track complements
+    if (selectedNodesService.selectedAllFlag) {
+      // ensure complement nodes are deselected
+      vm.setGridUnselectedRows(selectedNodesService.complementSelectedNodesUuids);
+      // previous selected nodes maintained during infinite scrolling
+    } else if (selectedNodesService.selectedNodes.length > 0) {
+      vm.setGridSelectedRows(selectedNodesService.selectedNodesUuids);
+    }
   };
 
   /**
