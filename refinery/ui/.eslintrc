@@ -2,7 +2,6 @@
   env: {
     browser: true
   },
-  extends: "airbnb/legacy",
   globals: {
     angular: false,
     d3: false,
@@ -25,12 +24,12 @@
     no-new: 0,
     no-param-reassign: [2, { props: false }],
     no-unused-vars: [2, { vars: "all", "args": "after-used" }],
-    no-use-before-define: [1, 'nofunc'],
+    no-use-before-define: [0, 'nofunc'],
     quotes: [2, "single", "avoid-escape"],
     semi: [2, "always"],
     space-before-function-paren: [2, "always"],
     keyword-spacing: 2,
-    strict: [2, "safe"],
+    strict: [1, "safe"],
     vars-on-top: 0
   }
 }
