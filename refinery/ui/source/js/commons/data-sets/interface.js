@@ -585,6 +585,15 @@ function DataSetFactory (
     _total = _totalSelection;
   }
 
+  /**
+   * Convert an object-based list into an array
+   *
+   * @method  _objListToArray
+   * @author  Fritz Lekschas
+   * @date    2017-01-13
+   * @param   {Object}  objList  Object-based list
+   * @return  {Array}            Array
+   */
   function _objListToArray (objList) {
     var arr = [];
     var ids = Object.keys(objList);
