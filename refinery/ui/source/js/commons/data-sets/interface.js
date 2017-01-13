@@ -3,7 +3,7 @@
 /* eslint no-use-before-define:0 */
 
 function DataSetFactory (
-  $q, _, settings, DataSetDataApi, DataSetDataDetailsApi, DataSetSearchApi,
+  $q, $sce, _, settings, DataSetDataApi, DataSetDataDetailsApi, DataSetSearchApi,
   DataSetStore, DataSetAnnotations) {
   /*
    * ------------------------------- Private -----------------------------------
@@ -407,6 +407,7 @@ function DataSetFactory (
   function _fetchDataFromSource (limit, offset) {
     return _source(limit, offset).then(function (response) {
       for (var i = response.data.length; i--;) {
+        _initHtmlTitleDesc(response.data[i]);
         _dataStore.add(response.data[i].id, response.data[i], true);
         _cacheOrder(offset + i, _dataStore.get(response.data[i].id));
       }
@@ -494,6 +495,7 @@ function DataSetFactory (
       return $q.when(_dataStore.get(id));
     }
     return _sourceDetails(id).then(function (dataSet) {
+      _initHtmlTitleDesc(dataSet);
       _dataStore.add(dataSet.id, dataSet, true);
     });
   }
@@ -601,6 +603,40 @@ function DataSetFactory (
       arr.push(ids[i]);
     }
     return arr;
+  }
+
+  /**
+   * Reset the title and description HTML.
+   *
+   * @description
+   * The HTML version of the title and description might change depending on the
+   * search as different parts can be highlighted. For that reason we need to
+   * explicitely update it everytime a search as been cleared.
+   *
+   * @method  _resetHtmlTitleDesc
+   * @author  Fritz Lekschas
+   * @date    2017-01-13
+   */
+  function _resetHtmlTitleDesc () {
+    _dataStore.each(function (ds) {
+      ds.titleHtml = $sce.trustAsHtml(ds.title);
+      ds.descriptionHtml = $sce.trustAsHtml(ds.description);
+    });
+  }
+
+  /**
+   * Initialize the title and description HTML.
+   *
+   * @method  _initHtmlTitleDesc
+   * @author  Fritz Lekschas
+   * @date    2017-01-13
+   * @param   {Object}  dataSet  Object to be initialized.
+   */
+  function _initHtmlTitleDesc (dataSet) {
+    dataSet.titleHtml = dataSet.titleHtml ?
+      dataSet.titleHtml : $sce.trustAsHtml(dataSet.title);
+    dataSet.descriptionHtml = dataSet.descriptionHtml ?
+      dataSet.descriptionHtml : $sce.trustAsHtml(dataSet.description);
   }
 
   /*
@@ -766,6 +802,7 @@ function DataSetFactory (
     if (_browsePath.length &&
       _browsePath[_browsePath.length - 1].type === 'search') {
       _browsePath.pop();
+      _resetHtmlTitleDesc();
     }
 
     _clearOrderCache();
@@ -1061,6 +1098,7 @@ angular
   .module('dataSet')
   .factory('dataSet', [
     '$q',
+    '$sce',
     '_',
     'settings',
     'DataSetDataApi',

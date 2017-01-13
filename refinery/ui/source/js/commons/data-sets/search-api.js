@@ -70,20 +70,20 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
             doc.id = doc.dbid;
 
             if (data.highlighting[id].title) {
-              doc.title = $sce.trustAsHtml(
+              doc.titleHtml = $sce.trustAsHtml(
                 data.highlighting[id].title[0]
               );
             } else {
-              doc.title = $sce.trustAsHtml(
+              doc.titleHtml = $sce.trustAsHtml(
                 '<span class="is-unknown">Unknown</span>'
               );
             }
             if (data.highlighting[id].description) {
-              doc.description = $sce.trustAsHtml(
+              doc.descriptionHtml = $sce.trustAsHtml(
                 data.highlighting[id].description[0]
               );
             } else {
-              doc.description = null;
+              doc.descriptionHtml = null;
             }
             if (doc.access) {
               if (userId && doc.access.indexOf('u_' + userId) >= 0) {

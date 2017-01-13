@@ -351,7 +351,7 @@
                   class="title one-line"
                   title="Expand data set preview"
                   ng-click="dashboard.expandDataSetPreview(dataSet.uuid)"
-                  ng-bind-html="dataSet.title"></a>
+                  ng-bind-html="dataSet.titleHtml"></a>
                 <div class="flex-box indicators">
                   <ul class="flex-item-two flex-left no-list-style">
                     <li class="indicator"
@@ -503,7 +503,7 @@
                 class="title"
                 title="Expand data set preview"
                 ng-click="dashboard.expandDataSetPreview(dataSet.uuid)"
-                ng-bind-html="dataSet.title"></a>
+                ng-bind-html="dataSet.titleHtml"></a>
               <div class="flex-box indicators">
                 <ul class="flex-item-two flex-left no-list-style">
                   <li class="indicator"
@@ -597,7 +597,7 @@
               <p
                 class="snippet"
                 ng-if="dataSet.description && dashboard.searchDataSet"
-                ng-bind-html="dataSet.description"></p>
+                ng-bind-html="dataSet.descriptionHtml"></p>
             </li>
             <li ng-if="dashboard.dataSetsAdapter.isLoading">
               <div class="refinery-request-loading">
