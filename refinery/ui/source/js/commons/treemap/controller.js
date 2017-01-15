@@ -105,7 +105,8 @@ function TreemapCtrl (
   treemapContext,
   Webworker,
   $rootScope,
-  $timeout
+  $timeout,
+  dashboardIntroStarter
 ) {
   this.$ = $;
   this._ = _;
@@ -196,6 +197,10 @@ function TreemapCtrl (
   } else {
     this.pubSub.trigger('treemap.noData');
   }
+
+  this.introStart = function () {
+    dashboardIntroStarter.start('satori-treemap');
+  };
 }
 
 /*
@@ -2117,5 +2122,6 @@ angular
     'Webworker',
     '$rootScope',
     '$timeout',
+    'dashboardIntroStarter',
     TreemapCtrl
   ]);

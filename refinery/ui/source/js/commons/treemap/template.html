@@ -1,22 +1,30 @@
 <div class="vis-wrapper">
-  <div class="top-bar">
-    <div class="left">
-      <ul id="treemap-root-path" class="left no-list-style"></ul>
-    </div>
-    <div class="right floatbox">
-      <label for="f-visible-depth" class="floatbox-min-left">Depth:</label>
-      <div class="floatbox-max-right">
-        <input
-          id="f-visible-depth"
-          type="number"
-          ng-model="treemap.visibleDepth"
-          ng-disabled="treemap.loadingVisibleDepth"
-          focus-on="visibleDepthInput">
-        <div class="refinery-global-notifier"
-          ng-if="treemap.loadingVisibleDepth">
-          <div class="refinery-spinner"></div>
+  <div class="top-bar floatbox">
+    <div class="floatbox-min-right">
+      <div class="floatbox-item">
+        <label for="f-visible-depth">Depth:</label>
+        <div class="rel-box">
+          <input
+            id="f-visible-depth"
+            type="number"
+            ng-model="treemap.visibleDepth"
+            ng-disabled="treemap.loadingVisibleDepth"
+            focus-on="visibleDepthInput">
+          <div class="refinery-global-notifier"
+            ng-if="treemap.loadingVisibleDepth">
+            <div class="refinery-spinner"></div>
+          </div>
         </div>
       </div>
+      <button class="floatbox-item icon-only button-like" ng-click="treemap.introStart()">
+        <span class="icon fa fa-info-circle"></span>
+      </button>
+      <button class="floatbox-item icon-only button-like">
+        <span class="icon fa fa-arrows-v"></span>
+      </button>
+    </div>
+    <div class="floatbox-max-left">
+      <ul id="treemap-root-path" class="left no-list-style"></ul>
     </div>
   </div>
   <div class="treemap">
