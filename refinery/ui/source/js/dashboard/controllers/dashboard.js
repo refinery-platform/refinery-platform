@@ -1256,9 +1256,9 @@ DashboardCtrl.prototype.removeFromDataCart = function (dataSet) {
  * @author  Fritz Lekschas
  * @date    2016-05-09
  */
-DashboardCtrl.prototype.resetDataSetSearch = function () {
+DashboardCtrl.prototype.resetDataSetSearch = function (noStateChange) {
   this.searchQueryDataSets = '';
-  this.setDataSetSource();
+  this.setDataSetSource(undefined, noStateChange);
 };
 
 /* ----------------------------------- S ------------------------------------ */
