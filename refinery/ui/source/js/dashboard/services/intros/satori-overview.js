@@ -54,57 +54,44 @@ function DashboardIntrosSatoriOverview (
         intro:
           'This is a quick introduction to the main interfaces of SATORI.</br>' +
           '</br>More are specific guides are available as well. Look for ' +
-          '<span class="fa fa-info-circle"></span>.',
+          '<span class="fa fa-info-circle"></span>.</br></br>Click on the ' +
+          'arrow buttons below or use the arrow keys to navigate.',
         position: 'bottom'
       },
       {
         element: '#data-set-panel',
         intro:
           'This is the data set view conisting of the search interface, the ' +
-          'list of data sets, filter options, the data cart.',
-        position: 'right'
-      },
-      {
-        element: '#search-interface',
-        intro:
-        'The search interface starts querying as you type. Its design has ' +
-        'been kept at a minimum.',
-        position: 'right'
-      },
-      {
-        element: '#data-set-panel-header',
-        intro:
-          'On the left you see the total number of data sets or results, and ' +
-          'on the right you have a button to open the data cart, to filter ' +
-          'and to sort data sets.</br><em>Note:</em> Sorting search results ' +
-          'is not possible.',
-        position: 'right'
-      },
-      {
-        element: '#data-set-list',
-        intro:
-          'The list of data sets holds either all data sets or the results ' +
-          'of a search or term query.</br>Each data set is represented by a ' +
-          'small snippet showing the title, sharing information, etc.',
+          'list of data sets, filter options, the data cart.<br/><br/>' +
+          '<em class="clickable" onclick="introJsSatoriOverview' +
+            '(\'satori-data-set-view\')">Jump to the data set view intro</em>',
         position: 'right'
       },
       {
         element: '#exploration-view',
         intro:
           'This is the <em>exploration view</em> containing the two main ' +
-          'visualizations for exploring the Refinery Platform',
+          'visualizations for exploring the Refinery Platform.',
         position: 'left'
       },
       {
         element: '#list-graph-wrapper',
         intro:
-          'This is the node-link diagram.',
+          'This is the node-link diagram. It shows the condensed graph of ' +
+          'ontology classes that are used for annotation of the data sets on ' +
+          'the left.<br/><br/>' +
+          '<em class="clickable" onclick="introJsSatoriOverview' +
+            '(\'satori-list-graph\')">Jump to the list graph intro</em>',
         position: 'left'
       },
       {
         element: '#treemap-wrapper',
         intro:
-          'This is the treemap.',
+          'This is the treemap visualization, which shows the relative ' +
+          'number of times each of the ontology classes is used for ' +
+          'annotation.<br/><br/>' +
+          '<em class="clickable" onclick="introJsSatoriOverview' +
+            '(\'satori-treemap\')">Jump to the treemap intro</em>',
         position: 'left'
       },
       {
@@ -113,7 +100,7 @@ function DashboardIntrosSatoriOverview (
           'This was a quick over. If you want to dive in deeper you can check' +
           'out the following guides that explain a bit more details: <ul>' +
           '<li class="clickable" onclick="introJsSatoriOverview' +
-            '(\'satori-data-set-view\')">Data set list</li>' +
+            '(\'satori-data-set-view\')">Data set view</li>' +
           '<li class="clickable" onclick="introJsSatoriOverview' +
             '(\'satori-list-graph\')">List graph visualization</li>' +
           '<li class="clickable" onclick="introJsSatoriOverview' +

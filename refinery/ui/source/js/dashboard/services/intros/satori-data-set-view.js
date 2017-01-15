@@ -15,7 +15,7 @@ function DashboardIntrosDataSetView (
    * @param   {Object}  context  Sometimes intro steps need to have access to
    *   the context of the controller to trigger certain actions.
    */
-  function Intros (/* context */) {
+  function Intros (context) {
     var self = this;
 
     self.id = 'satori-data-set-view';
@@ -67,20 +67,7 @@ function DashboardIntrosDataSetView (
         position: 'right'
       },
       {
-        element: '#search-interface',
-        intro:
-        'See! We just searched for <em>RNA-Seq</em>.',
-        position: 'right',
-        beforeExecutives: function () {
-          // context.searchQueryDataSets = 'RNA-Seq';
-          // context.searchDataSets(context.searchQueryDataSets);
-        },
-        afterExecutives: function () {
-          // context.resetDataSetSearch();
-        }
-      },
-      {
-        element: '#data-set-num',
+        element: '#total-datasets',
         intro:
           'Here you can see the total number of available data sets or the' +
           'number results returned by a search or term query.',
@@ -123,6 +110,31 @@ function DashboardIntrosDataSetView (
           '<br/><br/>A click on the title will open the <em>data set summary ' +
           'page</em> and a click on <span class="fa fa-table"></span> will ' +
           'bring you directly to the main data set page.'
+      },
+      {
+        element: '#search-interface',
+        intro:
+        'The search is executed immediately after typing. For example, we ' +
+        'just searched for <em>RNA-Seq</em>.',
+        position: 'right',
+        beforeExecutives: function () {
+          context.searchQueryDataSets = 'RNA-Seq';
+          context.searchDataSets(context.searchQueryDataSets, true);
+        }
+      },
+      {
+        dynamicElement: function () {
+          return document.querySelectorAll(
+            '.data-set-surrogate'
+          )[0];
+        },
+        dynamicPosition: 'right',
+        intro:
+          'The data set surrogate highlights the search keywords in the ' +
+          'title.',
+        afterExecutives: function () {
+          context.resetDataSetSearch(true);
+        }
       },
       {
         element: '#data-set-panel',
