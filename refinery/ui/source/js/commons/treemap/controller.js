@@ -198,8 +198,10 @@ function TreemapCtrl (
     this.pubSub.trigger('treemap.noData');
   }
 
+  this.introJs.addContext(this);
+
   this.introStart = function () {
-    dashboardIntroStarter.start('satori-treemap');
+    dashboardIntroStarter.start('satori-treemap', this);
   };
 }
 
@@ -999,6 +1001,14 @@ TreemapCtrl.prototype.adjustLevelDepth = function (oldVisibleDepth) {
     this.checkNodesLocked();
     return true;
   }.bind(this));
+};
+
+TreemapCtrl.prototype.changeVisibleDepth = function (newValue, noLocationChange) {
+  if (noLocationChange) {
+    this.visibleDepth = newValue;
+  } else {
+    this.visibleDepth = newValue;
+  }
 };
 
 /**

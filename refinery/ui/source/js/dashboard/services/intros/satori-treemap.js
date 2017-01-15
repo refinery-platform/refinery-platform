@@ -4,7 +4,10 @@ function DashboardIntrosSatoriTreemap (
   introJsDefaultOptions,
   introJsBeforeChangeEvent,
   dashboardIntroStarter,
-  dashboardIntroSatoriEasterEgg
+  dashboardIntroSatoriEasterEgg,
+  $rootScope,
+  $,
+  d3
 ) {
   /**
    * Constructor
@@ -17,6 +20,10 @@ function DashboardIntrosSatoriTreemap (
     var self = this;
 
     self.id = 'satori-treemap';
+
+    self.addContext = function (context) {
+      self.context = context;
+    };
 
     self.clickHandler = function (id) {
       self.complete();
@@ -57,6 +64,129 @@ function DashboardIntrosSatoriTreemap (
         position: 'top'
       },
       {
+        dynamicSvgElement: function () {
+          var groups = document.querySelectorAll(
+            '.treemap .group-of-nodes'
+          );
+
+          // The last `g` group is the largest rectangle
+          return groups[groups.length - 1];
+        },
+        dynamicPosition: 'left',
+        intro:
+          'Each rectangle represents an ontology term. The size indicates ' +
+          'the abundance and its color shows the depth of its subclass tree. ' +
+          'The darker the deeper is the subtree; rectangles with a light ' +
+          'gray background and no border are leaf terms, i.e., no subclass ' +
+          'has been used for annotation.<br/>The rectangles are ordered in ' +
+          'decreasing from the top left to the bottom right.',
+        beforeExecutives: function () {
+          $(document.body).addClass('introjs-svg-el');
+        },
+        afterExecutives: function () {
+          $(document.body).removeClass('introjs-svg-el');
+        }
+      },
+      {
+        element: '#treemap',
+        intro:
+          'The rectangles are ordered in decreasing from the top left to the ' +
+          'bottom right.<br/>Only leafs and internal ontology terms at a ' +
+          'certain level are shown.',
+        position: 'top'
+      },
+      {
+        element: '#treemap-visible-depth',
+        intro:
+          'The visible depth can be controlled here.<br/><br/>Let\'s ' +
+          'increase it by 1 for the next step&hellip;',
+        position: 'left',
+        beforeExecutives: function () {
+          self.context._noVisibleDepthNotification = true;
+          self.context.visibleDepth = 0;
+          $rootScope.$apply();
+        }
+      },
+      {
+        element: '#treemap',
+        intro:
+          'We now see inner ontology terms at depth 2 and leafs up until ' +
+          'depth 2<br/><br/>Let\'s ' +
+          'increase the depth one more time&hellip;',
+        position: 'top',
+        beforeExecutives: function () {
+          self.context._noVisibleDepthNotification = true;
+          self.context.visibleDepth = 2;
+          $rootScope.$apply();
+        }
+      },
+      {
+        element: '#treemap',
+        intro:
+          'The higher the depth the more fine grain structures get visible.',
+        position: 'top',
+        beforeExecutives: function () {
+          self.context._noVisibleDepthNotification = true;
+          self.context.visibleDepth = 3;
+          $rootScope.$apply();
+        },
+        afterExecutives: function () {
+          self.context._noVisibleDepthNotification = true;
+          self.context.visibleDepth = 0;
+          $rootScope.$apply();
+        }
+      },
+      {
+        dynamicSvgElement: function () {
+          var groups = document.querySelectorAll(
+            '.treemap .group-of-nodes'
+          );
+
+          // The last `g` group is the largest rectangle
+          return groups[groups.length - 1];
+        },
+        dynamicPosition: 'left',
+        intro:
+          'Another way to navigate the treemap is to double click on a node ' +
+          'to zoom into its subtree.<br/><br/>Let\'s open this nodes subtree' +
+          '&hellip;',
+        beforeExecutives: function () {
+          $(document.body).addClass('introjs-svg-el');
+        },
+        afterExecutives: function () {
+          $(document.body).removeClass('introjs-svg-el');
+        }
+      },
+      {
+        element: '#treemap-wrapper',
+        position: 'left',
+        intro:
+          'We now look at the direct child terms in terms of the annotation ' +
+          'hierarchy.',
+        beforeExecutives: function () {
+          var el = document.querySelectorAll(
+            '.treemap .group-of-nodes'
+          );
+          el = el[el.length - 1];
+
+          self.context.transition(d3.select(el).datum(), true);
+        }
+      },
+      {
+        element: '#treemap-root-path',
+        position: 'left',
+        intro:
+          'The breadcrumb-like menu shows the linear path back to the global ' +
+          'root term (i.e., <em>OWL:Thing</em>)',
+        afterExecutives: function () {
+          var el = document.querySelector(
+            '#treemap-root-path li a'
+          );
+
+          self.context.transition(d3.select(el).datum(), true);
+        }
+      },
+      {
         element: '#treemap-wrapper',
         intro:
           'That\'s it for the list graph! For an integrative overview of all ' +
@@ -85,5 +215,8 @@ angular
     'introJsBeforeChangeEvent',
     'dashboardIntroStarter',
     'dashboardIntroSatoriEasterEgg',
+    '$rootScope',
+    '$',
+    'd3',
     DashboardIntrosSatoriTreemap
   ]);
