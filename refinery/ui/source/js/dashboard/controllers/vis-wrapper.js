@@ -134,11 +134,11 @@ function VisWrapperCtrl (
   });
 
   this.customTopbarButtons = [{
-    label: 'Tour',
+    label: '',
     callback: function () {
       dashboardIntroStarter.start('satori-list-graph');
     },
-    iconSpan: 'fa fa-info-circle'
+    iconSpan: 'fa fa-info-circle introjs-starter'
   }];
 
   this.ready = true;
