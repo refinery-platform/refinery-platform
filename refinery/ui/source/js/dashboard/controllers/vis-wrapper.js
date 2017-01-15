@@ -140,6 +140,8 @@ function VisWrapperCtrl (
     },
     iconSpan: 'fa fa-info-circle'
   }];
+
+  this.ready = true;
 }
 
 Object.defineProperty(
@@ -150,10 +152,20 @@ Object.defineProperty(
       return this._active;
     },
     set: function (value) {
-      this._active = value;
+      var self = this;
+
+      self._active = value;
+
+      var triggerLoadData = function () {
+        if (self.ready) {
+          self.loadData();
+        } else {
+          setTimeout(triggerLoadData, 20);
+        }
+      };
 
       if (value) {
-        this.loadData();
+        triggerLoadData();
       }
     }
   }
