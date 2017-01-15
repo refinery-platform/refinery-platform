@@ -5,12 +5,13 @@ angular
   .constant(
     'introJsDefaultOptions', {
       showStepNumbers: false,
-      exitOnOverlayClick: true,
+      showBullets: false,
+      exitOnOverlayClick: false,
       exitOnEsc: true,
-      nextLabel: '<span class="intro-js-prev">Next</span>',
-      prevLabel: '<span class="intro-js-prev">Previous</span>',
-      skipLabel: '<span class="intro-js-exit">Exit</span>',
-      doneLabel: '<span class="intro-js-exit">Thanks</span>'
+      nextLabel: '<span class="intro-js-prev"><i class="fa fa-arrow-right"></i></span>',
+      prevLabel: '<span class="intro-js-prev"><i class="fa fa-arrow-left"></i></span>',
+      skipLabel: '<span class="intro-js-exit"><i class="fa fa-times"></i></span>',
+      doneLabel: '<span class="intro-js-exit">Close</span>'
     }
   )
   .service('introJsBeforeChangeEvent', function () {
