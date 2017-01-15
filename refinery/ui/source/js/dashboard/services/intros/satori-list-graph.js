@@ -29,6 +29,11 @@ function DashboardIntrosSatoriListGraph (
     self.start = function () {
       document.introJsSatoriListGraph = self.clickHandler;
 
+      // Ensure that the global menu is visible
+      angular
+        .element('#list-graph-wrapper .top-bar.details .control-switch')
+        .trigger('click');
+
       // Call the start method of Intro.js
       self._start();
     };
@@ -43,6 +48,31 @@ function DashboardIntrosSatoriListGraph (
 
     self.exit = function () {
       document.introJsSatoriListGraph = null;
+
+      // Ensure that the global menu is visible
+      angular
+        .element('#list-graph-wrapper .top-bar.details .control-switch')
+        .trigger('click');
+
+      // Ensure nothing is hovered
+      var sortPrecisionEl = document.querySelector(
+        '#list-graph-wrapper .global-controls .sort-precision'
+      );
+      triggerSvgEvent(sortPrecisionEl, 'mouseleave');
+      angular.element(sortPrecisionEl).removeClass('fakeHover');
+
+      var sortRecallEl = document.querySelector(
+        '#list-graph-wrapper .global-controls .sort-recall'
+      );
+      triggerSvgEvent(sortRecallEl, 'mouseleave');
+      angular.element(sortRecallEl).removeClass('fakeHover');
+
+      $(document.querySelector(
+        '#list-graph-wrapper .visible-node'
+      )).trigger('mouseleave');
+
+      // Remove the intro-js SVG helper
+      $(document.body).removeClass('introjs-svg-el');
     };
 
     self.autoStart = false;
@@ -88,7 +118,7 @@ function DashboardIntrosSatoriListGraph (
         element: '#list-graph-wrapper .top-bar',
         intro:
           '&hellip;now you can sort each column individually by ' +
-          '<em>precision</em> and<em>recall</em>.',
+          '<em>precision</em> and <em>recall</em>.',
         position: 'left',
         beforeExecutives: function () {
           angular
@@ -102,33 +132,38 @@ function DashboardIntrosSatoriListGraph (
         }
       },
       {
-        element: '#list-graph-wrapper .global-controls .sort-precision',
+        dynamicElement: function () {
+          return document.querySelector(
+            '#list-graph-wrapper .global-controls .sort-precision'
+          );
+        },
+        dynamicPosition: 'left',
         intro:
           '<strong>Precision</strong> (highlighted in blue) is defined as ' +
           'the number of retrieved ' +
           'data sets annotated with an ontology term divided by the total ' +
-          'number of retrieved data sets.<br/><br/>E.g., if 6 out of 12 ' +
-          'data sets annotated with <em>cancer</em> have been returned in a ' +
+          'number of retrieved data sets.<br/><br/>E.g., if 6 out of ' +
+          '<strong>retrieved</strong> 12 ' +
+          'data sets, annotated with <em>cancer</em>, have been returned in a ' +
           'search for <em>liver</em> than the precision of <em>cancer</em> ' +
           'is 0.5. In other words, half of all retrieved data sets are ' +
-          'related to <em>cancer</em> (See figure below).' +
+          'related to <em>cancer</em> (see the figure below).<br/>Not that this' +
+          'does not tell us how many <em>cancer</em> data sets are available in the repository!' +
           '<br/><img src="/static/images/intro-js-precision.png" class="m-t-1"/>',
-        position: 'left',
         beforeExecutives: function () {
-          triggerSvgEvent(
-            document.querySelector(
-              '#list-graph-wrapper .global-controls .sort-precision'
-            ),
-            'mouseenter'
+          var el = document.querySelector(
+            '#list-graph-wrapper .global-controls .sort-precision'
           );
+
+          triggerSvgEvent(el, 'mouseenter');
+          angular.element(el).addClass('fakeHover');
         },
         afterExecutives: function () {
-          triggerSvgEvent(
-            document.querySelector(
-              '#list-graph-wrapper .global-controls .sort-precision'
-            ),
-            'mouseleave'
+          var el = document.querySelector(
+            '#list-graph-wrapper .global-controls .sort-precision'
           );
+          triggerSvgEvent(el, 'mouseleave');
+          angular.element(el).removeClass('fakeHover');
         }
       },
       {
@@ -137,30 +172,28 @@ function DashboardIntrosSatoriListGraph (
           '<strong>Recall</strong> (highlighted in blue) is defined as the ' +
           'number of retrieved data sets ' +
           'annotated with an ontology term divided by the total number of ' +
-          'data sets annotated with this term.<br/><br/>E.g., if 6 of all 8 ' +
-          'data sets annotated with <em>cancer</em> have been returned in a ' +
+          'data sets annotated with this term.<br/><br/>E.g., if 6 of <strong>all</strong> 8 ' +
+          'data sets, annotated with <em>cancer</em>, have been returned in a ' +
           'search for <em>liver</em> the recall of <em>cancer</em> is 0.75. ' +
           'In other words, 75% of all <em>cancer</em>-related data sets have ' +
           'been found with the search (See figure below).' +
           '<br/><img src="/static/images/intro-js-recall.png" class="m-t-1 m-b-1" /><br/>' +
-          '<em>Note: We haven\'t filtered or search for anything so the ' +
-          'recall is always one.</em>',
+          '<em>Note: We haven\'t queried for anything so the recall is 1.</em>',
         position: 'left',
         beforeExecutives: function () {
-          triggerSvgEvent(
-            document.querySelector(
-              '#list-graph-wrapper .global-controls .sort-recall'
-            ),
-            'mouseenter'
+          var el = document.querySelector(
+            '#list-graph-wrapper .global-controls .sort-recall'
           );
+
+          triggerSvgEvent(el, 'mouseenter');
+          angular.element(el).addClass('fakeHover');
         },
         afterExecutives: function () {
-          triggerSvgEvent(
-            document.querySelector(
-              '#list-graph-wrapper .global-controls .sort-recall'
-            ),
-            'mouseleave'
+          var el = document.querySelector(
+            '#list-graph-wrapper .global-controls .sort-recall'
           );
+          triggerSvgEvent(el, 'mouseleave');
+          angular.element(el).removeClass('fakeHover');
         }
       },
       {

@@ -86,7 +86,7 @@ function DashboardIntrosDataSetSummary (
       {
         element: '#data-set-summary-references',
         intro:
-          'This panel lists all references pulled directly from PubMed. ' +
+          'Here are all references listed. They are pulled directly from PubMed. ' +
           'Links to PubMed and the journal website are provided as well.',
         position: 'left'
       },
