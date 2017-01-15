@@ -20,6 +20,7 @@ angular
         // The `this` context is the intro.js context
 
         var currentStep = this._options.steps[this._currentStep];
+        var nextStep = this._options.steps[this._currentStep + 1];
         var previousStep = this._options.steps[this._currentStep - 1];
 
         // Check for dynamic elements, e.g., elements Angular inserted after
@@ -56,9 +57,19 @@ angular
         }
 
         if (
-          previousStep && typeof(previousStep.afterExecutives) === 'function'
+          previousStep &&
+          typeof(previousStep.afterExecutives) === 'function' &&
+          this._direction === 'forward'
         ) {
           previousStep.afterExecutives.call(this);
+        }
+
+        if (
+          nextStep &&
+          typeof(nextStep.afterExecutives) === 'function' &&
+          this._direction === 'backward'
+        ) {
+          nextStep.afterExecutives.call(this);
         }
 
         if (typeof(currentStep.beforeExecutives) === 'function') {
