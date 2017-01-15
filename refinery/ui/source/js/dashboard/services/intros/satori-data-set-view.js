@@ -28,6 +28,7 @@ function DashboardIntrosDataSetView (
 
     self.start = function () {
       document.introJsSatoriDataSetView = self.clickHandler;
+      context.resetDataSetSearch(true);
 
       // Call the start method of Intro.js
       self._start();
@@ -43,6 +44,7 @@ function DashboardIntrosDataSetView (
 
     self.exit = function () {
       document.introJsSatoriDataSetView = null;
+      context.resetDataSetSearch(true);
     };
 
     self.autoStart = false;
