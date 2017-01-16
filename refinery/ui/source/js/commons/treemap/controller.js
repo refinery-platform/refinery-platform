@@ -124,6 +124,7 @@ function TreemapCtrl (
   this.treemapContext = treemapContext;
   this.$visWrapper = this.$element.closest('.vis-wrapper');
   this.$timeout = $timeout;
+  this.dashboardVisWrapperResizer = dashboardVisWrapperResizer;
 
   this.Webworker = Webworker;
 
@@ -206,22 +207,9 @@ function TreemapCtrl (
   };
 
   this.treemapSize = dashboardVisWrapperResizer.size;
-  this.maximize = dashboardVisWrapperResizer.maximize;
-  this.minimize = dashboardVisWrapperResizer.minimize;
-  this.equalize = dashboardVisWrapperResizer.equalize;
-  this.isMaximized = dashboardVisWrapperResizer.isMaximized;
-  this.isMinimized = dashboardVisWrapperResizer.isMinimized;
-  this.isEqualized = dashboardVisWrapperResizer.isEqualized;
-
-  console.log(
-    this.treemapSize,
-    this.maximize,
-    this.minimize,
-    this.equalize,
-    this.isMaximize,
-    this.isMinimize,
-    this.isEqualize
-  );
+  this.maximize = dashboardVisWrapperResizer.maximize.bind(dashboardVisWrapperResizer);
+  this.minimize = dashboardVisWrapperResizer.minimize.bind(dashboardVisWrapperResizer);
+  this.equalize = dashboardVisWrapperResizer.equalize.bind(dashboardVisWrapperResizer);
 }
 
 /*
@@ -2131,7 +2119,38 @@ Object.defineProperty(
         }.bind(this));
       }.bind(this), 0);
     }
-  });
+  }
+);
+
+Object.defineProperty(
+  TreemapCtrl.prototype,
+  'isMaximized',
+  {
+    get: function () {
+      return this.dashboardVisWrapperResizer.isMaximized;
+    }
+  }
+);
+
+Object.defineProperty(
+  TreemapCtrl.prototype,
+  'isMinimized',
+  {
+    get: function () {
+      return this.dashboardVisWrapperResizer.isMinimized;
+    }
+  }
+);
+
+Object.defineProperty(
+  TreemapCtrl.prototype,
+  'isEqualized',
+  {
+    get: function () {
+      return this.dashboardVisWrapperResizer.isEqualized;
+    }
+  }
+);
 
 angular
   .module('treemap')

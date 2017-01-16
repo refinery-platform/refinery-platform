@@ -21,7 +21,7 @@ function DashboardVisWrapperResizer (localStorageService) {
     {
       get: function () {
         var localValue = localStorageService.get(
-          'dashboard.satori.treemapSize'
+          'dashboard.satori.treemapWindowSize'
         );
 
         if (localValue === null) {
@@ -33,7 +33,7 @@ function DashboardVisWrapperResizer (localStorageService) {
       },
       set: function (value) {
         localStorageService.set(
-          'dashboard.satori.treemapSize', value
+          'dashboard.satori.treemapWindowSize', value
         );
       }
     }
@@ -41,7 +41,7 @@ function DashboardVisWrapperResizer (localStorageService) {
 
   Object.defineProperty(
     VisWrapperResizer.prototype,
-    'isMaxmimized',
+    'isMaximized',
     {
       get: function () {
         return this.size === 2;
@@ -70,15 +70,15 @@ function DashboardVisWrapperResizer (localStorageService) {
   );
 
   VisWrapperResizer.prototype.maximize = function () {
-    this.treemap = 2;
+    this.size = 2;
   };
 
   VisWrapperResizer.prototype.minimize = function () {
-    this.treemap = 0;
+    this.size = 0;
   };
 
   VisWrapperResizer.prototype.equalize = function () {
-    this.treemap = 1;
+    this.size = 1;
   };
 
   return new VisWrapperResizer();
