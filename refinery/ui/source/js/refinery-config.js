@@ -7,7 +7,8 @@ function refineryAppConfig (
   $provide,
   $urlRouterProvider,
   settings,
-  uiSelectConfig
+  uiSelectConfig,
+  localStorageServiceProvider
 ) {
   /*
    * Force URLs to be caseinsensitive.
@@ -60,6 +61,11 @@ function refineryAppConfig (
   // For ui-select, known bug. Should be fixed in the next release
   // https://github.com/angular-ui/ui-select/issues/1672
   uiSelectConfig.removeSelected = false;
+
+  // Set unique prefix for the local storage
+  localStorageServiceProvider.setPrefix(
+    'refinery' + settings.djangoApp.refineryInstanceName
+  );
 }
 
 angular
@@ -72,5 +78,6 @@ angular
     '$urlRouterProvider',
     'settings',
     'uiSelectConfig',
+    'localStorageServiceProvider',
     refineryAppConfig
   ]);

@@ -15,6 +15,7 @@ angular
     'ngWebworker',
     'file-model',
     'angular-intro',
+    'LocalStorageModule',
 
     /*
      * Angular App globals
