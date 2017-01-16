@@ -151,6 +151,7 @@
   height: @top-bar-height + 1px;
   color: #444;
   box-shadow: inset 0 -1px 0 0 lighten(@gray-light, 25%);
+  background: rgba(255, 255, 255, 0.9);
 
   label {
     margin: 0;
@@ -173,22 +174,63 @@
       padding: 0 1em;
 
       &:hover,
-      &:active,
       &:focus {
         color: @black;
         background: lighten(@gray-light, 25%);
+      }
+
+      &:active {
+        color: @blue;
+        background: fade(@blue-shadow, 50%);
       }
     }
 
     .rel-box {
       position: relative;
       display: inline-block;
+      height: 24px;
     }
   }
 }
 
 #f-visible-depth {
   width: 4em;
+}
+
+.top-half.is-maximized,
+.bottom-half.is-maximized {
+  height: 100%;
+}
+
+.top-half.is-maximized {
+  height: 100%;
+
+  .content {
+    bottom: 26px !important;
+  }
+}
+
+.bottom-half.is-maximized {
+  top: 24px;
+  height: 100%;
+}
+
+.top-half.is-minimized {
+  height: 25px;
+
+  .top-bar {
+    box-shadow: none;
+  }
+}
+
+.bottom-half.is-minimized {
+  top: 100%;
+  margin-top: -26px;
+  height: 0;
+
+  .top-bar {
+    box-shadow: none;
+  }
 }
 
 .vis-wrapper .top-bar ul {

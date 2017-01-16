@@ -104,7 +104,7 @@
           </ul>
         </div>
         <div class="floatbox-max-left">
-          <h4>Repository exploration</h4>
+          <h4>Repository exploration {{ visWrapper.treemapSize }}</h4>
           <span
             id="intro-js-satori-overview-start"
             class="btn"
@@ -117,7 +117,10 @@
       </div>
     </div>
     <div class="full-without-topbar">
-      <div id="list-graph-wrapper" class="top-half">
+      <div
+        id="list-graph-wrapper"
+        class="top-half"
+        ng-class="{ 'is-maximized': visWrapper.treemapIsMinimized, 'is-minimized': visWrapper.treemapIsMaximized }">
         <div class="refinery-global-notifier" ng-if="visWrapper.loading !== false">
           <div class="refinery-notifier-icon refinery-spinner"></div>
         </div>
@@ -142,7 +145,10 @@
             init-vis-depth="visWrapper.initVisDepth"></list-graph>
         </div>
       </div>
-      <div id="treemap-wrapper" class="bottom-half">
+      <div
+        id="treemap-wrapper"
+        class="bottom-half"
+        ng-class="{ 'is-maximized': visWrapper.treemapIsMaximized, 'is-minimized': visWrapper.treemapIsMinimized }">
         <div class="refinery-global-notifier" ng-if="visWrapper.loading !== false">
           <div class="refinery-notifier-icon refinery-spinner"></div>
         </div>

@@ -1,7 +1,12 @@
 <div class="vis-wrapper">
   <div class="top-bar flex-c flex-sb flex-st">
     <div class="flex-g-1">
-      <ul id="treemap-root-path" class="left no-list-style"></ul>
+      <div class="flex-c flex-sb flex-st">
+        <div class="flex-g-0">
+          <strong>TREEMAP</strong><em ng-if="treemap.isMinimized" class="m-l-1-4">(Minimized)</em>:
+        </div>
+        <ul id="treemap-root-path" class="flex-g-1 left no-list-style"></ul>
+      </div>
     </div>
     <div class="flex-g-0">
       <div id="treemap-visible-depth" class="floatbox-item">

@@ -173,6 +173,36 @@ Object.defineProperty(
   }
 );
 
+Object.defineProperty(
+  VisWrapperCtrl.prototype,
+  'treemapIsMaximized',
+  {
+    get: function () {
+      return this.dashboardVisWrapperResizer.isMaximized;
+    }
+  }
+);
+
+Object.defineProperty(
+  VisWrapperCtrl.prototype,
+  'treemapIsMinimized',
+  {
+    get: function () {
+      return this.dashboardVisWrapperResizer.isMinimized;
+    }
+  }
+);
+
+Object.defineProperty(
+  VisWrapperCtrl.prototype,
+  'treemapIsEqualized',
+  {
+    get: function () {
+      return this.dashboardVisWrapperResizer.isEqualized;
+    }
+  }
+);
+
 VisWrapperCtrl.prototype.loadData = function () {
   var self = this;
 
