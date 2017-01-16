@@ -1,6 +1,9 @@
 <div class="vis-wrapper">
-  <div class="top-bar floatbox">
-    <div class="floatbox-min-right">
+  <div class="top-bar flex-c flex-sb flex-st">
+    <div class="flex-g-1">
+      <ul id="treemap-root-path" class="left no-list-style"></ul>
+    </div>
+    <div class="flex-g-0">
       <div id="treemap-visible-depth" class="floatbox-item">
         <label for="f-visible-depth">Depth:</label>
         <div class="rel-box">
@@ -16,15 +19,57 @@
           </div>
         </div>
       </div>
-      <button class="floatbox-item icon-only button-like" ng-click="treemap.introStart()">
+      <button
+        class="floatbox-item icon-only button-like"
+        title="Start treemap introduction"
+        refinery-tooltip
+        refinery-tooltip-container="body"
+        refinery-tooltip-placement="top"
+        refinery-tooltip-delay-show="750"
+        refinery-tooltip-delay-hide="50"
+        refinery-tooltip-hide-on-click="true"
+        ng-click="treemap.introStart()">
         <span class="icon fa fa-info-circle"></span>
       </button>
-      <button class="floatbox-item icon-only button-like">
+      <button
+        class="floatbox-item icon-only button-like"
+        title="Maximize Treemap / Minimize List Graph"
+        refinery-tooltip
+        refinery-tooltip-container="body"
+        refinery-tooltip-placement="top"
+        refinery-tooltip-delay-show="750"
+        refinery-tooltip-delay-hide="50"
+        refinery-tooltip-hide-on-click="true"
+        ng-click="treemap.maximize()"
+        ng-class="{ 'active': treemap.isMaximized }">
+        <span class="icon fa fa-long-arrow-up"></span>
+      </button>
+      <button
+        class="floatbox-item icon-only button-like"
+        title="Equalize Treemap and List Graph"
+        refinery-tooltip
+        refinery-tooltip-container="body"
+        refinery-tooltip-placement="top"
+        refinery-tooltip-delay-show="750"
+        refinery-tooltip-delay-hide="50"
+        refinery-tooltip-hide-on-click="true"
+        ng-click="treemap.equalize()"
+        ng-class="{ 'active': treemap.isEqualized }">
         <span class="icon fa fa-arrows-v"></span>
       </button>
-    </div>
-    <div class="floatbox-max-left">
-      <ul id="treemap-root-path" class="left no-list-style"></ul>
+      <button
+        class="floatbox-item icon-only button-like"
+        title="Minimize Treemap / Maximize List Graph"
+        refinery-tooltip
+        refinery-tooltip-container="body"
+        refinery-tooltip-placement="top"
+        refinery-tooltip-delay-show="750"
+        refinery-tooltip-delay-hide="50"
+        refinery-tooltip-hide-on-click="true"
+        ng-click="treemap.minimize()"
+        ng-class="{ 'active': treemap.isMinimized }">
+        <span class="icon fa fa-long-arrow-down"></span>
+      </button>
     </div>
   </div>
   <div id="treemap" class="treemap">

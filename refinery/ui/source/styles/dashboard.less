@@ -321,6 +321,25 @@
   background: #000;
 }
 
+.vis-wrapper .top-bar .button-like.active {
+  color: black;
+  font-weight: bold;
+  text-decoration: none;
+  background: @white;
+
+  &::before {
+    position: absolute;
+    display: block;
+    content: '';
+    bottom: -1px;
+    left: 4px;
+    right: 4px;
+    height: 1px;
+    background: fade(@blue-shadow, 50%);
+    box-shadow: 0 0 8px 0 @blue-shadow;
+  }
+}
+
 .vis-wrapper .top-bar button:hover,
 .vis-wrapper .top-bar button:focus {
   outline: none;
