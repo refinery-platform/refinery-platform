@@ -21,6 +21,23 @@ function DashboardIntrosSatoriTreemap (
 
     self.id = 'satori-treemap';
 
+    function reset () {
+      // Make sure the SVG highlighting is disabled.
+      $(document.body).removeClass('introjs-svg-el');
+
+      // Make sure the visible depth is set to 1
+      self.context._noVisibleDepthNotification = true;
+      self.context.visibleDepth = 1;
+
+      // Make sure we're looking at the root level
+      var rootEl = document.querySelector(
+        '#treemap-root-path li a'
+      );
+      if (rootEl) {
+        self.context.transition(d3.select(rootEl).datum(), true);
+      }
+    }
+
     self.addContext = function (context) {
       self.context = context;
     };
@@ -33,6 +50,7 @@ function DashboardIntrosSatoriTreemap (
 
     self.start = function () {
       document.introJsSatoriTreemap = self.clickHandler;
+      reset();
 
       // Call the start method of Intro.js
       self._start();
@@ -44,6 +62,7 @@ function DashboardIntrosSatoriTreemap (
     self.complete = function () {
       dashboardIntroSatoriEasterEgg.completed(self.id);
       self.exit();
+      reset();
     };
 
     self.exit = function () {
@@ -103,7 +122,7 @@ function DashboardIntrosSatoriTreemap (
         position: 'left',
         beforeExecutives: function () {
           self.context._noVisibleDepthNotification = true;
-          self.context.visibleDepth = 0;
+          self.context.visibleDepth = 1;
           $rootScope.$apply();
         }
       },
@@ -117,7 +136,6 @@ function DashboardIntrosSatoriTreemap (
         beforeExecutives: function () {
           self.context._noVisibleDepthNotification = true;
           self.context.visibleDepth = 2;
-          $rootScope.$apply();
         }
       },
       {
@@ -128,12 +146,10 @@ function DashboardIntrosSatoriTreemap (
         beforeExecutives: function () {
           self.context._noVisibleDepthNotification = true;
           self.context.visibleDepth = 3;
-          $rootScope.$apply();
         },
         afterExecutives: function () {
           self.context._noVisibleDepthNotification = true;
-          self.context.visibleDepth = 0;
-          $rootScope.$apply();
+          self.context.visibleDepth = 1;
         }
       },
       {
@@ -169,7 +185,9 @@ function DashboardIntrosSatoriTreemap (
           );
           el = el[el.length - 1];
 
-          self.context.transition(d3.select(el).datum(), true);
+          if (el) {
+            self.context.transition(d3.select(el).datum(), true);
+          }
         }
       },
       {
@@ -183,7 +201,9 @@ function DashboardIntrosSatoriTreemap (
             '#treemap-root-path li a'
           );
 
-          self.context.transition(d3.select(el).datum(), true);
+          if (el) {
+            self.context.transition(d3.select(el).datum(), true);
+          }
         }
       },
       {
