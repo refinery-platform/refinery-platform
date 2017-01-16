@@ -106,7 +106,8 @@ function TreemapCtrl (
   Webworker,
   $rootScope,
   $timeout,
-  dashboardIntroStarter
+  dashboardIntroStarter,
+  dashboardVisWrapperResizer
 ) {
   this.$ = $;
   this._ = _;
@@ -203,6 +204,24 @@ function TreemapCtrl (
   this.introStart = function () {
     dashboardIntroStarter.start('satori-treemap', this);
   };
+
+  this.treemapSize = dashboardVisWrapperResizer.size;
+  this.maximize = dashboardVisWrapperResizer.maximize;
+  this.minimize = dashboardVisWrapperResizer.minimize;
+  this.equalize = dashboardVisWrapperResizer.equalize;
+  this.isMaximized = dashboardVisWrapperResizer.isMaximized;
+  this.isMinimized = dashboardVisWrapperResizer.isMinimized;
+  this.isEqualized = dashboardVisWrapperResizer.isEqualized;
+
+  console.log(
+    this.treemapSize,
+    this.maximize,
+    this.minimize,
+    this.equalize,
+    this.isMaximize,
+    this.isMinimize,
+    this.isEqualize
+  );
 }
 
 /*
@@ -2133,5 +2152,6 @@ angular
     '$rootScope',
     '$timeout',
     'dashboardIntroStarter',
+    'dashboardVisWrapperResizer',
     TreemapCtrl
   ]);
