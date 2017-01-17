@@ -32,6 +32,7 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
 
 ## 6. Reviewing Data Provenance
 - view data set in provenance graph
+  - point out new nodes created by the analyses: nodes representing FASTQC results and nodes representing output of the MACS2 workflow
 
 ## 7. Collaborating with other Users
 - create group for collaboration
