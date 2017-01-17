@@ -1872,13 +1872,6 @@ class ExtendedGroup(Group):
         except:
             return None
 
-    def save(self, *args, **kwargs):
-        if len(self.name) == 0:
-            logger.error("Group name cannot be empty.")
-            return
-        else:
-            super(ExtendedGroup, self).save(*args, **kwargs)
-
 
 # automatic creation of a managed group when an extended group is created:
 def create_manager_group(sender, instance, created, **kwargs):
