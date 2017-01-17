@@ -1,6 +1,20 @@
 'use strict';
 
 function DashboardVisWrapperResizer (localStorageService) {
+  var callbacks = [];
+  var formerSize;
+
+  function checkIfNewSize (newSize) {
+    if (formerSize !== newSize) {
+      for (var i = 0; i < callbacks.length; i++) {
+        try {
+          callbacks[i]();
+        } catch (Exception) {}  // eslint-disable-line no-empty
+      }
+    }
+    formerSize = newSize;
+  }
+
   function VisWrapperResizer () {}
 
   /**
@@ -70,15 +84,22 @@ function DashboardVisWrapperResizer (localStorageService) {
   );
 
   VisWrapperResizer.prototype.maximize = function () {
+    checkIfNewSize(2);
     this.size = 2;
   };
 
   VisWrapperResizer.prototype.minimize = function () {
+    checkIfNewSize(0);
     this.size = 0;
   };
 
   VisWrapperResizer.prototype.equalize = function () {
+    checkIfNewSize(1);
     this.size = 1;
+  };
+
+  VisWrapperResizer.prototype.onResize = function (callback) {
+    callbacks.push(callback);
   };
 
   return new VisWrapperResizer();

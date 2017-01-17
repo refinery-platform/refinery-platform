@@ -220,6 +220,12 @@
 
   .top-bar {
     box-shadow: none;
+
+    .title::after {
+      content: '(Minimized):' !important;
+      margin-left: 0.25em;
+      text-transform: none;
+    }
   }
 }
 
@@ -446,6 +452,18 @@
 
     .introjs-starter {
       padding: 0 2rem;
+    }
+
+    .title.show {
+      font-size: 1em;
+      line-height: 1.85em;
+      border-right: 0;
+      padding: 0 0.25em 0 0;
+
+      &::after {
+        content: ':';
+        font-weight: normal;
+      }
     }
   }
 

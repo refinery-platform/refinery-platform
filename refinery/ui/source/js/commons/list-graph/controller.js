@@ -19,13 +19,17 @@
 function ListGraphCtrl (
   $element,
   $rootScope,
+  $timeout,
   d3V4,
   graph,
   listGraphSettings,
   dataSet,
   pubSub,
-  ListGraphVis
+  ListGraphVis,
+  dashboardVisWrapperResizer
 ) {
+  var self = this;
+
   this.graphLib = graph;
   this.$element = $element;
   this.$rootScope = $rootScope;
@@ -73,7 +77,8 @@ function ListGraphCtrl (
             return _data.uri;
           }
         }],
-        customTopbarButtons: this.customTopbarButtons || []
+        customTopbarButtons: this.customTopbarButtons || [],
+        showTitle: true
       });
 
       this.initVisDepth.then(function (depth) {
@@ -81,6 +86,20 @@ function ListGraphCtrl (
       }.bind(this));
     }.bind(this));
   }
+
+  dashboardVisWrapperResizer.onResize(function () {
+    $timeout(function () {
+      self.width = self.$visElement.find('svg.base').width();
+      self.height = self.$visElement.find('svg.base').height();
+
+      self.listGraph.reRender({
+        grid: {
+          columns: Math.round(self.width / 175),
+          rows: Math.round(self.height / 24)
+        }
+      });
+    }, 25);
+  });
 
   // List graph internal events that should be broadcasted.
   pubSub.on('d3ListGraphNodeEnter', function (data) {
@@ -432,11 +451,13 @@ angular
   .controller('ListGraphCtrl', [
     '$element',
     '$rootScope',
+    '$timeout',
     'd3V4',
     'graph',
     'listGraphSettings',
     'dataSet',
     'pubSub',
     'ListGraphVis',
+    'dashboardVisWrapperResizer',
     ListGraphCtrl
   ]);
