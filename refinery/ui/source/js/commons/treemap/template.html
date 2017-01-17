@@ -47,7 +47,11 @@
         refinery-tooltip-hide-on-click="true"
         ng-click="treemap.maximize()"
         ng-class="{ 'active': treemap.isMaximized }">
-        <span class="icon fa fa-long-arrow-up"></span>
+        <svg class="icon-svg">
+          <use
+            xmlns:xlink="http://www.w3.org/1999/xlink"
+            xlink:href="/static/images/icons.svg#maximize"></use>
+        </svg>
       </button>
       <button
         class="floatbox-item icon-only button-like"
@@ -60,7 +64,11 @@
         refinery-tooltip-hide-on-click="true"
         ng-click="treemap.equalize()"
         ng-class="{ 'active': treemap.isEqualized }">
-        <span class="icon fa fa-arrows-v"></span>
+        <svg class="icon-svg">
+          <use
+            xmlns:xlink="http://www.w3.org/1999/xlink"
+            xlink:href="/static/images/icons.svg#equalize"></use>
+        </svg>
       </button>
       <button
         class="floatbox-item icon-only button-like"
@@ -73,7 +81,11 @@
         refinery-tooltip-hide-on-click="true"
         ng-click="treemap.minimize()"
         ng-class="{ 'active': treemap.isMinimized }">
-        <span class="icon fa fa-long-arrow-down"></span>
+        <svg class="icon-svg">
+          <use
+            xmlns:xlink="http://www.w3.org/1999/xlink"
+            xlink:href="/static/images/icons.svg#minimize"></use>
+        </svg>
       </button>
     </div>
   </div>
