@@ -192,6 +192,7 @@ function ListGraphCtrl (
     this.$rootScope.$emit(
       'dashboardVisNodeQuery', {
         nodeUri: data.id,
+        nodeLabel: data.name,
         dataSetIds: this.getAssociatedDataSetsIds(this.graph[data.id]),
         mode: data.mode,
         source: 'listGraph'
@@ -215,6 +216,7 @@ function ListGraphCtrl (
     for (var i = data.length; i--;) {
       terms.push({
         nodeUri: data[i].data.id,
+        nodeLabel: data[i].data.name,
         dataSetIds: this.getAssociatedDataSetsIds(this.graph[data[i].data.id]),
         mode: data[i].data.mode,
         query: data[i].name === 'd3ListGraphNodeQuery'

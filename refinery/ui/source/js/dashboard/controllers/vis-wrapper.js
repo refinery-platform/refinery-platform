@@ -4,8 +4,8 @@ function VisWrapperCtrl (
   $q,
   pubSub,
   dashboardVisData,
+  dashboardVisQueryTerms,
   dashboardVisWrapperResizer,
-  DashboardIntrosSatoriOverview,
   DashboardIntrosSatoriListGraph,
   DashboardIntrosSatoriTreemap,
   dashboardIntroStarter,
@@ -16,8 +16,8 @@ function VisWrapperCtrl (
   self.$q = $q;
   self.pubSub = pubSub;
   self.dashboardVisData = dashboardVisData;
+  self.queryTerms = dashboardVisQueryTerms;
   self.dashboardVisWrapperResizer = dashboardVisWrapperResizer;
-  self.introsSatoriOverview = new DashboardIntrosSatoriOverview(this);
   self.introsSatoriListGraph = new DashboardIntrosSatoriListGraph();
   self.introsSatoriTreemap = new DashboardIntrosSatoriTreemap();
 
@@ -243,8 +243,8 @@ angular
     '$q',
     'pubSub',
     'dashboardVisData',
+    'dashboardVisQueryTerms',
     'dashboardVisWrapperResizer',
-    'DashboardIntrosSatoriOverview',
     'DashboardIntrosSatoriListGraph',
     'DashboardIntrosSatoriTreemap',
     'dashboardIntroStarter',

@@ -32,8 +32,10 @@ function DashboardCtrl (
   treemapContext,
   dashboardVisData,
   dataCart,
+  DashboardIntrosSatoriOverview,
   DashboardIntrosDataSetView,
-  dashboardIntroSatoriEasterEgg
+  dashboardIntroSatoriEasterEgg,
+  dashboardVisQueryTerms
 ) {
   var that = this;
 
@@ -67,7 +69,9 @@ function DashboardCtrl (
   this.treemapContext = treemapContext;
   this.dashboardVisData = dashboardVisData;
   this.dataCart = dataCart;
+  this.introsSatoriOverview = new DashboardIntrosSatoriOverview();
   this.introsSatoriDataSetView = new DashboardIntrosDataSetView(this);
+  this.queryTerms = dashboardVisQueryTerms;
 
   // variable to track filters and sorting selected in ui for data set api query
   this.dataSetParams = {};
@@ -272,7 +276,6 @@ function DashboardCtrl (
     );
   }.bind(this));
 
-  this.queryTerms = {};
   this.queryRelatedDataSets = {};
 
   this.treemapContext.on('dataSets', function (response) {
@@ -315,22 +318,23 @@ function DashboardCtrl (
 
       if (data.terms[i].query) {
         // 1. Update query terms
-        if (!this.queryTerms[uri]) {
-          this.queryTerms[uri] = {};
-          this.queryTerms[uri].uri = uri;
-          this.queryTerms[uri].dataSetIds = data.terms[i].dataSetIds;
+        if (!this.queryTerms.get(uri)) {
+          this.queryTerms.set(uri, {
+            uri: uri,
+            label: data.terms[i].nodeLabel,
+            dataSetIds: data.terms[i].dataSetIds
+          });
         }
-        this.queryTerms[uri].mode = data.terms[i].mode;
+        this.queryTerms.get(uri).mode = data.terms[i].mode;
       } else {
-        if (this.queryTerms[uri]) {
-          this.queryTerms[uri] = undefined;
-          delete this.queryTerms[uri];
+        if (this.queryTerms.get(uri)) {
+          this.queryTerms.remove(uri);
         }
       }
     }
 
     // Update data set selection
-    if (this.numQueryTerms) {
+    if (this.queryTerms.length) {
       this.collectDataSetIds().then(function (dsIds) {
         this.selectDataSets(dsIds);
       }.bind(this));
@@ -343,12 +347,14 @@ function DashboardCtrl (
     var uri = this.getOriginalUri(data);
 
     // 1. Update query terms
-    if (!this.queryTerms[uri]) {
-      this.queryTerms[uri] = {};
-      this.queryTerms[uri].uri = uri;
-      this.queryTerms[uri].dataSetIds = data.dataSetIds;
+    if (!this.queryTerms.get(uri)) {
+      this.queryTerms.set(uri, {
+        uri: uri,
+        label: data.nodeLabel,
+        dataSetIds: data.dataSetIds
+      });
     }
-    this.queryTerms[uri].mode = data.mode;
+    this.queryTerms.get(uri).mode = data.mode;
 
     // Update data set selection
     this.collectDataSetIds().then(function (dsIds) {
@@ -359,10 +365,9 @@ function DashboardCtrl (
   this.$rootScope.$on('dashboardVisNodeUnquery', function (event, data) {
     var uri = this.getOriginalUri(data);
 
-    this.queryTerms[uri] = undefined;
-    delete this.queryTerms[uri];
+    this.queryTerms.remove(uri);
 
-    if (this.numQueryTerms) {
+    if (this.queryTerms.length) {
       this.collectDataSetIds().then(function (dsIds) {
         this.selectDataSets(dsIds);
       }.bind(this));
@@ -588,15 +593,6 @@ Object.defineProperty(
     enumerable: true,
     get: function () {
       return this.settings.djangoApp.numOntologiesImported > 0;
-    }
-  });
-
-Object.defineProperty(
-  DashboardCtrl.prototype,
-  'numQueryTerms', {
-    enumerable: true,
-    get: function () {
-      return Object.keys(this.queryTerms).length;
     }
   });
 
@@ -856,18 +852,18 @@ DashboardCtrl.prototype.collapseDataSetPreview = function () {
  * @return  {Object}  Object of _and, _or_, and _not_ arrays of query terms.
  */
 DashboardCtrl.prototype.collectAndOrNotTerms = function () {
-  var termUris = Object.keys(this.queryTerms);
+  var termUris = this.queryTerms.keys;
   var andTerms = [];
   var orTerms = [];
   var notTerms = [];
 
   for (var i = termUris.length; i--;) {
-    if (this.queryTerms[termUris[i]].mode === 'and') {
-      andTerms.push(this.queryTerms[termUris[i]]);
-    } else if (this.queryTerms[termUris[i]].mode === 'or') {
-      orTerms.push(this.queryTerms[termUris[i]]);
+    if (this.queryTerms.get(termUris[i]).mode === 'and') {
+      andTerms.push(this.queryTerms.get(termUris[i]));
+    } else if (this.queryTerms.get(termUris[i]).mode === 'or') {
+      orTerms.push(this.queryTerms.get(termUris[i]));
     } else {
-      notTerms.push(this.queryTerms[termUris[i]]);
+      notTerms.push(this.queryTerms.get(termUris[i]));
     }
   }
 
@@ -1277,7 +1273,7 @@ DashboardCtrl.prototype.resetDataSetSearch = function (noStateChange) {
  *   selected.
  */
 DashboardCtrl.prototype.selectDataSets = function (ids) {
-  var queryTermUris = Object.keys(this.queryTerms);
+  var queryTermUris = this.queryTerms.keys;
   var query = this.treemapRoot.ontId;
 
   if (queryTermUris && queryTermUris.length) {
@@ -1286,7 +1282,7 @@ DashboardCtrl.prototype.selectDataSets = function (ids) {
       query += (
         queryTermUris[i] +
         '.' +
-        this.queryTerms[queryTermUris[i]].mode +
+        this.queryTerms.get(queryTermUris[i]).mode +
         '+'
       );
     }
@@ -1351,7 +1347,7 @@ DashboardCtrl.prototype.setDataSetSource = function (
 
   if (searchQuery) {
     if (searchQuery.length > 1) {
-      if (this.numQueryTerms && !this.oldTotalDs) {
+      if (this.queryTerms.length && !this.oldTotalDs) {
         this.oldTotalDs = this.dataSets.totalReadable;
       }
 
@@ -1773,7 +1769,9 @@ angular
     'treemapContext',
     'dashboardVisData',
     'dataCart',
+    'DashboardIntrosSatoriOverview',
     'DashboardIntrosDataSetView',
     'dashboardIntroSatoriEasterEgg',
+    'dashboardVisQueryTerms',
     DashboardCtrl
   ]);

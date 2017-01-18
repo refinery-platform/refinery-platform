@@ -1,0 +1,84 @@
+'use strict';
+
+function DashboardVisQueryTerms () {
+  var queryTerms = {};
+  var numQueryTerms = 0;
+  var uris = [];
+  var list = [];
+
+  function addToList (uri) {
+    list.push(queryTerms[uri]);
+  }
+
+  function removeFromList (uri) {
+    console.log('remove', uri, list);
+    for (var i = 0; i < list.length; i++) {
+      if (list[i] === queryTerms[uri]) {
+        console.log('splice that thing', i);
+        list.splice(i, 1);
+      } else {
+        console.log(list[i] === queryTerms[uri], list[i], queryTerms[uri]);
+      }
+    }
+    console.log('remove after', uri, list);
+  }
+
+  function VisQueryTerms () {}
+
+  VisQueryTerms.prototype.get = function (uri) {
+    return queryTerms[uri];
+  };
+
+  VisQueryTerms.prototype.set = function (uri, term) {
+    queryTerms[uri] = term;
+    addToList(uri);
+    uris = Object.keys(queryTerms);
+    numQueryTerms = uris.length;
+  };
+
+  VisQueryTerms.prototype.remove = function (uri) {
+    removeFromList(uri);
+    queryTerms[uri] = undefined;
+    delete queryTerms[uri];
+    uris = Object.keys(queryTerms);
+    numQueryTerms = uris.length;
+  };
+
+  Object.defineProperty(
+    VisQueryTerms.prototype,
+    'keys', {
+      enumerable: true,
+      get: function () {
+        return uris;
+      }
+    }
+  );
+
+  Object.defineProperty(
+    VisQueryTerms.prototype,
+    'length', {
+      enumerable: true,
+      get: function () {
+        return numQueryTerms;
+      }
+    }
+  );
+
+  Object.defineProperty(
+    VisQueryTerms.prototype,
+    'list', {
+      enumerable: true,
+      get: function () {
+        return list;
+      }
+    }
+  );
+
+  return new VisQueryTerms();
+}
+
+angular
+  .module('refineryDashboard')
+  .factory('dashboardVisQueryTerms', [
+    DashboardVisQueryTerms
+  ]);

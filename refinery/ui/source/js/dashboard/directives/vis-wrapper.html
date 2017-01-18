@@ -3,15 +3,6 @@
   class="content-container"
   ng-class="{'hidden': !visWrapper.active, 'invisible': visWrapper.invisible}">
   <div ng-if="visWrapper.active">
-    <!-- Intro.js Overview of SATORI -->
-    <div
-      ng-intro-options="visWrapper.introsSatoriOverview.options"
-      ng-intro-method="visWrapper.introsSatoriOverview._start"
-      ng-intro-exit-method="visWrapper.introsSatoriOverview._exit"
-      ng-intro-onbeforechange="visWrapper.introsSatoriOverview.beforeChangeEvent"
-      ng-intro-autostart="visWrapper.introsSatoriOverview.autoStart"
-      ng-intro-oncomplete="visWrapper.introsSatoriOverview.complete"
-      ng-intro-onexit="visWrapper.introsSatoriOverview.exit">
     <!-- Intro.js Overview of SATORI's list graph -->
     <div
       ng-intro-options="visWrapper.introsSatoriListGraph.options"
@@ -20,7 +11,7 @@
       ng-intro-onbeforechange="visWrapper.introsSatoriListGraph.beforeChangeEvent"
       ng-intro-autostart="visWrapper.introsSatoriListGraph.autoStart"
       ng-intro-oncomplete="visWrapper.introsSatoriListGraph.complete"
-      ng-intro-onexit="visWrapper.introsSatoriListGraph.exit">
+      ng-intro-onexit="visWrapper.introsSatoriListGraph.exit"></div>
     <!-- Intro.js Overview of SATORI's treemap -->
     <div
       ng-intro-options="visWrapper.introsSatoriTreemap.options"
@@ -29,92 +20,23 @@
       ng-intro-onbeforechange="visWrapper.introsSatoriTreemap.beforeChangeEvent"
       ng-intro-autostart="visWrapper.introsSatoriTreemap.autoStart"
       ng-intro-oncomplete="visWrapper.introsSatoriTreemap.complete"
-      ng-intro-onexit="visWrapper.introsSatoriTreemap.exit">
+      ng-intro-onexit="visWrapper.introsSatoriTreemap.exit"></div>
 
     <div
       class="refinery-panel-topbar"
       ng-class="{'allow-overflow': visWrapper.ready}">
-      <div
-        class="floatbox"
-        ng-class="{'allow-overflow': visWrapper.ready}">
-        <div class="floatbox-min-right">
-          <ul id="intro-js-satori-overview-2" class="help no-list-style horizontal-list">
-            <li>
-              Highlight:
-              <span class="inputs">
-                <kbd
-                  title="Hover with mouse"
-                  refinery-tooltip
-                  refinery-tooltip-container="body"
-                  refinery-tooltip-placement="top">
-                  <svg class="icon-cursor-default">
-                    <use
-                      xmlns:xlink="http://www.w3.org/1999/xlink"
-                      xlink:href="/static/images/icons.svg#cursor-default"></use>
-                  </svg>
-                </kbd>
-              </span>
-            </li>
-            <li>
-              Lock:
-              <span class="inputs">
-                <kbd
-                  title="Click with mouse"
-                  refinery-tooltip
-                  refinery-tooltip-container="body"
-                  refinery-tooltip-placement="top">
-                  <svg class="icon-cursor-click">
-                    <use
-                      xmlns:xlink="http://www.w3.org/1999/xlink"
-                      xlink:href="/static/images/icons.svg#cursor-click"></use>
-                  </svg>
-                </kbd>
-              </span>
-            </li>
-            <li>
-              Query:
-              <span class="inputs">
-                <span
-                  title="Hold Command Key and click with mouse"
-                  refinery-tooltip
-                  refinery-tooltip-container="body"
-                  refinery-tooltip-placement="top">
-                  <kbd>&#8984;</kbd> +
-                  <kbd>
-                    <svg class="icon-cursor-click">
-                      <use
-                        xmlns:xlink="http://www.w3.org/1999/xlink"
-                        xlink:href="/static/images/icons.svg#cursor-click"></use>
-                    </svg>
-                  </kbd>
-                </span> or
-                <kbd
-                  title="Double click with mouse"
-                  refinery-tooltip
-                  refinery-tooltip-container="body"
-                  refinery-tooltip-placement="top">
-                  <svg class="icon-cursor-dblclick">
-                    <use
-                      xmlns:xlink="http://www.w3.org/1999/xlink"
-                      xlink:href="/static/images/icons.svg#cursor-dblclick"></use>
-                  </svg>
-                </kbd>
-              </span>
-            </li>
-          </ul>
-        </div>
-        <div class="floatbox-max-left">
-          <h4>Repository exploration {{ visWrapper.treemapSize }}</h4>
-          <span
-            id="intro-js-satori-overview-start"
-            class="btn"
-            ng-click="visWrapper.introsSatoriOverview.start()"
-            ng-if="visWrapper.noData !== true">
-            <span class="fa fa-info-circle"></span>
-            Intro Tour
-          </span>
-        </div>
-      </div>
+      <ul class="no-list-style flex-c flex-js flex-ac query-terms">
+        <li class="no-query-terms" ng-if="visWrapper.queryTerms.length === 0">
+          Query terms&hellip;
+        </li>
+        <li
+          class="badge"
+          ng-repeat="query in visWrapper.queryTerms.list track by query.uri">
+          <span class="mode">{{ query.mode }}</span>
+          <span class="name">{{ query.label }}</span>
+          <span class="close fa fa-times-circle" aria-hidden="true"></span>
+        </li>
+      </ul>
     </div>
     <div class="full-without-topbar">
       <div
