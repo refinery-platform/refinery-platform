@@ -1,39 +1,34 @@
 import json
 from urlparse import urljoin
 
-import mock
-
 from django.contrib.auth.models import User, Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import unittest, timezone
 from django.test import TestCase
 
-from rest_framework.test import APIRequestFactory, APIClient, \
-    force_authenticate
-from rest_framework.test import APITestCase
+from galaxy_connector.models import Instance
 from guardian.shortcuts import assign_perm
+import mock
 import mockcache as memcache
+from rest_framework.test import (APIRequestFactory, APIClient, APITestCase,
+                                 force_authenticate)
 from tastypie.test import ResourceTestCase
 
-from core.api import AnalysisResource
-
-from core.management.commands.create_user import init_user
-
-from core.models import (
-    NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,
-    ExtendedGroup, DataSet, InvestigationLink, Project,
-    Analysis, Workflow, WorkflowEngine, UserProfile, invalidate_cached_object,
-    AnalysisNodeConnection, NodeGroup, Tutorials)
-from core.utils import (get_aware_local_time,
-                        create_current_selection_node_group,
-                        filter_nodes_uuids_in_solr, move_obj_to_front)
-from core.views import NodeGroups, DataSetsViewSet, AnalysesViewSet
+from .api import AnalysisResource
+from .management.commands.create_user import init_user
+from .models import (Analysis, AnalysisNodeConnection, create_nodeset, DataSet,
+                     delete_nodeset, get_nodeset, ExtendedGroup,
+                     invalidate_cached_object, InvestigationLink, NodeGroup,
+                     NodeSet, Project, Tutorials, update_nodeset,
+                     UserProfile, Workflow, WorkflowEngine)
+from .utils import (create_current_selection_node_group,
+                    filter_nodes_uuids_in_solr, get_aware_local_time,
+                    move_obj_to_front)
+from .views import AnalysesViewSet, DataSetsViewSet, NodeGroups
 from .serializers import NodeGroupSerializer
-from file_store.models import FileStoreItem
-from file_store.models import FileExtension
+from data_set_manager.models import Assay, Investigation, Node, Study
+from file_store.models import FileExtension, FileStoreItem
 
-from data_set_manager.models import (Study, Assay, Node, Investigation)
-from galaxy_connector.models import Instance
 
 cache = memcache.Client(["127.0.0.1:11211"])
 

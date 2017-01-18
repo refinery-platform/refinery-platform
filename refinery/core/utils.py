@@ -1,11 +1,11 @@
 from __future__ import absolute_import
-import logging
 
 import ast
+import logging
 import os
 import py2neo
+from urlparse import urlparse, urljoin
 
-import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.models import Site
@@ -16,10 +16,15 @@ from django.db import connection
 from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework import status
-from urlparse import urlparse, urljoin
 
-import core
-import data_set_manager
+import requests
+
+from .serializers import NodeGroupSerializer
+import core.models
+from data_set_manager.model import Assay
+from data_set_manager.search_indexes import DataSetIndex, NodeIndex
+from data_set_manager.utils import (format_solr_response,
+                                    generate_solr_params, search_solr)
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +50,7 @@ def update_data_set_index(data_set):
 
     logger.info('Updated data set (uuid: %s) index', data_set.uuid)
     try:
-        core.search_indexes.DataSetIndex().update_object(data_set,
-                                                         using='core')
+        DataSetIndex().update_object(data_set, using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -354,8 +358,7 @@ def delete_data_set_index(data_set):
 
     logger.debug('Deleted data set (uuid: %s) index', data_set.uuid)
     try:
-        core.search_indexes.DataSetIndex().remove_object(data_set,
-                                                         using='core')
+        DataSetIndex().remove_object(data_set, using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -753,8 +756,7 @@ def delete_analysis_index(node_instance):
     """Remove a Analysis' related document from Solr's index.
     """
     try:
-        data_set_manager.search_indexes.NodeIndex().remove_object(
-            node_instance, using='data_set_manager')
+        NodeIndex().remove_object(node_instance, using='data_set_manager')
         logger.debug('Deleted Analysis\' NodeIndex with (uuid: %s)',
                      node_instance.uuid)
     except Exception as e:
@@ -858,15 +860,15 @@ def create_current_selection_node_group(assay_uuid):
     """
     # confirm an assay exists
     try:
-        assay = data_set_manager.models.Assay.objects.get(uuid=assay_uuid)
-    except data_set_manager.models.Assay.DoesNotExist as e:
+        assay = Assay.objects.get(uuid=assay_uuid)
+    except Assay.DoesNotExist as e:
         return Response(e, status=status.HTTP_404_NOT_FOUND)
-    except data_set_manager.models.Assay.MultipleObjectsReturned as e:
+    except Assay.MultipleObjectsReturned as e:
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     study_uuid = assay.study.uuid
     # initialize node_group with a current_selection
-    serializer = core.serializers.NodeGroupSerializer(data={
+    serializer = NodeGroupSerializer(data={
         'assay': assay_uuid,
         'study': study_uuid,
         'name': 'Current Selection'
@@ -916,7 +918,7 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
         else:
             params['facets'] = ','.join(filter_attribute.keys())
 
-    solr_params = data_set_manager.utils.generate_solr_params(
+    solr_params = generate_solr_params(
         params, assay_uuid)
     # Only require solr filters if exception uuids are passed
     if filter_out_uuids:
@@ -924,10 +926,8 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
         str_nodes = (' OR ').join(filter_out_uuids)
         field_filter = "&fq=-uuid:({})".format(str_nodes)
         solr_params = ''.join([solr_params, field_filter])
-    solr_response = data_set_manager.utils.search_solr(
-        solr_params, 'data_set_manager')
-    solr_reponse_json = data_set_manager.utils.format_solr_response(
-        solr_response)
+    solr_response = search_solr(solr_params, 'data_set_manager')
+    solr_reponse_json = format_solr_response(solr_response)
     uuid_list = []
     for node in solr_reponse_json.get('nodes'):
         uuid_list.append(node.get('uuid'))

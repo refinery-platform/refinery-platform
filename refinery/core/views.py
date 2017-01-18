@@ -23,27 +23,26 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext, loader
 from django.views.decorators.gzip import gzip_page
 
-from guardian.utils import get_anonymous_user
 from guardian.shortcuts import get_perms
-from registration.views import RegistrationView
+from guardian.utils import get_anonymous_user
 from registration import signals
-from rest_framework import viewsets
-from rest_framework.views import APIView
+from registration.views import RegistrationView
+from rest_framework import status, viewsets
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.views import APIView
 from xml.parsers.expat import ExpatError
 
-from core.forms import (ProjectForm, UserForm, UserProfileForm,
-                        WorkflowForm,  DataSetForm)
+from core.forms import (DataSetForm, ProjectForm, UserForm, UserProfileForm,
+                        WorkflowForm)
 from annotation_server.models import GenomeBuild
-from core.models import (ExtendedGroup, Project, DataSet, Workflow,
-                         UserProfile, WorkflowEngine, Analysis, Invitation,
-                         Ontology, NodeGroup, CustomRegistrationProfile)
-from core.serializers import (WorkflowSerializer, NodeGroupSerializer,
-                              NodeSerializer)
-from core.utils import (get_data_sets_annotations,
-                        create_current_selection_node_group,
-                        filter_nodes_uuids_in_solr, move_obj_to_front)
+from .models import (Analysis, CustomRegistrationProfile, DataSet,
+                     ExtendedGroup, Invitation, NodeGroup, Ontology, Project,
+                     UserProfile, Workflow, WorkflowEngine)
+from .serializers import (NodeGroupSerializer, NodeSerializer,
+                          WorkflowSerializer)
+from .utils import (create_current_selection_node_group,
+                    filter_nodes_uuids_in_solr,
+                    get_data_sets_annotations, move_obj_to_front)
 from data_set_manager.models import Node
 from data_set_manager.utils import generate_solr_params
 from file_store.models import FileStoreItem

@@ -3,13 +3,13 @@ import logging
 from django.db.models.deletion import Collector
 from django.db.models.fields.related import ForeignKey
 
-from core.models import DataSet, InvestigationLink
+from celery.task import task
+
+from .models import DataSet, InvestigationLink
 from data_set_manager.models import Investigation, Study
 from data_set_manager.tasks import annotate_nodes
-from file_store.models import is_permanent, FileStoreItem
+from file_store.models import FileStoreItem, is_permanent
 from file_store.tasks import create, import_file
-
-from celery.task import task
 
 
 logger = logging.getLogger(__name__)

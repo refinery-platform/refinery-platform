@@ -31,7 +31,7 @@ from django.utils.deconstruct import deconstructible
 from celery.result import AsyncResult
 from celery.task.control import revoke
 
-from core.utils import is_url
+import core.utils
 
 
 logger = logging.getLogger(__name__)
@@ -134,7 +134,7 @@ def generate_file_source_translator(username='', base_path=''):
         """
         source = map_source(source.strip())
         # ignore URLs and absolute file paths
-        if is_url(source) or os.path.isabs(source):
+        if core.utils.is_url(source) or os.path.isabs(source):
             return source
         # process relative path
         if base_path:
