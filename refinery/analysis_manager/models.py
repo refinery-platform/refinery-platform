@@ -1,6 +1,7 @@
+import logging
+
 import celery
 from celery.result import TaskSetResult
-import logging
 
 from django.db import models
 from django.db.models.fields import CharField, PositiveSmallIntegerField

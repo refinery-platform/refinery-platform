@@ -3,14 +3,14 @@ Created on Apr 5, 2012
 
 @author: nils
 '''
-import celery
-from celery.result import TaskSetResult
-from celery.task import task, Task
-from celery.task.sets import TaskSet
 import logging
 import urlparse
 
 from bioblend import galaxy
+import celery
+from celery.result import TaskSetResult
+from celery.task import task, Task
+from celery.task.sets import TaskSet
 import requests
 
 from .models import AnalysisStatus

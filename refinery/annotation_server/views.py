@@ -1,6 +1,6 @@
 from decimal import Decimal
-import logging
 import json
+import logging
 
 from django.db import connection
 from django.db.models import Q
