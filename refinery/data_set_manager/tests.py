@@ -4,33 +4,31 @@ when you run "manage.py test".
 
 Replace this with more appropriate tests for your application.
 """
-import re
 import json
+import re
 
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import QueryDict
+from django.test import TestCase
 
-from rest_framework.test import APIRequestFactory
-from rest_framework.test import APITestCase
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
+from .models import AttributeOrder, Assay, Study, Investigation, Node
+from .serializers import AttributeOrderSerializer
+from .utils import (create_facet_filter_query, customize_attribute_response,
+                    escape_character_solr, format_solr_response,
+                    generate_facet_fields_query,
+                    generate_filtered_facet_fields, generate_solr_params,
+                    get_owner_from_assay, hide_fields_from_list,
+                    initialize_attribute_order_ranks,
+                    insert_facet_field_filter, is_field_in_hidden_list,
+                    objectify_facet_field_counts, update_attribute_order_ranks)
+from .views import Assays, AssaysAttributes
 from core.management.commands.create_public_group import create_public_group
+from core.models import DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
 from file_store.models import FileStoreItem
-from .models import AttributeOrder, Assay, Study, Investigation, Node
-from .views import Assays, AssaysAttributes
-from .utils import (update_attribute_order_ranks,
-                    customize_attribute_response, format_solr_response,
-                    get_owner_from_assay, generate_facet_fields_query,
-                    hide_fields_from_list, is_field_in_hidden_list,
-                    generate_filtered_facet_fields,
-                    insert_facet_field_filter, create_facet_filter_query,
-                    generate_solr_params, objectify_facet_field_counts,
-                    escape_character_solr, initialize_attribute_order_ranks)
-from .serializers import AttributeOrderSerializer
-from core.models import DataSet, InvestigationLink, ExtendedGroup
 
 
 class AssaysAPITests(APITestCase):

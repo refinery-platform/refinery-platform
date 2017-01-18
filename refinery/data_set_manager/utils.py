@@ -4,22 +4,23 @@ Created on May 29, 2012
 @author: nils
 '''
 import hashlib
+import json
 import logging
 import time
 import urlparse
-import requests
-from requests.exceptions import HTTPError
-import json
 
+from django.conf import settings
 from django.db.models import Q
 from django.utils.http import (urlquote, urlunquote)
-from django.conf import settings
 
-import core
-from data_set_manager.search_indexes import NodeIndex
-from .models import (AttributeOrder, Study, Node, Attribute, AnnotatedNode,
-                     Assay, AnnotatedNodeRegistry)
+import requests
+from requests.exceptions import HTTPError
+
+from .models import (AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute,
+                     AttributeOrder, Node, Study)
+from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
+from core.models import DataSet, InvestigationLink
 
 
 logger = logging.getLogger(__name__)
@@ -717,9 +718,9 @@ def get_owner_from_assay(uuid):
         logger.error(e)
         return "Error: Invalid uuid"
 
-    investigation_link = core.models.InvestigationLink.objects.get(
+    investigation_link = InvestigationLink.objects.get(
             investigation=investigation_key)
-    owner = core.models.DataSet.objects.get(
+    owner = DataSet.objects.get(
             investigationlink=investigation_link).get_owner()
 
     return owner

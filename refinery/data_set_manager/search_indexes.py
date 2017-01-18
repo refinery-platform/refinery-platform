@@ -4,15 +4,14 @@ Created on Jul 2, 2012
 @author: nils
 '''
 
-
-import string
 import logging
+import string
 
 from django.conf import settings
 
 from haystack import indexes
 
-from data_set_manager.models import Node, AnnotatedNode
+from .models import AnnotatedNode, Node
 from file_store.models import FileStoreItem
 
 logger = logging.getLogger(__name__)
