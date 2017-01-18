@@ -1,7 +1,8 @@
 from django.contrib import admin
-import file_server.models
 
-admin.site.register(file_server.models.TDFItem)
-admin.site.register(file_server.models.BAMItem)
-admin.site.register(file_server.models.WIGItem)
-admin.site.register(file_server.models.BigBEDItem)
+from .models import BAMItem, BigBEDItem, TDFItem, WIGItem
+
+admin.site.register(TDFItem)
+admin.site.register(BAMItem)
+admin.site.register(WIGItem)
+admin.site.register(BigBEDItem)
