@@ -1,13 +1,17 @@
 class refinery::apache2 {
 
-  class { 'apache':
+  # must be set to the ELB Idle Timeout value provided in the CloudFormation template
+  # for chunked uploads of large files (MD5 calculation on the server can take a long time)
+  # to be adjusted to a more reasonable value after enabling file uploads to S3
+  $timeout = 1800
+
+  class { '::apache':
+    default_mods           => false,  # to allow declaration of ::apache::mod::reqtimeout below
     # recommended for use with AWS ELB
     mpm_module             => 'worker',
-    # for chunked uploads of large files (MD5 calculation on the server can take a long time)
-    # to be adjusted back to recommended values after adding support for S3
-    timeout                => 1805,  # should be set higher than the ELB IdleTimeout
+    timeout                => $refinery::apache2::timeout + 5,
     keepalive              => 'on',
-    keepalive_timeout      => 1805,  # should be set higher than the ELB IdleTimeout
+    keepalive_timeout      => $refinery::apache2::timeout + 5,
     max_keepalive_requests => 0,
     # recommended for use with AWS ELB
     # https://aws.amazon.com/premiumsupport/knowledge-center/apache-backend-elb/
@@ -16,9 +20,17 @@ class refinery::apache2 {
     },
   }
 
-  class { 'apache::mod::wsgi':
+  class { '::apache::mod::wsgi':
     mod_path     => 'mod_wsgi.so',
     package_name => 'libapache2-mod-wsgi',
+  }
+
+  # recommended for use with AWS ELB to avoid HTTP 408 errors
+  class { '::apache::mod::reqtimeout':
+    timeouts => [
+      "header=${ $refinery::apache2::timeout + 5 }-${ $refinery::apache2::timeout + 25 },MinRate=500",
+      "body=${ $refinery::apache2::timeout + 5 },MinRate=500",
+    ],
   }
 
   # recommended for use with AWS ELB
