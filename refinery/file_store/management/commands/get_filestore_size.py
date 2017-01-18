@@ -5,8 +5,10 @@ Created on Nov 10, 2015
 '''
 import logging
 from subprocess import check_output
+
 from django.core.management.base import BaseCommand
-from file_store.models import FileStoreItem
+
+from .models import FileStoreItem
 
 logger = logging.getLogger(__name__)
 

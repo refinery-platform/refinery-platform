@@ -14,23 +14,25 @@ Example: FILE_STORE_DIR = 'files'
 
 """
 
+import logging
 import os
 import re
-import logging
 from urlparse import urljoin
-from celery.result import AsyncResult
-from celery.task.control import revoke
 
 from django.conf import settings
-from django.dispatch import receiver
+from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 from django_extensions.db.fields import UUIDField
-from django.core.files.storage import FileSystemStorage
 from django.utils import timezone
 from django.utils.deconstruct import deconstructible
 
-import core
+from celery.result import AsyncResult
+from celery.task.control import revoke
+
+from core.utils import is_url
+
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +134,7 @@ def generate_file_source_translator(username='', base_path=''):
         """
         source = map_source(source.strip())
         # ignore URLs and absolute file paths
-        if core.utils.is_url(source) or os.path.isabs(source):
+        if is_url(source) or os.path.isabs(source):
             return source
         # process relative path
         if base_path:
