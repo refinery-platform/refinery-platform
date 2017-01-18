@@ -33,6 +33,8 @@ class refinery::apache2 {
     ],
   }
 
+  class { '::apache::mod::dir': }  # to allow ELB health checks using default vhost
+
   # recommended for use with AWS ELB
   apache::custom_config { 'no-acceptfilter':
     content => "AcceptFilter http none\nAcceptFilter https none",
@@ -44,7 +46,7 @@ class refinery::apache2 {
         comment      => 'Redirect http to https unless AWS ELB terminated TLS',
         rewrite_cond => [
           '%{HTTP:X-Forwarded-Proto} !https',
-          "%{HTTP_HOST} ${site_url}",  # to allow ELB health checks
+          "%{HTTP_HOST} ${site_url}",  # to allow ELB health checks using default vhost
         ],
         rewrite_rule => ['^.*$ https://%{HTTP_HOST}%{REQUEST_URI} [R=302,L]'],
       },
