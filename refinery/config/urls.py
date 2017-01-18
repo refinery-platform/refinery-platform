@@ -1,7 +1,7 @@
 import logging
 
 from django.conf import settings
-from django.conf.urls import patterns, include, url
+from django.conf.urls import include, patterns, url
 from django.conf.urls.static import static
 from django.contrib import admin
 
@@ -9,30 +9,31 @@ from haystack.forms import FacetedSearchForm
 from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
 from registration.backends.default.views import ActivationView
-from tastypie.api import Api
 from rest_framework import routers
+from tastypie.api import Api
 
-from core.api import (AnalysisResource, ProjectResource, NodeSetResource,
-                      NodeResource, NodeSetListResource, NodePairResource,
-                      NodeRelationshipResource, WorkflowResource,
-                      ExtendedGroupResource,
-                      WorkflowInputRelationshipsResource, DataSetResource,
-                      StatisticsResource, GroupManagementResource,
-                      UserAuthenticationResource, InvitationResource,
-                      FastQCResource, UserProfileResource)
+from core.api import (AnalysisResource, DataSetResource, ExtendedGroupResource,
+                      FastQCResource, GroupManagementResource,
+                      InvitationResource, NodePairResource,
+                      NodeRelationshipResource, NodeResource,
+                      NodeSetListResource, NodeSetResource, ProjectResource,
+                      StatisticsResource, UserAuthenticationResource,
+                      UserProfileResource, WorkflowResource,
+                      WorkflowInputRelationshipsResource)
+from core.forms import RegistrationFormWithCustomFields
 from core.models import DataSet, AuthenticationFormUsernameOrEmail
-from core.views import (WorkflowViewSet, NodeViewSet,
-                        CustomRegistrationView, NodeGroups, DataSetsViewSet,
-                        AnalysesViewSet)
+from core.views import (AnalysesViewSet, CustomRegistrationView,
+                        DataSetsViewSet, NodeGroups, NodeViewSet,
+                        WorkflowViewSet)
 from file_store.views import FileStoreItems
-from data_set_manager.views import Assays, AssaysFiles, AssaysAttributes
-from data_set_manager.api import (AttributeOrderResource, StudyResource,
-                                  AssayResource, InvestigationResource,
-                                  ProtocolResource,
+from data_set_manager.api import (AssayResource, AttributeOrderResource,
+                                  AttributeResource, InvestigationResource,
                                   ProtocolReferenceResource,
                                   ProtocolReferenceParameterResource,
-                                  PublicationResource, AttributeResource)
-from core.forms import RegistrationFormWithCustomFields
+                                  ProtocolResource, PublicationResource,
+                                  StudyResource)
+from data_set_manager.views import Assays, AssaysFiles, AssaysAttributes
+
 
 logger = logging.getLogger(__name__)
 
