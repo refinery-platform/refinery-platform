@@ -728,6 +728,43 @@
       font-size: 0.8em;
       color: @gray-light;
     }
+
+    .help-item {
+      display: inline-block;
+      margin-right: 0.5rem;
+
+      .f-box {
+        display: block;
+        float: left;
+        line-height: 22px;
+      }
+
+      .svg-icon {
+        display: block;
+        float: left;
+        width: 24px;
+        height: 24px;
+        padding: 2px;
+
+        &.icon-cursor-default {
+          padding: 4px 4px 5px 4px;
+        }
+
+        &.icon-cursor-click {
+          padding: 0 2px 2px 2px;
+        }
+
+        &.icon-cursor-dblclick {
+          padding: 0 2px 2px 2px;
+        }
+      }
+    }
+
+    .separator {
+      display: inline-block;
+      margin: 0 .5rem;
+      color: @gray-light;
+    }
   }
 
   .refinery-header .btn,
@@ -781,6 +818,49 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
+
+      .query-terms {
+        height: 25px;
+        padding: 0 2px;
+        border: 1px solid darken(@gray-lighter, 10%);
+        border-radius: 3px;
+        background-color: @gray-lighter;
+        line-height: 25px;
+
+        .no-query-terms {
+          margin-left: 3px;
+          color: @gray-light;
+        }
+
+        .badge {
+          display: block;
+          height: 19px;
+          margin: 0 5px 0 0;
+          padding: 0 5px;
+          border-radius: 2px;
+          line-height: 19px;
+
+          .mode {
+            text-transform: uppercase;
+            margin-right: 0.25rem;
+
+            &::after {
+              content: ':';
+            }
+          }
+
+          .close {
+            float: none;
+            margin-left: 5px;
+            color: inherit;
+            opacity: 0.5;
+
+            &:hover {
+              opacity: 1;
+            }
+          }
+        }
+      }
     }
 
     .refinery-panel-header {
@@ -800,12 +880,6 @@
         color: @gray-light;
         font-size: 14px;
         line-height: 1em;
-      }
-
-      .separator {
-        padding-left: 0.25rem;
-        padding-right: 0.25rem;
-        color: @gray-lighter;
       }
 
       button.icon-only {
@@ -1698,4 +1772,10 @@ body.repo-mode .refinery-dashboard {
 
 .custom-repo-mode-html {
   padding: 0 1em 1em 1em;
+}
+
+.separator {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+  color: @gray-lighter;
 }

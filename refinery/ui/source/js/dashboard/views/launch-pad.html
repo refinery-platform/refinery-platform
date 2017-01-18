@@ -2,13 +2,84 @@
   class="col-md-4"
   refinery-expandable-panel>
   <div class="refinery-panel">
-    <div class="refinery-header">
-      <span class="refinery-header-left">
+    <div class="refinery-header flex-c flex-ac flex-sb">
+      <div>
         <h3>
           <i class="m-r-1-4 fa fa-file"></i>Data Sets
         </h3>
-      </span>
-      <span class="refinery-header-right">
+      </div>
+      <div
+        class="flex-g-1 flex-c flex-jc"
+        ng-if="dashboard.dataSetExploration">
+        <span
+          id="intro-js-satori-overview-start"
+          class="btn"
+          ng-click="dashboard.introsSatoriOverview.start()">
+          <span class="fa fa-info-circle"></span>
+          Intro Tour
+        </span>
+        <span class="separator">&middot;</span>
+        <span class="help-item">
+          <span class="f-box">Highlight:</span>
+          <span
+            class="f-box"
+            title="Hover with mouse"
+            refinery-tooltip
+            refinery-tooltip-container="body"
+            refinery-tooltip-placement="top">
+            <svg class="svg-icon icon-cursor-default">
+              <use
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                xlink:href="/static/images/icons.svg#cursor-default"></use>
+            </svg>
+          </span>
+        </span>
+        <span class="help-item">
+          <span class="f-box">Lock:</span>
+          <span
+            class="f-box"
+            title="Click with mouse"
+            refinery-tooltip
+            refinery-tooltip-container="body"
+            refinery-tooltip-placement="top">
+            <svg class="svg-icon icon-cursor-click">
+              <use
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                xlink:href="/static/images/icons.svg#cursor-click"></use>
+            </svg>
+          </span>
+        </span>
+        <span class="help-item">
+          <span class="f-box">Query:</span>
+          <span
+            class="f-box"
+            title="Hold Command Key and click with mouse"
+            refinery-tooltip
+            refinery-tooltip-container="body"
+            refinery-tooltip-placement="top">
+            <span class="f-box m-l-1-4">&#8984; + </span>
+            <svg class="svg-icon icon-cursor-click">
+              <use
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                xlink:href="/static/images/icons.svg#cursor-click"></use>
+            </svg>
+          </span>
+          <span class="f-box">or</span>
+          <span
+            class="f-box"
+            title="Double click with mouse"
+            refinery-tooltip
+            refinery-tooltip-container="body"
+            refinery-tooltip-placement="top">
+            <svg class="svg-icon icon-cursor-dblclick">
+              <use
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                xlink:href="/static/images/icons.svg#cursor-dblclick"></use>
+            </svg>
+          </span>
+        </span>
+      </div>
+      <div>
         <div ng-controller="dataUploadTutorialCtrl">
           <div ng-intro-options="dataUploadIntroOptions"
                ng-intro-method="dataUploadStart"
@@ -35,7 +106,7 @@
             </div>
           </div>
         </div>
-      </span>
+      </div>
     </div>
 
     <div
@@ -980,6 +1051,16 @@
     </div>
   </div>
 </div>
+
+<!-- Intro.js Overview of SATORI -->
+<div
+  ng-intro-options="dashboard.introsSatoriOverview.options"
+  ng-intro-method="dashboard.introsSatoriOverview._start"
+  ng-intro-exit-method="dashboard.introsSatoriOverview._exit"
+  ng-intro-onbeforechange="dashboard.introsSatoriOverview.beforeChangeEvent"
+  ng-intro-autostart="dashboard.introsSatoriOverview.autoStart"
+  ng-intro-oncomplete="dashboard.introsSatoriOverview.complete"
+  ng-intro-onexit="dashboard.introsSatoriOverview.exit"></div>
 
 <!-- Intro.js Details of the Data Set View -->
 <div
