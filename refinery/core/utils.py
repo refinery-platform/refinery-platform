@@ -19,10 +19,9 @@ from rest_framework import status
 
 import requests
 
-from .serializers import NodeGroupSerializer
-import core.models
-from data_set_manager.model import Assay
-from data_set_manager.search_indexes import DataSetIndex, NodeIndex
+import core
+from data_set_manager.models import Assay
+from data_set_manager.search_indexes import NodeIndex
 from data_set_manager.utils import (format_solr_response,
                                     generate_solr_params, search_solr)
 
@@ -50,7 +49,8 @@ def update_data_set_index(data_set):
 
     logger.info('Updated data set (uuid: %s) index', data_set.uuid)
     try:
-        DataSetIndex().update_object(data_set, using='core')
+        core.search_indexes.DataSetIndex()\
+            .update_object(data_set, using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -358,7 +358,8 @@ def delete_data_set_index(data_set):
 
     logger.debug('Deleted data set (uuid: %s) index', data_set.uuid)
     try:
-        DataSetIndex().remove_object(data_set, using='core')
+        core.search_indexes.DataSetIndex()\
+            .remove_object(data_set, using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -868,7 +869,7 @@ def create_current_selection_node_group(assay_uuid):
 
     study_uuid = assay.study.uuid
     # initialize node_group with a current_selection
-    serializer = NodeGroupSerializer(data={
+    serializer = core.serializers.NodeGroupSerializer(data={
         'assay': assay_uuid,
         'study': study_uuid,
         'name': 'Current Selection'
