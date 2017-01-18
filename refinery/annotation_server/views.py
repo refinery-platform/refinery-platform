@@ -6,7 +6,7 @@ from django.db import connection
 from django.db.models import Q
 from django.http import HttpResponse
 
-from annotation_server import utils
+from .utils import GAP_REGIONS, MAPPABILITY_THEORETICAL, SUPPORTED_GENOMES
 
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ def search_genes(request, genome, search_string):
                  "%s search: %s",
                  genome, search_string)
 
-    if genome in utils.SUPPORTED_GENOMES:
+    if genome in SUPPORTED_GENOMES:
         current_table = eval(genome + "_EnsGene")
         curr_vals = current_table.objects.filter(
             Q(name__contains=search_string) | Q(name2__contains=search_string)
@@ -65,7 +65,7 @@ def get_sequence(request, genome, chrom, start, end):
                  "%s chrom: %s", genome, chrom)
     offset = int(end) - int(start)
     # NO SUBSTRING METHOD USING DJANGO ORM
-    if genome in utils.SUPPORTED_GENOMES:
+    if genome in SUPPORTED_GENOMES:
         cursor = connection.cursor()
         query = ("select name as chrom, substr(seq, %s, %s) as seq "
                  "from annotation_server_%s_sequence where name = '%s'")\
@@ -81,7 +81,7 @@ def get_length(request, genome):
     """
     logger.debug("annotation_server.get_length called for genome: %s", genome)
 
-    if genome in utils.SUPPORTED_GENOMES:
+    if genome in SUPPORTED_GENOMES:
         current_table = eval(genome + "_ChromInfo")
         data = ValuesQuerySetToDict(
             current_table.objects.values('chrom', 'size'))
@@ -95,7 +95,7 @@ def get_chrom_length(request, genome, chrom):
     logger.debug("annotation_server.get_chrom_length called for genome: "
                  "%s chromosome: %s", genome, chrom)
 
-    if genome in utils.SUPPORTED_GENOMES:
+    if genome in SUPPORTED_GENOMES:
         current_table = eval(genome + "_ChromInfo")
         curr_vals = current_table.objects.filter(chrom__iexact=chrom).values(
             'chrom', 'size')
@@ -112,7 +112,7 @@ def get_cytoband(request, genome, chrom):
     logger.debug("annotation_server.get_cytoband called for genome: "
                  "%s chromosome: %s", genome, chrom)
 
-    if genome in utils.SUPPORTED_GENOMES:
+    if genome in SUPPORTED_GENOMES:
         current_table = eval(genome + "_CytoBand")
         curr_vals = current_table.objects.filter(chrom__iexact=chrom).values(
             'chrom', 'chromStart', 'chromEnd', 'name', 'gieStain')
@@ -127,7 +127,7 @@ def get_genes(request, genome, chrom, start, end):
     logger.debug("annotation_server.get_genes called for genome: "
                  "%s chromosome: %s", genome, chrom)
 
-    if genome in utils.SUPPORTED_GENOMES:
+    if genome in SUPPORTED_GENOMES:
         current_table = eval(genome + "_EnsGene")
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
@@ -145,7 +145,7 @@ def get_gc(request, genome, chrom, start, end):
     logger.debug("annotation_server.get_gc called for genome: "
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
-    if genome in utils.SUPPORTED_GENOMES:
+    if genome in SUPPORTED_GENOMES:
         current_table = eval(genome + "_GC")
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
@@ -164,7 +164,7 @@ def get_maptheo(request, genome, chrom, start, end):
     logger.debug("annotation_server.get_maptheo called for genome: "
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
-    if genome in utils.MAPPABILITY_THEORETICAL:
+    if genome in MAPPABILITY_THEORETICAL:
         current_table = eval(genome + "_MappabilityTheoretical")
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
@@ -182,7 +182,7 @@ def get_mapemp(request, genome, chrom, start, end):
     logger.debug("annotation_server.get_mapemp called for genome: "
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
-    if genome in utils.SUPPORTED_GENOMES:
+    if genome in SUPPORTED_GENOMES:
         current_table = eval(genome + "_MappabilityEmpirial")
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
@@ -199,7 +199,7 @@ def get_conservation(request, genome, chrom, start, end):
     logger.debug("annotation_server.get_conservation called for genome: "
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
-    if genome in utils.SUPPORTED_GENOMES:
+    if genome in SUPPORTED_GENOMES:
         current_table = eval(genome + "_Conservation")
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
@@ -217,7 +217,7 @@ def get_gapregion(request, genome, chrom, start, end):
     logger.debug("annotation_server.get_gapregion called for genome: "
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
-    if genome in utils.GAP_REGIONS:
+    if genome in GAP_REGIONS:
         current_table = eval(genome + "_GapRegions")
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
