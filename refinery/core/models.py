@@ -19,7 +19,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import Group, Permission, User
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages
@@ -29,11 +29,11 @@ from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.models import Max
 from django.db.models.fields import IntegerField
-from django.db.models.signals import post_save, pre_delete, post_delete
+from django.db.models.signals import post_delete, post_save, pre_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
 from django.forms import ValidationError
-from django.template import loader, Context
+from django.template import Context, loader
 from django.utils import timezone
 
 from bioblend import galaxy
@@ -51,14 +51,14 @@ from .utils import (add_or_update_user_to_neo4j, add_read_access_in_neo4j,
                     delete_analysis_index, delete_data_set_index,
                     delete_data_set_neo4j, delete_ontology_from_neo4j,
                     delete_user_in_neo4j, email_admin, get_aware_local_time,
-                    update_data_set_index, invalidate_cached_object,
-                    remove_read_access_in_neo4j, update_annotation_sets_neo4j)
-from file_store.models import get_file_size, FileStoreItem, FileType
-from file_store.tasks import rename
+                    invalidate_cached_object, remove_read_access_in_neo4j,
+                    update_annotation_sets_neo4j, update_data_set_index)
 from data_set_manager.models import (Assay, Investigation, Node,
                                      NodeCollection, Study)
 from data_set_manager.utils import (add_annotated_nodes_selection,
                                     index_annotated_nodes_selection)
+from file_store.models import FileStoreItem, FileType, get_file_size
+from file_store.tasks import rename
 from galaxy_connector.galaxy_workflow import (configure_workflow,
                                               countWorkflowSteps,
                                               create_expanded_workflow_graph)

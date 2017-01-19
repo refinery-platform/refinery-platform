@@ -6,7 +6,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import unittest, timezone
 from django.test import TestCase
 
-from galaxy_connector.models import Instance
 from guardian.shortcuts import assign_perm
 import mock
 import mockcache as memcache
@@ -17,7 +16,7 @@ from tastypie.test import ResourceTestCase
 from .api import AnalysisResource
 from .management.commands.create_user import init_user
 from .models import (Analysis, AnalysisNodeConnection, create_nodeset, DataSet,
-                     delete_nodeset, get_nodeset, ExtendedGroup,
+                     delete_nodeset, ExtendedGroup, get_nodeset,
                      invalidate_cached_object, InvestigationLink, NodeGroup,
                      NodeSet, Project, Tutorials, update_nodeset,
                      UserProfile, Workflow, WorkflowEngine)
@@ -28,6 +27,7 @@ from .views import AnalysesViewSet, DataSetsViewSet, NodeGroups
 from .serializers import NodeGroupSerializer
 from data_set_manager.models import Assay, Investigation, Node, Study
 from file_store.models import FileExtension, FileStoreItem
+from galaxy_connector.models import Instance
 
 
 cache = memcache.Client(["127.0.0.1:11211"])

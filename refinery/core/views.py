@@ -2,8 +2,6 @@ import json
 import logging
 import os
 import re
-import requests
-from requests.exceptions import HTTPError
 import urllib
 from urlparse import urljoin
 import xmltodict
@@ -11,22 +9,23 @@ import xmltodict
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.sites.models import get_current_site, Site
-from django.contrib.sites.models import RequestSite
+from django.contrib.sites.models import get_current_site, RequestSite, Site
 from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
-from django.http import (Http404, HttpResponse, HttpResponseForbidden,
-                         HttpResponseRedirect, HttpResponseBadRequest,
-                         HttpResponseNotFound, HttpResponseServerError)
+from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
+                         HttpResponseForbidden, HttpResponseNotFound,
+                         HttpResponseRedirect, HttpResponseServerError)
 
-from django.shortcuts import render_to_response, get_object_or_404
-from django.template import RequestContext, loader
+from django.shortcuts import get_object_or_404, render_to_response
+from django.template import loader, RequestContext
 from django.views.decorators.gzip import gzip_page
 
 from guardian.shortcuts import get_perms
 from guardian.utils import get_anonymous_user
 from registration import signals
 from registration.views import RegistrationView
+import requests
+from requests.exceptions import HTTPError
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView

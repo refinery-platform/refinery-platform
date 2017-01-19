@@ -18,21 +18,21 @@ from core.api import (AnalysisResource, DataSetResource, ExtendedGroupResource,
                       NodeRelationshipResource, NodeResource,
                       NodeSetListResource, NodeSetResource, ProjectResource,
                       StatisticsResource, UserAuthenticationResource,
-                      UserProfileResource, WorkflowResource,
-                      WorkflowInputRelationshipsResource)
+                      UserProfileResource,
+                      WorkflowInputRelationshipsResource, WorkflowResource)
 from core.forms import RegistrationFormWithCustomFields
 from core.models import DataSet, AuthenticationFormUsernameOrEmail
 from core.views import (AnalysesViewSet, CustomRegistrationView,
                         DataSetsViewSet, NodeGroups, NodeViewSet,
                         WorkflowViewSet)
-from file_store.views import FileStoreItems
 from data_set_manager.api import (AssayResource, AttributeOrderResource,
                                   AttributeResource, InvestigationResource,
                                   ProtocolReferenceResource,
                                   ProtocolReferenceParameterResource,
                                   ProtocolResource, PublicationResource,
                                   StudyResource)
-from data_set_manager.views import Assays, AssaysFiles, AssaysAttributes
+from data_set_manager.views import Assays, AssaysAttributes, AssaysFiles
+from file_store.views import FileStoreItems
 
 
 logger = logging.getLogger(__name__)

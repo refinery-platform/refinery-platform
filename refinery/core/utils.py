@@ -14,15 +14,16 @@ from django.core.mail import send_mail
 from django.core.cache import cache
 from django.db import connection
 from django.utils import timezone
-from rest_framework.response import Response
-from rest_framework import status
 
 import requests
+from rest_framework.response import Response
+from rest_framework import status
 
 import core
 from data_set_manager.models import Assay
 from data_set_manager.search_indexes import NodeIndex
-import data_set_manager.utils  # This format required for mock patch.
+import data_set_manager.utils  # Can't specify due to mock patch.
+
 
 logger = logging.getLogger(__name__)
 

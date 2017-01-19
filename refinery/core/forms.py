@@ -8,9 +8,9 @@ from django.contrib.auth.models import User
 from django.forms import ModelForm, ValidationError
 from django.utils.translation import ugettext_lazy as _
 
-from registration.forms import RegistrationFormUniqueEmail, RegistrationForm
+from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
 
-from .models import Project, UserProfile, Workflow, DataSet
+from .models import DataSet, Project, UserProfile, Workflow
 
 
 class ProjectForm(ModelForm):

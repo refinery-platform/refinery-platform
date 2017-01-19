@@ -17,10 +17,10 @@ from django.utils import timezone
 from .models import AnalysisStatus
 from .tasks import run_analysis
 from core.models import (Analysis, InvestigationLink, NodeGroup, NodePair,
-                         NodeRelationship, NodeSet, Workflow, WorkflowEngine,
-                         WorkflowDataInputMap)
-from core.views import custom_error_page, get_solr_results
+                         NodeRelationship, NodeSet, Workflow,
+                         WorkflowDataInputMap, WorkflowEngine)
 from core.utils import get_aware_local_time
+from core.views import custom_error_page, get_solr_results
 from data_set_manager.models import Assay, Node, Study
 from workflow_manager.tasks import get_workflows
 
