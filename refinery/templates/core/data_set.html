@@ -293,10 +293,6 @@
                       </div>
 
                       <div class="col-md-9">
-                        <!--
-                        <a id="igv-multi-species" href="#" role="button" style="margin-left: 5px" class="btn btn-warning" data-toggle="modal" rel="tooltip" data-placement="bottom" data-html="true" title="Launch IGV with<br>current selection."><i class="icon-bar-chart"></i>&nbsp;&nbsp;View in IGV</a>
-                        <a href="#" id="help-igv-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
-                        -->
 
                         {% if REFINERY_REPOSITORY_MODE %}
                           <!-- CHECK BOXES FOR SELECTING SAMPLES -->
@@ -764,23 +760,6 @@
       })
 
       $("[rel=tooltip]").tooltip();
-
-      $("#help-igv-button").click( function(event) {
-        bootbox.alert(
-            "<h3><i class=\"fa fa-bar-chart-o\"></i>&nbsp;&nbsp;View in " +
-            "IGV</h3>" +
-            "<p>" +
-            "The selected files can be viewed in IGV (<a href=\"http://www.broadinstitute.org/igv\">Integrative Genomics Viewer</a>) along with the meta data shown in the table. " +
-            "IGV is launched through <a href=\"http://www.java.com/en/download/faq/java_webstart.xml\">Java WebStart</a>. This means that the software will be launched even if IGV is not installed on your computer. <b>Java needs to be installed for Java WebStart to be available</b>." +
-            "</p>" +
-            "<p>" +
-            "Once you have selected a of files and the clicked the \"View in IGV\" button (and selected a genome build) a <b>JNLP</b> file named \"igv.jnlp\" will be downloaded to your computer." +
-            "</p>" +
-            "<p>" +
-            "Many browsers will automatically open the downloaded JNLP file to launch the Java WebStart application. <b>If IGV is not launched by your browser after the file was downloaded, you need to launch IGV manually by double-clicking the downloaded JNLP file</b>." +
-            "</p>"
-        );
-      });
 
       $("#help-download-button").click( function(event) {
         bootbox.alert(

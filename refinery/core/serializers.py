@@ -1,6 +1,5 @@
 import logging
 
-import celery
 from rest_framework import serializers
 
 import file_store
@@ -83,8 +82,6 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
         '_get_file_extension')
     relative_file_store_item_url = serializers.SerializerMethodField(
         '_get_relative_url')
-    ready_for_igv_detail_view = serializers.SerializerMethodField(
-     '_ready_for_igv_detail_view')
     is_auxiliary_node = serializers.SerializerMethodField(
      '_is_auxiliary_node')
 
@@ -121,26 +118,6 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
     def _get_relative_url(self, obj):
         return obj.get_relative_file_store_item_url() or None
 
-    def _ready_for_igv_detail_view(self, obj):
-        if not obj.is_auxiliary_node:
-            ready_for_igv_detail_view = True
-            for item in obj.get_auxiliary_nodes():
-                try:
-                    node = data_set_manager.models.Node.objects.get(uuid=item)
-                except (data_set_manager.models.Node.DoesNotExist,
-                        data_set_manager.models.Node.MultipleObjectsReturned) \
-                        as e:
-                    logger.error(e)
-                    return False
-
-                state = node.get_auxiliary_file_generation_task_state()
-                if not state == celery.states.SUCCESS:
-                    ready_for_igv_detail_view = False
-
-            return ready_for_igv_detail_view
-        else:
-            return None
-
     def _is_auxiliary_node(self, obj):
         return obj.is_auxiliary_node
 
@@ -161,6 +138,5 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
             'is_auxiliary_node',
             'file_extension',
             'auxiliary_file_generation_task_state',
-            'ready_for_igv_detail_view',
             'file_uuid'
         ]
