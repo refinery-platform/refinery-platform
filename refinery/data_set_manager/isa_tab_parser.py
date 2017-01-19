@@ -20,7 +20,7 @@ from .models import (Assay, Attribute, Contact, Design, Factor,
                      Investigation, Node, Ontology, Protocol,
                      ProtocolReference, ProtocolReferenceParameter,
                      Publication, Study)
-from data_set_manager import tasks
+import data_set_manager.tasks
 from file_store.tasks import create, import_file
 
 
@@ -995,13 +995,13 @@ class IsaTabParser:
                 # parse study file
                 self._current_assay = None
                 study_file_name = os.path.join(path, study.file_name)
-                if tasks.fix_last_col(study_file_name):
+                if data_set_manager.tasks.fix_last_col(study_file_name):
                     self._parse_study_file(study, study_file_name)
                     for assay in study.assay_set.all():
                         # parse assay file
                         self._previous_node = None
                         assay_file_name = os.path.join(path, assay.file_name)
-                        if tasks.fix_last_col(
+                        if data_set_manager.tasks.fix_last_col(
                                 assay_file_name):
                             self._parse_assay_file(
                                 study,
