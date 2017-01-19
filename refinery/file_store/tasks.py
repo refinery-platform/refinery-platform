@@ -5,14 +5,14 @@ import stat
 from tempfile import NamedTemporaryFile
 from urlparse import urlparse
 
+from django.core.files import File
+
 import celery
 from celery.signals import task_success
 from celery.task import task
 import requests
 from requests.exceptions import (ContentDecodingError, ConnectionError,
                                  HTTPError)
-
-from django.core.files import File
 
 from .models import (file_path, FILE_STORE_BASE_DIR, FileStoreItem,
                      get_temp_dir)

@@ -24,10 +24,10 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .single_file_column_parser import process_metadata_table
-from .tasks import parse_isatab
 from .models import Assay, AttributeOrder, Study
 from .serializers import AssaySerializer, AttributeOrderSerializer
+from .single_file_column_parser import process_metadata_table
+from .tasks import parse_isatab
 from .utils import (customize_attribute_response, format_solr_response,
                     generate_solr_params, get_owner_from_assay,
                     initialize_attribute_order_ranks,
@@ -35,8 +35,9 @@ from .utils import (customize_attribute_response, format_solr_response,
                     update_attribute_order_ranks)
 from core.models import DataSet, get_user_import_dir
 from core.utils import get_full_url
-from file_store.tasks import download_file, DownloadError
 from file_store.models import generate_file_source_translator, get_temp_dir
+from file_store.tasks import download_file, DownloadError
+
 
 logger = logging.getLogger(__name__)
 

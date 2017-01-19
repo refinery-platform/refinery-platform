@@ -6,13 +6,14 @@ Created on May 10, 2012
 from datetime import datetime
 import logging
 
-from celery.result import AsyncResult
-import requests
-from requests.exceptions import HTTPError
-
 from django.conf import settings
 from django.db import models
 from django_extensions.db.fields import UUIDField
+
+
+from celery.result import AsyncResult
+import requests
+from requests.exceptions import HTTPError
 
 import data_set_manager
 import core.models

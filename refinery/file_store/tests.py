@@ -1,6 +1,5 @@
 """This file contains tests for file_store.models and file_store.tasks
 """
-import mock
 import os
 from urlparse import urljoin
 
@@ -9,6 +8,7 @@ from django.contrib.sites.models import Site
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import SimpleTestCase
 
+import mock
 from rest_framework.test import APIRequestFactory
 from rest_framework.test import APITestCase
 

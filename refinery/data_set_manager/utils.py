@@ -11,7 +11,7 @@ import urlparse
 
 from django.conf import settings
 from django.db.models import Q
-from django.utils.http import (urlquote, urlunquote)
+from django.utils.http import urlquote, urlunquote
 
 import requests
 from requests.exceptions import HTTPError

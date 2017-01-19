@@ -14,7 +14,7 @@ from django.test import TestCase
 
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
-from .models import AttributeOrder, Assay, Study, Investigation, Node
+from .models import Assay, AttributeOrder, Study, Investigation, Node
 from .serializers import AttributeOrderSerializer
 from .utils import (create_facet_filter_query, customize_attribute_response,
                     escape_character_solr, format_solr_response,

@@ -13,18 +13,18 @@ import tempfile
 import time
 import traceback
 
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.core.management import call_command
+
 import celery
 from celery.task import task
 import pysam
 import requests
 from requests.exceptions import HTTPError
 
-from django.conf import settings
-from django.contrib.auth.models import User
-from django.core.management import call_command
-
 from .isa_tab_parser import IsaTabParser
-from .models import (initialize_attribute_order, Investigation, Node)
+from .models import initialize_attribute_order, Investigation, Node
 from .utils import (calculate_checksum, get_node_types,
                     index_annotated_nodes, update_annotated_nodes)
 from core.models import DataSet, ExtendedGroup, FileStoreItem

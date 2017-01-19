@@ -10,7 +10,7 @@ import operator
 
 from django.conf import settings
 
-from .models import (Assay, Attribute, Investigation, Node, Study)
+from .models import Assay, Attribute, Investigation, Node, Study
 from .tasks import create_dataset
 from annotation_server.models import species_to_taxon_id, Taxon
 from file_store.models import FileStoreItem, generate_file_source_translator
