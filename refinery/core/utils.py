@@ -60,20 +60,21 @@ def update_data_set_index(data_set):
 
 
 @skip
-def add_data_set_to_neo4j(dataset_uuid, user_id):
+def add_data_set_to_neo4j(dataset, user_id):
+
     """Add a node in Neo4J for a dataset and give the owner read access.
     Note: Neo4J manages read access only.
     """
 
     logger.info(
         'Add dataset (uuid: %s) to Neo4J and give read access to user ' +
-        '(id: %s)', dataset_uuid, user_id
+        '(id: %s)', dataset.uuid, user_id
     )
 
     graph = py2neo.Graph(urljoin(settings.NEO4J_BASE_URL, 'db/data'))
 
     # Get annotations of the data_set
-    annotations = get_data_set_annotations(dataset_uuid)
+    annotations = get_data_set_annotations(dataset.uuid)
     annotations = normalize_annotation_ont_ids(annotations)
 
     try:
@@ -84,13 +85,13 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
 
         statement_name = (
             "MATCH (term:Class {name:{ont_id}}) "
-            "MERGE (ds:DataSet {uuid:{ds_uuid}}) "
+            "MERGE (ds:DataSet {id:{ds_id},uuid:{ds_uuid}}) "
             "MERGE ds-[:`annotated_with`]->term"
         )
 
         statement_uri = (
             "MATCH (term:Class {uri:{uri}}) "
-            "MERGE (ds:DataSet {uuid:{ds_uuid}}) "
+            "MERGE (ds:DataSet {id:{ds_id},uuid:{ds_uuid}}) "
             "MERGE ds-[:`annotated_with`]->term"
         )
 
@@ -100,7 +101,8 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
                     statement_uri,
                     {
                         'uri': annotation['value_uri'],
-                        'ds_uuid': annotation['data_set_uuid']
+                        'ds_id': dataset.id,
+                        'ds_uuid': dataset.uuid
                     }
                 )
             else:
@@ -112,7 +114,8 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
                             ':' +
                             annotation['value_accession']
                         ),
-                        'ds_uuid': annotation['data_set_uuid']
+                        'ds_id': dataset.id,
+                        'ds_uuid': dataset.uuid
                     }
                 )
 
@@ -133,7 +136,7 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
         tx.append(
             statement,
             {
-                'ds_uuid': dataset_uuid,
+                'ds_uuid': dataset.uuid,
                 'user_id': user_id
             }
         )
@@ -146,7 +149,7 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
         """
         logger.error(
             'Failed to add read access to data set (uuid: %s) for user '
-            '(uuid: %s) to Neo4J. Exception: %s', dataset_uuid, user_id, e
+            '(uuid: %s) to Neo4J. Exception: %s', dataset.uuid, user_id, e
         )
 
 

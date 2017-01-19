@@ -11,6 +11,7 @@ function FileBrowserCtrl (
   $window,
   fileBrowserFactory,
   fileBrowserSettings,
+  filesLoadingService,
   isOwnerService,
   resetGridService,
   selectedFilterService,
@@ -18,6 +19,10 @@ function FileBrowserCtrl (
   ) {
   var maxFileRequest = fileBrowserSettings.maxFileRequest;
   var vm = this;
+  // params for the assays api
+  vm.filesParam = {
+    uuid: $window.externalAssayUuid
+  };
   // attribute list from api
   vm.assayAttributes = fileBrowserFactory.assayAttributes;
   // objs used by ui to generate filters
@@ -42,11 +47,12 @@ function FileBrowserCtrl (
     enableSelectAll: true,
     selectionRowHeaderWidth: 35,
     rowHeight: 35,
-    showGridFooter: false,
     enableSelectionBatchEvent: true,
     multiSelect: true,
     columnDefs: fileBrowserFactory.customColumnNames,
-    data: fileBrowserFactory.assayFiles
+    data: fileBrowserFactory.assayFiles,
+    showGridFooter: true,
+    gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>'
   };
   // variables supporting ui-grid dynamic scrolling
   vm.firstPage = 0;
@@ -69,17 +75,22 @@ function FileBrowserCtrl (
    * ui-grid params.
   */
   vm.refreshAssayFiles = function () {
-    fileBrowserFactory.filesParam.offset = vm.lastPage * vm.rowCount;
-    fileBrowserFactory.filesParam.limit = vm.rowCount;
+    vm.filesParam.offset = vm.lastPage * vm.rowCount;
+    vm.filesParam.limit = vm.rowCount;
 
     var promise = $q.defer();
-    fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam).then(function () {
+    fileBrowserFactory.getAssayFiles(vm.filesParam).then(function () {
       // create column names
       vm.gridOptions.columnDefs = fileBrowserFactory.createColumnDefs();
+
       // Grabbing 100 files per request, keeping max of 300 at a time
       // Ui-grid rows generated from assay files
       vm.gridOptions.data = fileBrowserFactory.assayFiles;
       vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
+      // turns off infinite scroll for data sets < 100 files
+      if (vm.assayFilesTotal < maxFileRequest && vm.gridApi) {
+        vm.gridApi.infiniteScroll.setScrollDirections(false, false);
+      }
       vm.totalPages = Math.floor(vm.assayFilesTotal / vm.rowCount);
       vm.assayAttributes = fileBrowserFactory.assayAttributes;
       vm.attributeFilter = fileBrowserFactory.attributeFilter;
@@ -103,9 +114,9 @@ function FileBrowserCtrl (
     angular.forEach(allFilters, function (attributeObj) {
       vm.refreshSelectedFieldFromQuery(attributeObj);
     });
-    fileBrowserFactory.filesParam.filter_attribute = {};
+    vm.filesParam.filter_attribute = {};
     angular.copy(selectedFilterService.attributeSelectedFields,
-      fileBrowserFactory.filesParam.filter_attribute);
+      vm.filesParam.filter_attribute);
   };
 
   // helper method, upon refresh/load add fields to select data objs from query
@@ -136,9 +147,9 @@ function FileBrowserCtrl (
     selectedFilterService.updateSelectedFilters(
       vm.uiSelectedFields[internalName], internalName, field
     );
-    fileBrowserFactory.filesParam.filter_attribute = {};
+    vm.filesParam.filter_attribute = {};
     angular.copy(selectedFilterService.attributeSelectedFields,
-      fileBrowserFactory.filesParam.filter_attribute
+      vm.filesParam.filter_attribute
     );
     // Resets selection
     selectedNodesService.setSelectedAllFlags(false);
@@ -151,11 +162,8 @@ function FileBrowserCtrl (
     // prevent scoping issues, after reset or initial generation
     if (!vm.gridApi) {
       vm.gridApi = gridApi;
-       // Infinite Grid Load, watchers required for large files > maxFileRequest
-      if (vm.assayFilesTotal > maxFileRequest) {
-        gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
-        gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
-      }
+      gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
+      gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
 
       // Sort events
       vm.gridApi.core.on.sortChanged(null, vm.sortChanged);
@@ -247,13 +255,15 @@ function FileBrowserCtrl (
   // Helper method for dynamic scrolling, grabs data when scrolling down
   vm.getDataDown = function () {
     vm.lastPage++;
-    fileBrowserFactory.filesParam.offset = vm.lastPage * vm.rowCount;
-    fileBrowserFactory.filesParam.limit = vm.rowCount;
+    vm.filesParam.offset = vm.lastPage * vm.rowCount;
+    vm.filesParam.limit = vm.rowCount;
     var promise = $q.defer();
-    fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam)
+    filesLoadingService.setIsAssayFilesLoading(true);
+    fileBrowserFactory.getAssayFiles(vm.filesParam, 'down')
       .then(function () {
         vm.gridApi.infiniteScroll.saveScrollPercentage();
         vm.gridOptions.data = fileBrowserFactory.assayFiles;
+        filesLoadingService.setIsAssayFilesLoading(false);
         vm.gridApi.infiniteScroll
           .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
           .then(function () {
@@ -277,13 +287,15 @@ function FileBrowserCtrl (
       vm.firstPage--;
     }
 
-    fileBrowserFactory.filesParam.offset = vm.firstPage * vm.rowCount;
-    fileBrowserFactory.filesParam.limit = vm.rowCount;
+    vm.filesParam.offset = vm.firstPage * vm.rowCount;
+    vm.filesParam.limit = vm.rowCount;
     var promise = $q.defer();
-    fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam)
+    filesLoadingService.setIsAssayFilesLoading(true);
+    fileBrowserFactory.getAssayFiles(vm.filesParam, 'up')
       .then(function () {
         vm.gridApi.infiniteScroll.saveScrollPercentage();
         vm.gridOptions.data = fileBrowserFactory.assayFiles;
+        filesLoadingService.setIsAssayFilesLoading(false);
         vm.gridApi.infiniteScroll
           .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
           .then(function () {
@@ -342,7 +354,7 @@ function FileBrowserCtrl (
     if (typeof vm.gridApi !== 'undefined') {
       vm.gridApi.infiniteScroll.setScrollDirections(false, false);
 
-      vm.refreshAssayFiles(fileBrowserFactory.filesParam).then(function () {
+      vm.refreshAssayFiles(vm.filesParam).then(function () {
         $timeout(function () {
         // timeout needed to allow digest cycle to complete,and grid to finish ingesting the data
           vm.gridApi.infiniteScroll.resetScroll(vm.firstPage > 0, vm.lastPage < vm.totalPages);
@@ -380,11 +392,11 @@ function FileBrowserCtrl (
         typeof sortColumns[0].sort !== 'undefined') {
       switch (sortColumns[0].sort.direction) {
         case uiGridConstants.ASC:
-          fileBrowserFactory.filesParam.sort = sortColumns[0].field + ' asc';
+          vm.filesParam.sort = sortColumns[0].field + ' asc';
           vm.reset();
           break;
         case uiGridConstants.DESC:
-          fileBrowserFactory.filesParam.sort = sortColumns[0].field + ' desc';
+          vm.filesParam.sort = sortColumns[0].field + ' desc';
           vm.reset();
           break;
         default:
@@ -404,7 +416,7 @@ function FileBrowserCtrl (
 
   // Helper method which check for any data updates during soft loads (tabbing)
   var checkAndUpdateGridData = function () {
-    fileBrowserFactory.getAssayFiles(fileBrowserFactory.filesParam)
+    fileBrowserFactory.getAssayFiles(vm.filesParam)
       .then(function () {
         if (vm.assayFilesTotal !== fileBrowserFactory.assayFilesTotalItems.count) {
           if (vm.assayFilesTotal < maxFileRequest) {
@@ -476,7 +488,7 @@ function FileBrowserCtrl (
           selectedFilterService.resetAttributeFilter(fieldsObj);
         });
         vm.selectNodesCount = 0;
-        fileBrowserFactory.filesParam.filter_attribute = {};
+        vm.filesParam.filter_attribute = {};
         vm.reset();
       }
     }
@@ -520,6 +532,7 @@ angular
     '$window',
     'fileBrowserFactory',
     'fileBrowserSettings',
+    'filesLoadingService',
     'isOwnerService',
     'resetGridService',
     'selectedFilterService',

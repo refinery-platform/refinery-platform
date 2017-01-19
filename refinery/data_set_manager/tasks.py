@@ -28,7 +28,8 @@ from .models import initialize_attribute_order, Investigation, Node
 from .utils import (calculate_checksum, get_node_types,
                     index_annotated_nodes, update_annotated_nodes)
 from core.models import DataSet, ExtendedGroup, FileStoreItem
-from core.utils import add_data_set_to_neo4j, update_data_set_index
+from core.utils import (add_data_set_to_neo4j, update_annotation_sets_neo4j,
+                        update_data_set_index)
 from file_store.models import FileExtension
 
 
@@ -384,7 +385,8 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
         dataset.save()
         # Finally index data set
         update_data_set_index(dataset)
-        add_data_set_to_neo4j(dataset.uuid, user.id)
+        add_data_set_to_neo4j(dataset, user.id)
+        update_annotation_sets_neo4j()
         return dataset.uuid
     return None
 

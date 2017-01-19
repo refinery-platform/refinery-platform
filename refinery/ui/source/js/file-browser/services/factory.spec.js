@@ -26,7 +26,6 @@ describe('File Browser Factory', function () {
     expect(factory.assayFilesTotalItems).toEqual({});
     expect(factory.nodeGroupList).toEqual([]);
     expect(factory.customColumnNames).toEqual([]);
-    expect(factory.filesParam).toBeDefined();
   });
 
   describe('getAssayFiles', function () {
