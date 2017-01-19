@@ -2,14 +2,16 @@
 
 Refinery is a data management, analysis, and visualization platform designed to support analysts in managing common tasks in analysis and interpretation of biomedical data. 
 
-In this tutorial you will learn how to load data into Refinery, how to analyze it using workflows, and how to view analysis results using built-in visualizatin tools. Additionally, this tutorial demonstrates how to work with the data repository, how to use features that are supporting reproducible research, and how to use the collaboration tools of Refinery.
+In this tutorial you will learn how to load data into Refinery, how to analyze it using workflows, and how to view analysis results using built-in visualization tools. Additionally, this tutorial demonstrates how to work with the data repository, how to use features that are supporting reproducible research, and how to use the collaboration tools of Refinery.
 
 __Preparation__
 
-To follow the steps of this tutorial, you will need a data set consisting of data files and a meta data file that is referencing your files. 
+To follow the steps of this tutorial, you will need a data set consisting of data files and a metadata file that is referencing your files. 
 
 ## 1. Importing a Data Set 
-- tabular metadata file with local files
+  1. Go to https://beta.stemcellcommons.org
+  2. Click the Upload button from the Data Sets panel of the Launch Pad
+  
 
 ## 2. Viewing Data Sets in the Data Set Browser
 
