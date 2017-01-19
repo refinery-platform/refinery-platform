@@ -12,8 +12,8 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
   1. Go to https://beta.stemcellcommons.org
   2. Click the Upload button from the Data Sets panel of the Launch Pad
   3. Create and upload data set metadata
-    a. If uploading ISA-Tab metadata (recommended), choose a local .zip archive or provide the URL for a remote .zip archive
-    b. If uploading a local delimited text file containing metadata (see refinery-sample-metadata.tsv example for guidance), first specify        which delimiter was used and then select the file
+    - If uploading ISA-Tab metadata (recommended), choose a local .zip archive or provide the URL for a remote .zip archive
+    - If uploading a local delimited text file containing metadata (see refinery-sample-metadata.tsv example for guidance), first specify        which delimiter was used and then select the file
   4. Check metadata Preview for accuracy (note: only first 5 samples are displayed)
   5. Review Configure Metadata Import and make changes as needed
   6. Click Add files … button under Upload Data Files and select data files corresponding to the metadata (note: wait for MD5                  calculations, which ensure successful data file uploads, to complete)
