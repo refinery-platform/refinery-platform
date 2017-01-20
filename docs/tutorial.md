@@ -9,7 +9,9 @@ __Preparation__
 To follow the steps of this tutorial, you will need a data set consisting of data files and a metadata file that is referencing your files. 
 
 ## 1. Creating Metadata
-  1. @ISA-tools
+  1. Compile all the metadata to be associated with the data set and then organize these metadata into either an ISA-Tab or delimited text file:
+    - For an ISA-Tab file (recommended), see http://isa-tools.org/format/examples/ for the kinds of attributes typically included. To create the ISA-tab file use the ISAcreator tool within the ISA-tools suite (https://github.com/ISA-tools/ISAcreator). If instead converting to ISA-Tab format from MAGE-Tab (e.g. metadata from ArrayExpress), use the MAGEtoISAconverter tool (https://github.com/ISA-tools/MAGEtoISAconverter/).
+    - For a delimited text file, use https://beta.stemcellcommons.org/static/sample-files/refinery-sample-metadata.tsv as a template and note the required attributes (Sample Name, Data File, Organism, CellType, Technology). Additional attributes can be appended as needed.
 
 ## 2. Importing a Data Set 
   1. Go to the Stem Cell Commons Launch Pad at https://beta.stemcellcommons.org
