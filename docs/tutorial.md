@@ -9,27 +9,29 @@ __Preparation__
 To follow the steps of this tutorial, you will need a data set consisting of data files and a metadata file that is referencing your files. 
 
 ## 1. Creating Metadata
-  1. Compile all the metadata to be associated with the data set and then organize these metadata into either an ISA-Tab or delimited text file:
-    - For an ISA-Tab file (recommended), see http://isa-tools.org/format/examples/ for the kinds of attributes typically included. To create the ISA-tab file use the ISAcreator tool within the ISA-tools suite (https://github.com/ISA-tools/ISAcreator). If instead converting to ISA-Tab format from MAGE-Tab (e.g. metadata from ArrayExpress), use the MAGEtoISAconverter tool (https://github.com/ISA-tools/MAGEtoISAconverter/).
-    - For a delimited text file, use https://beta.stemcellcommons.org/static/sample-files/refinery-sample-metadata.tsv as a template and note the required attributes (Sample Name, Data File, Organism, CellType, Technology). Additional attributes can be appended as needed.
+1. Compile all the metadata to be associated with the data set and then organize these metadata into either an ISA-Tab or delimited text file:
+  - For an ISA-Tab file (recommended), see http://isa-tools.org/format/examples/ for the kinds of attributes typically included. To create the ISA-tab file use the ISAcreator tool within the ISA-tools suite (https://github.com/ISA-tools/ISAcreator). If instead converting to ISA-Tab format from MAGE-Tab (e.g. metadata from ArrayExpress), use the MAGEtoISAconverter tool (https://github.com/ISA-tools/MAGEtoISAconverter/).
+  - For a delimited text file, use https://beta.stemcellcommons.org/static/sample-files/refinery-sample-metadata.tsv as a template and note the required attributes (Sample Name, Data File, Organism, CellType, Technology). Additional attributes can be appended as needed.
 
 ## 2. Importing a Data Set 
-  1. Go to the Stem Cell Commons Launch Pad at https://beta.stemcellcommons.org
-  2. Click the Upload button from the Data Sets panel of the Launch Pad
-  3. Create and upload data set metadata
-    - If uploading ISA-Tab metadata (recommended), choose a local .zip archive or provide the URL for a remote .zip archive
-    - If uploading a local delimited text file containing metadata (see refinery-sample-metadata.tsv example for guidance), first specify        which delimiter was used and then select the file
-  4. Check metadata Preview for accuracy (note: only first 5 samples are displayed)
-  5. Review Configure Metadata Import and make changes as needed
-  6. Click Add files … button under Upload Data Files and select data files corresponding to the metadata (note: wait for MD5                  calculations, which ensure successful data file uploads, to complete)
-  7. Click Start upload to begin uploading all selected data files
-  8. After all data files have uploaded, click Upload Data Set
+1. Go to the Stem Cell Commons Launch Pad at https://beta.stemcellcommons.org
+2. Click the Upload button from the Data Sets panel of the Launch Pad
+3. Upload data set metadata
+  - If uploading an ISA-Tab file (recommended), choose a local .zip archive or provide the URL for a remote .zip archive
+  - If uploading a local delimited text file, first specify which delimiter was used and then select the file
+4. Check metadata Preview for accuracy (note: only first 5 samples are displayed)
+5. Review Configure Metadata Import and make changes as needed
+6. Click Add files … button under Upload Data Files and select data files corresponding to the metadata (note: wait for MD5 calculations, which ensure successful data file uploads, to complete)
+7. Click Start upload to begin uploading all selected data files
+8. After all data files have uploaded, click Upload Data Set
 
 ## 3. Viewing Data Sets in the Data Set Browser
-  1. Return to the Launch Pad and click on the newly uploaded data set (Expand data set preview). The Data Set Browser 
+1. Return to the Launch Pad and click on the newly uploaded data set (Expand data set preview). The Data Set Browser will display a summary of the data set
 
 ## 4. Exploring Contents of the Data Set in the File Browser
-- filter data set based on facets and sort table
+1. Click View content in File Browser to view the individual files belonging to the data set
+2. Files can be filtered based on attributes using the Attribute Filter in the left-hand panel
+3. Files can also be sorted according to attributes (both ascending and descending) by clicking the attribute names (i.e. column headers).
 
 ## 5. Launching Analyses
 
