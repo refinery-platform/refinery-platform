@@ -29,13 +29,16 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
 1. Return to the Launch Pad and click on the newly uploaded data set (Expand data set preview). The Data Set Browser will display a summary of the data set
 
 ## 4. Exploring Contents of the Data Set in the File Browser
-1. Click View content in File Browser to view the individual files belonging to the data set
-2. Files can be filtered based on attributes using the Attribute Filter in the left-hand panel
-3. Files can also be sorted according to attributes (both ascending and descending) by clicking the attribute names (i.e. column headers).
+1. Click View content in File Browser to view the individual files belonging to the data set:
+  - Files can be filtered based on attributes using the Attribute Filter in the left-hand panel
+  - Files can also be sorted according to attributes (both ascending and descending) by clicking the attribute names (i.e. column headers).
 
 ## 5. Launching Analyses
-
-- select files and:
+1. From the File Browser, select the files that will serve as input for the desired workflow
+2. Click the Analyze tab above the left-hand panel
+3. Select an analysis workflow using the drop-down menu in the left-hand panel
+4. (Input Dataset)
+5. (Launch Analysis)
 - run analyses:
   - FASTQC
   - peak calling with MACS2
