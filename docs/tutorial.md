@@ -8,8 +8,11 @@ __Preparation__
 
 To follow the steps of this tutorial, you will need a data set consisting of data files and a metadata file that is referencing your files. 
 
-## 1. Importing a Data Set 
-  1. Go to https://beta.stemcellcommons.org
+## 1. Creating Metadata
+  1. 
+
+## 2. Importing a Data Set 
+  1. Go to the Stem Cell Commons Launch Pad at https://beta.stemcellcommons.org
   2. Click the Upload button from the Data Sets panel of the Launch Pad
   3. Create and upload data set metadata
     - If uploading ISA-Tab metadata (recommended), choose a local .zip archive or provide the URL for a remote .zip archive
@@ -20,12 +23,13 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
   7. Click Start upload to begin uploading all selected data files
   8. After all data files have uploaded, click Upload Data Set
 
-## 2. Viewing Data Sets in the Data Set Browser
+## 3. Viewing Data Sets in the Data Set Browser
+  1. Return to the Launch Pad and click on the newly uploaded data set (Expand data set preview). The Data Set Browser 
 
-## 3. Exploring Contents of the Data Set in the File Browser
+## 4. Exploring Contents of the Data Set in the File Browser
 - filter data set based on facets and sort table
 
-## 4. Launching Analyses
+## 5. Launching Analyses
 
 - select files and:
 - run analyses:
@@ -35,19 +39,19 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
 
 > This is a comment providing background on xyz.
 
-## 5. Viewing Analysis Results
+## 6. Viewing Analysis Results
 - view FASTQC results and download FASTQC results
 - launch web-based IGV on peak calling output
 
-## 6. Reviewing Data Provenance
+## 7. Reviewing Data Provenance
 - view data set in provenance graph
   - point out new nodes created by the analyses: nodes representing FASTQC results and nodes representing output of the MACS2 workflow
 
-## 7. Collaborating with other Users
+## 8. Collaborating with other Users
 - create group for collaboration
 - invite other users to group
 - share data set with with group
 
-## 8. Deleting Analyses and Data Sets
+## 9. Deleting Analyses and Data Sets
 - delete MACS2 analysis
 - delete data set
