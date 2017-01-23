@@ -5,10 +5,31 @@ from rest_framework import serializers
 
 import file_store
 import data_set_manager
-from .models import Workflow, NodeGroup
+from .models import DataSet, Workflow, NodeGroup
 
 
 logger = logging.getLogger(__name__)
+
+
+class DataSetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DataSet
+        fields = ['name', 'summary', 'description', 'slug']
+
+    def partial_update(self, instance, validated_data):
+        """
+        Update and return an existing `DataSet` instance, given the
+        validated data.
+        """
+        instance.name = validated_data.get('name', instance.name)
+        instance.summary = validated_data.get('summary', instance.summary)
+        instance.description = validated_data.get(
+            'created', instance.description
+        )
+        instance.slug = validated_data.get('created', instance.slug)
+
+        instance.save()
+        return instance
 
 
 class NodeGroupSerializer(serializers.ModelSerializer):
