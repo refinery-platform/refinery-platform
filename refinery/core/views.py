@@ -39,8 +39,8 @@ from annotation_server.models import GenomeBuild
 from core.models import (ExtendedGroup, Project, DataSet, Workflow,
                          UserProfile, WorkflowEngine, Analysis, Invitation,
                          Ontology, NodeGroup, CustomRegistrationProfile)
-from core.serializers import (WorkflowSerializer, NodeGroupSerializer,
-                              NodeSerializer)
+from core.serializers import (DataSetSerializer, WorkflowSerializer,
+                              NodeGroupSerializer, NodeSerializer)
 from core.utils import (get_data_sets_annotations,
                         create_current_selection_node_group,
                         filter_nodes_uuids_in_solr, move_obj_to_front)
@@ -1069,7 +1069,29 @@ class NodeViewSet(viewsets.ModelViewSet):
 
 class DataSetsViewSet(APIView):
     """API endpoint that allows for DataSets to be deleted"""
-    http_method_names = ['delete']
+    http_method_names = ['delete', 'patch']
+
+    def get_object(self, uuid):
+        try:
+            return DataSet.objects.get(uuid=uuid)
+        except DataSet.DoesNotExist as e:
+            logger.error(e)
+            return Response(uuid, status=status.HTTP_404_NOT_FOUND)
+        except DataSet.MultipleObjectsReturned as e:
+            logger.error(e)
+            return Response(
+                uuid, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def is_user_authorized(self, user, data_set):
+        # user does not have change data set permission
+        if not user.is_authenticated():
+            return False
+        elif not user.has_perm('core.change_dataset', data_set):
+                # check edit permission for public group
+            return False
+        else:
+            return True
 
     def delete(self, request, uuid):
         if not request.user.is_authenticated():
@@ -1094,6 +1116,28 @@ class DataSetsViewSet(APIView):
                     return Response({"data": dataset_deleted[1]})
                 else:
                     return HttpResponseBadRequest(content=dataset_deleted[1])
+
+    def patch(self, request, uuid):
+        data_set = self.get_object(uuid)
+
+        # check edit permission for user
+        if self.is_user_authorized(request.user, data_set):
+            serializer = DataSetSerializer(
+               data_set, data=request.data, partial=True
+            )
+            # partial_update(request, *args, **kwargs)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    serializer.data, status=status.HTTP_202_ACCEPTED
+                )
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
+        else:
+            return Response(
+                data_set, status=status.HTTP_401_UNAUTHORIZED
+            )
 
 
 class AnalysesViewSet(APIView):
