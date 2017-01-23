@@ -8,10 +8,12 @@ __Preparation__
 
 To follow the steps of this tutorial, you will need a data set consisting of data files and a metadata file that is referencing your files.
 
-__This tutorial can be completed using sample ChIP-seq data and their associated tab-delimited metadata file (need links).__
+__This tutorial can be completed using the Tutorial Data Set, which consists of sample ChIP-seq data and their associated metadata file (need links). Follow all steps (except creating a metadata file as it already exists) and note the bold text at the end of each section which expands upon some of that section's steps with instructions specific to the Tutorial Data Set.__
 
 ## 1. Creating a Metadata File
-1. Compile all the metadata to be associated with the data set and then organize these metadata into a delimited (e.g. tab) text file. Use https://beta.stemcellcommons.org/static/sample-files/refinery-sample-metadata.tsv as a template and note the required attributes (Sample Name, Data File, Organism, Cell Type, Technology). Additional attributes can be appended as needed.
+1. Compile all the metadata to be associated with the data set and then organize these metadata into a delimited (e.g. tab-delimited) text file. Use https://beta.stemcellcommons.org/static/sample-files/refinery-sample-metadata.tsv as a template and note the required attributes (Sample Name, Data File, Organism, Cell Type, Technology). Additional attributes can be appended as needed.
+
+__Tutorial Data Set: tab-delimited tutorial.tsv metadata file already created__
 
 ## 2. Importing a Data Set 
 1. Go to the Stem Cell Commons Launch Pad at https://beta.stemcellcommons.org
@@ -22,6 +24,8 @@ __This tutorial can be completed using sample ChIP-seq data and their associated
 6. Click Add files … button under Upload Data Files and select data files corresponding to the metadata (note: wait for MD5 calculations, which ensure successful data file uploads, to complete)
 7. Click Start upload to begin uploading all selected data files
 8. After all data files have uploaded, click Upload Data Set
+
+__Tutorial Data Set: upload tab-delimited tutorial.tsv (step 3), no changes needed within Configure Metadata Import (step 5), upload input.fastq and nanog.fastq data files (step 6)__
 
 ## 3. Viewing Data Sets in the Data Set Browser
 1. Return to the Launch Pad and click on the newly uploaded data set (Expand data set preview). The Data Set Browser will display a summary of the data set
