@@ -44,6 +44,8 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
     2. Click Launch Analysis
     3. Modify Analysis Name as needed in pop-up and then click Launch Analysis
     4. Review Analysis Launch Status in pop-up and click View Analysis to monitor analysis progress (this page can also be reached via the Analyses panel of the Launch Pad)
+  - __TF ChIP-seq analysis using MACS2__
+  - __Tutorial Dataset: select human ChIP-seq workflow (i.e. hg19 reference genome)
 4. (Input Dataset)
 5. (Launch Analysis)
 - run analyses:
