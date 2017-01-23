@@ -39,11 +39,11 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 1. From the File Browser, select the files that will serve as input for the desired workflow
 2. Click the Analyze tab above the left-hand panel
 3. Select one of the analysis workflows below using the drop-down menu in the left-hand panel
-  - FastQC
-    a. Select 'Current Selection' in Input Dataset drop-down menu in left-hand panel
-    b. Click Launch Analysis
-    c. Modify Analysis Name as needed in pop-up and then click Launch Analysis
-    d. Review Analysis Launch Status in pop-up and click View Analysis to monitor analysis progress (this page can also be reached via the Analyses panel of the Launch Pad)
+  - __FastQC__
+    1. Select 'Current Selection' in Input Dataset drop-down menu in left-hand panel
+    2. Click Launch Analysis
+    3. Modify Analysis Name as needed in pop-up and then click Launch Analysis
+    4. Review Analysis Launch Status in pop-up and click View Analysis to monitor analysis progress (this page can also be reached via the Analyses panel of the Launch Pad)
 4. (Input Dataset)
 5. (Launch Analysis)
 - run analyses:
