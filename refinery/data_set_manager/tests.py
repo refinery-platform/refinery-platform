@@ -9,7 +9,7 @@ import json
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from django.http import QueryDict
 
 from rest_framework.test import APIRequestFactory
@@ -824,7 +824,7 @@ class UtilitiesTest(TestCase):
                          '%22 OR %22Derived Array Data File%22 OR %22'
                          'Array Data Matrix File%22 OR%22Derived Array '
                          'Data Matrix File%22%29&fq=is_annotation%3A'
-                         'false&start=0&rows=20&q=django_ct%3A'
+                         'false&start=0&rows=10000000&q=django_ct%3A'
                          'data_set_manager.node&wt=json&facet=true&'
                          'facet.limit=-1'.format(
                                  self.valid_uuid))
@@ -1560,8 +1560,6 @@ class NodeApiV2Tests(APITestCase):
         Study.objects.all().delete()
         Assay.objects.all().delete()
         Investigation.objects.all().delete()
-        Group.objects.all().delete()
-        ExtendedGroup.objects.all().delete()
 
     def test_get_request(self):
         self.assertIsNotNone(self.get_response.data[0])

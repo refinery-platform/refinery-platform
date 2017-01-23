@@ -3,17 +3,19 @@
 function MemberEditorCtrl (
   $timeout,
   $uibModalInstance,
+  activeMemberService,
   groupDataService,
-  groupMemberService,
-  member
+  groupMemberService
 ) {
   this.$timeout = $timeout;
   this.$uibModalInstance = $uibModalInstance;
   this.groupDataService = groupDataService;
   this.groupMemberService = groupMemberService;
-  this.member = member;
   this.alertType = 'info';
   this.responseMessage = '';
+  this.member = activeMemberService.activeMember;
+  // Total number of members in the active group
+  this.totalMembers = activeMemberService.totalMembers;
 
   this.close = function () {
     this.$uibModalInstance.dismiss();
@@ -90,8 +92,8 @@ angular
   .controller('MemberEditorCtrl', [
     '$timeout',
     '$uibModalInstance',
+    'activeMemberService',
     'groupDataService',
     'groupMemberService',
-    'member',
     MemberEditorCtrl
   ]);

@@ -11,7 +11,8 @@ $import_dir = "${project_root}/import"
 $solr_custom_synonyms_file =
   "${django_root}/solr/core/conf/custom-synonyms.txt"
 $solr_lib_dir = "${django_root}/solr/lib"
-$django_settings_module = "config.settings.dev"
+$conf_mode = "dev"
+$django_settings_module = "config.settings.${conf_mode}"
 $ui_app_root = "${django_root}/ui"
 $site_name = "Refinery"
 $site_url = "192.168.50.50:8000"
@@ -27,9 +28,11 @@ exec { "activate_user":
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
-  require     => Exec['create_user'],
+  require     => Exec['create_guest'],
 }
 
 # See code in refinery-modules/refinery/...
 include refinery
 include refinery::pg
+include refinery::neo4j
+include refinery::apache2

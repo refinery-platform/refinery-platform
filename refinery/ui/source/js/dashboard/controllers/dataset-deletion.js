@@ -34,15 +34,15 @@ DataSetDeleteCtrl.prototype.cancel = function () {
 };
 
 /**
- * Delete a DataSet
+ * Delete a DataSet using the deletionService and invalidate UiScroll cache
  * @type   {function}
  */
 DataSetDeleteCtrl.prototype.delete = function () {
-  var that = this;
+  var vm = this;
 
-  that.isDeleting = true;
-  that.deletionMessage = null;
-  that.deleteSuccessful = false;
+  vm.isDeleting = true;
+  vm.deletionMessage = null;
+  vm.deleteSuccessful = false;
 
   this
     .deletionService
@@ -52,18 +52,18 @@ DataSetDeleteCtrl.prototype.delete = function () {
     })
     .$promise
     .then(function (response) {
-      that.deletionMessage = response.data;
-      that.isDeleting = false;
-      that.deleteSuccessful = true;
-      that.dataSets.newOrCachedCache(undefined, true);
-      that.dashboardDataSetsReloadService.reload(true);
-      that.analyses.newOrCachedCache(undefined, true);
-      that.analysesReloadService.reload();
+      vm.deletionMessage = response.data;
+      vm.deleteSuccessful = true;
+    }, function (error) {
+      vm.deletionMessage = error.data;
+      vm.$log.error(error.data);
     })
-    .catch(function (error) {
-      that.deleteSuccessful = false;
-      that.deletionMessage = error.data;
-      that.$log.error(error);
+    .finally(function () {
+      vm.isDeleting = false;
+      vm.dataSets.newOrCachedCache(undefined, true);
+      vm.dashboardDataSetsReloadService.reload(true);
+      vm.analyses.newOrCachedCache(undefined, true);
+      vm.analysesReloadService.reload();
     });
 };
 

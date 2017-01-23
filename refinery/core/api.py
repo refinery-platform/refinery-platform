@@ -17,7 +17,6 @@ from django.utils import timezone
 from django.contrib.auth.models import User, Group
 from django.contrib.sites.models import get_current_site
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMessage
 from django.template import loader, Context
 from django.core.cache import cache
@@ -132,7 +131,7 @@ class SharableResourceAPIInterface(object):
     def transform_res_list(self, user, res_list, request, **kwargs):
 
         try:
-            user_uuid = user.userprofile.uuid
+            user_uuid = user.profile.uuid
         except AttributeError:
             logger.error('User\'s UUID not available.')
             user_uuid = None
@@ -486,7 +485,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         if not bundle.data['owner']:
             owner = bundle.obj.get_owner()
             try:
-                bundle.data['owner'] = owner.userprofile.uuid
+                bundle.data['owner'] = owner.profile.uuid
             except:
                 pass
 
@@ -506,10 +505,10 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             owner = analysis.get_owner()
             if owner:
                 try:
-                    analysis_dict['owner'] = owner.userprofile.uuid
+                    analysis_dict['owner'] = owner.profile.uuid
                     user = bundle.request.user
-                    if (hasattr(user, 'userprofile') and
-                       user.userprofile.uuid == analysis_dict['owner']):
+                    if (hasattr(user, 'profile') and
+                       user.profile.uuid == analysis_dict['owner']):
                         analysis_dict['is_owner'] = True
                 except:
                     analysis_dict['owner'] = None
@@ -694,7 +693,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         )
 
         try:
-            user_uuid = request.user.userprofile.uuid
+            user_uuid = request.user.profile.uuid
         except:
             user_uuid = None
 
@@ -728,7 +727,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     def get_investigation(self, request, **kwargs):
         try:
             data_set = DataSet.objects.get(uuid=kwargs['uuid'])
-        except ObjectDoesNotExist:
+        except (DataSet.DoesNotExist,
+                DataSet.MultipleObjectsReturned) as e:
+            logger.error(e)
             return HttpGone()
 
         # Assuming 1 to 1 relationship between DataSet and Investigation
@@ -740,7 +741,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     def get_studies(self, request, **kwargs):
         try:
             data_set = DataSet.objects.get(uuid=kwargs['uuid'])
-        except ObjectDoesNotExist:
+        except (DataSet.DoesNotExist,
+                DataSet.MultipleObjectsReturned) as e:
+            logger.error(e)
             return HttpGone()
 
         return StudyResource().get_list(
@@ -752,7 +755,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         try:
             data_set = DataSet.objects.get(uuid=kwargs['uuid'])
             assays = data_set.get_assays()
-        except ObjectDoesNotExist:
+        except (DataSet.DoesNotExist,
+                DataSet.MultipleObjectsReturned) as e:
+            logger.error(e)
             return HttpGone()
 
         # Unfortunately Tastypie doesn't allow `get_list` to run on a list of
@@ -777,7 +782,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     def get_analyses(self, request, **kwargs):
         try:
             DataSet.objects.get(uuid=kwargs['uuid'])
-        except ObjectDoesNotExist:
+        except (DataSet.DoesNotExist,
+                DataSet.MultipleObjectsReturned) as e:
+            logger.error(e)
             return HttpGone()
 
         return AnalysisResource().get_list(
@@ -788,8 +795,16 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     def get_study_assays(self, request, **kwargs):
         try:
             DataSet.objects.get(uuid=kwargs['uuid'])
+        except (DataSet.DoesNotExist,
+                DataSet.MultipleObjectsReturned) as e:
+            logger.error(e)
+            return HttpGone()
+
+        try:
             Study.objects.get(uuid=kwargs['study_uuid'])
-        except ObjectDoesNotExist:
+        except (Study.DoesNotExist,
+                Study.MultipleObjectsReturned) as e:
+            logger.error(e)
             return HttpGone()
 
         return AssayResource().get_list(
@@ -945,10 +960,10 @@ class AnalysisResource(ModelResource):
         owner = bundle.obj.get_owner()
         if owner:
             try:
-                bundle.data['owner'] = owner.userprofile.uuid
+                bundle.data['owner'] = owner.profile.uuid
                 user = bundle.request.user
-                if (hasattr(user, 'userprofile') and
-                        user.userprofile.uuid == bundle.data['owner']):
+                if (hasattr(user, 'profile') and
+                        user.profile.uuid == bundle.data['owner']):
                     bundle.data['is_owner'] = True
             except:
                 bundle.data['owner'] = None
@@ -1959,7 +1974,7 @@ class ExtendedGroupResource(ModelResource):
         return map(
             lambda u: {
                 'user_id': u.id,
-                'uuid': u.userprofile.uuid,
+                'uuid': u.profile.uuid,
                 'username': u.username,
                 'first_name': u.first_name,
                 'last_name': u.last_name,
@@ -2007,6 +2022,17 @@ class ExtendedGroupResource(ModelResource):
         new_ext_group.user_set.add(user)
         new_ext_group.manager_group.user_set.add(user)
         return bundle
+
+    def obj_delete(self, bundle, **kwargs):
+        user = bundle.request.user
+        ext_group = super(ExtendedGroupResource, self).obj_get(
+            bundle, **kwargs)
+        if not self.user_authorized(user, ext_group):
+            raise ImmediateHttpResponse(HttpForbidden(
+                'Only managers may delete groups.'
+            ))
+        ext_group.delete()
+        return HttpAccepted('Group deleted.')
 
     # Extra things
     def prepend_urls(self):

@@ -49,7 +49,7 @@ function AssayFilesUtilModalCtrl (
   };
 
   vm.isAttributeSelected = function (internalName) {
-    if (selectedFilterService.selectedFieldList.hasOwnProperty(internalName)) {
+    if (selectedFilterService.attributeSelectedFields.hasOwnProperty(internalName)) {
       return true;
     }
     return false;

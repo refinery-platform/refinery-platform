@@ -83,7 +83,7 @@
 		<p>Joined on {{ profile_user.date_joined }} Last login on {{ profile_user.last_login }}</p>
 
 		<a href="#" class="btn btn-primary" id="submit-link">Save</a>
-		<a href="{% url 'user' profile_user.get_profile.uuid %}" class="btn">Cancel</a>
+		<a href="{% url 'user' profile_user.profile.uuid %}" class="btn">Cancel</a>
 
 		</form>
 	</div>

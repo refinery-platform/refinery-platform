@@ -95,7 +95,10 @@
                 </span>
               </td>
               <td style="text-align:center">
-                <a ng-if="collab.activeGroup.can_edit" ng-href="#/{{collab.activeGroup.uuid}}/" ng-click="collab.openMemberEditor(member)">
+                <a
+                  ng-if="collab.activeGroup.can_edit"
+                  ng-href="#/{{collab.activeGroup.uuid}}/"
+                  ng-click="collab.openMemberEditor(member, collab.activeGroup.member_list.length )">
                   <i class="fa fa-cog"></i>
                 </a>
               </td>

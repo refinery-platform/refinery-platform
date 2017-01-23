@@ -122,12 +122,6 @@
 {% block content %}
   <!-- tab headers -->
 
-  <span ng-controller="AnalysisMonitorCtrl">
-    <div ng-if="checkAnalysesViewFlag()">
-      <span rp-analysis-monitor-alert-msg></span>
-    </div>
-  </span>
-
 <div ng-controller="DataSetNavCtrl" ng-cloak>
   <div ng-controller="DataSetUiModeCtrl">
 
@@ -608,7 +602,7 @@
             <p>
               <span class="fa fa-user"></span>&nbsp;
               {% if data_set.get_owner %}
-                <a href="{% url "user" data_set.get_owner.get_profile.uuid %}">
+                <a href="{% url "user" data_set.get_owner.profile.uuid %}">
                   {{ data_set.get_owner_full_name }}
                 </a>
               {% else %}

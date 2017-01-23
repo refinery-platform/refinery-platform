@@ -59,23 +59,27 @@
           </h4>
         </div>
         <div class="col-xs-2">
-          <h4>
-            <div class="checkbox" id="util-{{attributeObj.solr_field}}-expose">
-            <label>
-              <input
-                type="checkbox"
-                name="utilsCheckboxes"
-                ng-model= "attributeObj.is_exposed"
-                ng-change="AFUMCtrl.updateAssayAttributes(attributeObj)"
-                value="{{ attributeObj.is_exposed }}"
-                ng-disabled="AFUMCtrl.isAttributeSelected(attributeObj.solr_field)">
-            </label>
+          <h4 ng-if="attributeObj.display_name != 'Analysis'">
+          <div
+            class="checkbox"
+            id="util-{{attributeObj.solr_field}}-expose">
+              <label>
+                <input
+                  type="checkbox"
+                  name="utilsCheckboxes"
+                  ng-model= "attributeObj.is_exposed"
+                  ng-change="AFUMCtrl.updateAssayAttributes(attributeObj)"
+                  value="{{ attributeObj.is_exposed }}"
+                  ng-disabled="AFUMCtrl.isAttributeSelected(attributeObj.solr_field)">
+              </label>
             </div>
           </h4>
           </div>
-          <div class="col-xs-2" id="util-{{attributeObj.solr_field}}-facet">
-            <h4>
-              <div class="check">
+          <div class="col-xs-2">
+            <h4 ng-if="attributeObj.display_name != 'Analysis'">
+              <div
+                class="checkbox"
+                id="util-{{attributeObj.solr_field}}-facet">
                 <label>
                   <input
                     type="checkbox"

@@ -3,9 +3,9 @@
     <h3>Optional: Upload Data Files</h3>
   </div>
   <form id="fileupload" method="POST" enctype="multipart/form-data"
-        ng-controller="RefineryFileUploadCtrl"
-        data-file-upload="options"
-        ng-class="{'fileupload-processing': processing() || loadingFiles}">
+        ng-controller="RefineryFileUploadCtrl as FileCtrl"
+        data-file-upload="FileCtrl.options"
+        ng-class="{'fileupload-processing': processing()}">
 
     <!-- Redirect browsers with JavaScript disabled to the origin page -->
     <noscript>
@@ -31,30 +31,19 @@
         <button
           class="active-group btn btn-default start"
           ng-click="submit()"
-          ng-disabled="numUnfinishedUploads() === 0 || processing() || loadingFiles">
+          ng-disabled="FileCtrl.numUnfinishedUploads() === 0 ||
+                       processing() ||
+                      FileCtrl.overallFileStatus != 'queuing'">
           <i class="fa fa-upload"></i>
           <span>Start upload</span>
         </button>
         <button
           class="btn btn-warning cancel"
           ng-click="cancel()"
-          ng-disabled="numUnfinishedUploads() === 0">
+          ng-disabled="FileCtrl.numUnfinishedUploads() === 0">
           <i class="fa fa-ban"></i>
           <span>Cancel upload</span>
         </button>
-        <!-- The global file processing state -->
-        <!-- <span class="fileupload-process"></span> -->
-      </div>
-      <div class="col-lg-4">
-        <div class="v-center" ng-if="fileStatus !='none' && (processing() ||
-        loadingFiles)">
-          <span>Calculating MD5</span>
-          <button class="icon-only" ng-click="openHelpMd5()">
-            <i class="fa fa-question-circle" aria-hidden="true"></i>
-          </button>
-          <span>:</span>
-          <div class="refinery-spinner refinery-spinner-inline"></div>
-        </div>
       </div>
 
       <!-- Removed global progress state, issue #1300 -->
@@ -98,15 +87,18 @@
             <button
               class="active-group btn btn-default start"
               ng-click="file.$submit()"
-              ng-hide="!file.$submit || options.autoUpload"
-              ng-disabled="file.$state() == 'pending' || file.$state() == 'rejected' || loadingFiles">
+              ng-hide="!file.$submit || FileCtrl.options.autoUpload"
+              ng-disabled="file.$state() == 'pending' ||
+                 file.$state() == 'rejected' ||
+                 FileCtrl.fileCache[file.name].status != 'queued'">
               <i class="fa fa-upload"></i>
               <span>Start</span>
             </button>
             <button
               class="btn btn-warning cancel"
               ng-click="file.$cancel()"
-              ng-hide="!file.$cancel">
+              ng-hide="!file.$cancel"
+              ng-disabled="FileCtrl.fileCache[file.name].status == 'waitingOnMD5'">
               <i class="fa fa-ban"></i>
               <span>Cancel</span>
             </button>
