@@ -6,7 +6,9 @@ In this tutorial you will learn how to load data into Refinery, how to analyze i
 
 __Preparation__
 
-To follow the steps of this tutorial, you will need a data set consisting of data files and a metadata file that is referencing your files. This tutorial can be completed using sample ChIP-seq data and their associated tab-delimited metadata file (need link). 
+To follow the steps of this tutorial, you will need a data set consisting of data files and a metadata file that is referencing your files.
+
+__This tutorial can be completed using sample ChIP-seq data and their associated tab-delimited metadata file (need links).__
 
 ## 1. Creating a Metadata File
 1. Compile all the metadata to be associated with the data set and then organize these metadata into a delimited (e.g. tab) text file. Use https://beta.stemcellcommons.org/static/sample-files/refinery-sample-metadata.tsv as a template and note the required attributes (Sample Name, Data File, Organism, Cell Type, Technology). Additional attributes can be appended as needed.
