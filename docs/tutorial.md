@@ -38,22 +38,19 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 ## 5. Launching Analyses
 1. From the File Browser, select the files that will serve as input for the desired workflow
 2. Click the Analyze tab above the left-hand panel
-3. Select one of the analysis workflows below using the drop-down menu in the left-hand panel
+3. Select one of the analysis workflows below using the drop-down menu in the left-hand panel, follow their workflow-specific steps below, and then continue with step 4
   - __FastQC__
     1. Select 'Current Selection' in Input Dataset drop-down menu in left-hand panel
-    2. Click Launch Analysis
-    3. Modify Analysis Name as needed in pop-up and then click Launch Analysis
-    4. Review Analysis Launch Status in pop-up and click View Analysis to monitor analysis progress (this page can also be reached via the Analyses panel of the Launch Pad)
   - __TF ChIP-seq analysis using MACS2__
     - __Tutorial Dataset: select human ChIP-seq workflow (i.e. hg19 reference genome)__
-4. (Input Dataset)
-5. (Launch Analysis)
-- run analyses:
-  - FASTQC
-  - peak calling with MACS2
+    1. In the Inputs (1-1 File Mapping) section, click New... to create a new file mapping
+    2. Provide a name for the new file mapping in the pop-up
+    3. Drag the leftmost icons (three horizontal bars) of the input control and experimental files onto the input_file and exp_file dropzones, respectively, to create the new file mapping
+    4. Review the attribute comparison between input_file and exp_file to confirm distinct and shared attributes are correct
+4. Click Launch Analysis
+5. Modify Analysis Name as needed in pop-up and then click Launch Analysis
+6. Review Analysis Launch Status in pop-up and click View Analysis to monitor analysis progress (this page can also be reached via the Analyses panel of the Launch Pad)
 - monitor analyses
-
-> This is a comment providing background on xyz.
 
 ## 6. Viewing Analysis Results
 - view FASTQC results and download FASTQC results
