@@ -37,12 +37,14 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 
 ## 5. Launching Analyses
 1. From the File Browser, select the files that will serve as input for the desired workflow
+  - __Tutorial Data Set: select both input.fastq and nanog.fastq__
 2. Click the Analyze tab above the left-hand panel
 3. Select one of the analysis workflows below using the drop-down menu in the left-hand panel, follow their workflow-specific steps below, and then continue with step 4
+  - __Tutorial Data Set: run the FastQC workflow first followed by the TF ChIP-seq analysis using MACS2: hg19 workflow__
+  
   - __FastQC__
     1. Select 'Current Selection' in Input Dataset drop-down menu in left-hand panel
   - __TF ChIP-seq analysis using MACS2__
-    - __Tutorial Dataset: select human ChIP-seq workflow (i.e. hg19 reference genome)__
     1. In the Inputs (1-1 File Mapping) section, click New... to create a new file mapping
     2. Provide a name for the new file mapping in the pop-up
     3. Drag the leftmost icons (three horizontal bars) of the input control and experimental files onto the input_file and exp_file dropzones, respectively, to create the new file mapping
