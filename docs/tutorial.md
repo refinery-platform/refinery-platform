@@ -6,48 +6,77 @@ In this tutorial you will learn how to load data into Refinery, how to analyze i
 
 __Preparation__
 
-To follow the steps of this tutorial, you will need a data set consisting of data files and a metadata file that is referencing your files. 
+To follow the steps of this tutorial, you will need a data set consisting of data files and a metadata file that is referencing your files.
 
-## 1. Importing a Data Set 
-  1. Go to https://beta.stemcellcommons.org
-  2. Click the Upload button from the Data Sets panel of the Launch Pad
-  3. Create and upload data set metadata
-    - If uploading ISA-Tab metadata (recommended), choose a local .zip archive or provide the URL for a remote .zip archive
-    - If uploading a local delimited text file containing metadata (see refinery-sample-metadata.tsv example for guidance), first specify        which delimiter was used and then select the file
-  4. Check metadata Preview for accuracy (note: only first 5 samples are displayed)
-  5. Review Configure Metadata Import and make changes as needed
-  6. Click Add files … button under Upload Data Files and select data files corresponding to the metadata (note: wait for MD5                  calculations, which ensure successful data file uploads, to complete)
-  7. Click Start upload to begin uploading all selected data files
-  8. After all data files have uploaded, click Upload Data Set
+__This tutorial can be completed using the Tutorial Data Set, which consists of sample ChIP-seq data and their associated metadata file (need links). Follow all steps (except creating a metadata file as it already exists) and note the bullet points after some steps with expanded instructions specific to the Tutorial Data Set.__
 
-## 2. Viewing Data Sets in the Data Set Browser
+## 1. Creating a Metadata File
+1. Compile all the metadata to be associated with the data set and then organize these metadata into a delimited (e.g. tab-delimited) text file. Use https://beta.stemcellcommons.org/static/sample-files/refinery-sample-metadata.tsv as a template and note the required attributes (Sample Name, Data File, Organism, Cell Type, Technology). Additional attributes can be appended as needed.
+  - __Tutorial Data Set: tab-delimited tutorial.tsv metadata file already created__
 
-## 3. Exploring Contents of the Data Set in the File Browser
-- filter data set based on facets and sort table
+## 2. Importing a Data Set 
+1. Go to the Stem Cell Commons Launch Pad at https://beta.stemcellcommons.org
+2. Click the Upload button from the Data Sets panel of the Launch Pad
+3. First choose delimiter used in the metadata file and then upload the file
+  - __Tutorial Data Set: upload tab-delimited tutorial.tsv__
+4. Check metadata Preview for accuracy (note: only first 5 samples are displayed)
+5. Review Configure Metadata Import and make changes as needed
+  - __Tutorial Data Set: no changes needed__
+6. Click Add files … button under Upload Data Files and select data files corresponding to the metadata (note: wait for MD5 calculations, which ensure successful data file uploads, to complete)
+  - __Tutorial Data Set: upload input.fastq and nanog.fastq data files__
+7. Click Start upload to begin uploading all selected data files
+8. After all data files have uploaded, click Upload Data Set
 
-## 4. Launching Analyses
+## 3. Viewing Data Sets in the Data Set Browser
+1. Return to the Launch Pad and click on the newly uploaded data set (Expand data set preview). The Data Set Browser will display a summary of the data set
 
-- select files and:
-- run analyses:
-  - FASTQC
-  - peak calling with MACS2
-- monitor analyses
+## 4. Exploring Contents of the Data Set in the File Browser
+1. Click View content in File Browser to view the individual files belonging to the data set:
+  - Files can be filtered based on attributes using the Attribute Filter in the left-hand panel
+  - Files can also be sorted according to attributes (both ascending and descending) by clicking the attribute names (i.e. column headers)
 
-> This is a comment providing background on xyz.
+## 5. Launching Analyses
+1. From the File Browser, select the files that will serve as input for the desired workflow
+  - __Tutorial Data Set: follow the Launching Analyses section twice, first launching the FastQC workflow and afterwards the TF ChIP-seq analysis using MACS2: hg19 workflow (details below) -- in both instances, select both the input.fastq and nanog.fastq files during this step__
+2. Click the Analyze tab above the left-hand panel
+3. Select one of the analysis workflows below using the drop-down menu in the left-hand panel, follow their workflow-specific steps below, and then continue with step 4
+  - __FastQC__
+    1. Select 'Current Selection' in the Input Dataset drop-down menu in the left-hand panel
+  - __TF ChIP-seq analysis using MACS2__
+    1. In the Inputs (1-1 File Mapping) section, click New... to create a new file mapping
+    2. Provide a name for the new file mapping in the pop-up
+    3. Drag the leftmost icons (three horizontal bars) of the input control and experimental files onto the input_file and exp_file dropzones, respectively, to create the new file mapping
+      - __Tutorial Data Set: map input.fastq to the input_file and nanog.fastq to the exp_file__
+    4. Review the attribute comparison between input_file and exp_file to confirm distinct and shared attributes are correct
+4. Click Launch Analysis
+5. Modify Analysis Name as needed in pop-up and then click Launch Analysis
+6. Review Analysis Launch Status in pop-up and click View Analysis to monitor analysis progress (this analysis monitoring page can also be reached by clicking the analysis name within the Analyses panel of the Launch Pad)
 
-## 5. Viewing Analysis Results
-- view FASTQC results and download FASTQC results
-- launch web-based IGV on peak calling output
+## 6. Viewing Analysis Results
+1. Upon successful completion of an analysis, click its name from the Analyses panel of the Launch Pad which will display all analyses associated with that data set
+2. Click the desired analysis name again
+3. Follow the steps below corresponding to which analysis workflow was run:
+  - __FastQC__
+    1. To view FastQC results, click the bar graph icon associated with the 1_fastqc_results file
+    2. Use the drop-down menu to view the results of the various FastQC analysis modules
+  - __TF ChIP-seq analysis using MACS2__
+    1. To visualize peak calling results, select files to be displayed as tracks in IGV (e.g. 1_MACS2_bigwig and/or 1_MACS2_bed files)
+    2. Click the Visualize tab above the left-hand panel
+    3. Select 'Current Selection' in the 'Select a file set' drop-down menu in the left-hand panel
+    4. Choose the appropriate species in the 'Select a species' drop-down menu in the left-hand panel
+      - __Tutorial Data Set: select 'H. Sapiens (hg19)'__
+    5. Click 'Web-based IGV' to launch a visualization of the peak calling results
+4. To download any results file, click the down-pointing arrow icon associated with that file
 
-## 6. Reviewing Data Provenance
-- view data set in provenance graph
-  - point out new nodes created by the analyses: nodes representing FASTQC results and nodes representing output of the MACS2 workflow
+## 7. Reviewing Data Provenance
+1. Display a data set in the File Browser (see sections 3 and 4)
+2. Select 'Provenance' in the 'Display' drop-down menu located on the right-hand side of the page
+3. Review the displayed nodes to track the analysis history of the data set -- each new analysis will add a new node to the provenance graph
 
-## 7. Collaborating with other Users
+## 8. Collaborating with other Users
 - create group for collaboration
 - invite other users to group
 - share data set with with group
 
-## 8. Deleting Analyses and Data Sets
-- delete MACS2 analysis
-- delete data set
+## 9. Deleting Data Sets and Analyses
+1. To delete a data set or analysis, click the trash can icon in the Data Sets or Analyses panel, respectively, on the Launch Pad
