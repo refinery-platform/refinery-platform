@@ -15,8 +15,8 @@ from celery.result import AsyncResult
 import requests
 from requests.exceptions import HTTPError
 
+from .genomes import map_species_id_to_default_genome_build
 import data_set_manager
-from data_set_manager.genomes import map_species_id_to_default_genome_build
 import core
 from file_store.models import FileStoreItem
 
