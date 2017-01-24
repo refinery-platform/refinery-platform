@@ -13,6 +13,13 @@ function AboutDetailsCtrl (
   vm.assays = dataSetAboutFactory.assays;
   vm.dataSetUuid = $window.dataSetUuid;
   vm.fileStoreItem = dataSetAboutFactory.fileStoreItem;
+  vm.isCollapsed = {
+    name: true,
+    summary: true,
+    description: true,
+    slug: true
+  };
+  vm.updatedField = {};
 
 
   vm.refreshDataSetStats = function () {
@@ -62,6 +69,17 @@ function AboutDetailsCtrl (
       }, function (error) {
         $log.error(error);
       });
+  };
+
+  vm.updateDataSet = function (fieldName, formInput) {
+    var params = { uuid: vm.dataSetUuid };
+    params[fieldName] = formInput;
+    dataSetAboutFactory.updateDataSet(params).then(function () {
+      vm.dataSet[fieldName] = formInput;
+      vm.isCollapsed[fieldName] = true;
+    }, function (error) {
+      console.log(error);
+    });
   };
 
   vm.refreshDataSetStats();
