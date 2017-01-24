@@ -1,288 +1,280 @@
-<div class="container-fluid">
-
-  <div class="refinery-header">
-    <div class="row refinery-header-left">
-      <h3>{{ ADCtrl.dataSet.name }}</h3>
-      <a
-        class="btn btn-xs btn-icon"
-        ng-click="ADCtrl.isCollapsed.name = !ADCtrl.isCollapsed.name"
-        data-target=" #dataSetName">
-         <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-      </a>
-    </div>
-    <div
-      id="dataSetName"
-      uib-collapse="ADCtrl.isCollapsed.name">
-      <div class="row vertical-align">
-        <form
-          ng-submit="ADCtrl.updateDataSet('name', ADCtrl.updatedField.name)"
-          name="dataSetNameForm"
-          class="navbar-form text-align-center float-left">
-        <input
-          autofocus
-          type="text"
-          name="dataSetName"
-          class="form-control"
-          placeholder="update data set name"
-          ng-model="ADCtrl.updatedField.name"
-          ng-minlength="3" required>
-        </form>
-
-        <button
-          type="button"
-          class="btn btn-default btn-xs"
-          ng-click="ADCtrl.isCollapsed.name = !ADCtrl.isCollapsed.name">
-          Cancel
-        </button>
-        <button
-          type="submit"
-          class="btn btn-xs btn-primary"
-          ng-click="ADCtrl.updateDataSet('name', ADCtrl.updatedField.name)"
-          ng-disabled="!dataSetNameForm.$valid">
-          Save
-        </button>
-        <span
-          class='p-l-1-2 text-warning'
-          ng-show="dataSetNameForm.dataSetName.$error.minlength ||
-          dataSetNameForm.dataSetName.$error.required">
-          <i class="fa fa-warning" aria-hidden="true"></i>
-          Names must be 3 characters long.
-        </span>
-      </div>
-    </div>
-  </div>
-
-  <div class="row refinery-subheader">
-    <h4>Summary</h4>
+<div class="refinery-header">
+  <div class="refinery-header-left">
+    <h3>{{ ADCtrl.dataSet.name }}</h3>
     <a
       class="btn btn-xs btn-icon"
-      ng-click="ADCtrl.isCollapsed.summary = !ADCtrl.isCollapsed.summary"
-      data-target=" #dataSetSummary">
+      ng-click="ADCtrl.isCollapsed.name = !ADCtrl.isCollapsed.name"
+      data-target=" #dataSetName">
        <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
     </a>
   </div>
-  <div class="row">
-    <div ng-if="ADCtrl.dataSet.summary.length > 0">
-      {{ ADCtrl.dataSet.summary }}
-    </div>
-    <div ng-if="!ADCtrl.dataSet.summary" class="emphasized">
-       None provided.
-    </div>
-  </div>
-  <div id="dataSetSummary" uib-collapse="ADCtrl.isCollapsed.summary">
-    <div class="row vertical-align">
+  <div
+    id="dataSetName"
+    uib-collapse="ADCtrl.isCollapsed.name">
+    <div class="vertical-align">
       <form
-        ng-submit="ADCtrl.updateDataSet('summary', ADCtrl.updatedField.summary)"
-        name="dataSetSummaryForm"
+        ng-submit="ADCtrl.updateDataSet('name', ADCtrl.updatedField.name)"
+        name="dataSetNameForm"
         class="navbar-form text-align-center float-left">
-        <textarea
-          autofocus
-          name="dataSetSummary"
-          class="form-control"
-          placeholder="update data set summary"
-          ng-model="ADCtrl.updatedField.summary"
-          ng-minlength="3" required>
-        </textarea>
+      <input
+        autofocus
+        type="text"
+        name="dataSetName"
+        class="form-control"
+        placeholder="update data set name"
+        ng-model="ADCtrl.updatedField.name"
+        ng-minlength="3" required>
       </form>
 
       <button
         type="button"
         class="btn btn-default btn-xs"
-        ng-click="ADCtrl.isCollapsed.summary = !ADCtrl.isCollapsed.summary">
+        ng-click="ADCtrl.isCollapsed.name = !ADCtrl.isCollapsed.name">
         Cancel
       </button>
       <button
         type="submit"
         class="btn btn-xs btn-primary"
-        ng-click="ADCtrl.updateDataSet('summary', ADCtrl.updatedField.summary)"
-        ng-disabled="!dataSetSummaryForm.$valid">
+        ng-click="ADCtrl.updateDataSet('name', ADCtrl.updatedField.name)"
+        ng-disabled="!dataSetNameForm.$valid">
         Save
       </button>
       <span
         class='p-l-1-2 text-warning'
-        ng-show="dataSetSummaryForm.dataSetSummary.$error.minlength ||
-        dataSetSummaryForm.dataSetSummary.$error.required">
+        ng-show="dataSetNameForm.dataSetName.$error.minlength ||
+        dataSetNameForm.dataSetName.$error.required">
         <i class="fa fa-warning" aria-hidden="true"></i>
-        Summary must be 3 characters long.
+        Names must be 3 characters long.
       </span>
     </div>
   </div>
+</div>
 
-    <div class="row refinery-subheader">
-      <h4>Description</h4>
-      <span>
-       <a
+<div class="refinery-subheader">
+  <h4>Summary</h4>
+  <a
+    class="btn btn-xs btn-icon"
+    ng-click="ADCtrl.isCollapsed.summary = !ADCtrl.isCollapsed.summary"
+    data-target=" #dataSetSummary">
+     <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+  </a>
+</div>
+<div ng-if="ADCtrl.dataSet.summary.length > 0">
+    {{ ADCtrl.dataSet.summary }}
+  </div>
+<div ng-if="!ADCtrl.dataSet.summary" class="emphasized">
+     None provided.
+  </div>
+<div id="dataSetSummary" uib-collapse="ADCtrl.isCollapsed.summary">
+  <div class="vertical-align">
+    <form
+      ng-submit="ADCtrl.updateDataSet('summary', ADCtrl.updatedField.summary)"
+      name="dataSetSummaryForm"
+      class="navbar-form text-align-center float-left">
+      <textarea
+        autofocus
+        name="dataSetSummary"
+        class="form-control"
+        placeholder="update data set summary"
+        ng-model="ADCtrl.updatedField.summary"
+        ng-minlength="3" required>
+      </textarea>
+    </form>
+
+    <button
+      type="button"
+      class="btn btn-default btn-xs"
+      ng-click="ADCtrl.isCollapsed.summary = !ADCtrl.isCollapsed.summary">
+      Cancel
+    </button>
+    <button
+      type="submit"
+      class="btn btn-xs btn-primary"
+      ng-click="ADCtrl.updateDataSet('summary', ADCtrl.updatedField.summary)"
+      ng-disabled="!dataSetSummaryForm.$valid">
+      Save
+    </button>
+    <span
+      class='p-l-1-2 text-warning'
+      ng-show="dataSetSummaryForm.dataSetSummary.$error.minlength ||
+      dataSetSummaryForm.dataSetSummary.$error.required">
+      <i class="fa fa-warning" aria-hidden="true"></i>
+      Summary must be 3 characters long.
+    </span>
+  </div>
+</div>
+
+  <div class="refinery-subheader">
+    <h4>Description</h4>
+    <span>
+     <a
+      class="btn btn-xs btn-icon"
+      ng-click="ADCtrl.isCollapsed.description = !ADCtrl.isCollapsed.description"
+      data-target=" #dataSetDescription">
+       <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+    </a>
+    </span>
+  </div>
+  <div ng-if="ADCtrl.dataSet.description">
+    {{ ADCtrl.dataSet.description }}
+  </div>
+  <div ng-if="!ADCtrl.dataSet.description" class="emphasized">
+     None provided.
+  </div>
+
+<div id="dataSetDescription" uib-collapse="ADCtrl.isCollapsed.description">
+  <div class="vertical-align">
+    <form
+      ng-submit="ADCtrl.updateDataSet('description', ADCtrl.updatedField.description)"
+      name="dataSetDescriptionForm"
+      class="navbar-form text-align-center float-left">
+      <textarea
+        autofocus
+        name="dataSetDescription"
+        class="form-control"
+        placeholder="update data set description"
+        ng-model="ADCtrl.updatedField.description"
+        ng-minlength="3" required>
+      </textarea>
+    </form>
+
+    <button
+      type="button"
+      class="btn btn-default btn-xs"
+      ng-click="ADCtrl.isCollapsed.description = !ADCtrl.isCollapsed.description">
+      Cancel
+    </button>
+    <button
+      type="submit"
+      class="btn btn-xs btn-primary"
+      ng-click="ADCtrl.updateDataSet('description', ADCtrl.updatedField.description)"
+      ng-disabled="!dataSetDescriptionForm.$valid">
+      Save
+    </button>
+    <span
+      class='p-l-1-2 text-warning'
+      ng-show="dataSetDescriptionForm.dataSetDescription.$error.minlength ||
+      dataSetDescriptioForm.dataSetDescription.$error.required">
+      <i class="fa fa-warning" aria-hidden="true"></i>
+      Summary must be 3 characters long.
+    </span>
+  </div>
+</div>
+
+  <div class="refinery-subheader">
+    <h4>Shortcut Name</h4>
+    <span>
+      <a
         class="btn btn-xs btn-icon"
-        ng-click="ADCtrl.isCollapsed.description = !ADCtrl.isCollapsed.description"
-        data-target=" #dataSetDescription">
+        ng-click="isCollapsed.slug = !isCollapsed.slug"
+        data-target=" #dataSetSlug">
          <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
       </a>
-      </span>
-    </div>
-    <div class="row">
-       <div ng-if="ADCtrl.dataSet.description">
-        {{ ADCtrl.dataSet.description }}
-      </div>
-      <div ng-if="!ADCtrl.dataSet.description" class="emphasized">
-         None provided.
-      </div>
-    </div>
-
-  <div id="dataSetDescription" uib-collapse="ADCtrl.isCollapsed.description">
-    <div class="row vertical-align">
-      <form
-        ng-submit="ADCtrl.updateDataSet('description', ADCtrl.updatedField.description)"
-        name="dataSetDescriptionForm"
-        class="navbar-form text-align-center float-left">
-        <textarea
-          autofocus
-          name="dataSetDescription"
-          class="form-control"
-          placeholder="update data set description"
-          ng-model="ADCtrl.updatedField.description"
-          ng-minlength="3" required>
-        </textarea>
-      </form>
-
-      <button
-        type="button"
-        class="btn btn-default btn-xs"
-        ng-click="ADCtrl.isCollapsed.description = !ADCtrl.isCollapsed.description">
-        Cancel
-      </button>
-      <button
-        type="submit"
-        class="btn btn-xs btn-primary"
-        ng-click="ADCtrl.updateDataSet('description', ADCtrl.updatedField.description)"
-        ng-disabled="!dataSetDescriptionForm.$valid">
-        Save
-      </button>
-      <span
-        class='p-l-1-2 text-warning'
-        ng-show="dataSetDescriptionForm.dataSetDescription.$error.minlength ||
-        dataSetDescriptioForm.dataSetDescription.$error.required">
-        <i class="fa fa-warning" aria-hidden="true"></i>
-        Summary must be 3 characters long.
-      </span>
-    </div>
-  </div>
-
-    <div class="refinery-subheader">
-      <h4>Shortcut Name</h4>
-      <span>
-        <a
-          class="btn btn-xs btn-icon"
-          ng-click="isCollapsed.slug = !isCollapsed.slug"
-          data-target=" #dataSetSlug">
-           <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-        </a>
-      </span>
-      <div id="dataSetSlug" uib-collapse="isCollapsed.slug">
-        <rp-data-set-edit-form></rp-data-set-edit-form>
-      </div>
-    </div>
-    <p>
-      <div ng-if="ADCtrl.dataSet.slug">
-        {{ ADCtrl.dataSet.slug }}
-      </div>
-      <div ng-if="!ADCtrl.dataSet.slug" class="emphasized">
-         None provided.
-      </div>
-    </p>
-  </div>
-
-  <div>
-    <div class="refinery-header">
-      <span class="refinery-header-left">
-          <h3>Studies</h3>
-      </span>
-    </div>
-
-    <div ng-repeat="study in ADCtrl.studies track by $index">
-      <span ng-if="study.identifier">
-        <strong>{{study.identifier}}</strong>
-      </span>
-      <span ng-if="study.title">
-        : {{study.title}}
-      </span>
-
-      <ul ng-repeat="assay in ADCtrl.assays[study.uuid] track by $index">
-        Assay -
-        <span ng-if="assay.measurement">
-          Measurement: {{ assay.measurement }},
-        </span>
-        <span ng-if="assay.measurement_accession">
-          Measurement Accession: {{ assay.measurement_accession }}
-        </span>
-        <span ng-if="assay.measurement_source">
-          Measurement Source: {{ assay.measurement_source }},
-        </span>
-        <span ng-if="assay.technology">
-          Technology: {{ assay.technology }},
-        </span>
-        <span ng-if="assay.technology_accession">
-          Technology Accession: {{ assay.technology_accession }},
-        </span>
-        <span ng-if="assay.technology_source">
-          Technology Source: {{ assay.technology_source }},
-        </span>
-        <span ng-if="assay.platform">
-          Platform: {{ assay.platform }},
-        </span>
-        <span ng-if="assay.file_name">
-          File name: {{ assay.file_name }}
-        </span>
-      </ul>
-    </div>
-
-    <div class="refinery-header">
-      <span class="refinery-header-left">
-        <h3>Files</h3>
-      </span>
-    </div>
-
-    <span class="refinery-subheader">
-      <h3>Meta Data</h3>
     </span>
-  <div ng-if="ADCtrl.dataSet.isa_archive">
+    <div id="dataSetSlug" uib-collapse="isCollapsed.slug">
+      <rp-data-set-edit-form></rp-data-set-edit-form>
+    </div>
+  </div>
+  <p>
+    <div ng-if="ADCtrl.dataSet.slug">
+      {{ ADCtrl.dataSet.slug }}
+    </div>
+    <div ng-if="!ADCtrl.dataSet.slug" class="emphasized">
+       None provided.
+    </div>
+  </p>
+
+<div>
+  <div class="refinery-header">
+    <span class="refinery-header-left">
+        <h3>Studies</h3>
+    </span>
+  </div>
+
+  <div ng-repeat="study in ADCtrl.studies track by $index">
+    <span ng-if="study.identifier">
+      <strong>{{study.identifier}}</strong>
+    </span>
+    <span ng-if="study.title">
+      : {{study.title}}
+    </span>
+
+    <ul ng-repeat="assay in ADCtrl.assays[study.uuid] track by $index">
+      Assay -
+      <span ng-if="assay.measurement">
+        Measurement: {{ assay.measurement }},
+      </span>
+      <span ng-if="assay.measurement_accession">
+        Measurement Accession: {{ assay.measurement_accession }}
+      </span>
+      <span ng-if="assay.measurement_source">
+        Measurement Source: {{ assay.measurement_source }},
+      </span>
+      <span ng-if="assay.technology">
+        Technology: {{ assay.technology }},
+      </span>
+      <span ng-if="assay.technology_accession">
+        Technology Accession: {{ assay.technology_accession }},
+      </span>
+      <span ng-if="assay.technology_source">
+        Technology Source: {{ assay.technology_source }},
+      </span>
+      <span ng-if="assay.platform">
+        Platform: {{ assay.platform }},
+      </span>
+      <span ng-if="assay.file_name">
+        File name: {{ assay.file_name }}
+      </span>
+    </ul>
+  </div>
+
+  <div class="refinery-header">
+    <span class="refinery-header-left">
+      <h3>Files</h3>
+    </span>
+  </div>
+
+  <span class="refinery-subheader">
+    <h3>Meta Data</h3>
+  </span>
+<div ng-if="ADCtrl.dataSet.isa_archive">
+  <p>
+     <a href="{{ADCtrl.fileStoreItem.datafile && ADCtrl.fileStoreItem.datafile}}">
+      {{ADCtrl.fileStoreItem.datafile | isaArchiveName}}
+    </a>
+      - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
+  </p>
+</div>
+  <div ng-if="ADCtrl.dataSet.pre_isa_archive && ADCtrl.fileStoreItem.datafile">
     <p>
-       <a href="{{ADCtrl.fileStoreItem.datafile && ADCtrl.fileStoreItem.datafile}}">
-        {{ADCtrl.fileStoreItem.datafile | isaArchiveName}}
+      <a href="{{ADCtrl.fileStoreItem.datafile}}">
+      {{ADCtrl.fileStoreItem.datafile | isaArchiveName}}
       </a>
-        - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
+      - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
     </p>
   </div>
-    <div ng-if="ADCtrl.dataSet.pre_isa_archive && ADCtrl.fileStoreItem.datafile">
-      <p>
-        <a href="{{ADCtrl.fileStoreItem.datafile}}">
-        {{ADCtrl.fileStoreItem.datafile | isaArchiveName}}
-        </a>
-        - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
-      </p>
-    </div>
-    <div ng-if="!(ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive)">
-    <p class="emphasized">Not available.</p>
-    </div>
+  <div ng-if="!(ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive)">
+  <p class="emphasized">Not available.</p>
+  </div>
 
-    <span class="refinery-subheader">
-      <h3>Data Files</h3>
+  <span class="refinery-subheader">
+    <h3>Data Files</h3>
+  </span>
+  <p>
+    {{ ADCtrl.dataSet.file_count }} files
+    <div ng-if="ADCtrl.dataSet.file_size > 0">
+     - {{ ADCtrl.dataSet.file_size | fileSizeFormat }}
+    </div>
+  </p>
+
+  <div class="refinery-header">
+    <span class="refinery-header-left">
+      <h3>History</h3>
     </span>
-    <p>
-      {{ ADCtrl.dataSet.file_count }} files
-      <div ng-if="ADCtrl.dataSet.file_size > 0">
-       - {{ ADCtrl.dataSet.file_size | fileSizeFormat }}
-      </div>
-    </p>
-
-    <div class="refinery-header">
-      <span class="refinery-header-left">
-        <h3>History</h3>
-      </span>
-    </div>
-    <p>
-      Current version <span class="emphasized">{{ ADCtrl.dataSet.version }}</span>.
-      Data set created <span class="emphasized">{{ ADCtrl.dataSet.creation_date }}</span>.
-      Last modified <span class="emphasized">{{ ADCtrl.dataSet.modification_date }}</span>.
-    </p>
   </div>
+  <p>
+    Current version <span class="emphasized">{{ ADCtrl.dataSet.version }}</span>.
+    Data set created <span class="emphasized">{{ ADCtrl.dataSet.creation_date }}</span>.
+    Last modified <span class="emphasized">{{ ADCtrl.dataSet.modification_date }}</span>.
+  </p>
 </div>
