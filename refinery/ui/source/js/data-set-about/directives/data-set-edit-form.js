@@ -1,20 +1,20 @@
 'use strict';
 
-function rpDataSetEditForm () {
+function rpDataSetEditForm (dataSetAboutFactory, $window) {
   return {
     restrict: 'A',
     templateUrl: '/static/partials/data-set-about/partials/data-set-edit-form.html',
     link: function (scope) {
-      // if an analysis is launched, then the running list needs to be updated.
-      scope.AMCtrl.updateAnalysesRunningList();
-      scope.$on('rf/launchAnalysis', function () {
-        scope.AMCtrl.launchAnalysisFlag = true;
-      });
+      var dataSetUuid = $window.dataSetUuid;
 
-      scope.$on('rf/cancelAnalysis', function () {
-        scope.AMCtrl.cancelTimerRunningList();
-        scope.AMCtrl.updateAnalysesRunningList();
-      });
+      scope.updateDataSet = function () {
+        dataSetAboutFactory.updateDataSet(
+          {
+            uuid: dataSetUuid,
+            summary: 'Does this work'
+          }
+        );
+      };
     }
   };
 }
@@ -22,5 +22,7 @@ function rpDataSetEditForm () {
 angular
   .module('refineryDataSetAbout')
   .directive('rpDataSetEditForm', [
+    'dataSetAboutFactory',
+    '$window',
     rpDataSetEditForm
   ]);

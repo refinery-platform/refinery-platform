@@ -64,15 +64,6 @@ function AboutDetailsCtrl (
       });
   };
 
-  vm.updateDataSet = function () {
-    dataSetAboutFactory.updateDataSet(
-      {
-        uuid: vm.dataSetUuid,
-        summary: 'Does this work'
-      }
-    );
-  };
-
   vm.refreshDataSetStats();
   vm.refreshStudies();
 }
