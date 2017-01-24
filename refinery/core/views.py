@@ -1134,6 +1134,8 @@ class DataSetsViewSet(APIView):
             return Response(
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST
             )
+
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response(
                 data_set, status=status.HTTP_401_UNAUTHORIZED
