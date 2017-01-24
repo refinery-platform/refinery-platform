@@ -10,11 +10,10 @@ import operator
 
 from django.conf import settings
 
+from .models import Assay, Attribute, Investigation, Node, Study
+from .tasks import create_dataset
 from annotation_server.models import species_to_taxon_id, Taxon
-from data_set_manager.models import (Investigation, Study, Node, Attribute,
-                                     Assay)
-from data_set_manager.tasks import create_dataset
-from file_store.models import generate_file_source_translator, FileStoreItem
+from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import create, import_file
 
 

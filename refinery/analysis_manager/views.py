@@ -7,23 +7,21 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.urlresolvers import reverse
-from django.http import (
-    HttpResponse, HttpResponseServerError,
-    HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden
-)
-from django.utils import timezone
+from django.http import (HttpResponse, HttpResponseBadRequest,
+                         HttpResponseForbidden, HttpResponseNotAllowed,
+                         HttpResponseServerError)
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.utils import timezone
 
-from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import run_analysis
-from core.models import (
-    Analysis, Workflow, WorkflowEngine, WorkflowDataInputMap,
-    InvestigationLink, NodeSet, NodeRelationship, NodePair, NodeGroup
-)
-from core.views import get_solr_results, custom_error_page
+from .models import AnalysisStatus
+from .tasks import run_analysis
+from core.models import (Analysis, InvestigationLink, NodeGroup, NodePair,
+                         NodeRelationship, NodeSet, Workflow,
+                         WorkflowDataInputMap, WorkflowEngine)
 from core.utils import get_aware_local_time
-from data_set_manager.models import Study, Assay, Node
+from core.views import custom_error_page, get_solr_results
+from data_set_manager.models import Assay, Node, Study
 from workflow_manager.tasks import get_workflows
 
 

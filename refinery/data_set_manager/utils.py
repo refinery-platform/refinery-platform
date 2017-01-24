@@ -4,22 +4,23 @@ Created on May 29, 2012
 @author: nils
 '''
 import hashlib
+import json
 import logging
 import time
 import urlparse
+
+from django.conf import settings
+from django.db.models import Q
+from django.utils.http import urlquote, urlunquote
+
 import requests
 from requests.exceptions import HTTPError
-import json
 
-from django.db.models import Q
-from django.utils.http import (urlquote, urlunquote)
-from django.conf import settings
-
-import core
-from data_set_manager.search_indexes import NodeIndex
-from .models import (AttributeOrder, Study, Node, Attribute, AnnotatedNode,
-                     Assay, AnnotatedNodeRegistry)
+from .models import (AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute,
+                     AttributeOrder, Node, Study)
+from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
+import core
 
 
 logger = logging.getLogger(__name__)

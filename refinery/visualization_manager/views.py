@@ -5,15 +5,16 @@ from xml.dom.minidom import Document
 
 from django.shortcuts import redirect
 
-from annotation_server.models import taxon_id_to_genome_build, \
-    genome_build_to_species
+from annotation_server.models import (genome_build_to_species,
+                                      taxon_id_to_genome_build)
 from annotation_server.utils import SUPPORTED_GENOMES
 from core.utils import get_full_url
 from data_set_manager.models import Node
-from file_server.views import profile_viewer
 from file_server.models import get_aux_file_item
 from file_store.models import FileStoreItem
-from file_store.tasks import import_file, create, rename
+from file_store.tasks import create, import_file, rename
+from file_server.views import profile_viewer
+
 
 logger = logging.getLogger(__name__)
 
