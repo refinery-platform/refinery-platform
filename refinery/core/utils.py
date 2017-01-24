@@ -20,9 +20,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 import core
-from data_set_manager.models import Assay
-from data_set_manager.search_indexes import NodeIndex
-import data_set_manager.utils  # Can't specify due to mock patch.
+import data_set_manager
 
 
 logger = logging.getLogger(__name__)
@@ -49,8 +47,8 @@ def update_data_set_index(data_set):
 
     logger.info('Updated data set (uuid: %s) index', data_set.uuid)
     try:
-        core.search_indexes.DataSetIndex()\
-            .update_object(data_set, using='core')
+        data_set_index = core.search_indexes.DataSetIndex()
+        data_set_index.update_object(data_set, using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -361,8 +359,8 @@ def delete_data_set_index(data_set):
 
     logger.debug('Deleted data set (uuid: %s) index', data_set.uuid)
     try:
-        core.search_indexes.DataSetIndex()\
-            .remove_object(data_set, using='core')
+        data_set_index = core.search_indexes.DataSetIndex()
+        data_set_index.remove_object(data_set, using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -760,7 +758,9 @@ def delete_analysis_index(node_instance):
     """Remove a Analysis' related document from Solr's index.
     """
     try:
-        NodeIndex().remove_object(node_instance, using='data_set_manager')
+        data_set_manager.search_indexes.NodeIndex().remove_object(
+            node_instance, using='data_set_manager'
+        )
         logger.debug('Deleted Analysis\' NodeIndex with (uuid: %s)',
                      node_instance.uuid)
     except Exception as e:
@@ -864,10 +864,10 @@ def create_current_selection_node_group(assay_uuid):
     """
     # confirm an assay exists
     try:
-        assay = Assay.objects.get(uuid=assay_uuid)
-    except Assay.DoesNotExist as e:
+        assay = data_set_manager.models.Assay.objects.get(uuid=assay_uuid)
+    except data_set_manager.models.Assay.DoesNotExist as e:
         return Response(e, status=status.HTTP_404_NOT_FOUND)
-    except Assay.MultipleObjectsReturned as e:
+    except data_set_manager.models.Assay.MultipleObjectsReturned as e:
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     study_uuid = assay.study.uuid

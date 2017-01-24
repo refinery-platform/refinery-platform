@@ -31,7 +31,7 @@ from django.utils.deconstruct import deconstructible
 from celery.result import AsyncResult
 from celery.task.control import revoke
 
-import core.utils
+import core
 
 
 logger = logging.getLogger(__name__)

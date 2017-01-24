@@ -16,7 +16,8 @@ import requests
 from requests.exceptions import HTTPError
 
 import data_set_manager
-import core.models
+from data_set_manager.genomes import map_species_id_to_default_genome_build
+import core
 from file_store.models import FileStoreItem
 
 
@@ -308,8 +309,9 @@ class NodeManager(models.Manager):
             if (item["genome_build"] is None and
                     item["species"] is not None and
                     default_fallback is True):
-                item["genome_build"] = data_set_manager.genomes.\
-                    map_species_id_to_default_genome_build(item["species"])
+                item["genome_build"] = map_species_id_to_default_genome_build(
+                    item["species"]
+                )
             if item["genome_build"] not in result:
                 result[item["genome_build"]] = []
             result[item["genome_build"]].append(item["file_uuid"])

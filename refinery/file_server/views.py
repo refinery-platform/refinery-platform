@@ -14,7 +14,7 @@ from django.template.context import RequestContext
 import file_server.tdf_file as tdf_module
 import file_server.models as models
 from file_store.models import FileStoreItem
-import file_store.tasks
+import file_store
 
 logger = logging.getLogger(__name__)
 

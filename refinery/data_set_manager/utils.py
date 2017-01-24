@@ -20,7 +20,7 @@ from .models import (AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute,
                      AttributeOrder, Node, Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
-import core.models
+import core
 
 
 logger = logging.getLogger(__name__)
