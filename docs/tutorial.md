@@ -68,14 +68,14 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
   5. Click 'Web-based IGV' to launch a visualization of the peak calling results
 
 ## 7. Reviewing Data Provenance
-- view data set in provenance graph
-  - point out new nodes created by the analyses: nodes representing FASTQC results and nodes representing output of the MACS2 workflow
+1. Display a data set in the File Browser (see sections 3 and 4)
+2. Select 'Provenance' in the 'Display' drop-down menu located on the right-hand side of the page
+3. Review the displayed nodes to track the analysis history of the data set -- each new analysis will add a new node to the provenance graph
 
 ## 8. Collaborating with other Users
 - create group for collaboration
 - invite other users to group
 - share data set with with group
 
-## 9. Deleting Analyses and Data Sets
-- delete MACS2 analysis
-- delete data set
+## 9. Deleting Data Sets and Analyses
+1. To delete a data set or analysis, click the trash can icon in the Data Sets or Analyses panel, respectively, on the Launch Pad
