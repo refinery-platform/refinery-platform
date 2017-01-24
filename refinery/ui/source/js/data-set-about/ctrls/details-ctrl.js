@@ -21,18 +21,20 @@ function AboutDetailsCtrl (
   };
   vm.updatedField = {};
 
-
   vm.refreshDataSetStats = function () {
     dataSetAboutFactory
       .getDataSet(vm.dataSetUuid)
       .then(function () {
         vm.dataSet = dataSetAboutFactory.dataSet;
+        vm.checkUserPermissions();
         // grab meta-data info
         if (dataSetAboutFactory.dataSet.isa_archive) {
           vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.isa_archive);
         } else if (dataSetAboutFactory.dataSet.pre_isatab_archive) {
           vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.pre_isa_archive);
         }
+        console.log('in refresh');
+        console.log(vm.dataSet);
       }, function (error) {
         $log.error(error);
       });

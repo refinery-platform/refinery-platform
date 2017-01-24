@@ -1,12 +1,13 @@
 <div class="refinery-header">
   <div class="refinery-header-left">
     <h3>{{ ADCtrl.dataSet.name }}</h3>
-    <a
-      class="btn btn-xs btn-icon"
-      ng-click="ADCtrl.isCollapsed.name = !ADCtrl.isCollapsed.name"
-      data-target=" #dataSetName">
-       <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-    </a>
+    <span ng-if="ADCtrl.dataSet.is_owner">
+      <a
+        ng-click="ADCtrl.isCollapsed.name = !ADCtrl.isCollapsed.name"
+        data-target=" #dataSetName">
+         <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+      </a>
+    </span>
   </div>
   <div
     id="dataSetName"
@@ -28,7 +29,6 @@
 
       <button
         type="button"
-        class="btn btn-default btn-xs"
         ng-click="ADCtrl.isCollapsed.name = !ADCtrl.isCollapsed.name">
         Cancel
       </button>
@@ -52,12 +52,13 @@
 
 <div class="refinery-subheader">
   <h4>Summary</h4>
-  <a
-    class="btn btn-xs btn-icon"
-    ng-click="ADCtrl.isCollapsed.summary = !ADCtrl.isCollapsed.summary"
-    data-target=" #dataSetSummary">
-     <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-  </a>
+  <span ng-if="ADCtrl.dataSet.is_owner">
+    <a
+      ng-click="ADCtrl.isCollapsed.summary = !ADCtrl.isCollapsed.summary"
+      data-target=" #dataSetSummary">
+       <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+    </a>
+  </span>
 </div>
 <div ng-if="ADCtrl.dataSet.summary.length > 0">
     {{ ADCtrl.dataSet.summary }}
@@ -106,9 +107,8 @@
 
   <div class="refinery-subheader">
     <h4>Description</h4>
-    <span>
+    <span ng-if="ADCtrl.dataSet.is_owner">
      <a
-      class="btn btn-xs btn-icon"
       ng-click="ADCtrl.isCollapsed.description = !ADCtrl.isCollapsed.description"
       data-target=" #dataSetDescription">
        <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
@@ -163,9 +163,8 @@
 
 <div class="refinery-subheader">
   <h4>Shortcut Name</h4>
-  <span>
+  <span ng-if="ADCtrl.dataSet.is_owner">
     <a
-      class="btn btn-xs btn-icon"
       ng-click="ADCtrl.isCollapsed.slug = !ADCtrl.isCollapsed.slug"
       data-target=" #dataSetSlug">
        <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
