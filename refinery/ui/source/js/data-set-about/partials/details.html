@@ -9,8 +9,8 @@
     <h4>Summary</h4>
   </div>
   <p>
-    <div ng-if="ADCtrl.dataSet.summary">
-      {{ dataSet.summary }}
+    <div ng-if="ADCtrl.dataSet.summary.length > 0">
+      {{ ADCtrl.dataSet.summary }}
     </div>
     <div ng-if="!ADCtrl.dataSet.summary" class="emphasized">
        None provided.
@@ -22,7 +22,7 @@
   </div>
   <p>
      <div ng-if="ADCtrl.dataSet.description">
-      {{ dataSet.description }}
+      {{ ADCtrl.dataSet.description }}
     </div>
     <div ng-if="!ADCtrl.dataSet.description" class="emphasized">
        None provided.
@@ -34,7 +34,7 @@
   </div>
   <p>
     <div ng-if="ADCtrl.dataSet.slug">
-      {{ dataSet.slug }}
+      {{ ADCtrl.dataSet.slug }}
     </div>
     <div ng-if="!ADCtrl.dataSet.slug" class="emphasized">
        None provided.
