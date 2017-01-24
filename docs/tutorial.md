@@ -11,8 +11,10 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
 __This tutorial can be completed using the Tutorial Data Set, which consists of sample ChIP-seq data and their associated metadata file (need links). Follow all steps (except creating a metadata file as it already exists) and note the bullet points after some steps with expanded instructions specific to the Tutorial Data Set.__
 
 ## 1. Creating a Metadata File
-1. Compile all the metadata to be associated with the data set and then organize these metadata into a delimited (e.g. tab-delimited) text file. Use https://beta.stemcellcommons.org/static/sample-files/refinery-sample-metadata.tsv as a template and note the required attributes (Sample Name, Data File, Organism, Cell Type, Technology). Additional attributes can be appended as needed.
+1. Compile all the metadata to be associated with the data set and then organize these metadata into a delimited (e.g. tab-delimited) text file. Use https://beta.stemcellcommons.org/static/sample-files/refinery-sample-metadata.tsv as a template and note the required attributes (sample name, data file, and organism). Additional attributes can be appended as needed.
   - __Tutorial Data Set: tab-delimited `tutorial.tsv` metadata file already created__
+
+> Note that the attribute and file name columns in the metadata file can be provided in any order and the column headers can be chosen by the investigator. However, as the data set importer (see next section below) will map column 1 to _sample name_, column 2 to _data file_, and column 3 to _organism_th.
 
 ## 2. Importing a Data Set 
 1. Go to the Stem Cell Commons Launch Pad at https://beta.stemcellcommons.org
