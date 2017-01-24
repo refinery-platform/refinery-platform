@@ -41,7 +41,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 2. Click the Analyze tab above the left-hand panel
 3. Select one of the analysis workflows below using the drop-down menu in the left-hand panel, follow their workflow-specific steps below, and then continue with step 4
   - __FastQC__
-    1. Select 'Current Selection' in Input Dataset drop-down menu in left-hand panel
+    1. Select 'Current Selection' in the Input Dataset drop-down menu in the left-hand panel
   - __TF ChIP-seq analysis using MACS2__
     1. In the Inputs (1-1 File Mapping) section, click New... to create a new file mapping
     2. Provide a name for the new file mapping in the pop-up
@@ -55,8 +55,17 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 ## 6. Viewing Analysis Results
 1. Upon successful completion of an analysis, click its name from the Analyses panel of the Launch Pad which will display all analyses associated with that data set
 2. Click the desired analysis name again
-- view FASTQC results and download FASTQC results
-- launch web-based IGV on peak calling output
+3. Follow the steps below corresponding to which analysis workflow was run:
+  - __FastQC__
+  1. To view FastQC results, click the bar graph icon associated with the 1_fastqc_results file
+  2. Use the drop-down menu to view the results of the various FastQC analysis modules
+  - __TF ChIP-seq analysis using MACS2__
+  1. To visualize peak calling results, select files to be displayed as tracks in IGV (e.g. 1_MACS2_bigwig and/or 1_MACS2_bed)
+  2. Click the Visualize tab above the left-hand panel
+  3. Select 'Current Selection' in the 'Select a file set' drop-down menu in the left-hand panel
+  4. Choose the appropriate species in the 'Select a species' drop-down menu in the left-hand panel
+    - __Tutorial Data Set: select 'H. Sapiens (hg19)'
+  5. Click 'Web-based IGV' to launch a visualization of the peak calling results
 
 ## 7. Reviewing Data Provenance
 - view data set in provenance graph
