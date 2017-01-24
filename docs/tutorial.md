@@ -41,7 +41,6 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 2. Click the Analyze tab above the left-hand panel
 3. Select one of the analysis workflows below using the drop-down menu in the left-hand panel, follow their workflow-specific steps below, and then continue with step 4
   - __Tutorial Data Set: run the FastQC workflow first followed by the TF ChIP-seq analysis using MACS2: hg19 workflow__
-  
   - __FastQC__
     1. Select 'Current Selection' in Input Dataset drop-down menu in left-hand panel
   - __TF ChIP-seq analysis using MACS2__
