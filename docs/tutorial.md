@@ -12,18 +12,18 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 
 ## 1. Creating a Metadata File
 1. Compile all the metadata to be associated with the data set and then organize these metadata into a delimited (e.g. tab-delimited) text file. Use https://beta.stemcellcommons.org/static/sample-files/refinery-sample-metadata.tsv as a template and note the required attributes (Sample Name, Data File, Organism, Cell Type, Technology). Additional attributes can be appended as needed.
-  - __Tutorial Data Set: tab-delimited tutorial.tsv metadata file already created__
+  - __Tutorial Data Set: tab-delimited `tutorial.tsv` metadata file already created__
 
 ## 2. Importing a Data Set 
 1. Go to the Stem Cell Commons Launch Pad at https://beta.stemcellcommons.org
 2. Click the Upload button from the Data Sets panel of the Launch Pad
 3. First choose delimiter used in the metadata file and then upload the file
-  - __Tutorial Data Set: upload tab-delimited tutorial.tsv__
+  - __Tutorial Data Set: upload tab-delimited `tutorial.tsv`__
 4. Check metadata Preview for accuracy (note: only first 5 samples are displayed)
 5. Review Configure Metadata Import and make changes as needed
   - __Tutorial Data Set: no changes needed__
 6. Click Add files … button under Upload Data Files and select data files corresponding to the metadata (note: wait for MD5 calculations, which ensure successful data file uploads, to complete)
-  - __Tutorial Data Set: upload input.fastq and nanog.fastq data files__
+  - __Tutorial Data Set: upload `input.fastq` and `nanog.fastq` data files__
 7. Click Start upload to begin uploading all selected data files
 8. After all data files have uploaded, click Upload Data Set
 
@@ -37,7 +37,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 
 ## 5. Launching Analyses
 1. From the File Browser, select the files that will serve as input for the desired workflow
-  - __Tutorial Data Set: follow the Launching Analyses section twice, first launching the FastQC workflow and afterwards the TF ChIP-seq analysis using MACS2: hg19 workflow (details below) -- in both instances, select both the input.fastq and nanog.fastq files during this step__
+  - __Tutorial Data Set: follow the Launching Analyses section twice, first launching the FastQC workflow and afterwards the TF ChIP-seq analysis using MACS2: hg19 workflow (details below) -- in both instances, select both the `input.fastq` and `nanog.fastq` files during this step__
 2. Click the Analyze tab above the left-hand panel
 3. Select one of the analysis workflows below using the drop-down menu in the left-hand panel, follow their workflow-specific steps below, and then continue with step 4
   - __FastQC__
@@ -46,7 +46,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
     1. In the Inputs (1-1 File Mapping) section, click New... to create a new file mapping
     2. Provide a name for the new file mapping in the pop-up
     3. Drag the leftmost icons (three horizontal bars) of the input control and experimental files onto the input_file and exp_file dropzones, respectively, to create the new file mapping
-      - __Tutorial Data Set: map input.fastq to the input_file and nanog.fastq to the exp_file__
+      - __Tutorial Data Set: map `input.fastq` to the input_file and `nanog.fastq` to the exp_file__
     4. Review the attribute comparison between input_file and exp_file to confirm distinct and shared attributes are correct
 4. Click Launch Analysis
 5. Modify Analysis Name as needed in pop-up and then click Launch Analysis
