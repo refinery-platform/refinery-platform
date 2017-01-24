@@ -14,6 +14,7 @@ function AboutDetailsCtrl (
   vm.dataSetUuid = $window.dataSetUuid;
   vm.fileStoreItem = dataSetAboutFactory.fileStoreItem;
 
+
   vm.refreshDataSetStats = function () {
     dataSetAboutFactory
       .getDataSet(vm.dataSetUuid)
@@ -61,6 +62,15 @@ function AboutDetailsCtrl (
       }, function (error) {
         $log.error(error);
       });
+  };
+
+  vm.updateDataSet = function () {
+    dataSetAboutFactory.updateDataSet(
+      {
+        uuid: vm.dataSetUuid,
+        summary: 'Does this work'
+      }
+    );
   };
 
   vm.refreshDataSetStats();
