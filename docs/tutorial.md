@@ -36,9 +36,8 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
   - Files can also be sorted according to attributes (both ascending and descending) by clicking the attribute names (i.e. column headers)
 
 ## 5. Launching Analyses
-- __Tutorial Data Set: Follow this Launching Analyses section twice, first launching the FastQC workflow and afterwards the TF ChIP-seq analysis using MACS2: hg19 workflow__
 1. From the File Browser, select the files that will serve as input for the desired workflow
-  - __Tutorial Data Set: select the input.fastq and nanog.fastq files (do this for both the FastQC and ChIP-seq workflows)__
+  - __Tutorial Data Set: follow the Launching Analyses section twice, first launching the FastQC workflow and afterwards the TF ChIP-seq analysis using MACS2: hg19 workflow (details below) -- in both instances, select both the input.fastq and nanog.fastq files during this step__
 2. Click the Analyze tab above the left-hand panel
 3. Select one of the analysis workflows below using the drop-down menu in the left-hand panel, follow their workflow-specific steps below, and then continue with step 4
   - __FastQC__
@@ -47,13 +46,15 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
     1. In the Inputs (1-1 File Mapping) section, click New... to create a new file mapping
     2. Provide a name for the new file mapping in the pop-up
     3. Drag the leftmost icons (three horizontal bars) of the input control and experimental files onto the input_file and exp_file dropzones, respectively, to create the new file mapping
+      - __Tutorial Data Set: map input.fastq to the input_file and nanog.fastq to the exp_file__
     4. Review the attribute comparison between input_file and exp_file to confirm distinct and shared attributes are correct
 4. Click Launch Analysis
 5. Modify Analysis Name as needed in pop-up and then click Launch Analysis
-6. Review Analysis Launch Status in pop-up and click View Analysis to monitor analysis progress (this page can also be reached via the Analyses panel of the Launch Pad)
-- monitor analyses
+6. Review Analysis Launch Status in pop-up and click View Analysis to monitor analysis progress (this analysis monitoring page can also be reached by clicking the analysis name within the Analyses panel of the Launch Pad)
 
 ## 6. Viewing Analysis Results
+1. Upon successful completion of an analysis, click its name from the Analyses panel of the Launch Pad which will display all analyses associated with that data set
+2. Click the desired analysis name again
 - view FASTQC results and download FASTQC results
 - launch web-based IGV on peak calling output
 
