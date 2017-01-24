@@ -36,7 +36,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
   - Files can also be sorted according to attributes (both ascending and descending) by clicking the attribute names (i.e. column headers)
 
 ## 5. Launching Analyses
-  - __Tutorial Data Set: Follow this Launching Analyses section twice, first launching the FastQC workflow and afterwards the TF ChIP-seq analysis using MACS2: hg19 workflow__
+- __Tutorial Data Set: Follow this Launching Analyses section twice, first launching the FastQC workflow and afterwards the TF ChIP-seq analysis using MACS2: hg19 workflow__
 1. From the File Browser, select the files that will serve as input for the desired workflow
   - __Tutorial Data Set: select the input.fastq and nanog.fastq files (do this for both the FastQC and ChIP-seq workflows)__
 2. Click the Analyze tab above the left-hand panel
