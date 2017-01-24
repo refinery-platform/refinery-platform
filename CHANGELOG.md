@@ -1,5 +1,39 @@
 # Change Log
 
+## [v1.5.3](https://github.com/refinery-platform/refinery-platform/tree/v1.5.3) (2017-01-09)
+[Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.5.2.1...v1.5.3)
+
+**Implemented enhancements:**
+
+- move repo into refinery-platform organization [\#1504](https://github.com/refinery-platform/refinery-platform/issues/1504)
+- Collaboration UI - Membership Permissions  [\#1474](https://github.com/refinery-platform/refinery-platform/issues/1474)
+- Refactor data-set-nav: don't use rootScope [\#943](https://github.com/refinery-platform/refinery-platform/issues/943)
+- Jkmarx/colloration modal update [\#1565](https://github.com/refinery-platform/refinery-platform/pull/1565) ([jkmarx](https://github.com/jkmarx))
+- Wrap delete model to check for user permissions. [\#1564](https://github.com/refinery-platform/refinery-platform/pull/1564) ([jkmarx](https://github.com/jkmarx))
+
+**Fixed bugs:**
+
+- Data Set 2 Browser - Fix URL for Duplicate Attribute Fields [\#1567](https://github.com/refinery-platform/refinery-platform/issues/1567)
+- API V1: Group Members can Delete Group [\#1426](https://github.com/refinery-platform/refinery-platform/issues/1426)
+- DataSet2 Browser - Fastqc Viewer Bug [\#1409](https://github.com/refinery-platform/refinery-platform/issues/1409)
+- Jkmarx/data set 2 url bug [\#1568](https://github.com/refinery-platform/refinery-platform/pull/1568) ([jkmarx](https://github.com/jkmarx))
+- Adjust html so analysis's column can't be hidden. [\#1566](https://github.com/refinery-platform/refinery-platform/pull/1566) ([jkmarx](https://github.com/jkmarx))
+
+**Closed issues:**
+
+- Load third-party UI dependencies in static via bower  [\#1016](https://github.com/refinery-platform/refinery-platform/issues/1016)
+- Configure Apache using Puppet module [\#779](https://github.com/refinery-platform/refinery-platform/issues/779)
+- yvanlebras: new volunteer via Mozilla Science Lab Collaborate [\#666](https://github.com/refinery-platform/refinery-platform/issues/666)
+- Upgrade to Django 1.7 [\#614](https://github.com/refinery-platform/refinery-platform/issues/614)
+
+**Merged pull requests:**
+
+- Update references to current repo for new `refinery-platform` organiz… [\#1574](https://github.com/refinery-platform/refinery-platform/pull/1574) ([scottx611x](https://github.com/scottx611x))
+- Hackdna/large file upload config update [\#1572](https://github.com/refinery-platform/refinery-platform/pull/1572) ([hackdna](https://github.com/hackdna))
+- Scottx611x/anonymous user fix [\#1570](https://github.com/refinery-platform/refinery-platform/pull/1570) ([scottx611x](https://github.com/scottx611x))
+- Re-enable default Apache vhost [\#1569](https://github.com/refinery-platform/refinery-platform/pull/1569) ([hackdna](https://github.com/hackdna))
+- Scottx611x/django 1.7 upgrade [\#1511](https://github.com/refinery-platform/refinery-platform/pull/1511) ([scottx611x](https://github.com/scottx611x))
+
 ## [v1.5.2](https://github.com/refinery-platform/refinery-platform/tree/v1.5.2) (2016-11-10)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.5.1...v1.5.2)
 
