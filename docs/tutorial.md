@@ -14,9 +14,10 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 1. Compile all the metadata to be associated with the data set and then organize these metadata into a delimited (e.g. tab-delimited) text file. Use https://beta.stemcellcommons.org/static/sample-files/refinery-sample-metadata.tsv as a template and note the required attributes (sample name, data file, and organism). Additional attributes can be appended as needed.
   - __Tutorial Data Set: tab-delimited `tutorial.tsv` metadata file already created__
 
-> __Note on Column Order__: The attribute and file name columns in the metadata file can be provided in any order and the column headers can be chosen by the investigator. However, given that the data set importer (see next section below) will map column 1 to _sample name_, column 2 to _data file_, and column 3 to _organism_, it can save time during import if this information is provided in the first three columns in this order.
+> __Column Order__: The attribute and file name columns in the metadata file can be provided in any order and the column headers can be chosen by the investigator. However, given that the data set importer (see next section below) will map column 1 to _sample name_, column 2 to _data file_, and column 3 to _organism_, it can save time during import if this information is provided in the first three columns in this order.
 
-> __Note on Column Names__: The column names provided in the metadata file can be freely chosen by the analyst and will be used to identify attributes through out the Refinery application. They _must be unique_, _must not contain any special characters_, and _should be descriptive yet concise_.
+
+> __Column Names__: The column names provided in the metadata file can be freely chosen by the analyst and will be used to identify attributes throughout the Refinery application. They _must be unique_, _must not contain any special characters_, and _should be descriptive yet concise_.
 
 ## 2. Importing a Data Set 
 1. Go to the Stem Cell Commons Launch Pad at https://beta.stemcellcommons.org
@@ -35,9 +36,11 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 1. Return to the Launch Pad and click on the newly uploaded data set (Expand data set preview). The Data Set Browser will display a summary of the data set
 
 ## 4. Exploring Contents of the Data Set in the File Browser
-1. Click View content in File Browser to view the individual files belonging to the data set:
+1. Click _View Content_ in File Browser to view the individual files belonging to the data set:
   - Files can be filtered based on attributes using the Attribute Filter in the left-hand panel
   - Files can also be sorted according to attributes (both ascending and descending) by clicking the attribute names (i.e. column headers)
+
+> __Direct Access of Dataset Content__: The file browser can be launched directly from the data set browser by clicking on the table icon to the right of the dataset name and summary. It is not required to open the preview first.
 
 ## 5. Launching Analyses
 1. From the File Browser, select the files that will serve as input for the desired workflow
