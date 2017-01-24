@@ -108,33 +108,64 @@
     </div>
   </div>
 
-
-
-
-
-
-    <div class="refinery-subheader">
+    <div class="row refinery-subheader">
       <h4>Description</h4>
       <span>
-        <a
-          class="btn btn-xs btn-icon"
-          ng-click="isCollapsed.description = !isCollapsed.description"
-          data-target=" #dataSetDescription">
-           <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-        </a>
+       <a
+        class="btn btn-xs btn-icon"
+        ng-click="ADCtrl.isCollapsed.description = !ADCtrl.isCollapsed.description"
+        data-target=" #dataSetDescription">
+         <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+      </a>
       </span>
-      <div id="dataSetDescription" uib-collapse="isCollapsed.description">
-        <rp-data-set-edit-form></rp-data-set-edit-form>
-      </div>
     </div>
-    <p>
+    <div class="row">
        <div ng-if="ADCtrl.dataSet.description">
         {{ ADCtrl.dataSet.description }}
       </div>
       <div ng-if="!ADCtrl.dataSet.description" class="emphasized">
          None provided.
       </div>
-    </p>
+    </div>
+
+  <div id="dataSetDescription" uib-collapse="ADCtrl.isCollapsed.description">
+    <div class="row vertical-align">
+      <form
+        ng-submit="ADCtrl.updateDataSet('description', ADCtrl.updatedField.description)"
+        name="dataSetDescriptionForm"
+        class="navbar-form text-align-center float-left">
+        <textarea
+          autofocus
+          name="dataSetDescription"
+          class="form-control"
+          placeholder="update data set description"
+          ng-model="ADCtrl.updatedField.description"
+          ng-minlength="3" required>
+        </textarea>
+      </form>
+
+      <button
+        type="button"
+        class="btn btn-default btn-xs"
+        ng-click="ADCtrl.isCollapsed.description = !ADCtrl.isCollapsed.description">
+        Cancel
+      </button>
+      <button
+        type="submit"
+        class="btn btn-xs btn-primary"
+        ng-click="ADCtrl.updateDataSet('description', ADCtrl.updatedField.description)"
+        ng-disabled="!dataSetDescriptionForm.$valid">
+        Save
+      </button>
+      <span
+        class='p-l-1-2 text-warning'
+        ng-show="dataSetDescriptionForm.dataSetDescription.$error.minlength ||
+        dataSetDescriptioForm.dataSetDescription.$error.required">
+        <i class="fa fa-warning" aria-hidden="true"></i>
+        Summary must be 3 characters long.
+      </span>
+    </div>
+  </div>
 
     <div class="refinery-subheader">
       <h4>Shortcut Name</h4>
