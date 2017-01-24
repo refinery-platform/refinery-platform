@@ -19,6 +19,11 @@ from .genomes import map_species_id_to_default_genome_build
 import data_set_manager
 import core
 from file_store.models import FileStoreItem
+"""
+TODO: Refactor import data_set_manager. Importing
+data_set_manager.tasks.generate_auxiliary_file()
+results in a circular import error (see comments on PR #1590)
+"""
 
 
 logger = logging.getLogger(__name__)
