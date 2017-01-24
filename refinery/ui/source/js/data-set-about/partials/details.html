@@ -1,4 +1,5 @@
 <div class="container-fluid">
+
   <div class="refinery-header">
     <div class="row refinery-header-left">
       <h3>{{ ADCtrl.dataSet.name }}</h3>
@@ -37,7 +38,7 @@
           type="submit"
           class="btn btn-xs btn-primary"
           ng-click="ADCtrl.updateDataSet('name', ADCtrl.updatedField.name)"
-          ng-disabled="!dataSetForm.$valid">
+          ng-disabled="!dataSetNameForm.$valid">
           Save
         </button>
         <span
@@ -51,29 +52,66 @@
     </div>
   </div>
 
+  <div class="row refinery-subheader">
+    <h4>Summary</h4>
+    <a
+      class="btn btn-xs btn-icon"
+      ng-click="ADCtrl.isCollapsed.summary = !ADCtrl.isCollapsed.summary"
+      data-target=" #dataSetSummary">
+       <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+    </a>
+  </div>
   <div class="row">
-    <div class="refinery-subheader">
-      <h4>Summary</h4>
-      <span>
-        <a
-          class="btn btn-xs btn-icon"
-          ng-click="isCollapsed.summary = !isCollapsed.summary"
-          data-target=" #dataSetSummary">
-           <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-        </a>
-      </span>
-      <div id="dataSetSummary" uib-collapse="isCollapsed.summary">
-        <rp-data-set-edit-form></rp-data-set-edit-form>
-      </div>
+    <div ng-if="ADCtrl.dataSet.summary.length > 0">
+      {{ ADCtrl.dataSet.summary }}
     </div>
-    <p>
-      <div ng-if="ADCtrl.dataSet.summary.length > 0">
-        {{ ADCtrl.dataSet.summary }}
-      </div>
-      <div ng-if="!ADCtrl.dataSet.summary" class="emphasized">
-         None provided.
-      </div>
-    </p>
+    <div ng-if="!ADCtrl.dataSet.summary" class="emphasized">
+       None provided.
+    </div>
+  </div>
+  <div id="dataSetSummary" uib-collapse="ADCtrl.isCollapsed.summary">
+    <div class="row vertical-align">
+      <form
+        ng-submit="ADCtrl.updateDataSet('summary', ADCtrl.updatedField.summary)"
+        name="dataSetSummaryForm"
+        class="navbar-form text-align-center float-left">
+        <textarea
+          autofocus
+          name="dataSetSummary"
+          class="form-control"
+          placeholder="update data set summary"
+          ng-model="ADCtrl.updatedField.summary"
+          ng-minlength="3" required>
+        </textarea>
+      </form>
+
+      <button
+        type="button"
+        class="btn btn-default btn-xs"
+        ng-click="ADCtrl.isCollapsed.summary = !ADCtrl.isCollapsed.summary">
+        Cancel
+      </button>
+      <button
+        type="submit"
+        class="btn btn-xs btn-primary"
+        ng-click="ADCtrl.updateDataSet('summary', ADCtrl.updatedField.summary)"
+        ng-disabled="!dataSetSummaryForm.$valid">
+        Save
+      </button>
+      <span
+        class='p-l-1-2 text-warning'
+        ng-show="dataSetSummaryForm.dataSetSummary.$error.minlength ||
+        dataSetSummaryForm.dataSetSummary.$error.required">
+        <i class="fa fa-warning" aria-hidden="true"></i>
+        Summary must be 3 characters long.
+      </span>
+    </div>
+  </div>
+
+
+
+
+
 
     <div class="refinery-subheader">
       <h4>Description</h4>
