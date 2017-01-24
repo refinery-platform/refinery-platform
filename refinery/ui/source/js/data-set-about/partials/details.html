@@ -1,51 +1,53 @@
 <div class="container-fluid">
-  <div class="row refinery-header">
-    <span class="refinery-header-left">
+  <div class="refinery-header">
+    <div class="row refinery-header-left">
       <h3>{{ ADCtrl.dataSet.name }}</h3>
-    </span>
-    <span>
       <a
         class="btn btn-xs btn-icon"
         ng-click="ADCtrl.isCollapsed.name = !ADCtrl.isCollapsed.name"
         data-target=" #dataSetName">
          <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
       </a>
-    </span>
-    <div class="row" id="dataSetName" uib-collapse="ADCtrl.isCollapsed.name">
-      <form
-        ng-submit="ADCtrl.updateDataSet('name', ADCtrl.updatedField.name)"
-        name="dataSetNameForm"
-        class="navbar-form text-align-center float-left">
-      <input
-        autofocus
-        type="text"
-        name="dataSetName"
-        class="form-control"
-        placeholder="update data set name"
-        ng-model="ADCtrl.updatedField.name"
-        ng-minlength="3" required>
-    </form>
+    </div>
+    <div
+      id="dataSetName"
+      uib-collapse="ADCtrl.isCollapsed.name">
+      <div class="row vertical-align">
+        <form
+          ng-submit="ADCtrl.updateDataSet('name', ADCtrl.updatedField.name)"
+          name="dataSetNameForm"
+          class="navbar-form text-align-center float-left">
+        <input
+          autofocus
+          type="text"
+          name="dataSetName"
+          class="form-control"
+          placeholder="update data set name"
+          ng-model="ADCtrl.updatedField.name"
+          ng-minlength="3" required>
+        </form>
 
-     <button
-        type="button"
-        class="refinery-base btn btn-default btn-xs"
-        ng-click="ADCtrl.isCollapsed.name = !ADCtrl.isCollapsed.name">
-        Cancel
-      </button>
-      <button
-        type="submit"
-        class="btn btn-xs btn-primary"
-        ng-click="ADCtrl.updateDataSet('name', ADCtrl.updatedField.name)"
-        ng-disabled="!dataSetForm.$valid">
-        Save
-      </button>
-      <span
-        class='p-t-1-2 text-warning'
-        ng-show="dataSetNameForm.dataSetName.$error.minlength ||
-        dataSetNameForm.dataSetName.$error.required">
-        <i class="fa fa-warning" aria-hidden="true"></i>
-        Names must be 3 characters long.
-      </span>
+        <button
+          type="button"
+          class="btn btn-default btn-xs"
+          ng-click="ADCtrl.isCollapsed.name = !ADCtrl.isCollapsed.name">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn btn-xs btn-primary"
+          ng-click="ADCtrl.updateDataSet('name', ADCtrl.updatedField.name)"
+          ng-disabled="!dataSetForm.$valid">
+          Save
+        </button>
+        <span
+          class='p-l-1-2 text-warning'
+          ng-show="dataSetNameForm.dataSetName.$error.minlength ||
+          dataSetNameForm.dataSetName.$error.required">
+          <i class="fa fa-warning" aria-hidden="true"></i>
+          Names must be 3 characters long.
+        </span>
+      </div>
     </div>
   </div>
 
