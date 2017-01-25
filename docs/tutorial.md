@@ -61,8 +61,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 
 ## 6. Viewing Analysis Results
 1. Upon successful completion of an analysis, click its name from the Analyses tab within the File Browser
-2. Click the desired analysis name again
-3. Follow the steps below corresponding to which analysis workflow was run:
+2. Follow the steps below corresponding to which analysis workflow was run:
   - __FastQC__
     1. To view FastQC results, click the bar graph icon associated with the 1_fastqc_results file
     2. Use the drop-down menu to view the results of the various FastQC analysis modules
@@ -73,7 +72,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
     4. Choose the appropriate species in the 'Select a species' drop-down menu in the left-hand panel
       - __Tutorial Data Set: select 'H. Sapiens (hg19)'__
     5. Click 'Web-based IGV' to launch a visualization of the peak calling results
-4. To download any results file, click the down-pointing arrow icon associated with that file
+3. To download any results file, click the down-pointing arrow icon associated with that file
 
 ## 7. Reviewing Data Provenance
 1. Display a data set in the File Browser (see sections 3 and 4)
