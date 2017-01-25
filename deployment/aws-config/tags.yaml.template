@@ -1,0 +1,9 @@
+# AWS resource tags
+# as per https://github.com/refinery-platform/refinery-platform/issues/839
+# Copy to tags.yaml before launching a stack
+
+department: dbmi
+environment: dev
+project:
+product: refinery
+subproduct: platform
