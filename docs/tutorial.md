@@ -21,7 +21,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 
 ## 2. Importing a Data Set 
 1. Go to the Stem Cell Commons Launch Pad at https://beta.stemcellcommons.org
-2. Click the Upload button from the Data Sets panel of the Launch Pad
+2. Click the Upload button from the Data Sets panel on the Launch Pad
 3. First choose delimiter used in the metadata file and then upload the file
   - __Tutorial Data Set: upload tab-delimited `tutorial.tsv`__
 4. Check metadata Preview for accuracy (note: only first 5 samples are displayed)
@@ -57,10 +57,10 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
     4. Review the attribute comparison between input_file and exp_file to confirm distinct and shared attributes are correct
 4. Click Launch Analysis
 5. Modify Analysis Name as needed in pop-up and then click Launch Analysis
-6. Review Analysis Launch Status in pop-up and click View Analysis to monitor analysis progress (this analysis monitoring page can also be reached by clicking the analysis name within the Analyses panel of the Launch Pad)
+6. Review Analysis Launch Status in pop-up and click View Analysis to monitor analysis progress (this analysis monitoring page can also be reached by clicking the analysis name within the Analyses panel on the Launch Pad)
 
 ## 6. Viewing Analysis Results
-1. Upon successful completion of an analysis, click its name from the Analyses panel of the Launch Pad which will display all analyses associated with that data set
+1. Upon successful completion of an analysis, click its name from the Analyses panel on the Launch Pad which will display all analyses associated with that data set
 2. Click the desired analysis name again
 3. Follow the steps below corresponding to which analysis workflow was run:
   - __FastQC__
@@ -85,5 +85,5 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 - invite other users to group
 - share data set with with group
 
-## 9. Deleting Data Sets and Analyses
-1. To delete a data set or analysis, click the trash can icon in the Data Sets or Analyses panel, respectively, on the Launch Pad
+## 9. Deleting Analyses and Data Sets
+1. To delete an analysis only, click the trash can icon in the Analyses panel on the Launch Pad. To delete a data set and all its associated analyses, click the trash can icon in the Data Sets panel on the Launch Pad.
