@@ -33,8 +33,6 @@ function AboutDetailsCtrl (
         } else if (dataSetAboutFactory.dataSet.pre_isatab_archive) {
           vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.pre_isa_archive);
         }
-        console.log('in refresh');
-        console.log(vm.dataSet);
       }, function (error) {
         $log.error(error);
       });
