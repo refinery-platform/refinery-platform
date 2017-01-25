@@ -57,10 +57,10 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
     4. Review the attribute comparison between input_file and exp_file to confirm distinct and shared attributes are correct
 4. Click Launch Analysis
 5. Modify Analysis Name as needed in pop-up and then click Launch Analysis
-6. Review Analysis Launch Status in pop-up and click View Analysis to monitor analysis progress (this analysis monitoring page can also be reached by clicking the analysis name within the Analyses panel on the Launch Pad)
+6. Review Analysis Launch Status in pop-up and click View Analysis to monitor analysis progress within the File Browser (this Analyses tab within the File Browser can also be directly accessed by clicking the analysis name from the Analyses panel on the Launch Pad)
 
 ## 6. Viewing Analysis Results
-1. Upon successful completion of an analysis, click its name from the Analyses panel on the Launch Pad which will display all analyses associated with that data set
+1. Upon successful completion of an analysis, click its name from the Analyses tab within the File Browser
 2. Click the desired analysis name again
 3. Follow the steps below corresponding to which analysis workflow was run:
   - __FastQC__
