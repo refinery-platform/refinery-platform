@@ -63,7 +63,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 1. Upon successful completion of an analysis, click its name from the Analyses tab within the File Browser
 2. Follow the steps below corresponding to which analysis workflow was run:
   - __FastQC__
-    1. To view FastQC results, click the bar graph icon associated with the 1_fastqc_results file
+    1. To view FastQC results, click the bar graph icon associated with a \#\_fastqc_results file
     2. Use the drop-down menu to view the results of the various FastQC analysis modules
   - __TF ChIP-seq analysis using MACS2__
     1. To visualize peak calling results, select files to be displayed as tracks in IGV (e.g. 1_MACS2_bigwig and/or 1_MACS2_bed files)
