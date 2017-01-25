@@ -2132,12 +2132,6 @@ class DataSetApiV2Tests(APITestCase):
             format="json"
         )
         self.put_response = self.view(self.put_request)
-        self.patch_request = self.factory.patch(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
-        self.patch_response = self.view(self.patch_request)
         self.options_request = self.factory.options(
             self.url_root,
             data=self.node_json,
@@ -2156,8 +2150,6 @@ class DataSetApiV2Tests(APITestCase):
     def test_unallowed_http_verbs(self):
         self.assertEqual(
             self.put_response.data['detail'], 'Method "PUT" not allowed.')
-        self.assertEqual(
-            self.patch_response.data['detail'], 'Method "PATCH" not allowed.')
         self.assertEqual(
             self.options_response.data['detail'], 'Method "OPTIONS" not '
                                                   'allowed.')
