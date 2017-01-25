@@ -24,9 +24,9 @@ class DataSetSerializer(serializers.ModelSerializer):
         instance.name = validated_data.get('name', instance.name)
         instance.summary = validated_data.get('summary', instance.summary)
         instance.description = validated_data.get(
-            'created', instance.description
+            'description', instance.description
         )
-        instance.slug = validated_data.get('created', instance.slug)
+        instance.slug = validated_data.get('slug', instance.slug)
 
         instance.save()
         return instance
