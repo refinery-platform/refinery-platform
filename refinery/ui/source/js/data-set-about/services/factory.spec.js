@@ -15,9 +15,14 @@ describe('Data Set About Factory', function () {
 
   it('factory and tools variables should exist', function () {
     expect(factory).toBeDefined();
-    expect(factory.dataSet).toEqual({ });
-    expect(factory.studies).toEqual([]);
     expect(factory.assays).toEqual([]);
+    expect(factory.dataSet).toEqual({ });
+    expect(factory.dataSetSharing).toEqual({ });
+    expect(factory.fileStoreItem).toEqual({ });
+    expect(factory.investigation).toEqual({ });
+    expect(factory.isaTab).toEqual({ });
+    expect(factory.ownerName).toEqual('');
+    expect(factory.studies).toEqual([]);
   });
 
   describe('getDataSet', function () {
@@ -335,6 +340,42 @@ describe('Data Set About Factory', function () {
       expect(response).toEqual({});
       factory.getOwnerName({ uuid: fakeUuid });
       expect(response).toEqual(ownerResult);
+    });
+  });
+
+  describe('updateDataSet', function () {
+    var dataSetResult;
+
+    beforeEach(inject(function (
+      dataSetV2Service, _$q_, _$rootScope_
+    ) {
+      $q = _$q_;
+      dataSetResult = { name: 'Bam File V2' };
+      spyOn(dataSetV2Service, 'partial_update').and.callFake(function () {
+        deferred = $q.defer();
+        deferred.resolve(dataSetResult);
+        return {
+          $promise: deferred.promise
+        };
+      });
+
+      rootScope = _$rootScope_;
+    }));
+
+    it('updateDataSet is a method', function () {
+      expect(angular.isFunction(factory.updateDataSet)).toBe(true);
+    });
+
+    it('updateDataSet returns a promise', function () {
+      var successData;
+      var response = factory.updateDataSet({
+        uuid: fakeUuid
+      }).then(function (responseData) {
+        successData = responseData;
+      });
+      rootScope.$apply();
+      expect(typeof response.then).toEqual('function');
+      expect(successData).toEqual(dataSetResult);
     });
   });
 });
