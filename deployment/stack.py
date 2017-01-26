@@ -37,22 +37,17 @@ python stack.py > web.json
 
 import base64
 import datetime
-import json     # for json.dumps
-import os       # for os.popen, os.urandom
+import json
+import os
 import random
-import sys      # sys.stderr, sys.exit, and so on
+import sys
 
-# https://pypi.python.org/pypi/boto3
 import boto3
-# https://pypi.python.org/pypi/PyYAML/3.11
-import yaml
-
-import tags
-
 # Simulate the environment that "cfn_generate" runs scripts in.
 # http://cfn-pyplates.readthedocs.org/en/latest/advanced.html#generating-templates-in-python
 from cfn_pyplates import core
 from cfn_pyplates import functions
+import yaml
 
 
 class ConfigError(Exception):
@@ -74,7 +69,8 @@ def main():
 
     assert "'" not in config['SITE_NAME']
 
-    instance_tags = tags.load()
+    instance_tags = load_tags()
+
     # Set the `Name` as it appears on the EC2 web UI.
     instance_tags.append({'Key': 'Name',
                          'Value': "refinery-web-" + unique_suffix})
@@ -155,7 +151,7 @@ def main():
         'AvailabilityZone': config['AVAILABILITY_ZONE'],
         'Encrypted': True,
         'Size': config['DATA_VOLUME_SIZE'],
-        'Tags': tags.load(),
+        'Tags': load_tags(),
         'VolumeType': config['DATA_VOLUME_TYPE'],
     }
 
@@ -380,6 +376,22 @@ def main():
         })
 
     sys.stdout.write(str(cft))
+
+
+def load_tags():
+    """Load AWS resource tags from aws-config/tags.yaml"""
+    tags = {}
+    try:
+        with open("aws-config/tags.yaml") as f:
+            tags.update(yaml.load(f))
+    except (IOError, yaml.YAMLError) as exc:
+        sys.stderr.write("Error reading AWS resource tags: {}".format(exc))
+        raise ConfigError()
+
+    if 'owner' not in tags:
+        tags['owner'] = os.popen("git config --get user.email").read().rstrip()
+
+    return [{'Key': k, 'Value': v} for k, v in tags.items()]
 
 
 def load_config():
