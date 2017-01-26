@@ -124,6 +124,7 @@ def main():
         "AutoMinorVersionUpgrade": False,
         "AvailabilityZone": config['AVAILABILITY_ZONE'],
         "BackupRetentionPeriod": "0",
+        "CopyTagsToSnapshot": True,
         "DBInstanceClass": "db.t2.small",       # todo:?
         "DBInstanceIdentifier": config['RDS_NAME'],
         "Engine": "postgres",
