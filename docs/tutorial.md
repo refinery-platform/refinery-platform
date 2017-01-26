@@ -66,12 +66,13 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
     1. To view FastQC results, click the bar graph icon associated with a \#\_fastqc_results file
     2. Use the drop-down menu to view the results of the various FastQC analysis modules
   - __TF ChIP-seq analysis using MACS2__
-    1. To visualize peak calling results, select files to be displayed as tracks in IGV (e.g. 1_MACS2_bigwig and/or 1_MACS2_bed files)
+    1. To visualize peak calling results, select files to be displayed as tracks in IGV (e.g. \#\_MACS2_bigwig and/or \#\_MACS2_bed files)
     2. Click the Visualize tab above the left-hand panel
     3. Select 'Current Selection' in the 'Select a file set' drop-down menu in the left-hand panel
     4. Choose the appropriate species in the 'Select a species' drop-down menu in the left-hand panel
       - __Tutorial Data Set: select 'H. Sapiens (hg19)'__
     5. Click 'Web-based IGV' to launch a visualization of the peak calling results
+      - __Tutorial Data Set: search 'chr12:1-35,000,000' in the IGV search box (top left) to see all the peaks__
 3. To download any results file, click the down-pointing arrow icon associated with that file
 
 ## 7. Reviewing Data Provenance
