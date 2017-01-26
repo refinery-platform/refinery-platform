@@ -26,7 +26,6 @@ function AboutDetailsCtrl (
       .getDataSet(vm.dataSetUuid)
       .then(function () {
         vm.dataSet = dataSetAboutFactory.dataSet;
-        vm.checkUserPermissions();
         // grab meta-data info
         if (dataSetAboutFactory.dataSet.isa_archive) {
           vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.isa_archive);
