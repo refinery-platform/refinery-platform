@@ -13,7 +13,7 @@ describe('Controller: FileBrowserCtrl', function () {
     $rootScope,
     _$controller_,
     _fileBrowserFactory_,
-    _mockParamsService_,
+    _mockParamsFactory_,
     _selectedFilterService_,
     $window
   ) {
@@ -24,7 +24,7 @@ describe('Controller: FileBrowserCtrl', function () {
     });
     factory = _fileBrowserFactory_;
     service = _selectedFilterService_;
-    $window.externalAssayUuid = _mockParamsService_.generateUuid();
+    $window.externalAssayUuid = _mockParamsFactory_.generateUuid();
   }));
 
   it('FileBrowserCtrl ctrl should exist', function () {

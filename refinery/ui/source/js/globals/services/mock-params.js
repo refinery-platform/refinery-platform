@@ -1,6 +1,6 @@
 'use strict';
 
-function mockParamsService () {
+function mockParamsFactory () {
   function s4 () {
     // hex value (decimal 65536)
     return Math.floor((1 + Math.random()) * 0x10000)
@@ -18,5 +18,5 @@ function mockParamsService () {
 }
 
 angular
-  .module('mockParamsService', [])
-  .factory('mockParamsService', mockParamsService);
+  .module('mockParams', [])
+  .factory('mockParamsFactory', mockParamsFactory);
