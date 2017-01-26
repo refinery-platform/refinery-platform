@@ -48,8 +48,7 @@
       </span>
       <span
         class='p-l-1-2 text-warning'
-        ng-show="dataSetNameForm.dataSetName.$error.maxlength ||
-        dataSetNameForm.dataSetName.$error.required">
+        ng-show="dataSetNameForm.dataSetName.$error.maxlength">
         <i class="fa fa-warning" aria-hidden="true"></i>
         Names must be less than 250 characters long.
       </span>
@@ -113,8 +112,7 @@
     </span>
     <span
       class='p-l-1-2 text-warning'
-      ng-show="dataSetSummaryForm.dataSetSummary.$error.maxlength ||
-      dataSetSummaryForm.dataSetSummary.$error.required">
+      ng-show="dataSetSummaryForm.dataSetSummary.$error.maxlength>
       <i class="fa fa-warning" aria-hidden="true"></i>
       Summary must be less than 1000 characters long.
     </span>
@@ -178,8 +176,7 @@
     </span>
     <span
       class='p-l-1-2 text-warning'
-      ng-show="dataSetDescriptionForm.dataSetDescription.$error.maxlength ||
-      dataSetDescriptionForm.dataSetDescription.$error.required">
+      ng-show="dataSetDescriptionForm.dataSetDescription.$error.maxlength>
       <i class="fa fa-warning" aria-hidden="true"></i>
       Description must be less than 5000 characters long.
     </span>
@@ -242,8 +239,7 @@
     </span>
     <span
       class='p-l-1-2 text-warning'
-      ng-show="dataSetSlugForm.dataSetSlug.$error.maxlength ||
-      dataSetSlugForm.dataSetSlug.$error.required">
+      ng-show="dataSetSlugForm.dataSetSlug.$error.maxlength">
       <i class="fa fa-warning" aria-hidden="true"></i>
       Shortcut name must be less than 250 characters long.
     </span>
