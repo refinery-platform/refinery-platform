@@ -1,9 +1,13 @@
-# AWS resource tags
+# Sample AWS resource tags
 # as per https://github.com/refinery-platform/refinery-platform/issues/839
-# Copy to tags.yaml before launching a stack
+#
+# Copy this file to tags.yaml and edit that file before launching a stack
+#
+# More information:
+# https://github.com/refinery-platform/refinery-platform/wiki/AWS-deployment#tagging
 
-department: dbmi
-environment: dev
+department:
+environment:
 project:
-product: refinery
-subproduct: platform
+product:
+subproduct:
