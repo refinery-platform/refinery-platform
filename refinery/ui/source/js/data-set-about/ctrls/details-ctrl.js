@@ -21,6 +21,11 @@ function AboutDetailsCtrl (
   vm.studies = dataSetAboutFactory.studies;
   vm.updatedField = {};
 
+  vm.cancel = function (fieldName) {
+    vm.updatedField[fieldName] = '';
+    vm.isCollapsed[fieldName] = true;
+  };
+
   vm.refreshDataSetStats = function () {
     dataSetAboutFactory
       .getDataSet(vm.dataSetUuid)

@@ -30,7 +30,7 @@
       <button
         type="button"
         class="btn btn-default btn-xs"
-        ng-click="ADCtrl.isCollapsed.name = !ADCtrl.isCollapsed.name">
+        ng-click="ADCtrl.cancel('name')">
         Cancel
       </button>
       <button
@@ -94,7 +94,7 @@
     <button
       type="button"
       class="btn btn-default btn-xs"
-      ng-click="ADCtrl.isCollapsed.summary = !ADCtrl.isCollapsed.summary">
+      ng-click="ADCtrl.cancel('summary')">
       Cancel
     </button>
     <button
@@ -158,7 +158,7 @@
     <button
       type="button"
       class="btn btn-default btn-xs"
-      ng-click="ADCtrl.isCollapsed.description = !ADCtrl.isCollapsed.description">
+      ng-click="ADCtrl.cancel('description')">
       Cancel
     </button>
     <button
@@ -221,7 +221,7 @@
     <button
       type="button"
       class="btn btn-default btn-xs"
-      ng-click="ADCtrl.isCollapsed.slug = !ADCtrl.isCollapsed.slug">
+      ng-click="ADCtrl.cancel('slug')">
       Cancel
     </button>
     <button
