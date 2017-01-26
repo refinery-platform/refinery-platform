@@ -24,7 +24,7 @@
         class="form-control"
         placeholder="update data set name"
         ng-model="ADCtrl.updatedField.name"
-        ng-minlength="3" required>
+        ng-minlength="3" ng-maxlength="250" required>
       </form>
 
       <button
@@ -45,6 +45,13 @@
         dataSetNameForm.dataSetName.$error.required">
         <i class="fa fa-warning" aria-hidden="true"></i>
         Names must be 3 characters long.
+      </span>
+      <span
+        class='p-l-1-2 text-warning'
+        ng-show="dataSetNameForm.dataSetName.$error.maxlength ||
+        dataSetNameForm.dataSetName.$error.required">
+        <i class="fa fa-warning" aria-hidden="true"></i>
+        Names must be less than 250 characters long.
       </span>
     </div>
   </div>
@@ -78,7 +85,9 @@
         class="form-control"
         placeholder="update data set summary"
         ng-model="ADCtrl.updatedField.summary"
-        ng-minlength="3" required>
+        ng-minlength="3"
+        ng-maxlenght="1000"
+        required>
       </textarea>
     </form>
 
@@ -101,6 +110,13 @@
       dataSetSummaryForm.dataSetSummary.$error.required">
       <i class="fa fa-warning" aria-hidden="true"></i>
       Summary must be 3 characters long.
+    </span>
+    <span
+      class='p-l-1-2 text-warning'
+      ng-show="dataSetSummaryForm.dataSetSummary.$error.maxlength ||
+      dataSetSummaryForm.dataSetSummary.$error.required">
+      <i class="fa fa-warning" aria-hidden="true"></i>
+      Summary must be less than 1000 characters long.
     </span>
   </div>
 </div>
@@ -134,7 +150,9 @@
         class="form-control"
         placeholder="update data set description"
         ng-model="ADCtrl.updatedField.description"
-        ng-minlength="3" required>
+        ng-minlength="3"
+        ng-maxlenght="5000"
+        required>
       </textarea>
     </form>
 
@@ -157,6 +175,13 @@
       dataSetDescriptioForm.dataSetDescription.$error.required">
       <i class="fa fa-warning" aria-hidden="true"></i>
       Description must be 3 characters long.
+    </span>
+    <span
+      class='p-l-1-2 text-warning'
+      ng-show="dataSetDescriptionForm.dataSetDescription.$error.maxlength ||
+      dataSetDescriptionForm.dataSetDescription.$error.required">
+      <i class="fa fa-warning" aria-hidden="true"></i>
+      Description must be less than 5000 characters long.
     </span>
   </div>
 </div>
@@ -190,7 +215,9 @@
         class="form-control"
         placeholder="update data set slug"
         ng-model="ADCtrl.updatedField.slug"
-        ng-minlength="3" required>
+        ng-minlength="3"
+        ng-maxlenght="250"
+        required>
     </form>
 
     <button
@@ -211,7 +238,14 @@
       ng-show="dataSetSlugForm.dataSetSlug.$error.minlength ||
       dataSetSlugForm.dataSetSlug.$error.required">
       <i class="fa fa-warning" aria-hidden="true"></i>
-      Slug must be 3 characters long.
+      Shortcut name must be 3 characters long.
+    </span>
+    <span
+      class='p-l-1-2 text-warning'
+      ng-show="dataSetSlugForm.dataSetSlug.$error.maxlength ||
+      dataSetSlugForm.dataSetSlug.$error.required">
+      <i class="fa fa-warning" aria-hidden="true"></i>
+      Shortcut name must be less than 250 characters long.
     </span>
   </div>
 </div>
