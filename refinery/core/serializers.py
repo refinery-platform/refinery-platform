@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 class DataSetSerializer(serializers.ModelSerializer):
     slug = serializers.CharField(
             max_length=250,
+            trim_whitespace=True,
             validators=[UniqueValidator(
                 queryset=DataSet.objects.all(),
                 message='Slugs must be unique.'

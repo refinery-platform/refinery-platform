@@ -2227,7 +2227,7 @@ class DataSetApiV2Tests(APITestCase):
 
         self.assertEqual(DataSet.objects.all().count(), 1)
 
-    def test_dataset_patch_no_auth(self):
+    def test_dataset_patch_auth_fails(self):
         new_description = self.create_rand_str(50)
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.dataset.uuid),
@@ -2350,6 +2350,17 @@ class DataSetApiV2Tests(APITestCase):
         patch_response = self.view(patch_request, self.dataset.uuid)
         self.assertEqual(patch_response.status_code, 202)
         self.assertEqual(patch_response.data.get('slug'), new_slug)
+
+    def test_dataset_patch_slug_trim_whitespace(self):
+        new_slug = '  Test Slug Name  '
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"slug": new_slug},
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 202)
+        self.assertEqual(patch_response.data.get('slug'), new_slug.strip())
 
     # Summary too long
     def test_dataset_patch_summary_fails(self):
