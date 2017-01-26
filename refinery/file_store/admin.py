@@ -1,7 +1,8 @@
 import os
+
 from django.contrib import admin
 
-from file_store.models import FileStoreItem, FileType, FileExtension
+from .models import FileExtension, FileStoreItem, FileType
 
 
 class FileStoreItemAdmin(admin.ModelAdmin):

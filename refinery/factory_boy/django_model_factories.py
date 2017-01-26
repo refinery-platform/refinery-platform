@@ -1,10 +1,10 @@
-import uuid as uuid_builtin
 from datetime import datetime
+import uuid as uuid_builtin
 
 import django
 import factory
 
-from core.models import DataSet, Analysis
+from core.models import Analysis, DataSet
 
 # Call to django.setup() needed due to the new handling of the AppRegistry in
 # Django 1.7

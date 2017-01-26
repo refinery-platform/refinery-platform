@@ -8,10 +8,10 @@ from django.conf.urls import patterns, url
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 
-from data_set_manager.views import (
-    DataSetImportView, ImportISATabView, ProcessISATabView,
-    ProcessMetadataTableView, CheckDataFilesView, ChunkedFileUploadView,
-    ChunkedFileUploadCompleteView, TakeOwnershipOfPublicDatasetView)
+from .views import (CheckDataFilesView, ChunkedFileUploadCompleteView,
+                    ChunkedFileUploadView, DataSetImportView, ImportISATabView,
+                    ProcessISATabView, ProcessMetadataTableView,
+                    TakeOwnershipOfPublicDatasetView)
 
 
 urlpatterns = patterns(

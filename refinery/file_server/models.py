@@ -9,8 +9,8 @@ import logging
 from django.db import models, transaction
 from django.db.utils import IntegrityError
 
-import file_store.models as fs_models
 import file_server.tdf_file as tdf_module
+import file_store.models as fs_models
 
 logger = logging.getLogger('file_server')
 

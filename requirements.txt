@@ -36,7 +36,7 @@ docutils==0.10
 enum34==1.0.4
 factory_boy==2.8.1
 flake8==2.5.4
-flower==0.8.4
+flower==0.9.1
 Jinja2==2.6
 jsonpickle==0.4.0
 librabbitmq==1.6.1

@@ -1,8 +1,6 @@
 """This file contains tests for file_store.models and file_store.tasks
 """
-
 import os
-import mock
 from urlparse import urljoin
 
 from django.conf import settings
@@ -10,16 +8,17 @@ from django.contrib.sites.models import Site
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import SimpleTestCase
 
+import mock
 from rest_framework.test import APIRequestFactory
 from rest_framework.test import APITestCase
 
-from core.utils import get_full_url
-from .models import (file_path, get_temp_dir, get_file_object, FileStoreItem,
-                     FileExtension, FILE_STORE_TEMP_DIR,
-                     generate_file_source_translator, FileType,
-                     SymlinkedFileSystemStorage)
-from .views import FileStoreItems
+from .models import (file_path, FILE_STORE_TEMP_DIR, FileExtension,
+                     FileStoreItem, FileType,
+                     generate_file_source_translator, get_file_object,
+                     get_temp_dir, SymlinkedFileSystemStorage)
 from .serializers import FileStoreItemSerializer
+from .views import FileStoreItems
+from core.utils import get_full_url
 
 
 class FileStoreModuleTest(SimpleTestCase):
