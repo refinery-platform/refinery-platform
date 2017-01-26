@@ -1082,11 +1082,10 @@ class DataSetsViewSet(APIView):
             )
 
     def is_user_authorized(self, user, data_set):
-        # user does not have change data set permission
         if not user.is_authenticated():
             return False
+        # user does not have change data set permission
         elif not user.has_perm('core.change_dataset', data_set):
-                # check edit permission for public group
             return False
         else:
             return True
@@ -1123,7 +1122,6 @@ class DataSetsViewSet(APIView):
             serializer = DataSetSerializer(
                data_set, data=request.data, partial=True
             )
-            # partial_update(request, *args, **kwargs)
             if serializer.is_valid():
                 serializer.save()
                 return Response(
