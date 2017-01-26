@@ -1,16 +1,15 @@
 'use strict';
 
 function AboutDetailsCtrl (
-  dataSetAboutFactory,
-  $scope,
   $location,
+  $log,
+  $scope,
   $window,
-  $log
+  dataSetAboutFactory
   ) {
   var vm = this;
-  vm.dataSet = dataSetAboutFactory.dataSet;
-  vm.studies = dataSetAboutFactory.studies;
   vm.assays = dataSetAboutFactory.assays;
+  vm.dataSet = dataSetAboutFactory.dataSet;
   vm.dataSetUuid = $window.dataSetUuid;
   vm.fileStoreItem = dataSetAboutFactory.fileStoreItem;
   vm.isCollapsed = {
@@ -19,6 +18,7 @@ function AboutDetailsCtrl (
     description: true,
     slug: true
   };
+  vm.studies = dataSetAboutFactory.studies;
   vm.updatedField = {};
 
   vm.refreshDataSetStats = function () {
@@ -78,7 +78,7 @@ function AboutDetailsCtrl (
       vm.dataSet[fieldName] = formInput;
       vm.isCollapsed[fieldName] = true;
     }, function (error) {
-      console.log(error);
+      $log.error(error);
     });
   };
 
@@ -90,11 +90,10 @@ angular
   .module('refineryDataSetAbout')
   .controller('AboutDetailsCtrl',
   [
-    'dataSetAboutFactory',
-    '$scope',
     '$location',
-    '$window',
     '$log',
+    '$scope',
+    '$window',
+    'dataSetAboutFactory',
     AboutDetailsCtrl
   ]);
-

@@ -33,9 +33,6 @@ function dataSetAboutFactory (
 
   var updateDataSet = function (params) {
     var dataSetRequest = dataSetV2Service.partial_update(params);
-    dataSetRequest.$promise.then(function () {
-      // copy new params to the dataSet object
-    });
     return dataSetRequest.$promise;
   };
 
