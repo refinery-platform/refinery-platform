@@ -58,7 +58,11 @@ function dataSetAboutFactory (
     var ownerService = userService.get(userUuid);
     ownerService.then(function (response) {
       angular.copy(response, ownerProfile);
-      ownerName = ownerProfile.fullName;
+      if (ownerProfile.fullName) {
+        ownerName = ownerProfile.fullName;
+      } else {
+        ownerName = ownerProfile.userName;
+      }
     });
     return ownerService;
   };
