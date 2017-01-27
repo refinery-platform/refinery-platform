@@ -301,14 +301,6 @@ class SharableResourceAPIInterface(object):
                 name='api_%s_sharing_list' % (self._meta.resource_name)),
         ]
 
-    def can_user_read_data_set(self, res, user):
-        if user.is_authenticated() and user.has_perm('core.read_dataset', res):
-            return True
-        elif res.is_public():
-            return True
-        else:
-            return False
-
     # TODO: Make sure GuardianAuthorization works.
     def res_sharing(self, request, **kwargs):
         res = self.get_res(kwargs['uuid'])
@@ -316,16 +308,19 @@ class SharableResourceAPIInterface(object):
 
         if not res:
             return HttpBadRequest()
+        # user must be logged in or data set must be public
+        if not user.is_authenticated() and not res.is_public():
+            HttpUnauthorized()
 
         if request.method == 'GET':
-            # check if user has read permissions
-            if not self.can_user_read_data_set(res, user):
+            # user requires read permissions
+            if not user.has_perm('core.read_dataset', res):
                 return HttpUnauthorized()
             kwargs['sharing'] = True
             return self.process_get(request, res, **kwargs)
         elif request.method == 'PUT':
-            # only owners and admins can change share
-            if user.is_authenticated and user != res.get_owner():
+            # user must be admin or owner
+            if not user.is_superuser and user != res.get_owner():
                 return HttpUnauthorized()
             data = json.loads(request.body)
             new_share_list = data['share_list']
