@@ -313,7 +313,7 @@ class SharableResourceAPIInterface(object):
             HttpUnauthorized()
 
         if request.method == 'GET':
-            # user requires read permissions
+            # user has read permissions
             if not user.has_perm('core.read_dataset', res):
                 return HttpUnauthorized()
             kwargs['sharing'] = True
