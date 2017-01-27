@@ -821,6 +821,42 @@ a.analysis-header {
   }
 }
 
+// Generic panel set, similar to dashboard
+.refinery-panel-set {
+  position: relative;
+  width: auto;
+  overflow-x: hidden;
+
+  .refinery-panel {
+    position: relative;
+    margin: 0 0 5px 0;
+    padding: 0;
+  }
+
+  .refinery-header {
+    position: relative;
+    margin: 0;
+    padding: 5px 5px 5px 10px;
+    border-bottom: 1px solid darken(@gray-lighter, 10%);
+    background-color: @gray-lighter;
+
+    h3 a {
+      color: inherit;
+    }
+
+    h3 a i,
+    h3 a .link-hint {
+      text-decoration: none;
+    }
+
+    .link-hint {
+      font-weight: normal;
+      font-size: 0.8em;
+      color: @gray-light;
+    }
+  }
+}
+
 .refinery-header {
   display: block;
   border-bottom: 1px solid @gray-lighter;
