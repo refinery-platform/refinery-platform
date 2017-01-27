@@ -4,32 +4,31 @@ when you run "manage.py test".
 
 Replace this with more appropriate tests for your application.
 """
-import re
 import json
+import re
 
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import QueryDict
+from django.test import TestCase
 
-from rest_framework.test import APIRequestFactory
-from rest_framework.test import APITestCase
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
+from .models import Assay, AttributeOrder, Study, Investigation, Node
+from .serializers import AttributeOrderSerializer
+from .utils import (create_facet_filter_query, customize_attribute_response,
+                    escape_character_solr, format_solr_response,
+                    generate_facet_fields_query,
+                    generate_filtered_facet_fields, generate_solr_params,
+                    get_owner_from_assay, hide_fields_from_list,
+                    initialize_attribute_order_ranks,
+                    insert_facet_field_filter, is_field_in_hidden_list,
+                    objectify_facet_field_counts, update_attribute_order_ranks)
+from .views import Assays, AssaysAttributes
+from core.management.commands.create_public_group import create_public_group
+from core.models import DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
 from file_store.models import FileStoreItem
-from .models import AttributeOrder, Assay, Study, Investigation, Node
-from .views import Assays, AssaysAttributes
-from .utils import (update_attribute_order_ranks,
-                    customize_attribute_response, format_solr_response,
-                    get_owner_from_assay, generate_facet_fields_query,
-                    hide_fields_from_list, is_field_in_hidden_list,
-                    generate_filtered_facet_fields,
-                    insert_facet_field_filter, create_facet_filter_query,
-                    generate_solr_params, objectify_facet_field_counts,
-                    escape_character_solr, initialize_attribute_order_ranks)
-from .serializers import AttributeOrderSerializer
-from core.models import DataSet, InvestigationLink, ExtendedGroup
 
 
 class AssaysAPITests(APITestCase):
@@ -60,6 +59,11 @@ class AssaysAPITests(APITestCase):
         self.view = Assays.as_view()
         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
         self.invalid_format_uuid = "xxxxxxxx"
+
+    def tearDown(self):
+        Assay.objects.all().delete()
+        Study.objects.all().delete()
+        Investigation.objects.all().delete()
 
     def test_get_valid_uuid(self):
         # valid_uuid
@@ -126,6 +130,11 @@ class AssaysAPITests(APITestCase):
 #         self.view = AssaysFiles.as_view()
 #         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
 #         self.invalid_format_uuid = "xxxxxxxx"
+#
+#     def tearDown(self):
+#         Assay.objects.all().delete()
+#         Study.objects.all().delete()
+#         Investigation.objects.all().delete()
 #
 #     def test_get(self):
 #         # valid_uuid, patch date in the module that uses it
@@ -289,6 +298,14 @@ class AssaysAttributesAPITests(APITestCase):
         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
         self.invalid_format_uuid = "xxxxxxxx"
         self.client.logout()
+
+    def tearDown(self):
+        User.objects.all().delete()
+        Assay.objects.all().delete()
+        Study.objects.all().delete()
+        Investigation.objects.all().delete()
+        DataSet.objects.all().delete()
+        AttributeOrder.objects.all().delete()
 
     def test_get_valid_uuid(self):
         # valid_uuid
@@ -675,6 +692,15 @@ class UtilitiesTest(TestCase):
         self.url_root = '/api/v2/assays'
         self.valid_uuid = self.assay.uuid
         self.invalid_uuid = 'xxxxxxxx'
+
+    def tearDown(self):
+        User.objects.all().delete()
+        Assay.objects.all().delete()
+        Study.objects.all().delete()
+        Investigation.objects.all().delete()
+        DataSet.objects.all().delete()
+        InvestigationLink.objects.all().delete()
+        AttributeOrder.objects.all().delete()
 
     def test_objectify_facet_field_counts(self):
         facet_field_array = {'WORKFLOW': ['1_test_04', 1,
@@ -1390,6 +1416,15 @@ class NodeClassMethodTests(TestCase):
             file_uuid=self.filestore_item_1.uuid
         )
 
+    def tearDown(self):
+        FileStoreItem.objects.all().delete()
+        InvestigationLink.objects.all().delete()
+        Investigation.objects.all().delete()
+        Node.objects.all().delete()
+        Study.objects.all().delete()
+        Assay.objects.all().delete()
+        DataSet.objects.all().delete()
+
     def test_create_and_associate_auxiliary_node(self):
         self.assertEqual(self.node.get_children(), [])
         self.node.create_and_associate_auxiliary_node(self.filestore_item.uuid)
@@ -1455,6 +1490,8 @@ class NodeApiV2Tests(APITestCase):
 
     def setUp(self):
 
+        create_public_group()
+
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
@@ -1514,6 +1551,13 @@ class NodeApiV2Tests(APITestCase):
             format="json"
         )
         self.options_response = self.view(self.options_request)
+
+    def tearDown(self):
+        Node.objects.all().delete()
+        User.objects.all().delete()
+        Study.objects.all().delete()
+        Assay.objects.all().delete()
+        Investigation.objects.all().delete()
 
     def test_get_request(self):
         self.assertIsNotNone(self.get_response.data[0])

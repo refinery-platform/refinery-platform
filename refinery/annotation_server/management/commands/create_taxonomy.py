@@ -1,18 +1,19 @@
 import os
 import re
-import sys
 import shutil
 import string
+import sys
 import tarfile
 import tempfile
-import requests
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction, IntegrityError
+
+import requests
 from requests.exceptions import HTTPError
 
-from annotation_server.models import Taxon
+from .models import Taxon
 
 
 class Command(BaseCommand):

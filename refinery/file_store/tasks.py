@@ -1,23 +1,22 @@
 
+import logging
 import os
 import stat
-import logging
-import requests
-from celery.signals import task_success
-
-from requests.exceptions import ContentDecodingError, HTTPError, \
-    ConnectionError
-
 from tempfile import NamedTemporaryFile
 from urlparse import urlparse
-import celery
-from celery.task import task
 
 from django.core.files import File
 
-import data_set_manager
-from .models import (FileStoreItem, get_temp_dir, file_path,
-                     FILE_STORE_BASE_DIR)
+import celery
+from celery.signals import task_success
+from celery.task import task
+import requests
+from requests.exceptions import (ContentDecodingError, ConnectionError,
+                                 HTTPError)
+
+from .models import (file_path, FILE_STORE_BASE_DIR, FileStoreItem,
+                     get_temp_dir)
+from data_set_manager.models import Node
 
 
 logger = logging.getLogger(__name__)
@@ -240,11 +239,11 @@ def begin_auxiliary_node_generation(**kwargs):
     file_store_item_uuid = kwargs['result']
 
     try:
-        data_set_manager.models.Node.objects.get(
+        Node.objects.get(
             file_uuid=file_store_item_uuid
         ).run_generate_auxiliary_node_task()
-    except (data_set_manager.models.Node.DoesNotExist,
-            data_set_manager.models.Node.MultipleObjectsReturned) \
+    except (Node.DoesNotExist,
+            Node.MultipleObjectsReturned) \
             as e:
         logger.error("Couldn't properly fetch Node: %s", e)
 

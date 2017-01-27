@@ -19,7 +19,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import Group, Permission, User
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages
@@ -29,42 +29,40 @@ from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.models import Max
 from django.db.models.fields import IntegerField
-from django.db.models.signals import post_save, pre_delete, post_delete
+from django.db.models.signals import post_delete, post_save, pre_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
 from django.forms import ValidationError
-from django.template import loader, Context
+from django.template import Context, loader
 from django.utils import timezone
 
 from bioblend import galaxy
 from django.template.loader import render_to_string
-from django_extensions.db.fields import UUIDField
 from django_auth_ldap.backend import LDAPBackend
+from django_extensions.db.fields import UUIDField
 from guardian.models import UserObjectPermission
-from guardian.shortcuts import (get_users_with_perms,
-                                get_groups_with_perms, assign_perm,
-                                remove_perm, get_objects_for_group)
-from registration.models import RegistrationProfile, RegistrationManager
-from registration.signals import user_registered, user_activated
+from guardian.shortcuts import (assign_perm, get_groups_with_perms,
+                                get_objects_for_group, get_users_with_perms,
+                                remove_perm)
+from registration.models import RegistrationManager, RegistrationProfile
+from registration.signals import user_activated, user_registered
 
-
-from file_store.models import get_file_size, FileStoreItem, FileType
-from file_store.tasks import rename
-from data_set_manager.models import (Node, Study, Assay, Investigation,
-                                     NodeCollection)
+from .utils import (add_or_update_user_to_neo4j, add_read_access_in_neo4j,
+                    delete_analysis_index, delete_data_set_index,
+                    delete_data_set_neo4j, delete_ontology_from_neo4j,
+                    delete_user_in_neo4j, email_admin, get_aware_local_time,
+                    invalidate_cached_object, remove_read_access_in_neo4j,
+                    update_annotation_sets_neo4j, update_data_set_index)
+from data_set_manager.models import (Assay, Investigation, Node,
+                                     NodeCollection, Study)
 from data_set_manager.utils import (add_annotated_nodes_selection,
                                     index_annotated_nodes_selection)
-from galaxy_connector.galaxy_workflow import (create_expanded_workflow_graph,
+from file_store.models import FileStoreItem, FileType, get_file_size
+from file_store.tasks import rename
+from galaxy_connector.galaxy_workflow import (configure_workflow,
                                               countWorkflowSteps,
-                                              configure_workflow)
+                                              create_expanded_workflow_graph)
 from galaxy_connector.models import Instance
-from .utils import (update_data_set_index, delete_data_set_index,
-                    add_read_access_in_neo4j, remove_read_access_in_neo4j,
-                    delete_data_set_neo4j, delete_ontology_from_neo4j,
-                    delete_analysis_index, invalidate_cached_object,
-                    get_aware_local_time, email_admin,
-                    add_or_update_user_to_neo4j, update_annotation_sets_neo4j,
-                    delete_user_in_neo4j, skip_if_test_run)
 
 logger = logging.getLogger(__name__)
 
@@ -548,15 +546,19 @@ class DataSet(SharableResource):
         pre_isa_archive associated with the DataSet if one exists.
         """
 
-        # Delete isa/pre-isa archives if said DataSet has any associated
-        isa_archive = self.get_isa_archive()
-        pre_isa_archive = self.get_pre_isa_archive()
+        try:
+            self.get_isa_archive().delete()
 
-        if isa_archive:
-            isa_archive.delete()
+        except Exception as e:
+            logger.error(
+                "Couldn't delete DataSet's isa_archive: %s" % e)
 
-        if pre_isa_archive:
-            pre_isa_archive.delete()
+        try:
+            self.get_pre_isa_archive().delete()
+
+        except Exception as e:
+            logger.error(
+                "Couldn't delete DataSet's pre_isa_archive: %s" % e)
 
         related_investigation_links = self.get_investigation_links()
 
@@ -729,7 +731,7 @@ class DataSet(SharableResource):
     def get_isa_archive(self):
         """
         Returns the isa_archive that was used to create the
-        DataSet or None if one isn't associated
+        DataSet
         """
         try:
             return FileStoreItem.objects.get(
@@ -740,14 +742,13 @@ class DataSet(SharableResource):
                 FileStoreItem.MultipleObjectsReturned,
                 InvestigationLink.DoesNotExist,
                 InvestigationLink.MultipleObjectsReturned) as e:
-            logger.debug("Could not fetch FileStoreItem or "
+            logger.error("Error while fetching FileStoreItem or "
                          "InvestigationLink: %s" % e)
-            return None
 
     def get_pre_isa_archive(self):
         """
         Returns the pre_isa_archive that was used to create the
-        DataSet or None if one isn't associated
+        DataSet
         """
         try:
             return FileStoreItem.objects.get(
@@ -758,9 +759,8 @@ class DataSet(SharableResource):
                 FileStoreItem.MultipleObjectsReturned,
                 InvestigationLink.DoesNotExist,
                 InvestigationLink.MultipleObjectsReturned) as e:
-            logger.debug("Could not fetch FileStoreItem or "
+            logger.error("Error while fetching FileStoreItem or "
                          "InvestigationLink: %s" % e)
-            return None
 
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
@@ -1240,7 +1240,6 @@ class Analysis(OwnableResource):
     def get_analysis_results(self):
         return AnalysisResult.objects.filter(analysis_uuid=self.uuid)
 
-    @skip_if_test_run
     def optimize_solr_index(self):
         solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
                                    "data_set_manager"), timeout=10)
@@ -1252,7 +1251,7 @@ class Analysis(OwnableResource):
         try:
             solr.optimize()
         except Exception as e:
-            logger.error("Could not optimize Solr's index: %s", e)
+            logger.error("Could not optimize Solr's index:", e)
 
     def set_status(self, status, message=''):
         """Set analysis status and perform additional actions as required"""
@@ -1871,13 +1870,6 @@ class ExtendedGroup(Group):
         except:
             return None
 
-    def save(self, *args, **kwargs):
-        if len(self.name) == 0:
-            logger.error("Group name cannot be empty.")
-            return
-        else:
-            super(ExtendedGroup, self).save(*args, **kwargs)
-
 
 # automatic creation of a managed group when an extended group is created:
 def create_manager_group(sender, instance, created, **kwargs):
@@ -2262,7 +2254,6 @@ class FastQC(object):
 
 
 @receiver(post_save, sender=User)
-@skip_if_test_run
 def _add_user_to_neo4j(sender, **kwargs):
     user = kwargs['instance']
 

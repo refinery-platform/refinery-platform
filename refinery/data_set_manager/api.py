@@ -4,16 +4,15 @@ Created on Nov 29, 2012
 @author: nils
 '''
 
-from data_set_manager.models import (Investigation, Study, Assay,
-                                     AttributeOrder, Protocol,
-                                     ProtocolReference,
-                                     ProtocolReferenceParameter, Publication,
-                                     Attribute, Node)
 from tastypie import fields
 from tastypie.authentication import Authentication
 from tastypie.authorization import Authorization
 from tastypie.constants import ALL, ALL_WITH_RELATIONS
 from tastypie.resources import ModelResource
+
+from .models import (Assay, Attribute, AttributeOrder, Investigation,
+                     Node, Protocol, ProtocolReference,
+                     ProtocolReferenceParameter, Publication, Study)
 
 
 class AttributeResource(ModelResource):

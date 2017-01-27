@@ -52,8 +52,8 @@ function dataUploadTutorialCtrl2 (
   $scope.dataUploadIntroOptions = {
     showStepNumbers: false,
     showBullets: false,
-    exitOnOverlayClick: false,
-    exitOnEsc: false,
+    exitOnOverlayClick: true,
+    exitOnEsc: true,
     nextLabel: '<strong><i class="fa fa-arrow-right"></i></strong>',
     prevLabel: '<strong><i class="fa fa-arrow-left"></i></strong>',
     skipLabel: '<strong><i class="fa fa-times"></i></strong>',

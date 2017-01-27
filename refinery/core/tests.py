@@ -1,43 +1,39 @@
 import json
 from urlparse import urljoin
 
-import mock
-
 from django.contrib.auth.models import User, Group
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.utils import timezone
+from django.utils import unittest, timezone
 from django.test import TestCase
 
-from rest_framework.test import APIRequestFactory, APIClient, \
-    force_authenticate
-from rest_framework.test import APITestCase
 from guardian.shortcuts import assign_perm
+import mock
 import mockcache as memcache
+from rest_framework.test import (APIRequestFactory, APIClient, APITestCase,
+                                 force_authenticate)
 from tastypie.test import ResourceTestCase
 
-from core.api import AnalysisResource
-from core.management.commands.create_public_group import create_public_group
-from core.management.commands.create_user import init_user
-
-from core.models import (
-    NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,
-    ExtendedGroup, DataSet, InvestigationLink, Project,
-    Analysis, Workflow, WorkflowEngine, UserProfile, invalidate_cached_object,
-    AnalysisNodeConnection, NodeGroup, Tutorials)
-from core.utils import (get_aware_local_time,
-                        create_current_selection_node_group,
-                        filter_nodes_uuids_in_solr, move_obj_to_front)
-from core.views import NodeGroups, DataSetsViewSet, AnalysesViewSet
+from .api import AnalysisResource
+from .management.commands.create_user import init_user
+from .models import (Analysis, AnalysisNodeConnection, create_nodeset, DataSet,
+                     delete_nodeset, ExtendedGroup, get_nodeset,
+                     invalidate_cached_object, InvestigationLink, NodeGroup,
+                     NodeSet, Project, Tutorials, update_nodeset,
+                     UserProfile, Workflow, WorkflowEngine)
+from .utils import (create_current_selection_node_group,
+                    filter_nodes_uuids_in_solr, get_aware_local_time,
+                    move_obj_to_front)
+from .views import AnalysesViewSet, DataSetsViewSet, NodeGroups
 from .serializers import NodeGroupSerializer
-from file_store.models import FileStoreItem
-
-from data_set_manager.models import (Study, Assay, Node, Investigation)
+from data_set_manager.models import Assay, Investigation, Node, Study
+from file_store.models import FileExtension, FileStoreItem
 from galaxy_connector.models import Instance
+
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
 
-class UserCreateTest(TestCase):
+class UserCreateTest(unittest.TestCase):
     """Test User instance creation"""
 
     def setUp(self):
@@ -48,6 +44,9 @@ class UserCreateTest(TestCase):
         self.last_name = "Sample"
         self.affiliation = "University"
         self.public_group_name = ExtendedGroup.objects.public_group().name
+
+    def tearDown(self):
+        User.objects.all().delete()
 
     def test_add_new_user_to_public_group(self):
         """Test if User accounts are added to Public group"""
@@ -66,7 +65,7 @@ class UserCreateTest(TestCase):
             new_user.groups.filter(name=self.public_group_name).count(), 1)
 
 
-class NodeSetTest(TestCase):
+class NodeSetTest(unittest.TestCase):
     """Test all NodeSet operations"""
 
     def setUp(self):
@@ -777,6 +776,9 @@ class AnalysisResourceTest(ResourceTestCase):
             workflow_engine=self.workflow_engine
         )
 
+    def tearDown(self):
+        FileExtension.objects.all().delete()
+
     def get_credentials(self):
         """Authenticate as self.user"""
         # workaround required to use SessionAuthentication
@@ -1006,7 +1008,7 @@ class AnalysisResourceTest(ResourceTestCase):
         self.assertEqual(Analysis.objects.count(), 1)
 
 
-class BaseResourceSlugTest(TestCase):
+class BaseResourceSlugTest(unittest.TestCase):
     """Tests for BaseResource Slugs"""
 
     def setUp(self):
@@ -1022,6 +1024,10 @@ class BaseResourceSlugTest(TestCase):
             name="project3",
             slug=None
         )
+
+    def tearDown(self):
+        DataSet.objects.all().delete()
+        Project.objects.all().delete()
 
     def test_duplicate_slugs(self):
         # Try to create DS with existing slug
@@ -1103,18 +1109,19 @@ class BaseResourceSlugTest(TestCase):
             name="project_no_slug_duplicate3"))
 
 
-class CachingTest(TestCase):
+class CachingTest(unittest.TestCase):
     """Testing the addition and deletion of cached objects"""
 
     def setUp(self):
         # make some data
-        create_public_group()
         self.username = self.password = 'Cool'
-        self.user = User.objects.get_or_create(username=self.username,
-                                               password=self.password)[0]
+        self.user = User.objects.create_user(
+            self.username, '', self.password
+        )
         self.username1 = self.password1 = 'Cool1'
-        self.user1 = User.objects.get_or_create(username=self.username1,
-                                                password=self.password1)[0]
+        self.user1 = User.objects.create_user(
+            self.username1, '', self.password1
+        )
         self.public_group_name = ExtendedGroup.objects.public_group().name
         for index, item in enumerate(range(0, 6)):
             DataSet.objects.create(slug="TestSlug%d" % index)
@@ -1127,6 +1134,8 @@ class CachingTest(TestCase):
     def tearDown(self):
         self.cache = invalidate_cached_object(DataSet.objects.get(
             slug="TestSlug1"), True)
+        DataSet.objects.all().delete()
+        User.objects.all().delete()
 
     def test_verify_cache_invalidation(self):
         # Grab a DataSet and see if we can invalidate the cache
@@ -1192,7 +1201,7 @@ class CachingTest(TestCase):
         self.assertNotEqual(self.initial_cache, new_cache)
 
 
-class WorkflowDeletionTest(TestCase):
+class WorkflowDeletionTest(unittest.TestCase):
     """Testing for the deletion of Workflows"""
 
     def setUp(self):
@@ -1222,6 +1231,15 @@ class WorkflowDeletionTest(TestCase):
         )
         self.analysis.set_owner(self.user)
 
+    def tearDown(self):
+        User.objects.all().delete()
+        Project.objects.all().delete()
+        WorkflowEngine.objects.all().delete()
+        Workflow.objects.all().delete()
+        DataSet.objects.all().delete()
+        Instance.objects.all().delete()
+        Analysis.objects.all().delete()
+
     def test_verify_workflow_used_by_analysis(self):
         self.assertEqual(self.analysis.workflow.name,
                          "workflow_used_by_analyses")
@@ -1240,7 +1258,7 @@ class WorkflowDeletionTest(TestCase):
                           name="workflow_not_used_by_analyses")
 
 
-class DataSetDeletionTest(TestCase):
+class DataSetDeletionTest(unittest.TestCase):
     """Testing for the deletion of Datasets"""
 
     def setUp(self):
@@ -1289,6 +1307,23 @@ class DataSetDeletionTest(TestCase):
         )
         self.analysis.set_owner(self.user)
 
+    def tearDown(self):
+        User.objects.all().delete()
+        Project.objects.all().delete()
+        WorkflowEngine.objects.all().delete()
+        Workflow.objects.all().delete()
+        Instance.objects.all().delete()
+        Analysis.objects.all().delete()
+        DataSet.objects.all().delete()
+        UserProfile.objects.all().delete()
+        Node.objects.all().delete()
+        FileStoreItem.objects.all().delete()
+        Study.objects.all().delete()
+        Assay.objects.all().delete()
+        Investigation.objects.all().delete()
+        AnalysisNodeConnection.objects.all().delete()
+        InvestigationLink.objects.all().delete()
+
     def test_verify_dataset_deletion_if_no_analysis_run_upon_it(self):
         self.assertIsNotNone(
             DataSet.objects.get(name="dataset_without_analysis"))
@@ -1317,7 +1352,7 @@ class DataSetDeletionTest(TestCase):
         self.assertIsNone(self.dataset_without_analysis.get_pre_isa_archive())
 
 
-class AnalysisDeletionTest(TestCase):
+class AnalysisDeletionTest(unittest.TestCase):
     """Testing for the deletion of Analyses"""
 
     def setUp(self):
@@ -1408,6 +1443,22 @@ class AnalysisDeletionTest(TestCase):
                 node=self.node2, step=2,
                 direction="in")
 
+    def tearDown(self):
+        User.objects.all().delete()
+        Project.objects.all().delete()
+        WorkflowEngine.objects.all().delete()
+        Workflow.objects.all().delete()
+        DataSet.objects.all().delete()
+        Instance.objects.all().delete()
+        Analysis.objects.all().delete()
+        UserProfile.objects.all().delete()
+        Node.objects.all().delete()
+        Study.objects.all().delete()
+        Assay.objects.all().delete()
+        Investigation.objects.all().delete()
+        AnalysisNodeConnection.objects.all().delete()
+        InvestigationLink.objects.all().delete()
+
     def test_verify_analysis_deletion_if_nodes_not_analyzed_further(self):
         # Try to delete Analysis with a Node that has an
         # AnalysisNodeConnection with direction == 'out'
@@ -1476,6 +1527,13 @@ class NodeGroupAPITests(APITestCase):
         self.view = NodeGroups.as_view()
         self.invalid_uuid = "03b5f681-35d5-4bdd-bc7d-8552fa777ebc"
         self.invalid_format_uuid = "xxxxxxxx"
+
+    def tearDown(self):
+        NodeGroup.objects.all().delete()
+        Node.objects.all().delete()
+        Assay.objects.all().delete()
+        Study.objects.all().delete()
+        Investigation.objects.all().delete()
 
     def test_get_valid_uuid(self):
         # valid_uuid
@@ -1605,6 +1663,12 @@ class UtilitiesTest(TestCase):
             "32e977fc-b906-4315-b6ed-6a644d173492",
             "910117c5-fda2-4700-ae87-dc897f3a5d85"
             ]
+
+    def tearDown(self):
+        NodeGroup.objects.all().delete()
+        Assay.objects.all().delete()
+        Study.objects.all().delete()
+        Investigation.objects.all().delete()
 
     def test_get_aware_local_time(self):
         expected_time = timezone.localtime(timezone.now())
@@ -1776,6 +1840,11 @@ class UserTutorialsTest(TestCase):
         )
         self.userprofile = UserProfile.objects.get(user=self.user)
 
+    def tearDown(self):
+        User.objects.all().delete()
+        UserProfile.objects.all().delete()
+        Tutorials.objects.all().delete()
+
     def test_tutorial_creation(self):
         self.assertIsNotNone(
             Tutorials.objects.get(user_profile=self.userprofile)
@@ -1819,6 +1888,22 @@ class DataSetResourceTest(ResourceTestCase):
                 data_set=self.dataset,
                 version=1
             )
+
+    def tearDown(self):
+        User.objects.all().delete()
+        Project.objects.all().delete()
+        WorkflowEngine.objects.all().delete()
+        Workflow.objects.all().delete()
+        DataSet.objects.all().delete()
+        Instance.objects.all().delete()
+        Analysis.objects.all().delete()
+        UserProfile.objects.all().delete()
+        Node.objects.all().delete()
+        Study.objects.all().delete()
+        Assay.objects.all().delete()
+        Investigation.objects.all().delete()
+        AnalysisNodeConnection.objects.all().delete()
+        InvestigationLink.objects.all().delete()
 
     def get_credentials(self):
         """Authenticate as self.user"""
@@ -1894,7 +1979,7 @@ class DataSetResourceTest(ResourceTestCase):
         self.assertEqual(data['analyses'], [])
 
 
-class DataSetClassMethodsTest(TestCase):
+class DataSetClassMethodsTest(unittest.TestCase):
     """ Testing of methods specific to the DataSet model
     """
 
@@ -1962,6 +2047,23 @@ class DataSetClassMethodsTest(TestCase):
             name="n3", assay=self.assay, study=self.study)
         self.node4 = Node.objects.create(
             name="n4", assay=self.assay, study=self.study)
+
+    def tearDown(self):
+        User.objects.all().delete()
+        Project.objects.all().delete()
+        WorkflowEngine.objects.all().delete()
+        Workflow.objects.all().delete()
+        DataSet.objects.all().delete()
+        Instance.objects.all().delete()
+        Analysis.objects.all().delete()
+        UserProfile.objects.all().delete()
+        Node.objects.all().delete()
+        Study.objects.all().delete()
+        Assay.objects.all().delete()
+        Investigation.objects.all().delete()
+        AnalysisNodeConnection.objects.all().delete()
+        InvestigationLink.objects.all().delete()
+        FileStoreItem.objects.all().delete()
 
     def test_get_file_store_items(self):
         file_store_items = self.dataset.get_file_store_items()
@@ -2037,6 +2139,14 @@ class DataSetApiV2Tests(APITestCase):
             format="json"
         )
         self.options_response = self.view(self.options_request)
+
+    def tearDown(self):
+        Node.objects.all().delete()
+        User.objects.all().delete()
+        Study.objects.all().delete()
+        Assay.objects.all().delete()
+        DataSet.objects.all().delete()
+        Investigation.objects.all().delete()
 
     def test_unallowed_http_verbs(self):
         self.assertEqual(
@@ -2207,6 +2317,15 @@ class AnalysisApiV2Tests(APITestCase):
             format="json"
         )
         self.options_response = self.view(self.options_request)
+
+    def tearDown(self):
+        Node.objects.all().delete()
+        User.objects.all().delete()
+        Study.objects.all().delete()
+        Assay.objects.all().delete()
+        DataSet.objects.all().delete()
+        Investigation.objects.all().delete()
+        Analysis.objects.all().delete()
 
     def test_unallowed_http_verbs(self):
         self.assertEqual(

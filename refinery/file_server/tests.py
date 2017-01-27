@@ -3,8 +3,8 @@ Created on Apr 21, 2012
 
 """
 
-import struct
 import cStringIO
+import struct
 
 from django.test import TestCase
 

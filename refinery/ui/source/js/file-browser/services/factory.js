@@ -21,10 +21,6 @@ function fileBrowserFactory (
   var customColumnNames = [];
   var nodeUrl = {};
   var nodeGroupList = [];
-  // params for the assays api
-  var filesParam = {
-    uuid: $window.externalAssayUuid
-  };
   var csrfToken = $window.csrf_token;
   var maxFileRequest = fileBrowserSettings.maxFileRequest;
 
@@ -140,7 +136,7 @@ function fileBrowserFactory (
     assayFiles = [];
   };
 
-  var getAssayFiles = function (unencodeParams) {
+  var getAssayFiles = function (unencodeParams, scrollDirection) {
     var params = {};
     var additionalAssayFiles = [];
     angular.copy(unencodeParams, params);
@@ -171,6 +167,8 @@ function fileBrowserFactory (
       // Not concat data when under minimun file order, replace assay files
       if (assayFilesTotalItems.count < maxFileRequest && params.offset === 0) {
         angular.copy(additionalAssayFiles, assayFiles);
+      } else if (scrollDirection === 'up') {
+        angular.copy(additionalAssayFiles.concat(assayFiles), assayFiles);
       } else {
         angular.copy(assayFiles.concat(additionalAssayFiles), assayFiles);
       }
@@ -334,7 +332,6 @@ function fileBrowserFactory (
     assayFilesTotalItems: assayFilesTotalItems,
     attributeFilter: attributeFilter,
     customColumnNames: customColumnNames,
-    filesParam: filesParam,
     nodeGroupList: nodeGroupList,
     createColumnDefs: createColumnDefs,
     createNodeGroup: createNodeGroup,

@@ -14,23 +14,25 @@ Example: FILE_STORE_DIR = 'files'
 
 """
 
+import logging
 import os
 import re
-import logging
 from urlparse import urljoin
-from celery.result import AsyncResult
-from celery.task.control import revoke
 
 from django.conf import settings
-from django.dispatch import receiver
+from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 from django_extensions.db.fields import UUIDField
-from django.core.files.storage import FileSystemStorage
 from django.utils import timezone
 from django.utils.deconstruct import deconstructible
 
+from celery.result import AsyncResult
+from celery.task.control import revoke
+
 import core
+
 
 logger = logging.getLogger(__name__)
 
