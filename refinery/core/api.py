@@ -301,6 +301,14 @@ class SharableResourceAPIInterface(object):
                 name='api_%s_sharing_list' % (self._meta.resource_name)),
         ]
 
+    def can_user_read_data_set(self, res, user):
+        if user.is_authenticated() and user.has_perm('core.read_dataset', res):
+            return True
+        elif res.is_public():
+            return True
+        else:
+            return False
+
     # TODO: Make sure GuardianAuthorization works.
     def res_sharing(self, request, **kwargs):
         res = self.get_res(kwargs['uuid'])
@@ -309,17 +317,16 @@ class SharableResourceAPIInterface(object):
         if not res:
             return HttpBadRequest()
 
-        if user.is_authenticated and user != res.get_owner():
-            return HttpUnauthorized()
-
-        # User not authenticated, res is not public.
-        if not user.is_authenticated() and res and not res.is_public():
-            return HttpUnauthorized()
-
         if request.method == 'GET':
+            # check if user has read permissions
+            if not self.can_user_read_data_set(res, user):
+                return HttpUnauthorized()
             kwargs['sharing'] = True
             return self.process_get(request, res, **kwargs)
         elif request.method == 'PUT':
+            # only owners and admins can change share
+            if user.is_authenticated and user != res.get_owner():
+                return HttpUnauthorized()
             data = json.loads(request.body)
             new_share_list = data['share_list']
 
@@ -1051,9 +1058,6 @@ class NodeResource(ModelResource):
             bundle.data['file_url'] = None
             bundle.data['file_import_status'] = None
         except FileStoreItem.DoesNotExist:
-            logger.warning(
-                "Unable to find file store item with UUID '%s'",
-                bundle.obj.file_uuid)
             bundle.data['file_url'] = None
             bundle.data['file_import_status'] = None
         else:
