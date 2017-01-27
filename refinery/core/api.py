@@ -1058,6 +1058,9 @@ class NodeResource(ModelResource):
             bundle.data['file_url'] = None
             bundle.data['file_import_status'] = None
         except FileStoreItem.DoesNotExist:
+            logger.warning(
+                "Unable to find file store item with UUID '%s'",
+                bundle.obj.file_uuid)
             bundle.data['file_url'] = None
             bundle.data['file_import_status'] = None
         else:
