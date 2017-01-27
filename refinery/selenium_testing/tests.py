@@ -1,6 +1,5 @@
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from guardian.management import create_anonymous_user
 from pyvirtualdisplay import Display
 from selenium import webdriver
 
@@ -20,19 +19,22 @@ display.start()
 class SeleniumTestBase(StaticLiveServerTestCase):
     """Abstract base class to be used for all Selenium-based tests."""
 
-    def setUp(self):
+    def setUp(self, site_login=True, initialize_guest=True):
         self.browser = webdriver.Firefox()
         self.browser.maximize_window()
         # Manually create and save public group to sync Selenium and test
         # threads
         create_public_group()
         ExtendedGroup.objects.public_group().save()
-        init_user("guest", "guest", "guest@coffee.com", "Guest", "Guest",
-                  "Test User", is_active=True)
-        create_anonymous_user('sender')
-        self.user = User.objects.get(username="guest")
-        self.user.save()
-        login(self.browser, self.live_server_url)
+
+        if initialize_guest:
+            init_user("guest", "guest", "guest@coffee.com", "Guest", "Guest",
+                      "Test User", is_active=True)
+            self.user = User.objects.get(username="guest")
+            self.user.save()
+
+        if site_login:
+            login(self.browser, self.live_server_url)
 
     def tearDown(self):
         self.browser.quit()
@@ -47,14 +49,11 @@ class NoLoginTestCase(SeleniumTestBase):
     logged in user
     """
 
-    # Overriding setUp() in this case because we don't need to login or
-    # initialize the guest user
-    def setUp(self):
-        self.browser = webdriver.Firefox()
-        self.browser.maximize_window()
-        create_public_group()
-        ExtendedGroup.objects.public_group().save()
-        create_anonymous_user('sender')
+    # Overriding SeleniumTestBase.setUp() in this case because we don't
+    # need to login or initialize the guest user
+    def setUp(self, site_login=True, initialize_guest=True):
+        super(NoLoginTestCase, self).setUp(initialize_guest=False,
+                                           site_login=False)
 
     def test_login_not_required(self):
         self.browser.get(self.live_server_url)
