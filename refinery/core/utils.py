@@ -1,11 +1,11 @@
 from __future__ import absolute_import
+import logging
 
 import ast
-import logging
-import os
 import py2neo
-from urlparse import urlparse, urljoin
+import sys
 
+import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.models import Site
@@ -14,14 +14,12 @@ from django.core.mail import send_mail
 from django.core.cache import cache
 from django.db import connection
 from django.utils import timezone
-
-import requests
 from rest_framework.response import Response
 from rest_framework import status
+from urlparse import urlparse, urljoin
 
 import core
 import data_set_manager
-
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +30,10 @@ def skip_if_test_run(func):
     log output
     """
     def func_wrapper(*args, **kwargs):
-        try:
-            if os.environ['REDUCE_TEST_OUTPUT'] == "true":
+        if "test" in sys.argv:
                 return
-        except KeyError:
-            logger.error('REDUCE_TEST_OUTPUT .env var not set.')
-        return func(*args, **kwargs)
+        else:
+            return func(*args, **kwargs)
     return func_wrapper
 
 
@@ -48,8 +44,8 @@ def update_data_set_index(data_set):
 
     logger.info('Updated data set (uuid: %s) index', data_set.uuid)
     try:
-        data_set_index = core.search_indexes.DataSetIndex()
-        data_set_index.update_object(data_set, using='core')
+        core.search_indexes.DataSetIndex().update_object(data_set,
+                                                         using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -359,8 +355,8 @@ def delete_data_set_index(data_set):
 
     logger.debug('Deleted data set (uuid: %s) index', data_set.uuid)
     try:
-        data_set_index = core.search_indexes.DataSetIndex()
-        data_set_index.remove_object(data_set, using='core')
+        core.search_indexes.DataSetIndex().remove_object(data_set,
+                                                         using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -759,8 +755,7 @@ def delete_analysis_index(node_instance):
     """
     try:
         data_set_manager.search_indexes.NodeIndex().remove_object(
-            node_instance, using='data_set_manager'
-        )
+            node_instance, using='data_set_manager')
         logger.debug('Deleted Analysis\' NodeIndex with (uuid: %s)',
                      node_instance.uuid)
     except Exception as e:
@@ -923,8 +918,7 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
             params['facets'] = ','.join(filter_attribute.keys())
 
     solr_params = data_set_manager.utils.generate_solr_params(
-        params, assay_uuid
-    )
+        params, assay_uuid)
     # Only require solr filters if exception uuids are passed
     if filter_out_uuids:
         # node_arr = str(filter_out_uuids).split(',')
@@ -932,11 +926,9 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
         field_filter = "&fq=-uuid:({})".format(str_nodes)
         solr_params = ''.join([solr_params, field_filter])
     solr_response = data_set_manager.utils.search_solr(
-        solr_params, 'data_set_manager'
-    )
+        solr_params, 'data_set_manager')
     solr_reponse_json = data_set_manager.utils.format_solr_response(
-        solr_response
-    )
+        solr_response)
     uuid_list = []
     for node in solr_reponse_json.get('nodes'):
         uuid_list.append(node.get('uuid'))

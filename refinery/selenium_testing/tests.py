@@ -1,4 +1,3 @@
-import time
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from guardian.management import create_anonymous_user
@@ -21,16 +20,11 @@ display.start()
 class SeleniumTestBase(StaticLiveServerTestCase):
     """Abstract base class to be used for all Selenium-based tests."""
 
-    # Override `available_apps` to inhibit `post-migrate` signals run upon
-    # `fixture_teardown() See: http://bit.ly/2iJkQnU`
-    # This also allows for speedier testing
-    available_apps = ["core", "data_set_manager", "file_store",
-                      "galaxy_connector", "django.contrib.contenttypes",
-                      "django.contrib.auth", "django.contrib.humanize"]
-
     def setUp(self):
         self.browser = webdriver.Firefox()
         self.browser.maximize_window()
+        # Manually create and save public group to sync Selenium and test
+        # threads
         create_public_group()
         ExtendedGroup.objects.public_group().save()
         init_user("guest", "guest", "guest@coffee.com", "Guest", "Guest",
@@ -105,7 +99,6 @@ class DataSetsPanelTestCase(SeleniumTestBase):
         # Create sample Data & refresh page
         make_analyses_with_single_dataset(5, self.user)
         refresh(self.browser)
-        time.sleep(DEFAULT_WAIT)
 
         self.browser.find_elements_by_class_name("title")[0].click()
 
