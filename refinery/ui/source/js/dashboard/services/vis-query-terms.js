@@ -11,16 +11,11 @@ function DashboardVisQueryTerms () {
   }
 
   function removeFromList (uri) {
-    console.log('remove', uri, list);
     for (var i = 0; i < list.length; i++) {
       if (list[i] === queryTerms[uri]) {
-        console.log('splice that thing', i);
         list.splice(i, 1);
-      } else {
-        console.log(list[i] === queryTerms[uri], list[i], queryTerms[uri]);
       }
     }
-    console.log('remove after', uri, list);
   }
 
   function VisQueryTerms () {}
