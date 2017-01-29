@@ -664,7 +664,7 @@ function DataSetFactory (
    * @author  Fritz Lekschas
    * @date    2016-02-11
    *
-   * @type    {Object}
+   * @type    {Array}
    */
   Object.defineProperty(
     DataSet.prototype,
@@ -672,9 +672,6 @@ function DataSetFactory (
     {
       enumerable: true,
       get: function () {
-        if (_selectionLen()) {
-          return $q.when(_objListToArray(_selection));
-        }
         if (_search) {
           return _currentDsIds.promise;
         }
@@ -684,7 +681,7 @@ function DataSetFactory (
   );
 
   /**
-   * Promise resolving to all currently selected data set IDs.
+   * Promise resolving to all currently available data set IDs.
    *
    * @description
    * In contrast to `allIds` this can either be all IDs when `DataSet.all()` has
@@ -703,6 +700,29 @@ function DataSetFactory (
       enumerable: true,
       get: function () {
         return _allDsIds.promise;
+      }
+    }
+  );
+
+  /**
+   * Promise resolving to all selected IDs.
+   *
+   * @author  Fritz Lekschas
+   * @date    2017-01-29
+   *
+   * @type    {Array}
+   */
+  Object.defineProperty(
+    DataSet.prototype,
+    'selectedIds',
+    {
+      enumerable: true,
+      get: function () {
+        if (_selectionLen()) {
+          return $q.when(_objListToArray(_selection));
+        }
+
+        return $q.when([]);
       }
     }
   );
