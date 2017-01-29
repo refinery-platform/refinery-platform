@@ -236,12 +236,15 @@ function DashboardCtrl (
       }
       if (toState.name === 'launchPad.exploration') {
         if (toParams.context) {
+          var depth = parseInt(toParams.visibleDepth, 10);
+          depth = depth > 0 ? depth : 1;
+
           this.treemapRoot = {
             branchId: toParams.branchId ? toParams.branchId : 0,
             ontId: toParams.context,
-            visibleDepth: toParams.visibleDepth
+            visibleDepth: depth
           };
-          this.initVisDepth.resolve(toParams.visibleDepth);
+          this.initVisDepth.resolve(depth);
         }
         // Need to wait another digestion cycle to ensure the layout is set
         // properly.
