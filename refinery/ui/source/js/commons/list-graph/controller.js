@@ -27,7 +27,8 @@ function ListGraphCtrl (
   pubSub,
   ListGraphVis,
   dashboardVisWrapperResizer,
-  treemapContext
+  treemapContext,
+  dashboardVisQueryTerms
 ) {
   var self = this;
 
@@ -94,6 +95,13 @@ function ListGraphCtrl (
         if (uri) {
           this.updatePrecisionRecall(Object.keys(this.graph[uri].dataSets));
           this.listGraph.trigger('d3ListGraphNodeRoot', [uri]);
+          dashboardVisQueryTerms.set(uri, {
+            uri: uri,
+            label: this.graph[uri].label,
+            dataSetIds: this.graph[uri].dataSets
+          });
+          dashboardVisQueryTerms.setProp(uri, 'mode', 'or');
+          dashboardVisQueryTerms.setProp(uri, 'root', true);
         }
 
         this.listGraph.trigger('d3ListGraphActiveLevel', init.visibleDepth);
@@ -358,9 +366,7 @@ function ListGraphCtrl (
     // the list of data sets.
     if (this.listGraph && data.source !== 'listGraph') {
       this.updatePrecisionRecall(Object.keys(this.graph[data.nodeUri].dataSets));
-      this.listGraph.trigger('d3ListGraphNodeUnroot', {
-        nodeIds: [data.nodeUri]
-      });
+      this.listGraph.trigger('d3ListGraphNodeUnroot', [data.nodeUri]);
     }
   }.bind(this));
 
@@ -370,7 +376,7 @@ function ListGraphCtrl (
     if (this.listGraph && data.source !== 'listGraph' && !data.init) {
       this.updatePrecisionRecall(Object.keys(this.graph[data.nodeUri].dataSets));
       this.listGraph.trigger('d3ListGraphNodeQuery', {
-        id: data.nodeUri,
+        nodeIds: [data.nodeUri],
         mode: data.mode
       });
     }
@@ -382,7 +388,7 @@ function ListGraphCtrl (
     if (this.listGraph && data.source !== 'listGraph' && !data.init) {
       this.updatePrecisionRecall(Object.keys(this.graph[data.nodeUri].dataSets));
       this.listGraph.trigger('d3ListGraphNodeUnquery', {
-        id: data.nodeUri
+        nodeIds: [data.nodeUri]
       });
     }
   }.bind(this));
@@ -488,5 +494,6 @@ angular
     'ListGraphVis',
     'dashboardVisWrapperResizer',
     'treemapContext',
+    'dashboardVisQueryTerms',
     ListGraphCtrl
   ]);
