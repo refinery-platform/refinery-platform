@@ -204,7 +204,7 @@ Object.defineProperty(
 );
 
 VisWrapperCtrl.prototype.clearQuery = function (uri) {
-  this.queryTerms.remove(uri);
+  this.queryTerms.remove(uri, true);
 };
 
 VisWrapperCtrl.prototype.loadData = function () {
@@ -242,7 +242,7 @@ VisWrapperCtrl.prototype.loadData = function () {
 };
 
 VisWrapperCtrl.prototype.toggleQuery = function (uri) {
-  this.queryTerms.remove(uri);
+  this.queryTerms.toggleMode(uri, true);
 };
 
 angular
