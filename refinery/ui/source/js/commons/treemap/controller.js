@@ -1286,16 +1286,17 @@ TreemapCtrl.prototype.draw = function () {
   }
 
   if (rootNodeData) {
-    this.transition(
-      rootNodeData
-    );
+    this.transition(rootNodeData, true);
   } else {
-    this.setRootNode({
-      branchId: 0,
-      ontId: this.data.ontId,
-      uri: this.data.uri,
-      visibleDepth: this.visibleDepth
-    });
+    this.setRootNode(
+      {
+        branchId: 0,
+        ontId: this.data.ontId,
+        uri: this.data.uri,
+        visibleDepth: this.visibleDepth
+      },
+      true
+    );
   }
 
   if (this.rootNode && this.rootNode.visibleDepth) {

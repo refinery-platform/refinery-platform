@@ -25,6 +25,11 @@ function DashboardVisQueryTerms () {
   };
 
   VisQueryTerms.prototype.set = function (uri, term) {
+    if (uri === 'htp://www.w3.org/2002/07/owl#Thing') {
+      // Ignore the absolute root node
+      return;
+    }
+
     queryTerms[uri] = term;
     addToList(uri);
     uris = Object.keys(queryTerms);
