@@ -230,6 +230,10 @@ function TreemapCtrl (
       self.$timeout(self.reRender.bind(self), 0);
     }
   };
+
+  self.pubSub.on('resize', function () {
+    self.$timeout(self.reRender.bind(self), 25);
+  });
 }
 
 /*

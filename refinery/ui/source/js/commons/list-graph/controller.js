@@ -242,6 +242,20 @@ function ListGraphCtrl (
     this.listGraph.trigger('d3ListGraphUpdateBars');
   }.bind(this));
 
+  pubSub.on('resize', function () {
+    $timeout(function () {
+      self.width = self.$visElement.find('svg.base').width();
+      self.height = self.$visElement.find('svg.base').height();
+
+      self.listGraph.reRender({
+        grid: {
+          columns: Math.round(self.width / 175),
+          rows: Math.round(self.height / 24)
+        }
+      });
+    }, 25);
+  });
+
   // External events that should be delegated to the list graph
   this.$rootScope.$on('dashboardVisSearch', function (event, data) {
     if (data.source !== 'listGraph') {
