@@ -25,7 +25,7 @@ function DashboardVisQueryTerms () {
   };
 
   VisQueryTerms.prototype.set = function (uri, term) {
-    if (uri === 'htp://www.w3.org/2002/07/owl#Thing') {
+    if (uri === 'http://www.w3.org/2002/07/owl#Thing') {
       // Ignore the absolute root node
       return;
     }
@@ -42,6 +42,15 @@ function DashboardVisQueryTerms () {
     delete queryTerms[uri];
     uris = Object.keys(queryTerms);
     numQueryTerms = uris.length;
+  };
+
+  VisQueryTerms.prototype.setProp = function (uri, key, value) {
+    if (this.get(uri)) {
+      this.get(uri)[key] = value;
+    }
+  };
+
+  VisQueryTerms.prototype.toggle = function () {
   };
 
   Object.defineProperty(

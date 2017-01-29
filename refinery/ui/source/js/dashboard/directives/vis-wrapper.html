@@ -32,9 +32,14 @@
         <li
           class="badge"
           ng-repeat="query in visWrapper.queryTerms.list track by query.uri">
-          <span class="mode">{{ query.mode }}</span>
+          <span
+            class="mode"
+            ng-click="visWrapper.toggleQuery(query.uri)">{{ query.mode }}</span>
           <span class="name">{{ query.label }}</span>
-          <span class="close fa fa-times-circle" aria-hidden="true"></span>
+          <span
+            class="close fa fa-times-circle"
+            aria-hidden="true"
+            ng-click="visWrapper.clearQuery(query.uri)"></span>
         </li>
       </ul>
     </div>
@@ -64,7 +69,7 @@
             graph="visWrapper.graph"
             value-property-name="visWrapper.propertyValue"
             custom-topbar-buttons="visWrapper.customTopbarButtons"
-            init-vis-depth="visWrapper.initVisDepth"></list-graph>
+            init-vis="visWrapper.initVis"></list-graph>
         </div>
       </div>
       <div

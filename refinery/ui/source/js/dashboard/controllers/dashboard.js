@@ -331,7 +331,7 @@ function DashboardCtrl (
             dataSetIds: data.terms[i].dataSetIds
           });
         }
-        this.queryTerms.get(uri).mode = data.terms[i].mode;
+        this.queryTerms.setProp(uri, 'mode', data.terms[i].mode);
       } else {
         if (this.queryTerms.get(uri)) {
           this.queryTerms.remove(uri);
@@ -360,7 +360,7 @@ function DashboardCtrl (
         dataSetIds: data.dataSetIds
       });
     }
-    this.queryTerms.get(uri).mode = data.mode;
+    this.queryTerms.setProp(uri, 'mode', data.mode);
 
     // Update data set selection
     this.collectDataSetIds().then(function (dsIds) {
