@@ -1,6 +1,6 @@
 'use strict';
 
-function DashboardVisQueryTerms () {
+function DashboardVisQueryTerms ($rootScope) {
   var queryTerms = {};
   var numQueryTerms = 0;
   var uris = [];
@@ -17,6 +17,8 @@ function DashboardVisQueryTerms () {
       }
     }
   }
+
+  var queryModes = ['or', 'and', 'not'];
 
   function VisQueryTerms () {}
 
@@ -36,7 +38,18 @@ function DashboardVisQueryTerms () {
     numQueryTerms = uris.length;
   };
 
-  VisQueryTerms.prototype.remove = function (uri) {
+  VisQueryTerms.prototype.remove = function (uri, notify) {
+    var node = this.get(uri);
+
+    if (node && notify) {
+      $rootScope.$emit(
+        node.root ? 'dashboardVisNodeUnroot' : 'dashboardVisNodeUnquery', {
+          nodeUri: uri,
+          source: 'queryTerms'
+        }
+      );
+    }
+
     removeFromList(uri);
     queryTerms[uri] = undefined;
     delete queryTerms[uri];
@@ -50,7 +63,26 @@ function DashboardVisQueryTerms () {
     }
   };
 
-  VisQueryTerms.prototype.toggle = function () {
+  VisQueryTerms.prototype.toggleMode = function (uri, notify) {
+    var node = this.get(uri);
+
+    if (!node) {
+      return;
+    }
+
+    node.mode = queryModes[
+      (queryModes.indexOf(node.mode) + 1) % queryModes.length
+    ];
+
+    if (notify) {
+      $rootScope.$emit(
+        'dashboardVisNodeQuery', {
+          nodeUri: node.uri,
+          mode: node.mode,
+          source: 'queryTerms'
+        }
+      );
+    }
   };
 
   Object.defineProperty(
@@ -89,5 +121,6 @@ function DashboardVisQueryTerms () {
 angular
   .module('refineryDashboard')
   .factory('dashboardVisQueryTerms', [
+    '$rootScope',
     DashboardVisQueryTerms
   ]);
