@@ -234,6 +234,8 @@ function TreemapCtrl (
   self.pubSub.on('resize', function () {
     self.$timeout(self.reRender.bind(self), 25);
   });
+
+  self.treemapContext.set('treemap', this);
 }
 
 /*
@@ -1286,7 +1288,7 @@ TreemapCtrl.prototype.draw = function () {
   }
 
   if (rootNodeData) {
-    this.transition(rootNodeData, true);
+    this.transition(rootNodeData);
   } else {
     this.setRootNode(
       {
@@ -1294,8 +1296,7 @@ TreemapCtrl.prototype.draw = function () {
         ontId: this.data.ontId,
         uri: this.data.uri,
         visibleDepth: this.visibleDepth
-      },
-      true
+      }
     );
   }
 

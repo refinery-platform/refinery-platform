@@ -21,7 +21,7 @@ function VisWrapperCtrl (
   self.introsSatoriListGraph = new DashboardIntrosSatoriListGraph();
   self.introsSatoriTreemap = new DashboardIntrosSatoriTreemap();
 
-  self.initVisDepth = treemapContext.get('initVisDepth');
+  self.initVis = treemapContext.get('initVis');
 
   // Absolute root node: OWL:Thing
   // The absolute root node is used for pruning the graph as it acts as a
@@ -203,6 +203,10 @@ Object.defineProperty(
   }
 );
 
+VisWrapperCtrl.prototype.clearQuery = function (uri) {
+  this.queryTerms.remove(uri);
+};
+
 VisWrapperCtrl.prototype.loadData = function () {
   var self = this;
 
@@ -235,6 +239,10 @@ VisWrapperCtrl.prototype.loadData = function () {
         }
       });
   }
+};
+
+VisWrapperCtrl.prototype.toggleQuery = function (uri) {
+  this.queryTerms.remove(uri);
 };
 
 angular
