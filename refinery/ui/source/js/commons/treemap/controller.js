@@ -2017,7 +2017,7 @@ TreemapCtrl.prototype.transition = function (data, noNotification) {
         ontId: data.ontId,
         uri: data.uri,
         branchId: data.cache.branchId,
-        label: data.label
+        label: data.name
       });
     }.bind(this));
   }
