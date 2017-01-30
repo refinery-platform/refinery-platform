@@ -71,7 +71,7 @@ function DashboardIntrosSatoriOverview (
         element: '#exploration-view',
         intro:
           'This is the <em>exploration view</em> containing the two main ' +
-          'visualizations for exploring the Refinery Platform.',
+          'visualizations for exploration and the query term list.',
         position: 'left'
       },
       {
@@ -92,6 +92,17 @@ function DashboardIntrosSatoriOverview (
           'annotation.<br/><br/>' +
           '<em class="clickable" onclick="introJsSatoriOverview' +
             '(\'satori-treemap\')">Jump to the treemap intro</em>',
+        position: 'left'
+      },
+      {
+        element: '#query-terms',
+        intro:
+          'This panel shows all active query terms (e.g., a cell type). ' +
+          'Together with the search bar on the left it provides a holistic ' +
+          'overview of all queries.<br/><br/>Query terms are added through ' +
+          'interaction with the two visualizations but can be easily ' +
+          'modified and removed. In the future it will be possible to ' +
+          'directly search for ontological query terms in the search bar.',
         position: 'left'
       },
       {
