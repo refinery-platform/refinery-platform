@@ -379,6 +379,7 @@ function ListGraphCtrl (
         nodeIds: [data.nodeUri],
         mode: data.mode
       });
+      this.listGraph.trigger('d3ListGraphUpdateBars');
     }
   }.bind(this));
 
@@ -390,6 +391,7 @@ function ListGraphCtrl (
       this.listGraph.trigger('d3ListGraphNodeUnquery', {
         nodeIds: [data.nodeUri]
       });
+      this.listGraph.trigger('d3ListGraphUpdateBars');
     }
   }.bind(this));
 
@@ -409,7 +411,7 @@ function ListGraphCtrl (
   }.bind(this));
 
   this.$rootScope.$on('dashboardDsDeselected', function () {
-    dataSet.ids.then(function (allIds) {
+    dataSet.allIds.then(function (allIds) {
       this.updatePrecisionRecall(allIds);
       if (this.listGraph) {
         this.listGraph.trigger('d3ListGraphUpdateBars');
