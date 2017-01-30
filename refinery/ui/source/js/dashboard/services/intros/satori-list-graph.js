@@ -75,6 +75,8 @@ function DashboardIntrosSatoriListGraph (
 
       // Remove the intro-js SVG helper
       $(document.body).removeClass('introjs-svg-el');
+
+      $('.introjs-prevbutton').css('display', null);
     };
 
     self.autoStart = false;
@@ -268,6 +270,8 @@ function DashboardIntrosSatoriListGraph (
             dataSets: [],
             source: 'treeMap'
           });
+
+          $('.introjs-prevbutton').css('display', 'none');
         },
         afterExecutives: function () {
           $(document.body).removeClass('introjs-svg-el');
