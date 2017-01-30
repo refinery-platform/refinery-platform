@@ -26,9 +26,7 @@ function ListGraphCtrl (
   dataSet,
   pubSub,
   ListGraphVis,
-  dashboardVisWrapperResizer,
-  treemapContext,
-  dashboardVisQueryTerms
+  dashboardVisWrapperResizer
 ) {
   var self = this;
 
@@ -82,30 +80,6 @@ function ListGraphCtrl (
         customTopbarButtons: this.customTopbarButtons || [],
         showTitle: true
       });
-
-      this.initVis.then(function (init) {
-        var uri;
-
-        try {
-          uri = treemapContext.get('treemap').cacheTerms[init.ontId][0].uri;
-        } catch (e) {
-          uri = false;
-        }
-
-        if (uri) {
-          this.updatePrecisionRecall(Object.keys(this.graph[uri].dataSets));
-          this.listGraph.trigger('d3ListGraphNodeRoot', [uri]);
-          dashboardVisQueryTerms.set(uri, {
-            uri: uri,
-            label: this.graph[uri].label,
-            dataSetIds: this.graph[uri].dataSets
-          });
-          dashboardVisQueryTerms.setProp(uri, 'mode', 'or');
-          dashboardVisQueryTerms.setProp(uri, 'root', true);
-        }
-
-        this.listGraph.trigger('d3ListGraphActiveLevel', init.visibleDepth);
-      }.bind(this));
     }.bind(this));
   }
 
@@ -496,7 +470,5 @@ angular
     'pubSub',
     'ListGraphVis',
     'dashboardVisWrapperResizer',
-    'treemapContext',
-    'dashboardVisQueryTerms',
     ListGraphCtrl
   ]);

@@ -1800,7 +1800,7 @@ TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
     }
   }
 
-  if (prevRootUri === root.uri) {
+  if (root.uri === prevRootUri && root.uri === this.absRootNode.uri) {
     return;
   }
 
