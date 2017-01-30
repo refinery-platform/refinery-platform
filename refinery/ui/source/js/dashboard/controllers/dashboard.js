@@ -332,10 +332,9 @@ function DashboardCtrl (
           });
         }
         this.queryTerms.setProp(uri, 'mode', data.terms[i].mode);
+        this.queryTerms.setProp(uri, 'root', data.terms[i].root);
       } else {
-        if (this.queryTerms.get(uri)) {
-          this.queryTerms.remove(uri);
-        }
+        this.queryTerms.remove(uri);
       }
     }
 
