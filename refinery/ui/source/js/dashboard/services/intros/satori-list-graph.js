@@ -6,7 +6,9 @@ function DashboardIntrosSatoriListGraph (
   dashboardIntroStarter,
   dashboardIntroSatoriEasterEgg,
   triggerSvgEvent,
-  $
+  $,
+  dashboardVisQueryTerms,
+  $rootScope
 ) {
   /**
    * Constructor
@@ -216,7 +218,80 @@ function DashboardIntrosSatoriListGraph (
           $(document.querySelector(
             '#list-graph-wrapper .visible-node'
           )).trigger('mouseleave');
+          $(document.querySelector(
+            '#list-graph-wrapper .visible-node'
+          )).trigger('click');
+        }
+      },
+      {
+        dynamicSvgElement: function () {
+          return document.querySelector(
+            '#list-graph-wrapper .context-menu'
+          );
+        },
+        dynamicPosition: 'left',
+        intro:
+          'A click on a node open the <em>context menu</em>, which show the ' +
+          'node\'s OntID and URI, let\'s us query the data set collection ' +
+          'by this term, re-roots the node list diagram or focusses the ' +
+          'node\'s parents and children.<br/><br/>'
+      },
+      {
+        dynamicSvgElement: function () {
+          return document.querySelector(
+            '#list-graph-wrapper .visible-node'
+          ).parentNode;
+        },
+        dynamicPosition: 'bottom',
+        intro:
+          'We\'ve now re-rooted (indicated by the orange icon to the left of ' +
+          'the node) the node-link diagram to only show the ' +
+          'siblings and children of the current node.<br/><br/>The orange ' +
+          'icon to the right indicates that we\'re also querying the data ' +
+          'collection by this term.',
+        beforeExecutives: function () {
+          var node = document.querySelector(
+            '#list-graph-wrapper .visible-node'
+          ).__data__;
+
+          dashboardVisQueryTerms.set(
+            node.uri,
+            {
+              uri: node.uri,
+              label: node.name,
+              mode: 'OR'
+            }
+          );
+
+          $rootScope.$emit('dashboardVisNodeRoot', {
+            nodeUri: node.uri,
+            dataSets: [],
+            source: 'treeMap'
+          });
+        },
+        afterExecutives: function () {
           $(document.body).removeClass('introjs-svg-el');
+        }
+      },
+      {
+        element: '#query-terms',
+        position: 'left',
+        intro:
+          'The re-rooting or direct queries are shown in this bar for ' +
+          'easy manipulation. A click on the x button will ' +
+          'bring us back to the global root node.<br/>It is possible to ' +
+          'toggle through different Boolean query modes ' +
+          '(i.e., OR, AND, or NOT).',
+        afterExecutives: function () {
+          var node = document.querySelector(
+            '#list-graph-wrapper .visible-node'
+          ).__data__;
+
+          $rootScope.$emit('dashboardVisNodeUnroot', {
+            nodeUri: node.uri,
+            dataSets: [],
+            source: 'treeMap'
+          });
         }
       },
       {
@@ -250,5 +325,7 @@ angular
     'dashboardIntroSatoriEasterEgg',
     'triggerSvgEvent',
     '$',
+    'dashboardVisQueryTerms',
+    '$rootScope',
     DashboardIntrosSatoriListGraph
   ]);
