@@ -52,12 +52,37 @@ function DashboardVisQueryTerms ($rootScope) {
     }
 
     if (notify) {
-      $rootScope.$emit(
-        node.root ? 'dashboardVisNodeUnroot' : 'dashboardVisNodeUnquery', {
-          nodeUri: uri,
+      if (node.root) {
+        $rootScope.$emit(
+          'dashboardVisNodeUnroot', {
+            nodeUri: uri,
+            source: 'queryTerms'
+          }
+        );
+
+        $rootScope.$emit('dashboardVisNodeToggleQuery', {
+          terms: [
+            {
+              nodeUri: 'http://www.w3.org/2002/07/owl#Thing',
+              nodeLabel: 'Root',
+              mode: 'or',
+              query: true,
+              root: true
+            },
+            {
+              nodeUri: uri
+            }
+          ],
           source: 'queryTerms'
-        }
-      );
+        });
+      } else {
+        $rootScope.$emit(
+          'dashboardVisNodeUnquery', {
+            nodeUri: uri,
+            source: 'queryTerms'
+          }
+        );
+      }
     }
 
     removeFromList(uri);
