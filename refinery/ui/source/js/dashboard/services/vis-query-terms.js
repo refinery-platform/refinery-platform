@@ -32,8 +32,14 @@ function DashboardVisQueryTerms ($rootScope) {
       return;
     }
 
+    var node = this.get(uri);
+
     queryTerms[uri] = term;
-    addToList(uri);
+
+    if (!node) {
+      addToList(uri);
+    }
+
     uris = Object.keys(queryTerms);
     numQueryTerms = uris.length;
   };
@@ -41,7 +47,11 @@ function DashboardVisQueryTerms ($rootScope) {
   VisQueryTerms.prototype.remove = function (uri, notify) {
     var node = this.get(uri);
 
-    if (node && notify) {
+    if (!node) {
+      return;
+    }
+
+    if (notify) {
       $rootScope.$emit(
         node.root ? 'dashboardVisNodeUnroot' : 'dashboardVisNodeUnquery', {
           nodeUri: uri,
