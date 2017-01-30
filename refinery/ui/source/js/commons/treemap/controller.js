@@ -481,7 +481,8 @@ TreemapCtrl.prototype.addEventListeners = function () {
           uri: uri,
           // This is tricky because there are multiple paths in the tree map but
           // not in the list graph.
-          branchId: 0
+          branchId: 0,
+          label: this.nodeIndex[uri][0].label
         }, true);
       }
     }
@@ -492,7 +493,8 @@ TreemapCtrl.prototype.addEventListeners = function () {
       this.setRootNode({
         ontId: this.absRootNode.ontId,
         uri: this.absRootNode.uri,
-        branchId: 0
+        branchId: 0,
+        label: this.absRootNode.label
       }, true);
     }
   }.bind(this));
@@ -506,7 +508,8 @@ TreemapCtrl.prototype.addEventListeners = function () {
         this.setRootNode({
           ontId: this.nodeIndex[uri][0].ontId,
           uri: uri,
-          branchId: 0
+          branchId: 0,
+          label: this.nodeIndex[uri][0].label
         }, true);
       }
     }
@@ -1295,7 +1298,8 @@ TreemapCtrl.prototype.draw = function () {
         branchId: 0,
         ontId: this.data.ontId,
         uri: this.data.uri,
-        visibleDepth: this.visibleDepth
+        visibleDepth: this.visibleDepth,
+        label: this.data.label
       }
     );
   }
@@ -1824,11 +1828,13 @@ TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
   var terms = [
     {
       nodeUri: root.uri,
+      nodeLabel: root.label,
       dataSetIds: getAssociatedDataSets(
         this.cacheTerms[root.ontId][root.branchId]
       ),
       mode: 'and',
-      query: true
+      query: true,
+      root: true
     }
   ];
 
@@ -2010,7 +2016,8 @@ TreemapCtrl.prototype.transition = function (data, noNotification) {
       this.setRootNode({
         ontId: data.ontId,
         uri: data.uri,
-        branchId: data.cache.branchId
+        branchId: data.cache.branchId,
+        label: data.label
       });
     }.bind(this));
   }

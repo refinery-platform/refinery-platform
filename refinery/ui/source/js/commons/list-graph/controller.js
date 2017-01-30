@@ -241,6 +241,7 @@ function ListGraphCtrl (
         nodeLabel: data[i].data.name,
         dataSetIds: this.getAssociatedDataSetsIds(this.graph[data[i].data.id]),
         mode: data[i].data.mode,
+        root: data[i].data.root,
         query: data[i].name === 'd3ListGraphNodeQuery'
       });
     }
