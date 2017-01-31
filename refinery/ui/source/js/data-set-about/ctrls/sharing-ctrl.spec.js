@@ -6,6 +6,7 @@ describe('Controller: AboutSharingCtrl', function () {
   var factory;
   var $controller;
   var fakeUuid;
+  var mocker;
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryDataSetAbout'));
@@ -21,7 +22,8 @@ describe('Controller: AboutSharingCtrl', function () {
       $scope: scope
     });
     factory = _dataSetAboutFactory_;
-    fakeUuid = _mockParamsFactory_.generateUuid();
+    mocker = _mockParamsFactory_;
+    fakeUuid = mocker.generateUuid();
   }));
 
   it('AboutSharingCtrl ctrl should exist', function () {
@@ -67,7 +69,7 @@ describe('Controller: AboutSharingCtrl', function () {
         lastName: '',
         userId: 2,
         userName: 'guest',
-        userProfileUuid: '5377caec-0e4f-4de5-9db5-3214b6ef0857'
+        userProfileUuid: mocker.generateUuid()
       };
     }));
 
