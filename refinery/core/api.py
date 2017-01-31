@@ -83,6 +83,12 @@ class SharableResourceAPIInterface(object):
         return perms
 
     def get_share_list(self, user, res):
+        # Handle anonymousUsers seperatly due to request.users
+        # SimpleLazyObjects loading Users vs AnonymousUsers. Can't compare
+        # SLO-AnonymousUsers directly with user models
+        if user.is_anonymous():
+            user = User.objects.get(username='AnonymousUser')
+
         groups_in = filter(
             lambda g:
             not self.is_manager_group(g) and user in g.user_set.all(),
