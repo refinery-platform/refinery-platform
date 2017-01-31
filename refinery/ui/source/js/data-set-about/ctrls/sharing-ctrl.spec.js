@@ -5,11 +5,15 @@ describe('Controller: AboutSharingCtrl', function () {
   var scope;
   var factory;
   var $controller;
+  var fakeUuid;
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryDataSetAbout'));
   beforeEach(inject(function (
-    $rootScope, _$controller_, _dataSetAboutFactory_
+    $rootScope,
+    _$controller_,
+    _dataSetAboutFactory_,
+    _mockParamsFactory_
   ) {
     scope = $rootScope.$new();
     $controller = _$controller_;
@@ -17,6 +21,7 @@ describe('Controller: AboutSharingCtrl', function () {
       $scope: scope
     });
     factory = _dataSetAboutFactory_;
+    fakeUuid = _mockParamsFactory_.generateUuid();
   }));
 
   it('AboutSharingCtrl ctrl should exist', function () {
@@ -48,23 +53,40 @@ describe('Controller: AboutSharingCtrl', function () {
     });
   });
 
-  describe('refreshOwnerName', function () {
-    it('refreshOwnerName is method', function () {
+  describe('getOwnerName', function () {
+    var ownerResult;
+    var userService;
+
+    beforeEach(inject(function (_userService_) {
+      userService = _userService_;
+      ownerResult = {
+        affiliation: '',
+        email: 'guest@example.com',
+        firstName: 'Guest',
+        fullName: 'Guest',
+        lastName: '',
+        userId: 2,
+        userName: 'guest',
+        userProfileUuid: '5377caec-0e4f-4de5-9db5-3214b6ef0857'
+      };
+    }));
+
+    it('refreshOwnerName is a method', function () {
       expect(angular.isFunction(ctrl.refreshOwnerName)).toBe(true);
     });
 
-    it('refreshOwnerName returns calls Factory and updates mock item', function () {
-      var mockOwnerName = '';
-      spyOn(factory, 'getOwnerName').and.callFake(function () {
+    it('refreshOwnerName returns a promise', function () {
+      var response = {};
+      spyOn(userService, 'get').and.callFake(function () {
         return {
           then: function () {
-            mockOwnerName = 'Paul Stevens';
+            response = ownerResult;
           }
         };
       });
-      expect(mockOwnerName).toEqual('');
-      ctrl.refreshOwnerName();
-      expect(mockOwnerName).toEqual('Paul Stevens');
+      expect(response).toEqual({});
+      ctrl.refreshOwnerName({ uuid: fakeUuid });
+      expect(response).toEqual(ownerResult);
     });
   });
 });

@@ -300,41 +300,4 @@ describe('Data Set About Factory', function () {
       expect(successData).toEqual(dataSetSharingResult);
     });
   });
-
-  describe('getOwnerName', function () {
-    var ownerResult;
-    var userService;
-
-    beforeEach(inject(function (_userService_) {
-      userService = _userService_;
-      ownerResult = {
-        affiliation: '',
-        email: 'guest@example.com',
-        firstName: 'Guest',
-        fullName: 'Guest',
-        lastName: '',
-        userId: 2,
-        userName: 'guest',
-        userProfileUuid: '5377caec-0e4f-4de5-9db5-3214b6ef0857'
-      };
-    }));
-
-    it('getOwnerName is a method', function () {
-      expect(angular.isFunction(factory.getOwnerName)).toBe(true);
-    });
-
-    it('getOwnerName returns a promise', function () {
-      var response = {};
-      spyOn(userService, 'get').and.callFake(function () {
-        return {
-          then: function () {
-            response = ownerResult;
-          }
-        };
-      });
-      expect(response).toEqual({});
-      factory.getOwnerName({ uuid: fakeUuid });
-      expect(response).toEqual(ownerResult);
-    });
-  });
 });

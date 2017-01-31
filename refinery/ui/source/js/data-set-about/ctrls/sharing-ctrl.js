@@ -2,6 +2,7 @@
 
 function AboutSharingCtrl (
   dataSetAboutFactory,
+  userService,
   $scope,
   $location,
   $window,
@@ -9,7 +10,7 @@ function AboutSharingCtrl (
   ) {
   var vm = this;
   vm.dataSetSharing = dataSetAboutFactory.dataSetSharing;
-  vm.ownerName = dataSetAboutFactory.ownerName;
+  vm.ownerName = '';
   vm.groupList = dataSetAboutFactory.dataSetSharing.share_list;
 
   vm.refreshDataSetSharing = function () {
@@ -27,13 +28,13 @@ function AboutSharingCtrl (
   };
 
   vm.refreshOwnerName = function (userUuid) {
-    dataSetAboutFactory
-      .getOwnerName(userUuid)
-      .then(function () {
-        vm.ownerName = dataSetAboutFactory.ownerName;
-      }, function (error) {
-        $log.error(error);
-      });
+    userService.get(userUuid).then(function (response) {
+      if (response.fullName) {
+        vm.ownerName = response.fullName;
+      } else {
+        vm.ownerName = response.userName;
+      }
+    });
   };
 
   vm.refreshDataSetSharing();
@@ -45,6 +46,7 @@ angular
   .controller('AboutSharingCtrl',
   [
     'dataSetAboutFactory',
+    'userService',
     '$scope',
     '$location',
     '$window',

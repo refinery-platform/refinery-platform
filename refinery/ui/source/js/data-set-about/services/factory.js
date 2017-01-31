@@ -6,8 +6,7 @@ function dataSetAboutFactory (
   fileStoreItemService,
   groupMemberService,
   sharingService,
-  studyService,
-  userService
+  studyService
 ) {
   var assays = [];
   var dataSet = {};
@@ -15,8 +14,6 @@ function dataSetAboutFactory (
   var fileStoreItem = {};
   var investigation = {};
   var isaTab = {};
-  var ownerProfile = {};
-  var ownerName = '';
   var studies = [];
 
   var getDataSet = function (dataSetUuid) {
@@ -54,19 +51,6 @@ function dataSetAboutFactory (
     return dataSetRequest.$promise;
   };
 
-  var getOwnerName = function (userUuid) {
-    var ownerService = userService.get(userUuid);
-    ownerService.then(function (response) {
-      angular.copy(response, ownerProfile);
-      if (ownerProfile.fullName) {
-        ownerName = ownerProfile.fullName;
-      } else {
-        ownerName = ownerProfile.userName;
-      }
-    });
-    return ownerService;
-  };
-
   // Get Studies associated with a data set
   var getStudies = function (dataSetUuid) {
     var params = {
@@ -98,12 +82,10 @@ function dataSetAboutFactory (
     fileStoreItem: fileStoreItem,
     investigation: investigation,
     isaTab: isaTab,
-    ownerName: ownerName,
     studies: studies,
     getDataSet: getDataSet,
     getDataSetSharing: getDataSetSharing,
     getFileStoreItem: getFileStoreItem,
-    getOwnerName: getOwnerName,
     getStudies: getStudies,
     getStudysAssays: getStudysAssays
   };
@@ -118,7 +100,6 @@ angular
     'groupMemberService',
     'sharingService',
     'studyService',
-    'userService',
     dataSetAboutFactory
   ]
 );
