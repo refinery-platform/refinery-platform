@@ -7,6 +7,7 @@ describe('Controller: Node Group Ctrl', function () {
   var $controller;
   var service;
   var resetService;
+  var mocker;
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryFileBrowser'));
@@ -14,6 +15,7 @@ describe('Controller: Node Group Ctrl', function () {
     $rootScope,
     _$controller_,
     _fileBrowserFactory_,
+    _mockParamsFactory_,
     _selectedNodesService_,
     _resetGridService_,
     $window
@@ -25,6 +27,7 @@ describe('Controller: Node Group Ctrl', function () {
     });
     factory = _fileBrowserFactory_;
     service = _selectedNodesService_;
+    mocker = _mockParamsFactory_;
     resetService = _resetGridService_;
     $window.externalAssayUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
     $window.externalStudyUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
@@ -68,7 +71,7 @@ describe('Controller: Node Group Ctrl', function () {
     var mockResetResponse = false;
     ctrl.nodeGroups = {
       groups: [{
-        uuid: '7f9fdd26-187f-45d1-a87e-4d4e02d5aa1d',
+        uuid: mocker.generateUuid(),
         node_count: 0,
         is_implicit: false,
         study: '8486046b-22f4-447f-9c81-41dbf6173c44',
