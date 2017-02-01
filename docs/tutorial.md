@@ -85,9 +85,10 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
   - __Create a new group__
     1. Click the *__+__* icon in the top right of the *__Groups__* panel
     2. Choose a unique *__Group name__* and click *__Create group__*
-    3. Click the new *__Group name__* within the *__Groups__* panel to display members of the group within the *__Members__* panel
-- create group for collaboration
-- invite other users to group
+    3. Select the new group within the *__Groups__* panel to display members of the group within the *__Members__* panel
+  - __Invite new group members__
+    1. Select a group within the *__Groups__* panel and click the *__+__* icon in the top right of the *__Members__* panel
+    2. Provide a *__Recipient e-mail__* address belonging to the new group member and click *__Send Invite__*
 - share data set with with group
 
 ## 9. Sharing Data Sets with Collaboration Groups
