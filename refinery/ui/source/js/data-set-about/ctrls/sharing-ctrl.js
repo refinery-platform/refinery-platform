@@ -10,8 +10,8 @@ function AboutSharingCtrl (
   ) {
   var vm = this;
   vm.dataSetSharing = dataSetAboutFactory.dataSetSharing;
+  vm.groupList = dataSetAboutFactory.groupList;
   vm.ownerName = '';
-  vm.groupList = dataSetAboutFactory.dataSetSharing.share_list;
 
   vm.refreshDataSetSharing = function () {
     var dataSetUuid = $window.dataSetUuid;
@@ -20,7 +20,7 @@ function AboutSharingCtrl (
       .getDataSetSharing(dataSetUuid)
       .then(function () {
         vm.dataSetSharing = dataSetAboutFactory.dataSetSharing;
-        vm.groupList = dataSetAboutFactory.dataSetSharing.share_list;
+        vm.groupList = dataSetAboutFactory.groupList;
         vm.refreshOwnerName(vm.dataSetSharing.owner);
       }, function (error) {
         $log.error(error);

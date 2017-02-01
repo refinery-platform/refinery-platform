@@ -12,6 +12,7 @@ function dataSetAboutFactory (
   var dataSet = {};
   var dataSetSharing = {};
   var fileStoreItem = {};
+  var groupList = [];
   var investigation = {};
   var isaTab = {};
   var studies = [];
@@ -39,6 +40,17 @@ function dataSetAboutFactory (
     return fileStore.$promise;
   };
 
+  // helper method returns only groups associated with data set
+  var filterDataSetGroups = function (allGroups) {
+    var filteredGroupList = [];
+    for (var i = 0; i < allGroups.length; i++) {
+      if (allGroups[i].perms.read || allGroups[i].perms.write) {
+        filteredGroupList.push(allGroups[i]);
+      }
+    }
+    return filteredGroupList;
+  };
+
   var getDataSetSharing = function (dataSetUuid) {
     var params = {
       uuid: dataSetUuid,
@@ -47,6 +59,8 @@ function dataSetAboutFactory (
     var dataSetRequest = sharingService.query(params);
     dataSetRequest.$promise.then(function (response) {
       angular.copy(response, dataSetSharing);
+      var filteredGroups = filterDataSetGroups(response.share_list);
+      angular.copy(filteredGroups, groupList);
     });
     return dataSetRequest.$promise;
   };
@@ -80,6 +94,7 @@ function dataSetAboutFactory (
     dataSet: dataSet,
     dataSetSharing: dataSetSharing,
     fileStoreItem: fileStoreItem,
+    groupList: groupList,
     investigation: investigation,
     isaTab: isaTab,
     studies: studies,
