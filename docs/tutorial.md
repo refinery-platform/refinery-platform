@@ -19,7 +19,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 
 > __Column Names__: The column names provided in the metadata file can be freely chosen by the analyst and will be used to identify attributes throughout the Refinery application. They _must be unique_, _must not contain any special characters_, and _should be descriptive yet concise_.
 
-## 2. Importing a Data Set 
+## 2. Uploading a Data Set 
 1. Go to the [Refinery Launch Pad][scc-home]
 2. Click *__Upload__* from the *__Data Sets__* panel
 3. First choose delimiter used in the metadata file and then upload the file
@@ -32,10 +32,10 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 7. Click *__Start upload__* to begin uploading all selected data files
 8. After all data files have uploaded, click *__Upload Data Set__*
 
-## 3. Viewing Data Sets in the Data Set Browser
+## 3. Viewing a Data Set Summary in the Data Set Browser
 1. Return to the *__Launch Pad__* (Refinery homepage) and click on the newly uploaded data set title. The *__Data Set Browser__* will display a summary of the data set
 
-## 4. Exploring Contents of the Data Set in the File Browser
+## 4. Exploring Data Set Contents in the File Browser
 1. Click *__View Content in File Browser__* to view the individual files belonging to the data set:
   - Files can be filtered based on attributes using the *__Attribute Filter__* in the left-hand panel
   - Files can also be sorted according to attributes (both ascending and descending) by clicking the attribute names (i.e. column headers)
@@ -80,17 +80,19 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 2. Select *__Provenance__* in the *__Display__* drop-down menu located on the right-hand side of the page
 3. Review the displayed nodes to track the analysis history of the data set -- each new analysis will add a new node to the provenance graph
 
-## 8. Sharing Data Sets with Collaboration Groups
+## 8. Creating and Modifying Collaboration Groups
 1. From the *__Launch Pad__*, click *__Collaboration__* within the navigation bar (top of page)
   - __Create a new group__
     1. Click the *__+__* icon in the top right of the *__Groups__* panel
     2. Choose a unique *__Group name__* and click *__Create group__*
-    3. Click the new *__Group name__* within the *__Groups__* panel to display 
+    3. Click the new *__Group name__* within the *__Groups__* panel to display members of the group within the *__Members__* panel
 - create group for collaboration
 - invite other users to group
 - share data set with with group
 
-## 9. Deleting Analyses and Data Sets
+## 9. Sharing Data Sets with Collaboration Groups
+
+## 10. Deleting Analyses and Data Sets
 1. To delete an analysis only, click the trash can icon in the Analyses panel on the Launch Pad. To delete a data set and all its associated analyses, click the trash can icon in the Data Sets panel on the Launch Pad.
 
 [refinery-sample-metadata.tsv]: https://beta.stemcellcommons.org/static/sample-files/refinery-sample-metadata.tsv
