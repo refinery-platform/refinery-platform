@@ -20,7 +20,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 > __Column Names__: The column names provided in the metadata file can be freely chosen by the analyst and will be used to identify attributes throughout the Refinery application. They _must be unique_, _must not contain any special characters_, and _should be descriptive yet concise_.
 
 ## 2. Importing a Data Set 
-1. Go to the Stem Cell Commons Launch Pad at https://beta.stemcellcommons.org
+1. Go to the Stem Cell Commons [Launch Pad][scc-home]
 2. Click the Upload button from the Data Sets panel on the Launch Pad
 3. First choose delimiter used in the metadata file and then upload the file
   - __Tutorial Data Set: upload tab-delimited `tutorial.tsv`__
@@ -89,3 +89,4 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 1. To delete an analysis only, click the trash can icon in the Analyses panel on the Launch Pad. To delete a data set and all its associated analyses, click the trash can icon in the Data Sets panel on the Launch Pad.
 
 [refinery-sample-metadata.tsv]: https://beta.stemcellcommons.org/static/sample-files/refinery-sample-metadata.tsv
+[scc-home]: https://beta.stemcellcommons.org
