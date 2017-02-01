@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import gzip
 import logging
 import os
@@ -7,8 +8,8 @@ import zipfile
 from django.conf import settings
 from django.core.management.base import CommandError, LabelCommand
 
-from .models import ChromInfo, CytoBand, Gene, GenomeBuild
-from .utils import SUPPORTED_GENOMES
+from ...models import ChromInfo, CytoBand, Gene, GenomeBuild
+from ...utils import SUPPORTED_GENOMES
 from data_set_manager.tasks import download_http_file
 from file_store.models import _mkdir
 

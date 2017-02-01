@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 from optparse import make_option
 
 from django.core.management.base import BaseCommand, CommandError
 
-from data_set_manager.single_file_column_parser import SingleFileColumnParser
-from data_set_manager.tasks import create_dataset
+from ...single_file_column_parser import SingleFileColumnParser
+from ...tasks import create_dataset
 
 
 class Command(BaseCommand):

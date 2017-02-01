@@ -1,9 +1,11 @@
+from __future__ import absolute_import
 import os
 import sys
-import yaml
-import pytest
 
 from django.contrib.auth.models import User
+
+import pytest
+import yaml
 
 from core.models import DataSet, Analysis
 from factory_boy.django_model_factories import (

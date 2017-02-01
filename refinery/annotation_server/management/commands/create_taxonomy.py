@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import os
 import re
 import shutil
@@ -13,7 +14,7 @@ from django.db import transaction, IntegrityError
 import requests
 from requests.exceptions import HTTPError
 
-from .models import Taxon
+from ...models import Taxon
 
 
 class Command(BaseCommand):
