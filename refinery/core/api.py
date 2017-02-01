@@ -317,7 +317,7 @@ class SharableResourceAPIInterface(object):
             return HttpBadRequest()
         # if user is not logged in then data set must be public
         if not user.is_authenticated() and not res.is_public():
-            HttpUnauthorized()
+            return HttpUnauthorized()
 
         if request.method == 'GET':
             # user has read permissions
