@@ -5,19 +5,27 @@ describe('Data Set About Factory', function () {
   var deferred;
   var rootScope;
   var $q;
-  var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+  var fakeUuid;
+  var mocker;
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryDataSetAbout'));
-  beforeEach(inject(function (_dataSetAboutFactory_) {
+  beforeEach(inject(function (_dataSetAboutFactory_, _mockParamsFactory_) {
     factory = _dataSetAboutFactory_;
+    mocker = _mockParamsFactory_;
+    fakeUuid = mocker.generateUuid();
   }));
 
   it('factory and tools variables should exist', function () {
     expect(factory).toBeDefined();
-    expect(factory.dataSet).toEqual({ });
-    expect(factory.studies).toEqual([]);
     expect(factory.assays).toEqual([]);
+    expect(factory.dataSet).toEqual({ });
+    expect(factory.dataSetSharing).toEqual({ });
+    expect(factory.fileStoreItem).toEqual({ });
+    expect(factory.groupList).toEqual([]);
+    expect(factory.investigation).toEqual([]);
+    expect(factory.isaTab).toEqual({ });
+    expect(factory.studies).toEqual([]);
   });
 
   describe('getDataSet', function () {
@@ -50,7 +58,7 @@ describe('Data Set About Factory', function () {
           slug: null,
           summary: '',
           title: 'Request for Comments (RFC) Test',
-          uuid: 'db03efb7-cf01-4840-bcb2-7b023efc290c'
+          uuid: mocker.generateUuid()
         }]
       };
       spyOn(dataSetService, 'query').and.callFake(function () {
@@ -144,7 +152,7 @@ describe('Data Set About Factory', function () {
           file_name: 's_study.txt',
           id: 10,
           identifier: 'IETF Request for Comments',
-          investigation_uuid: '120f31a7-0f3a-4359-ab7b-4a83247c7887',
+          investigation_uuid: mocker.generateUuid(),
           protocols: [],
           publications: [],
           release_date: null,
@@ -152,7 +160,7 @@ describe('Data Set About Factory', function () {
           sources: [],
           submission_date: '2013-03-22',
           title: 'RFC Documents',
-          uuid: '8486046b-22f4-447f-9c81-41dbf6173c44'
+          uuid: mocker.generateUuid()
         }]
       };
       spyOn(studyService, 'query').and.callFake(function () {
@@ -270,7 +278,7 @@ describe('Data Set About Factory', function () {
         slug: null,
         summary: '',
         title: 'Request for Comments (RFC) Test',
-        uuid: 'db03efb7-cf01-4840-bcb2-7b023efc290c'
+        uuid: mocker.generateUuid()
       };
       spyOn(sharingService, 'query').and.callFake(function () {
         deferred = $q.defer();
