@@ -1,4 +1,6 @@
-import process_isatab
+from __future__ import absolute_import
+
+from . import process_isatab
 
 
 class Command(process_isatab.Command):
