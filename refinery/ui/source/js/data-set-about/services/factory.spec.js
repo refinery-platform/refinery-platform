@@ -23,7 +23,7 @@ describe('Data Set About Factory', function () {
     expect(factory.dataSetSharing).toEqual({ });
     expect(factory.fileStoreItem).toEqual({ });
     expect(factory.groupList).toEqual([]);
-    expect(factory.investigation).toEqual([]);
+    expect(factory.investigation).toEqual({ });
     expect(factory.isaTab).toEqual({ });
     expect(factory.studies).toEqual([]);
   });
