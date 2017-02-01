@@ -12,7 +12,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 
 ## 1. Creating a Metadata File
 1. Compile all the metadata to be associated with the data set and then organize these metadata into a delimited (e.g. tab-delimited) text file. A template metadata file can be found [here][refinery-sample-metadata.tsv] -- note the required attributes (sample name, data file, and organism). Additional attributes can be appended as needed.
-  - __Tutorial Data Set: tab-delimited `tutorial.tsv` metadata file already created__
+  - __Tutorial Data Set: tab-delimited__ `tutorial.tsv` __metadata file already created__
 
 > __Column Order__: The attribute and file name columns in the metadata file can be provided in any order and the column headers can be chosen by the investigator. However, given that the data set importer (see next section below) will map column 1 to _sample name_, column 2 to _data file_, and column 3 to _organism_, it can save time during import if this information is provided in the first three columns in this order.
 
@@ -23,20 +23,20 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 1. Go to the [Refinery Launch Pad][scc-home]
 2. Click *__Upload__* from the *__Data Sets__* panel
 3. First choose delimiter used in the metadata file and then upload the file
-  - __Tutorial Data Set: upload tab-delimited `tutorial.tsv`__
-4. Check metadata Preview for accuracy (note: only first 5 samples are displayed)
-5. Review Configure Metadata Import and make changes as needed
+  - __Tutorial Data Set: upload tab-delimited__ `tutorial.tsv`
+4. Check metadata *__Preview__* for accuracy (note: only first 5 samples are displayed)
+5. Review *__Configure Metadata Import__* and make changes as needed
   - __Tutorial Data Set: no changes needed__
-6. Click Add files … button under Upload Data Files and select data files corresponding to the metadata (note: wait for MD5 calculations, which ensure successful data file uploads, to complete)
-  - __Tutorial Data Set: upload `input.fastq` and `nanog.fastq` data files__
-7. Click Start upload to begin uploading all selected data files
-8. After all data files have uploaded, click Upload Data Set
+6. Click *__Add files…__* button under *__Upload Data Files__* and select data files corresponding to the metadata (note: wait for MD5 calculations, which ensure successful data file uploads, to complete)
+  - __Tutorial Data Set: upload__ `input.fastq` __and__ `nanog.fastq` __data files__
+7. Click *__Start upload__* to begin uploading all selected data files
+8. After all data files have uploaded, click *__Upload Data Set__*
 
 ## 3. Viewing Data Sets in the Data Set Browser
-1. Return to the Launch Pad and click on the newly uploaded data set (Expand data set preview). The Data Set Browser will display a summary of the data set
+1. Return to the *__Launch Pad__* (Refinery homepage) and click on the newly uploaded data set title. The *__Data Set Browser__* will display a summary of the data set
 
 ## 4. Exploring Contents of the Data Set in the File Browser
-1. Click _View Content_ in File Browser to view the individual files belonging to the data set:
+1. Click *__View Content in File Browser__* to view the individual files belonging to the data set:
   - Files can be filtered based on attributes using the Attribute Filter in the left-hand panel
   - Files can also be sorted according to attributes (both ascending and descending) by clicking the attribute names (i.e. column headers)
 
