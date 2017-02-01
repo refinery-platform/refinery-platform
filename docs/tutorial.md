@@ -21,7 +21,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 
 ## 2. Importing a Data Set 
 1. Go to the [Refinery Launch Pad][scc-home]
-2. Click the Upload button from the Data Sets panel on the Launch Pad
+2. Click *__Upload__* from the *__Data Sets__* panel
 3. First choose delimiter used in the metadata file and then upload the file
   - __Tutorial Data Set: upload tab-delimited `tutorial.tsv`__
 4. Check metadata Preview for accuracy (note: only first 5 samples are displayed)
