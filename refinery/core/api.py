@@ -24,6 +24,7 @@ from django.core.signing import Signer
 from django.forms import ValidationError
 from guardian.shortcuts import get_objects_for_user, get_objects_for_group
 from guardian.models import GroupObjectPermission
+from guardian.utils import get_anonymous_user
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication, Authentication
 from tastypie.authorization import Authorization
@@ -87,7 +88,7 @@ class SharableResourceAPIInterface(object):
         # SimpleLazyObjects loading Users vs AnonymousUsers. Can't compare
         # SLO-AnonymousUsers directly with user models
         if user.is_anonymous():
-            user = User.objects.get(username='AnonymousUser')
+            user = get_anonymous_user()
 
         groups_in = filter(
             lambda g:
