@@ -7,17 +7,15 @@ function dataSetAboutFactory (
   fileStoreItemService,
   groupMemberService,
   sharingService,
-  studyService,
-  userService
+  studyService
 ) {
   var assays = [];
   var dataSet = {};
   var dataSetSharing = {};
   var fileStoreItem = {};
+  var groupList = [];
   var investigation = {};
   var isaTab = {};
-  var ownerProfile = {};
-  var ownerName = '';
   var studies = [];
 
   var getDataSet = function (dataSetUuid) {
@@ -48,6 +46,17 @@ function dataSetAboutFactory (
     return fileStore.$promise;
   };
 
+  // helper method returns only groups associated with data set
+  var filterDataSetGroups = function (allGroups) {
+    var filteredGroupList = [];
+    for (var i = 0; i < allGroups.length; i++) {
+      if (allGroups[i].perms.read || allGroups[i].perms.write) {
+        filteredGroupList.push(allGroups[i]);
+      }
+    }
+    return filteredGroupList;
+  };
+
   var getDataSetSharing = function (dataSetUuid) {
     var params = {
       uuid: dataSetUuid,
@@ -56,17 +65,10 @@ function dataSetAboutFactory (
     var dataSetRequest = sharingService.query(params);
     dataSetRequest.$promise.then(function (response) {
       angular.copy(response, dataSetSharing);
+      var filteredGroups = filterDataSetGroups(response.share_list);
+      angular.copy(filteredGroups, groupList);
     });
     return dataSetRequest.$promise;
-  };
-
-  var getOwnerName = function (userUuid) {
-    var ownerService = userService.get(userUuid);
-    ownerService.then(function (response) {
-      angular.copy(response, ownerProfile);
-      ownerName = ownerProfile.fullName;
-    });
-    return ownerService;
   };
 
   // Get Studies associated with a data set
@@ -98,14 +100,13 @@ function dataSetAboutFactory (
     dataSet: dataSet,
     dataSetSharing: dataSetSharing,
     fileStoreItem: fileStoreItem,
+    groupList: groupList,
     investigation: investigation,
     isaTab: isaTab,
-    ownerName: ownerName,
     studies: studies,
     getDataSet: getDataSet,
     getDataSetSharing: getDataSetSharing,
     getFileStoreItem: getFileStoreItem,
-    getOwnerName: getOwnerName,
     getStudies: getStudies,
     getStudysAssays: getStudysAssays,
     updateDataSet: updateDataSet
@@ -122,7 +123,6 @@ angular
     'groupMemberService',
     'sharingService',
     'studyService',
-    'userService',
     dataSetAboutFactory
   ]
 );

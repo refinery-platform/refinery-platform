@@ -1082,9 +1082,8 @@ class DataSetsViewSet(APIView):
             )
 
     def is_user_authorized(self, user, data_set):
-        if not user.is_authenticated() or not user.has_perm(
-                'core.change_dataset', data_set
-        ):
+        if (not user.is_authenticated() or
+                not user.has_perm('core.change_dataset', data_set)):
             return False
         else:
             return True

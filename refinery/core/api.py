@@ -24,6 +24,7 @@ from django.core.signing import Signer
 from django.forms import ValidationError
 from guardian.shortcuts import get_objects_for_user, get_objects_for_group
 from guardian.models import GroupObjectPermission
+from guardian.utils import get_anonymous_user
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication, Authentication
 from tastypie.authorization import Authorization
@@ -83,6 +84,12 @@ class SharableResourceAPIInterface(object):
         return perms
 
     def get_share_list(self, user, res):
+        # Handle anonymousUsers seperatly due to request.users
+        # SimpleLazyObjects loading Users vs AnonymousUsers. Can't compare
+        # SLO-AnonymousUsers directly with user models
+        if user.is_anonymous():
+            user = get_anonymous_user()
+
         groups_in = filter(
             lambda g:
             not self.is_manager_group(g) and user in g.user_set.all(),
@@ -308,18 +315,20 @@ class SharableResourceAPIInterface(object):
 
         if not res:
             return HttpBadRequest()
-
-        if user.is_authenticated and user != res.get_owner():
-            return HttpUnauthorized()
-
-        # User not authenticated, res is not public.
-        if not user.is_authenticated() and res and not res.is_public():
+        # if user is not logged in then data set must be public
+        if not user.is_authenticated() and not res.is_public():
             return HttpUnauthorized()
 
         if request.method == 'GET':
+            # user has read permissions
+            if not user.has_perm('core.read_dataset', res):
+                return HttpUnauthorized()
             kwargs['sharing'] = True
             return self.process_get(request, res, **kwargs)
         elif request.method == 'PUT':
+            # user must be admin or owner
+            if not user.is_superuser and user != res.get_owner():
+                return HttpUnauthorized()
             data = json.loads(request.body)
             new_share_list = data['share_list']
 
