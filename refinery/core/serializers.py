@@ -2,13 +2,45 @@ import logging
 
 import celery
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 
-from .models import NodeGroup, Workflow
+from .models import DataSet, NodeGroup, Workflow
 from data_set_manager.models import Assay, Node, Study
 from file_store.models import FileStoreItem
 
 
 logger = logging.getLogger(__name__)
+
+
+class DataSetSerializer(serializers.ModelSerializer):
+    slug = serializers.CharField(
+            max_length=250,
+            trim_whitespace=True,
+            validators=[UniqueValidator(
+                queryset=DataSet.objects.all(),
+                message='Slugs must be unique.'
+            )]
+    )
+    description = serializers.CharField(max_length=5000)
+
+    class Meta:
+        model = DataSet
+        fields = ['name', 'summary', 'description', 'slug']
+
+    def partial_update(self, instance, validated_data):
+        """
+        Update and return an existing `DataSet` instance, given the
+        validated data.
+        """
+        instance.name = validated_data.get('name', instance.name)
+        instance.summary = validated_data.get('summary', instance.summary)
+        instance.description = validated_data.get(
+            'description', instance.description
+        )
+        instance.slug = validated_data.get('slug', instance.slug)
+
+        instance.save()
+        return instance
 
 
 class NodeGroupSerializer(serializers.ModelSerializer):

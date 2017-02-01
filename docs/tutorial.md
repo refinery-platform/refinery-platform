@@ -1,4 +1,4 @@
-# A Brief Introduction for Data Analysts 
+# Refinery Tutorial 
 
 Refinery is a data management, analysis, and visualization platform designed to support analysts in managing common tasks in analysis and interpretation of biomedical data. 
 
@@ -8,10 +8,10 @@ __Preparation__
 
 To follow the steps of this tutorial, you will need a data set consisting of data files and a metadata file that is referencing your files.
 
-__This tutorial can be completed using the Tutorial Data Set, which consists of sample ChIP-seq data and their associated metadata file (need links). Follow all steps (except creating a metadata file as it already exists) and note the bullet points after some steps with expanded instructions specific to the Tutorial Data Set.__
+__This tutorial can be completed using the Tutorial Data Set, which consists of sample ChIP-seq data ([input control][input.fastq] and [experimental][nanog.fastq] FASTQ files -- download both) and their associated [metadata file][tutorial.tsv]. Follow all steps (except creating a metadata file as it already exists) and note the bullet points after some steps with expanded instructions specific to the Tutorial Data Set.__
 
 ## 1. Creating a Metadata File
-1. Compile all the metadata to be associated with the data set and then organize these metadata into a delimited (e.g. tab-delimited) text file. Use https://beta.stemcellcommons.org/static/sample-files/refinery-sample-metadata.tsv as a template and note the required attributes (sample name, data file, and organism). Additional attributes can be appended as needed.
+1. Compile all the metadata to be associated with the data set and then organize these metadata into a delimited (e.g. tab-delimited) text file. A template metadata file can be found [here][refinery-sample-metadata.tsv] -- note the required attributes (sample name, data file, and organism). Additional attributes can be appended as needed.
   - __Tutorial Data Set: tab-delimited `tutorial.tsv` metadata file already created__
 
 > __Column Order__: The attribute and file name columns in the metadata file can be provided in any order and the column headers can be chosen by the investigator. However, given that the data set importer (see next section below) will map column 1 to _sample name_, column 2 to _data file_, and column 3 to _organism_, it can save time during import if this information is provided in the first three columns in this order.
@@ -20,8 +20,8 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 > __Column Names__: The column names provided in the metadata file can be freely chosen by the analyst and will be used to identify attributes throughout the Refinery application. They _must be unique_, _must not contain any special characters_, and _should be descriptive yet concise_.
 
 ## 2. Importing a Data Set 
-1. Go to the Stem Cell Commons Launch Pad at https://beta.stemcellcommons.org
-2. Click the Upload button from the Data Sets panel on the Launch Pad
+1. Go to the [Refinery Launch Pad][scc-home]
+2. Click *__Upload__* from the *__Data Sets__* panel
 3. First choose delimiter used in the metadata file and then upload the file
   - __Tutorial Data Set: upload tab-delimited `tutorial.tsv`__
 4. Check metadata Preview for accuracy (note: only first 5 samples are displayed)
@@ -87,3 +87,9 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 
 ## 9. Deleting Analyses and Data Sets
 1. To delete an analysis only, click the trash can icon in the Analyses panel on the Launch Pad. To delete a data set and all its associated analyses, click the trash can icon in the Data Sets panel on the Launch Pad.
+
+[refinery-sample-metadata.tsv]: https://beta.stemcellcommons.org/static/sample-files/refinery-sample-metadata.tsv
+[scc-home]: https://beta.stemcellcommons.org
+[input.fastq]: http://data.cloud.refinery-platform.org/
+[nanog.fastq]: http://data.cloud.refinery-platform.org/
+[tutorial.tsv]: http://data.cloud.refinery-platform.org/

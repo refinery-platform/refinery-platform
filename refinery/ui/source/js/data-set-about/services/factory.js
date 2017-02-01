@@ -3,6 +3,7 @@
 function dataSetAboutFactory (
   assayService,
   dataSetService,
+  dataSetV2Service,
   fileStoreItemService,
   groupMemberService,
   sharingService,
@@ -25,6 +26,11 @@ function dataSetAboutFactory (
     dataSetRequest.$promise.then(function (response) {
       angular.copy(response.objects[0], dataSet);
     });
+    return dataSetRequest.$promise;
+  };
+
+  var updateDataSet = function (params) {
+    var dataSetRequest = dataSetV2Service.partial_update(params);
     return dataSetRequest.$promise;
   };
 
@@ -102,7 +108,8 @@ function dataSetAboutFactory (
     getDataSetSharing: getDataSetSharing,
     getFileStoreItem: getFileStoreItem,
     getStudies: getStudies,
-    getStudysAssays: getStudysAssays
+    getStudysAssays: getStudysAssays,
+    updateDataSet: updateDataSet
   };
 }
 
@@ -111,6 +118,7 @@ angular
   .factory('dataSetAboutFactory', [
     'assayService',
     'dataSetService',
+    'dataSetV2Service',
     'fileStoreItemService',
     'groupMemberService',
     'sharingService',

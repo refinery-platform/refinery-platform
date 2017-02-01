@@ -9,6 +9,7 @@ from optparse import make_option
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand, CommandError
+
 from core.models import ExtendedGroup
 
 
