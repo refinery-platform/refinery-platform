@@ -12,6 +12,7 @@ describe('Controller: Node Group Modal Ctrl', function () {
     $rootScope,
     _$controller_,
     _fileBrowserFactory_,
+    _mockParamsFactory_,
     $window
   ) {
     scope = $rootScope.$new();
@@ -21,7 +22,7 @@ describe('Controller: Node Group Modal Ctrl', function () {
       $uibModalInstance: $uibModalInstance
     });
     factory = _fileBrowserFactory_;
-    $window.externalAssayUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+    $window.externalAssayUuid = _mockParamsFactory_.generateUuid();
   }));
 
   it('NodeGroupMoalCtrl should exist', function () {
