@@ -12,11 +12,11 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 
 ## 0. Accessing Refinery
 1. Go to the [Refinery Launch Pad][scc-home]
-  - To create a new account:
+  - __To create a new account__:
     1. Click *__Register__* at the top right of the navigation bar (top of page)
     2. Provide the required details and then click the *__Register__* button below
     3. Wait to receive an account activation e-mail at the address provided during registration
-  - To log in to an existing account:
+  - __To log in to an existing account__:
     1. Click *__Login__* at the top right of the navigation bar
     2. Enter the *__Username or E-mail__* and *__Password__* provided during registration and click the *__login__* button below
 
@@ -30,17 +30,16 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 > __Column Names__: The column names provided in the metadata file can be freely chosen by the analyst and will be used to identify attributes throughout the Refinery application. They _must be unique_, _must not contain any special characters_, and _should be descriptive yet concise_.
 
 ## 2. Uploading a Data Set 
-1. Go to the [Refinery Launch Pad][scc-home]
-2. Click *__Upload__* from the *__Data Sets__* panel
-3. First choose delimiter used in the metadata file and then upload the file
+1. From the *__Launch Pad__*, Click *__Upload__* from the *__Data Sets__* panel
+2. First choose delimiter used in the metadata file and then upload the file
   - __Tutorial Data Set: upload tab-delimited__ `tutorial.tsv`
-4. Check metadata *__Preview__* for accuracy (note: only first 5 samples are displayed)
-5. Review *__Configure Metadata Import__* and make changes as needed
+3. Check metadata *__Preview__* for accuracy (note: only first 5 samples are displayed)
+4. Review *__Configure Metadata Import__* and make changes as needed
   - __Tutorial Data Set: no changes needed__
-6. Click *__Add files…__* button under *__Upload Data Files__* and select data files corresponding to the metadata (note: wait for MD5 calculations, which ensure successful data file uploads, to complete)
+5. Click *__Add files…__* button under *__Upload Data Files__* and select data files corresponding to the metadata (note: wait for MD5 calculations, which ensure successful data file uploads, to complete)
   - __Tutorial Data Set: upload__ `input.fastq` __and__ `nanog.fastq` __data files__
-7. Click *__Start upload__* to begin uploading all selected data files
-8. After all data files have uploaded, click *__Upload Data Set__*
+6. Click *__Start upload__* to begin uploading all selected data files
+7. After all data files have uploaded, click *__Upload Data Set__*
 
 ## 3. Viewing a Data Set Summary in the Data Set Browser
 1. Return to the *__Launch Pad__* (Refinery homepage) and click on the newly uploaded data set title. The *__Data Set Browser__* will display a summary of the data set
@@ -52,9 +51,9 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 
 > __Direct Access of Dataset Content__: The file browser can be launched directly from the data set browser by clicking on the table icon to the right of the dataset name and summary. It is not required to open the preview first.
 
-## 5. Launching Analyses
+## 5. Launching an Analysis
 1. From the *__File Browser__*, select the files that will serve as input for the desired workflow
-  - __Tutorial Data Set: follow the 'Launching Analyses' section twice, first launching the *FastQC* workflow and afterwards the *TF ChIP-seq analysis using MACS2: hg19* workflow (details below) -- in both instances, select both the__ `input.fastq` __and__ `nanog.fastq` __files during this step__
+  - __Tutorial Data Set: follow the 'Launching an Analysis' section twice, first launching the *FastQC* workflow and afterwards the *TF ChIP-seq analysis using MACS2: hg19* workflow (details below) -- in both instances, select both the__ `input.fastq` __and__ `nanog.fastq` __files during this step__
 2. Click the *__Analyze__* tab above the left-hand panel
 3. Select one of the analysis workflows below using the drop-down menu in the left-hand panel, follow their workflow-specific steps below, and then continue with step 4
   - *__FastQC__*
@@ -90,7 +89,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 2. Select *__Provenance__* in the *__Display__* drop-down menu located on the right-hand side of the page
 3. Review the displayed nodes to track the analysis history of the data set -- each new analysis will add a new node to the provenance graph
 
-## 8. Creating and Modifying Collaboration Groups
+## 8. Creating and Modifying a Collaboration Group
 1. From the *__Launch Pad__*, click *__Collaboration__* within the navigation bar
   - __Create a new group__
     1. Click the *__+__* icon in the top right of the *__Groups__* panel
@@ -99,12 +98,15 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
   - __Invite new group members__
     1. Select a group within the *__Groups__* panel and click the *__+__* icon in the top right of the *__Members__* panel
     2. Provide a *__Recipient e-mail__* address belonging to the new group member and click *__Send Invite__*
-- share data set with with group
+      - The new group member will then receive an invitation e-mail with instructions on how to join the group
 
-## 9. Sharing Data Sets with Collaboration Groups
+## 9. Sharing a Data Set with a Collaboration Group
+1. Display a data set in the *__Data Set Browser__* (see section __3__)
+2. Click *__Share__* above the data set summary
+3. Assign *__Read-only__* or *__Modify__* permissions for that data set to any groups to which you belong
 
-## 10. Deleting Analyses and Data Sets
-1. To delete an analysis only, click the trash can icon in the Analyses panel on the Launch Pad. To delete a data set and all its associated analyses, click the trash can icon in the Data Sets panel on the Launch Pad.
+## 10. Deleting an Analysis or Data Set
+1. To delete an analysis only, click the trash can icon in the *__Analyses__* panel on the *__Launch Pad__*. To delete a data set and all its associated analyses, click the trash can icon in the *__Data Sets__* panel on the *__Launch Pad__*.
 
 [refinery-sample-metadata.tsv]: https://beta.stemcellcommons.org/static/sample-files/refinery-sample-metadata.tsv
 [scc-home]: https://beta.stemcellcommons.org
