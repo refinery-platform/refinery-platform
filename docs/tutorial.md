@@ -16,9 +16,9 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
     1. Click *__Register__* at the top right of the navigation bar (top of page)
     2. Provide the required details and then click the *__Register__* button below
     3. Wait to receive an account activation e-mail at the address provided during registration
-  - __To log in to an existing account__:
+  - __To log in to an account__:
     1. Click *__Login__* at the top right of the navigation bar
-    2. Enter the *__Username or E-mail__* and *__Password__* provided during registration and click the *__login__* button below
+    2. Enter the *__Username or E-mail__* and *__Password__* provided during registration and click the *__Login__* button below
 
 ## 1. Creating a Metadata File
 1. Compile all the metadata to be associated with the data set and then organize these metadata into a delimited (e.g. tab-delimited) text file. A template metadata file can be found [here][refinery-sample-metadata.tsv] -- note the required attributes (sample name, data file, and organism). Additional attributes can be appended as needed.
