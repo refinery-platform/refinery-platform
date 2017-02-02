@@ -10,6 +10,16 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
 
 __This tutorial can be completed using the Tutorial Data Set, which consists of sample ChIP-seq data ([input control][input.fastq] and [experimental][nanog.fastq] FASTQ files -- download both) and their associated [metadata file][tutorial.tsv]. Follow all steps (except creating a metadata file as it already exists) and note the bullet points after some steps with expanded instructions specific to the Tutorial Data Set.__
 
+## 0. Accessing Refinery
+1. Go to the [Refinery Launch Pad][scc-home]
+  - To create a new account:
+    1. Click *__Register__* at the top right of the navigation bar (top of page)
+    2. Provide the required details and then click the *__Register__* button below
+    3. Wait to receive an account activation e-mail at the address provided during registration
+  - To log in to an existing account:
+    1. Click *__Login__* at the top right of the navigation bar
+    2. Enter the *__Username or E-mail__* and *__Password__* provided during registration and click the *__login__* button below
+
 ## 1. Creating a Metadata File
 1. Compile all the metadata to be associated with the data set and then organize these metadata into a delimited (e.g. tab-delimited) text file. A template metadata file can be found [here][refinery-sample-metadata.tsv] -- note the required attributes (sample name, data file, and organism). Additional attributes can be appended as needed.
   - __Tutorial Data Set: tab-delimited__ `tutorial.tsv` __metadata file already created__
@@ -81,11 +91,11 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 3. Review the displayed nodes to track the analysis history of the data set -- each new analysis will add a new node to the provenance graph
 
 ## 8. Creating and Modifying Collaboration Groups
-1. From the *__Launch Pad__*, click *__Collaboration__* within the navigation bar (top of page)
+1. From the *__Launch Pad__*, click *__Collaboration__* within the navigation bar
   - __Create a new group__
     1. Click the *__+__* icon in the top right of the *__Groups__* panel
     2. Choose a unique *__Group name__* and click *__Create group__*
-    3. Select the new group within the *__Groups__* panel to display members of the group within the *__Members__* panel
+    3. Select the new group within the *__Groups__* panel to display current members of the group within the *__Members__* panel
   - __Invite new group members__
     1. Select a group within the *__Groups__* panel and click the *__+__* icon in the top right of the *__Members__* panel
     2. Provide a *__Recipient e-mail__* address belonging to the new group member and click *__Send Invite__*
