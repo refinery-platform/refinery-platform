@@ -30,7 +30,7 @@ describe('Controller: DetailsCtrl', function () {
     expect(ctrl.assays).toEqual([]);
     expect(ctrl.fileStoreItem).toEqual({});
     expect(ctrl.isCollapsed).toEqual({
-      name: true, summary: true, description: true, slug: true
+      title: true, summary: true, description: true, slug: true
     });
     expect(ctrl.updatedField).toEqual({});
   });
