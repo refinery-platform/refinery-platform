@@ -113,7 +113,7 @@
     // Helper method to keep track when data should be discard or added
     vm.checkDataLength = function (discardDirection) {
       // work out whether we need to discard a page, if so discard from the
-      // direction passed in
+      // direction passed in to
       if (vm.lastPage - vm.firstPage > vm.cachePages) {
         // we want to remove a page
         vm.gridApi.infiniteScroll.saveScrollPercentage();
