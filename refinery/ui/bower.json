@@ -48,8 +48,8 @@
     "ui-select": "angular-ui-select#0.18.0",
     "select2": "3.4.5",
     "filesize": "3.3.0",
-    "intro.js": "2.3.0",
-    "angular-intro.js": "^2.1.1"
+    "intro.js": "2.4.0",
+    "angular-intro.js": "2.1.2"
 
   },
   "resolutions": {

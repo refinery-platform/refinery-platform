@@ -6,19 +6,25 @@ Created on May 10, 2012
 from datetime import datetime
 import logging
 
-import requests
-from celery.result import AsyncResult
-from requests.exceptions import HTTPError
-
 from django.conf import settings
 from django.db import models
 from django_extensions.db.fields import UUIDField
 
-import core
-import file_store
-import data_set_manager
 
+from celery.result import AsyncResult
+import requests
+from requests.exceptions import HTTPError
+
+from .genomes import map_species_id_to_default_genome_build
+import data_set_manager
+import core
 from file_store.models import FileStoreItem
+"""
+TODO: Refactor import data_set_manager. Importing
+data_set_manager.tasks.generate_auxiliary_file()
+results in a circular import error (see comments on PR #1590)
+"""
+
 
 logger = logging.getLogger(__name__)
 
@@ -308,10 +314,9 @@ class NodeManager(models.Manager):
             if (item["genome_build"] is None and
                     item["species"] is not None and
                     default_fallback is True):
-                item["genome_build"] = \
-                    data_set_manager.genomes.\
-                    map_species_id_to_default_genome_build(
-                            item["species"])
+                item["genome_build"] = map_species_id_to_default_genome_build(
+                    item["species"]
+                )
             if item["genome_build"] not in result:
                 result[item["genome_build"]] = []
             result[item["genome_build"]].append(item["file_uuid"])
@@ -457,10 +462,10 @@ class Node(models.Model):
         there isn't one
         """
         try:
-            return file_store.models.FileStoreItem.objects.get(
+            return FileStoreItem.objects.get(
                 uuid=self.file_uuid)
-        except (file_store.models.FileStoreItem.DoesNotExist,
-                file_store.models.FileStoreItem.MultipleObjectsReturned) as e:
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned) as e:
             logger.error(e)
             return None
 
@@ -526,13 +531,13 @@ class Node(models.Model):
         datafile if one exists, otherwise return None
         """
         try:
-            file_store_item = file_store.models.FileStoreItem.objects.get(
+            file_store_item = FileStoreItem.objects.get(
                 uuid=self.file_uuid
             )
             return file_store_item.get_datafile_url()
 
-        except (file_store.models.FileStoreItem.DoesNotExist,
-                file_store.models.FileStoreItem.MultipleObjectsReturned) as e:
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned) as e:
             logger.error(e)
             return None
 

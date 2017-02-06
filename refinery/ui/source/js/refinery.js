@@ -26,6 +26,7 @@ angular
     'colors',
     'focusOn',
     'clearFileInput',
+    'mockParams',
     'replaceWhiteSpaceWithHyphen',
 
     /*

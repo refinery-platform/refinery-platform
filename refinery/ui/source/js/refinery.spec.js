@@ -55,6 +55,10 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('focusOn')).toEqual(true);
     });
 
+    it('should have "mockParams" as a dependency', function () {
+      expect(hasModule('mockParams')).toEqual(true);
+    });
+
     it('should have "replaceWhiteSpaceWithHyphen" as a dependency', function () {
       expect(hasModule('replaceWhiteSpaceWithHyphen')).toEqual(true);
     });

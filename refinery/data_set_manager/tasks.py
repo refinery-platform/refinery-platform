@@ -7,30 +7,30 @@ import os
 import re
 import shutil
 import string
-import time
 import subprocess
 import sys
 import tempfile
+import time
 import traceback
-
-import requests
-import pysam
-import celery
-from celery.task import task
-from requests.exceptions import HTTPError
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.management import call_command
 
-from core.models import DataSet, FileStoreItem, ExtendedGroup
-from core.utils import update_data_set_index, add_data_set_to_neo4j
-from file_store.models import FileExtension
+import celery
+from celery.task import task
+import pysam
+import requests
+from requests.exceptions import HTTPError
+
 from .isa_tab_parser import IsaTabParser
-from .models import Investigation, Node, \
-    initialize_attribute_order
-from .utils import get_node_types, update_annotated_nodes, \
-    index_annotated_nodes, calculate_checksum
+from .models import initialize_attribute_order, Investigation, Node
+from .utils import (calculate_checksum, get_node_types,
+                    index_annotated_nodes, update_annotated_nodes)
+from core.models import DataSet, ExtendedGroup, FileStoreItem
+from core.utils import (add_data_set_to_neo4j, update_annotation_sets_neo4j,
+                        update_data_set_index)
+from file_store.models import FileExtension
 
 
 logger = logging.getLogger(__name__)
@@ -385,7 +385,8 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
         dataset.save()
         # Finally index data set
         update_data_set_index(dataset)
-        add_data_set_to_neo4j(dataset.uuid, user.id)
+        add_data_set_to_neo4j(dataset, user.id)
+        update_annotation_sets_neo4j()
         return dataset.uuid
     return None
 

@@ -107,8 +107,8 @@ function IGVCtrl (
 angular
   .module('refineryIGV')
   .controller('IGVCtrl', [
-    '$log',
     '$httpParamSerializer',
+    '$log',
     '$resource',
     '$scope',
     '$uibModalInstance',

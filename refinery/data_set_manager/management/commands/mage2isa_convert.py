@@ -1,20 +1,22 @@
+from __future__ import absolute_import
+
+from datetime import date, datetime, timedelta
 import errno
 import os
 import re
 import string
 import sys
-import requests
-from requests.exceptions import HTTPError
 
 from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 
 from celery.task.sets import TaskSet
+import requests
+from requests.exceptions import HTTPError
 
-from data_set_manager.models import Study
-from data_set_manager.tasks import convert_to_isatab
-from datetime import date, datetime, timedelta
+from ...models import Study
+from ...tasks import convert_to_isatab
 
 
 class Command(BaseCommand):

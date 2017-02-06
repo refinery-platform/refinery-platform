@@ -2,8 +2,6 @@ import json
 import logging
 import os
 import re
-import requests
-from requests.exceptions import HTTPError
 import urllib
 from urlparse import urljoin
 import xmltodict
@@ -11,39 +9,39 @@ import xmltodict
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.sites.models import get_current_site, Site
-from django.contrib.sites.models import RequestSite
+from django.contrib.sites.models import get_current_site, RequestSite, Site
 from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
-from django.http import (Http404, HttpResponse, HttpResponseForbidden,
-                         HttpResponseRedirect, HttpResponseBadRequest,
-                         HttpResponseNotFound, HttpResponseServerError)
+from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
+                         HttpResponseForbidden, HttpResponseNotFound,
+                         HttpResponseRedirect, HttpResponseServerError)
 
-from django.shortcuts import render_to_response, get_object_or_404
-from django.template import RequestContext, loader
+from django.shortcuts import get_object_or_404, render_to_response
+from django.template import loader, RequestContext
 from django.views.decorators.gzip import gzip_page
 
-from guardian.utils import get_anonymous_user
 from guardian.shortcuts import get_perms
-from registration.views import RegistrationView
+from guardian.utils import get_anonymous_user
 from registration import signals
-from rest_framework import viewsets
-from rest_framework.views import APIView
+from registration.views import RegistrationView
+import requests
+from requests.exceptions import HTTPError
+from rest_framework import status, viewsets
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.views import APIView
 from xml.parsers.expat import ExpatError
 
-from core.forms import (ProjectForm, UserForm, UserProfileForm,
-                        WorkflowForm,  DataSetForm)
+from .forms import (DataSetForm, ProjectForm, UserForm, UserProfileForm,
+                    WorkflowForm)
+from .models import (Analysis, CustomRegistrationProfile, DataSet,
+                     ExtendedGroup, Invitation, NodeGroup, Ontology, Project,
+                     UserProfile, Workflow, WorkflowEngine)
+from .serializers import (DataSetSerializer, NodeGroupSerializer,
+                          NodeSerializer, WorkflowSerializer)
+from .utils import (create_current_selection_node_group,
+                    filter_nodes_uuids_in_solr,
+                    get_data_sets_annotations, move_obj_to_front)
 from annotation_server.models import GenomeBuild
-from core.models import (ExtendedGroup, Project, DataSet, Workflow,
-                         UserProfile, WorkflowEngine, Analysis, Invitation,
-                         Ontology, NodeGroup, CustomRegistrationProfile)
-from core.serializers import (WorkflowSerializer, NodeGroupSerializer,
-                              NodeSerializer)
-from core.utils import (get_data_sets_annotations,
-                        create_current_selection_node_group,
-                        filter_nodes_uuids_in_solr, move_obj_to_front)
 from data_set_manager.models import Node
 from data_set_manager.utils import generate_solr_params
 from file_store.models import FileStoreItem
@@ -1069,7 +1067,26 @@ class NodeViewSet(viewsets.ModelViewSet):
 
 class DataSetsViewSet(APIView):
     """API endpoint that allows for DataSets to be deleted"""
-    http_method_names = ['delete']
+    http_method_names = ['delete', 'patch']
+
+    def get_object(self, uuid):
+        try:
+            return DataSet.objects.get(uuid=uuid)
+        except DataSet.DoesNotExist as e:
+            logger.error(e)
+            return Response(uuid, status=status.HTTP_404_NOT_FOUND)
+        except DataSet.MultipleObjectsReturned as e:
+            logger.error(e)
+            return Response(
+                uuid, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def is_user_authorized(self, user, data_set):
+        if (not user.is_authenticated() or
+                not user.has_perm('core.change_dataset', data_set)):
+            return False
+        else:
+            return True
 
     def delete(self, request, uuid):
         if not request.user.is_authenticated():
@@ -1094,6 +1111,27 @@ class DataSetsViewSet(APIView):
                     return Response({"data": dataset_deleted[1]})
                 else:
                     return HttpResponseBadRequest(content=dataset_deleted[1])
+
+    def patch(self, request, uuid, format=None):
+        data_set = self.get_object(uuid)
+
+        # check edit permission for user
+        if self.is_user_authorized(request.user, data_set):
+            serializer = DataSetSerializer(
+               data_set, data=request.data, partial=True
+            )
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    serializer.data, status=status.HTTP_202_ACCEPTED
+                )
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
+        else:
+            return Response(
+                data_set, status=status.HTTP_401_UNAUTHORIZED
+            )
 
 
 class AnalysesViewSet(APIView):

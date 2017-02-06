@@ -12,7 +12,7 @@ from django.template.context import Context
 
 from haystack import indexes
 
-from data_set_manager.models import Node, AnnotatedNode
+from data_set_manager.models import AnnotatedNode, Node
 
 
 logger = logging.getLogger(__name__)
