@@ -4,7 +4,6 @@ describe('Controller: FileBrowserCtrl', function () {
   var ctrl;
   var scope;
   var factory;
-  var $controller;
   var service;
 
   beforeEach(module('refineryApp'));
@@ -18,7 +17,7 @@ describe('Controller: FileBrowserCtrl', function () {
     $window
   ) {
     scope = $rootScope.$new();
-    $controller = _$controller_;
+    var $controller = _$controller_;
     ctrl = $controller('FileBrowserCtrl', {
       $scope: scope
     });
