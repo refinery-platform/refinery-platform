@@ -1,4 +1,5 @@
-'use strict';
-
-angular
-  .module('refineryToolLaunch', []);
+(function () {
+  'use strict';
+  angular
+    .module('refineryToolLaunch', []);
+})();
