@@ -11,19 +11,22 @@
           role="button"
           data-toggle="collapse"
           data-parent="#tool-info-display"
-          ng-click="dropToolPanel($event, title)"
+          ng-click="$ctrl.isToolInfoCollapsed = !$ctrl.isToolInfoCollapsed"
           aria-expanded="true"
           aria-controls="{{ $ctrl.tool.name }}">
-          <i
-            class="fa fa-caret-right fa-pull-left"
-            aria-hidden="true"></i>
-          {{ $ctrl.tool.name }}
+            <i
+              ng-class="$ctrl.isToolInfoCollapsed ? 'fa fa-caret-right' : 'fa fa-caret-down'"
+              class="fa-pull-left"
+              id=""
+              aria-hidden="true"></i>
+           {{ $ctrl.tool.name }}
         </div>
       </h4>
     </div>
     <div
       id="tool-launch-body"
       class="panel-collapse"
+      uib-collapse="$ctrl.isToolInfoCollapsed"
       role="tabpanel"
       aria-labelledby="tool-body">
       <div class="panel-body">
