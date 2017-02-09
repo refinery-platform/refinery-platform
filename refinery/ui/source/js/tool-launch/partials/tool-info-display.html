@@ -1,4 +1,34 @@
-<div>
-  Here we are.
-  {{ $ctrl.tool.name }}
+<div
+  class="panel-group"
+  id="tool-info-display"
+  role="tablist"
+  aria-multiselectable="true">
+
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab">
+      <h4 class="panel-title">
+        <div
+          role="button"
+          data-toggle="collapse"
+          data-parent="#tool-info-display"
+          ng-click="dropToolPanel($event, title)"
+          aria-expanded="true"
+          aria-controls="{{ $ctrl.tool.name }}"
+          <i
+            class="fa fa-caret-right fa-pull-left"
+            aria-hidden="true"></i>
+          {{ $ctrl.tool.name }}
+        </div>
+      </h4>
+    </div>
+    <div
+      id="tool-launch-body"
+      class="panel-collapse"
+      role="tabpanel"
+      aria-labelledby="tool-body">
+      <div class="panel-body">
+        Here's the container for the tool's body.
+      </div>
+    </div>
+  </div>
 </div>
