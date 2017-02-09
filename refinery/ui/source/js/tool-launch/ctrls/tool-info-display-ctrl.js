@@ -11,7 +11,6 @@
   function ToolInfoDisplayCtrl ($scope) {
     var vm = this;
     vm.tool = {};
-    vm.collapse = false;
 
     vm.$onInit = function () {
       $scope.$watchCollection(
