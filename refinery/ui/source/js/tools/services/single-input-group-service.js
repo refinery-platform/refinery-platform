@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   angular
-    .module('refineryToolLaunch')
+    .module('refineryTools')
     .factory('singleInputGroupService', [singleInputGroupService]);
 
   function singleInputGroupService () {
