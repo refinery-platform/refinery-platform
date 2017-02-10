@@ -2,17 +2,15 @@
   'use strict';
 
   angular
-    .module('refineryToolLaunch')
-    .controller('InputGroupNavCtrl', InputGroupNavCtrl);
+    .module('refineryTools')
+    .controller('SingleInputWorkflowNavCtrl', SingleInputWorkflowNavCtrl);
 
-  InputGroupNavCtrl.$inject = ['$scope'];
+  SingleInputWorkflowNavCtrl.$inject = ['$scope'];
 
 
-  function InputGroupNavCtrl ($scope) {
+  function SingleInputWorkflowNavCtrl ($scope) {
     var vm = this;
     vm.tool = {};
-    vm.toolType = '';
-    vm.isNavCollapsed = false;
 
     vm.$onInit = function () {
       $scope.$watchCollection(
@@ -21,9 +19,6 @@
         },
         function () {
           angular.copy(vm.displayCtrl.selectedTool, vm.tool);
-          if (vm.tool.name === 'Workflow 1') {
-            vm.toolType = 'singleInputWorkflow';
-          }
         }
       );
     };

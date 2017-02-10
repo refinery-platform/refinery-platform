@@ -30,13 +30,13 @@
       role="tabpanel"
       aria-labelledby="tool-body">
       <div class="panel-body">
-        <div ng-if="toolType == 'singleInputWorkflow">
-           Add directive for the single analysis work panel
+        <div ng-if="$ctrl.toolType == 'singleInputWorkflow'">
+           <rp-single-input-workflow-nav></rp-single-input-workflow-nav>
         </div>
-        <div ng-if="toolType == 'pairedInputWorkflow">
+        <div ng-if="$ctrl.toolType == 'pairedInputWorkflow'">
            Add directive for the paired analysis work panel
         </div>
-        <div ng-if="toolType == 'webIGV">
+        <div ng-if="$ctrl.toolType == 'webIGV'">
            Add directive for the web based IGV
         </div>
 

@@ -1,0 +1,34 @@
+<span class="control-label"">
+  <b>{{ currentNodePairIndex + 1 }}</b> of
+  <b>{{currentNodeRelationship.node_pairs.length }} </b> groups
+</span>
+
+
+<div>
+  <button
+    class="btn btn-default btn-xs outline"
+    ng-disabled="!hasNextMapping()"
+    ng-click="loadPreviousMapping()">
+    <i class="fa fa-backward"></i>
+  </button>
+  <button
+    class="btn btn-default btn-xs outline"
+    ng-disabled="!hasNextMapping()"
+    ng-click="loadNextMapping()">
+    <i class="fa fa-forward"></i>
+  </button>
+  <button
+    class="btn btn-default btn-xs outline"
+    ng-disabled="currentNodePair == null"
+    ng-click="deleteMapping()">
+    Delete Group
+  </button>
+  <button
+    class="btn btn-default btn-xs outline"
+    ng-disabled="currentNodePair == null"
+    ng-click="deleteAllMappings()">
+    Delete All Groups
+  </button>
+</div>
+
+
