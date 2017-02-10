@@ -25,14 +25,17 @@ class DataSetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DataSet
-        fields = ['name', 'summary', 'description', 'slug']
+        fields = ['title', 'accession', 'summary', 'description', 'slug']
 
     def partial_update(self, instance, validated_data):
         """
         Update and return an existing `DataSet` instance, given the
         validated data.
         """
-        instance.name = validated_data.get('name', instance.name)
+        instance.title = validated_data.get('title', instance.title)
+        instance.accession = validated_data.get(
+            'accession', instance.accession
+        )
         instance.summary = validated_data.get('summary', instance.summary)
         instance.description = validated_data.get(
             'description', instance.description
