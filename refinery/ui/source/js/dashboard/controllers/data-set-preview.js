@@ -203,6 +203,14 @@ DataSetPreviewCtrl.prototype.getStudies = function (uuid) {
       } else {
         this.studies = data.objects;
       }
+      // remove unnamed protocols
+      var filteredProtocols = [];
+      for (var i = 0; i < this.studies.protocols.length; i++) {
+        if (this.studies.protocols[i].name) {
+          filteredProtocols.push(this.studies.protocols[i]);
+        }
+      }
+      angular.copy(filteredProtocols, this.studies.protocols);
     }.bind(this));
 };
 
