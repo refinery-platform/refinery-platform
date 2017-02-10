@@ -30,8 +30,27 @@
       role="tabpanel"
       aria-labelledby="tool-body">
       <div class="panel-body">
-        Here's the container for the tool's nav imput group.
+        <div ng-if="toolType == 'singleInputWorkflow">
+           Add directive for the single analysis work panel
+        </div>
+        <div ng-if="toolType == 'pairedInputWorkflow">
+           Add directive for the paired analysis work panel
+        </div>
+        <div ng-if="toolType == 'webIGV">
+           Add directive for the web based IGV
+        </div>
+
       </div>
+
+      <ul class="list-group">
+        <li class="list-group-item">Add directives for the single display.</li>
+        <li class="list-group-item">Dapibus ac facilisis in</li>
+        <li class="list-group-item">Morbi leo risus</li>
+        <li class="list-group-item">Porta ac consectetur ac</li>
+        <li class="list-group-item">Vestibulum at eros</li>
+      </ul>
     </div>
+
+
   </div>
 </div>
