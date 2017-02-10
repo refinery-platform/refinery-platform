@@ -3,12 +3,12 @@
 
   angular
     .module('refineryTools')
-    .controller('SingleInputGroupNavCtrl', SingleInputGroupNavCtrl);
+    .controller('SingleInputGroupCtrl', SingleInputGroupCtrl);
 
-  SingleInputGroupNavCtrl.$inject = ['$scope', 'singleInputGroupService'];
+  SingleInputGroupCtrl.$inject = ['$scope', 'singleInputGroupService'];
 
 
-  function SingleInputGroupNavCtrl ($scope, singleInputGroupService) {
+  function SingleInputGroupCtrl ($scope, singleInputGroupService) {
     var vm = this;
     vm.groups = singleInputGroupService.inputGroups;
     vm.groupIndex = 0;

@@ -1,10 +1,10 @@
 (function () {
   'use strict';
-  angular.module('refineryTools').component('rpSingleInputGroupNav', {
-    controller: 'SingleInputGroupNavCtrl',
+  angular.module('refineryTools').component('rpSingleInputGroup', {
+    controller: 'SingleInputGroupCtrl',
     require: {
       displayCtrl: '^rpToolDisplay'
     },
-    templateUrl: '/static/partials/tools/partials/single-input-group-nav-ctrl.html'
+    templateUrl: '/static/partials/tools/partials/single-input-group-ctrl.html'
   });
 })();

@@ -3,7 +3,7 @@
   angular.module('refineryTools').component('rpSingleInputGroupCart', {
     controller: 'SingleInputGroupCartCtrl',
     require: {
-      navCtrl: '^rpSingleInputGroupNav'
+      navCtrl: '^rpSingleInputGroup'
     },
     templateUrl: '/static/partials/tools/partials/single-input-group-cart.html'
   });
