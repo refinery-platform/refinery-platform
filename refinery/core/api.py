@@ -324,7 +324,12 @@ class SharableResourceAPIInterface(object):
             if not user.has_perm('core.read_dataset', res):
                 return HttpUnauthorized()
             kwargs['sharing'] = True
-            return self.process_get(request, res, **kwargs)
+            mod_res = self.transform_res_list(user, [res], request, **kwargs)
+            perm_obj = {
+                'owner': mod_res[0].owner,
+                'share_list': mod_res[0].share_list
+            }
+            return self.build_response(request, perm_obj, **kwargs)
         elif request.method == 'PUT':
             # user must be admin or owner
             if not user.is_superuser and user != res.get_owner():
