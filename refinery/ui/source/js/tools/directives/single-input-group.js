@@ -5,6 +5,6 @@
     require: {
       displayCtrl: '^rpToolDisplay'
     },
-    templateUrl: '/static/partials/tools/partials/single-input-group-ctrl.html'
+    templateUrl: '/static/partials/tools/partials/single-input-group.html'
   });
 })();
