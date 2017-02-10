@@ -1,8 +1,7 @@
 <span class="control-label"">
-  <b>{{ currentNodePairIndex + 1 }}</b> of
-  <b>{{currentNodeRelationship.node_pairs.length }} </b> groups
+  <b>{{ $ctrl.groupIndex + 1 }}</b> of
+  <b>{{ $ctrl.groups.length }} </b> groups
 </span>
-
 
 <div>
   <button
@@ -19,16 +18,17 @@
   </button>
   <button
     class="btn btn-default btn-xs outline"
-    ng-disabled="currentNodePair == null"
+    ng-disabled="$ctrl.groups.length == 0"
     ng-click="$ctrl.removeGroup()">
     Remove Group
   </button>
   <button
     class="btn btn-default btn-xs outline"
-    ng-disabled="currentNodePair == null"
+    ng-disabled="$ctrl.groups.length == 0"
     ng-click="$ctrl.removeAllGroups()">
     Remove All Groups
   </button>
 </div>
 
-
+<hr>
+<rp-single-input-group-cart></rp-single-input-group-cart>
