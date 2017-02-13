@@ -550,16 +550,14 @@ class DataSet(SharableResource):
         try:
             self.get_isa_archive().delete()
 
-        except Exception as e:
-            logger.error(
-                "Couldn't delete DataSet's isa_archive: %s" % e)
+        except AttributeError as e:
+            logger.debug("DataSet has no isa_archive to delete: %s" % e)
 
         try:
             self.get_pre_isa_archive().delete()
 
-        except Exception as e:
-            logger.error(
-                "Couldn't delete DataSet's pre_isa_archive: %s" % e)
+        except AttributeError as e:
+            logger.debug("DataSet has no pre_isa_archive to delete: %s" % e)
 
         related_investigation_links = self.get_investigation_links()
 
