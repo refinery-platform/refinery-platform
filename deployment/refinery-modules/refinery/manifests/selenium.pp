@@ -3,12 +3,8 @@ class refinery::selenium {
   $filename = "geckodriver-${geckodriver_version}-linux32.tar.gz"
   $install_path = "/opt/geckodriver"
 
-  package { "firefox":
-    ensure   => 'installed',
-  }
-  package { "xvfb":
-    ensure   => 'installed',
-  }
+  package { "firefox":}
+  package { "xvfb":}
 
   archive { "fetch geckodriver":
     path          => "/tmp/${filename}",
