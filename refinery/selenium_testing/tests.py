@@ -22,8 +22,8 @@ class SeleniumTestBase(StaticLiveServerTestCase):
     def setUp(self, site_login=True, initialize_guest=True):
         self.browser = webdriver.Firefox()
         self.browser.maximize_window()
-        # Manually create and save public group to sync Selenium and test
-        # threads
+        # Manually create and save public group to sync Selenium and gecko
+        # driver threads
         create_public_group()
         ExtendedGroup.objects.public_group().save()
 
@@ -49,8 +49,8 @@ class NoLoginTestCase(SeleniumTestBase):
     logged in user
     """
 
-    # Overriding SeleniumTestBase.setUp() in this case because we don't
-    # need to login or initialize the guest user
+    # SeleniumTestBase.setUp(): We don't need to login or initialize the
+    # guest user this time
     def setUp(self, site_login=True, initialize_guest=True):
         super(NoLoginTestCase, self).setUp(initialize_guest=False,
                                            site_login=False)
