@@ -2,13 +2,19 @@
 
 describe('Selected-Nodes-Service', function () {
   var service;
+  var mocker;
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryFileBrowser'));
-  beforeEach(inject(function (_selectedNodesService_, $window) {
+  beforeEach(inject(function (
+    _selectedNodesService_,
+    _mockParamsFactory_,
+    $window
+  ) {
     service = _selectedNodesService_;
-    $window.externalAssayUuid = '8486046b-22f4-447f-9c81-41dbf6173c44';
-    $window.externalStudyUuid = '2341568b-22f4-643f-9c76-32dbf6173d66';
+    mocker = _mockParamsFactory_;
+    $window.externalAssayUuid = mocker.generateUuid();
+    $window.externalStudyUuid = mocker.generateUuid();
   }));
 
   it('service variables should exist', function () {
@@ -36,10 +42,10 @@ describe('Selected-Nodes-Service', function () {
 
   it('setSelectedNodes updates selectedNodes', function () {
     var node = {
-      entity: { uuid: 'x508x83x-x9xx-4740-x9x7-x7x0x631280x' },
+      entity: { uuid: mocker.generateUuid() },
       isSelected: true
     };
-    var nodesUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+    var nodesUuid = node.entity.uuid;
     expect(service.selectedNodesUuids).toEqual([]);
     expect(service.selectedNodes).toEqual([]);
     service.setSelectedNodes(node);
@@ -50,8 +56,8 @@ describe('Selected-Nodes-Service', function () {
   it('setSelectedNodesUuidsFromNodeGroup updates' +
     ' selectedNodesUuidsFromNodeGroup', function () {
     var nodesList = [
-      'x508x83x-x9xx-4740-x9x7-x7x0x631280x',
-      'x5788x83x-x9xx-4740-x9x7-x7x0x98765x'
+      mocker.generateUuid(),
+      mocker.generateUuid()
     ];
     expect(service.selectedNodesUuidsFromNodeGroup).toEqual([]);
     service.setSelectedNodesUuidsFromNodeGroup(nodesList);
@@ -59,12 +65,12 @@ describe('Selected-Nodes-Service', function () {
   });
 
   it('setSelectedNodesFromNodeGroup calls on setSelectedNode', function () {
-    var uuidList = ['x5788x83x-x9xx-4740-x9x7-x7x0x98765x'];
+    var uuidList = [mocker.generateUuid()];
 
     spyOn(service, 'setSelectedNodes');
     var expectedParam = {
       entity: {
-        uuid: 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x'
+        uuid: uuidList[0]
       },
       isSelected: true
     };
@@ -75,12 +81,12 @@ describe('Selected-Nodes-Service', function () {
 
   it('setSelectedAllFlags', function () {
     service.complementSelectedNodes = [
-      { entity: { uuid: 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x' } },
-      { entity: { uuid: 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x' } }
+      { entity: { uuid: mocker.generateUuid() } },
+      { entity: { uuid: mocker.generateUuid() } }
     ];
     service.complementSelectedNodesUuids = [
-      'x5788x83x-x9xx-4740-x9x7-x7x0x98765x',
-      'x5788x83x-x9xx-4740-x9x7-x7x0x98765x'
+      mocker.generateUuid(),
+      mocker.generateUuid()
     ];
     service.setSelectedAllFlags(true);
     expect(service.selectedAllFlag).toEqual(true);
@@ -97,13 +103,13 @@ describe('Selected-Nodes-Service', function () {
     expect(service.complementSelectedNodesUuids.length).toEqual(0);
     // Does not add duplicate uuids
     service.setComplementSeletedNodes({
-      entity: { uuid: 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x' },
+      entity: { uuid: mocker.generateUuid() },
       isSelected: false
     });
     expect(service.complementSelectedNodes.length).toEqual(1);
     expect(service.complementSelectedNodesUuids.length).toEqual(1);
     service.setComplementSeletedNodes({
-      entity: { uuid: 'x7398x83x-x9xx-4740-x9x7-x7x0x98123x' },
+      entity: { uuid: mocker.generateUuid() },
       isSelected: false
     });
     expect(service.complementSelectedNodes.length).toEqual(2);
@@ -113,7 +119,7 @@ describe('Selected-Nodes-Service', function () {
   describe('resetNodeGroupSelection, helper method', function () {
     it('resetNodeGroupSelection to true flag', function () {
       expect(service.selectedNodeGroupUuid).toEqual('');
-      service.defaultCurrentSelectionUuid = 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x';
+      service.defaultCurrentSelectionUuid = mocker.generateUuid();
       service.resetNodeGroupSelection(true);
       expect(service.selectedNodeGroupUuid).toEqual(service.defaultCurrentSelectionUuid);
       expect(service.resetNodeGroup).toEqual(true);
@@ -123,7 +129,7 @@ describe('Selected-Nodes-Service', function () {
 
     it('resetNodeGroupSelection to false flag', function () {
       expect(service.selectedNodeGroupUuid).toEqual('');
-      service.defaultCurrentSelectionUuid = 'x5788x83x-x9xx-4740-x9x7-x7x0x98765x';
+      service.defaultCurrentSelectionUuid = mocker.generateUuid();
       service.resetNodeGroupSelection(false);
       expect(service.selectedNodeGroupUuid).toEqual('');
       expect(service.resetNodeGroup).toEqual(false);
@@ -133,8 +139,8 @@ describe('Selected-Nodes-Service', function () {
   describe('getNodeGroupParams', function () {
     it('getNodeGroupParams sets correct complement nodes params', function () {
       service.selectedAllFlag = true;
-      service.selectedNodeGroupUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
-      service.complementSelectedNodesUuids = ['x5788x83x-x9xx-4740-x9x7-x7x0x98765x'];
+      service.selectedNodeGroupUuid = mocker.generateUuid();
+      service.complementSelectedNodesUuids = [mocker.generateUuid()];
 
       var response = service.getNodeGroupParams();
       expect(response.uuid).toEqual(service.selectedNodeGroupUuid);
@@ -144,8 +150,8 @@ describe('Selected-Nodes-Service', function () {
 
     it('getNodeGroupParams sets correct selected nodes params', function () {
       service.selectedAllFlag = false;
-      service.selectedNodeGroupUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
-      service.selectedNodesUuids = ['db03efb7-cf01-4840-bcb2-7b023efc290c'];
+      service.selectedNodeGroupUuid = mocker.generateUuid();
+      service.selectedNodesUuids = [mocker.generateUuid()];
 
       var response = service.getNodeGroupParams();
       expect(response.uuid).toEqual(service.selectedNodeGroupUuid);
@@ -168,8 +174,8 @@ describe('Selected-Nodes-Service', function () {
     it('isNodeSelectionEmpty returns false when nodes are selected', function () {
       spyOn(service, 'getNodeGroupParams').and.returnValue({
         nodes: [
-          'x5788x83x-x9xx-4740-x9x7-x7x0x98765x',
-          'x5788x83x-x9xx-4740-x9x7-x7x0x98765x'
+          mocker.generateUuid(),
+          mocker.generateUuid()
         ],
         use_complement_nodes: false
       });
@@ -191,8 +197,8 @@ describe('Selected-Nodes-Service', function () {
     it('isNodeSelectionEmpty returns false with when both values are', function () {
       spyOn(service, 'getNodeGroupParams').and.returnValue({
         nodes: [
-          'x5788x83x-x9xx-4740-x9x7-x7x0x98765x',
-          'x5788x83x-x9xx-4740-x9x7-x7x0x98765x'
+          mocker.generateUuid(),
+          mocker.generateUuid()
         ],
         use_complement_nodes: true
       });

@@ -1,4 +1,6 @@
 import json
+import random
+import string
 from urlparse import urljoin
 
 from django.contrib.auth.models import User, Group
@@ -2007,6 +2009,11 @@ class DataSetClassMethodsTest(TestCase):
 
 class DataSetApiV2Tests(APITestCase):
 
+    def create_rand_str(self, count):
+        return ''.join(
+            random.choice(string.ascii_lowercase) for _ in xrange(count)
+        )
+
     def setUp(self):
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
@@ -2021,8 +2028,18 @@ class DataSetApiV2Tests(APITestCase):
         self.url_root = '/api/v2/data_sets/'
 
         # Create Datasets
-        self.dataset = DataSet.objects.create(name="coffee dataset")
-        self.dataset2 = DataSet.objects.create(name="cool dataset")
+        self.dataset = DataSet.objects.create(
+            name="coffee dataset",
+            title="coffee dataset"
+        )
+        self.dataset2 = DataSet.objects.create(
+            name="cool dataset",
+            title="cool dataset"
+        )
+
+        # Set Data Sets Owner
+        self.dataset.set_owner(self.user)
+        self.dataset2.set_owner(self.user)
 
         # Create Investigation/InvestigationLinks for the DataSets
         self.investigation = Investigation.objects.create()
@@ -2059,12 +2076,6 @@ class DataSetApiV2Tests(APITestCase):
             format="json"
         )
         self.put_response = self.view(self.put_request)
-        self.patch_request = self.factory.patch(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
-        self.patch_response = self.view(self.patch_request)
         self.options_request = self.factory.options(
             self.url_root,
             data=self.node_json,
@@ -2083,8 +2094,6 @@ class DataSetApiV2Tests(APITestCase):
     def test_unallowed_http_verbs(self):
         self.assertEqual(
             self.put_response.data['detail'], 'Method "PUT" not allowed.')
-        self.assertEqual(
-            self.patch_response.data['detail'], 'Method "PATCH" not allowed.')
         self.assertEqual(
             self.options_response.data['detail'], 'Method "OPTIONS" not '
                                                   'allowed.')
@@ -2154,6 +2163,182 @@ class DataSetApiV2Tests(APITestCase):
         self.assertEqual(self.delete_response.status_code, 404)
 
         self.assertEqual(DataSet.objects.all().count(), 1)
+
+    # Accession too long
+    def test_dataset_patch_accession_fails(self):
+        new_accession = self.create_rand_str(33)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"accession": new_accession}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+        self.assertEqual(
+            patch_response.data.get('accession')[0],
+            'Ensure this field has no more than 32 characters.'
+        )
+
+    def test_dataset_patch_accession_successful(self):
+        new_accession = self.create_rand_str(10)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"accession": new_accession},
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 202)
+        self.assertEqual(patch_response.data.get('accession'), new_accession)
+
+    def test_dataset_patch_auth_fails(self):
+        new_description = self.create_rand_str(50)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"description": new_description},
+        )
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 401)
+
+    def test_dataset_patch_description_fails(self):
+        new_description = self.create_rand_str(5001)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"description": new_description},
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+        self.assertEqual(
+            patch_response.data.get('description')[0],
+            'Ensure this field has no more than 5000 characters.'
+        )
+
+    def test_dataset_patch_description_successful(self):
+        new_description = self.create_rand_str(500)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"description": new_description},
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 202)
+        self.assertEqual(
+            patch_response.data.get('description'), new_description
+        )
+
+    # Slug too long
+    def test_dataset_patch_slug_fails(self):
+        new_slug = self.create_rand_str(251)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"slug": new_slug}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+        self.assertEqual(
+            patch_response.data.get('slug')[0],
+            'Ensure this field has no more than 250 characters.'
+        )
+
+    # Slugs must be unique
+    def test_dataset_patch_slug_fails_unique(self):
+        new_slug = self.create_rand_str(10)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"slug": new_slug}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 202)
+        self.assertEqual(patch_response.data.get('slug'), new_slug)
+
+        # Duplicate request
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset2.uuid),
+            {"slug": new_slug}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset2.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+        self.assertEqual(
+            patch_response.data.get('slug')[0],
+            'Slugs must be unique.'
+        )
+
+    def test_dataset_patch_slug_successful(self):
+        new_slug = self.create_rand_str(10)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"slug": new_slug},
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 202)
+        self.assertEqual(patch_response.data.get('slug'), new_slug)
+
+    def test_dataset_patch_slug_trim_whitespace(self):
+        new_slug = '  Test Slug Name  '
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"slug": new_slug},
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 202)
+        self.assertEqual(patch_response.data.get('slug'), new_slug.strip())
+
+    # Summary too long
+    def test_dataset_patch_summary_fails(self):
+        new_summary = self.create_rand_str(1001)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"summary": new_summary}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+        self.assertEqual(
+            patch_response.data.get('summary')[0],
+            'Ensure this field has no more than 1000 characters.'
+        )
+
+    def test_dataset_patch_summary_successful(self):
+        new_summary = self.create_rand_str(500)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"summary": new_summary},
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 202)
+        self.assertEqual(patch_response.data.get('summary'), new_summary)
+
+    # Title too long
+    def test_dataset_patch_title_fails(self):
+        new_title = self.create_rand_str(251)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"title": new_title}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+        self.assertEqual(
+            patch_response.data.get('title')[0],
+            'Ensure this field has no more than 250 characters.'
+            )
+
+    def test_dataset_patch_title_successful(self):
+        new_title = "decaf coffee dataset"
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"title": new_title},
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 202)
+        self.assertEqual(patch_response.data.get('title'), new_title)
 
 
 class AnalysisApiV2Tests(APITestCase):

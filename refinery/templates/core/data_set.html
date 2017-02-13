@@ -110,11 +110,17 @@
   </style>
 {% endblock head_html %}
 
-{% block title %} - Data Set {{ data_set.name }}{% endblock %}
+{% block title %} - Data Set
+  {{ data_set.accession }}:
+  {{ data_set.title }} {% endblock %}
 
 {% block subheader %}
   <div class="page-header">
-    <h1>Data Set <small>{{ data_set.name }}</small></h1>
+    <h1>Data Set
+      <small>
+        {{ data_set.accession }}: {{ data_set.title }}
+      </small>
+    </h1>
   </div>
 
 {% endblock %}

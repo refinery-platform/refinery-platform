@@ -16,6 +16,7 @@ from guardian.utils import get_anonymous_user
 from core.models import DataSet, ExtendedGroup
 from core.utils import (normalize_annotation_ont_ids, get_data_set_annotations)
 
+
 logger = logging.getLogger(__name__)
 root_logger = logging.getLogger()
 
