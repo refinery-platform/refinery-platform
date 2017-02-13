@@ -740,11 +740,11 @@ class DataSet(SharableResource):
                     data_set__uuid=self.uuid).investigation.isarchive_file)
 
         except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned,
-                InvestigationLink.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned) as e:
+            logger.debug("Couldn't fetch FileStoreItem: %s" % e)
+        except (InvestigationLink.DoesNotExist,
                 InvestigationLink.MultipleObjectsReturned) as e:
-            logger.error("Error while fetching FileStoreItem or "
-                         "InvestigationLink: %s" % e)
+            logger.debug("Couldn't fetch InvestigationLink: %s" % e)
 
     def get_pre_isa_archive(self):
         """
@@ -757,11 +757,11 @@ class DataSet(SharableResource):
                     data_set__uuid=self.uuid).investigation.pre_isarchive_file)
 
         except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned,
-                InvestigationLink.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned) as e:
+            logger.debug("Couldn't fetch FileStoreItem: %s" % e)
+        except (InvestigationLink.DoesNotExist,
                 InvestigationLink.MultipleObjectsReturned) as e:
-            logger.error("Error while fetching FileStoreItem or "
-                         "InvestigationLink: %s" % e)
+            logger.debug("Couldn't fetch InvestigationLink: %s" % e)
 
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
