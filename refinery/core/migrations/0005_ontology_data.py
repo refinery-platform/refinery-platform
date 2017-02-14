@@ -1,93 +1,85 @@
 # encoding: utf8
-import json
-from django.core import serializers
-from django.db import models, migrations
+from django.db import migrations, IntegrityError, transaction
 
 
 def forwards(apps, schema_editor):
     Ontology = apps.get_model("core", "Ontology")
     ontologies = [
         Ontology(
+            pk=9,
             name="BRENDA Tissue and Enzyme Source Ontology",
             acronym="BTO",
             uri="http://purl.obolibrary.org/obo/bto.owl",
             owl2neo4j_version="0.6.1",
-            import_date="2016-05-19",
-            update_date="2016-05-19"),
+        ),
         Ontology(
+
             name="Chemical Entities of Biological Interest",
             acronym="CHEBI",
             uri="http://purl.obolibrary.org/obo/chebi.owl",
             owl2neo4j_version="0.6.1",
-            import_date="2016-05-19",
-            update_date="2016-05-19"),
+        ),
         Ontology(
             name="Cell Ontology",
             acronym="CL",
             uri="http://purl.obolibrary.org/obo/cl.owl",
             owl2neo4j_version="0.6.1",
-            import_date="2016-05-19",
-            update_date="2016-05-19"),
+        ),
         Ontology(
             name="Experimental Factor Ontology",
             acronym="EFO",
             uri="http://www.ebi.ac.uk/efo/efo.owl",
             owl2neo4j_version="0.6.1",
-            import_date="2016-05-19",
-            update_date="2016-05-19"),
+        ),
         Ontology(
             name="Foundational Model of Anatomy",
             acronym="FMA",
             uri="http://purl.obolibrary.org/obo/fma.owl",
             owl2neo4j_version="0.6.1",
-            import_date="2016-05-19",
-            update_date="2016-05-19"),
+        ),
         Ontology(
             name="Gene Ontology",
             acronym="GO",
             uri="http://purl.obolibrary.org/obo/go.owl",
             owl2neo4j_version="0.6.1",
-            import_date="2016-05-19",
-            update_date="2016-05-19"),
+        ),
         Ontology(
             name="Mouse Adult Gross Anatomy",
             acronym="MA",
             uri="http://purl.obolibrary.org/obo/ma.owl",
             owl2neo4j_version="0.6.1",
-            import_date="2016-05-19",
-            update_date="2016-05-19"),
+        ),
         Ontology(
             name="National Cancer Institute Thesaurus",
             acronym="NCIT",
             uri="http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl",
             owl2neo4j_version="0.6.1",
-            import_date="2016-05-19",
-            update_date="2016-05-19"),
+        ),
         Ontology(
             name="Ontology for Biomedical Investigations",
             acronym="OBI",
             uri="http://purl.obolibrary.org/obo/obi.owl",
             owl2neo4j_version="0.6.1",
-            import_date="2016-05-19",
-            update_date="2016-05-19"),
+        ),
         Ontology(
             name="Phenotypic Quality",
             acronym="PATO",
             uri="http://purl.obolibrary.org/obo/pato.owl",
             owl2neo4j_version="0.6.1",
-            import_date="2016-05-19",
-            update_date="2016-05-19"),
+        ),
         Ontology(
             name="Unit Ontology",
             acronym="UO",
             uri="http://purl.obolibrary.org/obo/uo.owl",
             owl2neo4j_version="0.6.1",
-            import_date="2016-05-19",
-            update_date="2016-05-19")
+        )
     ]
-
     for ontology in ontologies:
-        ontology.update_or_create()
+        try:
+            with transaction.atomic():
+                ontology.save()
+        except IntegrityError:
+            continue
 
 
 def backwards(apps, schema_editor):
