@@ -6,7 +6,6 @@ def forwards(apps, schema_editor):
     Ontology = apps.get_model("core", "Ontology")
     ontologies = [
         Ontology(
-            pk=9,
             name="BRENDA Tissue and Enzyme Source Ontology",
             acronym="BTO",
             uri="http://purl.obolibrary.org/obo/bto.owl",
