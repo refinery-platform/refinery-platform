@@ -10,6 +10,7 @@
     '$log',
     '$q',
     '$scope',
+    '$templateCache',
     '$timeout',
     'uiGridConstants',
     '_',
@@ -28,6 +29,7 @@
     $log,
     $q,
     $scope,
+    $templateCache,
     $timeout,
     uiGridConstants,
     _,
@@ -61,6 +63,13 @@
       uuid: $window.externalAssayUuid
     };
     vm.firstPage = 0;
+    $templateCache.put('ui-grid/selectionRowHeaderButtons',
+      '<div class="ui-grid-selection-row-header-buttons "' +
+      ' ng-class="{\'ui-grid-row-selected\': row.isSelected}" ' +
+      'ng-click="selectButtonClick(row, $event)">' +
+      '<i class="fa fa-arrow-right" aria-hidden="true"></i></div>'
+    );
+
     //
     vm.gridApi = undefined; // avoids duplicate grid generation
     // Main ui-grid options
@@ -70,13 +79,13 @@
       infiniteScrollUp: true,
       infiniteScrollDown: true,
       useExternalSorting: true,
-      enableRowSelection: false,
-      enableSelectAll: false,
+      enableRowSelection: true,
+      enableSelectAll: true,
       selectionRowHeaderWidth: 35,
       rowHeight: 35,
       showGridFooter: true,
-      enableSelectionBatchEvent: false,
-      multiSelect: false,
+      enableSelectionBatchEvent: true,
+      multiSelect: true,
       columnDefs: fileBrowserFactory.customColumnNames,
       data: fileBrowserFactory.assayFiles,
       gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>'
