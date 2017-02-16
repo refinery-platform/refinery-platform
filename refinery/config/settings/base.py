@@ -206,6 +206,7 @@ INSTALLED_APPS = (
     'visualization_manager',
     'data_set_manager',
     'annotation_server',
+    'tools',
     'registration',
     'flatblocks',
     'chunked_upload',
