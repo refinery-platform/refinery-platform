@@ -33,6 +33,7 @@ from data_set_manager.api import (AssayResource, AttributeOrderResource,
                                   StudyResource)
 from data_set_manager.views import Assays, AssaysAttributes, AssaysFiles
 from file_store.views import FileStoreItems
+from tools.views import ToolDefinitionsViewSet
 
 
 logger = logging.getLogger(__name__)
@@ -48,6 +49,7 @@ sqs = (SearchQuerySet().using("core")
 router = routers.DefaultRouter()
 router.register(r'workflows', WorkflowViewSet)
 router.register(r'nodes', NodeViewSet)
+router.register(r'tools/definitions', ToolDefinitionsViewSet)
 
 # NG: added for tastypie URL
 v1_api = Api(api_name='v1')
