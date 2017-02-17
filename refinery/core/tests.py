@@ -5,7 +5,7 @@ from urlparse import urljoin
 
 from django.contrib.auth.models import User, Group
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.utils import unittest, timezone
+from django.utils import timezone
 from django.test import TestCase
 
 from guardian.shortcuts import assign_perm
@@ -35,7 +35,7 @@ from galaxy_connector.models import Instance
 cache = memcache.Client(["127.0.0.1:11211"])
 
 
-class UserCreateTest(unittest.TestCase):
+class UserCreateTest(TestCase):
     """Test User instance creation"""
 
     def setUp(self):
@@ -46,9 +46,6 @@ class UserCreateTest(unittest.TestCase):
         self.last_name = "Sample"
         self.affiliation = "University"
         self.public_group_name = ExtendedGroup.objects.public_group().name
-
-    def tearDown(self):
-        User.objects.all().delete()
 
     def test_add_new_user_to_public_group(self):
         """Test if User accounts are added to Public group"""
@@ -67,7 +64,7 @@ class UserCreateTest(unittest.TestCase):
             new_user.groups.filter(name=self.public_group_name).count(), 1)
 
 
-class NodeSetTest(unittest.TestCase):
+class NodeSetTest(TestCase):
     """Test all NodeSet operations"""
 
     def setUp(self):
@@ -1010,7 +1007,7 @@ class AnalysisResourceTest(ResourceTestCase):
         self.assertEqual(Analysis.objects.count(), 1)
 
 
-class BaseResourceSlugTest(unittest.TestCase):
+class BaseResourceSlugTest(TestCase):
     """Tests for BaseResource Slugs"""
 
     def setUp(self):
@@ -1026,10 +1023,6 @@ class BaseResourceSlugTest(unittest.TestCase):
             name="project3",
             slug=None
         )
-
-    def tearDown(self):
-        DataSet.objects.all().delete()
-        Project.objects.all().delete()
 
     def test_duplicate_slugs(self):
         # Try to create DS with existing slug
@@ -1111,7 +1104,7 @@ class BaseResourceSlugTest(unittest.TestCase):
             name="project_no_slug_duplicate3"))
 
 
-class CachingTest(unittest.TestCase):
+class CachingTest(TestCase):
     """Testing the addition and deletion of cached objects"""
 
     def setUp(self):
@@ -1136,8 +1129,6 @@ class CachingTest(unittest.TestCase):
     def tearDown(self):
         self.cache = invalidate_cached_object(DataSet.objects.get(
             slug="TestSlug1"), True)
-        DataSet.objects.all().delete()
-        User.objects.all().delete()
 
     def test_verify_cache_invalidation(self):
         # Grab a DataSet and see if we can invalidate the cache
@@ -1203,7 +1194,7 @@ class CachingTest(unittest.TestCase):
         self.assertNotEqual(self.initial_cache, new_cache)
 
 
-class WorkflowDeletionTest(unittest.TestCase):
+class WorkflowDeletionTest(TestCase):
     """Testing for the deletion of Workflows"""
 
     def setUp(self):
@@ -1233,15 +1224,6 @@ class WorkflowDeletionTest(unittest.TestCase):
         )
         self.analysis.set_owner(self.user)
 
-    def tearDown(self):
-        User.objects.all().delete()
-        Project.objects.all().delete()
-        WorkflowEngine.objects.all().delete()
-        Workflow.objects.all().delete()
-        DataSet.objects.all().delete()
-        Instance.objects.all().delete()
-        Analysis.objects.all().delete()
-
     def test_verify_workflow_used_by_analysis(self):
         self.assertEqual(self.analysis.workflow.name,
                          "workflow_used_by_analyses")
@@ -1260,7 +1242,7 @@ class WorkflowDeletionTest(unittest.TestCase):
                           name="workflow_not_used_by_analyses")
 
 
-class DataSetDeletionTest(unittest.TestCase):
+class DataSetDeletionTest(TestCase):
     """Testing for the deletion of Datasets"""
 
     def setUp(self):
@@ -1309,23 +1291,6 @@ class DataSetDeletionTest(unittest.TestCase):
         )
         self.analysis.set_owner(self.user)
 
-    def tearDown(self):
-        User.objects.all().delete()
-        Project.objects.all().delete()
-        WorkflowEngine.objects.all().delete()
-        Workflow.objects.all().delete()
-        Instance.objects.all().delete()
-        Analysis.objects.all().delete()
-        DataSet.objects.all().delete()
-        UserProfile.objects.all().delete()
-        Node.objects.all().delete()
-        FileStoreItem.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        Investigation.objects.all().delete()
-        AnalysisNodeConnection.objects.all().delete()
-        InvestigationLink.objects.all().delete()
-
     def test_verify_dataset_deletion_if_no_analysis_run_upon_it(self):
         self.assertIsNotNone(
             DataSet.objects.get(name="dataset_without_analysis"))
@@ -1354,7 +1319,7 @@ class DataSetDeletionTest(unittest.TestCase):
         self.assertIsNone(self.dataset_without_analysis.get_pre_isa_archive())
 
 
-class AnalysisDeletionTest(unittest.TestCase):
+class AnalysisDeletionTest(TestCase):
     """Testing for the deletion of Analyses"""
 
     def setUp(self):
@@ -1444,22 +1409,6 @@ class AnalysisDeletionTest(unittest.TestCase):
                 analysis=self.analysis_with_node_analyzed_further,
                 node=self.node2, step=2,
                 direction="in")
-
-    def tearDown(self):
-        User.objects.all().delete()
-        Project.objects.all().delete()
-        WorkflowEngine.objects.all().delete()
-        Workflow.objects.all().delete()
-        DataSet.objects.all().delete()
-        Instance.objects.all().delete()
-        Analysis.objects.all().delete()
-        UserProfile.objects.all().delete()
-        Node.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        Investigation.objects.all().delete()
-        AnalysisNodeConnection.objects.all().delete()
-        InvestigationLink.objects.all().delete()
 
     def test_verify_analysis_deletion_if_nodes_not_analyzed_further(self):
         # Try to delete Analysis with a Node that has an
@@ -1981,7 +1930,7 @@ class DataSetResourceTest(ResourceTestCase):
         self.assertEqual(data['analyses'], [])
 
 
-class DataSetClassMethodsTest(unittest.TestCase):
+class DataSetClassMethodsTest(TestCase):
     """ Testing of methods specific to the DataSet model
     """
 
@@ -2049,23 +1998,6 @@ class DataSetClassMethodsTest(unittest.TestCase):
             name="n3", assay=self.assay, study=self.study)
         self.node4 = Node.objects.create(
             name="n4", assay=self.assay, study=self.study)
-
-    def tearDown(self):
-        User.objects.all().delete()
-        Project.objects.all().delete()
-        WorkflowEngine.objects.all().delete()
-        Workflow.objects.all().delete()
-        DataSet.objects.all().delete()
-        Instance.objects.all().delete()
-        Analysis.objects.all().delete()
-        UserProfile.objects.all().delete()
-        Node.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        Investigation.objects.all().delete()
-        AnalysisNodeConnection.objects.all().delete()
-        InvestigationLink.objects.all().delete()
-        FileStoreItem.objects.all().delete()
 
     def test_get_file_store_items(self):
         file_store_items = self.dataset.get_file_store_items()

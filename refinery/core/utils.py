@@ -1,11 +1,11 @@
 from __future__ import absolute_import
+import logging
 
 import ast
-import logging
-import os
 import py2neo
-from urlparse import urlparse, urljoin
+import sys
 
+import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.models import Site
@@ -14,41 +14,38 @@ from django.core.mail import send_mail
 from django.core.cache import cache
 from django.db import connection
 from django.utils import timezone
-
-import requests
 from rest_framework.response import Response
 from rest_framework import status
+from urlparse import urlparse, urljoin
 
 import core
 import data_set_manager
 
-
 logger = logging.getLogger(__name__)
 
 
-def skip(func):
-    """Decorator to be used on function calls that don't necessarily need to
-    be run on CI i.e. Neo4J and Solr stuff tend to pollute log output
+def skip_if_test_run(func):
+    """Decorator to be used on functions that don't necessarily need to
+    be run during tests or CI i.e. Neo4J and Solr stuff tend to pollute
+    log output
     """
     def func_wrapper(*args, **kwargs):
-        try:
-            if os.environ['REDUCE_TEST_OUTPUT'] == "true":
+        if "test" in sys.argv:
                 return
-        except KeyError:
-            logger.error('REDUCE_TEST_OUTPUT .env var not set.')
-        return func(*args, **kwargs)
+        else:
+            return func(*args, **kwargs)
     return func_wrapper
 
 
-@skip
+@skip_if_test_run
 def update_data_set_index(data_set):
     """Update a dataset's corresponding document in Solr.
     """
 
     logger.info('Updated data set (uuid: %s) index', data_set.uuid)
     try:
-        data_set_index = core.search_indexes.DataSetIndex()
-        data_set_index.update_object(data_set, using='core')
+        core.search_indexes.DataSetIndex().update_object(data_set,
+                                                         using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -57,9 +54,8 @@ def update_data_set_index(data_set):
         logger.error("Could not update DataSetIndex: %s", e)
 
 
-@skip
+@skip_if_test_run
 def add_data_set_to_neo4j(dataset, user_id):
-
     """Add a node in Neo4J for a dataset and give the owner read access.
     Note: Neo4J manages read access only.
     """
@@ -151,7 +147,7 @@ def add_data_set_to_neo4j(dataset, user_id):
         )
 
 
-@skip
+@skip_if_test_run
 def add_read_access_in_neo4j(dataset_uuids, user_ids):
     """Give one or more user read access to one or more datasets.
     """
@@ -195,7 +191,7 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
         )
 
 
-@skip
+@skip_if_test_run
 def update_annotation_sets_neo4j(username=''):
     """
     Update annotation sets in Neo4J
@@ -224,7 +220,7 @@ def update_annotation_sets_neo4j(username=''):
         )
 
 
-@skip
+@skip_if_test_run
 def add_or_update_user_to_neo4j(user_id, username):
     """
     Add or update a user in Neo4J
@@ -262,7 +258,7 @@ def add_or_update_user_to_neo4j(user_id, username):
         )
 
 
-@skip
+@skip_if_test_run
 def delete_user_in_neo4j(user_id, user_name):
     """
     Delete a user and its annotation set in Neo4J
@@ -309,7 +305,7 @@ def delete_user_in_neo4j(user_id, user_name):
         )
 
 
-@skip
+@skip_if_test_run
 def remove_read_access_in_neo4j(dataset_uuids, user_ids):
     """Remove read access for one or multiple users to one or more datasets.
     """
@@ -352,24 +348,24 @@ def remove_read_access_in_neo4j(dataset_uuids, user_ids):
         )
 
 
-@skip
+@skip_if_test_run
 def delete_data_set_index(data_set):
     """Remove a dataset's related document from Solr's index.
     """
 
     logger.debug('Deleted data set (uuid: %s) index', data_set.uuid)
     try:
-        data_set_index = core.search_indexes.DataSetIndex()
-        data_set_index.remove_object(data_set, using='core')
+        core.search_indexes.DataSetIndex().remove_object(data_set,
+                                                         using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
         (e.g. Travis CI doesn't support solr yet)
         """
-        logger.error("Could not delete from DataSetIndex:", e)
+        logger.error("Could not delete from DataSetIndex: %s", e)
 
 
-@skip
+@skip_if_test_run
 def delete_data_set_neo4j(dataset_uuid):
     """Remove a dataset's related node in Neo4J.
     """
@@ -402,7 +398,7 @@ def delete_data_set_neo4j(dataset_uuid):
         )
 
 
-@skip
+@skip_if_test_run
 def delete_ontology_from_neo4j(acronym):
     """Remove ontology and all class nodes that belong exclusively to an
     ontology.
@@ -753,14 +749,13 @@ def create_update_ontology(name, acronym, uri, version, owl2neo4j_version):
         logger.info('Updated %s', ontology)
 
 
-@skip
+@skip_if_test_run
 def delete_analysis_index(node_instance):
     """Remove a Analysis' related document from Solr's index.
     """
     try:
         data_set_manager.search_indexes.NodeIndex().remove_object(
-            node_instance, using='data_set_manager'
-        )
+            node_instance, using='data_set_manager')
         logger.debug('Deleted Analysis\' NodeIndex with (uuid: %s)',
                      node_instance.uuid)
     except Exception as e:
@@ -923,8 +918,7 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
             params['facets'] = ','.join(filter_attribute.keys())
 
     solr_params = data_set_manager.utils.generate_solr_params(
-        params, assay_uuid
-    )
+        params, assay_uuid)
     # Only require solr filters if exception uuids are passed
     if filter_out_uuids:
         # node_arr = str(filter_out_uuids).split(',')
@@ -932,11 +926,9 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
         field_filter = "&fq=-uuid:({})".format(str_nodes)
         solr_params = ''.join([solr_params, field_filter])
     solr_response = data_set_manager.utils.search_solr(
-        solr_params, 'data_set_manager'
-    )
+        solr_params, 'data_set_manager')
     solr_reponse_json = data_set_manager.utils.format_solr_response(
-        solr_response
-    )
+        solr_response)
     uuid_list = []
     for node in solr_reponse_json.get('nodes'):
         uuid_list.append(node.get('uuid'))

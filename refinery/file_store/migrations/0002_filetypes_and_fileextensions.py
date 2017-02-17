@@ -1,633 +1,306 @@
 # encoding: utf8
-import json
-from django.core import serializers
-from django.db import models, migrations
+from django.db import migrations, transaction, IntegrityError
 
 
 def forwards(apps, schema_editor):
-    data = [
-      {
-        "model": "file_store.FileType",
-        "pk": 1,
-        "fields": {
-          "description": "Binary compressed SAM",
-          "name": "BAM",
-          "used_for_visualization": True
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 2,
-        "fields": {
-          "description": "BED file",
-          "name": "BED",
-          "used_for_visualization": True
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 3,
-        "fields": {
-          "description": "Big BED",
-          "name": "BIGBED"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 4,
-        "fields": {
-          "description": "Big WIG",
-          "name": "BIGWIG",
-          "used_for_visualization": True
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 5,
-        "fields": {
-          "description": "Circular Binary Segmentation File",
-          "name": "CBS"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 6,
-        "fields": {
-          "description": "Affymetrix Probe Results File",
-          "name": "CEL"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 7,
-        "fields": {
-          "description": "Comma Separated Values",
-          "name": "CSV"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 8,
-        "fields": {
-          "description": "Eland file",
-          "name": "ELAND"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 9,
-        "fields": {
-          "description": "GFF file",
-          "name": "GFF",
-          "used_for_visualization": True
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 10,
-        "fields": {
-          "description": "GTF file",
-          "name": "GTF"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 11,
-        "fields": {
-          "description": "Gzip compressed archive",
-          "name": "GZ"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 12,
-        "fields": {
-          "description": "Hypertext Markup Language",
-          "name": "HTML"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 13,
-        "fields": {
-          "description": "IDF file",
-          "name": "IDF"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 14,
-        "fields": {
-          "description": "FASTA file",
-          "name": "FASTA"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 15,
-        "fields": {
-          "description": "FASTQ file",
-          "name": "FASTQ"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 16,
-        "fields": {
-          "description": "FASTQC Sanger",
-          "name": "FASTQCSANGER"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 17,
-        "fields": {
-          "description": "FASTQ Illumina",
-          "name": "FASTQILLUMINA"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 18,
-        "fields": {
-          "description": "FASTQ Sanger",
-          "name": "FASTQSANGER"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 19,
-        "fields": {
-          "description": "FASTQ Solexa",
-          "name": "FASTQSOLEXA"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 20,
-        "fields": {
-          "description": "Portable Document Format",
-          "name": "PDF"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 21,
-        "fields": {
-          "description": "Sequence Alignment/Map",
-          "name": "SAM"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 22,
-        "fields": {
-          "description": "Segmented Data File",
-          "name": "SEG",
-          "used_for_visualization": True
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 23,
-        "fields": {
-          "description": "Tabular file",
-          "name": "TABULAR"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 24,
-        "fields": {
-          "description": "TDF file",
-          "name": "TDF",
-          "used_for_visualization": True
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 25,
-        "fields": {
-          "description": "Gzip compressed tar archive",
-          "name": "TGZ"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 26,
-        "fields": {
-          "description": "Text file",
-          "name": "TXT"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 27,
-        "fields": {
-          "description": "Variant Call Format",
-          "name": "VCF",
-          "used_for_visualization": True
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 28,
-        "fields": {
-          "description": "Wiggle Track Format",
-          "name": "WIG",
-          "used_for_visualization": True
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 29,
-        "fields": {
-          "description": "XML file",
-          "name": "XML"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 32,
-        "fields": {
-          "description": "Zip compressed archive",
-          "name": "ZIP"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 34,
-        "fields": {
-          "description": "FASTQ.GZ file",
-          "name": "FASTQ.GZ"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 35,
-        "fields": {
-          "description": "GCT file",
-          "name": "GCT"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 37,
-        "fields": {
-          "description": "DAT file",
-          "name": "DAT"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 38,
-        "fields": {
-          "description": "Illumina basecall file",
-          "name": "BCL"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 39,
-        "fields": {
-          "description": "Illumina basecall file gzipped",
-          "name": "BCL GZip file"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 40,
-        "fields": {
-          "description": "Illumina basecall file tarred + gzipped",
-          "name": "BCL TGZ file"
-        }
-      },
-      {
-        "model": "file_store.FileType",
-        "pk": 41,
-        "fields": {
-          "description": "BAM index file",
-          "name": "BAI file",
-          "used_for_visualization": True
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 1,
-        "fields": {
-          "name": "bam",
-          "filetype": 1
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 2,
-        "fields": {
-          "name": "bed",
-          "filetype": 2
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 3,
-        "fields": {
-          "name":"bigbed",
-          "filetype": 3
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 4,
-        "fields": {
-          "name": "bigwig",
-          "filetype": 4
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 5,
-        "fields": {
-          "name": "cbs",
-          "filetype": 5
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 6,
-        "fields": {
-          "name": "cel",
-          "filetype": 6
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 7,
-        "fields": {
-          "name": "csv",
-          "filetype": 7
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 8,
-        "fields": {
-          "name": "eland",
-          "filetype": 8
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 9,
-        "fields": {
-          "name": "gff",
-          "filetype": 9
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 10,
-        "fields": {
-          "name": "gtf",
-          "filetype": 10
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 11,
-        "fields": {
-          "name": "gz",
-          "filetype": 11
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 12,
-        "fields": {
-          "name": "html",
-          "filetype": 12
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 13,
-        "fields": {
-          "name": "idf",
-          "filetype": 13
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 14,
-        "fields": {
-          "name": "fasta",
-          "filetype": 14
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 15,
-        "fields": {
-          "name": "fastq",
-          "filetype": 15
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 16,
-        "fields": {
-          "name": "fastqcsanger",
-          "filetype": 16
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 17,
-        "fields": {
-          "name": "fastqillumina",
-          "filetype": 17
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 18,
-        "fields": {
-          "name": "fastqsanger",
-          "filetype": 18
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 19,
-        "fields": {
-          "name": "fastqsolexa",
-          "filetype": 19
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 20,
-        "fields": {
-          "name": "pdf",
-          "filetype": 20
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 21,
-        "fields": {
-          "name": "sam",
-          "filetype": 21
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 22,
-        "fields": {
-          "name": "seg",
-          "filetype": 22
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 23,
-        "fields": {
-          "name": "tabular",
-          "filetype": 23
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 24,
-        "fields": {
-          "name": "tdf",
-          "filetype": 24
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 25,
-        "fields": {
-          "name": "tgz",
-          "filetype": 25
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 26,
-        "fields": {
-          "name": "txt",
-          "filetype": 26
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 27,
-        "fields": {
-          "name": "vcf",
-          "filetype": 27
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 28,
-        "fields": {
-          "name": "wig",
-          "filetype": 28
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 29,
-        "fields": {
-          "name": "xml",
-          "filetype": 29
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 30,
-        "fields": {
-          "name": "bb",
-          "filetype": 3
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 31,
-        "fields": {
-          "name": "igv.tdf",
-          "filetype": 24
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 32,
-        "fields": {
-          "name": "zip",
-          "filetype": 32
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 34,
-        "fields": {
-          "name": "fastq.gz",
-          "filetype": 34
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 35,
-        "fields": {
-          "name": "gct",
-          "filetype": 35
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 38,
-        "fields": {
-          "name": "fq",
-          "filetype": 15
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 39,
-        "fields": {
-          "name": "bcl",
-          "filetype": 38
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 39,
-        "fields": {
-          "name": "bcl.gz",
-          "filetype": 39
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 40,
-        "fields": {
-          "name": "bcl.tgz",
-          "filetype": 40
-        }
-      },
-      {
-        "model": "file_store.FileExtension",
-        "pk": 41,
-        "fields": {
-          "name": "bai",
-          "filetype": 41
-        }
-      }
+    Filetype = apps.get_model("file_store", "Filetype")
+    FileExtension = apps.get_model("file_store", "FileExtension")
+
+    filetypes = [
+        Filetype(
+            description="Binary compressed SAM",
+            name="BAM",
+            used_for_visualization=True),
+        Filetype(
+            description="BED file",
+            name="BED",
+            used_for_visualization=True),
+        Filetype(
+            description="Big BED",
+            name="BIGBED"),
+        Filetype(
+            description="Big WIG",
+            name="BIGWIG",
+            used_for_visualization=True),
+        Filetype(
+            description="Circular Binary Segmentation File",
+            name="CBS"),
+        Filetype(
+            description="Affymetrix Probe Results File",
+            name="CEL"),
+        Filetype(
+            description="Comma Separated Values",
+            name="CSV"),
+        Filetype(
+            description="Eland file",
+            name="ELAND"),
+        Filetype(
+            description="GFF file",
+            name="GFF",
+            used_for_visualization=True),
+        Filetype(
+            description="GTF file",
+            name="GTF"),
+        Filetype(
+            description="Gzip compressed archive",
+            name="GZ"),
+        Filetype(
+            description="Hypertext Markup Language",
+            name="HTML"),
+        Filetype(
+            description="IDF file",
+            name="IDF"),
+        Filetype(
+            description="FASTA file",
+            name="FASTA"),
+        Filetype(
+            description="FASTQ file",
+            name="FASTQ"),
+        Filetype(
+            description="FASTQC Sanger",
+            name="FASTQCSANGER"),
+        Filetype(
+            description="FASTQ Illumina",
+            name="FASTQILLUMINA"),
+        Filetype(
+            description="FASTQ Sanger",
+            name="FASTQSANGER"),
+        Filetype(
+            description="FASTQ Solexa",
+            name="FASTQSOLEXA"),
+        Filetype(
+            description="Portable Document Format",
+            name="PDF"),
+        Filetype(
+            description="Sequence Alignment/Map",
+            name="SAM"),
+        Filetype(
+            description="Segmented Data File",
+            name="SEG",
+            used_for_visualization=True),
+        Filetype(
+            description="Tabular file",
+            name="TABULAR"),
+        Filetype(
+            description="TDF file",
+            name="TDF",
+            used_for_visualization=True),
+        Filetype(
+            description="Gzip compressed tar archive",
+            name="TGZ"),
+        Filetype(
+            description="Text file",
+            name="TXT"),
+        Filetype(
+            description="Variant Call Format",
+            name="VCF",
+            used_for_visualization=True),
+        Filetype(
+            description="Wiggle Track Format",
+            name="WIG",
+            used_for_visualization=True),
+        Filetype(
+            description="XML file",
+            name="XML"),
+        Filetype(
+            description="Zip compressed archive",
+            name="ZIP"),
+        Filetype(
+            description="FASTQ.GZ file",
+            name="FASTQ.GZ"),
+        Filetype(
+            description="GCT file",
+            name="GCT"),
+        Filetype(
+            description="DAT file",
+            name="DAT"),
+        Filetype(
+            description="Illumina basecall file",
+            name="BCL"),
+        Filetype(
+            description="Illumina basecall file gzipped",
+            name="BCL GZip file"),
+        Filetype(
+            description="Illumina basecall file tarred + gzipped",
+            name="BCL TGZ file"),
+        Filetype(
+            description="BAM index file",
+            name="BAI file",
+            used_for_visualization=True)
+        ]
+
+    for filetype in filetypes:
+        with transaction.atomic():
+            try:
+                filetype.save()
+            except IntegrityError:
+                continue
+
+    file_extensions = [
+        FileExtension(
+            name="bam",
+            filetype=Filetype.objects.get(name="BAM")
+        ),
+        FileExtension(
+            name="bed",
+            filetype=Filetype.objects.get(name="BED")
+        ),
+        FileExtension(
+            name="bigbed",
+            filetype=Filetype.objects.get(name="BIGBED")
+        ),
+        FileExtension(
+            name="bigwig",
+            filetype=Filetype.objects.get(name="BIGWIG")
+        ),
+        FileExtension(
+            name="cbs",
+            filetype=Filetype.objects.get(name="CBS")
+        ),
+        FileExtension(
+            name="cel",
+            filetype=Filetype.objects.get(name="CEL")
+        ),
+        FileExtension(
+            name="csv",
+            filetype=Filetype.objects.get(name="CSV")
+        ),
+        FileExtension(
+            name="eland",
+            filetype=Filetype.objects.get(name="ELAND")
+        ),
+        FileExtension(
+            name="gff",
+            filetype=Filetype.objects.get(name="GFF")
+        ),
+        FileExtension(
+            name="gtf",
+            filetype=Filetype.objects.get(name="GTF")
+        ),
+        FileExtension(
+            name="gz",
+            filetype=Filetype.objects.get(name="GZ")
+        ),
+        FileExtension(
+            name="html",
+            filetype=Filetype.objects.get(name="HTML")
+        ),
+        FileExtension(
+            name="idf",
+            filetype=Filetype.objects.get(name="IDF")
+        ),
+        FileExtension(
+            name="fasta",
+            filetype=Filetype.objects.get(name="FASTA")
+        ),
+        FileExtension(
+            name="fastq",
+            filetype=Filetype.objects.get(name="FASTQ")
+        ),
+        FileExtension(
+            name="fastqcsanger",
+            filetype=Filetype.objects.get(name="FASTQCSANGER")
+        ),
+        FileExtension(
+            name="fastqillumina",
+            filetype=Filetype.objects.get(name="FASTQILLUMINA")
+        ),
+        FileExtension(
+            name="fastqsanger",
+            filetype=Filetype.objects.get(name="FASTQSANGER")
+        ),
+        FileExtension(
+            name="fastqsolexa",
+            filetype=Filetype.objects.get(name="FASTQSOLEXA")
+        ),
+        FileExtension(
+            name="pdf",
+            filetype=Filetype.objects.get(name="PDF")
+        ),
+        FileExtension(
+            name="sam",
+            filetype=Filetype.objects.get(name="SAM")
+        ),
+        FileExtension(
+            name="seg",
+            filetype=Filetype.objects.get(name="SEG")
+        ),
+        FileExtension(
+            name="tabular",
+            filetype=Filetype.objects.get(name="TABULAR")
+        ),
+        FileExtension(
+            name="tdf",
+            filetype=Filetype.objects.get(name="TDF")
+        ),
+        FileExtension(
+            name="tgz",
+            filetype=Filetype.objects.get(name="TGZ")
+        ),
+        FileExtension(
+            name="txt",
+            filetype=Filetype.objects.get(name="TXT")
+        ),
+        FileExtension(
+            name="vcf",
+            filetype=Filetype.objects.get(name="VCF")
+        ),
+        FileExtension(
+            name="wig",
+            filetype=Filetype.objects.get(name="WIG")
+        ),
+        FileExtension(
+            name="xml",
+            filetype=Filetype.objects.get(name="XML")
+        ),
+        FileExtension(
+            name="bb",
+            filetype=Filetype.objects.get(name="BIGBED")
+        ),
+        FileExtension(
+            name="igv.tdf",
+            filetype=Filetype.objects.get(name="TDF")
+        ),
+        FileExtension(
+            name="zip",
+            filetype=Filetype.objects.get(name="ZIP")
+        ),
+        FileExtension(
+            name="fastq.gz",
+            filetype=Filetype.objects.get(name="FASTQ.GZ")
+        ),
+        FileExtension(
+            name="gct",
+            filetype=Filetype.objects.get(name="GCT")
+        ),
+        FileExtension(
+            name="fq",
+            filetype=Filetype.objects.get(name="FASTQ")
+        ),
+        FileExtension(
+            name="bcl",
+            filetype=Filetype.objects.get(name="BCL")
+        ),
+        FileExtension(
+            name="bcl.gz",
+            filetype=Filetype.objects.get(name="BCL GZip file")
+        ),
+        FileExtension(
+            name="bcl.tgz",
+            filetype=Filetype.objects.get(name="BCL TGZ file")
+        ),
+        FileExtension(
+            name="bai",
+            filetype=Filetype.objects.get(name="BAI file")
+        )
     ]
-    data_as_json = json.dumps([ob for ob in data])
-    objects = serializers.deserialize('json', data_as_json, ignorenonexistent=True)
-    for obj in objects:
-        obj.save()
+
+    for file_extension in file_extensions:
+        try:
+            with transaction.atomic():
+                file_extension.save()
+        except IntegrityError:
+            continue
 
 
 def backwards(apps, schema_editor):

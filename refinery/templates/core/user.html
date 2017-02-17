@@ -18,7 +18,7 @@
 	{% if user %}
 		<div class="refinery-header">
 			<span class="refinery-header-left">
-				<h3>Profile for {{profile_user.username}}</h3>
+				<h3 id="user-profile-name">Profile for {{profile_user.username}}</h3>
 			</span>
 		</div>
 
@@ -71,7 +71,7 @@
 		</div>
 		<p>Joined on {{ profile_user.date_joined }} Last login on {{ profile_user.last_login }}</p>
     {% if user == profile_user %}
-		  <a class="refinery-base btn btn-default"
+		  <a id="user-profile-edit" class="refinery-base btn btn-default"
         href="{% url 'user_edit' profile_user.profile.uuid %}">Edit</a>
     {% endif %}
 	{% else %}
