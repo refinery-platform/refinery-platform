@@ -205,6 +205,7 @@ INSTALLED_APPS = (
     'visualization_manager',
     'annotation_server',
     'selenium_testing',
+    'tools',
     'flatblocks',
     'chunked_upload',
     'rest_framework',
