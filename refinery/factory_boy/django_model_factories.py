@@ -89,3 +89,52 @@ class InvestigationFactory(NodeCollectionFactory):
     """Minimal representation of a Investigation for testing purposes"""
     class Meta:
         model = "data_set_manager.Investigation"
+
+
+class ToolDefinitionFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a ToolDefinition for testing purposes"""
+
+    class Meta:
+        model = "tools.ToolDefinition"
+
+
+class FileRelationshipFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a FileRelationship for testing purposes"""
+
+    class Meta:
+        model = "tools.FileRelationship"
+
+
+class InputFileFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an InputFile for testing purposes"""
+
+    class Meta:
+        model = "tools.InputFile"
+
+
+class ParameterFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a Parameter for testing purposes"""
+
+    class Meta:
+        model = "tools.Parameter"
+
+
+class OutputFileFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an OutputFile for testing purposes"""
+
+    class Meta:
+        model = "tools.OutputFile"
+
+
+class FileTypeFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a FileType for testing purposes"""
+
+    class Meta:
+        model = "file_store.FileType"
+
+
+class FileExtensionFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a FileExtension for testing purposes"""
+
+    class Meta:
+        model = "file_store.FileExtension"

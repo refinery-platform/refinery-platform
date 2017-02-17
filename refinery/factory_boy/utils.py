@@ -6,10 +6,13 @@ from django.contrib.auth.models import Group
 
 from core.models import DataSet, Analysis
 
-from factory_boy.django_model_factories import DataSetFactory, \
-    InvestigationFactory, StudyFactory, InvestigationLinkFactory, \
-    GalaxyInstanceFactory, WorkflowEngineFactory, WorkflowFactory, \
-    ProjectFactory, AnalysisFactory
+from factory_boy.django_model_factories import (
+    DataSetFactory, InvestigationFactory, StudyFactory,
+    InvestigationLinkFactory, GalaxyInstanceFactory, WorkflowEngineFactory,
+    WorkflowFactory, ProjectFactory, AnalysisFactory,
+    FileRelationshipFactory,  InputFileFactory,
+    ToolDefinitionFactory, ParameterFactory, OutputFileFactory)
+from file_store.models import FileType
 
 
 def make_datasets(number_to_create, user_instance):
@@ -80,3 +83,47 @@ def create_dataset_with_necessary_models():
         date=datetime.now()
     )
     return dataset
+
+
+def make_tool_definitions():
+    bam_filetype = FileType.objects.get(name="BAM")
+    bed_filetype = FileType.objects.get(name="BED")
+    fastq_filetype = FileType.objects.get(name="FASTQ")
+
+    pair_relationship = FileRelationshipFactory(
+        name="ChIP vs Input Pair", value_type="PAIR")
+
+    i1 = InputFileFactory(
+        name="ChIP file",
+        description="File with actual signal",
+        file_relationship=pair_relationship)
+    i1.allowed_filetypes.add(bam_filetype, fastq_filetype)
+
+    i2 = InputFileFactory(
+        name="Input file",
+        description="File with background signal",
+        file_relationship=pair_relationship)
+    i2.allowed_filetypes.add(bam_filetype, fastq_filetype)
+
+    list_relationship = FileRelationshipFactory(
+        name="List of Paired Samples", value_type="LIST")
+    list_relationship.nested_elements.add(pair_relationship)
+    tool_definition = ToolDefinitionFactory(
+        name="Chip Seq", description="Chip Seq using MACS2",
+        tool_type="WORKFLOW", file_relationships=list_relationship)
+
+    ParameterFactory(name="Genome Build",
+                     description="The genome build to use for this workflow."
+                                 " Has to be installed in Galaxy workflow "
+                                 "engine.",
+                     value_type="GENOME_BUILD",
+                     default_value="hg19",
+                     galaxy_tool_id="CHIP SEQ XXX",
+                     galaxy_tool_parameter="genome_build",
+                     tool_definition=tool_definition)
+    OutputFileFactory(
+        name="broadpeaks.bed",
+        description="Peaks called by MACS2",
+        filetype=bed_filetype,
+        tool_definition=tool_definition
+    )
