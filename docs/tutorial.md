@@ -19,7 +19,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
   - __To log in to an account__:
     1. Click *__Login__* at the top right of the navigation bar
     2. Enter the *__Username or E-mail__* and *__Password__* provided during registration and click the *__Login__* button below
-![registerLogin](refinery-platform/docs/screenshots/Launch Pad.png)
+![registerLogin](https://github.com/refinery-platform/refinery-platform/docs/screenshots/Launch Pad.png)
 
 ## 1. Creating a Metadata File
 1. Compile all the metadata to be associated with the data set and then organize these metadata into a delimited (e.g. tab-delimited) text file. A template metadata file can be found [here][refinery-sample-metadata.tsv] -- note the required attributes (sample name, data file, and organism). Additional attributes can be appended as needed.
