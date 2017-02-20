@@ -53,9 +53,11 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 ![DataSetBrowser](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/DataSetBrowser.png)
 
 ## 4. Exploring Data Set Contents in the File Browser
-1. Click *__View Content in File Browser__* to view the individual files belonging to the data set:
+1. From the *__Data Set Browser__*, click *__View Content in File Browser__* to view the individual files belonging to the data set:
   - Files can be filtered based on attributes using the *__Attribute Filter__* in the left-hand panel
   - Files can also be sorted according to attributes (both ascending and descending) by clicking the attribute names (i.e. column headers)
+  
+![FileBrowser](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/FileBrowser.png)
 
 > __Direct Access of Dataset Content__: The file browser can be launched directly from the data set browser by clicking on the table icon to the right of the dataset name and summary. It is not required to open the preview first.
 
