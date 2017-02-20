@@ -115,4 +115,4 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 [scc-home]: https://beta.stemcellcommons.org
 [input.fastq]: http://data.cloud.refinery-platform.org/?prefix=data/tutorials/introduction/input.fastq
 [nanog.fastq]: http://data.cloud.refinery-platform.org/?prefix=data/tutorials/introduction/nanog.fastq
-[tutorial.tsv]: http://data.cloud.refinery-platform.org/?prefix=data/tutorials/introduction/tutorial.tsv
+[tutorial.tsv]: http://data.cloud.refinery-platform.org.s3.amazonaws.com/data/tutorials/introduction/tutorial.tsv
