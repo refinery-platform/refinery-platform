@@ -53,7 +53,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 ![DataSetBrowser](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/DataSetBrowser.png)
 
 ## 4. Exploring Data Set Contents in the File Browser
-1. From the *__Data Set Browser__*, click *__View Content in File Browser__* to view the individual files belonging to the data set:
+1. From the *__Data Set Browser__*, click *__View Content in File Browser__* to view the individual data files belonging to the data set:
   - Files can be filtered based on attributes using the *__Attribute Filter__* in the left-hand panel
   - Files can also be sorted according to attributes (both ascending and descending) by clicking the attribute names (i.e. column headers)
   
@@ -62,21 +62,22 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 > __Direct Access of Dataset Content__: The file browser can be launched directly from the data set browser by clicking on the table icon to the right of the dataset name and summary. It is not required to open the preview first.
 
 ## 5. Launching an Analysis
-1. From the *__File Browser__*, select the files that will serve as input for the desired workflow
-  - __Tutorial Data Set: follow the 'Launching an Analysis' section twice, first launching the *FastQC* workflow and afterwards the *TF ChIP-seq analysis using MACS2: hg19* workflow (details below) -- in both instances, select both the__ `input.fastq` __and__ `nanog.fastq` __files during this step__
-2. Click the *__Analyze__* tab above the left-hand panel
-3. Select one of the analysis workflows below using the drop-down menu in the left-hand panel, follow their workflow-specific steps below, and then continue with step 4
+1. From the *__File Browser__*, click the *__Analyze__* tab above the left-hand panel
+  - __Tutorial Data Set: follow this '5. Launching an Analysis' section twice, first launching the *FastQC* workflow and afterwards the *TF ChIP-seq analysis using MACS2: hg19* workflow (details below)
+2. Select one of the analysis workflows below using the drop-down menu in the left-hand panel, follow their workflow-specific steps below, and then continue with step 3
   - *__FastQC__*
-    1. Select *__Current Selection__* in the *__Input Dataset__* drop-down menu in the left-hand panel
+    1. Select the file(s) to analyze
+      - __Tutorial Data Set: select both `input.fastq` and `nanog.fastq`
+    2. Choose *__Current Selection__* in the *__Input Dataset__* drop-down menu in the left-hand panel
   - *__TF ChIP-seq analysis using MACS2__*
     1. Under *__Inputs (1-1 File Mapping)__*, click *__New...__* to create a new file mapping
     2. Provide a name for the new file mapping in the pop-up
     3. Drag the leftmost icons (three horizontal bars) of the input control and experimental files onto the *__input_file__* and *__exp_file__* dropzones, respectively, to create the new file mapping
       - __Tutorial Data Set: map__ `input.fastq` __to the *input_file* and__ `nanog.fastq` __to the *exp_file*__
     4. Review the attribute comparison between *__input_file__* and *__exp_file__* to confirm distinct and shared attributes are correct
-4. Click *__Launch Analysis__*
-5. Modify *__Analysis Name__* as needed in pop-up and then click *__Launch Analysis__*
-6. Review *__Analysis Launch Status__* in pop-up and click *__View Analysis__* to monitor analysis progress within the *__File Browser__* (this *__Analyses__* tab within the *__File Browser__* can also be directly accessed by clicking the analysis name from the *__Analyses__* panel on the *__Launch Pad__*)
+3. Click *__Launch Analysis__*
+4. Modify *__Analysis Name__* as needed in pop-up and then click *__Launch Analysis__*
+5. Review *__Analysis Launch Status__* in pop-up and click *__View Analysis__* to monitor analysis progress within the *__File Browser__* (this *__Analyses__* tab within the *__File Browser__* can also be directly accessed by clicking the analysis name from the *__Analyses__* panel on the *__Launch Pad__*)
 
 ## 6. Viewing Analysis Results
 1. Upon successful completion of an analysis, click its name from the *__Analyses__* tab within the *__File Browser__*
