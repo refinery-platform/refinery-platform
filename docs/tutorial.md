@@ -33,7 +33,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 
 ## 2. Uploading a Data Set 
 1. From the *__Launch Pad__*, Click *__Upload__* from the *__Data Sets__* panel
-![Upload screenshot](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/DataSetsHeader.png)
+![DataSetsHeader](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/DataSetsHeader.png)
 2. First choose delimiter used in the metadata file and then upload the file
   - __Tutorial Data Set: upload tab-delimited__ `tutorial.tsv`
 3. Check metadata *__Preview__* for accuracy (note: only first 5 samples are displayed)
@@ -44,6 +44,8 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 6. Click *__Start upload__* to begin uploading all selected data files
 7. After all data files have uploaded, click *__Check Availability of Data Files__* to confirm all files are now on the Refinery server
 8. Click *__Upload Data Set__* to upload the new data set (metadata + data files)
+
+![UploadDataSet](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/UploadDataSet.png)
 
 ## 3. Viewing a Data Set Summary in the Data Set Browser
 1. Return to the *__Launch Pad__* (Refinery homepage) and click on the newly uploaded data set title. The *__Data Set Browser__* will display a summary of the data set
