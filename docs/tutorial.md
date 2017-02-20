@@ -33,8 +33,8 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 
 ## 2. Uploading a Data Set 
 1. From the *__Launch Pad__*, Click *__Upload__* from the *__Data Sets__* panel
-  ![Upload screenshot]
-  (https://github.com/refinery-platform/refinery-platform/blob/develop/docs/Tutorial_2.1.png)
+
+![Upload screenshot](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/DataSetsHeader.png)
 2. First choose delimiter used in the metadata file and then upload the file
   - __Tutorial Data Set: upload tab-delimited__ `tutorial.tsv`
 3. Check metadata *__Preview__* for accuracy (note: only first 5 samples are displayed)
