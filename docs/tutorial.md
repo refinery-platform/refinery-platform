@@ -50,6 +50,8 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 ## 3. Viewing a Data Set Summary in the Data Set Browser
 1. Return to the *__Launch Pad__* (Refinery homepage) and click on the newly uploaded data set title. The *__Data Set Browser__* will display a summary of the data set
 
+![DataSetBrowser](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/DataSetBrowser.png)
+
 ## 4. Exploring Data Set Contents in the File Browser
 1. Click *__View Content in File Browser__* to view the individual files belonging to the data set:
   - Files can be filtered based on attributes using the *__Attribute Filter__* in the left-hand panel
