@@ -33,7 +33,8 @@ class Parameter(models.Model):
     galaxy_tool_id = models.TextField(max_length=300, blank=False, null=False)
     galaxy_tool_parameter = models.TextField(
         max_length=100, blank=False, null=False)
-    tool_definition = models.ForeignKey("ToolDefinition")
+    tool_definition = models.ForeignKey(
+        "ToolDefinition", on_delete=models.CASCADE)
 
     def __unicode__(self):
         return "{}: {} - {} - {}".format(
@@ -62,6 +63,9 @@ class FileRelationship(models.Model):
             self.value_type,
             self.name)
 
+    def get_input_files(self):
+        return InputFile.objects.filter(file_relationship=self)
+
 
 class InputFile(models.Model):
     uuid = UUIDField(unique=True, auto=True)
@@ -82,7 +86,8 @@ class OutputFile(models.Model):
     name = models.TextField(max_length=100, blank=False, null=False)
     description = models.TextField(max_length=500, blank=False, null=False)
     filetype = models.ForeignKey("file_store.FileType")
-    tool_definition = models.ForeignKey("ToolDefinition")
+    tool_definition = models.ForeignKey(
+        "ToolDefinition", on_delete=models.CASCADE)
 
     def __unicode__(self):
         return "{}: {}".format(
@@ -105,18 +110,14 @@ class ToolDefinition(models.Model):
                                    null=False)
     tool_type = models.CharField(max_length=100, choices=TOOL_TYPES,
                                  blank=False, null=False)
-    file_relationships = models.ForeignKey("FileRelationship")
+    file_relationships = models.ForeignKey(
+        "FileRelationship", on_delete=models.CASCADE)
 
     def __unicode__(self):
         return "{}: {} {}".format(self.tool_type, self.name, self.uuid)
 
     def get_parameters(self):
         return Parameter.objects.filter(tool_definition=self)
-
-    def get_input_files(self):
-        return InputFile.objects.filter(
-            file_relationship__in=FileRelationship.objects.filter(
-                tooldefinition=self))
 
     def get_output_files(self):
         return OutputFile.objects.filter(tool_definition=self)
