@@ -19,7 +19,8 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
   - __To log in to an account__:
     1. Click *__Login__* at the top right of the navigation bar
     2. Enter the *__Username or E-mail__* and *__Password__* provided during registration and click the *__Login__* button below
-![NavBar](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/NavBar.png)
+  
+  ![NavBar](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/NavBar.png)
 
 ## 1. Creating a Metadata File
 1. Compile all the metadata to be associated with the data set and then organize these metadata into a delimited (e.g. tab-delimited) text file. A template metadata file can be found [here][refinery-sample-metadata.tsv] -- note the required attributes (sample name, data file, and organism). Additional attributes can be appended as needed.
@@ -54,7 +55,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 1. From the *__Data Set Browser__*, click *__View Content in File Browser__* to view the individual data files belonging to the data set:
   - Files can be filtered based on attributes using the *__Attribute Filter__* in the left-hand panel
   - Files can also be sorted according to attributes (both ascending and descending) by clicking the attribute names (i.e. column headers)
-![FileBrowser](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/FileBrowser.png)
+  ![FileBrowser](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/FileBrowser.png)
 
 > __Direct Access of Dataset Content__: The file browser can be launched directly from the data set browser by clicking on the table icon to the right of the dataset name and summary. It is not required to open the preview first.
 
@@ -116,8 +117,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
     1. Select a group within the *__Groups__* panel and click the *__+__* icon in the top right of the *__Members__* panel
     2. Provide a *__Recipient e-mail__* address belonging to the new group member and click *__Send Invite__*
       - The new group member will then receive an invitation e-mail with instructions on how to join the group
-
-![Collaboration](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/Collaboration.png)
+  ![Collaboration](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/Collaboration.png)
 
 ## 9. Sharing a Data Set with a Collaboration Group
 1. Display a data set in the *__Data Set Browser__* (see section __3__)
@@ -127,6 +127,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 
 ## 10. Deleting an Analysis or Data Set
 1. To delete an analysis only, click the trash can icon in the *__Analyses__* panel on the *__Launch Pad__*. To delete a data set and all its associated analyses, click the trash can icon in the *__Data Sets__* panel on the *__Launch Pad__*.
+![Delete](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/Delete.png)
 
 [refinery-sample-metadata.tsv]: https://beta.stemcellcommons.org/static/sample-files/refinery-sample-metadata.tsv
 [scc-home]: https://beta.stemcellcommons.org
