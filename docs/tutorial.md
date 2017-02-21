@@ -117,6 +117,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
     1. Select a group within the *__Groups__* panel and click the *__+__* icon in the top right of the *__Members__* panel
     2. Provide a *__Recipient e-mail__* address belonging to the new group member and click *__Send Invite__*
       - The new group member will then receive an invitation e-mail with instructions on how to join the group
+  
   ![Collaboration](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/Collaboration.png)
 
 ## 9. Sharing a Data Set with a Collaboration Group
