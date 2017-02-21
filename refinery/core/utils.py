@@ -461,20 +461,18 @@ def normalize_annotation_ont_ids(annotations):
         if underscore_pos >= 0:
             annotation['value_accession'] = \
                 annotation['value_accession'][(underscore_pos + 1):]
-            new_annotations.append(annotation)
-            continue
 
         hash_pos = annotation['value_accession'].rfind('#')
         if hash_pos >= 0:
             annotation['value_accession'] = \
                 annotation['value_accession'][(hash_pos + 1):]
-            new_annotations.append(annotation)
-            continue
 
         if annotation['value_source'] == 'CL':
             annotation['value_accession'] = \
                 annotation['value_accession'].zfill(7)
-            continue
+
+        new_annotations.append(annotation)
+
     return new_annotations
 
 
