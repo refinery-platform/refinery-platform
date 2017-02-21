@@ -19,6 +19,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
   - __To log in to an account__:
     1. Click *__Login__* at the top right of the navigation bar
     2. Enter the *__Username or E-mail__* and *__Password__* provided during registration and click the *__Login__* button below
+    
   ![NavBar](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/NavBar.png)
 
 ## 1. Creating a Metadata File
