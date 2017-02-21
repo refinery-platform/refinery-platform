@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from pyvirtualdisplay import Display
@@ -5,7 +6,7 @@ from selenium import webdriver
 
 from core.management.commands.create_public_group import create_public_group
 from core.management.commands.create_user import init_user
-from core.models import DataSet,  Analysis, ExtendedGroup
+from core.models import DataSet, Analysis, ExtendedGroup
 from factory_boy.utils import make_analyses_with_single_dataset, make_datasets
 from selenium_testing.utils import (
     assert_body_text, login, wait_until_id_clickable, DEFAULT_WAIT,
@@ -25,7 +26,14 @@ class SeleniumTestBase(StaticLiveServerTestCase):
         # Manually create and save public group to sync Selenium and gecko
         # driver threads
         create_public_group()
-        ExtendedGroup.objects.public_group().save()
+        try:
+            public_group = ExtendedGroup.objects.get(
+                id=settings.REFINERY_PUBLIC_GROUP_ID)
+        except (ExtendedGroup.DoesNotExist,
+                ExtendedGroup.MultipleObjectsReturned) as e:
+            self.fail("Error while fetching the Public Group: {}".format(e))
+        else:
+            public_group.save()
 
         if initialize_guest:
             init_user("guest", "guest", "guest@coffee.com", "Guest", "Guest",
