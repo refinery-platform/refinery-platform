@@ -733,16 +733,20 @@ class DataSet(SharableResource):
         DataSet
         """
         try:
-            return FileStoreItem.objects.get(
-                uuid=InvestigationLink.objects.get(
-                    data_set__uuid=self.uuid).investigation.isarchive_file)
-
-        except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned) as e:
-            logger.debug("Couldn't fetch FileStoreItem: %s" % e)
+            investigation_link = InvestigationLink.objects.get(
+                data_set__uuid=self.uuid)
         except (InvestigationLink.DoesNotExist,
                 InvestigationLink.MultipleObjectsReturned) as e:
             logger.debug("Couldn't fetch InvestigationLink: %s" % e)
+
+        else:
+            try:
+                return FileStoreItem.objects.get(
+                    uuid=investigation_link.investigation.isarchive_file)
+
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as e:
+                logger.debug("Couldn't fetch FileStoreItem: %s" % e)
 
     def get_pre_isa_archive(self):
         """
@@ -750,16 +754,20 @@ class DataSet(SharableResource):
         DataSet
         """
         try:
-            return FileStoreItem.objects.get(
-                uuid=InvestigationLink.objects.get(
-                    data_set__uuid=self.uuid).investigation.pre_isarchive_file)
-
-        except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned) as e:
-            logger.debug("Couldn't fetch FileStoreItem: %s" % e)
+            investigation_link = InvestigationLink.objects.get(
+                data_set__uuid=self.uuid)
         except (InvestigationLink.DoesNotExist,
                 InvestigationLink.MultipleObjectsReturned) as e:
             logger.debug("Couldn't fetch InvestigationLink: %s" % e)
+
+        else:
+            try:
+                return FileStoreItem.objects.get(
+                    uuid=investigation_link.investigation.pre_isarchive_file)
+
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as e:
+                logger.debug("Couldn't fetch FileStoreItem: %s" % e)
 
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
