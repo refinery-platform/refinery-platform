@@ -3,6 +3,7 @@ from rest_framework.test import APITestCase, APIRequestFactory, APIClient
 
 from core.models import ExtendedGroup
 from factory_boy.utils import make_tool_definitions
+from tools.models import ToolDefinition
 from tools.views import ToolDefinitionsViewSet
 
 
@@ -30,5 +31,12 @@ class ToolDefinitionAPITests(APITestCase):
         self.get_request = self.factory.get(self.url_root)
         self.get_response = self.view(self.get_request)
 
+    def test_tool_definitions_exist(self):
+        self.assertEqual(ToolDefinition.objects.count(), 2)
+
     def test_get_request(self):
         self.assertIsNotNone(self.get_response)
+        self.assertEqual(
+            self.get_response.data[0]["description"], "Chip Seq using MACS2")
+        self.assertEqual(
+            self.get_response.data[1]["description"], "LIST:LIST:PAIR desc")
