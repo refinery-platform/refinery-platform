@@ -1,37 +1,56 @@
-from django.core import serializers as s
 from rest_framework import serializers
 from rest_framework_recursive.fields import RecursiveField
-from .models import ToolDefinition, FileRelationship
+
+from file_store.models import FileType
+from .models import ToolDefinition, FileRelationship, OutputFile, InputFile, \
+    Parameter
+
+
+class FileTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FileType
+        exclude = ["id"]
+
+
+class ParameterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Parameter
+        exclude = ["id"]
+
+
+class InputFileSerializer(serializers.ModelSerializer):
+    allowed_filetypes = FileTypeSerializer(many=True)
+
+    class Meta:
+        model = InputFile
+        exclude = ["id"]
 
 
 class FileRelationshipSerializer(serializers.ModelSerializer):
     nested_elements = RecursiveField(required=False, allow_null=True,
                                      many=True)
-    input_files = serializers.SerializerMethodField('_get_input_files')
-
-    def _get_input_files(self, obj):
-        return s.serialize("json", obj.get_input_files(),
-                           use_natural_foreign_keys=True)
+    input_files = InputFileSerializer(many=True)
 
     class Meta:
         model = FileRelationship
-        fields = (
-            'uuid', 'name', 'value_type', 'input_files', 'nested_elements')
+        exclude = ["id"]
 
 
-class ToolDefinitionSerializer(serializers.HyperlinkedModelSerializer):
-    parameters = serializers.SerializerMethodField('_get_parameters')
-    output_files = serializers.SerializerMethodField('_get_output_files')
-    file_relationships = FileRelationshipSerializer()
+class OutputFileSerializer(serializers.ModelSerializer):
+    filetype = FileTypeSerializer()
 
-    def _get_output_files(self, obj):
-        return s.serialize("json", obj.get_output_files())
+    class Meta:
+        model = OutputFile
+        exclude = ["id"]
 
-    def _get_parameters(self, obj):
-        return s.serialize("json", obj.get_parameters())
+
+class ToolDefinitionSerializer(serializers.ModelSerializer):
+    nesting_type = url = serializers.CharField(source='get_nesting_type',
+                                               read_only=True)
+    file_relationship = FileRelationshipSerializer()
+    output_files = OutputFileSerializer(many=True)
+    parameters = ParameterSerializer(many=True)
 
     class Meta:
         model = ToolDefinition
-        fields = (
-            'uuid', 'name', 'description', 'tool_type',
-            'file_relationships', 'parameters', 'output_files')
+        exclude = ["id"]
