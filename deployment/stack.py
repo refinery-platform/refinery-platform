@@ -195,7 +195,7 @@ def main():
             'ManagedPolicyArns': [
                 'arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess',
                 'arn:aws:iam::aws:policy/AmazonRDSReadOnlyAccess',
-                'arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess'
+                'arn:aws:iam::aws:policy/AmazonS3FullAccess'
             ],
             'Path': '/',
             'Policies': [
@@ -495,8 +495,9 @@ def report_missing_keys(config):
     """Collect and report list of missing keys"""
 
     required = [
-        'KEY_NAME', 'RDS_SUPERUSER_PASSWORD',
-        'SITE_NAME', 'SITE_URL', 'ADMIN_PASSWORD']
+        'KEY_NAME', 'RDS_SUPERUSER_PASSWORD', 'SITE_NAME', 'SITE_URL',
+        'ADMIN_PASSWORD', 'AWS_STORAGE_BUCKET_NAME'
+    ]
     bad = []
     for key in required:
         if key not in config:

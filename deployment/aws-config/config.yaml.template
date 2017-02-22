@@ -62,6 +62,9 @@ KEY_NAME: "id_rsa"
 # the same AWS account).
 # RDS_NAME: rds-refinery-default
 
+# Name of the S3 bucket to be used for serving UI assets
+AWS_STORAGE_BUCKET_NAME: ""
+
 EMAIL_SUBJECT_PREFIX: "[Refinery] "
 REFINERY_URL_SCHEME: "http"
 REFINERY_WELCOME_EMAIL_MESSAGE: "Please fill out your user profile"
