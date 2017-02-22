@@ -19,7 +19,6 @@ class Migration(migrations.Migration):
                 ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
                 ('name', models.TextField(max_length=100)),
                 ('value_type', models.CharField(max_length=100, choices=[(b'PAIR', b'pair'), (b'LIST', b'list')])),
-                ('nested_elements', models.ManyToManyField(to='tools.FileRelationship', null=True, blank=True)),
             ],
             options={
             },
@@ -33,7 +32,6 @@ class Migration(migrations.Migration):
                 ('name', models.TextField(max_length=100)),
                 ('description', models.TextField(max_length=500)),
                 ('allowed_filetypes', models.ManyToManyField(to='file_store.FileType')),
-                ('file_relationship', models.ForeignKey(to='tools.FileRelationship')),
             ],
             options={
             },
@@ -77,22 +75,24 @@ class Migration(migrations.Migration):
                 ('name', models.TextField(unique=True, max_length=100)),
                 ('description', models.TextField(unique=True, max_length=500)),
                 ('tool_type', models.CharField(max_length=100, choices=[(b'WORKFLOW', b'Workflow'), (b'VISUALIZATION', b'Visualization')])),
-                ('file_relationships', models.ForeignKey(to='tools.FileRelationship')),
+                ('file_relationship', models.ForeignKey(to='tools.FileRelationship')),
+                ('output_files', models.ManyToManyField(to='tools.OutputFile')),
+                ('parameters', models.ManyToManyField(to='tools.Parameter')),
             ],
             options={
             },
             bases=(models.Model,),
         ),
         migrations.AddField(
-            model_name='parameter',
-            name='tool_definition',
-            field=models.ForeignKey(to='tools.ToolDefinition'),
+            model_name='filerelationship',
+            name='input_files',
+            field=models.ManyToManyField(to='tools.InputFile'),
             preserve_default=True,
         ),
         migrations.AddField(
-            model_name='outputfile',
-            name='tool_definition',
-            field=models.ForeignKey(to='tools.ToolDefinition'),
+            model_name='filerelationship',
+            name='nested_elements',
+            field=models.ManyToManyField(to='tools.FileRelationship', null=True, blank=True),
             preserve_default=True,
         ),
     ]
