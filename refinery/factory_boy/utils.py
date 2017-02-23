@@ -89,7 +89,7 @@ def make_tool_definitions():
     bed_filetype = FileType.objects.get(name="BED")
     fastq_filetype = FileType.objects.get(name="FASTQ")
 
-    # Make LIST:PAIR
+    # Make LIST:PAIR TD
     pair_relationship1 = FileRelationshipFactory(
         name="ChIP vs Input Pair", value_type="PAIR")
 
@@ -109,7 +109,7 @@ def make_tool_definitions():
         name="List of Paired Samples", value_type="LIST")
     list_relationship1.nested_elements.add(pair_relationship1)
     tool_definition1 = ToolDefinitionFactory(
-        name="Chip Seq", description="Chip Seq using MACS2",
+        name="Chip Seq <list:pair>", description="Chip Seq using MACS2",
         tool_type="WORKFLOW", file_relationship=list_relationship1)
 
     p1 = ParameterFactory(
@@ -129,7 +129,7 @@ def make_tool_definitions():
     tool_definition1.output_files.add(o1)
     tool_definition1.parameters.add(p1)
 
-    # Make LIST:LIST:PAIR
+    # Make LIST:LIST:PAIR TD
     pair_relationship2 = FileRelationshipFactory(
         name="Generic Pair", value_type="PAIR")
 
@@ -154,7 +154,8 @@ def make_tool_definitions():
     list_relationship2a.nested_elements.add(list_relationship2b)
 
     tool_definition2 = ToolDefinitionFactory(
-        name="Generic LIST:LIST:PAIR Tool", description="LIST:LIST:PAIR desc",
+        name="Sample <list:list:pair> Tool",
+        description="<list:list:pair> desc",
         tool_type="WORKFLOW", file_relationship=list_relationship2a)
 
     p2 = ParameterFactory(name="Generic Param",
