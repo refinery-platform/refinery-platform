@@ -27,6 +27,8 @@ class InputFileSerializer(serializers.ModelSerializer):
 
 
 class FileRelationshipSerializer(serializers.ModelSerializer):
+    # RecursiveField allows for the exposure of all self-referential nested
+    # ManyToMany relations in the serialized response data
     nested_elements = RecursiveField(required=False, allow_null=True,
                                      many=True)
     input_files = InputFileSerializer(many=True)
