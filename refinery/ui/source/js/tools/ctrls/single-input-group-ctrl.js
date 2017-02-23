@@ -5,12 +5,23 @@
     .module('refineryTools')
     .controller('SingleInputGroupCtrl', SingleInputGroupCtrl);
 
-  SingleInputGroupCtrl.$inject = ['$scope', 'singleInputGroupService'];
+  SingleInputGroupCtrl.$inject = [
+    '$scope',
+    'fileBrowserFactory',
+    'singleInputGroupService',
+    'selectedNodesService'
+  ];
 
 
-  function SingleInputGroupCtrl ($scope, singleInputGroupService) {
+  function SingleInputGroupCtrl (
+    $scope,
+    fileBrowserFactory,
+    singleInputGroupService,
+    selectedNodesService
+  ) {
     var vm = this;
-    vm.groups = singleInputGroupService.inputGroups;
+    vm.singleInputSelected = false;
+    vm.groups = [];
     vm.groupIndex = 0;
     vm.navRight = navRight;
     vm.navLeft = navLeft;
@@ -18,6 +29,7 @@
     vm.removeAllGroups = removeAllGroups;
     vm.service = singleInputGroupService;
     vm.tool = {};
+    vm.attributes = {};
 
   /*
    * ---------------------------------------------------------
@@ -51,6 +63,24 @@
         },
         function () {
           angular.copy(vm.displayCtrl.selectedTool, vm.tool);
+        }
+      );
+
+      $scope.$watchCollection(
+        function () {
+          return selectedNodesService.selectedNodes;
+        },
+        function () {
+          vm.groups = selectedNodesService.selectedNodes;
+          console.log('in the single input group ctrl');
+          console.log(vm.groups);
+          var attributesArray = vm.groups[0].grid.appScope.assayAttributes;
+          console.log(attributesArray);
+          for (var ind = 0; ind < attributesArray.length; ind ++) {
+            vm.attributes[attributesArray[ind].display_name] = attributesArray[ind].internal_name;
+          }
+          console.log('here I am');
+          console.log(vm.attributes);
         }
       );
     };
