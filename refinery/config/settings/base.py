@@ -578,3 +578,10 @@ REFINERY_TUTORIAL_STEPS = refinery_tutorial_settings
 ANONYMOUS_USER_ID = -1
 
 TEST_RUNNER = "django.test.runner.DiscoverRunner"
+
+# Only allow DRF API access to registered users
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    )
+}
