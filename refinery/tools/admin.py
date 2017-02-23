@@ -1,30 +1,28 @@
 from django.contrib import admin
 
-from .models import FileRelationship, InputFile, ToolDefinition, OutputFile,\
+from .models import FileRelationship, InputFile, ToolDefinition, OutputFile, \
     Parameter
 
+from .utils import AdminFieldPopulator
 
-class FileRelationshipAdmin(admin.ModelAdmin):
+
+class FileRelationshipAdmin(AdminFieldPopulator):
     pass
 
 
-class InputFileAdmin(admin.ModelAdmin):
+class InputFileAdmin(AdminFieldPopulator):
     pass
 
 
-class AuthorAdmin(admin.ModelAdmin):
+class ToolDefinitionAdmin(AdminFieldPopulator):
     pass
 
 
-class ToolDefinitionAdmin(admin.ModelAdmin):
+class OutputFileAdmin(AdminFieldPopulator):
     pass
 
 
-class OutputFileAdmin(admin.ModelAdmin):
-    pass
-
-
-class ParameterAdmin(admin.ModelAdmin):
+class ParameterAdmin(AdminFieldPopulator):
     pass
 
 
