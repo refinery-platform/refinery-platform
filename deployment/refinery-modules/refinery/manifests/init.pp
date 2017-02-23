@@ -13,60 +13,6 @@ file { "/home/${app_user}/.ssh/config":
   group  => $app_group,
 }
 
-class { 'python':
-  version    => 'system',
-  pip        => true,
-  dev        => true,
-  virtualenv => true,
-  gunicorn   => false,
-}
-
-class venvdeps {
-  package { 'build-essential': }
-  package { 'libncurses5-dev': }
-  package { 'libldap2-dev': }
-  package { 'libsasl2-dev': }
-  package { 'libffi-dev': }  # for SSL modules
-}
-include venvdeps
-
-file { "/home/${app_user}/.virtualenvs":
-  # workaround for parent directory /home/vagrant/.virtualenvs does not exist error
-  ensure => directory,
-  owner  => $app_user,
-  group  => $app_group,
-}
-->
-python::virtualenv { $virtualenv:
-  ensure  => present,
-  owner   => $app_user,
-  group   => $app_group,
-  require => [ Class['venvdeps'], Class['postgresql::lib::devel'] ],
-}
-~>
-python::requirements { $requirements:
-  virtualenv => $virtualenv,
-  owner      => $app_user,
-  group      => $app_group,
-}
-
-package { 'virtualenvwrapper': }
-->
-file_line { "virtualenvwrapper_config":
-  path    => "/home/${app_user}/.profile",
-  line    => "source /etc/bash_completion.d/virtualenvwrapper",
-  require => Python::Virtualenv[$virtualenv],
-}
-->
-file { "virtualenvwrapper_project":
-  # workaround for setvirtualenvproject command not found
-  ensure  => file,
-  path    => "${virtualenv}/.project",
-  content => "${django_root}",
-  owner   => $app_user,
-  group   => $app_group,
-}
-
 file { ["${project_root}/isa-tab", "${project_root}/import", "${project_root}/static"]:
   ensure => directory,
   owner  => $app_user,
@@ -92,7 +38,7 @@ exec { "migrate":
   user        => $app_user,
   group       => $app_group,
   require     => [
-    Python::Requirements[$requirements],
+    Class['::refinery::python'],
     Postgresql::Server::Db["refinery"]
   ],
 }
@@ -281,7 +227,7 @@ class ui {
     environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
     user        => $app_user,
     group       => $app_group,
-    require     => Python::Requirements[$requirements],
+    require     => Class['::refinery::python'],
   }
 }
 include ui
