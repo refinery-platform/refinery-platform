@@ -5,8 +5,10 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import QueryDict
 from django.test import TestCase
+from guardian.utils import get_anonymous_user
 
-from rest_framework.test import APIClient, APIRequestFactory, APITestCase
+from rest_framework.test import (APIClient, APIRequestFactory,
+                                 APITransactionTestCase, force_authenticate)
 
 from .models import Assay, AttributeOrder, Study, Investigation, Node
 from .serializers import AttributeOrderSerializer
@@ -25,9 +27,13 @@ from core.views import NodeViewSet
 from file_store.models import FileStoreItem
 
 
-class AssaysAPITests(APITestCase):
+class AssaysAPITests(APITransactionTestCase):
 
     def setUp(self):
+        self.username = 'coffee_lover'
+        self.password = 'coffeecoffee'
+        self.user = User.objects.create_user(self.username, '',
+                                             self.password)
         self.factory = APIRequestFactory()
         investigation = Investigation.objects.create()
         self.study = Study.objects.create(
@@ -54,15 +60,11 @@ class AssaysAPITests(APITestCase):
         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
         self.invalid_format_uuid = "xxxxxxxx"
 
-    def tearDown(self):
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
-
     def test_get_valid_uuid(self):
         # valid_uuid
         request = self.factory.get('%s/?uuid=%s' % (
             self.url_root, self.valid_uuid))
+        force_authenticate(request, self.user)
         response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
         self.assertItemsEqual(response.data.keys(), self.assay.keys())
@@ -72,6 +74,7 @@ class AssaysAPITests(APITestCase):
         # valid_study_uuid
         request = self.factory.get('%s/?study=%s' % (
             self.url_root, self.study.uuid))
+        force_authenticate(request, self.user)
         response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
         self.assertItemsEqual(response.data[0].keys(), self.assay.keys())
@@ -81,6 +84,7 @@ class AssaysAPITests(APITestCase):
         # invalid_uuid
         request = self.factory.get('%s/?uuid=%s' % (self.url_root,
                                                     self.invalid_uuid))
+        force_authenticate(request, self.user)
         response = self.view(request, self.invalid_uuid)
         self.assertEqual(response.status_code, 404)
 
@@ -88,6 +92,7 @@ class AssaysAPITests(APITestCase):
         # invalid_study_uuid
         request = self.factory.get('%s/?study=%s' % (self.url_root,
                                                      self.invalid_uuid))
+        force_authenticate(request, self.user)
         response = self.view(request, self.invalid_uuid)
         self.assertEqual(response.status_code, 404)
 
@@ -95,73 +100,12 @@ class AssaysAPITests(APITestCase):
         # invalid_format_uuid
         request = self.factory.get('%s/?uuid=%s'
                                    % (self.url_root, self.invalid_format_uuid))
+        force_authenticate(request, user=self.user)
         response = self.view(request, self.invalid_format_uuid)
         self.assertEqual(response.status_code, 404)
 
 
-# class AssaysFilesAPITests(APITestCase):
-#
-#     def setUp(self):
-#
-#         self.factory = APIRequestFactory()
-#         investigation = Investigation.objects.create()
-#         study = Study.objects.create(file_name='test_filename123.txt',
-#                                      title='Study Title Test',
-#                                      investigation=investigation)
-#
-#         assay = Assay.objects.create(
-#                 study=study,
-#                 measurement='transcription factor binding site',
-#                 measurement_accession='http://www.testurl.org/testID',
-#                 measurement_source='OBI',
-#                 technology='nucleotide sequencing',
-#                 technology_accession='test info',
-#                 technology_source='test source',
-#                 platform='Genome Analyzer II',
-#                 file_name='test_assay_filename.txt',
-#                 )
-#         self.valid_uuid = assay.uuid
-#         self.view = AssaysFiles.as_view()
-#         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
-#         self.invalid_format_uuid = "xxxxxxxx"
-#
-#     def tearDown(self):
-#         Assay.objects.all().delete()
-#         Study.objects.all().delete()
-#         Investigation.objects.all().delete()
-#
-#     def test_get(self):
-#         # valid_uuid, patch date in the module that uses it
-#         with patch(
-# 'data_set_manager.views.AssaysFiles.get') as mock_search_solr:
-#             mock_search_solr.search_solr = {
-#                 "facet_field_counts": {},
-#                 "attributes": 'cow',
-#                 "nodes": []}
-#
-#         uuid = self.valid_uuid
-#         request = self.factory.get('/api/v2/assays/%s/files' % uuid)
-#         response = self.view(request, uuid)
-#         response.render()
-#         self.assertEqual(response.status_code, 200)
-#         self.assertEqual(response.content,
-#                          '{"facet_field_counts":{},'
-#                          '"attributes":"cow",'
-#                          '"nodes":[]}')
-#
-#         # invalid_uuid
-#         uuid = self.invalid_uuid
-#         request = self.factory.get('/api/v2/assays/%s/files' % uuid)
-#         response = self.view(request, uuid)
-#         response.render()
-#         self.assertEqual(response.status_code, 200)
-#         self.assertEqual(response.content,
-#                          '{"facet_field_counts":{},'
-#                          '"attributes":cow,'
-#                          '"nodes":[]}')
-
-
-class AssaysAttributesAPITests(APITestCase):
+class AssaysAttributesAPITests(APITransactionTestCase):
 
     def setUp(self):
         self.user1 = User.objects.create_user("ownerJane", '', 'test1234')
@@ -293,18 +237,11 @@ class AssaysAttributesAPITests(APITestCase):
         self.invalid_format_uuid = "xxxxxxxx"
         self.client.logout()
 
-    def tearDown(self):
-        User.objects.all().delete()
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
-        DataSet.objects.all().delete()
-        AttributeOrder.objects.all().delete()
-
     def test_get_valid_uuid(self):
         # valid_uuid
         uuid = self.valid_uuid
         request = self.factory.get('%s/%s/attributes/' % (self.url_root, uuid))
+        force_authenticate(request, self.user1)
         response = self.view(request, uuid)
         self.assertEqual(response.status_code, 200)
 
@@ -324,6 +261,7 @@ class AssaysAttributesAPITests(APITestCase):
         # invalid uuid
         request = self.factory.get('%s/%s/attributes/' % (
             self.url_root, self.invalid_uuid))
+        force_authenticate(request, self.user1)
         response = self.view(request, self.invalid_uuid)
         response.render()
         self.assertEqual(response.status_code, 404)
@@ -333,6 +271,7 @@ class AssaysAttributesAPITests(APITestCase):
         # invalid form uuid
         request = self.factory.get('%s/%s/attributes/' % (
             self.url_root, self.invalid_format_uuid))
+        force_authenticate(request, self.user1)
         response = self.view(request, self.invalid_format_uuid)
         response.render()
         self.assertEqual(response.status_code, 404)
@@ -686,15 +625,6 @@ class UtilitiesTest(TestCase):
         self.url_root = '/api/v2/assays'
         self.valid_uuid = self.assay.uuid
         self.invalid_uuid = 'xxxxxxxx'
-
-    def tearDown(self):
-        User.objects.all().delete()
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
-        DataSet.objects.all().delete()
-        InvestigationLink.objects.all().delete()
-        AttributeOrder.objects.all().delete()
 
     def test_objectify_facet_field_counts(self):
         facet_field_array = {'WORKFLOW': ['1_test_04', 1,
@@ -1480,7 +1410,7 @@ class NodeClassMethodTests(TestCase):
         self.assertIsNone(self.node.get_auxiliary_file_generation_task_state())
 
 
-class NodeApiV2Tests(APITestCase):
+class NodeApiV2Tests(APITransactionTestCase):
 
     def setUp(self):
 
@@ -1493,7 +1423,6 @@ class NodeApiV2Tests(APITestCase):
                                              self.password)
 
         self.factory = APIRequestFactory()
-        self.client = APIClient()
         self.view = NodeViewSet.as_view({'get': 'list'})
 
         self.url_root = '/api/v2/node/'
@@ -1522,48 +1451,43 @@ class NodeApiV2Tests(APITestCase):
             "ready_for_igv_detail_view": None
         }])
 
-        self.client.login(username=self.username, password=self.password)
-
         # Make a reusable request & response
         self.get_request = self.factory.get(self.url_root)
+        force_authenticate(self.get_request, self.user)
         self.get_response = self.view(self.get_request)
         self.put_request = self.factory.put(
             self.url_root,
             data=self.node_json,
             format="json"
         )
+        force_authenticate(self.put_request, self.user)
         self.put_response = self.view(self.put_request)
         self.patch_request = self.factory.patch(
             self.url_root,
             data=self.node_json,
             format="json"
         )
+        force_authenticate(self.patch_request, self.user)
         self.patch_response = self.view(self.patch_request)
         self.options_request = self.factory.options(
             self.url_root,
             data=self.node_json,
             format="json"
         )
+        force_authenticate(self.options_request, self.user)
         self.options_response = self.view(self.options_request)
-
-    def tearDown(self):
-        Node.objects.all().delete()
-        User.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        Investigation.objects.all().delete()
 
     def test_get_request(self):
         self.assertIsNotNone(self.get_response.data[0])
 
     def test_get_request_anonymous_user(self):
-        self.client.logout()
-
+        anon_user = get_anonymous_user()
         self.new_get_request = self.factory.get(self.url_root)
+        force_authenticate(self.new_get_request, user=anon_user)
         self.new_get_response = self.view(self.new_get_request)
         self.assertIsNotNone(self.new_get_response.data[0])
         self.assertEqual(self.new_get_request.user.id,
-                         None)
+                         anon_user.id)
 
     def test_unallowed_http_verbs(self):
         self.assertEqual(

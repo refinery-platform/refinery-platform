@@ -11,10 +11,11 @@ from django.test import TestCase
 from guardian.shortcuts import assign_perm
 import mock
 import mockcache as memcache
-from rest_framework.test import (APIRequestFactory, APIClient, APITestCase,
-                                 force_authenticate)
+from rest_framework.test import (APIRequestFactory, force_authenticate,
+                                 APITransactionTestCase)
 from tastypie.test import ResourceTestCase
 
+from core.management.commands.create_public_group import create_public_group
 from .api import AnalysisResource
 from .management.commands.create_user import init_user
 from .models import (Analysis, AnalysisNodeConnection, create_nodeset, DataSet,
@@ -28,7 +29,7 @@ from .utils import (create_current_selection_node_group,
 from .views import AnalysesViewSet, DataSetsViewSet, NodeGroups
 from .serializers import NodeGroupSerializer
 from data_set_manager.models import Assay, Investigation, Node, Study
-from file_store.models import FileExtension, FileStoreItem
+from file_store.models import FileStoreItem
 from galaxy_connector.models import Instance
 
 
@@ -775,9 +776,6 @@ class AnalysisResourceTest(ResourceTestCase):
             workflow_engine=self.workflow_engine
         )
 
-    def tearDown(self):
-        FileExtension.objects.all().delete()
-
     def get_credentials(self):
         """Authenticate as self.user"""
         # workaround required to use SessionAuthentication
@@ -1428,9 +1426,13 @@ class AnalysisDeletionTest(TestCase):
             name='analysis_with_node_analyzed_further'))
 
 
-class NodeGroupAPITests(APITestCase):
+class NodeGroupAPITests(APITransactionTestCase):
 
     def setUp(self):
+        self.username = 'coffee_lover'
+        self.password = 'coffeecoffee'
+        self.user = User.objects.create_user(self.username, '',
+                                             self.password)
         self.factory = APIRequestFactory()
         investigation = Investigation.objects.create()
         self.study = Study.objects.create(
@@ -1479,17 +1481,11 @@ class NodeGroupAPITests(APITestCase):
         self.invalid_uuid = "03b5f681-35d5-4bdd-bc7d-8552fa777ebc"
         self.invalid_format_uuid = "xxxxxxxx"
 
-    def tearDown(self):
-        NodeGroup.objects.all().delete()
-        Node.objects.all().delete()
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
-
     def test_get_valid_uuid(self):
         # valid_uuid
         request = self.factory.get('%s/?uuid=%s' % (
             self.url_root, self.valid_uuid))
+        force_authenticate(request, user=self.user)
         response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data,
@@ -1499,6 +1495,7 @@ class NodeGroupAPITests(APITestCase):
         # valid_assay_uuid
         request = self.factory.get('%s/?assay=%s' % (
             self.url_root, self.assay.uuid))
+        force_authenticate(request, user=self.user)
         response = self.view(request, self.assay.uuid)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), len(self.node_group_list))
@@ -1509,6 +1506,7 @@ class NodeGroupAPITests(APITestCase):
         # invalid_uuid
         request = self.factory.get('%s/?uuid=%s' % (self.url_root,
                                                     self.invalid_uuid))
+        force_authenticate(request, user=self.user)
         response = self.view(request, self.invalid_uuid)
         self.assertEqual(response.status_code, 404)
 
@@ -1516,6 +1514,7 @@ class NodeGroupAPITests(APITestCase):
         # invalid_assay_uuid
         request = self.factory.get('%s/?assay=%s' % (self.url_root,
                                                      self.invalid_uuid))
+        force_authenticate(request, user=self.user)
         response = self.view(request, self.invalid_uuid)
         self.assertEqual(response.status_code, 404)
 
@@ -1524,6 +1523,7 @@ class NodeGroupAPITests(APITestCase):
         request = self.factory.get('%s/?uuid=%s'
                                    % (self.url_root,
                                       self.invalid_format_uuid))
+        force_authenticate(request, user=self.user)
         response = self.view(request, self.invalid_format_uuid)
         self.assertEqual(response.status_code, 404)
 
@@ -1535,6 +1535,7 @@ class NodeGroupAPITests(APITestCase):
                           'nodes': self.nodes_list_uuid
                           }
         request = self.factory.post('%s/' % self.url_root, new_node_group)
+        force_authenticate(request, user=self.user)
         response = self.view(request)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data.get('name'), new_node_group.get('name'))
@@ -1549,6 +1550,7 @@ class NodeGroupAPITests(APITestCase):
                           'study': self.study.uuid,
                           'nodes': '%s' % self.invalid_uuid}
         request = self.factory.post('%s/' % self.url_root, new_node_group)
+        force_authenticate(request, user=self.user)
         response = self.view(request)
         self.assertEqual(response.status_code, 400)
 
@@ -1558,6 +1560,7 @@ class NodeGroupAPITests(APITestCase):
                                    {'uuid': self.node_group_2.uuid,
                                     'nodes': self.nodes_list_uuid,
                                     'is_current': True})
+        force_authenticate(request, user=self.user)
         response = self.view(request)
         self.assertEqual(response.status_code, 202)
         self.assertItemsEqual(response.data.get('nodes'), self.nodes_list_uuid)
@@ -1568,6 +1571,7 @@ class NodeGroupAPITests(APITestCase):
                                    {'uuid': self.node_group_2.uuid,
                                     'nodes': self.invalid_uuid,
                                     'is_current': True})
+        force_authenticate(request, user=self.user)
         response = self.view(request)
         self.assertEqual(response.status_code, 400)
 
@@ -1576,6 +1580,7 @@ class NodeGroupAPITests(APITestCase):
         request = self.factory.put('%s/' % self.url_root,
                                    {'uuid': self.invalid_uuid}
                                    )
+        force_authenticate(request, user=self.user)
         response = self.view(request)
         self.assertEqual(response.status_code, 404)
 
@@ -1584,6 +1589,7 @@ class NodeGroupAPITests(APITestCase):
         request = self.factory.put('%s/' % self.url_root,
                                    {'uuid': self.invalid_format_uuid}
                                    )
+        force_authenticate(request, user=self.user)
         response = self.view(request)
         self.assertEqual(response.status_code, 404)
 
@@ -1614,12 +1620,6 @@ class UtilitiesTest(TestCase):
             "32e977fc-b906-4315-b6ed-6a644d173492",
             "910117c5-fda2-4700-ae87-dc897f3a5d85"
             ]
-
-    def tearDown(self):
-        NodeGroup.objects.all().delete()
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
 
     def test_get_aware_local_time(self):
         expected_time = timezone.localtime(timezone.now())
@@ -1790,11 +1790,6 @@ class UserTutorialsTest(TestCase):
             self.username, '', self.password
         )
         self.userprofile = UserProfile.objects.get(user=self.user)
-
-    def tearDown(self):
-        User.objects.all().delete()
-        UserProfile.objects.all().delete()
-        Tutorials.objects.all().delete()
 
     def test_tutorial_creation(self):
         self.assertIsNotNone(
@@ -2007,7 +2002,7 @@ class DataSetClassMethodsTest(TestCase):
         self.assertIn(self.file_store_item2, file_store_items)
 
 
-class DataSetApiV2Tests(APITestCase):
+class DataSetApiV2Tests(APITransactionTestCase):
 
     def create_rand_str(self, count):
         return ''.join(
@@ -2015,6 +2010,7 @@ class DataSetApiV2Tests(APITestCase):
         )
 
     def setUp(self):
+        create_public_group()
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
@@ -2022,7 +2018,6 @@ class DataSetApiV2Tests(APITestCase):
                                              self.password)
 
         self.factory = APIRequestFactory()
-        self.client = APIClient()
         self.view = DataSetsViewSet.as_view()
 
         self.url_root = '/api/v2/data_sets/'
@@ -2065,31 +2060,24 @@ class DataSetApiV2Tests(APITestCase):
             "ready_for_igv_detail_view": None
         }])
 
-        self.client.login(username=self.username, password=self.password)
-
         # Make reusable requests & responses
         self.get_request = self.factory.get(self.url_root)
+        force_authenticate(self.get_request, user=self.user)
         self.get_response = self.view(self.get_request)
         self.put_request = self.factory.put(
             self.url_root,
             data=self.node_json,
             format="json"
         )
+        force_authenticate(self.put_request, user=self.user)
         self.put_response = self.view(self.put_request)
         self.options_request = self.factory.options(
             self.url_root,
             data=self.node_json,
             format="json"
         )
+        force_authenticate(self.options_request, user=self.user)
         self.options_response = self.view(self.options_request)
-
-    def tearDown(self):
-        Node.objects.all().delete()
-        User.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        DataSet.objects.all().delete()
-        Investigation.objects.all().delete()
 
     def test_unallowed_http_verbs(self):
         self.assertEqual(
@@ -2197,7 +2185,7 @@ class DataSetApiV2Tests(APITestCase):
             {"description": new_description},
         )
         patch_response = self.view(patch_request, self.dataset.uuid)
-        self.assertEqual(patch_response.status_code, 401)
+        self.assertEqual(patch_response.status_code, 403)
 
     def test_dataset_patch_description_fails(self):
         new_description = self.create_rand_str(5001)
@@ -2341,9 +2329,10 @@ class DataSetApiV2Tests(APITestCase):
         self.assertEqual(patch_response.data.get('title'), new_title)
 
 
-class AnalysisApiV2Tests(APITestCase):
+class AnalysisApiV2Tests(APITransactionTestCase):
 
     def setUp(self):
+        create_public_group()
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
@@ -2359,7 +2348,6 @@ class AnalysisApiV2Tests(APITestCase):
             workflow_engine=self.workflow_engine
         )
         self.factory = APIRequestFactory()
-        self.client = APIClient()
         self.view = AnalysesViewSet.as_view()
 
         self.url_root = '/api/v2/analyses/'
@@ -2411,38 +2399,31 @@ class AnalysisApiV2Tests(APITestCase):
             "ready_for_igv_detail_view": None
         }])
 
-        self.client.login(username=self.username, password=self.password)
-
         # Make reusable requests & responses
         self.get_request = self.factory.get(self.url_root)
+        force_authenticate(self.get_request, user=self.user)
         self.get_response = self.view(self.get_request)
         self.put_request = self.factory.put(
             self.url_root,
             data=self.node_json,
             format="json"
         )
+        force_authenticate(self.put_request, user=self.user)
         self.put_response = self.view(self.put_request)
         self.patch_request = self.factory.patch(
             self.url_root,
             data=self.node_json,
             format="json"
         )
+        force_authenticate(self.patch_request, user=self.user)
         self.patch_response = self.view(self.patch_request)
         self.options_request = self.factory.options(
             self.url_root,
             data=self.node_json,
             format="json"
         )
+        force_authenticate(self.options_request, user=self.user)
         self.options_response = self.view(self.options_request)
-
-    def tearDown(self):
-        Node.objects.all().delete()
-        User.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        DataSet.objects.all().delete()
-        Investigation.objects.all().delete()
-        Analysis.objects.all().delete()
 
     def test_unallowed_http_verbs(self):
         self.assertEqual(
