@@ -45,8 +45,6 @@ class OutputFileSerializer(serializers.ModelSerializer):
 
 
 class ToolDefinitionSerializer(serializers.ModelSerializer):
-    nesting_type = url = serializers.CharField(source='get_nesting_type',
-                                               read_only=True)
     file_relationship = FileRelationshipSerializer()
     output_files = OutputFileSerializer(many=True)
     parameters = ParameterSerializer(many=True)
