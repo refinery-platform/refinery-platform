@@ -36,8 +36,7 @@ import sys
 import boto3
 # Simulate the environment that "cfn_generate" runs scripts in.
 # http://cfn-pyplates.readthedocs.org/en/latest/advanced.html#generating-templates-in-python
-from cfn_pyplates import core
-from cfn_pyplates import functions
+from cfn_pyplates import core, functions
 import yaml
 
 
