@@ -40,13 +40,13 @@ class refinery::apache2 {
     content => "AcceptFilter http none\nAcceptFilter https none",
   }
 
-  if $tls_rewrite == 'true' {
+  if $::tls_rewrite == 'true' {
     $rewrites = [
       {
         comment      => 'Redirect http to https unless AWS ELB terminated TLS',
         rewrite_cond => [
           '%{HTTP:X-Forwarded-Proto} !https',
-          "%{HTTP_HOST} ${site_url}",  # to allow ELB health checks using default vhost
+          "%{HTTP_HOST} ${::site_url}",  # to allow ELB health checks using default vhost
         ],
         rewrite_rule => ['^.*$ https://%{HTTP_HOST}%{REQUEST_URI} [R=302,L]'],
       },
@@ -59,18 +59,18 @@ class refinery::apache2 {
   }
 
   apache::vhost { 'refinery':
-    servername                  => $site_url,
+    servername                  => $::site_url,
     vhost_name                  => '*',
     port                        => 80,
     docroot                     => false,
     manage_docroot              => false,
     rewrites                    => $rewrites,
-    wsgi_script_aliases         => { '/' => "${django_root}/config/wsgi_${conf_mode}.py" },
+    wsgi_script_aliases         => { '/' => "${::django_root}/config/wsgi_${::conf_mode}.py" },
     wsgi_daemon_process         => 'refinery',
     wsgi_daemon_process_options => {
-      user        => $app_user,
-      group       => $app_group,
-      python-path => "${django_root}:${virtualenv}/lib/python2.7/site-packages",
+      user        => $::app_user,
+      group       => $::app_group,
+      python-path => "${::django_root}:${::virtualenv}/lib/python2.7/site-packages",
     },
     wsgi_process_group          => 'refinery',
     access_log_file             => 'refinery_access.log',
@@ -79,27 +79,27 @@ class refinery::apache2 {
     aliases                     => [
       {
         aliasmatch => '^/([^/]*\.css)',
-        path       => "${django_root}/static/styles/\$1",
+        path       => "${::django_root}/static/styles/\$1",
       },
       {
         alias => '/static/',
-        path  => "${project_root}/static/",
+        path  => "${::project_root}/static/",
       },
       {
         alias => '/media/',
-        path  => "${media_root}/",
+        path  => "${::media_root}/",
       }
     ],
     directories                 => [
       {
-        path     => "${django_root}/config/wsgi_*.py",
+        path     => "${::django_root}/config/wsgi_*.py",
         provider => 'files',
       },
       {
-        path => "${project_root}/static/",
+        path => "${::project_root}/static/",
       },
       {
-        path => "${media_root}/",
+        path => "${::media_root}/",
       },
     ],
   }
