@@ -12,14 +12,14 @@
   </button>
   <button
     class="btn btn-default btn-xs outline"
-    ng-disabled="$ctrl.groupIndex == $ctrl.groups.length - 1"
+    ng-disabled="$ctrl.groupIndex == $ctrl.groups.length - 1 || $ctrl.groups.length == 0"
     ng-click="$ctrl.navRight()">
     <i class="fa fa-forward"></i>
   </button>
   <button
     class="btn btn-default btn-xs outline"
     ng-disabled="$ctrl.groups.length == 0"
-    ng-click="$ctrl.removeGroup()">
+    ng-click="$ctrl.removeGroup($ctrl.groupIndex)">
     Remove
   </button>
   <button
@@ -31,7 +31,9 @@
 </div>
 
 <hr>
-<div class="wrap-word">
+<div
+  ng-if="$ctrl.groups.length != 0"
+  class="wrap-word">
   {{ $ctrl.groups[$ctrl.groupIndex].entity[$ctrl.attributes.Name] }}
   <{{ $ctrl.groups[$ctrl.groupIndex].entity[$ctrl.attributes['File Type']] }}>
 </div>
