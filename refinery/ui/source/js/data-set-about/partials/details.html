@@ -1,29 +1,81 @@
 <div class="refinery-header">
   <div class="refinery-header-left">
-    <h3>{{ ADCtrl.dataSet.name }}</h3>
+    <h3>{{ ADCtrl.dataSet.accession }}: {{ ADCtrl.dataSet.title }}</h3>
     <span ng-if="ADCtrl.dataSet.is_owner">
       <a
-        ng-click="ADCtrl.isCollapsed.name = !ADCtrl.isCollapsed.name"
-        data-target=" #dataSetName">
+        ng-click="ADCtrl.isCollapsed.title = !ADCtrl.isCollapsed.title"
+        data-target=" #dataSetTitle">
          <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
       </a>
     </span>
   </div>
   <div
-    id="dataSetName"
-    uib-collapse="ADCtrl.isCollapsed.name">
+    id="dataSetAccession"
+    uib-collapse="ADCtrl.isCollapsed.title">
     <div class="vertical-align">
       <form
-        ng-submit="ADCtrl.updateDataSet('name', ADCtrl.updatedField.name)"
-        name="dataSetNameForm"
+        ng-submit="ADCtrl.updateDataSet(
+        'accession', ADCtrl.updatedField.accession
+        )"
+        name="dataSetAccessionForm"
         class="navbar-form text-align-center float-left">
       <input
         autofocus
         type="text"
-        name="dataSetName"
+        name="dataSetAccession"
         class="form-control"
-        placeholder="update data set name"
-        ng-model="ADCtrl.updatedField.name"
+        placeholder="update accession"
+        ng-model="ADCtrl.updatedField.accession"
+        ng-minlength="3"
+        ng-maxlength="32"
+        required>
+      </form>
+
+      <button
+        type="button"
+        class="btn btn-default btn-xs"
+        ng-click="ADCtrl.cancel('accession')">
+        Cancel
+      </button>
+      <button
+        type="submit"
+        class="btn btn-xs btn-primary"
+        ng-click="ADCtrl.updateDataSet(
+        'accession', ADCtrl.updatedField.accession)"
+        ng-disabled="!dataSetAccessionForm.$valid">
+        Save
+      </button>
+      <span
+        class='p-l-1-2 text-warning'
+        ng-show="dataSetAccessionForm.dataSetAccession.$error.minlength ||
+        dataSetAccessionForm.dataSetAccession.$error.required">
+        <i class="fa fa-warning" aria-hidden="true"></i>
+        Accession must be 3 characters long.
+      </span>
+      <span
+        class='p-l-1-2 text-warning'
+        ng-show="dataSetAccessionForm.dataSetAccession.$error.maxlength">
+        <i class="fa fa-warning" aria-hidden="true"></i>
+        Accession must be less than 32 characters long.
+      </span>
+    </div>
+  </div>
+
+  <div
+    id="dataSetTitle"
+    uib-collapse="ADCtrl.isCollapsed.title">
+    <div class="vertical-align">
+      <form
+        ng-submit="ADCtrl.updateDataSet('title', ADCtrl.updatedField.title)"
+        name="dataSetTitleForm"
+        class="navbar-form text-align-center float-left">
+      <input
+        autofocus
+        type="text"
+        name="dataSetTitle"
+        class="form-control"
+        placeholder="update data set title"
+        ng-model="ADCtrl.updatedField.title"
         ng-minlength="3"
         ng-maxlength="250"
         required>
@@ -32,28 +84,28 @@
       <button
         type="button"
         class="btn btn-default btn-xs"
-        ng-click="ADCtrl.cancel('name')">
+        ng-click="ADCtrl.cancel('title')">
         Cancel
       </button>
       <button
         type="submit"
         class="btn btn-xs btn-primary"
-        ng-click="ADCtrl.updateDataSet('name', ADCtrl.updatedField.name)"
-        ng-disabled="!dataSetNameForm.$valid">
+        ng-click="ADCtrl.updateDataSet('title', ADCtrl.updatedField.title)"
+        ng-disabled="!dataSetTitleForm.$valid">
         Save
       </button>
       <span
         class='p-l-1-2 text-warning'
-        ng-show="dataSetNameForm.dataSetName.$error.minlength ||
-        dataSetNameForm.dataSetName.$error.required">
+        ng-show="dataSetTitleForm.dataSetTitle.$error.minlength ||
+        dataSetTitleForm.dataSetTitle.$error.required">
         <i class="fa fa-warning" aria-hidden="true"></i>
-        Names must be 3 characters long.
+        Title must be 3 characters long.
       </span>
       <span
         class='p-l-1-2 text-warning'
-        ng-show="dataSetNameForm.dataSetName.$error.maxlength">
+        ng-show="dataSetTitleForm.dataSetTitle.$error.maxlength">
         <i class="fa fa-warning" aria-hidden="true"></i>
-        Names must be less than 250 characters long.
+        Title must be less than 250 characters long.
       </span>
     </div>
   </div>

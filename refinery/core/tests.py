@@ -2097,8 +2097,13 @@ class DataSetApiV2Tests(APITestCase):
 
         # Create Datasets
         self.dataset = DataSet.objects.create(
-            name="coffee dataset")
-        self.dataset2 = DataSet.objects.create(name="cool dataset")
+            name="coffee dataset",
+            title="coffee dataset"
+        )
+        self.dataset2 = DataSet.objects.create(
+            name="cool dataset",
+            title="cool dataset"
+        )
 
         # Set Data Sets Owner
         self.dataset.set_owner(self.user)
@@ -2227,6 +2232,32 @@ class DataSetApiV2Tests(APITestCase):
 
         self.assertEqual(DataSet.objects.all().count(), 1)
 
+    # Accession too long
+    def test_dataset_patch_accession_fails(self):
+        new_accession = self.create_rand_str(33)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"accession": new_accession}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+        self.assertEqual(
+            patch_response.data.get('accession')[0],
+            'Ensure this field has no more than 32 characters.'
+        )
+
+    def test_dataset_patch_accession_successful(self):
+        new_accession = self.create_rand_str(10)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"accession": new_accession},
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 202)
+        self.assertEqual(patch_response.data.get('accession'), new_accession)
+
     def test_dataset_patch_auth_fails(self):
         new_description = self.create_rand_str(50)
         patch_request = self.factory.patch(
@@ -2262,43 +2293,6 @@ class DataSetApiV2Tests(APITestCase):
         self.assertEqual(
             patch_response.data.get('description'), new_description
         )
-
-    # Name too long
-    def test_dataset_patch_name_fails(self):
-        new_name = self.create_rand_str(251)
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.dataset.uuid),
-            {"name": new_name}
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.dataset.uuid)
-        self.assertEqual(patch_response.status_code, 400)
-        self.assertEqual(
-            patch_response.data.get('name')[0],
-            'Ensure this field has no more than 250 characters.'
-            )
-
-    def test_dataset_patch_name_successful(self):
-        new_name = "decaf coffee dataset"
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.dataset.uuid),
-            {"name": new_name},
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.dataset.uuid)
-        self.assertEqual(patch_response.status_code, 202)
-        self.assertEqual(patch_response.data.get('name'), new_name)
-
-    def test_dataset_patch_name_successful_empty(self):
-        new_name = ""
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.dataset.uuid),
-            {"name": new_name},
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.dataset.uuid)
-        self.assertEqual(patch_response.status_code, 202)
-        self.assertEqual(patch_response.data.get('name'), None)
 
     # Slug too long
     def test_dataset_patch_slug_fails(self):
@@ -2387,6 +2381,32 @@ class DataSetApiV2Tests(APITestCase):
         patch_response = self.view(patch_request, self.dataset.uuid)
         self.assertEqual(patch_response.status_code, 202)
         self.assertEqual(patch_response.data.get('summary'), new_summary)
+
+    # Title too long
+    def test_dataset_patch_title_fails(self):
+        new_title = self.create_rand_str(251)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"title": new_title}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+        self.assertEqual(
+            patch_response.data.get('title')[0],
+            'Ensure this field has no more than 250 characters.'
+            )
+
+    def test_dataset_patch_title_successful(self):
+        new_title = "decaf coffee dataset"
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"title": new_title},
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 202)
+        self.assertEqual(patch_response.data.get('title'), new_title)
 
 
 class AnalysisApiV2Tests(APITestCase):
