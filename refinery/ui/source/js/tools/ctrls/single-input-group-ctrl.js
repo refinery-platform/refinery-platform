@@ -8,7 +8,6 @@
   SingleInputGroupCtrl.$inject = [
     '$scope',
     'fileBrowserFactory',
-    'singleInputGroupService',
     'selectedNodesService'
   ];
 
@@ -16,7 +15,6 @@
   function SingleInputGroupCtrl (
     $scope,
     fileBrowserFactory,
-    singleInputGroupService,
     selectedNodesService
   ) {
     var vm = this;
@@ -27,7 +25,6 @@
     vm.navLeft = navLeft;
     vm.removeGroup = removeGroup;
     vm.removeAllGroups = removeAllGroups;
-    vm.service = singleInputGroupService;
     vm.tool = {};
     vm.attributes = {};
 
