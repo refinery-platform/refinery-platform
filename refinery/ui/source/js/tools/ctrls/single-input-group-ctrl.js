@@ -48,12 +48,13 @@
       }
     }
 
-    function removeGroup () {
-      console.log('remove group');
+    function removeGroup (groupInd) {
+      vm.groups[groupInd].isSelected = false;
+      selectedNodesService.setSelectedNodes(vm.groups[groupInd]);
     }
 
     function removeAllGroups () {
-      console.log('remove all groups');
+      selectedNodesService.setSelectedAllFlags(false);
     }
 
     vm.$onInit = function () {
@@ -72,15 +73,12 @@
         },
         function () {
           vm.groups = selectedNodesService.selectedNodes;
-          console.log('in the single input group ctrl');
           console.log(vm.groups);
           var attributesArray = vm.groups[0].grid.appScope.assayAttributes;
-          console.log(attributesArray);
           for (var ind = 0; ind < attributesArray.length; ind ++) {
             vm.attributes[attributesArray[ind].display_name] = attributesArray[ind].internal_name;
           }
-          console.log('here I am');
-          console.log(vm.attributes);
+          vm.groupIndex = vm.groups.length - 1;
         }
       );
     };

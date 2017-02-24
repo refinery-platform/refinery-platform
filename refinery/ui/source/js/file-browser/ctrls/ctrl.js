@@ -383,8 +383,6 @@
 
     // Helper function: unselect rows on the ui-grid
     vm.setGridUnselectedRows = function (uuidsList) {
-      console.log('setting grid unselected rows');
-      console.log(uuidsList);
       // If user scrolls quickly, there could be a delay for selected items
       angular.forEach(vm.gridApi.grid.rows, function (gridRow) {
         // select rows if not in complement list
