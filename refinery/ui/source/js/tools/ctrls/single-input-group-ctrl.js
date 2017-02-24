@@ -74,11 +74,13 @@
         function () {
           vm.groups = selectedNodesService.selectedNodes;
           console.log(vm.groups);
-          var attributesArray = vm.groups[0].grid.appScope.assayAttributes;
-          for (var ind = 0; ind < attributesArray.length; ind ++) {
-            vm.attributes[attributesArray[ind].display_name] = attributesArray[ind].internal_name;
+          if (vm.groups.length > 0) {
+            var attributesArray = vm.groups[0].grid.appScope.assayAttributes;
+            for (var ind = 0; ind < attributesArray.length; ind ++) {
+              vm.attributes[attributesArray[ind].display_name] = attributesArray[ind].internal_name;
+            }
+            vm.groupIndex = vm.groups.length - 1;
           }
-          vm.groupIndex = vm.groups.length - 1;
         }
       );
     };

@@ -1,5 +1,10 @@
 <span class="control-label"">
-  <b>{{ $ctrl.groupIndex + 1 }}</b> of
+  <span ng-if="$ctrl.groups.length == 0">
+    <b>0</b> of
+  </span>
+  <span ng-if="$ctrl.groups.length > 0">
+    <b>{{ $ctrl.groupIndex + 1 }}</b> of
+  </span>
   <b>{{ $ctrl.groups.length }} </b> groups
 </span>
 
