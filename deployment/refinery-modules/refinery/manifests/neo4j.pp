@@ -175,6 +175,7 @@ class refinery::neo4j {
       cwd         => $django_root,
       user        => $app_user,
       group       => $app_group,
+      require     => Exec['migrate'],
     }
     ->
     exec { "remove neo4j fixture":
