@@ -28,7 +28,7 @@ from .utils import (create_current_selection_node_group,
 from .views import AnalysesViewSet, DataSetsViewSet, NodeGroups
 from .serializers import NodeGroupSerializer
 from data_set_manager.models import Assay, Investigation, Node, Study
-from file_store.models import FileExtension, FileStoreItem
+from file_store.models import FileStoreItem
 from galaxy_connector.models import Instance
 
 
@@ -775,9 +775,6 @@ class AnalysisResourceTest(ResourceTestCase):
             workflow_engine=self.workflow_engine
         )
 
-    def tearDown(self):
-        FileExtension.objects.all().delete()
-
     def get_credentials(self):
         """Authenticate as self.user"""
         # workaround required to use SessionAuthentication
@@ -1316,11 +1313,11 @@ class DataSetDeletionTest(TestCase):
         )
 
     def test_pre_isa_archive_deletion(self):
-        pre_isa = self.dataset_with_analysis.get_isa_archive()
+        pre_isa = self.dataset_without_analysis.get_isa_archive()
         self.assertIsNotNone(pre_isa)
         pre_isa.delete()
         self.assertIsNone(
-            self.dataset_with_analysis.get_isa_archive()
+            self.dataset_without_analysis.get_isa_archive()
         )
 
 
@@ -1484,13 +1481,6 @@ class NodeGroupAPITests(APITestCase):
         self.invalid_uuid = "03b5f681-35d5-4bdd-bc7d-8552fa777ebc"
         self.invalid_format_uuid = "xxxxxxxx"
 
-    def tearDown(self):
-        NodeGroup.objects.all().delete()
-        Node.objects.all().delete()
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
-
     def test_get_valid_uuid(self):
         # valid_uuid
         request = self.factory.get('%s/?uuid=%s' % (
@@ -1619,12 +1609,6 @@ class UtilitiesTest(TestCase):
             "32e977fc-b906-4315-b6ed-6a644d173492",
             "910117c5-fda2-4700-ae87-dc897f3a5d85"
             ]
-
-    def tearDown(self):
-        NodeGroup.objects.all().delete()
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
 
     def test_get_aware_local_time(self):
         expected_time = timezone.localtime(timezone.now())
@@ -1844,22 +1828,6 @@ class DataSetResourceTest(ResourceTestCase):
                 data_set=self.dataset,
                 version=1
             )
-
-    def tearDown(self):
-        User.objects.all().delete()
-        Project.objects.all().delete()
-        WorkflowEngine.objects.all().delete()
-        Workflow.objects.all().delete()
-        DataSet.objects.all().delete()
-        Instance.objects.all().delete()
-        Analysis.objects.all().delete()
-        UserProfile.objects.all().delete()
-        Node.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        Investigation.objects.all().delete()
-        AnalysisNodeConnection.objects.all().delete()
-        InvestigationLink.objects.all().delete()
 
     def get_credentials(self):
         """Authenticate as self.user"""
@@ -2439,15 +2407,6 @@ class AnalysisApiV2Tests(APITestCase):
             format="json"
         )
         self.options_response = self.view(self.options_request)
-
-    def tearDown(self):
-        Node.objects.all().delete()
-        User.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        DataSet.objects.all().delete()
-        Investigation.objects.all().delete()
-        Analysis.objects.all().delete()
 
     def test_unallowed_http_verbs(self):
         self.assertEqual(
