@@ -739,7 +739,8 @@ class DataSet(SharableResource):
                 uuid=investigation.isarchive_file)
 
         except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned) as e:
+                FileStoreItem.MultipleObjectsReturned,
+                AttributeError) as e:
             logger.debug("Couldn't fetch FileStoreItem: %s" % e)
 
     def get_pre_isa_archive(self):
@@ -754,7 +755,8 @@ class DataSet(SharableResource):
                     uuid=investigation.pre_isarchive_file)
 
         except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned) as e:
+                FileStoreItem.MultipleObjectsReturned,
+                AttributeError) as e:
             logger.debug("Couldn't fetch FileStoreItem: %s" % e)
 
     def share(self, group, readonly=True):
