@@ -19,7 +19,6 @@ from .utils import (create_facet_filter_query, customize_attribute_response,
                     insert_facet_field_filter, is_field_in_hidden_list,
                     objectify_facet_field_counts, update_attribute_order_ranks)
 from .views import Assays, AssaysAttributes
-from core.management.commands.create_public_group import create_public_group
 from core.models import DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
 from file_store.models import FileStoreItem
@@ -1396,9 +1395,6 @@ class NodeClassMethodTests(TestCase):
 class NodeApiV2Tests(APITestCase):
 
     def setUp(self):
-
-        create_public_group()
-
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'

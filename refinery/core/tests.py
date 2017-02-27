@@ -12,10 +12,9 @@ from guardian.shortcuts import assign_perm
 import mock
 import mockcache as memcache
 from rest_framework.test import (APIRequestFactory, force_authenticate,
-                                 APITransactionTestCase)
+                                 APITestCase)
 from tastypie.test import ResourceTestCase
 
-from core.management.commands.create_public_group import create_public_group
 from .api import AnalysisResource
 from .management.commands.create_user import init_user
 from .models import (Analysis, AnalysisNodeConnection, create_nodeset, DataSet,
@@ -1428,7 +1427,7 @@ class AnalysisDeletionTest(TestCase):
             name='analysis_with_node_analyzed_further'))
 
 
-class NodeGroupAPITests(APITransactionTestCase):
+class NodeGroupAPITests(APITestCase):
 
     def setUp(self):
         self.username = 'coffee_lover'
@@ -1988,7 +1987,7 @@ class DataSetClassMethodsTest(TestCase):
         self.assertIn(self.file_store_item2, file_store_items)
 
 
-class DataSetApiV2Tests(APITransactionTestCase):
+class DataSetApiV2Tests(APITestCase):
 
     def create_rand_str(self, count):
         return ''.join(
@@ -1996,7 +1995,6 @@ class DataSetApiV2Tests(APITransactionTestCase):
         )
 
     def setUp(self):
-        create_public_group()
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
@@ -2315,10 +2313,9 @@ class DataSetApiV2Tests(APITransactionTestCase):
         self.assertEqual(patch_response.data.get('title'), new_title)
 
 
-class AnalysisApiV2Tests(APITransactionTestCase):
+class AnalysisApiV2Tests(APITestCase):
 
     def setUp(self):
-        create_public_group()
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'

@@ -10,8 +10,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import SimpleTestCase, TestCase
 
 import mock
-from rest_framework.test import APIRequestFactory, APITransactionTestCase, \
-    force_authenticate
+from rest_framework.test import (APIRequestFactory, force_authenticate,
+                                 APITestCase)
 
 from .models import (file_path, FILE_STORE_TEMP_DIR, FileExtension,
                      FileStoreItem, FileType,
@@ -359,7 +359,7 @@ class FileSourceTranslationTest(TestCase):
             translate_file_source(self.rel_path_source)
 
 
-class FileStoreItemsAPITests(APITransactionTestCase):
+class FileStoreItemsAPITests(APITestCase):
 
     def setUp(self):
         self.username = 'coffee_lover'
