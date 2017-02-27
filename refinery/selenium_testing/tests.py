@@ -53,7 +53,8 @@ class NoLoginTestCase(SeleniumTestBase):
 
     # SeleniumTestBase.setUp(): We don't need to login or initialize the
     # guest user this time
-    def setUp(self, site_login=True, initialize_guest=True):
+    def setUp(self, site_login=True, initialize_guest=True,
+              public_group_needed=False):
         super(NoLoginTestCase, self).setUp(initialize_guest=False,
                                            site_login=False)
 
