@@ -33,7 +33,7 @@ from data_set_manager.api import (AssayResource, AttributeOrderResource,
                                   StudyResource)
 from data_set_manager.views import Assays, AssaysAttributes, AssaysFiles
 from file_store.views import FileStoreItems
-from tools.views import ToolDefinitionsViewSet
+from tool_manager.views import ToolDefinitionsViewSet
 
 
 logger = logging.getLogger(__name__)

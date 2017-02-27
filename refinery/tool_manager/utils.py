@@ -1,4 +1,7 @@
+import logging
 from django.contrib import admin
+
+logger = logging.getLogger(__name__)
 
 
 class AdminFieldPopulator(admin.ModelAdmin):

@@ -93,35 +93,35 @@ class ToolDefinitionFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a ToolDefinition for testing purposes"""
 
     class Meta:
-        model = "tools.ToolDefinition"
+        model = "tool_manager.ToolDefinition"
 
 
 class FileRelationshipFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a FileRelationship for testing purposes"""
 
     class Meta:
-        model = "tools.FileRelationship"
+        model = "tool_manager.FileRelationship"
 
 
 class InputFileFactory(factory.django.DjangoModelFactory):
     """Minimal representation of an InputFile for testing purposes"""
 
     class Meta:
-        model = "tools.InputFile"
+        model = "tool_manager.InputFile"
 
 
 class ParameterFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a Parameter for testing purposes"""
 
     class Meta:
-        model = "tools.Parameter"
+        model = "tool_manager.Parameter"
 
 
 class OutputFileFactory(factory.django.DjangoModelFactory):
     """Minimal representation of an OutputFile for testing purposes"""
 
     class Meta:
-        model = "tools.OutputFile"
+        model = "tool_manager.OutputFile"
 
 
 class FileTypeFactory(factory.django.DjangoModelFactory):

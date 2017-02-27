@@ -75,9 +75,10 @@ class Migration(migrations.Migration):
                 ('name', models.TextField(unique=True, max_length=100)),
                 ('description', models.TextField(unique=True, max_length=500)),
                 ('tool_type', models.CharField(max_length=100, choices=[(b'WORKFLOW', b'Workflow'), (b'VISUALIZATION', b'Visualization')])),
-                ('file_relationship', models.ForeignKey(to='tools.FileRelationship')),
-                ('output_files', models.ManyToManyField(to='tools.OutputFile')),
-                ('parameters', models.ManyToManyField(to='tools.Parameter')),
+                ('file_relationship', models.ForeignKey(
+                    to='tool_manager.FileRelationship')),
+                ('output_files', models.ManyToManyField(to='tool_manager.OutputFile')),
+                ('parameters', models.ManyToManyField(to='tool_manager.Parameter')),
             ],
             options={
             },
@@ -86,13 +87,14 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='filerelationship',
             name='input_files',
-            field=models.ManyToManyField(to='tools.InputFile'),
+            field=models.ManyToManyField(to='tool_manager.InputFile'),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='filerelationship',
             name='nested_elements',
-            field=models.ManyToManyField(to='tools.FileRelationship', null=True, blank=True),
+            field=models.ManyToManyField(to='tool_manager.FileRelationship',
+                                         null=True, blank=True),
             preserve_default=True,
         ),
     ]

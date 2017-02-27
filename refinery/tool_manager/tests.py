@@ -7,8 +7,8 @@ from rest_framework.test import (APITestCase, APIRequestFactory,
 
 from core.models import ExtendedGroup
 from factory_boy.utils import make_tool_definitions
-from tools.models import ToolDefinition
-from tools.views import ToolDefinitionsViewSet
+from .models import ToolDefinition
+from .views import ToolDefinitionsViewSet
 
 
 class ToolDefinitionAPITests(APITestCase):
