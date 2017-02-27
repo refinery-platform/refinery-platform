@@ -363,6 +363,23 @@ def main():
             }
         })
 
+    cft.resources.add(core.Resource(
+        'StorageBucket', 'AWS::S3::Bucket',
+        core.Properties({
+            'BucketName': config['AWS_STORAGE_BUCKET_NAME'],
+            'AccessControl': 'PublicRead',
+            'CorsConfiguration': {
+                'CorsRules': [
+                    {
+                        'AllowedOrigins': ['*'],
+                        'AllowedMethods': ['GET'],
+                        'AllowedHeaders': ['Authorization'],
+                        'MaxAge': 3000,
+                    }
+                ]
+            }
+        }),
+    ))
     sys.stdout.write(str(cft))
 
 
