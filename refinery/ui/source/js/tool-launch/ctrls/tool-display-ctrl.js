@@ -9,12 +9,7 @@
 
   function ToolDisplayCtrl ($scope, _, toolsService) {
     var vm = this;
-    vm.toolList = [
-      { name: 'Workflow 1' },
-      { name: 'Workflow 2' },
-      { name: 'Visualization 1' }
-    ];
-    vm.updateTool = updateTool;
+    vm.toolList = toolsService.toolList;
     vm.selectedTool = {};
     vm.isToolSelected = false;
 
@@ -23,10 +18,6 @@
      * Methods Definitions
      * ---------------------------------------------------------
      */
-    function updateTool (tool) {
-      console.log(vm.selectedTool.select);
-      angular.copy(tool, vm.selectedTool);
-    }
 
     /*
     * ---------------------------------------------------------

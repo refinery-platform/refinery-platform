@@ -13,13 +13,23 @@
     vm.tools = toolsService.toolList;
     vm.updateTool = updateTool;
 
+    activate();
+
 /*
  * -----------------------------------------------------------------------------
  * Methods Definitions
  * -----------------------------------------------------------------------------
  */
-    function updateTool () {
-      toolsService.setSelectedTool({ name: vm.selectedTool.select.name });
+    function activate () {
+      refreshToolList();
+    }
+
+    function refreshToolList () {
+      vm.tools = toolsService.toolList;
+    }
+
+    function updateTool (tool) {
+      toolsService.setSelectedTool(tool);
     }
   }
 })();
