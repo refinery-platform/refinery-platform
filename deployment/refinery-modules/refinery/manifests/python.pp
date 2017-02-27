@@ -41,8 +41,7 @@ class refinery::python {
     require    => Python::Virtualenv[$::virtualenv],
   }
 
-  # install additional Python modules when deploying on AWS
-  if $::domain == 'ec2.internal' {
+  if $::deployment_platform == 'aws' {
     python::requirements { $::requirements_aws:
       virtualenv => $::virtualenv,
       owner      => $::app_user,

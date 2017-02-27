@@ -26,6 +26,8 @@ $ui_app_root = "${django_root}/ui"
 $solr_data_set_manager_data = "/data/solr/data_set_manager"
 $solr_core_data = "/data/solr/core"
 
+$deployment_platform = 'aws'
+
 # See code in refinery-modules/refinery/...
 include refinery
 include refinery::pg

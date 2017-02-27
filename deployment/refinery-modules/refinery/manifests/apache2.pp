@@ -53,10 +53,22 @@ class refinery::apache2 {
     ]
   }
 
-  # change log format if deploying on AWS
-  if $::domain == 'ec2.internal' {
-    $log_format = 'aws-elb'
-  }
+  $aliases = [
+    {
+      alias => '/media/',
+      path  => "${::media_root}/",
+    }
+  ]
+
+  $directories = [
+    {
+      path     => "${::django_root}/config/wsgi_*.py",
+      provider => 'files',
+    },
+    {
+      path => "${::media_root}/",
+    },
+  ]
 
   apache::vhost { 'refinery':
     servername                  => $::site_url,
@@ -74,33 +86,37 @@ class refinery::apache2 {
     },
     wsgi_process_group          => 'refinery',
     access_log_file             => 'refinery_access.log',
-    access_log_format           => $log_format,
+    access_log_format           => $::deployment_platform ? {
+      'aws'   => 'aws-elb',
+      default => undef,
+    },
     error_log_file              => 'refinery_error.log',
-    aliases                     => [
-      {
-        aliasmatch => '^/([^/]*\.css)',
-        path       => "${::django_root}/static/styles/\$1",
-      },
-      {
-        alias => '/static/',
-        path  => "${::project_root}/static/",
-      },
-      {
-        alias => '/media/',
-        path  => "${::media_root}/",
-      }
-    ],
-    directories                 => [
-      {
-        path     => "${::django_root}/config/wsgi_*.py",
-        provider => 'files',
-      },
-      {
-        path => "${::project_root}/static/",
-      },
-      {
-        path => "${::media_root}/",
-      },
-    ],
+    aliases                     => $::deployment_platform ? {
+      'aws'   => $aliases,
+      default => concat(
+        $aliases,
+        [
+          {
+            aliasmatch => '^/([^/]*\.css)',
+            path       => "${::django_root}/static/styles/\$1",
+          },
+          {
+            alias => '/static/',
+            path  => "${::project_root}/static/",
+          },
+        ]
+      ),
+    },
+    directories                 => $::deployment_platform ? {
+      'aws'   => $directories,
+      default => concat(
+        $directories,
+        [
+          {
+            path => "${::project_root}/static/",
+          },
+        ]
+      ),
+    },
   }
 }
