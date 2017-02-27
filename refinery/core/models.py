@@ -554,7 +554,7 @@ class DataSet(SharableResource):
             logger.debug("DataSet has no isa_archive to delete: %s" % e)
 
         try:
-            self.get_isa_archive(pre_isa=True).delete()
+            self.get_pre_isa_archive().delete()
 
         except AttributeError as e:
             logger.debug("DataSet has no pre_isa_archive to delete: %s" % e)
@@ -727,34 +727,35 @@ class DataSet(SharableResource):
 
         return file_size
 
-    def get_isa_archive(self, pre_isa=False):
+    def get_isa_archive(self):
         """
         Returns the isa_archive that was used to create the
         DataSet
-
-        Alternatively, if pre_isa is True the pre_isa_archive file
-        will be fetched instead.
         """
+        investigation = self.get_investigation()
+
         try:
-            # An InvestigationLink can't exist without an investigation
-            investigation = InvestigationLink.objects.get(
-                data_set__uuid=self.uuid).investigation
-        except (InvestigationLink.DoesNotExist,
-                InvestigationLink.MultipleObjectsReturned) as e:
-            logger.debug("Couldn't fetch InvestigationLink: %s" % e)
+            return FileStoreItem.objects.get(
+                uuid=investigation.isarchive_file)
 
-        else:
-            try:
-                if pre_isa:
-                    archive_uuid = investigation.pre_isarchive_file
-                else:
-                    archive_uuid = investigation.isarchive_file
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned) as e:
+            logger.debug("Couldn't fetch FileStoreItem: %s" % e)
 
-                return FileStoreItem.objects.get(uuid=archive_uuid)
+    def get_pre_isa_archive(self):
+        """
+        Returns the pre_isa_archive that was used to create the
+        DataSet
+        """
+        investigation = self.get_investigation()
 
-            except (FileStoreItem.DoesNotExist,
-                    FileStoreItem.MultipleObjectsReturned) as e:
-                logger.debug("Couldn't fetch FileStoreItem: %s" % e)
+        try:
+            return FileStoreItem.objects.get(
+                    uuid=investigation.pre_isarchive_file)
+
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned) as e:
+            logger.debug("Couldn't fetch FileStoreItem: %s" % e)
 
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
