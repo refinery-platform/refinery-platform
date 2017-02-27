@@ -379,6 +379,7 @@ def main():
                 ]
             }
         }),
+        core.DeletionPolicy('Retain')
     ))
     sys.stdout.write(str(cft))
 
