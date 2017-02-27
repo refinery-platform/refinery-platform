@@ -506,7 +506,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
                 pass
 
         isa_archive = bundle.obj.get_isa_archive()
-        pre_isa_archive = bundle.obj.get_pre_isa_archive()
+        pre_isa_archive = bundle.obj.get_isa_archive(pre_isa=True)
 
         if isa_archive:
             bundle.data["isa_archive"] = isa_archive.uuid

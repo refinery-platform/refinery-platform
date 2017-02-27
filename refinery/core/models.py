@@ -554,7 +554,7 @@ class DataSet(SharableResource):
             logger.debug("DataSet has no isa_archive to delete: %s" % e)
 
         try:
-            self.get_pre_isa_archive().delete()
+            self.get_isa_archive(pre_isa=True).delete()
 
         except AttributeError as e:
             logger.debug("DataSet has no pre_isa_archive to delete: %s" % e)
@@ -727,43 +727,30 @@ class DataSet(SharableResource):
 
         return file_size
 
-    def get_isa_archive(self):
+    def get_isa_archive(self, pre_isa=False):
         """
         Returns the isa_archive that was used to create the
         DataSet
+
+        Alternatively, if pre_isa is True the pre_isa_archive file
+        will be fetched instead.
         """
         try:
-            investigation_link = InvestigationLink.objects.get(
-                data_set__uuid=self.uuid)
+            # An InvestigationLink can't exist without an investigation
+            investigation = InvestigationLink.objects.get(
+                data_set__uuid=self.uuid).investigation
         except (InvestigationLink.DoesNotExist,
                 InvestigationLink.MultipleObjectsReturned) as e:
             logger.debug("Couldn't fetch InvestigationLink: %s" % e)
 
         else:
             try:
-                return FileStoreItem.objects.get(
-                    uuid=investigation_link.investigation.isarchive_file)
+                if pre_isa:
+                    archive_uuid = investigation.pre_isarchive_file
+                else:
+                    archive_uuid = investigation.isarchive_file
 
-            except (FileStoreItem.DoesNotExist,
-                    FileStoreItem.MultipleObjectsReturned) as e:
-                logger.debug("Couldn't fetch FileStoreItem: %s" % e)
-
-    def get_pre_isa_archive(self):
-        """
-        Returns the pre_isa_archive that was used to create the
-        DataSet
-        """
-        try:
-            investigation_link = InvestigationLink.objects.get(
-                data_set__uuid=self.uuid)
-        except (InvestigationLink.DoesNotExist,
-                InvestigationLink.MultipleObjectsReturned) as e:
-            logger.debug("Couldn't fetch InvestigationLink: %s" % e)
-
-        else:
-            try:
-                return FileStoreItem.objects.get(
-                    uuid=investigation_link.investigation.pre_isarchive_file)
+                return FileStoreItem.objects.get(uuid=archive_uuid)
 
             except (FileStoreItem.DoesNotExist,
                     FileStoreItem.MultipleObjectsReturned) as e:
