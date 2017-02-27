@@ -1,8 +1,5 @@
 from datetime import datetime
-import random
 import uuid as uuid_builtin
-
-from django.contrib.auth.models import Group
 
 from core.models import DataSet, Analysis
 
@@ -29,7 +26,6 @@ def make_datasets(number_to_create, user_instance):
 def make_analyses_with_single_dataset(number_to_create, user_instance):
     """Create some minimal Analyses"""
 
-    status_choices = Analysis.STATUS_CHOICES
     instance = GalaxyInstanceFactory()
     workflow_engine = WorkflowEngineFactory(instance=instance)
     workflow = WorkflowFactory(uuid=uuid_builtin.uuid4(),
@@ -44,15 +40,13 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
             name="Test Analysis - {}".format(analysis_uuid),
             project=project,
             data_set=dataset,
-            workflow=workflow,
-            status=random.choice(status_choices)[0]
+            workflow=workflow
         )
 
         number_to_create -= 1
 
     for dataset in DataSet.objects.all():
         dataset.set_owner(user_instance)
-        dataset.share(group=Group.objects.get(name="Public"))
         dataset.save()
 
     for analysis in Analysis.objects.all():

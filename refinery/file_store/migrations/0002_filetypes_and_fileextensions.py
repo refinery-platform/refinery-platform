@@ -130,11 +130,12 @@ def forwards(apps, schema_editor):
         ]
 
     for filetype in filetypes:
-        with transaction.atomic():
-            try:
-                filetype.save()
-            except IntegrityError:
-                continue
+        # Attempt to save FileType objects. If an IntegrityError is raised
+        # upon saving an object we continue as it already exists.
+        try:
+            filetype.save()
+        except IntegrityError:
+            continue
 
     file_extensions = [
         FileExtension(
@@ -296,9 +297,10 @@ def forwards(apps, schema_editor):
     ]
 
     for file_extension in file_extensions:
+        # Attempt to save FileExtension objects. If an IntegrityError is raised
+        # upon saving an object we continue as it already exists.
         try:
-            with transaction.atomic():
-                file_extension.save()
+            file_extension.save()
         except IntegrityError:
             continue
 

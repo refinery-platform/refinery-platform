@@ -579,9 +579,15 @@ ANONYMOUS_USER_ID = -1
 
 TEST_RUNNER = "django.test.runner.DiscoverRunner"
 
+
 # Only allow DRF API access to registered users
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     )
 }
+
+# Required for pre-Django 1.9 TransactionTestCases utilizing
+# `serialized_rollback` to function properly http://bit.ly/2l5gR30
+TEST_NON_SERIALIZED_APPS = ['django.contrib.contenttypes',
+                            'django.contrib.auth', 'core']

@@ -732,34 +732,32 @@ class DataSet(SharableResource):
         Returns the isa_archive that was used to create the
         DataSet
         """
+        investigation = self.get_investigation()
+
         try:
             return FileStoreItem.objects.get(
-                uuid=InvestigationLink.objects.get(
-                    data_set__uuid=self.uuid).investigation.isarchive_file)
+                uuid=investigation.isarchive_file)
 
         except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned) as e:
+                FileStoreItem.MultipleObjectsReturned,
+                AttributeError) as e:
             logger.debug("Couldn't fetch FileStoreItem: %s" % e)
-        except (InvestigationLink.DoesNotExist,
-                InvestigationLink.MultipleObjectsReturned) as e:
-            logger.debug("Couldn't fetch InvestigationLink: %s" % e)
 
     def get_pre_isa_archive(self):
         """
         Returns the pre_isa_archive that was used to create the
         DataSet
         """
+        investigation = self.get_investigation()
+
         try:
             return FileStoreItem.objects.get(
-                uuid=InvestigationLink.objects.get(
-                    data_set__uuid=self.uuid).investigation.pre_isarchive_file)
+                    uuid=investigation.pre_isarchive_file)
 
         except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned) as e:
+                FileStoreItem.MultipleObjectsReturned,
+                AttributeError) as e:
             logger.debug("Couldn't fetch FileStoreItem: %s" % e)
-        except (InvestigationLink.DoesNotExist,
-                InvestigationLink.MultipleObjectsReturned) as e:
-            logger.debug("Couldn't fetch InvestigationLink: %s" % e)
 
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)

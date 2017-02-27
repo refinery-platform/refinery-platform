@@ -5,7 +5,7 @@ from selenium import webdriver
 
 from core.management.commands.create_public_group import create_public_group
 from core.management.commands.create_user import init_user
-from core.models import DataSet,  Analysis, ExtendedGroup
+from core.models import DataSet, Analysis
 from factory_boy.utils import make_analyses_with_single_dataset, make_datasets
 from selenium_testing.utils import (
     assert_body_text, login, wait_until_id_clickable, DEFAULT_WAIT,
@@ -19,22 +19,24 @@ display.start()
 class SeleniumTestBase(StaticLiveServerTestCase):
     """Abstract base class to be used for all Selenium-based tests."""
 
-    def setUp(self, site_login=True, initialize_guest=True):
+    # Don't delete data migration data after test runs: http://bit.ly/2lAYqVJ
+    serialized_rollback = True
+
+    def setUp(self, site_login=True, initialize_guest=True,
+              public_group_needed=False):
         self.browser = webdriver.Firefox()
         self.browser.maximize_window()
-        # Manually create and save public group to sync Selenium and gecko
-        # driver threads
-        create_public_group()
-        ExtendedGroup.objects.public_group().save()
 
         if initialize_guest:
             init_user("guest", "guest", "guest@coffee.com", "Guest", "Guest",
                       "Test User", is_active=True)
             self.user = User.objects.get(username="guest")
-            self.user.save()
 
         if site_login:
             login(self.browser, self.live_server_url)
+
+        if public_group_needed:
+            create_public_group()
 
     def tearDown(self):
         self.browser.quit()
@@ -51,7 +53,8 @@ class NoLoginTestCase(SeleniumTestBase):
 
     # SeleniumTestBase.setUp(): We don't need to login or initialize the
     # guest user this time
-    def setUp(self, site_login=True, initialize_guest=True):
+    def setUp(self, site_login=True, initialize_guest=True,
+              public_group_needed=False):
         super(NoLoginTestCase, self).setUp(initialize_guest=False,
                                            site_login=False)
 
@@ -129,6 +132,15 @@ class DataSetsPanelTestCase(SeleniumTestBase):
 
 class UiDeletionTestCase(SeleniumTestBase):
     """Ensure proper deletion of DataSets and Analyses from the UI"""
+
+    # SeleniumTestBase.setUp(): Due to a bug with TransactionTestCases (see:
+    # here http://bit.ly/2lD7dGU) we need to manually create the public group
+    # within this test suite. This issue has been addressed in Django 1.9 +
+    def setUp(self, site_login=True, initialize_guest=True,
+              public_group_needed=False):
+        super(UiDeletionTestCase, self).setUp(site_login=True,
+                                              initialize_guest=True,
+                                              public_group_needed=True)
 
     def test_dataset_deletion(self, total_datasets=2):
         """Delete some datasets and make sure the UI updates properly"""

@@ -1306,15 +1306,17 @@ class DataSetDeletionTest(TestCase):
                           name="dataset_with_analysis")
 
     def test_isa_archive_deletion(self):
-        self.assertIsNotNone(self.dataset_without_analysis.get_isa_archive())
-        self.dataset_without_analysis.delete()
+        isa = self.dataset_without_analysis.get_isa_archive()
+        self.assertIsNotNone(isa)
+        isa.delete()
         self.assertIsNone(self.dataset_without_analysis.get_isa_archive())
 
     def test_pre_isa_archive_deletion(self):
-        self.assertIsNotNone(
+        pre_isa = self.dataset_without_analysis.get_pre_isa_archive()
+        self.assertIsNotNone(pre_isa)
+        pre_isa.delete()
+        self.assertIsNone(
             self.dataset_without_analysis.get_pre_isa_archive())
-        self.dataset_without_analysis.delete()
-        self.assertIsNone(self.dataset_without_analysis.get_pre_isa_archive())
 
 
 class AnalysisDeletionTest(TestCase):
@@ -1834,22 +1836,6 @@ class DataSetResourceTest(ResourceTestCase):
                 data_set=self.dataset,
                 version=1
             )
-
-    def tearDown(self):
-        User.objects.all().delete()
-        Project.objects.all().delete()
-        WorkflowEngine.objects.all().delete()
-        Workflow.objects.all().delete()
-        DataSet.objects.all().delete()
-        Instance.objects.all().delete()
-        Analysis.objects.all().delete()
-        UserProfile.objects.all().delete()
-        Node.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        Investigation.objects.all().delete()
-        AnalysisNodeConnection.objects.all().delete()
-        InvestigationLink.objects.all().delete()
 
     def get_credentials(self):
         """Authenticate as self.user"""
