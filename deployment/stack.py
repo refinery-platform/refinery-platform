@@ -164,8 +164,7 @@ def main():
             'IamInstanceProfile': functions.ref('WebInstanceProfile'),
             'Tags': instance_tags,
         }),
-        core.DependsOn(functions.ref('RDSInstance'),
-                       functions.ref('StorageBucket')),
+        core.DependsOn(['RDSInstance', 'StorageBucket']),
     )
 
     cft.resources.instance_profile = core.Resource(
