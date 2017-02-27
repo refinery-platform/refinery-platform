@@ -135,7 +135,7 @@ class UiDeletionTestCase(SeleniumTestBase):
 
     # SeleniumTestBase.setUp(): Due to a bug with TransactionTestCases (see:
     # here http://bit.ly/2lD7dGU) we need to manually create the public group
-    # form this test suite. This issue has been addressed in Django 1.9 +
+    # within this test suite. This issue has been addressed in Django 1.9 +
     def setUp(self, site_login=True, initialize_guest=True,
               public_group_needed=False):
         super(UiDeletionTestCase, self).setUp(site_login=True,
