@@ -1,14 +1,14 @@
 from datetime import datetime
 import uuid as uuid_builtin
 
-from core.models import DataSet, Analysis
+from core.models import Analysis, DataSet
 
 from factory_boy.django_model_factories import (
-    DataSetFactory, InvestigationFactory, StudyFactory,
-    InvestigationLinkFactory, GalaxyInstanceFactory, WorkflowEngineFactory,
-    WorkflowFactory, ProjectFactory, AnalysisFactory,
-    FileRelationshipFactory, InputFileFactory,
-    ToolDefinitionFactory, ParameterFactory, OutputFileFactory)
+    AnalysisFactory, DataSetFactory, FileRelationshipFactory,
+    GalaxyInstanceFactory, InputFileFactory, InvestigationFactory,
+    InvestigationLinkFactory, OutputFileFactory, ParameterFactory,
+    ProjectFactory, StudyFactory, ToolDefinitionFactory,
+    WorkflowEngineFactory, WorkflowFactory)
 from file_store.models import FileType
 
 

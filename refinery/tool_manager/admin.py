@@ -1,7 +1,7 @@
 from django.contrib import admin
 
-from .models import FileRelationship, InputFile, ToolDefinition, OutputFile, \
-    Parameter
+from .models import (FileRelationship, InputFile, OutputFile, Parameter,
+                     ToolDefinition)
 
 from .utils import AdminFieldPopulator
 
