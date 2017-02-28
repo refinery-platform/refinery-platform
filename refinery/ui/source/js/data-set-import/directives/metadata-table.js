@@ -15,6 +15,7 @@ function metadataTableDirective (
     replace: true,
     templateUrl: '/static/partials/data-set-import/partials/metadata-table.html',
     link: function (scope, element, attrs, ctrl) {
+      scope.isAdvancedCollapsed = true;
       // use to check pattern of public shortcut name
       scope.urlShortcutRegex = /^[a-zA-Z0-9_]*$/;
 
