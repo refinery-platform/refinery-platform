@@ -11,8 +11,8 @@ from django.test import TestCase
 from guardian.shortcuts import assign_perm
 import mock
 import mockcache as memcache
-from rest_framework.test import (APIRequestFactory, force_authenticate,
-                                 APITestCase)
+from rest_framework.test import (APIRequestFactory, APIClient, APITestCase,
+                                 force_authenticate)
 from tastypie.test import ResourceTestCase
 
 from .api import AnalysisResource
@@ -1430,10 +1430,6 @@ class AnalysisDeletionTest(TestCase):
 class NodeGroupAPITests(APITestCase):
 
     def setUp(self):
-        self.username = 'coffee_lover'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, '',
-                                             self.password)
         self.factory = APIRequestFactory()
         investigation = Investigation.objects.create()
         self.study = Study.objects.create(
@@ -1486,7 +1482,6 @@ class NodeGroupAPITests(APITestCase):
         # valid_uuid
         request = self.factory.get('%s/?uuid=%s' % (
             self.url_root, self.valid_uuid))
-        force_authenticate(request, user=self.user)
         response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data,
@@ -1496,7 +1491,6 @@ class NodeGroupAPITests(APITestCase):
         # valid_assay_uuid
         request = self.factory.get('%s/?assay=%s' % (
             self.url_root, self.assay.uuid))
-        force_authenticate(request, user=self.user)
         response = self.view(request, self.assay.uuid)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), len(self.node_group_list))
@@ -1507,7 +1501,6 @@ class NodeGroupAPITests(APITestCase):
         # invalid_uuid
         request = self.factory.get('%s/?uuid=%s' % (self.url_root,
                                                     self.invalid_uuid))
-        force_authenticate(request, user=self.user)
         response = self.view(request, self.invalid_uuid)
         self.assertEqual(response.status_code, 404)
 
@@ -1515,7 +1508,6 @@ class NodeGroupAPITests(APITestCase):
         # invalid_assay_uuid
         request = self.factory.get('%s/?assay=%s' % (self.url_root,
                                                      self.invalid_uuid))
-        force_authenticate(request, user=self.user)
         response = self.view(request, self.invalid_uuid)
         self.assertEqual(response.status_code, 404)
 
@@ -1524,7 +1516,6 @@ class NodeGroupAPITests(APITestCase):
         request = self.factory.get('%s/?uuid=%s'
                                    % (self.url_root,
                                       self.invalid_format_uuid))
-        force_authenticate(request, user=self.user)
         response = self.view(request, self.invalid_format_uuid)
         self.assertEqual(response.status_code, 404)
 
@@ -1536,7 +1527,6 @@ class NodeGroupAPITests(APITestCase):
                           'nodes': self.nodes_list_uuid
                           }
         request = self.factory.post('%s/' % self.url_root, new_node_group)
-        force_authenticate(request, user=self.user)
         response = self.view(request)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data.get('name'), new_node_group.get('name'))
@@ -1551,7 +1541,6 @@ class NodeGroupAPITests(APITestCase):
                           'study': self.study.uuid,
                           'nodes': '%s' % self.invalid_uuid}
         request = self.factory.post('%s/' % self.url_root, new_node_group)
-        force_authenticate(request, user=self.user)
         response = self.view(request)
         self.assertEqual(response.status_code, 400)
 
@@ -1561,7 +1550,6 @@ class NodeGroupAPITests(APITestCase):
                                    {'uuid': self.node_group_2.uuid,
                                     'nodes': self.nodes_list_uuid,
                                     'is_current': True})
-        force_authenticate(request, user=self.user)
         response = self.view(request)
         self.assertEqual(response.status_code, 202)
         self.assertItemsEqual(response.data.get('nodes'), self.nodes_list_uuid)
@@ -1572,7 +1560,6 @@ class NodeGroupAPITests(APITestCase):
                                    {'uuid': self.node_group_2.uuid,
                                     'nodes': self.invalid_uuid,
                                     'is_current': True})
-        force_authenticate(request, user=self.user)
         response = self.view(request)
         self.assertEqual(response.status_code, 400)
 
@@ -1581,7 +1568,6 @@ class NodeGroupAPITests(APITestCase):
         request = self.factory.put('%s/' % self.url_root,
                                    {'uuid': self.invalid_uuid}
                                    )
-        force_authenticate(request, user=self.user)
         response = self.view(request)
         self.assertEqual(response.status_code, 404)
 
@@ -1590,7 +1576,6 @@ class NodeGroupAPITests(APITestCase):
         request = self.factory.put('%s/' % self.url_root,
                                    {'uuid': self.invalid_format_uuid}
                                    )
-        force_authenticate(request, user=self.user)
         response = self.view(request)
         self.assertEqual(response.status_code, 404)
 
@@ -1621,6 +1606,12 @@ class UtilitiesTest(TestCase):
             "32e977fc-b906-4315-b6ed-6a644d173492",
             "910117c5-fda2-4700-ae87-dc897f3a5d85"
             ]
+
+    def tearDown(self):
+        NodeGroup.objects.all().delete()
+        Assay.objects.all().delete()
+        Study.objects.all().delete()
+        Investigation.objects.all().delete()
 
     def test_get_aware_local_time(self):
         expected_time = timezone.localtime(timezone.now())
@@ -2002,6 +1993,7 @@ class DataSetApiV2Tests(APITestCase):
                                              self.password)
 
         self.factory = APIRequestFactory()
+        self.client = APIClient()
         self.view = DataSetsViewSet.as_view()
 
         self.url_root = '/api/v2/data_sets/'
@@ -2044,24 +2036,31 @@ class DataSetApiV2Tests(APITestCase):
             "ready_for_igv_detail_view": None
         }])
 
+        self.client.login(username=self.username, password=self.password)
+
         # Make reusable requests & responses
         self.get_request = self.factory.get(self.url_root)
-        force_authenticate(self.get_request, user=self.user)
         self.get_response = self.view(self.get_request)
         self.put_request = self.factory.put(
             self.url_root,
             data=self.node_json,
             format="json"
         )
-        force_authenticate(self.put_request, user=self.user)
         self.put_response = self.view(self.put_request)
         self.options_request = self.factory.options(
             self.url_root,
             data=self.node_json,
             format="json"
         )
-        force_authenticate(self.options_request, user=self.user)
         self.options_response = self.view(self.options_request)
+
+    def tearDown(self):
+        Node.objects.all().delete()
+        User.objects.all().delete()
+        Study.objects.all().delete()
+        Assay.objects.all().delete()
+        DataSet.objects.all().delete()
+        Investigation.objects.all().delete()
 
     def test_unallowed_http_verbs(self):
         self.assertEqual(
@@ -2169,7 +2168,7 @@ class DataSetApiV2Tests(APITestCase):
             {"description": new_description},
         )
         patch_response = self.view(patch_request, self.dataset.uuid)
-        self.assertEqual(patch_response.status_code, 403)
+        self.assertEqual(patch_response.status_code, 401)
 
     def test_dataset_patch_description_fails(self):
         new_description = self.create_rand_str(5001)
@@ -2331,6 +2330,7 @@ class AnalysisApiV2Tests(APITestCase):
             workflow_engine=self.workflow_engine
         )
         self.factory = APIRequestFactory()
+        self.client = APIClient()
         self.view = AnalysesViewSet.as_view()
 
         self.url_root = '/api/v2/analyses/'
@@ -2382,30 +2382,28 @@ class AnalysisApiV2Tests(APITestCase):
             "ready_for_igv_detail_view": None
         }])
 
+        self.client.login(username=self.username, password=self.password)
+
         # Make reusable requests & responses
         self.get_request = self.factory.get(self.url_root)
-        force_authenticate(self.get_request, user=self.user)
         self.get_response = self.view(self.get_request)
         self.put_request = self.factory.put(
             self.url_root,
             data=self.node_json,
             format="json"
         )
-        force_authenticate(self.put_request, user=self.user)
         self.put_response = self.view(self.put_request)
         self.patch_request = self.factory.patch(
             self.url_root,
             data=self.node_json,
             format="json"
         )
-        force_authenticate(self.patch_request, user=self.user)
         self.patch_response = self.view(self.patch_request)
         self.options_request = self.factory.options(
             self.url_root,
             data=self.node_json,
             format="json"
         )
-        force_authenticate(self.options_request, user=self.user)
         self.options_response = self.view(self.options_request)
 
     def test_unallowed_http_verbs(self):

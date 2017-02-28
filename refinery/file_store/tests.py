@@ -4,14 +4,12 @@ import os
 from urlparse import urljoin
 
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import SimpleTestCase, TestCase
 
 import mock
-from rest_framework.test import (APIRequestFactory, force_authenticate,
-                                 APITestCase)
+from rest_framework.test import APIRequestFactory, APITestCase
 
 from .models import (file_path, FILE_STORE_TEMP_DIR, FileExtension,
                      FileStoreItem, FileType,
@@ -362,10 +360,6 @@ class FileSourceTranslationTest(TestCase):
 class FileStoreItemsAPITests(APITestCase):
 
     def setUp(self):
-        self.username = 'coffee_lover'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, '',
-                                             self.password)
         self.factory = APIRequestFactory()
         # create FileStoreItem instances without any disk operations
         self.url_source = 'http://example.org/test_file.dat'
@@ -383,12 +377,11 @@ class FileStoreItemsAPITests(APITestCase):
             uuid=self.item_from_url.uuid)
         expected_response = FileStoreItemSerializer(file_store_item_obj)
         request = self.factory.get('%s/%s/' % (self.url_root, self.valid_uuid))
-        force_authenticate(request, self.user)
         response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
 
-        response_keys = response.data.keys()
-        for field in response_keys:
+        responseKeys = response.data.keys()
+        for field in responseKeys:
             self.assertEqual(response.data[field],
                              expected_response.data[field])
 
@@ -396,7 +389,6 @@ class FileStoreItemsAPITests(APITestCase):
         # invalid_uuid
         request = self.factory.get('%s/%s/' % (self.url_root,
                                                self.invalid_uuid))
-        force_authenticate(request, user=self.user)
         response = self.view(request, self.invalid_uuid)
         self.assertEqual(response.status_code, 404)
 
@@ -404,7 +396,6 @@ class FileStoreItemsAPITests(APITestCase):
         # invalid_format_uuid
         request = self.factory.get('%s/%s/'
                                    % (self.url_root, self.invalid_format_uuid))
-        force_authenticate(request, user=self.user)
         response = self.view(request, self.invalid_format_uuid)
         self.assertEqual(response.status_code, 404)
 

@@ -1,9 +1,8 @@
 from urlparse import urljoin
 
 from django.contrib.auth.models import User
-from guardian.utils import get_anonymous_user
-from rest_framework.test import (APITestCase, APIRequestFactory,
-                                 force_authenticate)
+from rest_framework.test import APITestCase, APIRequestFactory, APIClient, \
+    force_authenticate
 
 from core.models import ExtendedGroup
 from factory_boy.utils import make_sample_tool_definitions
@@ -21,9 +20,12 @@ class ToolDefinitionAPITests(APITestCase):
                                              self.password)
 
         self.factory = APIRequestFactory()
+        self.client = APIClient()
         self.view = ToolDefinitionsViewSet.as_view({'get': 'list'})
 
         self.url_root = '/api/v2/tools/definitions/'
+
+        self.client.login(username=self.username, password=self.password)
 
         # Make some sample data
         make_sample_tool_definitions()
@@ -83,12 +85,3 @@ class ToolDefinitionAPITests(APITestCase):
         self.assertEqual(
             self.delete_response.data['detail'], 'Method "DELETE" not '
                                                  'allowed.')
-
-    def test_get_request_anonymous_user(self):
-        anon_user = get_anonymous_user()
-        self.new_get_request = self.factory.get(self.url_root)
-        force_authenticate(self.new_get_request, user=anon_user)
-        self.new_get_response = self.view(self.new_get_request)
-        self.assertIsNotNone(self.new_get_response.data[0])
-        self.assertEqual(self.new_get_request.user.id,
-                         anon_user.id)

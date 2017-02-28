@@ -5,10 +5,8 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import QueryDict
 from django.test import TestCase
-from guardian.utils import get_anonymous_user
 
-from rest_framework.test import APIClient, APIRequestFactory, APITestCase, \
-    force_authenticate
+from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from .models import Assay, AttributeOrder, Study, Investigation, Node
 from .serializers import AttributeOrderSerializer
@@ -60,7 +58,6 @@ class AssaysAPITests(APITestCase):
         # valid_uuid
         request = self.factory.get('%s/?uuid=%s' % (
             self.url_root, self.valid_uuid))
-        force_authenticate(request, self.user)
         response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
         self.assertItemsEqual(response.data.keys(), self.assay.keys())
@@ -70,7 +67,6 @@ class AssaysAPITests(APITestCase):
         # valid_study_uuid
         request = self.factory.get('%s/?study=%s' % (
             self.url_root, self.study.uuid))
-        force_authenticate(request, self.user)
         response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
         self.assertItemsEqual(response.data[0].keys(), self.assay.keys())
@@ -80,7 +76,6 @@ class AssaysAPITests(APITestCase):
         # invalid_uuid
         request = self.factory.get('%s/?uuid=%s' % (self.url_root,
                                                     self.invalid_uuid))
-        force_authenticate(request, self.user)
         response = self.view(request, self.invalid_uuid)
         self.assertEqual(response.status_code, 404)
 
@@ -88,7 +83,6 @@ class AssaysAPITests(APITestCase):
         # invalid_study_uuid
         request = self.factory.get('%s/?study=%s' % (self.url_root,
                                                      self.invalid_uuid))
-        force_authenticate(request, self.user)
         response = self.view(request, self.invalid_uuid)
         self.assertEqual(response.status_code, 404)
 
@@ -96,7 +90,6 @@ class AssaysAPITests(APITestCase):
         # invalid_format_uuid
         request = self.factory.get('%s/?uuid=%s'
                                    % (self.url_root, self.invalid_format_uuid))
-        force_authenticate(request, self.user)
         response = self.view(request, self.invalid_format_uuid)
         self.assertEqual(response.status_code, 404)
 
@@ -228,11 +221,18 @@ class AssaysAttributesAPITests(APITestCase):
         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
         self.invalid_format_uuid = "xxxxxxxx"
 
+    def tearDown(self):
+        User.objects.all().delete()
+        Assay.objects.all().delete()
+        Study.objects.all().delete()
+        Investigation.objects.all().delete()
+        DataSet.objects.all().delete()
+        AttributeOrder.objects.all().delete()
+
     def test_get_valid_uuid(self):
         # valid_uuid
         uuid = self.valid_uuid
         request = self.factory.get('%s/%s/attributes/' % (self.url_root, uuid))
-        force_authenticate(request, self.user1)
         response = self.view(request, uuid)
         self.assertEqual(response.status_code, 200)
 
@@ -252,7 +252,6 @@ class AssaysAttributesAPITests(APITestCase):
         # invalid uuid
         request = self.factory.get('%s/%s/attributes/' % (
             self.url_root, self.invalid_uuid))
-        force_authenticate(request, self.user1)
         response = self.view(request, self.invalid_uuid)
         response.render()
         self.assertEqual(response.status_code, 404)
@@ -262,7 +261,6 @@ class AssaysAttributesAPITests(APITestCase):
         # invalid form uuid
         request = self.factory.get('%s/%s/attributes/' % (
             self.url_root, self.invalid_format_uuid))
-        force_authenticate(request, self.user1)
         response = self.view(request, self.invalid_format_uuid)
         response.render()
         self.assertEqual(response.status_code, 404)
@@ -1435,40 +1433,35 @@ class NodeApiV2Tests(APITestCase):
 
         # Make a reusable request & response
         self.get_request = self.factory.get(self.url_root)
-        force_authenticate(self.get_request, self.user)
         self.get_response = self.view(self.get_request)
         self.put_request = self.factory.put(
             self.url_root,
             data=self.node_json,
             format="json"
         )
-        force_authenticate(self.put_request, self.user)
         self.put_response = self.view(self.put_request)
         self.patch_request = self.factory.patch(
             self.url_root,
             data=self.node_json,
             format="json"
         )
-        force_authenticate(self.patch_request, self.user)
         self.patch_response = self.view(self.patch_request)
         self.options_request = self.factory.options(
             self.url_root,
             data=self.node_json,
             format="json"
         )
-        force_authenticate(self.options_request, self.user)
         self.options_response = self.view(self.options_request)
 
     def test_get_request(self):
         self.assertIsNotNone(self.get_response.data[0])
 
     def test_get_request_anonymous_user(self):
-        anon_user = get_anonymous_user()
+        self.client.logout()
         self.new_get_request = self.factory.get(self.url_root)
-        force_authenticate(self.new_get_request, anon_user)
         self.new_get_response = self.view(self.new_get_request)
         self.assertIsNotNone(self.new_get_response.data[0])
-        self.assertEqual(self.new_get_request.user.id, anon_user.id)
+        self.assertEqual(self.new_get_request.user.id, None)
 
     def test_unallowed_http_verbs(self):
         self.assertEqual(
