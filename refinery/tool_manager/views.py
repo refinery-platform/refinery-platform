@@ -5,10 +5,8 @@ from .models import ToolDefinition
 
 
 class ToolDefinitionsViewSet(ModelViewSet):
-    """
-        API endpoint that allows for ToolDefinitions to be created and
-        fetched
-    """
+    """API endpoint that allows for ToolDefinitions to be fetched"""
+
     queryset = ToolDefinition.objects.all()
     serializer_class = ToolDefinitionSerializer
     lookup_field = 'uuid'
